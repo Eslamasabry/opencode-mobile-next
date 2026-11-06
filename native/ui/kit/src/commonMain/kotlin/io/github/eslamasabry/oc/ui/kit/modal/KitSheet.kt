@@ -3,8 +3,8 @@ package io.github.eslamasabry.oc.ui.kit.modal
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +34,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -53,14 +52,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.paneTitle
@@ -68,6 +68,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -76,11 +77,9 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
-import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
@@ -228,7 +227,10 @@ internal class SheetEntry {
     }
 }
 
-/** The keyboard's height where the platform reports none (the desktop gate sets it); null reads the real IME inset. */
+/**
+ * The keyboard's height where the platform reports none (the desktop gate sets it); null reads the
+ * real IME inset.
+ */
 internal val LocalSheetKeyboard: ProvidableCompositionLocal<Dp?> = staticCompositionLocalOf { null }
 
 public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
@@ -242,9 +244,22 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
     val state = remember { KitSheetHostState() }
     Box(modifier) {
         CompositionLocalProvider(LocalKitSheetHost provides state) {
-            content()
-            SheetLayer(state)
-            DialogLayer(state)
+            // The in-window modal is a sibling of the page, never a descendant of its
+            // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
+            // its accessibility nodes while a modal owns the window, including its exit.
+            Box(
+                if (state.isShowing || state.isDialogShowing) Modifier.clearAndSetSemantics {}
+                else Modifier
+            ) {
+                content()
+            }
+            Box(
+                Modifier.zIndex(1f)
+                    .then(if (state.isDialogShowing) Modifier.clearAndSetSemantics {} else Modifier)
+            ) {
+                SheetLayer(state)
+            }
+            Box(Modifier.zIndex(2f)) { DialogLayer(state) }
         }
     }
 }
@@ -267,8 +282,8 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
  *
  * States: closed, open, asking (discard), predictive back, grown Text: frame (header), reading
  * (body) Cap: Sheet (640 / 560 / 440) Motion: rises on the spatial spring, scrim fades STANDARD;
- * Half → Full grows on the spatial spring; back gesture shrinks it; Off = instant Replaces: showKitSheet, KitSheet, KitSheetHeight, showKitFramedSheet
- * (lib/ui/kit/kit_sheet*.dart)
+ * Half → Full grows on the spatial spring; back gesture shrinks it; Off = instant Replaces:
+ * showKitSheet, KitSheet, KitSheetHeight, showKitFramedSheet (lib/ui/kit/kit_sheet*.dart)
  */
 @Composable
 public fun KitSheet(
@@ -446,8 +461,8 @@ private fun SheetLayer(state: KitSheetHostState) {
 }
 
 /**
- * The growing sheet's height. A change of [SheetEntry.height] (Half ↔ Full) springs on `Spatial`;
- * a change of the window (rotation, split screen) snaps, so only the person's step moves.
+ * The growing sheet's height. A change of [SheetEntry.height] (Half ↔ Full) springs on `Spatial`; a
+ * change of the window (rotation, split screen) snaps, so only the person's step moves.
  */
 @Composable
 private fun sheetGrowth(entry: SheetEntry, half: Dp, full: Dp): Animatable<Dp, AnimationVector1D> {
@@ -465,11 +480,12 @@ private fun sheetGrowth(entry: SheetEntry, half: Dp, full: Dp): Animatable<Dp, A
 }
 
 /** Reads the growing height in the layout phase: the spring never recomposes the sheet's body. */
-private fun Modifier.grownHeight(grow: Animatable<Dp, AnimationVector1D>): Modifier = layout { measurable, constraints ->
-    val h = grow.value.roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
-    val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
-    layout(placeable.width, h) { placeable.place(0, 0) }
-}
+private fun Modifier.grownHeight(grow: Animatable<Dp, AnimationVector1D>): Modifier =
+    layout { measurable, constraints ->
+        val h = grow.value.roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
+        val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+        layout(placeable.width, h) { placeable.place(0, 0) }
+    }
 
 /**
  * Reads the back gesture in the draw phase: the modal shrinks toward its edge while the gesture
@@ -488,7 +504,8 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
 private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, shape: KitShapeId) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    // Glass: the sheet is a frosted pane (opaque over the page whenever nothing blurs); every other style keeps surface2.
+    // Glass: the sheet is a frosted pane (opaque over the page whenever nothing blurs); every other
+    // style keeps surface2.
     val face = kitGlassSheet(shape, colors.surface2) ?: Modifier.background(colors.surface2)
     Column(
         modifier
@@ -497,10 +514,18 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, s
             .semantics {
                 paneTitle = entry.title
                 isTraversalGroup = true
+                if (entry.dismissible)
+                    dismiss {
+                        entry.requestDismiss()
+                        true
+                    }
             }
             .testTag("kit-sheet")
             .navigationBarsPadding()
-            .then(LocalSheetKeyboard.current?.let { Modifier.padding(bottom = it) } ?: Modifier.imePadding())
+            .then(
+                LocalSheetKeyboard.current?.let { Modifier.padding(bottom = it) }
+                    ?: Modifier.imePadding()
+            )
     ) {
         if (handle) {
             val density = LocalDensity.current
@@ -541,7 +566,8 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, s
         }
         if (entry.asking) SheetQuestion(entry)
         BoxWithConstraints(
-            Modifier.weight(1f, fill = false).then(if (entry.asking) Modifier.keptOffstage() else Modifier)
+            Modifier.weight(1f, fill = false)
+                .then(if (entry.asking) Modifier.keptOffstage() else Modifier)
         ) {
             // Under a large font or the keyboard, let the header join the scroll. Pinned actions
             // keep their
@@ -565,14 +591,16 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, s
                         KitLoadingBar(entry.loading, stringResource(Res.string.kitSheetLoading))
                     }
                     val hasActions =
-                        entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
+                        entry.primary != null ||
+                            entry.secondary != null ||
+                            entry.tertiary.isNotEmpty()
                     Column(
                         Modifier.padding(
                             start = FlutterKitTokens.RAIL.dp,
                             top = Space.S2.dp,
                             end = FlutterKitTokens.RAIL.dp,
                             bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp,
-                        ),
+                        )
                     ) {
                         if (entry.framed) {
                             Column(
@@ -624,7 +652,7 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
             (FlutterKitTokens.RAIL - (tokens.minTarget - 24) / 2f - 24 * 0.1875f)
                 .coerceAtLeast(0f)
                 .dp // F: lib/ui/kit/kit_sheet.dart:616-627 lib/ui/kit/kit_optical.dart:29,34
-                    // lib/ui/app_iconography.dart:20
+            // lib/ui/app_iconography.dart:20
         } else Space.S2.dp
     Column(
         Modifier.fillMaxWidth()
@@ -700,7 +728,9 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
     }
 }
 
-/** The header mark tile (`_KitIconTile`): the 44 dp square, neutral on `surface3`, attention tinted. */
+/**
+ * The header mark tile (`_KitIconTile`): the 44 dp square, neutral on `surface3`, attention tinted.
+ */
 @Composable
 internal fun IconTile(glyph: ImageVector, tone: KitSheetTone = KitSheetTone.Neutral) {
     val colors = LocalKitColors.current
@@ -708,7 +738,9 @@ internal fun IconTile(glyph: ImageVector, tone: KitSheetTone = KitSheetTone.Neut
         when (tone) {
             KitSheetTone.Neutral -> colors.surface3
             KitSheetTone.Attention ->
-                colors.attention.copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA).compositeOver(colors.surface2)
+                colors.attention
+                    .copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA)
+                    .compositeOver(colors.surface2)
         }
     val ink = if (tone == KitSheetTone.Neutral) colors.text1 else colors.attention
     Box(
@@ -739,13 +771,12 @@ internal fun IconTile(glyph: ImageVector, size: Dp) {
  * reading order while the question has the sheet (Flutter's `Visibility(maintainState)` under
  * `ExcludeFocus`, `kit_sheet_modal.dart:441-449`).
  */
-private fun Modifier.keptOffstage(): Modifier =
-    layout { measurable, constraints ->
-            measurable.measure(constraints)
-            layout(0, 0) {}
-        }
-        .focusProperties { canFocus = false }
-        .clearAndSetSemantics {}
+private fun Modifier.keptOffstage(): Modifier = layout { measurable, constraints ->
+    measurable.measure(constraints)
+    layout(0, 0) {}
+}
+    .focusProperties { canFocus = false }
+    .clearAndSetSemantics {}
 
 /**
  * "Discard your changes?" over a dirty sheet without a draft (Dart `showKitDiscardChanges`): the
@@ -787,12 +818,15 @@ private fun SheetQuestion(entry: SheetEntry) {
                     onClick = { answer(true) },
                     destructive = true,
                     haptic = KitHaptic.Commit,
-                ),
+                )
         )
         Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/kit/kit_confirm_sheet.dart:610
         KitActionBlock(
             secondary =
-                KitAction(stringResource(Res.string.kitConfirmKeepEditing), onClick = { answer(false) }),
+                KitAction(
+                    stringResource(Res.string.kitConfirmKeepEditing),
+                    onClick = { answer(false) },
+                )
         )
     }
 }
