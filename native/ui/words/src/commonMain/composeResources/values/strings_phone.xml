@@ -540,6 +540,7 @@
     <string name="settingsV3SavedOn">Saved on %1$s. Other apps using %1$s get this too.</string>
     <string name="settingsV3UseMyDefaultDone">Reset on %1$s to your own choices: %2$s.</string>
     <string name="phoneSetupStageRetrying">Interrupted. Trying again</string>
+    <string name="phoneSetupStageCompat">Trying again in compatibility mode</string>
     <string name="linuxMgrRow">Linux</string>
     <string name="linuxMgrRunning">Running</string>
     <string name="linuxMgrRunningDetail">What runs inside Linux, and stopping it</string>

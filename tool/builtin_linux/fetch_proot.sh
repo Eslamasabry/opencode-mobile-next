@@ -26,12 +26,12 @@ MIRROR=https://packages-cf.termux.dev/apt/termux-main/pool/main
 # name|path in the archive|sha256, per architecture.
 declare -A PACKAGES=(
   [aarch64]="
-p/proot/proot_5.1.107.94_aarch64.deb|b6fa26884d162f5234b0aba9f8a98971aad793706099464f7bd7eb1e21d63935
-libt/libtalloc/libtalloc_2.4.3_aarch64.deb|ac81ad623d74c209718b9f3acb2dd702cc8a88c431e820d212229910b4db29da
+p/proot/proot_5.1.107.102_aarch64.deb|10a394b585c2fc2b2c8502544f4e5f1be581dc8bfff79e8ba62f16207423e030
+libt/libtalloc/libtalloc_2.5.0_aarch64.deb|556591f43bb773ad8777e1a29522640866a55f95dab71914418b94a8c58ad5a7
 liba/libandroid-shmem/libandroid-shmem_0.7_aarch64.deb|0da3a24d558b93c92bcf8d611e0826a99ff96e396b148e6cdf33b47c47c57ff6"
   [x86_64]="
-p/proot/proot_5.1.107.94_x86_64.deb|826cdf66f9eb04bb9faf7f1eb36078abc75b086c074e937b53d1abbf08ccfb85
-libt/libtalloc/libtalloc_2.4.3_x86_64.deb|7ca2eaae2e53b28228a01301bc410b62845403d6317c25b8e0a7f40681de0628
+p/proot/proot_5.1.107.102_x86_64.deb|2497064226c15971be8131c7facead94a06c225347796326a383c832dca57758
+libt/libtalloc/libtalloc_2.5.0_x86_64.deb|b8c6d95f20075dc1f9ec6573575b2444e8d526e48e0d8d6d5cf4e071e6e06530
 liba/libandroid-shmem/libandroid-shmem_0.7_x86_64.deb|ffa9e4c87467b158b148d0ff92dda796aa038276c2075af3269cdcdb06f25797"
 )
 declare -A ABI=([aarch64]=arm64-v8a [x86_64]=x86_64)
@@ -52,7 +52,7 @@ for arch in aarch64 x86_64; do
   mkdir -p "$dest"
   install -m 0755 "$usr/bin/proot" "$dest/libproot.so"
   install -m 0755 "$usr/libexec/proot/loader" "$dest/libproot-loader.so"
-  install -m 0755 "$usr/lib/libtalloc.so.2.4.3" "$dest/libtalloc.so"
+  install -m 0755 "$usr/lib/libtalloc.so.2.5.0" "$dest/libtalloc.so"
   install -m 0755 "$usr/lib/libandroid-shmem.so" "$dest/libandroid-shmem.so"
 
   "$PATCHELF" --replace-needed libtalloc.so.2 libtalloc.so "$dest/libproot.so"

@@ -39,7 +39,7 @@ class BuiltinScriptsShellTest {
             mapOf(
                 "install" to BuiltinScripts.installOpenCodeScript(OpenCodeRuntime.OpenCode2).getOrNull()!!,
                 "server" to BuiltinScripts.serverScript(OpenCodeRuntime.OpenCode2).getOrNull()!!,
-                "password" to BuiltinScripts.writePasswordScript("pw")!!,
+                "password" to BuiltinScripts.writePasswordScript(),
                 "version" to BuiltinScripts.versionScript(OpenCodeRuntime.OpenCode2),
                 "list" to BuiltinScripts.listProjectsScript(),
                 "exists" to BuiltinScripts.folderExistsScript("/root/projects/a b"),

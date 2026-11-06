@@ -74,7 +74,7 @@ oc_download "$NODE_BASE_URL/${'$'}node_version/node-${'$'}node_version-linux-${'
 oc_stage 'Unpacking Node.js'
 rm -rf /opt/node.new
 mkdir -p /opt/node.new
-tar -xzf "${'$'}node_file" -C /opt/node.new --strip-components=1
+oc_untar "${'$'}node_file" /opt/node.new 1
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/${'$'}tool /usr/local/bin/${'$'}tool; done

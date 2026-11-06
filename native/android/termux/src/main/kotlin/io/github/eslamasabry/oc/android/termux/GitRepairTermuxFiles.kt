@@ -231,6 +231,10 @@ class AndroidGitRepairTermuxFiles(
                         val script =
                             """# oc-git-repair
 export LC_ALL=C
+oc_curl_cfg=${'$'}(mktemp "${'$'}{TMPDIR:-${'$'}HOME}/.oc-curl.XXXXXX") || exit 1
+trap 'rm -f "${'$'}oc_curl_cfg"' EXIT
+# The token reaches curl as a private config file, never as an argument.
+printf 'header = "Authorization: Bearer %s"\n' '$token' > "${'$'}oc_curl_cfg"
 while IFS='|' read -r index path; do
   case "${'$'}path" in
     /data/data/com.termux/files/usr/var/lib/proot-distro/*/.l2s/.l2s.*|/data/user/0/com.termux/files/usr/var/lib/proot-distro/*/.l2s/.l2s.*) ;;
@@ -238,7 +242,7 @@ while IFS='|' read -r index path; do
   esac
   case "${'$'}path" in *..*/*|*/..*) continue ;; esac
   [ -f "${'$'}path" ] && [ -r "${'$'}path" ] || continue
-  curl --silent --fail --max-time 120 --connect-timeout 3 -T "${'$'}path" -H 'Authorization: Bearer $token' "http://127.0.0.1:${socket.localPort}/f/${'$'}index" >/dev/null 2>&1 || true
+  curl --silent --fail --max-time 120 --connect-timeout 3 -T "${'$'}path" -K "${'$'}oc_curl_cfg" "http://127.0.0.1:${socket.localPort}/f/${'$'}index" >/dev/null 2>&1 || true
 done <<'OC_GIT_REPAIR_LIST'
 $entries
 OC_GIT_REPAIR_LIST

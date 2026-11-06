@@ -199,7 +199,7 @@ oc_download "${d}oc_url" "${d}oc_file" "${d}oc_sha"
 oc_stage 'Unpacking OpenCode'
 rm -rf "${d}oc_new"
 mkdir -p "${d}oc_new/bin"
-if ! tar -xzf "${d}oc_file" -C "${d}oc_new" "${d}oc_member" ||
+if ! oc_untar "${d}oc_file" "${d}oc_new" 0 "${d}oc_member" ||
   [ ! -f "${d}oc_new/${d}oc_member" ] || [ -L "${d}oc_new/${d}oc_member" ]; then
   rm -rf "${d}oc_new" "${d}oc_file"
   oc_fail "${OpenCodeInstallFailure.NoProgram.line}"

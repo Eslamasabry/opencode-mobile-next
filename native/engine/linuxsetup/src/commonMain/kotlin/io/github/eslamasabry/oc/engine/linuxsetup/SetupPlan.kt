@@ -93,7 +93,7 @@ public fun planSetupJob(
                 else ->
                     base.copy(
                         script = wrapper.wrap(component.installScript),
-                        labels = mapOf("retry" to titles.stageRetrying),
+                        labels = mapOf("retry" to titles.stageRetrying, "compat" to titles.stageCompat),
                         agentUser = component.agentUser,
                     )
             }

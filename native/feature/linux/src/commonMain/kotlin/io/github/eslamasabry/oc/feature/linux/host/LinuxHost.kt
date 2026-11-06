@@ -39,6 +39,13 @@ public interface LinuxHost {
      */
     public suspend fun run(script: String, timeoutSeconds: Long): Outcome<ShellRun>
 
+    /**
+     * Makes `/root/projects/<name>` a new git project from the app itself, never through a shell in
+     * Linux: once AI Team is on, the sandbox denies the chmod `git init` needs (issue #111).
+     * Answers `created` or `exists`. Only for a direct child of `/root/projects`.
+     */
+    public suspend fun createProject(path: String): Outcome<String>
+
     /** True while phone setup (or repair) runs: the setup journal says `running`. */
     public suspend fun setupRunning(): Boolean
 
@@ -68,6 +75,8 @@ public class AbsentLinuxHost(private val why: LinuxPresence = LinuxPresence.NotO
     override suspend fun presence(): LinuxPresence = why
 
     override suspend fun run(script: String, timeoutSeconds: Long): Outcome<ShellRun> = absent()
+
+    override suspend fun createProject(path: String): Outcome<String> = absent()
 
     override suspend fun setupRunning(): Boolean = false
 

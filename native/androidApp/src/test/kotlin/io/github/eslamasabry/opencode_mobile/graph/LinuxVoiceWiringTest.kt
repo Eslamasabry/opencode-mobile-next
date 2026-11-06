@@ -68,19 +68,10 @@ class LinuxVoiceWiringTest {
     }
 
     @Test
-    fun `B-LINUX-037 writing the password keeps it off the command line and quotes it safely`() {
-        val script = PhoneServerScripts.writePassword("pa'ss word")
-        assertTrue("umask 077\n" in script)
-        assertTrue("printf '%s' 'pa'\"'\"'ss word' > /root/.oc-builtin/server.password.tmp\n" in script)
-        assertTrue(script.endsWith("mv /root/.oc-builtin/server.password.tmp /root/.oc-builtin/server.password\n"))
-        assertFalse("opencode2 serve" in script)
-    }
-
-    @Test
     fun `B-LINUX-024 every phone-server script parses as shell`() {
         val sh = File("/bin/sh")
         if (!sh.canExecute()) return
-        for (script in listOf(PhoneServerScripts.server(), PhoneServerScripts.writePassword("x"))) {
+        for (script in listOf(PhoneServerScripts.server())) {
             val p = ProcessBuilder(sh.path, "-n").redirectErrorStream(true).start()
             p.outputStream.use { it.write(script.toByteArray()) }
             val output = p.inputStream.bufferedReader().readText()

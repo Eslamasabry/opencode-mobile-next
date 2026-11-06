@@ -27,7 +27,7 @@ class SetupPlanTest {
         val python = byId.getValue("python")
         assertTrue(python.script!!.startsWith("PRELUDE\n"))
         assertTrue(python.script.contains("oc_apt_install python3 python3-venv python3-pip"))
-        assertEquals(mapOf("retry" to "Interrupted. Trying again"), python.labels)
+        assertEquals(mapOf("retry" to "Interrupted. Trying again", "compat" to "Trying again in compatibility mode"), python.labels)
         assertEquals("300000000", byId.getValue("opencode").data["requiredFreeBytes"])
         val start = byId.getValue("start")
         assertTrue(start.step)

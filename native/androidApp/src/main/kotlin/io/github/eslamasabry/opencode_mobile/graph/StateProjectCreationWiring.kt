@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.projects.presentation.NoProjectCreation
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectCreation
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectServer
+import io.github.eslamasabry.opencode_mobile.BuiltinNewProject
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -73,29 +74,45 @@ class PhoneProjectCreation(
             if (linux.presence() != LinuxPresence.Ready || !linux.serviceRunning("server"))
                 return@withLock Outcome.Failed(Failure.Folder(FolderProblem.NotInstalled))
             val path = "/root/projects/" + folder
-            val script =
-                BuiltinScripts.createFolderScript(path)
-                    ?: return@withLock Outcome.Failed(Failure.StorageRefused())
             if (!available(server)) return@withLock stale()
-            when (val result = linux.run(script, timeoutSeconds = 45)) {
-                is Outcome.Failed -> result
-                is Outcome.Ok -> {
-                    if (!available(server)) return@withLock stale()
-                    val last =
-                        result.value.output
-                            .lineSequence()
-                            .map(String::trim)
-                            .filter(String::isNotEmpty)
-                            .lastOrNull()
-                    if (
-                        result.value.exitCode == 0 &&
-                            (last == "created $path" || last == "exists $path")
-                    )
-                        Outcome.Ok(path)
+            val made = make(path) ?: return@withLock Outcome.Failed(Failure.StorageRefused())
+            if (made is Outcome.Ok && !available(server)) return@withLock stale()
+            made
+        }
+
+    /**
+     * Makes [path] a git project. A direct child of /root/projects is made by the app itself, never
+     * by `git init` in Linux: once AI Team is on, the sandbox denies the chmod `git init` needs
+     * (issue #111). Null for a path no script may name.
+     */
+    private suspend fun make(path: String): Outcome<String>? {
+        if (BuiltinNewProject.managedName(path) != null) {
+            return when (val made = linux.createProject(path)) {
+                is Outcome.Failed -> made
+                is Outcome.Ok ->
+                    if (made.value == "created" || made.value == "exists") Outcome.Ok(path)
                     else Outcome.Failed(Failure.Folder(FolderProblem.Denied))
-                }
             }
         }
+        val script = BuiltinScripts.createFolderScript(path) ?: return null
+        return when (val result = linux.run(script, timeoutSeconds = 45)) {
+            is Outcome.Failed -> result
+            is Outcome.Ok -> {
+                val last =
+                    result.value.output
+                        .lineSequence()
+                        .map(String::trim)
+                        .filter(String::isNotEmpty)
+                        .lastOrNull()
+                if (
+                    result.value.exitCode == 0 &&
+                        (last == "created $path" || last == "exists $path")
+                )
+                    Outcome.Ok(path)
+                else Outcome.Failed(Failure.Folder(FolderProblem.Denied))
+            }
+        }
+    }
 
     /** Checked inside the app's Linux, never by asking OpenCode, so a missing folder is not remembered as broken. */
     override suspend fun exists(server: ProjectServer, path: String): Boolean? =
@@ -115,27 +132,9 @@ class PhoneProjectCreation(
             if (!onPhone(server)) return@withLock stale()
             if (linux.presence() != LinuxPresence.Ready || !linux.serviceRunning("server"))
                 return@withLock Outcome.Failed(Failure.Folder(FolderProblem.NotInstalled))
-            val script =
-                BuiltinScripts.createFolderScript(path)
-                    ?: return@withLock Outcome.Failed(Failure.StorageRefused())
-            when (val result = linux.run(script, timeoutSeconds = 45)) {
-                is Outcome.Failed -> result
-                is Outcome.Ok -> {
-                    if (!available(server)) return@withLock stale()
-                    val last =
-                        result.value.output
-                            .lineSequence()
-                            .map(String::trim)
-                            .filter(String::isNotEmpty)
-                            .lastOrNull()
-                    if (
-                        result.value.exitCode == 0 &&
-                            (last == "created $path" || last == "exists $path")
-                    )
-                        Outcome.Ok(path)
-                    else Outcome.Failed(Failure.Folder(FolderProblem.Denied))
-                }
-            }
+            val made = make(path) ?: return@withLock Outcome.Failed(Failure.StorageRefused())
+            if (made is Outcome.Ok && !available(server)) return@withLock stale()
+            made
         }
 
     /** N-41: beside the server's most recent project (its parent folder); refused when it has none to go by. */

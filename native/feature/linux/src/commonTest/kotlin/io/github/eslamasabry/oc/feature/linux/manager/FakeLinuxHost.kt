@@ -32,6 +32,13 @@ class FakeLinuxHost(
         return answer(script)
     }
 
+    val projects = mutableListOf<String>()
+
+    override suspend fun createProject(path: String): Outcome<String> {
+        projects += path
+        return Outcome.Ok("created")
+    }
+
     override suspend fun setupRunning(): Boolean = setup
 
     override suspend fun serviceRunning(name: String): Boolean = name in running

@@ -162,8 +162,18 @@ public class BuiltinLinuxBridge(
     /** Starts the download and unpack; returns at once. Poll [status]. */
     public suspend fun installUbuntu(): Outcome<Unit> = invokeUnit("installUbuntu")
 
-    public suspend fun run(script: String, timeout: Duration = 2.minutes): Outcome<RunResult> =
-        runWith(mapOf("script" to script, "timeoutSeconds" to timeout.inWholeSeconds))
+    /**
+     * Runs [script] with `/bin/sh -c` inside Ubuntu. The script is a process argument there, so it must never hold a
+     * secret: pass one as [input], which reaches the script on stdin.
+     */
+    public suspend fun run(script: String, timeout: Duration = 2.minutes, input: String? = null): Outcome<RunResult> =
+        runWith(
+            buildMap {
+                put("script", script)
+                put("timeoutSeconds", timeout.inWholeSeconds)
+                if (input != null) put("stdin", input)
+            },
+        )
 
     /** Setup checks in the fixed oc view. Never use for credentials or sign-in. */
     public suspend fun runAgentSetupCheck(script: String, timeout: Duration = 2.minutes): Outcome<RunResult> =

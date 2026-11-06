@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupNotificationStopped
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupNotificationTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageDownloadingLinux
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageCompat
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageRetrying
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageStarting
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageUnpackingLinux
@@ -410,6 +411,7 @@ private class RunnerSetupHost(
                 "download" to getString(Res.string.phoneSetupStageDownloadingLinux),
                 "unpack" to getString(Res.string.phoneSetupStageUnpackingLinux),
                 "retry" to getString(Res.string.phoneSetupStageRetrying),
+                "compat" to getString(Res.string.phoneSetupStageCompat),
             )
         val starting = getString(Res.string.phoneSetupStageStarting)
         val words =

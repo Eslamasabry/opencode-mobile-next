@@ -17,7 +17,7 @@ class OpenCodeNativeInstallTest {
         val x64 = script.lines().single { it.trim().startsWith("x86_64|amd64)") }
         assertTrue(pins.arm64.url in arm && pins.arm64.sha256 in arm)
         assertTrue(pins.x64.url in x64 && pins.x64.sha256 in x64)
-        assertTrue(script.indexOf("oc_download \"\$oc_url\" \"\$oc_file\" \"\$oc_sha\"") < script.indexOf("tar -xzf"))
+        assertTrue(script.indexOf("oc_download \"\$oc_url\" \"\$oc_file\" \"\$oc_sha\"") < script.indexOf("oc_untar"))
         assertTrue(script.indexOf("oc_download") >= 0)
         assertNull(Regex("^[^#\\n]*\\bnpm\\s", RegexOption.MULTILINE).find(script), "no npm command at all")
         assertNull(Regex("curl[^\\n]*\\|\\s*(ba)?sh").find(script))

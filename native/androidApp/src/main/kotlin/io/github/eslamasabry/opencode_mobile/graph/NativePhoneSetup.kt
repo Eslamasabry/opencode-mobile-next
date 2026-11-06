@@ -276,6 +276,7 @@ class NativePhoneSetup(
                 stageDownloadingLinux = getString(Res.string.phoneSetupStageDownloadingLinux),
                 stageUnpackingLinux = getString(Res.string.phoneSetupStageUnpackingLinux),
                 stageRetrying = getString(Res.string.phoneSetupStageRetrying),
+                stageCompat = getString(Res.string.phoneSetupStageCompat),
                 addingTitle = { names -> adding.replace("{names}", names.joinToString(separator)) },
             )
         return SetupEngine(
@@ -652,7 +653,7 @@ oc_download "https://nodejs.org/dist/$node_version/node-$node_version-linux-$nod
 oc_stage 'Unpacking Node.js'
 rm -rf /opt/node.new
 mkdir -p /opt/node.new
-tar -xzf "$node_file" -C /opt/node.new --strip-components=1
+oc_untar "$node_file" /opt/node.new 1
 [ "$(/opt/node.new/bin/node --version)" = "$node_version" ]
 rm -rf /opt/node
 mv /opt/node.new /opt/node

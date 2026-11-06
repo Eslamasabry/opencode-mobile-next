@@ -200,6 +200,15 @@ class BuiltinLinuxBridgeTest {
     }
 
     @Test
+    fun `B-LINUX-022 run passes a secret as stdin input, never inside the script`() = runTest {
+        channel.answerValue(mapOf("exitCode" to 0, "output" to ""))
+        linux.run(BuiltinScripts.writePasswordScript(), input = "s3cret-pw")
+        val arguments = channel.calls.single().arguments!!
+        assertEquals("s3cret-pw", arguments["stdin"])
+        assertFalse((arguments["script"] as String).contains("s3cret-pw"))
+    }
+
+    @Test
     fun `B-LINUX-022 every other method speaks the contract`() = runTest {
         var toolsChanged = 0
         val bridge = BuiltinLinuxBridge(channel, supported = true, onSetupToolsChanged = { toolsChanged++ })

@@ -78,7 +78,7 @@ class ServerRestartBudgetTest {
             override suspend fun checkHistoryMove(): Outcome<Unit> = Unit.ok()
 
             override suspend fun writePassword(password: String): Outcome<Unit> =
-                bridge.run(BuiltinScripts.writePasswordScript(password)!!).map { }
+                bridge.run(BuiltinScripts.writePasswordScript(), input = password).map { }
 
             override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome<Unit> =
                 when (mode) {

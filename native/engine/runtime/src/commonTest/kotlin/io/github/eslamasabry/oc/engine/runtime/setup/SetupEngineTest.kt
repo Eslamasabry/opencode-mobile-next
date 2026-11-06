@@ -277,7 +277,7 @@ class SetupEngineTest {
             assertEquals("2.43.0", linux.spec("essentials").version)
             assertTrue(linux.spec("node").script!!.startsWith(FixtureRegistry.PRELUDE))
             assertTrue(linux.spec("node").script!!.contains("oc_download"))
-            assertEquals(mapOf("retry" to fixtureWords.stageRetrying), linux.spec("node").labels)
+            assertEquals(mapOf("retry" to fixtureWords.stageRetrying, "compat" to fixtureWords.stageCompat), linux.spec("node").labels)
             assertEquals(FixtureRegistry.PRELUDE + FixtureRegistry.openCodeInstall("opencode2"), linux.spec("opencode").script)
             assertTrue(linux.spec("start").step)
             assertEquals(

@@ -215,6 +215,7 @@ val fixtureWords = SetupWords(
     stageDownloadingLinux = "Downloading Linux base",
     stageUnpackingLinux = "Unpacking Linux base",
     stageRetrying = "Retrying",
+    stageCompat = "Retrying carefully",
     addingTitle = { names -> "Adding " + names.joinToString(" and ") },
 )
 

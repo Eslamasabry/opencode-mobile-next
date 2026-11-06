@@ -83,6 +83,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupNotificationTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupOpenCodeWhy
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageDownloadingLinux
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageCompat
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageRetrying
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageStarting
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageUnpackingLinux
@@ -188,6 +189,7 @@ class PhoneSetup(
                 stageDownloadingLinux = downloading,
                 stageUnpackingLinux = unpacking,
                 stageRetrying = getString(Res.string.phoneSetupStageRetrying),
+                stageCompat = getString(Res.string.phoneSetupStageCompat),
                 // Adding tools to an existing setup is not offered here (non-goal): the plain title stands.
                 addingTitle = { title },
             )
