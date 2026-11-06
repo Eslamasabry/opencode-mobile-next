@@ -148,13 +148,11 @@ public fun ChatsScreen(
     val showFab = state.phase == ChatsPhase.List && state.home.opening == null
     var menuOpen by remember { mutableStateOf(false) }
     // Looks pass (concept A): a hub's large title with icon actions; New conversation is the floating button, so
-    // the bar keeps Search and Settings (and Servers or Update only while they apply).
+    // the bar keeps Search and Settings in fixed positions; Servers stays in More.
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
-        if (state.home.opening != null)
-            add(KitLineAction(stringResource(Res.string.serversTitle), actions::openServers, icon = KitIcons.server))
-        if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
+        if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
     KitScreen(
