@@ -42,3 +42,7 @@ No textual conflicts. Retain current-step counts, gentle line transitions, acces
 ## 4. upg-voice
 
 One textual conflict: `SCREENS-UPGRADE.md`; retain both the new-chat and voice sections, giving voice its own heading. Automatic composer/voice merges reviewed for semantic conflicts: retain the upgrade in-field mic, stable hold position and dictation-without-send behavior, and retain N-05's + close callback and active conversation controls. `Actions` delegates to the same `Options` entry; that entry now uses the upgrade row design, preventing duplicate voice choices. Inline mic also installs the existing hold teaching tip. Old `startVoiceConversation` callers are removed together with the API. History/source, formatting and diff review only; no compilation or tests.
+
+## 5. upg-rows
+
+One conflict: `SCREENS-UPGRADE.md`; retain all new-chat, voice, rows and predictive-back notes under distinct headings. Source merges keep the agent mark/live dot/server metadata, archive capability gates, swipe/Undo and app-scope completion/failure restoration. N-15's Search/Settings/optional Update header order remains unchanged. New action methods retain defaults for existing callers. History/source and diff review only; no compilation or tests.

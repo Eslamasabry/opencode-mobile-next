@@ -7,10 +7,12 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.FeedDay
+import io.github.eslamasabry.oc.engine.agents.feed.OPENCODE_AGENT_ID
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -19,6 +21,7 @@ import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlin.time.Clock
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,6 +47,8 @@ public class ChatsViewModel(
     private val updates: UpdateDoor = NoUpdateDoor(),
     private val home: ChatsHomeExtras = NoChatsHomeExtras(),
     private val permissionAnswers: Set<HomePermissionAnswers> = emptySet(),
+    private val connections: ConversationServers = NoConversationServers(),
+    private val appScope: AppCoroutineScope? = null,
 ) : ViewModel(), ChatsActions {
     override fun openInbox(): Unit = nav.open(MonitorInboxRoute())
 
@@ -55,14 +60,43 @@ public class ChatsViewModel(
             emptySet<String>() to null
         )
 
+    /** Archive in flight: [hidden] rows are out of the list; [pending] is the one waiting out its undo window. */
+    private data class Archiving(
+        val hidden: Set<String> = emptySet(),
+        val pending: PendingArchive? = null,
+        val offer: Int = 0,
+        val failure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    )
+
+    private data class PendingArchive(val key: String, val ref: ConversationRef, val title: RowTitle)
+
+    private val archiving = MutableStateFlow(Archiving())
+
     public val state: StateFlow<ChatsUi> =
         combine(
-                combine(feed.snapshot, briefs.brief, filters, updates.ready) {
+                combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
                     snapshot,
                     brief,
                     chosen,
-                    update ->
-                    build(snapshot, brief, chosen).copy(updateReady = update)
+                    update,
+                    archived ->
+                    val shown =
+                        if (archived.hidden.isEmpty()) snapshot
+                        else
+                            snapshot.copy(
+                                items =
+                                    snapshot.items
+                                        .filter { it.identity !in archived.hidden }
+                                        .toImmutableList()
+                            )
+                    build(shown, brief, chosen)
+                        .copy(
+                            updateReady = update,
+                            archivable = archivable(shown),
+                            archiveUndo =
+                                archived.pending?.let { ArchiveUndoUi(archived.offer, it.title) },
+                            archiveFailure = archived.failure,
+                        )
                 },
                 home.snapshot,
                 sheet,
@@ -83,6 +117,18 @@ public class ChatsViewModel(
                 build(feed.snapshot.value, briefs.brief.value, filters.value)
                     .copy(updateReady = updates.ready.value, home = home.snapshot.value),
             )
+
+    /** Rows the person can archive: OpenCode conversations on a connection whose server offers it. */
+    private fun archivable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        val capable =
+            connections.servers.value
+                .filter { it.operations != null && it.gateway.capabilities.value.sessionArchive }
+                .mapTo(hashSetOf()) { it.profile }
+        return snapshot.items
+            .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in capable }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
 
     private fun build(snapshot: ChatFeedSnapshot, brief: ReturnBrief, chosen: ChatsFilters) =
         ChatsState.build(
@@ -115,6 +161,58 @@ public class ChatsViewModel(
         sheet.value = null
         feed.prefetch(ref)
         nav.openChat(ref)
+    }
+
+    override fun archive(row: ConversationRowUi) {
+        if (row.key !in state.value.archivable) return
+        // One offer at a time: a new archive sends the earlier one first.
+        commitArchive()
+        val title = row.title
+        archiving.update {
+            it.copy(
+                hidden = it.hidden + row.key,
+                pending = PendingArchive(row.key, row.ref, title),
+                offer = it.offer + 1,
+                failure = null,
+            )
+        }
+    }
+
+    override fun undoArchive() {
+        archiving.update { cur ->
+            val back = cur.pending ?: return@update cur
+            cur.copy(hidden = cur.hidden - back.key, pending = null)
+        }
+    }
+
+    override fun commitArchive() {
+        val job = archiving.value.pending ?: return
+        archiving.update { it.copy(pending = null) }
+        // The app scope, so leaving the page inside the window still sends what the person archived.
+        (appScope ?: viewModelScope).launch {
+            val ops =
+                connections.servers.value.firstOrNull { it.profile == job.ref.profileId }?.operations
+            val done: io.github.eslamasabry.oc.core.common.Outcome<Unit> =
+                ops?.archiveSession(job.ref.sessionId)
+                    ?: io.github.eslamasabry.oc.core.domain.unavailable("sessionArchive")
+            when (done) {
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> feed.refresh()
+                // A refusal (or a server that went away) brings the row back with its reason.
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                    archiving.update {
+                        it.copy(hidden = it.hidden - job.key, failure = done.failure)
+                    }
+            }
+        }
+    }
+
+    override fun dismissArchiveFailure() {
+        archiving.update { it.copy(failure = null) }
+    }
+
+    override fun onCleared() {
+        commitArchive()
+        super.onCleared()
     }
 
     override fun newConversation() {

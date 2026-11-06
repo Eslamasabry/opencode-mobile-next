@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -64,7 +65,15 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
+import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedItem
+import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
+import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
+import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
+import io.github.eslamasabry.oc.ui.words.res.chatsRowActions
+import io.github.eslamasabry.oc.ui.words.res.chatsRowArchived
+import io.github.eslamasabry.oc.ui.words.res.p12ArchiveFailed
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRowWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
@@ -194,6 +203,13 @@ public fun ChatsScreen(
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions, state) } }
+            if (state.archiveFailure != null)
+                item(key = "archive-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.p12ArchiveFailed),
+                        failure = state.archiveFailure,
+                    )
+                }
             if (state.answerFailure != null)
                 item(key = "answer-failure") {
                     io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -266,12 +282,23 @@ public fun ChatsScreen(
             }
 
         }
-        if (showFab) {
-            KitFab(
-                label = stringResource(Res.string.chatsHomeNewShort),
-                icon = KitIcons.add,
-                onClick = actions::newConversation,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(Space.S4.dp),
+        // The Undo bar sits at the bottom edge; the New button rides above it while it shows.
+        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
+            if (showFab) {
+                KitFab(
+                    label = stringResource(Res.string.chatsHomeNewShort),
+                    icon = KitIcons.add,
+                    onClick = actions::newConversation,
+                    modifier = Modifier.padding(Space.S4.dp),
+                )
+            }
+            val undo = state.archiveUndo
+            val message = undo?.let { stringResource(Res.string.chatsRowArchived, rowTitleText(it.title)) }
+            KitUndoBar(
+                offer = if (undo != null && message != null) KitUndoOffer("archive-${undo.id}", message) else null,
+                onUndo = actions::undoArchive,
+                onTimeout = actions::commitArchive,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
       }
@@ -325,13 +352,17 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
 }
 
 @Composable
+private fun rowTitleText(t: RowTitle): String =
+    when (t) {
+        is RowTitle.Text -> t.text
+        RowTitle.New,
+        RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
+    }
+
+@Composable
 private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null) {
-    val title =
-        when (val t = row.title) {
-            is RowTitle.Text -> t.text
-            RowTitle.New,
-            RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
-        }
+    val title = rowTitleText(row.title)
+    val canArchive = state != null && row.key in state.archivable
     val status =
         when (row.status) {
             RowStatus.NeedsYou -> stringResource(Res.string.chatsHomeNeedsYou)
@@ -350,9 +381,18 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         }
     // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2). Looks pass: the
     // state leads the supporting line in its colour, the time sits in its own column.
+    val archiveWord = stringResource(Res.string.sessionMenuArchive)
+    var menuOpen by remember(row.key) { mutableStateOf(false) }
+    val needsAttention = row.status == RowStatus.NeedsYou || row.status == RowStatus.Running
+    val feedItem: @Composable () -> Unit = {
     KitFeedItem(
         title = title,
         project = row.project,
+        agent = KitFeedAgent(row.agentMark, row.agentName ?: title),
+        server = row.server,
+        live = needsAttention,
+        onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
+        onLongClickLabel = stringResource(Res.string.chatsRowActions),
         state = KitRowState(status?.takeUnless { signal && row.running != null }, tone),
         time = row.updatedAtMs?.takeIf { state != null && state.nowMs > 0 }?.let { kitRelativeAge(it, state!!.nowMs) }
             ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) },
@@ -360,6 +400,20 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
         growKey = row.ref,
         onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
     )
+    }
+    KitMenu(
+        expanded = menuOpen,
+        items = buildList {
+            if (row.canOpen) add(KitMenuItem(stringResource(Res.string.kitRequestOpen), { menuOpen = false; actions.openConversation(row.ref) }, icon = KitIcons.chat))
+            if (canArchive) add(KitMenuItem(archiveWord, { menuOpen = false; actions.archive(row) }, icon = KitIcons.archive))
+        },
+        onDismissRequest = { menuOpen = false },
+        title = title,
+    ) {
+        // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action
+        // are the same act, so the gesture is never the only way.
+        if (canArchive) KitSwipeRow(archiveWord, { actions.archive(row) }) { feedItem() } else feedItem()
+    }
 
     if (!signal && row.permission != null) {
         val permission = row.permission
