@@ -179,7 +179,12 @@ HOOKS: dict[str, Hook] = {
     "device-http": Hook("Forward a device port and make one HTTP request from the host: {port, path, method}; "
                         "returns {status, disposition, bytes}", host="device_http"),
     "install-native": Hook("adb install -r the native APK given to run.py with --native-apk (never uninstall, "
-                           "never -d); returns {installed: bool}", host="install_native"),
+                           "never -d); with --state-dir first saves --save-seed-snapshot and writes before.json "
+                           "(device_state); returns {installed: bool}", host="install_native"),
+    "upgrade-capture": Hook("Write the app's OS-held state (grants, channels, shortcuts, widgets, tiles, alarms, "
+                            "rootfs inode count, voice files) to --state-dir/{phase}.json: "
+                            "{phase: after-migration|after-assert}; returns {captured: bool}", root=True,
+                            host="upgrade_capture"),
     "fill-disk": Hook("Fill /data with a file until {leave_mb} MB are free; removed at cleanup", host="fill_disk"),
     "unfill-disk": Hook("Remove the fill file", host="unfill_disk"),
     "push-media": Hook("Push the fixture device files (photos, data.xlsx, report.docx, notes.txt, name-only stub) to "

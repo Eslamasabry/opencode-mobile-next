@@ -38,7 +38,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
     __package__ = "runner"
 
-from . import catalog, gen_strings, hooks, lint_flows  # noqa: E402
+from . import catalog, device_state, gen_strings, hooks, lint_flows  # noqa: E402
 
 HERE = pathlib.Path(__file__).resolve().parent
 E2E = HERE.parent
@@ -199,8 +199,28 @@ class HookContext:
         apk = self.args.native_apk
         if not apk:
             raise hooks.HookError("run.py was not given --native-apk")
+        state_dir = getattr(self.args, "state_dir", None)
+        if state_dir:
+            # E00-S09: the seeded Flutter state is saved (once) and read before the native APK goes over it.
+            snapshot = getattr(self.args, "save_seed_snapshot", None)
+            if snapshot:
+                self.adb(["emu", "avd", "snapshot", "save", snapshot], timeout=600)
+            self.root()
+            self.adb(["shell", "am", "force-stop", self.app_id])
+            write_state(pathlib.Path(state_dir) / "before.json", device_state.capture(self.adb, self.app_id))
         install_apk(self.adb, apk, self.args.expect_signer)
         return {"installed": True}
+
+    def h_upgrade_capture(self, args):
+        phase = args.get("phase")
+        if phase not in UPGRADE_PHASES:
+            raise hooks.HookError("phase not allowed")
+        state_dir = getattr(self.args, "state_dir", None)
+        if not state_dir:
+            return {"captured": False}
+        self.root()
+        write_state(pathlib.Path(state_dir) / f"{phase}.json", device_state.capture(self.adb, self.app_id))
+        return {"captured": True}
 
     def h_fill_disk(self, args):
         leave = args.get("leave_mb")
@@ -264,6 +284,14 @@ class HookContext:
         if self.clock_moved:
             with contextlib.suppress(Exception):
                 self.adb(["shell", "settings", "put", "global", "auto_time", "1"])
+
+
+UPGRADE_PHASES = ("after-migration", "after-assert")
+
+
+def write_state(path: pathlib.Path, state: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, indent=1, sort_keys=True), encoding="utf-8")
 
 
 def start_hook_server(ctx: HookContext, log: list) -> tuple[http.server.HTTPServer, str]:
@@ -344,6 +372,23 @@ def preflight(args) -> None:
 @contextlib.contextmanager
 def emulator_lock(path: str):
     p = pathlib.Path(path)
+    inherited = os.environ.get("OC_EMULATOR_LOCK_FD")
+    if inherited:
+        # E00-S09: upgrade.py holds the lock for the whole journey and hands its descriptor down. Accept it only
+        # when it is that same lock file and the lock is really held on it.
+        try:
+            fd = int(inherited)
+            st, mine = os.fstat(fd), os.stat(p)
+        except (ValueError, OSError):
+            raise Refused("OC_EMULATOR_LOCK_FD is not an open descriptor of the lock file")
+        if (st.st_dev, st.st_ino) != (mine.st_dev, mine.st_ino):
+            raise Refused("OC_EMULATOR_LOCK_FD names a different file than --lock")
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise Refused(f"another run holds {p}")
+        yield
+        return
     if not p.parent.is_dir():
         raise Refused(f"lock folder {p.parent} is missing; pass --lock")
     fh = open(p, "a+")
@@ -484,6 +529,12 @@ def parse_args(argv=None):
     ap.add_argument("--skip-resource-checks", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="print what would run; touch no device")
     ap.add_argument("--check-syntax", action="store_true", help="lint + maestro check-syntax every file; no device")
+    up = ap.add_argument_group("upgrade (E2E-39, driven by upgrade.py)")
+    up.add_argument("--state-dir", help="write before.json / after-*.json device state here (install-native and "
+                                       "upgrade-capture hooks)")
+    up.add_argument("--save-seed-snapshot", help="save this AVD snapshot right before the native APK is installed")
+    up.add_argument("--seeded", action="store_true", help="the Flutter app is already seeded (snapshot restored): "
+                                                        "the flow skips Part A")
     return ap.parse_args(argv)
 
 
@@ -534,6 +585,7 @@ def main(argv=None) -> int:
             hook_log: list = []
             server, token = start_hook_server(ctx, hook_log)
             env = {"APP": args.app, "APP_ID": app_id, "LANG_UNDER_TEST": args.lang,
+                   "SEEDED": "true" if args.seeded else "false",
                    "HOOK_PORT": str(server.server_address[1]), "HOOK_TOKEN": token,
                    "FX_CTL": "http://127.0.0.1:8898", **fx_env}
             secrets.append(token)

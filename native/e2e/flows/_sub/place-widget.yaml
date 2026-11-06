@@ -1,0 +1,28 @@
+# Put the app's Conversations widget on the launcher home screen (Pixel launcher on API 37: touch and hold the home
+# screen > Widgets > the app > tap the widget > "Add to home screen"). Every step is optional so a different launcher
+# does not stop the seed; the upgrade gate reads `dumpsys appwidget` and fails its widget check if nothing was placed.
+appId: ${APP_ID}
+---
+- pressKey: Home
+- longPressOn:
+    point: "50%,40%"
+    optional: true
+- tapOn:
+    text: "Widgets"  # literal-ok: the launcher's own menu item, not app copy
+    optional: true
+- scrollUntilVisible:
+    element:
+      text: ${output.s.x_app_label}
+    optional: true
+- tapOn:
+    text: ${output.s.x_app_label}
+    optional: true
+- tapOn:
+    text: ${output.s.x_widget_conversations_title}
+    optional: true
+# confirm: the launcher's add button wording on the PC AVD image.
+- tapOn:
+    text: "Add to home screen"  # literal-ok: the launcher's own button, not app copy
+    optional: true
+# confirm: whether the app's widget configure screen opens here and which button keeps its defaults.
+- pressKey: Home
