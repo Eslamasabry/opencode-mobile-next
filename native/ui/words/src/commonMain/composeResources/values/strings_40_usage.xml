@@ -32,7 +32,7 @@
     <string name="m40PlansMonth">This month</string>
     <string name="m40PlansLimit">Limit</string>
     <string name="m40PlansTools">Tools</string>
-    <string name="m40PlansLeft">%1$d%% left</string>
+    <string name="m40PlansLeft">%1$d% left</string>
     <string name="m40PlansResetNow">resets now</string>
     <string name="m40PlansResetMinutes">resets in %1$d min</string>
     <string name="m40PlansResetHours">resets in %1$d h</string>
@@ -42,7 +42,7 @@
     </plurals>
     <string name="m40PlansResetSince">It has reset since these numbers were read.</string>
     <string name="m40PlansPlan">Plan: %1$s</string>
-    <string name="m40PlansAlertAt">Alert at %1$d%% used</string>
+    <string name="m40PlansAlertAt">Alert at %1$d% used</string>
     <string name="m40PlansOfflineShort">offline</string>
     <string name="m40PlansExpiredShort">sign-in ran out</string>
     <string name="m40PlansNotSignedInShort">not signed in</string>
