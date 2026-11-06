@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.feature.projects.presentation.ChatTitle
@@ -98,7 +102,10 @@ public fun ProjectPageScreen(
         width = KitScreenWidth.Reading,
     ) {
         IsolatedTaskSheet(state, actions)
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S4.dp),
+        ) {
             if (state.storageBlock != SharedStorageBlock.None) {
                 item(key = "shared-storage-access") { SharedStorageNotice(state, actions) }
                 return@LazyColumn
@@ -122,13 +129,17 @@ public fun ProjectPageScreen(
                 }
                 return@LazyColumn
             }
+            // N-50: the page's one act on the gutter, full width; the button already says where it starts.
             item(key = "new") {
-                KitButton(
-                    label = stringResource(Res.string.p12NewHere),
-                    onClick = actions::newConversationHere,
-                    role = KitButtonRole.Primary,
-                    working = state.creating,
-                )
+                Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                    KitButton(
+                        label = stringResource(Res.string.p12NewHere),
+                        onClick = actions::newConversationHere,
+                        role = KitButtonRole.Primary,
+                        working = state.creating,
+                        fullWidth = true,
+                    )
+                }
             }
             if (state.canStartIsolated)
                 item(key = "isolated-task") {
@@ -139,10 +150,12 @@ public fun ProjectPageScreen(
                         onClick = actions::startIsolatedTask,
                     )
                 }
-            if (state.canStartIsolated)
+            // N-50: the project itself is not one of its separate copies; the group shows only real copies.
+            val copies = state.copies.filter { it.directory.trimEnd('/') != state.directory.trimEnd('/') }
+            if (state.canStartIsolated && (copies.isNotEmpty() || state.copiesFailure != null))
                 item(key = "copies") {
                     KitRowGroup(label = stringResource(Res.string.isolatedTaskCopies)) {
-                        state.copies.forEach { copy ->
+                        copies.forEach { copy ->
                             KitRow(
                                 title = copy.name,
                                 supporting = copy.branch,
@@ -156,12 +169,6 @@ public fun ProjectPageScreen(
                                 failure = it,
                             )
                         }
-                        KitButton(
-                            stringResource(Res.string.isolatedTaskRefreshCopies),
-                            actions::refreshCopies,
-                            role = KitButtonRole.Tertiary,
-                            working = state.copiesLoading,
-                        )
                     }
                 }
             state.devServerPort?.let { port ->
@@ -180,11 +187,13 @@ public fun ProjectPageScreen(
                         onClick = onTerminal,
                     )
                 }
+            // N-50: Development services once, with what it holds (the Ready list's own row is gone).
             item(key = "development-services") {
                 KitRow(
-                    title = stringResource(Res.string.linuxSvcTitle),
+                    title = stringResource(Res.string.servicesTitle),
+                    supporting = stringResource(Res.string.servicesSubtitle),
                     trailing = KitRowTrailing.Chevron,
-                    onClick = actions::developmentServices,
+                    onClick = onDevServices ?: actions::developmentServices,
                 )
             }
             if (state.workspace.available) {
@@ -198,12 +207,6 @@ public fun ProjectPageScreen(
                         onClick = actions::openWorkspace,
                     )
                 }
-            }
-            item(key = "new-body") {
-                KitText(
-                    stringResource(Res.string.p12NewHereBody, state.name),
-                    KitTextRole.Supporting,
-                )
             }
             state.createFailure?.let { failure ->
                 item(key = "create-failed") {
@@ -234,19 +237,6 @@ public fun ProjectPageScreen(
                     }
                 ProjectPagePhase.NoServer -> Unit
                 ProjectPagePhase.Ready -> {
-                    // BUILD-RUNTIME-A: Development services of this folder (Flutter project hub).
-                    if (onDevServices != null) {
-                        item(key = "services") {
-                            KitRowGroup {
-                                KitRow(
-                                    title = stringResource(Res.string.servicesTitle),
-                                    supporting = stringResource(Res.string.servicesSubtitle),
-                                    trailing = KitRowTrailing.Chevron,
-                                    onClick = onDevServices,
-                                )
-                            }
-                        }
-                    }
                     item(key = "here") {
                         KitRowGroup(label = stringResource(Res.string.p12ProjectConversations)) {
                             if (state.conversations.isEmpty()) {

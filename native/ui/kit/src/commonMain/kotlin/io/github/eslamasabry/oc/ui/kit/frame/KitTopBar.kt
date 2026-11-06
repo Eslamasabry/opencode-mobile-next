@@ -299,7 +299,15 @@ public fun KitTopBar(
             val lead = (if (back) tokens.minTarget + Space.S1 else 0).dp + if (scope != null) Space.S1.dp else 0.dp
             // The line's words keep their 48 dp targets, but the targets overlap the bar's empty edges by 8 dp so the
             // line reads as the title's second line (Flutter: "my-app · master" right under the title).
-            Box(Modifier.fillMaxWidth().padding(start = lead).tuckedTarget(Space.S2.dp)) { under() }
+            // N-50: only the scope line has targets to tuck; a plain subtitle takes its own room, so the page's first
+            // part never sits on it.
+            Box(
+                Modifier.fillMaxWidth()
+                    .padding(start = lead)
+                    .then(if (scope != null) Modifier.tuckedTarget(Space.S2.dp) else Modifier)
+            ) {
+                under()
+            }
         }
     }
 }
