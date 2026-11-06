@@ -514,7 +514,8 @@ private fun ReceiptCheckLine(localId: Long, check: ReceiptCheckUi?, onCheck: (()
     // One notice under the bubble, with Check again as its real action (owner 2026-11-06: the same problem was
     // said twice, and "Check again" read as a heading). The screen's status line leaves this to the bubble.
     val checkAgain = stringResource(Res.string.chatReceiptCheckAgain)
-    Column(Modifier.testTag("chat-receipt-$localId")) {
+    // On the reply's own 16 dp edge, never against the screen's.
+    Column(Modifier.padding(horizontal = Space.S4.dp).testTag("chat-receipt-$localId")) {
         KitNotice(
             message = words,
             tone = StatusTone.Attention,

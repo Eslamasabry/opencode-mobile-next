@@ -39,6 +39,8 @@ public fun ChatInboxSlot(
         }
     }
     val title = stringResource(Res.string.nativePendingTitle)
+    // N-48: an action waiting for another to finish says why (a disabled button always does, B-KIT-011).
+    val wait = stringResource(Res.string.serversWorking)
     // N-48: the row and the answer being confirmed (true = Send again, false = Discard).
     var asking by remember { mutableStateOf<Pair<ChatInboxRow, Boolean>?>(null) }
     KitSheetHost {
@@ -65,6 +67,7 @@ public fun ChatInboxSlot(
                                         stringResource(Res.string.nativePendingEdit),
                                         { actions.cancel(row) },
                                         !state.busy && !row.sending,
+                                        wait,
                                     )
                                 )
                             if (!row.local && state.canSteer && row.delivery != InboxDelivery.Steer)
@@ -73,6 +76,7 @@ public fun ChatInboxSlot(
                                         stringResource(Res.string.nativePendingSteer),
                                         { actions.steer(row) },
                                         !state.busy,
+                                        wait,
                                     )
                                 )
                             if (row.local && !row.dispatched)
@@ -81,6 +85,7 @@ public fun ChatInboxSlot(
                                         stringResource(Res.string.nativePendingEdit),
                                         { actions.editLocal(row) },
                                         !state.busy && !row.sending,
+                                        wait,
                                     )
                                 )
                             // N-48: a send that may already have arrived is never a dead end: Send again (warned
@@ -91,6 +96,7 @@ public fun ChatInboxSlot(
                                         stringResource(Res.string.queuedResendConfirm),
                                         { asking = row to true },
                                         !state.busy && !row.sending,
+                                        wait,
                                     )
                                 )
                                 add(
@@ -98,6 +104,7 @@ public fun ChatInboxSlot(
                                         stringResource(Res.string.nativePendingDiscard),
                                         { asking = row to false },
                                         !state.busy && !row.sending,
+                                        wait,
                                     )
                                 )
                                 add(
@@ -105,6 +112,7 @@ public fun ChatInboxSlot(
                                         stringResource(Res.string.nativePendingCheck),
                                         { actions.check(row) },
                                         !state.busy && !row.sending,
+                                        wait,
                                     )
                                 )
                             }

@@ -81,6 +81,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -223,28 +224,24 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     ) {
                         NewConversationStarters(state, actions)
                     }
+                    // The form's notices and ways forward keep the gutter like the field above them.
+                    val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
                     if (state.deliveryUnconfirmed) {
-                        // N-48: one notice with its way forward: the conversation (where it can be sent again) or
-                        // Discard, which opens this form again.
-                        KitNotice(
-                            message = stringResource(Res.string.p12NewDeliveryUnconfirmed),
-                            actions =
-                                listOfNotNull(
-                                    state.reviewConversation?.let {
-                                        KitLineAction(
-                                            stringResource(Res.string.p12NewOpenCreated),
-                                            actions::openCreatedConversation,
-                                        )
-                                    },
-                                    KitLineAction(
-                                        stringResource(Res.string.nativePendingDiscard),
-                                        actions::discardUnconfirmed,
-                                    ),
-                                ),
+                        // N-48: the field already says it once (its own reason); under it only the ways forward: the
+                        // conversation (where it can be sent again) and Discard, which opens this form again.
+                        val open =
+                            state.reviewConversation?.let {
+                                KitAction(stringResource(Res.string.p12NewOpenCreated), actions::openCreatedConversation)
+                            }
+                        val discard = KitAction(stringResource(Res.string.nativePendingDiscard), actions::discardUnconfirmed)
+                        KitActionBlock(
+                            inset,
+                            secondary = open ?: discard,
+                            tertiary = if (open != null) listOf(discard) else emptyList(),
                         )
                     }
-                    if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed))
-                    if (state.repairing) KitNotice(stringResource(Res.string.gitRepairLooking))
+                    if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed), inset)
+                    if (state.repairing) KitNotice(stringResource(Res.string.gitRepairLooking), inset)
                     state.repair?.let { result ->
                         KitNotice(
                             stringResource(
@@ -271,8 +268,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 role = KitButtonRole.Tertiary,
                             )
                     }
-                    if (state.failure != null) {
+                    // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
+                    if (state.failure != null && !state.deliveryUnconfirmed) {
                         KitErrorNotice(
+                            modifier = inset,
                             message =
                                 stringResource(
                                     if (state.creationUnconfirmed)
@@ -397,7 +396,8 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                     val chosen = project.directory == state.directory
                     KitRow(
                         title = project.name,
-                        supporting = project.directory,
+                        // The end of the path tells same-named projects apart; it is never cut mid-name.
+                        supporting = io.github.eslamasabry.oc.ui.kit.text.kitPathTail(project.directory),
                         leading = KitRowLeading.Glyph(KitIcons.folderOpen, tile = true, current = chosen),
                         trailing = if (chosen) KitRowTrailing.Check else KitRowTrailing.None,
                         selected = chosen,
@@ -572,7 +572,8 @@ private fun NewConversationModelStep(state: NewConversationUi, actions: NewConve
     var query by remember { mutableStateOf("") }
     if (named.size >= NEW_CONVERSATION_MODEL_SEARCH_FROM)
         KitSearchField(
-            label = stringResource(Res.string.upgNewChatModelsSearch),
+            // N-51: the chat's model sheet's own words.
+            label = stringResource(Res.string.chatModelsSearch),
             onSearch = { query = it },
             state = search,
             modifier = Modifier.fillMaxWidth(),
@@ -719,7 +720,7 @@ internal fun NewConversationModelChoices(
         .groupBy { it.providerName ?: it.model.providerId }
         .forEach { (provider, group) ->
             KitRowGroup(label = provider, section = true) {
-                group.forEach { model ->
+                group.sortedBy { it.name.lowercase() }.forEach { model ->
                     KitChoiceRow(
                         title = model.name,
                         supporting = model.runtime?.takeIf { it != provider },
