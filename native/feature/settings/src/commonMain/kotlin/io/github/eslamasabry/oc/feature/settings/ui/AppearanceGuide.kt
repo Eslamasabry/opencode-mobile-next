@@ -108,12 +108,15 @@ internal fun AppearanceGuideNext(ui: AppearanceUi, actions: SettingsActions) {
                 )
             record.seen.isEmpty() ->
                 stringResource(Res.string.appearanceGuideCountIntro, ui.questions.size)
-            else ->
+            else -> {
+                // The overview lists groups, so it counts groups: one is seen when all its questions are.
+                val groups = ui.questions.groupBy { it.group }
                 stringResource(
                     Res.string.appearanceGuideCountSeen,
-                    ui.questions.count { it in record.seen },
-                    ui.questions.size,
+                    groups.count { (_, asked) -> asked.all { it in record.seen } },
+                    groups.size,
                 )
+            }
         }
     val label =
         when {
