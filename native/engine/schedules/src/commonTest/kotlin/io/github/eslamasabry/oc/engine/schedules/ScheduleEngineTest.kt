@@ -80,6 +80,33 @@ class ScheduleEngineTest {
     }
 
     @Test
+    fun `B-AGENT-215 a prompt sent later is listed, waits for its time and is sent once then`() = runTest {
+        // E05-S02: Send later saves a once schedule half an hour ahead (fixture clock, UTC).
+        val due = T0 + 30 * MIN
+        val saved = h.saved(Recurrence.once(due))
+        val listed = h.engine.state(P).value.schedules.single()
+        assertEquals(saved.id, listed.id)
+        assertEquals(due, listed.nextRunAtMs)
+        val entry = h.armed().single()
+        assertEquals(due, entry.dueAtMs)
+        // An early wake-up sends nothing and keeps it armed.
+        h.clock.now = due - MIN
+        assertNull(h.engine.runOccurrence(entry, far))
+        assertTrue(h.gateway.prompts.isEmpty())
+        assertEquals(listOf(entry), h.armed())
+        // At its time it is sent, once, and nothing more is armed.
+        h.clock.now = due
+        assertEquals("ran", h.engine.runOccurrence(entry, far)!!.status)
+        assertEquals(1, h.gateway.prompts.size)
+        assertEquals(due, h.engine.store.history(P).single().scheduledAtMs)
+        assertTrue(h.armed().isEmpty())
+        assertNull(h.engine.state(P).value.schedules.single().nextRunAtMs)
+        h.clock.now = due + HOUR
+        assertNull(h.engine.runOccurrence(entry, far))
+        assertEquals(1, h.gateway.prompts.size)
+    }
+
+    @Test
     fun `B-AGENT-215 a duplicate trigger for a finished occurrence is never dispatched twice`() = runTest {
         h.saved()
         val entry = h.armed().first()
