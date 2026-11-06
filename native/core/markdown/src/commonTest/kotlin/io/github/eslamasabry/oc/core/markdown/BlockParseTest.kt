@@ -89,8 +89,7 @@ class BlockParseTest {
             listOf(
                 "LI 1. d0 first \"Collect the diagnostics.\"",
                 "LI 2. d0 \"Ask only for details needed to reproduce or understand\\nimpact.\"",
-                "LI 3. d0 \"Draft the issue.\"",
-                "C[sh] \"gh issue create\"",
+                "LI 3. d0 \"Draft the issue.\" {C[sh] \"gh issue create\"}",
             ),
             dump(blocks),
         )

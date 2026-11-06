@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.core.markdown
 
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * One block of an agent's Markdown, as the transcript list draws it (plan 09 §9.1). Blocks are values: a block that
@@ -33,22 +34,27 @@ public sealed interface Block {
     ) : Block
 
     /**
-     * Consecutive `>` lines, drawn with a visible rail in the secondary tone. Flutter draws a quote as one run of
-     * text (no nested blocks), so this holds [inlines], not child blocks (deviation from the plan sketch, see the
-     * S2-MD report).
+     * Consecutive `>` lines, drawn with a visible rail in the secondary tone. The lines with their `>` marks removed
+     * are parsed again as blocks, so a quote holds paragraphs, lists, headings, fences, tables and further quotes
+     * ([children]); a plain quote has one [Prose] child.
      */
     public data class Quote(
         override val key: String,
         override val start: Int,
         override val end: Int,
-        val inlines: Inlines,
+        val children: ImmutableList<Block>,
     ) : Block
 
     /**
-     * One item of a list. [number] is the ordered marker to draw (`null` for a bullet): the top level counts on
-     * from the list's first number, a nested run restarts at 1. [depth] is 0–4, normalised by the list's smallest
-     * indent step so 2- and 4-space nesting both land one level deeper. [firstInList] marks the item that sits on
-     * the list's own top edge (no item gap above it).
+     * One item of a list. [number] is the ordered marker to draw (`null` for a bullet): a list counts on from its
+     * first number, a nested list restarts at its own. [depth] is 0–[MAX_LIST_DEPTH]: a nested list's items follow
+     * their parent as siblings one level deeper, so a list is still a flat run of items. [firstInList] marks the
+     * item that sits on the top edge of its own list (no item gap above it).
+     *
+     * [inlines] is the item's first paragraph. Everything else that belongs to the item and is not a nested list
+     * item (a fenced block under a numbered step, a second paragraph, a quote, a table) is in [children]; blocks
+     * that follow a nested list inside the same item are kept in the last nested item's [children], so order holds.
+     * An item that holds nested items spans them ([end]).
      */
     public data class ListItem(
         override val key: String,
@@ -59,6 +65,7 @@ public sealed interface Block {
         val depth: Int,
         val firstInList: Boolean,
         val inlines: Inlines,
+        val children: ImmutableList<Block> = persistentListOf(),
     ) : Block
 
     /**
@@ -191,4 +198,13 @@ public data class BlockDelta(val stable: ImmutableList<Block>, val tail: Immutab
  * code, a table, pictures, an agent block or a rule shows no caret: it would make a line of its own.
  */
 public val Block.carriesCaret: Boolean
-    get() = this is Block.Prose || this is Block.Heading || this is Block.Quote || this is Block.ListItem
+    get() =
+        when (this) {
+            is Block.Prose, is Block.Heading -> true
+            is Block.Quote -> children.lastOrNull()?.carriesCaret == true
+            is Block.ListItem -> children.isEmpty() || children.last().carriesCaret
+            else -> false
+        }
+
+/** The deepest list nesting level a [Block.ListItem] reports; deeper lists are drawn at this level. */
+public const val MAX_LIST_DEPTH: Int = 6

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.core.markdown
 
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -17,6 +18,31 @@ internal interface ParseLines {
     fun start(i: Int): Int
 
     fun end(i: Int): Int
+
+    /** Whether line [i] is the last line of the whole text (it may still be arriving). */
+    fun isLast(i: Int): Boolean = i == size - 1
+}
+
+/**
+ * Lines [index] of [parent] with the first [cut] characters of each removed: a container's content (the text after a
+ * list marker or `>`), parsed again as blocks. Offsets stay absolute in the part's raw text.
+ */
+internal class SubLines(
+    private val parent: ParseLines,
+    private val index: IntArray,
+    private val cut: IntArray,
+) : ParseLines {
+    override val size: Int get() = index.size
+
+    override fun line(i: Int): String = parent.line(index[i]).drop(cut[i])
+
+    override fun rawLine(i: Int): String = parent.rawLine(index[i]).drop(cut[i])
+
+    override fun start(i: Int): Int = minOf(parent.start(index[i]) + cut[i], parent.end(index[i]))
+
+    override fun end(i: Int): Int = parent.end(index[i])
+
+    override fun isLast(i: Int): Boolean = parent.isLast(index[i])
 }
 
 /** What the parser remembers about an open fence, so a streaming fence can grow without a re-parse. */
@@ -57,7 +83,7 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
     private fun key(start: Int) = "$partId:$start"
 
     /** The last line may still be arriving: a picture half written on it is held back. */
-    private fun lineOf(i: Int): String = if (i == n - 1) PictureScanner.withoutUnfinished(src.line(i)) else src.line(i)
+    private fun lineOf(i: Int): String = if (src.isLast(i)) PictureScanner.withoutUnfinished(src.line(i)) else src.line(i)
 
     private fun flushParagraph() {
         if (paragraph.isEmpty()) return
@@ -130,26 +156,14 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
 
             if (line.trimStart().startsWith(">")) {
                 flushParagraph()
-                val first = i
-                val quote = ArrayList<String>()
-                while (i < n && src.line(i).trimStart().startsWith(">")) {
-                    quote += quoteMark.replaceFirst(src.line(i), "")
-                    i++
-                }
-                val start = src.start(first)
-                groups += Group(
-                    first,
-                    listOf(
-                        Block.Quote(key(start), start, src.end(i - 1), InlineParser.parse(quote.joinToString("\n"))),
-                    ),
-                )
+                i = quote(i)
                 continue
             }
 
             val marker = if (bullet.find(line) != null) bullet else if (ordered.find(line) != null) ordered else null
             if (marker != null) {
                 flushParagraph()
-                i = list(i, marker)
+                i = list(i, marker === ordered)
                 continue
             }
 
@@ -237,64 +251,120 @@ internal class BlockParser(private val partId: String, private val src: ParseLin
         return i
     }
 
-    private class Item(val indent: Int, val text: String, val first: Int, val last: Int)
+    /** [sub] (a container's content) parsed again as blocks. */
+    private fun nested(sub: ParseLines): List<Block> =
+        BlockParser(partId, sub).parse(0).flatMap { it.blocks }
 
-    private fun list(first: Int, marker: Regex): Int {
-        val isOrdered = marker === ordered
-        // CommonMark: an ordered list starts at its first item's number.
-        val startNumber = if (isOrdered) ordered.find(src.line(first))!!.groupValues[2].toInt() else 1
-        val items = ArrayList<Item>()
+    private fun quote(first: Int): Int {
+        val index = ArrayList<Int>()
+        val cut = ArrayList<Int>()
         var i = first
-        while (i < n) {
-            val m = marker.find(src.line(i)) ?: break
-            val indent = m.groupValues[1].length
-            var text = src.line(i).substring(m.range.last + 1)
-            val itemFirst = i
+        while (i < n && src.line(i).trimStart().startsWith(">")) {
+            index += i
+            cut += quoteMark.find(src.line(i))!!.value.length
             i++
-            // A wrapped item: the lines indented under it are its own words (CommonMark continuation).
-            while (i < n) {
-                val next = src.line(i)
-                if (next.isBlank() || bullet.find(next) != null || ordered.find(next) != null) break
-                if (fencePattern.find(next.trimStart()) != null) break
-                if (next.length - next.trimStart().length < maxOf(2, indent + 1)) break
-                text = text + "\n" + next.trim()
-                i++
-            }
-            items += Item(indent, text, itemFirst, i - 1)
         }
-        val levels = levels(items.map { it.indent })
-        val counters = ArrayList<Int>()
-        val blocks = ArrayList<Block>(items.size)
-        for ((index, item) in items.withIndex()) {
-            val level = levels[index]
-            while (counters.size > level + 1) counters.removeAt(counters.lastIndex)
-            while (counters.size < level + 1) counters += if (counters.isEmpty()) startNumber - 1 else 0
-            counters[level] = counters[level] + 1
-            val start = src.start(item.first)
-            blocks += Block.ListItem(
-                key = key(start),
-                start = start,
-                end = src.end(item.last),
-                ordered = isOrdered,
-                number = if (isOrdered) counters[level] else null,
-                depth = level,
-                firstInList = index == 0,
-                inlines = InlineParser.parse(item.text),
-            )
-        }
-        groups += Group(first, blocks)
+        val children = nested(SubLines(src, index.toIntArray(), cut.toIntArray()))
+        val start = src.start(first)
+        groups += Group(first, listOf(Block.Quote(key(start), start, src.end(i - 1), children.toImmutableList())))
         return i
     }
 
-    /** Nesting depth per item, normalised by the smallest indent step so 2- and 4-space nesting land one deeper. */
-    private fun levels(indents: List<Int>): List<Int> {
-        val base = indents.min()
-        var unit = 0
-        for (d in indents) {
-            val step = d - base
-            if (step > 0 && (unit == 0 || step < unit)) unit = step
+    private fun indentOf(line: String): Int = line.length - line.trimStart().length
+
+    /**
+     * One list: its items, then each item's content parsed again as blocks (a nested list comes back as items one
+     * level deeper, everything else becomes the item's children). A blank line does not end a list: the next
+     * marker of the same kind still belongs to it.
+     */
+    private fun list(first: Int, isOrdered: Boolean): Int {
+        val marker = if (isOrdered) ordered else bullet
+        // CommonMark: an ordered list starts at its first item's number.
+        val startNumber = if (isOrdered) ordered.find(src.line(first))!!.groupValues[2].toInt() else 1
+        val out = ArrayList<Block>()
+        var i = first
+        var count = 0
+        var listEnd = first
+        while (i < n) {
+            val m = marker.find(src.line(i)) ?: break
+            val itemIndent = m.groupValues[1].length
+            val content = m.range.last + 1
+            val index = arrayListOf(i)
+            val cut = arrayListOf(content)
+            var last = i
+            var j = i + 1
+            while (j < n) {
+                val line = src.line(j)
+                if (line.isBlank()) {
+                    j++
+                    continue
+                }
+                val indent = indentOf(line)
+                val isMarker = bullet.find(line) != null || ordered.find(line) != null
+                // Indented two or more past the marker: the item's own. One space past, as a wrapped line (not a
+                // marker, not a fence, no blank above): lazy continuation of its paragraph.
+                val inside =
+                    indent >= itemIndent + 2 ||
+                        (indent > itemIndent && !isMarker && last == j - 1 && fencePattern.find(line) == null)
+                if (!inside) break
+                for (blank in last + 1 until j) {
+                    index += blank
+                    cut += 0
+                }
+                index += j
+                cut += minOf(content, indent)
+                last = j
+                j++
+            }
+            val items = item(m, count == 0, startNumber + count, isOrdered, SubLines(src, index.toIntArray(), cut.toIntArray()), i, last)
+            out += items
+            count++
+            listEnd = last + 1
+            // The next marker of the same kind, past any blank lines, is the next item.
+            var k = listEnd
+            while (k < n && src.line(k).isBlank()) k++
+            if (k >= n) break
+            val next = src.line(k)
+            if (marker.find(next) == null || indentOf(next) >= itemIndent + 2) break
+            i = k
         }
-        return indents.map { if (unit == 0) 0 else ((it - base) / unit).coerceIn(0, 4) }
+        groups += Group(first, out)
+        return listEnd
+    }
+
+    private fun item(
+        m: MatchResult,
+        firstInList: Boolean,
+        number: Int,
+        isOrdered: Boolean,
+        sub: SubLines,
+        firstLine: Int,
+        lastLine: Int,
+    ): List<Block> {
+        val inner = nested(sub)
+        val head = inner.firstOrNull() as? Block.Prose
+        val start = src.start(firstLine)
+        val own =
+            Block.ListItem(
+                key = key(start),
+                start = start,
+                end = src.end(lastLine),
+                ordered = isOrdered,
+                number = if (isOrdered) number else null,
+                depth = 0,
+                firstInList = firstInList,
+                inlines = head?.inlines ?: Inlines("", persistentListOf()),
+            )
+        val emitted = arrayListOf<Block.ListItem>(own)
+        for (b in if (head != null) inner.drop(1) else inner) {
+            if (b is Block.ListItem) {
+                emitted += b.copy(depth = (b.depth + 1).coerceAtMost(MAX_LIST_DEPTH), firstInList = false)
+            } else {
+                val tail = emitted.last()
+                emitted[emitted.lastIndex] = tail.copy(children = (tail.children + b).toImmutableList())
+            }
+        }
+        return emitted
     }
 
     /** The picture-only lines from [first] (blank lines between them included); the line after them, or null. */

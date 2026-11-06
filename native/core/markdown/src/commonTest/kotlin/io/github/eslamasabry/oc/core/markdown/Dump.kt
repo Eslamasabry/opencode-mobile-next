@@ -10,10 +10,16 @@ internal fun dump(block: Block): String =
     when (block) {
         is Block.Prose -> "P ${q(block.inlines.text)}"
         is Block.Heading -> "H${block.level} ${q(block.inlines.text)}"
-        is Block.Quote -> "Q ${q(block.inlines.text)}"
+        is Block.Quote ->
+            if (block.children.size == 1 && block.children[0] is Block.Prose) {
+                "Q ${q((block.children[0] as Block.Prose).inlines.text)}"
+            } else {
+                "Q[" + block.children.joinToString(" ; ") { dump(it) } + "]"
+            }
         is Block.ListItem ->
             "LI ${if (block.ordered) "${block.number}." else "•"} d${block.depth}${if (block.firstInList) " first" else ""} " +
-                q(block.inlines.text)
+                q(block.inlines.text) +
+                if (block.children.isEmpty()) "" else " {" + block.children.joinToString(" ; ") { dump(it) } + "}"
         is Block.Code -> "C[${block.info ?: ""}]${if (block.open) " open" else ""} ${q(block.text)}"
         is Block.Table ->
             "T ${block.header.joinToString("|") { it.text }} / ${block.aligns.joinToString(",")} / " +
@@ -33,8 +39,8 @@ internal fun drawn(blocks: List<Block>): String =
         when (block) {
             is Block.Prose -> block.inlines.text
             is Block.Heading -> block.inlines.text
-            is Block.Quote -> block.inlines.text
-            is Block.ListItem -> block.inlines.text
+            is Block.Quote -> drawn(block.children)
+            is Block.ListItem -> (listOf(block.inlines.text) + block.children.map { drawn(listOf(it)) }).joinToString("\n")
             is Block.Code -> block.text
             is Block.Table -> (block.header + block.rows.flatten()).joinToString("\n") { it.text }
             is Block.PictureGroup -> block.pictures.joinToString("\n") { it.alt }

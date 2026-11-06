@@ -32,20 +32,31 @@ public object KitMdSource {
         when (b) {
             is KitMdBlock.Prose -> b.copy(key = key)
             is KitMdBlock.Heading -> b.copy(key = key)
-            is KitMdBlock.Quote -> b.copy(key = key, children = b.children.map { rekey(it, "$key:q") }.toImmutableList())
-            is KitMdBlock.ListItem -> b.copy(key = key)
+            is KitMdBlock.Quote -> b.copy(key = key, children = rekeyChildren(b.children, key))
+            is KitMdBlock.ListItem -> b.copy(key = key, children = rekeyChildren(b.children, key))
             is KitMdBlock.Code -> b.copy(key = key)
             is KitMdBlock.Table -> b.copy(key = key)
             is KitMdBlock.Rule -> b.copy(key = key)
             is KitMdBlock.Pictures -> b.copy(key = key)
         }
 
+    private fun rekeyChildren(children: ImmutableList<KitMdBlock>, key: String): ImmutableList<KitMdBlock> =
+        children.mapIndexed { i, child -> rekey(child, "$key:$i") }.toImmutableList()
+
     private fun toKit(b: Block): KitMdBlock? =
         when (b) {
             is Block.Prose -> KitMdBlock.Prose(b.key, inlines(b.inlines))
             is Block.Heading -> KitMdBlock.Heading(b.key, b.level, inlines(b.inlines))
-            is Block.Quote -> KitMdBlock.Quote(b.key, persistentListOf(KitMdBlock.Prose("${b.key}:q", inlines(b.inlines))))
-            is Block.ListItem -> KitMdBlock.ListItem(b.key, b.ordered, b.number, b.depth, inlines(b.inlines))
+            is Block.Quote -> KitMdBlock.Quote(b.key, b.children.mapNotNull(::toKit).toImmutableList())
+            is Block.ListItem ->
+                KitMdBlock.ListItem(
+                    b.key,
+                    b.ordered,
+                    b.number,
+                    b.depth,
+                    inlines(b.inlines),
+                    children = b.children.mapNotNull(::toKit).toImmutableList(),
+                )
             is Block.Code -> KitMdBlock.Code(b.key, b.info, b.text, b.open)
             is Block.Table ->
                 KitMdBlock.Table(

@@ -9,7 +9,8 @@ package io.github.eslamasabry.oc.core.markdown
 public object UnfinishedTail {
     private const val DOT = Dart.DOT
     private const val END = Dart.END
-    private val fence = Regex("""^ {0,3}(`{3,}|~{3,})($DOT*)$END""")
+    // A fence may sit inside a list item or a quote: any indent, and `>` marks before it.
+    private val fence = Regex("""^(?:[ \t]*>)*[ \t]*(`{3,}|~{3,})($DOT*)$END""")
     private val prefix = Regex("""^\s*(?:(?:#{1,6}|>|[-*+]|\d{1,9}[.)])\s+|>)*""")
     private val markChars = Regex("""[*_~`\[]""")
     private val wordBefore = Regex("""[A-Za-z0-9_\])]""")
