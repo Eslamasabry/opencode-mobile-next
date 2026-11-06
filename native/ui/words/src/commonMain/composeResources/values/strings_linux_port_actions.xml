@@ -4,6 +4,9 @@
     <string name="linuxPortCopiedAddress">Copy address</string>
     <string name="linuxPortOwnerStop">Stop %1$s</string>
     <string name="linuxPortOwnerQuestion">Stop %1$s?</string>
-    <string name="linuxPortOwnerStopBody">Stop the selected program and its helpers (%1$d processes). Each process must still match the identity shown. Nothing restarts it.</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="one">Stop the selected program and its helpers (1 process). Each process must still match the identity shown. Nothing restarts it.</item>
+        <item quantity="other">Stop the selected program and its helpers (%1$d processes). Each process must still match the identity shown. Nothing restarts it.</item>
+    </plurals>
     <string name="linuxPortOwnerResult">Ended: %1$d · forced: %2$d · still running: %3$d · identity changed and kept: %4$d</string>
 </resources>

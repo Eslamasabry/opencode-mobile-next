@@ -36,7 +36,14 @@
     <string name="m40PlansResetNow">يُعاد الآن</string>
     <string name="m40PlansResetMinutes">يُعاد بعد %1$d دقيقة</string>
     <string name="m40PlansResetHours">يُعاد بعد %1$d ساعة</string>
-    <string name="m40PlansResetDays">يُعاد بعد %1$d يوم</string>
+    <plurals name="m40PlansResetDays">
+        <item quantity="zero">يُعاد بعد %1$d أيام</item>
+        <item quantity="one">يُعاد بعد يوم واحد</item>
+        <item quantity="two">يُعاد بعد يومين</item>
+        <item quantity="few">يُعاد بعد %1$d أيام</item>
+        <item quantity="many">يُعاد بعد %1$d يومًا</item>
+        <item quantity="other">يُعاد بعد %1$d يوم</item>
+    </plurals>
     <string name="m40PlansResetSince">أُعيد ضبطه منذ قراءة هذه الأرقام.</string>
     <string name="m40PlansPlan">الخطة: %1$s</string>
     <string name="m40PlansAlertAt">تنبيه عند استخدام %1$d%%</string>

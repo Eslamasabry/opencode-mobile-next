@@ -85,6 +85,7 @@ import io.github.eslamasabry.oc.ui.words.res.termuxProcsMemoryMb
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsStopping
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import kotlin.math.roundToLong
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -212,8 +213,9 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                         consequences =
                             if (it.stopIdentities.size > 1)
                                 listOf(
-                                    stringResource(
-                                        Res.string.runningDetailHelpers,
+                                    pluralStringResource(
+                                        Res.plurals.runningDetailHelpers,
+                                        it.stopIdentities.size - 1,
                                         it.stopIdentities.size - 1,
                                     )
                                 )
@@ -305,7 +307,7 @@ private fun ProcessRow(
         listOfNotNull(
                 processFacts(row).takeIf { it.isNotEmpty() },
                 if (row.memberCount > 1)
-                    stringResource(Res.string.linuxProcessMembers, row.memberCount)
+                    pluralStringResource(Res.plurals.linuxProcessMembers, row.memberCount, row.memberCount)
                 else null,
                 if (row.heavy) stringResource(Res.string.linuxProcessHeavy) else null,
                 when (row.orphanReason) {

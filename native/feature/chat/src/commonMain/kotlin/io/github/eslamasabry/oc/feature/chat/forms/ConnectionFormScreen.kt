@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.kitchat.form.*
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -199,8 +200,10 @@ private fun problemWords(problem: FieldProblem): String =
         FieldProblem.NotAWholeNumber -> stringResource(Res.string.monitor40Integer)
         FieldProblem.NoMatch,
         FieldProblem.NotOffered -> stringResource(Res.string.monitor40NotOffered)
-        is FieldProblem.TooShort -> stringResource(Res.string.monitor40MinLength, problem.minLength)
-        is FieldProblem.TooLong -> stringResource(Res.string.monitor40MaxLength, problem.maxLength)
+        is FieldProblem.TooShort ->
+            pluralStringResource(Res.plurals.monitor40MinLength, problem.minLength, problem.minLength)
+        is FieldProblem.TooLong ->
+            pluralStringResource(Res.plurals.monitor40MaxLength, problem.maxLength, problem.maxLength)
         is FieldProblem.OutOfRange ->
             stringResource(
                 Res.string.monitor40Range,
@@ -208,9 +211,9 @@ private fun problemWords(problem: FieldProblem): String =
                 problem.max?.toString().orEmpty(),
             )
         is FieldProblem.TooFewItems ->
-            stringResource(Res.string.monitor40MinItems, problem.minItems)
+            pluralStringResource(Res.plurals.monitor40MinItems, problem.minItems, problem.minItems)
         is FieldProblem.TooManyItems ->
-            stringResource(Res.string.monitor40MaxItems, problem.maxItems)
+            pluralStringResource(Res.plurals.monitor40MaxItems, problem.maxItems, problem.maxItems)
     }
 
 /**

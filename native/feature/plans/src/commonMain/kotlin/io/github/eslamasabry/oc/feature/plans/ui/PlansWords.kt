@@ -14,6 +14,7 @@ import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** Resource-backed plan copy shared by the compact reading and its full details. */
@@ -139,7 +140,10 @@ public class PlansWords internal constructor() {
             minutes <= 0 -> stringResource(Res.string.m40PlansResetNow)
             minutes < 60 -> stringResource(Res.string.m40PlansResetMinutes, minutes)
             minutes < 48 * 60 -> stringResource(Res.string.m40PlansResetHours, minutes / 60)
-            else -> stringResource(Res.string.m40PlansResetDays, minutes / (24 * 60))
+            else ->
+                (minutes / (24 * 60)).toInt().let { days ->
+                    pluralStringResource(Res.plurals.m40PlansResetDays, days, days)
+                }
         }
 
     @Composable

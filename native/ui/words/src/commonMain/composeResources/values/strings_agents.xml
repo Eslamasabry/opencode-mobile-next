@@ -503,7 +503,10 @@
     <string name="agentDraftLoading">Reading the conversation</string>
     <string name="agentDraftFailed">The complete record could not be prepared. Check the connection and choose the conversation again.</string>
     <string name="agentDraftReview">Review the record</string>
-    <string name="agentDraftOmitted">%1$d older messages were left out to fit the record. The newest turn is kept whole.</string>
+    <plurals name="agentDraftOmitted">
+        <item quantity="one">1 older message was left out to fit the record. The newest turn is kept whole.</item>
+        <item quantity="other">%1$d older messages were left out to fit the record. The newest turn is kept whole.</item>
+    </plurals>
     <string name="agentDraftMasked">Credentials were masked. Check the record before sharing it.</string>
     <string name="agentDraftCopy">Copy reviewed record</string>
     <string name="agentDraftCopied">Record copied.</string>

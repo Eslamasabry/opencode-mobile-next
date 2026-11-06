@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -92,7 +93,12 @@ internal fun ServerSavedRows(
                 if ((facts?.queued ?: 0) > 0 && destination != null)
                     add(
                         KitMenuItem(
-                            stringResource(Res.string.rows40Move, facts!!.queued, destination.name),
+                            pluralStringResource(
+                                Res.plurals.rows40Move,
+                                facts!!.queued,
+                                facts.queued,
+                                destination.name,
+                            ),
                             { actions.moveQueued(server.id) },
                             enabled = enabled,
                         )

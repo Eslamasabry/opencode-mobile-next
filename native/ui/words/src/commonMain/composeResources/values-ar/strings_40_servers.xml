@@ -47,11 +47,32 @@
     <string name="editor40TailscaleOpen">فتح Tailscale</string>
     <string name="editor40TailscaleInstall">تنزيل Tailscale</string>
     <string name="editor40TailscaleRefresh">فحص Tailscale مجددًا</string>
-    <string name="rows40Waiting">%1$d تحتاج إليك</string>
+    <plurals name="rows40Waiting">
+        <item quantity="zero">%1$d تحتاج إليك</item>
+        <item quantity="one">واحدة تحتاج إليك</item>
+        <item quantity="two">اثنتان تحتاجان إليك</item>
+        <item quantity="few">%1$d تحتاج إليك</item>
+        <item quantity="many">%1$d تحتاج إليك</item>
+        <item quantity="other">%1$d تحتاج إليك</item>
+    </plurals>
     <string name="rows40Working">%1$d قيد العمل</string>
     <string name="rows40Secret">أدخل بيانات الدخول المحفوظة مجددًا</string>
-    <string name="rows40Queued">%1$d من الطلبات تنتظر</string>
-    <string name="rows40Move">نقل %1$d من الطلبات المنتظرة إلى %2$s</string>
+    <plurals name="rows40Queued">
+        <item quantity="zero">%1$d من الطلبات تنتظر</item>
+        <item quantity="one">طلب واحد ينتظر</item>
+        <item quantity="two">طلبان ينتظران</item>
+        <item quantity="few">%1$d طلبات تنتظر</item>
+        <item quantity="many">%1$d من الطلبات تنتظر</item>
+        <item quantity="other">%1$d من الطلبات تنتظر</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="zero">نقل %1$d من الطلبات المنتظرة إلى %2$s</item>
+        <item quantity="one">نقل طلب واحد منتظر إلى %2$s</item>
+        <item quantity="two">نقل طلبين منتظرين إلى %2$s</item>
+        <item quantity="few">نقل %1$d طلبات منتظرة إلى %2$s</item>
+        <item quantity="many">نقل %1$d من الطلبات المنتظرة إلى %2$s</item>
+        <item quantity="other">نقل %1$d من الطلبات المنتظرة إلى %2$s</item>
+    </plurals>
     <string name="rows40Schedules">الطلبات المجدولة</string>
     <string name="queue40Title">نقل الطلبات المنتظرة</string>
     <string name="queue40Loading">جارٍ قراءة الطلبات المنتظرة والمحادثات الوجهة…</string>
@@ -67,20 +88,69 @@
     <string name="queue40Destination">المحادثة الوجهة</string>
     <string name="queue40NewConversation">بدء محادثة جديدة</string>
     <string name="queue40Untitled">محادثة بلا عنوان</string>
-    <string name="queue40Move">نقل %1$d من الطلبات إلى %2$s</string>
+    <plurals name="queue40Move">
+        <item quantity="zero">نقل %1$d من الطلبات إلى %2$s</item>
+        <item quantity="one">نقل طلب واحد إلى %2$s</item>
+        <item quantity="two">نقل طلبين إلى %2$s</item>
+        <item quantity="few">نقل %1$d طلبات إلى %2$s</item>
+        <item quantity="many">نقل %1$d من الطلبات إلى %2$s</item>
+        <item quantity="other">نقل %1$d من الطلبات إلى %2$s</item>
+    </plurals>
     <string name="queue40Select">اختر طلبًا قابلًا للنقل على الأقل.</string>
-    <string name="queue40Moved">نُقل %1$d من الطلبات. بقي %2$d على الخادم الأصلي. سيستخدم %3$d منها اختيار النموذج أو الوكيل في الوجهة. لم يُرسل شيء.</string>
+    <plurals name="queue40Moved">
+        <item quantity="zero">نُقل %1$d من الطلبات. بقي على الخادم الأصلي: %2$d. يستخدم اختيار النموذج أو الوكيل في الوجهة: %3$d. لم يُرسل شيء.</item>
+        <item quantity="one">نُقل طلب واحد. بقي على الخادم الأصلي: %2$d. يستخدم اختيار النموذج أو الوكيل في الوجهة: %3$d. لم يُرسل شيء.</item>
+        <item quantity="two">نُقل طلبان. بقي على الخادم الأصلي: %2$d. يستخدم اختيار النموذج أو الوكيل في الوجهة: %3$d. لم يُرسل شيء.</item>
+        <item quantity="few">نُقلت %1$d طلبات. بقي على الخادم الأصلي: %2$d. يستخدم اختيار النموذج أو الوكيل في الوجهة: %3$d. لم يُرسل شيء.</item>
+        <item quantity="many">نُقل %1$d من الطلبات. بقي على الخادم الأصلي: %2$d. يستخدم اختيار النموذج أو الوكيل في الوجهة: %3$d. لم يُرسل شيء.</item>
+        <item quantity="other">نُقل %1$d من الطلبات. بقي على الخادم الأصلي: %2$d. يستخدم اختيار النموذج أو الوكيل في الوجهة: %3$d. لم يُرسل شيء.</item>
+    </plurals>
     <string name="queue40Undo">التراجع عن النقل</string>
     <string name="queue40Open">فتح المحادثة الوجهة</string>
-    <string name="queue40Undone">أُعيد %1$d من الطلبات التي كانت لا تزال منتظرة. بقيت الطلبات التي بدأ إرسالها في مكانها.</string>
+    <plurals name="queue40Undone">
+        <item quantity="zero">أُعيد %1$d من الطلبات التي كانت لا تزال منتظرة. بقيت الطلبات التي بدأ إرسالها في مكانها.</item>
+        <item quantity="one">أُعيد طلب واحد كان لا يزال منتظرًا. بقيت الطلبات التي بدأ إرسالها في مكانها.</item>
+        <item quantity="two">أُعيد طلبان كانا لا يزالان منتظرَين. بقيت الطلبات التي بدأ إرسالها في مكانها.</item>
+        <item quantity="few">أُعيدت %1$d طلبات كانت لا تزال منتظرة. بقيت الطلبات التي بدأ إرسالها في مكانها.</item>
+        <item quantity="many">أُعيد %1$d من الطلبات التي كانت لا تزال منتظرة. بقيت الطلبات التي بدأ إرسالها في مكانها.</item>
+        <item quantity="other">أُعيد %1$d من الطلبات التي كانت لا تزال منتظرة. بقيت الطلبات التي بدأ إرسالها في مكانها.</item>
+    </plurals>
     <string name="queue40Refresh">تحديث الطلبات المنتظرة</string>
     <string name="remove40Title">إزالة هذا الخادم</string>
     <string name="remove40ConfirmTitle">إزالة %1$s؟</string>
     <string name="remove40Body">سيُحذف الاتصال المحفوظ والبيانات المحلية من هذا التطبيق. لن تُحذف المحادثات من الخادم.</string>
-    <string name="remove40QueueLost">سيُحذف %1$d من الطلبات المنتظرة من هذا الهاتف.</string>
-    <string name="remove40QueueKept">سيُحتفظ بـ %1$d من الطلبات المنتظرة في الطلبات المحفوظة.</string>
-    <string name="remove40Uncertain">ربما أُرسل %1$d من الطلبات بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</string>
-    <string name="remove40DraftsLost">سيُحذف %1$d من مسودات المحادثات المحفوظة.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="zero">سيُحذف %1$d من الطلبات المنتظرة من هذا الهاتف.</item>
+        <item quantity="one">سيُحذف طلب واحد منتظر من هذا الهاتف.</item>
+        <item quantity="two">سيُحذف طلبان منتظران من هذا الهاتف.</item>
+        <item quantity="few">ستُحذف %1$d طلبات منتظرة من هذا الهاتف.</item>
+        <item quantity="many">سيُحذف %1$d من الطلبات المنتظرة من هذا الهاتف.</item>
+        <item quantity="other">سيُحذف %1$d من الطلبات المنتظرة من هذا الهاتف.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="zero">سيُحتفظ بـ %1$d من الطلبات المنتظرة في الطلبات المحفوظة.</item>
+        <item quantity="one">سيُحتفظ بطلب واحد منتظر في الطلبات المحفوظة.</item>
+        <item quantity="two">سيُحتفظ بطلبين منتظرين في الطلبات المحفوظة.</item>
+        <item quantity="few">سيُحتفظ بـ %1$d طلبات منتظرة في الطلبات المحفوظة.</item>
+        <item quantity="many">سيُحتفظ بـ %1$d من الطلبات المنتظرة في الطلبات المحفوظة.</item>
+        <item quantity="other">سيُحتفظ بـ %1$d من الطلبات المنتظرة في الطلبات المحفوظة.</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="zero">ربما أُرسل %1$d من الطلبات بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</item>
+        <item quantity="one">ربما أُرسل طلب واحد بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</item>
+        <item quantity="two">ربما أُرسل طلبان بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</item>
+        <item quantity="few">ربما أُرسلت %1$d طلبات بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</item>
+        <item quantity="many">ربما أُرسل %1$d من الطلبات بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</item>
+        <item quantity="other">ربما أُرسل %1$d من الطلبات بالفعل. قد تمنع عملية إرسال تحتاج إلى مراجعة إزالة الخادم.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="zero">سيُحذف %1$d من مسودات المحادثات المحفوظة.</item>
+        <item quantity="one">ستُحذف مسودة محادثة محفوظة واحدة.</item>
+        <item quantity="two">ستُحذف مسودتا محادثة محفوظتان.</item>
+        <item quantity="few">ستُحذف %1$d مسودات محادثات محفوظة.</item>
+        <item quantity="many">سيُحذف %1$d من مسودات المحادثات المحفوظة.</item>
+        <item quantity="other">سيُحذف %1$d من مسودات المحادثات المحفوظة.</item>
+    </plurals>
     <string name="remove40Active">سيُغلق الاتصال الحالي. ستعود إلى الخوادم المحفوظة.</string>
     <string name="remove40ServerKeeps">يحتفظ الخادم بمحادثاته وملفاته.</string>
     <string name="remove40Loading">جارٍ فحص بيانات الخادم المحفوظة على هذا الهاتف…</string>

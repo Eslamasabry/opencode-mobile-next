@@ -6,7 +6,10 @@
     <string name="settings40_local_work">Unsent work on this phone</string>
     <string name="settings40_queue_title">Queued prompts</string>
     <string name="settings40_drafts_title">Conversation drafts</string>
-    <string name="settings40_storage_size">%1$d items · %2$s</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="one">1 item · %2$s</item>
+        <item quantity="other">%1$d items · %2$s</item>
+    </plurals>
     <string name="settings40_storage_unknown">Cannot read this storage. Everything is kept.</string>
     <string name="settings40_storage_reading">Reading local storage…</string>
     <string name="settings40_discard_queue">Delete unsent queued prompts</string>
@@ -19,9 +22,18 @@
     <string name="settings40_drafts_question">Delete conversation drafts?</string>
     <string name="settings40_drafts_body">Deletes saved words and draft attachments on this phone. Open conversations update too. Work still being sent or checked prevents deletion. This cannot be undone.</string>
     <string name="settings40_discard_failed">Could not finish deleting. Work being sent, uncertain work, unreadable storage or a change while saving can prevent deletion. Check the counts and try again.</string>
-    <string name="settings40_discard_done">Deleted %1$d items.</string>
-    <string name="settings40_discard_kept">Deleted %1$d items. Kept %2$d prompts that need review.</string>
-    <string name="settings40_discard_cleanup">Deleted %1$d drafts. Some attachment files could not be removed. Try deleting drafts again to finish.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="one">Deleted 1 item.</item>
+        <item quantity="other">Deleted %1$d items.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="one">Deleted 1 item. Prompts kept for review: %2$d.</item>
+        <item quantity="other">Deleted %1$d items. Prompts kept for review: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="one">Deleted 1 draft. Some attachment files could not be removed. Try deleting drafts again to finish.</item>
+        <item quantity="other">Deleted %1$d drafts. Some attachment files could not be removed. Try deleting drafts again to finish.</item>
+    </plurals>
     <string name="settings40_no_answers">No questions on this server need an answer yet.</string>
     <string name="settings40_answer_failed">This step did not finish. Your saved answer and Android settings may differ. Check Notifications or Keep running, then try again.</string>
 </resources>

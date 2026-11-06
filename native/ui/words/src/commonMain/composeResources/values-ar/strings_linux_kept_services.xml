@@ -14,7 +14,14 @@
     <string name="keptSvcRemoveNamed">حذف %1$s</string>
     <string name="keptSvcWorking">جارٍ إكمال إجراء الخدمة…</string>
     <string name="keptSvcCopyLog">نسخ السجل</string>
-    <string name="keptSvcRestarts">عادت بعد %1$d إعادات تشغيل</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="zero">عادت بعد %1$d إعادات تشغيل</item>
+        <item quantity="one">عادت بعد إعادة تشغيل واحدة</item>
+        <item quantity="two">عادت بعد إعادتَي تشغيل</item>
+        <item quantity="few">عادت بعد %1$d إعادات تشغيل</item>
+        <item quantity="many">عادت بعد %1$d إعادة تشغيل</item>
+        <item quantity="other">عادت بعد %1$d إعادة تشغيل</item>
+    </plurals>
     <string name="keptSvcLogTitle">سجل الخدمة</string>
     <string name="keptSvcSearchLog">بحث في السجل</string>
     <string name="keptSvcLogEmpty">لا توجد مخرجات بعد.</string>
@@ -44,7 +51,14 @@
     <string name="keptSvcStopping">جارٍ الإيقاف…</string>
     <string name="keptSvcRetrying">تعطلت (الرمز %1$d). تُعاد المحاولة بعد %2$d ث</string>
     <string name="keptSvcPortBusy">المنفذ %1$d مستخدم. ستُعاد المحاولة قريبًا.</string>
-    <string name="keptSvcGaveUp">توقفت بعد أعطال متكررة (%1$d إعادات تشغيل)</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="zero">توقفت بعد أعطال متكررة (%1$d إعادات تشغيل)</item>
+        <item quantity="one">توقفت بعد أعطال متكررة (إعادة تشغيل واحدة)</item>
+        <item quantity="two">توقفت بعد أعطال متكررة (إعادتا تشغيل)</item>
+        <item quantity="few">توقفت بعد أعطال متكررة (%1$d إعادات تشغيل)</item>
+        <item quantity="many">توقفت بعد أعطال متكررة (%1$d إعادة تشغيل)</item>
+        <item quantity="other">توقفت بعد أعطال متكررة (%1$d إعادة تشغيل)</item>
+    </plurals>
     <string name="keptSvcExited">انتهت (الرمز %1$d)</string>
     <string name="keptSvcPortNumber">المنفذ %1$d</string>
     <string name="keptSvcLogStarted">بدأت</string>

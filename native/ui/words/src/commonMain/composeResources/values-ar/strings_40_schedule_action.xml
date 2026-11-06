@@ -1,4 +1,11 @@
 <resources>
     <string name="scheduleActionWhen">جدوِل في %1$s</string>
-    <string name="scheduleActionHours">جدوِل كل %1$d ساعات</string>
+    <plurals name="scheduleActionHours">
+        <item quantity="zero">جدوِل كل %1$d ساعات</item>
+        <item quantity="one">جدوِل كل ساعة</item>
+        <item quantity="two">جدوِل كل ساعتين</item>
+        <item quantity="few">جدوِل كل %1$d ساعات</item>
+        <item quantity="many">جدوِل كل %1$d ساعة</item>
+        <item quantity="other">جدوِل كل %1$d ساعة</item>
+    </plurals>
 </resources>

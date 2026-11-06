@@ -134,6 +134,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.whatsNewShowAgents
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -226,7 +227,11 @@ public fun AgentsScreen(
                 when (removal) {
                     is PhoneAgentRemoval.Removed ->
                         KitNotice(
-                            stringResource(Res.string.linuxAgentPayloadRemoved, removal.freedBytes),
+                            pluralStringResource(
+                                Res.plurals.linuxAgentPayloadRemoved,
+                                removal.freedBytes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                                removal.freedBytes,
+                            ),
                             gutter,
                         )
                     is PhoneAgentRemoval.Refused ->

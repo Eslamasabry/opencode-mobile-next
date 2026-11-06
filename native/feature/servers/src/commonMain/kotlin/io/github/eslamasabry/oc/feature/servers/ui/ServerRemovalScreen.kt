@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -27,15 +28,16 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
         if (plan != null) {
             if (plan.queued > 0)
                 add(
-                    stringResource(
-                        if (state.deleteQueued) Res.string.remove40QueueLost
-                        else Res.string.remove40QueueKept,
+                    pluralStringResource(
+                        if (state.deleteQueued) Res.plurals.remove40QueueLost
+                        else Res.plurals.remove40QueueKept,
+                        plan.queued,
                         plan.queued,
                     )
                 )
             if (plan.uncertain > 0)
-                add(stringResource(Res.string.remove40Uncertain, plan.uncertain))
-            if (plan.drafts > 0) add(stringResource(Res.string.remove40DraftsLost, plan.drafts))
+                add(pluralStringResource(Res.plurals.remove40Uncertain, plan.uncertain, plan.uncertain))
+            if (plan.drafts > 0) add(pluralStringResource(Res.plurals.remove40DraftsLost, plan.drafts, plan.drafts))
             if (plan.active) add(stringResource(Res.string.remove40Active))
         }
         add(stringResource(Res.string.remove40ServerKeeps))

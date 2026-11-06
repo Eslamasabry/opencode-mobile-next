@@ -14,7 +14,10 @@
     <string name="keptSvcRemoveNamed">Remove %1$s</string>
     <string name="keptSvcWorking">Finishing the service action…</string>
     <string name="keptSvcCopyLog">Copy log</string>
-    <string name="keptSvcRestarts">Came back after %1$d restarts</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="one">Came back after 1 restart</item>
+        <item quantity="other">Came back after %1$d restarts</item>
+    </plurals>
     <string name="keptSvcLogTitle">Service log</string>
     <string name="keptSvcSearchLog">Find in log</string>
     <string name="keptSvcLogEmpty">No output yet.</string>
@@ -44,7 +47,10 @@
     <string name="keptSvcStopping">Stopping…</string>
     <string name="keptSvcRetrying">Crashed (code %1$d). Trying again in %2$d s</string>
     <string name="keptSvcPortBusy">Port %1$d is busy. Trying again soon.</string>
-    <string name="keptSvcGaveUp">Stopped after repeated crashes (%1$d restarts)</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="one">Stopped after repeated crashes (1 restart)</item>
+        <item quantity="other">Stopped after repeated crashes (%1$d restarts)</item>
+    </plurals>
     <string name="keptSvcExited">Finished (code %1$d)</string>
     <string name="keptSvcPortNumber">Port %1$d</string>
     <string name="keptSvcLogStarted">Started</string>

@@ -20,11 +20,39 @@
     <string name="monitor40Number">أدخل رقمًا.</string>
     <string name="monitor40Integer">أدخل عددًا صحيحًا.</string>
     <string name="monitor40NotOffered">اختر إجابة متاحة أو أدخل قيمة يقبلها النموذج.</string>
-    <string name="monitor40MinLength">أدخل %1$d أحرف على الأقل.</string>
-    <string name="monitor40MaxLength">استخدم %1$d أحرف على الأكثر.</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="zero">أدخل %1$d أحرف على الأقل.</item>
+        <item quantity="one">أدخل حرفًا واحدًا على الأقل.</item>
+        <item quantity="two">أدخل حرفين على الأقل.</item>
+        <item quantity="few">أدخل %1$d أحرف على الأقل.</item>
+        <item quantity="many">أدخل %1$d حرفًا على الأقل.</item>
+        <item quantity="other">أدخل %1$d حرف على الأقل.</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="zero">استخدم %1$d أحرف على الأكثر.</item>
+        <item quantity="one">استخدم حرفًا واحدًا على الأكثر.</item>
+        <item quantity="two">استخدم حرفين على الأكثر.</item>
+        <item quantity="few">استخدم %1$d أحرف على الأكثر.</item>
+        <item quantity="many">استخدم %1$d حرفًا على الأكثر.</item>
+        <item quantity="other">استخدم %1$d حرف على الأكثر.</item>
+    </plurals>
     <string name="monitor40Range">أدخل قيمة ضمن الحدود المسموحة: من %1$s إلى %2$s.</string>
-    <string name="monitor40MinItems">اختر %1$d إجابات على الأقل.</string>
-    <string name="monitor40MaxItems">اختر %1$d إجابات على الأكثر.</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="zero">اختر %1$d إجابات على الأقل.</item>
+        <item quantity="one">اختر إجابة واحدة على الأقل.</item>
+        <item quantity="two">اختر إجابتين على الأقل.</item>
+        <item quantity="few">اختر %1$d إجابات على الأقل.</item>
+        <item quantity="many">اختر %1$d إجابة على الأقل.</item>
+        <item quantity="other">اختر %1$d إجابة على الأقل.</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="zero">اختر %1$d إجابات على الأكثر.</item>
+        <item quantity="one">اختر إجابة واحدة على الأكثر.</item>
+        <item quantity="two">اختر إجابتين على الأكثر.</item>
+        <item quantity="few">اختر %1$d إجابات على الأكثر.</item>
+        <item quantity="many">اختر %1$d إجابة على الأكثر.</item>
+        <item quantity="other">اختر %1$d إجابة على الأكثر.</item>
+    </plurals>
     <string name="monitor40QuestionCount">عدد الأسئلة: %1$d</string>
     <string name="monitor40Answer">إجابة</string>
 </resources>

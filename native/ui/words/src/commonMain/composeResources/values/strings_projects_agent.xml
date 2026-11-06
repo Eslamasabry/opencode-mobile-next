@@ -27,5 +27,8 @@
     <string name="agentProjectCreate">Create worktree</string>
     <string name="agentProjectRemoveQuestion">Remove “%1$s”?</string>
     <string name="agentProjectRemoveBody">Archives the worktree and its conversations, and removes its folder: %1$s</string>
-    <string name="agentProjectRemoveChanges">This worktree has %1$d changed files. They will be removed with the folder.</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="one">This worktree has 1 changed file. It will be removed with the folder.</item>
+        <item quantity="other">This worktree has %1$d changed files. They will be removed with the folder.</item>
+    </plurals>
 </resources>

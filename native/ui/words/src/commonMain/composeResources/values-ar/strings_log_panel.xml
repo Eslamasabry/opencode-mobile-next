@@ -5,7 +5,14 @@
     <string name="p12LogPause">إيقاف مؤقت</string>
     <string name="p12LogCopy">نسخ الكل</string>
     <string name="p12LogWrap">التفاف الأسطر</string>
-    <string name="p12LogMatches">%1$d من %2$d أسطر مطابقة</string>
+    <plurals name="p12LogMatches">
+        <item quantity="zero">%1$d من %2$d أسطر مطابقة</item>
+        <item quantity="one">%1$d من سطر مطابق واحد</item>
+        <item quantity="two">%1$d من سطرين مطابقين</item>
+        <item quantity="few">%1$d من %2$d أسطر مطابقة</item>
+        <item quantity="many">%1$d من %2$d سطرًا مطابقًا</item>
+        <item quantity="other">%1$d من %2$d سطر مطابق</item>
+    </plurals>
     <string name="p12LogPrevious">المطابقة السابقة</string>
     <string name="p12LogNext">المطابقة التالية</string>
 </resources>

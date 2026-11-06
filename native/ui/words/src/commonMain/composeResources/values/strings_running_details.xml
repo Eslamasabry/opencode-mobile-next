@@ -3,7 +3,10 @@
     <string name="runningDetailMemory">%1$d MB memory</string>
     <string name="runningDetailElapsed">Running for %1$d min</string>
     <string name="runningDetailPid">Process %1$d</string>
-    <string name="runningDetailHelpers">Also stops its %1$d helper processes. Each identity is checked again.</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="one">Also stops its 1 helper process. Its identity is checked again.</item>
+        <item quantity="other">Also stops its %1$d helper processes. Each identity is checked again.</item>
+    </plurals>
     <string name="runningDetailBusy">Busy</string>
     <string name="runningDetailIdle">Idle</string>
 </resources>

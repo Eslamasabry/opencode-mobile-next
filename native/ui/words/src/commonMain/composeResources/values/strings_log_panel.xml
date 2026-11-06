@@ -5,7 +5,10 @@
     <string name="p12LogPause">Pause</string>
     <string name="p12LogCopy">Copy all</string>
     <string name="p12LogWrap">Wrap lines</string>
-    <string name="p12LogMatches">%1$d of %2$d matching lines</string>
+    <plurals name="p12LogMatches">
+        <item quantity="one">%1$d of %2$d matching line</item>
+        <item quantity="other">%1$d of %2$d matching lines</item>
+    </plurals>
     <string name="p12LogPrevious">Previous match</string>
     <string name="p12LogNext">Next match</string>
 </resources>

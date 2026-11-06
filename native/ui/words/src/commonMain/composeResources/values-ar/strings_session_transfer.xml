@@ -8,7 +8,14 @@
     <string name="sessionTransferSave">حفظ ملف JSON</string>
     <string name="sessionTransferImport">استيراد محادثة</string>
     <string name="sessionTransferChoose">اختيار ملف JSON</string>
-    <string name="sessionTransferRecords">%1$d من سجلات الرسائل</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="zero">%1$d من سجلات الرسائل</item>
+        <item quantity="one">سجل رسالة واحد</item>
+        <item quantity="two">سجلا رسائل</item>
+        <item quantity="few">%1$d سجلات رسائل</item>
+        <item quantity="many">%1$d من سجلات الرسائل</item>
+        <item quantity="other">%1$d من سجلات الرسائل</item>
+    </plurals>
     <string name="sessionTransferRedacted">تحتوي هذه النسخة على قيم مخفية. يحتفظ الاستيراد بالعناصر البديلة.</string>
     <string name="sessionTransferDestination">الاستيراد إلى مجلد الخادم هذا</string>
     <string name="sessionTransferDestinationRequired">اختر مجلد الوجهة أولاً.</string>
@@ -17,7 +24,14 @@
     <string name="sessionTransferLoadNote">قراءة الملاحظة الحالية</string>
     <string name="sessionTransferSaveNote">حفظ الملاحظة</string>
     <string name="sessionTransferRemoveNote">إزالة الملاحظة</string>
-    <string name="sessionTransferNoteLimit">يجب ألا تتجاوز الملاحظة %1$d بايت بعد الترميز. اختصرها وحاول مجددًا.</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="zero">يجب ألا تتجاوز الملاحظة %1$d بايت بعد الترميز. اختصرها وحاول مجددًا.</item>
+        <item quantity="one">يجب ألا تتجاوز الملاحظة بايتًا واحدًا بعد الترميز. اختصرها وحاول مجددًا.</item>
+        <item quantity="two">يجب ألا تتجاوز الملاحظة بايتين بعد الترميز. اختصرها وحاول مجددًا.</item>
+        <item quantity="few">يجب ألا تتجاوز الملاحظة %1$d بايت بعد الترميز. اختصرها وحاول مجددًا.</item>
+        <item quantity="many">يجب ألا تتجاوز الملاحظة %1$d بايت بعد الترميز. اختصرها وحاول مجددًا.</item>
+        <item quantity="other">يجب ألا تتجاوز الملاحظة %1$d بايت بعد الترميز. اختصرها وحاول مجددًا.</item>
+    </plurals>
     <string name="sessionTransferSaved">تم حفظ المحادثة.</string>
     <string name="sessionTransferImported">تم استيراد المحادثة.</string>
     <string name="sessionTransferNoteSaved">تم حفظ الملاحظة.</string>

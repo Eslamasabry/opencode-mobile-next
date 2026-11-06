@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxIdleResume
 import io.github.eslamasabry.oc.ui.words.res.linuxIdleSave
 import io.github.eslamasabry.oc.ui.words.res.linuxIdleTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxIdleWorking
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -38,7 +39,7 @@ internal fun LinuxIdlePanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
         idle.minutes?.let { minutes ->
             KitRow(
                 title = stringResource(Res.string.linuxIdleMinutes),
-                supporting = stringResource(Res.string.linuxIdleMinutesValue, minutes),
+                supporting = pluralStringResource(Res.plurals.linuxIdleMinutesValue, minutes, minutes),
                 enabled = !state.idleWorking,
                 disabledReason = working,
                 onClick = actions::askIdleMinutes,

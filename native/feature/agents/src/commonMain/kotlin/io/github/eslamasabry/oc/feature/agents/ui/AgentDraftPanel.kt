@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -58,7 +59,13 @@ internal fun AgentDraftPanel(state: AgentsUi, actions: AgentsActions) {
             if (record != null) {
                 KitSectionLabel(stringResource(Res.string.agentDraftReview))
                 if (record.omittedMessages > 0)
-                    KitNotice(stringResource(Res.string.agentDraftOmitted, record.omittedMessages))
+                    KitNotice(
+                        pluralStringResource(
+                            Res.plurals.agentDraftOmitted,
+                            record.omittedMessages,
+                            record.omittedMessages,
+                        )
+                    )
                 if (record.redacted) KitNotice(stringResource(Res.string.agentDraftMasked))
                 KitText(record.markdown)
                 KitButton(

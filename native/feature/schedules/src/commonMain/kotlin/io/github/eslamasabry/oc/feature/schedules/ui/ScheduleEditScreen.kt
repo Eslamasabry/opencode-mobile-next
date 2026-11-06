@@ -62,6 +62,7 @@ import io.github.eslamasabry.oc.ui.words.res.scheduleNeedFuture
 import io.github.eslamasabry.oc.ui.words.res.scheduleThisConversation
 import kotlinx.coroutines.flow.drop
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -376,7 +377,7 @@ private fun clockValue(minutes: Int): String =
 private fun scheduleActionLabel(fields: EditorFields, nowMs: Long, words: ScheduleWords): String {
     if (fields.kind == RecurrenceKind.Interval) {
         val hours = fields.hours.toIntOrNull() ?: return words.save
-        return stringResource(Res.string.scheduleActionHours, hours)
+        return pluralStringResource(Res.plurals.scheduleActionHours, hours, hours)
     }
     val time =
         io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules.time(fields.time)

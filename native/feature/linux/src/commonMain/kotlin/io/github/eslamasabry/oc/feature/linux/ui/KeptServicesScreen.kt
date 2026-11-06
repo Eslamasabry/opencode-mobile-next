@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.ceil
 import kotlin.time.Duration.Companion.milliseconds
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -193,7 +194,11 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
                                         service.lastExitAt != null &&
                                         service.phase == KeptPhase.Running
                                 )
-                                    stringResource(Res.string.keptSvcRestarts, service.restarts)
+                                    pluralStringResource(
+                                        Res.plurals.keptSvcRestarts,
+                                        service.restarts,
+                                        service.restarts,
+                                    )
                                 else null,
                             supportingMaxLines = 3,
                         )
@@ -429,7 +434,7 @@ private fun serviceStatus(service: KeptService, nowMs: Long): String =
                 Res.string.linuxSvcPortBusy,
                 service.definition.port?.toString().orEmpty(),
             )
-        KeptPhase.Failed -> stringResource(Res.string.keptSvcGaveUp, service.restarts)
+        KeptPhase.Failed -> pluralStringResource(Res.plurals.keptSvcGaveUp, service.restarts, service.restarts)
         KeptPhase.Exited -> stringResource(Res.string.linuxSvcExited, service.lastExit ?: 0)
     }
 
