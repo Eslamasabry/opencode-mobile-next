@@ -52,3 +52,10 @@ public object DiagnosticsReport {
         }
     }
 }
+
+/**
+ * P-022: the line under the closed Details fold on Report a problem: the report's first non-blank line (its plain
+ * headline, E19-S04), or null when the report has none. Never more than one line.
+ */
+public fun reportHeadline(report: String): String? =
+    report.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
