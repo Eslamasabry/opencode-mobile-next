@@ -229,7 +229,13 @@ abstract final class NodeCompat {
   static String envFileText(NodeCompatVariant variant) => [
     '# OpenCode Mobile: Node.js in a safe mode on this phone (issue #117).',
     for (final entry in variant.env.entries)
-      'export ${entry.key}=${entry.value}',
+      if (entry.key == 'NODE_OPTIONS')
+        // Added to the caller's own options (Paseo sets one), once.
+        'case " \${NODE_OPTIONS:-} " in *" ${entry.value} "*) ;; '
+            '*) export NODE_OPTIONS="\${NODE_OPTIONS:+\$NODE_OPTIONS }'
+            '${entry.value}" ;; esac'
+      else
+        'export ${entry.key}=${entry.value}',
     "OC_NODE_FLAGS='${variant.flags.join(' ')}'",
   ].join('\n');
 
@@ -270,6 +276,33 @@ abstract final class NodeCompat {
     );
   }
 
+  /// `oc_nc_wrap PROGRAM`: when Linux has a safe mode on file, PROGRAM
+  /// (a Node binary) moves to `PROGRAM.real` and a wrapper that applies the
+  /// mode takes its place; run again, it rewrites the wrapper only (after
+  /// its folder moved). Nothing on file: nothing changes. Shared with the
+  /// agents' own Node (paseo_scripts.dart), which runs as their user.
+  static const wrapPrelude = r'''
+# Node.js safe modes (issue #117), lib/builtin/setup/node_compat.dart.
+oc_nc_dir=${OC_NODE_COMPAT_DIR:-/etc/oc-setup}
+oc_nc_wrap() {
+  oc_nc_bin=$1
+  [ -s "$oc_nc_dir/node-compat.env" ] || return 0
+  if [ ! -e "$oc_nc_bin.real" ]; then
+    # Never move a wrapper over the program it wraps.
+    ! grep -q 'OpenCode Mobile: Node.js in a safe mode' "$oc_nc_bin" 2>/dev/null || return 1
+    mv -f "$oc_nc_bin" "$oc_nc_bin.real"
+  fi
+  {
+    echo '#!/bin/sh'
+    echo '# OpenCode Mobile: Node.js in a safe mode on this phone (issue #117).'
+    echo "[ ! -r '$oc_nc_dir/node-compat.env' ] || . '$oc_nc_dir/node-compat.env'"
+    echo "exec '$oc_nc_bin.real' \${OC_NODE_FLAGS:-} \"\$@\""
+  } > "$oc_nc_bin.oc-new"
+  chmod 755 "$oc_nc_bin.oc-new"
+  mv -f "$oc_nc_bin.oc-new" "$oc_nc_bin"
+}
+''';
+
   /// The shell functions the Node.js step uses. Every path can be moved for
   /// the script tests (`OC_NODE_*`); the defaults are the real ones.
   static String get prelude {
@@ -282,8 +315,7 @@ abstract final class NodeCompat {
             "${envFileText(variant).split('\n').map(_quote).join(' ')} ;;",
     ].join('\n');
     return '''
-# Node.js safe modes (issue #117), lib/builtin/setup/node_compat.dart.
-oc_nc_dir=\${OC_NODE_COMPAT_DIR:-/etc/oc-setup}
+$wrapPrelude
 oc_nc_node=\${OC_NODE_BIN:-/opt/node/bin/node}
 oc_nc_link=\${OC_NODE_LINK:-/usr/local/bin/node}
 oc_nc_npm=\${OC_NPM_BIN:-/usr/local/bin/npm}
@@ -302,7 +334,9 @@ oc_nc_try() {
 oc_nc_row() {
   oc_nc_id=\$1 oc_nc_label=\$2
   shift 2
-  oc_nc_r=\$(oc_nc_try env oc_nc_node="\$oc_nc_node" sh -c "\$*")
+  oc_nc_real=\$oc_nc_node
+  [ ! -e "\$oc_nc_node.real" ] || oc_nc_real=\$oc_nc_node.real
+  oc_nc_r=\$(oc_nc_try env oc_nc_node="\$oc_nc_real" sh -c "\$*")
   case \$oc_nc_r in ''|*[!0-9]*) oc_nc_r=1 ;; esac
   eval "oc_nc_rc_\$oc_nc_id=\$oc_nc_r"
   printf '[oc] probe %s %s # %s\\n' "\$oc_nc_id" "\$oc_nc_r" "\$oc_nc_label"
@@ -311,6 +345,8 @@ oc_nc_crashed() { [ "\$1" -ge 128 ] && [ "\$1" != 255 ]; }
 oc_nc_in_compat() { case \${GLIBC_TUNABLES:-} in *rseq=0*) return 0 ;; esac; return 1; }
 oc_nc_save() {
   mkdir -p "\$oc_nc_dir"
+  # Agents run Node as their own user: the mode must be readable to them.
+  chmod 755 "\$oc_nc_dir"
   case \$1 in
 $envCases
     *) return 1 ;;
@@ -325,20 +361,17 @@ $envCases
   mv -f "\$oc_nc_dir/node-compat.env.new" "\$oc_nc_dir/node-compat.env"
   mv -f "\$oc_nc_dir/node-compat.new" "\$oc_nc_dir/node-compat"
 }
-# Makes [\$oc_nc_link] (and with it npm and npx) run Node the saved way. A
-# phone with nothing saved keeps the plain link.
+# Makes [\$oc_nc_node] run the saved way: the program moves to node.real
+# and a small wrapper takes its place, so every way of starting it (the
+# PATH, its full path, npm, an agent's own launcher, an empty environment)
+# gets the same mode. A phone with nothing saved keeps the plain program.
 oc_nc_apply_saved() {
   [ -s "\$oc_nc_dir/node-compat" ] && [ -s "\$oc_nc_dir/node-compat.env" ] || return 0
-  rm -f "\$oc_nc_link.new"
-  {
-    echo '#!/bin/sh'
-    echo '# OpenCode Mobile: Node.js in a safe mode on this phone (issue #117).'
-    echo "[ ! -r '\$oc_nc_dir/node-compat.env' ] || . '\$oc_nc_dir/node-compat.env'"
-    echo "exec '\$oc_nc_node' \\\${OC_NODE_FLAGS:-} \\"\\\$@\\""
-  } > "\$oc_nc_link.new"
-  chmod 755 "\$oc_nc_link.new"
-  mv -f "\$oc_nc_link.new" "\$oc_nc_link"
+  oc_nc_wrap "\$oc_nc_node"
   echo "[oc] Node.js runs in a safe mode on this phone: \$(head -n 1 "\$oc_nc_dir/node-compat")"
+}
+oc_nc_restore_plain() {
+  [ ! -e "\$oc_nc_node.real" ] || mv -f "\$oc_nc_node.real" "\$oc_nc_node"
 }
 oc_nc_works() {
   oc_nc_w=\$(oc_nc_try "\$oc_nc_link" --version)
@@ -387,8 +420,7 @@ $node
     echo "[oc] Node.js still crashed with \$oc_nc_v"
   done
   rm -f "\$oc_nc_dir/node-compat" "\$oc_nc_dir/node-compat.env"
-  rm -f "\$oc_nc_link"
-  ln -s "\$oc_nc_node" "\$oc_nc_link"
+  oc_nc_restore_plain
   oc_nc_give_up
   return 139
 }

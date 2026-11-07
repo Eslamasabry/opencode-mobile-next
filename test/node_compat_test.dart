@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/builtin/agents/paseo_scripts.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/setup/node_compat.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
@@ -232,6 +233,27 @@ void main() {
       );
     });
 
+    test(
+      'the agents\' Node check asks for the wrapper while a mode is on file',
+      () {
+        expect(
+          PaseoPhoneScripts.nodeCheck,
+          contains(
+            '[ ! -s ${NodeCompat.envFile} ] || '
+            '[ -e /home/oc/.local/node/bin/node.real ]',
+          ),
+        );
+        expect(
+          PaseoPhoneScripts.nodeInstall,
+          contains('oc_nc_wrap "\$node_dir.new/bin/node"'),
+        );
+        expect(
+          PaseoPhoneScripts.nodeInstall,
+          contains('oc_nc_wrap "\$node_dir/bin/node"'),
+        );
+      },
+    );
+
     test('without one, Linux\'s own file still decides', () {
       final script = BuiltinLinux.serverScript();
       expect(script, contains(NodeCompat.stateFile));
@@ -362,6 +384,7 @@ kill -SEGV \$\$
         expect(r.exitCode, 0, reason: '${r.stdout}${r.stderr}');
         expect(stateOf(), isEmpty);
         expect(FileSystemEntity.isLinkSync('$bin/node'), isTrue);
+        expect(File('${dir.path}/opt/bin/node.real').existsSync(), isFalse);
         expect(r.stdout, isNot(contains('Node.js crashed')));
         expect(r.stderr, isNot(contains('Segmentation')));
       }, skip: skip);
@@ -387,7 +410,16 @@ kill -SEGV \$\$
           ),
         );
         expect(out, contains('v24.21.0'));
-        expect(FileSystemEntity.isLinkSync('$bin/node'), isFalse);
+        // The program itself is wrapped: its full path, an empty
+        // environment and an agent's own launcher all get the mode.
+        expect(File('${dir.path}/opt/bin/node.real').existsSync(), isTrue);
+        final direct = await Process.run(shell, [
+          '-c',
+          'env -i PATH=/usr/bin:/bin "\$1" --version',
+          'sh',
+          '${dir.path}/opt/bin/node',
+        ]);
+        expect(direct.exitCode, 0, reason: '${direct.stderr}');
         expect(
           chooseNodeCompat(parseNodeProbeTable(out)),
           NodeCompatVariant.armcap,
@@ -413,8 +445,28 @@ kill -SEGV \$\$
           expect(out, contains('[oc] probe threads 0'));
           expect(
             File('${dir.path}/etc/node-compat.env').readAsStringSync(),
-            contains('export NODE_OPTIONS=--v8-pool-size=1'),
+            contains('--v8-pool-size=1'),
           );
+          // Added to the caller's own NODE_OPTIONS, once.
+          _script(
+            '${dir.path}/opt/bin/node.real',
+            r'printf "%s\n" "$NODE_OPTIONS"',
+          );
+          final options = await run(
+            'node -e 1',
+            shell: shell,
+            extra: {'NODE_OPTIONS': '--dns-result-order=ipv4first'},
+          );
+          expect(
+            (options.stdout as String).trim(),
+            '--dns-result-order=ipv4first --v8-pool-size=1',
+          );
+          final nested = await run(
+            'node -e 1',
+            shell: shell,
+            extra: {'NODE_OPTIONS': '--v8-pool-size=1'},
+          );
+          expect((nested.stdout as String).trim(), '--v8-pool-size=1');
         },
         skip: skip,
       );
@@ -451,6 +503,11 @@ kill -SEGV \$\$
         expect(lines.last, NodeCompatFailure.unsupported);
         expect(stateOf(), isEmpty);
         expect(FileSystemEntity.isLinkSync('$bin/node'), isTrue);
+        expect(File('${dir.path}/opt/bin/node.real').existsSync(), isFalse);
+        expect(
+          File('${dir.path}/opt/bin/node').readAsStringSync(),
+          isNot(contains('safe mode')),
+        );
         expect(
           parseNodeProbeTable(r.stdout as String).keys,
           containsAll(NodeCompat.nodeProbes.map((p) => p.id)),
@@ -481,6 +538,53 @@ kill -SEGV \$\$
             (r.stdout as String).trimRight().split('\n').last,
             NodeCompatFailure.unsupported,
           );
+        },
+        skip: skip,
+      );
+
+      test('$shell: the agents\' Node is wrapped where it is unpacked and '
+          'again where it ends up', () async {
+        File(
+          '${dir.path}/etc/node-compat.env',
+        ).writeAsStringSync(NodeCompat.envFileText(NodeCompatVariant.armcap));
+        final unpacked = Directory('${dir.path}/agent/node.new/bin')
+          ..createSync(recursive: true);
+        _script(
+          '${unpacked.path}/node',
+          r'[ "${OPENSSL_armcap:-}" = 0 ] && echo v24.21.0 || kill -SEGV $$',
+        );
+        final r = await Process.run(shell, [
+          '-c',
+          'set -eu\n${NodeCompat.wrapPrelude}\n'
+              'oc_nc_wrap "\$1/node.new/bin/node"\n'
+              '"\$1/node.new/bin/node" --version\n'
+              'mv "\$1/node.new" "\$1/node"\n'
+              'oc_nc_wrap "\$1/node/bin/node"\n'
+              'env -i "\$1/node/bin/node" --version\n',
+          'sh',
+          '${dir.path}/agent',
+        ], environment: env);
+        expect(r.exitCode, 0, reason: '${r.stdout}${r.stderr}');
+        expect(r.stdout, 'v24.21.0\nv24.21.0\n');
+        expect(
+          File('${dir.path}/agent/node/bin/node').readAsStringSync(),
+          contains("exec '${dir.path}/agent/node/bin/node.real'"),
+        );
+      }, skip: skip);
+
+      test(
+        '$shell: nothing on file, the agents\' Node stays as it is',
+        () async {
+          Directory('${dir.path}/agent/bin').createSync(recursive: true);
+          _script('${dir.path}/agent/bin/node', 'echo real');
+          final r = await Process.run(shell, [
+            '-c',
+            'set -eu\n${NodeCompat.wrapPrelude}\noc_nc_wrap "\$1"',
+            'sh',
+            '${dir.path}/agent/bin/node',
+          ], environment: env);
+          expect(r.exitCode, 0, reason: '${r.stderr}');
+          expect(File('${dir.path}/agent/bin/node.real').existsSync(), isFalse);
         },
         skip: skip,
       );
