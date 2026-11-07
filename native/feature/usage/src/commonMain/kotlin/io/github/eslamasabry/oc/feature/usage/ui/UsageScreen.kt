@@ -152,6 +152,8 @@ import io.github.eslamasabry.oc.ui.words.res.usageToolsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.usageTotalTokens
 import io.github.eslamasabry.oc.ui.words.res.usageUnfinished
 import io.github.eslamasabry.oc.ui.words.res.usageUnsupported
+import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityExplainer
+import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityVariant
 import io.github.eslamasabry.oc.ui.words.res.usageYear
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -173,7 +175,8 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = actions::back,
                     actions =
-                        if (state.server == null) emptyList()
+                        // F: lib/ui/screens/usage_screen.dart:253: no Refresh while the server cannot report usage.
+                        if (state.server == null || state.phase == UsagePhase.Unsupported) emptyList()
                         else
                             listOf(
                                 KitLineAction(
@@ -190,7 +193,17 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
             loadingLabel = stringResource(Res.string.usageLoading),
             width = KitScreenWidth.Reading,
         ) {
-            UsageContent(state, actions)
+            // F: lib/ui/screens/usage_screen.dart:266-275: the whole page is the missing feature, said by the
+            // capability explainer's page state (no description, filters or budgets on a server without usage).
+            if (state.phase == UsagePhase.Unsupported)
+                KitCapabilityExplainer(
+                    "server.oc2",
+                    Modifier.testTag("usage-unsupported"),
+                    variant = KitCapabilityVariant.State,
+                    serverName = state.serverName,
+                    source = "usage",
+                )
+            else UsageContent(state, actions)
         }
         BudgetEditor(state, actions)
     }

@@ -44,6 +44,17 @@ internal fun PhoneReplySpeed(state: ThisPhoneUi) {
     }
 }
 
+/** F: lib/builtin/setup/setup_selection.dart `joinSetupNames`: "Linux base, Git and SSH, Node.js and OpenCode". */
+@Composable
+internal fun installedSentence(names: List<String>): String =
+    if (names.size < 2) names.joinToString()
+    else
+        stringResource(
+            Res.string.phoneSetupStartListPair,
+            names.dropLast(1).joinToString(stringResource(Res.string.phoneSetupStartListSeparator)),
+            names.last(),
+        )
+
 @Composable
 internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
     val reading = state.details
@@ -59,8 +70,7 @@ internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) 
             title = stringResource(Res.string.thisPhoneInstalled),
             expanded = state.installedOpen,
             modifier = Modifier.testTag("this-phone-installed"),
-            supporting =
-                names.joinToString(stringResource(Res.string.phoneSetupStartListSeparator)),
+            supporting = installedSentence(names),
             onExpandedChange = actions::showInstalled,
             leading = KitIcons.check,
         ) {

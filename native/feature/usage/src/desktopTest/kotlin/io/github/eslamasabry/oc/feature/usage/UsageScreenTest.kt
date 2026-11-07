@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -178,8 +179,13 @@ class UsageScreenTest {
     @Test
     fun `B-NAV-078 a server without usage is explained in place, not as an error`() = runComposeUiTest {
         setContent { Screen(ready().copy(phase = UsagePhase.Unsupported, report = null), Actions()) }
-        onNodeWithText("This server does not support aggregate usage.").assertExists()
+        // F: lib/ui/screens/usage_screen.dart:266-275: the whole page is the OpenCode 2 explainer; no Refresh, no
+        // filters and no budgets for a server that reports no usage.
+        onNodeWithText("OpenCode 2 server").assertExists()
+        onNodeWithText("Needs a server running OpenCode 2.").assertExists()
         onNodeWithText("Couldn't load usage.").assertDoesNotExist()
+        onNodeWithText("Set USD budget").assertDoesNotExist()
+        onNodeWithContentDescription("Refresh").assertDoesNotExist()
     }
 
     @Test

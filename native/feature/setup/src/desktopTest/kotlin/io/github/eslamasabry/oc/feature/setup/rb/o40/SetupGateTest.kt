@@ -26,30 +26,9 @@ class SetupGateTest {
         override fun openAppSettings() {}
         override fun back() {}
     }
-    private val steps = persistentListOf(
-        SetupStepUi("linux", "Linux base", ComponentState.Done),
-        SetupStepUi("essentials", "Git and SSH", ComponentState.Done),
-        SetupStepUi("python", "Python", ComponentState.Done),
-        SetupStepUi("node", "Node.js", ComponentState.Running, bytes = "18" to "30 MB"),
-        SetupStepUi("opencode", "OpenCode", ComponentState.Pending),
-    )
-    @Test fun setup_progress_running() {
-        FlutterGoldenGate.check("setup_progress_running", frame = FlutterGoldenGate.Frame.Screen) {
-        SetupScreen(SetupUi(SetupPhase.Progress(SetupProgressUi(
-            state = SetupState.Running, headline = SetupHeadline.Downloading, subject = "Node.js",
-            step = 4, of = 5, measured = .6f, bytes = "18" to "30 MB", minutesLeft = 2, steps = steps,
-        ))), Actions)
-    }
-    }
-    @Test fun setup_progress_failed() {
-        FlutterGoldenGate.check("setup_progress_failed", frame = FlutterGoldenGate.Frame.Screen) {
-        SetupScreen(SetupUi(SetupPhase.Progress(SetupProgressUi(
-            state = SetupState.Failed, headline = SetupHeadline.Failed, step = 4, of = 5,
-            failure = SetupFailureLine.Error(SetupError.Offline("Node.js")),
-            steps = steps.set(3, steps[3].copy(state = ComponentState.Failed)),
-        ))), Actions)
-    }
-    }
+    // setup_progress_running / setup_progress_failed render the live PhoneSetupRoute.Setup screen in
+    // :feature:phonesetup (SetupJourneyGateTest). SetupRoute.Phone here is opened by no route, and two modules writing
+    // the same golden's rows let whichever ran last decide the measurement.
     @Test fun phone_drawing() {
         FlutterGoldenGate.check("kit_setup_fresh") { KitSetupPhone(modifier = Modifier.width(240.dp)) }
     }

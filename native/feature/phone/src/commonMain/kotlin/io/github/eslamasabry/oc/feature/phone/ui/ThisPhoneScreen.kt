@@ -258,7 +258,7 @@ public fun ThisPhoneScreen(
                 ThisPhoneNotice.SettingsMissing ->
                     PhoneNoticeLine(stringResource(Res.string.keepRunningOpenFailed), actions)
             }
-            if (state.serverRows.isNotEmpty() || state.version != null) {
+            if (state.serverRows.isNotEmpty()) {
                 Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 KitRowGroup(leadingTiles = true) {
                     state.serverRows.forEach { row ->
@@ -279,47 +279,6 @@ public fun ThisPhoneScreen(
                                     disabledReason = busyWords,
                                     onClick = actions::askRestart,
                                 )
-                        }
-                    }
-                    state.version?.let { version ->
-                        val installed = version.installed
-                        when (val update = version.update) {
-                            UpdateRow.UpToDate ->
-                                if (installed != null)
-                                    KitRow(
-                                        title =
-                                            stringResource(Res.string.thisPhoneUpToDate, installed),
-                                        leading = KitRowLeading.Glyph(KitIcons.check),
-                                    )
-                            is UpdateRow.Available,
-                            is UpdateRow.Failed -> {
-                                val offered =
-                                    if (update is UpdateRow.Available) update.version
-                                    else (update as UpdateRow.Failed).version
-                                KitRow(
-                                    title = stringResource(Res.string.thisPhoneUpdate),
-                                    leading = KitRowLeading.Glyph(KitIcons.download),
-                                    trailing = KitRowTrailing.Chevron,
-                                    supporting =
-                                        stringResource(Res.string.thisPhoneUpdateDetail, offered),
-                                    enabled = !busy,
-                                    disabledReason = busyWords,
-                                    onClick = actions::askUpdate,
-                                )
-                            }
-                            UpdateRow.Updating ->
-                                KitRow(
-                                    title = stringResource(Res.string.phoneServerCardUpdate),
-                                    enabled = false,
-                                    disabledReason = busyWords,
-                                )
-                            null ->
-                                installed?.let {
-                                    KitRow(
-                                        title =
-                                            stringResource(Res.string.phoneServerCardVersion, it)
-                                    )
-                                }
                         }
                     }
                 }
@@ -344,6 +303,49 @@ public fun ThisPhoneScreen(
                     )
                 }
             KitRowGroup(leadingTiles = true) {
+                // F: lib/ui/screens/this_phone_screen.dart:1116-1135: the version row (up to date, or Update) leads
+                // the list, under the server group, not inside it.
+                state.version?.let { version ->
+                    val installed = version.installed
+                    when (val update = version.update) {
+                        UpdateRow.UpToDate ->
+                            if (installed != null)
+                                KitRow(
+                                    title =
+                                        stringResource(Res.string.thisPhoneUpToDate, installed),
+                                    leading = KitRowLeading.Glyph(KitIcons.check),
+                                )
+                        is UpdateRow.Available,
+                        is UpdateRow.Failed -> {
+                            val offered =
+                                if (update is UpdateRow.Available) update.version
+                                else (update as UpdateRow.Failed).version
+                            KitRow(
+                                title = stringResource(Res.string.thisPhoneUpdate),
+                                leading = KitRowLeading.Glyph(KitIcons.download),
+                                trailing = KitRowTrailing.Chevron,
+                                supporting =
+                                    stringResource(Res.string.thisPhoneUpdateDetail, offered),
+                                enabled = !busy,
+                                disabledReason = busyWords,
+                                onClick = actions::askUpdate,
+                            )
+                        }
+                        UpdateRow.Updating ->
+                            KitRow(
+                                title = stringResource(Res.string.phoneServerCardUpdate),
+                                enabled = false,
+                                disabledReason = busyWords,
+                            )
+                        null ->
+                            installed?.let {
+                                KitRow(
+                                    title =
+                                        stringResource(Res.string.phoneServerCardVersion, it)
+                                )
+                            }
+                    }
+                }
                 val running = state.running
                 val count = running.count
                 if ((count ?: 0) > 0 || running.status != null || running.nearLimit) KitRow(

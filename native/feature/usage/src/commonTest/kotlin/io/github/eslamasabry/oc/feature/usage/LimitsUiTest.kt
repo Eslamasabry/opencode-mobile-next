@@ -50,7 +50,7 @@ class LimitsUiTest {
 
     @Test
     fun `B-159 less left than an even pace is ahead of pace, on pace is not`() {
-        assertEquals(LimitPace.Ahead, LimitMath.pace(left = 0.20, evenLeft = 0.25))
+        assertEquals(LimitPace.Ahead, LimitMath.pace(leftShare = 0.20, evenLeft = 0.25))
         assertEquals(LimitPace.WithinPace, LimitMath.pace(0.25, 0.25))
         // Half a percent of slack: a reading exactly on pace does not flip to Ahead on rounding.
         assertEquals(LimitPace.WithinPace, LimitMath.pace(0.246, 0.25))
