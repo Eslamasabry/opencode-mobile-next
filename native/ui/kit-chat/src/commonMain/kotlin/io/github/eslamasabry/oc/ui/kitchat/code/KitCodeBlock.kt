@@ -180,55 +180,65 @@ public fun KitCodeBlock(
                 .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp)
         ) {
             val lineStyle = mono.copy(color = colors.text, textDirection = TextDirection.Ltr)
-            val body =
-                @Composable {
-                    Column {
-                        shown.forEachIndexed { i, line ->
-                            Row {
-                                if (prompts != null) {
-                                    DisableSelection {
-                                        BasicText(
-                                            if (prompts[i]) "$" else "",
-                                            Modifier.width(Space.S4.dp),
-                                            style =
-                                                lineStyle.copy(
-                                                    color = colors.gutter,
-                                                    textAlign = TextAlign.Start,
-                                                ),
-                                        )
-                                    }
-                                }
-                                BasicText(
-                                    text = lineText(line, tokens, colors),
-                                    style = lineStyle,
-                                    softWrap = effectiveWrap,
-                                )
-                            }
-                        }
-                    }
-                }
             val copying = copyLabel != null && onCopy != null
-            // Copy sits at the end of the first line, over the block's corner, not on a header of
-            // its own
-            // (Dart `_CodePlan.inline`); the lines keep clear of it.
+            // P-001: Copy and Wrap float at the end of the first line (Dart `_CodePlan.inline`), not on a header row
+            // of their own. Only the first line keeps clear of them; every other line uses the block's full width.
             BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val gutter = if (prompts != null) Space.S4 else 0
                 val longest =
                     remember(shown) { shown.maxByOrNull { it.text.length }?.text.orEmpty() }
                 val natural =
                     remember(longest, mono) {
                         measurer.measure(longest, mono, maxLines = 1).size.width
                     }
-                val copyWidth = with(LocalDensity.current) { COPY_CLEARANCE.dp.roundToPx() }
-                val overflow = natural > constraints.maxWidth - (if (copying) copyWidth else 0)
-                val controls = (if (copying) COPY_CLEARANCE else 0) + if (overflow) 48 else 0
-                val lineModifier = Modifier.padding(end = controls.dp)
-                if (effectiveWrap) Box(lineModifier) { body() }
-                else CodeOverflow(colors.fill, colors.gutter, lineModifier) { body() }
-                if (copying)
-                    CopyCorner(copyLabel, copiedLabel, trailingInset = if (overflow) 48 else 0) {
-                        onCopy(display)
+                val firstNatural =
+                    remember(shown, mono) {
+                        measurer.measure(shown.firstOrNull()?.text.orEmpty(), mono, maxLines = 1).size.width
                     }
-                if (overflow) CodeWrapCorner(effectiveWrap) { effectiveWrap = !effectiveWrap }
+                val density = LocalDensity.current
+                val px = { dp: Int -> with(density) { dp.dp.roundToPx() } }
+                val room = constraints.maxWidth - px(gutter)
+                val overflow =
+                    codeOverflows(natural, firstNatural, room, px(codeCornerReserve(if (copying) 1 else 0)))
+                val reserve = codeCornerReserve((if (copying) 1 else 0) + (if (overflow) 1 else 0))
+                val body =
+                    @Composable {
+                        Column {
+                            shown.forEachIndexed { i, line ->
+                                Row(if (i == 0) Modifier.padding(end = reserve.dp) else Modifier) {
+                                    if (prompts != null) {
+                                        DisableSelection {
+                                            BasicText(
+                                                if (prompts[i]) "$" else "",
+                                                Modifier.width(Space.S4.dp),
+                                                style =
+                                                    lineStyle.copy(
+                                                        color = colors.gutter,
+                                                        textAlign = TextAlign.Start,
+                                                    ),
+                                            )
+                                        }
+                                    }
+                                    BasicText(
+                                        text = lineText(line, tokens, colors),
+                                        style = lineStyle,
+                                        softWrap = effectiveWrap,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                if (effectiveWrap) Box(Modifier.fillMaxWidth()) { body() }
+                else CodeOverflow(colors.fill, colors.gutter) { body() }
+                CodeCorner(
+                    fill = colors.fill,
+                    firstLine = codeFirstLine(lineStyle),
+                    copyLabel = copyLabel,
+                    copiedLabel = copiedLabel,
+                    onCopy = onCopy?.let { copy -> { copy(display) } },
+                    wrapOn = if (overflow) effectiveWrap else null,
+                    onWrap = if (overflow) ({ effectiveWrap = !effectiveWrap }) else null,
+                )
             }
             if (hidden > 0 && moreLabel != null && onMore != null) {
                 DisableSelection {
@@ -246,8 +256,12 @@ public fun KitCodeBlock(
     }
 }
 
-/** Room kept at the end of the lines for the Copy button. */
-private const val COPY_CLEARANCE = 56
+/**
+ * P-001: whether a block's lines need sideways room (and so its Wrap toggle): the [longest] line is wider than the
+ * [room], or the [first] line is wider than what the Copy corner leaves of it ([copyReserve]). All in pixels.
+ */
+internal fun codeOverflows(longest: Int, first: Int, room: Int, copyReserve: Int): Boolean =
+    longest > room || first > room - copyReserve
 
 /** Plan 09 §9.2: code and output in the transcript stop at 12 lines. */
 public const val TRANSCRIPT_MAX_LINES: Int = 12

@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -67,12 +68,12 @@ class KitCodeBlockTest {
                     )
                 }
             }
-            onNodeWithText("Copy command").performClick()
+            onNodeWithContentDescription("Copy command").performClick()
             assertEquals(source, copied)
         }
 
     @Test
-    fun `N9 QA wave4 Copy says Copied for a moment and a one-line block stays one line tall`() =
+    fun `N9 QA wave4 Copy says Copied (P-001: as a check icon) for a moment and a one-line block stays one line tall`() =
         runComposeUiTest {
             mainClock.autoAdvance = false
             setContent {
@@ -94,11 +95,11 @@ class KitCodeBlockTest {
             val withCopy = onNode(androidx.compose.ui.test.hasTestTag("one")).fetchSemanticsNode().size.height
             val without = onNode(androidx.compose.ui.test.hasTestTag("plain")).fetchSemanticsNode().size.height
             assertEquals(without, withCopy, "Copy adds no empty space under the line")
-            onNodeWithText("Copy").performClick()
+            onNodeWithContentDescription("Copy").performClick()
             mainClock.advanceTimeBy(100)
-            onNodeWithText("Copied").assertExists()
+            onNodeWithContentDescription("Copied").assertExists()
             mainClock.advanceTimeBy(COPIED_MS + 500)
-            onNodeWithText("Copy").assertExists()
+            onNodeWithContentDescription("Copy").assertExists()
         }
 
     @Test
@@ -156,7 +157,7 @@ class KitCodeBlockTest {
             val shown = allText()
             assertFalse("sk-canary-123456" in shown, shown)
             assertTrue("export KEY=" in shown, shown)
-            onNodeWithText("Copy").performClick()
+            onNodeWithContentDescription("Copy").performClick()
             assertFalse("sk-canary-123456" in copied.orEmpty())
         }
 }
