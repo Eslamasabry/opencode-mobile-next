@@ -73,7 +73,7 @@ APKSIGNER="$(find_tool "${OC_APKSIGNER:-}" apksigner)" || cannot "apksigner not 
 dev() { if [[ -n "$serial" ]]; then "$ADB" -s "$serial" "$@"; else "$ADB" "$@"; fi; }
 signers_of() { # signers_of <apk>: one upper-case SHA-256 per line
   "$APKSIGNER" verify --print-certs "$1" 2>/dev/null |
-    sed -n 's/^Signer #[0-9][0-9]* certificate SHA-256 digest:[[:space:]]*//p' | tr -d ': \t\r' | tr '[:lower:]' '[:upper:]'
+    sed -n 's/^.*Signer[^:]*:\{0,1\}[[:space:]]*certificate SHA-256 digest:[[:space:]]*//p' | tr -d ': \t\r' | tr '[:lower:]' '[:upper:]' | sort -u
 }
 
 work="$(mktemp -d "${TMPDIR:-/tmp}/oc-owner-preflight.XXXXXX")" || cannot "no temporary folder"

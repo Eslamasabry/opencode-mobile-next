@@ -29,7 +29,7 @@ the identity gate.
 | `verifySwitchReleaseIdentity` | Gradle, before packaging the switch release | package is not the Flutter one, versionCode < 10010 or differs between APKs, versionName is not a plain X.Y.Z |
 | `verifyProductionLineage` | Gradle, before packaging any release | the signing key is neither Owner local nor Public CI |
 | `verifySwitchReleaseStorageManifest`, `verifySwitchReleaseNativeLibraries` | Gradle, `assembleSwitchRelease` | All-files access would reset; an APK lacks its ABI's Linux or speech libraries |
-| `lintSwitchRelease`, `testSwitchReleaseUnitTest` | Gradle | release lint or the app's unit tests (including `ReleaseShapeTest`) fail |
+| `lintSwitchRelease`, `testSwitchDebugUnitTest` | Gradle | release lint or the app's unit tests (including `ReleaseShapeTest`) fail |
 | `:quality:test -Poc.mergedManifest=required` | Gradle | a name Android binds to differs from Flutter 2.1.4 (component freeze, E00-S13) |
 | `native/tool/release/kept_classes_check.sh` | on the built APKs | R8 renamed or removed a class the freeze names |
 | `native/tool/release/identity_gate.sh --expect-signer <sha>` | on the built APKs | wrong package/version, not exactly one signer, or the signer is not the expected lineage |
