@@ -127,7 +127,7 @@ class Walk:
 
     def visible(self, n):
         x0, y0, x1, y1 = n.box
-        return x1 - x0 > self.s and y1 - y0 > self.s and x1 > 0 and x0 < self.w and y1 > 0 and y0 < self.h
+        return x1 - x0 > 1 + self.s and y1 - y0 > 1 + self.s and x1 > 0 and x0 < self.w and y1 > 0 and y0 < self.h
 
     def row(self, n):
         return n.tap and n.bleed
