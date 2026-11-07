@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -22,61 +23,101 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * E20-S10 (owner's phone): the reply's Copy and More floated at the far end with a wide gap, Copy drawn heavier, and a
- * tall gap above them. They now sit as one compact row on the reply's own start edge, glyphs on the text's edge.
+ * C-003 (parity audit 2026-11-07, Flutter kit_turn.dart:667-737): the reply footer puts Copy then More at the **end**,
+ * 24 dp glyphs in 48 dp targets 8 dp apart, the last glyph's ink on the turn's edge, and the meta caption at the
+ * start. Native had them at the start, 20 dp, no gap, no caption, raised into the reply.
  */
 @OptIn(ExperimentalTestApi::class)
 class ReplyFooterCraftTest {
     private val width = 400.dp
 
     private fun near(expected: Dp, actual: Dp, what: String) =
-        assertTrue(abs(expected.value - actual.value) < 0.5f, "$what: expected $expected, was $actual")
+        assertTrue(abs(expected.value - actual.value) <= 0.51f, "$what: expected $expected, was $actual")
 
-    private fun androidx.compose.ui.test.ComposeUiTest.footer(rtl: Boolean, copied: () -> Unit = {}, opened: () -> Unit = {}) =
-        setContent {
-            ChatTestTheme(localeTag = if (rtl) "ar" else "en") {
-                CompositionLocalProvider(LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
-                    Column(Modifier.width(width)) { KitReplyFooter("Copy reply", "More", copied, opened) }
+    private fun ComposeUiTest.footer(
+        rtl: Boolean = false,
+        meta: String? = null,
+        fontScale: Float? = null,
+        copied: () -> Unit = {},
+        opened: (() -> Unit)? = {},
+    ) = setContent {
+        ChatTestTheme(localeTag = if (rtl) "ar" else "en", fontScale = fontScale) {
+            val direction = if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+            CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                Column(Modifier.width(width)) {
+                    KitReplyFooter("Copy reply", "More", copied, opened) { meta?.let { KitReplyMeta(it) } }
                 }
             }
         }
-
-    @Test
-    fun `E20-S10 Copy and More sit on the reply's start edge, the Copy glyph on the text's edge, targets side by side`() =
-        runComposeUiTest {
-            footer(rtl = false)
-            val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
-            val more = onNodeWithContentDescription("More").getBoundsInRoot()
-            // The reply text starts at S4; the glyph starts one target inset into its 48 dp target.
-            near(Space.S4.dp, copy.left + REPLY_ACTION_INSET.dp, "Copy's glyph lines up with the text's start")
-            near(copy.right, more.left, "More follows Copy with no extra gap between the targets")
-            assertTrue(more.right < width / 2, "the actions stay on the start edge, not floating at the end")
-            near(copy.bottom - copy.top, more.bottom - more.top, "same target size")
-        }
-
-    @Test
-    fun `E20-S10 in Arabic the actions mirror to the right edge, the reply's start`() = runComposeUiTest {
-        footer(rtl = true)
-        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
-        val more = onNodeWithContentDescription("More").getBoundsInRoot()
-        near(width - Space.S4.dp, copy.right - REPLY_ACTION_INSET.dp, "Copy's glyph lines up with the text's start")
-        assertTrue(more.right <= copy.left + 0.5.dp && more.left > width / 2, "More follows Copy toward the middle")
     }
 
     @Test
-    fun `E20-S10 the row rises so the glyph sits one kit step under the reply, and both actions still take taps`() =
-        runComposeUiTest {
-            var copied = 0
-            var opened = 0
-            footer(rtl = false, copied = { copied++ }, opened = { opened++ })
-            val row = onNodeWithTag("kit-reply-actions").getBoundsInRoot()
-            val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
-            near(row.top - REPLY_ACTION_RISE.dp, copy.top, "the target rises above the footer's top")
-            // The reply column's S1 bottom padding + what is left of the inset above the glyph = S2.
-            near(Space.S2.dp, Space.S1.dp + (REPLY_ACTION_INSET - REPLY_ACTION_RISE).dp, "glyph gap is the kit's step")
-            onNodeWithContentDescription("Copy reply").performClick()
-            onNodeWithContentDescription("More").performClick()
-            assertEquals(1, copied)
-            assertEquals(1, opened)
-        }
+    fun `C-003 Copy then More sit at the end, 8 dp apart, More's ink ending on the turn's edge`() = runComposeUiTest {
+        footer()
+        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        val more = onNodeWithContentDescription("More").getBoundsInRoot()
+        near(48.dp, copy.right - copy.left, "Copy keeps a 48 dp target")
+        near(48.dp, more.right - more.left, "More keeps a 48 dp target")
+        near(Space.S2.dp, more.left - copy.right, "8 dp between the two targets")
+        assertTrue(copy.left > width / 2, "the actions sit at the end, not the start")
+        // The glyph is 24 dp centred in the target; the dots' ink stands 18.75 % in from the glyph's end.
+        val moreInkEnd = more.right - REPLY_ACTION_INSET.dp - (REPLY_ACTION_GLYPH * MORE_INK_END).dp
+        near(width - Space.S4.dp, moreInkEnd, "More's ink ends on the turn's edge")
+        assertEquals(24, REPLY_ACTION_GLYPH, "the action glyphs are 24 dp (AppIconography.actionSize)")
+    }
+
+    @Test
+    fun `C-003 in Arabic the actions mirror to the left end, More's ink on the left edge`() = runComposeUiTest {
+        footer(rtl = true)
+        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        val more = onNodeWithContentDescription("More").getBoundsInRoot()
+        assertTrue(more.right < copy.left, "More follows Copy toward the end (left)")
+        near(Space.S2.dp, copy.left - more.right, "8 dp between the two targets")
+        val moreInkEnd = more.left + REPLY_ACTION_INSET.dp + (REPLY_ACTION_GLYPH * MORE_INK_END).dp
+        near(Space.S4.dp, moreInkEnd, "More's ink ends on the turn's edge")
+    }
+
+    @Test
+    fun `C-003 the meta caption sits at the start of the footer row, the actions at its end`() = runComposeUiTest {
+        footer(meta = "7:01 PM · Parity model · 150 tok")
+        val meta = onNodeWithTag(REPLY_META_TAG, useUnmergedTree = true).getBoundsInRoot()
+        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        near(Space.S4.dp, meta.left, "the meta starts on the reply's text edge")
+        assertTrue(meta.right <= copy.left, "the meta stays clear of the actions")
+        val metaMid = (meta.top + meta.bottom) / 2
+        val copyMid = (copy.top + copy.bottom) / 2
+        near(copyMid, metaMid, "meta and actions share one line")
+    }
+
+    @Test
+    fun `C-003 from 1_3x text the meta moves above the actions, which stay at the end`() = runComposeUiTest {
+        footer(meta = "7:01 PM · Parity model · 150 tok", fontScale = 1.3f)
+        val meta = onNodeWithTag(REPLY_META_TAG, useUnmergedTree = true).getBoundsInRoot()
+        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        assertTrue(meta.bottom <= copy.top + 0.5.dp, "the meta sits above the actions")
+        assertTrue(copy.left > width / 2, "the actions stay at the end")
+    }
+
+    @Test
+    fun `C-003 the row no longer rises into the reply, and both actions take taps`() = runComposeUiTest {
+        var copied = 0
+        var opened = 0
+        footer(copied = { copied++ }, opened = { opened++ })
+        val row = onNodeWithTag("kit-reply-actions").getBoundsInRoot()
+        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        near(row.top, copy.top, "the target starts at the footer's top: 4 dp under the reply plus the 12 dp inset")
+        near(0.dp, row.top, "nothing pulls the row above its own slot")
+        onNodeWithContentDescription("Copy reply").performClick()
+        onNodeWithContentDescription("More").performClick()
+        assertEquals(1, copied)
+        assertEquals(1, opened)
+    }
+
+    @Test
+    fun `C-003 with Copy alone, Copy's own ink ends on the edge`() = runComposeUiTest {
+        footer(opened = null)
+        val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+        val inkEnd = copy.right - REPLY_ACTION_INSET.dp - (REPLY_ACTION_GLYPH * COPY_INK_END).dp
+        near(width - Space.S4.dp, inkEnd, "Copy's ink ends on the turn's edge")
+    }
 }

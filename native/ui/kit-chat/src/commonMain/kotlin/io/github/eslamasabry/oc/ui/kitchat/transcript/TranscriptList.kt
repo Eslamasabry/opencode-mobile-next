@@ -180,7 +180,9 @@ public fun KitTranscriptList(
         LazyColumn(
             state = state.lazy,
             reverseLayout = true,
-            verticalArrangement = Arrangement.Top,
+            // C-002: a short conversation sits on the composer, its empty space above (Flutter's reversed list,
+            // chat_transcript.dart:153-155). Under reverseLayout, Bottom is where index 0 (the newest row) rests.
+            verticalArrangement = Arrangement.Bottom,
             contentPadding = insetPadding,
             // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
             // list measures, so the newest row rides the slot's edge frame by frame.
