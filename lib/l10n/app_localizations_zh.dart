@@ -340,26 +340,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '可附加图片、PDF、文本文件以及 Excel 或 Word 文件（.xlsx、.docx）。';
 
   @override
-  String get termuxRestartTitle => '重启本地服务器？';
-
-  @override
-  String get termuxRestartMessage => 'OpenCode 会短暂不可用。应用会保留你当前的项目并自动重新连接。';
-
-  @override
-  String termuxRestartBusyMessage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '有 $count 个对话正在生成。重启会中断它们。',
-      one: '有 1 个对话正在生成。重启会中断它。',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get termuxRestartConfirm => '重启';
-
-  @override
   String get chatCopyCompleteReply => '复制完整回复';
 
   @override
@@ -9157,33 +9137,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localAgentTitle => '此手机上的 Claude Code';
 
   @override
-  String get localAgentRestartTitle => '在此手机上重启 Claude Code？';
-
-  @override
-  String get localAgentRestartBody =>
-      'Claude Code 会短暂不可用，它当前正在做的事情会被中断。你的对话会保留在手机上。';
-
-  @override
-  String get localAgentStopTitle => '在此手机上停止 Claude Code？';
-
-  @override
-  String get localAgentStopBody =>
-      'Claude Code 在此手机上正在做的事情会被中断，本应用也会与它断开连接。你的项目、对话和 Claude 登录信息会保留；重新启动即可继续。';
-
-  @override
-  String get localAgentRemove => '从此手机移除';
-
-  @override
-  String get localAgentRemoveTitle => '从此手机移除 Claude Code？';
-
-  @override
-  String get localAgentRemoveBody =>
-      '停止它，并从 Ubuntu 中删除 Node.js、Paseo 和 Claude Code，约 1 GB。你的项目和 Claude 登录信息会保留。';
-
-  @override
-  String get localAgentRemoveKeep => '保留';
-
-  @override
   String get firstRunAgentsSideBySide =>
       '它们在同一台电脑上并行运行。先从一个开始，之后随时可从顶部的服务器名称添加其他的。';
 
@@ -16315,9 +16268,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String serverDisconnectFrom(String server) {
     return '断开与 $server 的连接';
   }
-
-  @override
-  String get localAgentStopNamed => '停止 Claude Code';
 
   @override
   String monitorSwitchToTitle(String server) {

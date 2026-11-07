@@ -366,28 +366,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se pueden adjuntar imágenes, PDF, archivos de texto y archivos de Excel o Word (.xlsx, .docx).';
 
   @override
-  String get termuxRestartTitle => '¿Reiniciar el servidor local?';
-
-  @override
-  String get termuxRestartMessage =>
-      'OpenCode no estará disponible por un momento. La app conservará tu proyecto actual y se reconectará sola.';
-
-  @override
-  String termuxRestartBusyMessage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count conversaciones están generando. Reiniciar las interrumpirá.',
-      one: '1 conversación está generando. Reiniciar la interrumpirá.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get termuxRestartConfirm => 'Reiniciar';
-
-  @override
   String get chatCopyCompleteReply => 'Copiar la respuesta completa';
 
   @override
@@ -9945,34 +9923,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get localAgentTitle => 'Claude Code en este teléfono';
 
   @override
-  String get localAgentRestartTitle =>
-      '¿Reiniciar Claude Code en este teléfono?';
-
-  @override
-  String get localAgentRestartBody =>
-      'Claude Code no estará disponible un momento y se interrumpe lo que esté haciendo ahora. Tus conversaciones se quedan en el teléfono.';
-
-  @override
-  String get localAgentStopTitle => '¿Detener Claude Code en este teléfono?';
-
-  @override
-  String get localAgentStopBody =>
-      'Se interrumpe lo que Claude Code esté haciendo en este teléfono y esta app se desconecta de él. Tus proyectos, conversaciones y el inicio de sesión de Claude se conservan; vuelve a iniciarlo para continuar.';
-
-  @override
-  String get localAgentRemove => 'Quitar de este teléfono';
-
-  @override
-  String get localAgentRemoveTitle => '¿Quitar Claude Code de este teléfono?';
-
-  @override
-  String get localAgentRemoveBody =>
-      'Lo detiene y elimina Node.js, Paseo y Claude Code de Ubuntu, unos 1 GB. Tus proyectos y tu inicio de sesión de Claude se conservan.';
-
-  @override
-  String get localAgentRemoveKeep => 'Conservarlo';
-
-  @override
   String get firstRunAgentsSideBySide =>
       'Se ejecutan en paralelo en la misma computadora. Empieza con uno y agrega los demás cuando quieras desde el nombre del servidor, arriba.';
 
@@ -17484,9 +17434,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String serverDisconnectFrom(String server) {
     return 'Desconectar de $server';
   }
-
-  @override
-  String get localAgentStopNamed => 'Detener Claude Code';
 
   @override
   String monitorSwitchToTitle(String server) {

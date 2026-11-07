@@ -362,31 +362,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمكن إرفاق الصور وملفات PDF والملفات النصية وملفات Excel وWord ‏(‎.xlsx و‎.docx).';
 
   @override
-  String get termuxRestartTitle => 'هل تريد إعادة تشغيل الخادم المحلي؟';
-
-  @override
-  String get termuxRestartMessage =>
-      'سيتعذّر استخدام OpenCode لفترة قصيرة. سيحتفظ التطبيق بمشروعك الحالي ويعيد الاتصال تلقائيًا.';
-
-  @override
-  String termuxRestartBusyMessage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'تولّد $count محادثة ردودًا. ستقاطعها إعادة التشغيل.',
-      many: 'تولّد $count محادثة ردودًا. ستقاطعها إعادة التشغيل.',
-      few: 'تولّد $count محادثات ردودًا. ستقاطعها إعادة التشغيل.',
-      two: 'تولّد محادثتان ردودًا. ستقاطعهما إعادة التشغيل.',
-      one: 'تولّد محادثة واحدة ردًا. ستقاطعها إعادة التشغيل.',
-      zero: 'لا توجد محادثات تولّد ردودًا.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get termuxRestartConfirm => 'إعادة التشغيل';
-
-  @override
   String get chatCopyCompleteReply => 'نسخ الرد كاملًا';
 
   @override
@@ -9888,34 +9863,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get localAgentTitle => 'Claude Code على هذا الهاتف';
 
   @override
-  String get localAgentRestartTitle =>
-      'إعادة تشغيل Claude Code على هذا الهاتف؟';
-
-  @override
-  String get localAgentRestartBody =>
-      'يتوقف Claude Code لحظات ويُقاطَع ما يفعله الآن. تبقى محادثاتك على الهاتف.';
-
-  @override
-  String get localAgentStopTitle => 'إيقاف Claude Code على هذا الهاتف؟';
-
-  @override
-  String get localAgentStopBody =>
-      'يُقاطَع كل ما يفعله Claude Code على هذا الهاتف، وينقطع اتصال هذا التطبيق به. تبقى مشاريعك ومحادثاتك وتسجيل دخولك إلى Claude؛ شغّله من جديد للمتابعة.';
-
-  @override
-  String get localAgentRemove => 'إزالة من هذا الهاتف';
-
-  @override
-  String get localAgentRemoveTitle => 'إزالة Claude Code من هذا الهاتف؟';
-
-  @override
-  String get localAgentRemoveBody =>
-      'يوقفه ويحذف Node.js وPaseo وClaude Code من Ubuntu، نحو 1 غ.ب. تبقى مشاريعك وتسجيل دخولك إلى Claude.';
-
-  @override
-  String get localAgentRemoveKeep => 'إبقاؤه';
-
-  @override
   String get firstRunAgentsSideBySide =>
       'تعمل جنبًا إلى جنب على الحاسوب نفسه. ابدأ بواحد، وأضف البقية في أي وقت من اسم الخادم في الأعلى.';
 
@@ -17369,9 +17316,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String serverDisconnectFrom(String server) {
     return 'قطع الاتصال بـ $server';
   }
-
-  @override
-  String get localAgentStopNamed => 'إيقاف Claude Code';
 
   @override
   String monitorSwitchToTitle(String server) {

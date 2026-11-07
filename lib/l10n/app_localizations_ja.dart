@@ -361,28 +361,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'Images, PDFs, text files, and Excel or Word files (.xlsx, .docx) can be attached.';
 
   @override
-  String get termuxRestartTitle => 'Restart the local server?';
-
-  @override
-  String get termuxRestartMessage =>
-      'OpenCode will be briefly unavailable. The app will keep your current project and reconnect automatically.';
-
-  @override
-  String termuxRestartBusyMessage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count conversations are generating. Restarting will interrupt them.',
-      one: '1 conversation is generating. Restarting will interrupt it.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get termuxRestartConfirm => 'Restart';
-
-  @override
   String get chatCopyCompleteReply => 'Copy complete reply';
 
   @override
@@ -9794,33 +9772,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get localAgentTitle => 'Claude Code on this phone';
 
   @override
-  String get localAgentRestartTitle => 'Restart Claude Code on this phone?';
-
-  @override
-  String get localAgentRestartBody =>
-      'Claude Code is briefly unavailable and anything it is doing right now is interrupted. Your conversations stay on the phone.';
-
-  @override
-  String get localAgentStopTitle => 'Stop Claude Code on this phone?';
-
-  @override
-  String get localAgentStopBody =>
-      'Anything Claude Code is doing on this phone is interrupted, and this app disconnects from it. Your projects, conversations and Claude sign-in stay; start it again to continue.';
-
-  @override
-  String get localAgentRemove => 'Remove from this phone';
-
-  @override
-  String get localAgentRemoveTitle => 'Remove Claude Code from this phone?';
-
-  @override
-  String get localAgentRemoveBody =>
-      'Stops it and deletes Node.js, Paseo and Claude Code from Ubuntu, about 1 GB. Your projects and your Claude sign-in stay.';
-
-  @override
-  String get localAgentRemoveKeep => 'Keep it';
-
-  @override
   String get firstRunAgentsSideBySide =>
       'They run side by side on the same computer. Start with one, and add the others any time from the server name at the top.';
 
@@ -17223,9 +17174,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String serverDisconnectFrom(String server) {
     return 'Disconnect from $server';
   }
-
-  @override
-  String get localAgentStopNamed => 'Stop Claude Code';
 
   @override
   String monitorSwitchToTitle(String server) {
