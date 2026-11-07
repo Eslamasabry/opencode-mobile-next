@@ -11,6 +11,11 @@ import io.github.eslamasabry.oc.ui.kit.rb.o06.FlutterCapture
 import io.github.eslamasabry.oc.ui.kit.row.KitFactRow
 import io.github.eslamasabry.oc.ui.kit.row.KitProvenance
 import io.github.eslamasabry.oc.ui.kit.row.kitFactBorder
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -52,7 +57,15 @@ class KitFactRowGateTest {
     }
 
     private fun shot(name: String, modes: List<String> = listOf("light", "dark"), content: @Composable () -> Unit) =
-        FlutterGoldenGate.check(wrap = { FlutterCapture(it) }, name = name, modes = modes, content = content)
+        FlutterGoldenGate.check(wrap = if ("_ar" in name) geistAr else ({ c -> FlutterCapture(c) }), name = name, modes = modes, content = content)
+
+    /** kit_gallery.dart:64-88 keeps captureTheme's Geist primary face under the Arabic locale (as rb/o06 KitKeyValueGateTest). */
+    private val geistAr: @Composable (@Composable () -> Unit) -> Unit = { c ->
+        val fonts = rememberKitFonts(arabic = false)
+        val typography = remember(fonts) { KitTypography(fonts, arabic = false) }
+        CompositionLocalProvider(LocalKitTypography provides typography) { FlutterCapture(c) }
+    }
+
 
     @Test fun kit_fact_row_default() { shot("kit_fact_row_default") { facts() }; shot("kit_fact_row_default_1280x800") { facts() } }
     @Test fun kit_fact_row_waiting() { shot("kit_fact_row_waiting") { waiting() }; shot("kit_fact_row_waiting_1280x800") { waiting() } }
