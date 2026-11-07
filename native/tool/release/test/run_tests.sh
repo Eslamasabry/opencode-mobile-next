@@ -44,7 +44,13 @@ cat >"$FAKE/apksigner" <<'EOF'
 #!/usr/bin/env bash
 apk="${@: -1}"
 [[ -f "$apk.broken" ]] && { echo "DOES NOT VERIFY" >&2; exit 1; }
-n=0; while read -r fp; do [[ -n "$fp" ]] || continue; n=$((n + 1)); echo "Signer #$n certificate SHA-256 digest: $(tr 'A-F' 'a-f' <<<"$fp")"; done <"$apk.certs"
+n=0; while read -r fp; do [[ -n "$fp" ]] || continue; n=$((n + 1))
+  lc="$(tr 'A-F' 'a-f' <<<"$fp")"
+  if [[ -f "$apk.v2" ]]; then # apksigner's form for an APK without a v1 signature (minSdk 24+): one block per scheme
+    echo "V2 Signer: certificate DN: CN=Test"; echo "V2 Signer: certificate SHA-256 digest: $lc"
+    echo "V3 Signer: certificate SHA-256 digest: $lc"
+  else echo "Signer #$n certificate SHA-256 digest: $lc"; fi
+done <"$apk.certs"
 EOF
 # aapt2 dump badging <apk>: prints <apk>.badging.
 cat >"$FAKE/aapt2" <<'EOF'
@@ -76,6 +82,10 @@ expect "E01-S01 gate refuses the Legacy CI lineage as the expectation" 1 "$GATE"
 expect "E01-S01 gate refuses an unknown (debug) expectation" 1 "$GATE" --expect-signer "$DEBUG" --version-code 10010 --version-name 3.0.0 "$A/arm.apk"
 expect "E01-S01 gate refuses the other lineage" 1 "$GATE" --expect-signer "$OWNER" --version-code 10010 --version-name 3.0.0 "$A/arm.apk"
 check "E01-S01 the refusal names the signer mismatch" has "is not the expected lineage"
+apk "$A/v2only.apk" "$PKG" 10010 3.0.0 "$PUBLIC"; touch "$A/v2only.apk.v2"
+expect "E01-S01 gate reads apksigner's V2/V3 signer lines (no v1 signature)" 0 "$GATE" --expect-signer "$PUBLIC" --version-code 10010 --version-name 3.0.0 "$A/v2only.apk"
+apk "$A/v2dbg.apk" "$PKG" 10010 3.0.0 "$DEBUG"; touch "$A/v2dbg.apk.v2"
+expect "E01-S01 gate refuses a V2-only debug signer" 1 "$GATE" --expect-signer "$PUBLIC" --version-code 10010 --version-name 3.0.0 "$A/v2dbg.apk"
 apk "$A/two.apk" "$PKG" 10010 3.0.0 "$PUBLIC" "$OWNER"
 expect "E01-S01 gate refuses two signers" 1 "$GATE" --expect-signer "$PUBLIC" --version-code 10010 --version-name 3.0.0 "$A/two.apk"
 check "E01-S01 the refusal counts the signers" has "printed 2 signers"
@@ -129,7 +139,7 @@ echo "$*" >>"$PHONE/calls.log"
 case "$1" in
   devices) printf 'List of devices attached\n'; cat "$PHONE/devices" ;;
   get-state) echo device ;;
-  pull) cp "$PHONE/base.apk" "$3"; cp "$PHONE/base.apk.certs" "$3.certs"; [[ -f "$PHONE/base.apk.broken" ]] && cp "$PHONE/base.apk.broken" "$3.broken"; exit 0 ;;
+  pull) cp "$PHONE/base.apk" "$3"; cp "$PHONE/base.apk.certs" "$3.certs"; [[ -f "$PHONE/base.apk.v2" ]] && cp "$PHONE/base.apk.v2" "$3.v2"; [[ -f "$PHONE/base.apk.broken" ]] && cp "$PHONE/base.apk.broken" "$3.broken"; exit 0 ;;
   shell)
     shift
     case "$*" in
@@ -156,6 +166,8 @@ check "E00-S16 preflight reports the installed version" has "installed version 2
 check "E00-S16 preflight reports the Linux data size" has "app data (projects and the built-in Linux) 3072 MB"
 check "E00-S16 preflight only sends read-only commands" bash -c "! grep -Eiv '^(-s [^ ]+ )?(devices|get-state|pull /data/app/[^ ]+ [^ ]+|shell (pm path|dumpsys package|dumpsys diskstats|df -k /data).*)$' '$PHONE/calls.log'"
 check "E00-S16 preflight never takes a screenshot" bash -c "! grep -Eiq 'screencap|screenrecord|(^| )(install|uninstall|clear|am|rm)( |$)' '$PHONE/calls.log' && ! grep -Eq 'screencap|screenrecord' '$PRE'"
+phone "$OWNER" 4610; touch "$PHONE/base.apk.v2"
+expect "E00-S16 preflight reads a V2-only installed signer" 0 "$PRE" --expect-signer "$OWNER"
 phone "$PUBLIC" 62
 expect "E00-S16 preflight stops when the signer is another lineage" 1 "$PRE" --expect-signer "$OWNER"
 check "E00-S16 preflight stops before reading the version" bash -c "! grep -q 'dumpsys package' '$PHONE/calls.log'"

@@ -112,8 +112,8 @@ for apk in "${apks[@]}"; do
   if ! certs="$("$apksigner" verify --print-certs "$apk" 2>/dev/null)"; then
     refuse "$name" "apksigner does not verify the signature (unsigned or broken)"; continue
   fi
-  mapfile -t signers < <(sed -n 's/^Signer #[0-9][0-9]* certificate SHA-256 digest:[[:space:]]*//p' <<<"$certs" |
-    tr -d ': \t\r' | tr '[:lower:]' '[:upper:]')
+  mapfile -t signers < <(sed -n 's/^.*Signer[^:]*:\{0,1\}[[:space:]]*certificate SHA-256 digest:[[:space:]]*//p' <<<"$certs" |
+    tr -d ': \t\r' | tr '[:lower:]' '[:upper:]' | sort -u)
   if [[ ${#signers[@]} -ne 1 ]]; then
     refuse "$name" "apksigner printed ${#signers[@]} signers; exactly one is allowed"
   elif [[ "${signers[0]}" != "$expect" ]]; then
