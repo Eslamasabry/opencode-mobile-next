@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
+import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,6 +66,8 @@ public class DesktopKitPlatform : KitPlatform {
     }
 
     override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? = null
+
+    override fun liveShader(source: String): LiveShaderProgram? = DesktopLiveShader.compile(source)
 
     @OptIn(ExperimentalResourceApi::class)
     override fun svgPainter(text: String, pixels: Int): Painter? {

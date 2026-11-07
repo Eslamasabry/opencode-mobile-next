@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.ui.design.color.DynamicSource
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.kit.foundation.scaledFontDensity
+import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
 import kotlinx.coroutines.flow.StateFlow
 
 public enum class KitPlatformFamily {
@@ -101,6 +102,12 @@ public interface KitPlatform {
      * own curve.
      */
     public fun frameDensity(base: Density, cap: Float): Density = scaledFontDensity(base, 1f, cap)
+
+    /**
+     * Compiles a live background's shader (AGSL on Android 13+, SkSL on desktop), or null where the platform has no
+     * runtime shaders (Android 8–12) or the text does not compile: the page then draws the look's still fallback.
+     */
+    public fun liveShader(source: String): LiveShaderProgram? = null
 }
 
 public val LocalKitPlatform: ProvidableCompositionLocal<KitPlatform> = staticCompositionLocalOf {

@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.design.color.DynamicSource
 import io.github.eslamasabry.oc.ui.design.color.DynamicTones
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -97,6 +98,8 @@ public class AndroidKitPlatform(
     override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) AndroidFrost.effect(spec, density)
         else null
+
+    override fun liveShader(source: String): LiveShaderProgram? = AndroidLiveShader.compile(source)
 
     override fun svgPainter(text: String, pixels: Int): Painter? {
         if (!isStaticKitSvg(text) || pixels !in 1..256) return null
