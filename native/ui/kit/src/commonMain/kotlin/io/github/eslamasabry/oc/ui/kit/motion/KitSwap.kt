@@ -6,6 +6,7 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -38,17 +39,54 @@ public fun <T> KitSwap(
     alignment: Alignment = Alignment.Center,
     content: @Composable (T) -> Unit,
 ) {
+    SwapOf(target, modifier, SwapLook(pace, alignment) { 1f }, content)
+}
+
+/**
+ * [KitSwap] for a confirming mark (M-015, the copied check): a content [grows] says so also grows from
+ * [GROW_FROM] (0.9) as it fades in, at Full only; everything else cross-fades as [KitSwap] does.
+ *
+ * States: at rest, changing
+ * Text: none (content decides)
+ * Cap: none
+ * Motion: cross-fade QUICK, the mark growing from 0.9 at Full; Calm = fade only; Off = instant (class Fade)
+ * Replaces: the AnimatedSwitcher of KitIconButton.copy (lib/ui/kit/kit_icon_button.dart)
+ */
+@Composable
+public fun <T> KitSwapGrow(
+    target: T,
+    grows: (T) -> Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable (T) -> Unit,
+) {
+    SwapOf(target, modifier, SwapLook(KitPace.Quick, Alignment.Center) { if (grows(it)) GROW_FROM else 1f }, content)
+}
+
+/** M-015: a confirming mark grows from 90 % of its size. */
+public const val GROW_FROM: Float = 0.9f
+
+/** How a swap moves: its [pace], where its contents sit, and the scale each one [enterScale]s from. */
+private class SwapLook<T>(val pace: KitPace, val alignment: Alignment, val enterScale: (T) -> Float)
+
+@Composable
+private fun <T> SwapOf(target: T, modifier: Modifier, look: SwapLook<T>, content: @Composable (T) -> Unit) {
     if (KitMotion.state.reduced) {
-        Box(modifier, contentAlignment = alignment) { key(target) { content(target) } }
+        Box(modifier, contentAlignment = look.alignment) { key(target) { content(target) } }
         return
     }
     val specs = KitMotion.specs
+    val travels = KitMotion.state.travels
+    val pace = look.pace
     AnimatedContent(
         targetState = target,
         modifier = modifier,
-        contentAlignment = alignment,
+        contentAlignment = look.alignment,
         transitionSpec = {
-            (fadeIn(specs.pace(pace)) togetherWith fadeOut(specs.pace(pace)))
+            val from = if (travels) look.enterScale(targetState) else 1f
+            val enter =
+                if (from < 1f) fadeIn(specs.pace(pace)) + scaleIn(specs.pace(pace), initialScale = from)
+                else fadeIn(specs.pace(pace))
+            (enter togetherWith fadeOut(specs.pace(pace)))
                 .using(SizeTransform(clip = false) { _, _ -> snap<IntSize>() })
         },
         label = "kit.swap",

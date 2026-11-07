@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
@@ -21,8 +22,8 @@ public object KitModalMotionRules {
     /** MOT-2: a modal never scales in. Part B's 0.96 `scaleIn` goes when its owner adopts [KitModalMotion]. */
     public const val INITIAL_SCALE: Float = 1f
 
-    /** A dialog or centred panel rises 8 dp as it fades in, at Full only. */
-    public fun dialogRiseDp(state: KitMotionState): Int = if (state.travels) MotionTokens.ENTRANCE_RISE_DP else 0
+    /** A dialog or centred panel rises 8 dp as it fades in, at Full only (kept apart from the 6 dp entrance rise). */
+    public fun dialogRiseDp(state: KitMotionState): Int = if (state.travels) Space.S2 else 0
 
     /**
      * A menu drops 8 dp from its anchor (starts 8 dp up, toward the anchor) or rises when it opens above; Full only,

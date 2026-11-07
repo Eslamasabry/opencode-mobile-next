@@ -23,11 +23,6 @@ public data class KitMotionState(
     val stillFrame: Boolean = false,
     /** Gallery and debug builds only: slows every kit animation for review (1 = normal). */
     val debugTimeScale: Float = 1f,
-    /**
-     * A theme change is fading (P-029): the parts' own short tweens follow the theme's colours frame by frame instead
-     * of easing behind them, so the whole change takes the theme's 200 ms.
-     */
-    val themeFading: Boolean = false,
 ) {
     val reduced: Boolean get() = level == MotionLevel.Off
     val travels: Boolean get() = level == MotionLevel.Full
@@ -53,14 +48,14 @@ public class KitMotionSpecs internal constructor(private val s: KitMotionState) 
     private fun k(stiffness: Float) = stiffness / (s.debugTimeScale * s.debugTimeScale)
 
     public fun <T> enter(): FiniteAnimationSpec<T> =
-        if (s.reduced || s.themeFading) snap() else tween(ms(MotionTokens.STANDARD), easing = KitEasing.Enter)
+        if (s.reduced) snap() else tween(ms(MotionTokens.STANDARD), easing = KitEasing.Enter)
 
     public fun <T> quick(): FiniteAnimationSpec<T> =
-        if (s.reduced || s.themeFading) snap() else tween(ms(MotionTokens.QUICK), easing = KitEasing.Enter)
+        if (s.reduced) snap() else tween(ms(MotionTokens.QUICK), easing = KitEasing.Enter)
 
     /** The Style surface transition (Flutter kitSurfaceBox, state 120 ms). */
     public fun <T> surface(): FiniteAnimationSpec<T> =
-        if (s.reduced || s.themeFading) snap() else tween(ms(120), easing = KitEasing.Enter)
+        if (s.reduced) snap() else tween(ms(120), easing = KitEasing.Enter)
 
     /** A part leaving uses QUICK on `Enter` (Flutter's exit curve is a reverse-slot curve). */
     public fun <T> exit(): FiniteAnimationSpec<T> = quick()

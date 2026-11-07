@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -67,6 +68,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.kitLeaving
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -148,8 +150,8 @@ public object MenuLayout {
  * until after selection or leave dismissal to the action owner. Dismissing (outside tap, Back) calls [onDismissRequest]
  * and runs nothing. An empty [items] never opens.
  *
- * States: closed, open Text: frame Cap: Menu (320) Motion: slides a few dp out from its anchor as it fades in at Full;
- * Calm fades; Off appears at once Replaces: showKitMenu, KitMenuPanel (lib/ui/kit/kit_menu.dart)
+ * States: closed, opening, open, closing Text: frame Cap: Menu (320) Motion: fades in QUICK and drops 8 dp from its
+ * anchor at Full; Calm fades; fades out QUICK; Off appears and leaves at once Replaces: showKitMenu, KitMenuPanel (lib/ui/kit/kit_menu.dart)
  */
 @Composable
 public fun KitMenu(
@@ -168,27 +170,52 @@ public fun KitMenu(
     val origin = LocalKitPressOrigin.current
     val open = expanded && items.isNotEmpty()
     val pressed = remember(open) { if (open) origin.take() else null }
+    // M-004: the transition lives above the Popup, so a closing menu stays composed until its fade has run (the Popup
+    // used to leave on the frame the menu closed). What it shows while it fades is what it showed when it closed.
+    val shown = remember { MutableTransitionState(false) }
+    shown.targetState = open
+    val last = remember { MenuShown() }
+    if (open) {
+        last.items = items
+        last.title = title
+    }
     Box(modifier.onGloballyPositioned { own = it.boundsInWindow().toIntRect() }) {
         anchor()
-        if (open) {
-            val at = MenuPlacement.anchorFor(own, pressed)
-            MenuPopup(items, title, onDismissRequest, at, override = at.takeIf { it != own })
+        if (MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty()) {
+            if (open) last.at = MenuPlacement.anchorFor(own, pressed)
+            MenuPopup(shown, last, onDismissRequest, own)
         }
     }
 }
 
+/** What a menu showed when it was last open, kept while it fades out. */
+private class MenuShown {
+    var items: List<KitMenuItem> = emptyList()
+    var title: String? = null
+    var at: IntRect = IntRect.Zero
+}
+
+/** The menu's motion rules, pure (M-004). */
+public object MenuRules {
+    /** The menu's Popup is composed while it is open, opening or still fading out; it leaves once the fade is done. */
+    public fun composed(current: Boolean, target: Boolean): Boolean = current || target
+}
+
 /**
- * The open menu: placed by [MenuPlacement] from [anchor] (window px); [override] replaces the anchor box the popup is
- * given when the menu opens from a pressed control instead of its own.
+ * The open menu: [last]'s items, placed by [MenuPlacement] from its anchor box (window px), which replaces the box the
+ * popup is given ([own]) when the menu opens from a pressed control instead of its own.
  */
 @Composable
 private fun MenuPopup(
-    items: List<KitMenuItem>,
-    title: String?,
+    shown: MutableTransitionState<Boolean>,
+    last: MenuShown,
     onDismissRequest: () -> Unit,
-    anchor: IntRect,
-    override: IntRect?,
+    own: IntRect,
 ) {
+    val anchor = last.at
+    val override = anchor.takeIf { it != own }
+    val items = last.items
+    val title = last.title
     val anchorTop = anchor.top
     val anchorBottom = anchor.bottom
     // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
@@ -203,23 +230,29 @@ private fun MenuPopup(
     val provider = remember(gutter, top, bottom, override) { MenuPosition(gutter, top, bottom, override) }
     Popup(
         popupPositionProvider = provider,
-        onDismissRequest = onDismissRequest,
+        // A menu already fading out does not ask to close again.
+        onDismissRequest = { if (shown.targetState) onDismissRequest() },
         properties = PopupProperties(focusable = true),
     ) {
         val motion = KitMotion.state
         val specs = KitMotion.specs
-        val shown = remember { MutableTransitionState(false).apply { targetState = true } }
-        // The panel drops from the anchor when it opens below and rises when it opens above.
+        val density = LocalDensity.current
+        // The panel drops 8 dp from the anchor when it opens below and rises when it opens above (Full only; Calm
+        // fades); it fades out on the way out (M-004). Off: both are instant, so the first frame is final.
         val opensAbove = remember { mutableStateOf(false) }
-        val slide = slideInVertically(specs.quick()) { if (opensAbove.value) it / SLIDE_SHARE else -it / SLIDE_SHARE }
+        val drop =
+            slideInVertically(specs.quick<IntOffset>()) {
+                with(density) { KitModalMotionRules.menuDropDp(motion, opensAbove.value).dp.roundToPx() }
+            }
         AnimatedVisibility(
             shown,
-            enter = fadeIn(specs.quick()) + if (motion.travels) slide else fadeIn(specs.quick()),
+            enter = if (motion.travels) fadeIn(specs.quick()) + drop else fadeIn(specs.quick()),
             exit = fadeOut(specs.exit()),
+            label = "kit.menu",
         ) {
             KitMenuPanel(
                 modifier =
-                    Modifier.layout { measurable, constraints ->
+                    Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit).layout { measurable, constraints ->
                         if (!constraints.hasBoundedHeight) {
                             val placeable = measurable.measure(constraints.copy(minHeight = 0))
                             return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
@@ -241,9 +274,6 @@ private fun MenuPopup(
         }
     }
 }
-
-/** The opening slide: a sixteenth of the panel's height, toward it from the anchor. */
-private const val SLIDE_SHARE = 16
 
 /**
  * The menu's panel on its own (Dart `KitMenuPanel`): `surface2`, a hairline, at most 320 dp, rows

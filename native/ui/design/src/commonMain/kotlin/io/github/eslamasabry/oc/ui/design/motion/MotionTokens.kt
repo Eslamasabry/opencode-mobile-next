@@ -47,7 +47,8 @@ public object MotionTokens {
     public const val REFRESH_BREATH: Int = FlutterKitMotion.BREATH_MS
     // Distances (dp) and ratios (§2.5)
     public const val PAGE_TRAVEL_DP: Int = 30
-    public const val ENTRANCE_RISE_DP: Int = 8
+    /** Dart `KitEntrance.rise` (kit_reveal.dart): a late part rises 6 dp into place (M-021). */
+    public const val ENTRANCE_RISE_DP: Int = 6
     public const val MENU_DROP_DP: Int = 8
     public const val TIP_RISE_DP: Int = 4
     public const val PREVIEW_CORNER_DP: Int = 28

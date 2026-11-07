@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit
 
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.ripple.RippleAlpha
@@ -14,6 +15,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -49,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
+import io.github.eslamasabry.oc.ui.kit.theme.kitThemeCover
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitThemeFade
 import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
 
@@ -123,12 +126,11 @@ public fun KitTheme(
             appearance.motion,
             appearance.saver,
         )
-    // P-029: a theme change fades over 200 ms on one clock; while it runs, the parts' own colour easing follows it
-    // frame by frame instead of trailing behind it.
+    // P-029, M-019: a theme change fades the old screen's picture out over the new colours in 200 ms; the parts'
+    // own moves keep running underneath.
     val fade = rememberKitThemeFade(targetColors, fades = level != MotionLevel.Off && !stillFrame)
     val colors = fade.colors
-    val motion =
-        remember(level, stillFrame, fade.fading) { KitMotionState(level, stillFrame, themeFading = fade.fading) }
+    val motion = remember(level, stillFrame) { KitMotionState(level, stillFrame) }
     val direction = if (isRtl(localeTag)) LayoutDirection.Rtl else LayoutDirection.Ltr
     val ripple = remember { kitRippleConfiguration() }
     val selection =
@@ -165,7 +167,9 @@ public fun KitTheme(
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
-        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, typography = MaterialBridge.typography(typography), content = content)
+        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, typography = MaterialBridge.typography(typography)) {
+            Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) { content() }
+        }
     }
 }
 

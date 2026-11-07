@@ -51,6 +51,7 @@ public object KitMotionManifest {
         linkedMapOf(
             "KitSwap" to KitMotionClass.Fade,
             "KitSwap.count" to KitMotionClass.Travel,
+            "KitSwapGrow" to KitMotionClass.Travel,
             "KitSpin" to KitMotionClass.Travel,
             "KitReveal" to KitMotionClass.Fold,
             "KitEntrance" to KitMotionClass.Travel,

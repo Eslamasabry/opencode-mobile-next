@@ -102,7 +102,7 @@ class KitbRulesTest {
     fun `B-KIT-054 every S2-KITB motion part is registered with exactly one class`() {
         val expected =
             setOf(
-                "KitSwap", "KitSwap.count", "KitSpin", "KitReveal", "KitEntrance", "KitPresence", "KitAnimatedRows",
+                "KitSwap", "KitSwap.count", "KitSwapGrow", "KitSpin", "KitReveal", "KitEntrance", "KitPresence", "KitAnimatedRows",
                 "KitAnimatedValue", "KitDim", "KitRefresh.pull", "KitRefresh.breath", "KitTip", "KitJumpPill",
                 "KitTabSwitcher", "KitTabStrip.indicator", "KitSearchField.clear", "KitScrollFade", "KitSheetStep",
                 "KitSideSheet.drag", "KitSideSheet.settle", "KitModalMotion.dialog", "KitModalMotion.menu",
@@ -198,8 +198,8 @@ class KitbRulesTest {
     fun `B-KIT-023 the jump pill shows past 480 dp from the latest, and rises toward its own edge`() {
         assertFalse(JumpPillRules.shows(distanceFromEdgePx = 480f * 2.625f, density = 2.625f))
         assertTrue(JumpPillRules.shows(distanceFromEdgePx = 481f * 2.625f, density = 2.625f))
-        assertEquals(MotionTokens.ENTRANCE_RISE_DP, JumpPillRules.riseDp(KitJumpEdge.Bottom, KitMotionState(MotionLevel.Full)))
-        assertEquals(-MotionTokens.ENTRANCE_RISE_DP, JumpPillRules.riseDp(KitJumpEdge.Top, KitMotionState(MotionLevel.Full)))
+        assertEquals(8, JumpPillRules.riseDp(KitJumpEdge.Bottom, KitMotionState(MotionLevel.Full)))
+        assertEquals(-8, JumpPillRules.riseDp(KitJumpEdge.Top, KitMotionState(MotionLevel.Full)))
         assertEquals(0, JumpPillRules.riseDp(KitJumpEdge.Bottom, KitMotionState(MotionLevel.Calm)))
     }
 
@@ -245,7 +245,7 @@ class KitbRulesTest {
 
     @Test
     fun `B-KIT-016 B-KIT-022 dialogs rise and menus drop only at Full, and never scale`() {
-        assertEquals(MotionTokens.ENTRANCE_RISE_DP, KitModalMotionRules.dialogRiseDp(KitMotionState(MotionLevel.Full)))
+        assertEquals(8, KitModalMotionRules.dialogRiseDp(KitMotionState(MotionLevel.Full)))
         assertEquals(0, KitModalMotionRules.dialogRiseDp(KitMotionState(MotionLevel.Calm)))
         assertEquals(-MotionTokens.MENU_DROP_DP, KitModalMotionRules.menuDropDp(KitMotionState(MotionLevel.Full), above = false))
         assertEquals(MotionTokens.MENU_DROP_DP, KitModalMotionRules.menuDropDp(KitMotionState(MotionLevel.Full), above = true))

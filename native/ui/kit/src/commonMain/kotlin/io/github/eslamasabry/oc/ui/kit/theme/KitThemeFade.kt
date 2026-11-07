@@ -1,18 +1,29 @@
 package io.github.eslamasabry.oc.ui.kit.theme
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 
 /**
- * The theme change (P-029): dark to light, a new pack or accent fades over [MS] instead of jumping, and every colour
- * moves on the one clock, so a part's own colour easing does not add its tail on top (it measured 270 ms).
+ * The theme change (P-029, M-019): dark to light, a new pack or accent fades over [MS] instead of jumping. The old
+ * screen's picture fades out over the new theme ([rememberKitThemeFade]); [lerp] is the colour mix kept for parts
+ * that blend two themes.
  */
 public object ThemeFade {
     /** Flutter's theme change (`kThemeAnimationDuration`). */
@@ -57,37 +68,73 @@ public object ThemeFade {
     }
 }
 
-/** The colours shown now and whether a theme fade is running. */
-internal class KitThemeFadeFrame(val colors: KitColors, val fading: Boolean)
+/**
+ * M-019: the picture of the screen as it was, laid over the new theme and fading out. The live screen switches to the
+ * new colours in one frame underneath it, so every word stays fully readable through the change (a colour lerp left
+ * text near the ground's colour at the midpoint) and the parts' own moves (the segmented indicator) still run.
+ */
+@Stable
+internal class KitThemeCover(internal val layer: GraphicsLayer) {
+    /** The old screen while it fades out; null at rest. */
+    internal var shot: ImageBitmap? by mutableStateOf(null)
+
+    /** The old screen's opacity over the new one: 1 → 0 over [ThemeFade.MS]. */
+    internal val alpha: Animatable<Float, AnimationVector1D> = Animatable(0f)
+
+    /** True while the old screen still covers part of the new one. */
+    internal val fading: Boolean get() = shot != null
+}
+
+/** The colours shown now and the cover that fades the old screen out. */
+internal class KitThemeFadeFrame(val colors: KitColors, val cover: KitThemeCover)
 
 /**
- * Follows [target] through a [ThemeFade.MS] linear fade; at once when [fades] is false (motion Off, still frames). A
- * change during a fade starts from the colours on screen, never jumping back.
+ * Follows [target]: the screen as it is now is captured, the new colours apply at once underneath, and the capture
+ * fades out over [ThemeFade.MS] (linear, Flutter `AnimatedTheme`). At once when [fades] is false (motion Off, still
+ * frames). A change during a fade captures what is on screen then (the half-faded cover included), never jumping back.
  */
 @Composable
 internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFadeFrame {
-    val from = remember { mutableStateOf(target) }
-    val to = remember { mutableStateOf(target) }
-    val progress = remember { Animatable(1f) }
+    val layer = rememberGraphicsLayer()
+    val cover = remember(layer) { KitThemeCover(layer) }
+    val shown = remember { mutableStateOf(target) }
     LaunchedEffect(target, fades) {
-        if (target == to.value) return@LaunchedEffect
-        from.value = ThemeFade.lerp(from.value, to.value, progress.value)
-        to.value = target
         if (!fades) {
-            progress.snapTo(1f)
+            cover.shot = null
+            shown.value = target
             return@LaunchedEffect
         }
-        progress.snapTo(0f)
-        // P-116: the first fading frame recomposes every part in the new colours' path (it measured ~95 ms of a
-        // 200 ms fade left on the emulator). The fade's clock starts once that frame is under way, so all of MS is
-        // seen as motion instead of being spent on one long first frame.
+        if (target == shown.value) return@LaunchedEffect
+        // Nothing drawn yet (the first frame): nothing to fade from.
+        if (layer.size.width == 0 || layer.size.height == 0) {
+            shown.value = target
+            return@LaunchedEffect
+        }
+        // The layer still holds the last frame drawn, in the old colours.
+        val shot = layer.toImageBitmap()
+        cover.alpha.snapTo(1f)
+        cover.shot = shot
+        shown.value = target
+        // P-116: the first frame in the new colours recomposes every part (it measured ~95 ms on the emulator); the
+        // fade's clock starts once that frame is under way, so all of MS is seen as motion.
         withFrameNanos {}
-        progress.animateTo(1f, tween(ThemeFade.MS, easing = LinearEasing))
+        cover.alpha.animateTo(0f, tween(ThemeFade.MS, easing = LinearEasing))
+        cover.shot = null
     }
     // Motion Off and still frames show the new colours on the same frame.
-    if (!fades) return KitThemeFadeFrame(target, fading = false)
-    val t = progress.value
-    // Until the effect has started the fade, keep the colours on screen (one frame), not the new ones.
-    return if (t >= 1f) KitThemeFadeFrame(to.value, fading = false)
-    else KitThemeFadeFrame(ThemeFade.lerp(from.value, to.value, t), fading = true)
+    return KitThemeFadeFrame(if (fades) shown.value else target, cover)
+}
+
+/**
+ * Draws the theme's content through [cover]'s layer (so the last frame can be captured) and the fading old screen
+ * over it. The cover is drawn inside the layer, so a capture taken mid-fade holds what was really on screen.
+ */
+internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier = drawWithContent {
+    val content = this
+    cover.layer.record {
+        content.drawContent()
+        val shot = cover.shot
+        if (shot != null) drawImage(shot, alpha = cover.alpha.value.coerceIn(0f, 1f))
+    }
+    drawLayer(cover.layer)
 }
