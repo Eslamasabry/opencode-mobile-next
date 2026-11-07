@@ -375,6 +375,10 @@ public class ChatPresenter(
         launcher.launch { world.reload() }
     }
 
+    override fun reportProblem() {
+        nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem)
+    }
+
     override fun retryLastPrompt() {
         val text = newestPrompt()?.text?.takeIf { it.isNotBlank() } ?: return
         launcher.launch { world.sendAgain(text) }

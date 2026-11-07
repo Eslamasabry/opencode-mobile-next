@@ -2,3 +2,5 @@
 # shot	rule	subject
 chat_find_open	start-edge	"# of # matches"
 chat_loading	gap-step	(unnamed)
+chat_transcript_turn	target	"Ask OpenCode…"
+chat_transcript_turn_1280x800	target	"Ask OpenCode…"

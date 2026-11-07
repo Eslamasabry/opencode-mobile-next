@@ -5,13 +5,8 @@ chat_find_open	phone	edge-tap	More for this reply
 chat_find_open	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_find_open	phone	overlap	shopfront
 chat_find_open	phone	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
-chat_find_open	tablet	edge-tap	Fix the flaky checkout test
-chat_find_open	tablet	edge-tap	More for this reply
-chat_find_open	tablet	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_find_open	tablet	overlap	shopfront
 chat_find_open	tablet	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
-chat_find_open	tablet	wide-text	# of # matches
-chat_find_open	tablet	wide-text	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_load_error	phone	overlap	shopfront
 chat_load_error	tablet	overlap	shopfront
 chat_loading	phone	overlap	shopfront
@@ -21,20 +16,12 @@ chat_transcript_turn	phone	edge-tap	More for this reply
 chat_transcript_turn	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_transcript_turn	phone	overlap	shopfront
 chat_transcript_turn	phone	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
-chat_transcript_turn	tablet	edge-tap	Fix the flaky checkout test
-chat_transcript_turn	tablet	edge-tap	More for this reply
-chat_transcript_turn	tablet	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_transcript_turn	tablet	overlap	shopfront
 chat_transcript_turn	tablet	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
-chat_transcript_turn	tablet	wide-text	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_transcript_turn_1280x800	phone	edge-tap	Fix the flaky checkout test
 chat_transcript_turn_1280x800	phone	edge-tap	More for this reply
 chat_transcript_turn_1280x800	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_transcript_turn_1280x800	phone	overlap	shopfront
 chat_transcript_turn_1280x800	phone	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
-chat_transcript_turn_1280x800	tablet	edge-tap	Fix the flaky checkout test
-chat_transcript_turn_1280x800	tablet	edge-tap	More for this reply
-chat_transcript_turn_1280x800	tablet	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
 chat_transcript_turn_1280x800	tablet	overlap	shopfront
 chat_transcript_turn_1280x800	tablet	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
-chat_transcript_turn_1280x800	tablet	wide-text	The flakiness comes from ⁨CheckoutBloc⁩ racing t

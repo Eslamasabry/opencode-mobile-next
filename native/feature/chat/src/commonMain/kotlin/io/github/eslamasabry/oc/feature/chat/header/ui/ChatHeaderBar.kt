@@ -213,6 +213,11 @@ public fun ChatHeaderTopBar(
     extraActions: List<KitLineAction> = emptyList(),
     onProject: (() -> Unit)? = null,
     onBranch: (() -> Unit)? = null,
+    /**
+     * Back shows where the chat was opened from somewhere (Flutter `KitTopBarExit.auto`: a pushed route); a chat at
+     * the root of its window (a wide layout's detail pane, the gate's scene) starts its title on the gutter.
+     */
+    canGoBack: Boolean = true,
 ) {
     val state = slot.state
     val actions = slot.actions
@@ -293,18 +298,22 @@ public fun ChatHeaderTopBar(
                                 )
                             } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
                         onProject = onProject,
+                        // Flutter chat_top_bar.dart:180-190 shows the Git chip always ("Git" until the branch is
+                        // known). Native KitTopBarScope draws its "·" as a word of its own outside the branch's target
+                        // (Flutter kit_top_bar_scope.dart:164 keeps it inside), which the alignment gate rejects, so
+                        // "Git" waits for that :ui:kit fix (score-E.md) and only a known branch shows for now.
                         branch = state.branch,
                         onBranch = onBranch,
                     )
                 }
             },
-        exit = KitTopBarExit.Back,
+        exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,
         exitLabel = stringResource(Res.string.kitTopBarBack),
         onExit = onBack,
         // E20-S13: Back, the title and "server · project" are one compact block (they were three rows).
         backBesideTitle = true,
-        onTitleTap = actions::renameRequested,
-        titleTapLabel = stringResource(Res.string.chatUiRenameSession),
+        // Flutter's chat title is not a switcher (chat_top_bar.dart:325, no onTitleTap): Rename lives in the ⋯ menu,
+        // so the title carries no chevron.
         actions = emptyList(),
         more = { hidden ->
             val places =

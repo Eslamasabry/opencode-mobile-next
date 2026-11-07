@@ -202,6 +202,8 @@ public class ChatViewModel(
 
     override fun retryLoad(): Unit = presenter.retryLoad()
 
+    override fun reportProblem(): Unit = presenter.reportProblem()
+
     /**
      * Project Files for this conversation (P12-FILES; 07 §5 D01/D02, `/files` and the chat's Files
      * action).

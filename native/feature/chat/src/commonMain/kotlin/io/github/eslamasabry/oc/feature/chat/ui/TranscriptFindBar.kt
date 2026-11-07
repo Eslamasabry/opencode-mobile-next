@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Flutter chat/transcript_find.dart: search stays by the composer, with two compact rows. */
 @Composable
-internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
+internal fun TranscriptFindBar(find: FindUi, actions: ChatActions, modifier: Modifier = Modifier) {
     val field = rememberTextFieldState(find.query)
     val focus = remember { FocusRequester() }
     val navigationFocus = remember { FocusRequester() }
@@ -61,7 +61,7 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions) {
         testTag = "transcript-find-older",
     )
     Column(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
             .padding(start = Space.S4.dp, end = Space.S1.dp, top = Space.S2.dp, bottom = Space.S2.dp)
             .testTag("transcript-find-bar")
             .focusRequester(navigationFocus)
