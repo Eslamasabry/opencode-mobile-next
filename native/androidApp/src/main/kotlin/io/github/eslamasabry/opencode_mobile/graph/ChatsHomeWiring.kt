@@ -25,10 +25,15 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningRow
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.NoChatsHomeExtras
+import io.github.eslamasabry.oc.feature.chats.presentation.OpeningRules
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.SessionTitles
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +41,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/** How often home quietly tries this phone's server again while it starts (E05-S20). */
+private val QUIET_RETRY_EVERY = 3.seconds
 
 /**
  * One source selector over the actual runtime; hiding a source never closes a graph an open chat
@@ -51,6 +59,7 @@ class AppChatsHome(
     private val redactor: Redactor,
     private val clock: Clock,
     private val monitor: AppChatsMonitor,
+    private val phone: BuiltinRuntime,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras {
@@ -60,6 +69,9 @@ class AppChatsHome(
     override val snapshot: StateFlow<ChatsHomeExtraState> = mutable.asStateFlow()
     private var actionFailure: Failure? = null
     private val cachedRevisions = mutableMapOf<ProfileId, Pair<String, List<ChatFeedItem>>>()
+    // E05-S20: home's wait for this phone's own server, and the quiet retries while it starts.
+    private var phoneWatch: Pair<ProfileId, PhoneStartWatch>? = null
+    private var quietRetry: Job? = null
 
     init {
         scope.launch {
@@ -69,7 +81,7 @@ class AppChatsHome(
                     runtime.busy,
                     runtime.snapshot,
                     runtime.profiles.activeId,
-                    monitor.snapshot,
+                    combine(monitor.snapshot, phone.serverFacts) { _, _ -> Unit },
                 ) { _, _, _, _, _ ->
                     Unit
                 }
@@ -98,17 +110,77 @@ class AppChatsHome(
         val owner = active?.let(runtime.profiles::profile)
         val opening =
             if (owner != null && !runtime.activeListReady()) {
+                val failure = runtime.sourceFailures[active]
                 ChatsOpeningUi(
                     phase =
-                        if (runtime.busy.value) ChatsOpeningPhase.Connecting
-                        else ChatsOpeningPhase.Failed,
+                        OpeningRules.phase(
+                            runtime.busy.value,
+                            failure,
+                            watchPhone(owner),
+                            clock.now(),
+                        ),
                     serverName = owner.profile.name,
                     rows = readInventory(owner).toImmutableList(),
-                    failure = runtime.sourceFailures[active],
+                    failure = failure,
                     profile = active,
                 )
             } else null
+        if (opening == null) phoneWatch = null
         mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value)
+        if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
+    }
+
+    /**
+     * E05-S20: the readings of this phone's own server (the built-in Linux server the app launches) while home waits
+     * for its first answer; null for any other server, which keeps the plain connecting/failed rule.
+     */
+    private fun watchPhone(owner: LoadedProfile): PhoneStartWatch? {
+        val facts = phone.serverFacts.value
+        if (!builtIn(owner) || facts.status?.installed == false) {
+            phoneWatch = null
+            return null
+        }
+        val now = clock.now()
+        val prior = phoneWatch?.takeIf { it.first == owner.id }?.second ?: PhoneStartWatch(since = now)
+        val alive = facts.status?.serverRunning
+        val next =
+            prior.copy(
+                startingSince = if (facts.starting) prior.startingSince ?: now else null,
+                processAlive = alive,
+                uptime = facts.status?.serverUptime?.takeIf { alive == true },
+                seenAlive = prior.seenAlive || alive == true || facts.starting,
+                stoppedByPerson = facts.stoppedByPerson,
+            )
+        phoneWatch = owner.id to next
+        return next
+    }
+
+    private fun builtIn(owner: LoadedProfile): Boolean =
+        !owner.profile.usesAgentSocket &&
+            runtime.sourceOnThisPhone(owner.profile) &&
+            owner.profile.baseUrl.trimEnd('/') in
+                listOf(
+                    "http://127.0.0.1:${PhoneServerScripts.PORT}",
+                    "http://localhost:${PhoneServerScripts.PORT}",
+                )
+
+    /**
+     * While this phone starts, home tries its server again every few seconds without showing a failure, and looks at
+     * the clock again so the 90 s start window can end in the failure card.
+     */
+    private fun keepTryingQuietly() {
+        if (quietRetry?.isActive == true) return
+        quietRetry =
+            scope.launch {
+                while (true) {
+                    delay(QUIET_RETRY_EVERY)
+                    val opening = mutable.value.opening ?: break
+                    if (opening.phase != ChatsOpeningPhase.Starting) break
+                    val profile = opening.profile
+                    if (profile != null && !runtime.busy.value) runtime.retryListSource(profile)
+                    publish()
+                }
+            }
     }
 
     override suspend fun showSource(profile: ProfileId, shown: Boolean): Outcome<Unit> =

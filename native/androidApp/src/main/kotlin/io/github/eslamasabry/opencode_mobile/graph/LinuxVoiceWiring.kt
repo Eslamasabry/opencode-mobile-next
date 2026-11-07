@@ -664,6 +664,10 @@ internal constructor(
 
     private val facts = MutableStateFlow(PhoneServerFacts())
 
+    /** The phone server's readings, for home's "Starting this phone…" wait (E05-S20). Read-only. */
+    val serverFacts: StateFlow<PhoneServerFacts>
+        get() = facts.asStateFlow()
+
     private fun readStatus(): RuntimeStatus =
         NativeRuntimeStatus.read(
             mapOf(
@@ -1600,7 +1604,15 @@ internal constructor(
         if (bound is Outcome.Failed) return@withLock true
         if (target.profile.raw in closedProfiles) return@withLock true
         reconcileRecovery(target)
-        val result = appOpen.run(target)
+        // The app-open start is the one start path too (PhoneServerFacts.starting: "whoever asked for it"), so home
+        // can tell a server the app is booting from one that is broken (E05-S20).
+        facts.update { it.copy(starting = true) }
+        val result =
+            try {
+                appOpen.run(target)
+            } finally {
+                facts.update { it.copy(starting = false) }
+            }
         if (result.starts > 0 && result.failure == null && result.leave == null) {
             mutation { linux.confirmManualServerStart(target.profile.raw) }
         }
