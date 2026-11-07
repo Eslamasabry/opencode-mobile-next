@@ -2,11 +2,25 @@ package io.github.eslamasabry.oc.ui.kit.live
 
 import io.github.eslamasabry.oc.ui.design.effects.AuroraImage
 import io.github.eslamasabry.oc.ui.kit.live.looks.AuroraLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.BlueprintLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.BokehLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.BrushedMetalLook
 import io.github.eslamasabry.oc.ui.kit.live.looks.CausticsLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.CircuitLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.ConstellationLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.DotRippleLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.FlowThreadsLook
 import io.github.eslamasabry.oc.ui.kit.live.looks.GlowSpillLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.HalftoneLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.HoneycombLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.LightRaysLook
 import io.github.eslamasabry.oc.ui.kit.live.looks.LiquidBlobsLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.MatrixRainLook
 import io.github.eslamasabry.oc.ui.kit.live.looks.MeshLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.OscilloscopeLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.RadarLook
 import io.github.eslamasabry.oc.ui.kit.live.looks.SilkLook
+import io.github.eslamasabry.oc.ui.kit.live.looks.TopoLook
 import io.github.eslamasabry.oc.ui.words.res.liveStyleAurora
 import io.github.eslamasabry.oc.ui.words.res.liveStyleBlueprint
 import io.github.eslamasabry.oc.ui.words.res.liveStyleBokeh
@@ -65,7 +79,7 @@ public object LiveLooks {
             "bokeh",
         )
 
-    /** The shader looks. One line per look; builders B and C add theirs here. */
+    /** The shader looks, one line per look. */
     private val shaderLooks: List<LiveLook> =
         listOf(
             AuroraLook,
@@ -74,6 +88,20 @@ public object LiveLooks {
             CausticsLook,
             LiquidBlobsLook,
             GlowSpillLook,
+            DotRippleLook,
+            TopoLook,
+            FlowThreadsLook,
+            LightRaysLook,
+            ConstellationLook,
+            BokehLook,
+            HalftoneLook,
+            MatrixRainLook,
+            BlueprintLook,
+            CircuitLook,
+            OscilloscopeLook,
+            RadarLook,
+            HoneycombLook,
+            BrushedMetalLook,
         )
 
     private val byId: Map<String, LiveLook> = shaderLooks.associateBy { it.id }

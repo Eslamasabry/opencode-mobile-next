@@ -9,12 +9,15 @@ import kotlin.test.assertTrue
 /** E20-S28: stored ids map to looks, the picker offers what is drawn, and the renderer follows the API level. */
 class LiveLooksTest {
     private val builderA = listOf("aurora", "mesh", "silk", "caustics", "liquidBlobs", "glowSpill")
+    private val builderB = listOf("dotRipple", "topo", "flowThreads", "lightRays", "constellation", "bokeh", "halftone")
+    private val builderC =
+        listOf("matrixRain", "blueprint", "circuit", "oscilloscope", "radar", "honeycomb", "brushedMetal")
 
     @Test
     fun `B-KIT-LIVE-010 every Flutter look id is kept and each shader look answers to its own id`() {
         assertEquals(21, LiveLooks.ids.size)
         assertEquals(LiveLooks.ids.toSet().size, LiveLooks.ids.size)
-        for (id in builderA) assertEquals(id, LiveLooks.shader(id)?.id, id)
+        for (id in builderA + builderB + builderC) assertEquals(id, LiveLooks.shader(id)?.id, id)
         for (id in LiveLooks.ids) LiveLooks.shader(id)?.let { assertEquals(id, it.id) }
     }
 
@@ -31,6 +34,7 @@ class LiveLooksTest {
     fun `B-KIT-LIVE-012 the picker offers the painted aurora and every shader look in Flutter's order`() {
         val offered = LiveLooks.offered
         assertTrue(offered.containsAll(builderA + "auroraImage"))
+        assertEquals(LiveLooks.ids, offered, "every stored look is drawn and selectable")
         assertEquals(LiveLooks.ids.filter { it in offered }, offered)
         assertEquals(offered.size, offered.map(LiveLooks::label).toSet().size, "each look has its own name")
     }
@@ -58,11 +62,16 @@ class LiveLooksTest {
 
     @Test
     fun `B-KIT-LIVE-015 every look's shader starts from the shared prelude contract`() {
-        for (id in builderA) {
+        for (id in builderA + builderB + builderC) {
             val look = LiveLooks.shader(id)!!
-            assertTrue("half4 main(float2 fragCoord)" in look.shader, id)
-            assertTrue("liveOut(" in look.shader, "$id ends through liveOut (dither and contrast cap)")
-            assertFalse("uniform float uTime" in look.shader, "$id must not redeclare shared uniforms")
+            assertTrue("half4 main(float2 " in look.shader, id)
+            assertTrue(
+                "liveOut(" in look.shader || "lvOut(" in look.shader,
+                "$id ends through liveOut or lvOut (dither and contrast cap)",
+            )
+            for (shared in listOf("uRes", "uTime", "uIntensity", "uDensity", "uDark", "uGround", "uAccent", "uInk")) {
+                assertFalse(Regex("uniform \\w+ $shared;").containsMatchIn(look.shader), "$id redeclares $shared")
+            }
         }
     }
 }
