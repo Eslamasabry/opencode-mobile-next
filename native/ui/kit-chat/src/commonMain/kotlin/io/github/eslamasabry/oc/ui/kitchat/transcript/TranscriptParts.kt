@@ -1,11 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Alignment
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -65,12 +59,12 @@ private val TurnColumn = Modifier.fillMaxWidth().widthIn(max = 700.dp).padding(h
 
 /** The column for a part: its own 4 dp row padding only outside a [KitTurn]. */
 @Composable
-private fun column(): Modifier = if (LocalKitTurn.current) TurnColumn else Column
+internal fun column(): Modifier = if (LocalKitTurn.current) TurnColumn else Column
 
 /** A quiet line inside an opened step's body: the step's own edge, no page gutter. */
 private val StepLine = Modifier.fillMaxWidth().padding(vertical = Space.S1.dp / 2)
 
-private class LayoutHolder {
+internal class LayoutHolder {
     var layout: TextLayoutResult? = null
 }
 
@@ -183,33 +177,6 @@ private fun styleOf(kind: KitBlockKind): TextStyle {
         color = if (kind == KitBlockKind.Quote) base.color else c,
         textMotion = TextMotion.Static,
     )
-}
-
-/**
- * The person's prompt: a bubble at the end side, ≤ 85 % wide (R13), wrapped to its words. Graphite `surface2` with
- * the primary ink, as in Flutter: mint is kept for actions and live things, never the person's words.
- */
-@Composable
-public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    Box(modifier.then(column()), contentAlignment = Alignment.CenterEnd) {
-        Box(Modifier.fillMaxWidth(0.85f), contentAlignment = Alignment.CenterEnd) {
-            BasicText(
-                text = text,
-                style =
-                    // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
-                    // Arabic interface is left to right, its full stop at the end).
-                    LocalKitTypography.current.style(TypeRole.Body).copy(
-                        color = colors.text1,
-                        textDirection = TextDirection.Content,
-                    ),
-                modifier =
-                    Modifier.background(colors.surface2, RoundedCornerShape(tokens.bubbleRadius.dp))
-                        .padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),
-            )
-        }
-    }
 }
 
 /**
