@@ -34090,4 +34090,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get telemetryConsentNotNow => 'Not now';
+
+  @override
+  String get appUpdatePromptTitle => 'Update available';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'Download and update';
+
+  @override
+  String get appUpdateLater => 'Later';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'Size: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'What\'s new';
+
+  @override
+  String get appUpdateInstall => 'Install';
+
+  @override
+  String get appUpdateDownloading => 'Downloading update…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'Ready to install. Tap Install to finish updating.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'Failed to download update. Check connection and retry.';
+
+  @override
+  String get appUpdateRetry => 'Try again';
 }

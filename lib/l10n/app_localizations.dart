@@ -53539,6 +53539,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get telemetryConsentNotNow;
+
+  /// Title of the in-app update prompt sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get appUpdatePromptTitle;
+
+  /// Primary button in the in-app update prompt sheet to download and install.
+  ///
+  /// In en, this message translates to:
+  /// **'Download and update'**
+  String get appUpdateDownloadAndUpdate;
+
+  /// Secondary button to dismiss the in-app update prompt for now.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get appUpdateLater;
+
+  /// Download size label in the update prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {size}'**
+  String appUpdateSize(String size);
+
+  /// Section header for release notes and changes in the update sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get appUpdateChangelog;
+
+  /// Button to trigger installation after the update package is downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get appUpdateInstall;
+
+  /// Status text while update is downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get appUpdateDownloading;
+
+  /// Status text once APK download is finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to install. Tap Install to finish updating.'**
+  String get appUpdateReadyToInstall;
+
+  /// Status text when update download encounters an error.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download update. Check connection and retry.'**
+  String get appUpdateDownloadFailed;
+
+  /// Button to retry a failed update download.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get appUpdateRetry;
 }
 
 class _AppLocalizationsDelegate

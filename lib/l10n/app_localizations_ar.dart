@@ -34136,4 +34136,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get telemetryConsentNotNow => 'ليس الآن';
+
+  @override
+  String get appUpdatePromptTitle => 'تحديث متاح';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'تنزيل وتحديث';
+
+  @override
+  String get appUpdateLater => 'لاحقاً';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'الحجم: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'ما الجديد';
+
+  @override
+  String get appUpdateInstall => 'تثبيت';
+
+  @override
+  String get appUpdateDownloading => 'جارٍ تنزيل التحديث…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'جاهز للتثبيت. اضغط تثبيت لإكمال التحديث.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'فشل تنزيل التحديث. تحقق من الاتصال وحاول مجدداً.';
+
+  @override
+  String get appUpdateRetry => 'إعادة المحاولة';
 }

@@ -41503,15 +41503,73 @@
     "description": "Button on the failed phone setup screen when this phone cannot run Node.js: opens adding a server on a computer"
   },
   "telemetryConsentTitle": "Help improve OpenCode Mobile?",
-  "@telemetryConsentTitle": {"description": "One-time question on the first start of a build that can send analytics: title."},
+  "@telemetryConsentTitle": {
+    "description": "One-time question on the first start of a build that can send analytics: title."
+  },
   "telemetryConsentBody": "If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.",
-  "@telemetryConsentBody": {"description": "One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md."},
+  "@telemetryConsentBody": {
+    "description": "One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md."
+  },
   "telemetryConsentSends": "Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.",
-  "@telemetryConsentSends": {"description": "One-time analytics question: what is sent."},
+  "@telemetryConsentSends": {
+    "description": "One-time analytics question: what is sent."
+  },
   "telemetryConsentNever": "Never sent: your code, conversations, files, server addresses or keys. No advertising ID.",
-  "@telemetryConsentNever": {"description": "One-time analytics question: what is never sent."},
+  "@telemetryConsentNever": {
+    "description": "One-time analytics question: what is never sent."
+  },
   "telemetryConsentShare": "Share anonymous usage",
-  "@telemetryConsentShare": {"description": "One-time analytics question: the button that turns sharing on."},
+  "@telemetryConsentShare": {
+    "description": "One-time analytics question: the button that turns sharing on."
+  },
   "telemetryConsentNotNow": "Not now",
-  "@telemetryConsentNotNow": {"description": "One-time analytics question: the button that leaves sharing off and never asks again."}
+  "@telemetryConsentNotNow": {
+    "description": "One-time analytics question: the button that leaves sharing off and never asks again."
+  },
+  "appUpdatePromptTitle": "Update available",
+  "@appUpdatePromptTitle": {
+    "description": "Title of the in-app update prompt sheet."
+  },
+  "appUpdateDownloadAndUpdate": "Download and update",
+  "@appUpdateDownloadAndUpdate": {
+    "description": "Primary button in the in-app update prompt sheet to download and install."
+  },
+  "appUpdateLater": "Later",
+  "@appUpdateLater": {
+    "description": "Secondary button to dismiss the in-app update prompt for now."
+  },
+  "appUpdateSize": "Size: {size}",
+  "@appUpdateSize": {
+    "description": "Download size label in the update prompt.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "40.2 MB"
+      }
+    }
+  },
+  "appUpdateChangelog": "What's new",
+  "@appUpdateChangelog": {
+    "description": "Section header for release notes and changes in the update sheet."
+  },
+  "appUpdateInstall": "Install",
+  "@appUpdateInstall": {
+    "description": "Button to trigger installation after the update package is downloaded."
+  },
+  "appUpdateDownloading": "Downloading update…",
+  "@appUpdateDownloading": {
+    "description": "Status text while update is downloading."
+  },
+  "appUpdateReadyToInstall": "Ready to install. Tap Install to finish updating.",
+  "@appUpdateReadyToInstall": {
+    "description": "Status text once APK download is finished."
+  },
+  "appUpdateDownloadFailed": "Failed to download update. Check connection and retry.",
+  "@appUpdateDownloadFailed": {
+    "description": "Status text when update download encounters an error."
+  },
+  "appUpdateRetry": "Try again",
+  "@appUpdateRetry": {
+    "description": "Button to retry a failed update download."
+  }
 }

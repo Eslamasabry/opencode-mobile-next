@@ -10438,5 +10438,15 @@
   "telemetryConsentSends": "يُرسل: الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، وتقارير الأعطال، مع معرّف تثبيت عشوائي.",
   "telemetryConsentNever": "لا يُرسل أبدًا: شيفرتك ومحادثاتك وملفاتك وعناوين خوادمك ومفاتيحك. ولا معرّف إعلاني.",
   "telemetryConsentShare": "مشاركة الاستخدام المجهول",
-  "telemetryConsentNotNow": "ليس الآن"
+  "telemetryConsentNotNow": "ليس الآن",
+  "appUpdatePromptTitle": "تحديث متاح",
+  "appUpdateDownloadAndUpdate": "تنزيل وتحديث",
+  "appUpdateLater": "لاحقاً",
+  "appUpdateSize": "الحجم: {size}",
+  "appUpdateChangelog": "ما الجديد",
+  "appUpdateInstall": "تثبيت",
+  "appUpdateDownloading": "جارٍ تنزيل التحديث…",
+  "appUpdateReadyToInstall": "جاهز للتثبيت. اضغط تثبيت لإكمال التحديث.",
+  "appUpdateDownloadFailed": "فشل تنزيل التحديث. تحقق من الاتصال وحاول مجدداً.",
+  "appUpdateRetry": "إعادة المحاولة"
 }

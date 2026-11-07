@@ -1,3 +1,4 @@
+import '../quota/antigravity_quota_client.dart';
 import '../scheduling/platform.dart';
 import 'dart:async';
 import 'dart:math' show Random;
@@ -65,7 +66,6 @@ import 'attention_feed.dart';
 import 'monitor_attention_reader.dart';
 import '../domain/work_row_status.dart';
 import 'provider_quota_monitor.dart';
-import '../quota/antigravity_quota_client.dart';
 import '../quota/provider_quota_client.dart';
 import '../api2/client.dart';
 import '../api2/gateway.dart';

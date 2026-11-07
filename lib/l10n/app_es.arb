@@ -8898,5 +8898,15 @@
   "telemetryConsentSends": "Se envía: qué páginas y funciones usas, hasta dónde llega la configuración e informes de fallos, con un ID de instalación aleatorio.",
   "telemetryConsentNever": "Nunca se envía: tu código, conversaciones, archivos, direcciones de servidores ni claves. Ningún ID de publicidad.",
   "telemetryConsentShare": "Compartir uso anónimo",
-  "telemetryConsentNotNow": "Ahora no"
+  "telemetryConsentNotNow": "Ahora no",
+  "appUpdatePromptTitle": "Actualización disponible",
+  "appUpdateDownloadAndUpdate": "Descargar y actualizar",
+  "appUpdateLater": "Más tarde",
+  "appUpdateSize": "Tamaño: {size}",
+  "appUpdateChangelog": "Novedades",
+  "appUpdateInstall": "Instalar",
+  "appUpdateDownloading": "Descargando actualización…",
+  "appUpdateReadyToInstall": "Listo para instalar. Toca Instalar para finalizar la actualización.",
+  "appUpdateDownloadFailed": "Error al descargar la actualización. Comprueba la conexión y vuelve a intentarlo.",
+  "appUpdateRetry": "Reintentar"
 }
