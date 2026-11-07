@@ -39,6 +39,7 @@
         android:label="@string/app_label_preview"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
+        android:enableOnBackInvokedCallback="true"
         android:theme="@style/NativeAppTheme">
         <!-- Crash reports are opt-in at run time (Settings > Privacy); nothing is collected until the person's answer is applied. -->
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
