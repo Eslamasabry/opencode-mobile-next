@@ -771,6 +771,7 @@ public fun KitTerminalLiveView(
                 onKey = send,
                 modifier =
                     Modifier.kitEdge(KitEdge.Chrome)
+                        .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
                 enabled = !readOnly,
                 compact = compact,
@@ -786,7 +787,7 @@ public fun KitTerminalLiveView(
             controller = bar,
             onKey = send,
             // Window chrome: the band and its keys meet the screen's edges, the safe area inside it.
-            modifier = Modifier.kitEdge(KitEdge.Chrome),
+            modifier = Modifier.kitEdge(KitEdge.Chrome).fillMaxWidth(),
             enabled = !readOnly,
             compact = compact,
             interruptKeys = interruptKeys,
