@@ -16,7 +16,8 @@ internal const val STEP_DURATION_MIN_MS: Long = 100
 
 /**
  * How long the step row says the step took (or, while it runs, has been running), or null when it says nothing:
- * not started, no times from the server, or under [STEP_DURATION_MIN_MS].
+ * not started, no times from the server, under [STEP_DURATION_MIN_MS], or stopped (P-102: "Stopped 2m 13s" read as
+ * two minutes of work; the time was only how long it waited before the stop).
  */
 internal fun shownStepDurationMs(
     state: StepState,
@@ -24,6 +25,7 @@ internal fun shownStepDurationMs(
     startedAtMs: Long?,
     nowMs: Long,
 ): Long? {
+    if (state == StepState.Stopped || state == StepState.NotRun) return null
     val runningFor =
         if (state == StepState.Running) startedAtMs?.let { (nowMs - it).coerceAtLeast(0) } else null
     return (durationMs ?: runningFor)?.takeIf { it >= STEP_DURATION_MIN_MS }

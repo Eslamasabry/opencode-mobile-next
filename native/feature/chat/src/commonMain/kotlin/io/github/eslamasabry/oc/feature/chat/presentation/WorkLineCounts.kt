@@ -33,7 +33,8 @@ public object WorkLineRules {
      * written then edited is one file, a step the server never ran is "not run".
      */
     public fun split(work: TurnWork): WorkLineCounts {
-        if (work.steps.none(::unfinished)) return WorkLineCounts(work.counts)
+        // P-102: a stopped step did not do its work; it is not counted as "edited" or "ran".
+        if (work.steps.none { unfinished(it) || it.state == StepState.Stopped }) return WorkLineCounts(work.counts)
         var out = WorkLineCounts(WorkCounts(steps = work.counts.steps))
         val editedFiles = HashSet<String>()
         val waitingFiles = HashSet<String>()
@@ -61,6 +62,7 @@ public object WorkLineRules {
 
     private fun finished(c: WorkCounts, step: TurnStep, files: MutableSet<String>): WorkCounts {
         if (step.state == StepState.NotRun) return c.copy(notRun = c.notRun + 1)
+        if (step.state == StepState.Stopped) return c
         return when (name(step)) {
             "read" -> c.copy(read = c.read + 1)
             "glob",
