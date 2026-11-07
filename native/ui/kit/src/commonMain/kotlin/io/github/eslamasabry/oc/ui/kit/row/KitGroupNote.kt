@@ -31,7 +31,7 @@ public fun KitGroupNote(text: String, modifier: Modifier = Modifier) {
         modifier
             .kitMaxWidth(CapRole.List)
             .fillMaxWidth()
-            .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = tokens.labelGap.dp)
+            .padding(start = kitRowGutter(), end = kitRowGutter(), top = tokens.labelGap.dp)
             .testTag("kit-group-note"),
         role = TypeRole.Secondary,
         tone = TextTone.Secondary,

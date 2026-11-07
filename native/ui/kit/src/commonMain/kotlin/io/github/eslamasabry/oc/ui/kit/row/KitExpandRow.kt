@@ -69,7 +69,7 @@ public fun KitExpandRow(
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val horizontalGutter = if (inset) tokens.gutter.dp else 0.dp
+    val horizontalGutter = if (inset) kitRowGutter() else 0.dp
     val specs = KitMotion.specs
     val turn by animateFloatAsState(if (expanded) HALF_TURN else 0f, specs.quick(), label = "expand-chevron")
     Column(modifier.fillMaxWidth()) {

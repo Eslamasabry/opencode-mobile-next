@@ -68,7 +68,6 @@ public fun KitFeedItem(
         return
     }
     val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
     val large = LocalDensity.current.fontScale > 1.3f // F: lib/ui/kit/kit_feed_item.dart:365
     val word = state?.word
     val statusColor = when (state?.tone) {
@@ -89,7 +88,9 @@ public fun KitFeedItem(
     val words = listOfNotNull(title, pinnedWord, agent?.name, word, project.takeIf { it.isNotBlank() }, server?.takeIf { it.isNotBlank() }, time).joinToString(", ")
     val body: @Composable () -> Unit = {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S3.dp).clearAndSetSemantics {},
+            Modifier.fillMaxWidth()
+                .padding(horizontal = kitRowGutter(), vertical = Space.S3.dp)
+                .clearAndSetSemantics {},
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

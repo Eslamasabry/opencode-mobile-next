@@ -43,7 +43,7 @@ public fun KitTeachingRow(
             .kitMaxWidth(CapRole.List)
             .fillMaxWidth()
             .heightIn(min = tokens.rowHeightOne.dp)
-            .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+            .padding(horizontal = kitRowGutter(), vertical = Space.S2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {
