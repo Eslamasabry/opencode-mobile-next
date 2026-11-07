@@ -6,6 +6,8 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -35,7 +37,12 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropVeil
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.spatialFast
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
@@ -103,31 +110,51 @@ public fun KitJumpPill(
     visible: Boolean,
     modifier: Modifier = Modifier,
     edge: KitJumpEdge = KitJumpEdge.Bottom,
+    /**
+     * E20-S30: what scrolls behind the pill ([io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource]). Given, the
+     * pill is the calmer translucent one: a 32 dp face over the content blurred behind it (API 31+; a 92 % tint below),
+     * an arrow and the words, scaling in and out on the kit's spring.
+     */
+    backdrop: KitFrostState? = null,
 ) {
     kitAssert(label.isNotBlank()) { "KitJumpPill: a pill always carries words" }
     val state = KitMotion.state
     if (state.reduced) {
-        if (visible) PillFace(label, onClick, modifier, edge)
+        if (visible) PillFace(label, onClick, modifier, edge, backdrop)
         return
     }
     val specs = KitMotion.specs
     val risePx = with(LocalDensity.current) { JumpPillRules.riseDp(edge, state).dp.roundToPx() }
+    // The veiled pill also grows from 90 % on the kit's fast spring while it may travel (Calm only fades).
+    val grows = backdrop != null && state.travels
     val enter: EnterTransition =
         fadeIn(specs.pace(KitPace.Standard)) +
-            if (risePx != 0) slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { risePx } else EnterTransition.None
+            (if (risePx != 0) slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { risePx } else EnterTransition.None) +
+            if (grows) scaleIn(specs.spatialFast(), initialScale = PILL_ENTER_SCALE) else EnterTransition.None
     val exit: ExitTransition =
         fadeOut(specs.pace(KitPace.Quick)) +
-            if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(KitPace.Quick)) { risePx } else ExitTransition.None
+            (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(KitPace.Quick)) { risePx } else ExitTransition.None) +
+            if (grows) scaleOut(specs.spatialFast(), targetScale = PILL_ENTER_SCALE) else ExitTransition.None
     AnimatedVisibility(visible, modifier, enter = enter, exit = exit, label = "kit.jump") {
-        PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge)
+        PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge, backdrop)
     }
 }
 
+/** E20-S30: the veiled pill's visible face height (inside its 48 dp target). */
+public const val JUMP_PILL_FACE_DP: Int = 32
+
+/** The veiled pill's scale as it arrives and leaves. */
+private const val PILL_ENTER_SCALE = 0.9f
+
 @Composable
-private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edge: KitJumpEdge) {
+private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edge: KitJumpEdge, backdrop: KitFrostState?) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Pill.shape()
+    if (backdrop != null) {
+        VeiledPillFace(label, onClick, modifier, edge, backdrop)
+        return
+    }
     // A small floating pill (36 dp face) inside its 48 dp target: it points the way without covering the reading
     // column (owner 2026-11-06: the full-size button sat on the words).
     Box(
@@ -148,6 +175,36 @@ private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edg
         ) {
             KitGlyph(if (edge == KitJumpEdge.Bottom) KitPartGlyphs.ChevronDown else KitPartGlyphs.ChevronUp, colors.text1, 16.dp)
             KitText(label, role = TypeRole.Secondary, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
+        }
+    }
+}
+
+/** E20-S30: the calmer pill on a translucent, blurred face: arrow and words, 32 dp, in its 48 dp target. */
+@Composable
+private fun VeiledPillFace(label: String, onClick: () -> Unit, modifier: Modifier, edge: KitJumpEdge, backdrop: KitFrostState) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val shape = KitShapeId.Pill.shape()
+    val veil = rememberKitChromeVeil()
+    Box(
+        modifier
+            .testTag("kit-jump-pill")
+            .heightIn(min = tokens.minTarget.dp)
+            .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
+            .semantics(mergeDescendants = true) { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            Modifier.heightIn(min = JUMP_PILL_FACE_DP.dp)
+                .kitBackdropVeil(backdrop, veil, colors.surface3, shape)
+                .border(1.dp, colors.hairline, shape)
+                .padding(horizontal = Space.S3.dp)
+                .testTag("kit-jump-pill-veiled"),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            KitGlyph(if (edge == KitJumpEdge.Bottom) KitIcons.down else KitIcons.send, colors.text2, 14.dp)
+            KitText(label, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
         }
     }
 }

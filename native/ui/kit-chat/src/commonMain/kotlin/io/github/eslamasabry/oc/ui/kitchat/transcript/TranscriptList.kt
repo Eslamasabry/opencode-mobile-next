@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
+import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
@@ -177,6 +180,8 @@ public fun KitTranscriptList(
         pin.inset(bottomInset.value)
     }
     Box(modifier) {
+        // E20-S30: what the list draws, recorded for the pill's blur (the pill itself is never in it).
+        val backdrop = rememberKitFrostState()
         LazyColumn(
             state = state.lazy,
             reverseLayout = true,
@@ -186,42 +191,55 @@ public fun KitTranscriptList(
             contentPadding = insetPadding,
             // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
             // list measures, so the newest row rides the slot's edge frame by frame.
-            modifier = Modifier.fillMaxSize().keepsBottom(pin).testTag("transcript-list"),
+            modifier = Modifier.fillMaxSize().keepsBottom(pin).kitFrostSource(backdrop).testTag("transcript-list"),
             content = content,
         )
-        // The pill's own lane: while it shows, the page's ground rises behind it (fading in over 16 dp above), so
-        // the words scroll away under the lane and the pill never sits on them (owner 2026-11-06).
+        // E20-S30 (owner 2026-11-07, "Big gap not required"): no solid lane behind the pill. The words scroll on under
+        // the translucent composer; while the pill shows, only a short soft fade (never a block) settles them where
+        // the viewport meets the composer, so letters do not run into the pill.
+        val chromeBottom = chrome.calculateBottomPadding()
         val ground = LocalKitColors.current.ground
-        val lane by
+        val fade by
             animateFloatAsState(
                 if (state.awayFromLatest) 1f else 0f,
                 if (motion == KitMotionLevel.Off) snap() else tween(MotionTokens.STANDARD),
-                label = "jump-lane",
+                label = "jump-fade",
             )
-        if (lane > 0f)
+        if (fade > 0f)
             Box(
                 Modifier.align(Alignment.BottomCenter)
+                    .padding(bottom = chromeBottom)
                     .fillMaxWidth()
-                    .height(chrome.calculateBottomPadding() + Space.S2.dp + LocalKitTokens.current.minTarget.dp + 16.dp)
+                    .height(JUMP_FADE_DP.dp)
+                    .testTag("transcript-jump-fade")
                     .drawBehind {
-                        val reach = 16.dp.toPx()
                         drawRect(
-                            Brush.verticalGradient(0f to ground.copy(alpha = 0f), 1f to ground, startY = 0f, endY = reach),
-                            alpha = lane,
+                            Brush.verticalGradient(
+                                0f to ground.copy(alpha = 0f),
+                                1f to ground.copy(alpha = JUMP_FADE_ALPHA),
+                            ),
+                            alpha = fade,
                         )
-                        drawRect(ground, topLeft = Offset(0f, reach), alpha = lane)
                     }
             )
         KitJumpToLatest(
             state,
             jumpLabel,
             motion,
-            // Above the composer, at the end of the line: clear of the reading column's start.
-            Modifier.align(Alignment.BottomEnd)
-                .padding(end = Space.S4.dp, bottom = Space.S2.dp + chrome.calculateBottomPadding()),
+            backdrop,
+            // Bottom centre, its face 8 dp above the composer's veil (the 48 dp target's own margin counts toward it).
+            Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom + jumpPillLift(LocalKitTokens.current.minTarget).dp),
         )
     }
 }
+
+/** E20-S30: the gap between the pill and the composer, the soft fade's height and its strongest alpha. */
+internal const val JUMP_GAP_DP = 8
+internal const val JUMP_FADE_DP = 28
+internal const val JUMP_FADE_ALPHA = 0.72f
+
+/** How far above the chrome the pill's target sits so its visible face is [JUMP_GAP_DP] above it. */
+internal fun jumpPillLift(minTarget: Int): Int = (JUMP_GAP_DP - (minTarget - JUMP_PILL_FACE_DP) / 2).coerceAtLeast(0)
 
 /**
  * For a part under the transcript that changes height while it animates (M-005: the request slot's `KitReveal`; M-002:
@@ -267,6 +285,7 @@ private fun KitJumpToLatest(
     state: TranscriptListState,
     label: String,
     motion: KitMotionLevel,
+    backdrop: KitFrostState,
     modifier: Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -275,6 +294,7 @@ private fun KitJumpToLatest(
         label = label,
         visible = state.awayFromLatest,
         modifier = modifier.testTag("jump-to-latest"),
+        backdrop = backdrop,
         onClick = {
                 state.following = true
                 scope.launch {
