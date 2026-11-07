@@ -371,7 +371,7 @@ class ComposerModelsFilesTest {
                 openSavedPrompts = { opened += 1 },
             )
         setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), withPrompts) } } }
-        onNodeWithContentDescription("Attach").performClick()
+        onNodeWithTag("chat-attach-button").performClick()
         onNodeWithText("Saved prompts").performClick()
         waitForIdle()
         assertEquals(1, opened)
@@ -381,7 +381,7 @@ class ComposerModelsFilesTest {
     @Test
     fun `B-151 no Saved prompts row where the chat offers none`() = runComposeUiTest {
         setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), chrome) } } }
-        onNodeWithContentDescription("Attach").performClick()
+        onNodeWithTag("chat-attach-button").performClick()
         onNodeWithText("Saved prompts").assertDoesNotExist()
     }
 

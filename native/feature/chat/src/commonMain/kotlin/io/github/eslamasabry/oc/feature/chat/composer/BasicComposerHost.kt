@@ -820,7 +820,7 @@ public fun BasicComposer(
                     label =
                         stringResource(
                             if (addOpen) Res.string.kitComposerTrayClose
-                            else if (state.attachKinds.isEmpty())
+                            else if (state.attachKinds.isEmpty() && chrome.openSavedPrompts == null)
                                 Res.string.composerPreviewAttachFile
                             else Res.string.composerFullAttach
                         ),
@@ -830,6 +830,7 @@ public fun BasicComposer(
                                 voice == null &&
                                 refreshHistory == null &&
                                 chrome.openCommands == null &&
+                                chrome.openSavedPrompts == null &&
                                 chrome.sendLater == null
                         )
                             actions.attachFile()
