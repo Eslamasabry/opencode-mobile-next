@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -154,15 +155,18 @@ public fun <T> KitStepSlider(
                 }
             }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // One block for the ends and the track, so the chosen step's name sits right under it, as in Flutter.
+        Row(Modifier.semantics {}, verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.width(target * .7f),
                 contentAlignment = Alignment.Center,
             ) { // F: lib/ui/kit/kit_step_slider.dart:139
                 KitText(
                     stringResource(Res.string.kitStepSliderLess),
+                    Modifier.fillMaxWidth(),
                     role = TypeRole.Secondary,
                     tone = TextTone.Secondary,
+                    textAlign = TextAlign.Center,
                 )
             }
             BoxWithConstraints(Modifier.weight(1f).height(target)) {
@@ -205,17 +209,18 @@ public fun <T> KitStepSlider(
                             .background(fill, RoundedCornerShape(line))
                     ) // F: lib/ui/kit/kit_step_slider.dart:228-235
                     steps.forEachIndexed { i, _ ->
-                        KitTappable(
-                            onClick = {
-                                focus.requestFocus()
-                                choose(i)
-                            },
-                            modifier =
-                                Modifier.offset(x = usable * (i.toFloat() / steps.lastIndex))
-                                    .size(target),
-                            enabled = enabled,
-                            disabledReason = if (enabled) null else semanticsLabel,
-                            shape = KitShapeId.Circle,
+                        // Each step is a 48 dp target of its own (a plain gesture, as Flutter's GestureDetector: the
+                        // slider is the one node a screen reader hears).
+                        Box(
+                            Modifier.offset(x = usable * (i.toFloat() / steps.lastIndex))
+                                .size(target)
+                                .pointerInput(enabled, i) {
+                                    if (enabled) detectTapGestures {
+                                        focus.requestFocus()
+                                        choose(i)
+                                    }
+                                },
+                            contentAlignment = Alignment.Center,
                         ) {
                             Box(
                                 Modifier.size(Space.S2.dp)
@@ -259,8 +264,10 @@ public fun <T> KitStepSlider(
             ) { // F: lib/ui/kit/kit_step_slider.dart:139
                 KitText(
                     stringResource(Res.string.kitStepSliderMore),
+                    Modifier.fillMaxWidth(),
                     role = TypeRole.Title,
                     tone = TextTone.Secondary,
+                    textAlign = TextAlign.Center,
                 )
             }
         }
