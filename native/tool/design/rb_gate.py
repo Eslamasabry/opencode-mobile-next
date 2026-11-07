@@ -10,6 +10,7 @@ Subcommands (gate_order.sh calls them in this order; each exits non-zero on a fa
   renders  --order NN|all      each golden's render window and density (WxH@D) and where it came from; a per-order count
   recheck  --order NN          once order NN is done: re-gate every shot of a merged order waived DEPENDS_ON NN
                                (gate_order.sh --recheck MM per order MM, RB_PARTS = the parts of those shots)
+  coverage --order NN|all      static estimate: goldens a gate case names vs none (RB_LIST=1 lists the unnamed stems)
   stale                        DEPENDS_ON waivers naming a done order (RB_STATE/<NN>.done or orders_done.tsv): no
                                longer deferred, the shots are measured
   chunks   --order NN          one line per part: id, golden count, the part's write globs (chunks.py prints it)
@@ -86,6 +87,55 @@ def ledger_done():
 
 def order_done(o):
     return os.path.exists(os.path.join(STATE, f'{o}.done')) or o in ledger_done()
+
+
+LITERAL = re.compile(r'"([a-z][a-z0-9_]*(?:\$(?:\{[^}"]+\}|[A-Za-z_]\w*)[a-z0-9_]*)*)"')
+
+
+def case_names(root=None):
+    """(exact names, template regexes) of every string literal in the native test sources: the names gate cases can
+    hand FlutterGoldenGate.check. A template ("kit_setup_$name") becomes a regex when it keeps a 4+ character prefix."""
+    exact, rx = set(), []
+    for f in glob.glob(os.path.join(root or ROOT, 'native', '**', 'src', '*Test', '**', '*.kt'), recursive=True):
+        with open(f, encoding='utf-8') as fh:
+            text = fh.read()
+        if 'FlutterGoldenGate' not in text and 'GateCase' not in text:
+            continue
+        for lit in LITERAL.findall(text):
+            if '$' not in lit:
+                exact.add(lit)
+                continue
+            parts = re.split(r'\$(?:\{[^}]+\}|[A-Za-z_]\w*)', lit)
+            if len(parts[0]) >= 4:
+                rx.append(re.compile('^' + '[a-z0-9_]*'.join(re.escape(p) for p in parts) + '$'))
+    return exact, rx
+
+
+def cmd_coverage(nn):
+    """Static estimate of which goldens a gate case names (scoreboard 2026-11-07: 83 % rendered by none). Per order:
+    goldens, named by a test, not named. RB_LIST=1 also prints each unnamed golden stem. The authority stays
+    `evaluate` (a golden counts only when its gate row rendered); this finds the gaps without running Gradle."""
+    exact, rx = case_names()
+    orders = [nn] if nn != 'all' else sorted({os.path.basename(f)[:2] for f in glob.glob(os.path.join(DOC, 'orders', '[0-9][0-9].gate.tsv'))})
+    tot_g = tot_n = 0
+    print('order\tgoldens\tnamed\tunnamed')
+    for o in orders:
+        stems = {}
+        for r in manifest(o, whole=True):
+            if r[0] == 'golden':
+                shot = os.path.basename(r[3])[:-4]
+                stems.setdefault(re.sub(r'_(light|dark)$', '', shot), []).append(shot)
+        named = {s for s in stems if s in exact or any(x.match(s) for x in rx)}
+        g = sum(len(v) for v in stems.values())
+        n = sum(len(stems[s]) for s in named)
+        tot_g, tot_n = tot_g + g, tot_n + n
+        print(f'{o}\t{g}\t{n}\t{g - n}')
+        if os.environ.get('RB_LIST') == '1':
+            for s in sorted(set(stems) - named):
+                print(f'  unnamed\t{o}\t{s}')
+    if len(orders) > 1:
+        print(f'all\t{tot_g}\t{tot_n}\t{tot_g - tot_n}')
+    return 0
 
 
 def cmd_stale(_nn):
@@ -1168,13 +1218,13 @@ def cmd_recheck(nn):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests', 'recheck', 'stale'])
+    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests', 'recheck', 'stale', 'coverage'])
     ap.add_argument('--order')
     a = ap.parse_args()
     if a.order is None and a.cmd != 'stale':
         ap.error('--order is required')
     nn = 'all' if a.order in (None, 'all') else f'{int(a.order):02d}'
-    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests, 'recheck': cmd_recheck, 'stale': cmd_stale}[a.cmd](nn))
+    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests, 'recheck': cmd_recheck, 'stale': cmd_stale, 'coverage': cmd_coverage}[a.cmd](nn))
 
 
 if __name__ == '__main__':

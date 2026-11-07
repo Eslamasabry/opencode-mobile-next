@@ -46,6 +46,20 @@ class LayoutRows(unittest.TestCase):
         self.assertIn('layout guard: 1 gate cases checked, 1 with findings', text)
 
 
+class Coverage(unittest.TestCase):
+    def test_G0_14_gate_case_names_are_read_exactly_and_as_templates(self):
+        root = tempfile.mkdtemp(prefix='rbc')
+        d = os.path.join(root, 'native', 'ui', 'kit', 'src', 'desktopTest', 'kotlin', 'rb')
+        os.makedirs(d)
+        with open(os.path.join(d, 'XGateTest.kt'), 'w', encoding='utf-8') as fh:
+            fh.write('class X { fun a() { FlutterGoldenGate.check("kit_row_default") {}\n'
+                     '  FlutterGoldenGate.check("kit_setup_steps_$name") {}\n  val t = "$x" } }\n')
+        exact, rx = rb.case_names(root)
+        self.assertIn('kit_row_default', exact)
+        self.assertTrue(any(x.match('kit_setup_steps_running_ar') for x in rx))
+        self.assertFalse(any(x.match('kit_row_default_ar') for x in rx), 'a bare "$x" is no template')
+
+
 class DoneLedger(unittest.TestCase):
     def test_G0_05_a_ledger_order_is_done_without_a_state_marker(self):
         os.environ.pop('RB_STATE', None)
