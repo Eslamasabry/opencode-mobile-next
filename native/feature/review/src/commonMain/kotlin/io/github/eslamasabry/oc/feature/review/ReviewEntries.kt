@@ -37,7 +37,7 @@ public class ReviewEntries(private val environment: KitChatEnvironment) : EntryI
         entry<ReviewRoute.File> { route ->
             val vm = assistedMetroViewModel<FileDiffViewModel, FileDiffViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
-            environment.Provide { FileDiffScreen(state, vm::back, vm::retry) }
+            environment.Provide { FileDiffScreen(state, vm) }
         }
         entry<ReviewRoute.UndoFromHere> { route ->
             val vm = assistedMetroViewModel<UndoFromHereViewModel, UndoFromHereViewModel.Factory> { create(route) }

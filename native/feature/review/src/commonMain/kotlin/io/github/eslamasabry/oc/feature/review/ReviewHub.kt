@@ -9,9 +9,12 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
 import io.github.eslamasabry.oc.engine.review.ConversationReview
 import io.github.eslamasabry.oc.engine.review.ReviewGateways
 import io.github.eslamasabry.oc.engine.review.ReviewLifetime
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewCommentBook
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewGuide
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -21,6 +24,15 @@ import kotlinx.coroutines.flow.stateIn
 public interface ReviewGraphAccessors {
     public val reviewGateway: ServerGateway
     public val reviewOperations: ServerOperationsGateway
+
+    /** The conversation's send pipeline: line comments and the guide question reach its agent through it (B-155/156). */
+    public val reviewDelivery: ConnectionDelivery
+}
+
+/** A conversation's review comments and guides, kept as long as its review is (in memory only). */
+public class ReviewNotes {
+    public val comments: ReviewCommentBook = ReviewCommentBook()
+    public val guides: MutableMap<String, ReviewGuide> = HashMap()
 }
 
 /**
@@ -32,6 +44,13 @@ public interface ReviewGraphAccessors {
 @Inject
 public class ReviewHub(private val registry: ConnectionRegistry) {
     private val open = LinkedHashMap<ConversationRef, Pair<ConversationReview, ReviewLifetime>>()
+    private val notes = HashMap<ConversationRef, ReviewNotes>()
+
+    /** The conversation's comments and guides; they go when its review is closed. */
+    public fun notes(ref: ConversationRef): ReviewNotes {
+        review(ref) // keeps the review (and so these notes) among the open ones
+        return notes.getOrPut(ref) { ReviewNotes() }
+    }
 
     public fun review(ref: ConversationRef): ConversationReview {
         open.remove(ref)?.let { kept ->
@@ -49,6 +68,7 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
         while (open.size > KEEP) {
             val oldest = open.keys.first()
             open.remove(oldest)?.second?.close()
+            notes.remove(oldest)
         }
         return review
     }

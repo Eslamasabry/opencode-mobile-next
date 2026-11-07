@@ -99,7 +99,31 @@ public data class ChangesUi(
     val noting: Boolean = false,
     /** The note could not be put into the message. */
     val sendBackFailure: Failure? = null,
+    /** Line comments written and not sent yet, in this conversation (B-156: "Send N comments"). */
+    val drafts: Int = 0,
+    /** Sent comments still waiting for the agent's edit. */
+    val waiting: Int = 0,
+    val sendingComments: Boolean = false,
+    /** The last "Send N comments" did not reach the agent; the comments stay as drafts. */
+    val commentsFailure: Failure? = null,
+    /** "Guided" can be turned on here (B-155): the conversation's agent can be asked. */
+    val canGuide: Boolean = false,
+    val guide: GuideUi = GuideUi.Off,
 )
+
+/** The Guided view of the Changes page (B-155). */
+public sealed interface GuideUi {
+    /** The plain file list. */
+    public data object Off : GuideUi
+
+    /** The agent is putting the guide together. */
+    public data object Making : GuideUi
+
+    public data class Ready(val guide: ReviewGuide) : GuideUi
+
+    /** No guide this time ([failure] says why): the plain file list is shown under a plain line. */
+    public data class Fallback(val failure: Failure) : GuideUi
+}
 
 /** One file's diff page. [diff] is null with [noDiff] when the tools reported no lines for it. */
 public data class FileDiffUi(
@@ -109,6 +133,16 @@ public data class FileDiffUi(
     /** The file is not in this change set any more (it moved on, or the undo changed). */
     val missing: Boolean = false,
     val noDiff: Boolean = false,
+    /** Lines can be commented for the agent here (B-156; not on the undo's preview). */
+    val canComment: Boolean = false,
+    /** This file's comments, in the order written. */
+    val comments: ImmutableList<LineComment> = persistentListOf(),
+    /** The comment field is open for these lines. */
+    val commenting: CommentAnchor? = null,
+    /** Drafts in the whole conversation: "Send N comments" sends them all in one prompt. */
+    val drafts: Int = 0,
+    val sending: Boolean = false,
+    val sendFailure: Failure? = null,
 ) {
     val name: String get() = path.split('/', '\\').lastOrNull { it.isNotEmpty() } ?: path
 }
