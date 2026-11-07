@@ -83,6 +83,11 @@ PROVIDER_PACKAGE = "@opencode/ai/providers/openai-compatible"
 # changes and "write" the OC2 tool name; unknown actions are expected to be inert.
 ASK_ACTIONS = ("edit", "write", "shell")
 READY_SECONDS = 90.0
+# Readiness: OpenCode 2.0.4 and later (the pinned 2.1.1) answer GET /api/info; the 0.0.0 beta answered
+# /api/health (the app's own managed-server check reads both, in this order).
+READY_PATHS = ("/api/info", "/api/health")
+# History import: /api/experimental/session/import on 2.1.1 (live OpenAPI), /api/session/import on the beta.
+IMPORT_PATHS = ("/api/experimental/session/import", "/api/session/import")
 GIT_DATE = "2026-10-01T09:00:00+00:00"
 # 1x1 transparent PNG: the "binary" file of project app.
 ICON_PNG = base64.b64decode(
@@ -246,12 +251,13 @@ def wait_ready(proc: subprocess.Popen[Any], api: Upstream, log: Path, binary: st
         if code is not None:
             raise RuntimeError(f"{binary} exited with code {code} before it was ready; see {log}")
         if wait_for_port(api.port, timeout=0.3):
-            try:
-                status, _ = api.call("GET", "/api/health", timeout=5)
-            except OSError:
-                status = 0
-            if status == 200:
-                return
+            for path in READY_PATHS:
+                try:
+                    status, _ = api.call("GET", path, timeout=5)
+                except OSError:
+                    status = 0
+                if status == 200:
+                    return
         time.sleep(0.2)
     raise RuntimeError(f"{binary} not healthy on port {api.port} after {READY_SECONDS:.0f}s; see {log}")
 
@@ -269,8 +275,8 @@ def _project_id(api: Upstream, directory: Path, known: dict[str, str], name: str
 
 
 def history_import(seed: SeedSession, directory: Path, project_id: str, kind: str) -> dict[str, Any]:
-    """Body for POST /api/session/import [U: accepted shape on 2.1.1 not live-verified;
-    built from the 18600 OpenAPI schema]."""
+    """Body for the history import (IMPORT_PATHS) [U: accepted shape on 2.1.1 not live-verified;
+    built from the 18600 OpenAPI schema; the 2.1.1 schema has the same required info fields]."""
     t0 = 1790000000000
     messages: list[dict[str, Any]] = []
     model = {"id": stub_model.MODEL_ID, "providerID": PROVIDER_ID}
@@ -325,8 +331,11 @@ def seed_sessions(api: Upstream, profile: Profile, projects: dict[str, Path], se
         if kind not in sets:
             continue
         pid = _project_id(api, projects["app"], project_ids, "app")
-        status, data = api.call("POST", "/api/session/import",
-                                history_import(seed, projects["app"], pid, kind), timeout=120)
+        body = history_import(seed, projects["app"], pid, kind)
+        for path in IMPORT_PATHS:
+            status, data = api.call("POST", path, body, timeout=120)
+            if status != 404:
+                break
         if status == 200 and isinstance(data, dict):
             out[seed.key] = (data.get("data") or {}).get("id", seed.id)
         elif status == 409:

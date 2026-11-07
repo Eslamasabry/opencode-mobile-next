@@ -400,10 +400,11 @@ KNOWN = {"e2e:echo", "e2e:long", "e2e:cut", "e2e:slow-finish", "e2e:ask-edit", "
 
 
 def is_title_request(body: dict[str, Any]) -> bool:
-    """[U] OpenCode's title agent: a system prompt about generating a title, no tools."""
+    """[U] OpenCode's title agent: a system prompt about a title and no tools offered. OpenCode 2.1.1's main
+    agent prompt mentions both "title" and "generate" while offering tools, so a request with tools is never one."""
     msgs = body.get("messages") or []
     system = " ".join(_text_of(m) for m in msgs if m.get("role") == "system").lower()
-    return "title" in system and ("generate" in system or not body.get("tools"))
+    return "title" in system and not body.get("tools")
 
 
 def plan(body: dict[str, Any], default_dir: str | None = None) -> Reply:
