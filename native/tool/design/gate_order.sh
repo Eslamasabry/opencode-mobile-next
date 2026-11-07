@@ -5,7 +5,9 @@
 #   2. the order's Flutter goldens copied into looks-gate/flutter/<ref9>/                                 rb_gate.py fetch
 #   3. the order's gate cases: <module>:desktopTest --tests '*.rb.o<NN>.*' (FlutterGoldenGate v2 writes
 #      looks-out/gate/rows/*.tsv, looks-out/gate/matrix/*.tsv and the flutter/native/diff PNGs)
-#   4. every golden on its ink box against gate_thresholds.tsv, waivers, matrix; tracker updated          rb_gate.py evaluate
+#   4. every golden on its ink box against gate_thresholds.tsv, waivers, matrix, layout guard rows
+#      (looks-out/gate/layout/*.tsv, rows L1); tracker updated                                           rb_gate.py evaluate
+#      A failing gate case no longer stops the gate before step 4: the pictures it rendered are still measured.
 # RB_PARTS="part-a part-b": gate only those parts (their goldens, matrix, caps, write set and Gradle test classes).
 # Gradle runs desktopTest only (no Android variants); configuration and build cache come from native/gradle.properties,
 # Kotlin compiles in the Gradle daemon (kotlin.compiler.execution.strategy=in-process: no Kotlin daemon is started).
@@ -69,11 +71,20 @@ if [ ${#args[@]} -gt 0 ]; then
   if [ "$rc" -eq 99 ]; then echo "GATE FAIL (no Gradle slot within 2 h)"; exit 1; fi
   if [ "$rc" -ne 0 ]; then
     grep -E "FAILED|error:|e: |AssertionError|No tests found" "$ROOT/looks-out/gate/gradle.log" | head -40
-    echo "GATE FAIL (Gradle exit $rc; full log looks-out/gate/gradle.log)"; exit 1
+    # Nothing ran (configuration or every compile failed): stop. Otherwise a failing gate case (a layout guard finding,
+    # a missing golden, a throwing scene, or one module not compiling under --continue) still leaves every picture the
+    # other cases rendered, so measure those too (scoreboard item 0.1); the gate fails either way.
+    if ! grep -qE "^> Task :.*:desktopTest( |$)" "$ROOT/looks-out/gate/gradle.log"; then
+      echo "GATE FAIL (Gradle exit $rc before any gate case ran; full log looks-out/gate/gradle.log)"; exit 1
+    fi
+    echo "   Gradle exit $rc: gate cases failed; evaluating what rendered (full log looks-out/gate/gradle.log)"
   fi
 fi
 
 echo "== order $NN: evaluation"
-$PY evaluate --order "$NN"; rc=$?
-[ $rc -eq 0 ] && echo "GATE PASS" || echo "GATE FAIL (evaluation)"
-exit $rc
+$PY evaluate --order "$NN"; erc=$?
+if [ "${rc:-0}" -ne 0 ] && [ "${rc:-0}" -ne 99 ]; then
+  echo "GATE FAIL (Gradle exit $rc: gate cases failed; see the L1 layout rows and looks-out/gate/gradle.log)"; exit 1
+fi
+[ $erc -eq 0 ] && echo "GATE PASS" || echo "GATE FAIL (evaluation)"
+exit $erc

@@ -132,9 +132,11 @@ object FlutterGoldenGate {
     }
 
     /**
-     * Renders [content] once per mode as the Flutter golden `<name>_<mode>` and records the comparison. Throws when
-     * [LayoutGuard] finds a layout rule broken that the baseline does not list, when the golden file is missing or when
-     * the content throws; picture thresholds are applied by gate_order.sh.
+     * Renders [content] once per mode as the Flutter golden `<name>_<mode>` and records the comparison. The layout
+     * guard's verdict is recorded as its own row (`looks-out/gate/layout/<name>.tsv`, read by `rb_gate.py evaluate`)
+     * and never costs the picture: every mode is still rendered and compared. Afterwards it throws when [LayoutGuard]
+     * found a layout rule broken that the baseline does not list, when a golden file is missing or when the content
+     * throws (the first failure, with the others suppressed); picture thresholds are applied by gate_order.sh.
      */
     fun check(
         name: String,
@@ -151,16 +153,46 @@ object FlutterGoldenGate {
         act: (androidx.compose.ui.test.ComposeUiTest.() -> Unit)? = null,
         content: @Composable () -> Unit,
     ): Map<String, Double> {
-        // Every gate shot is also held to the layout rules (E02-S13, native/docs/kit/LAYOUT-RULES.md); a finding the
-        // module's baseline does not list fails here, before the picture comparison.
-        LayoutGuard.check(name, LayoutGuard.Scene(frame, style, wrap, act, content))
+        // Every gate shot is also held to the layout rules (E02-S13, native/docs/kit/LAYOUT-RULES.md). A finding the
+        // module's baseline does not list is recorded as the shot's layout row and fails the test after the pictures
+        // are rendered and compared, so the gate never trades a picture for a rule (scoreboard 2026-11-07 item 0.1).
+        val failures = ArrayList<Throwable>()
+        val guard = try {
+            LayoutGuard.check(name, LayoutGuard.Scene(frame, style, wrap, act, content))
+            null
+        } catch (e: AssertionError) {
+            e
+        }
+        writeLayoutRow(name, guard?.message)
+        guard?.let { failures += it }
         val result = LinkedHashMap<String, Double>()
         for (mode in modes) {
-            val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
-            val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
-            result[mode] = compare("${name}_$mode", ref, native)
+            try {
+                val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
+                val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
+                result[mode] = compare("${name}_$mode", ref, native)
+            } catch (e: Exception) {
+                failures += e
+            } catch (e: AssertionError) {
+                failures += e
+            }
+        }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach { first.addSuppressed(it) }
+            throw first
         }
         return result
+    }
+
+    /** The layout row of one gate case: `<name> TAB PASS|FAIL TAB <the guard's message on one line, or ->`. */
+    internal fun layoutRow(name: String, failure: String?): String {
+        val detail = failure?.replace('\n', ' ')?.replace('\t', ' ')?.replace(Regex(" {2,}"), " ")?.trim()
+        return "$name\t${if (failure == null) "PASS" else "FAIL"}\t${detail?.ifEmpty { null } ?: "-"}\n"
+    }
+
+    private fun writeLayoutRow(name: String, failure: String?) {
+        File(out, "layout").mkdirs()
+        File(out, "layout/$name.tsv").writeText(layoutRow(name, failure))
     }
 
     /** One render of [content] at the window of [axes], returned as a bitmap. */
