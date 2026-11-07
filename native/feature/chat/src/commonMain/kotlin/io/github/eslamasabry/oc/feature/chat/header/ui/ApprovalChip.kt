@@ -71,6 +71,8 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
             onClick = actions::openApprovalMenu,
             modifier = Modifier.testTag("chat-approval-chip"),
             active = state.choice != ApprovalChoice.Ask,
+            // E20-S11: beside a model name the approval words shorten first ("Approve ev…"); the menu says them whole.
+            shrinks = true,
         )
     }
     KitConfirm(

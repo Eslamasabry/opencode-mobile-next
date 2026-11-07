@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.widthIn
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -188,9 +189,8 @@ public fun KitComposerBox(
                     leading()
                     if (largeText) Spacer(Modifier.weight(1f))
                     else
-                        // E20-S08: the line never scrolls a chip under the mic or Send. Chips after the first
-                        // (the approval mode) keep their words; the first (the model) takes the room left and
-                        // ends in "…".
+                        // E20-S08: the line never scrolls a chip under the mic or Send. E20-S11: the first chip
+                        // (the model) shows its name; the later ones (the approval mode) shorten first.
                         KitComposerChipLine(
                             Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
                         ) {
@@ -219,8 +219,8 @@ public fun KitComposerChip(
     /** A choice that is on (auto-approve): the accent's soft tint and accent words, same size and shape. */
     active: Boolean = false,
     /**
-     * E20-S08: this chip gives up its room first when the line is full (the model's name), its words ending in
-     * "…". It goes first in the line; a chip that does not shrink is never cut.
+     * This chip's words may end in "…" when the line is full (E20-S11: the approval mode shortens first; the model's
+     * name, the line's first chip, gives way only when even that does not fit).
      */
     shrinks: Boolean = false,
 ) {
@@ -449,10 +449,15 @@ private const val RING = 44
 /** The longest a composer chip's words grow before they end in "…" (the model's name stays readable). */
 private const val COMPOSER_CHIP_WORDS_MAX = 180
 
+/** E20-S11: the least a later chip (the approval mode) keeps beside the model: its words start, then "…". */
+private const val COMPOSER_CHIP_TAIL_MIN = 96
+
 /**
- * The message box's chip line (E20-S08): one row that ends before the action button. Every chip after the first is
- * measured whole first; the first (the model chip, which [KitComposerChip.shrinks]) gets the width that is left. A
- * line too narrow for the later chips still never draws past its end: they get what is left, in order.
+ * The message box's chip line (E20-S08, E20-S11): one row that ends before the action button. The first chip (the
+ * model) has priority: it shows its whole name, up to the chip's own cap, as long as every later chip (the approval
+ * mode) keeps [COMPOSER_CHIP_TAIL_MIN] (or its whole width when smaller); the later chips take what is left and end in
+ * "…" first. Only when even that does not fit does the model's name give way too. Nothing ever draws past the line's
+ * end. Right to left, the line starts on the right.
  */
 @Composable
 private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> Unit) {
@@ -460,12 +465,20 @@ private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> U
         val gap = Space.S2.dp.roundToPx()
         val max = constraints.maxWidth
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
-        var used = 0
+        val first = measurables.firstOrNull()
+        val rest = measurables.drop(1)
+        val tailMin = COMPOSER_CHIP_TAIL_MIN.dp.roundToPx()
+        val reserved =
+            rest.map { minOf(it.maxIntrinsicWidth(Constraints.Infinity), tailMin) }
+                .filter { it > 0 }
+                .let { widths -> widths.sum() + gap * widths.size }
+        val headCap = (max - reserved).coerceAtLeast(0)
+        val head = first?.measure(loose.copy(maxWidth = headCap))
+        var used = head?.width?.let { if (it > 0) it + gap else 0 } ?: 0
         val tail =
-            measurables.drop(1).map { m ->
+            rest.map { m ->
                 m.measure(loose.copy(maxWidth = (max - used).coerceAtLeast(0))).also { if (it.width > 0) used += it.width + gap }
             }
-        val head = measurables.firstOrNull()?.measure(loose.copy(maxWidth = (max - used).coerceAtLeast(0)))
         val placed = listOfNotNull(head) + tail
         val shown = placed.filter { it.width > 0 }
         val width = (shown.sumOf { it.width } + gap * (shown.size - 1).coerceAtLeast(0)).coerceIn(constraints.minWidth, max)

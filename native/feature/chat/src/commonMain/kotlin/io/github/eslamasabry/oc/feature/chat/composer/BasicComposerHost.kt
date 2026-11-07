@@ -846,7 +846,8 @@ public fun BasicComposer(
                     },
                     semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
                     modifier = Modifier.testTag("chat-model-button"),
-                    // E20-S08: the model's name gives way first, so the approval chip is never cut by the mic.
+                    // E20-S11: the model's name has priority on the line (the approval chip shortens first); it
+                    // ends in "…" only when even a short approval chip leaves it no room.
                     shrinks = true,
                 )
                 chrome.rowChips()
