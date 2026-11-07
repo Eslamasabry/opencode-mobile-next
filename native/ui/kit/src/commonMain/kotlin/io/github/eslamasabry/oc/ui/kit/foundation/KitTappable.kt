@@ -16,6 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -110,7 +114,11 @@ internal fun Modifier.kitTappable(
             }
         }
     val hapticsOn = appearance.haptics
+    // P-108: the control's box, read only when it is pressed, so a menu it opens can open beside it.
+    val origin = LocalKitPressOrigin.current
+    val placed = remember { PlacedBox() }
     return this
+        .onPlaced { placed.coordinates = it }
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
         .clip(shape.shape())
         .then(role.edgeMark())
@@ -126,16 +134,25 @@ internal fun Modifier.kitTappable(
             onLongClick =
                 onLongClick?.let { long ->
                     {
+                        placed.pressed()?.let(origin::record)
                         if (hapticsOn) platform.haptic(KitHaptic.LongPress)
                         long()
                     }
                 },
             hapticFeedbackEnabled = false,
             onClick = {
+                placed.pressed()?.let(origin::record)
                 if (hapticsOn && haptic != null) platform.haptic(haptic)
                 onClick()
             },
         )
+}
+
+/** Where a tappable was last placed; its window box is worked out only when it is pressed. */
+private class PlacedBox {
+    var coordinates: LayoutCoordinates? = null
+
+    fun pressed(): IntRect? = coordinates?.takeIf { it.isAttached }?.boundsInWindow()?.toIntRect()
 }
 
 /** A row's highlight runs edge to edge; its words keep the gutter (native/docs/kit/LAYOUT-RULES.md §2). */
