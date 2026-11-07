@@ -76,6 +76,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
@@ -580,12 +581,11 @@ private fun ViewerHeader(
             // The one labelled action has its own full-width row under the name, starting where the name starts.
             val reason = (primary.enabled as? KitEnabled.Disabled)?.reason
             Column(Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)) {
-                val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-                // The tertiary button's words line up with the name (Dart `KitButton.tertiaryInset`, which is space2).
-                val shift = if (!compact) 0 else if (rtl) Space.S2 else -Space.S2
+                // The tertiary button's words line up with the name (Dart shifts it back by `KitButton.tertiaryInset`;
+                // the native tertiary button already reaches its padding into the gutter, so its words sit there).
                 KitButton(
                     primary,
-                    Modifier.offset(x = shift.dp).testTag(KitViewerKeys.PRIMARY),
+                    Modifier.testTag(KitViewerKeys.PRIMARY),
                     role = if (compact) KitButtonRole.Tertiary else KitButtonRole.Secondary,
                 )
                 if (reason != null) KitText(reason, role = TypeRole.Secondary)
@@ -678,7 +678,7 @@ private fun ViewerBody(
 ) {
     val tokens = LocalKitTokens.current
     if (state.loading) {
-        Box(Modifier.fillMaxSize().padding(horizontal = tokens.gutter.dp)) { KitSkeletonRows(count = 6) } // F: lib/ui/kit/kit_viewer_build.dart:343
+        Box(Modifier.fillMaxSize().padding(horizontal = tokens.gutter.dp)) { KitSkeletonRows(Modifier.fillMaxWidth().kitMaxWidth(io.github.eslamasabry.oc.ui.design.layout.CapRole.List), count = 6) } // F: lib/ui/kit/kit_viewer_build.dart:343
         return
     }
     if (state.error != null) {

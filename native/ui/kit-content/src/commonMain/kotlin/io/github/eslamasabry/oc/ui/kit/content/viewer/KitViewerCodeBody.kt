@@ -167,11 +167,18 @@ internal fun ViewerCodeBody(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val density = LocalDensity.current
-    val mono = LocalKitTypography.current.style(TypeRole.Mono).copy(color = colors.text1)
+    val mono =
+        LocalKitTypography.current.style(TypeRole.Mono).copy(
+            color = colors.text1,
+            lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+                androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+                androidx.compose.ui.text.style.LineHeightStyle.Trim.None,
+            ),
+        )
     val measurer = rememberTextMeasurer()
     // The file fills the viewer sheet edge to edge on an opaque fill in every style (contract F7).
     val fill = if (colors.dark) colors.surface1 else colors.ground
-    val lines = remember(prepared) { KitRedact.text(prepared.shown).split('\n') }
+    val lines = remember(prepared) { KitRedact.text(prepared.shown).removeSuffix("\n").split('\n') } // Dart `_splitLines`
     val starts = remember(lines) { lines.runningFold(0) { at, line -> at + line.length + 1 } }
     val digits = if (lineNumbers) prepared.shownLines.toString().length else 0
     val gutterWidth = if (lineNumbers) with(density) { measurer.measure("9".repeat(digits), mono).size.width.toDp() } else 0.dp

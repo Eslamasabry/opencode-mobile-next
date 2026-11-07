@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.decodeToImageBitmap
 
 /**
  * Reader controls shared by text, code, Markdown, SVG and tables. The source stays exact for Copy;
@@ -371,11 +372,26 @@ internal class ViewerState(private val source: KitViewerSource, private val load
 @Composable
 internal fun ViewerImage(content: KitViewerContent.Image, name: String) {
     io.github.eslamasabry.oc.ui.kit.content.image.KitZoomView(name, Modifier.fillMaxSize()) {
+        // Centre loosens the window: the picture keeps its own size (1 px = 1 dp, as Flutter's Image), never larger
+        // than the room, and its aspect ratio.
+        val size = remember(content.bytes) { pictureSizeOf(content.bytes) }
         Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
             io.github.eslamasabry.oc.ui.kit.content.image.KitImage(
                 io.github.eslamasabry.oc.ui.kit.content.image.KitImageSource.Memory(content.bytes),
                 content.semanticsLabel ?: name,
+                if (size == null) Modifier
+                else Modifier.sizeIn(maxWidth = size.first.dp, maxHeight = size.second.dp).aspectRatio(size.first.toFloat() / size.second),
             )
         }
     }
 }
+
+/** The pixel size of an encoded picture, or null when it does not decode. */
+@OptIn(org.jetbrains.compose.resources.ExperimentalResourceApi::class)
+internal fun pictureSizeOf(bytes: ByteArray): Pair<Int, Int>? =
+    try {
+        val bitmap = bytes.decodeToImageBitmap()
+        if (bitmap.width > 0 && bitmap.height > 0) bitmap.width to bitmap.height else null
+    } catch (_: RuntimeException) { // an undecodable picture keeps the image part's own failure state
+        null
+    }
