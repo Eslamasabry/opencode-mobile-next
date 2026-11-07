@@ -169,6 +169,7 @@ public fun ThisPhoneScreen(
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             state.exitNotice?.let { exit ->
                 KitNotice(
+                    modifier = noticeEdge,
                     title =
                         stringResource(
                             when (exit.kind) {
@@ -224,13 +225,13 @@ public fun ThisPhoneScreen(
                     supporting = stringResource(Res.string.thisPhoneHostInApp),
                     leading = KitRowLeading.Glyph(KitIcons.phone))
             }
-            state.lifecycle
-                ?.takeIf { it.showNotice }
-                ?.let { report ->
+            state.recoveryNotice
+                ?.let { readiness ->
                     KitNotice(
+                        modifier = noticeEdge,
                         message =
                             stringResource(
-                                when (report.readiness) {
+                                when (readiness) {
                                     LifecycleReadiness.Unchecked,
                                     LifecycleReadiness.Checking -> Res.string.stateLifecycleChecking
                                     LifecycleReadiness.Unavailable ->
@@ -326,6 +327,7 @@ public fun ThisPhoneScreen(
             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 state.leftover?.let { notice ->
                     KitNotice(
+                        modifier = noticeEdge,
                         message = notice.message.words(),
                         actions =
                             listOf(
@@ -575,11 +577,20 @@ private fun PhoneConfirmation(
 @Composable
 private fun PhoneNoticeLine(words: String, actions: ThisPhoneActions) {
     KitNotice(
+        modifier = noticeEdge,
         message = words,
         dismiss =
             KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
     )
 }
+
+/**
+ * P-115: KitScreen's body runs edge to edge (rows carry their own gutter), so a notice on this page
+ * starts its info mark on the page gutter, the rows' one start edge (16 dp), not on the screen edge.
+ * Notices inside the storage fold already sit on the fold's gutter.
+ */
+private val noticeEdge: Modifier
+    @Composable get() = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
 
 @Composable
 private fun storageSize(bytes: Long): String =
