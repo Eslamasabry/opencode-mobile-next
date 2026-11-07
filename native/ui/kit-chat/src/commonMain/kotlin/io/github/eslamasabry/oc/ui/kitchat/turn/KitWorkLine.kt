@@ -27,7 +27,10 @@ import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.design.color.SignalPalette
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -176,7 +179,7 @@ public fun KitWorkLine(
             // Flutter's work line: one quiet line, a mark for where the work stands, the summary in the supporting
             // grey and a caret at the end; no frame, no fill. The state words are what TalkBack adds.
             val colors = LocalKitColors.current
-            val iconSize = (16f * minOf(LocalDensity.current.fontScale, 1.4f)).dp // NV: icon box follows the person's text size, capped so the line stays one row
+            val iconSize = workMark()
             KitTappable(
                 onClick = { onToggle(!expanded) },
                 modifier =
@@ -190,7 +193,7 @@ public fun KitWorkLine(
                     // On the reply's own edge (16 dp, like its words): the mark and the caret never touch the screen.
                     Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(horizontal = 16.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(WORK_GAP.dp),
                 ) {
                     when (state) {
                         KitWorkState.Running -> Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
@@ -220,7 +223,9 @@ public fun KitWorkLine(
                 }
             }
             KitReveal(visible = expanded) {
-                Column(Modifier.fillMaxWidth().padding(start = 4.dp)) {
+                // P-011: the steps sit on the line's own 16 dp edge, their glyphs in the summary mark's column and their
+                // names on the summary's text edge; no extra indent of their own.
+                Column(Modifier.fillMaxWidth()) {
                     if (earlier != null)
                         KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary)
                     steps()
@@ -229,6 +234,26 @@ public fun KitWorkLine(
         }
     }
 }
+
+/**
+ * P-011: the work line's one icon column. The summary's mark and every step's glyph ([KitToolRow]) take this size and
+ * are followed by [WORK_GAP], so an opened group has one start edge (16 dp), one icon column and one text edge. The box
+ * follows the person's text size (system × in-app), capped so the line stays one row.
+ */
+@Composable
+internal fun workMark(): Dp {
+    val fontScale = (LocalKitAppDensity.current ?: LocalDensity.current).fontScale
+    return (WORK_MARK * minOf(fontScale, WORK_MARK_CAP)).dp
+}
+
+/** The work line's mark at text size 1.0. */
+internal const val WORK_MARK: Float = 16f
+
+/** How far the mark grows with the text. */
+private const val WORK_MARK_CAP: Float = 1.4f
+
+/** The space between a mark (or a step's glyph) and its words: one kit step. */
+internal const val WORK_GAP: Int = Space.S2
 
 /** A running line is a polite live region (the step changed); a settled one is just text. */
 private fun Modifier.liveLabel(state: KitWorkState): Modifier =
