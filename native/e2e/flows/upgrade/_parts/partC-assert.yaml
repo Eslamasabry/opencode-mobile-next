@@ -160,7 +160,7 @@ appId: ${APP_ID}
       - tapOn: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
       - runFlow: ../../_sub/settle-chat.yaml
       - extendedWaitUntil:
-          visible: ${output.s.kitComposerField + '(?s).*'}
+          visible: ${'(' + output.s.kitComposerField + '(?s).*|' + output.s.chatUiAskOpenCode + ')'}  # literal-ok: either app's composer field, both from strings
           timeout: 30000
       - runFlow:
           file: ../../_sub/send-prompt.yaml

@@ -142,7 +142,7 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
             TARGET: fx-proxy
             ACTION: restore-host
             ARGS: "${JSON.stringify({host: output.fx.serverHost, port: parseInt(output.fx.serverBAddress.split(':')[1], 10)})}"
-      - evalScript: ${output.fxr = {count: 0}}
+      - evalScript: "${output.fxr = {count: 0}}"
       - repeat:
           times: 18
           while:

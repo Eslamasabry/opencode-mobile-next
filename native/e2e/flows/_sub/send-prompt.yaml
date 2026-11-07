@@ -1,8 +1,8 @@
 # In a conversation: type PROMPT into the composer and send it. env: PROMPT (raw text, e.g. "e2e:echo hi")
-# The composer field reads "Message to the agent\nAsk OpenCode…" on Flutter 2.1.4; offline its send button is
+# The composer field reads "Message to the agent\nAsk OpenCode…" on Flutter 2.1.4 and "Ask OpenCode…" on native; offline its send button is
 # "Send when back online" (the prompt is queued).
 appId: ${APP_ID}
 ---
-- tapOn: ${output.s.kitComposerField + '(?s).*'}
+- tapOn: ${'(' + output.s.kitComposerField + '(?s).*|' + output.s.chatUiAskOpenCode + ')'}  # literal-ok: either app's composer field, both from strings
 - inputText: ${PROMPT}
 - tapOn: ${'(' + output.s.kitComposerSend + '|' + output.s.kitComposerSendOffline + ')'}  # literal-ok: either send button, both from strings
