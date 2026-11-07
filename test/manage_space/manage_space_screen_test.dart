@@ -145,7 +145,7 @@ void main() {
     expect(find.text('2.0 MB'), findsOneWidget);
     expect(find.text('blog'), findsOneWidget);
     expect(find.text('2 saved servers'), findsOneWidget);
-    expect(find.text('Termux and the projects in it'), findsOneWidget);
+    expect(find.textContaining('Termux'), findsNothing);
   });
 
   testWidgets('export writes a zip and says how much, credentials left out', (

@@ -1090,7 +1090,6 @@ void main() {
       for (final key in [
         'phone-setup-start-primary',
         'phone-setup-start-customize',
-        'phone-setup-start-use-termux',
         'phone-setup-start-by-address',
       ]) {
         final size = tester.getSize(find.byKey(ValueKey(key)));
@@ -1223,10 +1222,17 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'ابدأ الإعداد'), findsOneWidget);
 
     await _expandOtherWays(tester);
-    final termux = find.byKey(const ValueKey('phone-setup-start-use-termux'));
-    final icon = find.descendant(of: termux, matching: find.byType(Icon)).first;
+    final byAddress = find.byKey(
+      const ValueKey('phone-setup-start-by-address'),
+    );
+    final icon = find
+        .descendant(of: byAddress, matching: find.byType(Icon))
+        .first;
     // The leading icon sits at the start, which is the right in Arabic.
-    expect(tester.getCenter(icon).dx, greaterThan(tester.getCenter(termux).dx));
+    expect(
+      tester.getCenter(icon).dx,
+      greaterThan(tester.getCenter(byAddress).dx),
+    );
     expect(tester.takeException(), isNull);
   });
 

@@ -137,15 +137,6 @@
       "changed": false
     },
     {
-      "page": "termux-processes",
-      "element": "termux-processes-pull-refresh",
-      "gesture": "pull to refresh",
-      "action": "reload the process list",
-      "visibleEquivalent": "visible 'Refresh' icon button (tooltip termuxProcsRefresh); also loads on open (lib/ui/screens/termux_processes_screen.dart:76)",
-      "evidence": "lib/ui/screens/termux_processes_screen.dart:281",
-      "changed": false
-    },
-    {
       "page": "team-agent",
       "element": "team-agent-pull",
       "gesture": "pull to refresh",

@@ -243,29 +243,6 @@ void main() {
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
   });
 
-  testWidgets('managed local profile opens the in-app updater', (tester) async {
-    final controller = await _controllerFor('http://127.0.0.1:4096');
-    addTearDown(controller.dispose);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: SettingsScreen(controller: controller),
-        routes: {
-          '/this-phone': (_) => const Scaffold(body: Text('Managed updater')),
-        },
-      ),
-    );
-    await tester.pumpAndSettle();
-    await _openCategory(tester, 'settings-category-server');
-
-    expect(find.text('Update managed OpenCode'), findsOneWidget);
-    await _tapVisible(tester, find.byKey(const Key('server-updates-tile')));
-    await tester.pumpAndSettle();
-    expect(find.text('Managed updater'), findsOneWidget);
-  });
-
   testWidgets('remote profile clearly remains externally managed', (
     tester,
   ) async {

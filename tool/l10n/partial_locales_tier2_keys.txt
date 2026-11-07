@@ -1232,15 +1232,6 @@ liveIntensityBold
 liveIntensityNormal
 liveIntensitySubtle
 liveToolWorking
-localAgentRemove
-localAgentRemoveBody
-localAgentRemoveKeep
-localAgentRemoveTitle
-localAgentRestartBody
-localAgentRestartTitle
-localAgentStopBody
-localAgentStopNamed
-localAgentStopTitle
 localAgentTitle
 localTerminalFailedBody
 localTerminalFailedTitle
@@ -1801,10 +1792,6 @@ terminalScreenStopTitle
 terminalScreenUsePhone
 terminalShowEarlier
 termuxProcsNoRestart
-termuxRestartBusyMessage
-termuxRestartConfirm
-termuxRestartMessage
-termuxRestartTitle
 textSizeDefault
 textSizeLarge
 textSizeSmall

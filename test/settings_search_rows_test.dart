@@ -116,7 +116,6 @@ void main() {
       addTearDown(controller.dispose);
       for (final (query, id) in [
         ('heat', 'inside-keep-running-thermal'),
-        ('crash', 'inside-phone-crash-recovery'),
         ('battery', 'inside-keep-running-battery'),
         ('animations', 'inside-appearance-motion'),
         ('confetti', 'inside-appearance-motion'),
@@ -125,7 +124,7 @@ void main() {
       ]) {
         expect(_ids(controller, query).first, id, reason: query);
       }
-      // "crash" also finds what went wrong, after the restart itself.
+      // "crash" finds what went wrong.
       expect(_ids(controller, 'crash'), contains('library-report-bug'));
       final byId = {
         for (final entry in searchIndex(_en, _scope(controller)))
@@ -141,10 +140,7 @@ void main() {
         byId['inside-keep-running-thermal']!.target?.rowId,
         'keep-running-thermal',
       );
-      expect(
-        byId['inside-phone-crash-recovery']!.target?.rowId,
-        'managed-recovery-option',
-      );
+      expect(byId.containsKey('inside-phone-crash-recovery'), isFalse);
     });
 
     test('one typo and a word begun still find the row', () async {

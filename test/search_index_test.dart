@@ -45,8 +45,6 @@ const _excluded = <String, String>{
   'servers-welcome': 'first run only, before any server exists',
   'manage-space':
       'opened by Android Settings › Storage, not from inside the app',
-  'termux-migration':
-      'offered only to a Termux user, from This phone and the Termux server row',
   'team-migration':
       'shown on its own when an old team was left on after the update',
   // Need a conversation: the conversation menu and its command launcher are
@@ -427,7 +425,6 @@ void main() {
             'settings-mcp',
             'inside-capabilities-tools',
             'inside-notifications-quiet',
-            'inside-phone-running-now',
             'settings-on-this-phone',
           ]),
         );

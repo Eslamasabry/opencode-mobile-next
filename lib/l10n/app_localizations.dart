@@ -744,30 +744,6 @@ abstract class AppLocalizations {
   /// **'Images, PDFs, text files, and Excel or Word files (.xlsx, .docx) can be attached.'**
   String get chatAttachmentUnsupported;
 
-  /// Confirmation title before restarting the managed Termux server
-  ///
-  /// In en, this message translates to:
-  /// **'Restart the local server?'**
-  String get termuxRestartTitle;
-
-  /// Confirmation explanation before restarting the managed Termux server
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode will be briefly unavailable. The app will keep your current project and reconnect automatically.'**
-  String get termuxRestartMessage;
-
-  /// Additional restart warning when one or more sessions are generating
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 conversation is generating. Restarting will interrupt it.} other{{count} conversations are generating. Restarting will interrupt them.}}'**
-  String termuxRestartBusyMessage(int count);
-
-  /// Confirmation button that starts a managed Termux server restart
-  ///
-  /// In en, this message translates to:
-  /// **'Restart'**
-  String get termuxRestartConfirm;
-
   /// No description provided for @chatCopyCompleteReply.
   ///
   /// In en, this message translates to:
@@ -16402,54 +16378,6 @@ abstract class AppLocalizations {
   /// **'Claude Code on this phone'**
   String get localAgentTitle;
 
-  /// Confirm sheet: restarting the daemon.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart Claude Code on this phone?'**
-  String get localAgentRestartTitle;
-
-  /// Confirm sheet: what restarting the daemon costs.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code is briefly unavailable and anything it is doing right now is interrupted. Your conversations stay on the phone.'**
-  String get localAgentRestartBody;
-
-  /// Confirm sheet: stopping the daemon.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Claude Code on this phone?'**
-  String get localAgentStopTitle;
-
-  /// Confirm sheet: what stopping the daemon costs.
-  ///
-  /// In en, this message translates to:
-  /// **'Anything Claude Code is doing on this phone is interrupted, and this app disconnects from it. Your projects, conversations and Claude sign-in stay; start it again to continue.'**
-  String get localAgentStopBody;
-
-  /// Claude Code block: menu action that uninstalls it.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove from this phone'**
-  String get localAgentRemove;
-
-  /// Confirm sheet: removing the install.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove Claude Code from this phone?'**
-  String get localAgentRemoveTitle;
-
-  /// Confirm sheet: what removing deletes and keeps.
-  ///
-  /// In en, this message translates to:
-  /// **'Stops it and deletes Node.js, Paseo and Claude Code from Ubuntu, about 1 GB. Your projects and your Claude sign-in stay.'**
-  String get localAgentRemoveBody;
-
-  /// Confirm sheet: cancels the removal.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it'**
-  String get localAgentRemoveKeep;
-
   /// No description provided for @firstRunAgentsSideBySide.
   ///
   /// In en, this message translates to:
@@ -27565,12 +27493,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnect from {server}'**
   String serverDisconnectFrom(String server);
-
-  /// Confirm button and menu item that stop Claude Code on this phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Claude Code'**
-  String get localAgentStopNamed;
 
   /// Confirm title before switching to the saved server whose request the person opened.
   ///

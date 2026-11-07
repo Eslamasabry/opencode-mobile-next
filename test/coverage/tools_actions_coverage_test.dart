@@ -60,7 +60,6 @@ const _app = [
   'app external.add-and-ask',
   'app web.search-and-add',
   'app context.open-and-copy',
-  'app local-agent.connect',
 ];
 
 final _paths = <String, Future<void> Function(WidgetTester)>{};

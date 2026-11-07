@@ -208,7 +208,7 @@ void main() {
     'ownership failure opens Android settings instead of continuing setup',
     (tester) async {
       var settings = 0;
-      const channel = MethodChannel('oc/termux');
+      const channel = MethodChannel('oc/app');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(channel, (call) async {

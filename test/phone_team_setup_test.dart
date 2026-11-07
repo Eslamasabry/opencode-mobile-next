@@ -1081,7 +1081,7 @@ void main() {
         final phone = _Phone()..serverFailure = 'componentRecovery';
         final flow = _flow(phone);
         var settings = 0;
-        const channel = MethodChannel('oc/termux');
+        const channel = MethodChannel('oc/app');
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         messenger.setMockMethodCallHandler(channel, (call) async {

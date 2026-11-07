@@ -454,11 +454,8 @@ void main() {
       'android/app/src/main/kotlin/io/github/eslamasabry/'
       'opencode_mobile/MainActivity.kt',
     ).readAsStringSync();
-    final termux = File(
-      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/TermuxActivityBridge.kt',
-    ).readAsStringSync();
-    final environment = File(
-      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/TermuxActivityEnvironment.kt',
+    final appInfo = File(
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppInfoChannel.kt',
     ).readAsStringSync();
     final background = File(
       'android/app/src/main/kotlin/io/github/eslamasabry/'
@@ -466,14 +463,14 @@ void main() {
     ).readAsStringSync();
     final about = File('lib/ui/screens/about_screen.dart').readAsStringSync();
 
-    expect(activity, contains('termux.handle(call, result)'));
+    expect(activity, contains('AppInfoChannel.register(this, messenger)'));
     expect(
-      termux,
+      appInfo,
       contains(
-        '"getSigningCertificateSha256" -> result.success(environment.signingCertificateSha256())',
+        '"getSigningCertificateSha256" -> result.success(signingCertificateSha256(activity))',
       ),
     );
-    expect(environment, contains('MessageDigest.getInstance("SHA-256")'));
+    expect(appInfo, contains('MessageDigest.getInstance("SHA-256")'));
     expect(about, contains('l10n.aboutSigningCertificate'));
     expect(background, contains('setAuthenticationRequired(true)'));
   });
