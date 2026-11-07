@@ -293,6 +293,7 @@ private fun Language(state: VoiceSettingsUi, actions: VoiceSettingsPresenter, gu
     )
     // The rest of the languages are one row away: a row that opens the list, not a loose link.
     if (!state.busy) {
+        Spacer(Modifier.height(Space.S2.dp)) // panel styles: the row's card must not touch the segmented track
         KitRowGroup {
             KitRow(
                 title = stringResource(Res.string.rb51VoiceMoreLanguages),
