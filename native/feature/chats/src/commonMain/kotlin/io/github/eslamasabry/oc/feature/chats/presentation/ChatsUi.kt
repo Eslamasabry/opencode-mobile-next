@@ -151,6 +151,11 @@ public data class ChatsFilters(
 public data class ChatsUi(
     val phase: ChatsPhase = ChatsPhase.Opening,
     val nowMs: Long = 0,
+    /**
+     * Rows lead with their agent's tile only when the home lists more than one agent: one agent's mark on every row
+     * says nothing (P-021; Flutter rows have none).
+     */
+    val showAgents: Boolean = false,
     val today: ImmutableList<ConversationRowUi> = persistentListOf(),
     val earlier: ImmutableList<ConversationRowUi> = persistentListOf(),
     val needsYou: Int = 0,

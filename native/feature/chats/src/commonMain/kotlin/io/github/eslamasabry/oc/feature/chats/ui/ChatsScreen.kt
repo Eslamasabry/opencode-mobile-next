@@ -160,6 +160,7 @@ import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefSeen
+import io.github.eslamasabry.oc.ui.words.res.teamProjectDigest
 import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
@@ -359,7 +360,7 @@ public fun ChatsScreen(
                         }
                         items(today, key = { it.key }) { row ->
                             ConversationRow(row, actions, state)
-                            if (row != today.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))
+                            if (row != today.last()) RowDivider(state)
                         }
                     }
                     if (earlier.isNotEmpty()) {
@@ -368,7 +369,7 @@ public fun ChatsScreen(
                         }
                         items(earlier, key = { it.key }) {
                             ConversationRow(it, actions, state)
-                            if (it != earlier.last()) io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(Modifier.padding(horizontal = Space.S4.dp))
+                            if (it != earlier.last()) RowDivider(state)
                         }
                     }
                     // The other places the old ⋯ menu hid, as plain rows after the list (obvious options first).
@@ -467,7 +468,12 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
                 stringResource(Res.string.chatsReturnBriefUnknown),
                 Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
             )
-        brief.rows.forEach { ConversationRow(it, actions, state) }
+        // Headed and ruled like Today and Earlier, so the top group reads as part of the same list.
+        if (brief.rows.isNotEmpty()) KitSectionLabel(stringResource(Res.string.teamProjectDigest))
+        brief.rows.forEach { row ->
+            ConversationRow(row, actions, state)
+            if (row != brief.rows.last()) RowDivider(state)
+        }
         // One line on the gutter: the rest of what finished at the start, marking it all seen at the end.
         if (brief.more > 0 || brief.rows.isNotEmpty())
             Row(
@@ -494,6 +500,19 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
 
 @Composable
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
+
+/**
+ * The hairline between two conversation rows, inset to the rows' text like the groups under the list
+ * (KitRowGroup): past the agent tile when the rows show one, else the 16 dp page edge.
+ */
+@Composable
+private fun RowDivider(state: ChatsUi) {
+    io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(
+        inset =
+            if (state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
+            else io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Gutter
+    )
+}
 
 @Composable
 private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null) {
@@ -524,7 +543,11 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
     KitFeedItem(
         title = title,
         project = row.project,
-        agent = KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName)),
+        // The agent's tile only says something when the list holds more than one agent (Flutter rows have none).
+        agent =
+            if (state?.showAgents == true)
+                KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName))
+            else null,
         server = row.server,
         live = needsAttention,
         onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,

@@ -68,6 +68,8 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
             label = if (state.home.sources.all { it.shown }) stringResource(Res.string.chatsSourcesAll)
                 else stringResource(Res.string.chatsSourcesSome, state.home.sources.count { it.shown }, state.home.sources.size),
             kind = KitChipKind.Action,
+            // It opens a sheet of choices, so it carries the same chevron as the project chip beside it (P-023).
+            opensMenu = true,
             onClick = actions::showSources,
         )
     }

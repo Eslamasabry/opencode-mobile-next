@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -135,8 +136,9 @@ class ChatsScreenTest {
             onAllNodesWithText("New chat").assertCountEquals(0)
             onAllNodesWithContentDescription("New chat", substring = true).assertCountEquals(0)
             // One status word per row: the needs-you row says it once, the running row says Working.
-            onNodeWithContentDescription("Theme packs, OpenCode, Needs you, web").assertExists()
-            onNodeWithContentDescription("Fix the reconnect loop, OpenCode, Working, api").assertExists()
+            // One agent on every row: its name is not repeated on each (P-021).
+            onNodeWithContentDescription("Theme packs, Needs you, web").assertExists()
+            onNodeWithContentDescription("Fix the reconnect loop, Working, api").assertExists()
             onNodeWithContentDescription("Theme packs", substring = true).performClick()
             assertTrue("open ask" in actions.calls)
         }
@@ -272,9 +274,54 @@ class ChatsScreenTest {
     fun `SCREENS-ROWS-01 an agent with no name reads Another agent, not the conversation's title`() =
         runComposeUiTest {
             val mystery = item("m", title = "Tidy the logs").copy(agentId = "hermes")
-            setContent { Themed { ChatsScreen(ui(mystery), RecordingChatsActions()) } }
+            // Two agents in the list, so each row says whose it is (P-021).
+            setContent { Themed { ChatsScreen(ui(mystery, item("o", title = "Other")), RecordingChatsActions()) } }
             onNodeWithContentDescription("Tidy the logs, Another agent", substring = true).assertExists()
             onAllNodesWithContentDescription("Tidy the logs, Tidy the logs", substring = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `P-021 rows name their agent only when the list holds more than one`() = runComposeUiTest {
+        val mixed = arrayOf(item("c", title = "Port the parser").copy(agentId = "codex"), item("o", title = "Other"))
+        setContent { Themed { ChatsScreen(ui(*mixed), RecordingChatsActions()) } }
+        onNodeWithContentDescription("Port the parser, Codex", substring = true).assertExists()
+        onNodeWithContentDescription("Other, OpenCode", substring = true).assertExists()
+    }
+
+    @Test
+    fun `P-021 the finished group is headed like Today and Earlier`() = runComposeUiTest {
+        val brief =
+            ReturnBrief.build(
+                listOf(Session(SessionId("old"), directory = "/work/api", time = SessionTime(idleMs = 10))),
+                true,
+                false,
+                { true },
+                { false },
+                { null },
+                scope = BRIEF_SCOPE,
+            )
+        setContent { Themed { ChatsScreen(ui(*rows, brief = brief), RecordingChatsActions()) } }
+        onNodeWithText("Since you were away").assertExists()
+    }
+
+    @Test
+    fun `P-021 no finished rows, no heading`() = runComposeUiTest {
+        setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions()) } }
+        onAllNodesWithText("Since you were away").assertCountEquals(0)
+    }
+
+    @Test
+    fun `P-023 the connections chip opens its choices with the same chevron as the project chip`() =
+        runComposeUiTest {
+            val phone = ChatsListSourceUi(ProfileId("p1"), "On this phone", shown = true, main = true, onThisPhone = true, unreachable = false)
+            val laptop = ChatsListSourceUi(ProfileId("p2"), "Laptop", shown = false, main = false, onThisPhone = false, unreachable = false)
+            val actions = RecordingChatsActions()
+            setContent {
+                Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone, laptop))), actions) }
+            }
+            onNodeWithContentDescription("1 of 2 connections").assertExists()
+            // The project chip's and the connections chip's.
+            onAllNodesWithTag("kit-chip-chevron", useUnmergedTree = true).assertCountEquals(2)
         }
 
     @Test

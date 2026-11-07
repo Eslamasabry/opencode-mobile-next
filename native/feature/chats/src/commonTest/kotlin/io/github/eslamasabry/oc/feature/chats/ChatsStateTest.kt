@@ -9,10 +9,12 @@ import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
+import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
@@ -109,6 +111,45 @@ class ChatsStateTest {
             ChatsPhase.NoMatch,
             build(*rows, filters = ChatsFilters(query = "tool_call")).phase,
         )
+    }
+
+    @Test
+    fun `P-021 rows lead with the agent tile only when the list holds more than one agent`() {
+        assertFalse(build(item("a"), item("b"), item("c")).showAgents)
+        assertTrue(build(item("a"), item("b").copy(agentId = "codex")).showAgents)
+        // A filter that leaves one agent's rows on screen leaves no tile to tell apart.
+        assertFalse(
+            build(
+                    item("a", "/work/api"),
+                    item("b", "/work/web").copy(agentId = "codex"),
+                    filters = ChatsFilters(projectDirectory = "/work/api"),
+                )
+                .showAgents
+        )
+    }
+
+    @Test
+    fun `P-021 the finished rows carry their time like the Today rows`() {
+        val brief =
+            ReturnBrief.build(
+                listOf(Session(SessionId("s1"), directory = "/work/api", time = SessionTime(idleMs = 10))),
+                true,
+                false,
+                { true },
+                { false },
+                { null },
+                scope = BRIEF_SCOPE,
+            )
+        val ui =
+            ChatsState.build(
+                ChatFeedSnapshot(listOf(item("s1", at = 1_000)).toImmutableList()),
+                brief,
+                ChatsFilters(),
+                today,
+                settingsAvailable = true,
+                nowMs = 1_000 + 5 * 60_000L,
+            )
+        assertEquals(RelativeAge.Minutes(5), ui.brief!!.rows.single().ago)
     }
 
     @Test
