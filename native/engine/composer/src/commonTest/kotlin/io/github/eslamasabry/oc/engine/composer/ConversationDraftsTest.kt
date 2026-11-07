@@ -262,7 +262,7 @@ class ConversationDraftsTest {
         }
 
     @Test
-    fun `B-STATE-101 corrupt attachment restoration refuses without deleting metadata or payloads`() =
+    fun `B-STATE-101 corrupt attachment restoration holds the file back without deleting metadata or payloads`() =
         runTest {
             val drafts = store()
             drafts.save("alpha", "same", "with a file", listOf(dataAttachment("keep.txt", "bytes")))
@@ -272,8 +272,11 @@ class ConversationDraftsTest {
             val blobs = payloads.keys()
             val handle = facade(drafts).open(ref())
             runCurrent()
-            assertFalse(handle.state.value.ready)
-            assertNotNull(handle.state.value.failure)
+            // B-144: the words come back; the unreadable file is held back, never dropped.
+            assertTrue(handle.state.value.ready)
+            assertEquals("with a file", handle.state.value.text)
+            assertEquals(listOf("keep.txt"), handle.state.value.heldBackAttachments)
+            assertNull(handle.captureSubmission())
             handle.changed("")
             assertIs<Outcome.Failed>(handle.flush())
             assertEquals(original, prefs.string(Drafts.KEY))

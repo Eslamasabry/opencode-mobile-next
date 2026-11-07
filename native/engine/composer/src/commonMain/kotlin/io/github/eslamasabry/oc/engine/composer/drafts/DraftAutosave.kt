@@ -56,6 +56,12 @@ public class DraftAutosave(
      */
     internal var currentAttachments: (() -> List<PromptAttachment>)? = null
 
+    /**
+     * True while a saved file is held back (B-144): a revision save then writes the words only and
+     * keeps the stored files, as Flutter's text-only save does.
+     */
+    internal var keepStoredFiles: (() -> Boolean)? = null
+
     internal fun changedRevision(text: String, revision: Long) {
         changedPending(Pending(text, null, null, revision))
     }
@@ -104,7 +110,11 @@ public class DraftAutosave(
         // remove it.
         val result =
             attempt({ Failure.StorageRefused() }) {
-                    if (next.revision != null)
+                    if (next.revision != null && keepStoredFiles?.invoke() == true)
+                        drafts.saveKeepingFiles(profileId, sessionId, next.text) {
+                            canWriteRevision?.invoke(next.revision) != false
+                        }
+                    else if (next.revision != null)
                         drafts.saveRevision(
                             profileId,
                             sessionId,

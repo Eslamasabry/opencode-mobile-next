@@ -382,6 +382,7 @@ public fun ChatScreen(
                             commandsOpen = true
                         }
                     },
+                openSavedPrompts = if (demoMode) null else prompts?.let { door -> door::open },
                 sendLater = if (demoMode) null else actions::sendLater,
                 laterScheduled = { scheduledId },
                 laterShown = actions::laterShown,

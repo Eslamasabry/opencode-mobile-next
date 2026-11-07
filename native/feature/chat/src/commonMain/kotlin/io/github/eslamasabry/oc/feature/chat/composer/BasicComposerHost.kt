@@ -82,6 +82,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
 import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
+import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
@@ -115,6 +116,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentUnsupporte
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelButton
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefault
 import io.github.eslamasabry.oc.ui.words.res.draftRetrySave
+import io.github.eslamasabry.oc.ui.words.res.draftAttachmentsFailed
 import io.github.eslamasabry.oc.ui.words.res.draftSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitComposerAddToTurn
 import io.github.eslamasabry.oc.ui.words.res.kitComposerField
@@ -471,6 +473,14 @@ public fun BasicComposer(
                             )
                     },
             )
+        } else if (state.draft.heldBackAttachments.isNotEmpty()) {
+            // B-144: the words are back; a saved file is kept in the draft but not shown yet.
+            KitErrorNotice(
+                message = stringResource(Res.string.draftAttachmentsFailed),
+                retry =
+                    KitLineAction(stringResource(Res.string.draftRetrySave), actions::retrySave),
+                modifier = Modifier.testTag("chat-draft-files-held"),
+            )
         }
         val attachmentFailure = state.attachmentFailure
         if (attachmentFailure != null) {
@@ -583,6 +593,17 @@ public fun BasicComposer(
                         KitTrayAction(
                             stringResource(Res.string.composerFullCommands),
                             KitTrayKind.Commands,
+                        ) {
+                            addOpen = false
+                            open()
+                        }
+                    )
+                }
+                chrome.openSavedPrompts?.let { open ->
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.promptStashTitle),
+                            KitTrayKind.History,
                         ) {
                             addOpen = false
                             open()
@@ -807,7 +828,7 @@ public fun BasicComposer(
                     label =
                         stringResource(
                             if (addOpen) Res.string.kitComposerTrayClose
-                            else if (state.attachKinds.isEmpty())
+                            else if (state.attachKinds.isEmpty() && chrome.openSavedPrompts == null)
                                 Res.string.composerPreviewAttachFile
                             else Res.string.composerFullAttach
                         ),
@@ -817,6 +838,7 @@ public fun BasicComposer(
                                 voice == null &&
                                 refreshHistory == null &&
                                 chrome.openCommands == null &&
+                                chrome.openSavedPrompts == null &&
                                 chrome.sendLater == null
                         )
                             actions.attachFile()

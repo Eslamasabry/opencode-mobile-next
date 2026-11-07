@@ -247,6 +247,21 @@ public class Drafts(
     }
 
     /**
+     * Flutter's text-only draft save (`saveSessionDraft` without an attachment snapshot): the words
+     * change, the stored files and their place stay exactly as saved. Used while a saved file is
+     * held back (B-144), so typing never drops a chip that could not be shown yet.
+     */
+    internal suspend fun saveKeepingFiles(
+        profileId: String,
+        sessionId: String,
+        text: String,
+        permit: () -> Boolean = { true },
+    ): Outcome<Unit> = lane.withLock {
+        if (!permit()) return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        saveLocked(profileId, sessionId, text, null, null)
+    }
+
+    /**
      * Exact text-only preview writes retain whitespace and refuse files that cannot be restored.
      */
     internal suspend fun saveText(
@@ -408,14 +423,13 @@ public class Drafts(
     public suspend fun restoreAttachments(
         profileId: String,
         sessionId: String,
-        location: DraftLocation,
+        location: DraftLocation?,
     ): AttachmentRecovery = lane.withLock {
         val draft = draft(profileId, sessionId) ?: return@withLock AttachmentRecovery.Empty
         vault.restore(
             draft.profileId,
             draft.attachments,
-            sameLocation =
-                draft.directory == location.directory && draft.workspace == location.workspace,
+            sameLocation = location != null && samePlace(DraftLocation(draft.directory, draft.workspace), location),
         )
     }
 
@@ -522,4 +536,18 @@ private enum class Exactness {
 
     /** The draft session's own write: exact text plus the authoritative file snapshot. */
     WholeState,
+}
+
+/**
+ * The same project place as Dart compares it (`directory == directory && workspace == workspace`),
+ * read leniently: a trailing slash and an empty value are no different place (B-144: the 2.1.4 draft
+ * and the native connection may spell the same folder either way). A place of `null` never matches a
+ * named one.
+ */
+internal fun samePlace(saved: DraftLocation, current: DraftLocation): Boolean {
+    fun folder(value: String?): String? =
+        value?.trim()?.takeIf { it.isNotEmpty() }?.trimEnd('/')?.ifEmpty { "/" }
+    fun workspace(value: String?): String? = value?.trim()?.takeIf { it.isNotEmpty() }
+    return folder(saved.directory) == folder(current.directory) &&
+        workspace(saved.workspace) == workspace(current.workspace)
 }

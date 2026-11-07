@@ -350,15 +350,48 @@ class ProfileStoreTest {
     }
 
     @Test
-    fun `B-STATE-065 server titles keep names and never expose an IP`() {
+    fun `B-STATE-065 server titles keep names and read an address as Flutter 2_1_4 did`() {
         assertEquals("This phone", StoredProfileJson.plainServerName("127.0.0.1"))
         assertEquals("This phone", StoredProfileJson.plainServerName("[::1]"))
-        assertEquals("Computer", StoredProfileJson.plainServerName("203.0.113.4"))
-        assertEquals("Computer", StoredProfileJson.plainServerName("Computer at 203.0.113.4"))
-        assertEquals("Computer", StoredProfileJson.plainServerName("2001:db8::8"))
+        assertEquals("Computer at 203.0.113.4", StoredProfileJson.plainServerName("203.0.113.4"))
+        assertEquals("Computer at 203.0.113.4", StoredProfileJson.plainServerName("Computer at 203.0.113.4"))
+        assertEquals("Computer at 2001:db8::8", StoredProfileJson.plainServerName("2001:db8::8"))
         assertEquals("office.local", StoredProfileJson.plainServerName("Computer", "https://office.local:4096"))
+        assertEquals("Computer at 10.0.2.2", StoredProfileJson.plainServerName("", "http://10.0.2.2:4097"))
         assertEquals("This phone", StoredProfileJson.plainServerName("", "http://127.0.0.1:4096"))
         assertEquals("Office PC", StoredProfileJson.plainServerName("Office PC", "https://203.0.113.4"))
         assertEquals("Workstation", StoredProfileJson.plainServerName("Workstation"))
+    }
+
+    @Test
+    fun `B-149 three 2_1_4 computers on one address keep their distinct names`() {
+        // The exact `oc.profiles` rows Flutter 2.1.4 stores for the upgrade gate's three saved servers.
+        val raw =
+            """[{"id":"p1","name":"Computer at 10.0.2.2","baseUrl":"http://10.0.2.2:4097","backend":"openCode",""" +
+                """"username":"opencode","flavor":"v2","requiresOpenCode2Migration":false,"openCode2HistoryPending":false},""" +
+                """{"id":"p2","name":"Computer at 10.0.2.2","baseUrl":"http://10.0.2.2:4098","backend":"openCode",""" +
+                """"username":"opencode","flavor":"v2","requiresOpenCode2Migration":false,"openCode2HistoryPending":false},""" +
+                """{"id":"p3","name":"10.0.2.2","baseUrl":"https://10.0.2.2:8443","backend":"openCode",""" +
+                """"username":"opencode","flavor":"v2","requiresOpenCode2Migration":false,"openCode2HistoryPending":false}]"""
+        assertEquals(
+            listOf("Computer at 10.0.2.2:4097", "Computer at 10.0.2.2:4098", "Computer at 10.0.2.2:8443 (secure)"),
+            StoredProfileJson.decodeList(raw).map { it.name },
+        )
+    }
+
+    @Test
+    fun `B-149 same address and port are numbered and a unique name is left alone`() {
+        fun row(id: String, name: String, url: String) =
+            """{"id":"$id","name":"$name","baseUrl":"$url","backend":"openCode","flavor":"v2"}"""
+        val raw = "[" + listOf(
+            row("a", "Computer at 10.0.0.5", "http://10.0.0.5:4096"),
+            row("b", "Computer at 10.0.0.5", "http://10.0.0.5:4096"),
+            row("c", "Office PC", "http://10.0.0.9:4096"),
+            row("d", "127.0.0.1", "http://127.0.0.1:4096"),
+        ).joinToString(",") + "]"
+        assertEquals(
+            listOf("Computer at 10.0.0.5:4096 (1)", "Computer at 10.0.0.5:4096 (2)", "Office PC", "This phone"),
+            StoredProfileJson.decodeList(raw).map { it.name },
+        )
     }
 }

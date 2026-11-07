@@ -82,6 +82,10 @@ class ComposerModelsFilesTest {
             calls += "attach $kind"
         }
 
+        override fun retrySave() {
+            calls += "retrySave"
+        }
+
         val variants = mutableListOf<String>()
     }
 
@@ -338,6 +342,48 @@ class ComposerModelsFilesTest {
             waitForIdle()
             assertTrue("attach Photos" in actions.calls)
         }
+
+    @Test
+    fun `B-144 restored words with a held-back file say so in plain words, not Draft not saved`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val draft =
+                DraftFacts(
+                    text = "@notes.txt upgrade draft text",
+                    saved = "@notes.txt upgrade draft text",
+                    heldBackAttachments = listOf("notes.txt"),
+                )
+            setContent { Theme { KitSheetHost { BasicComposer(ui(draft = draft), actions, chrome) } } }
+            onNodeWithText("Attachments need recovery or could not be saved. Retry before sending.")
+                .assertIsDisplayed()
+            onNodeWithText("Draft not saved. Copy your text or retry.").assertDoesNotExist()
+            onNodeWithText("Try saving draft again").performClick()
+            waitForIdle()
+            assertTrue("retrySave" in actions.calls)
+        }
+
+    @Test
+    fun `B-151 the Add tray opens Saved prompts where 2_1_4 kept them`() = runComposeUiTest {
+        var opened = 0
+        val withPrompts =
+            ComposerChrome(
+                { false }, { false }, {}, { null }, {}, { null }, {}, {}, { false },
+                openSavedPrompts = { opened += 1 },
+            )
+        setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), withPrompts) } } }
+        onNodeWithTag("chat-attach-button").performClick()
+        onNodeWithText("Saved prompts").performClick()
+        waitForIdle()
+        assertEquals(1, opened)
+        onNodeWithTag("kit-composer-tray").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-151 no Saved prompts row where the chat offers none`() = runComposeUiTest {
+        setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), chrome) } } }
+        onNodeWithTag("chat-attach-button").performClick()
+        onNodeWithText("Saved prompts").assertDoesNotExist()
+    }
 
     @Test
     fun `B-NAV-049 a slash field lists server commands and a tap fills the command`() =

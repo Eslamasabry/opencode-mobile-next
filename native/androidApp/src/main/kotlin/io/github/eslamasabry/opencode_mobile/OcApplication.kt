@@ -109,6 +109,10 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as AppNoticesAccessors).appNotices.start()
         (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
         (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
+        // B-146: send prompts queued for another saved server once it answers.
+        (appGraph as io.github.eslamasabry.opencode_mobile.graph.QueuedServerWatchAccessors)
+            .queuedServerWatch
+            .start()
         appGraph.previewRuntime // Warm local stores. MainActivity restores the ordinary connection.
         (appGraph as PhoneDetailsAccessors).nativePhoneDetails.start()
         (appGraph as io.github.eslamasabry.opencode_mobile.graph.AttentionStateAccessors)

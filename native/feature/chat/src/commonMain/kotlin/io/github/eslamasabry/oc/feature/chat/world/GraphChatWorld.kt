@@ -478,6 +478,9 @@ internal class GraphChatWorld(
                             editRevision = saved.editRevision,
                             attachments = saved.attachments,
                             savedAttachments = saved.savedAttachments,
+                            heldBackAttachments =
+                                if (saved.heldBackWaitsForPlace) emptyList()
+                                else saved.heldBackAttachments,
                         )
                     refreshDraftProtection()
                     publishVoiceConversation()
@@ -705,6 +708,8 @@ internal class GraphChatWorld(
         refreshReadOnly(gateway)
         userMessageKeys.clear()
         // The draft records (and restores `file:` references only at) this conversation's place.
+        // B-144: bound now and again whenever the connection names its place (the saved project
+        // folder can be restored after the chat opened), so a held-back file chip comes back.
         gateway.location.value.let {
             draftSession?.bindLocation(
                 io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation(
@@ -775,6 +780,21 @@ internal class GraphChatWorld(
             }
         val jobs =
             listOf(
+                scope.launch(registry.mainContext) {
+                    gateway.location.collect {
+                        val draft = draftSession
+                        if (
+                            currentAttached()?.graph === graph &&
+                                draft?.state?.value?.heldBackAttachments?.isNotEmpty() == true
+                        )
+                            draft.bindLocation(
+                                io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation(
+                                    it.directory,
+                                    it.workspace,
+                                )
+                            )
+                    }
+                },
                 scope.launch(registry.mainContext) {
                     // A missed SSE echo is common when client and server share a busy phone.
                     // Reads are bounded; later history/events can still trigger another check.
@@ -1135,6 +1155,8 @@ internal class GraphChatWorld(
                     editRevision = current.editRevision,
                     attachments = current.attachments,
                     savedAttachments = current.savedAttachments,
+                    heldBackAttachments =
+                        if (current.heldBackWaitsForPlace) emptyList() else current.heldBackAttachments,
                 )
         }
         refreshDraftProtection()
@@ -1167,6 +1189,8 @@ internal class GraphChatWorld(
                 editRevision = current.editRevision,
                 attachments = current.attachments,
                 savedAttachments = current.savedAttachments,
+                heldBackAttachments =
+                    if (current.heldBackWaitsForPlace) emptyList() else current.heldBackAttachments,
             )
         refreshDraftProtection()
         return result

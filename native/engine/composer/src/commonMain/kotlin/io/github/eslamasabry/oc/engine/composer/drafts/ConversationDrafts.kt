@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.engine.composer.vault.AttachmentRecovery
 import io.github.eslamasabry.oc.engine.composer.vault.schemeOf
 import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.coroutines.CompletableDeferred
@@ -39,11 +40,20 @@ public data class DraftState(
     val editRevision: Long = 0,
     val attachments: List<PromptAttachment> = emptyList(),
     val savedAttachments: List<PromptAttachment> = emptyList(),
+    /**
+     * B-144: names of saved files not shown yet (a project file waits for this conversation's place,
+     * or cannot be read). They stay in the saved draft untouched; the words are shown and saved
+     * meanwhile, and sending or changing files waits until they are back (Flutter: "Attachments
+     * need recovery … Retry before sending").
+     */
+    val heldBackAttachments: List<String> = emptyList(),
+    /** True while the held-back files only wait for this conversation's place (nothing to say yet). */
+    val heldBackWaitsForPlace: Boolean = false,
 ) {
     override fun toString(): String =
         "DraftState(text=${text.length} chars, saved=${saved.length} chars, ready=$ready, failed=${failure != null}, " +
             "restoreRevision=$restoreRevision, editRevision=$editRevision, attachments=${attachments.size}, " +
-            "savedAttachments=${savedAttachments.size})"
+            "savedAttachments=${savedAttachments.size}, heldBack=${heldBackAttachments.size})"
 }
 
 public data class DraftSubmission(
@@ -55,8 +65,15 @@ public data class DraftSubmission(
         "DraftSubmission(text=${text.length} chars, revision=$revision, attachments=${attachments.size})"
 }
 
-/** Internal marker: restoration waits for the conversation's location (never shown). */
-private val AWAITING_LOCATION = Failure.StorageRefused()
+/** What a restore read: the words, the files shown and the saved files held back (B-144). */
+private class Restored(
+    val text: String,
+    val saved: String,
+    val files: List<PromptAttachment>,
+    val heldBack: List<String>,
+    val place: DraftLocation?,
+    val awaiting: Boolean,
+)
 
 private data class ProfileFence(val generation: Long = 0, val closing: Boolean = false)
 
@@ -297,6 +314,7 @@ internal constructor(
                         owner.active(ref.profileId, generation)
                 }
                 currentAttachments = { snapshots.value.public.attachments }
+                keepStoredFiles = { snapshots.value.public.heldBackAttachments.isNotEmpty() }
             }
 
     internal fun start() {
@@ -328,7 +346,8 @@ internal constructor(
                     before.public.saved.isNotEmpty() ||
                     before.public.failure != null ||
                     before.public.attachments.isNotEmpty() ||
-                    before.public.savedAttachments.isNotEmpty()
+                    before.public.savedAttachments.isNotEmpty() ||
+                    before.public.heldBackAttachments.isNotEmpty()
             )
                 return false
             if (snapshots.compareAndSet(before, before.copy(retired = true))) return true
@@ -359,29 +378,23 @@ internal constructor(
                     // them one tap away would invite a duplicate send.
                     val waiting = restored.text == null && !saved?.text.isNullOrEmpty()
                     val place = snapshots.value.location
-                    val files =
-                        if (!waiting && saved?.attachments?.isNotEmpty() == true) {
-                            // A `file:` reference means something only where it was saved: wait for
-                            // the conversation's own location instead of guessing it.
-                            if (
-                                place == null &&
-                                    saved.attachments.any { schemeOf(it.url.orEmpty()) == "file" }
-                            )
-                                return@attempt AWAITING_LOCATION.failed()
-                            val recovery =
-                                drafts.restoreAttachments(
-                                    ref.profileId.raw,
-                                    ref.sessionId.raw,
-                                    place ?: DraftLocation(null, null),
-                                )
-                            // A payload that cannot be recovered blocks the session: half a draft
-                            // must never overwrite the saved one.
-                            if (recovery.unavailable.isNotEmpty()) return@attempt unavailable()
-                            recovery.attachments
-                        } else {
-                            emptyList()
-                        }
-                    Triple(restored.text.orEmpty(), saved?.text.orEmpty(), files).ok()
+                    // B-144 (Flutter parity): the words always come back. A `file:` reference
+                    // means something only where it was saved, so before this conversation's
+                    // place is known (or where a file cannot be read) it is held back: shown by
+                    // name, kept in the saved draft, never overwritten by half a draft.
+                    val recovery =
+                        if (!waiting && saved?.attachments?.isNotEmpty() == true)
+                            drafts.restoreAttachments(ref.profileId.raw, ref.sessionId.raw, place)
+                        else AttachmentRecovery.Empty
+                    Restored(
+                            restored.text.orEmpty(),
+                            saved?.text.orEmpty(),
+                            recovery.attachments,
+                            recovery.unavailable,
+                            place = place,
+                            awaiting = waitsForPlace(place, recovery.unavailable),
+                        )
+                        .ok()
                 }
                 .flatMap { it }
         snapshots.update { before ->
@@ -396,31 +409,36 @@ internal constructor(
             else
                 when (loaded) {
                     is Outcome.Failed ->
-                        if (loaded.failure === AWAITING_LOCATION)
-                            before.copy(awaitingLocation = true)
-                        else
-                            before.copy(
-                                public = before.public.copy(failure = loaded.failure),
-                                awaitingLocation = false,
-                            )
+                        before.copy(
+                            public = before.public.copy(failure = loaded.failure),
+                            awaitingLocation = false,
+                        )
                     is Outcome.Ok ->
                         before.copy(
                             public =
                                 DraftState(
-                                    text = loaded.value.first,
-                                    saved = loaded.value.second,
+                                    text = loaded.value.text,
+                                    saved = loaded.value.saved,
                                     ready = true,
-                                    attachments = loaded.value.third,
-                                    savedAttachments = loaded.value.third,
+                                    attachments = loaded.value.files,
+                                    savedAttachments = loaded.value.files,
                                     restoreRevision = before.public.restoreRevision + 1,
                                     editRevision = before.revision + 1,
+                                    heldBackAttachments = loaded.value.heldBack,
+                                    heldBackWaitsForPlace = loaded.value.awaiting,
                                 ),
                             revision = before.revision + 1,
-                            awaitingLocation = false,
+                            awaitingLocation = loaded.value.awaiting,
                         )
                 }
         }
-        if (loaded is Outcome.Failed && loaded.failure === AWAITING_LOCATION) return unavailable()
+        // The place may have been bound while the saved files were read: read them there now.
+        if (
+            loaded is Outcome.Ok &&
+                loaded.value.heldBack.isNotEmpty() &&
+                snapshots.value.location != loaded.value.place
+        )
+            recoverHeldBack()
         return if (snapshots.value.fenced || !owner.active(ref.profileId, generation)) deleted()
         else
             loaded.let {
@@ -442,7 +460,64 @@ internal constructor(
             if (before.location == location) return
             if (snapshots.compareAndSet(before, before.copy(location = location))) break
         }
-        if (snapshots.value.awaitingLocation) scope.launch(serial) { restore() }
+        if (snapshots.value.public.heldBackAttachments.isNotEmpty())
+            scope.launch(serial) { recoverHeldBack() }
+    }
+
+    /**
+     * B-144: reads the held-back saved files again at the place now bound. Words typed meanwhile
+     * stay; a file that is back is shown and counts as saved (it is the stored one).
+     */
+    private suspend fun recoverHeldBack(): Outcome<Unit> {
+        if (!owner.active(ref.profileId, generation) || snapshots.value.fenced) return deleted()
+        if (snapshots.value.public.heldBackAttachments.isEmpty()) return Unit.ok()
+        val place = snapshots.value.location
+        val recovery =
+            attempt({ Failure.StorageRefused() }) {
+                    drafts.restoreAttachments(ref.profileId.raw, ref.sessionId.raw, place).ok()
+                }
+                .flatMap { it }
+        val back =
+            when (recovery) {
+                is Outcome.Ok -> recovery.value
+                is Outcome.Failed -> return recovery
+            }
+        val waits = waitsForPlace(place, back.unavailable)
+        snapshots.update { before ->
+            if (
+                before.fenced ||
+                    !owner.active(ref.profileId, generation) ||
+                    before.public.heldBackAttachments.isEmpty() ||
+                    before.location != place
+            )
+                before
+            else
+                before.copy(
+                    public =
+                        before.public.copy(
+                            attachments = back.attachments,
+                            savedAttachments = back.attachments,
+                            heldBackAttachments = back.unavailable,
+                            heldBackWaitsForPlace = waits,
+                            restoreRevision = before.public.restoreRevision + 1,
+                        ),
+                    awaitingLocation = waits,
+                )
+        }
+        return if (snapshots.value.public.heldBackAttachments.isEmpty()) Unit.ok() else unavailable()
+    }
+
+    /**
+     * True when every held-back file is a project-file reference and this conversation's folder is
+     * not known yet (no place, or the connection's default without a folder): nothing to say yet.
+     */
+    private fun waitsForPlace(place: DraftLocation?, unavailable: List<String>): Boolean {
+        if (unavailable.isEmpty() || place?.directory != null) return false
+        val files =
+            drafts.draft(ref.profileId.raw, ref.sessionId.raw)?.attachments.orEmpty()
+                .filter { schemeOf(it.url.orEmpty()) == "file" }
+                .map { it.filename }
+        return unavailable.all { it in files }
     }
 
     public fun changed(text: String) {
@@ -553,6 +628,15 @@ internal constructor(
                 val restored = restore()
                 if (restored is Outcome.Failed) return@withContext restored
             }
+            if (snapshots.value.public.heldBackAttachments.isNotEmpty()) {
+                val back = recoverHeldBack()
+                if (back is Outcome.Failed) {
+                    // The words are still saved, with the stored files kept as they were.
+                    autosave.changedRevision(snapshots.value.public.text, snapshots.value.revision)
+                    autosave.flush()
+                    return@withContext back
+                }
+            }
             val current = snapshots.value
             if (
                 current.public.text == current.public.saved &&
@@ -592,6 +676,12 @@ internal constructor(
                 }
             }
             if (snapshots.value.closed || snapshots.value.retired) return@withContext unavailable()
+            // B-144: a whole-state write now would drop the saved files that are held back.
+            if (
+                snapshots.value.public.heldBackAttachments.isNotEmpty() &&
+                    recoverHeldBack() is Outcome.Failed
+            )
+                return@withContext unavailable()
             commitAttachments(requested)
         }
     }
@@ -667,6 +757,7 @@ internal constructor(
             if (
                 !before.public.ready ||
                     before.public.failure != null ||
+                    before.public.heldBackAttachments.isNotEmpty() ||
                     before.closed ||
                     before.fenced ||
                     before.privacyRevision != null ||

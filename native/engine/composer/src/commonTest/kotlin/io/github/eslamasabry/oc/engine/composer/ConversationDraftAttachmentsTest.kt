@@ -26,6 +26,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
@@ -99,7 +100,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-101 a missing payload blocks the session without overwriting metadata or bytes`() =
+    fun `B-STATE-101 a missing payload is held back without overwriting metadata or bytes`() =
         runTest {
             val handle = facade().open(ref())
             runCurrent()
@@ -113,17 +114,22 @@ class ConversationDraftAttachmentsTest {
             val commits = prefs.commits
             val restarted = facade().open(ref())
             runCurrent()
-            assertFalse(restarted.state.value.ready)
-            assertIs<Failure.StorageRefused>(restarted.state.value.failure)
-            restarted.changed("")
+            // B-144 (Flutter parity): the words come back; the unreadable file is held back by name.
+            assertTrue(restarted.state.value.ready)
+            assertNull(restarted.state.value.failure)
+            assertEquals("with a file", restarted.state.value.text)
+            assertEquals(listOf("keep.txt"), restarted.state.value.heldBackAttachments)
+            assertNull(restarted.captureSubmission(), "sending waits until the file is back")
+            assertIs<Outcome.Failed>(restarted.replaceAttachments(emptyList()))
             assertIs<Outcome.Failed>(restarted.flush())
             assertEquals(original, prefs.string(Drafts.KEY))
             assertEquals(commits, prefs.commits)
-            assertEquals(
-                "with a file",
-                store().draft("alpha", "same")?.text,
-                "the saved words stay untouched behind the block",
-            )
+            restarted.changed("new words")
+            advanceTimeBy(Drafts.AUTOSAVE_DELAY.inWholeMilliseconds + 1)
+            runCurrent()
+            val saved = assertNotNull(store().draft("alpha", "same"))
+            assertEquals("new words", saved.text, "words typed meanwhile are saved")
+            assertEquals(blob, saved.attachments.single().blob, "the held-back file stays in the draft")
         }
 
     @Test
@@ -308,12 +314,18 @@ class ConversationDraftAttachmentsTest {
 
             val moved = facade().open(ref())
             runCurrent()
-            assertFalse(moved.state.value.ready, "a file reference waits for the conversation's location")
+            assertTrue(moved.state.value.ready, "the words never wait for the location")
+            assertEquals("see @main.kt", moved.state.value.text)
+            assertEquals(listOf("main.kt"), moved.state.value.heldBackAttachments)
             moved.bindLocation(elsewhere)
             runCurrent()
-            assertFalse(moved.state.value.ready)
-            assertNotNull(moved.state.value.failure, "another place's file is never restored")
+            assertTrue(moved.state.value.attachments.isEmpty(), "another place's file is never restored")
+            assertEquals(listOf("main.kt"), moved.state.value.heldBackAttachments)
             assertEquals(original, prefs.string(Drafts.KEY), "the saved draft is preserved")
+            moved.bindLocation(here)
+            runCurrent()
+            assertEquals(listOf(projectFile), moved.state.value.attachments, "back in its place, the file returns")
+            assertTrue(moved.state.value.heldBackAttachments.isEmpty())
 
             val back = facade().open(ref())
             back.bindLocation(here)
@@ -332,5 +344,62 @@ class ConversationDraftAttachmentsTest {
         runCurrent()
         assertTrue(again.state.value.ready)
         assertEquals(listOf(note), again.state.value.attachments)
+    }
+
+    // ---- B-144: the draft Flutter 2.1.4 left behind is restored with its project-file chip ----
+
+    /** `oc.sessionDrafts` exactly as 2.1.4 writes it (`SessionDraftStore.save`, `SessionDraft.toJson`). */
+    private fun seed214() {
+        prefs.rawPut(
+            Drafts.KEY,
+            """[{"sessionID":"same","profileID":"alpha","text":"@notes.txt upgrade draft text",""" +
+                """"updatedAt":1762500000000,"attachments":[{"filename":"notes.txt","mime":"text/plain",""" +
+                """"url":"file:///root/app/notes.txt","bytes":0}],"directory":"/root/app","workspace":null}]""",
+        )
+    }
+
+    private val notes =
+        io.github.eslamasabry.oc.core.model.PromptAttachment("text/plain", "notes.txt", "file:///root/app/notes.txt")
+
+    @Test
+    fun `B-144 the 2_1_4 draft words show at once, with no save failure, before the place is known`() = runTest {
+        seed214()
+        val handle = facade().open(ref())
+        runCurrent()
+        assertTrue(handle.state.value.ready)
+        assertNull(handle.state.value.failure, "no \"Draft not saved\" on open")
+        assertEquals("@notes.txt upgrade draft text", handle.state.value.text)
+        assertEquals(listOf("notes.txt"), handle.state.value.heldBackAttachments)
+    }
+
+    @Test
+    fun `B-144 the notes chip returns when the chat's place arrives after an unknown one`() = runTest {
+        seed214()
+        val original = prefs.string(Drafts.KEY)
+        val handle = facade().open(ref())
+        // The chat binds the connection's place before it has restored the saved project folder.
+        handle.bindLocation(io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation(null, null))
+        runCurrent()
+        assertNull(handle.state.value.failure)
+        assertEquals("@notes.txt upgrade draft text", handle.state.value.text)
+        assertEquals(original, prefs.string(Drafts.KEY), "nothing is written over the 2.1.4 draft")
+        // The same folder, spelled with a trailing slash and an empty workspace.
+        handle.bindLocation(io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation("/root/app/", ""))
+        runCurrent()
+        assertEquals(listOf(notes), handle.state.value.attachments)
+        assertEquals(listOf(notes), handle.state.value.savedAttachments)
+        assertTrue(handle.state.value.heldBackAttachments.isEmpty())
+        assertNotNull(handle.captureSubmission(), "the restored draft can be sent")
+    }
+
+    @Test
+    fun `B-144 a 2_1_4 draft opened in its own place restores words and chip together`() = runTest {
+        seed214()
+        val handle = facade().open(ref())
+        handle.bindLocation(io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation("/root/app", null))
+        runCurrent()
+        assertEquals("@notes.txt upgrade draft text", handle.state.value.text)
+        assertEquals(listOf(notes), handle.state.value.attachments)
+        assertTrue(handle.state.value.heldBackAttachments.isEmpty())
     }
 }
