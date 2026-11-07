@@ -291,58 +291,5 @@ class S7PolishKitTest {
         assertEquals(to.dark, mid.dark)
         assertEquals(from.dark, ThemeFade.lerp(from, to, 0.49f).dark)
     }
-
-    @Test
-    fun `P-116 the fade's 200 ms start after its first frame, so a slow first frame does not eat them`() =
-        runComposeUiTest {
-            var mode by mutableStateOf(AppearanceMode.Dark)
-            var ground = Color.Unspecified
-            setContent {
-                KitTheme(KitAppearance(mode = mode, motion = MotionLevel.Full), FakeKitPlatform(), "en") {
-                    ground = LocalKitColors.current.ground
-                }
-            }
-            waitForIdle()
-            val dark = ground
-            mainClock.autoAdvance = false
-            mode = AppearanceMode.Light
-            // Frame 1 sees the change and starts the fade; frame 2 is the first fading frame (the costly one, every
-            // part recomposing); the clock starts on frame 3, so up to then the old colours still show in full.
-            mainClock.advanceTimeByFrame()
-            mainClock.advanceTimeByFrame()
-            mainClock.advanceTimeByFrame()
-            assertEquals(dark, ground, "the fade has not spent any of its time before its first frame is drawn")
-            mainClock.advanceTimeBy(100)
-            assertNotEquals(dark, ground, "then it moves")
-        }
-
-    @Test
-    fun `P-029 dark to light fades over 200 ms and is done by then, at once with motion off`() = runComposeUiTest {
-        var mode by mutableStateOf(AppearanceMode.Dark)
-        var level by mutableStateOf(MotionLevel.Full)
-        var ground = Color.Unspecified
-        setContent {
-            KitTheme(KitAppearance(mode = mode, motion = level), FakeKitPlatform(), "en") {
-                ground = LocalKitColors.current.ground
-            }
-        }
-        waitForIdle()
-        val dark = ground
-        mainClock.autoAdvance = false
-        mode = AppearanceMode.Light
-        mainClock.advanceTimeBy(100)
-        val mid = ground
-        // P-116: the fade's clock starts once its first frame is under way (one frame later), so it ends by ~248 ms.
-        mainClock.advanceTimeBy(160)
-        val light = ground
-        assertNotEquals(dark, mid, "halfway it has left the dark ground")
-        assertNotEquals(light, mid, "halfway it is not yet the light ground")
-        mainClock.advanceTimeBy(500)
-        assertEquals(light, ground, "after 260 ms nothing moves any more")
-        level = MotionLevel.Off
-        mainClock.advanceTimeBy(32)
-        mode = AppearanceMode.Dark
-        mainClock.advanceTimeBy(16)
-        assertEquals(dark, ground, "with motion off the change is at once")
-    }
+    // P-116 and the timed P-029 fade moved to S10MotionKitTest with M-019 (the old screen now fades over the new).
 }
