@@ -189,6 +189,62 @@ class PlanTest(Fixture):
         self.assertEqual(0o600, (fx / "e.json").stat().st_mode & 0o777)
 
 
+class SetupFixesTest(Fixture):
+    """B-134/B-135: the first real run (E00-S10, 2026-11-07) could not get past these."""
+
+    def test_an_avd_made_elsewhere_is_found_through_its_ini(self):
+        elsewhere = self.tmp / "storage2/OCN_U.avd"
+        (elsewhere / "snapshots/flutter-2.1.4-seeded").mkdir(parents=True)
+        (self.tmp / "avd").mkdir(parents=True, exist_ok=True)
+        (self.tmp / "avd/OCN_U.ini").write_text(f"avd.ini.encoding=UTF-8\npath={elsewhere}\n")
+        self.assertEqual(elsewhere, upgrade.avd_dir("OCN_U"))
+        self.assertTrue(upgrade.avd_has_snapshot("OCN_U", "flutter-2.1.4-seeded"))
+
+    def test_run_py_always_skips_its_ram_check_the_gate_checks_before_booting(self):
+        args = upgrade.parse_args(["--flutter-apk", "r", "--native-apk", "n", "--expect-signer", OWNER,
+                                   "--avd", "OCN_U"])
+        self.assertIn("--skip-resource-checks", upgrade.run_py_cmd(args, self.tmp, False, None))
+
+    def test_no_snapshot_save_when_its_disk_is_short(self):
+        args = upgrade.parse_args(["--flutter-apk", "r", "--native-apk", "n", "--expect-signer", OWNER,
+                                   "--avd", "OCN_U"])
+        with mock.patch.object(upgrade.shutil, "disk_usage", return_value=types.SimpleNamespace(free=1)):
+            self.assertNotIn("--save-seed-snapshot", upgrade.run_py_cmd(args, self.tmp, False, None))
+
+    def test_a_checkout_without_the_flutter_strings_is_refused_before_the_emulator(self):
+        args = upgrade.parse_args(["--flutter-apk", "r", "--native-apk", "n", "--expect-signer", OWNER,
+                                   "--avd", "OCN_U"])
+        with mock.patch.object(upgrade, "REPO", self.tmp):
+            with self.assertRaises(upgrade.Refused) as ctx:
+                upgrade.preflight(args)
+        self.assertIn("lib/l10n/app_en.arb", str(ctx.exception))
+
+    def test_the_fixture_env_carries_fx_ctl_from_fx_py_state(self):
+        state = self.tmp / "state.json"
+        state.write_text(json.dumps({"env": {"SERVER_PASSWORD": "a", "SERVER_B_PASSWORD": "b",
+                                             "GIT_PASSWORD": "c", "FX_CTL": "http://127.0.0.1:8898"}}))
+        self.assertEqual({"SERVER_PASSWORD": "a", "SERVER_B_PASSWORD": "b", "FX_CTL": "http://127.0.0.1:8898"},
+                         upgrade.fixtures_env_from_state(state))
+
+    def test_maestro_2_12_commands_json_is_read(self):
+        root = self.tmp / "run"
+        d = root / "E2E-39" / "attempt-1" / "debug" / "E2E-39-upgrade-in-place"
+        d.mkdir(parents=True)
+        (d / "commands.json").write_text(json.dumps(
+            [{"command": {"runFlowCommand": {"label": "S4 Part C on native", "commands": []}},
+              "metadata": {"status": "COMPLETED"}}]))
+        self.assertEqual({"S4 Part C on native": "COMPLETED"}, upgrade.maestro_statuses(root))
+
+    def test_the_step_where_maestro_stopped_is_kept_as_the_failure_screen(self):
+        shots = self.tmp / "run" / "E2E-39" / "attempt-1" / "debug" / "E2E-39-upgrade-in-place" / "screenshots"
+        shots.mkdir(parents=True)
+        (shots / "step-004-runFlow.png").write_bytes(b"a")
+        (shots / "step-008-assertCondition-x.png").write_bytes(b"b")
+        out = upgrade.collect_screens(self.tmp / "run", self.tmp / "dest")
+        self.assertEqual(1, len(out))
+        self.assertEqual(b"b", (self.tmp / "dest" / out[0][0]).read_bytes())
+
+
 class VerdictTest(unittest.TestCase):
     def debug_tree(self, commands):
         root = pathlib.Path(tempfile.mkdtemp())
