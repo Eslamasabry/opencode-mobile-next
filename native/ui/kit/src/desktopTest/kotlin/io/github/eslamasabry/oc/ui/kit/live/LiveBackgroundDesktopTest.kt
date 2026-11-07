@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -69,21 +70,24 @@ class LiveBackgroundDesktopTest {
         runDesktopComposeUiTest(200, 400) {
             val platform = CountingPlatform()
             var pageCompositions = 0
+            var pageDraws = 0
             setContent {
                 KitTheme(appearance(MotionLevel.Full), platform, "en") {
                     KitLiveBackground(Modifier.fillMaxSize()) {
                         SideEffect { pageCompositions++ }
-                        Box(Modifier.fillMaxSize())
+                        Box(Modifier.fillMaxSize().drawBehind { pageDraws++ })
                     }
                 }
             }
             mainClock.autoAdvance = false
             val start = platform.draws
+            val pageDrawsBefore = pageDraws
             repeat(120) { mainClock.advanceTimeByFrame() } // two seconds at 60 Hz
             val frames = platform.draws - start
             assertTrue(frames in 40..62, "drew $frames background frames in two seconds (30 fps cap)")
             assertTrue(platform.times.last() > platform.times.first(), "time moved")
             assertEquals(1, pageCompositions, "the page above the background never recomposed")
+            assertEquals(pageDrawsBefore, pageDraws, "the page above the background was never redrawn")
         }
 
     @Test
