@@ -49,12 +49,14 @@ class AndroidKitPlatformTest {
         compose.onNodeWithText(SceneWords.En.row).performClick()
         compose.onNodeWithText(SceneWords.En.row).performTouchInput { longClick() }
         assertEquals(1, sent)
-        assertEquals(listOf(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.LONG_PRESS), view.played)
+        assertEquals(listOf(HapticFeedbackConstants.CONFIRM, HapticFeedbackConstants.LONG_PRESS), view.played)
     }
 
     @Test
     fun `haptic constants follow the API level`() {
         assertEquals(HapticFeedbackConstants.KEYBOARD_TAP, hapticConstant(KitHaptic.Commit, 37))
+        assertEquals(HapticFeedbackConstants.CONFIRM, hapticConstant(KitHaptic.Send, 30))
+        assertEquals(HapticFeedbackConstants.VIRTUAL_KEY, hapticConstant(KitHaptic.Send, 29))
         assertEquals(HapticFeedbackConstants.CONFIRM, hapticConstant(KitHaptic.Done, 30))
         assertNull(hapticConstant(KitHaptic.Done, 29))
         assertEquals(HapticFeedbackConstants.SEGMENT_TICK, hapticConstant(KitHaptic.Select, 34))

@@ -183,8 +183,9 @@ public fun KitButton(
             // reads apart from disabled text3 (R5).
             else -> colors.text1 // F: lib/ui/kit/kit_buttons.dart:732
         }
-    val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
-    val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
+    // Muted → solid when the step becomes valid (owner reference 2026-11-07): the fill washes in on the effects spring.
+    val easedFill by animateColorAsState(fill, specs.effects(), label = "kit-button-fill")
+    val easedWords by animateColorAsState(words, specs.effects(), label = "kit-button-words")
     val ink =
         if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent
         else TextTone.Primary

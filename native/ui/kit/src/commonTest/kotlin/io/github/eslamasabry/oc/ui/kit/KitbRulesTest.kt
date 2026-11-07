@@ -105,8 +105,9 @@ class KitbRulesTest {
                 "KitAnimatedValue", "KitDim", "KitRefresh.pull", "KitRefresh.breath", "KitTip", "KitJumpPill",
                 "KitTabSwitcher", "KitTabStrip.indicator", "KitSearchField.clear", "KitScrollFade", "KitSheetStep",
                 "KitSideSheet.drag", "KitSideSheet.settle", "KitModalMotion.dialog", "KitModalMotion.menu",
-                "KitModalMotion.sheet", "KitSwapMorph", "kitItemMotion.placement", "kitItemMotion.fade", "KitGrow.title",
-                "KitRollingNumber", "KitDissolve", "KitStepProgress", "KitToast", "KitStaggerRow",
+                "KitModalMotion.sheet", "KitSwapMorph", "kitItemMotion.placement", "kitItemMotion.fade", "KitSheet.drag",
+                "KitSheet.release", "KitGrow.title", "KitRollingNumber", "KitDissolve", "KitChoiceRow.fill",
+                "KitChoiceRow.mark", "KitStepProgress", "KitToast", "KitStaggerRow",
             )
         assertEquals(expected, KitMotionManifest.parts.keys)
         assertEquals(KitMotionClass.Travel, KitMotionManifest.parts.getValue("KitSwap.count"))
