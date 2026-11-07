@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.content.terminal
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -83,7 +87,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.floor
-import kotlin.math.max
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -364,7 +367,8 @@ public fun TerminalKeyBar(
 
     if (singleRow && !compact) {
         // The caps sit on the screen's own ground, without a panel behind them.
-        Box(modifier.semantics { contentDescription = barLabel }) {
+        // Keyboard chrome anchored to the window's bottom edge: the caps reach the edges as a keyboard's do.
+        Box(modifier.kitEdge(KitEdge.Chrome).semantics { contentDescription = barLabel }) {
             KitLtr {
                 TerminalKeyBarSingleRow(
                     keys = KitTerminalBarKey.SingleRowKeys, // F: lib/ui/kit/terminal_key_bar.dart:375
@@ -385,7 +389,7 @@ public fun TerminalKeyBar(
     }
     // The band the keys sit in: a track in the style's look, Solid's `surface2` under a hairline as it always was.
     val density = LocalDensity.current
-    val hairlinePx = with(density) { (1f / density.density).dp.toPx() } // F: lib/ui/kit/terminal_key_bar.dart:392-395 lib/ui/kit/kit_tokens.dart:315-318
+    val hairlinePx = with(density) { kitHairline().toPx() } // the view's pixel ratio, not the density (standard §6.1); F: lib/ui/kit/terminal_key_bar.dart:392-395 lib/ui/kit/kit_tokens.dart:315-318
     val bandLook =
         terminalSurfaceLook(
             role = SurfaceRole.Track, // F: lib/ui/kit/terminal_key_bar.dart:398
@@ -405,13 +409,19 @@ public fun TerminalKeyBar(
         }
     Box(
         modifier
+            // Keyboard chrome anchored to the window's bottom edge: the band and its caps reach the edges, as a
+            // keyboard's keys do (the Flutter golden puts Esc at x 0).
+            .kitEdge(KitEdge.Chrome)
             .semantics { contentDescription = barLabel } // F: lib/ui/kit/terminal_key_bar.dart:402-404
             .then(bandLook.modifier)
             .drawBehind { drawLine(colors.hairline, Offset(0f, hairlinePx / 2), Offset(size.width, hairlinePx / 2), hairlinePx) }, // NV: the hairline stroke is centred on the top edge so it fills Flutter's Border top band (terminal_key_bar.dart:391-397)
     ) {
         KitLtr { // Keys sit where a keyboard has them in every language. // F: lib/ui/kit/terminal_key_bar.dart:415-417
+            // The keys take the band's whole width, so the band (laid out in the reader's direction) never pushes
+            // them to its start edge: in Arabic the centred grid stayed centred only once it fills the band.
             Column(
                 safe
+                    .fillMaxWidth()
                     .padding(vertical = gap), // F: lib/ui/kit/terminal_key_bar.dart:418-419
                 verticalArrangement = Arrangement.spacedBy(gap), // F: lib/ui/kit/terminal_key_bar.dart:475
             ) {
@@ -604,9 +614,8 @@ private fun TerminalKeyCap(
     val buttonRadius = (Shapes.of(KitShapeId.Button) as Corner.Radius).dp // F: lib/ui/kit/terminal_key_bar.dart:750-752 (tokens.buttonRadius)
     val capRadiusDp = if (calm) buttonRadius * .72f else buttonRadius.toFloat() // F: lib/ui/kit/terminal_key_bar.dart:750-752
     val radius = RoundedCornerShape(capRadiusDp)
-    val density = LocalDensity.current.density
-    val focusRingWidth = (if (density <= 1f) max(2f / density, 1f) else 2f / density).dp // F: lib/ui/kit/kit_tokens.dart:322-327 (tokens.focusRingWidth)
-    val hairlineWidth = (1f / density).dp // F: lib/ui/kit/kit_tokens.dart:315-318 (tokens.hairlineWidth)
+    val focusRingWidth = kitFocusRingWidth() // F: lib/ui/kit/kit_tokens.dart:322-327 (tokens.focusRingWidth)
+    val hairlineWidth = kitHairline() // F: lib/ui/kit/kit_tokens.dart:315-318 (tokens.hairlineWidth)
     // Hook H3: a latched cap's face takes the colour the style says reads on it, so a style that sets a latched key in
     // reverse keeps it legible; every other cap keeps its own tone. Resolved inside the cap, so the face keeps its
     // plate (hook H10).
@@ -647,8 +656,10 @@ private fun TerminalKeyCap(
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = { onTap?.invoke() }), // F: lib/ui/kit/terminal_key_bar.dart:828-838
         contentAlignment = Alignment.Center,
     ) {
+        // The cap fills its slot (Dart: Padding → DecoratedBox → Center over the whole key); only the face is centred.
         Box(
             Modifier
+                .fillMaxSize()
                 .then(if (calm) Modifier.padding(horizontal = half, vertical = Space.S1.dp) else Modifier) // F: lib/ui/kit/terminal_key_bar.dart:733-736,840-845
                 .then(capLook.modifier)
                 .then(edge),
