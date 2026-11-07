@@ -34124,4 +34124,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get crashOfferSettingDetail =>
       'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.';
+
+  @override
+  String get telemetrySettingTitle =>
+      'Send crash reports to the developer (Google Firebase)';
+
+  @override
+  String get telemetrySettingDetail =>
+      'Sends crash and failure reports to Google Firebase Crashlytics: the kind of error, the code locations it happened in, your phone model and Android version, and the app version. No messages, files, addresses or passwords.';
 }

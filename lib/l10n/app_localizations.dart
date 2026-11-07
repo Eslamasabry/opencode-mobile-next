@@ -56621,6 +56621,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.'**
   String get crashOfferSettingDetail;
+
+  /// Privacy and data: switch that turns on sending crash reports to the developer through Google Firebase Crashlytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Send crash reports to the developer (Google Firebase)'**
+  String get telemetrySettingTitle;
+
+  /// Privacy and data: one sentence on what the crash-report switch sends.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends crash and failure reports to Google Firebase Crashlytics: the kind of error, the code locations it happened in, your phone model and Android version, and the app version. No messages, files, addresses or passwords.'**
+  String get telemetrySettingDetail;
 }
 
 class _AppLocalizationsDelegate

@@ -3,8 +3,9 @@
 **Effective date: September 6, 2026**
 
 OpenCode for Android is a client for OpenCode servers. It does not provide a
-developer-operated account, advertising, analytics, or crash-reporting service.
-The app does not sell personal data.
+developer-operated account, advertising or analytics service. It can send crash
+and error reports to the developer, but only if you turn that on (see
+"Optional crash and error reports" below). The app does not sell personal data.
 
 ## Where your data goes
 
@@ -43,6 +44,31 @@ merge approval and merge). Each action carries a random idempotency key
 and is identified on the host by your Tailscale login; the app keeps a
 record of each action and its receipt under the same server-scoped keys.
 The front never receives a password from the app.
+
+## Optional crash and error reports
+
+Off by default. In **Settings > Privacy and data** the switch "Send crash
+reports to the developer (Google Firebase)" sends crash and failure reports to
+**Google Firebase Crashlytics**, a service run by Google, so Google receives
+them under its own terms. Nothing is collected or sent while the switch is off,
+and the app contains no Firebase Analytics, performance or remote-config code.
+Turn the switch off at any time to stop; unsent reports are discarded.
+
+When on, a report contains only: the kind of error (for example "Invalid
+state") and the code locations (library, line and column) it happened in; for
+a failure the app handled, a fixed name such as `setup_step_failed` with a few
+short codes (the setup step name, an exit code, the pack name of a voice
+model, the kind of refusal); the app version and build; and the facts Google's
+Crashlytics adds on its own: phone model, Android version, free memory and
+storage, whether the phone is rooted, a random installation identifier, and
+the time. It never contains message text, prompts, file names or contents,
+paths, server addresses, usernames, passwords, keys or tokens; the app drops
+anything that is not a short plain code, and removes secrets from the rest
+before it leaves the app. A native (Java or C) crash report carries the
+crashed thread's code locations and the device facts above, not your data.
+
+The separate "Offer crash reports" switch is unchanged: it offers to prepare a
+report you review and send yourself through GitHub, with no third party.
 
 ## Data stored on your device
 

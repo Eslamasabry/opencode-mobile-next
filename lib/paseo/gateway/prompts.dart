@@ -97,6 +97,9 @@ extension _PaseoPrompts on PaseoGateway {
       Error.throwWithStackTrace(error, stack);
     }
     final agent = _agents[sessionID];
+    AppTelemetry.failure('prompt_not_accepted', {
+      'kind': classifyAgentRunFailure(reason).name,
+    });
     String? named(Object? value) =>
         value is String && value.isNotEmpty && value != paseoDefaultModel
         ? value
