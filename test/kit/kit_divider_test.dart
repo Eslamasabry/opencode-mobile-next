@@ -386,4 +386,20 @@ void main() {
     // dangling SemanticsHandle runs before addTearDown callbacks do.
     semantics.dispose();
   });
+
+  testWidgets('prominent divider has 1.0 thickness and visible color', (
+    tester,
+  ) async {
+    const divider = KitDivider.prominent();
+    expect(divider.thickness, 1.0);
+    final key = GlobalKey();
+    await _pump(
+      tester,
+      SizedBox(width: 200, child: KitDivider.prominent(key: key)),
+      dpr: 3.0,
+      light: false,
+    );
+    final box = key.currentContext!.findRenderObject()! as RenderBox;
+    expect(box.size.height, 1.0);
+  });
 }
