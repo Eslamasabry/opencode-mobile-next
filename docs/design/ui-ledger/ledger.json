@@ -1,5 +1,5 @@
 {
- "generatedFrom": "c2c2ca8d02a5d5a76431027d596d52c421fda5a8",
+ "generatedFrom": "a5c31416dedb5639762edc92e7d2b7fa1e487f8b",
  "pages": [
   {
    "id": "system",
@@ -38476,6 +38476,11 @@
    "file": "lib/ui/screens/library/integrations_connect.dart",
    "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "j2-library"
+  },
+  {
+   "file": "lib/ui/screens/library/integrations_load_states.dart",
+   "reason": "Not a page: how each Integrations list stands when it is not loaded (waiting, not offered, failed), part of the Integrations screen.",
+   "part": "o-usage-and-settings"
   },
   {
    "file": "lib/ui/screens/library/integrations_mcp.dart",

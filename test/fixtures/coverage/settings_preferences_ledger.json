@@ -746,5 +746,17 @@
   "oc.crashReports.offer": {
     "scope": "global",
     "why": "app-wide Privacy and data switch \"Offer crash reports\" (E02-S91)"
+  },
+  "oc.builtin.nodeCompat.device": {
+    "scope": "global",
+    "why": "this phone's Node.js safe mode (issue #117, node_compat.dart): about the device's system, not any server"
+  },
+  "oc.telemetry.crashReports": {
+    "scope": "global",
+    "why": "app-wide consent for crash reports and setup analytics (Settings > Privacy and data), off by default"
+  },
+  "oc.telemetry.lastVersion": {
+    "scope": "global",
+    "why": "app version seen at the last start, so a newer one counts as update_installed; not about any server"
   }
 }
