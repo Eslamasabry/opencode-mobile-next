@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -165,3 +166,41 @@ private fun KitTappableRole.toSemantics(): Role =
         KitTappableRole.Tab -> Role.Tab
         KitTappableRole.Switch -> Role.Switch
     }
+
+/**
+ * Reading content that opens its actions on a tap or a hold (a message bubble, a reply; M-018): the press shows from
+ * the moment the finger lands and stays through the hold, as the platform's bounded ripple clipped to [shape] (the
+ * bubble's own outline), so a long-press is never ~600 ms of nothing. Unlike [kitTappable] it adds no minimum size
+ * and no resting surface: the content keeps its natural height. The hold plays the kit's `LongPress` haptic, once.
+ * Reduced motion shows the flat press fill instead of the ripple.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+public fun Modifier.kitContentPress(
+    label: String,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    shape: Shape,
+    interactionSource: MutableInteractionSource? = null,
+): Modifier {
+    val platform = LocalKitPlatform.current
+    val hapticsOn = LocalKitAppearance.current.haptics
+    val reduced = LocalKitMotion.current.reduced
+    val ink = LocalKitColors.current.tone(TextTone.Primary)
+    val indication = remember(platform, ink, reduced) { if (reduced) KitFillIndication(ink) else platform.pressIndication(ink) }
+    val interactions = interactionSource ?: remember { MutableInteractionSource() }
+    return this
+        .clip(shape)
+        .combinedClickable(
+            interactionSource = interactions,
+            indication = indication,
+            onClickLabel = label,
+            onLongClickLabel = label,
+            hapticFeedbackEnabled = false,
+            onLongClick = {
+                if (hapticsOn) platform.haptic(KitHaptic.LongPress)
+                onLongClick()
+            },
+            onClick = onClick,
+        )
+}
