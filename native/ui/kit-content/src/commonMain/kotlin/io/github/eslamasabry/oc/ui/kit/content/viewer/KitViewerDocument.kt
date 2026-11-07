@@ -23,10 +23,12 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.decodeToImageBitmap
 
 /**
  * Reader controls shared by text, code, Markdown, SVG and tables. The source stays exact for Copy;
@@ -224,3 +226,172 @@ public fun KitViewerDocument(
             }
     }
 }
+
+// --- The Flutter viewer's state and text rules (lib/ui/kit/kit_viewer.dart) ------------------------------------------
+
+/** Text sources show at most this many lines (Dart `KitViewer.maxLines`); beyond it the notice says how many. */
+internal const val VIEWER_MAX_LINES: Int = 2000 // F: lib/ui/kit/kit_viewer.dart:302
+
+/**
+ * Text prepared once per content (Dart `_Prepared`): capped at [VIEWER_MAX_LINES], redacted for Find, with the counts
+ * for the truncation notice and the longest line for the sideways width.
+ */
+internal class ViewerPrepared(text: String) {
+    val totalLines: Int
+    val capped: Boolean
+    val shown: String
+    val shownLines: Int
+    val redacted: String
+    val longest: String
+
+    init {
+        val lines = text.split('\n').toMutableList()
+        if (text.endsWith('\n')) lines.removeAt(lines.size - 1)
+        totalLines = lines.size
+        capped = totalLines > VIEWER_MAX_LINES
+        shown = if (capped) lines.take(VIEWER_MAX_LINES).joinToString("\n") else text
+        shownLines = minOf(totalLines, VIEWER_MAX_LINES)
+        redacted = KitRedact.text(shown)
+        longest = shown.split('\n').maxByOrNull { it.length }.orEmpty()
+    }
+}
+
+/** Find's pure rules (Dart `_onQuery`, `_step`) and the notice's number words. */
+internal object ViewerFind {
+    /** Every literal, case-insensitive match of [query] in [haystack]; empty matches are skipped. */
+    fun marks(haystack: String, query: String): List<IntRange> {
+        if (query.isEmpty()) return emptyList()
+        val pattern = Regex(Regex.escape(query), RegexOption.IGNORE_CASE)
+        return pattern.findAll(haystack).filter { !it.range.isEmpty() }.map { it.range }.toList()
+    }
+
+    /** The next active mark, wrapping both ways. */
+    fun step(active: Int, delta: Int, count: Int): Int {
+        if (count == 0) return active
+        val next = (active + delta) % count
+        return if (next < 0) next + count else next
+    }
+
+    /** "5,210": the count with its thousands grouped, as the Dart message's number format writes it. */
+    fun grouped(n: Int): String = n.toString().reversed().chunked(3).joinToString(",").reversed() // NV: thousands grouping of intl NumberFormat
+}
+
+/** What the body draws for the current content and Show source (Dart `_sourceView`, `_codeText`, `_isEmpty`). */
+internal class ViewerView(content: KitViewerContent?, sourceOn: Boolean) {
+    val sourceView: Boolean =
+        when (content) {
+            is KitViewerContent.Markdown -> sourceOn
+            is KitViewerContent.Svg -> sourceOn && content.original != null
+            is KitViewerContent.Delimited -> sourceOn && content.original != null
+            else -> false
+        }
+
+    val sourceApplies: Boolean =
+        when (content) {
+            is KitViewerContent.Markdown -> true
+            is KitViewerContent.Svg -> content.original != null
+            is KitViewerContent.Delimited -> content.original != null
+            else -> false
+        }
+
+    /** The text the body draws in a code block, or null when the body is not a code block. */
+    val codeText: String? =
+        when (content) {
+            is KitViewerContent.Text -> content.text
+            is KitViewerContent.Code -> content.text
+            is KitViewerContent.Markdown -> if (sourceView) content.source else null
+            is KitViewerContent.Svg -> if (sourceView) content.original else null
+            is KitViewerContent.Delimited -> if (sourceView) content.original else null
+            else -> null
+        }
+
+    val empty: Boolean =
+        when (content) {
+            is KitViewerContent.Text -> content.text.isBlank()
+            is KitViewerContent.Code -> content.text.isBlank()
+            is KitViewerContent.Markdown -> content.source.isBlank()
+            is KitViewerContent.Svg -> content.safeSource.isBlank()
+            is KitViewerContent.Delimited -> content.rows.isEmpty()
+            else -> false
+        }
+}
+
+/** Dart `content._truncated`. */
+internal fun KitViewerContent.truncatedFlag(): Boolean =
+    when (this) {
+        is KitViewerContent.Text -> truncated
+        is KitViewerContent.Code -> truncated
+        is KitViewerContent.Markdown -> truncated
+        is KitViewerContent.Svg -> truncated
+        is KitViewerContent.Delimited -> truncated
+        else -> false
+    }
+
+/** Dart `content._totalLines`. */
+internal fun KitViewerContent.knownTotal(): Int? =
+    when (this) {
+        is KitViewerContent.Text -> totalLines
+        is KitViewerContent.Code -> totalLines
+        else -> null
+    }
+
+/** Loading a [KitViewerSource] (Dart `_resolve`, `_retry`): content in hand at once, else loading then content or error. */
+internal class ViewerState(private val source: KitViewerSource, private val loader: (suspend () -> KitViewerContent)?) {
+    var content: KitViewerContent? by mutableStateOf(source.content)
+        private set
+    var error: Throwable? by mutableStateOf(null)
+        private set
+    var loading: Boolean by mutableStateOf(source.content == null)
+        private set
+    var generation: Int by mutableIntStateOf(0)
+        private set
+
+    fun retry() {
+        if (source.content != null) return
+        error = null
+        content = null
+        loading = true
+        generation++
+    }
+
+    suspend fun load() {
+        if (source.content != null) return
+        val run = loader ?: return
+        try {
+            content = run()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) { // the caller's failure is shown as "Couldn't open", never its text
+            error = e
+        }
+        loading = false
+    }
+}
+
+/** The image body (Dart `KitZoom` over a centred `KitImage`). */
+@Composable
+internal fun ViewerImage(content: KitViewerContent.Image, name: String) {
+    io.github.eslamasabry.oc.ui.kit.content.image.KitZoomView(name, Modifier.fillMaxSize()) {
+        // Centre loosens the window: the picture keeps its own size (1 px = 1 dp, as Flutter's Image), never larger
+        // than the room, and its aspect ratio.
+        val size = remember(content.bytes) { pictureSizeOf(content.bytes) }
+        Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            io.github.eslamasabry.oc.ui.kit.content.image.KitImage(
+                io.github.eslamasabry.oc.ui.kit.content.image.KitImageSource.Memory(content.bytes),
+                content.semanticsLabel ?: name,
+                if (size == null) Modifier
+                else Modifier.sizeIn(maxWidth = size.first.dp, maxHeight = size.second.dp).aspectRatio(size.first.toFloat() / size.second),
+            )
+        }
+    }
+}
+
+/** The pixel size of an encoded picture, or null when it does not decode. */
+@OptIn(org.jetbrains.compose.resources.ExperimentalResourceApi::class)
+internal fun pictureSizeOf(bytes: ByteArray): Pair<Int, Int>? =
+    try {
+        val bitmap = bytes.decodeToImageBitmap()
+        if (bitmap.width > 0 && bitmap.height > 0) bitmap.width to bitmap.height else null
+    } catch (_: RuntimeException) { // an undecodable picture keeps the image part's own failure state
+        null
+    }
