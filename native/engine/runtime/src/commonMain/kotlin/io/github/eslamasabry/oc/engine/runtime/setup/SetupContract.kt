@@ -8,12 +8,11 @@ package io.github.eslamasabry.oc.engine.runtime.setup
  */
 
 /**
- * Where a setup job installs OpenCode. Only the app's own Linux is ported (D7: Termux migrates
- * out).
+ * Where a setup job installs OpenCode: only the app's own Linux. A saved job naming another host
+ * (an old Termux job) is not this engine's.
  */
 public enum class SetupHostKind(public val wireName: String) {
     Builtin("builtin"),
-    Termux("termux"),
 }
 
 /** Evidence about a payload, never a transport/header guess (lib/state/download_size.dart). */

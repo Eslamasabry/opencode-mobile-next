@@ -18,7 +18,7 @@ public data class SetupRunResult(val exitCode: Int, val output: String) {
     val ok: Boolean get() = exitCode == 0
 }
 
-/** The native side of setup (BuiltinLinux / the Termux setup host), as a port. */
+/** The native side of setup (BuiltinLinux), as a port. */
 public interface SetupLinuxHost {
     public suspend fun status(): HostReply<SetupLinuxStatus>
 

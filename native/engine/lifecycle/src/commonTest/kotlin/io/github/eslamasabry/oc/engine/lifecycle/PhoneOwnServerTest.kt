@@ -13,7 +13,8 @@ class PhoneOwnServerTest {
     fun `B-NAV-040 only the phone's own servers count as this phone`() {
         val android = PhoneHostSupport.Android
         assertTrue(PhoneOwnServers.isPhoneOwnServer(at("in-app", PhoneOwnServers.IN_APP_URL), android))
-        assertTrue(PhoneOwnServers.isPhoneOwnServer(at("termux", PhoneOwnServers.TERMUX_URL), android))
+        // The retired Termux address (4096) is any other loopback server now.
+        assertFalse(PhoneOwnServers.isPhoneOwnServer(at("old-termux", "http://127.0.0.1:4096"), android))
         assertFalse(PhoneOwnServers.isPhoneOwnServer(at("forwarded", "http://127.0.0.1:4123"), android))
         assertFalse(PhoneOwnServers.isPhoneOwnServer(at("local", "http://localhost:4096"), android))
         assertFalse(PhoneOwnServers.isPhoneOwnServer(at("lan", "https://laptop.example"), android))

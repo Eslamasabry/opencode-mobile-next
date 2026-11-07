@@ -70,7 +70,6 @@
     <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$private fun close(expected: Double, actual: Double)</ID>
     <ID>MaxLineLength:SetupScripts.kt$OpenCodePins$url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz"</ID>
     <ID>MaxLineLength:SetupScripts.kt$SetupScripts$public const val LINUX_CHECK: String = """[ -s /etc/os-release ] &amp;&amp; . /etc/os-release &amp;&amp; echo "${'$'}{VERSION%% *}""""</ID>
-    <ID>MaxLineLength:TermuxSetupParams.kt$TermuxSetupParams$private val allowed = mapOf("opencode" to setOf("runtime", "version"), SetupJobParams.KEY to setOf("first", "adding"))</ID>
     <ID>ReturnCount:FakeSetupHost.kt$FakeSetupHost$override suspend fun run(script: String): HostReply&lt;SetupRunResult&gt;</ID>
     <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun checkUntraced(job: List&lt;SetupComponent&gt;, requireComplete: Boolean): Map&lt;String, SetupCheckResult&gt;?</ID>
     <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun readInstalledOptional(): SetupInventory</ID>
@@ -82,7 +81,6 @@
     <ID>ReturnCount:SetupProgressMath.kt$private fun fraction(progress: ComponentProgress, floors: MutableMap&lt;String, Double&gt;?): Double</ID>
     <ID>ReturnCount:SetupProgressMath.kt$public fun estimateEta( components: List&lt;SetupComponent&gt;, progress: List&lt;ComponentProgress&gt;, overall: Double, elapsed: Duration, minimum: Duration = 10.seconds, ): Int?</ID>
     <ID>ReturnCount:SetupScripts.kt$SetupScripts$public fun openCodeNativeInstall( version: String? = null, pins: OpenCodeAssets = OpenCodePins.assets, root: String = "", probeSeconds: Int = 120, ): String?</ID>
-    <ID>ReturnCount:TermuxSetupParams.kt$TermuxSetupParams$public fun isValid(params: Map&lt;String, Map&lt;String, String&gt;&gt;, redactor: Redactor = Redactor()): Boolean</ID>
     <ID>TooGenericExceptionCaught:SetupEngine.kt$SetupEngine$error: RuntimeException</ID>
     <ID>TooManyFunctions:SetupEngine.kt$SetupEngine</ID>
   </CurrentIssues>

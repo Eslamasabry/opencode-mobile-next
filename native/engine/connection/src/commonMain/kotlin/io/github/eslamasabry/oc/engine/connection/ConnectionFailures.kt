@@ -93,7 +93,6 @@ private fun stageDiagnostics(stage: ConnectionStage, failure: Failure): String {
         }
         is Failure.ProjectGit -> parts += "ProjectGit"
         is Failure.StagedRevert -> parts += "StagedRevert"
-        is Failure.Termux -> parts += "Termux"
         is Failure.Unexpected -> parts += "Unexpected"
         is Failure.Unknown -> parts += "Unknown"
     }
@@ -128,7 +127,6 @@ private fun Failure.withDetails(details: Redacted): Failure =
         is Failure.Folder -> Failure.Folder(problem, details)
         is Failure.ProjectGit -> Failure.ProjectGit(details)
         is Failure.StagedRevert -> Failure.StagedRevert(details)
-        is Failure.Termux -> Failure.Termux(details)
         is Failure.Unexpected -> Failure.Unexpected(details)
         is Failure.Unknown -> Failure.Unknown(details)
     }

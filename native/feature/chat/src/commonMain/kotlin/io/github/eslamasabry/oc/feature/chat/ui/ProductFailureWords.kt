@@ -31,7 +31,6 @@ internal fun rememberProductFailureWords(): (Failure) -> String {
                     ProductErrorLine.Storage -> Res.string.productErrorStorage
                     ProductErrorLine.Secret -> Res.string.serverFailureSecret
                     ProductErrorLine.Device -> Res.string.productErrorDevice
-                    ProductErrorLine.Termux -> Res.string.productErrorTermux
                     ProductErrorLine.Computer -> Res.string.productErrorComputer
                     ProductErrorLine.ProjectGit -> Res.string.productErrorProjectGit
                     ProductErrorLine.Unknown -> Res.string.productErrorUnknown

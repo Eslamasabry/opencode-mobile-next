@@ -66,13 +66,6 @@ command -v npm >/dev/null
 node --version | sed 's/^v//'
 """
 
-    /** The Termux host: the pinned Node, or an older Node from Ubuntu's own packages, as long as it and npm run. */
-    public const val TERMUX_NODE_CHECK: String = """set -e
-node --version >/dev/null
-command -v npm >/dev/null
-node --version | sed 's/^v//'
-"""
-
     public const val NODE_PRESENCE: String = "[ -e /opt/node ] || [ -L /opt/node ] || command -v node >/dev/null 2>&1"
 
     /** Node from its official pinned download, resumable from /var/cache/oc-setup, deleted once unpacked. */
@@ -115,17 +108,6 @@ oc_version "${'$'}(node --version | sed 's/^v//')"
     public fun selectedVersion(version: String?): String? {
         val selected = version ?: OpenCodePins.VERSION
         return selected.takeIf { versionPattern.matches(it) }
-    }
-
-    /** The Termux host's check: passes only for OpenCode 2 at the requested version (any install of it). */
-    public fun openCodeCheck(version: String? = null): String? {
-        val selected = selectedVersion(version) ?: return null
-        return """set -e
-installed=${'$'}(command -v opencode2 >/dev/null 2>&1 && opencode2 --version)
-installed=${'$'}{installed##* v}
-[ "${'$'}installed" = '$selected' ]
-echo "${'$'}installed"
-"""
     }
 
     /**

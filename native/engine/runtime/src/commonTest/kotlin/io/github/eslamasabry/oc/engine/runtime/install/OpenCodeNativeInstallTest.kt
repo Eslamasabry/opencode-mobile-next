@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.runtime.install
 
+import io.github.eslamasabry.oc.engine.runtime.bridge.BuiltinScriptTexts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -46,15 +47,10 @@ class OpenCodeNativeInstallTest {
     }
 
     @Test
-    fun `B-LINUX-111 the in-app component uses the native install and Termux keeps its shared text`() {
-        val builtin = OpenCodeInstallScripts.component(SetupHost.Builtin)
+    fun `B-LINUX-111 the in-app component uses the native install`() {
+        val builtin = OpenCodeInstallScripts.component()
         assertEquals(OpenCodeInstallScripts.nativeInstall(), builtin.installScript)
         assertEquals(OpenCodeInstallScripts.nativeCheck(), builtin.checkScript)
-        val termux = OpenCodeInstallScripts.component(SetupHost.Termux)
-        assertTrue(OpenCodeUbuntuSetup.SCRIPT in termux.installScript)
-        assertTrue("bash -s <<'OC_PROOT_SETUP'\n${OpenCodeUbuntuSetup.SCRIPT}OC_PROOT_SETUP\n" in termux.installScript)
-        assertTrue("export OC_REQUESTED_VERSION='2.2.5'" in termux.installScript)
-        assertTrue("[ \"\$installed\" = '2.2.5' ]" in termux.checkScript)
         // The check only passes for the pinned native program behind the link.
         assertTrue("[ \"\$(readlink -f \"\$oc_bin\")\" = '/opt/opencode2/bin/opencode2' ]" in builtin.checkScript)
         assertTrue(builtin.checkScript.startsWith(InstallPrelude.COMPONENT_UPDATE))
@@ -62,7 +58,7 @@ class OpenCodeNativeInstallTest {
 
     @Test
     fun `B-LINUX-111 npm installs that remain allow exactly their own package's install scripts`() {
-        val text = OpenCodeUbuntuSetup.SCRIPT
+        val text = BuiltinScriptTexts.UBUNTU_SETUP
         assertTrue("--allow-scripts=\"\$main_package\"" in text)
         assertFalse("main_package=opencode-ai" in text)
         assertTrue("main_package=@opencode/cli" in text)

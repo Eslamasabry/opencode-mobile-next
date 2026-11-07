@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.runtime.setup.registry
 import io.github.eslamasabry.oc.engine.runtime.components.ComponentRemovalScripts
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallFailure
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallScripts
-import io.github.eslamasabry.oc.engine.runtime.install.SetupHost
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponent
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupRegistry
@@ -163,7 +162,7 @@ public class PhoneSetupRegistry(private val words: PhoneSetupRegistryWords) : Se
 
         private fun openCodeInstall(version: String?): String =
             try {
-                OpenCodeInstallScripts.component(SetupHost.Builtin, version).installScript
+                OpenCodeInstallScripts.component(version).installScript
             } catch (e: IllegalArgumentException) {
                 "echo '${OpenCodeInstallFailure.Unpinned.line}' >&2\nexit 64\n"
             }

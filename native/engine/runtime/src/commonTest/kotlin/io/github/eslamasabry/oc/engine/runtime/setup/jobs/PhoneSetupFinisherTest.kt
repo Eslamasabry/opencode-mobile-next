@@ -88,7 +88,7 @@ class PhoneSetupFinisherTest {
     }
 
     @Test
-    fun `B-LINUX-015 a running server the app is connected to is left alone, and Termux never starts the phone`() = runTest {
+    fun `B-LINUX-015 a running server the app is connected to is left alone`() = runTest {
         val host = FakeLinuxHost().apply { running = true }
         val store = Store(PhoneProfile(ProfileId("phone"), password = "synthetic-only"))
         var connects = 0
@@ -105,7 +105,5 @@ class PhoneSetupFinisherTest {
         assertEquals(Outcome.Ok(Unit), finisher.finish(SetupFinishRequest(openCodeChanged = false)))
         assertEquals(0, host.launchCount)
         assertEquals(0, connects)
-        assertTrue(finisher.finish(SetupFinishRequest(host = SetupHost.Termux, openCodeChanged = true)) is Outcome.Failed)
-        assertEquals(0, host.launchCount)
     }
 }

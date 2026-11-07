@@ -78,8 +78,7 @@ public sealed interface RunawayMessage {
     ) : RunawayMessage
 
     /**
-     * l10n `workRunawayStopFailed(helper)`: "Couldn't stop node. Try again, or stop it from
-     * Termux.".
+     * l10n `workRunawayStopFailedRetry(helper)`: "Couldn't stop node. Try again.".
      */
     public data class StopFailed(val helper: String) : RunawayMessage
 }

@@ -20,21 +20,8 @@ class HistoryCopyScriptsTest {
     }
 
     @Test
-    fun `B-LINUX-107 the Termux runner copies inside Ubuntu, piped to the server log`() {
-        val step = HistoryCopyScripts.termuxRunnerStep
-        val copyAt = step.indexOf(copy)
-        assertTrue(copyAt > 0)
-        assertTrue(step.lastIndexOf("proot-distro login opencode-ubuntu -- sh -s", copyAt) > 0)
-        assertTrue(step.indexOf("mkdir -p /root/.oc-opencode2/data/opencode") < copyAt)
-        assertTrue(step.endsWith(copy + "OC_HISTORY_COPY\n"))
-    }
-
-    @Test
-    fun `B-LINUX-109 copy failures cannot be swallowed by either launcher`() {
+    fun `B-LINUX-109 copy failures cannot be swallowed by the launcher`() {
         assertTrue("(\n$copy) || exit 74" in HistoryCopyScripts.builtinServerPrelude)
-        assertTrue(
-            "<<'OC_HISTORY_COPY' | \"\$manager\" write-log server || exit 74" in HistoryCopyScripts.termuxRunnerStep,
-        )
         assertEquals(74, HistoryCopyScripts.FAILED_EXIT)
         assertTrue("history_copy_failed() {\n    echo '${HistoryCopyScripts.COPY_FAILED_MARKER}" in copy)
     }

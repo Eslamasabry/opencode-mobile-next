@@ -106,9 +106,6 @@ public sealed interface Failure {
     /** A staged revert blocks the action (Flutter `stagedRevert`). */
     public data class StagedRevert(override val details: Redacted? = null) : Failure
 
-    /** Kept while D7 = migrate-out. */
-    public data class Termux(override val details: Redacted? = null) : Failure
-
     /** A bug path; still shown in plain words. */
     public data class Unexpected(override val details: Redacted? = null) : Failure
 

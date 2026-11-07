@@ -58,8 +58,6 @@ public class PhoneSetupFinisher(
     private val isConnectedTo: (PhoneProfile) -> Boolean,
 ) : SetupFinishStep {
     override suspend fun finish(request: SetupFinishRequest): Outcome<Unit> {
-        // A Termux job must never create or start the in-app Ubuntu profile.
-        if (request.host != SetupHost.Builtin) return Failure.Runtime(RuntimeProblem.ServerStartUnavailable).failed()
         val profile = when (val found = profiles.ensureBuiltinProfile(request.version)) {
             is Outcome.Failed -> return found
             is Outcome.Ok -> found.value

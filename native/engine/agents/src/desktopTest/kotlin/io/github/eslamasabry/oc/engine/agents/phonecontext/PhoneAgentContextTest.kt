@@ -35,10 +35,10 @@ class PhoneAgentContextTest {
 
     @Test
     fun `B-LINUX-116 writes the phone context into both OpenCode generations' global AGENTS md`() {
-        runScript(PhoneAgentContext.termuxScript)
+        runScript(PhoneAgentContext.builtinScript)
         for (path in PhoneAgentContext.files) {
             val text = file(path).readText()
-            assertEquals(PhoneAgentContext.block(Host.Termux), text)
+            assertEquals(PhoneAgentContext.block(Host.Builtin), text)
             assertTrue("person's Android phone" in text)
             assertTrue("no desktop app" in text)
             assertTrue("no adb connection" in text)
@@ -50,9 +50,9 @@ class PhoneAgentContextTest {
         val global = file(PhoneAgentContext.files.first())
         global.parentFile.mkdirs()
         global.writeText("# My rules\n\nUse tabs.\n")
-        runScript(PhoneAgentContext.termuxScript)
-        runScript(PhoneAgentContext.termuxScript)
-        // Moving to the built-in Ubuntu swaps the block, never adds a second.
+        runScript(PhoneAgentContext.builtinScript)
+        runScript(PhoneAgentContext.builtinScript)
+        // Each start swaps the block, never adds a second.
         runScript(PhoneAgentContext.builtinScript)
         val text = global.readText()
         assertEquals("# My rules\n\nUse tabs.\n\n${PhoneAgentContext.block(Host.Builtin)}", text)

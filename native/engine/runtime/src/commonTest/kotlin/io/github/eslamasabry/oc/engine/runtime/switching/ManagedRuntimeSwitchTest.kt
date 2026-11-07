@@ -85,7 +85,7 @@ class ManagedRuntimeSwitchTest {
     }
 
     private val world = World()
-    private var local = LocalProfile("local", "This phone", "http://127.0.0.1:4096")
+    private var local = LocalProfile("local", "This phone", ManagedLocalServer.BUILTIN_URL)
     private val remote = LocalProfile("remote", "Computer", "https://server.example")
     private val switch = ManagedRuntimeSwitch(world, world)
 
@@ -123,7 +123,7 @@ class ManagedRuntimeSwitchTest {
 
     @Test
     fun `B-LINUX-104 every local alias is suspended while remote work stays connected`() = runTest {
-        val alias = LocalProfile("local-v2", "This phone beta", "http://127.0.0.1:4096")
+        val alias = LocalProfile("local-v2", "This phone beta", ManagedLocalServer.BUILTIN_URL)
         world.profiles += alias
         recoveryOn(local.id)
         recoveryOn(alias.id)
@@ -150,7 +150,7 @@ class ManagedRuntimeSwitchTest {
 
     @Test
     fun `B-LINUX-104 an unmanaged endpoint is not disconnected`() = runTest {
-        for (url in listOf("http://127.0.0.1:4999", "http://localhost:4096")) {
+        for (url in listOf("http://127.0.0.1:4999", "http://localhost:4098", "http://127.0.0.1:4096")) {
             replaceLocal(local.copy(baseUrl = url))
             world.work = LocalWork(busySessions = 1)
             assertEquals(SwitchResult.Ready(disconnected = false), switch.prepare(), url)
@@ -172,11 +172,11 @@ class ManagedRuntimeSwitchTest {
     }
 
     @Test
-    fun `B-LINUX-104 managed addresses are exactly the two loopback ports over http`() {
-        assertTrue(ManagedLocalServer.isTermux("http://127.0.0.1:4096"))
+    fun `B-LINUX-104 the managed address is exactly the in-app loopback port over http`() {
         assertTrue(ManagedLocalServer.isBuiltin("http://127.0.0.1:4098/"))
-        assertFalse(ManagedLocalServer.isTermux("https://127.0.0.1:4096"))
-        assertFalse(ManagedLocalServer.isTermux("http://localhost:4096"))
+        assertFalse(ManagedLocalServer.isBuiltin("https://127.0.0.1:4098"))
+        assertFalse(ManagedLocalServer.isBuiltin("http://localhost:4098"))
+        assertFalse(ManagedLocalServer.isManagedLocal(LocalProfile("old", "Old Termux", "http://127.0.0.1:4096")))
         assertFalse(ManagedLocalServer.isBuiltin("http://127.0.0.1:4999"))
         assertFalse(ManagedLocalServer.isBuiltin("http://127.0.0.1"))
         assertFalse(ManagedLocalServer.isBuiltin(null))

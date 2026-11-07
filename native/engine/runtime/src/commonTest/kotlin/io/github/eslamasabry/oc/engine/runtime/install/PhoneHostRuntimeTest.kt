@@ -61,39 +61,7 @@ class PhoneHostRuntimeTest {
     }
 
     @Test
-    fun `B-LINUX-142 Termux host preserves a legacy installation`() {
-        for (installed in listOf(false, true)) {
-            val inventory =
-                PhoneHostRuntime.TermuxInstallation.parse("ubuntu=${if (installed) "installed" else "absent"}\nversion=\n")
-            requireNotNull(inventory)
-            assertEquals(installed, inventory.ubuntuInstalled)
-            assertNull(inventory.openCodeVersion)
-            assertEquals(false, inventory.runtimeSelected)
-            assertEquals(
-                if (installed) ManagedRuntime.OpenCode1 else ManagedRuntime.OpenCode2,
-                PhoneHostRuntime.termux(status = null, installation = inventory, profile = null),
-            )
-        }
-    }
-
-    @Test
-    fun `B-LINUX-142 saved Termux runtime wins over a fresh-install default`() {
-        val older = PhoneHostRuntime.SavedProfile(requiresOpenCode2Migration = true)
-        assertEquals(ManagedRuntime.OpenCode1, PhoneHostRuntime.termux(status = null, installation = null, profile = older))
-        assertEquals(ManagedRuntime.OpenCode2, PhoneHostRuntime.termux(status = null, installation = null, profile = null))
-        // A selected inventory or a manager status that names its runtime is read before the profile.
-        val selected = PhoneHostRuntime.TermuxInstallation.parse("ubuntu=installed\nversion=2.2.5\nruntime=opencode2")
-        assertEquals(ManagedRuntime.OpenCode2, PhoneHostRuntime.termux(null, selected, older))
-        val status = PhoneHostRuntime.TermuxStatus(ManagedRuntime.OpenCode1, runtimeSelected = false, version = "1.18.0")
-        assertEquals(ManagedRuntime.OpenCode1, PhoneHostRuntime.termux(status, selected, null))
-    }
-
-    @Test
-    fun `B-LINUX-142 the inventory probe refuses any other shape`() {
-        assertNull(PhoneHostRuntime.TermuxInstallation.parse("ubuntu=absent\nversion=2.2.5\n"), "a version without Ubuntu")
-        assertNull(PhoneHostRuntime.TermuxInstallation.parse("ubuntu=installed\nversion=v2\n"))
-        assertNull(PhoneHostRuntime.TermuxInstallation.parse("ubuntu=installed\nversion=\nruntime=opencode3"))
-        assertNull(PhoneHostRuntime.TermuxInstallation.parse("weird"))
+    fun `B-LINUX-142 a missing runtime record is OpenCode 1 and an unknown one is refused`() {
         assertEquals(ManagedRuntime.OpenCode1, ManagedRuntime.parse(null))
         assertEquals(ManagedRuntime.OpenCode1, ManagedRuntime.parse(" "))
         assertNull(ManagedRuntime.parse("opencode3"))

@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.engine.setupscripts
 
-import io.github.eslamasabry.oc.core.common.Outcome
 import java.io.File
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -10,7 +9,6 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
@@ -297,37 +295,12 @@ class SetupScriptsShellTest {
     }
 
     @Test
-    fun `B-LINUX-215 the OpenCode check fails on another version or runtime`() {
-        bin.mkdirs()
-        File(bin, "opencode").apply { writeText("#!/bin/sh\necho 1.19.0\n"); setExecutable(true) }
-        val two = File(bin, "opencode2").apply { writeText("#!/bin/sh\necho \"opencode2 v2.0.9\"\n"); setExecutable(true) }
-        val env = mapOf("PATH" to "${bin.path}:/usr/bin:/bin")
-        fun check(params: Map<String, String>): Result? =
-            when (val script = OpenCodeChecks.openCodeCheck(params)) {
-                is Outcome.Ok -> run("dash", listOf("-c", script.value), env)
-                is Outcome.Failed -> null
-            }
-        assertNotEquals(0, check(emptyMap())!!.exitCode, "a fresh setup requires pinned OC2, not installed OC1")
-        assertIs<Outcome.Failed>(OpenCodeChecks.openCodeCheck(mapOf("runtime" to "opencode1")))
-        assertIs<Outcome.Failed>(OpenCodeChecks.openCodeCheck(mapOf("runtime" to "opencode3")))
-        assertIs<Outcome.Failed>(OpenCodeChecks.openCodeCheck(mapOf("runtime" to "opencode2", "version" to "2.0; rm -rf /")))
-        assertNotEquals(0, check(mapOf("version" to "1.18.30"))!!.exitCode)
-        assertNotEquals(0, check(mapOf("runtime" to "opencode2"))!!.exitCode) // OC2 there, not at the pin: update due
-        val pinned = check(mapOf("runtime" to "opencode2", "version" to "2.0.9"))!!
-        assertEquals(0, pinned.exitCode)
-        assertEquals("2.0.9", pinned.stdout.trim())
-        two.delete()
-        assertNotEquals(0, check(mapOf("runtime" to "opencode2", "version" to "2.0.9"))!!.exitCode)
-    }
-
-    @Test
     fun `B-LINUX-215 every setup script of this module parses in dash and bash`() {
         val scripts =
             mapOf(
                 "prelude" to SETUP_PRELUDE,
                 "prelude+updates" to withSetupPrelude("oc_stage 'x'\n"),
                 "combined" to combinedCheckScript(mapOf("a" to "echo 1", "b" to "exit 2")),
-                "opencode check" to (OpenCodeChecks.openCodeCheck(emptyMap()) as Outcome.Ok).value,
             )
         for ((name, script) in scripts) {
             for (shell in listOf("dash", "bash")) {
