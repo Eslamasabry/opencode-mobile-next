@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeProjectKind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,7 +62,9 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
                 ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/')
         },
         kind = KitChipKind.Action,
-        selected = state.filters.projectDirectory != null || state.otherFoldersSelected,
+        // F: lib/ui/screens/chats/chats_home_screen.dart:421-423: a chosen project tints the chip (active tone); it
+        // carries no check, which marks the Running filter beside it.
+        tone = if (state.filters.projectDirectory != null || state.otherFoldersSelected) KitChipTone.Active else KitChipTone.Neutral,
         opensMenu = true,
         onClick = actions::showProjectChoices,
     )

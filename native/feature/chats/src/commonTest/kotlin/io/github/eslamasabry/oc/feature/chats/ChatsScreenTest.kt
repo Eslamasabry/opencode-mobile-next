@@ -128,7 +128,8 @@ class ChatsScreenTest {
             val button = onNodeWithText("New conversation").fetchSemanticsNode().boundsInRoot
             // Centred across the page, in the upper part of the room under the heading, and the button in the bottom
             // quarter (a top-aligned state put the words right under the heading).
-            assertTrue(abs(words.center.x - root.center.x) < 2f, "words centred: ${words.center.x} vs ${root.center.x}")
+            // Centred on the page column the full-width button spans.
+            assertTrue(abs(words.center.x - button.center.x) < 2f, "words centred: ${words.center.x} vs ${button.center.x}")
             assertTrue(words.top > root.height * 0.25f && words.bottom < root.center.y, "words above the middle: $words")
             assertTrue(button.top > root.height * 0.75f, "button at the bottom: $button in $root")
         }
@@ -229,8 +230,10 @@ class ChatsScreenTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(), actions) } }
             onNodeWithText("No conversations yet").assertExists()
-            onAllNodesWithContentDescription("New conversation").assertCountEquals(1)
-            onNodeWithContentDescription("New conversation").performClick()
+            // G3: the calm page's own button, drawn with its words; the floating + waits for a list.
+            onAllNodesWithText("New conversation").assertCountEquals(1)
+            onAllNodesWithContentDescription("New conversation").assertCountEquals(0)
+            onNodeWithText("New conversation").performClick()
             assertEquals(listOf("new"), actions.calls)
         }
 
