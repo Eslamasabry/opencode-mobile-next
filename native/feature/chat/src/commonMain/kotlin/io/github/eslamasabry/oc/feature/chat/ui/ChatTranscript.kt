@@ -302,6 +302,7 @@ internal fun ChatTranscriptList(
                 }
             }
         }
+    val anchor = rememberFoldAnchor()
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
     val tables = remember(unique) { LongTable.of(unique) }
@@ -385,7 +386,8 @@ internal fun ChatTranscriptList(
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
-            Column {
+            // P-010: a row the person opens stays under their finger.
+            Column(Modifier.foldAnchor(row.key, anchor, list.lazy)) {
                 // Keep the engine's item indices: a folded source has an empty item, not a removed
                 // list
                 // position.

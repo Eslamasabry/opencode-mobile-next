@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.collectAsState
@@ -56,6 +57,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
+import io.github.eslamasabry.oc.feature.chat.header.ui.LocalChatHeaderActs
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
 import io.github.eslamasabry.oc.feature.chat.start.ui.ChatStartArea
@@ -499,23 +501,6 @@ public fun ChatScreen(
                                                 icon = KitIcons.branch,
                                             )
                                         else null,
-                                        if (folds.anyOpen)
-                                            KitLineAction(
-                                                stringResource(Res.string.chatCollapseAllSteps),
-                                                folds::collapseAll,
-                                                testTag = "chat-collapse-all",
-                                                icon = KitIcons.unfoldLess,
-                                            )
-                                        else null,
-                                        if (state.capabilities.compact)
-                                            KitLineAction(
-                                                stringResource(Res.string.chatUiCompactSession),
-                                                actions::compactRequested,
-                                                enabled = state.live == null,
-                                                testTag = "chat-compact-open",
-                                                icon = KitIcons.layers,
-                                            )
-                                        else null,
                                         facts.tasks?.let { tasks ->
                                             KitLineAction(
                                                 stringResource(
@@ -549,6 +534,36 @@ public fun ChatScreen(
                                             )
                                         },
                                         KitLineAction(
+                                            stringResource(Res.string.nlibTitle),
+                                            actions::openTools,
+                                            testTag = "chat-tools-open",
+                                            icon = KitIcons.tools,
+                                        ),
+                                    )) + extraActions
+                            // P-018: acts on the conversation's view, not places: they sit under
+                            // More in the header's menu.
+                            val unitActs =
+                                if (demoMode) emptyList()
+                                else
+                                    listOfNotNull(
+                                        if (folds.anyOpen)
+                                            KitLineAction(
+                                                stringResource(Res.string.chatCollapseAllSteps),
+                                                folds::collapseAll,
+                                                testTag = "chat-collapse-all",
+                                                icon = KitIcons.unfoldLess,
+                                            )
+                                        else null,
+                                        if (state.capabilities.compact)
+                                            KitLineAction(
+                                                stringResource(Res.string.chatUiCompactSession),
+                                                actions::compactRequested,
+                                                enabled = state.live == null,
+                                                testTag = "chat-compact-open",
+                                                icon = KitIcons.layers,
+                                            )
+                                        else null,
+                                        KitLineAction(
                                             stringResource(
                                                 if (state.reasoningExpanded)
                                                     Res.string.chatUiCollapseReasoning
@@ -558,25 +573,21 @@ public fun ChatScreen(
                                             testTag = "chat-reasoning-toggle",
                                             icon = KitIcons.idea,
                                         ),
-                                        KitLineAction(
-                                            stringResource(Res.string.nlibTitle),
-                                            actions::openTools,
-                                            testTag = "chat-tools-open",
-                                            icon = KitIcons.tools,
-                                        ),
-                                    )) + extraActions
+                                    )
                             if (header != null) {
                                 // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the
                                 // other
                                 // units' actions stay.
-                                ChatHeaderTopBar(
-                                    header,
-                                    actions::leaveRequested,
-                                    { actions.find(state.find?.query ?: "") },
-                                    extraActions = unitActions + listOfNotNull(context),
-                                    onProject = actions::openFiles,
-                                    onBranch = actions::openGit,
-                                )
+                                CompositionLocalProvider(LocalChatHeaderActs provides unitActs) {
+                                    ChatHeaderTopBar(
+                                        header,
+                                        actions::leaveRequested,
+                                        { actions.find(state.find?.query ?: "") },
+                                        extraActions = unitActions + listOfNotNull(context),
+                                        onProject = actions::openFiles,
+                                        onBranch = actions::openGit,
+                                    )
+                                }
                             } else
                                 KitTopBar(
                                     title =
@@ -595,7 +606,7 @@ public fun ChatScreen(
                                                 testTag = "chat-find-open",
                                                 icon = KitIcons.search,
                                             ),
-                                        ) + unitActions,
+                                        ) + unitActions + unitActs,
                                     more = { hidden ->
                                         KitChatMoreMenu(
                                             label = stringResource(Res.string.kitTopBarMore),
@@ -645,6 +656,10 @@ public fun ChatScreen(
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
                         Column {
+                            // E15-S06: a copy the redactor changed says so in the screen's status
+                            // line. It must be composed inside KitScreen: the screen owns the one
+                            // status slot, and a contribution from outside it has nowhere to go.
+                            CopyKeyHiddenNotes(state.copied, header?.state?.clip)
                             // Notification opt-in is a review sheet; pending-send recovery uses the
                             // status slot.
                             replyOffer?.invoke()
@@ -840,13 +855,6 @@ public fun ChatScreen(
                     stringResource(
                         if (state.copied?.masked == true) Res.string.kitCopiedMasked else Res.string.kitCopied
                     ),
-                )
-                // E15-S06: and on screen when the redactor hid something, whichever message was copied.
-                KeyHiddenNote(
-                    copyId = state.copied?.id,
-                    masked = state.copied?.masked == true,
-                    message = stringResource(Res.string.kitCopiedMasked),
-                    dismissLabel = stringResource(Res.string.kitSheetDismiss),
                 )
             }
         }

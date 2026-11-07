@@ -11,6 +11,10 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardRules
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotHold
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,22 +106,27 @@ public fun ChatRequestSlot(
     nowMs: Long?,
     modifier: Modifier = Modifier,
 ) {
-    if (state.cards.isEmpty()) return
-    val total = state.cards.size
-    KitRequestStack(
-        items = state.cards,
-        key = { it.id },
-        label = { index, card ->
-            stringResource(
-                Res.string.chatRequestCardLabel,
-                Numbers.format(index + 1),
-                Numbers.format(total),
-                cardTarget(card),
-            )
-        },
-        modifier = modifier,
-    ) { card ->
-        key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+    // P-009: the slot stays composed while its last card folds away (fade + collapse, instant under
+    // reduced motion), and a card that arrives right after another left unfolds in the same stack
+    // instead of swapping in.
+    val held = remember { RequestSlotHold() }
+    val cards = held.cards(state.cards)
+    KitReveal(visible = state.cards.isNotEmpty(), modifier = modifier) {
+        val total = cards.size
+        KitRequestStack(
+            items = cards,
+            key = { it.id },
+            label = { index, card ->
+                stringResource(
+                    Res.string.chatRequestCardLabel,
+                    Numbers.format(index + 1),
+                    Numbers.format(total),
+                    cardTarget(card),
+                )
+            },
+        ) { card ->
+            key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+        }
     }
     state.sheet?.let { ChatQuestionSheet(it, actions) }
     val confirm = state.confirmAlways
@@ -254,11 +263,13 @@ private fun PermissionWaiting(
     val mask = rememberKitMask()
     val always = card.canAlwaysAllow && !card.invitation
     val request = card.captured?.request
+    val copies = RequestCardRules.copiesTargets(card.ask)
     KitPermissionCard(
-        title = askQuestion(card.ask),
-        toolLabel = askToolLine(card.ask),
-        copyLabel = stringResource(Res.string.approvalCopyAsk),
-        copiedLabel = stringResource(Res.string.approvalCopied),
+        // P-013: a file named by its one target line is not named again in the question.
+        title = askQuestion(if (RequestCardRules.questionOmitsName(card.ask)) card.ask.copy(name = null) else card.ask),
+        toolLabel = if (RequestCardRules.showsToolLine(card.ask)) askToolLine(card.ask) else null,
+        copyLabel = if (copies) stringResource(Res.string.approvalCopyAsk) else null,
+        copiedLabel = if (copies) stringResource(Res.string.approvalCopied) else null,
         denyReply =
             KitDenyReply(
                 fieldLabel = stringResource(Res.string.approvalReplyLabel),

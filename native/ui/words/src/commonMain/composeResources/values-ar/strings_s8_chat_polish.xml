@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S8 chat polish (P-012, P-013, P-018). A new file so parallel chat units never edit the same lines. -->
+<resources>
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="zero">ينتظر تعديل %1$d من الملفات</item>
+        <item quantity="one">ينتظر تعديل ملف واحد</item>
+        <item quantity="two">ينتظر تعديل ملفين</item>
+        <item quantity="few">ينتظر تعديل %1$d ملفات</item>
+        <item quantity="many">ينتظر تعديل %1$d ملفًا</item>
+        <item quantity="other">ينتظر تعديل %1$d من الملفات</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="zero">ينتظر تشغيل %1$d من الأوامر</item>
+        <item quantity="one">ينتظر تشغيل أمر واحد</item>
+        <item quantity="two">ينتظر تشغيل أمرين</item>
+        <item quantity="few">ينتظر تشغيل %1$d أوامر</item>
+        <item quantity="many">ينتظر تشغيل %1$d أمرًا</item>
+        <item quantity="other">ينتظر تشغيل %1$d من الأوامر</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="zero">%1$d من الخطوات تنتظر</item>
+        <item quantity="one">خطوة واحدة تنتظر</item>
+        <item quantity="two">خطوتان تنتظران</item>
+        <item quantity="few">%1$d خطوات تنتظر</item>
+        <item quantity="many">%1$d خطوة تنتظر</item>
+        <item quantity="other">%1$d من الخطوات تنتظر</item>
+    </plurals>
+    <string name="chatMenuContinueElsewhere">المتابعة في مكان آخر</string>
+</resources>

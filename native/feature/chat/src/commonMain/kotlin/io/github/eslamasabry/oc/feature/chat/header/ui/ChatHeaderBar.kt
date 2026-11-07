@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeUnavailable
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
-import io.github.eslamasabry.oc.feature.chat.ui.KeyHiddenNote
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
 import io.github.eslamasabry.oc.feature.chat.header.presentation.DetailsUi
@@ -161,6 +162,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDo
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuFind
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuGoTo
+import io.github.eslamasabry.oc.ui.words.res.chatMenuContinueElsewhere
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuNeedsPrompt
 import io.github.eslamasabry.oc.ui.words.res.stateNoteTitle
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindReasoning
@@ -180,12 +182,20 @@ public class ChatHeaderSlot(
 )
 
 /**
+ * P-018: other units' acts on the conversation's view (fold all steps, compact, show reasoning). The header's menu
+ * lists them under More with the conversation's own acts, not among the places in Go to.
+ */
+public val LocalChatHeaderActs: ProvidableCompositionLocal<List<KitLineAction>> =
+    staticCompositionLocalOf { emptyList() }
+
+/**
  * Presentation-only menu navigation; every action retains its existing target and capability gate.
  */
 private enum class HeaderMenuPage {
     Main,
     GoTo,
     More,
+    Continue,
 }
 
 /**
@@ -225,14 +235,21 @@ public fun ChatHeaderTopBar(
         menuItems(state, actions, onFind, transcriptWords, primaryActions).map {
             it.copy(group = null)
         }
+    val continueGroup = HeaderRules.continueGroup(state.menu)
+    val continueItems =
+        menuItems(state, actions, onFind, transcriptWords, continueGroup).map { it.copy(group = null) }
+    // P-018: a sub-page is its own section; its rows carry no "Do" heading of their own.
     val secondary =
         menuItems(
-            state,
-            actions,
-            onFind,
-            transcriptWords,
-            state.menu.filterNot { it in primaryActions || it == HeaderAction.Details },
-        )
+                state,
+                actions,
+                onFind,
+                transcriptWords,
+                state.menu.filterNot {
+                    it in primaryActions || it == HeaderAction.Details || it in continueGroup
+                },
+            )
+            .map { it.copy(group = null) }
     val goTo = KitMenuGroup("go-to", stringResource(Res.string.sessionMenuGoTo))
     val destinations =
         menuItems(
@@ -305,12 +322,40 @@ public fun ChatHeaderTopBar(
                                 else KitEnabled.Disabled(extra.disabledReason.orEmpty()),
                         )
                     }
+            val acts =
+                LocalChatHeaderActs.current.map { extra ->
+                    KitMenuItem(
+                        label = extra.label,
+                        onSelect = {
+                            actions.closeMenu()
+                            extra.onClick()
+                        },
+                        icon = extra.icon,
+                        enabled =
+                            if (extra.enabled) KitEnabled.Enabled
+                            else KitEnabled.Disabled(extra.disabledReason.orEmpty()),
+                    )
+                }
+            // P-018: Back has its icon, in the same column as every other row's.
             val back =
                 KitMenuItem(
                     stringResource(Res.string.kitTopBarBack),
                     { menuPage = HeaderMenuPage.Main },
+                    icon = KitIcons.back,
                     dismissal = KitMenuDismissal.ByAction,
                 )
+            val continueRow =
+                if (continueItems.isEmpty()) null
+                else
+                    KitMenuItem(
+                        stringResource(Res.string.chatMenuContinueElsewhere),
+                        { menuPage = HeaderMenuPage.Continue },
+                        icon = KitIcons.forward,
+                        dismissal = KitMenuDismissal.ByAction,
+                    )
+            // The Delete row stays last on More, after the acts and the Continue page.
+            val (deleteRows, otherRows) = secondary.partition { it.destructive }
+            val more = otherRows + acts + listOfNotNull(continueRow) + deleteRows
             val menu =
                 when (menuPage) {
                     HeaderMenuPage.Main ->
@@ -324,7 +369,7 @@ public fun ChatHeaderTopBar(
                                         icon = KitIcons.files,
                                         dismissal = KitMenuDismissal.ByAction,
                                     ),
-                                if (secondary.isEmpty()) null
+                                if (more.isEmpty()) null
                                 else
                                     KitMenuItem(
                                         stringResource(Res.string.kitMore),
@@ -334,7 +379,9 @@ public fun ChatHeaderTopBar(
                                     ),
                             )
                     HeaderMenuPage.GoTo -> listOf(back) + places
-                    HeaderMenuPage.More -> listOf(back) + secondary
+                    HeaderMenuPage.More -> listOf(back) + more
+                    HeaderMenuPage.Continue ->
+                        listOf(back.copy(onSelect = { menuPage = HeaderMenuPage.More })) + continueItems
                 }
             KitChatMoreMenu(
                 label = stringResource(Res.string.kitTopBarMore),
@@ -519,13 +566,8 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                 ClipKind.PhoneLink -> copied
             },
     )
-    // E15-S06: a transcript copy that hid a key says so on screen too, not only to a screen reader.
-    KeyHiddenNote(
-        copyId = clip?.takeIf { it.kind == ClipKind.Transcript }?.id,
-        masked = clip?.masked == true,
-        message = transcriptMasked,
-        dismissLabel = stringResource(Res.string.kitSheetDismiss),
-    )
+    // E15-S06: the on-screen line for a transcript copy that hid a key is drawn by the chat screen
+    // (CopyKeyHiddenNotes), inside the screen that owns the status slot.
 }
 
 @Composable

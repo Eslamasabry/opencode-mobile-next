@@ -72,6 +72,26 @@ public object HeaderRules {
         }
         .toImmutableList()
 
+    /** P-018: every way to carry this conversation on somewhere else, in menu order. */
+    private val continueFamily =
+        listOf(
+            HeaderAction.ContinueWith,
+            HeaderAction.AgentHandoff,
+            HeaderAction.Handoff,
+            HeaderAction.ContinueOnComputer,
+            HeaderAction.ContinueOnPhone,
+        )
+
+    /**
+     * P-018: the "Continue…" actions the menu offers, shown together on one "Continue elsewhere" page when there
+     * are two or more (three look-alike rows in a list read as one muddle); empty when one or none, which then
+     * stays in place.
+     */
+    public fun continueGroup(menu: List<HeaderAction>): List<HeaderAction> {
+        val offered = continueFamily.filter { it in menu }
+        return if (offered.size >= 2) offered else emptyList()
+    }
+
     /** Fork acts on prompts: before the first one it waits, dimmed, with the reason. */
     public fun needsPrompt(action: HeaderAction): Boolean = action == HeaderAction.Fork
 
@@ -175,15 +195,16 @@ public object TranscriptCopy {
         mask: (String) -> String,
     ): String {
         val out = StringBuilder()
-        fun put(text: String) {
-            out.append(mask(text))
-        }
-        put("# ${title?.takeIf { it.isNotBlank() } ?: words.untitled}\n")
+        out.append(mask("# ${title?.takeIf { it.isNotBlank() } ?: words.untitled}\n"))
         if (partial) out.append("\n> ").append(words.partial).append('\n')
         for (message in messages) {
             if (message.info.id.startsWith("local-")) continue
-            val own = message.info.role == Role.User
-            out.append("\n## ").append(if (own) words.user else words.assistant).append("\n\n")
+            // E15-S07: a message with nothing to print (a step marker, an empty reply opening the
+            // conversation) gets no heading, so the copy never starts with an empty section.
+            val body = StringBuilder()
+            fun put(text: String) {
+                body.append(mask(text))
+            }
             for (part in message.parts) {
                 when (part.type) {
                     PartType.Text ->
@@ -205,7 +226,11 @@ public object TranscriptCopy {
                     else -> Unit
                 }
             }
-            message.info.errorText?.let { put("> ${words.error}: $it\n") }
+            message.info.errorText?.takeIf { it.isNotBlank() }?.let { put("> ${words.error}: $it\n") }
+            if (body.isBlank()) continue
+            val own = message.info.role == Role.User
+            out.append("\n## ").append(if (own) words.user else words.assistant).append("\n\n")
+            out.append(body)
         }
         return out.toString().trimEnd()
     }

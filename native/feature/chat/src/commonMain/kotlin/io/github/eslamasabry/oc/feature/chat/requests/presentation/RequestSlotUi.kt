@@ -148,3 +148,16 @@ public data class QuestionSheetUi(
     val drafts: ImmutableList<PromptDraft>,
     val canSend: Boolean,
 )
+
+/**
+ * P-009: the cards the slot draws. While the slot folds away after its last card left, it keeps showing that card
+ * (in its last state) instead of going blank in one frame. Plain bookkeeping, read once per composition.
+ */
+public class RequestSlotHold {
+    private var last: List<RequestCardUi> = emptyList()
+
+    public fun cards(now: List<RequestCardUi>): List<RequestCardUi> {
+        if (now.isNotEmpty()) last = now
+        return last
+    }
+}

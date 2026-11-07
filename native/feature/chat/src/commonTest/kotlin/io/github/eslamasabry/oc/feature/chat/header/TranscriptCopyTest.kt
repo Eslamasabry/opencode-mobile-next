@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptCopy
 import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptWords
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -110,5 +111,23 @@ class TranscriptCopyTest {
         val copy = TranscriptCopy.markdown(null, rows, words, partial = false, mask = mask)
         assertFalse("secretmaterial" in copy, copy)
         assertTrue("## You\n\nuse [private key]" in copy, copy)
+    }
+
+    @Test
+    fun `B-CHAT-111 E15-S07 a message with nothing to copy gets no empty heading`() {
+        fun part(id: String, type: PartType, text: String = "") =
+            Part(id, "m", "s", type, type.name.lowercase(), text)
+        val messages = listOf(
+            // An assistant message that opens the conversation with only a step marker and a blank text part.
+            MessageWithParts(
+                MessageInfo("a0", "s", Role.Assistant),
+                persistentListOf(part("a0-s", PartType.StepStart), part("a0-t", PartType.Text, "  ")),
+            ),
+            MessageWithParts(MessageInfo("u1", "s", Role.User), persistentListOf(part("u-t", PartType.Text, "hi"))),
+            MessageWithParts(MessageInfo("a1", "s", Role.Assistant), persistentListOf(part("a-t", PartType.Text, "Hello."))),
+            MessageWithParts(MessageInfo("a2", "s", Role.Assistant), persistentListOf()),
+        )
+        val copy = TranscriptCopy.markdownOf("Chat", messages, words, partial = false, mask = { it })
+        assertEquals("# Chat\n\n## You\n\nhi\n\n\n## Assistant\n\nHello.", copy)
     }
 }
