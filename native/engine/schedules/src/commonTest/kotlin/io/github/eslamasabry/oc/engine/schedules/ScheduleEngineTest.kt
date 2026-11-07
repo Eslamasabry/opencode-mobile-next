@@ -291,6 +291,28 @@ class ScheduleEngineTest {
     }
 
     @Test
+    fun `B-148 a settled late run leaves the occurrences due after it owed, so the next one catches up`() = runTest {
+        // Flutter 2.1.4 ran the 09:00 occurrence late (two days on, 03:47) and settled its claim without moving
+        // nextRunAt; the native app first looks at it a day after that, past the next 09:00.
+        h.saved()
+        val first = h.armed().single()
+        val day = 24 * HOUR
+        h.clock.now = first.dueAtMs + 2 * day - 5 * HOUR - 13 * MIN
+        h.engine.claims.claim(first)
+        h.engine.claims.settle(first)
+        h.clock.now = first.dueAtMs + 3 * day - 5 * HOUR - 10 * MIN
+        assertNull(h.engine.runOccurrence(first, far))
+        assertTrue(h.gateway.prompts.isEmpty())
+        // The 09:00 that fell due after the settled run is owed: armed, already due, not skipped to tomorrow.
+        val owed = ArmedEntry(P, first.scheduleId, 1, first.dueAtMs + 2 * day)
+        assertEquals(listOf(owed), h.armed())
+        assertEquals("ran", h.engine.runOccurrence(owed, far)!!.status)
+        assertEquals(1, h.gateway.prompts.size)
+        // That one catch-up covers every day missed up to now; the next run is the coming 09:00.
+        assertEquals(first.dueAtMs + 3 * day, h.armed().single().dueAtMs)
+    }
+
+    @Test
     fun `B-STATE-096 a sync that read an older revision never overwrites a newer one`() = runTest {
         val saved = h.saved()
         // An older sync (opening the list) read revision 1 and is held before it writes the armed index.

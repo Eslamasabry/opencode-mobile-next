@@ -100,6 +100,13 @@ public class ScheduleClaims(private val backend: ScheduleBackend, private val no
         }
     }
 
+    /** When the attempt that claimed this occurrence started (the claim's `at`), or null when it was never claimed. */
+    public suspend fun claimedAtMs(entry: ArmedEntry): Long? {
+        val raw = backend.read(ScheduleKeys.claims(entry.profileId)) ?: return null
+        val claims = DartJson.decodeOrNull(raw) as? Map<*, *> ?: return null
+        return (claims[entry.occurrence] as? Map<*, *>)?.get("at") as? Long
+    }
+
     public suspend fun finished(entry: ArmedEntry): Boolean {
         val raw = backend.read(ScheduleKeys.claims(entry.profileId)) ?: return false
         val claims = DartJson.decodeOrNull(raw) as? Map<*, *> ?: return false

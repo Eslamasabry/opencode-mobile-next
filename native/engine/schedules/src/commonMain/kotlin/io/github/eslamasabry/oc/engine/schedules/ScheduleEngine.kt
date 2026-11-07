@@ -320,12 +320,20 @@ public class ScheduleEngine(
             report.also { if (it.quiet) notices.clear(entry) else notices.finished(entry, it) }
         }
 
-    /** Moves a settled occurrence's schedule past it when the attempt that settled it could not. */
+    /**
+     * Moves a settled occurrence's schedule past it when the attempt that settled it could not. The settled run covered
+     * the occurrences missed up to the moment it ran (its claim's `at`), not up to now: an occurrence that fell due
+     * after that run and before now is still owed, and arming it makes it the one catch-up run (B-148: Flutter 2.1.4
+     * ran a late occurrence without moving `nextRunAt`; moving past *now* dropped the day the phone was off after the
+     * update).
+     */
     private suspend fun advanceSettled(entry: ArmedEntry) {
         val schedule = store.load(entry.profileId).firstOrNull { it.id == entry.scheduleId } ?: return
         if (!schedule.enabled || schedule.revision != entry.revision || schedule.nextRunAtMs != entry.dueAtMs) return
-        val due = schedule.due(nowMs(), zone()) ?: return
-        store.advanceOccurrence(schedule, due.nextRunAtMs)
+        val now = nowMs()
+        schedule.due(now, zone()) ?: return
+        val ranAt = (claims.claimedAtMs(entry) ?: now).coerceIn(entry.dueAtMs, now)
+        store.advanceOccurrence(schedule, Recurrences.next(schedule.recurrence, ranAt, zone()))
     }
 
     /**
