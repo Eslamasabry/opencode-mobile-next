@@ -42,7 +42,10 @@ internal class FirstLaunchHooks(
     suspend fun run(): Report? {
         if (!source.adoptedFlutterData()) return null
         val start = marker.read()
-        if (start.state == HookState.Done) return Report(emptyList(), emptyList(), HookState.Done)
+        return if (start.state == HookState.Done) Report(emptyList(), emptyList(), HookState.Done) else resume(start)
+    }
+
+    private suspend fun resume(start: HookRecord): Report {
         var current = start.copy(state = HookState.Running, attempts = start.attempts + 1, at = nowMs())
         marker.write(current) // before any step: a crash still counts as an attempt
         val ran = mutableListOf<String>()
@@ -139,9 +142,8 @@ internal class JournalSource(private val journal: File) : AdoptedSource {
  */
 internal class FileHookMarker(private val file: File) : HookMarkerStore {
     override fun read(): HookRecord {
-        val root = readObject(file) ?: return HookRecord()
-        val hook = (root["hooks"] as? JsonObject)?.get(FirstLaunchHooks.MARKER_ID) as? JsonObject ?: return HookRecord()
-        return HookRecord(
+        val hook = (readObject(file)?.get("hooks") as? JsonObject)?.get(FirstLaunchHooks.MARKER_ID) as? JsonObject
+        return if (hook == null) HookRecord() else HookRecord(
             state = HookState.of(hook.string("state")),
             attempts = (hook["attempts"] as? JsonPrimitive)?.intOrNull ?: 0,
             at = (hook["at"] as? JsonPrimitive)?.longOrNull,

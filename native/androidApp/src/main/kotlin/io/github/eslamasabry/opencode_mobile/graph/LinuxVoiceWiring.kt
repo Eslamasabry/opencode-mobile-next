@@ -1624,12 +1624,15 @@ internal constructor(
      * True when decided (started, already answering, or nothing to do); false to try again on the next launch.
      */
     suspend fun resumeAfterUpdate(): Boolean {
-        if (!readyMarkerPresent()) return true // no built-in Linux: nothing to bring back
-        if (!foreground) return false // a foreground-service start needs the app in front
-        // 2.1.4's own record (device-wide builtin_server_recovery): it was wanted and the person had not stopped it.
-        if (withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }) return true
-        if (healingOwner() == null) return true // no phone-server profile to start it for
-        return openStartWith(updateOpen)
+        val stopped = withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }
+        return when {
+            !readyMarkerPresent() -> true // no built-in Linux: nothing to bring back
+            !foreground -> false // a foreground-service start needs the app in front
+            // 2.1.4's own record (device-wide builtin_server_recovery): wanted, and the person had not stopped it.
+            stopped -> true
+            healingOwner() == null -> true // no phone-server profile to start it for
+            else -> openStartWith(updateOpen)
+        }
     }
 
     private suspend fun openStartWith(start: AppOpenStart): Boolean = lane.withLock {

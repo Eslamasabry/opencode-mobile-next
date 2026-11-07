@@ -19,12 +19,9 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
 import io.github.eslamasabry.oc.android.tiles.PinnedShortcuts
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
-import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
-import io.github.eslamasabry.oc.core.data.migration.MigrationGate
-import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
 import io.github.eslamasabry.opencode_mobile.MainActivity
 import io.github.eslamasabry.opencode_mobile.hooks.FileHookMarker
 import io.github.eslamasabry.opencode_mobile.hooks.FirstLaunchHooks
@@ -35,7 +32,6 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * E00-S07: runs [FirstLaunchHooks] (plan 05 §7.9) on the first app open after the Flutter → native update. It starts
@@ -58,22 +54,20 @@ import kotlinx.coroutines.withContext
 class FirstLaunchWiring(
     private val application: Application,
     appScope: AppCoroutineScope,
-    private val dispatchers: AppDispatchers,
-    private val gate: MigrationGate,
-    private val migration: MigrationWiring,
     private val stores: PreviewStores,
-    private val schedules: ScheduleEngine,
     private val background: BackgroundHub,
     private val runtime: BuiltinRuntime,
     private val clock: kotlin.time.Clock,
 ) {
-    private val scope = CoroutineScope(appScope.coroutineContext + dispatchers.io)
+    private val scope = CoroutineScope(appScope.coroutineContext)
     private val log = AppLog.tagged("FirstLaunch")
     private val launched = AtomicBoolean(false)
 
-    /** Called once from OcApplication (main process). Arms the run for the first resumed activity. */
+    /**
+     * Called once from OcApplication (main process). Arms the run for the first resumed activity. On the preview
+     * package there is no journal, so the hooks find nothing adopted and write nothing.
+     */
     fun start() {
-        if (!migration.adoptsFlutterData) return // the preview package never adopted anything
         application.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityResumed(activity: Activity) {
@@ -98,7 +92,8 @@ class FirstLaunchWiring(
     }
 
     private suspend fun run() {
-        gate.awaitOpen()
+        // The journal says "complete" only once the gate has opened; warm() waits for that (plan 05 §7.3).
+        if (!warm()) return
         val native = File(application.filesDir, "native")
         val hooks =
             FirstLaunchHooks(
@@ -143,7 +138,8 @@ class FirstLaunchWiring(
             },
             step("H2.schedules") {
                 if (!warm()) return@step StepResult.Later
-                schedules.restoreAll()
+                // Through the graph, as the schedule receiver does: one engine, one sync lane.
+                (application.appGraph as SchedulesGraphAccess).schedules.restoreAll()
                 StepResult.Done
             },
             step("H2.widgets") {
@@ -168,7 +164,8 @@ class FirstLaunchWiring(
                 if (!warm()) return@step StepResult.Later
                 if ((stores.prefs.get(LIVE_KEY) as? PrefValue.Bool)?.value != true) return@step StepResult.Done
                 if (!runtime.isForeground) return@step StepResult.Later
-                withContext(dispatchers.main) { background.controller().restore() }
+                // LiveModeController is main-confined: the hub runs the restore there.
+                background.launchOnMain { background.controller().restore() }
                 StepResult.Done
             },
             step("H2.phoneServer") {
@@ -180,16 +177,18 @@ class FirstLaunchWiring(
     /** Every placed widget of every provider of this app gets an update broadcast (its own onUpdate redraws it). */
     private fun redrawWidgets() {
         val manager = AppWidgetManager.getInstance(application) ?: return
-        for (provider in manager.installedProviders) {
-            if (provider.provider.packageName != application.packageName) continue
-            val ids = manager.getAppWidgetIds(provider.provider)
-            if (ids.isEmpty()) continue
-            application.sendBroadcast(
-                Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-                    .setComponent(provider.provider)
-                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            )
-        }
+        manager.installedProviders
+            .map { it.provider }
+            .filter { it.packageName == application.packageName }
+            .map { it to manager.getAppWidgetIds(it) }
+            .filter { (_, ids) -> ids.isNotEmpty() }
+            .forEach { (provider, ids) ->
+                application.sendBroadcast(
+                    Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                        .setComponent(provider)
+                        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                )
+            }
     }
 
     /**
@@ -240,13 +239,10 @@ internal object FirstLaunchRules {
         appLocale in LANGUAGES && systemTags.isBlank()
 
     /** `oc.session:<profileId>:<sessionId>` → (profile, session); anything else is not ours to touch. */
-    fun pinnedSession(id: String): Pair<String, String>? {
-        if (!id.startsWith(PinnedShortcuts.ID_PREFIX)) return null
-        val rest = id.removePrefix(PinnedShortcuts.ID_PREFIX)
-        val split = rest.indexOf(':')
-        if (split <= 0 || split == rest.length - 1) return null
-        return rest.substring(0, split) to rest.substring(split + 1)
-    }
+    fun pinnedSession(id: String): Pair<String, String>? =
+        PINNED.matchEntire(id)?.destructured?.let { (profile, session) -> profile to session }
+
+    private val PINNED = Regex(Regex.escape(PinnedShortcuts.ID_PREFIX) + "([^:]+):(.+)")
 
     /** 2.1.4 `AppLocaleStore.supportedLanguages`: `oc.appLocale` holds one of these bare codes, or is absent. */
     private val LANGUAGES = setOf("en", "ar", "es", "ja", "pt", "ru", "zh")

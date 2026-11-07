@@ -128,7 +128,8 @@ public class WorkScheduleAlarms(
                     .addTag(TAG)
                     .addTag(profileTag(profileId))
                     .build()
-            val policy = ScheduleWorkPolicy.rearmPolicy(entry.workName in ScheduleWorkPolicy.running, entry.dueAtMs, nowMs())
+            val running = entry.workName in ScheduleWorkPolicy.running
+            val policy = ScheduleWorkPolicy.rearmPolicy(running, entry.dueAtMs, nowMs())
             work.enqueueUniqueWork(entry.workName, policy, request)
         }
         armed.edit().putStringSet(profileId, names).apply()

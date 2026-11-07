@@ -12,20 +12,22 @@ import kotlin.test.assertEquals
 class RearmPolicyTest {
     private val now = 1_730_457_600_000L
 
+    private fun policy(running: Boolean, dueAtMs: Long) = ScheduleWorkPolicy.rearmPolicy(running, dueAtMs, now)
+
     @Test
     fun `B-148 an occurrence already due is replaced so it runs now`() {
-        assertEquals(ExistingWorkPolicy.REPLACE, ScheduleWorkPolicy.rearmPolicy(running = false, dueAtMs = now - 60_000, nowMs = now))
-        assertEquals(ExistingWorkPolicy.REPLACE, ScheduleWorkPolicy.rearmPolicy(running = false, dueAtMs = now, nowMs = now))
+        assertEquals(ExistingWorkPolicy.REPLACE, policy(false, now - 60_000))
+        assertEquals(ExistingWorkPolicy.REPLACE, policy(false, now))
     }
 
     @Test
     fun `B-148 a future occurrence keeps its armed work`() {
-        assertEquals(ExistingWorkPolicy.KEEP, ScheduleWorkPolicy.rearmPolicy(running = false, dueAtMs = now + 60_000, nowMs = now))
+        assertEquals(ExistingWorkPolicy.KEEP, policy(false, now + 60_000))
     }
 
     @Test
     fun `B-148 a running occurrence is never cancelled`() {
-        assertEquals(ExistingWorkPolicy.APPEND_OR_REPLACE, ScheduleWorkPolicy.rearmPolicy(running = true, dueAtMs = now - 1, nowMs = now))
-        assertEquals(ExistingWorkPolicy.APPEND_OR_REPLACE, ScheduleWorkPolicy.rearmPolicy(running = true, dueAtMs = now + 1, nowMs = now))
+        assertEquals(ExistingWorkPolicy.APPEND_OR_REPLACE, policy(true, now - 1))
+        assertEquals(ExistingWorkPolicy.APPEND_OR_REPLACE, policy(true, now + 1))
     }
 }

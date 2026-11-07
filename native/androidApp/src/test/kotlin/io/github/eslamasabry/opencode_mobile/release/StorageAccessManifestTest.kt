@@ -39,9 +39,12 @@ class StorageAccessManifestTest {
     private fun Element.children(tag: String): List<Element> =
         (0 until childNodes.length).map { childNodes.item(it) }.filterIsInstance<Element>().filter { it.tagName == tag }
 
-    private fun Element.attr(name: String): String? = getAttributeNS(android, name).takeIf { hasAttributeNS(android, name) }
+    private fun Element.attr(name: String): String? =
+        getAttributeNS(android, name).takeIf { hasAttributeNS(android, name) }
 
-    private val flutter: Element by lazy { parse(RepoFiles.native("androidApp/src/test/resources/flutter-2.1.4/AndroidManifest.xml")) }
+    private val flutter: Element by lazy {
+        parse(RepoFiles.native("androidApp/src/test/resources/flutter-2.1.4/AndroidManifest.xml"))
+    }
 
     private fun permissions(manifest: Element): Map<String, String?> =
         manifest.children("uses-permission").associate { it.attr("name").orEmpty() to it.attr("maxSdkVersion") }
@@ -55,7 +58,8 @@ class StorageAccessManifestTest {
                 assertEquals(
                     flutterApp.attr(name),
                     app.attr(name),
-                    "${manifest.relativeTo(RepoFiles.native)}: android:$name differs from 2.1.4 (resets All-files access)",
+                    "${manifest.relativeTo(RepoFiles.native)}: android:$name differs from 2.1.4 " +
+                        "(resets All-files access)",
                 )
             }
         }
@@ -75,9 +79,9 @@ class StorageAccessManifestTest {
     @Test
     fun `B-145 no shipped manifest removes or caps a storage permission`() {
         for (manifest in RepoFiles.shippedManifests()) {
-            for (permission in parse(manifest).children("uses-permission")) {
-                val name = permission.attr("name") ?: continue
-                if (name !in storagePermissions) continue
+            val storage = parse(manifest).children("uses-permission").filter { it.attr("name") in storagePermissions }
+            for (permission in storage) {
+                val name = permission.attr("name")
                 val where = "${manifest.relativeTo(RepoFiles.native)}: $name"
                 assertTrue(permission.getAttributeNS(tools, "node").isEmpty(), "$where carries tools:node")
                 if (name == "android.permission.MANAGE_EXTERNAL_STORAGE") {

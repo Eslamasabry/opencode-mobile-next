@@ -121,7 +121,7 @@ class FirstLaunchHooksTest {
             object : HookStep {
                 override val id = "H2.shortcuts"
 
-                override suspend fun run(): StepResult = throw IllegalStateException("launcher refused")
+                override suspend fun run(): StepResult = error("launcher refused")
             }
         val after = Step("H2.tiles")
         val report =
