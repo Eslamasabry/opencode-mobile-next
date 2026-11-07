@@ -2,6 +2,15 @@ package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import kotlin.math.roundToInt
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -339,17 +348,27 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
         }
         return
     }
-    val shape = if (mark == KitChoiceMark.Radio) KitShapeId.Circle.shape() else KitShapeId.Square.shape()
-    if (mark == KitChoiceMark.Check && selected) {
-        Box(Modifier.size(size).clip(KitShapeId.Code.shape()).background(edge), contentAlignment = Alignment.Center) {
-            KitGlyph(KitPartGlyphs.Check, colors.onAccent, 16.dp)
-        }
-        return
-    }
+    // Radio and check, as Flutter's _KitChoiceMarkView (kit_choice_list.dart:700-760): the small icon size growing with
+    // the text up to maxIconScale, a 2 dp ring, the radio's dot half the mark and the check's box filled in the accent;
+    // the dot or tick scales in and the colours cross-fade over QUICK (instant under reduced motion).
+    val tokens = LocalKitTokens.current
+    val markDp = (tokens.smallIcon * minOf(kitTextScale(), tokens.maxIconScale)).roundToInt()
+    val specs = KitMotion.specs
+    val ring by animateColorAsState(edge, specs.quick(), label = "choice-ring")
+    val fill by animateColorAsState(if (mark == KitChoiceMark.Check && selected) edge else Color.Transparent, specs.quick(), label = "choice-fill")
+    val inner by animateFloatAsState(if (selected) 1f else 0f, specs.quick(), label = "choice-inner")
+    val box = if (mark == KitChoiceMark.Radio) KitShapeId.Circle.shape() else RoundedCornerShape(FlutterKitTokens.CHOICE_MARK_RADIUS.dp)
     Box(
-        Modifier.size(size).clip(if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape).border(2.dp, edge, if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape),
+        Modifier.size(markDp.dp).clip(box).background(fill, box)
+            .border(FlutterKitTokens.CHOICE_MARK_STROKE.dp, ring, box),
         contentAlignment = Alignment.Center,
     ) {
-        if (selected) Box(Modifier.size(10.dp).clip(KitShapeId.Circle.shape()).background(edge))
+        Box(Modifier.graphicsLayer { scaleX = inner; scaleY = inner }) {
+            if (mark == KitChoiceMark.Radio) {
+                Box(Modifier.size((markDp / 2f).roundToInt().dp).clip(KitShapeId.Circle.shape()).background(ring))
+            } else {
+                KitGlyph(KitPartGlyphs.Check, colors.onAccent, (markDp - 4).dp)
+            }
+        }
     }
 }

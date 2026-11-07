@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.ui.kit.choice
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -16,6 +15,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.geometry.Offset
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -312,10 +312,9 @@ private fun <T> StackedSegments(segments: List<KitSegment<T>>, selected: T, enab
             // The whole control's reason shows once under the stack, never on every row.
             val segEnabled = if (!enabled.isEnabled) KitEnabled.Disabled("") else s.enabled
             if (i > 0) {
-                Box(
-                    Modifier.padding(start = (tokens.gutter + tokens.smallIcon + Space.S3).dp)
-                        .fillMaxWidth().height(kitHairline()).background(colors.hairline),
-                )
+                // A kit divider from the words' edge (F: lib/ui/kit/kit_segmented.dart:574-582): a hand-made box a
+                // third of a pixel tall rounded away to nothing in the DPR-3 goldens.
+                KitDivider(Modifier.padding(start = (tokens.gutter + tokens.smallIcon + Space.S3).dp))
             }
             KitChoiceRow(
                 title = s.count?.let { "${s.label} · ${Numbers.format(it)}" } ?: s.label,
