@@ -17364,6 +17364,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get desktopReleaseOpenPage => 'Open release page';
 
   @override
+  String get appUpdatePromptTitle => 'Actualización disponible';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'Descargar y actualizar';
+
+  @override
+  String get appUpdateLater => 'Más tarde';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'Tamaño: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'Novedades';
+
+  @override
+  String get appUpdateInstall => 'Instalar';
+
+  @override
+  String get appUpdateDownloading => 'Descargando actualización…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'Listo para instalar. Toca Instalar para finalizar la actualización.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'Error al descargar la actualización. Comprueba la conexión y vuelve a intentarlo.';
+
+  @override
+  String get appUpdateRetry => 'Reintentar';
+
+  @override
   String get runningWorkTitle => 'Work in this conversation';
 
   @override

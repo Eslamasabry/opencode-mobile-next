@@ -66,6 +66,7 @@ import 'state/local_server_controls.dart';
 import 'termux/bridge.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
+import 'update/in_app_update_notice.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
 import 'ui/screens/chats/chats_host.dart' show ConnectionChatsHost;
@@ -460,37 +461,40 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                                   at: at,
                                 );
                               },
-                          child: DesktopReleaseNotice(
+                          child: InAppUpdateNotice(
                             navigatorKey: _navigatorKey,
-                            // Desktop only. On Android this returns its child
-                            // untouched, so the touch product gains no key handling.
-                            child: AppShortcuts(
+                            child: DesktopReleaseNotice(
                               navigatorKey: _navigatorKey,
-                              signals: _shortcutSignals,
-                              handlers: AppShortcutHandlers(
-                                onNewSession: () =>
-                                    unawaited(_startNewSession()),
-                                onOpenSettings: _openSettings,
-                                paletteCommands: _shellCommands,
-                              ),
-                              // Settings › Appearance › Effects, above the
-                              // navigator so every route and its transitions read
-                              // the same choices. Calls without a context (a send
-                              // from a controller) obey Vibration via the flag.
-                              child: ValueListenableBuilder<KitEffects>(
-                                valueListenable: _controller.effects,
-                                builder: (context, effects, navigator) {
-                                  KitHaptics.enabled = effects.haptics;
-                                  return KitEffectsScope(
-                                    effects: saver
-                                        ? effects.underSaver
-                                        : effects,
-                                    // The Style's own ground (design schools,
-                                    // hook H6); Solid keeps the theme as is.
-                                    child: kitStyleTheme(child: navigator!),
-                                  );
-                                },
-                                child: child ?? const SizedBox.shrink(),
+                              // Desktop only. On Android this returns its child
+                              // untouched, so the touch product gains no key handling.
+                              child: AppShortcuts(
+                                navigatorKey: _navigatorKey,
+                                signals: _shortcutSignals,
+                                handlers: AppShortcutHandlers(
+                                  onNewSession: () =>
+                                      unawaited(_startNewSession()),
+                                  onOpenSettings: _openSettings,
+                                  paletteCommands: _shellCommands,
+                                ),
+                                // Settings › Appearance › Effects, above the
+                                // navigator so every route and its transitions read
+                                // the same choices. Calls without a context (a send
+                                // from a controller) obey Vibration via the flag.
+                                child: ValueListenableBuilder<KitEffects>(
+                                  valueListenable: _controller.effects,
+                                  builder: (context, effects, navigator) {
+                                    KitHaptics.enabled = effects.haptics;
+                                    return KitEffectsScope(
+                                      effects: saver
+                                          ? effects.underSaver
+                                          : effects,
+                                      // The Style's own ground (design schools,
+                                      // hook H6); Solid keeps the theme as is.
+                                      child: kitStyleTheme(child: navigator!),
+                                    );
+                                  },
+                                  child: child ?? const SizedBox.shrink(),
+                                ),
                               ),
                             ),
                           ),
