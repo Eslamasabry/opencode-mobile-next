@@ -253,22 +253,24 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             }
         }
         Spacer(Modifier.width(Space.S2.dp))
-        StepEnd(
-            view,
-            lines,
-            Modifier.layout { m, c ->
-                val p = m.measure(c.copy(minWidth = 0, maxWidth = (c.maxWidth * END_SHARE).toInt()))
-                layout(p.width, p.height) { p.place(0, 0) }
-            },
-        )
-        if (opened != null) {
-            Spacer(Modifier.width(Space.S1.dp))
-            KitFoldChevron(
-                opened,
-                colors.text2,
-                tokens.smallIcon.dp,
-                Modifier.padding(top = Space.S1.dp / 2),
-            )
+        // E20-S14: the time and the chevron are one group at the end, centred on the title's first line (the time sat
+        // a line above the chevron). The group never takes more than its share of the line.
+        val firstLine =
+            with(LocalDensity.current) {
+                LocalKitTypography.current.style(TypeRole.Label).lineHeight.takeIf { it.isSp }?.toDp()
+            } ?: tokens.smallIcon.dp
+        Row(
+            Modifier.heightIn(min = firstLine)
+                .layout { m, c ->
+                    val p = m.measure(c.copy(minWidth = 0, maxWidth = (c.maxWidth * END_SHARE).toInt()))
+                    layout(p.width, p.height) { p.place(0, 0) }
+                }
+                .testTag("kit-tool-end"),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp, Alignment.End),
+        ) {
+            StepEnd(view, lines, Modifier.weight(1f, fill = false))
+            if (opened != null) KitFoldChevron(opened, colors.text2, tokens.smallIcon.dp, Modifier.testTag("kit-tool-chevron"))
         }
     }
 }
@@ -312,7 +314,7 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
             }
         }
         if (duration != null && view.status != KitToolStatus.Pending) {
-            KitText(duration, role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
+            KitText(duration, Modifier.testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
         }
     }
 }

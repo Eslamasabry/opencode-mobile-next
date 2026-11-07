@@ -234,23 +234,27 @@ private fun StepRow(
 ) {
     val key = "step:${step.partId}"
     val f = step.facts
-    val runningFor =
-        if (step.state == StepState.Running) step.startedAtMs?.let { (nowMs - it).coerceAtLeast(0) }
-        else null
+    val out = step.output
     val view =
         KitToolView(
             id = step.partId,
             kind = f.kind.toKit(),
             title = stepTitle(f),
-            subject = stepSubjectWords(f),
+            // E20-S14: a waiting Write (Read, Edit) names its file as soon as the call's input has the path.
+            subject =
+                stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput)
+                    ?: stepSubjectWords(f),
             detail = stepDetailWords(f),
             status = step.state.toKit(),
-            durationLabel = (step.durationMs ?: runningFor)?.let { durationWords(it) },
+            // E20-S14: under a tenth of a second there is no time to show ("0.0s" said nothing).
+            durationLabel =
+                shownStepDurationMs(step.state, step.durationMs, step.startedAtMs, nowMs)?.let {
+                    durationWords(it)
+                },
             added = f.added,
             removed = f.removed,
             statusLabel = stepStatus(step.state, f.exitCode),
         )
-    val out = step.output
     val text = out.text.takeIf { it.isNotEmpty() }
     val shell = f.kind == ToolKind.Shell
     val child = f.childSessionId?.takeIf { onOpenSession != null }
