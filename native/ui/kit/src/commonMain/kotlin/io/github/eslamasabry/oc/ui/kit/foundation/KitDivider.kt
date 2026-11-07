@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -35,7 +35,8 @@ public fun KitDivider(
     val style = LocalKitStyle.current
     val roles = LocalKitRoles.current
     val tokens = LocalKitTokens.current
-    val hairline = 1f / LocalDensity.current.density
+    // One physical pixel at the kit's pixel ratio (Flutter `KitTokens.hairlineWidth`), not at the picture density.
+    val hairline = kitHairline().value
     val request = SurfaceRequest(roles, SurfaceRole.Divider, style.knobs, withinGroup = !vertical && inset != KitDividerInset.None)
     val row = style.spec.resolve(request)
     val look = if (section) style.spec.resolve(request.copy(selected = true)) else row
@@ -48,10 +49,15 @@ public fun KitDivider(
         KitDividerInset.Gutter -> Space.S4.dp
         KitDividerInset.Text -> (Space.S4 + tokens.leadColumn).dp
     }
+    // The layout box rounds a sub-pixel line to whole pixels (to nothing at a third of a pixel), so the line is drawn
+    // at its exact thickness from the box's start edge, the way Flutter paints a fractional hairline.
     Canvas(
         modifier.clearAndSetSemantics {}.then(
             if (vertical) Modifier.width(thickness.dp).fillMaxHeight()
             else Modifier.padding(start = start, end = end).fillMaxWidth().height(thickness.dp),
         ),
-    ) { drawRect(color) }
+    ) {
+        val t = thickness.dp.toPx()
+        if (vertical) drawRect(color, size = Size(t, size.height)) else drawRect(color, size = Size(size.width, t))
+    }
 }
