@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.rb.o11
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -62,7 +62,9 @@ class KitSheetGateTest {
             ) {
                 Column(Modifier.fillMaxWidth()) {
                     rows.forEach { (i, t, s) ->
-                        KitRow(t, Modifier.padding(vertical = 8.dp), supporting = s, leading = KitRowLeading.Glyph(i), onClick = {})
+                        // Flutter: `KitRow(padding: EdgeInsets.symmetric(vertical: 8), leading: KitRowIcon(icon, current: icon == check))`:
+                        // the row's own padding replaces its rails, and the current language's check is accent.
+                        KitRow(t, supporting = s, leading = KitRowLeading.Glyph(i, current = i == KitIcons.check), padding = PaddingValues(vertical = 8.dp), onClick = {})
                     }
                 }
             }

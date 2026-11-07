@@ -708,7 +708,7 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
                     icon = KitIcons.close,
                     label = entry.closeLabel ?: stringResource(Res.string.kitSheetClose),
                     onClick = { entry.requestDismiss() },
-                    tone = TextTone.Secondary,
+                    // Flutter's KitIconButton (not quiet) draws its glyph in text1 (kit_icon_button.dart:295).
                 )
             }
         }
