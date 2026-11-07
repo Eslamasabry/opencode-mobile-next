@@ -569,6 +569,42 @@ sed -i '/900058 | retired/d' native/BUILD_NUMBERS.md; printf '| 900058 | retired
 expect "B-MIGR-004 versions: the counter skips a retired number" 0 native/tool/version_code.sh next
 expect_out "B-MIGR-004 versions: 900059 not 900058" '^900059$'
 
+# ---------------------------------------------------------------- qa/compile_desktop_tests.sh (scoreboard item 0.3)
+R="$(new_repo)"; cd "$R" || exit 1
+mkdir -p native/core/common/src/commonTest native/ui/kit/src/desktopTest native/ui/words
+printf 'plugins { id("oc.kmp.library") }\n' >native/ui/words/build.gradle.kts   # no test sources: not compiled
+cat >"$R/stub_gradle" <<'STUB'
+#!/usr/bin/env bash
+# Plays Gradle: STUB_BREAK names a module whose test compile fails, STUB_SKIP one whose task never runs.
+rc=0
+for a in "$@"; do
+  case "$a" in
+    :*:compileTestKotlinDesktop)
+      m="${a%:compileTestKotlinDesktop}"
+      [[ "$m" == "${STUB_SKIP:-}" ]] && continue
+      echo "> Task $a"
+      if [[ "$m" == "${STUB_BREAK:-}" ]]; then
+        p="${m#:}"; echo "e: file:///x/native/${p//://}/src/desktopTest/A.kt:3:5 Unresolved reference 'KitTrayAction'."
+        echo "> Task $a FAILED"; echo "Execution failed for task '$a'."; rc=1
+      fi ;;
+  esac
+done
+exit $rc
+STUB
+chmod +x "$R/stub_gradle"
+cdt=(env OC_GRADLE="$R/stub_gradle" native/tool/qa/compile_desktop_tests.sh)
+expect "G0-07 compile desktop tests: lists only modules with desktop test sources" 0 native/tool/qa/compile_desktop_tests.sh --print
+expect_out "G0-07 compile desktop tests: :ui:kit listed" $'^module\t:ui:kit$'
+expect_out "G0-07 compile desktop tests: :core:common listed (commonTest)" $'^module\t:core:common$'
+expect "G0-08 compile desktop tests: every module compiles" 0 "${cdt[@]}"
+expect_out "G0-08 compile desktop tests: says so" 'all 2 modules compiled'
+expect "G0-09 compile desktop tests: a module whose tests do not compile fails" 1 env STUB_BREAK=:ui:kit "${cdt[@]}"
+expect_out "G0-09 compile desktop tests: names the module" "FAIL :ui:kit: desktop test sources do not compile"
+expect_out "G0-09 compile desktop tests: shows the compiler error" "ui/kit/src/desktopTest/A.kt:3:5 Unresolved reference"
+expect "G0-10 compile desktop tests: a module whose task never ran fails" 1 env STUB_SKIP=:core:common "${cdt[@]}"
+expect_out "G0-10 compile desktop tests: names it" "FAIL :core:common: compileTestKotlinDesktop did not run"
+expect "G0-11 compile desktop tests: Gradle that runs nothing is 'could not run'" 2 env OC_GRADLE=false native/tool/qa/compile_desktop_tests.sh
+
 expect "GATES review: offline regression suite" 0 python3 "$TOOL_SRC/test/test_gates_review.py"
 
 echo

@@ -10,6 +10,9 @@ Subcommands (gate_order.sh calls them in this order; each exits non-zero on a fa
   renders  --order NN|all      each golden's render window and density (WxH@D) and where it came from; a per-order count
   recheck  --order NN          once order NN is done: re-gate every shot of a merged order waived DEPENDS_ON NN
                                (gate_order.sh --recheck MM per order MM, RB_PARTS = the parts of those shots)
+  coverage --order NN|all      static estimate: goldens a gate case names vs none (RB_LIST=1 lists the unnamed stems)
+  stale                        DEPENDS_ON waivers naming a done order (RB_STATE/<NN>.done or orders_done.tsv): no
+                               longer deferred, the shots are measured
   chunks   --order NN          one line per part: id, golden count, the part's write globs (chunks.py prints it)
   RB_PARTS="part-a part-b"     restricts static (write set), fetch, evaluate and the manifest to those parts of NN
   evaluate --order NN          measure looks-out/gate trios (rasterisation-tolerant, RB_METRICS_JAVA), apply
@@ -64,8 +67,93 @@ def depends_on(code):
     return f'{int(v):02d}' if v.isdigit() else v
 
 
+# Orders merged into the integration head, committed so every machine agrees (RB_STATE is per-machine and was missing
+# them on the VPS: the scoreboard of 2026-11-07, item 0.2). One line per order: order TAB merge commit TAB note.
+DONE_LEDGER = os.path.join(ROOT, 'native/tool/design/orders_done.tsv')
+
+
+def ledger_done():
+    if not os.path.exists(DONE_LEDGER):
+        return set()
+    out = set()
+    with open(DONE_LEDGER, encoding='utf-8') as fh:
+        lines = fh.read().splitlines()
+    for line in lines:
+        if line.strip() and not line.startswith('#'):
+            v = line.split('\t', 1)[0].strip()
+            out.add(f'{int(v):02d}' if v.isdigit() else v)
+    return out
+
+
 def order_done(o):
-    return os.path.exists(os.path.join(STATE, f'{o}.done'))
+    return os.path.exists(os.path.join(STATE, f'{o}.done')) or o in ledger_done()
+
+
+LITERAL = re.compile(r'"([a-z][a-z0-9_]*(?:\$(?:\{[^}"]+\}|[A-Za-z_]\w*)[a-z0-9_]*)*)"')
+
+
+def case_names(root=None):
+    """(exact names, template regexes) of every string literal in the native test sources: the names gate cases can
+    hand FlutterGoldenGate.check. A template ("kit_setup_$name") becomes a regex when it keeps a 4+ character prefix."""
+    exact, rx = set(), []
+    for f in glob.glob(os.path.join(root or ROOT, 'native', '**', 'src', '*Test', '**', '*.kt'), recursive=True):
+        with open(f, encoding='utf-8') as fh:
+            text = fh.read()
+        if 'FlutterGoldenGate' not in text and 'GateCase' not in text:
+            continue
+        for lit in LITERAL.findall(text):
+            if '$' not in lit:
+                exact.add(lit)
+                continue
+            parts = re.split(r'\$(?:\{[^}]+\}|[A-Za-z_]\w*)', lit)
+            if len(parts[0]) >= 4:
+                rx.append(re.compile('^' + '[a-z0-9_]*'.join(re.escape(p) for p in parts) + '$'))
+    return exact, rx
+
+
+def cmd_coverage(nn):
+    """Static estimate of which goldens a gate case names (scoreboard 2026-11-07: 83 % rendered by none). Per order:
+    goldens, named by a test, not named. RB_LIST=1 also prints each unnamed golden stem. The authority stays
+    `evaluate` (a golden counts only when its gate row rendered); this finds the gaps without running Gradle."""
+    exact, rx = case_names()
+    orders = [nn] if nn != 'all' else sorted({os.path.basename(f)[:2] for f in glob.glob(os.path.join(DOC, 'orders', '[0-9][0-9].gate.tsv'))})
+    tot_g = tot_n = 0
+    print('order\tgoldens\tnamed\tunnamed')
+    for o in orders:
+        stems = {}
+        for r in manifest(o, whole=True):
+            if r[0] == 'golden':
+                shot = os.path.basename(r[3])[:-4]
+                stems.setdefault(re.sub(r'_(light|dark)$', '', shot), []).append(shot)
+        named = {s for s in stems if s in exact or any(x.match(s) for x in rx)}
+        g = sum(len(v) for v in stems.values())
+        n = sum(len(stems[s]) for s in named)
+        tot_g, tot_n = tot_g + g, tot_n + n
+        print(f'{o}\t{g}\t{n}\t{g - n}')
+        if os.environ.get('RB_LIST') == '1':
+            for s in sorted(set(stems) - named):
+                print(f'  unnamed\t{o}\t{s}')
+    if len(orders) > 1:
+        print(f'all\t{tot_g}\t{tot_n}\t{tot_g - tot_n}')
+    return 0
+
+
+def cmd_stale(_nn):
+    """Every DEPENDS_ON waiver whose order is done (RB_STATE marker or orders_done.tsv): evaluate rejects these, so the
+    shot is measured and must pass; print them (order TAB golden TAB waited-for) so the waiving order can drop them."""
+    n = 0
+    for wf in sorted(glob.glob(os.path.join(DOC, 'waivers', '*.tsv'))):
+        mm = os.path.basename(wf)[:-4]
+        for line in open(wf, encoding='utf-8'):
+            if not line.strip() or line.startswith('#'):
+                continue
+            c = line.rstrip('\n').split('\t')
+            dep = depends_on(c[1]) if len(c) > 1 else None
+            if dep and order_done(dep):
+                print(f'{mm}\t{c[0]}\t{dep}')
+                n += 1
+    print(f'stale: {n} DEPENDS_ON waivers name a done order (they no longer defer; the shots are measured)', file=sys.stderr)
+    return 0
 
 
 def run(*a, check=True, cwd=ROOT):
@@ -883,6 +971,19 @@ def tracker_url():
     return None
 
 
+def layout_rows(outg):
+    """name -> (PASS|FAIL, detail) from <outg>/layout/*.tsv, one file per FlutterGoldenGate.check case."""
+    out = {}
+    for f in sorted(glob.glob(os.path.join(outg, 'layout', '*.tsv'))):
+        with open(f, encoding='utf-8') as fh:
+            lines = fh.read().splitlines()
+        for line in lines:
+            c = line.rstrip('\n').split('\t')
+            if len(c) >= 3 and c[1] in ('PASS', 'FAIL'):
+                out[c[0]] = (c[1], c[2])
+    return out
+
+
 def cmd_evaluate(nn):
     h = header(nn)
     oid = os.path.basename(order_file(nn))[:-3]
@@ -1027,12 +1128,25 @@ def cmd_evaluate(nn):
             fails.append(f'X2 {pid}: {o}')
         if other:
             per_part.setdefault(pid, {'ok': True, 'worst': -1.0, 'shot': None})['ok'] = False
+    # layout guard rows (FlutterGoldenGate.check writes one per gate case; their own rows, never a lost picture)
+    layout = layout_rows(OUTG)
+    for name, (verdict, detail) in sorted(layout.items()):
+        if verdict == 'PASS':
+            continue
+        fails.append(f'L1 {name}: {detail[:300]}')
+        for r in goldens:
+            if os.path.basename(r[3])[:-4].startswith(name + '_'):
+                per_part.setdefault(r[1], {'ok': True, 'worst': -1.0, 'shot': None})['ok'] = False
+                break
     # print
     for st, shot, why in sorted(results):
         print(f'{st:6} {shot}  {why}')
     bad = [r for r in results if r[0] == 'FAIL']
     for f in fails:
         print('FAIL', f)
+    lfail = sum(1 for v, _ in layout.values() if v != 'PASS')
+    print(f'layout guard: {len(layout)} gate cases checked, {lfail} with findings the baseline does not list '
+          f'(looks-out/gate/layout/; rows L1 above)')
     os.makedirs(OUTG, exist_ok=True)
     with open(os.path.join(OUTG, 'deferred.tsv'), 'w', encoding='utf-8') as fh:
         fh.write('# golden\torder\n' + ''.join(f'{g}\t{o}\n' for g, o in deferred))
@@ -1104,11 +1218,13 @@ def cmd_recheck(nn):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests', 'recheck'])
-    ap.add_argument('--order', required=True)
+    ap.add_argument('cmd', choices=['static', 'fetch', 'modules', 'evaluate', 'chunks', 'renders', 'tests', 'recheck', 'stale', 'coverage'])
+    ap.add_argument('--order')
     a = ap.parse_args()
-    nn = 'all' if a.order == 'all' else f'{int(a.order):02d}'
-    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests, 'recheck': cmd_recheck}[a.cmd](nn))
+    if a.order is None and a.cmd != 'stale':
+        ap.error('--order is required')
+    nn = 'all' if a.order in (None, 'all') else f'{int(a.order):02d}'
+    sys.exit({'static': cmd_static, 'fetch': cmd_fetch, 'modules': cmd_modules, 'evaluate': cmd_evaluate, 'chunks': cmd_chunks, 'renders': cmd_renders, 'tests': cmd_tests, 'recheck': cmd_recheck, 'stale': cmd_stale, 'coverage': cmd_coverage}[a.cmd](nn))
 
 
 if __name__ == '__main__':
