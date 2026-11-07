@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- P-015: an app exit on an earlier day is said by its date only. -->
+    <string name="andr_appExitOnDate">يوم %1$s</string>
+</resources>

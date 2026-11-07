@@ -597,6 +597,12 @@ public class SettingsPresenter(
     override fun onBack(): Boolean {
         val l = local.value
         return when {
+            // P-027: Back from one Appearance question returns to all groups first, as the guide's "All" did.
+            l.stack.lastOrNull() == SettingsPage.Appearance &&
+                l.appearanceQuestion?.let { it in appearanceQuestions(currentFacts.value) } == true -> {
+                onAppearanceQuestion(null)
+                true
+            }
             l.standaloneWhatsNew && l.stack.size <= 2 -> {
                 exitWhatsNew()
                 true

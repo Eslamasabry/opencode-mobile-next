@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -55,12 +54,10 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearch
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerLine
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerNone
-import io.github.eslamasabry.oc.ui.words.res.settingsHubServerOnPhone
 import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsHiddenCount
 import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsShowHidden
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Connected
 import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
-import io.github.eslamasabry.oc.ui.words.res.settingsV3ServersBlock
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -123,9 +120,8 @@ private fun ColumnScope.HubBody(
                 KitRow(
                     title = groupWords(group),
                     selected = group == selected,
-                    modifier =
-                        Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
-                            .testTag("settings-group-${group.name}"),
+                    // P-028: one-line groups are 56 dp like every sub-page row; only Server, with its line, is 64.
+                    modifier = Modifier.testTag("settings-group-${group.name}"),
                     leading = if (large) null else KitRowLeading.Glyph(groupGlyph(group)),
                     supporting =
                         if (group == SettingsGroupId.Server) hubServerLine(state) else null,
@@ -173,7 +169,8 @@ private fun hubServerLine(state: SettingsUi): String {
         return if (saved.isEmpty()) stringResource(Res.string.settingsHubServerNone)
         else pluralStringResource(Res.plurals.settingsV3ServersCount, saved.size, saved.size)
     val where =
-        if (server.onPhone) stringResource(Res.string.settingsHubServerOnPhone) else server.name
+        // P-028: the phone's server has one name everywhere, "This phone", as on home.
+        if (server.onPhone) stringResource(Res.string.settingsV3ThisPhone) else server.name
     return stringResource(
         Res.string.settingsHubServerLine,
         where,
@@ -207,6 +204,9 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.Guide -> KitIcons.guide
         SettingsRowId.Tips -> KitIcons.idea
         SettingsRowId.Capabilities -> KitIcons.checklist
+        // P-031: each Server row has its own glyph (Flutter hub_rows: capabilities is the checklist).
+        SettingsRowId.ServerCapabilities -> KitIcons.checklist
+        SettingsRowId.ServerConfiguration -> KitIcons.dataObject
         SettingsRowId.ReportProblem -> KitIcons.bug
         SettingsRowId.About -> KitIcons.info
         else -> KitIcons.settings
@@ -343,17 +343,15 @@ private fun ColumnScope.GroupBody(
                     onClick = actions::onShowHiddenPhrases,
                 )
             }
-    if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
-        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
-        SavedServersBody(state, actions, null)
-    }
+    // P-031: the saved servers are listed once, behind Servers (each opens its own page there); a second list
+    // here, under a sentence for a label, repeated them.
 }
 
 @Composable
 internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
     state: SettingsUi,
     actions: SettingsActions,
-    section: io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside?,
+    section: SettingsOutside,
 ) {
     val note =
         when (section) {
@@ -365,10 +363,7 @@ internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(
             else -> null
         }
     note?.let { KitGroupNote(stringResource(it)) }
-    KitRowGroup(
-        leadingTiles = true,
-        label = if (section == null) stringResource(Res.string.settingsV3ServersBlock) else null,
-    ) {
+    KitRowGroup(leadingTiles = true) {
         state.hub.savedServers.forEach { server ->
             KitRow(
                 title = server.name,

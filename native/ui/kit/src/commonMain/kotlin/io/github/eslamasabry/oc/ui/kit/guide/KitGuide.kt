@@ -95,17 +95,21 @@ public fun KitGuideRail(
     Column(Modifier.padding(horizontal = tokens.gutter.dp)) {
         if (group != null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                KitTappable(onClick = { onBack?.invoke() }, onClickLabel = backLabel) {
-                    Row(
-                        Modifier.padding(start = Space.S1.dp, end = Space.S2.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        KitGlyph(KitIcons.back, colors.text2, tokens.smallIcon.dp)
-                        Spacer(Modifier.width(Space.S1.dp))
-                        KitText(allLabel, role = TypeRole.Secondary)
+                // P-027: the "← All" crumb only when the caller has no other way back; a page whose bar Back
+                // already returns to all groups passes no onBack, so the page never shows two back buttons.
+                if (onBack != null) {
+                    KitTappable(onClick = onBack, onClickLabel = backLabel) {
+                        Row(
+                            Modifier.padding(start = Space.S1.dp, end = Space.S2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            KitGlyph(KitIcons.back, colors.text2, tokens.smallIcon.dp)
+                            Spacer(Modifier.width(Space.S1.dp))
+                            KitText(allLabel, role = TypeRole.Secondary)
+                        }
                     }
+                    Spacer(Modifier.width(Space.S2.dp))
                 }
-                Spacer(Modifier.width(Space.S2.dp))
                 KitText(group, Modifier.weight(1f).semantics { heading() }, role = TypeRole.Label)
                 // E20-S08: no per-group dots here. The guide's foot already says where the person is ("1 of 5");
                 // two dots for the group beside it counted something else and read as a contradiction.

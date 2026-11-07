@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -12,6 +16,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
 import io.github.eslamasabry.oc.feature.settings.presentation.ReportUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+import io.github.eslamasabry.oc.feature.settings.presentation.reportHeadline
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -21,6 +26,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -41,6 +47,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiPortuguese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiRussian
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSystem
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.languagePickerPartlyTranslated
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopyShort
@@ -110,7 +117,8 @@ internal fun ColumnScope.ReportBody(
     KitField(
         state = field,
         label = stringResource(Res.string.reportProblemDescribeLabel),
-        placeholder = stringResource(Res.string.reportProblemDescribeHint),
+        // P-022: the hint is a helper line that wraps; a one-line placeholder cut it with "…".
+        helper = stringResource(Res.string.reportProblemDescribeHint),
         kind = KitFieldKind.Multiline,
         modifier = gutter.testTag("report-description"),
         onTextChanged = actions::onReportDescription,
@@ -144,9 +152,6 @@ internal fun ColumnScope.ReportBody(
                         ),
                 )
             }
-            Box(gutter.testTag("report-text")) {
-                KitText(report.text, role = TypeRole.Mono, kind = KitTextKind.Reading)
-            }
             KitRowGroup {
                 KitRow(
                     title = stringResource(Res.string.reportProblemSendGitHub),
@@ -157,6 +162,23 @@ internal fun ColumnScope.ReportBody(
                 KitRow(
                     title = stringResource(Res.string.reportProblemKeptLink),
                     onClick = { actions.onOutside(SettingsOutside.KeptDiagnostics) },
+                )
+            }
+            // P-022: the exact report stays one tap away in a Details fold that starts closed, last on the page;
+            // its line is the report's headline, so the page still says what will be sent.
+            var open by rememberSaveable { mutableStateOf(false) }
+            KitExpandRow(
+                title = stringResource(Res.string.kitDetails),
+                expanded = open,
+                supporting = reportHeadline(report.text),
+                onExpandedChange = { open = it },
+                modifier = Modifier.testTag("report-details"),
+            ) {
+                KitText(
+                    report.text,
+                    Modifier.testTag("report-text"),
+                    role = TypeRole.Mono,
+                    kind = KitTextKind.Reading,
                 )
             }
         }

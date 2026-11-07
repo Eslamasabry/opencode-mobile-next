@@ -83,9 +83,7 @@ internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: Settin
                     },
             selected = question.name,
             group = appearanceGroupWords(question.group),
-            allLabel = stringResource(Res.string.kitGuideAll),
-            backLabel = stringResource(Res.string.kitGuideBack),
-            onBack = { actions.onAppearanceQuestion(null) },
+            // P-027: no "← All" crumb; the bar's Back (and system Back) returns to all groups (SettingsPresenter.onBack).
             onItem = { id -> actions.onAppearanceQuestion(AppearanceQuestion.valueOf(id)) },
         )
     }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- S8 settings polish (P-026): two-line descriptions on Voice typing. -->
+    <string name="vpttAutoSendDetailShort">تُرسل بعد وقفة قصيرة، ولديك 3 ثوانٍ للإلغاء. الضغط على الميكروفون لا يرسل وحده.</string>
+    <string name="readAloudVoiceNaturalDetailShort">أكثر طبيعية ويعمل دون إنترنت. الإنجليزية فقط؛ اللغات الأخرى بصوت الهاتف.</string>
+</resources>
