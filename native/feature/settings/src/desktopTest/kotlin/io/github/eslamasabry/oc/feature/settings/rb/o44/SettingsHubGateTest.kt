@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.settings.RecordingActions
 import io.github.eslamasabry.oc.feature.settings.SettingsThemed
@@ -48,6 +49,15 @@ class SettingsHubGateTest {
         onNodeWithText("Appearance").assertDoesNotExist()
         onNodeWithText("This app").performClick()
         assertEquals(listOf("open:Group(id=ThisApp)"), actions.calls)
+    }
+
+    @Test
+    fun `B-NAV-068 hub group rows are roomy, 64 dp with one line or two`() = runComposeUiTest {
+        setContent { SettingsThemed { SettingsScreen(hub(), RecordingActions()) } }
+        // F: lib/ui/screens/settings_screen.dart:324 (roomy: true), lib/ui/kit/kit_row.dart:121 (roomyHeight = 64)
+        onNodeWithTag("settings-group-Agent").assertHeightIsEqualTo(64.dp)
+        onNodeWithTag("settings-group-Help").assertHeightIsEqualTo(64.dp)
+        onNodeWithTag("settings-group-Server").assertHeightIsEqualTo(64.dp)
     }
 
     @Test
