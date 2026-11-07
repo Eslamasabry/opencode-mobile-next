@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12NoServerBody
 import io.github.eslamasabry.oc.ui.words.res.p12NoServerTitle
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectConversations
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectNoConversations
+import io.github.eslamasabry.oc.ui.words.res.scheduleTitle
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.servicesSubtitle
 import io.github.eslamasabry.oc.ui.words.res.servicesTitle
@@ -169,6 +170,12 @@ public fun ProjectPageScreen(
                         trailing = KitRowTrailing.Chevron,
                         onClick = onDevServices ?: actions::developmentServices,
                     )
+                    if (state.canSchedule)
+                        KitRow(
+                            title = stringResource(Res.string.scheduleTitle),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = actions::openSchedules,
+                        )
                     if (state.workspace.available)
                         KitRow(
                             title =

@@ -46,6 +46,9 @@ public data class ChatHeaderUi(
 public enum class HeaderAction {
     Find,
     Details,
+
+    /** "Schedule a prompt" (Flutter `scheduleCreate`, B-163): this server's scheduled prompts, seeded from here. */
+    Schedule,
     Share,
     Unshare,
 

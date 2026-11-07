@@ -172,6 +172,26 @@ class ProjectsViewModelTest {
     }
 
     @Test
+    fun `B-163 the project page offers Scheduled prompts where the server runs them and opens them for this project`() {
+        val nav = Nav()
+        val gateway = FakeServerGateway(listOf(session("old", "/work/app", 5)))
+        gateway.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        val servers = Servers(listOf(ProjectServer(p1, "srv", gateway, null)))
+        val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), nav, servers, SessionOpenedFolders())
+        assertTrue(vm.state.value.canSchedule)
+        vm.openSchedules()
+        assertEquals("open ${io.github.eslamasabry.oc.ui.routes.SchedulesRoute.List(p1, projectDir = "/work/app")}", nav.calls.last())
+
+        val plain = FakeServerGateway(listOf(session("old", "/work/app", 5)))
+        plain.capabilities.value = ServerCapabilities(scheduledPrompts = false)
+        val quiet = Nav()
+        val none = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), quiet, Servers(listOf(ProjectServer(p1, "srv", plain, null))), SessionOpenedFolders())
+        assertFalse(none.state.value.canSchedule)
+        none.openSchedules()
+        assertTrue(quiet.calls.isEmpty())
+    }
+
+    @Test
     fun `New conversation here starts a conversation that works in this folder and opens it`() {
         val nav = Nav()
         val gateway = Creating(FakeServerGateway(listOf(session("old", "/work/app", 5), session("there", "/work/site", 9))))

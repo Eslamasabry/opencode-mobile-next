@@ -15,7 +15,9 @@ import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.a2aTitle
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
+import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailInstaller
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailNetwork
@@ -36,6 +38,7 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
+import io.github.eslamasabry.oc.ui.words.res.appearanceGroupBackground
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAuto
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeSaver
 import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingCompact
@@ -44,17 +47,37 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceBrutal
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfacePaper
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSolid
-import io.github.eslamasabry.oc.ui.words.res.rb34AppearanceSurfaceGlass
+import io.github.eslamasabry.oc.ui.words.res.automationSearchAliases
+import io.github.eslamasabry.oc.ui.words.res.automationTitle
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenAliases
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiTimestampsUsage
+import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptDisplay
 import io.github.eslamasabry.oc.ui.words.res.configInspectionTitle
+import io.github.eslamasabry.oc.ui.words.res.demoScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShareFailed
+import io.github.eslamasabry.oc.ui.words.res.discoverLanguageAliases
+import io.github.eslamasabry.oc.ui.words.res.discoverShowTipsAgain
+import io.github.eslamasabry.oc.ui.words.res.discoverShowTipsAliases
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceDark
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceLight
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryAlwaysAllowedActions
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiLanguage
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsDetailUi17
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsDetailUi18
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi12
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi14
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi25
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi35
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi74
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi88
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi92
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi96
+import io.github.eslamasabry.oc.ui.words.res.e7SetupServers
+import io.github.eslamasabry.oc.ui.words.res.effectsActivityGlow
+import io.github.eslamasabry.oc.ui.words.res.effectsAnimations
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionCalm
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionCalmHint
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionFull
@@ -62,25 +85,41 @@ import io.github.eslamasabry.oc.ui.words.res.effectsMotionFullHint
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionOff
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionOffHint
 import io.github.eslamasabry.oc.ui.words.res.effectsSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.effectsSection
+import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
+import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.libraryMcpTitle
+import io.github.eslamasabry.oc.ui.words.res.libraryProvidersTitle
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilitiesTitle
 import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsAliases
 import io.github.eslamasabry.oc.ui.words.res.onboardingSetupGuide
+import io.github.eslamasabry.oc.ui.words.res.openCodeConnectionLabel
+import io.github.eslamasabry.oc.ui.words.res.phoneServerCardTitle
+import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
+import io.github.eslamasabry.oc.ui.words.res.rb34AppearanceSurfaceGlass
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopied
+import io.github.eslamasabry.oc.ui.words.res.settingsHubAccounts
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupAgent
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupConversations
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupHelp
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupThisApp
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupUsage
 import io.github.eslamasabry.oc.ui.words.res.settingsHubModelAndMode
+import io.github.eslamasabry.oc.ui.words.res.settingsHubModelRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubProvidersRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchAboutAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchAccountsAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchAppearanceAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchBugAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchCommandsAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchDiagnosticsAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchExternalAgentsAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchGuideAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchMcpAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchModelModeAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchNotificationsAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchPermissionsAliases
@@ -99,22 +138,35 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubShowReasoning
 import io.github.eslamasabry.oc.ui.words.res.settingsHubShowTimestamps
 import io.github.eslamasabry.oc.ui.words.res.settingsHubToolsRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsSupporting
 import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsTitle
+import io.github.eslamasabry.oc.ui.words.res.settingsSearchAppearanceInsideAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsTryDemo
 import io.github.eslamasabry.oc.ui.words.res.settingsV3AgentsOnPhone
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Background
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Off
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Permissions
+import io.github.eslamasabry.oc.ui.words.res.settingsV3Providers
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
+import io.github.eslamasabry.oc.ui.words.res.settingsV3Shell
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.settingsV3VoiceTyping
 import io.github.eslamasabry.oc.ui.words.res.signalStyleName
+import io.github.eslamasabry.oc.ui.words.res.teamUiHomeTitle
+import io.github.eslamasabry.oc.ui.words.res.teamUiPluginsTitle
 import io.github.eslamasabry.oc.ui.words.res.textSizeDefault
 import io.github.eslamasabry.oc.ui.words.res.textSizeLarge
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmall
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmallest
+import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
+import io.github.eslamasabry.oc.ui.words.res.tipsHubSubtitle
+import io.github.eslamasabry.oc.ui.words.res.tipsSearchAliases
 import io.github.eslamasabry.oc.ui.words.res.tipsTitle
+import io.github.eslamasabry.oc.ui.words.res.transcriptFindReasoning
 import io.github.eslamasabry.oc.ui.words.res.voiceNoticeCopyFailed
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -133,77 +185,166 @@ internal fun groupWords(group: SettingsGroupId): String =
     )
 
 @Composable
-internal fun rowWords(row: SettingsRowId): String =
-    stringResource(
-        when (row) {
-            SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenTitle
-            SettingsRowId.ServerConfiguration -> Res.string.configInspectionTitle
-            SettingsRowId.Servers -> Res.string.settingsV3Servers
-            SettingsRowId.ThisPhone -> Res.string.settingsV3ThisPhone
-            SettingsRowId.ModelAndMode -> Res.string.settingsHubModelAndMode
-            SettingsRowId.Providers -> Res.string.settingsHubProvidersRow
-            SettingsRowId.Usage -> Res.string.settingsHubGroupUsage
-            SettingsRowId.Tools -> Res.string.settingsHubToolsRow
-            SettingsRowId.Agents -> Res.string.settingsV3AgentsOnPhone
-            SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
-            SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
-            SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
-            SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
-            SettingsRowId.Voice -> Res.string.settingsHubVoice
-            SettingsRowId.Permissions -> Res.string.settingsV3Permissions
-            SettingsRowId.Notifications -> Res.string.settingsV3Notifications
-            SettingsRowId.Background -> Res.string.settingsV3Background
-            SettingsRowId.Appearance -> Res.string.e7AppearanceTitle
-            SettingsRowId.Language -> Res.string.settingsV3Language
-            SettingsRowId.Privacy -> Res.string.settingsHubPrivacyRow
-            SettingsRowId.Updates -> Res.string.appUpdatesTitle
-            SettingsRowId.Storage -> Res.string.migrationStorageTitle
-            SettingsRowId.Guide -> Res.string.onboardingSetupGuide
-            SettingsRowId.Tips -> Res.string.tipsTitle
-            SettingsRowId.Capabilities -> Res.string.nativeCapabilitiesTitle
-            SettingsRowId.ReportProblem -> Res.string.kitReportProblem
-            SettingsRowId.About -> Res.string.aboutTitle
-        }
-    )
+internal fun rowWords(row: SettingsRowId): String = stringResource(rowKey(row))
+
+internal fun rowKey(row: SettingsRowId): StringResource =
+    when (row) {
+        SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenTitle
+        SettingsRowId.ServerConfiguration -> Res.string.configInspectionTitle
+        SettingsRowId.Servers -> Res.string.settingsV3Servers
+        SettingsRowId.ThisPhone -> Res.string.settingsV3ThisPhone
+        SettingsRowId.ModelAndMode -> Res.string.settingsHubModelAndMode
+        SettingsRowId.Providers -> Res.string.settingsHubProvidersRow
+        SettingsRowId.Usage -> Res.string.settingsHubGroupUsage
+        SettingsRowId.Tools -> Res.string.settingsHubToolsRow
+        SettingsRowId.Agents -> Res.string.settingsV3AgentsOnPhone
+        SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
+        SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
+        SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
+        SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
+        SettingsRowId.Voice -> Res.string.settingsHubVoice
+        SettingsRowId.Permissions -> Res.string.settingsV3Permissions
+        SettingsRowId.Notifications -> Res.string.settingsV3Notifications
+        SettingsRowId.Background -> Res.string.settingsV3Background
+        SettingsRowId.Appearance -> Res.string.e7AppearanceTitle
+        SettingsRowId.Language -> Res.string.settingsV3Language
+        SettingsRowId.Privacy -> Res.string.settingsHubPrivacyRow
+        SettingsRowId.Updates -> Res.string.appUpdatesTitle
+        SettingsRowId.Storage -> Res.string.migrationStorageTitle
+        SettingsRowId.Guide -> Res.string.onboardingSetupGuide
+        SettingsRowId.Tips -> Res.string.tipsTitle
+        SettingsRowId.Capabilities -> Res.string.nativeCapabilitiesTitle
+        SettingsRowId.ReportProblem -> Res.string.kitReportProblem
+        SettingsRowId.About -> Res.string.aboutTitle
+    }
 
 /**
- * The freeze tip's acceptance words per row (bilingual where `:ui:words` has them); empty = the
- * title only.
+ * The acceptance words per row, as Flutter's settings search gives them (lib/ui/search/search_index/hub_rows.dart
+ * keywords plus lib/domain/settings_search_catalog.dart for the rows inside Appearance, B-165): each hub row also
+ * answers to the titles of what lives inside it, so "Voice typing", "Text size" or "Always allowed actions" find
+ * the row that holds them. Bilingual where `:ui:words` has them; empty = the title only.
  */
+internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
+    when (row) {
+        SettingsRowId.Servers ->
+            listOf(
+                Res.string.settingsHubSearchSavedServersAliases,
+                Res.string.openCodeConnectionLabel,
+                Res.string.e7SetupServers,
+            )
+        SettingsRowId.ThisPhone ->
+            listOf(Res.string.settingsHubSearchPhoneLinuxAliases, Res.string.phoneServerCardTitle)
+        SettingsRowId.ModelAndMode ->
+            listOf(Res.string.settingsHubModelRow, Res.string.settingsHubSearchModelModeAliases)
+        SettingsRowId.Providers ->
+            listOf(
+                Res.string.settingsV3Providers,
+                Res.string.libraryProvidersTitle,
+                Res.string.settingsHubAccounts,
+                Res.string.settingsHubSearchProvidersAliases,
+                Res.string.settingsHubSearchAccountsAliases,
+            )
+        SettingsRowId.Usage -> listOf(Res.string.settingsHubSearchUsageAliases)
+        SettingsRowId.Tools ->
+            listOf(
+                Res.string.settingsHubSearchToolsAliases,
+                Res.string.libraryMcpTitle,
+                Res.string.settingsHubSearchMcpAliases,
+                Res.string.settingsHubSearchCommandsAliases,
+                Res.string.teamUiPluginsTitle,
+                Res.string.a2aTitle,
+                Res.string.settingsHubSearchExternalAgentsAliases,
+            )
+        SettingsRowId.Agents ->
+            listOf(Res.string.agentsSectionTitle, Res.string.teamUiHomeTitle, Res.string.a2aTitle)
+        SettingsRowId.ShowReasoning ->
+            listOf(
+                Res.string.settingsHubSearchReasoningAliases,
+                Res.string.chatUiTranscriptDisplay,
+                Res.string.transcriptFindReasoning,
+            )
+        SettingsRowId.ShowTimestamps ->
+            listOf(
+                Res.string.settingsHubSearchTranscriptAliases,
+                Res.string.chatUiTranscriptDisplay,
+                Res.string.chatUiTimestampsUsage,
+            )
+        SettingsRowId.PhraseChips ->
+            listOf(Res.string.nativePhraseChipsAliases, Res.string.settingsPhraseChipsSupporting)
+        SettingsRowId.DefaultShell ->
+            listOf(Res.string.settingsV3Shell, Res.string.settingsHubSearchShellAliases)
+        SettingsRowId.Voice ->
+            listOf(Res.string.settingsV3VoiceTyping, Res.string.settingsHubSearchVoiceAliases)
+        SettingsRowId.Permissions ->
+            listOf(
+                Res.string.automationTitle,
+                Res.string.automationSearchAliases,
+                Res.string.settingsHubSearchPermissionsAliases,
+                Res.string.e7SettingsUi74,
+                Res.string.e7LibraryAlwaysAllowedActions,
+            )
+        SettingsRowId.Notifications -> listOf(Res.string.settingsHubSearchNotificationsAliases)
+        SettingsRowId.Background ->
+            listOf(
+                Res.string.keepRunningTitle,
+                Res.string.e7SettingsUi25,
+                Res.string.keepRunningRowSubtitle,
+                Res.string.settingsHubSearchNotificationsAliases,
+            )
+        SettingsRowId.Appearance ->
+            listOf(
+                Res.string.settingsHubSearchAppearanceAliases,
+                Res.string.textSizeTitle,
+                Res.string.appearanceGroupBackground,
+                Res.string.effectsSection,
+                Res.string.effectsAnimations,
+                Res.string.effectsActivityGlow,
+                Res.string.settingsSearchAppearanceInsideAliases,
+            )
+        SettingsRowId.Language ->
+            listOf(Res.string.e7LocaleUiLanguage, Res.string.discoverLanguageAliases)
+        SettingsRowId.Privacy ->
+            listOf(
+                Res.string.settingsHubSearchPrivacyAliases,
+                Res.string.privacyPolicyTitle,
+                Res.string.e7SettingsUi92,
+                Res.string.e7SettingsDetailUi17,
+            )
+        SettingsRowId.Updates -> listOf(Res.string.appUpdatesSearchAliases)
+        SettingsRowId.Guide ->
+            listOf(
+                Res.string.settingsHubSearchGuideAliases,
+                Res.string.settingsTryDemo,
+                Res.string.demoScreenTitle,
+            )
+        SettingsRowId.Tips ->
+            listOf(
+                Res.string.tipsSearchAliases,
+                Res.string.tipsHubSubtitle,
+                Res.string.discoverShowTipsAgain,
+                Res.string.discoverShowTipsAliases,
+            )
+        SettingsRowId.ReportProblem ->
+            listOf(
+                Res.string.settingsHubSearchBugAliases,
+                Res.string.e7SettingsUi88,
+                Res.string.settingsHubSearchDiagnosticsAliases,
+            )
+        SettingsRowId.About ->
+            listOf(
+                Res.string.settingsHubSearchAboutAliases,
+                Res.string.e7SettingsUi96,
+                Res.string.e7SettingsDetailUi18,
+            )
+        SettingsRowId.ServerCapabilities -> listOf(Res.string.capabilityScreenAliases)
+        SettingsRowId.Storage,
+        SettingsRowId.ServerConfiguration,
+        SettingsRowId.Capabilities -> emptyList()
+    }
+
 @Composable
-internal fun aliasWords(row: SettingsRowId): String {
-    val key =
-        when (row) {
-            SettingsRowId.Servers -> Res.string.settingsHubSearchSavedServersAliases
-            SettingsRowId.ThisPhone -> Res.string.settingsHubSearchPhoneLinuxAliases
-            SettingsRowId.ModelAndMode -> Res.string.settingsHubSearchModelModeAliases
-            SettingsRowId.Providers -> Res.string.settingsHubSearchProvidersAliases
-            SettingsRowId.Usage -> Res.string.settingsHubSearchUsageAliases
-            SettingsRowId.Tools -> Res.string.settingsHubSearchToolsAliases
-            SettingsRowId.ShowReasoning -> Res.string.settingsHubSearchReasoningAliases
-            SettingsRowId.ShowTimestamps -> Res.string.settingsHubSearchTranscriptAliases
-            SettingsRowId.PhraseChips -> Res.string.nativePhraseChipsAliases
-            SettingsRowId.DefaultShell -> Res.string.settingsHubSearchShellAliases
-            SettingsRowId.Voice -> Res.string.settingsHubSearchVoiceAliases
-            SettingsRowId.Permissions -> Res.string.settingsHubSearchPermissionsAliases
-            SettingsRowId.Notifications -> Res.string.settingsHubSearchNotificationsAliases
-            SettingsRowId.Appearance -> Res.string.settingsHubSearchAppearanceAliases
-            SettingsRowId.Privacy -> Res.string.settingsHubSearchPrivacyAliases
-            SettingsRowId.Updates -> Res.string.appUpdatesSearchAliases
-            SettingsRowId.Guide -> Res.string.settingsHubSearchGuideAliases
-            SettingsRowId.ReportProblem -> Res.string.settingsHubSearchBugAliases
-            SettingsRowId.About -> Res.string.settingsHubSearchAboutAliases
-            SettingsRowId.Storage,
-            SettingsRowId.ServerCapabilities,
-            SettingsRowId.ServerConfiguration,
-            SettingsRowId.Agents,
-            SettingsRowId.Background,
-            SettingsRowId.Language,
-            SettingsRowId.Tips,
-            SettingsRowId.Capabilities -> null
-        }
-    return key?.let { stringResource(it) }.orEmpty()
-}
+internal fun aliasWords(row: SettingsRowId): String =
+    aliasKeys(row).map { stringResource(it) }.joinToString(" ")
 
 @Composable
 internal fun modeWords(mode: AppearanceMode): String =

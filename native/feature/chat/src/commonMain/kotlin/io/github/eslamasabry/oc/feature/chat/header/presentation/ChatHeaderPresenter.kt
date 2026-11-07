@@ -239,7 +239,7 @@ public class ChatHeaderPresenter(
             serverName = facts.serverName,
             projectName = project,
             menu =
-                HeaderRules.menu(caps, shared = facts.shareUrl != null)
+                HeaderRules.menu(caps, shared = facts.shareUrl != null, directory = facts.directory)
                     .filter {
                         world.readOnly.value == null ||
                             it in
@@ -321,6 +321,14 @@ public class ChatHeaderPresenter(
                 nav.open(io.github.eslamasabry.oc.ui.routes.AgentHandoffRoute(ref))
             HeaderAction.CardsSettings ->
                 nav.open(io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute)
+            HeaderAction.Schedule ->
+                nav.open(
+                    io.github.eslamasabry.oc.ui.routes.SchedulesRoute.List(
+                        profileId = ref.profileId,
+                        projectDir = port.facts.value.directory,
+                        from = ref,
+                    )
+                )
             HeaderAction.AgentOptions ->
                 nav.open(
                     io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(ref.profileId, ref.sessionId)

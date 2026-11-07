@@ -400,7 +400,11 @@ public class SettingsPresenter(
     private fun appearanceQuestions(f: SettingsFacts): List<AppearanceQuestion> = buildList {
         add(AppearanceQuestion.Mode)
         add(AppearanceQuestion.Theme)
-        if (f.surfaceStyles) add(AppearanceQuestion.Style)
+        if (f.surfaceStyles) {
+            add(AppearanceQuestion.Style)
+            // B-166: Flutter's Style group asks Style then Shape (corners and spacing over the style's own).
+            add(AppearanceQuestion.Shape)
+        }
         add(AppearanceQuestion.Text)
         add(AppearanceQuestion.Motion)
     }

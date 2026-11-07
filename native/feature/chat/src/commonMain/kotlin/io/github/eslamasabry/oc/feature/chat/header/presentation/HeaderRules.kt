@@ -43,11 +43,19 @@ public object HeaderRules {
      * The ⋯ menu (Flutter `sessionMenuItems`): Go to (Find, Details), then Do (Share or Stop
      * sharing, Fork, Rename, Continue with…, Continue on computer, Copy transcript, Archive),
      * Delete last. Gated on the conversation's own capabilities, never on the backend kind.
+     *
+     * B-163: "Schedule a prompt" (Flutter `canSchedulePrompts`) is offered when the server runs scheduled prompts
+     * and the conversation has a project folder; it opens this server's scheduled prompts.
      */
-    public fun menu(caps: ServerCapabilities, shared: Boolean): ImmutableList<HeaderAction> =
+    public fun menu(
+        caps: ServerCapabilities,
+        shared: Boolean,
+        directory: String? = null,
+    ): ImmutableList<HeaderAction> =
         buildList {
             add(HeaderAction.Find)
             add(HeaderAction.Details)
+            if (caps.scheduledPrompts && !directory.isNullOrBlank()) add(HeaderAction.Schedule)
             add(HeaderAction.CardsSettings)
             add(HeaderAction.AgentHandoff)
             if (caps.sessionShare) {

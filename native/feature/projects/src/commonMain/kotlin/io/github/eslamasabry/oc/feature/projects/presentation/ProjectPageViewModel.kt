@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.attention.AttentionKind
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
@@ -156,7 +157,9 @@ public class ProjectPageViewModel(
                         it.copy(
                             canStartIsolated =
                                 next?.gateway?.capabilities?.value?.worktreeCreate == true &&
-                                    isolatedHosts.size == 1
+                                    isolatedHosts.size == 1,
+                            // B-163: Flutter's project hub offers "Scheduled prompts" where the server runs them.
+                            canSchedule = next?.gateway?.capabilities?.value?.scheduledPrompts == true,
                         )
                     }
                     refreshCopies()
@@ -633,6 +636,12 @@ public class ProjectPageViewModel(
         viewModelScope.launch {
             if (checkStorage(live, run)) nav.open(LinuxRoute.Services(route.profile, directory))
         }
+    }
+
+    /** B-163: this server's scheduled prompts; a new one starts in this project. */
+    override fun openSchedules() {
+        if (server == null || !state.value.canSchedule) return
+        nav.open(SchedulesRoute.List(route.profile, projectDir = directory))
     }
 
     override fun openWorkspace() = workspace.openWorkspace()
