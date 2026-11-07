@@ -194,9 +194,11 @@ public fun KitDiffView(
                             )
                         },
                     )
+                    // The sign keeps the same air on both sides as a source row's (UnifiedLine): with
+                    // only an end pad the number ran into it ("1+"), C-005.
                     BasicText(
                         sign(first.kind),
-                        Modifier.padding(end = Space.S2.dp),
+                        Modifier.padding(horizontal = Space.S2.dp),
                         style = mono.copy(color = colors.text2),
                     )
                     // A diff's Markdown is presentation only; source links are selectable text,

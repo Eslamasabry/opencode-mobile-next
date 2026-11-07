@@ -13,6 +13,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlin.test.Test
@@ -98,5 +99,20 @@ class KitDiffViewTest {
             val text = onNodeWithText("new value", useUnmergedTree = true).getUnclippedBoundsInRoot()
             assertTrue(sign.left < text.left, "the sign sits before the text on the left: $sign vs $text")
             onNodeWithText("−", useUnmergedTree = true).assertExists()
+        }
+
+    @Test
+    fun `B-CHAT-058 a formatted Markdown row keeps air between the line number and its sign`() =
+        runComposeUiTest {
+            // C-005: a .md diff opens formatted; its number cell ran straight into the "+" ("1+").
+            val file = DiffModel.fromBeforeAfter("README.md", null, "# App")
+            setContent {
+                ChatTestTheme {
+                    KitDiffView(file, hunkLabel = { _, _, _, _ -> "hunk" }, gapLabel = { "$it hidden" })
+                }
+            }
+            val number = onNodeWithText("1", useUnmergedTree = true).getUnclippedBoundsInRoot()
+            val sign = onNodeWithText("+", useUnmergedTree = true).getUnclippedBoundsInRoot()
+            assertTrue(sign.left - number.right >= 4.dp, "the sign starts clear of the number: $number vs $sign")
         }
 }
