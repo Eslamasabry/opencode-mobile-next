@@ -1,0 +1,70 @@
+{
+ "flutter.oc.profiles": {
+  "type": "string",
+  "value": "[{\"id\":\"1735000000000001\"},{\"id\":\"1735000000000002\"}]"
+ },
+ "flutter.oc.activeProfile": {
+  "type": "string",
+  "value": "1735000000000001"
+ },
+ "flutter.oc.model.1735000000000001": {
+  "type": "string",
+  "value": "anthropic/claude"
+ },
+ "flutter.oc.lastProject.1735000000000001": {
+  "type": "string",
+  "value": "/home/dev/code/acme"
+ },
+ "flutter.oc.chatTail.1735000000000001": {
+  "type": "string",
+  "value": "{\"v\":1,\"scope\":\"/home/dev/code/acme\",\"session\":\"ses_tail1\",\"at\":1762500000000,\"rows\":[{\"id\":\"msg_u1\",\"role\":\"user\",\"text\":\"Fix the login bug\"},{\"id\":\"msg_a1\",\"role\":\"assistant\",\"text\":\"تم إصلاح الخطأ.\\nLine two — done 🚀\"}]}"
+ },
+ "flutter.oc.chatNoticesSeen.1735000000000001": {
+  "type": "string",
+  "value": "VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![\"auto-approve:ses_old\",\"auto-approve:ses_tail1\"]"
+ },
+ "flutter.oc.withdrawnPrompts.1735000000000001": {
+  "type": "string",
+  "value": "VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![\"ses_tail1|msg_w1\",\"ses_other|msg_w2\",\"ses_tail1|msg_w3\"]"
+ },
+ "flutter.oc.providerRuntimeRefresh.v1.1735000000000001.%3Cdefault%3E%0A%3Cdefault%3E": {
+  "type": "boolean",
+  "value": true
+ },
+ "flutter.oc.providerRuntimeRefresh.v1.1735000000000001.%2Fhome%2Fdev%2Fcode%2Facme%0A%3Cdefault%3E": {
+  "type": "boolean",
+  "value": true
+ },
+ "flutter.oc.providerRuntimeUnloadable.1735000000000001.%2Fhome%2Fdev%2Fcode%2Facme%0A%3Cdefault%3E": {
+  "type": "string",
+  "value": "anthropic,openai"
+ },
+ "flutter.oc.lastProject.1735000000000002": {
+  "type": "boolean",
+  "value": true
+ },
+ "flutter.oc.chatTail.1735000000000002": {
+  "type": "string",
+  "value": "{\"v\":2,\"scope\":\"x\",\"session\":\"y\",\"at\":1,\"rows\":[]}"
+ },
+ "flutter.oc.chatNoticesSeen.1735000000000002": {
+  "type": "string",
+  "value": "VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![\"auto-approve:ses_b\""
+ },
+ "flutter.oc.withdrawnPrompts.1735000000000002": {
+  "type": "string",
+  "value": "ses_b|msg_b"
+ },
+ "flutter.oc.providerRuntimeRefresh.v1.1735000000000002.%3Cdefault%3E%0A%3Cdefault%3E": {
+  "type": "string",
+  "value": "true"
+ },
+ "flutter.oc.providerRuntimeUnloadable.1735000000000002.%3Cdefault%3E%0A%3Cdefault%3E": {
+  "type": "long",
+  "value": 3
+ },
+ "flutter.oc.offlineQueue": {
+  "type": "string",
+  "value": "[]"
+ }
+}
