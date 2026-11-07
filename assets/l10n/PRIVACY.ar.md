@@ -20,7 +20,7 @@ OpenCode لنظام Android تطبيق للاتصال بخوادم OpenCode. ل�
 
 - `app_open`: بدء التطبيق (cold) أو عودته من الخلفية (warm).
 - `setup_step_reached`: خطوة الإعداد (linux أو essentials أو python أو node أو opencode أو aiteam أو voice أو start أو other).
-- `setup_step_failed`: الخطوة؛ ونوع الإخفاق (crash أو timeout أو network أو space أو other)؛ وهل كان وضع التوافق مفعّلًا؛ وإصدار Node.js المختار إن وُجد (standard أو compat أو legacy أو other).
+- `setup_step_failed`: الخطوة؛ ونوع الإخفاق (crash أو timeout أو network أو space أو other)؛ وهل كان وضع التوافق مفعّلًا؛ ووضع Node.js الآمن الذي اعتمده الهاتف إن وُجد (armcap أو threads أو both، أو none_worked إن لم ينجح أي منها، أو other).
 - `setup_done`: مدة الإعداد بالدقائق ضمن نطاق.
 - `first_reply`: هل الخادم على الهاتف (phone) أم على حاسوب (computer)، ومدة انتظار أول رد بالثواني ضمن نطاق.
 - `connect_computer_chosen` و`update_offered` و`update_installed`: بلا أي قيمة.

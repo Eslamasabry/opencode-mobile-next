@@ -81,7 +81,7 @@ events, and no others:
 | --- | --- |
 | `app_open` | `kind`: cold (the app started) or warm (it came back from the background) |
 | `setup_step_reached` | `step`: one of linux, essentials, python, node, opencode, aiteam, voice, start, other |
-| `setup_step_failed` | `step` (as above); `kind`: crash, timeout, network, space or other; `compat_mode`: true or false; `node_variant`: standard, compat, legacy or other, when the step picked one |
+| `setup_step_failed` | `step` (as above); `kind`: crash, timeout, network, space or other; `compat_mode`: true or false; `node_variant` for the Node.js step: the safe mode this phone kept (armcap, threads, both), none_worked when none worked, or other |
 | `setup_done` | `minutes`: a range (under 2, 2 to 5, 5 to 10, 10 to 20, 20 to 40, over 40) |
 | `first_reply` | `server_kind`: phone or computer; `seconds`: a range (under 5, 5 to 15, 15 to 30, 30 to 60, 60 to 180, over 180, unknown) |
 | `connect_computer_chosen` | nothing |

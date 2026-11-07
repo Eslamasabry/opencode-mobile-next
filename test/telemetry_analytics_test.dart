@@ -56,7 +56,7 @@ final _everyEvent = <AnalyticsEvent, Map<String, Object?>>{
     'step': AnalyticsSetupStep.node,
     'kind': AnalyticsFailureKind.crash,
     'compat_mode': true,
-    'node_variant': AnalyticsNodeVariant.compat,
+    'node_variant': AnalyticsNodeVariant.noneWorked,
   },
   AnalyticsEvent.setupDone: {
     'minutes': AnalyticsBuckets.minutesOf(const Duration(minutes: 7)),
@@ -111,7 +111,7 @@ void main() {
         'step': 'node',
         'kind': 'crash',
         'compat_mode': 'true',
-        'node_variant': 'compat',
+        'node_variant': 'none_worked',
       });
 
       await service.setConsent(false);
@@ -247,7 +247,11 @@ void main() {
     test('unknown step ids and Node variants become other', () {
       expect(AnalyticsSetupStep.of('opencode'), AnalyticsSetupStep.opencode);
       expect(AnalyticsSetupStep.of('/opt/evil'), AnalyticsSetupStep.other);
-      expect(AnalyticsNodeVariant.of('compat'), AnalyticsNodeVariant.compat);
+      expect(AnalyticsNodeVariant.of('armcap'), AnalyticsNodeVariant.armcap);
+      expect(
+        AnalyticsNodeVariant.of('none_worked'),
+        AnalyticsNodeVariant.noneWorked,
+      );
       expect(AnalyticsNodeVariant.of('v22.1.0'), AnalyticsNodeVariant.other);
     });
 

@@ -63,16 +63,21 @@ enum AnalyticsFailureKind { crash, timeout, network, space, other }
 /// Where the server that answered runs.
 enum AnalyticsServerKind { phone, computer }
 
-/// Node.js builds the setup can pick between (issue #117). Only these names
-/// are ever sent; an unknown build is sent as [other].
+/// The Node.js safe mode setup settled on (issue #117, `NodeCompatVariant`),
+/// or [noneWorked] when it gave up. Anything else is sent as [other].
 enum AnalyticsNodeVariant {
-  standard,
-  compat,
-  legacy,
+  armcap,
+  threads,
+  both,
+  noneWorked,
   other;
 
-  static AnalyticsNodeVariant of(String name) =>
-      values.firstWhere((v) => v.name == name, orElse: () => other);
+  String get wire => this == noneWorked ? 'none_worked' : name;
+
+  static AnalyticsNodeVariant of(String name) => values.firstWhere(
+    (v) => v.wire == name || v.name == name,
+    orElse: () => other,
+  );
 }
 
 /// Duration buckets: the vendor never sees an exact time.
@@ -131,7 +136,7 @@ final Map<String, Map<String, Set<String>>> analyticsSchema = {
     'step': {for (final s in AnalyticsSetupStep.values) s.name},
     'kind': {for (final k in AnalyticsFailureKind.values) k.name},
     'compat_mode': _bool,
-    'node_variant': {for (final v in AnalyticsNodeVariant.values) v.name},
+    'node_variant': {for (final v in AnalyticsNodeVariant.values) v.wire},
   },
   AnalyticsEvent.setupDone.wire: {
     'minutes': {...AnalyticsBuckets.minutes},

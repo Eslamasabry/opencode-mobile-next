@@ -397,15 +397,22 @@ extension _SetupEnginePoll on ChannelSetupEngine {
           'step': component.id,
           'exit': exit,
         });
-        final variant = component.data['nodeVariant'];
         if (counted) {
-          AppTelemetry.track(AnalyticsEvent.setupStepFailed, {
+          final props = <String, Object?>{
             'step': AnalyticsSetupStep.of(component.id),
             'kind': analyticsFailureKind(exit: exit, error: component.error),
             'compat_mode': _ranInCompatibilityMode(record, component),
-            if (variant != null && variant.isNotEmpty)
-              'node_variant': AnalyticsNodeVariant.of(variant),
-          });
+          };
+          if (component.id == SetupComponentIds.node) {
+            unawaited(
+              _nodeVariantForAnalytics(record, component).then((variant) {
+                if (variant != null) props['node_variant'] = variant;
+                AppTelemetry.track(AnalyticsEvent.setupStepFailed, props);
+              }),
+            );
+          } else {
+            AppTelemetry.track(AnalyticsEvent.setupStepFailed, props);
+          }
         }
       }
       PerfTrace.recordDuration(
@@ -443,6 +450,24 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     if (_traced.contains('${record.jobId}/live')) return true;
     final age = _clock().millisecondsSinceEpoch - record.updatedAt;
     return age >= 0 && age < const Duration(minutes: 30).inMilliseconds;
+  }
+
+  /// The Node.js safe mode for a failed Node step: none worked when the
+  /// step gave up (node_compat.dart), else the one this phone kept, if any.
+  Future<AnalyticsNodeVariant?> _nodeVariantForAnalytics(
+    SetupJobRecord record,
+    SetupJobComponent component,
+  ) async {
+    final text = '${component.error ?? ''}\n${record.logTail}';
+    if (text.contains(NodeCompatFailure.unsupported)) {
+      return AnalyticsNodeVariant.noneWorked;
+    }
+    try {
+      final state = await NodeCompatStore.load();
+      return state == null ? null : AnalyticsNodeVariant.of(state.variant.name);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Whether [component] was run again in compatibility mode (issue #117):
