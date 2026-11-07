@@ -1,0 +1,10 @@
+# Settings open: go to the Servers list. Flutter 2.1.4: Settings > Server > Servers (each row reads as its label, a
+# line break, then a summary such as "Computer at 10.0.2.2 · Connected").
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      visible: ${output.s.settingsHubServer + '\n(?s).*'}
+    commands:
+      - tapOn: ${output.s.settingsHubServer + '\n(?s).*'}
+- tapOn: ${output.s.e7SetupServers + '(\n(?s).*)?'}

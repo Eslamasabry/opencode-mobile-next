@@ -133,7 +133,7 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
             TARGET: fx-proxy
             ACTION: restore-host
             ARGS: "${JSON.stringify({host: output.fx.serverHost, port: parseInt(output.fx.serverBAddress.split(':')[1], 10)})}"
-      - tapOn: "Upgrade queued"  # literal-ok: title seeded in Part A
+      - tapOn: "Upgrade queued(, .*)?"  # literal-ok: title seeded in Part A
       - extendedWaitUntil:
           visible: "ECHO queued once"  # literal-ok: stub-model reply to the queued prompt
           timeout: 60000

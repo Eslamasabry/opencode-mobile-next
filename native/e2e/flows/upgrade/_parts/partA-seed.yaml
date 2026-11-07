@@ -17,13 +17,19 @@ tags: [linux-setup]
     env:
       HOOK: permission
       ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+# Flutter 2.1.4 opens on "Where should your agent run?" with "On this phone" chosen; choosing the computer card
+# turns the main button into "Connect to my computer" (connect-server.yaml taps it).
+- extendedWaitUntil:
+    visible: ${output.s.firstRunWhereQuestion}
+    timeout: 30000
+- tapOn: ${output.c.firstRunOnComputer}
 - extendedWaitUntil:
     visible: ${output.s.welcomeComputerConnect}
-    timeout: 30000
+    timeout: 10000
 - runFlow:
     file: ../../_sub/connect-server.yaml
     env:
-      ADDRESS: ${output.fx.serverAddress}
+      ADDRESS: ${output.fx.serverUrl}
       PASSWORD: ${SERVER_PASSWORD}
 # Conversations to pin and to hold the draft (titles are fixture data passed in ARGS).
 - runScript:
@@ -34,44 +40,55 @@ tags: [linux-setup]
       ARGS: '{"project": "app", "titles": ["Upgrade pin one", "Upgrade pin two", "Upgrade draft"]}'
 - runFlow: ../../_sub/restart-app.yaml
 - extendedWaitUntil:
-    visible: "Upgrade draft"  # literal-ok: title seeded through the fixture above
+    visible: "Upgrade draft(, .*)?"  # literal-ok: title seeded through the fixture above
     timeout: 30000
 
-# Two pinned conversations (their dynamic launcher shortcuts follow the pins).
-# confirm: the pin action of a Conversations row (see E2E-21 S5).
-- longPressOn: "Upgrade pin one"  # literal-ok: title seeded through the fixture above
-- tapOn: ${output.rc.sessionRelationsPin}
-- longPressOn: "Upgrade pin two"  # literal-ok: title seeded through the fixture above
-- tapOn: ${output.rc.sessionRelationsPin}
+# No pins: Flutter 2.1.4 has no pin action for a top-level conversation (walked 2026-11-07: a Conversations row
+# has no long-press menu; "Pin {title}" exists only on the sub-agent list of a sub-agent conversation). Pins and the
+# launcher shortcuts that follow them stay unseeded until they are seeded through storage (backlog).
 
 # An always-allow rule, then a draft with an attachment and a saved prompt, in "Upgrade draft".
-- tapOn: "Upgrade draft"  # literal-ok: title seeded through the fixture above
+- tapOn: "Upgrade draft(, .*)?"  # literal-ok: title seeded through the fixture above
 - extendedWaitUntil:
-    visible: ${output.s.kitComposerField}
+    visible: ${output.s.kitComposerField + '(?s).*'}
     timeout: 30000
 - runFlow:
     file: ../../_sub/send-prompt.yaml
     env:
       PROMPT: "e2e:ask-shell ls"  # literal-ok: stub-model magic prompt
+# 2.1.4: the request card offers "Always allow ls"; a sheet confirms "Always allow ls in this project?".
 - extendedWaitUntil:
-    visible: ${output.s.chatUiAlwaysAllow}
+    visible: ${output.re.chatRequestAlwaysAllowNamed}
     timeout: 30000
+- tapOn: ${output.re.chatRequestAlwaysAllowNamed}
 - tapOn: ${output.s.chatUiAlwaysAllow}
 - extendedWaitUntil:
-    notVisible: ${output.s.chatUiAlwaysAllow}
+    notVisible: ${output.re.chatRequestAlwaysAllowNamed}
     timeout: 30000
-- tapOn: ${output.s.kitComposerField}
+# 2.1.4 asks once, after the first reply, whether to notify when the agent needs you: yes.
+- runFlow:
+    when:
+      visible: ${output.s.firstRunNotifyAccept}
+    commands:
+      - tapOn: ${output.s.firstRunNotifyAccept}
+- tapOn: ${output.s.kitComposerField + '(?s).*'}
 - inputText: "upgrade saved prompt"  # literal-ok: seed text
-- tapOn: ${output.s.kitComposerTools}
-- tapOn: ${output.s.composerToolSaveForLater}
+# 2.1.4: Attach and more > More > Prompts > Save prompt for later.
+- runFlow: ../../_sub/composer-more-tools.yaml
+- runFlow:
+    when:
+      notVisible: ${output.s.composerToolSaveForLater + '(?s).*'}
+    commands:
+      - tapOn: ${output.s.usagePrompts}
+- tapOn: ${output.s.composerToolSaveForLater + '(?s).*'}
 - extendedWaitUntil:
     visible: ${output.s.promptStashed}
     timeout: 15000
-# confirm: the composer's "Attach and more" tray lists the project's files (attach notes.txt).
-- tapOn: ${output.s.kitComposerTools}
-- tapOn: ${output.s.chatUiProjectFiles}
-- tapOn: ${output.fx.fileNotes}
-- tapOn: ${output.s.kitComposerField}
+# The project file notes.txt on the draft: 2.1.4's More > File from the project opens the Project files sheet.
+- runFlow: ../../_sub/composer-more-tools.yaml
+- tapOn: ${output.s.mentionToolTitle + '(?s).*'}
+- tapOn: ${'(?s).*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- tapOn: ${output.s.kitComposerField + '(?s).*'}
 - inputText: "upgrade draft text"  # literal-ok: seed text left unsent as the draft
 - hideKeyboard
 - back
@@ -86,7 +103,12 @@ tags: [linux-setup]
       ARGS: '{"project": "app", "titles": ["Upgrade queued"]}'
 - runFlow: ../../_sub/restart-app.yaml
 - extendedWaitUntil:
-    visible: "Upgrade queued"  # literal-ok: title seeded through the fixture above
+    visible: "Upgrade queued(, .*)?"  # literal-ok: title seeded through the fixture above
+    timeout: 30000
+# Open the conversation while FX-OC2-B answers (2.1.4 cannot open a conversation it never loaded), then cut it off.
+- tapOn: "Upgrade queued(, .*)?"  # literal-ok: title seeded through the fixture above
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField + '(?s).*'}
     timeout: 30000
 - runScript:
     file: ../../_fx/fx.js
@@ -94,7 +116,6 @@ tags: [linux-setup]
       TARGET: fx-proxy
       ACTION: cut-host
       ARGS: "${JSON.stringify({host: output.fx.serverHost, port: parseInt(output.fx.serverBAddress.split(':')[1], 10)})}"
-- tapOn: "Upgrade queued"  # literal-ok: title seeded through the fixture above
 - runFlow:
     file: ../../_sub/send-prompt.yaml
     env:
@@ -102,20 +123,19 @@ tags: [linux-setup]
 - extendedWaitUntil:
     visible: ${output.s.chatUiQueuedWillSendWhenReconnected}
     timeout: 30000
+- hideKeyboard
 - back
 
 # A self-signed server whose certificate is pinned (same steps as E2E-04).
+# FX-TLS fronts FX-OC2, so once it is opened Conversations shows FX-OC2's conversations again.
 - runFlow: ../../_sub/open-settings.yaml
-- scrollUntilVisible:
-    element: ${output.s.e7SetupServers}
-- tapOn: ${output.s.e7SetupServers}
+- runFlow: ../../_sub/open-servers.yaml
 - tapOn: ${output.s.e7SetupAddServer}
-- tapOn: ${output.s.e7SetupServerUrl}
-- inputText: ${output.fx.tlsSelfSignedUrl}
-- tapOn: ${output.s.e7SetupServerPassword}
-- inputText: ${SERVER_PASSWORD}
-- hideKeyboard
-- tapOn: ${output.s.e7SetupTestConnection}
+- runFlow:
+    file: ../../_sub/server-form.yaml
+    env:
+      ADDRESS: ${output.fx.tlsSelfSignedUrl}
+      PASSWORD: ${SERVER_PASSWORD}
 - extendedWaitUntil:
     visible: ${output.c.e7SetupCertificate}
     timeout: 30000
@@ -124,40 +144,42 @@ tags: [linux-setup]
 - extendedWaitUntil:
     visible: ${output.c.serverTrustCertificatePinned}
     timeout: 30000
-- tapOn: ${output.s.e7SetupConnect}
+- tapOn: ${output.s.onboardingSaveConnect}
+- extendedWaitUntil:
+    visible: ${output.re.addServerReadyOpen}
+    timeout: 30000
+- tapOn: ${output.re.addServerReadyOpen}
 - extendedWaitUntil:
     visible: ${output.s.chatsHomeTitle}
     timeout: 60000
+# Back to FX-OC2 itself: the draft, the always-allow rule and the schedule below belong to that saved server, and
+# Part C reads them there.
+- runFlow:
+    file: ../../_sub/switch-server.yaml
+    env:
+      NAME: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.')}  # literal-ok: built from fixture data
 
 # Finished-work notifications on.
 - runFlow: ../../_sub/open-settings.yaml
-- runFlow:
-    file: ../../_sub/settings-search.yaml
-    env:
-      QUERY: ${output.t.notifyFinishedRuns}
-- tapOn:
-    text: ${output.s.notifyFinishedRuns}
-    index: 1
+- runFlow: ../../_sub/open-notifications.yaml
 - runFlow:
     when:
       visible:
-        text: ${output.s.notifyFinishedRuns}
+        text: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
         checked: false
     commands:
-      - tapOn: ${output.s.notifyFinishedRuns}
-- back
-- back
+      - tapOn: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
+- runFlow: ../../_sub/back-to-conversations.yaml
 
 # A daily scheduled prompt.
+# 2.1.4 keeps Scheduled prompts with the project: conversation > project chip > Files > More > Scheduled prompts.
 - runFlow:
-    file: ../../_sub/settings-search.yaml
+    file: ../../_sub/open-project-tools.yaml
     env:
-      QUERY: ${output.t.scheduleTitle}
-- tapOn:
-    text: ${output.s.scheduleTitle}
-    index: 1
+      TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded through the fixture above
+- tapOn: ${output.s.scheduleTitle}
 - tapOn: ${output.s.scheduleNew}
-- tapOn: ${output.s.scheduleAsk}
+- tapOn: ${output.s.scheduleAsk + '(?s).*'}
 - inputText: "e2e:echo daily upgrade"  # literal-ok: stub-model magic prompt for the schedule
 - hideKeyboard
 - tapOn: ${output.s.scheduleEveryDay}
@@ -165,60 +187,68 @@ tags: [linux-setup]
 - extendedWaitUntil:
     visible: ".*e2e:echo daily upgrade.*"  # literal-ok: the prompt typed above names the schedule
     timeout: 15000
-- back
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
 
-# Text Smallest; style Soft with a tweak (sharp corners).
+# Text Smallest; style Soft with a tweak (sharp corners). Flutter 2.1.4's Appearance is a guided page: settings
+# search "Text size" opens its Text size question, a four-step slider (Smallest, Small, Default, Large) dragged to
+# the left end; then "Back to all chips" > Style > Soft, and its Shape question > Corners Sharp. Choices save as
+# they are made.
+- runFlow: ../../_sub/open-settings.yaml
 - runFlow:
     file: ../../_sub/settings-search.yaml
     env:
       QUERY: ${output.t.textSizeTitle}
-- tapOn:
-    text: ${output.s.textSizeTitle}
-    index: 1
-- tapOn: ${output.s.textSizeSmallest}
-- back
-- back
-- runFlow:
-    file: ../../_sub/settings-search.yaml
-    env:
-      QUERY: ${output.t.e7AppearanceTitle}
-- tapOn:
-    text: ${output.s.e7AppearanceTitle}
-    index: 1
-- tapOn: ${output.s.appearanceSurfaceSoft}
-- tapOn: ${output.s.appearanceFineTuneCornersSharp}
+- tapOn: ${output.s.textSizeTitle + '\n(?s).*'}
+- swipe:
+    from:
+      text: ${'.*, ' + output.s.textSizeTitle}  # literal-ok: the slider reads "<size>, Text size"
+    direction: LEFT
+- extendedWaitUntil:
+    visible: ${output.s.textSizeSmallest + ', ' + output.s.textSizeTitle}
+    timeout: 10000
 - runFlow:
     when:
-      visible: ${output.s.e7AppearanceApply}
+      visible: ${output.s.tourNotNow}
     commands:
-      - tapOn: ${output.s.e7AppearanceApply}
-- back
-- back
+      - tapOn: ${output.s.tourNotNow}
+- tapOn: ${output.s.kitGuideBack}
+# The all-chips page lists "Style\nSolid" rows on a first visit and "Style, Soft" chips after one.
+- tapOn: ${output.s.appearanceChipStyle + '(\n|, )(?s).*'}
+- tapOn: ${output.s.appearanceSurfaceSoft}
+- tapOn: ${output.s.appearanceChipShape + ', (?s).*'}
+- tapOn: ${output.s.appearanceFineTuneCornersSharp}
+- extendedWaitUntil:
+    visible: ${output.s.appearanceChipShape + ', ' + output.s.appearanceFineTuneCornersSharp + '(?s).*'}
+    timeout: 10000
+- runFlow: ../../_sub/back-to-conversations.yaml
 
-# Built-in Linux with project app, its server running (FX-LINUXDL where the build reads it; the pinned hosts on
-# Flutter R). Long: up to 40 minutes.
-- scrollUntilVisible:
-    element: ${output.s.settingsV3ThisPhone}
-- tapOn: ${output.s.settingsV3ThisPhone}
+# Built-in Linux with a project, its server running. Flutter 2.1.4 downloads from the real pinned hosts (it has no
+# download-base hook); about 4 minutes on the emulator. Settings > Server > This phone > Set up OpenCode on this phone,
+# then "OpenCode is ready" names the first project. The name field's accessibility node covers the whole column, so
+# Maestro cannot focus it: the project keeps 2.1.4's suggested name "my-app" (Part C looks for that name).
+- runFlow: ../../_sub/open-settings.yaml
+- tapOn: ${output.s.settingsHubServer + '\n(?s).*'}
+- tapOn: ${output.s.settingsV3ThisPhone + '(\n(?s).*)?'}
 - tapOn: ${output.s.phoneSetupStartSetUp}
 - repeat:
     times: 10
     while:
-      notVisible: ${output.s.phoneSetupReadyTitle}
+      notVisible: ${output.s.phoneSetupReadyTitle + '(\n(?s).*)?'}
     commands:
       - extendedWaitUntil:
-          visible: ${output.s.phoneSetupReadyTitle}
+          visible: ${output.s.phoneSetupReadyTitle + '(\n(?s).*)?'}
           timeout: 300000
           optional: true
-- tapOn: ${output.s.phoneSetupReadyNameLabel}
-- inputText: ${output.fx.projectApp}
-- hideKeyboard
 - tapOn: ${output.s.phoneSetupReadyCreateOpen}
 - extendedWaitUntil:
-    visible: ${output.s.kitComposerField}
+    visible: ${output.s.kitComposerField + '(?s).*'}
     timeout: 120000
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
+# Setup makes "On this phone" the current server: back to FX-OC2.
+- runFlow:
+    file: ../../_sub/switch-server.yaml
+    env:
+      NAME: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.')}  # literal-ok: built from fixture data
 
 # The voice pack, set up from the composer's mic as E2E-13 does (real download, pinned by hash in the app).
 # adb: permission
@@ -227,23 +257,26 @@ tags: [linux-setup]
     env:
       HOOK: permission
       ARGS: '{"perm": "RECORD_AUDIO", "grant": true}'
-- tapOn: "Upgrade pin two"  # literal-ok: title seeded through the fixture above
+- tapOn: "Upgrade pin two(, .*)?"  # literal-ok: title seeded through the fixture above
 - tapOn: ${output.s.kitComposerVoice}
+# 2.1.4 shows it as a sheet ("Dismiss\nVoice typing"); the High accuracy pack is about 375 MB.
 - extendedWaitUntil:
-    visible: ${output.s.voiceAutoSetupTitle}
+    visible: ${output.c.voiceAutoSetupTitle}
     timeout: 30000
 - tapOn: ${output.re.voiceAutoSetupDownload}
+# 2.1.4 downloads, verifies (a minute or more on the emulator), then opens voice mode in the composer: wait for its
+# "Leave voice mode" and leave it.
 - repeat:
     times: 3
     while:
-      notVisible: ${output.s.kitVoiceListening}
+      notVisible: ${output.s.kitVoiceLeave}
     commands:
       - extendedWaitUntil:
-          visible: ${output.s.kitVoiceListening}
+          visible: ${output.s.kitVoiceLeave}
           timeout: 300000
           optional: true
-- tapOn: ${output.s.kitVoiceDone}
-- back
+- tapOn: ${output.s.kitVoiceLeave}
+- runFlow: ../../_sub/back-to-conversations.yaml
 
 # Both Quick Settings tiles (the upgrade gate checks they are still placed afterwards).
 # adb: qs-tile
@@ -267,11 +300,7 @@ tags: [linux-setup]
 
 # Arabic last.
 - runFlow: ../../_sub/open-settings.yaml
-- runFlow:
-    file: ../../_sub/settings-search.yaml
-    env:
-      QUERY: ${output.t.settingsV3Language}
-- tapOn: ${output.s.settingsV3Language}
+- runFlow: ../../_sub/open-language.yaml
 - tapOn: ${output.s.e7LocaleUiArabic}
 - stopApp
 - launchApp

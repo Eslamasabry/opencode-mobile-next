@@ -261,7 +261,7 @@ tags: [parity, slice-2, g2, connect]
 - tapOn: ${output.s.e7SetupEdit}
 - tapOn: ${output.s.e7SetupServerUrl}
 - eraseText: 160
-- inputText: ${output.fx.tlsSelfSignedUrl.replace(':8444', ':8445')}
+- inputText: ${output.fx.tlsSelfSignedUrl.replace(':8443', ':8444')}
 - hideKeyboard
 - assertNotVisible: ${output.c.serverTrustCertificatePinned}
 # The public-HTTP choice is still in force: its origin shows as confirmed, with no new consent.

@@ -1,0 +1,11 @@
+# In a conversation: open the composer's tools sheet. Flutter 2.1.4: "Attach and more" opens a tray (Photos, Camera,
+# File, More); its "More" opens the full "Prompt tools" sheet. A composer whose button opens the sheet directly works
+# too.
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.kitComposerTools}
+- runFlow:
+    when:
+      visible: ${output.s.composerTrayMore}
+    commands:
+      - tapOn: ${output.s.composerTrayMore}

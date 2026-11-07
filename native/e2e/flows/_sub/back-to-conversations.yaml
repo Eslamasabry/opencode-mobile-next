@@ -1,0 +1,11 @@
+# Press Back until the Conversations list shows (at most 6 times): leaves any Settings depth or search state.
+# "All projects" marks the list: "Conversations" alone also names a Settings group.
+appId: ${APP_ID}
+---
+- repeat:
+    times: 6
+    while:
+      notVisible: ${output.s.chatsHomeAllProjects}
+    commands:
+      - back
+- assertVisible: ${output.s.chatsHomeAllProjects}

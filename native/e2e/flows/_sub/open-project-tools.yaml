@@ -1,0 +1,14 @@
+# From Conversations: open the project tools menu of the conversation TITLE (a regex). Flutter 2.1.4: the chat
+# header's project chip ("Project app. Opens its files and tools.") opens Files, whose More menu holds Terminal,
+# Scheduled prompts and the other project tools. env: TITLE
+appId: ${APP_ID}
+---
+- tapOn: ${TITLE}  # literal-ok: the caller's title regex
+- tapOn: ${output.re.chatProjectChipFilesSemantics}
+- extendedWaitUntil:
+    visible: ${output.s.shellTabFiles}
+    timeout: 30000
+# The Files app bar's More, right of Search files (a background-connection banner may carry its own More).
+- tapOn:
+    text: ${output.s.kitMore}
+    rightOf: ${output.s.readerUiSearchFiles}
