@@ -1,0 +1,6 @@
+kit_scenes_default_text2_dark	GALLERY_FOREIGN	native KitText (part-kit_text) and KitButton (part-kit_buttons) cap the title and button label at 1.3x where Flutter scales them to 2.0; the portal scene, gaps and body text match
+kit_scenes_default_text2_1280x800_dark	GALLERY_FOREIGN	native KitText (part-kit_text) and KitButton (part-kit_buttons) cap the title and button label at 1.3x where Flutter scales them to 2.0; the portal scene, gaps and body text match
+kit_scenes_default_ar_dark	GALLERY_FOREIGN	Arabic glyph shaping of the title, body and label (part-kit_text) and the button's Arabic height (part-kit_buttons) differ; the mirrored page layout and the portal scene match
+kit_scenes_mirrored_ar_dark	DEPENDS_ON 30	the sheet's third scene is TeamDiscoverRelayScene (part-team_discover_scenes, order 30), not drawn yet; the steps strip and the link scene mirror and match
+kit_scenes_mirrored_ar_1280x800_dark	DEPENDS_ON 30	the sheet's third scene is TeamDiscoverRelayScene (part-team_discover_scenes, order 30), not drawn yet; the steps strip and the link scene mirror and match
+kit_scenes_default_ar_1280x800_dark	GALLERY_FOREIGN	Arabic glyph shaping of the title, body and label (part-kit_text) and the button's Arabic height (part-kit_buttons) differ; the mirrored page layout and the portal scene match
