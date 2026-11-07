@@ -31808,11 +31808,11 @@ abstract class AppLocalizations {
   /// **'You\'re on mobile data. This download counts against your data plan.'**
   String get voiceAutoSetupMobileData;
 
-  /// First mic tap voice setup sheet (P10.4): warning when the network type is unknown; the size is on the button
+  /// First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows
   ///
   /// In en, this message translates to:
-  /// **'This connection may count against a data plan.'**
-  String get voiceAutoSetupMaybeMetered;
+  /// **'This phone can\'t tell whether this connection costs data.'**
+  String get voiceAutoSetupUnknownNetwork;
 
   /// First mic tap voice setup sheet (P10.4): primary button on Wi-Fi; {size} is the download size
   ///

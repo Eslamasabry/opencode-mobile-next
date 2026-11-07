@@ -6690,7 +6690,7 @@
   "voiceAutoSetupOffer": "تحدّث بدلًا من الكتابة. يتحوّل الكلام إلى نص على هذا الهاتف حتى دون اتصال، ولا يغادر الصوت الهاتف أبدًا. يحتاج إلى تنزيل مرة واحدة.",
   "voiceAutoSetupPicked": "نموذج الكلام {model}، اختير بحسب ذاكرة هذا الهاتف",
   "voiceAutoSetupMobileData": "أنت تستخدم بيانات الهاتف. يُحتسب هذا التنزيل من باقة بياناتك.",
-  "voiceAutoSetupMaybeMetered": "قد يُحتسب هذا الاتصال من باقة بيانات.",
+  "voiceAutoSetupUnknownNetwork": "لا يستطيع هذا الهاتف معرفة ما إذا كان هذا الاتصال يستهلك من بياناتك.",
   "voiceAutoSetupDownload": "تنزيل {size}",
   "voiceAutoSetupDownloadMobile": "تنزيل {size} عبر بيانات الهاتف",
   "voiceAutoSetupOtherModel": "اختيار نموذج كلام آخر",

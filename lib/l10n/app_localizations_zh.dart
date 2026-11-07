@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -18935,7 +18936,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceAutoSetupMobileData => '你正在使用移动数据。此次下载会计入你的流量套餐。';
 
   @override
-  String get voiceAutoSetupMaybeMetered => '此连接可能会计入流量套餐。';
+  String get voiceAutoSetupUnknownNetwork =>
+      'This phone can\'t tell whether this connection costs data.';
 
   @override
   String voiceAutoSetupDownload(String size) {

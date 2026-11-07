@@ -7310,7 +7310,6 @@
   "voiceAutoSetupOffer": "用说话代替打字。语音会在此手机上转为文字，即使离线也可以，音频绝不会离开设备。需要一次性下载。",
   "voiceAutoSetupPicked": "已按此手机的内存挑选 {model} 语音模型",
   "voiceAutoSetupMobileData": "你正在使用移动数据。此次下载会计入你的流量套餐。",
-  "voiceAutoSetupMaybeMetered": "此连接可能会计入流量套餐。",
   "voiceAutoSetupDownload": "下载 {size}",
   "voiceAutoSetupDownloadMobile": "使用移动数据下载 {size}",
   "voiceAutoSetupOtherModel": "选择其他语音模型",

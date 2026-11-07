@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -20092,8 +20093,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'You\'re on mobile data. This download counts against your data plan.';
 
   @override
-  String get voiceAutoSetupMaybeMetered =>
-      'This connection may count against a data plan.';
+  String get voiceAutoSetupUnknownNetwork =>
+      'This phone can\'t tell whether this connection costs data.';
 
   @override
   String voiceAutoSetupDownload(String size) {

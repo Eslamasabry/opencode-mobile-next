@@ -52,8 +52,13 @@ class VoiceDownloadNotifications(private val activity: Activity) {
                 // plans Android happens to report as unmetered.
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "metered"
                 connectivity.isActiveNetworkMetered -> "metered"
-                // A VPN's underlying network cannot be proven here.
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> "unknown"
+                // Android derives a VPN's metered state from the network
+                // underneath it, so NOT_METERED here is trustworthy.
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ->
+                    VpnMetering.classify(
+                        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
+                        connectivity.isActiveNetworkMetered,
+                    )
                 else -> "unmetered"
             }
         }

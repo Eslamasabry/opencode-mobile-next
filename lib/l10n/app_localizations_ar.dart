@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -20151,8 +20152,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'أنت تستخدم بيانات الهاتف. يُحتسب هذا التنزيل من باقة بياناتك.';
 
   @override
-  String get voiceAutoSetupMaybeMetered =>
-      'قد يُحتسب هذا الاتصال من باقة بيانات.';
+  String get voiceAutoSetupUnknownNetwork =>
+      'لا يستطيع هذا الهاتف معرفة ما إذا كان هذا الاتصال يستهلك من بياناتك.';
 
   @override
   String voiceAutoSetupDownload(String size) {
