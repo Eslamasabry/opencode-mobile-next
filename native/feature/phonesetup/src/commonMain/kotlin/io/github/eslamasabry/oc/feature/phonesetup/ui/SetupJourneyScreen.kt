@@ -9,6 +9,11 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.setup.*
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.row.KitLockedRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -230,7 +235,44 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
                     retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))
             }
         },
+        footer = { OtherWays(actions) },
     )
+}
+
+/**
+ * F: lib/ui/screens/phone_setup/phone_setup_start_screen.dart:686-760 (`_otherWays`): a divider, then one row that
+ * unfolds in place. Native keeps only the way it can take: Termux setup was dropped (D7), so "Connect to a computer
+ * by address" is the one row.
+ */
+@Composable
+private fun OtherWays(actions: SetupJourneyActions) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth()) {
+        // The hairline sits on the top edge of the row and takes no height, so the step above stays the hero's
+        // 16 dp (native/docs/kit/ALIGN-RULES.md gap-step).
+        KitDivider(
+            Modifier.layout { measurable, constraints ->
+                val line = measurable.measure(constraints)
+                layout(line.width, 0) { line.place(0, -line.height) }
+            }
+        )
+        KitExpandRow(
+            title = stringResource(Res.string.phoneSetupStartOtherWays),
+            expanded = open,
+            onExpandedChange = { open = it },
+            modifier = Modifier.testTag("phone-setup-start-other-ways"),
+            // NV: the hero column is already on the 16 dp gutter; a second row inset would put the title on 32,
+            // off the page's columns (native/docs/kit/ALIGN-RULES.md start-edge).
+            inset = false,
+        ) {
+            KitRow(
+                title = stringResource(Res.string.phoneSetupStartByAddress),
+                leading = KitRowLeading.Glyph(KitIcons.link),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::connectComputer,
+            )
+        }
+    }
 }
 
 @Composable
@@ -388,6 +430,8 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
         modifier = Modifier.testTag("phone-setup-customize-done"),
         enabled = KitEnabled.of(state.canConfirm, disabled),
         working = state.working,
+        // F: lib/ui/screens/phone_setup/phone_setup_customize_sheet.dart:465 (`KitActionBlock(primary:)`, full width)
+        fullWidth = true,
     )
 }
 

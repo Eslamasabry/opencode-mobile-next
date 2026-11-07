@@ -3,6 +3,8 @@
 package io.github.eslamasabry.oc.feature.phonesetup.rb.o40
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.*
@@ -65,6 +67,12 @@ class SetupJourneyGateTest {
         override fun openStorage() {}
 
         override fun done() {}
+
+        var connected = 0
+
+        override fun connectComputer() {
+            connected++
+        }
     }
 
     // test/support/fake_setup_engine.dart: each total and estimate is the Flutter scene's registry.
@@ -419,6 +427,36 @@ class SetupJourneyGateTest {
         FlutterGoldenGate.check("setup_progress_running", frame = FlutterGoldenGate.Frame.Screen) {
             SetupJourneyScreen(state.copy(progress = progress), Actions())
         }
+    }
+
+    @Test
+    fun `other ways unfolds in place and offers connecting a computer by address`() = runComposeUiTest {
+        val actions = Actions()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(state, actions)
+            }
+        }
+        onNodeWithText("Connect to a computer by address").assertDoesNotExist()
+        onNodeWithText("Other ways").performScrollTo().performClick()
+        onNodeWithText("Connect to a computer by address").performScrollTo().assertIsDisplayed().performClick()
+        assertEquals(1, actions.connected)
+        assertEquals(0, actions.started)
+    }
+
+    @Test
+    fun `customize Done spans the sheet like Flutter's action block`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(state.copy(customizing = true), Actions())
+            }
+        }
+        val done = onNodeWithTag("phone-setup-customize-done").getUnclippedBoundsInRoot()
+        val python = onNodeWithTag("phone-setup-customize-python").getUnclippedBoundsInRoot()
+        // F: phone_setup_customize_sheet.dart:465: KitActionBlock(primary:) fills the sheet's content width, up to the
+        // 400 dp control cap.
+        val expected = minOf(python.width, 400.dp)
+        assertTrue(done.width >= expected - 1.dp, "Done is ${done.width} wide; expected $expected")
     }
 
     @Test
