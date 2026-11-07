@@ -296,7 +296,7 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
         // M-020: how the step stands changes as one QUICK cross-fade (live dot → done, failed, stopped), never in one
         // frame; reduced motion: instant.
         KitSwap(view.status) { status -> StepStatus(view, status, lines, gapBefore = counts) }
-        if (duration != null && view.status != KitToolStatus.Pending) {
+        if (duration != null && view.status != KitToolStatus.Pending && view.status != KitToolStatus.WaitingForYou) {
             val gap = if (counts || view.status != KitToolStatus.Done) Space.S2.dp else 0.dp
             KitText(duration, Modifier.padding(start = gap).testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
         }
@@ -347,9 +347,6 @@ private fun StepStatus(view: KitToolView, status: KitToolStatus, lines: Int, gap
                     )
                 }
             }
-        }
-        if (duration != null && view.status != KitToolStatus.Pending && view.status != KitToolStatus.WaitingForYou) {
-            KitText(duration, Modifier.testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
         }
     }
 }
