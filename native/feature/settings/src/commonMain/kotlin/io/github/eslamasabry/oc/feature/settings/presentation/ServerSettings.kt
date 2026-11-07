@@ -219,7 +219,10 @@ public class ServerSettingsViewModel(
             source.watch(route.profile).collect { facts ->
                 val firstLive = facts?.connected == true && mutable.value.facts?.connected != true
                 mutable.update { it.copy(loading = false, facts = facts) }
-                if (firstLive && route.page == ServerSettingsPage.Home) refresh()
+                if (firstLive && route.page == ServerSettingsPage.Home) {
+                    refresh()
+                    loadModelNames()
+                }
             }
         }
         if (
@@ -378,6 +381,17 @@ public class ServerSettingsViewModel(
                 is Outcome.Failed ->
                     mutable.update { it.copy(modelWorking = false, failure = result.failure) }
             }
+        }
+    }
+
+    /**
+     * P-020: Home names the chosen model from the server's catalog. Quiet: the row falls back to the tidied ids when
+     * the catalog can't be read, so a failure here is not the page's failure.
+     */
+    private fun loadModelNames() {
+        viewModelScope.launch {
+            val result = preferences.models(route.profile)
+            if (result is Outcome.Ok) mutable.update { it.copy(modelChoices = result.value) }
         }
     }
 
