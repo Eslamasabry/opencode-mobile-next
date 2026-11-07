@@ -11,33 +11,49 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.pace
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 
-/** E20-S10: Copy and More draw at one glyph size, so the outlined Copy no longer reads heavier than the three dots. */
-internal const val REPLY_ACTION_GLYPH: Int = 20
+/** The footer's Copy and More glyphs (Flutter `AppIconography.actionSize`, app_iconography.dart:20). */
+internal const val REPLY_ACTION_GLYPH: Int = 24
 
-/** The space between the 48 dp target's edge and its glyph: what the row shifts by to put the glyph on the text's edge. */
+/** The space between the 48 dp target's edge and its glyph's box. */
 internal const val REPLY_ACTION_INSET: Int = (FlutterKitTokens.MIN_TARGET - REPLY_ACTION_GLYPH) / 2
 
 /**
- * How far the row rises into the space above it: the glyph then sits one kit step (S1 under the reply's own S1 bottom
- * padding = S2) below the reply's last line instead of a whole target's inset lower.
+ * How far each glyph's ink stands in from the end of its box, as a share of its size (Flutter `KitOptical._ink`,
+ * kit_optical.dart:25-33, measured on the same Phosphor paths: dots-three .1875, copy .125).
  */
-internal const val REPLY_ACTION_RISE: Int = REPLY_ACTION_INSET - Space.S1
+internal const val MORE_INK_END: Float = 0.1875f
+internal const val COPY_INK_END: Float = 0.125f
 
 /**
- * The reply footer's visible Copy and More affordances (Flutter kit_turn.dart:667-737), owner's craft pass (E20-S10):
- * one compact row on the reply's own edge — the start edge its text begins on, inside the reply column (700 dp cap,
- * S4 sides), the first glyph lined up with the text — Copy then More at the same glyph size and tone, their 48 dp
- * targets side by side with no extra gap, the row tucked one kit step under the last line. [metadata] (a failed or
- * stopped line, an end note) follows the actions on the same row.
+ * How far the actions move toward the end edge (Flutter `_footerRow` reach, kit_turn.dart:676-684): the last glyph's
+ * ink then ends on the turn's edge, where the prompt bubble's does, not inside its 48 dp target.
+ */
+internal fun replyActionReach(more: Boolean): Float =
+    REPLY_ACTION_INSET + REPLY_ACTION_GLYPH * if (more) MORE_INK_END else COPY_INK_END
+
+/** At this text scale and above the meta words move above the actions (Flutter `_kWrapTextScale`). */
+internal const val FOOTER_WRAP_TEXT_SCALE: Float = 1.3f
+
+/**
+ * The reply footer (Flutter `KitTurn._footerRow`, kit_turn.dart:667-737; C-003): one row in the reply column (700 dp
+ * cap, S4 sides). Copy then More sit at the **end**, 24 dp glyphs in 48 dp targets 8 dp apart, moved toward the edge
+ * so the last glyph's ink ends where the prompt bubble's edge does. [metadata] fills the start of the line: a stopped
+ * reply's [KitReplyNote], then the newest turn's [KitReplyMeta] ("7:01 PM · model · 150 tok"), then any other line
+ * (an end note). From 1.3× text that start column moves above the actions, which stay at the end.
+ *
+ * Inside a [KitTurn] the row keeps no padding of its own: the turn puts it 4 dp under the reply
+ * ([KitTurnNext.Footer]). Outside one, the reply block's own 4 dp does the same.
  *
  * [arriving] (M-009): the turn has just ended in front of the person, so the row enters as Flutter's `KitEntrance`
  * does: it fades in and rises [FOOTER_RISE_DP] into place over STANDARD (250 ms) on Enter, paint only (the row is
@@ -54,33 +70,59 @@ public fun KitReplyFooter(
     arriving: Boolean = false,
     metadata: @Composable () -> Unit = {},
 ) {
-    Row(
-        modifier.footerEntrance(arriving).fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (onCopy != null || onMore != null)
-            Row(Modifier.replyActionEdge().testTag("kit-reply-actions")) {
-                if (onCopy != null)
-                    KitIconButton(KitIcons.copy, copyLabel, onCopy, tone = TextTone.Secondary, size = REPLY_ACTION_GLYPH)
-                if (onMore != null)
-                    KitIconButton(KitIcons.more, moreLabel, onMore, tone = TextTone.Secondary, size = REPLY_ACTION_GLYPH)
+    val stacked = LocalDensity.current.fontScale >= FOOTER_WRAP_TEXT_SCALE
+    val frame = modifier.footerEntrance(arriving).fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp)
+    val hasActions = onCopy != null || onMore != null
+    if (stacked) {
+        Column(frame) {
+            metadata()
+            if (hasActions)
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    ReplyActions(copyLabel, moreLabel, onCopy, onMore)
+                }
+        }
+    } else {
+        Row(frame, verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) { metadata() }
+            if (hasActions) {
+                Spacer(Modifier.width(Space.S2.dp))
+                ReplyActions(copyLabel, moreLabel, onCopy, onMore)
             }
-        Box(Modifier.weight(1f)) { metadata() }
+        }
     }
 }
 
 /**
- * Shifts the action row toward the start edge by the target's inset (mirrored under RTL by `placeRelative`) and up by
- * [REPLY_ACTION_RISE], and takes that much less room, so the glyphs line up with the reply text without shrinking a
- * target: the targets keep their full 48 dp and still take taps (nothing above clips them).
+ * The newest turn's meta words at the start of its footer ("7:01 PM · Parity model · 150 tok"; Flutter
+ * kit_turn.dart:719-721): Caption, tertiary. Goes in [KitReplyFooter]'s `metadata`.
  */
-private fun Modifier.replyActionEdge(): Modifier = layout { measurable, constraints ->
-    val inset = REPLY_ACTION_INSET.dp.roundToPx()
-    val rise = REPLY_ACTION_RISE.dp.roundToPx()
-    val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-    val width = (placeable.width - inset).coerceAtLeast(0)
-    val height = (placeable.height - rise).coerceAtLeast(0)
-    layout(width, height) { placeable.placeRelative(-inset, -rise) }
+@Composable
+public fun KitReplyMeta(text: String, modifier: Modifier = Modifier) {
+    KitText(text, modifier.testTag(REPLY_META_TAG), role = TypeRole.Caption, tone = TextTone.Tertiary)
+}
+
+/**
+ * A stopped reply's note leading its footer line ("This reply was stopped before it finished."; Flutter
+ * kit_turn.dart:536-546, :697-712): Secondary words, the meta under it, Copy and More at the line's end. Goes in
+ * [KitReplyFooter]'s `metadata`, before [KitReplyMeta].
+ */
+@Composable
+public fun KitReplyNote(text: String, modifier: Modifier = Modifier) {
+    KitText(text, modifier, role = TypeRole.Secondary, tone = TextTone.Secondary)
+}
+
+public const val REPLY_META_TAG: String = "kit-reply-meta"
+
+@Composable
+private fun ReplyActions(copyLabel: String, moreLabel: String, onCopy: (() -> Unit)?, onMore: (() -> Unit)?) {
+    // Placed (painted and hit-tested) toward the end; the row's layout keeps its width, as Flutter's translate.
+    Row(Modifier.offset(x = replyActionReach(more = onMore != null).dp).testTag("kit-reply-actions")) {
+        if (onCopy != null)
+            KitIconButton(KitIcons.copy, copyLabel, onCopy, tone = TextTone.Secondary, size = REPLY_ACTION_GLYPH)
+        if (onCopy != null && onMore != null) Spacer(Modifier.width(Space.S2.dp))
+        if (onMore != null)
+            KitIconButton(KitIcons.more, moreLabel, onMore, tone = TextTone.Secondary, size = REPLY_ACTION_GLYPH)
+    }
 }
 
 /** Flutter `KitEntrance.rise` (6 dp; native `MotionTokens.ENTRANCE_RISE_DP` still says 8, a `:ui:design` item). */
