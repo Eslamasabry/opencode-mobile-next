@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReadiness
 import io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -87,7 +88,24 @@ public data class ThisPhoneUi(
     val details: PhoneDetailsUi = PhoneDetailsUi(),
     val detailsOpen: Boolean = false,
     val installedOpen: Boolean = false,
-)
+) {
+    /**
+     * The recovery notice to show, or null. P-115: after Android stops the app, the exit notice
+     * already says so; the recovery line "Android stopped the app. …" would repeat it. While the
+     * exit notice is up, recovery shows only what it adds: some services are not ready yet, or
+     * everything answers again when the exit notice has not said so.
+     */
+    val recoveryNotice: LifecycleReadiness?
+        get() {
+            val report = lifecycle?.takeIf { it.showNotice } ?: return null
+            val exit = exitNotice ?: return report.readiness
+            return when (report.readiness) {
+                LifecycleReadiness.Partial -> report.readiness
+                LifecycleReadiness.Ready -> report.readiness.takeUnless { exit.restored }
+                else -> null
+            }
+        }
+}
 
 /** Intents only (ADR §9.1). */
 public interface ThisPhoneActions {

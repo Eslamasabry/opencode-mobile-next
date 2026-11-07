@@ -10,6 +10,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReadiness
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport
+import io.github.eslamasabry.oc.engine.runtime.recovery.PreviousExitKind
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitNotice
+import kotlin.time.Instant
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -114,6 +123,31 @@ class PhoneScreensTest {
             onNodeWithText("Running on this phone").performClick()
             onNodeWithText("Keep running in the background").performClick()
             assertEquals(listOf("act RestartNow", "openRunning", "openKeepRunning"), calls.seen.filterNot { it.startsWith("shown") })
+        }
+
+    @Test
+    fun `P-115 after Android stops the app This phone says it once, on the rows' start edge`() =
+        runComposeUiTest {
+            val calls = Calls()
+            val ui =
+                ThisPhoneUi(
+                    answer = ThisPhoneAnswer(AnswerTone.Off, AnswerHeadline.StoppedItself, primary = PhoneAct.RestartNow),
+                    details = PhoneDetailsUi(installed = true),
+                    exitNotice = PhoneExitNotice(PhoneExitKind.Killed, Instant.fromEpochMilliseconds(0), recoveryAllowed = true),
+                    lifecycle =
+                        LifecycleReport(
+                            readiness = LifecycleReadiness.Stopped,
+                            exitKind = PreviousExitKind.Killed,
+                            hadServices = true,
+                        ),
+                )
+            setContent { Themed { ThisPhoneScreen(ui, calls) } }
+            onNodeWithText("Android stopped the app while OpenCode was running").assertExists()
+            // The recovery line repeated the exit notice ("Android stopped the app. OpenCode is stopped.").
+            onAllNodesWithText("Android stopped the app. OpenCode is stopped.").assertCountEquals(0)
+            onAllNodesWithTag("kit-notice").assertCountEquals(1)
+            // The info mark starts on the gutter (16 dp), the rows' edge, not on the screen edge.
+            onNodeWithTag("kit-notice").assertLeftPositionInRootIsEqualTo(16.dp)
         }
 
     @Test
