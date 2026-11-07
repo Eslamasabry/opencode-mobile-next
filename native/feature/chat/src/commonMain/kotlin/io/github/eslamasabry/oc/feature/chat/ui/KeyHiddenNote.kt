@@ -6,10 +6,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ClipKind
+import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderClip
+import io.github.eslamasabry.oc.feature.chat.presentation.CopiedUi
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptCopiedMasked
+import io.github.eslamasabry.oc.ui.words.res.kitCopiedMasked
+import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
 
 /** How long the "a key was hidden" line stays (the kit's tip hold); the person can dismiss it sooner. */
 private const val KEY_HIDDEN_HOLD_MS = 4000L
@@ -42,4 +50,17 @@ internal fun KeyHiddenNote(copyId: Long?, masked: Boolean, message: String, dism
             )
         }
     )
+}
+
+/**
+ * E15-S06: the on-screen notes for every masked copy on the chat screen — a message's or reply's Copy ([copied]) and the
+ * ⋯ menu's Copy transcript ([clip]). Call it inside the chat's `KitScreen`: the screen owns the window's one status
+ * slot, and [KeyHiddenNote] outside it has nothing to contribute to.
+ */
+@Composable
+internal fun CopyKeyHiddenNotes(copied: CopiedUi?, clip: HeaderClip?) {
+    val dismiss = stringResource(Res.string.kitSheetDismiss)
+    KeyHiddenNote(copied?.id, copied?.masked == true, stringResource(Res.string.kitCopiedMasked), dismiss)
+    val transcript = clip?.takeIf { it.kind == ClipKind.Transcript }
+    KeyHiddenNote(transcript?.id, transcript?.masked == true, stringResource(Res.string.chatUiTranscriptCopiedMasked), dismiss)
 }

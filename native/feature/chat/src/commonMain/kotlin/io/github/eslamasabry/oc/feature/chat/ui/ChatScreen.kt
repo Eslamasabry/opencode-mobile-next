@@ -645,6 +645,10 @@ public fun ChatScreen(
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
                         Column {
+                            // E15-S06: a copy the redactor changed says so in the screen's status
+                            // line. It must be composed inside KitScreen: the screen owns the one
+                            // status slot, and a contribution from outside it has nowhere to go.
+                            CopyKeyHiddenNotes(state.copied, header?.state?.clip)
                             // Notification opt-in is a review sheet; pending-send recovery uses the
                             // status slot.
                             replyOffer?.invoke()
@@ -840,13 +844,6 @@ public fun ChatScreen(
                     stringResource(
                         if (state.copied?.masked == true) Res.string.kitCopiedMasked else Res.string.kitCopied
                     ),
-                )
-                // E15-S06: and on screen when the redactor hid something, whichever message was copied.
-                KeyHiddenNote(
-                    copyId = state.copied?.id,
-                    masked = state.copied?.masked == true,
-                    message = stringResource(Res.string.kitCopiedMasked),
-                    dismissLabel = stringResource(Res.string.kitSheetDismiss),
                 )
             }
         }
