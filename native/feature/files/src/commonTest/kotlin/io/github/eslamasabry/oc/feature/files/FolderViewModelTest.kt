@@ -48,6 +48,22 @@ class FolderViewModelTest {
         )
 
     @Test
+    fun `P-025 the root is titled with the project's folder name`() = runTest {
+        assertEquals("app", vm(connections = FakeConnections(FakeFileGateway(tree), dir = "/work/app/")).state.value.projectName)
+        // Unknown folder: no name, and the screen falls back to "Project".
+        assertEquals(null, vm(connections = FakeConnections(FakeFileGateway(tree), dir = null)).state.value.projectName)
+    }
+
+    @Test
+    fun `P-025 the project's folder name is the last segment of its path`() {
+        assertEquals("my-app", io.github.eslamasabry.oc.feature.files.presentation.projectFolderName("/home/me/my-app/"))
+        assertEquals("api", io.github.eslamasabry.oc.feature.files.presentation.projectFolderName("C:\\work\\api"))
+        assertEquals(null, io.github.eslamasabry.oc.feature.files.presentation.projectFolderName("/"))
+        assertEquals(null, io.github.eslamasabry.oc.feature.files.presentation.projectFolderName("C:\\"))
+        assertEquals(null, io.github.eslamasabry.oc.feature.files.presentation.projectFolderName(null))
+    }
+
+    @Test
     fun `B-NAV-026 Files opened from a conversation lists that conversation's project root`() = runTest {
         val gateway = FakeFileGateway(tree)
         val model = vm(connections = FakeConnections(gateway))

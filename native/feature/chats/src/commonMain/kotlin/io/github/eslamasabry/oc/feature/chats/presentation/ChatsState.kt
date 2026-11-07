@@ -56,15 +56,19 @@ public object ChatsState {
                 else -> ChatsPhase.List
             }
         val (today, earlier) = visible.partition { it.lastActivityMs >= startOfTodayMs }
+        val todayRows = today.map { row(it, nowMs) }
+        val earlierRows = earlier.map { row(it, nowMs) }
+        val briefUi = if (filters.identities == null) briefUi(brief, roots, nowMs) else null
         return ChatsUi(
             phase = phase,
-            today = today.map { row(it, nowMs) }.toImmutableList(),
-            earlier = earlier.map { row(it, nowMs) }.toImmutableList(),
+            today = todayRows.toImmutableList(),
+            earlier = earlierRows.toImmutableList(),
+            showAgents = agentsDiffer(todayRows + earlierRows + briefUi?.rows.orEmpty()),
             needsYou = roots.count { it.status == ChatStatus.NeedsYou },
             running = roots.count { it.status == ChatStatus.Running },
             projects = chips.toImmutableList(),
             filters = filters,
-            brief = if (filters.identities == null) briefUi(brief, roots) else null,
+            brief = briefUi,
             incomplete = feed.incompleteSources,
             settingsAvailable = settingsAvailable,
             projectChoices = projects.toImmutableList(),
@@ -92,6 +96,10 @@ public object ChatsState {
                     .toImmutableList(),
         )
     }
+
+    /** Whether [rows] come from more than one agent, told apart by mark and name (P-021). */
+    public fun agentsDiffer(rows: List<ConversationRowUi>): Boolean =
+        rows.distinctBy { it.agentMark to it.agentName }.size > 1
 
     private fun matches(item: ChatFeedItem, query: String): Boolean {
         val q = query.trim()
@@ -161,7 +169,7 @@ public object ChatsState {
      * Brief rows are the feed rows of the sessions it names (same profile); nothing when it has
      * nothing to say.
      */
-    private fun briefUi(brief: ReturnBrief, roots: List<ChatFeedItem>): BriefUi? {
+    private fun briefUi(brief: ReturnBrief, roots: List<ChatFeedItem>, nowMs: Long): BriefUi? {
         if (brief.isEmpty && !brief.unknown && brief.hiddenUnreviewed + brief.hiddenRequests == 0)
             return null
         // A session id is local to a source and folder. Unknown scope or an ambiguous match fails
@@ -183,7 +191,8 @@ public object ChatsState {
                 .mapNotNull(::match)
                 .distinctBy { it.identity }
                 .map {
-                    row(it).let { r ->
+                    // With its time, like the Today rows under it (P-021).
+                    row(it, nowMs).let { r ->
                         if (r.status == RowStatus.None) r.copy(status = RowStatus.Done) else r
                     }
                 }

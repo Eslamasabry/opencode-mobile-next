@@ -79,6 +79,7 @@ import io.github.eslamasabry.oc.ui.words.res.filesPreferencesFailed
 import io.github.eslamasabry.oc.ui.words.res.filesProjectRoot
 import io.github.eslamasabry.oc.ui.words.res.filesReviewStorage
 import io.github.eslamasabry.oc.ui.words.res.filesRowActions
+import io.github.eslamasabry.oc.ui.words.res.gestureEquivFileRowActions
 import io.github.eslamasabry.oc.ui.words.res.filesScopedEmpty
 import io.github.eslamasabry.oc.ui.words.res.filesSearchInside
 import io.github.eslamasabry.oc.ui.words.res.filesSearchNames
@@ -165,7 +166,8 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
     // E12-S04: one query for the field and the bar's Back, so Back closes a search before it leaves.
     val typed = rememberTextFieldState()
     val title =
-        if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
+        if (state.path.isEmpty()) state.projectName ?: stringResource(Res.string.filesProjectRoot)
+        else state.name
     val loadingSince =
         remember(state.phase, state.query, state.surface, state.searching) {
             kotlin.time.TimeSource.Monotonic.markNow()
@@ -676,11 +678,14 @@ private fun EntryRow(node: FileNode, state: FolderUi, actions: FolderActions) {
             supporting = detail,
             supportingMaxLines = 2,
             titleIsFileName = true,
+            // The row's acts behind the same quiet ⋯ as every other list row, not a green word on each row (P-025).
             trailing =
-                KitRowTrailing.Action(
+                KitRowTrailing.IconAction(
                     KitLineAction(
                         stringResource(Res.string.filesRowActions),
                         { actions.showActions(node) },
+                        semanticsLabel = stringResource(Res.string.gestureEquivFileRowActions, node.name),
+                        icon = KitIcons.more,
                     )
                 ),
             onClick = { actions.open(node) },
@@ -734,7 +739,8 @@ internal fun folderBarActions(
                 icon = KitIcons.terminal,
             )
         )
-    add(KitLineAction(stringResource(Res.string.fileReload), actions::retry, icon = KitIcons.sync))
+    // The single-arrow reload every other list uses: the two-arrow sync glyph read heavier than Back and ⋯ (P-025).
+    add(KitLineAction(stringResource(Res.string.fileReload), actions::retry, icon = KitIcons.retry))
     add(
         KitLineAction(
             stringResource(Res.string.filesViewOptions),

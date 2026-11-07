@@ -31,4 +31,35 @@ class LooksCaptureTest {
         val ui = ChatsState.build(ChatFeedSnapshot(items.toImmutableList()), ReturnBrief.None, ChatsFilters(), now - 6 * hour, true, now)
         Looks.shoot("native-02-conversations-home") { ChatsScreen(ui, RecordingChatsActions()) }
     }
+
+    /**
+     * P-021/P-023 at font scale 1.0 and 1.3: one agent (no tiles), a finished group above the list headed and ruled
+     * like Today, two connections (the chip with its chevron).
+     */
+    @Test
+    fun homeOneAgentWithBrief() {
+        val items = listOf(
+            item("a", "/work/api", now - 2 * min, "Fix login redirect loop", ChatStatus.Running),
+            item("c", "/work/api", now - 40 * min, "Rate limit the upload endpoint", unseen = true),
+            item("h", "/work/web", now - 50 * min, "Tidy the theme tokens", unseen = true),
+            item("d", "/work/mobile", now - 5 * hour, "Migrate the chat list to Compose"),
+            item("e", "/work/web", now - 30 * hour, "Why is the build slow on CI?"),
+        )
+        val brief =
+            ReturnBrief.build(
+                listOf(
+                    io.github.eslamasabry.oc.core.model.Session(io.github.eslamasabry.oc.core.common.ids.SessionId("c"), directory = "/work/api", time = io.github.eslamasabry.oc.core.model.SessionTime(idleMs = now - 40 * min)),
+                    io.github.eslamasabry.oc.core.model.Session(io.github.eslamasabry.oc.core.common.ids.SessionId("h"), directory = "/work/web", time = io.github.eslamasabry.oc.core.model.SessionTime(idleMs = now - 50 * min)),
+                ),
+                true, false, { true }, { false }, { null }, scope = BRIEF_SCOPE,
+            )
+        val sources = kotlinx.collections.immutable.persistentListOf(
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi(P1, "My computer", shown = true, main = true, onThisPhone = false, unreachable = false),
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi(io.github.eslamasabry.oc.core.common.ids.ProfileId("p2"), "Build VPS", shown = false, main = false, onThisPhone = false, unreachable = false),
+        )
+        val ui = ChatsState.build(ChatFeedSnapshot(items.toImmutableList()), brief, ChatsFilters(), now - 6 * hour, true, now)
+            .copy(home = io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState(sources = sources))
+        for ((suffix, scale) in listOf("" to 1f, "-text13" to 1.3f))
+            Looks.shoot("p021-home-one-agent-brief$suffix", fontScale = scale) { ChatsScreen(ui, RecordingChatsActions()) }
+    }
 }

@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.feature.servers.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -25,7 +25,9 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * Flutter _ServerRow: state before kind, addresses in Details, named actions in the visible More
- * menu.
+ * menu. Each fact once (screen standard §2): the kind is said only when the saved servers are not
+ * all the same kind, and two servers whose names read the same are told apart by a number, never
+ * by their address (that stays in Details).
  */
 @Composable
 internal fun ServerSavedRows(
@@ -36,7 +38,8 @@ internal fun ServerSavedRows(
 ) {
     var detailsFor by remember { mutableStateOf<ProfileId?>(null) }
     val ordered = savedServersByUrgency(state)
-    val lookAlike = lookAlikeNames(ordered.map { it.name })
+    val names = distinctServerNames(state.servers.map { it.id to it.name })
+    val showKind = kindsDiffer(state.servers.map { state.rows.facts[it.id]?.backend })
     KitRowGroup(leadingTiles = true) {
         ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
@@ -63,9 +66,10 @@ internal fun ServerSavedRows(
                         else Res.string.e7SetupPasswordRequired
                     )
                 else null
+            val name = names[server.id] ?: server.name
             val supporting =
                 kitServerSupporting(
-                    kind = kind,
+                    kind = if (showKind) kind else "",
                     connected = server.connected,
                     waiting = waiting,
                     running = facts?.running ?: 0,
@@ -128,23 +132,16 @@ internal fun ServerSavedRows(
                 )
             }
             KitRow(
-                title = server.name,
-                supporting =
-                    buildAnnotatedString {
-                        // Two saved servers whose names read the same are told apart by where they are.
-                        if (nameKey(server.name) in lookAlike) {
-                            append(plainAddress(server.address))
-                            append(" · ")
-                        }
-                        append(supporting)
-                    },
+                title = name,
+                supporting = withoutTrailingSeparator(supporting),
                 supportingMaxLines =
                     2, // F: lib/ui/screens/servers/server_rows.dart:191-196
                 leading =
                     if (waiting <= 0)
+                        // In the rows' own tile, as on home and Settings, so the lead column lines up.
                         KitRowLeading.Glyph(
                             if (phone) KitIcons.phone else KitIcons.server,
-                            tile = false,
+                            tile = true,
                         )
                     else null,
                 state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,
@@ -157,7 +154,7 @@ internal fun ServerSavedRows(
                     if (state.newConversation) actions.create(server.id)
                     else actions.settings(server.id)
                 },
-                trailing = KitRowTrailing.Menu(server.name, items, title = server.name),
+                trailing = KitRowTrailing.Menu(name, items, title = name),
             )
         }
     }
@@ -166,7 +163,7 @@ internal fun ServerSavedRows(
         visible = details != null,
         onDismissRequest = { detailsFor = null },
         title =
-            details?.let { stringResource(Res.string.serverRowDetailsTitle, it.name) }
+            details?.let { stringResource(Res.string.serverRowDetailsTitle, names[it.id] ?: it.name) }
                 ?: stringResource(Res.string.kitDetails),
     ) {
         details?.let {
@@ -213,9 +210,34 @@ internal fun nameKey(name: String): String = name.lowercase().filter { it.isLett
 internal fun lookAlikeNames(names: List<String>): Set<String> =
     names.groupingBy(::nameKey).eachCount().filterValues { it > 1 }.keys
 
-/** An address as a person reads it: host, port and path, without scheme, sign-in part, query or trailing slash. */
-internal fun plainAddress(address: String): String {
-    val rest = address.substringAfter("://").substringBefore('?').substringBefore('#')
-    val host = rest.substringBefore('/')
-    return (host.substringAfterLast('@') + rest.removePrefix(host)).trimEnd('/')
+/**
+ * The name each saved server is shown under, in saved order. Names that read the same get their number among
+ * them ("My computer (1)", "My computer (2)", Flutter `_distinctServerName`'s last step); the address is technical
+ * and stays in Details. Only how the list presents a name: the stored name is never changed.
+ */
+internal fun <K> distinctServerNames(servers: List<Pair<K, String>>): Map<K, String> {
+    val lookAlike = lookAlikeNames(servers.map { it.second })
+    val seen = HashMap<String, Int>()
+    return servers.associate { (id, name) ->
+        val key = nameKey(name)
+        if (key !in lookAlike) id to name
+        else {
+            val n = (seen[key] ?: 0) + 1
+            seen[key] = n
+            id to "${name.trim()} ($n)"
+        }
+    }
+}
+
+/**
+ * Whether the rows say what kind of server each is: only when the list holds more than one kind. A list of four
+ * OpenCode 2 servers saying "OpenCode 2" four times tells nobody anything (screen standard §2, each fact once).
+ */
+internal fun kindsDiffer(kinds: List<BackendKind?>): Boolean = kinds.distinct().size > 1
+
+/** The supporting line without the " · " the kit leaves after its last word when the kind is not said. */
+internal fun withoutTrailingSeparator(line: AnnotatedString): AnnotatedString {
+    var end = line.length
+    while (end > 0 && (line[end - 1] == ' ' || line[end - 1] == '·' || line[end - 1] == '\u00a0')) end--
+    return if (end == line.length) line else line.subSequence(0, end)
 }

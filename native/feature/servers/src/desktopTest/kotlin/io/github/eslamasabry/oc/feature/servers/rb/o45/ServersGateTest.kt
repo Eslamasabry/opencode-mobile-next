@@ -151,6 +151,77 @@ class ServersGateTest {
                 .assertCountEquals(2)
         }
 
+    /** The emulator's list (P-019): four OpenCode 2 servers, two saved as "My computer". */
+    private fun sameKindState(): ServersUi {
+        val list =
+            persistentListOf(
+                SavedServer(ProfileId("one"), "My computer", "http://10.0.2.2:4123", true),
+                SavedServer(ProfileId("two"), "My computer", "http://10.0.2.2:4124", false),
+                SavedServer(ProfileId("vps"), "Build VPS", "https://build.example:4096", false),
+                SavedServer(ProfileId("lab"), "Lab", "https://lab.example", false),
+            )
+        return ServersUi(
+            servers = list,
+            rows =
+                ServerRowsState(
+                    facts =
+                        list
+                            .associate {
+                                it.id to
+                                    ServerRowFacts(
+                                        BackendKind.OpenCode2,
+                                        null,
+                                        "",
+                                        false,
+                                        0,
+                                        0,
+                                        if (it.id.raw == "two") 1 else 0,
+                                    )
+                            }
+                            .toPersistentMap()
+                ),
+        )
+    }
+
+    @Test
+    fun `P-019 a list of one kind says each fact once, with no addresses and distinct names`() =
+        runComposeUiTest {
+            setContent { ServersTestTheme { ServersScreen(sameKindState(), Actions()) } }
+            onNodeWithText("My computer (1)").assertExists()
+            onNodeWithText("My computer (2)").assertExists()
+            onAllNodesWithText("OpenCode 2", substring = true, useUnmergedTree = true)
+                .assertCountEquals(0)
+            onAllNodesWithText("10.0.2.2", substring = true, useUnmergedTree = true)
+                .assertCountEquals(0)
+            onNodeWithText("1 prompt waiting to send · Not connected", useUnmergedTree = true)
+                .assertExists()
+            onAllNodesWithText("Not connected", useUnmergedTree = true).assertCountEquals(2)
+        }
+
+    @Test
+    fun `P-019 the address is still one tap away in Details`() = runComposeUiTest {
+        setContent { ServersTestTheme { ServersScreen(sameKindState(), Actions()) } }
+        onNodeWithContentDescription("My computer (2)").performClick()
+        onNodeWithText("Details").performClick()
+        onNodeWithText("http://10.0.2.2:4124").assertExists()
+    }
+
+    @Test
+    fun saved_servers_same_kind_looks() {
+        for ((suffix, scale) in listOf("" to 1f, "-text13" to 1.3f))
+            io.github.eslamasabry.oc.feature.servers.Looks.shoot(
+                "p019-servers-same-kind$suffix",
+                fontScale = scale,
+            ) {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink provides
+                        io.github.eslamasabry.oc.ui.kit.input.KitSecretSink {}
+                ) {
+                    ServersScreen(sameKindState(), Actions())
+                }
+            }
+    }
+
     @Test
     fun saved_servers() {
         FlutterGoldenGate.check("servers_servers_loaded", frame = FlutterGoldenGate.Frame.Screen) {

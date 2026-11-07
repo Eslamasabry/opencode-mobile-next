@@ -87,6 +87,8 @@ public data class FolderUi(
     val storageResult: FilesStorageResult? = null,
     val actionFailure: Failure? = null,
     val canTerminal: Boolean = false,
+    /** The project folder's own name ("my-app"), once the server says where the project is; null until then. */
+    val projectName: String? = null,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -190,6 +192,11 @@ public class FolderViewModel(
             )
         }
         load()
+        // The root is titled with the project's own name, not the word "Project" (P-025).
+        viewModelScope.launch {
+            val name = projectFolderName(connections.directory(route.from))
+            if (name != null) local.update { it.copy(projectName = name) }
+        }
     }
 
     override fun terminal() {
@@ -667,3 +674,12 @@ public class FolderViewModel(
         public fun create(@Assisted route: FilesRoute.Folder): FolderViewModel
     }
 }
+
+/**
+ * The last segment of the project's folder as the server reports it ("/home/me/my-app/" → "my-app", "C:\work\api" →
+ * "api"); null when it is unknown or is a bare root.
+ */
+internal fun projectFolderName(directory: String?): String? =
+    directory?.trim()?.trimEnd('/', '\\')?.substringAfterLast('/')?.substringAfterLast('\\')?.takeIf {
+        it.isNotEmpty() && !it.endsWith(':')
+    }
