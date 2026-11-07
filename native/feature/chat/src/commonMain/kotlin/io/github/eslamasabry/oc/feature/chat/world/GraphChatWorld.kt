@@ -1220,7 +1220,7 @@ internal class GraphChatWorld(
                             ComposerModel(
                                 cached.providerId,
                                 cached.modelId,
-                                cached.modelId,
+                                ModelNames.fromId(cached.modelId),
                                 supportsAttachments = false,
                             ),
                         variant = cached.variant,

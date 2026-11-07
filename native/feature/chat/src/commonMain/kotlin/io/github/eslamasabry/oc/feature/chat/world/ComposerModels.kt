@@ -100,6 +100,20 @@ public class RecentModels(
  * null while the store cannot be read yet; [save] never blocks the pick. No binding keeps the picks
  * for this app run only.
  */
+/**
+ * P-005: a model named before the catalog has loaded never shows its raw id: "crouton-alpha-free" reads "Crouton
+ * Alpha Free" (the catalog's own name replaces it once loaded). A provider prefix ("openai/gpt-5") is dropped;
+ * words keep their own capitals and digits ("gpt-5" → "Gpt 5", "GLM-4.6" → "GLM 4.6").
+ */
+public object ModelNames {
+    public fun fromId(modelId: String): String {
+        val last = modelId.trim().substringAfterLast('/').ifEmpty { return modelId }
+        val words = last.split('-', '_', ' ').filter { it.isNotEmpty() }
+        if (words.isEmpty()) return last
+        return words.joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
+    }
+}
+
 public data class SavedSessionModel(
     val providerId: String,
     val modelId: String,
