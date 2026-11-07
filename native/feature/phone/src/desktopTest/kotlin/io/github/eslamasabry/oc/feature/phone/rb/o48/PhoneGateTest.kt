@@ -3,6 +3,7 @@
 package io.github.eslamasabry.oc.feature.phone.rb.o48
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.phone.presentation.*
 import io.github.eslamasabry.oc.feature.phone.ui.KeepRunningScreen
@@ -143,6 +144,41 @@ class PhoneGateTest {
         }
     }
 
+    private val runningState =
+        ThisPhoneUi(
+            answer = ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running),
+            details =
+                PhoneDetailsUi(
+                    installed = true,
+                    installedNames = persistentListOf("Linux base", "Git and SSH", "Node.js", "OpenCode"),
+                ),
+            version = VersionRowUi("1.18.29", UpdateRow.Available("2.1.1")),
+            serverRows = persistentListOf(ServerRow.Restart, ServerRow.Stop),
+        )
+
+    @Test
+    fun `installed tools read as one sentence like Flutter's joinSetupNames`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ThisPhoneScreen(runningState, PhoneActions)
+            }
+        }
+        onNodeWithText("Linux base, Git and SSH, Node.js and OpenCode").assertExists()
+    }
+
+    @Test
+    fun `the update row leads the tools list, a section below the server rows`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                ThisPhoneScreen(runningState, PhoneActions)
+            }
+        }
+        val stop = onNodeWithText("Stop OpenCode on this phone").getUnclippedBoundsInRoot()
+        val update = onNodeWithText("Update OpenCode").getUnclippedBoundsInRoot()
+        // F: this_phone_screen.dart:1009-1135: the server group, a section gap, then the list the update row leads.
+        assertTrue(update.top - stop.bottom >= 16.dp, "Update sits ${update.top - stop.bottom} under Stop")
+    }
+
     @Test
     fun running() {
         FlutterGoldenGate.check(
@@ -150,14 +186,24 @@ class PhoneGateTest {
             frame = FlutterGoldenGate.Frame.Screen,
         ) {
             ThisPhoneScreen(
+                // test/revamp/screen_phone_1_golden_test.dart `phone_this_phone_running`: PhoneLinux(running: true)
+                // uses 700 MB, the in-app profile is saved but not connected (Use this phone's server), and the
+                // pinned OpenCode 2.1.1 is offered.
                 ThisPhoneUi(
-                    answer = ThisPhoneAnswer(AnswerTone.Ok, AnswerHeadline.Running),
+                    answer =
+                        ThisPhoneAnswer(
+                            AnswerTone.Ok,
+                            AnswerHeadline.Running,
+                            line = AnswerLine.Storage(700L * 1024 * 1024),
+                        ),
                     details =
                         PhoneDetailsUi(
                             installed = true,
+                            canConnect = true,
                             installedNames =
                                 persistentListOf("Linux base", "Git and SSH", "Node.js", "OpenCode"),
                         ),
+                    version = VersionRowUi("1.18.29", UpdateRow.Available("2.1.1")),
                     serverRows = persistentListOf(ServerRow.Restart, ServerRow.Stop),
                 ),
                 PhoneActions,
