@@ -77,6 +77,10 @@ public data class BasicComposerUi(
     val attachKinds: Set<AttachKind> = emptySet(),
     val readOnly: io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat? = null,
     val phrases: List<String> = emptyList(),
+    /** E20-S20: the server takes files with a prompt (Flutter `promptAttachmentsSupported`); off = no tray. */
+    val attachmentsSupported: Boolean = true,
+    /** E20-S20: the server takes pictures only (Flutter `promptImagesOnly`): the tray has no File. */
+    val imagesOnly: Boolean = false,
 ) {
     override fun toString(): String =
         "BasicComposerUi(available=$available, sending=$sending, steers=$steers, draft=$draft, " +
@@ -309,6 +313,8 @@ public class BasicComposerViewModel(
                                     !draft.sendBlocked,
                             sending = inFlight,
                             steers = t.run.busy && caps.promptSteering,
+                            attachmentsSupported = caps.promptAttachments,
+                            imagesOnly = caps.promptImagesOnly,
                             draft = draft,
                             targetKey = targetKey,
                             canRepeat =
