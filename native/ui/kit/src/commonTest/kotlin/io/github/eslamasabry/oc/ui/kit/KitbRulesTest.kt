@@ -30,7 +30,6 @@ import io.github.eslamasabry.oc.ui.kit.motion.iconTurn
 import io.github.eslamasabry.oc.ui.kit.motion.kitDimAlpha
 import io.github.eslamasabry.oc.ui.kit.motion.KitDimLevel
 import io.github.eslamasabry.oc.ui.kit.motion.pace
-import io.github.eslamasabry.oc.ui.kit.motion.spatialFast
 import io.github.eslamasabry.oc.ui.kit.motion.tipFade
 import io.github.eslamasabry.oc.ui.kit.motion.travelOrNull
 import io.github.eslamasabry.oc.ui.kit.nav.KitTab
@@ -106,7 +105,8 @@ class KitbRulesTest {
                 "KitAnimatedValue", "KitDim", "KitRefresh.pull", "KitRefresh.breath", "KitTip", "KitJumpPill",
                 "KitTabSwitcher", "KitTabStrip.indicator", "KitSearchField.clear", "KitScrollFade", "KitSheetStep",
                 "KitSideSheet.drag", "KitSideSheet.settle", "KitModalMotion.dialog", "KitModalMotion.menu",
-                "KitModalMotion.sheet",
+                "KitModalMotion.sheet", "KitSwapMorph", "kitItemMotion.placement", "kitItemMotion.fade", "KitGrow.title",
+                "KitRollingNumber", "KitDissolve", "KitStepProgress", "KitToast", "KitStaggerRow",
             )
         assertEquals(expected, KitMotionManifest.parts.keys)
         assertEquals(KitMotionClass.Travel, KitMotionManifest.parts.getValue("KitSwap.count"))

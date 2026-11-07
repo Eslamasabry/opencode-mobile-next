@@ -152,11 +152,28 @@ public object ShellMotion {
     }
 
     /**
-     * The Material full-screen preview for every route class (plan 08 M8-9): the page scales to 0.9, shifts away
+     * The Material full-screen preview for every route class but a page that grew from a row at Full (plan 08 M8-9):
+     * the page scales to 0.9, shifts away
      * from the swiped edge and fades through from 35 % progress; the page underneath holds still. Calm: the fade
      * only. Off: no preview (Back commits on release).
      */
-    public fun predictivePop(edge: Int, level: ShellMotionLevel, edgeShiftPx: Int): ContentTransform =
+    public fun predictivePop(
+        edge: Int,
+        level: ShellMotionLevel,
+        edgeShiftPx: Int,
+        motion: RouteMotion? = null,
+        /** The page's exit while its shared bounds fly: NavDisplay passes its scope's `KeepUntilTransitionsFinished`. */
+        keep: ExitTransition = ExitTransition.None,
+    ): ContentTransform =
+        when {
+            // A page that grew from a row shrinks back into it under the finger: the shared bounds are the preview, the
+            // page itself stays until the transform ends (motion lead 2026-11-07).
+            level == ShellMotionLevel.Full && motion == RouteMotion.GrowFromRow ->
+                EnterTransition.None togetherWith keep
+            else -> predictivePreview(edge, level, edgeShiftPx)
+        }
+
+    private fun predictivePreview(edge: Int, level: ShellMotionLevel, edgeShiftPx: Int): ContentTransform =
         when (level) {
             ShellMotionLevel.Off -> none
             ShellMotionLevel.Calm -> EnterTransition.None togetherWith previewFade()

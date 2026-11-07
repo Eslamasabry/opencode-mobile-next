@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RippleConfiguration
@@ -26,6 +27,7 @@ import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotionScheme
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
 import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.ui.design.motion.resolveMotion
@@ -66,7 +68,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
  * Slice 0 keeps it in the `…ui.kit` package (the shell imports it there); plan 06's `…ui.kit.theme`
  * move rides with the contract freeze.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 public fun KitTheme(
     appearance: KitAppearance = KitAppearance.Default,
@@ -167,7 +169,14 @@ public fun KitTheme(
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
-        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, typography = MaterialBridge.typography(typography)) {
+        // One motion scheme for kit and M3 parts alike (motion lead 2026-11-07): springs, snapping under Off.
+        val motionScheme = remember(motion) { KitMotionScheme(motion) }
+        MaterialTheme(
+            colorScheme = scheme,
+            motionScheme = motionScheme,
+            shapes = MaterialBridge.shapes,
+            typography = MaterialBridge.typography(typography),
+        ) {
             Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) { content() }
         }
     }

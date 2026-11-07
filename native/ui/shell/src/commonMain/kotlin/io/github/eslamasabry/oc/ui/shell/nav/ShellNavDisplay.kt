@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.shell.nav
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
@@ -39,9 +40,10 @@ import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.forward
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
 
 /**
- * Option A (ADR §9.4, plan 08 §5.4): the container transform runs on tap and on button-back; while a back gesture is
- * in progress (and until its transition settles) the shared bounds are off and the Material predictive preview runs.
- * The gate is cleared by state (entries composed ≤ 1), never by a timer.
+ * The container transform runs on tap, on button-back and under a predictive back gesture (motion lead 2026-11-07,
+ * replacing option A): the gesture seeks the same transform, so a chat shrinks toward its row with the finger, a cancel
+ * grows it back and a commit finishes the flight into the row. Other routes keep the Material predictive preview. The
+ * gate is cleared by state (entries composed ≤ 1), never by a timer.
  */
 @Composable
 public fun ShellNavDisplay(
@@ -105,7 +107,8 @@ public fun ShellNavDisplay(
                         onDispose { signals.composedEntries-- }
                     }
                     val host = remember(contentScope) { ShellGrowHost(sharedScope, contentScope, gate, levelState) }
-                    Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value)) {
+                    val grows = (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
+                    Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value, grows)) {
                         CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
                     }
                 },
@@ -122,7 +125,15 @@ public fun ShellNavDisplay(
             sharedTransitionScope = sharedScope,
             transitionSpec = { forward(targetState.motion(), levelState.value) },
             popTransitionSpec = { pop(initialState.motion(), levelState.value) },
-            predictivePopTransitionSpec = { edge -> ShellMotion.predictivePop(edge, levelState.value, edgeShiftPx) },
+            predictivePopTransitionSpec = { edge ->
+                ShellMotion.predictivePop(
+                    edge,
+                    levelState.value,
+                    edgeShiftPx,
+                    initialState.motion(),
+                    keep = ExitTransition.KeepUntilTransitionsFinished,
+                )
+            },
             entryProvider = withMotion,
         )
     }
@@ -162,10 +173,12 @@ private fun Modifier.predictiveCorners(
     signals: GestureSignals,
     cornerPx: Float,
     level: ShellMotionLevel,
+    grows: Boolean,
 ): Modifier = graphicsLayer {
     val leaving = scope.transition.targetState == EnterExitState.PostExit
     val previewing = gate.state == GateState.Gesture || gate.state == GateState.GestureSettling
-    if (leaving && previewing && level == ShellMotionLevel.Full) {
+    // A page that grew from a row is rounded by its own transform (the row's corners) while the finger shrinks it.
+    if (leaving && previewing && level == ShellMotionLevel.Full && !grows) {
         val r = cornerPx * ShellMotion.PredictiveBack.transform(signals.progress.coerceIn(0f, 1f))
         shape = RoundedCornerShape(r)
         clip = true

@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.IntSize
  * States: shown, hidden, unfolding, folding
  * Text: none (content decides)
  * Cap: none
- * Motion: height + fade STANDARD in, QUICK out; Calm = same; Off = instant (class Fold)
+ * Motion: height on the Spatial spring in, SpatialFast out; fade STANDARD in, QUICK out; Calm = same; Off = instant
+ * (class Fold)
  * Replaces: KitReveal (lib/ui/kit/motion/kit_reveal.dart)
  */
 @Composable
@@ -32,8 +33,10 @@ public fun KitReveal(visible: Boolean, modifier: Modifier = Modifier, content: @
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
-        enter = expandVertically(specs.pace<IntSize>(KitPace.Standard)) + fadeIn(specs.pace(KitPace.Standard)),
-        exit = shrinkVertically(specs.pace<IntSize>(KitPace.Quick)) + fadeOut(specs.pace(KitPace.Quick)),
+        // Height on the spatial springs (interruptible: a part closed mid-unfold turns around with its speed), fades
+        // on the timed paces.
+        enter = expandVertically(specs.spatial<IntSize>()) + fadeIn(specs.pace(KitPace.Standard)),
+        exit = shrinkVertically(specs.spatialFast<IntSize>()) + fadeOut(specs.pace(KitPace.Quick)),
         label = "kit.reveal",
     ) {
         Box(Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)) { content() }

@@ -42,10 +42,23 @@ public object KitEasing {
     public val Steady: Easing = LinearEasing
 }
 
-/** The only place the kit creates tweens and springs (plan 08 §2.7). Off: the next frame is final (MOT-7). */
+/**
+ * The only place the kit creates tweens and springs (plan 08 §2.7). Off: the next frame is final (MOT-7).
+ *
+ * The native motion scheme (motion lead 2026-11-07), shaped like M3's `MotionScheme`:
+ * - **Spatial** (position, size, bounds, list placement): critically-near springs, ζ 0.9, no visible overshoot,
+ *   [spatialFast] 1400 / [spatial] 700 / [spatialSlow] 300. Springs keep their velocity when a new target arrives
+ *   mid-flight, so an interrupted part turns around smoothly instead of restarting a curve.
+ * - **Effects** (alpha, colour): ζ 1 springs, [effectsFast] 3800 / [effects] 1600 / [effectsSlow] 800.
+ * - **Release** ([release]): a part a finger let go of may overshoot slightly (ζ 0.82); nothing else does.
+ * - The timed fades ([enter], [quick], [pace]) stay tweens on `Enter`: cross-fades read the same either way and their
+ *   lengths are part of the kit's contracts.
+ */
 public class KitMotionSpecs internal constructor(private val s: KitMotionState) {
     private fun ms(v: Int) = (v * s.debugTimeScale).toInt()
     private fun k(stiffness: Float) = stiffness / (s.debugTimeScale * s.debugTimeScale)
+    private fun <T> springOf(zeta: Float, stiffness: Float): FiniteAnimationSpec<T> =
+        if (s.reduced) snap() else spring(zeta, k(stiffness))
 
     public fun <T> enter(): FiniteAnimationSpec<T> =
         if (s.reduced) snap() else tween(ms(MotionTokens.STANDARD), easing = KitEasing.Enter)
@@ -60,11 +73,28 @@ public class KitMotionSpecs internal constructor(private val s: KitMotionState) 
     /** A part leaving uses QUICK on `Enter` (Flutter's exit curve is a reverse-slot curve). */
     public fun <T> exit(): FiniteAnimationSpec<T> = quick()
 
-    public fun <T> spatial(): FiniteAnimationSpec<T> =
-        if (s.reduced) snap() else spring(MotionTokens.SPATIAL_ZETA, k(MotionTokens.SPATIAL_K))
+    /** Small spatial moves: chevron turn, tab indicator, slot widths, a count rolling. */
+    public fun <T> spatialFast(): FiniteAnimationSpec<T> = springOf(MotionTokens.SPATIAL_ZETA, MotionTokens.SPATIAL_FAST_K)
 
-    public fun <T> largeTravel(): FiniteAnimationSpec<T> =
-        if (s.reduced) snap() else spring(1f, k(MotionTokens.LARGE_TRAVEL_K))
+    /** The default spatial move: a part unfolding, a row finding its new place, a bubble rising. */
+    public fun <T> spatial(): FiniteAnimationSpec<T> = springOf(MotionTokens.SPATIAL_ZETA, MotionTokens.SPATIAL_K)
+
+    /** Large spatial moves: a page-sized container growing, a sheet travelling its full height. */
+    public fun <T> spatialSlow(): FiniteAnimationSpec<T> = springOf(MotionTokens.SPATIAL_ZETA, MotionTokens.SPATIAL_SLOW_K)
+
+    public fun <T> largeTravel(): FiniteAnimationSpec<T> = springOf(1f, MotionTokens.LARGE_TRAVEL_K)
+
+    /** List rows moving to a new place (insert above, removal, reorder). */
+    public fun <T> placement(): FiniteAnimationSpec<T> = springOf(MotionTokens.SPATIAL_ZETA, MotionTokens.PLACEMENT_K)
+
+    public fun <T> effectsFast(): FiniteAnimationSpec<T> = springOf(1f, MotionTokens.EFFECTS_FAST_K)
+
+    public fun <T> effects(): FiniteAnimationSpec<T> = springOf(1f, MotionTokens.EFFECTS_K)
+
+    public fun <T> effectsSlow(): FiniteAnimationSpec<T> = springOf(1f, MotionTokens.EFFECTS_SLOW_K)
+
+    /** A part a finger let go of settles with the finger's velocity and may overshoot slightly. */
+    public fun <T> release(): FiniteAnimationSpec<T> = springOf(MotionTokens.RELEASE_ZETA, MotionTokens.RELEASE_K)
 
     public val state: KitMotionState get() = s
 }

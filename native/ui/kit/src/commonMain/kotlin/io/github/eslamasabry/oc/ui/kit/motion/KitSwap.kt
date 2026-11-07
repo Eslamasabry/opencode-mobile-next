@@ -7,6 +7,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -61,6 +62,41 @@ public fun <T> KitSwapGrow(
 ) {
     SwapOf(target, modifier, SwapLook(KitPace.Quick, Alignment.Center) { if (grows(it)) GROW_FROM else 1f }, content)
 }
+
+/**
+ * [KitSwap] for one control that changes meaning in place (the composer's Send ⇄ Stop ⇄ mic): the leaving face shrinks
+ * as it fades and the new one grows in from [MORPH_FROM] on the SpatialFast spring, so the button reads as one object
+ * turning into another rather than two icons trading places. Full only; Calm cross-fades; Off is instant.
+ *
+ * States: at rest, morphing
+ * Text: none (content decides)
+ * Cap: none
+ * Motion: scale SpatialFast + fade QUICK at Full; Calm = fade only; Off = instant (class Travel)
+ */
+@Composable
+public fun <T> KitSwapMorph(target: T, modifier: Modifier = Modifier, content: @Composable (T) -> Unit) {
+    if (KitMotion.state.reduced || !KitMotion.state.travels) {
+        KitSwap(target, modifier, KitPace.Quick, Alignment.Center, content)
+        return
+    }
+    val specs = KitMotion.specs
+    AnimatedContent(
+        targetState = target,
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+        transitionSpec = {
+            (fadeIn(specs.pace(KitPace.Quick)) + scaleIn(specs.spatialFast(), initialScale = MORPH_FROM))
+                .togetherWith(fadeOut(specs.pace(KitPace.Quick)) + scaleOut(specs.spatialFast(), targetScale = MORPH_FROM))
+                .using(SizeTransform(clip = false) { _, _ -> snap<IntSize>() })
+        },
+        label = "kit.swap.morph",
+    ) { shown ->
+        Box(Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)) { content(shown) }
+    }
+}
+
+/** A morphing control's faces grow from and shrink to 60 % of their size. */
+public const val MORPH_FROM: Float = 0.6f
 
 /** M-015: a confirming mark grows from 90 % of its size. */
 public const val GROW_FROM: Float = 0.9f

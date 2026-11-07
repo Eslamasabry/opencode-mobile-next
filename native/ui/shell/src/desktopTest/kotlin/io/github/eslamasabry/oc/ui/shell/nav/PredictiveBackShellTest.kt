@@ -38,7 +38,7 @@ class PredictiveBackShellTest {
     }
 
     @Test
-    fun `B-KIT-054 P2-1 a committed gesture keeps shared bounds off until the pop settles`() = runComposeUiTest {
+    fun `B-KIT-054 P2-1 a committed gesture settles the gate only after the pop`() = runComposeUiTest {
         val h = Harness()
         setContent { h.Content() }
         onNodeWithText("Row 3").performClick()
@@ -47,13 +47,13 @@ class PredictiveBackShellTest {
         runOnIdle { h.input.start(NavigationEvent.EDGE_LEFT) }
         mainClock.advanceTimeByFrame()
         assertEquals(GateState.Gesture, h.gate.state)
-        assertFalse(sharedBoundsEnabled(h.gate.state, ShellMotionLevel.Full))
+        assertTrue(sharedBoundsEnabled(h.gate.state, ShellMotionLevel.Full), "the finger drives the transform")
         runOnIdle { h.input.progress(NavigationEvent.EDGE_LEFT, 0.5f) }
         mainClock.advanceTimeByFrame()
         onNodeWithText("Row 3").assertExists() // the list is composed under the preview
         runOnIdle { h.input.complete() }
         mainClock.advanceTimeByFrame()
-        assertEquals(GateState.GestureSettling, h.gate.state, "commit must not re-enable the transform mid-pop")
+        assertEquals(GateState.GestureSettling, h.gate.state, "the gate settles once the pop has finished")
         mainClock.autoAdvance = true
         waitForIdle()
         assertEquals(GateState.Idle, h.gate.state)
@@ -92,7 +92,7 @@ class PredictiveBackShellTest {
     }
 
     @Test
-    fun `B-KIT-054 a gesture during the opening transform turns it off and the pop still completes`() =
+    fun `B-KIT-054 a gesture during the opening transform takes it over and the pop still completes`() =
         runComposeUiTest {
             val h = Harness()
             setContent { h.Content() }

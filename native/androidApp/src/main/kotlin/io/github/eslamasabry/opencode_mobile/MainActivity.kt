@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity() {
         // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
         // too.
         enableEdgeToEdge()
+        // Motion lead 2026-11-07: run at the display's full refresh rate (90/120 Hz phones never stay at 60).
+        DisplayRefresh.follow(this)
         val graph = appGraph
         graph.previewRuntime.restoreSavedConnection()
         graph.composerFiles.attach(this)
