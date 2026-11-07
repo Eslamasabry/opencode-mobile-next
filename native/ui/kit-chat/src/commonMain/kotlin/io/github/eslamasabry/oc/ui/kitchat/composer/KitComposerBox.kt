@@ -72,6 +72,8 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
@@ -268,7 +270,8 @@ public fun KitComposerChip(
 
 /**
  * The plus at the start of the message box's row: a bare glyph in a 48 dp target. While the tray is [open] it turns
- * into "×" by an eighth of a turn (Flutter `AnimatedRotation(turns: 1/8)`, QUICK), at once with reduced motion.
+ * into "×" by an eighth of a turn (Flutter `AnimatedRotation(turns: 1/8)`, QUICK on Enter) through the kit's [KitSpin]:
+ * Calm cross-fades the two glyphs instead of turning, reduced motion is instant (M-002).
  */
 @Composable
 public fun KitComposerAdd(
@@ -277,29 +280,24 @@ public fun KitComposerAdd(
     modifier: Modifier = Modifier,
     open: Boolean = false,
 ) {
-    val target = if (open) ADD_OPEN_DEGREES else 0f
-    val turn by
-        androidx.compose.animation.core.animateFloatAsState(
-            target,
-            if (KitMotion.state.reduced) androidx.compose.animation.core.snap() else KitMotion.specs.quick(),
-            label = "composer-add-turn",
-        )
     KitTappable(
         onClick = onClick,
         modifier = modifier.semantics { contentDescription = label },
         shape = KitShapeId.Circle,
     ) {
-        KitIcon(
-            KitIcons.add,
-            modifier = Modifier.graphicsLayer { rotationZ = turn }.testTag(if (open) "kit-composer-add-open" else "kit-composer-add"),
-            size = KitIconSize.Large,
-            tone = TextTone.Primary,
-        )
+        KitSpin(turns = if (open) ADD_OPEN_TURNS else 0f, pace = KitPace.Quick) {
+            KitIcon(
+                KitIcons.add,
+                modifier = Modifier.testTag(if (open) "kit-composer-add-open" else "kit-composer-add"),
+                size = KitIconSize.Large,
+                tone = TextTone.Primary,
+            )
+        }
     }
 }
 
 /** An eighth of a turn: "+" reads as "×". */
-private const val ADD_OPEN_DEGREES = 45f
+internal const val ADD_OPEN_TURNS: Float = 1f / 8f
 
 /**
  * Send (Dart `_Circle` send): a 40 dp mint disc with the arrow in a 48 dp target (the audit's P1:
