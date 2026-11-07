@@ -359,6 +359,7 @@ class ChatFeelScreenTest {
             androidx.compose.ui.test.hasContentDescription("Copy") and
                 androidx.compose.ui.test.hasAnyAncestor(
                     androidx.compose.ui.test.hasTestTag(io.github.eslamasabry.oc.ui.kitchat.code.CODE_CORNER_TAG)
-                )
+                ),
+            useUnmergedTree = true,
         )
 }
