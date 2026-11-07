@@ -61,7 +61,7 @@ public fun KitCarousel(
     val fraction = share
     val pageSize = object : PageSize {
         override fun Density.calculateMainAxisPageSize(availableSpace: Int, pageSpacing: Int): Int =
-            (availableSpace * fraction).toInt()
+            kotlin.math.round(availableSpace * fraction).toInt()
     }
     Column(
         modifier.kitMaxWidth(CapRole.Reading).semantics { contentDescription = semanticsLabel; stateDescription = place },
