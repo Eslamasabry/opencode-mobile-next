@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.frame.KitOwnScrollbar
@@ -122,4 +123,21 @@ class KitScrollbarParityTest {
             assertFalse(outside)
             assertTrue(inside)
         }
+
+    @Test
+    fun matrix() {
+        FlutterGoldenGate.matrix(
+            "part-kit_scrollbar",
+            caps = mapOf("KitOwnScrollbar" to "wrapper", "KitScrollArea" to "wrapper", "KitScrollbar" to "wrapper"),
+        ) {
+            KitScrollArea { area ->
+                val state = area ?: rememberScrollState()
+                KitScrollbar(state, Modifier.size(200.dp)) {
+                    Column(Modifier.verticalScroll(state)) {
+                        androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().height(600.dp))
+                    }
+                }
+            }
+        }
+    }
 }
