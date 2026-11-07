@@ -1,0 +1,222 @@
+# Native (Kotlin) release build (E01-S03). Runbook: docs/native/release.md.
+#
+# Runs ONLY when a maintainer starts it by hand (Actions › Native release › Run workflow) for a tag that
+# scripts/native-release.sh --go pushed. It never runs on push, tag or schedule.
+#
+# Builds the switch release (package io.github.eslamasabry.opencode_mobile) as three APKs — arm64-v8a, x86_64 and
+# universal, all with the same versionCode — signed with the Public CI lineage, runs the identity gate
+# (native/tool/release/identity_gate.sh: package, version, exactly one signer equal to the Public CI fingerprint),
+# writes SHA256SUMS, and attaches all four files to a DRAFT GitHub release with make_latest=false. A person publishes
+# the draft after the GO checklist; this workflow never publishes, never marks a release latest and never overwrites a
+# published release.
+#
+# Fails closed: without the four RELEASE_* secrets, or with a keystore that is not the Public CI lineage, the job stops
+# before Gradle runs. The key file and keystore live in the runner's temp folder and are deleted after the build.
+
+name: Native release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag pushed by scripts/native-release.sh --go (vX.Y.Z+N)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: native-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  # Public CI lineage (docs/native/release-identity.md). Never rotated, never substituted.
+  PUBLIC_CI_CERT_SHA256: 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Require the release signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$KEYSTORE_B64" ]   || missing+=(RELEASE_KEYSTORE_BASE64)
+          [ -n "$STORE_PASSWORD" ] || missing+=(RELEASE_STORE_PASSWORD)
+          [ -n "$KEY_ALIAS" ]      || missing+=(RELEASE_KEY_ALIAS)
+          [ -n "$KEY_PASSWORD" ]   || missing+=(RELEASE_KEY_PASSWORD)
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Native release blocked: repository secrets not set: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Check the tag shape
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]]; then
+            echo "::error::Tag '$TAG' is not vX.Y.Z+N"
+            exit 1
+          fi
+
+      - name: Check out the tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Require the tag to match version.properties and master
+        id: version
+        env:
+          TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          name="$(sed -n 's/^versionName=//p' native/version.properties)"
+          code="$(sed -n 's/^versionCode=//p' native/version.properties)"
+          if [ "v$name+$code" != "$TAG" ]; then
+            echo "::error::native/version.properties is $name+$code, the tag is $TAG"
+            exit 1
+          fi
+          git fetch --quiet origin master
+          if ! git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/master; then
+            echo "::error::$TAG is not on master"
+            exit 1
+          fi
+          notes="docs/releases/$TAG.md"
+          if [ ! -s "$notes" ] || [ "$(head -n 1 "$notes")" != "# OpenCode Mobile $name+$code" ]; then
+            echo "::error::$notes must exist and start with '# OpenCode Mobile $name+$code'"
+            exit 1
+          fi
+          if gh release view "$TAG" --json isDraft > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
+            python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("isDraft") is True else "Refusing to touch a published release")' "$RUNNER_TEMP/release-state.json"
+          fi
+          {
+            echo "name=$name"
+            echo "code=$code"
+          } >> "$GITHUB_OUTPUT"
+
+      # Module bytecode targets JDK 17 (toolchain); Metro's Gradle plugin needs a JDK 21 runtime, which the runner
+      # image ships (JAVA_HOME_21_X64).
+      - name: Set up Java 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Install the pinned Android SDK parts
+        run: |
+          set -euo pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "build-tools;37.0.0" > /dev/null
+          echo "sdk.dir=$ANDROID_HOME" > native/local.properties
+
+      - name: Fetch the vendored, hash-pinned artifacts
+        run: native/tools/vendor/fetch.sh
+
+      - name: Write the signing file outside the repository
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEYSTORE: ${{ runner.temp }}/native-release.jks
+          KEY_PROPERTIES: ${{ runner.temp }}/native-key.properties
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$KEYSTORE"
+          # Refuse before building if the keystore is not the Public CI lineage.
+          actual="$(OC_STORE_PASSWORD="$STORE_PASSWORD" keytool -J-Duser.language=en -list -v \
+              -keystore "$KEYSTORE" -alias "$KEY_ALIAS" -storepass:env OC_STORE_PASSWORD |
+            sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
+          if [ "$actual" != "$PUBLIC_CI_CERT_SHA256" ]; then
+            echo "::error::The keystore certificate is not the Public CI lineage"
+            exit 1
+          fi
+          printf '%s\n' \
+            "storeFile=$KEYSTORE" \
+            "storePassword=$STORE_PASSWORD" \
+            "keyAlias=$KEY_ALIAS" \
+            "keyPassword=$KEY_PASSWORD" \
+            > "$KEY_PROPERTIES"
+
+      - name: Build the switch release
+        env:
+          OC_KEY_PROPERTIES: ${{ runner.temp }}/native-key.properties
+        working-directory: native
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          ./gradlew --console=plain :androidApp:assembleSwitchRelease
+
+      - name: Delete the signing file
+        if: always()
+        run: rm -f "${{ runner.temp }}/native-key.properties" "${{ runner.temp }}/native-release.jks"
+
+      - name: Collect the APKs and SHA256SUMS
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          CODE: ${{ steps.version.outputs.code }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/native-release"
+          mkdir -p "$out"
+          src=native/androidApp/build/outputs/apk/switch/release
+          for abi in arm64-v8a x86_64 universal; do
+            apk="$(find "$src" -maxdepth 1 -name "*-$abi-release.apk" | head -n 1)"
+            if [ -z "$apk" ]; then
+              echo "::error::No $abi APK in $src"
+              exit 1
+            fi
+            cp "$apk" "$out/opencode-mobile-$NAME-$CODE-$abi.apk"
+          done
+          (cd "$out" && sha256sum ./*.apk | sed 's# \./# #' > SHA256SUMS)
+          cat "$out/SHA256SUMS"
+
+      - name: Check the frozen classes survived R8
+        run: native/tool/release/kept_classes_check.sh "$RUNNER_TEMP"/native-release/*.apk
+
+      - name: Run the identity gate
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          CODE: ${{ steps.version.outputs.code }}
+        run: |
+          set -euo pipefail
+          native/tool/release/identity_gate.sh --expect-signer "$PUBLIC_CI_CERT_SHA256" \
+            --version-code "$CODE" --version-name "$NAME" "$RUNNER_TEMP"/native-release/*.apk
+
+      - name: Keep the APKs as a workflow artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-release-${{ steps.version.outputs.name }}-${{ steps.version.outputs.code }}
+          path: ${{ runner.temp }}/native-release/
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Attach to a DRAFT release (make_latest=false)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          files=("$RUNNER_TEMP"/native-release/*.apk "$RUNNER_TEMP/native-release/SHA256SUMS")
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            # Only a draft reaches here (checked above); replace its files with this build's.
+            gh release upload "$TAG" "${files[@]}" --clobber
+          else
+            gh release create "$TAG" "${files[@]}" --verify-tag --draft --latest=false \
+              --title "OpenCode Mobile ${TAG#v}" --notes-file "docs/releases/$TAG.md"
+          fi
+          echo "Draft release $TAG is ready for review. It is not published and not marked latest."
