@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts
 
 /** The runtime a saved in-app profile was set up with (port of `TermuxRuntime`). OpenCode 1 is detection only. */
 public enum class OpenCodeRuntime(public val wireName: String, public val pinnedVersion: String) {
@@ -185,6 +186,8 @@ public object BuiltinScripts {
                 "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
                 "export OPENCODE_PASSWORD=\"\$password\"\n" +
                 "unset password\n" +
+                // Node.js started by the server (MCP tools, agents) keeps this phone's safe mode (#117).
+                NodeCompatScripts.SERVER_ENV +
                 "exec opencode2 serve --hostname 127.0.0.1 --port $port\n"
             ).ok()
     }

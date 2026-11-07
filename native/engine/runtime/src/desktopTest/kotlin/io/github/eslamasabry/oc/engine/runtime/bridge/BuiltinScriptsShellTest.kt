@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.runtime.bridge
 
 import io.github.eslamasabry.oc.core.common.getOrNull
+import io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts
 import java.io.File
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -110,9 +111,13 @@ class BuiltinScriptsShellTest {
         )
         // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the script stays the Flutter script byte for
         // byte; only the port differs on native, whose default is 4098 (abf07acb1) and follows the flavor's choice.
+        // The Node safe-mode exports (#117, Flutter fix/117-adapt) are outside the hashed 2.1.4 text.
         assertEquals(
             "deac5091b852089a39d1a3ae9c115acb0a40436ad416012435b9fa7d86592fda",
-            sha256(BuiltinScripts.serverScript(port = 4097).getOrNull()!!),
+            sha256(
+                BuiltinScripts.serverScript(port = 4097).getOrNull()!!
+                    .replace(NodeCompatScripts.SERVER_ENV, "")
+            ),
         )
         assertEquals(
             BuiltinScripts.serverScript(port = 4097).getOrNull()!!.replace("--port 4097\n", "--port 4098\n"),

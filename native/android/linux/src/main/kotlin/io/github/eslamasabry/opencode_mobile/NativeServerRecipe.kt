@@ -55,6 +55,8 @@ internal data class NativeServerRecipe(
             "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
             "export OPENCODE_PASSWORD=\"\$password\"\n" +
             "unset password\n" +
+            // Node.js started by the server keeps this phone's safe mode (#117).
+            NodeCompatState.SERVER_ENV +
             "exec $binary serve --hostname 127.0.0.1 --port $port\n"
     }
 

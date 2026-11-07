@@ -229,6 +229,7 @@ internal object PhoneServerScripts {
             "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
             "export OPENCODE_PASSWORD=\"\$password\"\n" +
             "unset password\n" +
+            io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts.SERVER_ENV +
             "exec opencode2 serve --hostname 127.0.0.1 --port $port\n"
     }
 
