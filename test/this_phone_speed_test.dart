@@ -16,7 +16,6 @@ import 'package:opencode_mobile/builtin/reply_watch.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart'
     show IntegrationsScreen;
@@ -128,7 +127,7 @@ void main() {
       'the way to sign in', (tester) async {
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
       configure: _connected(),
@@ -147,7 +146,7 @@ void main() {
   testWidgets('a provider signed in: no free-model notice', (tester) async {
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
       configure: _connected(signedIn: ['anthropic']),
@@ -160,7 +159,7 @@ void main() {
   testWidgets('not connected to it: no free-model notice', (tester) async {
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
     );
@@ -181,7 +180,7 @@ void main() {
 
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: _Linux(),
       profiles: [inAppProfile],
       overrides: [replyWatchProvider.overrideWithValue(replies)],

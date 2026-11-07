@@ -14,28 +14,13 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_intro_screen.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 import 'package:opencode_mobile/ui/widgets/builtin_team_section.dart';
 import 'package:opencode_mobile/ui/widgets/team_host_form.dart';
-import 'package:opencode_mobile/ui/widgets/team_phone_onboarding.dart';
 import 'package:opencode_mobile/voice/device.dart';
 
 import '../../tool/capture/fixtures.dart' show captureApp, loadCaptureFonts;
 import '../support/fake_setup_engine.dart';
 import '../support/work_tab_fixture.dart';
-
-/// The owner's phone: Termux that can run a team.
-class _Runtime extends TermuxTeamRuntime {
-  _Runtime()
-    : super(
-        runner: (_, {timeout = Duration.zero}) async => '',
-        manifestLoader: () async => null,
-        archProbe: () async => 'aarch64',
-      );
-
-  @override
-  Future<bool> get supportsAiTeam async => true;
-}
 
 void _mockSecureStorage(WidgetTester tester) {
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
@@ -92,20 +77,15 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
   setUp(() {
-    debugTeamPhoneRuntime = _Runtime();
     // Nothing of the team is installed yet, as the page's inventory reads it.
     final previousEngine = PhoneSetup.engine;
-    final previousTermux = PhoneSetup.termux;
     PhoneSetup.engine = FakeSetupEngine();
-    PhoneSetup.termux = FakeSetupEngine();
     addTearDown(() {
       PhoneSetup.engine = previousEngine;
-      PhoneSetup.termux = previousTermux;
     });
   });
   tearDown(() {
     debugBuiltinTeam = null;
-    debugTeamPhoneRuntime = null;
     debugPlatformCapabilities = null;
     teamHostProbe = defaultTeamHostProbe;
   });

@@ -943,12 +943,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "explains (dead end): needs-ubuntu view says 'Finish the On this phone setup first' with only Refresh — onOpenPhoneSetup is never passed by any caller (local_agent_onboarding.dart:782); on a v2 (in-app) phone it can never proceed"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer",
@@ -1162,12 +1158,8 @@
   ],
   "module": "phone",
   "chrome": "embedded",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden off Termux (supportsTermux gate, local_agent_onboarding.dart:260); on a phone without Termux's Ubuntu it explains with a Refresh-only dead end (l.779)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -2509,12 +2501,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden (rows only on the Termux manage page; the in-app host has no process view at all)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "tinkerer",
    "phone-only",
@@ -2705,12 +2693,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "tinkerer"
   ],
@@ -2772,12 +2756,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "tinkerer",
    "team-delegator"
@@ -2851,12 +2831,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "tinkerer"
   ],
@@ -2951,12 +2927,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "offers-enable:termux-setup-get-termux (the wizard itself); off Android explains (termux-setup-unsupported)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -3141,12 +3113,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "tinkerer",
    "phone-only"
@@ -3227,12 +3195,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -3323,12 +3287,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only"
   ],
@@ -3593,12 +3553,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "offers-enable:termux-setup-get-termux"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "newcomer"
@@ -3725,12 +3681,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "offers-enable:termux-setup-connect-termux"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -3864,12 +3816,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "offers-enable:termux-setup-get-termux (after the check)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only"
   ],
@@ -3954,12 +3902,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "remote-lead"
@@ -4074,12 +4018,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only"
   ],
@@ -4193,12 +4133,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "offers-enable:termux-setup (wizard) — to become phone-setup-start"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer",
@@ -4424,12 +4360,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only"
   ],
@@ -4495,12 +4427,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -4579,12 +4507,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only"
   ],
@@ -4648,12 +4572,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "newcomer"
@@ -4783,12 +4703,8 @@
   ],
   "module": "phone",
   "chrome": "title-header",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden (in-app phones see only a total on the This phone card)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -4939,12 +4855,8 @@
   ],
   "module": "phone",
   "chrome": "sheet",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -5103,12 +5015,8 @@
   ],
   "module": "phone",
   "chrome": "embedded",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden (TermuxBridge.supported gate)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "tinkerer"
@@ -5202,12 +5110,8 @@
   ],
   "module": "servers",
   "chrome": "embedded",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden (renders only for a running or stopped managed server)"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "phone-only",
    "remote-lead"
@@ -5311,12 +5215,8 @@
   ],
   "module": "phone",
   "chrome": "embedded",
-  "needs": [
-   "phone.termux"
-  ],
-  "whenMissing": {
-   "phone.termux": "hidden"
-  },
+  "needs": [],
+  "whenMissing": {},
   "personas": [
    "tinkerer"
   ],

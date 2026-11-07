@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 
 final _url = RegExp(r'''https?://[^\s"'<>()\[\]]+''');
 
@@ -88,13 +87,6 @@ void main() {
 
   test('every download manifest in assets/ is https and public', () {
     final manifests = _assetTextFiles().where((f) => f.path.endsWith('.json'));
-    expect(
-      manifests.map((f) => f.path),
-      containsAll([
-        TermuxTeamRuntime.manifestAsset,
-        TermuxTeamRuntime.manifestAssetX86,
-      ]),
-    );
     for (final file in manifests) {
       final raw = file.readAsStringSync();
       // Any URL in a shipped JSON file is something the app may fetch.
@@ -107,13 +99,12 @@ void main() {
       }
       final json = jsonDecode(raw);
       if (json is! Map || !json.containsKey('base_url')) continue;
-      final manifest = TeamRuntimeManifest.parse(raw);
-      expect(manifest, isNotNull, reason: file.path);
-      final base = Uri.parse(manifest!.baseUrl);
+      final baseUrl = json['base_url'] as String;
+      final base = Uri.parse(baseUrl);
       expect(base.scheme, 'https', reason: file.path);
       expect(base.hasPort, isFalse, reason: '${file.path}: odd port');
       expect(privateHostProblem(base.host), isNull, reason: file.path);
-      expect(manifest.baseUrl, endsWith('/'), reason: file.path);
+      expect(baseUrl, endsWith('/'), reason: file.path);
       for (final entry in (json['files'] as Map).values) {
         final sha = (entry as Map)['sha256'] as String;
         expect(sha, matches(RegExp(r'^[0-9a-f]{64}$')), reason: file.path);

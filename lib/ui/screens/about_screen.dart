@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../platform/app_info.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/factsbook/factsbook_flag.dart';
@@ -73,8 +74,6 @@ enum _UpdateCheck {
 }
 
 class _AboutScreenState extends State<AboutScreen> {
-  static const _platform = MethodChannel('oc/termux');
-
   Future<String>? _notices;
   late final Future<_BuildData> _build = _loadBuild();
   _UpdateCheck _update = _UpdateCheck.idle;
@@ -110,14 +109,10 @@ class _AboutScreenState extends State<AboutScreen> {
       return const _BuildData(package: null, signer: null);
     }
     String? signer;
-    if (platformCapabilities.supportsTermux) {
-      try {
-        signer = await _platform.invokeMethod<String>(
-          'getSigningCertificateSha256',
-        );
-      } catch (_) {
-        // Desktop and older Android builds do not expose a signer.
-      }
+    try {
+      signer = await AppInfoPlatform.signingCertificateSha256();
+    } catch (_) {
+      // Desktop and older Android builds do not expose a signer.
     }
     return _BuildData(package: package, signer: signer);
   }

@@ -17,9 +17,7 @@ import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/builtin/setup/setup_engine.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
-import 'package:opencode_mobile/termux/termux_reach.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -48,7 +46,6 @@ enum _Scene {
   jobStopped('setup-stopped-dark', job: _Job.stopped),
   jobDone('setup-done-not-connected-dark', job: _Job.done),
   noPhonePath('no-phone-path-dark', desktop: true),
-  termuxFound('termux-found-dark', termux: true),
   small('small-320-text2-dark', size: Size(320, 693), scale: 2),
   arabic('arabic-rtl-dark', locale: Locale('ar'));
 
@@ -58,7 +55,6 @@ enum _Scene {
     this.computer = false,
     this.job = _Job.none,
     this.desktop = false,
-    this.termux = false,
     this.size = const Size(412, 915),
     this.scale = 1,
     this.locale = const Locale('en'),
@@ -69,8 +65,6 @@ enum _Scene {
   final _Job job;
   final bool desktop;
 
-  /// Termux is on the phone with the app's OpenCode in it, not yet allowed.
-  final bool termux;
   final Size size;
   final double scale;
   final Locale locale;
@@ -115,31 +109,6 @@ void main() {
       messenger.setMockMethodCallHandler(storage, (_) async => null);
       addTearDown(() => messenger.setMockMethodCallHandler(storage, null));
 
-      if (scene.termux) {
-        TermuxAccess.blocked = false;
-        final previousProbe = captureTermuxRunningServerProbe;
-        captureTermuxRunningServerProbe =
-            ({required baseUrl, username, password, cancellation}) async =>
-                const ServerProbeResult.failure(
-                  'password required',
-                  needsPassword: true,
-                );
-        addTearDown(() => captureTermuxRunningServerProbe = previousProbe);
-        const termux = MethodChannel('oc/termux');
-        messenger.setMockMethodCallHandler(termux, (call) async {
-          if (call.method == 'getCapabilities') {
-            return <String, Object>{
-              'installed': true,
-              'version': '0.118',
-              'serviceAvailable': true,
-              'protocolSupported': true,
-              'permissionGranted': false,
-            };
-          }
-          return null;
-        });
-        addTearDown(() => messenger.setMockMethodCallHandler(termux, null));
-      }
       // The real component registry, so the cost line is the engine's own.
       final engine = FakeSetupEngine(registry: ChannelSetupEngine().registry);
       switch (scene.job) {

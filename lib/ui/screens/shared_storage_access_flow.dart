@@ -11,7 +11,6 @@ import '../../platform/storage_access.dart';
 import '../../state/shared_project_roots.dart';
 import '../../state/profiles.dart';
 import '../../state/shared_storage_gate.dart';
-import '../../termux/bridge.dart';
 import '../app_iconography.dart';
 import '../kit/kit.dart';
 
@@ -205,36 +204,6 @@ class SharedStorageAccessFlow {
             body: l10n.storageAccessRefusedBody,
             icon: AppIconography.folderOpen,
             alertKey: const ValueKey('storage-access-refused'),
-          );
-        }
-        return SharedStorageOutcome.declined;
-      case SharedStorageBlock.termuxAccess:
-        final open = await showKitConfirm(
-          context,
-          title: l10n.storageTermuxTitle,
-          body: l10n.storageTermuxBody,
-          confirmLabel: l10n.storageTermuxAllow,
-          cancelLabel: l10n.storageAccessNotNow,
-          icon: AppIconography.folderOpen,
-          alternative: alternative,
-          confirmKey: const ValueKey('storage-termux-allow'),
-        );
-        if (appSpace) return SharedStorageOutcome.useAppSpace;
-        if (!open || !context.mounted) return SharedStorageOutcome.declined;
-        try {
-          await TermuxBridge.openTerminalSession('termux-setup-storage');
-        } on TermuxBridgeException {
-          // The still-missing answer below says what to do by hand.
-        }
-        // The person answers Android's question inside Termux; the folder is
-        // opened again from the Projects screen once they are back.
-        if (context.mounted) {
-          await showKitAlert(
-            context,
-            title: l10n.storageTermuxStillTitle,
-            body: l10n.storageTermuxStillBody,
-            icon: AppIconography.folderOpen,
-            alertKey: const ValueKey('storage-termux-still'),
           );
         }
         return SharedStorageOutcome.declined;

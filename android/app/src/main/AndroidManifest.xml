@@ -36,14 +36,11 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
-    <!-- Drive the on-device opencode server through Termux's RUN_COMMAND service -->
-    <uses-permission android:name="com.termux.permission.RUN_COMMAND"/>
-    <!-- Package visibility (Android 11+) so we can detect Termux and launch it -->
+    <!-- Package visibility (Android 11+) for the apps this one hands off to -->
     <queries>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
-        <package android:name="com.termux" />
         <package android:name="com.tailscale.ipn" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
@@ -162,9 +159,6 @@
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/WidgetOverlayTheme" />
         </activity>
         <receiver android:name=".WidgetActionReceiver" android:exported="false" />
-        <service
-            android:name=".TermuxResultService"
-            android:exported="false" />
         <service
             android:name=".BuiltinServerService"
             android:exported="false"

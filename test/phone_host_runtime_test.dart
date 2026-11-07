@@ -1,14 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/domain/opencode_history_copy.dart';
-import 'package:opencode_mobile/l10n/app_localizations_en.dart';
 import 'package:opencode_mobile/state/phone_host.dart';
-import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
+import 'package:opencode_mobile/builtin/opencode_runtime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'revamp/screen_phone_1_fixtures.dart';
-import 'support/termux_channel_fixture.dart';
+import 'support/phone_store_fixture.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -67,43 +65,8 @@ void main() {
       await host.refresh();
       expect(
         host.runtime,
-        installed ? TermuxRuntime.openCode1 : TermuxRuntime.openCode2,
-      );
-    });
-
-    test('Termux host preserves legacy installation: $installed', () async {
-      final channel = TermuxChannelFixture()
-        ..inventoryOutput =
-            'ubuntu=${installed ? 'installed' : 'absent'}\nversion=\n';
-      channel.install();
-      final host = TermuxPhoneHost(
-        connection: connection,
-        copy: AppLocalizationsEn.new,
-      );
-      addTearDown(host.dispose);
-      await host.refresh();
-      expect(
-        host.runtime,
-        installed ? TermuxRuntime.openCode1 : TermuxRuntime.openCode2,
+        installed ? OpenCodeRuntime.openCode1 : OpenCodeRuntime.openCode2,
       );
     });
   }
-
-  test('saved Termux runtime wins over a fresh-install default', () async {
-    store.saved.add(
-      ServerProfile(
-        id: 'older',
-        name: 'My phone',
-        baseUrl: TermuxBridge.managedServerUrl,
-        requiresOpenCode2Migration: true,
-      ),
-    );
-    final host = TermuxPhoneHost(
-      connection: connection,
-      copy: AppLocalizationsEn.new,
-    );
-    addTearDown(host.dispose);
-    expect(host.runtime, TermuxRuntime.openCode1);
-    expect(store.saved.single.name, 'My phone');
-  });
 }

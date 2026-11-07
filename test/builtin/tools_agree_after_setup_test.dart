@@ -17,7 +17,6 @@ import 'package:opencode_mobile/builtin/team/builtin_team_job.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 import 'package:opencode_mobile/ui/widgets/builtin_team_section.dart';
@@ -66,7 +65,7 @@ void main() {
   ) async {
     final engine = await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
     );
@@ -92,7 +91,7 @@ void main() {
       final late = Completer<void>();
       final engine = await pumpPhone(
         tester,
-        home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+        home: const ThisPhoneScreen(),
         linux: PhoneLinux(running: true),
         profiles: [inAppProfile],
       );
@@ -126,7 +125,7 @@ void main() {
   ) async {
     final engine = await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
       optionalInstalled: {'python'},

@@ -35,19 +35,16 @@ extension _FilesLoading on _FilesScreenState {
   }
 
   Widget _storageAccessNotice(AppLocalizations l10n) {
-    final termux = _storageBlock == SharedStorageBlock.termuxAccess;
     return KitRefresh(
       onRefresh: _refreshFiles,
       child: KitStateView(
         key: const ValueKey('files-storage-access'),
         icon: AppIconography.folderOpen,
         title: l10n.filesAccessNeededTitle,
-        body: termux
-            ? l10n.filesAccessNeededTermuxBody
-            : l10n.filesAccessNeededBody,
+        body: l10n.filesAccessNeededBody,
         primary: KitAction(
           key: const ValueKey('files-storage-access-action'),
-          label: termux ? l10n.storageTermuxAllow : l10n.storageAccessAllow,
+          label: l10n.storageAccessAllow,
           onPressed: () => unawaited(_allowStorageAccess()),
         ),
       ),

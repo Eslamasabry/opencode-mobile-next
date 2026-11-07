@@ -8,7 +8,7 @@ import '../../../builtin/setup/setup_contract.dart';
 import '../../../builtin/setup/setup_engine.dart' show setupAddingTitle;
 import '../../../l10n/app_localizations.dart';
 import '../../../platform/network.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
+import '../../../platform/app_info.dart';
 import '../../../voice/automatic_setup_platform.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
@@ -348,7 +348,7 @@ class _PhoneSetupProgressScreenState extends State<PhoneSetupProgressScreen> {
           _ when ownership => KitButton.primary(
             key: const Key('setup-progress-recover-ownership'),
             label: l10n.e7SetupOpenAppSettings,
-            onPressed: () => unawaited(TermuxBridge.openAppSettings()),
+            onPressed: () => unawaited(AppInfoPlatform.openAppSettings()),
           ),
           _ when progress.canContinue => KitButton.primary(
             key: const Key('setup-progress-continue'),

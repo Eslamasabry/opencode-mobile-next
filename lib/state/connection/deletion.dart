@@ -166,7 +166,6 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
             }
           }
           _profileDeletions.remove(profileId);
-          _syncProfileServices();
         });
     _profileDeletions[profileId] = operation;
     _profileDeletionChanges = operation.then<void>(
@@ -290,10 +289,6 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
         // Only now invalidate destructive owners and begin cleanup.
         await Future.wait<void>([
           BuiltinServerRecovery.suspendForProfile(store.prefs, profileId),
-          ManagedServerRecovery.prepareForProfileDeletion(
-            store.prefs,
-            profileId,
-          ),
         ]);
         // Keep the shared runtime owner through queue preflight failures.
         // Once preservation succeeds, prevent fallback to another profile.
@@ -524,7 +519,6 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
       // caller disconnects, and a republish would put their titles straight
       // back onto the home screen.
       _deletingReadProfiles.remove(profileId);
-      _syncProfileServices();
       if (!_disposed) _notifyListeners();
       _widgetSnapshotSuspended = false;
     }

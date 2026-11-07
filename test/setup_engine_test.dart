@@ -10,7 +10,6 @@ import 'package:opencode_mobile/builtin/setup/setup_engine.dart';
 import 'package:opencode_mobile/builtin/setup/setup_scripts.dart';
 import 'package:opencode_mobile/diagnostics/perf_trace.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 
 /// The native side, scripted: a status, the check output, and a job the
 /// test moves along by setting [job].
@@ -492,7 +491,7 @@ void main() {
       expect(
         spec(linux, 'opencode')['script'],
         withSetupPrelude(
-          SetupScripts.openCodeNativeInstall(TermuxRuntime.openCode2),
+          SetupScripts.openCodeNativeInstall(OpenCodeRuntime.openCode2),
         ),
       );
       expect(spec(linux, 'start')['step'], isTrue);
@@ -841,7 +840,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 30));
       engine.progress.removeListener(listener);
       expect(finishes, hasLength(1));
-      expect(finishes.single.runtime, TermuxRuntime.openCode2);
+      expect(finishes.single.runtime, OpenCodeRuntime.openCode2);
       expect(finishes.single.openCodeChanged, isFalse);
       expect(linux.steps.single, containsPair('ok', true));
       expect(engine.progress.value.state, SetupState.done);

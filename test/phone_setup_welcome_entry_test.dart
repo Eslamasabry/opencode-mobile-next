@@ -113,9 +113,6 @@ void main() {
     PhoneSetup.engine = engine;
     // No Termux job: phone setup's start screen also reads Termux's engine
     // (320269a2, P1.7), which must not reach the platform channel here.
-    final previousTermux = PhoneSetup.termux;
-    PhoneSetup.termux = FakeSetupEngine();
-    addTearDown(() => PhoneSetup.termux = previousTermux);
     // Set up on this phone reads the device before anything downloads.
     answerVoiceDeviceProbe();
   });

@@ -13,7 +13,7 @@ import '../../builtin/phone_process_watch.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/kit.dart';
-import '../screens/termux_processes_screen.dart' show formatTermuxCpuPct;
+import 'process_format.dart';
 import 'phone_server_card.dart' show formatPhoneStorage;
 import 'running_on_phone_text.dart';
 
@@ -64,7 +64,7 @@ String? runningRowStatus(AppLocalizations l10n, PhoneProcessReading reading) {
     return l10n.runningPhoneRowHeavy(
       heavy.length,
       runningProcessName(l10n, top),
-      formatTermuxCpuPct(top.cpuPercent),
+      formatProcessCpuPct(top.cpuPercent),
     );
   }
   if (reading.nearLimit) {

@@ -13,7 +13,7 @@ import '../../builtin/thermal_guard.dart';
 import '../../builtin/thermal_guard_teams.dart';
 import '../../state/background_pause_notice.dart';
 import '../../state/connection.dart';
-import '../../termux/bridge.dart' show TermuxBridge;
+import '../../platform/app_info.dart';
 import '../kit/kit.dart';
 import '../screens/servers_screen.dart' show ServersRouteRequest;
 import 'app_exit_notice.dart';
@@ -78,7 +78,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
                 onRecoverOwnership:
                     builtin.failureFor(controller.profile)?.problem ==
                         BuiltinStartProblem.componentRecovery
-                    ? () => unawaited(TermuxBridge.openAppSettings())
+                    ? () => unawaited(AppInfoPlatform.openAppSettings())
                     : null,
                 actionContext: actionContext,
                 switchingTo: phoneRuntimeSwitchTarget(controller, builtin),

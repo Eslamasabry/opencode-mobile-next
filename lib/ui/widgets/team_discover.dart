@@ -16,8 +16,7 @@ import '../../builtin/setup/setup_contract.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
-import '../screens/settings/plugins_screen.dart'
-    show teamPhoneProfile, teamRowSubtitle;
+import '../screens/settings/plugins_screen.dart' show teamRowSubtitle;
 import '../screens/team/team_intro_screen.dart' show TeamIntroScreen;
 import '../screens/team/team_page.dart' show TeamPage;
 import 'builtin_team_section.dart' show BuiltinTeamSection;
@@ -30,10 +29,6 @@ enum TeamServerKind {
   /// the app's setup, installed here and turned on per project.
   inApp,
 
-  /// OpenCode in Termux, managed by this app: the team is the same setup
-  /// component, installed into Termux's Ubuntu by the Termux host's job.
-  termux,
-
   /// Any other server (a computer, a laptop, WSL): Gas City runs there and
   /// the app finds it, or is given its address.
   computer,
@@ -42,7 +37,6 @@ enum TeamServerKind {
 /// The kind of [profile] for the AI Team.
 TeamServerKind teamServerKindOf(ServerProfile profile) {
   if (BuiltinTeamSection.appliesTo(profile)) return TeamServerKind.inApp;
-  if (teamPhoneProfile(profile)) return TeamServerKind.termux;
   return TeamServerKind.computer;
 }
 

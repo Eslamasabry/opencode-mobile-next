@@ -13,7 +13,6 @@ import '../../l10n/app_localizations_en.dart';
 
 enum ConnectionFailureAction {
   retry,
-  openTermuxSetup,
 
   /// Start the app's own server on this phone, then connect.
   startPhoneServer,
@@ -77,18 +76,12 @@ class ConnectionFailure {
   static ConnectionFailure diagnose({
     required String error,
     required String baseUrl,
-    required bool supportsTermux,
     bool usesConnectionToken = false,
     bool requiresTokenReentry = false,
 
-    /// The address is the server this app installed and manages on the
-    /// phone. When nothing answers there, it is stopped (the phone
-    /// restarted, or Android closed Termux), and starting it is the fix.
-    bool managedPhoneServer = false,
-
     /// The address is OpenCode running inside this app (the built-in
     /// Ubuntu). Whatever went wrong, starting it again is the fix, and
-    /// Termux, tunnels and passwords are not the person's business here.
+    /// tunnels and passwords are not the person's business here.
     bool inAppServer = false,
 
     /// The app just tried to start that server and it did not answer.
@@ -234,18 +227,6 @@ class ConnectionFailure {
         rawError: error,
       );
     }
-    if (managedPhoneServer &&
-        !usesConnectionToken &&
-        loopback &&
-        (nothingAnswered || timedOut || !serverError && !unhealthy)) {
-      return ConnectionFailure(
-        title: l10n.phoneServerStoppedTitle,
-        explanation: l10n.phoneServerStoppedBody,
-        checks: [?retried],
-        primary: ConnectionFailureAction.startPhoneServer,
-        rawError: error,
-      );
-    }
     if (!usesConnectionToken &&
         loopback &&
         (nothingAnswered || timedOut || !serverError && !unhealthy)) {
@@ -253,13 +234,12 @@ class ConnectionFailure {
         title: l10n.e7ConnectionFailure24,
         explanation: l10n.connectionFailureLoopbackBody,
         checks: [
-          if (supportsTermux) l10n.e7ConnectionFailure26,
           l10n.e7ConnectionFailure27,
           l10n.e7ConnectionFailure28,
           ?retried,
         ],
-        // Loopback identifies an endpoint, not whether Termux or a tunnel
-        // hosts it. Retry is safe without guessing the user's setup.
+        // Loopback identifies an endpoint, not what hosts it (a tunnel, a
+        // server started by hand). Retry is safe without guessing.
         primary: ConnectionFailureAction.retry,
         rawError: error,
       );

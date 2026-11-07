@@ -9,14 +9,11 @@ import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_customize_sheet.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_routes.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_selection.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_start_screen.dart';
-import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_termux_job_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/voice/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,19 +84,15 @@ Widget _app(
   ),
 );
 
-/// Screen A with Termux and the in-app install stood in for.
+/// Screen A with the in-app install stood in for.
 class _Harness {
   _Harness({
-    TermuxRunningServer termux = const TermuxRunningServer.absent(),
     bool inApp = false,
     List<SetupComponent>? registry,
     VoiceDeviceInfo? device,
   }) : engine = FakeSetupEngine(registry: registry) {
     PhoneSetup.engine = engine;
-    // "Use Termux instead" opens the Termux host's job: a fake here too.
-    PhoneSetup.termux = FakeSetupEngine(registry: registry);
     screen = PhoneSetupStartScreen(
-      termuxProbe: () async => termux,
       inAppProbe: () async => inApp,
       deviceProbe: () async => device ?? _okDevice,
       openProgress: (_) async => progressOpened++,
@@ -214,11 +207,11 @@ void main() {
         findsOneWidget,
       );
       // Other ways starts folded.
-      expect(find.text('Use Termux instead'), findsNothing);
+      expect(find.text('Connect to a computer by address'), findsNothing);
 
       await _expandOtherWays(tester);
-      expect(find.text('Use Termux instead'), findsOneWidget);
       expect(find.text('Connect to a computer by address'), findsOneWidget);
+      expect(find.textContaining('Termux'), findsNothing);
       // The words the design bans from this screen, everywhere on it.
       for (final text in _visibleTexts(tester)) {
         for (final banned in ['ubuntu', 'server', 'proot', 'experimental']) {
@@ -358,93 +351,17 @@ void main() {
     expect(find.text('OpenCode is ready on this phone'), findsOneWidget);
   });
 
-  group('Termux already runs OpenCode', () {
-    final running = TermuxRunningServer.running(
-      runtime: TermuxRuntime.openCode1,
-      version: '1.18.29',
-      observedAt: DateTime(2026, 9, 24),
-    );
-
-    testWidgets('it leads with Connect and keeps the in-app setup below', (
-      tester,
-    ) async {
-      final harness = _Harness(termux: running);
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(controller, home: harness.screen));
-      await tester.pumpAndSettle();
-
-      expect(find.text('OpenCode is already set up in Termux'), findsOneWidget);
-      expect(find.byType(FilledButton), findsOneWidget);
-      expect(find.widgetWithText(FilledButton, 'Connect'), findsOneWidget);
-
-      await _expandOtherWays(tester);
-      expect(find.text('Use Termux instead'), findsNothing);
-      await _tapVisible(
-        tester,
-        find.byKey(const ValueKey('phone-setup-start-set-up-here')),
-      );
-      expect(harness.engine.runs, [_defaultIds]);
-      expect(harness.progressOpened, 1);
-    });
-
-    testWidgets('Connect hands a saved Termux profile to the connect flow', (
-      tester,
-    ) async {
-      final harness = _Harness(termux: running);
-      final controller = await _controller([
-        ServerProfile(
-          id: 'termux',
-          name: 'This phone',
-          baseUrl: TermuxBridge.managedServerUrl,
-        ),
-      ]);
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(controller, home: harness.screen));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(FilledButton, 'Connect'));
-      await tester.pumpAndSettle();
-      expect(find.text('servers connect:termux'), findsOneWidget);
-    });
-
-    testWidgets('Connect with no saved profile restores the phone password', (
-      tester,
-    ) async {
-      final harness = _Harness(termux: running);
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(controller, home: harness.screen));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(FilledButton, 'Connect'));
-      await tester.pumpAndSettle();
-      expect(find.text('servers enterPhoneCredentials:null'), findsOneWidget);
-    });
-  });
-
-  testWidgets('Other ways open Termux and the address form', (tester) async {
+  testWidgets('Other ways open the address form', (tester) async {
     final harness = _Harness();
     final controller = await _controller();
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(controller, home: harness.screen));
     await tester.pumpAndSettle();
     await _expandOtherWays(tester);
-
-    final termux = find.byKey(const ValueKey('phone-setup-start-use-termux'));
-    await tester.ensureVisible(termux);
-    await tester.pumpAndSettle();
-    await tester.tap(termux);
-    // Termux's own checks keep a working mark moving: frames, not settle.
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    // Termux is a host of phone setup (P1.3): its checklist, not a wizard.
-    expect(find.byType(PhoneSetupTermuxJobScreen), findsOneWidget);
-    await tester.pageBack();
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+    expect(
+      find.byKey(const ValueKey('phone-setup-start-use-termux')),
+      findsNothing,
+    );
 
     await _tapVisible(
       tester,
@@ -1248,24 +1165,18 @@ void main() {
       },
     );
 
-    testWidgets('the progress and Termux heroes fit 320 dp at 2.5x', (
+    testWidgets('the fresh and progress heroes fit 320 dp at 2.5x', (
       tester,
     ) async {
       await useSmallPhone(tester);
-      final harness = _Harness(
-        termux: TermuxRunningServer.running(
-          runtime: TermuxRuntime.openCode1,
-          version: '1.18.29',
-          observedAt: DateTime(2026, 9, 24),
-        ),
-      );
+      final harness = _Harness();
       final controller = await _controller();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         _app(controller, home: harness.screen, scale: 2.5),
       );
       await tester.pumpAndSettle();
-      expect(find.text('OpenCode is already set up in Termux'), findsOneWidget);
+      expect(find.text('Run a coding agent right here'), findsOneWidget);
       await _expandOtherWays(tester);
       expect(tester.takeException(), isNull);
 

@@ -479,7 +479,7 @@ Future<void> showConnectionDetailsSheet(
   final l10n = lookupAppLocalizations(Localizations.localeOf(context));
   final navigator = Navigator.of(context);
   final profile = controller.profile;
-  // The OpenCode server diagnosis (addresses, Termux, tunnels) is not an
+  // The OpenCode server diagnosis (addresses, tunnels) is not an
   // agent link's: its reason stays in Details.
   final failure =
       reconnecting || error == null || error.isEmpty || agent != null
@@ -488,7 +488,6 @@ Future<void> showConnectionDetailsSheet(
           l10n: l10n,
           error: error,
           baseUrl: profile?.baseUrl ?? '',
-          supportsTermux: false,
           usesConnectionToken: snapshot.usesToken,
         );
   return showKitSheet<void>(

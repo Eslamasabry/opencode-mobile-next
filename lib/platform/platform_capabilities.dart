@@ -53,10 +53,10 @@ class PlatformCapabilities {
           platform == TargetPlatform.macOS ||
           platform == TargetPlatform.windows);
 
-  /// The Termux bridge (`oc/termux`), its guided setup screen, and the
-  /// on-device managed OpenCode server. Termux is an Android app; there is no
-  /// desktop equivalent and nothing to fall back to.
-  bool get supportsTermux => isAndroid;
+  /// This phone: the page for the OpenCode server the app runs on the
+  /// device itself (built-in Linux). Android only; there is no desktop
+  /// equivalent and nothing to fall back to.
+  bool get supportsThisPhone => isAndroid;
 
   /// Explicit handoff to the separately installed official Android VPN app.
   bool get supportsTailscaleHandoff => isAndroid;

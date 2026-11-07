@@ -5,17 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/models.dart';
 import 'support/fake_server_gateway.dart';
 import 'package:opencode_mobile/domain/product_repository.dart';
-import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
-import 'package:opencode_mobile/ui/widgets/termux_running_server_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -79,12 +75,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
 
-  const termux = MethodChannel('oc/termux');
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   final secrets = <String, String>{};
-  final oldProbe = termuxRunningServerProbe;
 
   final work = ServerProfile(
     id: 'work',
@@ -101,7 +95,7 @@ void main() {
   final phone = ServerProfile(
     id: 'phone',
     name: 'Phone',
-    baseUrl: TermuxBridge.managedServerUrl,
+    baseUrl: 'http://127.0.0.1:4096',
     password: 'synthetic-phone',
   );
 
@@ -130,34 +124,8 @@ void main() {
 
   tearDown(() {
     debugPlatformCapabilities = null;
-    termuxRunningServerProbe = oldProbe;
-    messenger.setMockMethodCallHandler(termux, null);
     messenger.setMockMethodCallHandler(secure, null);
   });
-
-  /// The phone reports a ready OpenCode 1 server that answers on loopback.
-  void fakeRunningPhoneServer() {
-    debugPlatformCapabilities = const PlatformCapabilities.android();
-    termuxRunningServerProbe =
-        ({required baseUrl, username, password, cancellation}) async =>
-            const ServerProbeResult.success('1.18.29');
-    messenger.setMockMethodCallHandler(termux, (call) async {
-      if (call.method == 'getCapabilities') {
-        return {
-          'installed': true,
-          'serviceAvailable': true,
-          'protocolSupported': true,
-          'permissionGranted': true,
-        };
-      }
-      return {
-        'exitCode': 0,
-        'stdout':
-            'phase=ready\nport=4096\nruntime=opencode1\nversion=1.18.29\npid=12\n',
-        'stderr': '',
-      };
-    });
-  }
 
   Future<_Connection> pumpShell(
     WidgetTester tester, {
@@ -542,135 +510,10 @@ void main() {
     expect(find.byType(HomeScreen), findsNothing);
   });
 
-  group('the server on this phone', () {
-    testWidgets('its row follows the one server list and connects in place', (
-      tester,
-    ) async {
-      fakeRunningPhoneServer();
-      final connection = await pumpShell(tester, profiles: [work, phone, home]);
-      await openSwitcher(tester);
-
-      final card = find.byKey(const ValueKey('termux-running-server'));
-      expect(inSheet(card), findsOneWidget);
-      expect(inSheet(find.byType(TermuxRunningServerEntry)), findsOneWidget);
-      // The saved servers are one unlabelled panel, the current one first
-      // (R1); the phone's own server, controlled in place, follows it.
-      expect(
-        tester.getTopLeft(card).dy,
-        greaterThan(
-          tester
-              .getTopLeft(find.byKey(const ValueKey('server-switcher-current')))
-              .dy,
-        ),
-      );
-      expect(
-        tester.getTopLeft(card).dy,
-        greaterThan(
-          tester
-              .getTopLeft(
-                find.byKey(const ValueKey('server-switcher-profile-home')),
-              )
-              .dy,
-        ),
-      );
-      // Controlled where it is shown, from its row's menu.
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-menu')),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('termux-running-server-restart')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('termux-running-server-stop')),
-        findsOneWidget,
-      );
-      await tester.tapAt(const Offset(5, 5));
-      await tester.pumpAndSettle();
-
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-connect')),
-      );
-      await tester.pumpAndSettle();
-      expect(connection.attempted.map((p) => p.id), ['phone']);
-      expect(find.text('Connected home'), findsOneWidget);
-    });
-
-    testWidgets('connected through it: its menu disconnects after confirming', (
-      tester,
-    ) async {
-      fakeRunningPhoneServer();
-      final connection = await pumpShell(tester, profiles: [phone, work]);
-      await openSwitcher(tester);
-
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-menu')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-disconnect')),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('disconnect-confirm-sheet')),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(connection.disconnects, 0);
-      expect(connection.api, isNotNull);
-
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-menu')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-disconnect')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('confirm-disconnect')));
-      await tester.pumpAndSettle();
-      expect(connection.disconnects, 1);
-      expect(connection.api, isNull);
-      expect(find.byType(ServersScreen), findsOneWidget);
-    });
-
-    testWidgets('connected through it: the card offers no Open, and the '
-        'connection is left as it is', (tester) async {
-      fakeRunningPhoneServer();
-      final connection = await pumpShell(tester, profiles: [phone, work]);
-      await openSwitcher(tester);
-      // The row above already says it is the connected one.
-      expect(
-        find.byKey(const ValueKey('termux-running-server-connect')),
-        findsNothing,
-      );
-      expect(connection.attempted, isEmpty);
-      expect(connection.disconnects, 0);
-    });
-
-    testWidgets('Manage setup opens the phone setup', (tester) async {
-      fakeRunningPhoneServer();
-      await pumpShell(tester, profiles: [work, phone]);
-      await openSwitcher(tester);
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-menu')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const ValueKey('termux-running-server-manage')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Phone setup'), findsOneWidget);
-    });
-  });
-
   for (final locale in const [Locale('en'), Locale('ar')]) {
     testWidgets(
       'the app bar and the sheet fit 320 dp at 2.5x in ${locale.languageCode}',
       (tester) async {
-        fakeRunningPhoneServer();
         await pumpShell(
           tester,
           profiles: [home, phone, work],
@@ -693,7 +536,6 @@ void main() {
         expect(find.byKey(const ValueKey('server-switcher-sheet')), findsOne);
         for (final key in [
           'server-switcher-current',
-          'termux-running-server',
           'server-switcher-profile-work',
           'server-switcher-add',
         ]) {

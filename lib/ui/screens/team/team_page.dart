@@ -26,7 +26,6 @@ import '../../../state/phone_team_setup.dart';
 import '../../../state/profiles.dart' show OrchestrationProvider;
 import '../../../state/team_project_demo.dart';
 import '../../../domain/orchestration_gateway.dart' show OrchestrationRun;
-import '../../../termux/team_runtime.dart';
 import '../../../voice/device.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
@@ -46,7 +45,6 @@ Future<void> openTeamPage(
   BuildContext context,
   ConnectionController connection, {
   TeamHostProbe? probe,
-  TermuxTeamRuntime? runtime,
   Future<VoiceDeviceInfo> Function()? deviceProbe,
   DateTime Function()? now,
   ValueChanged<OrchestrationRun>? onOpenRun,
@@ -55,7 +53,6 @@ Future<void> openTeamPage(
   (_) => TeamPage(
     connection: connection,
     probe: probe,
-    runtime: runtime,
     deviceProbe: deviceProbe,
     now: now,
     onOpenRun: onOpenRun,
@@ -69,7 +66,6 @@ Future<void> openTeamSetup(
   BuildContext context,
   ConnectionController connection, {
   TeamHostProbe? probe,
-  TermuxTeamRuntime? runtime,
   Future<VoiceDeviceInfo> Function()? deviceProbe,
 }) {
   final profile = connection.profile;
@@ -91,14 +87,12 @@ Future<void> openTeamSetup(
       controller: team,
       connection: connection,
       probe: probe,
-      teamRuntime: runtime,
     );
   }
   return openTeamPage(
     context,
     connection,
     probe: probe,
-    runtime: runtime,
     deviceProbe: deviceProbe,
   );
 }
@@ -199,7 +193,6 @@ class TeamPage extends StatelessWidget {
     super.key,
     required this.connection,
     this.probe,
-    this.runtime,
     this.deviceProbe,
     this.now,
     this.onOpenRun,
@@ -210,9 +203,6 @@ class TeamPage extends StatelessWidget {
   /// The Gas City probe (discovery and the address form); tests pass a
   /// fake.
   final TeamHostProbe? probe;
-
-  /// The Termux team runtime; tests pass a fake.
-  final TermuxTeamRuntime? runtime;
 
   /// The device facts the phone's pre-flight reads; tests stand in.
   final Future<VoiceDeviceInfo> Function()? deviceProbe;
@@ -277,7 +267,6 @@ class TeamPage extends StatelessWidget {
             controller: team,
             connection: connection,
             probe: probe,
-            teamRuntime: runtime,
             now: now,
             onOpenRun: onOpenRun,
             // This page follows the connection by itself.
@@ -302,7 +291,6 @@ class TeamPage extends StatelessWidget {
         key: ValueKey('team-page-off-${profile?.id}'),
         controller: connection,
         probe: probe,
-        runtime: runtime,
         deviceProbe: deviceProbe,
       );
     },

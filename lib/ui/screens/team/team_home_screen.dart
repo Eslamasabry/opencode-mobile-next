@@ -12,8 +12,7 @@
 ///    its action; Search joins it only when there are more than eight
 ///    tasks, and opens the pinned [KitSearchField] with its one filter
 ///    menu. Its menu: Refresh, Change address (a team found at an
-///    address), the phone's Termux team's own controls (keep it running,
-///    stop, remove; reachable in every state) and Turn off: the
+///    address) and Turn off: the
 ///    team-plugin-sheet's switches, merged here. Turned off, [TeamPage]
 ///    shows the off state on the same page.
 /// 2. One line for the whole team, in the screen's status slot (so it and
@@ -24,9 +23,7 @@
 ///    team…", "Task sent to the team · waiting for a worker", "A worker
 ///    started your task", each only once the host confirmed it; a refusal
 ///    or an unconfirmed step comes before the team's Now), else the team's
-///    Now ([teamNowStatus]). Android stopping the phone's Termux team is its
-///    own line above the list, with Start the team again, and then the page
-///    says nothing that contradicts it.
+///    Now ([teamNowStatus]).
 /// 3. What needs the person, only when something does, with no heading of
 ///    its own: one question as a request block with its answers. The one
 ///    question's block is also its task's row: it names the task, carries
@@ -66,7 +63,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
-import 'package:intl/intl.dart' show DateFormat;
 
 import '../../../builtin/team/builtin_team.dart'
     show BuiltinTeam, BuiltinTeamStartProgress;
@@ -79,7 +75,6 @@ import '../../../state/connection.dart';
 import '../../../state/orchestration.dart';
 import '../../../state/team_dispatch.dart';
 import '../../../state/team_overview.dart';
-import '../../../termux/team_runtime.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
 import '../../widgets/relative_time.dart';
@@ -87,7 +82,6 @@ import '../../widgets/team_now.dart';
 import '../../widgets/team_now_line_view.dart'
     show TeamNowActivity, teamNowActivityLine, teamWorkerStartUsual;
 import '../../widgets/team_host_form.dart' show TeamHostProbe;
-import '../../widgets/team_phone_onboarding.dart' show TeamPhoneKilledNotice;
 import '../../widgets/team_receipt.dart';
 import '../../widgets/team_vocabulary.dart';
 import '../team_conversation/team_conversation.dart' show TeamConversation;
@@ -126,7 +120,6 @@ class TeamHomeScreen extends StatefulWidget {
     this.connection,
     this.thermalGuard,
     this.probe,
-    this.teamRuntime,
     this.onTeamChanged,
   });
 
@@ -143,9 +136,6 @@ class TeamHomeScreen extends StatefulWidget {
 
   /// The Gas City probe of the address form; tests pass a fake.
   final TeamHostProbe? probe;
-
-  /// The Termux team runtime; tests pass a fake.
-  final TermuxTeamRuntime? teamRuntime;
 
   /// After Change address or Turn off replaced this team. [TeamPage]
   /// follows the connection by itself; opened on its own (over a task's
@@ -179,13 +169,6 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
   bool _doneExpanded = false;
 
   bool _refreshing = false;
-
-  /// Android stopped the phone's Termux team ([TeamPhoneKilledNotice]).
-  bool _killed = false;
-
-  /// Keeps the notice (and what it read) as the page moves between its
-  /// states.
-  final _killedKey = GlobalKey();
 
   ConnectionController? _scopeConnection;
   ValueListenable<ThermalGuard?>? _scopeHeat;
@@ -299,7 +282,6 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
         connection: _connection,
         thermalGuard: _heat,
         probe: widget.probe,
-        teamRuntime: widget.teamRuntime,
         now: widget.now,
         onOpenAgent: widget.onOpenAgent,
         onTeamChanged: _teamChanged,
@@ -413,27 +395,11 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
           // A list on its own: centred at the list width on a PC.
           width: KitScreenWidth.list,
           search: _searchOpen && ready ? _searchField(l10n) : null,
-          // Android stopped the phone's Termux team: said here, with
-          // Start the team again (map: team-phone-onboarding-killed).
           status: line,
-          // Stopped by Android: nothing loads until it starts again, and
-          // the line above says so.
-          loading: !_killed && (teamScreenLoading(controller) || _refreshing),
+          loading: teamScreenLoading(controller) || _refreshing,
           loadingLabel: l10n.teamUiCardLoading,
           body: _body(context, hold),
-          // Stopped by Android: giving a task needs the team running, so
-          // the action stays in its place, off, and says why.
-          bottom: _killed
-              ? KitActionBlock(
-                  primary: KitAction(
-                    key: const ValueKey('team-home-start-run'),
-                    label: l10n.teamUiStartRunFab,
-                    icon: AppIconography.add,
-                    onPressed: null,
-                    disabledReason: l10n.teamHomeStoppedStartFirst,
-                  ),
-                )
-              : canStart
+          bottom: canStart
               ? KitButton.primary(
                   key: const ValueKey('team-home-start-run'),
                   label: l10n.teamUiStartRunFab,
@@ -512,9 +478,7 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
     ThermalTeamHold? hold,
   ) {
     final String? held;
-    if (_killed) {
-      held = l10n.teamHomeHostStopped;
-    } else if (hold != null) {
+    if (hold != null) {
       held = hold.serviceStopped
           ? l10n.teamHomeHostStoppedForHeat
           : l10n.teamHomeHostCooling;
@@ -530,107 +494,10 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
     return [teamHostPlace(l10n, controller), held].join(teamUsageSeparator);
   }
 
-  /// "10:42" today, "Sep 27, 10:42" before: when the last-known team was
-  /// read.
-  String _asOf(BuildContext context, DateTime at) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final local = at.toLocal();
-    final now = _now.toLocal();
-    final today =
-        local.year == now.year &&
-        local.month == now.month &&
-        local.day == now.day;
-    return today
-        ? DateFormat.jm(locale).format(local)
-        : DateFormat.MMMd(locale).add_jm().format(local);
-  }
-
-  /// The team as last read, while Android has it stopped: its tasks and
-  /// agents, dimmed, each with the state it had, under one "as of" label.
-  /// Rows do not open: the tasks and agents answer again once the team
-  /// runs (the reason is the page's pinned line).
-  List<Widget> _lastKnown(
-    BuildContext context,
-    AppLocalizations l10n,
-    TeamLastKnown lastKnown,
-  ) {
-    final tokens = KitTokens.of(context);
-    final asOf = _asOf(context, lastKnown.asOf);
-    final titles = teamAgentTitles(l10n, lastKnown.agents);
-    return [
-      if (lastKnown.runs.isNotEmpty) ...[
-        SizedBox(height: tokens.sectionGap),
-        KitRowGroup(
-          key: const ValueKey('team-home-last-known-tasks'),
-          label: l10n.teamHomeLastKnownTasks(asOf),
-          children: [
-            for (final run in lastKnown.runs)
-              KitRow(
-                key: ValueKey('team-home-last-known-run-${run.id}'),
-                leading: KitTaskMark(state: teamRunMark(run, needsYou: false)),
-                title: run.title,
-                titleMaxLines: 2,
-                enabled: false,
-                disabledReason: teamRunStateWord(l10n, run.state),
-              ),
-          ],
-        ),
-      ],
-      if (lastKnown.agents.isNotEmpty) ...[
-        SizedBox(height: tokens.sectionGap),
-        KitRowGroup(
-          key: const ValueKey('team-home-last-known-agents'),
-          label: l10n.teamHomeLastKnownAgents(asOf),
-          children: [
-            for (final agent in lastKnown.agents)
-              KitRow(
-                key: ValueKey('team-home-last-known-agent-${agent.id}'),
-                leading: KitRow.icon(context, AppIconography.agent),
-                title: titles[agent.id] ?? agent.name,
-                enabled: false,
-                disabledReason: teamAgentStateWord(l10n, agent.state),
-              ),
-          ],
-        ),
-      ],
-    ];
-  }
-
   Widget _body(BuildContext context, ThermalTeamHold? hold) {
     final l10n = _copy(context);
     final tokens = KitTokens.of(context);
     final controller = widget.controller;
-    // Android stopped the phone's Termux team (map:
-    // team-phone-onboarding-killed): said at the top of the page, where it
-    // scrolls (at large text it is taller than a fixed header allows).
-    final killed = TeamPhoneKilledNotice.appliesTo(controller.config)
-        ? TeamPhoneKilledNotice(
-            key: _killedKey,
-            controller: controller,
-            runtime: widget.teamRuntime,
-            onKilledChanged: (killed) {
-              if (mounted) setState(() => _killed = killed);
-            },
-          )
-        : null;
-    // Stopped by Android: that line is the page's state (with Start the
-    // team again), and the team as last read stays under it, dimmed and
-    // "as of", so the person still sees what it was doing. Nothing on it
-    // acts: it needs the team running. No "not answering, the app keeps
-    // trying" under it.
-    if (killed != null && _killed) {
-      final lastKnown = controller.lastKnown;
-      return ListView(
-        key: const ValueKey('team-home-stopped'),
-        padding: EdgeInsetsDirectional.only(
-          bottom: KitScreen.endPadding(context),
-        ),
-        children: [
-          killed,
-          if (lastKnown != null) ..._lastKnown(context, l10n, lastKnown),
-        ],
-      );
-    }
     if (teamScreenState(
           context,
           controller: controller,
@@ -638,14 +505,7 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
           onRetry: _refreshing ? null : _refresh,
         )
         case final state?) {
-      if (killed == null) return state;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          killed,
-          Expanded(child: state),
-        ],
-      );
+      return state;
     }
 
     final snapshot = controller.snapshot;
@@ -798,7 +658,6 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
     }
 
     final children = <Widget>[
-      ?killed,
       SizedBox(height: tokens.space3),
       // The tasks: one panel, most urgent first, what finished last.
       if (runs.isEmpty && planning.isEmpty && loose.isEmpty)

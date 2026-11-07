@@ -1,12 +1,10 @@
 // Fakes shared by shared-phone-1's behaviour tests and goldens: a profile
 // store and connection that never touch secure storage, OpenCode inside the
-// app (BuiltinLinux), and the Termux AI team runtime.
+// app (BuiltinLinux).
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 import 'package:opencode_mobile/state/queued_prompt_removal.dart';
 
 final l10n = AppLocalizationsEn();
@@ -130,105 +128,4 @@ ServerProfile phoneProfile() => ServerProfile(
   username: BuiltinLinux.serverUsername,
   password: 'secret',
   serverVersion: '1.18.29',
-);
-
-TeamRuntimeStatus teamStatus(
-  TeamRuntimePhase phase, {
-  bool installed = false,
-  bool busy = false,
-  String city = '',
-  String project = '',
-  int? agents,
-  String? health,
-  bool killed = false,
-  String? lastError,
-  Map<String, String> versions = const {},
-}) => TeamRuntimeStatus(
-  phase: phase,
-  rawPhase: phase.name,
-  verb: '',
-  installed: installed,
-  busy: busy,
-  city: city,
-  project: project,
-  agents: agents,
-  health: health,
-  killedByAndroid: killed,
-  lastError: lastError,
-  versions: versions,
-);
-
-TeamRuntimeStatus teamReady({int agents = 2, bool killed = false}) =>
-    teamStatus(
-      TeamRuntimePhase.ready,
-      installed: true,
-      city: 'phone',
-      project: '/root/projects/calc',
-      agents: killed ? null : agents,
-      health: killed ? null : 'ok',
-      killed: killed,
-      versions: const {'gc': '1.4.1', 'bd': '1.2.2', 'dolt': '2.3.3'},
-    );
-
-class TeamRuntime extends TermuxTeamRuntime {
-  TeamRuntime({this.supported = true, this.totalBytes = 0})
-    : super(
-        runner: (_, {timeout = Duration.zero}) async => '',
-        manifestLoader: () async => null,
-        archProbe: () async => 'aarch64',
-      );
-
-  final bool supported;
-  final int totalBytes;
-  TeamRuntimeStatus current = teamStatus(TeamRuntimePhase.idle);
-  final calls = <String>[];
-  final results = <String, TeamRuntimeStatus>{};
-
-  @override
-  Future<bool> get supportsAiTeam async => supported;
-
-  @override
-  Future<TeamRuntimeManifest?> manifest() async => TeamRuntimeManifest(
-    json: '{}',
-    arch: 'arm64',
-    gascity: '',
-    beads: '',
-    dolt: '',
-    baseUrl: '',
-    totalBytes: totalBytes,
-  );
-
-  @override
-  Future<TeamRuntimeStatus> status() async => current;
-
-  Future<TeamRuntimeStatus> _verb(String verb) async {
-    calls.add(verb);
-    return current = results[verb] ?? current;
-  }
-
-  @override
-  Future<TeamRuntimeStatus> start() => _verb('start');
-
-  @override
-  Future<TeamRuntimeStatus> stop() => _verb('stop');
-
-  @override
-  Future<TeamRuntimeStatus> remove() => _verb('remove');
-}
-
-ServerProfile teamProfile({bool on = true}) => ServerProfile(
-  id: 'termux',
-  name: 'My phone',
-  baseUrl: TermuxBridge.managedServerUrl,
-  password: 'phone-secret',
-  flavor: ServerFlavor.v2,
-  orchestration: on
-      ? OrchestrationConfig(
-          provider: OrchestrationProvider.gascity,
-          url: TermuxBridge.aiteamSupervisorUrl,
-          city: 'phone',
-          hostMode: OrchestrationHostMode.phone,
-          enabledAt: DateTime.utc(2026, 9, 11),
-        )
-      : null,
 );

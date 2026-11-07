@@ -9,6 +9,7 @@ import 'package:opencode_mobile/domain/models.dart';
 import 'support/fake_server_gateway.dart';
 import 'package:opencode_mobile/domain/product_repository.dart';
 import 'support/fake_event_channel.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart' show BuiltinLinux;
 import 'package:opencode_mobile/codex/gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
@@ -16,7 +17,6 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/nudges.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
@@ -899,9 +899,7 @@ void main() {
     testWidgets(
       'This phone is always on the hub and says whether it is set up',
       (tester) async {
-        final controller = await _controller(
-          baseUrl: 'http://127.0.0.1:${TermuxBridge.managedServerPort}',
-        );
+        final controller = await _controller(baseUrl: BuiltinLinux.serverUrl);
         addTearDown(controller.dispose);
         await tester.pumpWidget(_app(controller));
         await tester.pumpAndSettle();
