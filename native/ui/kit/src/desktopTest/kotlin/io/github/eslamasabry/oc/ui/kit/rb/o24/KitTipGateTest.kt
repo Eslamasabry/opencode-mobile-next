@@ -38,6 +38,8 @@ class KitTipGateTest {
 
     @Test fun kit_tip_default() { FlutterGoldenGate.check("kit_tip_default", content = scene) }
     @Test fun kit_tip_default_1280x800() { FlutterGoldenGate.check("kit_tip_default_1280x800", content = scene) }
+    @Test fun kit_tip_default_text2() { FlutterGoldenGate.check("kit_tip_default_text2", modes = listOf("dark"), content = scene) }
+    @Test fun kit_tip_default_text2_1280x800() { FlutterGoldenGate.check("kit_tip_default_text2_1280x800", modes = listOf("dark"), content = scene) }
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_tip", caps = mapOf("KitTip" to "popover"), content = scene) }
 }
 
