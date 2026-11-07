@@ -73,6 +73,9 @@ class LiveBackgroundDesktopTest {
             val platform = CountingPlatform()
             var pageCompositions = 0
             var pageDraws = 0
+            // The clock asks for every display frame, so the test steps frames by hand from the start: an
+            // auto-advancing clock would run the page past the 30 s idle rest before the first measured frame.
+            mainClock.autoAdvance = false
             setContent {
                 KitTheme(appearance(MotionLevel.Full), platform, "en") {
                     KitLiveBackground(Modifier.fillMaxSize()) {
@@ -81,12 +84,12 @@ class LiveBackgroundDesktopTest {
                     }
                 }
             }
-            mainClock.autoAdvance = false
+            repeat(3) { mainClock.advanceTimeByFrame() }
             val start = platform.draws
             val pageDrawsBefore = pageDraws
             repeat(120) { mainClock.advanceTimeByFrame() } // two seconds at 60 Hz
             val frames = platform.draws - start
-            assertTrue(frames in 40..62, "drew $frames background frames in two seconds (30 fps cap)")
+            assertTrue(frames >= 110, "drew $frames background frames in two seconds (one per display frame)")
             assertTrue(platform.times.last() > platform.times.first(), "time moved")
             assertEquals(1, pageCompositions, "the page above the background never recomposed")
             assertEquals(pageDrawsBefore, pageDraws, "the page above the background was never redrawn")

@@ -43,20 +43,33 @@ internal fun LiveShaderLayer(
         modifier
             .reducedResolution(RENDER_SCALE)
             .drawBehind {
-                program.width = size.width
-                program.height = size.height
-                program.time = time()
-                program.intensity = strength
-                program.density = density * RENDER_SCALE
-                program.dark = palette.dark
-                program.setShared(palette)
-                look.uniforms(program)
+                program.setSize(size.width, size.height, density * RENDER_SCALE)
+                program.setFrame(look, time(), strength, palette)
                 drawRect(program.brush)
             }
     )
 }
 
-private fun LiveShaderProgram.setShared(p: LivePalette) {
+/** The drawn size in render pixels and render pixels per dp; [setFrame] sends them with the frame. */
+internal fun LiveUniforms.setSize(width: Float, height: Float, density: Float) {
+    this.width = width
+    this.height = height
+    this.density = density
+}
+
+/**
+ * Sets one frame's uniforms after [setSize]: the shared ones, then [look]'s own. The host calls it in its draw block;
+ * the desktop stills and look tests call the same code, so they draw exactly what a device draws.
+ */
+internal fun LiveUniforms.setFrame(look: LiveLook, time: Float, strength: Float, palette: LivePalette) {
+    this.time = time
+    this.intensity = strength
+    this.dark = palette.dark
+    setShared(palette)
+    look.uniforms(this)
+}
+
+private fun LiveUniforms.setShared(p: LivePalette) {
     float2(LiveShaderLib.RES, width, height)
     float(LiveShaderLib.TIME, time)
     float(LiveShaderLib.INTENSITY, intensity)
@@ -66,6 +79,7 @@ private fun LiveShaderProgram.setShared(p: LivePalette) {
     color(LiveShaderLib.ACCENT, p.accent)
     color(LiveShaderLib.PARTNER, p.partner)
     color(LiveShaderLib.GLOW, p.glow)
+    color(LiveShaderLib.INK, p.ink)
 }
 
 private fun LiveUniforms.color(name: String, c: Color) = float4(name, c.red, c.green, c.blue, 1f)
