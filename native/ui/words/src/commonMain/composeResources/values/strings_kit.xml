@@ -31,6 +31,7 @@
     <string name="kitDiscardBody">What you changed here isn't saved. Discarding it can't be undone.</string>
     <string name="kitDiscardConfirm">Discard changes</string>
     <string name="kitCopied">Copied</string>
+    <string name="kitCopiedMasked">Copied. Anything that looked like a password or key was hidden.</string>
     <string name="kitMore">More</string>
     <string name="kitCopy">Copy</string>
     <string name="kitImageUnavailable">Can't show this image</string>

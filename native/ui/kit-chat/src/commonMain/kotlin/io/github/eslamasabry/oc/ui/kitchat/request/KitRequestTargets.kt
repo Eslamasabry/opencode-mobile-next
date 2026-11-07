@@ -15,6 +15,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -22,12 +25,12 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
-import io.github.eslamasabry.oc.ui.kit.action.rememberKitCopyAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kitchat.rememberKitRedactedCopyAction
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -64,11 +67,12 @@ public fun KitRequestTargets(
             .padding(Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        // Copies every command or path exactly as asked (the full text, not the shown lines): a compact copy mark in
-        // the box's corner beside the first line, like a code block's, never a long button under the command.
+        // Copies every command or path as asked (the full text, not the shown lines) with any key, token or password
+        // masked (Flutter KitCopy.copy, redact: true; E15-S04): a compact copy mark in the box's corner beside the first
+        // line, like a code block's, never a long button under the command.
         val copy =
             if (copyLabel != null && copiedLabel != null)
-                rememberKitCopyAction(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
+                rememberKitRedactedCopyAction(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
             else null
         (if (expanded) targets else targets.take(TARGET_LIMIT)).forEachIndexed { index, target ->
             if (index == 0 && copy != null) {
@@ -82,9 +86,11 @@ public fun KitRequestTargets(
                         TextTone.Primary,
                     )
                     KitIconButton(
-                        icon = if (copy.label == copiedLabel) KitIcons.check else KitIcons.copy,
+                        icon = if (copy.label != copyLabel) KitIcons.check else KitIcons.copy,
                         label = copy.label,
                         onClick = copy.onClick ?: {},
+                        // The copied name is announced once, saying when a password or key was masked.
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                         tone = TextTone.Secondary,
                     )
                 }

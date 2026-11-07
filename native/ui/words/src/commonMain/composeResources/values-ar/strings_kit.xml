@@ -35,6 +35,7 @@
     <string name="kitDiscardBody">ما غيّرته هنا غير محفوظ، ولا يمكن التراجع عن تجاهله.</string>
     <string name="kitDiscardConfirm">تجاهل التغييرات</string>
     <string name="kitCopied">تم النسخ</string>
+    <string name="kitCopiedMasked">تم النسخ. أُخفي كل ما بدا مثل كلمة مرور أو مفتاح.</string>
     <string name="kitMore">المزيد</string>
     <string name="kitCopy">نسخ</string>
     <string name="kitImageUnavailable">يتعذر عرض هذه الصورة</string>

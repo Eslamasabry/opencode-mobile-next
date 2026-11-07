@@ -23,25 +23,33 @@ public fun KitCopyButton(
     text: () -> String,
     modifier: Modifier = Modifier,
     enabled: KitEnabled = KitEnabled.Enabled,
+    mask: KitCopyMask = KitCopyVerbatim,
+    maskedLabel: String = copiedLabel,
 ) {
     KitButton(
-        rememberKitCopyAction(label, copiedLabel, text, enabled),
+        rememberKitCopyAction(label, copiedLabel, text, enabled, mask, maskedLabel),
         modifier.semantics { liveRegion = LiveRegionMode.Polite },
         role = KitButtonRole.Tertiary,
     )
 }
 
-/** The same copy behavior for a pinned sheet action, without moving that action into the body. */
+/**
+ * The same copy behavior for a pinned sheet action, without moving that action into the body. [mask] prepares the text
+ * just before the write; when it masked something the copied state reads [maskedLabel] instead of [copiedLabel].
+ */
 @Composable
 public fun rememberKitCopyAction(
     label: String,
     copiedLabel: String,
     text: () -> String,
     enabled: KitEnabled = KitEnabled.Enabled,
+    mask: KitCopyMask = KitCopyVerbatim,
+    maskedLabel: String = copiedLabel,
 ): KitAction {
     @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     var copies by remember { mutableIntStateOf(0) }
     var copied by remember { mutableStateOf(false) }
+    var masked by remember { mutableStateOf(false) }
     LaunchedEffect(copies) {
         if (copies > 0) {
             delay(MotionTokens.COPIED_HOLD.toLong())
@@ -49,9 +57,11 @@ public fun rememberKitCopyAction(
         }
     }
     return KitAction(
-        if (copied) copiedLabel else label,
+        if (!copied) label else if (masked) maskedLabel else copiedLabel,
         {
-            clipboard.setText(AnnotatedString(text()))
+            val out = mask.apply(text())
+            clipboard.setText(AnnotatedString(out.text))
+            masked = out.masked
             copies++
             copied = true
         },
