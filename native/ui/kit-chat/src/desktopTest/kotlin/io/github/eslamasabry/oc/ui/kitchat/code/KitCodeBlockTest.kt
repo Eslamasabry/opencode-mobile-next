@@ -14,7 +14,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.width
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -33,6 +36,14 @@ class KitCodeBlockTest {
             return SyntaxMpCodeTokenizer().tokenize(code, language)
         }
     }
+
+    private fun androidx.compose.ui.test.SemanticsNodeInteraction.box(): androidx.compose.ui.geometry.Rect =
+        getUnclippedBoundsInRoot().let {
+            androidx.compose.ui.geometry.Rect(it.left.value, it.top.value, it.right.value, it.bottom.value)
+        }
+
+    private fun near(expected: Float, actual: Float, slack: Float = 1f, what: String) =
+        assertTrue(kotlin.math.abs(expected - actual) <= slack, "$what: expected $expected, was $actual")
 
     private fun SemanticsNodeInteractionsProvider.allText(): String =
         onRoot(useUnmergedTree = true).fetchSemanticsNode().let { root ->
@@ -73,7 +84,7 @@ class KitCodeBlockTest {
         }
 
     @Test
-    fun `N9 QA wave4 Copy says Copied (P-001 as a check icon) for a moment and a one-line block stays one line tall`() =
+    fun `N9 C-006 Copy says Copied for a moment and a one-line block with Copy is one target tall plus 4 dp`() =
         runComposeUiTest {
             mainClock.autoAdvance = false
             setContent {
@@ -92,14 +103,113 @@ class KitCodeBlockTest {
                 }
             }
             mainClock.advanceTimeBy(100)
-            val withCopy = onNode(androidx.compose.ui.test.hasTestTag("one")).fetchSemanticsNode().size.height
-            val without = onNode(androidx.compose.ui.test.hasTestTag("plain")).fetchSemanticsNode().size.height
-            assertEquals(without, withCopy, "Copy adds no empty space under the line")
+            // Flutter (`kit_code_block.dart:596-633`, `:1003-1013`): with Copy on line one the block is S1 + 48 + S1;
+            // without controls it is S4 + a 48 dp minimum + S4.
+            val withCopy = onNode(androidx.compose.ui.test.hasTestTag("one")).box()
+            val without = onNode(androidx.compose.ui.test.hasTestTag("plain")).box()
+            near(56f, withCopy.height, what = "one line with Copy")
+            near(80f, without.height, what = "one line without controls")
             onNodeWithContentDescription("Copy").performClick()
             mainClock.advanceTimeBy(100)
             onNodeWithContentDescription("Copied").assertExists()
             mainClock.advanceTimeBy(COPIED_MS + 500)
             onNodeWithContentDescription("Copy").assertExists()
+        }
+
+    @Test
+    fun `C-006 text starts 16 dp in, Copy ends the first line and Wrap sits under it`() =
+        runComposeUiTest {
+            setContent {
+                ChatTestTheme {
+                    KitCodeBlock(
+                        "x = 1\n" + "y".repeat(300), KitCodeKind.Code,
+                        androidx.compose.ui.Modifier.width(360.dp).testTag("block"),
+                        copyLabel = "Copy", onCopy = {},
+                    )
+                }
+            }
+            val block = onNode(androidx.compose.ui.test.hasTestTag("block")).box()
+            val first = onNodeWithText("x = 1", useUnmergedTree = true).box()
+            val copy = onNodeWithContentDescription("Copy").box()
+            val wrap = onNodeWithContentDescription("Wrap lines").box()
+            near(block.left + 16f, first.left, what = "text start (16 dp, was 12)")
+            near(48f, copy.width, what = "Copy target")
+            near(block.right - CODE_COPY_END, copy.right, what = "Copy's target 1 dp from the end")
+            near(block.top + 4f, copy.top, what = "Copy 4 dp under the top")
+            near((first.top + first.bottom) / 2, (copy.top + copy.bottom) / 2, what = "line one centred on Copy")
+            near(copy.left, wrap.left, what = "Wrap under Copy, same column")
+            near(copy.bottom, wrap.top, what = "Wrap right under Copy")
+        }
+
+    @Test
+    fun `C-006 a capped block draws Open full output under a hairline and hands over`() =
+        runComposeUiTest {
+            val source = (1..43).joinToString("\n") { "line $it" }
+            var more = 0
+            setContent {
+                ChatTestTheme {
+                    KitCodeBlock(source = source, kind = KitCodeKind.Code, maxLines = 12, onMore = { more++ })
+                }
+            }
+            onNodeWithText("line 12").assertExists()
+            onNodeWithText("line 13").assertDoesNotExist()
+            onNodeWithText("Open full output").performClick()
+            assertEquals(1, more)
+        }
+
+    @Test
+    fun `C-006 without a hand-over a capped block says Show all N lines and unfolds in place`() =
+        runComposeUiTest {
+            val source = (1..20).joinToString("\n") { "line $it" }
+            setContent { ChatTestTheme { KitCodeBlock(source = source, kind = KitCodeKind.Output) } }
+            onNodeWithText("line 13").assertDoesNotExist()
+            onNodeWithText("Show all 20 lines").performClick()
+            waitForIdle()
+            onNodeWithText("line 13").assertExists()
+            onNodeWithText("line 20").assertExists()
+            onNodeWithText("Show all 20 lines").assertDoesNotExist()
+        }
+
+    @Test
+    fun `C-006 a command never offers Wrap (Flutter scrolls commands sideways)`() =
+        runComposeUiTest {
+            setContent {
+                ChatTestTheme {
+                    KitCodeBlock(
+                        "echo " + "a".repeat(300), KitCodeKind.Command, androidx.compose.ui.Modifier.width(360.dp),
+                        copyLabel = "Copy", onCopy = {},
+                    )
+                }
+            }
+            onNodeWithContentDescription("Copy").assertExists()
+            onNodeWithContentDescription("Wrap lines").assertDoesNotExist()
+        }
+
+    @Test
+    fun `C-006 a long fence's chunks are coloured in their language, an open one stays plain`() =
+        runComposeUiTest {
+            val counting = Counting()
+            var open by mutableStateOf(true)
+            setContent {
+                ChatTestTheme {
+                    CompositionLocalProvider(LocalKitCodeTokenizer provides counting) {
+                        KitCodeChunk(
+                            "val a = 1\nval b = 2", continued = false, continues = true,
+                            language = CodeLanguage.Kotlin, open = open,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            assertEquals(0, counting.calls, "a streaming fence is never coloured")
+            open = false
+            waitForIdle()
+            assertEquals(1, counting.calls)
+            val text =
+                onNodeWithText("val a = 1\nval b = 2", useUnmergedTree = true)
+                    .fetchSemanticsNode().config[SemanticsProperties.Text].first()
+            val bold = androidx.compose.ui.text.font.FontWeight.W600
+            assertTrue(text.spanStyles.any { it.item.fontWeight == bold }, "keywords drawn")
         }
 
     @Test

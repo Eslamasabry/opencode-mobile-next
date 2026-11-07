@@ -1,41 +1,50 @@
 package io.github.eslamasabry.oc.ui.kitchat.code
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitChatWork
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.withContext
 
 /**
  * P12-CHAT-FEEL: one row of a long code block in the transcript. STREAM-FIX publishes a fence of more than 16 lines as
- * chunk rows; each draws its part of ONE box (no seam: [continued] drops the top rounding and padding, [continues]
+ * chunk rows; each draws its part of ONE box (no seam: [continued] drops the top rounding, edge and inset, [continues]
  * the bottom), lines never wrap and scroll sideways (Flutter's code block), and the first chunk carries Copy at the
  * end of its first line, which copies the whole block ([onCopy] is handed the block by the caller). Displays the
- * redacted source (R18). Always left to right (R15).
+ * redacted source (R18). Always left to right (R15); Copy keeps the reading direction's end side.
  *
- * P-001: only the first line keeps clear of Copy; the other lines run the full width. P-002: the frame and the text
- * style are [codeChunkFrame] and [codeChunkStyle], which the streaming reply block draws with too, so a fence whose
- * rows settle at different moments never shows two differently styled boxes.
+ * C-006: the same look as [KitCodeBlock] (radius 14, `detailsSurface`, light hairline edge, 16 dp start inset, Copy
+ * as a 24 dp icon centred on the first line with the text kept S3 clear of its column on every row of the fence).
+ * C-019: a chunk of a closed fence is coloured in its [language] like the block (each chunk is tokenised on its own,
+ * through the same cache); [open] (still streaming) and [CodeLanguage.Plain] draw plain.
  */
 @Composable
 public fun KitCodeChunk(
@@ -46,53 +55,78 @@ public fun KitCodeChunk(
     copyLabel: String? = null,
     onCopy: (() -> Unit)? = null,
     copiedLabel: String? = null,
+    language: CodeLanguage = CodeLanguage.Plain,
+    open: Boolean = false,
 ) {
     val redactor = LocalKitRedactor.current
     val display = remember(source, redactor) { redactor.redact(source) }
-    val fill = LocalKitColors.current.surface2
+    val look = codeFrameLook()
+    val colors = KitCodeColors.of(LocalKitColors.current)
     val style = codeChunkStyle()
-    val copying = !continued && copyLabel != null && onCopy != null
-    val first = remember(display) { display.substringBefore('\n') }
-    val rest = remember(display) { display.substringAfter('\n', missingDelimiterValue = "").takeIf { '\n' in display } }
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Box(modifier.codeChunkFrame(fill, continued, continues).testTag(CODE_CHUNK_TAG)) {
-            Column(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                BasicText(
-                    first,
-                    if (copying) Modifier.padding(end = codeCornerReserve(1).dp) else Modifier,
-                    style = style,
-                    softWrap = false,
-                )
-                if (rest != null) BasicText(rest, style = style, softWrap = false)
+    // Every row of a copyable fence keeps the control column's room, so the rows' text ends on one line.
+    val copyable = copyLabel != null && onCopy != null
+    val copying = copyable && !continued
+    val tokenizer = LocalKitCodeTokenizer.current
+    val work = LocalKitChatWork.current
+    val colourable = !open && language != CodeLanguage.Plain
+    val tokens by
+        produceState<ImmutableList<CodeToken>>(persistentListOf(), display, colourable, language, tokenizer) {
+            value =
+                if (colourable) withContext(work) { tokenizer.tokenize(display, language) } else persistentListOf()
+        }
+    val text = remember(display, tokens, colors) { lineText(display, 0, tokens, colors) }
+    val (insetTop, insetBottom) = codeLineInsets(codeLineHeight(style))
+    Row(
+        modifier.codeChunkFrame(look, continued, continues, copyable, insetTop, insetBottom).testTag(CODE_CHUNK_TAG),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(Modifier.weight(1f)) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                CodeOverflow(colors.fill, colors.gutter) {
+                    Column { BasicText(text, style = style, softWrap = false) }
+                }
             }
-            if (copying)
-                CodeCorner(
-                    fill = fill,
-                    firstLine = codeFirstLine(style),
+        }
+        if (copyable) {
+            Spacer(Modifier.width(Space.S3.dp))
+            if (copying) {
+                // The text's top inset already centres line one on the 48 dp target: lift the column by it.
+                CodeControls(
                     copyLabel = copyLabel,
                     copiedLabel = copiedLabel,
                     onCopy = onCopy,
+                    modifier = Modifier.offsetUp(insetTop),
                 )
+            } else {
+                Spacer(Modifier.width(FlutterKitTokens.MIN_TARGET.dp))
+            }
         }
     }
 }
 
 /**
- * The code surface every transcript code row draws on (P-002): `surface2`, the kit's 8 dp rounding, S3 sides and S2
- * top and bottom; a chunk that [continued] from the row above or [continues] into the row below drops its rounding and
- * padding on that side, so the rows of one fence read as one box. The same values as [KitCodeBlock].
+ * The code surface every transcript code row draws on (P-002, C-006): [codeSurface] plus the insets of
+ * [KitCodeBlock]: 16 dp at the start; a [copyable] fence ends 1 dp from the edge (its control column brings the rest)
+ * and its first and last rows sit S1 plus the centring insets ([insetTop], [insetBottom]) from the edge, as the block
+ * does with Copy on line one; otherwise 16 dp all round. A side that [continued] or [continues] has no inset, so the
+ * rows of one fence read as one box.
  */
-public fun Modifier.codeChunkFrame(fill: Color, continued: Boolean, continues: Boolean): Modifier {
-    val top = if (continued) 0.dp else 8.dp
-    val bottom = if (continues) 0.dp else 8.dp
-    return fillMaxWidth()
-        .background(fill, RoundedCornerShape(top, top, bottom, bottom))
-        .padding(
-            start = Space.S3.dp,
-            end = Space.S3.dp,
-            top = if (continued) 0.dp else Space.S2.dp,
-            bottom = if (continues) 0.dp else Space.S2.dp,
+public fun Modifier.codeChunkFrame(
+    look: CodeFrameLook,
+    continued: Boolean,
+    continues: Boolean,
+    copyable: Boolean = false,
+    insetTop: Float = 0f,
+    insetBottom: Float = 0f,
+): Modifier {
+    val padding =
+        PaddingValues(
+            start = Space.S4.dp,
+            end = (if (copyable) CODE_COPY_END else Space.S4).dp,
+            top = if (continued) 0.dp else if (copyable) (Space.S1 + insetTop).dp else Space.S4.dp,
+            bottom = if (continues) 0.dp else if (copyable) (Space.S1 + insetBottom).dp else Space.S4.dp,
         )
+    return fillMaxWidth().codeSurface(look, continued, continues).padding(padding)
 }
 
 /** Code text in a transcript row (P-002): the kit's mono reading role in the primary ink, always left to right. */
@@ -104,3 +138,10 @@ public fun codeChunkStyle(): TextStyle =
     )
 
 public const val CODE_CHUNK_TAG: String = "kit-code-chunk"
+
+/** Draws a part [dp] higher and takes that much less room (the Copy column on a chunk's first line). */
+private fun Modifier.offsetUp(dp: Float): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val up = dp.dp.roundToPx()
+    layout(placeable.width, (placeable.height - up).coerceAtLeast(0)) { placeable.place(0, -up) }
+}

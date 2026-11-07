@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkFrame
 import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkStyle
+import io.github.eslamasabry.oc.ui.kitchat.code.codeFrameLook
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -123,9 +124,9 @@ public fun KitReplyBlock(
     if (kind == KitBlockKind.Code) {
         // P-002: a fence's rows draw on the settled code chunk's own surface, in its text style and without
         // wrapping (lines scroll sideways), so a row still revealing and a settled one beside it read as one box.
-        val fill = LocalKitColors.current.surface2
+        val look = codeFrameLook()
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Box(m.codeChunkFrame(fill, continued, continues)) {
+            Box(m.codeChunkFrame(look, continued, continues)) {
                 BasicText(
                     text = visible,
                     style = codeChunkStyle().copy(textMotion = TextMotion.Static),
