@@ -33,7 +33,8 @@ Rules:
 ## Version codes
 
 - The first native build delivered to any phone uses **10010** or higher, and the code only ever goes up.
-  `native/version.properties` holds the current value (10003 while builds are internal dev builds).
+  `native/version.properties` holds the current value: 10010, `3.0.0`, taken for the first switch release (E01-S01).
+- Release steps, gates and fix-forward: [release.md](release.md); the owner's switch day: [switch-day.md](switch-day.md).
 - Each fix-forward release adds **+10**, leaving room for rebuilds of the same version.
 - Native must always be above every Flutter version code a user can have: Flutter is at 62 (2.1.4+62) and owner test
   builds reach the 4000s (4610 on 2026-11-06), so 10010+ is safe for both lineages.

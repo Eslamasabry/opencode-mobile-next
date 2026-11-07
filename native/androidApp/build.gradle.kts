@@ -2,6 +2,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.KeyStore
 import java.security.MessageDigest
+import java.util.Properties
 import java.util.zip.ZipFile
 
 plugins { id("oc.android.application") }
@@ -42,6 +43,66 @@ run {
     }
 }
 
+/** E01-S01: what the release signing file says. Values are never logged; only which keys are missing. */
+class ReleaseSigning(val source: File, val storeFile: File?, val storePassword: String?, val keyAlias: String?, val keyPassword: String?) {
+    val missing: List<String> =
+        listOfNotNull(
+            "storeFile".takeIf { storeFile == null },
+            "storePassword".takeIf { storePassword.isNullOrEmpty() },
+            "keyAlias".takeIf { keyAlias.isNullOrEmpty() },
+            "keyPassword".takeIf { keyPassword.isNullOrEmpty() },
+        )
+    val present: Boolean get() = source.isFile
+    val complete: Boolean get() = present && missing.isEmpty() && storeFile?.isFile == true
+}
+
+val releaseSigning: ReleaseSigning = run {
+    val repo = rootDir.parentFile
+    val named =
+        providers.environmentVariable("OC_KEY_PROPERTIES").orNull?.takeIf { it.isNotBlank() }
+            ?: providers.gradleProperty("OC_KEY_PROPERTIES").orNull?.takeIf { it.isNotBlank() }
+    val source: File = if (named != null) File(named) else File(repo, "android/key.properties")
+    val props = Properties()
+    if (source.isFile) source.inputStream().use(props::load)
+    val storePath: String = props.getProperty("storeFile").orEmpty().trim()
+    val store: File? =
+        when {
+            storePath.isEmpty() -> null
+            File(storePath).isAbsolute -> File(storePath)
+            else -> File(repo, "android/app/$storePath")
+        }
+    ReleaseSigning(
+        source,
+        store,
+        props.getProperty("storePassword"),
+        props.getProperty("keyAlias"),
+        props.getProperty("keyPassword"),
+    )
+}
+val releaseDebugSigned: Boolean = providers.gradleProperty("ocReleaseDebugSigned").orNull == "true"
+val releaseRequested: Boolean = gradle.startParameter.taskNames.any { it.substringAfterLast(':').contains("Release") }
+val abiSplits: Boolean = providers.gradleProperty("ocAbiSplits").orNull?.let { it == "true" } ?: releaseRequested
+
+when {
+    releaseDebugSigned ->
+        logger.lifecycle(
+            "Release signing: DEBUG KEY (ocReleaseDebugSigned=true). A build-shape proof only; the identity gate " +
+                "refuses this APK and it must never be installed over the Flutter app."
+        )
+    releaseSigning.complete -> logger.info("Release signing: the lineage key from ${releaseSigning.source}.")
+    releaseSigning.present ->
+        logger.lifecycle(
+            "Release signing skipped: ${releaseSigning.source} is incomplete (" +
+                (releaseSigning.missing.ifEmpty { listOf("storeFile is not a file") }).joinToString() +
+                "). The release APK is left unsigned."
+        )
+    releaseRequested ->
+        logger.lifecycle(
+            "Release signing skipped: no ${releaseSigning.source} (or OC_KEY_PROPERTIES). The release APK is left " +
+                "unsigned; sign it with apksigner and run tool/release/identity_gate.sh before delivery."
+        )
+}
+
 android {
     buildFeatures { buildConfig = true }
     defaultConfig {
@@ -53,11 +114,52 @@ android {
         buildConfigField("long", "AGENT_INSTALL_MIN_FREE_BYTES", "${agentInstallFloor}L")
         buildConfigField("int", "PHONE_SERVER_PORT", "4098")
     }
+    // E01-S01: the release signer. The same file and the same four keys the Flutter app reads
+    // (android/app/build.gradle.kts: <repo>/android/key.properties with storeFile, storePassword, keyAlias, keyPassword;
+    // a relative storeFile resolves against <repo>/android/app as Flutter's file() does). OC_KEY_PROPERTIES (environment
+    // or Gradle property) names another file of that shape, so CI can keep it outside the repository. Without a
+    // complete file the release stays unsigned (it is signed afterwards with apksigner and checked by the identity
+    // gate). -PocReleaseDebugSigned=true signs it with this machine's debug key for a build-shape proof only: the
+    // identity gate refuses that APK, so it can never be delivered.
+    signingConfigs {
+        if (releaseSigning.complete) {
+            create("lineage") {
+                storeFile = releaseSigning.storeFile
+                storePassword = releaseSigning.storePassword
+                keyAlias = releaseSigning.keyAlias
+                keyPassword = releaseSigning.keyPassword
+            }
+        }
+    }
+    // E01-S05/E01-S08: ABI splits for release builds (arm64-v8a, x86_64, universal). AGP gives every split the
+    // variant's versionCode; verifySwitchReleaseIdentity proves it. Splits are off for debug builds so the everyday
+    // `assembleDebug` keeps one APK; -PocAbiSplits=true|false overrides.
+    splits {
+        abi {
+            isEnable = abiSplits
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = true
+        }
+    }
     // Slice-0 proofs P3 and start-up (native/proof-p3-2026-11-01): a release build that the shell
     // may profile, signed
     // with the debug key so Macrobenchmark can install it. R8 on, like the release the plan ships
     // (ADR §9.9).
     buildTypes {
+        // E01-S08: the shipped release shape. R8 (shrink, optimize, obfuscate) and resource shrinking, with the keep
+        // rules in release-rules.pro (serialization, Metro, workers, widget providers, frozen components, JNI).
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "release-rules.pro")
+            signingConfig =
+                when {
+                    releaseDebugSigned -> signingConfigs.getByName("debug")
+                    releaseSigning.complete -> signingConfigs.getByName("lineage")
+                    else -> null
+                }
+        }
         create("benchmark") {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
@@ -78,6 +180,9 @@ android {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += listOf("release")
+            // Unchanged by E01-S08: the migration proof's qa build stays un-shrunk, as before.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
     // Slice-0 P5 + P12-MIGRATION: the same-package build. `switch` has no applicationIdSuffix, so
@@ -287,10 +392,12 @@ abstract class VerifyNativeLibraries : DefaultTask() {
         check(apks.isNotEmpty()) { "No APK to check in ${apkDir.get().asFile}" }
         val problems = mutableListOf<String>()
         for (apk in apks) {
+            // E01-S08: a per-ABI split carries only its own ABI; the universal APK (or an unsplit one) carries both.
+            val abis = listOf("arm64-v8a", "x86_64").filter { "-$it-" in apk.name }.ifEmpty { listOf("arm64-v8a", "x86_64") }
             ZipFile(apk).use { zip ->
                 if (zip.getEntry("assets/aiteam-engine-manifest.json") == null)
                     problems += "${apk.name}: assets/aiteam-engine-manifest.json missing"
-                for (abi in listOf("arm64-v8a", "x86_64")) for (name in required) {
+                for (abi in abis) for (name in required) {
                     val entry = zip.getEntry("lib/$abi/$name")
                     if (entry == null) {
                         problems += "${apk.name}: lib/$abi/$name missing"
@@ -389,6 +496,51 @@ androidComponents.onVariants { variant ->
     tasks.matching { it.name == "assemble$name" }.configureEach { finalizedBy(verify) }
 }
 
+// E01-S01: the switch release must be the Flutter app's package with a release version name, at or above the first
+// native release number, and every APK (each ABI split and the universal one) must carry the same versionCode, or
+// the phones holding one APK could not update to another. Checked from the variant's outputs before packaging.
+abstract class VerifyReleaseIdentity : DefaultTask() {
+    @get:Input abstract val applicationId: Property<String>
+    @get:Input abstract val versionCodes: ListProperty<Int>
+    @get:Input abstract val versionNames: ListProperty<String>
+
+    @TaskAction
+    fun verify() {
+        val problems = mutableListOf<String>()
+        if (applicationId.get() != SWITCH_PACKAGE)
+            problems += "package is ${applicationId.get()}, expected $SWITCH_PACKAGE"
+        val codes = versionCodes.get().distinct()
+        if (codes.size != 1) problems += "the APKs carry different versionCodes $codes (every split needs the same one)"
+        if (codes.any { it < FIRST_RELEASE_CODE }) problems += "versionCode ${codes.min()} is below $FIRST_RELEASE_CODE"
+        val names = versionNames.get().distinct()
+        if (names.size != 1 || !Regex("""[3-9]\.\d+\.\d+|\d{2,}\.\d+\.\d+""").matches(names.single()))
+            problems += "versionName $names is not one plain release version (3.0.0 or later, no suffix)"
+        check(problems.isEmpty()) { "The switch release identity is wrong (E01-S01):\n" + problems.joinToString("\n") }
+    }
+
+    companion object {
+        const val SWITCH_PACKAGE = "io.github.eslamasabry.opencode_mobile"
+        const val FIRST_RELEASE_CODE = 10010
+    }
+}
+
+androidComponents.onVariants(androidComponents.selector().withBuildType("release")) { variant ->
+    if (variant.flavorName != "switch") return@onVariants
+    val identity =
+        tasks.register<VerifyReleaseIdentity>("verifySwitchReleaseIdentity") {
+            group = "verification"
+            description = "Fails when the switch release is not the Flutter package at a release version (E01-S01)."
+            applicationId.set(variant.applicationId)
+            for (output in variant.outputs) {
+                versionCodes.add(output.versionCode.map { it ?: -1 })
+                versionNames.add(output.versionName.map { it ?: "" })
+            }
+        }
+    tasks.matching { it.name == "assembleSwitchRelease" || it.name == "packageSwitchRelease" }.configureEach {
+        dependsOn(identity)
+    }
+}
+
 // A production release may only keep one of the two existing populations' signing lineages.
 // Release builds that Gradle leaves unsigned (signed afterwards with apksigner, as the migration
 // proof and the build server do) are checked by the signer comparison at delivery instead. The
@@ -399,7 +551,12 @@ val verifyProductionLineage by tasks.registering {
     val storeType = signing?.storeType ?: "JKS"
     val storePassword = signing?.storePassword
     val keyAlias = signing?.keyAlias
+    val debugSigned = releaseDebugSigned
     doLast {
+        if (debugSigned) {
+            logger.lifecycle("Release is DEBUG-signed (ocReleaseDebugSigned=true): a build-shape proof, never delivered.")
+            return@doLast
+        }
         if (storeFile == null) {
             logger.lifecycle(
                 "Release is unsigned here; its signer is compared with the installed lineage at delivery."
