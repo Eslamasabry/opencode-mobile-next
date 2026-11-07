@@ -130,6 +130,39 @@ class VoiceSettingsScreenTest {
             }
         }
 
+    @Test
+    fun `E20-S08 a running download says the locked choices' reason once, on the page edge`() = runTest {
+        val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+        runCurrent()
+        val state = presenter.state.value.copy(job = PackJobUi(PackId("base"), 49, 100, false))
+        runComposeUiTest {
+            show(state, presenter)
+            val caption = "You can change this when the download finishes"
+            // It showed under the models and again, 8 dp in, under the language choice.
+            onAllNodesWithText(caption, useUnmergedTree = true).assertCountEquals(1)
+            onAllNodesWithTag("kit-segmented-reason", useUnmergedTree = true).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `E20-S08 the pinned Download is one short line on the page's edge`() = runTest {
+        val presenter = VoiceSettingsPresenter(FakeHub(), backgroundScope) {}
+        runCurrent()
+        val state = presenter.state.value
+        runComposeUiTest {
+            show(state, presenter)
+            val block = onNodeWithTag("kit-screen-bottom", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            val action = onNodeWithTag("voice-model-primary-action", useUnmergedTree = true).fetchSemanticsNode()
+            // The bottom block keeps the gutter once: the button fills it, not a second gutter further in.
+            assertEquals(block.width, action.boundsInRoot.width, 1f)
+            // "Download (… MB)": no model name, so it fits one line.
+            val words = onNode(hasText("Download (", substring = true), useUnmergedTree = true).fetchSemanticsNode()
+            val lines = words.config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action!!
+                .let { get -> mutableListOf<androidx.compose.ui.text.TextLayoutResult>().also { get(it) }.first().lineCount }
+            assertEquals(1, lines)
+        }
+    }
+
     private fun ComposeUiTest.show(state: VoiceSettingsUi, presenter: VoiceSettingsPresenter) {
         setContent {
             KitTheme(

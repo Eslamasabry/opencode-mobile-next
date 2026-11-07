@@ -216,6 +216,7 @@
     <string name="runCommandFailedTitle">تعذّر تشغيل /%1$s</string>
     <string name="voiceSetupSubtitle">نزّل نموذجًا للكلام مرة واحدة. بعد ذلك، يعمل الإدخال الصوتي على هذا الهاتف دون إنترنت.</string>
     <string name="voiceSetupDownloadPack">تنزيل %1$s (%2$s)</string>
+    <string name="voiceSetupDownloadSize">تنزيل (%1$s)</string>
     <string name="voiceSetupUsePack">استخدام %1$s</string>
     <string name="voiceSetupRedownloadPack">تنزيل نموذج الكلام %1$s مجددًا</string>
     <string name="voiceSetupDeletePack">حذف نموذج الكلام %1$s (%2$s)</string>
