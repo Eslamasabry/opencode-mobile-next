@@ -172,7 +172,7 @@ object FlutterGoldenGate {
                 val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
                 result[mode] = compare("${name}_$mode", ref, native)
                 emptyComposition("${name}_$mode", ref, native)?.let { failures += AssertionError(it) }
-            } catch (e: Exception) {
+            } catch (e: IllegalStateException) { // a missing golden (compare's check); other exceptions propagate
                 failures += e
             } catch (e: AssertionError) {
                 failures += e
