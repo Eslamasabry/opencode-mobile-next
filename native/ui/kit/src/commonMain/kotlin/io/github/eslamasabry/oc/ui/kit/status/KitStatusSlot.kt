@@ -72,12 +72,33 @@ public fun KitStatusScope(conditions: List<KitStatus>, content: @Composable () -
  */
 @Composable
 public fun KitStatusSlot(status: KitStatus?, content: @Composable (shown: KitStatus?) -> Unit) {
+    KitStatusSlot(status, emptySet(), content)
+}
+
+/**
+ * [KitStatusSlot] that leaves out the app-wide condition kinds in [omit], because the page under it already is that
+ * condition (Dart `KitStatusLineSlot.omit`, `KitScreen.bodySays`).
+ */
+@Composable
+public fun KitStatusSlot(status: KitStatus?, omit: Set<KitStatusKind>, content: @Composable (shown: KitStatus?) -> Unit) {
     val state = remember { KitStatusSlotState() }
     val conditions = LocalKitStatusConditions.current
     CompositionLocalProvider(LocalKitStatusSlot provides state) {
-        content(KitStatus.highest(conditions + status + state.contributions))
+        content(kitStatusShown(conditions, status, state.contributions, omit))
     }
 }
+
+/**
+ * Which status the slot shows (Dart `_KitStatusLineSlotState.build`, kit_status_slot.dart:143-154): the highest of the
+ * app-wide [conditions] not in [omit], the slot's own [status] and every contribution, ties keeping the first
+ * (app-wide, then own, then contributions in registration order). [omit] leaves out app-wide conditions only.
+ */
+public fun kitStatusShown(
+    conditions: List<KitStatus>,
+    status: KitStatus?,
+    contributions: List<KitStatus?>,
+    omit: Set<KitStatusKind> = emptySet(),
+): KitStatus? = KitStatus.highest(conditions.filter { it.kind !in omit } + status + contributions)
 
 /**
  * The slot's line: folds in (STANDARD on Enter) when a condition appears and out (QUICK) when it goes; instant under

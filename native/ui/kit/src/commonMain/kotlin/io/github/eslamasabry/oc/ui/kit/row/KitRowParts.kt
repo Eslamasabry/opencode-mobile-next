@@ -213,7 +213,10 @@ internal fun RowLockedValue(value: KitRowTrailing.Locked) {
     val tokens = LocalKitTokens.current
     Row(
         Modifier.widthIn(max = (LocalKitWindow.current.widthDp / 2).dp) // F: lib/ui/kit/kit_row.dart:627
-            .padding(start = Space.S2.dp, end = Space.S3.dp).testTag("kit-row-locked-value"),
+            // Flutter: the row's space2 gap and the part's own space2 before the lock, and the part's space3 after it
+            // on the row's space1 end (kit_row_parts.dart:431-436, kit_row.dart:507-512, 618). Here the row already
+            // keeps space3 before it and the gutter after it, so the part adds space1 before and nothing after.
+            .padding(start = Space.S1.dp).testTag("kit-row-locked-value"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
