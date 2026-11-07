@@ -18,7 +18,6 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.Accents
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
-import io.github.eslamasabry.oc.ui.design.effects.AuroraImage
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -40,6 +39,8 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
 import io.github.eslamasabry.oc.ui.kit.choice.KitThemeOptionCard
+import io.github.eslamasabry.oc.ui.kit.live.kitLiveLookIds
+import io.github.eslamasabry.oc.ui.kit.live.kitLiveLookLabel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.guide.KitGuideQuestionHeading
@@ -383,7 +384,8 @@ private fun ColumnScope.AppearanceControls(
 
     if (question == null || question == AppearanceQuestion.Look) {
         // Background › Look (GLASS_REF appearance_screen.dart:1041-1083): Off and every look the app draws, each a
-        // still frame behind a tiny conversation. A look the native app does not draw yet is not offered.
+        // still frame behind a tiny conversation (kitLiveLookIds: the drawn looks and the painted aurora, in Flutter's
+        // picker order). A look the native app does not draw yet is not offered.
         AppearanceControlHeading(
             stringResource(Res.string.appearanceAskLook),
             question,
@@ -397,17 +399,14 @@ private fun ColumnScope.AppearanceControls(
         val scale = LocalDensity.current.fontScale
         Box(gutter) {
             AppearanceGrid(
-                listOf(null, AuroraImage.ID),
+                listOf<String?>(null) + kitLiveLookIds,
                 3, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
                 (136 + 44 * scale).dp, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
             ) { look ->
                 KitLookOptionCard(
                     look = look,
                     label =
-                        stringResource(
-                            if (look == null) Res.string.appearanceLookOff
-                            else Res.string.rb34LiveStyleAuroraImage
-                        ),
+                        stringResource(if (look == null) Res.string.appearanceLookOff else kitLiveLookLabel(look)),
                     selected = ui.liveLook == look,
                     onSelect = { actions.onLiveLook(look) },
                     modifier = Modifier.fillMaxSize().testTag("appearance-look-${look ?: "off"}"),
