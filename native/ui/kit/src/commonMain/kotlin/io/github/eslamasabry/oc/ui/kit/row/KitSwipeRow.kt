@@ -120,7 +120,10 @@ public fun KitSwipeRow(
                         placeable.placeRelative(IntOffset(drag.roundToInt(), 0))
                     }
                 }
-                .background(colors.ground)
+                // E20-S24: the face is filled only while it moves, to cover the action beneath. At rest the row lies
+                // on the page itself, so a list of swipe rows reads as one surface (an opaque face drew a darker
+                // band per row over a live background or a styled ground).
+                .then(if (drag > 0f || committed > 0f) Modifier.background(colors.ground) else Modifier)
                 .kitLeaving(committed > 0f)
                 .draggable(
                     state = state,

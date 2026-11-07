@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="s10HomeRowWorkingFor">يعمل منذ %1$s</string>
+    <string name="s10HomeRowMinutes">%1$s د</string>
+    <string name="s10HomeRowHoursMinutes">%1$s س %2$s د</string>
+    <string name="s10HomeUsageLeft">%1$s · متبقٍّ %2$s٪</string>
+</resources>

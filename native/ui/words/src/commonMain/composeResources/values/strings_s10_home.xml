@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- B-161: a live run on a home row, "Working 34m"; %1$s is the run's length. -->
+    <string name="s10HomeRowWorkingFor">Working %1$s</string>
+    <string name="s10HomeRowMinutes">%1$sm</string>
+    <string name="s10HomeRowHoursMinutes">%1$sh %2$sm</string>
+    <!-- B-162: the quiet Usage row; %1$s is the agent or provider, %2$s the percent left. -->
+    <string name="s10HomeUsageLeft">%1$s · %2$s% left</string>
+</resources>

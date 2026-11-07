@@ -52,6 +52,10 @@ public data class ConversationRowUi(
     val agentName: String? = null,
     /** The server's name, set only when the list holds more than one source. */
     val server: String? = null,
+    /** The conversation's folder on its server (where its branch is read); null when it has none. */
+    val directory: String? = null,
+    /** B-161: the folder's git branch; null outside git or until it is known. */
+    val branch: String? = null,
 )
 
 /**
@@ -197,6 +201,8 @@ public data class ChatsUi(
     /** The rename dialog (N-30: Rename from the row menu), or null. */
     val renaming: RenameUi? = null,
     val renameFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    /** B-162: today's tightest usage limit for the Usage row's line; null = the row says only "Usage". */
+    val usage: HomeUsageLimit? = null,
 ) {
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
@@ -295,6 +301,9 @@ public interface ChatsActions {
     public fun showBriefOverflow(shown: BriefUi)
 
     public fun showAll()
+
+    /** B-162: the Usage page (the quiet row at the end of the list). */
+    public fun openUsage() {}
 
     /** Search conversations across the server (unit P12-SEARCH-USAGE). */
     public fun openSearch() {}

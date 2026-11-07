@@ -116,6 +116,10 @@ internal class RecordingChatsActions : ChatsActions {
         calls += "all"
     }
 
+    override fun openUsage() {
+        calls += "usage"
+    }
+
     override fun openProjects() {
         calls += "projects"
     }

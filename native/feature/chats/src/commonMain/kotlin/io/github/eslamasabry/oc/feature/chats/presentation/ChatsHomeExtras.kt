@@ -113,6 +113,20 @@ public interface ChatsHomeExtras {
     public suspend fun refreshWatched(): Outcome<Unit>
 
     public suspend fun openWatched(key: String): Outcome<ConversationRef>
+
+    /**
+     * B-161: the git branch of each folder the home lists; a folder without git is absent. The connection owner
+     * fills it (OC2 `GET /vcs` per folder); by default rows show no branch.
+     */
+    public val branches: StateFlow<Map<BranchPlace, String>>
+        get() = NoHomeRowFacts.branches
+
+    /** B-161: the folders the home lists now, so [branches] reads those and only those. */
+    public fun wantBranches(places: Set<BranchPlace>) {}
+
+    /** B-162: the usage limits known now, for the Usage row's line; by default none, and the row says "Usage". */
+    public val usageLimits: StateFlow<ImmutableList<HomeUsageLimit>>
+        get() = NoHomeRowFacts.usageLimits
 }
 
 @ContributesBinding(AppScope::class)
