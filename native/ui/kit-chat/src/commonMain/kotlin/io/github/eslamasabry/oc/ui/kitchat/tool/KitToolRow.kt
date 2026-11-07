@@ -36,10 +36,7 @@ import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -57,6 +54,8 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwapCount
 import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -229,7 +228,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             // drops under the verb.
             if (wide || subject == null) {
                 KitLiveSweep(working = view.status == KitToolStatus.Running) {
-                    KitText(view.title, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = lines)
+                    StepTitle(view.title, lines)
                 }
                 if (subject != null) {
                     KitFrameText { KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Secondary, maxLines = lines) }
@@ -237,7 +236,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     KitLiveSweep(working = view.status == KitToolStatus.Running) {
-                        KitText(view.title, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
+                        StepTitle(view.title, 1)
                     }
                     Spacer(Modifier.width(Space.S2.dp))
                     Box(Modifier.weight(1f)) {
@@ -273,7 +272,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp, Alignment.End),
         ) {
             StepEnd(view, lines, Modifier.weight(1f, fill = false))
-            if (opened != null) KitFoldChevron(opened, colors.text2, tokens.smallIcon.dp, Modifier.testTag("kit-tool-chevron"))
+            if (opened != null) KitFoldChevron(opened, Modifier.testTag("kit-tool-chevron"))
         }
     }
 }
@@ -285,17 +284,44 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
  */
 @Composable
 private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
-    val colors = LocalKitColors.current
     val duration = view.durationLabel?.takeIf { it.isNotEmpty() }
+    val counts = view.added != null || view.removed != null
+    // The parts are S2 apart. The gaps are their own (no spacedBy): the status slot stays composed while a finished
+    // step shows nothing there, and an empty slot must not add a gap.
     Row(
         modifier.semantics(mergeDescendants = true) { stateDescription = view.statusLabel },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        if (view.added != null || view.removed != null) Counts(view.added, view.removed)
-        when (view.status) {
+        if (counts) Counts(view.added, view.removed)
+        // M-020: how the step stands changes as one QUICK cross-fade (live dot → done, failed, stopped), never in one
+        // frame; reduced motion: instant.
+        KitSwap(view.status) { status -> StepStatus(view, status, lines, gapBefore = counts) }
+        if (duration != null && view.status != KitToolStatus.Pending) {
+            val gap = if (counts || view.status != KitToolStatus.Done) Space.S2.dp else 0.dp
+            KitText(duration, Modifier.padding(start = gap).testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
+        }
+    }
+}
+
+/**
+ * The step's verb ("Running" → "Running the date"): a new title cross-fades over the old one (M-020, QUICK; instant
+ * under reduced motion) instead of replacing it in one frame.
+ */
+@Composable
+private fun StepTitle(title: String, lines: Int) {
+    KitSwap(title, alignment = Alignment.CenterStart) { shown ->
+        KitText(shown, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = lines)
+    }
+}
+
+@Composable
+private fun StepStatus(view: KitToolView, status: KitToolStatus, lines: Int, gapBefore: Boolean) {
+    val colors = LocalKitColors.current
+    if (status == KitToolStatus.Done) return // a finished step shows only how long it took
+    Row(Modifier.padding(start = if (gapBefore) Space.S2.dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
+        when (status) {
             KitToolStatus.Done -> Unit
-            KitToolStatus.Running -> Box(Modifier.size(8.dp).background(colors.live, CircleShape))
+            KitToolStatus.Running -> Box(Modifier.size(8.dp).background(colors.live, CircleShape).testTag("kit-tool-live-dot"))
             // P-105: blocked on the person: the work line's attention dot and the caller's words, no clock.
             KitToolStatus.WaitingForYou ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
@@ -304,18 +330,18 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
                 }
             else -> {
                 val mark =
-                    when (view.status) {
+                    when (status) {
                         KitToolStatus.Failed -> KitIcons.error
                         KitToolStatus.Stopped -> KitIcons.stopCircle
                         else -> KitIcons.radioEmpty
                     }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitIcon(mark, size = KitIconSize.Tiny, tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)
+                    KitIcon(mark, size = KitIconSize.Tiny, tone = if (status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)
                     KitText(
                         view.statusLabel,
                         role = TypeRole.Secondary,
                         // LOOK-5: a failed step's word is plain text1, never a danger colour; the rest are quiet.
-                        tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary,
+                        tone = if (status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary,
                         kind = KitTextKind.Frame,
                         maxLines = lines,
                     )
@@ -335,11 +361,6 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
 @Composable
 private fun Counts(added: Int?, removed: Int?) {
     val colors = LocalKitColors.current
-    val text = buildAnnotatedString {
-        if (added != null) withStyle(SpanStyle(color = colors.success)) { append("+$added") }
-        if (added != null && removed != null) append(' ')
-        if (removed != null) withStyle(SpanStyle(color = colors.text2)) { append("−$removed") }
-    }
     val style =
         LocalKitTypography.current
             .style(TypeRole.Secondary)
@@ -348,9 +369,15 @@ private fun Counts(added: Int?, removed: Int?) {
                 textDirection = TextDirection.Ltr,
                 fontFeatureSettings = "tnum",
             )
+    // M-020: each number rolls to its new value (KitSwap.count: Full rolls, Calm cross-fades, reduced motion jumps).
     KitFrameText {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            BasicText(text, style = style, maxLines = 1)
+            Row(Modifier.testTag("kit-tool-counts"), horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                if (added != null)
+                    KitSwapCount(added) { n -> BasicText("+$n", style = style.copy(color = colors.success), maxLines = 1) }
+                if (removed != null)
+                    KitSwapCount(removed) { n -> BasicText("−$n", style = style, maxLines = 1) }
+            }
         }
     }
 }

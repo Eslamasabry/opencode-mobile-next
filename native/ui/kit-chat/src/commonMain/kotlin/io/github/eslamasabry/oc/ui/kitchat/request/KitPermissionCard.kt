@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -205,6 +206,8 @@ private fun Answers(
                 allowOnceLabel, alwaysLabel, denyLabel, onAllowOnce, onAlways,
                 if (denyReply != null) ({ replying = true }) else onDeny,
                 enabled, reason, secondary,
+                // M-005: Deny is an answer only when it does not open the reply field first.
+                denyAnswers = denyReply == null,
             )
         }
     }
@@ -230,10 +233,11 @@ private fun DenyReplyPanel(
             { reply.onSend(note) },
             Modifier.fillMaxWidth().testTag("permission-card-reply-send"),
             role = KitButtonRole.Primary,
+            haptic = ANSWER_HAPTIC,
             enabled = if (canSend) KitEnabled.Enabled else KitEnabled.Disabled(reason ?: reply.emptyReason),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
-            KitButton(reply.justDenyLabel, onJustDeny, Modifier.weight(1f).testTag("permission-card-reply-just-deny"), role = KitButtonRole.Secondary, enabled = availability)
+            KitButton(reply.justDenyLabel, onJustDeny, Modifier.weight(1f).testTag("permission-card-reply-just-deny"), role = KitButtonRole.Secondary, enabled = availability, haptic = ANSWER_HAPTIC)
             KitButton(reply.backLabel, onBack, Modifier.weight(1f), role = KitButtonRole.Tertiary)
         }
     }
@@ -250,6 +254,7 @@ private fun AnswerButtons(
     enabled: Boolean,
     reason: String?,
     secondary: Boolean,
+    denyAnswers: Boolean = true,
 ) {
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
@@ -265,10 +270,11 @@ private fun AnswerButtons(
             val allow: @Composable (Modifier) -> Unit = { modifier ->
                 KitButton(allowOnceLabel, onAllowOnce, modifier.testTag("permission-card-allow"),
                     role = if (secondary && !signal) KitButtonRole.Secondary else KitButtonRole.Primary,
-                    enabled = availability)
+                    enabled = availability, haptic = ANSWER_HAPTIC)
             }
             val reject: @Composable (Modifier) -> Unit = { modifier ->
-                KitButton(denyLabel, onDeny, modifier.testTag("permission-card-reject"), role = KitButtonRole.Secondary, enabled = availability)
+                KitButton(denyLabel, onDeny, modifier.testTag("permission-card-reject"), role = KitButtonRole.Secondary, enabled = availability,
+                    haptic = if (denyAnswers) ANSWER_HAPTIC else null)
             }
             if (fits(allowOnceLabel) && fits(denyLabel)) Row(
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically,
@@ -282,10 +288,16 @@ private fun AnswerButtons(
         }
         if (!enabled && reason != null) KitText(reason, role = TypeRole.Secondary, tone = TextTone.Secondary)
         if (alwaysLabel != null && onAlways != null) {
-            KitButton(alwaysLabel, onAlways, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary, enabled = availability)
+            KitButton(alwaysLabel, onAlways, Modifier.fillMaxWidth().testTag("permission-card-always"), role = KitButtonRole.Secondary, enabled = availability, haptic = ANSWER_HAPTIC)
         }
     }
 }
+
+/**
+ * M-005 (Flutter `kit_request_card.dart`): every answer (Allow, Deny, Always, and the deny reply's two answers) plays the
+ * light `Send` haptic, the person's words leaving. Opening the reply field is not an answer and stays silent (MOT-11).
+ */
+internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Send
 
 /**
  * 45 % of the window's height (60 % at 2× text and above); no cap while the window has no size yet.

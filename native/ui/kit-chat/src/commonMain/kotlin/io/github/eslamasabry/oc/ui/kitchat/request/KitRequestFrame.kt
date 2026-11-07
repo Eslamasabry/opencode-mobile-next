@@ -16,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
@@ -114,4 +116,31 @@ public fun KitRequestAnsweredRow(
             outcome()
         }
     }
+}
+
+/**
+ * The collapsed answered row whose [outcome] changes in place (M-005): "Allowed · Undo" → "Sending…" → "Not confirmed
+ * yet" cross-fade through the kit's [KitSwap] (QUICK; instant with reduced motion) instead of swapping in one frame.
+ * [outcomeKey] says when the outcome is a different one; the leaving outcome is drawn from its own key, ignores touches
+ * (a late Undo tap never lands) and is hidden from TalkBack while it fades.
+ */
+@Composable
+public fun <T> KitRequestAnsweredRow(
+    icon: ImageVector,
+    title: String,
+    outcomeKey: T,
+    modifier: Modifier = Modifier,
+    outcome: @Composable (T) -> Unit,
+) {
+    // Named, without outcomeKey: only the plain row fits (this overload needs a key).
+    KitRequestAnsweredRow(
+        icon = icon,
+        title = title,
+        modifier = modifier,
+        outcome = {
+            KitSwap(outcomeKey, Modifier.fillMaxWidth(), pace = KitPace.Quick, alignment = Alignment.CenterStart) { shown ->
+                outcome(shown)
+            }
+        },
+    )
 }

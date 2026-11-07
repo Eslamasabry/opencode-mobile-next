@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +25,8 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrameText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -76,11 +76,12 @@ public const val PILL_TAG: String = "kit-stop-and-send"
 
 /**
  * The field button's face changes (plan 08 §5.2 "Field button changes"): mic ⇄ Send ⇄ "Stop and send", Send → spinner,
- * all on the same 48 dp target, a cross-fade of `QUICK` under Full and Calm, instant under Off. No scale (MOT-2).
+ * all on the same 48 dp target, a cross-fade of `QUICK` under Full and Calm, instant under Off. No scale (MOT-2). It is
+ * the kit's own [KitSwap], so the leaving face ignores touches and is hidden from TalkBack while it fades.
  *
  * Motion: fade. Replaces: the field button's `KitSwap` (lib/ui/kit/chat/kit_composer.dart).
  */
 @Composable
 public fun <T> KitComposerSwap(target: T, modifier: Modifier = Modifier, content: @Composable (T) -> Unit) {
-    Crossfade(target, modifier, animationSpec = KitMotion.specs.quick(), label = "composer-swap") { content(it) }
+    KitSwap(target, modifier, pace = KitPace.Quick, content = content)
 }

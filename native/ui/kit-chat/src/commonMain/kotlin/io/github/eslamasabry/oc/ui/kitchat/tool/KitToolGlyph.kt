@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitChevron
 
 /**
  * The kind glyph of a step: the Phosphor glyph the Flutter step rows use for the same tool (terminal, file, pencil,
@@ -36,8 +37,12 @@ internal fun KitToolKind.icon(): ImageVector =
         KitToolKind.Other -> KitIcons.more
     }
 
-/** The fold chevron: Phosphor caret down when folded, up when open (vertical, so it never mirrors). */
+/**
+ * The fold chevron (M-016): the kit's one disclosure chevron ([KitChevron], Flutter `KitSpin.chevron`), down when folded
+ * and turning half a turn to up when open instead of flipping in one frame; Calm cross-fades, reduced motion is
+ * instant. Vertical, so it never mirrors; `text2` at the small icon size.
+ */
 @Composable
-internal fun KitFoldChevron(opened: Boolean, color: Color, size: Dp, modifier: Modifier = Modifier) {
-    Image(if (opened) KitIcons.chevronUp else KitIcons.chevronDown, null, modifier.size(size), colorFilter = ColorFilter.tint(color))
+internal fun KitFoldChevron(opened: Boolean, modifier: Modifier = Modifier) {
+    KitChevron(opened, modifier)
 }

@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitChevron
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
@@ -196,16 +198,20 @@ public fun KitWorkLine(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(WORK_GAP.dp),
                 ) {
-                    when (state) {
-                        KitWorkState.Running -> Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
-                            Box(Modifier.size(8.dp).background(colors.live, CircleShape))
+                    // M-020: the mark changes with the work (live dot → waiting dot → done glyph) as one QUICK
+                    // cross-fade, never in one frame; reduced motion: instant.
+                    KitSwap(state, Modifier.testTag("kit-work-mark")) { shown ->
+                        when (shown) {
+                            KitWorkState.Running -> Box(Modifier.size(iconSize).testTag("kit-work-mark-running"), contentAlignment = Alignment.Center) {
+                                Box(Modifier.size(8.dp).background(colors.live, CircleShape))
+                            }
+                            KitWorkState.WaitingForYou -> Box(Modifier.size(iconSize).testTag("kit-work-mark-waiting"), contentAlignment = Alignment.Center) {
+                                Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
+                            }
+                            KitWorkState.EndedFailed -> KitIcon(KitIcons.warning, Modifier.testTag("kit-work-mark-failed"), size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
+                            KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, Modifier.testTag("kit-work-mark-stopped"), size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
+                            KitWorkState.Done -> KitIcon(KitIcons.fileText, Modifier.testTag("kit-work-mark-done"), size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
                         }
-                        KitWorkState.WaitingForYou -> Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
-                            Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
-                        }
-                        KitWorkState.EndedFailed -> KitIcon(KitIcons.warning, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
-                        KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
-                        KitWorkState.Done -> KitIcon(KitIcons.fileText, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
                     }
                     // One live line: when the step changes the new words fade in over the old (QUICK; instant
                     // under reduced motion). While running it is one polite live region, so the screen reader
@@ -220,7 +226,8 @@ public fun KitWorkLine(
                             maxLines = 1,
                         )
                     }
-                    KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
+                    // M-016: the kit's one chevron turns half a turn (no one-frame flip); reduced motion: instant.
+                    KitChevron(expanded, Modifier.testTag("kit-work-chevron"))
                 }
             }
             KitReveal(visible = expanded) {

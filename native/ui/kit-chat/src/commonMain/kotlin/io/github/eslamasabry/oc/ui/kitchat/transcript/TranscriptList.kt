@@ -38,8 +38,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -85,6 +87,30 @@ internal constructor(
     public val awayFromLatest: Boolean by derivedStateOf {
         lazy.firstVisibleItemIndex > 0 ||
             lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+    }
+
+    private var slotHeight = -1
+
+    /** A bottom slot measured at [height] px; a change re-pins. */
+    internal fun slotHeightChanged(height: Int) {
+        if (slotHeight >= 0 && height != slotHeight) keepAtBottom()
+        slotHeight = height
+    }
+
+    /**
+     * M-005/M-009: keeps the newest row on the bottom edge this frame. While the person follows the conversation (and
+     * no scroll is running, so a fling or the jump glide is never cut short), the list snaps to index 0 at offset 0 in
+     * the same frame as the call: a bottom slot (an approval card unfolding, the composer's tray, a receipt folding
+     * away) changing height every frame never leaves the transcript a frame behind. Reading history (not following) is
+     * never moved. Safe to call from measure: its reads are not observed, so scrolling never re-runs the caller.
+     */
+    public fun keepAtBottom() {
+        val leave =
+            Snapshot.withoutReadObservation {
+                !following || lazy.isScrollInProgress ||
+                    (lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset == 0)
+            }
+        if (!leave) lazy.requestScrollToItem(0)
     }
 
     internal companion object {
@@ -144,13 +170,21 @@ public fun KitTranscriptList(
             top = contentPadding.calculateTopPadding() + chrome.calculateTopPadding(),
             bottom = contentPadding.calculateBottomPadding() + chrome.calculateBottomPadding(),
         )
+    val pin = remember(state) { BottomPin(state) }
+    val bottomInset = insetPadding.calculateBottomPadding()
+    SideEffect {
+        // The bottom chrome (composer, request slot) changed height: re-pin in the same frame as the new padding.
+        pin.inset(bottomInset.value)
+    }
     Box(modifier) {
         LazyColumn(
             state = state.lazy,
             reverseLayout = true,
             verticalArrangement = Arrangement.Top,
             contentPadding = insetPadding,
-            modifier = Modifier.fillMaxSize().testTag("transcript-list"),
+            // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
+            // list measures, so the newest row rides the slot's edge frame by frame.
+            modifier = Modifier.fillMaxSize().keepsBottom(pin).testTag("transcript-list"),
             content = content,
         )
         // The pill's own lane: while it shows, the page's ground rises behind it (fading in over 16 dp above), so
@@ -186,6 +220,41 @@ public fun KitTranscriptList(
         )
     }
 }
+
+/**
+ * For a part under the transcript that changes height while it animates (M-005: the request slot's `KitReveal`; M-002:
+ * the composer tray): whenever its measured height changes, the transcript is kept on its newest row
+ * ([TranscriptListState.keepAtBottom]) in the same frame. Measuring is untouched; the part's own motion is unchanged.
+ */
+public fun Modifier.kitKeepsTranscriptAtBottom(state: TranscriptListState): Modifier =
+    this.then(Modifier.layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        state.slotHeightChanged(placeable.height)
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+    })
+
+/** Last seen heights; a change while following re-pins (plain fields: written and read only during layout). */
+internal class BottomPin(private val state: TranscriptListState) {
+    private var viewport = -1
+    private var bottomInset = Float.NaN
+
+    fun viewport(height: Int) {
+        if (viewport >= 0 && height != viewport) state.keepAtBottom()
+        viewport = height
+    }
+
+    fun inset(dp: Float) {
+        if (!bottomInset.isNaN() && dp != bottomInset) state.keepAtBottom()
+        bottomInset = dp
+    }
+}
+
+private fun Modifier.keepsBottom(pin: BottomPin): Modifier =
+    this.then(Modifier.layout { measurable, constraints ->
+        if (constraints.hasBoundedHeight) pin.viewport(constraints.maxHeight)
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+    })
 
 /**
  * The pill (plan 08 §5.1 "Jump pill"). It alone reads [TranscriptListState.awayFromLatest]. Plain

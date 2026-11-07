@@ -134,7 +134,9 @@ class KitToolRowTest {
             }
         }
         onNodeWithText("Stopped", useUnmergedTree = true).assertIsDisplayed()
-        onNodeWithText("+4 −1", useUnmergedTree = true).assertIsDisplayed()
+        // M-020: each number is its own rolling count now; both still show as text, signs first.
+        onNodeWithText("+4", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithText("−1", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test
