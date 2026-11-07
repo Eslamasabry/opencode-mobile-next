@@ -68,6 +68,38 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.selected
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.row.KitKeyValue
+import io.github.eslamasabry.oc.ui.kit.row.KitKeyValueRow
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitCopy
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import org.jetbrains.compose.resources.stringResource
 
 // Agent cards (plan 09 §13.7, Flutter `KitAgentCard` + agent_card_nodes/asks/form). Kit-local
 // models only: the chat
@@ -78,7 +110,6 @@ import androidx.compose.foundation.layout.size
 // caller, who routes them through the app's external-link policy.
 
 /** Reading cap of a card (plan 09 §13.7): one shape at 720 dp. */
-private val CARD_MAX_WIDTH: Dp = 720.dp
 
 /** One body node, drawn by [KitCardBody]. */
 @Immutable
@@ -169,103 +200,247 @@ public fun KitAgentCard(
     details: String? = null,
     detailsLabel: String? = null,
     announcement: String? = null,
+    icon: ImageVector? = null,
+    unreadableLabel: String? = null,
+    inList: Boolean = false,
 ) {
-    val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.shape()
-    val asks = mode == KitAgentCardMode.Ask
-    var open by rememberSaveable { mutableStateOf(false) }
-    Column(
-        modifier
-            .widthIn(max = CARD_MAX_WIDTH)
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .then(
-                if (asks)
-                    Modifier.background(colors.attentionSurface)
-                        .border(1.dp, colors.attentionLine, shape)
-                else Modifier.border(1.dp, colors.hairline, shape)
-            )
-            .animateContentSize(KitMotion.specs.quick())
-            .padding(Space.S4.dp)
-            .testTag("kit-agent-card"),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
-        KitText(
-            eyebrow,
-            role = TypeRole.Secondary,
-            tone = TextTone.Secondary,
-            kind = KitTextKind.Frame,
-            maxLines = 1,
-        )
-        KitText(
-            title,
-            Modifier.semantics {
-                heading()
-                if (announcement != null) {
-                    liveRegion = LiveRegionMode.Polite
-                    contentDescription = announcement
-                }
-            },
-            role = TypeRole.Headline,
-            tone = TextTone.Primary,
-            kind = KitTextKind.Reading,
-        )
+    val glyph = icon ?: KitIcons.agent
+    var open by rememberSaveable(mode) { mutableStateOf(false) }
+    // kitRequestPlacement (kit_request_shape.dart:13-34): centred at the reading width, the card's border on the page
+    // gutter (the ring adds its own width around it), space1 above and below; in a list, as the list places it.
+    val placed =
+        if (inList) modifier.fillMaxWidth()
+        else
+            modifier
+                .kitMaxWidth(CapRole.Reading)
+                .fillMaxWidth()
+                .padding(
+                    horizontal = (LocalKitTokens.current.gutter - FlutterKitTokens.NEEDS_YOU_RING_WIDTH).dp,
+                    vertical = Space.S1.dp,
+                )
+    Box(placed.animateContentSize(KitMotion.specs.quick()).testTag("kit-agent-card")) {
         when (mode) {
-            KitAgentCardMode.Unreadable -> {
-                if (details != null && detailsLabel != null) {
-                    var shown by remember { mutableStateOf(false) }
-                    KitButton(detailsLabel, { shown = !shown }, role = KitButtonRole.Tertiary)
-                    if (shown)
-                        KitText(
-                            details,
-                            Modifier.testTag("kit-agent-card-details"),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                        )
+            KitAgentCardMode.Ask, KitAgentCardMode.Report -> {
+                val attention = mode == KitAgentCardMode.Ask
+                AgentFrame(attention) {
+                    AgentHeading(glyph, attention, eyebrow, title, announcement)
+                    for (piece in body) {
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitCardBody(persistentListOf(piece), onLink)
+                    }
+                    if (ask != null) {
+                        Spacer(Modifier.height(Space.S4.dp))
+                        ask()
+                    }
+                    if (notice != null) {
+                        Spacer(Modifier.height(Space.S3.dp))
+                        KitNotice(notice, Modifier.testTag("kit-agent-card-notice"), tone = noticeTone)
+                    }
                 }
             }
-            KitAgentCardMode.Receipt,
-            KitAgentCardMode.PassedOver -> {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            KitAgentCardMode.Receipt, KitAgentCardMode.PassedOver ->
+                AgentAnsweredRow(
+                    icon = glyph,
+                    title = title,
+                    open = open,
+                    onToggle = if (expandLabel != null && body.isNotEmpty()) ({ open = !open }) else null,
+                    toggleLabel = expandLabel,
+                    body = body,
+                    onLink = onLink,
                 ) {
-                    val line =
-                        if (mode == KitAgentCardMode.Receipt) receiptLabel else passedOverLabel
-                    if (line != null) {
-                        KitText(
-                            line,
-                            Modifier.weight(1f).testTag("kit-agent-card-receipt").semantics {
-                                liveRegion = LiveRegionMode.Polite
-                            },
-                            role = TypeRole.Body,
-                            tone =
-                                if (mode == KitAgentCardMode.Receipt) TextTone.Primary
-                                else TextTone.Secondary,
-                        )
-                    }
-                    if (onUndo != null && undoLabel != null) {
-                        KitButton(
-                            undoLabel,
-                            onUndo,
-                            role = KitButtonRole.Tertiary,
-                            modifier = Modifier.testTag("kit-agent-card-undo"),
-                        )
-                    } else if (expandLabel != null && body.isNotEmpty()) {
-                        KitButton(expandLabel, { open = !open }, role = KitButtonRole.Tertiary)
+                    if (mode == KitAgentCardMode.Receipt) AgentReceiptLine(receiptLabel, undoLabel, onUndo)
+                    else KitText(
+                        passedOverLabel.orEmpty(),
+                        Modifier.testTag("kit-agent-card-receipt").semantics { liveRegion = LiveRegionMode.Polite },
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                }
+            KitAgentCardMode.Unreadable -> AgentUnreadable(unreadableLabel ?: title, details, detailsLabel)
+        }
+    }
+}
+
+/**
+ * kitRequestFrame (kit_request_shape.dart:54-240), Solid's look: the attention-tinted card with its attention line
+ * and the 4 dp wash ring outside it while it asks, else a plain surface1 card with a hairline in the ring's place.
+ */
+@Composable
+private fun AgentFrame(attention: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    val colors = LocalKitColors.current
+    val radius = FlutterKitTokens.CARD_RADIUS
+    val ring = FlutterKitTokens.NEEDS_YOU_RING_WIDTH
+    val shape = RoundedCornerShape(radius.dp)
+    val face = if (attention) colors.attentionSurface.compositeOver(colors.surface1) else colors.surface1
+    val line = if (attention) colors.attentionLine else colors.hairline
+    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, ownFill = face, color = if (attention) face else null))
+    val card =
+        Modifier.fillMaxWidth()
+            .then(look.modifier)
+            .border(kitHairline(), line, shape)
+            .padding(Space.S4.dp)
+    val around =
+        if (attention)
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape((radius + ring).dp))
+                .background(colors.attention.copy(alpha = FlutterKitTokens.NEEDS_YOU_RING_ALPHA))
+                .padding(ring.dp)
+        else Modifier.fillMaxWidth().padding(horizontal = ring.dp)
+    Box(around) { Column(card, content = content) }
+}
+
+/** kitRequestHeading (kit_request_shape.dart:430-465) with kitRequestTile (:382-425). */
+@Composable
+private fun AgentHeading(icon: ImageVector, attention: Boolean, caption: String, title: String, announcement: String?) {
+    val colors = LocalKitColors.current
+    val said =
+        if (announcement != null)
+            Modifier.clearAndSetSemantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = announcement
+            }
+        else Modifier
+    Row(said, verticalAlignment = Alignment.Top) {
+        val tint =
+            if (attention)
+                colors.attention.copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA)
+                    .compositeOver(colors.attentionSurface.compositeOver(colors.surface1))
+            else colors.surface3
+        Box(
+            Modifier.size(FlutterKitTokens.REQUEST_TILE_SIZE.dp)
+                .clip(RoundedCornerShape(FlutterKitTokens.REQUEST_TILE_RADIUS.dp))
+                .background(tint)
+                .clearAndSetSemantics {},
+            contentAlignment = Alignment.Center,
+        ) {
+            KitIcon(icon, size = KitIconSize.Small, tone = if (attention) TextTone.Attention else TextTone.Primary)
+        }
+        Spacer(Modifier.width(Space.S3.dp))
+        Column(Modifier.weight(1f)) {
+            KitText(caption, role = TypeRole.Caption, tone = if (attention) TextTone.Attention else TextTone.Secondary)
+            Spacer(Modifier.height(Space.S1.dp))
+            KitText(title, Modifier.semantics { heading() }, role = TypeRole.Headline, tone = TextTone.Primary)
+        }
+    }
+}
+
+/** kitAnsweredRow (kit_request_shape.dart:473-572): no card; the glyph, the title, the outcome under it. */
+@Composable
+private fun AgentAnsweredRow(
+    icon: ImageVector,
+    title: String,
+    open: Boolean,
+    onToggle: (() -> Unit)?,
+    toggleLabel: String?,
+    body: ImmutableList<KitCardNode>,
+    onLink: (String) -> Unit,
+    outcome: @Composable () -> Unit,
+) {
+    val tokens = LocalKitTokens.current
+    val twoLines = LocalDensity.current.fontScale * 10 >= 13 // F: lib/ui/kit/kit_request_shape.dart:487
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = tokens.rowHeightOne.dp).padding(horizontal = Space.S4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            KitIcon(icon, size = KitIconSize.Small, tone = TextTone.Secondary)
+            Spacer(Modifier.width(Space.S3.dp))
+            val words: @Composable (Modifier) -> Unit = { m ->
+                KitText(title, m, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = if (twoLines) 2 else 1) // F: lib/ui/kit/kit_request_shape.dart:494
+            }
+            if (onToggle != null) {
+                // The title line is the toggle (48 dp tall, as Flutter's KitTappable); the outcome sits right under it
+                // inside the same row target, so no line lies flush under a separate control (LAYOUT-RULES.md tight).
+                KitTappable(
+                    onClick = onToggle,
+                    role = KitTappableRole.Row,
+                    modifier = Modifier.weight(1f).kitEdge(KitEdge.Bleed).semantics {
+                        toggleLabel?.let { contentDescription = it }
+                        selected = open
+                    },
+                ) {
+                    Column(Modifier.fillMaxWidth()) {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            words(Modifier.weight(1f))
+                            KitIcon(if (open) KitIcons.chevronUp else KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
+                        }
+                        outcome()
                     }
                 }
-                if (open && onUndo == null) KitCardBody(body, onLink)
-            }
-            KitAgentCardMode.Ask,
-            KitAgentCardMode.Report -> {
-                KitCardBody(body, onLink)
-                ask?.invoke()
+            } else {
+                Column(Modifier.weight(1f)) {
+                    words(Modifier)
+                    outcome()
+                }
             }
         }
-        if (notice != null)
-            KitNotice(notice, Modifier.testTag("kit-agent-card-notice"), tone = noticeTone)
+        if (onToggle != null) {
+            KitReveal(visible = open) {
+                KitCardBody(
+                    body,
+                    onLink,
+                    Modifier.padding(
+                        start = (Space.S4 + KitIconSize.Small.dp + Space.S3).dp,
+                        top = Space.S2.dp,
+                        end = Space.S4.dp,
+                    ).clearAndSetSemantics {},
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The receipt of an answered card (kit_receipt.dart, confirmed with a label): the check, the act in the person's
+ * words, then Undo while the host offers it. Native `KitReceipt` has no label or Undo yet (folded gap, evidence 21).
+ */
+@Composable
+private fun AgentReceiptLine(label: String?, undoLabel: String?, onUndo: (() -> Unit)?) {
+    FlowRow(
+        verticalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            Modifier.testTag("kit-agent-card-receipt").semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.Success)
+            Spacer(Modifier.width(Space.S2.dp))
+            if (label != null) KitText(label, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        }
+        if (onUndo != null && undoLabel != null) {
+            KitButton(undoLabel, onUndo, role = KitButtonRole.Tertiary, modifier = Modifier.testTag("kit-agent-card-undo"))
+        }
+    }
+}
+
+/** kit_agent_card.dart:245-286: one quiet line with the info glyph, the technical text under a Details fold. */
+@Composable
+private fun AgentUnreadable(line: String, details: String?, detailsLabel: String?) {
+    val tokens = LocalKitTokens.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = tokens.rowHeightOne.dp), verticalAlignment = Alignment.CenterVertically) {
+            KitIcon(KitIcons.info, size = KitIconSize.Small, tone = TextTone.Secondary)
+            Spacer(Modifier.width(Space.S3.dp))
+            KitText(
+                line,
+                Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+        }
+        if (!details.isNullOrEmpty()) {
+            KitDetailsFold(
+                label = detailsLabel ?: stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopy),
+                text = LocalKitRedactor.current.details(details),
+                modifier = Modifier.testTag("kit-agent-card-details"),
+            )
+        }
     }
 }
 
@@ -285,20 +460,7 @@ public fun KitCardBody(
         nodes.forEach { node ->
             when (node) {
                 is KitCardNode.Text -> KitText(node.text, role = TypeRole.Body)
-                is KitCardNode.KeyValue ->
-                    Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                        node.rows.forEach { (k, v) ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                                KitText(
-                                    k,
-                                    Modifier.weight(0.4f),
-                                    role = TypeRole.Secondary,
-                                    tone = TextTone.Secondary,
-                                )
-                                KitText(v, Modifier.weight(0.6f), role = TypeRole.Body)
-                            }
-                        }
-                    }
+                is KitCardNode.KeyValue -> KitKeyValue(node.rows.map { (k, v) -> KitKeyValueRow(k, v) })
                 is KitCardNode.Checklist ->
                     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                         node.items.forEach { (text, done) ->
