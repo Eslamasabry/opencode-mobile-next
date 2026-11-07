@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.team
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +32,16 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -321,7 +330,7 @@ private fun LoadingLane(column: KitBoardColumn, width: Float, wide: Boolean) {
 private fun LaneBed(modifier: Modifier, content: @Composable () -> Unit) {
     val colors = LocalKitColors.current
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Track, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.ground))
-    val edge = if (LocalKitStyle.current.style == Style.Solid) Modifier.border(kitHairline(), colors.hairline, look.shape) else Modifier
+    val edge = if (LocalKitStyle.current.style == Style.Solid) Modifier.teamEdge(kitHairline(), colors.hairline, look.shape) else Modifier
     Box(modifier.kitMaxWidth(CapRole.Lane).fillMaxSize().then(look.modifier).then(edge).clip(look.shape)) { content() }
 }
 
@@ -384,4 +393,19 @@ public fun KitBoardLaneLoading(modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+/**
+ * A border drawn inside the box at its exact width, like Flutter's `Border.all` (a one-physical-pixel hairline is a
+ * third of a picture pixel in the DPR-3 gallery). `Modifier.border` rounds its width up to a whole pixel, which draws
+ * the hairline three times as strong.
+ */
+internal fun Modifier.teamEdge(width: Dp, color: Color, shape: Shape, over: Boolean = false): Modifier =
+    if (over) drawWithContent { drawContent(); drawEdge(width, color, shape) } else drawBehind { drawEdge(width, color, shape) }
+
+private fun DrawScope.drawEdge(width: Dp, color: Color, shape: Shape) {
+    val w = width.toPx()
+    if (w <= 0f || size.width <= w || size.height <= w) return
+    val inner = Size(size.width - w, size.height - w)
+    translate(w / 2, w / 2) { drawOutline(shape.createOutline(inner, layoutDirection, this), color, style = Stroke(w)) } // NV: half the stroke, so it lies inside the edge as Flutter's Border does
 }

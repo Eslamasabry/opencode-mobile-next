@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.rb.o18
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -83,6 +86,14 @@ class KitBoardLaneGateTest {
     @Test fun kit_board_lane_loaded_text2_1280x800() { FlutterGoldenGate.check("kit_board_lane_loaded_text2_1280x800", Frame.Screen) { Board(selected = 2) } }
 
     @Test fun matrix() {
-        FlutterGoldenGate.matrix("part-kit_board_lane", caps = mapOf("KitBoardLane" to "lane", "KitBoardLanes" to "fill"), frame = Frame.Screen) { Board(selected = 2) }
+        // One lane: the cap row measures the lane (400); the board around it fills its host.
+        FlutterGoldenGate.matrix("part-kit_board_lane", caps = mapOf("KitBoardLane" to "lane", "KitBoardLanes" to "fill")) {
+            Box(Modifier.height(480.dp)) {
+                KitBoardLane(
+                    cards = (0 until 3).map { i -> KitBoardCard("card-2-$i") { Card(2, i, needsYou = 1) } },
+                    empty = { KitInlineStateView("Nothing waiting for review", KitIcons.checklist) },
+                )
+            }
+        }
     }
 }

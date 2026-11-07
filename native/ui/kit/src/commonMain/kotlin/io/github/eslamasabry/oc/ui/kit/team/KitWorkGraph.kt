@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.team
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -575,7 +574,7 @@ internal fun KitWorkGraphTaskMark(state: KitWorkGraphMark, paused: Boolean = fal
                 // The waiting ring: `text3`, or `text2` where `text3` misses the 3:1 glyph floor on a ground.
                 val grounds = listOf(roles.ground, roles.surface1, roles.surface2, roles.surface3)
                 val ring = if (grounds.all { wcagContrast(roles.text3, it) >= GLYPH_CONTRAST_FLOOR }) colors.text3 else colors.text2
-                Box(Modifier.size(FlutterKitTokens.MARK_RING_SIZE.dp).border(kitHairline(), ring, KitShapeId.Circle.shape()))
+                Box(Modifier.size(FlutterKitTokens.MARK_RING_SIZE.dp).teamEdge(kitHairline(), ring, KitShapeId.Circle.shape()))
             }
         }
     }
@@ -870,8 +869,9 @@ private fun LayerChip(node: KitWorkGraphNode, inChain: Boolean, onOpen: () -> Un
     val word = wordOf(node)
     val label = stringResource(Res.string.kitWorkGraphNode, node.title, word)
     val colors = LocalKitColors.current
-    val chainEdge = if (inChain) Modifier.border(kitHairline(), colors.text1, KitShapeId.Panel.shape()) else Modifier
-    KitSurface(modifier.then(chainEdge), level = SurfaceLevel.Surface1, shape = KitShapeId.Panel, padding = KitSurfacePadding.None, outlined = !inChain) {
+    // Outside the chain a hairline edge (KitSurface's outlined, drawn at its exact width); in it a text1 one on top.
+    val edge = Modifier.teamEdge(kitHairline(), if (inChain) colors.text1 else colors.hairline, KitShapeId.Panel.shape(), over = true)
+    KitSurface(modifier.then(edge), level = SurfaceLevel.Surface1, shape = KitShapeId.Panel, padding = KitSurfacePadding.None) {
         KitTappable(onOpen, Modifier.fillMaxSize().semantics { contentDescription = label }, shape = KitShapeId.Panel) {
             Row(
                 Modifier.fillMaxSize().padding(horizontal = Space.S3.dp, vertical = Space.S2.dp).clearAndSetSemantics {},
