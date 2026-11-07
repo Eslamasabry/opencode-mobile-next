@@ -1721,7 +1721,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get setupOutputWaiting => 'Esperando la salida de Termux…';
+  String get setupOutputWaiting => 'Esperando la salida…';
 
   @override
   String get uncertainAuthDetail =>
@@ -9299,7 +9299,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsHubSearchPhoneAliases =>
-      'teléfono termux local en el dispositivo android instalar configuración almacenamiento servicios';
+      'teléfono local en el dispositivo android instalar configuración almacenamiento servicios linux';
 
   @override
   String get settingsHubSearchAccountsAliases =>
@@ -13940,7 +13940,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get kitCapClaudeLocalWhy =>
-      'Necesita Termux en este teléfono y una suscripción de Claude.';
+      'Necesita Linux integrado en este teléfono y una suscripción de Claude.';
 
   @override
   String get kitCapClaudeLocalEnable => 'Agregar Claude Code';
@@ -14233,11 +14233,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get searchClaudeCodeGateDevice =>
-      'Claude Code corre en un teléfono solo a través de Termux, que este dispositivo no tiene. Hazlo correr en una computadora con Paseo y agrega esa computadora como servidor.';
+      'Claude Code corre en un teléfono solo dentro del Linux integrado de la aplicación, que este dispositivo no tiene. Hazlo correr en una computadora con Paseo y agrega esa computadora como servidor.';
 
   @override
   String get searchClaudeCodeGateDesktop =>
-      'Claude Code en este teléfono es para teléfonos Android con Termux. En una computadora, corre Claude Code con Paseo y agrégalo como servidor.';
+      'Claude Code en este teléfono es para teléfonos Android con Linux integrado. En una computadora, corre Claude Code con Paseo y agrégalo como servidor.';
 
   @override
   String get searchClaudeCodeGateServers => 'Abrir servidores';
@@ -20697,7 +20697,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get manageSpaceKeptAll =>
-      'Termux, tus computadoras y lo que hayas empujado a git se quedan';
+      'Tus computadoras y lo que hayas empujado a git se quedan';
 
   @override
   String get manageSpaceWaitForExport => 'Espera a que termine la exportación';
