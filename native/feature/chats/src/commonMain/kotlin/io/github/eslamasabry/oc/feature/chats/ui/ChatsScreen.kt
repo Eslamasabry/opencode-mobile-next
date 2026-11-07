@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionPill
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
 import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
@@ -272,7 +273,7 @@ public fun ChatsScreen(
                 return@LazyColumn
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
-            state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions, state) } }
+            state.brief?.let { brief -> item(key = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
             if (state.archiveFailure != null)
                 item(key = "archive-failure") {
                     // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
@@ -337,26 +338,32 @@ public fun ChatsScreen(
                 ChatsPhase.List -> {
                     val today = state.today.filterNot { it.key in briefKeys }
                     val earlier = state.earlier.filterNot { it.key in briefKeys }
+                    // Lists breathe (motion lead 2026-11-07): a row that arrives fades in, one that leaves fades out
+                    // where it was, and the rest glide to their new places (a chat jumping to the top, Mark all seen).
                     if (today.isNotEmpty()) {
                         item(key = "today") {
-                            KitSectionLabel(stringResource(Res.string.chatsHomeToday))
+                            Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
                         }
                         items(today, key = { it.key }) { row ->
-                            ConversationRow(row, actions, state)
-                            if (row != today.last()) RowDivider(state)
+                            Column(kitItemMotion()) {
+                                ConversationRow(row, actions, state)
+                                if (row != today.last()) RowDivider(state)
+                            }
                         }
                     }
                     if (earlier.isNotEmpty()) {
                         item(key = "earlier") {
-                            KitSectionLabel(stringResource(Res.string.chatsHomeEarlier))
+                            Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeEarlier)) }
                         }
                         items(earlier, key = { it.key }) {
-                            ConversationRow(it, actions, state)
-                            if (it != earlier.last()) RowDivider(state)
+                            Column(kitItemMotion()) {
+                                ConversationRow(it, actions, state)
+                                if (it != earlier.last()) RowDivider(state)
+                            }
                         }
                     }
                     // The other places the old ⋯ menu hid, as plain rows after the list (obvious options first).
-                    item(key = "more-places") { MorePlaces(actions, state.usage) }
+                    item(key = "more-places") { Box(kitItemMotion()) { MorePlaces(actions, state.usage) } }
                 }
             }
 

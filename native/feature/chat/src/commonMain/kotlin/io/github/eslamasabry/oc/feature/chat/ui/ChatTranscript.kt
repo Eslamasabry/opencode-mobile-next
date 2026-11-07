@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
@@ -324,6 +325,10 @@ internal fun ChatTranscriptList(
             pending.isNotEmpty() -> ListKeys.pending(pending.first().localId)
             else -> unique.firstOrNull()?.key
         }
+    // Lists breathe (motion lead 2026-11-07): rows fade in and out, and glide to new places when rows are added or
+    // removed. While a reply streams the rows above it never glide (the growing reply would drag them a few pixels
+    // behind every frame); the newest row stays on the bottom edge either way (reverse layout keeps it anchored).
+    val glide = live == null
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -333,6 +338,7 @@ internal fun ChatTranscriptList(
     ) {
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
+              Box(kitItemMotion(placement = glide)) {
                 // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
                 // Retry, stall and shortening fold into the live line: no new bar
                 // (CHAT-TRANSCRIPT).
@@ -357,13 +363,14 @@ internal fun ChatTranscriptList(
                         secondsLabel = { seconds.replace("%1\$s", it) },
                     )
                 } else KitQuietLine(liveWords, Modifier.testTag("chat-live-line"))
+              }
             }
         }
         if (facts.background.isNotEmpty() && listWords != null) {
             item(key = ListKeys.BACKGROUND, contentType = "background") {
                 KitQuietLine(
                     backgroundWords(facts.background, facts.nowMs),
-                    Modifier.testTag("chat-background-work"),
+                    kitItemMotion(placement = glide).testTag("chat-background-work"),
                 )
             }
         }
@@ -373,6 +380,9 @@ internal fun ChatTranscriptList(
                 key = { ListKeys.pending(it.localId) },
                 contentType = { RowKind.Prompt },
             ) { p ->
+              // The bubble rose from the field on its own; when the server's copy replaces it, neither fades (no
+              // flash, no double bubble).
+              Box(kitItemMotion(fadeIn = false, fadeOut = false, placement = glide)) {
                 PendingBubble(
                     p,
                     listWords,
@@ -383,11 +393,16 @@ internal fun ChatTranscriptList(
                         else null,
                     onReview = onReviewPending,
                 )
+              }
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
-            // P-010: a row the person opens stays under their finger.
-            Column(Modifier.foldAnchor(row.key, anchor, list.lazy)) {
+            // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
+            // bubble in place, so it never fades in.
+            Column(
+                kitItemMotion(fadeIn = row !is PromptRow, placement = glide)
+                    .foldAnchor(row.key, anchor, list.lazy)
+            ) {
                 // Keep the engine's item indices: a folded source has an empty item, not a removed
                 // list
                 // position.
