@@ -72,6 +72,26 @@ public object HeaderRules {
         }
         .toImmutableList()
 
+    /** P-018: every way to carry this conversation on somewhere else, in menu order. */
+    private val continueFamily =
+        listOf(
+            HeaderAction.ContinueWith,
+            HeaderAction.AgentHandoff,
+            HeaderAction.Handoff,
+            HeaderAction.ContinueOnComputer,
+            HeaderAction.ContinueOnPhone,
+        )
+
+    /**
+     * P-018: the "Continue…" actions the menu offers, shown together on one "Continue elsewhere" page when there
+     * are two or more (three look-alike rows in a list read as one muddle); empty when one or none, which then
+     * stays in place.
+     */
+    public fun continueGroup(menu: List<HeaderAction>): List<HeaderAction> {
+        val offered = continueFamily.filter { it in menu }
+        return if (offered.size >= 2) offered else emptyList()
+    }
+
     /** Fork acts on prompts: before the first one it waits, dimmed, with the reason. */
     public fun needsPrompt(action: HeaderAction): Boolean = action == HeaderAction.Fork
 
