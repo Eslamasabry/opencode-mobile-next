@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -86,7 +87,7 @@ public fun KitPdfPage(
     val shape = KitShapeId.Square.shape()
     BoxWithConstraints(modifier.fillMaxWidth().testTag("$KIT_PDF_PAGE_TAG$page"), contentAlignment = Alignment.TopCenter) {
         val width: Dp = minOf(maxWidth - (Space.S3 * 2).dp, PAGE_MAX_WIDTH_DP.dp).coerceAtLeast(0.dp)
-        Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) { // F: lib/ui/kit/kit_viewer_bodies.dart:236
             when (state) {
                 is KitPdfPageState.Ready ->
                     Image(
@@ -121,10 +122,11 @@ public fun KitPdfPage(
             }
             KitText(
                 caption,
-                Modifier.align(Alignment.CenterHorizontally),
+                Modifier.fillMaxWidth().padding(horizontal = Space.S1.dp), // inside the gutter while the page spans 12..400
                 role = TypeRole.Caption,
                 tone = TextTone.Secondary,
                 kind = KitTextKind.Frame,
+                textAlign = TextAlign.Center, // the caption centres under its page (kit_viewer_bodies.dart:233-240)
             )
         }
     }

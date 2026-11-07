@@ -165,7 +165,7 @@ public sealed interface KitViewerContent {
 public class KitViewerSource private constructor(
     /** Content already in hand; null when loaded on open. */
     public val content: KitViewerContent?,
-    private val load: (suspend () -> KitViewerContent)?,
+    internal val load: (suspend () -> KitViewerContent)?,
 ) {
     override fun equals(other: Any?): Boolean =
         other is KitViewerSource && other.content === content && other.load === load // F: lib/ui/kit/kit_viewer_content.dart:250-253
