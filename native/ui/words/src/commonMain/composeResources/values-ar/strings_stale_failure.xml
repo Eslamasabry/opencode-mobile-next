@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- E19-S03: الإبلاغ عن هذا الفشل، لفشل حفظه إصدار أقدم من التطبيق. -->
+    <string name="staleFailureTitle">هل تريد الإبلاغ عن هذا الفشل؟</string>
+    <string name="staleFailureBody">حدث هذا على الإصدار %1$s. قد يكون الإصدار %2$s قد أصلحه بالفعل.</string>
+    <string name="staleFailureUpdateFirst">حدّث أولًا</string>
+    <string name="staleFailureReportAnyway">أبلغ على أي حال</string>
+</resources>
