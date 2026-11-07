@@ -40,6 +40,17 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouReason
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -176,4 +187,57 @@ class S17KitAParityTest {
             val two = onNodeWithText(long, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.height
             assertTrue(two > one * 1.6f, "long title $two dp vs one line $one dp")
         }
+
+    @Test
+    fun `B-KIT-066 a control mark is the font glyph KitIcon draws, with no text node of its own`() =
+        runDesktopComposeUiTest(80, 40) {
+            setContent {
+                Themed {
+                    Row {
+                        Box(Modifier.testTag("glyph")) { KitGlyph(KitIcons.check, LocalKitColors.current.text1, 20.dp) }
+                        Box(Modifier.testTag("icon")) { KitIcon(KitIcons.check, size = KitIconSize.Small) }
+                    }
+                }
+            }
+            val a = onNodeWithTag("glyph").captureToImage().toAwtImage()
+            val b = onNodeWithTag("icon").captureToImage().toAwtImage()
+            var differing = 0
+            for (y in 0 until minOf(a.height, b.height)) for (x in 0 until minOf(a.width, b.width)) if (a.getRGB(x, y) != b.getRGB(x, y)) differing++
+            // Before: the vector path, a pixel higher and heavier than the font glyph.
+            assertEquals(0, differing, "pixels that differ from KitIcon's glyph")
+            onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+                .filter(hasAnyAncestor(hasTestTag("glyph"))).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-KIT-014 the choice mark is the small icon size and grows with the text`() {
+        fun ringWidth(scale: Float): Int {
+            var w = 0
+            runDesktopComposeUiTest(412, 120) {
+                setContent {
+                    KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off), platform = DesktopKitPlatform(), stillFrame = true) {
+                        CompositionLocalProvider(LocalDensity provides Density(1f, scale)) {
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                KitChoiceRow("Staging", selected = false, onClick = {})
+                            }
+                        }
+                    }
+                }
+                val img = onRoot().captureToImage().toAwtImage()
+                val ground = img.getRGB(2, 2)
+                // The ring is the first ink from the start edge up to the words (gutter 16, mark, 12 dp gap).
+                fun inked(x: Int) = (0 until img.height).any { y -> img.getRGB(x, y) != ground }
+                val first = (0 until 80).firstOrNull { inked(it) } ?: return@runDesktopComposeUiTest
+                var last = first
+                while (last + 1 < img.width && inked(last + 1)) last++
+                w = last - first + 1
+            }
+            return w
+        }
+        val one = ringWidth(1f)
+        val big = ringWidth(2f)
+        // Before: a fixed 22 dp ring at every text size.
+        assertTrue(one in 19..21, "ring $one dp at 1.0, Flutter 20")
+        assertTrue(big in 29..31, "ring $big dp at 2.0, Flutter 30 (1.5x cap)")
+    }
 }
