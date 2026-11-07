@@ -738,17 +738,16 @@ public class ChatPresenter(
         when (action) {
             MessageAction.Copy -> {
                 val text = textOf(world.transcript.value, target) ?: return
-                // E15-S05: only the person's own prompt copies verbatim; a reply goes through the redactor.
-                val own = target.kind == TargetKind.Prompt
+                // E15-S06: the person's own prompt goes through the redactor too, like every other copy.
                 if (outside == null) local.update { it.copy(clip = ClipUi(nextId++, text)) }
-                else copyOut(text, own)
+                else copyOut(text)
             }
             MessageAction.Share -> {
                 val text =
                     textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 val out = outside ?: return
-                val safe = if (target.kind == TargetKind.Prompt) text else out.mask(text)
-                if (!out.share(safe)) local.update { it.copy(actionFailure = Failure.Unexpected()) }
+                // E15-S06: one mask for every role; a key the person pasted never leaves in a share either.
+                if (!out.share(out.mask(text))) local.update { it.copy(actionFailure = Failure.Unexpected()) }
             }
             MessageAction.SelectText -> {
                 val text =
@@ -842,16 +841,19 @@ public class ChatPresenter(
         if (outside?.openLink(link.url) != true) local.update { it.copy(linkRefused = true) }
     }
 
-    /** A code block's, a tool output's or a reply's Copy: server text, so always through the redactor (E15-S05). */
+    /** A code block's, a tool output's or a reply's Copy: always through the redactor (E15-S05). */
     override fun copyText(text: String) {
-        copyOut(text, own = false)
+        copyOut(text)
     }
 
-    /** Masks server text ([own] = the person's own prompt stays verbatim), copies, and says whether it hid anything. */
-    private fun copyOut(text: String, own: Boolean) {
+    /**
+     * The chat's one copy (E15-S06): every text — the person's own prompt as much as a reply, a code block or a tool's
+     * output — is masked by the app's redactor before it reaches the clipboard, and the copy says whether it hid anything.
+     */
+    private fun copyOut(text: String) {
         if (text.isEmpty()) return
         val out = outside ?: return
-        val safe = if (own) text else out.mask(text)
+        val safe = out.mask(text)
         if (out.copy(safe)) local.update { it.copy(copied = CopiedUi(nextId++, masked = safe != text)) }
         else local.update { it.copy(actionFailure = Failure.Unexpected()) }
     }

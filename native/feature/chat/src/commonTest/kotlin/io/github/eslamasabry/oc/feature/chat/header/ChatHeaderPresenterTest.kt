@@ -275,7 +275,7 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
-    fun `B-CHAT-111 copy transcript keeps the person's prompts verbatim and masks everything else`() {
+    fun `B-CHAT-111 E15-S06 copy transcript masks the person's prompts and everything else alike`() {
         world.transcript.value =
             stateOf(
                 prompt("u1", "my key is sk-live-123456"),
@@ -285,7 +285,8 @@ class ChatHeaderPresenterTest {
         p.copyTranscript(words) { it.replace("sk-live-123456", "••••") }
         val text = assertNotNull(p.current().clip).text
         assertTrue(text.startsWith("# Fix the build"))
-        assertTrue("## User\n\nmy key is sk-live-123456" in text, text)
+        assertTrue("## User\n\nmy key is ••••" in text, text)
+        assertFalse("sk-live-123456" in text, "no section keeps the key, the person's own included")
         assertTrue("## Assistant\n\nprinted ••••" in text, text)
         assertTrue("thinking about ••••" in text, text)
         assertFalse("printed sk-live" in text)
@@ -306,12 +307,12 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
-    fun `B-SEC-145 a key in the person's own prompt alone does not claim anything was hidden`() {
+    fun `B-SEC-145 E15-S06 a key in the person's own prompt alone is masked and the copy says so`() {
         world.transcript.value = stateOf(prompt("u1", "my key is sk-live-123456"))
         p.copyTranscript(words) { it.replace("sk-live-123456", "••••") }
         val clip = assertNotNull(p.current().clip)
-        assertTrue("sk-live-123456" in clip.text, "the person's own prompt stays verbatim (SEC-13)")
-        assertFalse(clip.masked)
+        assertFalse("sk-live-123456" in clip.text, clip.text)
+        assertTrue(clip.masked, "the confirmation says a key was hidden")
     }
 
     @Test
