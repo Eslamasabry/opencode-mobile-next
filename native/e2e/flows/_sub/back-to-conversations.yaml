@@ -1,12 +1,13 @@
 # Press Back until the Conversations list shows (at most 6 times): leaves any Settings depth or search state.
-# "All projects" marks the list: "Conversations" alone also names a Settings group.
+# The top bar's "<server>, <state>, Switch server" marks the list: "Conversations" alone also names a Settings group,
+# and an empty list (the phone's first project) has no "All projects".
 appId: ${APP_ID}
 ---
 - repeat:
     times: 6
     while:
-      notVisible: ${output.s.chatsHomeAllProjects}
+      notVisible: ${'(?s).+, ' + output.s.kitTopBarSwitchServer}  # literal-ok: the top bar, from strings
     commands:
       - back
-- assertVisible: ${output.s.chatsHomeAllProjects}
+- assertVisible: ${'(?s).+, ' + output.s.kitTopBarSwitchServer}  # literal-ok: the top bar, from strings
 - runFlow: dismiss-notices.yaml
