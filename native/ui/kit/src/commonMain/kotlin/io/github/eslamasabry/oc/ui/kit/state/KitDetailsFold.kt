@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.motion.KitChevron
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.kit.text.KitRedact
@@ -288,26 +292,27 @@ private fun DetailsContent(
     }
 }
 
-/** The raw text: its first lines, then "Show all {count} lines" unfolding the rest in place (unless [whole]). */
+/**
+ * The raw text: its first lines, then "Show all {count} lines" unfolding the rest in place (unless [whole]). The text
+ * stays one node (the whole text once shown), growing to its new height over the kit's reveal pace; Off = at once.
+ */
 @Composable
 private fun TextBlock(text: String, whole: Boolean, showAllLabel: ((lines: Int) -> String)?) {
     var all by rememberSaveable { mutableStateOf(false) }
     val (head, tail) = KitDetailsRules.preview(text, whole)
-    Column(Modifier.fillMaxWidth().testTag("kit-details-text")) {
-        LtrValue(head)
-        if (tail != null) {
-            KitReveal(all) { LtrValue(tail) }
-            if (!all) {
-                val count = text.split('\n').size
-                Spacer(Modifier.height(Space.S1.dp)) // F: lib/ui/kit/kit_details_fold.dart:442
-                TertiaryInset {
-                    KitButton(
-                        showAllLabel?.invoke(count) ?: pluralStringResource(Res.plurals.kitDetailsShowAll, count, count),
-                        { all = true },
-                        Modifier.testTag("kit-details-show-all"),
-                        role = KitButtonRole.Tertiary,
-                    )
-                }
+    val grow = if (KitMotion.state.reduced) Modifier else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
+    Column(Modifier.fillMaxWidth().then(grow)) {
+        LtrValue(if (tail == null || all) text else head, Modifier.testTag("kit-details-text"))
+        if (tail != null && !all) {
+            val count = text.split('\n').size
+            Spacer(Modifier.height(Space.S1.dp)) // F: lib/ui/kit/kit_details_fold.dart:442
+            TertiaryInset {
+                KitButton(
+                    showAllLabel?.invoke(count) ?: pluralStringResource(Res.plurals.kitDetailsShowAll, count, count),
+                    { all = true },
+                    Modifier.testTag("kit-details-show-all"),
+                    role = KitButtonRole.Tertiary,
+                )
             }
         }
     }
@@ -324,20 +329,22 @@ private fun ValueRow(index: Int, value: KitTechnicalValue, wide: Boolean) {
     val spoken = KitBidi.ltr(KitRedact.text(value.spoken ?: value.value.text))
     val sentence = stringResource(Res.string.kitDetailsValueSpoken, value.label, spoken)
     Row(
-        Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(vertical = Space.S1.dp), // F: lib/ui/kit/kit_details_fold.dart:501-503
+        Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(vertical = Space.S1.dp) // F: lib/ui/kit/kit_details_fold.dart:501-503
+            .testTag("kit-details-value"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // One spoken node, label and value ("Address: 100.64.0.3, port 4096"); the copy button is its own.
         Box(Modifier.weight(1f).clearAndSetSemantics { contentDescription = sentence }) {
             if (wide) {
                 Row {
                     Box(Modifier.width(FlutterKitTokens.DETAILS_LABEL_COLUMN.dp)) { KitText(value.label, role = TypeRole.Secondary) }
                     Spacer(Modifier.width(Space.S3.dp)) // F: lib/ui/kit/kit_details_fold.dart:490
-                    Box(Modifier.weight(1f)) { LtrValue(shown, Modifier.testTag("kit-details-value")) }
+                    Box(Modifier.weight(1f)) { LtrValue(shown) }
                 }
             } else {
                 Column(Modifier.fillMaxWidth()) {
                     KitText(value.label, role = TypeRole.Secondary)
-                    LtrValue(shown, Modifier.testTag("kit-details-value"))
+                    LtrValue(shown)
                 }
             }
         }
