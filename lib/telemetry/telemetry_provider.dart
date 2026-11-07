@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart'
     show
         AppLifecycleState,
         BuildContext,
+        NavigatorObserver,
+        PageRoute,
+        Route,
         WidgetsBinding,
         WidgetsBindingObserver;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../diagnostics/perf_trace.dart' show PerfTraceNavigatorObserver;
 import 'analytics_events.dart';
 import 'telemetry.dart';
 
@@ -47,6 +53,10 @@ abstract final class AppTelemetry {
     AnalyticsEvent event, [
     Map<String, Object?> props = const {},
   ]) => _current.track(event, props);
+
+  /// `feature_used` for one use of [feature].
+  static void feature(AnalyticsFeature feature) =>
+      _current.track(AnalyticsEvent.featureUsed, {'feature': feature});
 }
 
 /// Code with a `ref` depends only on this. Tests override it with a fake; a
@@ -70,7 +80,29 @@ Telemetry telemetryOf(BuildContext context) {
 /// vendor is built in, and installs the reporter. Never blocks the first
 /// frame and never throws.
 abstract final class TelemetryStartup {
+  static Completer<void> _ready = Completer<void>();
+
+  /// Completes once [start] has installed the reporter (or failed), so the
+  /// consent question knows whether a vendor is built in.
+  static Future<void> get ready => _ready.future;
+
+  /// Test hook: a fresh, not yet completed [ready].
+  static void resetForTest() => _ready = Completer<void>();
+
+  /// Test hook: [ready] completes now.
+  static void markReadyForTest() {
+    if (!_ready.isCompleted) _ready.complete();
+  }
+
   static Future<void> start(TelemetryAdapter adapter) async {
+    try {
+      await _start(adapter);
+    } finally {
+      if (!_ready.isCompleted) _ready.complete();
+    }
+  }
+
+  static Future<void> _start(TelemetryAdapter adapter) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final service = TelemetryService(
@@ -96,6 +128,7 @@ class AnalyticsLifecycle with WidgetsBindingObserver {
 
   static AnalyticsLifecycle? _installed;
   bool _wasAway = false;
+  DateTime _since = DateTime.now();
 
   static Future<void> start(
     SharedPreferences prefs, {
@@ -126,13 +159,53 @@ class AnalyticsLifecycle with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
-      case AppLifecycleState.paused || AppLifecycleState.hidden:
+      case AppLifecycleState.paused || AppLifecycleState.hidden when !_wasAway:
         _wasAway = true;
+        AppTelemetry.track(AnalyticsEvent.sessionLength, {
+          'minutes': AnalyticsBuckets.sessionMinutesOf(
+            DateTime.now().difference(_since),
+          ),
+        });
       case AppLifecycleState.resumed when _wasAway:
         _wasAway = false;
+        _since = DateTime.now();
         AppTelemetry.track(AnalyticsEvent.appOpen, {'kind': 'warm'});
       default:
         break;
     }
   }
 }
+
+/// `screen_view` for each page that comes into view, named by kind from
+/// [AnalyticsScreen] (never its content). Sheets and dialogs are not pages.
+class AnalyticsNavigatorObserver extends NavigatorObserver {
+  void _viewed(Route<dynamic>? route) {
+    if (route is! PageRoute) return;
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!route.isCurrent) return;
+        AppTelemetry.track(AnalyticsEvent.screenView, {
+          'screen': AnalyticsScreen.of(
+            PerfTraceNavigatorObserver.routeName(route),
+          ),
+        });
+      });
+    } catch (_) {}
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _viewed(route);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _viewed(newRoute);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _viewed(previousRoute);
+}
+
+/// Whether the one-time "Help improve OpenCode Mobile" question was asked.
+/// App-wide; set before the question shows, so it is never asked twice.
+const telemetryConsentAskedKey = 'oc.telemetryConsentAsked';

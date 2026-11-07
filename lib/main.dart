@@ -30,6 +30,7 @@ import 'telemetry/firebase_analytics_adapter.dart';
 import 'telemetry/firebase_crashlytics_adapter.dart';
 import 'telemetry/telemetry.dart';
 import 'telemetry/telemetry_provider.dart';
+import 'ui/widgets/telemetry_consent.dart';
 import 'builtin/app_exit_recovery.dart';
 import 'builtin/builtin_server.dart';
 import 'builtin/linux_manager/linux_reset_flow.dart';
@@ -435,7 +436,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           final saver = appearance == AppAppearance.saver;
           return MaterialApp(
             navigatorKey: _navigatorKey,
-            navigatorObservers: [_routeTracker, _routeTiming],
+            navigatorObservers: [
+              _routeTracker,
+              _routeTiming,
+              AnalyticsNavigatorObserver(),
+            ],
             builder: (context, child) {
               // Global text-scale safety net: only the extreme top end is
               // capped (KitText.appScaler).

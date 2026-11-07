@@ -68,6 +68,11 @@ final _everyEvent = <AnalyticsEvent, Map<String, Object?>>{
   AnalyticsEvent.connectComputerChosen: const {},
   AnalyticsEvent.updateOffered: const {},
   AnalyticsEvent.updateInstalled: const {},
+  AnalyticsEvent.screenView: {'screen': AnalyticsScreen.thisPhone},
+  AnalyticsEvent.featureUsed: {'feature': AnalyticsFeature.fileAttach},
+  AnalyticsEvent.sessionLength: {
+    'minutes': AnalyticsBuckets.sessionMinutesOf(const Duration(minutes: 9)),
+  },
 };
 
 Future<void> _settle() => Future<void>.delayed(Duration.zero);
@@ -242,6 +247,44 @@ void main() {
       expect(AnalyticsBuckets.secondsOf(null), 'unknown');
       expect(AnalyticsBuckets.minutesOf(const Duration(minutes: 1)), 'under_2');
       expect(AnalyticsBuckets.minutesOf(const Duration(hours: 2)), 'over_40');
+    });
+
+    test('pages are named by kind, never by what is on them', () {
+      expect(AnalyticsScreen.of('/'), AnalyticsScreen.conversations);
+      expect(AnalyticsScreen.of('/chat/ses_7f3a'), AnalyticsScreen.chat);
+      expect(AnalyticsScreen.of('ChatScreen'), AnalyticsScreen.chat);
+      expect(AnalyticsScreen.of('NewChatScreen'), AnalyticsScreen.newChat);
+      expect(
+        AnalyticsScreen.of('PrivacySettingsScreen'),
+        AnalyticsScreen.privacy,
+      );
+      expect(AnalyticsScreen.of('SettingsScreen'), AnalyticsScreen.settings);
+      expect(AnalyticsScreen.of('ThisPhoneScreen'), AnalyticsScreen.thisPhone);
+      expect(
+        AnalyticsScreen.of('PhoneSetupStartScreen'),
+        AnalyticsScreen.setup,
+      );
+      expect(AnalyticsScreen.of('ReviewWorkspace'), AnalyticsScreen.review);
+      expect(AnalyticsScreen.of('ManageSpaceScreen'), AnalyticsScreen.other);
+      expect(AnalyticsScreen.thisPhone.wire, 'this_phone');
+      expect(AnalyticsFeature.fileAttach.wire, 'file_attach');
+      expect(
+        TelemetryService.cleanProps(AnalyticsEvent.screenView, {
+          'screen': '/chat/ses_7f3a',
+        }),
+        isEmpty,
+      );
+    });
+
+    test('session length is a range', () {
+      expect(
+        AnalyticsBuckets.sessionMinutesOf(const Duration(seconds: 20)),
+        'under_1',
+      );
+      expect(
+        AnalyticsBuckets.sessionMinutesOf(const Duration(hours: 3)),
+        'over_60',
+      );
     });
 
     test('unknown step ids and Node variants become other', () {

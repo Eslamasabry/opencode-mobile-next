@@ -34,7 +34,16 @@ enum AnalyticsEvent {
   updateOffered('update_offered'),
 
   /// The app started on a newer version than last time.
-  updateInstalled('update_installed');
+  updateInstalled('update_installed'),
+
+  /// A page came into view: `screen`, from [AnalyticsScreen].
+  screenView('screen_view'),
+
+  /// The person used a feature: `feature`, from [AnalyticsFeature].
+  featureUsed('feature_used'),
+
+  /// The app went to the background: `minutes` it was in front, a range.
+  sessionLength('session_length');
 
   const AnalyticsEvent(this.wire);
   final String wire;
@@ -80,6 +89,83 @@ enum AnalyticsNodeVariant {
   );
 }
 
+/// Pages, by kind. A page outside this list is sent as [other]; nothing
+/// about what is on the page is ever sent.
+enum AnalyticsScreen {
+  conversations,
+  chat,
+  newChat,
+  servers,
+  thisPhone,
+  setup,
+  privacy,
+  appearance,
+  integrations,
+  settings,
+  files,
+  git,
+  review,
+  team,
+  usage,
+  agents,
+  about,
+  other;
+
+  String get wire => switch (this) {
+    newChat => 'new_chat',
+    thisPhone => 'this_phone',
+    _ => name,
+  };
+
+  /// [route] is a route name (`/chat/ses_1`) or a page's type name
+  /// (`ChatScreen`); only the matching word of this list is kept.
+  static AnalyticsScreen of(String route) {
+    final r = route.toLowerCase();
+    if (r == '/' || r == '/home' || r.contains('chatshome')) {
+      return conversations;
+    }
+    if (r.contains('newchat')) return newChat;
+    if (r.startsWith('/chat/') || r.contains('chatscreen')) return chat;
+    if (r.contains('thisphone') || r.contains('this-phone')) return thisPhone;
+    if (r.contains('setup')) return setup;
+    if (r.contains('privacy')) return privacy;
+    if (r.contains('appearance')) return appearance;
+    if (r.contains('integration')) return integrations;
+    if (r.contains('server')) return servers;
+    if (r.contains('setting')) return settings;
+    if (r.contains('file')) return files;
+    if (r.contains('git')) return git;
+    if (r.contains('review') || r.contains('diff')) return review;
+    if (r.contains('team')) return team;
+    if (r.contains('usage')) return usage;
+    if (r.contains('agent')) return agents;
+    if (r.contains('about')) return about;
+    return other;
+  }
+}
+
+/// Features whose use is counted, once per use.
+enum AnalyticsFeature {
+  voice,
+  camera,
+  fileAttach,
+  agentSwitch,
+  modelSwitch,
+  serverAdd,
+  gitAction,
+  reviewOpen;
+
+  String get wire => switch (this) {
+    fileAttach => 'file_attach',
+    agentSwitch => 'agent_switch',
+    modelSwitch => 'model_switch',
+    serverAdd => 'server_add',
+    gitAction => 'git_action',
+    reviewOpen => 'review_open',
+    _ => name,
+  };
+}
+
 /// Duration buckets: the vendor never sees an exact time.
 abstract final class AnalyticsBuckets {
   static const minutes = [
@@ -90,6 +176,23 @@ abstract final class AnalyticsBuckets {
     '20_to_40',
     'over_40',
   ];
+  static const sessionMinutes = [
+    'under_1',
+    '1_to_5',
+    '5_to_15',
+    '15_to_60',
+    'over_60',
+  ];
+
+  static String sessionMinutesOf(Duration elapsed) {
+    final m = elapsed.inSeconds / 60;
+    if (m < 1) return sessionMinutes[0];
+    if (m < 5) return sessionMinutes[1];
+    if (m < 15) return sessionMinutes[2];
+    if (m < 60) return sessionMinutes[3];
+    return sessionMinutes[4];
+  }
+
   static const seconds = [
     'under_5',
     '5_to_15',
@@ -144,6 +247,15 @@ final Map<String, Map<String, Set<String>>> analyticsSchema = {
   AnalyticsEvent.firstReply.wire: {
     'server_kind': {for (final k in AnalyticsServerKind.values) k.name},
     'seconds': {...AnalyticsBuckets.seconds},
+  },
+  AnalyticsEvent.screenView.wire: {
+    'screen': {for (final s in AnalyticsScreen.values) s.wire},
+  },
+  AnalyticsEvent.featureUsed.wire: {
+    'feature': {for (final f in AnalyticsFeature.values) f.wire},
+  },
+  AnalyticsEvent.sessionLength.wire: {
+    'minutes': {...AnalyticsBuckets.sessionMinutes},
   },
   AnalyticsEvent.connectComputerChosen.wire: const {},
   AnalyticsEvent.updateOffered.wire: const {},

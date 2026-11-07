@@ -238,6 +238,8 @@ class TelemetryService implements Telemetry {
       final value = switch (entry.value) {
         final bool v => '$v',
         final AnalyticsNodeVariant v => v.wire,
+        final AnalyticsScreen v => v.wire,
+        final AnalyticsFeature v => v.wire,
         final Enum v => v.name,
         final String v => v,
         _ => null,
