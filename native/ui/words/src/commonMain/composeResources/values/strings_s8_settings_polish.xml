@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- S8 settings polish (P-026): two-line descriptions on Voice typing. -->
+    <string name="vpttAutoSendDetailShort">Sends after a short pause, with 3 seconds to cancel. Holding the mic never sends.</string>
+    <string name="readAloudVoiceNaturalDetailShort">More natural and works offline. English only; other languages use the phone's voice.</string>
+</resources>

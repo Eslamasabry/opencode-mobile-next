@@ -30,8 +30,6 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
@@ -79,7 +77,7 @@ import io.github.eslamasabry.oc.ui.words.res.naturalVoiceRemove
 import io.github.eslamasabry.oc.ui.words.res.naturalVoiceRemoveBody
 import io.github.eslamasabry.oc.ui.words.res.naturalVoiceRemoveTitle
 import io.github.eslamasabry.oc.ui.words.res.readAloudVoiceNatural
-import io.github.eslamasabry.oc.ui.words.res.readAloudVoiceNaturalDetail
+import io.github.eslamasabry.oc.ui.words.res.readAloudVoiceNaturalDetailShort
 import io.github.eslamasabry.oc.ui.words.res.readAloudVoiceNaturalDownload
 import io.github.eslamasabry.oc.ui.words.res.readAloudVoicePhone
 import io.github.eslamasabry.oc.ui.words.res.readAloudVoicePhoneDetail
@@ -101,7 +99,7 @@ import io.github.eslamasabry.oc.ui.words.res.voiceSetupModelLabel
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupNotDownloaded
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupRedownloadPack
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupSubtitle
-import io.github.eslamasabry.oc.ui.words.res.vpttAutoSendDetail
+import io.github.eslamasabry.oc.ui.words.res.vpttAutoSendDetailShort
 import io.github.eslamasabry.oc.ui.words.res.vpttAutoSendTitle
 import io.github.eslamasabry.oc.ui.words.res.vpttLanguageDetectDetail
 import io.github.eslamasabry.oc.ui.words.res.vpttLanguageFollowAppDetail
@@ -212,7 +210,8 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                 KitSwitchRow(
                     title = stringResource(Res.string.vpttAutoSendTitle),
                     checked = state.autoSend,
-                    supporting = stringResource(Res.string.vpttAutoSendDetail),
+                    // P-026: two lines at most; the old sentence ran to three.
+                    supporting = stringResource(Res.string.vpttAutoSendDetailShort),
                     onCheckedChange = actions::setAutoSend,
                     modifier = Modifier.testTag("voice-auto-send"),
                 )
@@ -370,11 +369,27 @@ private fun DownloadProgress(state: VoiceSettingsUi, actions: VoiceSettingsPrese
 
 @Composable
 private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
+    // P-026: the installed model's two acts are rows of the list, worded alike; Delete sits in the group's
+    // destructive slot, last after its hairline (no green link beside a bold white one).
+    val row = state.selectedRow?.takeIf { it.installed && !state.busy }
+    val name = row?.let { packName(it.id) }.orEmpty()
+    val size = row?.let { sizeWords(it.bytes) }.orEmpty()
     // While a download runs the models are locked for one reason, said once under the list.
     KitRowGroup(
         label = stringResource(Res.string.voiceSetupModelLabel),
         note = if (state.busy) stringResource(Res.string.voiceSetupBusyChoice) else null,
         section = true,
+        destructive =
+            row?.let {
+                {
+                    KitRow(
+                        title = stringResource(Res.string.voiceSetupDeletePack, name, size),
+                        titleMaxLines = 2,
+                        onClick = actions::askDelete,
+                        modifier = Modifier.testTag("voice-delete-${it.id.raw}"),
+                    )
+                }
+            },
     ) {
         KitChoiceList(
             choices = state.packs.map { row -> packChoice(row, state.busy) },
@@ -384,30 +399,13 @@ private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
             empty = {},
             onSelect = actions::choose,
         )
-    }
-    val row = state.selectedRow ?: return
-    if (state.busy) return
-    val name = packName(row.id)
-    val size = sizeWords(row.bytes)
-    if (row.installed) {
-        Column(
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-        ) {
-            KitButton(
-                label = stringResource(Res.string.voiceSetupRedownloadPack, name),
+        if (row != null)
+            KitRow(
+                title = stringResource(Res.string.voiceSetupRedownloadPack, name),
+                titleMaxLines = 2,
                 onClick = actions::downloadAgain,
-                role = KitButtonRole.Tertiary,
                 modifier = Modifier.testTag("voice-redownload-${row.id.raw}"),
             )
-            KitButton(
-                label = stringResource(Res.string.voiceSetupDeletePack, name, size),
-                onClick = actions::askDelete,
-                role = KitButtonRole.Tertiary,
-                destructive = true,
-                modifier = Modifier.testTag("voice-delete-${row.id.raw}"),
-            )
-        }
     }
 }
 
@@ -460,6 +458,18 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
         label = stringResource(Res.string.readAloudVoiceTitle),
         // E20-S08: the busy caption is said once, under the model list; this list was its second copy.
         section = true,
+        // P-026: removing the natural voice is a row in the destructive slot, like deleting a speech model.
+        destructive =
+            if (natural.installed && !state.busy) {
+                {
+                    KitRow(
+                        title = stringResource(Res.string.naturalVoiceRemove, sizeWords(natural.bytes)),
+                        titleMaxLines = 2,
+                        onClick = actions::askRemoveNatural,
+                        modifier = Modifier.testTag("voice-natural-remove"),
+                    )
+                }
+            } else null,
     ) {
         KitChoiceList(
             choices =
@@ -478,7 +488,8 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
                                     Res.string.readAloudVoiceNaturalDownload,
                                     sizeWords(natural.bytes),
                                 ),
-                        supporting = stringResource(Res.string.readAloudVoiceNaturalDetail),
+                        // P-026: two lines at most (screen standard); the long sentence ran to three.
+                        supporting = stringResource(Res.string.readAloudVoiceNaturalDetailShort),
                         enabled =
                             when {
                                 !natural.available ->
@@ -494,15 +505,6 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
             selected = natural.chosen,
             semanticsLabel = stringResource(Res.string.readAloudVoiceTitle),
             onSelect = actions::setNaturalVoice,
-        )
-    }
-    if (natural.installed && !state.busy) {
-        KitButton(
-            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-            label = stringResource(Res.string.naturalVoiceRemove, sizeWords(natural.bytes)),
-            onClick = actions::askRemoveNatural,
-            role = KitButtonRole.Tertiary,
-            destructive = true,
         )
     }
 }
