@@ -6,7 +6,7 @@ import androidx.compose.runtime.Immutable
  * What kind of step it was (plan 06 §7.8, plan 09 §0.4 C5). It picks the glyph only; the words are the caller's
  * [KitToolView.title]. `:feature:chat` maps the engine's `ToolView` onto it.
  */
-public enum class KitToolKind { Shell, Read, Edit, Write, Patch, Search, WebFetch, SubAgent, Todo, Question, Card, Other }
+public enum class KitToolKind { Shell, Read, List, Edit, Write, Patch, Search, WebFetch, SubAgent, Todo, Question, Card, Other }
 
 /**
  * How the step went. The caller maps the server's status and gives the words ([KitToolView.statusLabel]); the row

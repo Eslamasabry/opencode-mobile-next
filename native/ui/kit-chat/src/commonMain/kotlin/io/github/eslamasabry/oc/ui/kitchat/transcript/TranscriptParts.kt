@@ -225,7 +225,7 @@ public fun KitQuietLine(text: String, modifier: Modifier = Modifier) {
     // E20-S12: inside an opened step the line is already on the step's text edge; the page gutter would push it
     // past the code under it.
     val inStep = io.github.eslamasabry.oc.ui.kitchat.tool.LocalKitStepBody.current
-    Box(modifier.then(if (inStep) StepLine else Column)) {
+    val words: @Composable () -> Unit = {
         BasicText(
             text,
             style =
@@ -235,4 +235,10 @@ public fun KitQuietLine(text: String, modifier: Modifier = Modifier) {
                 ),
         )
     }
+    // Between the steps of an opened work line the line is a sentence on the rail: a dot and the steps' text edge.
+    if (!inStep && io.github.eslamasabry.oc.ui.kitchat.tool.kitOnStepRail()) {
+        io.github.eslamasabry.oc.ui.kitchat.tool.KitStepSentence(modifier) { words() }
+        return
+    }
+    Box(modifier.then(if (inStep) StepLine else Column)) { words() }
 }

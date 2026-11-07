@@ -1,18 +1,14 @@
 package io.github.eslamasabry.oc.ui.kitchat.turn
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,38 +16,32 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.collapse
-import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.design.color.SignalPalette
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
-import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
-import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
-import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
-import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.kit.icon.KitStatusIcon
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepTimeline
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.signalHide
 import io.github.eslamasabry.oc.ui.words.res.signalShow
 import org.jetbrains.compose.resources.stringResource
@@ -79,16 +69,13 @@ public enum class KitWorkState {
 public const val KIT_WORK_STEP_CAP: Int = 25
 
 /**
- * The one line a turn's work folds under (Dart `KitWorkLine`, plan 09 chat-transcript-turn-model:
- * "work folded under ONE line"). [label] is the summary in the caller's words ("Read 3 files ·
- * edited 1", or what is happening now while it runs); [state] reads out with it. Tapping the line
- * (ripple, 48 dp row) or the screen reader's expand / collapse action asks [onToggle]; the caller
- * owns [expanded]. [steps] are drawn only while open, revealed with the kit's one layout motion
- * (reduced motion: instant). [earlier] is "Show N earlier steps" when the open line hides older
- * ones.
- *
- * Text: reading role through [KitExpandRow] (frame-capped by the kit); no frame, no fill: work is
- * quiet.
+ * The one line a turn's work folds under (Dart `KitWorkLine`, lib/ui/kit/chat/kit_work_line.dart; plan 09
+ * chat-transcript-turn-model: "work folded under ONE line"), drawn as a [KitStepTimeline]. [label] is the summary in
+ * the caller's words ("Read 3 files · edited 1"); [now] is the live step's words, shown while the work runs and the
+ * line is shut; [stateWords] is how it stands, read with it and, for stopped and failed work, said after the summary.
+ * [icon] leads the line (see `kitWorkIcon`). Tapping the line or the screen reader's expand / collapse action asks
+ * [onToggle]; the caller owns [expanded]. [steps] hang off the rail while open; [earlier] is "Show N earlier steps".
+ * No frame, no fill, no page gutter of its own (the transcript gives it the 16 dp edge): work is quiet.
  */
 @Composable
 public fun KitWorkLine(
@@ -99,17 +86,18 @@ public fun KitWorkLine(
     onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     earlier: KitLineAction? = null,
+    icon: ImageVector = KitIcons.tools,
+    now: String? = null,
     steps: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(
-        modifier.fillMaxWidth().widthIn(max = 700.dp).semantics {
-            stateDescription = stateWords ?: label
-        }
-    ) {
+    Column(modifier.fillMaxWidth().widthIn(max = 700.dp)) { // F: lib/ui/kit/kit_layout.dart:48
         if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
             val colors = LocalKitColors.current
             val palette = SignalPalette.of(colors.dark)
-            KitTappable(onClick = { onToggle(!expanded) }, modifier = Modifier.fillMaxWidth()) {
+            KitTappable(
+                onClick = { onToggle(!expanded) },
+                modifier = Modifier.fillMaxWidth().semantics { stateDescription = stateWords ?: label },
+            ) {
                 Row(
                     Modifier.fillMaxWidth()
                         .drawBehind {
@@ -125,7 +113,7 @@ public fun KitWorkLine(
                                     ),
                             )
                         }
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(vertical = 8.dp), // NV: the Signal line keeps its 8 dp band; the page gutter is the host's now
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -177,61 +165,38 @@ public fun KitWorkLine(
                 steps()
             }
         } else {
-            // Flutter's work line: one quiet line, a mark for where the work stands, the summary in the supporting
-            // grey and a caret at the end; no frame, no fill. The state words are what TalkBack adds.
-            val colors = LocalKitColors.current
-            val iconSize = workMark()
-            KitTappable(
-                onClick = { onToggle(!expanded) },
-                modifier =
-                    Modifier.fillMaxWidth().semantics {
-                        if (expanded) collapse { onToggle(false); true } else expand { onToggle(true); true }
+            // Flutter's work line (kit_work_line.dart `_KitWorkLineState._buildContent`): a KitStepTimeline whose line
+            // says the summary (or, folded while a step runs, the live step), with the failed mark in the glyph's
+            // place when the work ended on a failure and the step light on the glyph while a step runs and the
+            // line is shut. The state words are what TalkBack adds.
+            val sep = stringResource(Res.string.kitWorkSeparator)
+            val shown =
+                when (state) {
+                    KitWorkState.Running -> if (expanded) label else now ?: label
+                    KitWorkState.WaitingForYou -> stateWords ?: label
+                    KitWorkState.Done -> label
+                    KitWorkState.EndedFailed,
+                    KitWorkState.Stopped -> if (stateWords == null) label else "$label$sep$stateWords"
+                }
+            KitStepTimeline(
+                label = shown,
+                icon = icon,
+                expanded = expanded,
+                onPressed = { onToggle(!expanded) },
+                spoken = stateWords,
+                mark =
+                    if (state == KitWorkState.EndedFailed) {
+                        { KitStatusIcon(StatusTone.Failure) }
+                    } else null,
+                live = state == KitWorkState.Running && !expanded,
+                head =
+                    if (earlier == null) null
+                    else {
+                        { KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary) }
                     },
-                role = KitTappableRole.Row,
-                shape = KitShapeId.Tile,
-            ) {
-                Row(
-                    // On the reply's own edge (16 dp, like its words): the mark and the caret never touch the screen.
-                    Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(horizontal = 16.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(WORK_GAP.dp),
-                ) {
-                    when (state) {
-                        KitWorkState.Running -> Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
-                            Box(Modifier.size(8.dp).background(colors.live, CircleShape))
-                        }
-                        KitWorkState.WaitingForYou -> Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
-                            Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
-                        }
-                        KitWorkState.EndedFailed -> KitIcon(KitIcons.warning, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
-                        KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
-                        KitWorkState.Done -> KitIcon(KitIcons.fileText, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
-                    }
-                    // One live line: when the step changes the new words fade in over the old (QUICK; instant
-                    // under reduced motion). While running it is one polite live region, so the screen reader
-                    // says the new step once, never per token.
-                    KitSwap(label, Modifier.weight(1f).liveLabel(state), alignment = Alignment.CenterStart) { shown ->
-                        KitText(
-                            shown,
-                            Modifier.fillMaxWidth(),
-                            role = TypeRole.Secondary,
-                            tone = if (state == KitWorkState.Running) TextTone.Primary else TextTone.Secondary,
-                            kind = KitTextKind.Reading,
-                            maxLines = 1,
-                        )
-                    }
-                    KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
-                }
-            }
-            KitReveal(visible = expanded) {
-                // P-011: the steps sit on the line's own 16 dp edge, their glyphs in the summary mark's column and their
-                // names on the summary's text edge; no extra indent of their own.
-                Column(Modifier.fillMaxWidth()) {
-                    if (earlier != null)
-                        KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary)
-                    steps()
-                }
-            }
+                lineModifier = Modifier.liveLabel(state),
+                steps = steps,
+            )
         }
     }
 }

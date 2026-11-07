@@ -25,9 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -91,6 +89,10 @@ private const val END_SHARE = 0.45f
  * [opened]. Without one the row is plain text. [KitToolView.subject] and [KitToolView.detail]
  * display redacted (R18).
  *
+ * Inside an opened [KitStepTimeline] the row takes its timeline form (Dart `_buildTimelineStep`): one 32 dp line, its
+ * node on the rail, no chevron of its own (the group's line has the one chevron); [onOpen] (a step that opens another
+ * page, with no [body]) keeps a forward chevron.
+ *
  * Text: frame (≤ 1.3×) for title, detail and status; the subject is mono, left to right.
  */
 @Composable
@@ -100,28 +102,13 @@ public fun KitToolRow(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     body: (@Composable () -> Unit)? = null,
-    rail: KitToolRail? = null,
+    onOpen: (() -> Unit)? = null,
 ) {
+    if (kitOnStepRail()) {
+        TimelineStep(view, opened, onToggle, modifier, body, onOpen)
+        return
+    }
     val tokens = LocalKitTokens.current
-    val colors = LocalKitColors.current
-    val glyph = stepGlyph()
-    val railModifier =
-        if (rail == null) Modifier
-        else
-            Modifier.drawBehind {
-                // The node leads the line: on the right in a right-to-left layout, through the glyph's centre.
-                val inset = glyph.toPx() / 2f
-                val x = if (layoutDirection == LayoutDirection.Rtl) size.width - inset else inset
-                val center = (Space.S1 + Space.S1 / 2f).dp.toPx() + inset
-                val from = if (rail.first) center else 0f
-                val to = if (rail.last) center else size.height
-                drawLine(
-                    colors.text3.copy(alpha = .5f),
-                    Offset(x, from),
-                    Offset(x, to),
-                    1.dp.toPx(),
-                )
-            }
     // Opening fades the body in (never on first composition: a row scrolled back into view shows at once).
     val reduced = KitMotion.state.reduced
     val quick = KitMotion.specs.pace<Float>(KitPace.Quick)
@@ -131,7 +118,7 @@ public fun KitToolRow(
         wasOpen = opened
         fade.animateTo(1f, quick)
     }
-    Column(modifier.then(ConversationColumn).then(railModifier)) {
+    Column(modifier.then(ConversationColumn)) {
         if (body != null) {
             KitTappable(
                 onClick = onToggle,
@@ -327,7 +314,7 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
  * left to right in any interface language.
  */
 @Composable
-private fun Counts(added: Int?, removed: Int?) {
+internal fun Counts(added: Int?, removed: Int?) {
     val colors = LocalKitColors.current
     val text = buildAnnotatedString {
         if (added != null) withStyle(SpanStyle(color = colors.success)) { append("+$added") }
@@ -349,5 +336,3 @@ private fun Counts(added: Int?, removed: Int?) {
     }
 }
 
-/** Position in the expanded work timeline; an open output stays beside its connecting rail. */
-public data class KitToolRail(val first: Boolean, val last: Boolean)
