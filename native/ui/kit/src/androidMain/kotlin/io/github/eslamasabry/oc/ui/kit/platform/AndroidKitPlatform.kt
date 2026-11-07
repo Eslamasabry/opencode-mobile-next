@@ -1,7 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.platform
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.ContextWrapper
 import android.content.pm.ApplicationInfo
 import android.database.ContentObserver
@@ -74,6 +77,25 @@ public class AndroidKitPlatform(
             false,
             observer,
         )
+        // Live, so Battery Saver and heat calm motion (and rest the live background) as they change.
+        val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val saver =
+            object : BroadcastReceiver() {
+                override fun onReceive(c: Context?, intent: Intent?) {
+                    state.update { it.copy(powerSave = power?.isPowerSaveMode == true) }
+                }
+            }
+        val saverChanged = IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(saver, saverChanged, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(saver, saverChanged)
+        }
+        if (power != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            power.addThermalStatusListener(context.mainExecutor) { status ->
+                state.update { it.copy(severeHeat = status >= PowerManager.THERMAL_STATUS_SEVERE) }
+            }
+        }
     }
 
     override fun pressIndication(ink: Color): Indication = ripple(bounded = true, color = ink)
@@ -178,6 +200,9 @@ public class AndroidKitPlatform(
         return KitSystemSignals(
             animatorScale = animatorScale(),
             powerSave = power?.isPowerSaveMode == true,
+            severeHeat =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && power != null &&
+                    power.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE,
             is24Hour = android.text.format.DateFormat.is24HourFormat(context),
         )
     }
