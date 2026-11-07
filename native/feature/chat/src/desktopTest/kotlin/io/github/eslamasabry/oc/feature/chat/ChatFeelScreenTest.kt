@@ -131,7 +131,7 @@ class ChatFeelScreenTest {
             }
             onNodeWithText("val answer = 42", substring = true).assertIsDisplayed()
             assertEquals(0, onAllNodesWithText("```", substring = true).fetchSemanticsNodes().size)
-            onNodeWithText("Copy").performClick()
+            codeCopy().performClick()
             assertEquals(listOf("copy val answer = 42"), outside.calls)
         }
 
@@ -198,7 +198,7 @@ class ChatFeelScreenTest {
                 val state by states.collectAsState()
                 Root { ChatScreen(state, p, composer) }
             }
-            onNodeWithText("Copy").performClick()
+            codeCopy().performClick()
             val copied = outside.calls.single()
             assertTrue(copied.startsWith("copy curl -H 'Authorization:"), copied)
             assertTrue(bearerTail !in copied, "the key never reaches the clipboard: $copied")
@@ -352,4 +352,14 @@ class ChatFeelScreenTest {
             }
             onNodeWithText("Screenshot", substring = true).assertIsDisplayed()
         }
+
+    /** The code block's Copy: an icon button in the block's corner (S8 P-001), apart from the reply footer's Copy. */
+    private fun androidx.compose.ui.test.SemanticsNodeInteractionsProvider.codeCopy() =
+        onNode(
+            androidx.compose.ui.test.hasContentDescription("Copy") and
+                androidx.compose.ui.test.hasAnyAncestor(
+                    androidx.compose.ui.test.hasTestTag(io.github.eslamasabry.oc.ui.kitchat.code.CODE_CORNER_TAG)
+                ),
+            useUnmergedTree = true,
+        )
 }

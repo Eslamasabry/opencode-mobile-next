@@ -63,6 +63,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveSweep
+import io.github.eslamasabry.oc.ui.kitchat.turn.WORK_GAP
+import io.github.eslamasabry.oc.ui.kitchat.turn.workMark
 
 /** Plan 09 R13: a step sits in the conversation column, capped at 700 dp, on the page gutter. */
 private val ConversationColumn =
@@ -101,14 +103,15 @@ public fun KitToolRow(
 ) {
     val tokens = LocalKitTokens.current
     val colors = LocalKitColors.current
+    val glyph = stepGlyph()
     val railModifier =
         if (rail == null) Modifier
         else
             Modifier.drawBehind {
-                // The node leads the line: on the right in a right-to-left layout.
-                val inset = (tokens.smallIcon / 2f).dp.toPx()
+                // The node leads the line: on the right in a right-to-left layout, through the glyph's centre.
+                val inset = glyph.toPx() / 2f
                 val x = if (layoutDirection == LayoutDirection.Rtl) size.width - inset else inset
-                val center = (Space.S1 + tokens.smallIcon / 2f).dp.toPx()
+                val center = (Space.S1 + Space.S1 / 2f).dp.toPx() + inset
                 val from = if (rail.first) center else 0f
                 val to = if (rail.last) center else size.height
                 drawLine(
@@ -166,7 +169,7 @@ public fun KitToolRow(
             // R5: a list item); reduced motion shows it at once.
             Column(
                 Modifier.fillMaxWidth()
-                    .padding(start = stepGlyph() + Space.S3.dp, top = Space.S1.dp, bottom = Space.S2.dp)
+                    .padding(start = stepGlyph() + WORK_GAP.dp, top = Space.S1.dp, bottom = Space.S2.dp)
                     .graphicsLayer { alpha = fade.value }
                     .testTag("kit-tool-body"),
                 verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -183,13 +186,12 @@ public fun KitToolRow(
  */
 internal val LocalKitStepBody = compositionLocalOf { false }
 
-/** The kind glyph's size: it grows with the text, up to the kit's icon cap (plan 06 §9). */
+/**
+ * The kind glyph's size (P-011): the work line's mark, so a step's glyph sits in the summary mark's column and its
+ * name on the summary's text edge. It grows with the text like the mark.
+ */
 @Composable
-private fun stepGlyph(): Dp {
-    val tokens = LocalKitTokens.current
-    val fontScale = (LocalKitAppDensity.current ?: LocalDensity.current).fontScale
-    return (tokens.smallIcon * fontScale.coerceIn(1f, tokens.maxIconScale)).dp
-}
+private fun stepGlyph(): Dp = workMark()
 
 /** The header line. [opened] is null for a row that does not open (no chevron). */
 @Composable
@@ -219,7 +221,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
                 animate = !LocalKitMotion.current.reduced,
             )
         }
-        Spacer(Modifier.width(Space.S3.dp))
+        Spacer(Modifier.width(WORK_GAP.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2)) {
             // Flutter's step line: the verb in the label weight and the subject in mono on the same line ("Read
             // checkout_bloc.dart"), so a list of steps scans as one column of verbs. From 1.3x text the subject

@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
@@ -42,8 +44,17 @@ fun ChatTestTheme(
     localeTag: String = "en",
     redactor: Redactor = Redactor(),
     platform: KitPlatform = ChatFakePlatform(),
+    /** The person's system text size (1.3 = large text); the kit's in-app size stays at its default. */
+    fontScale: Float? = null,
     content: @Composable () -> Unit,
 ) {
+    if (fontScale != null) {
+        val base = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(base.density, fontScale)) {
+            ChatTestTheme(dark, localeTag, redactor, platform, null, content)
+        }
+        return
+    }
     KitTheme(
         appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off),
         platform = platform,

@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Box
@@ -11,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -20,14 +23,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.FrameRateCategory
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextMotion
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkFrame
+import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -109,17 +115,29 @@ public fun KitReplyBlock(
             m = m.preferredFrameRate(FrameRateCategory.High) // §8.5, only while live
     }
     val textModifier = if (revealing) Modifier.kitFreshFade({ holder.layout }, reveal) else Modifier
-    val boxed = if (kind == KitBlockKind.Code) codeBox(continued, continues) else Modifier
+    val onLayout = { it: TextLayoutResult ->
+        holder.layout = it
+        registry.laidOut(it.layoutInput.text.length)
+    }
+    if (kind == KitBlockKind.Code) {
+        // P-002: a fence's rows draw on the settled code chunk's own surface, in its text style and without
+        // wrapping (lines scroll sideways), so a row still revealing and a settled one beside it read as one box.
+        val fill = LocalKitColors.current.surface2
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Box(m.codeChunkFrame(fill, continued, continues)) {
+                BasicText(
+                    text = visible,
+                    style = codeChunkStyle().copy(textMotion = TextMotion.Static),
+                    softWrap = false,
+                    onTextLayout = onLayout,
+                    modifier = Modifier.horizontalScroll(rememberScrollState()).then(textModifier),
+                )
+            }
+        }
+        return
+    }
     Box(m) {
-        BasicText(
-            text = visible,
-            style = style,
-            onTextLayout = {
-                holder.layout = it
-                registry.laidOut(it.layoutInput.text.length)
-            },
-            modifier = boxed.then(textModifier),
-        )
+        BasicText(text = visible, style = style, onTextLayout = onLayout, modifier = textModifier)
     }
 }
 
@@ -141,27 +159,6 @@ private fun columnOf(continued: Boolean, continues: Boolean): Modifier =
             )
     }
 
-/**
- * The code surface: one rounded box across all chunks of a fence (no seam, no inner padding between
- * chunks).
- */
-@Composable
-private fun codeBox(continued: Boolean, continues: Boolean): Modifier {
-    val top = if (continued) 0.dp else 8.dp
-    val bottom = if (continues) 0.dp else 8.dp
-    return Modifier.background(
-            MaterialTheme.colorScheme.surfaceVariant,
-            RoundedCornerShape(top, top, bottom, bottom),
-        )
-        .fillMaxWidth()
-        .padding(
-            start = Space.S2.dp,
-            end = Space.S2.dp,
-            top = if (continued) 0.dp else Space.S2.dp,
-            bottom = if (continues) 0.dp else Space.S2.dp,
-        )
-}
-
 @Composable
 private fun styleOf(kind: KitBlockKind): TextStyle {
     val t = MaterialTheme.typography
@@ -169,7 +166,6 @@ private fun styleOf(kind: KitBlockKind): TextStyle {
     val base =
         when (kind) {
             KitBlockKind.Heading -> t.titleMedium
-            KitBlockKind.Code -> t.bodyMedium.copy(fontFamily = FontFamily.Monospace)
             KitBlockKind.Quote ->
                 t.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             else -> t.bodyLarge
