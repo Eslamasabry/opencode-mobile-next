@@ -112,7 +112,7 @@ internal fun TurnWorkLine(
     val key = "work:${work.turnId}"
     val kitState = work.state.toKit()
     val expanded = folds.open[key] ?: kitState.opensByDefault
-    val summary = workSummary(work.counts)
+    val summary = workSummary(work)
     val now = work.now
     // The line names the real current step, with its count, while the turn runs; open or folded.
     val label = if (now != null) nowWords(now, work.counts) else summary

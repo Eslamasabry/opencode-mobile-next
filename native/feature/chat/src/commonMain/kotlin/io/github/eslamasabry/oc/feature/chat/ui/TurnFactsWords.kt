@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkCounts
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTask
@@ -15,6 +16,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.formatRetryCountdown
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolDuration
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
+import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextShell
 import io.github.eslamasabry.oc.ui.words.res.activeContextSkill
@@ -23,6 +25,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatStallConnectionLost
 import io.github.eslamasabry.oc.ui.words.res.chatStallConnectionUnchecked
 import io.github.eslamasabry.oc.ui.words.res.chatStallHelperDown
 import io.github.eslamasabry.oc.ui.words.res.chatStallModelSlow
+import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingEdit
+import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingOther
+import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingRun
 import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
 import io.github.eslamasabry.oc.ui.words.res.chatUiApplyPatch
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactingConversation
@@ -178,9 +183,14 @@ internal fun durationWords(ms: Long): String =
         is ToolDuration.MinutesSeconds -> stringResource(Res.string.chatUiDurationMinutesSeconds, Numbers.format(d.minutes), d.seconds)
     }
 
-/** The work line's summary (Dart `KitWorkLine.summaryOf`): "Read 3 files · edited 1 file", first letter upper. */
+/**
+ * The work line's summary (Dart `KitWorkLine.summaryOf`), first letter upper. P-012: finished steps in the past
+ * tense, then the ones still waiting: "Read 3 files · edited 1 file · waiting to run 1 command".
+ */
 @Composable
-internal fun workSummary(c: WorkCounts): String {
+internal fun workSummary(work: TurnWork): String {
+    val split = WorkLineRules.split(work)
+    val c = split.done
     val segments = ArrayList<String>()
     if (c.read > 0) segments += pluralStringResource(Res.plurals.kitWorkRead, c.read, c.read)
     if (c.searched > 0) segments += pluralStringResource(Res.plurals.kitWorkSearched, c.searched, c.searched)
@@ -191,6 +201,12 @@ internal fun workSummary(c: WorkCounts): String {
     if (c.delegated > 0) segments += pluralStringResource(Res.plurals.kitWorkDelegated, c.delegated, c.delegated)
     if (c.other > 0) segments += pluralStringResource(Res.plurals.kitWorkOther, c.other, c.other)
     if (c.notRun > 0) segments += pluralStringResource(Res.plurals.kitWorkNotRun, c.notRun, c.notRun)
+    if (split.waitingEdit > 0)
+        segments += pluralStringResource(Res.plurals.chatWorkWaitingEdit, split.waitingEdit, split.waitingEdit)
+    if (split.waitingRun > 0)
+        segments += pluralStringResource(Res.plurals.chatWorkWaitingRun, split.waitingRun, split.waitingRun)
+    if (split.waitingOther > 0)
+        segments += pluralStringResource(Res.plurals.chatWorkWaitingOther, split.waitingOther, split.waitingOther)
     if (segments.isEmpty()) return pluralStringResource(Res.plurals.kitWorkSteps, c.steps, c.steps)
     segments[0] = segments[0].replaceFirstChar { it.uppercase() }
     return segments.joinToString(stringResource(Res.string.kitWorkSeparator))
