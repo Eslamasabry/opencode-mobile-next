@@ -158,7 +158,7 @@ public fun KitAgentChoice(
         ) {
           // Compose lays out on whole pixels: the two sub-pixel hairlines of Flutter's height go to the bottom, rounded, so
           // rows of cards keep Flutter's pitch.
-          Box(Modifier.fillMaxWidth().padding(start = inset, top = Space.S5.dp, end = inset, bottom = Space.S5.dp + (inset - Space.S5.dp) * 2)) {
+          Box(Modifier.fillMaxWidth().padding(start = inset, top = Space.S5.dp, end = inset, bottom = Space.S5.dp + (inset - Space.S5.dp) * 2)) { // NV: twice the hairline, top and bottom edge
             if (wide) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     mark()
