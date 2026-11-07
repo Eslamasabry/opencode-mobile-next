@@ -1,0 +1,34 @@
+kit_fact_row_waiting_light	DEPENDS_ON 07	part-kit_buttons: KitButton has no expand:false (48x48 minimum, kit_buttons.dart:455-459), so the two answers are taller and wider; the card, glyph, border and line match
+kit_fact_row_waiting_1280x800_light	DEPENDS_ON 07	part-kit_buttons: KitButton has no expand:false (48x48 minimum, kit_buttons.dart:455-459), so the two answers are taller and wider; the card, glyph, border and line match
+kit_agent_card_answered_light	DEPENDS_ON 07	part-kit_buttons: the tertiary Undo is accent, Flutter's is text1; the answered row, glyph, title and receipt match
+kit_fact_row_waiting_dark	DEPENDS_ON 07	part-kit_buttons: KitButton has no expand:false (48x48 minimum, kit_buttons.dart:455-459), so the two answers are taller and wider; the card, glyph, border and line match
+kit_fact_row_waiting_1280x800_dark	DEPENDS_ON 07	part-kit_buttons: KitButton has no expand:false (48x48 minimum, kit_buttons.dart:455-459), so the two answers are taller and wider; the card, glyph, border and line match
+kit_agent_card_answered_dark	DEPENDS_ON 07	part-kit_buttons: the tertiary Undo is accent, Flutter's is text1; the answered row, glyph, title and receipt match
+kit_agent_card_default_text2_dark	DEPENDS_ON 07	part-kit_buttons: the secondary button's label stays at 1.3x where Flutter scales it to 2.0x; the card frame, tile, heading and key values match
+kit_agent_card_default_text2_1280x800_dark	DEPENDS_ON 07	part-kit_buttons: the secondary button's label stays at 1.3x where Flutter scales it to 2.0x; the card frame, tile, heading and key values match
+kit_handoff_record_open_light	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_handoff_record_open_1280x800_light	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_handoff_record_open_text2_light	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_handoff_record_open_text2_1280x800_light	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_frost_default_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_360x800_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_800x1280_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_1280x800_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_1600x1000_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_text2_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_text2_1280x800_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_weak_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_strong_light	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_handoff_record_open_dark	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_handoff_record_open_1280x800_dark	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_handoff_record_open_text2_dark	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_handoff_record_open_text2_1280x800_dark	DEPENDS_ON 08	part-kit_code_block: the preview block's padding (12 vs 16) and corner radius differ; the record lines, path and toggle above it match
+kit_frost_default_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_360x800_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_800x1280_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_1280x800_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_1600x1000_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_text2_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_default_text2_1280x800_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_weak_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
+kit_frost_strong_dark	DEPENDS_ON 08	part-kit_code_block: the code block under the glass is shorter with a different fill, moving every line below it; the pane's blur, tint and edges match
