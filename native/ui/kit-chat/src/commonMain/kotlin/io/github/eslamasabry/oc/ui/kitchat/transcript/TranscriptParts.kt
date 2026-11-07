@@ -54,6 +54,9 @@ private val Column =
         .widthIn(max = 700.dp)
         .padding(horizontal = Space.S4.dp, vertical = Space.S1.dp)
 
+/** A quiet line inside an opened step's body: the step's own edge, no page gutter. */
+private val StepLine = Modifier.fillMaxWidth().padding(vertical = Space.S1.dp / 2)
+
 private class LayoutHolder {
     var layout: TextLayoutResult? = null
 }
@@ -223,7 +226,10 @@ public fun KitTranscriptActions(modifier: Modifier = Modifier, content: @Composa
 /** One quiet line: a folded thought, the work line, a notice or the turn footer. */
 @Composable
 public fun KitQuietLine(text: String, modifier: Modifier = Modifier) {
-    Box(modifier.then(Column)) {
+    // E20-S12: inside an opened step the line is already on the step's text edge; the page gutter would push it
+    // past the code under it.
+    val inStep = io.github.eslamasabry.oc.ui.kitchat.tool.LocalKitStepBody.current
+    Box(modifier.then(if (inStep) StepLine else Column)) {
         BasicText(
             text,
             style =

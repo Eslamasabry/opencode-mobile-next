@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,13 +17,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
@@ -31,6 +40,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -44,6 +54,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
@@ -105,6 +118,15 @@ public fun KitToolRow(
                     1.dp.toPx(),
                 )
             }
+    // Opening fades the body in (never on first composition: a row scrolled back into view shows at once).
+    val reduced = KitMotion.state.reduced
+    val quick = KitMotion.specs.pace<Float>(KitPace.Quick)
+    var wasOpen by remember { mutableStateOf(opened) }
+    val fade = remember(opened) { Animatable(if (opened && !wasOpen && !reduced) 0f else 1f) }
+    LaunchedEffect(opened) {
+        wasOpen = opened
+        fade.animateTo(1f, quick)
+    }
     Column(modifier.then(ConversationColumn).then(railModifier)) {
         if (body != null) {
             KitTappable(
@@ -138,9 +160,35 @@ public fun KitToolRow(
             }
         }
         if (opened && body != null) {
-            Box(Modifier.fillMaxWidth().padding(top = Space.S1.dp, bottom = Space.S2.dp)) { body() }
+            // E20-S12: the opened parts stack (a Box drew the path and "Show all output" over the code's first lines)
+            // and start at the text's own x, under the title, as in Flutter ("its body sits at the text's own x").
+            // Flutter `_KitToolRowState._fade`: the body fades in over QUICK when it opens; no size motion (MOT-5,
+            // R5: a list item); reduced motion shows it at once.
+            Column(
+                Modifier.fillMaxWidth()
+                    .padding(start = stepGlyph() + Space.S3.dp, top = Space.S1.dp, bottom = Space.S2.dp)
+                    .graphicsLayer { alpha = fade.value }
+                    .testTag("kit-tool-body"),
+                verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+            ) {
+                CompositionLocalProvider(LocalKitStepBody provides true) { body() }
+            }
         }
     }
+}
+
+/**
+ * True inside an opened step's body: its parts already sit on the step's text edge, so a quiet line drops the page
+ * gutter it carries in the transcript (E20-S12).
+ */
+internal val LocalKitStepBody = compositionLocalOf { false }
+
+/** The kind glyph's size: it grows with the text, up to the kit's icon cap (plan 06 §9). */
+@Composable
+private fun stepGlyph(): Dp {
+    val tokens = LocalKitTokens.current
+    val fontScale = (LocalKitAppDensity.current ?: LocalDensity.current).fontScale
+    return (tokens.smallIcon * fontScale.coerceIn(1f, tokens.maxIconScale)).dp
 }
 
 /** The header line. [opened] is null for a row that does not open (no chevron). */
@@ -152,8 +200,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
     val fontScale = (LocalKitAppDensity.current ?: LocalDensity.current).fontScale
     val wide = fontScale >= WRAP_TEXT_SCALE
     val lines = if (wide) 2 else 1
-    // Glyphs grow with the text, up to the kit's icon cap (plan 06 §9).
-    val glyph = (tokens.smallIcon * fontScale.coerceIn(1f, tokens.maxIconScale)).dp
+    val glyph = stepGlyph()
     val subject = view.subject?.takeIf { it.isNotEmpty() }
     val detail = view.detail?.takeIf { it.isNotEmpty() }
 
