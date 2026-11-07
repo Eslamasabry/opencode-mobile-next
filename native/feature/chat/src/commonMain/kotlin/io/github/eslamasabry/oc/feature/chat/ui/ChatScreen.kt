@@ -65,6 +65,7 @@ import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -84,9 +85,6 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
-import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
-import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
@@ -655,7 +653,13 @@ public fun ChatScreen(
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
-                        Column {
+                        Column(Modifier.fillMaxWidth()) {
+                            // Find sits by the keyboard it is typed with, over what needs the person and the
+                            // composer (Flutter chat_composer_region.dart:279-301); the composer stays, as in Flutter.
+                            state.find?.let { find ->
+                                if (state.phase == ChatPhase.Live)
+                                    TranscriptFindBar(find, actions, Modifier.fillMaxWidth().chatPane())
+                            }
                             // E15-S06: a copy the redactor changed says so in the screen's status
                             // line. It must be composed inside KitScreen: the screen owns the one
                             // status slot, and a contribution from outside it has nowhere to go.
@@ -680,19 +684,17 @@ public fun ChatScreen(
                                     modifier = Modifier,
                                 )
                             if (requests.card == null) formSlot?.invoke(Modifier)
-                            val find = state.find
-                            if (find != null) TranscriptFindBar(find, actions)
-                            else
-                            // Find owns the bottom input while it is open. The same entry's
-                            // composer ViewModel keeps the draft, attachments and selected model;
-                            // closing Find restores them without stacking two fields above IME.
-                            composerHost.Composer(
+                            // The composer is the conversation's: it shows once the conversation has loaded
+                            // (Flutter chat_states.dart: no composer under the skeleton or the could-not-load
+                            // page), as wide as the conversation's pane (E20-S27).
+                            if (state.phase == ChatPhase.Live)
+                                composerHost.Composer(
                                     ComposerTarget(
                                         state.ref.profileId.raw,
                                         state.ref.sessionId.raw,
                                     ),
                                     chrome,
-                                    Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
+                                    Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(vertical = Space.S2.dp),
                                 )
                         }
                     },
@@ -701,17 +703,14 @@ public fun ChatScreen(
                         // First load: the skeleton under the loading line, never an empty-state
                         // text
                         // (plan 09 §6.5).
-                        ChatPhase.Loading ->
-                            KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
+                        ChatPhase.Loading -> ChatLoadingBody()
                         is ChatPhase.Failed ->
-                            KitStateView(
-                                kind = KitStateKind.Error,
+                            ChatLoadError(
                                 title = stringResource(Res.string.chatLoadFailedTitle),
                                 body = stringResource(Res.string.chatLoadFailedBody),
                                 failure = phase.failure,
-                                onRetry = actions::retryLoad,
-                                retryLabel = stringResource(Res.string.commonRetry),
-                                modifier = Modifier.testTag("chat-load-error"),
+                                retry = KitAction(stringResource(Res.string.commonRetry), actions::retryLoad),
+                                onReport = actions::reportProblem,
                             )
                         ChatPhase.Live ->
                             Box(Modifier.fillMaxSize().kitFrostSource(frost)) {
@@ -760,7 +759,7 @@ public fun ChatScreen(
                                         receiptChecks = state.receiptChecks,
                                         onCheckReceipt = actions::checkReceipt,
                                         onReviewPending = onReviewPending,
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier.fillMaxSize().chatPane(),
                                         facts = facts,
                                         display = transcriptDisplay,
                                         onOpenSession = onOpenSession,

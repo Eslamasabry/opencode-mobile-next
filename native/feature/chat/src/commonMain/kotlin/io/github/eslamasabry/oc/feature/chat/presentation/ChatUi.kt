@@ -335,6 +335,9 @@ public interface ChatActions {
 
     public fun retryLoad()
 
+    /** "Report a problem" from the could-not-load page (Flutter chat_states.dart:85, `product-error-report-bug`). */
+    public fun reportProblem() {}
+
     /** Opens Project Files for this conversation (P12-FILES). */
     public fun openFiles() {}
 
