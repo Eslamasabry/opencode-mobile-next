@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.rb.o08
 
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
+import io.github.eslamasabry.oc.ui.kit.rb.o06.FlutterCapture
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionStack
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -33,18 +34,18 @@ class KitActionStackGateTest {
         )
     }
 
-    @Test fun kit_action_stack_default() { FlutterGoldenGate.check("kit_action_stack_default", content = stackDefault()) }
-    @Test fun kit_action_stack_disabled() { FlutterGoldenGate.check("kit_action_stack_disabled", content = stackDisabled) }
-    @Test fun kit_action_stack_destructive() { FlutterGoldenGate.check("kit_action_stack_destructive", content = stackDestructive) }
-    @Test fun kit_action_stack_default_360x800() { FlutterGoldenGate.check("kit_action_stack_default_360x800", content = stackDefault()) }
-    @Test fun kit_action_stack_default_915x412() { FlutterGoldenGate.check("kit_action_stack_default_915x412", content = stackDefault()) }
-    @Test fun kit_action_stack_default_800x1280() { FlutterGoldenGate.check("kit_action_stack_default_800x1280", content = stackDefault()) }
-    @Test fun kit_action_stack_default_1280x800() { FlutterGoldenGate.check("kit_action_stack_default_1280x800", content = stackDefault()) }
-    @Test fun kit_action_stack_default_1600x1000() { FlutterGoldenGate.check("kit_action_stack_default_1600x1000", content = stackDefault()) }
-    @Test fun kit_action_stack_default_text2() { FlutterGoldenGate.check("kit_action_stack_default_text2", content = stackDefault()) }
-    @Test fun kit_action_stack_default_text2_1280x800() { FlutterGoldenGate.check("kit_action_stack_default_text2_1280x800", content = stackDefault()) }
-    @Test fun kit_action_stack_default_ar() { FlutterGoldenGate.check("kit_action_stack_default_ar", content = stackDefault(ar = true)) }
-    @Test fun kit_action_stack_default_ar_1280x800() { FlutterGoldenGate.check("kit_action_stack_default_ar_1280x800", content = stackDefault(ar = true)) }
+    @Test fun kit_action_stack_default() { FlutterGoldenGate.check("kit_action_stack_default", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_disabled() { FlutterGoldenGate.check("kit_action_stack_disabled", wrap = { FlutterCapture(it) }, content = stackDisabled) }
+    @Test fun kit_action_stack_destructive() { FlutterGoldenGate.check("kit_action_stack_destructive", wrap = { FlutterCapture(it) }, content = stackDestructive) }
+    @Test fun kit_action_stack_default_360x800() { FlutterGoldenGate.check("kit_action_stack_default_360x800", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_915x412() { FlutterGoldenGate.check("kit_action_stack_default_915x412", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_800x1280() { FlutterGoldenGate.check("kit_action_stack_default_800x1280", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_1280x800() { FlutterGoldenGate.check("kit_action_stack_default_1280x800", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_1600x1000() { FlutterGoldenGate.check("kit_action_stack_default_1600x1000", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_text2() { FlutterGoldenGate.check("kit_action_stack_default_text2", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_text2_1280x800() { FlutterGoldenGate.check("kit_action_stack_default_text2_1280x800", wrap = { FlutterCapture(it) }, content = stackDefault()) }
+    @Test fun kit_action_stack_default_ar() { FlutterGoldenGate.check("kit_action_stack_default_ar", wrap = { FlutterCapture(it) }, content = stackDefault(ar = true)) }
+    @Test fun kit_action_stack_default_ar_1280x800() { FlutterGoldenGate.check("kit_action_stack_default_ar_1280x800", wrap = { FlutterCapture(it) }, content = stackDefault(ar = true)) }
 
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_action_stack", caps = mapOf("KitActionStack" to "reading"), content = stackDefault()) }
 }
