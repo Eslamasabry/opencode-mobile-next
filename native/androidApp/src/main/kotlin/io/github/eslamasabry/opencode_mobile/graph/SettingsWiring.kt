@@ -85,6 +85,9 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.LibraryRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
+import io.github.eslamasabry.oc.ui.routes.PlansAlertsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import io.github.eslamasabry.oc.ui.routes.TeachingRoute
@@ -224,15 +227,7 @@ class AndroidSettingsHost(
     private val scope = CoroutineScope(appScope.coroutineContext)
 
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
-    private val shipped =
-        platform.copy(
-            builtinLinux = false,
-            voice = voiceSettings.offered,
-            readAloud = false,
-            backgroundService = true,
-            inAppUpdater = true,
-            desktopReleaseCheck = false,
-        )
+    private val shipped = settingsShippedPlatform(platform, voiceSettings.offered)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val selectedCapabilities =
@@ -284,7 +279,7 @@ class AndroidSettingsHost(
                     diagnostics = true,
                     configurationInspection = configAvailable,
                     localModelStorage = true,
-                    opens = OPENS,
+                    opens = SETTINGS_OPENS,
                     surfaceStyles = true,
                     phraseChips = true,
                     transcriptDisplay = false,
@@ -298,7 +293,7 @@ class AndroidSettingsHost(
                     dynamicColour = Build.VERSION.SDK_INT >= 31,
                     diagnostics = true,
                     localModelStorage = true,
-                    opens = OPENS,
+                    opens = SETTINGS_OPENS,
                     surfaceStyles = true,
                     phraseChips = true,
                     transcriptDisplay = false,
@@ -378,16 +373,12 @@ class AndroidSettingsHost(
             SettingsOutside.Usage -> nav.open(io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub())
             SettingsOutside.Tools,
             SettingsOutside.Providers -> {
-                val live = connections.servers.value
-                val active = stores.profiles.activeId.value
-                val target =
-                    live.firstOrNull { it.id == active && it.connected }
-                        ?: live.firstOrNull { it.connected }
+                val target = connectedTarget()
                 if (target != null) {
                     nav.open(
                         if (place == SettingsOutside.Providers)
-                            LibraryRoute(tab = "providers", profileId = target.id)
-                        else ToolsRoute(target.id)
+                            LibraryRoute(tab = "providers", profileId = target)
+                        else ToolsRoute(target)
                     )
                 } else {
                     // PORT-SCREENS-2: with no connected server, the tabbed library answers (it
@@ -426,9 +417,42 @@ class AndroidSettingsHost(
             SettingsOutside.KeptPrompts ->
                 nav.open(io.github.eslamasabry.oc.ui.routes.KeptPromptsRoute)
             SettingsOutside.ReadState -> nav.open(ServersRoute.Home)
-            else -> Unit // Absent rows: OPENS keeps them off screen.
+            // E14-S01: Flutter opens This phone once OpenCode is set up here, else its setup.
+            SettingsOutside.ThisPhone -> nav.open(thisPhoneRoute(phoneSetUp()))
+            // One saved server (several go through Settings' By server page): its own page.
+            SettingsOutside.DefaultShell,
+            SettingsOutside.Permissions -> {
+                val target = connectedTarget()
+                if (target != null) serverPage.open(target, place) else nav.open(ServersRoute.Home)
+            }
+            SettingsOutside.UsageAlerts -> nav.open(PlansAlertsRoute)
+            // Notices and Quiet hours are Settings' own pages: the presenter opens them.
+            else -> Unit // Absent rows: SETTINGS_OPENS keeps them off screen.
         }
     }
+
+    /** The active server when it is connected, else the first connected one. */
+    private fun connectedTarget(): io.github.eslamasabry.oc.core.common.ids.ProfileId? {
+        val live = connections.servers.value
+        val active = stores.profiles.activeId.value
+        val target =
+            live.firstOrNull { it.id == active && it.connected }
+                ?: live.firstOrNull { it.connected }
+        return target?.id
+    }
+
+    /** OpenCode is set up on this phone: the built-in server's owner is still a saved server. */
+    private fun phoneSetUp(): Boolean =
+        try {
+            val owner =
+                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)
+                    ?.value
+                    ?.takeIf { it.isNotEmpty() }
+            val id = owner?.let { io.github.eslamasabry.oc.core.common.ids.ProfileId(it) }
+            id != null && stores.profiles.profile(id) != null
+        } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+            false
+        }
 
     override val analytics: AnalyticsChoices = EngineAnalyticsChoices(analyticsEngine)
     override val voice: VoiceSettings? = voiceSettings.takeIf { it.offered }
@@ -592,36 +616,69 @@ class AndroidSettingsHost(
             // A platform restriction does not escape into the settings action.
         }
     }
-
-    private companion object {
-        val OPENS: Set<SettingsOutside> =
-            setOf(
-                SettingsOutside.KeptPrompts,
-                SettingsOutside.ReadState,
-                SettingsOutside.ModelAndMode,
-                SettingsOutside.Capabilities,
-                SettingsOutside.Tools,
-                SettingsOutside.Providers,
-                SettingsOutside.Servers,
-                SettingsOutside.Usage,
-                SettingsOutside.Agents,
-                SettingsOutside.StarOnGitHub,
-                SettingsOutside.WhatsNew,
-                SettingsOutside.ReleaseNotes,
-                SettingsOutside.PrivacyPolicy,
-                SettingsOutside.ShareApp,
-                SettingsOutside.AndroidNotificationSettings,
-                SettingsOutside.VoiceSetup,
-                SettingsOutside.VoiceNotices,
-                SettingsOutside.ReportOnGitHub,
-                SettingsOutside.KeptDiagnostics,
-                SettingsOutside.KeepRunning,
-                SettingsOutside.Tools,
-                SettingsOutside.Providers,
-                SettingsOutside.Tips,
-            )
-    }
 }
+
+/**
+ * What Settings shows on this build: the phone's own capabilities with the parts this build
+ * does not ship turned off (02 §3.7). Built-in Linux is on: This phone, its setup and the phone
+ * agents are in this build (E14-S01).
+ */
+internal fun settingsShippedPlatform(
+    platform: PlatformCapabilities,
+    voiceOffered: Boolean,
+): PlatformCapabilities =
+    platform.copy(
+        voice = voiceOffered,
+        readAloud = false,
+        backgroundService = true,
+        inAppUpdater = true,
+        desktopReleaseCheck = false,
+    )
+
+/** This phone once OpenCode is set up here, else the setup that installs it (Flutter's hub row). */
+internal fun thisPhoneRoute(setUp: Boolean): io.github.eslamasabry.oc.ui.routes.AppRoute =
+    if (setUp) PhoneRoute.ThisPhone else PhoneSetupRoute.Setup
+
+/**
+ * The places [AndroidSettingsHost.openers] (or the Settings presenter itself) opens on Android.
+ * A row leading anywhere else is absent from the hub and from search, never dead (02 §3.7).
+ */
+internal val SETTINGS_OPENS: Set<SettingsOutside> =
+    setOf(
+        SettingsOutside.KeptPrompts,
+        SettingsOutside.ReadState,
+        SettingsOutside.ModelAndMode,
+        SettingsOutside.Capabilities,
+        SettingsOutside.Tools,
+        SettingsOutside.Providers,
+        SettingsOutside.Servers,
+        SettingsOutside.ThisPhone,
+        SettingsOutside.Usage,
+        SettingsOutside.UsageAlerts,
+        SettingsOutside.Agents,
+        SettingsOutside.DefaultShell,
+        SettingsOutside.Permissions,
+        SettingsOutside.QuietHours,
+        SettingsOutside.Notices,
+        SettingsOutside.StarOnGitHub,
+        SettingsOutside.WhatsNew,
+        SettingsOutside.ReleaseNotes,
+        SettingsOutside.PrivacyPolicy,
+        SettingsOutside.ShareApp,
+        SettingsOutside.AndroidNotificationSettings,
+        SettingsOutside.VoiceSetup,
+        SettingsOutside.VoiceNotices,
+        SettingsOutside.ReportOnGitHub,
+        SettingsOutside.KeptDiagnostics,
+        SettingsOutside.KeepRunning,
+        SettingsOutside.Tips,
+    )
+
+/**
+ * Flutter places whose page this build does not have yet. Their rows stay absent (never a fake
+ * page): Guide is Flutter's setup guide (lib/ui/screens/guide_screen.dart), not ported natively.
+ */
+internal val SETTINGS_NOT_NATIVE_YET: Set<SettingsOutside> = setOf(SettingsOutside.Guide)
 
 /**
  * Notification choices under the Flutter keys (`oc.notify.*`, so a migrated install keeps them and
