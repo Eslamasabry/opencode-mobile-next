@@ -1,14 +1,24 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.Manifest
+import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.ClipboardManager
 import android.content.ContentResolver
+import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
@@ -21,6 +31,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.platform.ActivityResults
 import io.github.eslamasabry.oc.core.domain.platform.AppPermission
 import io.github.eslamasabry.oc.core.domain.platform.DocumentTarget
@@ -57,8 +68,10 @@ import kotlinx.coroutines.withContext
  * [attach] before rendering (the OpenDocument launcher must exist before STARTED) and [detach] on
  * destroy. [pickFile] reuses the shared `AttachmentIntake` limits, MIME gate, office conversion and
  * data-URL encoding; a cancel from the system picker is a null success. Failures carry no file
- * name, URI or exception text, and nothing is logged. The system photo picker and the clipboard
- * picture are offered through [AndroidComposerMedia]; the camera stays closed (no FileProvider).
+ * name, URI or exception text, and nothing is logged. The system photo picker, the clipboard
+ * picture and the camera (E05-S01) are offered through [AndroidComposerMedia]. The camera asks for
+ * its permission first, records the pending photo (`oc.pendingPromptPhoto`) before it opens, and
+ * writes into an app-owned file shared through the FileProvider ([ComposerCameraWiring]).
  */
 @SingleIn(AppScope::class)
 @ContributesIntoSet(AppScope::class, binding = binding<PromptFilePicker>())
@@ -66,6 +79,7 @@ import kotlinx.coroutines.withContext
 class AndroidComposerFiles(
     private val dispatchers: AppDispatchers,
     private val clock: Clock,
+    private val camera: ComposerCameraWiring,
 ) : PromptFilePicker {
     private val lock = Any()
 
@@ -98,6 +112,26 @@ class AndroidComposerFiles(
     /** The live intake, or null between activities. */
     internal fun intake(): AttachmentIntake? = synchronized(lock) { host }?.intake
 
+    /** The camera's intake: the same limits, with the real pending-photo record. */
+    internal fun cameraIntake(): AttachmentIntake? = synchronized(lock) { host }?.cameraIntake
+
+    /** "Open settings" after a camera refusal: the app's page in Android settings. */
+    internal fun openCameraSettings() {
+        val activity = synchronized(lock) { host }?.activity
+        val context = activity ?: camera.application()
+        val intent =
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+        if (activity == null) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            // A phone without that settings page: the words already say where to allow it.
+        }
+    }
+
+    /** The camera launcher of whichever activity is live now (a recreated one included). */
+    private fun cameraLauncher(): ActivityResultLauncher<Uri>? = synchronized(lock) { host }?.cameraLauncher
+
     override suspend fun pickFile(current: List<PromptAttachment>): Outcome<PromptAttachment?> {
         val attached = synchronized(lock) { host } ?: return Outcome.Failed(Failure.Device())
         return when (val picked = attached.intake.pickFile(current)) {
@@ -127,6 +161,37 @@ class AndroidComposerFiles(
                 val request = photoRef.getAndSet(null) ?: return@registerForActivityResult
                 photoRequests.resolve(request, uris)
             }
+        // E05-S01: the camera's answer goes to the process's waiting request, whichever activity
+        // launched it; with none waiting (the app was killed meanwhile) it starts the recovery.
+        val cameraLauncher =
+            activity.registerForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+                if (!camera.requests.deliver(saved)) camera.orphanResult(saved)
+            }
+        val permissionRequests = PickRequests<Boolean>()
+        val permissionRef = AtomicReference<CompletableDeferred<Boolean?>?>()
+        val permissionLauncher =
+            activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                val request = permissionRef.getAndSet(null) ?: return@registerForActivityResult
+                permissionRequests.resolve(request, granted)
+            }
+        // Added after the launchers: their pending results are delivered first on ON_START.
+        val started =
+            LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_START) camera.hostStarted() }
+        activity.lifecycle.addObserver(started)
+        val cameraIntake =
+            AttachmentIntake(
+                activity = CameraActivityResults(dispatchers, camera.requests, ::cameraLauncher),
+                permissions =
+                    CameraPermissionGate(activity, dispatchers, permissionLauncher, permissionRequests, permissionRef),
+                reader = ContentReader(activity, dispatchers),
+                codec = AndroidImageCodec(activity.contentResolver, dispatchers),
+                clipboard = AndroidClipboardImages(activity, dispatchers),
+                captures = camera.captures,
+                photos = camera.record,
+                words = ComposerFileWords,
+                dispatchers = dispatchers,
+                clock = clock,
+            )
         val intake =
             AttachmentIntake(
                 activity =
@@ -150,22 +215,47 @@ class AndroidComposerFiles(
                 dispatchers = dispatchers,
                 clock = clock,
             )
-        return Host(activity, intake, requests, launcher, photoRequests, photoLauncher)
+        return Host(
+            activity,
+            intake,
+            cameraIntake,
+            requests,
+            launcher,
+            photoRequests,
+            photoLauncher,
+            cameraLauncher,
+            permissionRequests,
+            permissionLauncher,
+            started,
+        )
     }
 
     private class Host(
         val activity: ComponentActivity,
         val intake: AttachmentIntake,
+        val cameraIntake: AttachmentIntake,
         private val requests: PickRequests<Uri>,
         private val launcher: ActivityResultLauncher<Array<String>>,
         private val photoRequests: PickRequests<List<Uri>>,
         private val photoLauncher: ActivityResultLauncher<PickVisualMediaRequest>,
+        val cameraLauncher: ActivityResultLauncher<Uri>,
+        private val permissionRequests: PickRequests<Boolean>,
+        private val permissionLauncher: ActivityResultLauncher<String>,
+        private val started: LifecycleEventObserver,
     ) {
+        /**
+         * The camera request is the process's, not this activity's: a photo taken while the
+         * activity is recreated reaches the next activity's launcher and the same waiting request.
+         */
         fun close() {
             requests.cancelActive()
             photoRequests.cancelActive()
+            permissionRequests.cancelActive()
             launcher.unregister()
             photoLauncher.unregister()
+            cameraLauncher.unregister()
+            permissionLauncher.unregister()
+            activity.lifecycle.removeObserver(started)
         }
     }
 
@@ -244,6 +334,121 @@ class AndroidComposerFiles(
         override suspend fun openDocumentTree(): Outcome<TreeTarget?> = Outcome.Failed(Failure.Device())
     }
 
+    /**
+     * The system camera (TakePicture) into the FileProvider target; every other surface is
+     * refused. One camera request per process ([CameraRequests]); the launcher is looked up at
+     * launch time, so a recreated activity's launcher is used.
+     */
+    private class CameraActivityResults(
+        private val dispatchers: AppDispatchers,
+        private val requests: CameraRequests,
+        private val launcher: () -> ActivityResultLauncher<Uri>?,
+    ) : ActivityResults {
+        override suspend fun takePhoto(target: PhotoTarget): Outcome<PickedFile?> {
+            if (target.uri.isEmpty()) return Outcome.Failed(Failure.Media(MediaProblem.CameraFailed))
+            val request = requests.begin() ?: return Outcome.Failed(Failure.Busy(BusyKind.Starting))
+            var launched = false
+            try {
+                return attempt({ it.asCameraFailure() }) {
+                    withContext(dispatchers.main) {
+                        val live = launcher() ?: throw IllegalStateException()
+                        live.launch(Uri.parse(target.uri))
+                        launched = true
+                    }
+                    if (request.await() == true) PickedFile(target.uri, null, "image/jpeg", null) else null
+                }
+            } finally {
+                if (launched) requests.retire(request) else requests.releaseUnlaunched(request)
+            }
+        }
+
+        override suspend fun openDocument(mimeTypes: List<String>): Outcome<PickedFile?> =
+            Outcome.Failed(Failure.Device())
+
+        override suspend fun pickImages(limit: Int): Outcome<ImmutableList<PickedFile>> =
+            Outcome.Failed(Failure.Device())
+
+        override suspend fun createDocument(suggestedName: String, mime: String): Outcome<DocumentTarget?> =
+            Outcome.Failed(Failure.Device())
+
+        override suspend fun openDocumentTree(): Outcome<TreeTarget?> = Outcome.Failed(Failure.Device())
+    }
+
+    /**
+     * The camera permission, asked only from the Take photo tap ([CameraPermissionRules]). A
+     * refusal Android will not ask about again is [PermissionStatus.PermanentlyDenied]; the composer
+     * then offers Open settings.
+     */
+    private class CameraPermissionGate(
+        private val activity: ComponentActivity,
+        private val dispatchers: AppDispatchers,
+        private val launcher: ActivityResultLauncher<String>,
+        private val requests: PickRequests<Boolean>,
+        private val requestRef: AtomicReference<CompletableDeferred<Boolean?>?>,
+    ) : PermissionGate {
+        private fun granted() =
+            ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
+        private fun declared(): Boolean =
+            try {
+                val info: PackageInfo =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        activity.packageManager.getPackageInfo(
+                            activity.packageName,
+                            PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong()),
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        activity.packageManager.getPackageInfo(activity.packageName, PackageManager.GET_PERMISSIONS)
+                    }
+                info.requestedPermissions.orEmpty().contains(Manifest.permission.CAMERA)
+            } catch (_: PackageManager.NameNotFoundException) {
+                true // ask rather than open a camera that may refuse us
+            }
+
+        override suspend fun status(permission: AppPermission): PermissionStatus {
+            if (permission != AppPermission.Camera) return PermissionStatus.NotApplicable
+            return withContext(dispatchers.main) {
+                CameraPermissionRules.before(declared(), granted()) ?: PermissionStatus.Denied
+            }
+        }
+
+        override suspend fun request(permission: AppPermission): PermissionStatus {
+            if (permission != AppPermission.Camera) return PermissionStatus.NotApplicable
+            withContext(dispatchers.main) { CameraPermissionRules.before(declared(), granted()) }?.let { return it }
+            val request = requests.begin() ?: return PermissionStatus.Denied
+            var launched = false
+            try {
+                requestRef.set(request)
+                withContext(dispatchers.main) {
+                    launcher.launch(Manifest.permission.CAMERA)
+                    launched = true
+                }
+                val answer = request.await() ?: return PermissionStatus.Denied
+                return withContext(dispatchers.main) {
+                    CameraPermissionRules.after(
+                        answer,
+                        activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA),
+                    )
+                }
+            } catch (_: ActivityNotFoundException) {
+                return PermissionStatus.Denied
+            } finally {
+                if (launched) requests.retire(request)
+                else {
+                    requestRef.compareAndSet(request, null)
+                    requests.releaseUnlaunched(request)
+                }
+            }
+        }
+
+        override fun openSettings(permission: AppPermission) {
+            activity.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", activity.packageName, null))
+            )
+        }
+    }
+
     /** Bounded streaming reads of a picked document off the main thread, stream always closed. */
     private class ContentReader(
         private val activity: ComponentActivity,
@@ -308,6 +513,20 @@ internal class PickRequests<T : Any> {
         request.complete(value)
     }
 
+    @Synchronized fun isActive(): Boolean = active != null
+
+    /**
+     * The launcher's answer for whichever request is open, even one launched by an activity that
+     * was since recreated. False when nobody still waits (none open, or it was retired): the caller
+     * treats the answer as an orphan.
+     */
+    @Synchronized
+    fun resolveCurrent(value: T?): Boolean {
+        val current = active ?: return false
+        active = null
+        return current.complete(value)
+    }
+
     /** Abandon this result, but keep its OS slot occupied until the callback drains it. */
     @Synchronized
     fun retire(request: CompletableDeferred<T?>): Boolean {
@@ -367,6 +586,14 @@ internal fun Throwable.asPickFailure(): Failure =
         else -> asReadFailure()
     }
 
+/** A launch that never opened the camera: no camera app is a missing camera, not a file error. */
+internal fun Throwable.asCameraFailure(): Failure =
+    when (this) {
+        is ActivityNotFoundException -> Failure.Media(MediaProblem.NoCamera)
+        is SecurityException -> Failure.Media(MediaProblem.CameraDenied)
+        else -> Failure.Media(MediaProblem.CameraFailed)
+    }
+
 /** Read-side classifier shared by the picker and the bounded reader. */
 internal fun Throwable.asReadFailure(): Failure =
     when (this) {
@@ -376,7 +603,7 @@ internal fun Throwable.asReadFailure(): Failure =
         else -> Failure.Device()
     }
 
-/** The camera and photo paths stay closed in this slice; the intake constructor needs them present. */
+/** The gallery, file and clipboard intake never asks for a permission or opens the camera. */
 private object UnavailablePermissions : PermissionGate {
     override suspend fun status(permission: AppPermission): PermissionStatus = PermissionStatus.NotApplicable
 
@@ -386,25 +613,12 @@ private object UnavailablePermissions : PermissionGate {
 }
 
 private object UnavailableCaptures : CaptureFiles {
-    override fun target(captureId: String): PhotoTarget = throw IllegalStateException("camera capture is not part of this slice")
+    /** Never reached: only the camera intake takes photos, and it has the real capture files. */
+    override fun target(captureId: String): PhotoTarget = PhotoTarget("")
 
     override suspend fun existing(captureId: String): PickedFile? = null
 
     override suspend fun delete(captureId: String) {}
-}
-
-private object UnavailablePhotos : PhotoRecord {
-    override val pending: PendingPhotoInfo? = null
-
-    override suspend fun begin(profileId: String, sessionId: String, directory: String?, workspace: String?): Outcome<String> =
-        Outcome.Failed(Failure.Device())
-
-    override suspend fun complete(id: String, name: String, bytes: ByteArray): Outcome<Boolean> =
-        Outcome.Failed(Failure.Device())
-
-    override suspend fun markFailed(id: String): Outcome<Unit> = Outcome.Failed(Failure.Device())
-
-    override suspend fun discard(id: String): Outcome<Unit> = Outcome.Ok(Unit)
 }
 
 /**
@@ -417,20 +631,38 @@ private object ComposerFileWords : AttachmentWords {
     override fun officeTruncated(): String = "The text was shortened to fit the attachment size limit."
 }
 
-/** Photos and the clipboard picture for the composer's Add sheet; the camera needs a FileProvider. */
+/**
+ * Photos, the camera and the clipboard picture for the composer's Add sheet. Take photo is offered
+ * only on a phone with a camera; its photo is recorded for the conversation it was asked from.
+ */
 @SingleIn(AppScope::class)
 @ContributesIntoSet(AppScope::class, binding = binding<ComposerAttachSource>())
 @Inject
-class AndroidComposerMedia(private val files: AndroidComposerFiles) : ComposerAttachSource {
-    override val kinds: Set<AttachKind> = setOf(AttachKind.Photos, AttachKind.Clipboard)
+class AndroidComposerMedia(private val files: AndroidComposerFiles, application: Application) : ComposerAttachSource {
+    override val kinds: Set<AttachKind> =
+        buildSet {
+            add(AttachKind.Photos)
+            if (application.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) add(AttachKind.Camera)
+            add(AttachKind.Clipboard)
+        }
 
-    override suspend fun attach(kind: AttachKind, current: List<PromptAttachment>): Outcome<List<PromptAttachment>> {
-        val intake = files.intake() ?: return Outcome.Failed(Failure.Device())
+    override suspend fun attach(kind: AttachKind, current: List<PromptAttachment>): Outcome<List<PromptAttachment>> =
+        attach(kind, current, null)
+
+    override suspend fun attach(
+        kind: AttachKind,
+        current: List<PromptAttachment>,
+        conversation: ConversationRef?,
+    ): Outcome<List<PromptAttachment>> {
         val result =
             when (kind) {
-                AttachKind.Photos -> intake.pickPhotos(GalleryTarget, current)
-                AttachKind.Clipboard -> intake.fromClipboard(current)
-                AttachKind.Camera -> return Outcome.Failed(Failure.Media(MediaProblem.NoCamera))
+                AttachKind.Photos -> (files.intake() ?: return noHost()).pickPhotos(GalleryTarget, current)
+                AttachKind.Clipboard -> (files.intake() ?: return noHost()).fromClipboard(current)
+                AttachKind.Camera -> {
+                    // Without its conversation a recovered photo could not find its draft.
+                    val ref = conversation ?: return Outcome.Failed(Failure.Device())
+                    (files.cameraIntake() ?: return noHost()).takePhoto(AttachTarget(ref), current)
+                }
             }
         return when (result) {
             is Outcome.Ok ->
@@ -439,6 +671,12 @@ class AndroidComposerMedia(private val files: AndroidComposerFiles) : ComposerAt
             is Outcome.Failed -> result
         }
     }
+
+    override fun openSettings(kind: AttachKind) {
+        if (kind == AttachKind.Camera) files.openCameraSettings()
+    }
+
+    private fun noHost(): Outcome<List<PromptAttachment>> = Outcome.Failed(Failure.Device())
 
     private companion object {
         /** The gallery's pending record is discarded when the picker closes; it never needs a target. */

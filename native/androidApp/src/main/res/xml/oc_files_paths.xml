@@ -2,6 +2,8 @@
 <!-- P12-FILES: Open with hands over only the latest private cache copy (FilesWiring.kt AndroidFileHandoff). -->
 <paths>
     <cache-path name="open-with" path="open-with/" />
+    <!-- E05-S01: the composer camera writes its photo here (ComposerCameraWiring, :android:camera CaptureFiles.DIR). -->
+    <files-path name="camera" path="camera-capture-v1/" />
     <external-path name="phone-shared" path="." />
     <external-path name="phone-shared-storage" path="." />
 </paths>
