@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -65,6 +69,21 @@ import io.github.eslamasabry.oc.ui.kit.status.kitStatusSlotAbove
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+
+/** The most of the room under the bar the status line may take (Flutter `KitStatusLineSlot`: 0.4). */
+internal const val STATUS_ROOM_SHARE: Float = 0.4f
+
+/** The status line's height cap in px for [room] px under the bar (P-106); unbounded room leaves it uncapped. */
+internal fun statusRoomCap(room: Int): Int =
+    if (room == Constraints.Infinity) Constraints.Infinity else (room * STATUS_ROOM_SHARE).toInt()
+
+/** Holds the status line to [STATUS_ROOM_SHARE] of the room it is offered (P-106). */
+private fun Modifier.kitStatusRoom(): Modifier =
+    layout { measurable, constraints ->
+        val cap = statusRoomCap(constraints.maxHeight)
+        val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = maxOf(cap, 0)))
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+    }
 
 /** Optional host inset source; null uses the platform's safe drawing area and keyboard. */
 internal val LocalKitScreenInsets = compositionLocalOf<WindowInsets?> { null }
@@ -208,7 +227,14 @@ public fun KitScreen(
                         topPart()
                     }
                 }
-                if (ownsLine) KitStatusLineFold(line)
+                // P-106: a long condition (Android stopped the app, with its action) stood 200 dp tall and pinned,
+                // so a short window kept little room for the list. As Flutter's slot, the line takes at most
+                // 40 % of the room under the bar and scrolls its own words beyond that.
+                if (ownsLine)
+                    KitStatusLineFold(
+                        line,
+                        Modifier.kitStatusRoom().verticalScroll(rememberScrollState()).testTag("kit-screen-status"),
+                    )
                 Column(Modifier.fillMaxWidth().weight(1f).kitMaxWidth(cap).fillMaxWidth()) {
                     search?.let {
                         // E20-S08: a step under the field, so the page's first part (an empty state's heading)
