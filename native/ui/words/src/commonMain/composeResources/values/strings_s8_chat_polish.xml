@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S8 chat polish (P-012, P-013, P-018). A new file so parallel chat units never edit the same lines. -->
+<resources>
+    <!-- P-012: steps still waiting (for approval or to start) are not said in the past tense. -->
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="one">waiting to edit 1 file</item>
+        <item quantity="other">waiting to edit %1$d files</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="one">waiting to run 1 command</item>
+        <item quantity="other">waiting to run %1$d commands</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="one">1 step waiting</item>
+        <item quantity="other">%1$d steps waiting</item>
+    </plurals>
+    <!-- P-018: one menu row opens every way to carry the conversation on (another model, agent, computer, phone). -->
+    <string name="chatMenuContinueElsewhere">Continue elsewhere</string>
+</resources>
