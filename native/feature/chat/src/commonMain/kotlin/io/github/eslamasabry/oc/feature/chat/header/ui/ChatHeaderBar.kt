@@ -148,6 +148,7 @@ import io.github.eslamasabry.oc.ui.words.res.nativeHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingBody
 import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingKeep
 import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingTitle
+import io.github.eslamasabry.oc.ui.words.res.scheduleCreate
 import io.github.eslamasabry.oc.ui.words.res.sessionArchiveBody
 import io.github.eslamasabry.oc.ui.words.res.sessionArchiveTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionContextLoading
@@ -843,6 +844,7 @@ private fun menuItems(
                 when (action) {
                     HeaderAction.Find -> KitIcons.search
                     HeaderAction.Details -> KitIcons.info
+                    HeaderAction.Schedule -> KitIcons.clock
                     HeaderAction.Share -> KitIcons.link
                     HeaderAction.Unshare -> KitIcons.unlink
                     HeaderAction.CopyShareLink -> KitIcons.copy
@@ -864,7 +866,8 @@ private fun menuItems(
             group =
                 when (action) {
                     HeaderAction.Find,
-                    HeaderAction.Details -> goTo
+                    HeaderAction.Details,
+                    HeaderAction.Schedule -> goTo
                     HeaderAction.Delete -> null
                     else -> act
                 },
@@ -880,6 +883,7 @@ private fun menuWords(action: HeaderAction): String =
     when (action) {
         HeaderAction.Find -> stringResource(Res.string.sessionMenuFind)
         HeaderAction.Details -> stringResource(Res.string.sessionMenuDetails)
+        HeaderAction.Schedule -> stringResource(Res.string.scheduleCreate)
         HeaderAction.Share -> stringResource(Res.string.chatUiShareSession)
         HeaderAction.Unshare -> stringResource(Res.string.chatUiStopSharing)
         HeaderAction.CopyShareLink -> stringResource(Res.string.chatUiCopyShareLink)

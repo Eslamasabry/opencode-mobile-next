@@ -152,6 +152,32 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
+    fun `B-163 Go to offers Schedule a prompt and opens this server's scheduled prompts from this conversation`() {
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        val menu = p.current().menu
+        assertEquals(listOf(HeaderAction.Find, HeaderAction.Details, HeaderAction.Schedule), menu.take(3))
+        p.choose(HeaderAction.Schedule)
+        assertEquals(
+            io.github.eslamasabry.oc.ui.routes.SchedulesRoute.List(
+                profileId = world.ref.profileId,
+                projectDir = "/home/me/projects/app/",
+                from = world.ref,
+            ),
+            nav.opened.single(),
+        )
+        assertFalse(p.current().menuOpen)
+    }
+
+    @Test
+    fun `B-163 Schedule a prompt needs the server's schedules and a project folder`() {
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = false)
+        assertFalse(HeaderAction.Schedule in p.current().menu)
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        port.facts.value = port.facts.value.copy(directory = null)
+        assertFalse(HeaderAction.Schedule in p.current().menu)
+    }
+
+    @Test
     fun `B-CHAT-020 the menu offers only what this server supports`() {
         world.capabilities.value = ServerCapabilities(sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = false)
         val menu = p.current().menu
