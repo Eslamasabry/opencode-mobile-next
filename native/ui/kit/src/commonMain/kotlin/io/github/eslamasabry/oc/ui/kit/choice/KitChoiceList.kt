@@ -228,7 +228,8 @@ public fun KitChoiceRow(
             .fillMaxWidth()
             .bleedSideways(bleed)
             .then(if (band) Modifier.background(LocalKitColors.current.surface3.copy(alpha = 0.6f)) else Modifier)
-            .heightIn(min = tokens.choiceRowMin.dp)
+            // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
+            .heightIn(min = tokens.rowHeightTwo.dp)
             .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
             .kitSelectTap(
                 selected = selected,
