@@ -330,4 +330,55 @@ class ModelPacksTest {
             packs.clearProblem()
             assertNull(packs.state.value.lastProblem)
         }
+
+    @Test
+    fun `B-MEDIA-013 E13-S04 cancelling a re-download leaves the pack Installed and ready`() =
+        runTest {
+            val (packs, installer) = packs()
+            assertIs<Outcome.Ok<InstalledPack>>(packs.download(PackId("base")))
+            fetcher.stallAfter = 1_000
+            val again = async { packs.download(PackId("base"), replaceExisting = true) }
+            runCurrent()
+            assertEquals(PackId("base"), packs.downloading)
+            assertNotNull(packs.readySpeechPack(), "dictation keeps the installed model during the re-download")
+            packs.cancelDownload()
+            assertTrue(again.isCancelled)
+            advanceUntilIdle()
+            assertNull(packs.state.value.job)
+            assertEquals(PackStatus.Installed, packs.state.value.packs[PackId("base")])
+            assertEquals(0L, packs.partialBytes(PackId("base")))
+            assertNotNull(packs.readySpeechPack())
+            packs.refresh()
+            assertEquals(PackStatus.Installed, packs.state.value.packs[PackId("base")])
+            assertFalse(installer.isBusy(base))
+        }
+
+    @Test
+    fun `B-MEDIA-013 E13-S04 a re-download that drops its connection says why and leaves the pack Installed`() =
+        runTest {
+            val (packs, _) = packs()
+            assertIs<Outcome.Ok<InstalledPack>>(packs.download(PackId("base")))
+            fetcher.stallAfter = 1_000
+            val again = async { packs.download(PackId("base"), replaceExisting = true) }
+            runCurrent()
+            packs.interruptDownload(MediaProblem.DownloadOffline)
+            assertEquals(MediaProblem.DownloadOffline, problem(again.await()))
+            advanceUntilIdle()
+            assertEquals(PackStatus.Installed, packs.state.value.packs[PackId("base")])
+            assertEquals(MediaProblem.DownloadOffline, packs.state.value.lastProblem)
+            assertNotNull(packs.readySpeechPack())
+        }
+
+    @Test
+    fun `B-MEDIA-012 E13-S04 a cancelled first download keeps its partial row for resume`() =
+        runTest {
+            fetcher.stallAfter = 1_000
+            val (packs, _) = packs()
+            val first = async { packs.download(PackId("base")) }
+            runCurrent()
+            packs.cancelDownload()
+            assertTrue(first.isCancelled)
+            advanceUntilIdle()
+            assertEquals(PackStatus.Partial(1_000, base.totalBytes), packs.state.value.packs[PackId("base")])
+        }
 }
