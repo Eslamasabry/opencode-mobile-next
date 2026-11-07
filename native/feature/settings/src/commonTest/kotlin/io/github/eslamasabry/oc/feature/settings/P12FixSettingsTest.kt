@@ -39,7 +39,8 @@ class P12FixSettingsTest {
     private class Rig(val scope: TestScope, facts: SettingsFacts = phoneFacts(), prefs: PersonalPrefs = PersonalPrefs()) {
         val choices = FakeChoices(prefs)
         val notifications = FakeNotifications()
-        val p = SettingsPresenter(scope.backgroundScope, MutableStateFlow(facts), choices, RecordingOpeners(), notifications = notifications)
+        val openers = RecordingOpeners()
+        val p = SettingsPresenter(scope.backgroundScope, MutableStateFlow(facts), choices, openers, notifications = notifications)
 
         fun settle() = scope.runCurrent()
     }
@@ -127,8 +128,13 @@ class P12FixSettingsTest {
     @Test
     fun `I05 resuming elsewhere in Settings does not touch Android's permission`() =
         rig {
-            p.onResume()
-            assertEquals(0, notifications.refreshes)
+            // N-07 (d6bd5161e, B-ANDR-013): every resume re-reads Android's state for the hub and This app
+            // summaries. Reading is all it does: no choice changes and Android's settings never open.
+            val before = notifications.facts.value
+            p.onResume(); settle()
+            assertEquals(1, notifications.refreshes)
+            assertEquals(before, notifications.facts.value)
+            assertTrue(openers.opened.isEmpty())
         }
 
     // ---- #2 and #5: a choice must change something ------------------------------------------------------------
