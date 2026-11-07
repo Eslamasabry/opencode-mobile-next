@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -120,8 +121,11 @@ private fun ColumnScope.HubBody(
                 KitRow(
                     title = groupWords(group),
                     selected = group == selected,
-                    // P-028: one-line groups are 56 dp like every sub-page row; only Server, with its line, is 64.
-                    modifier = Modifier.testTag("settings-group-${group.name}"),
+                    // Flutter's hub rows are `roomy` (lib/ui/screens/settings_screen.dart:324): at least 64 dp with one
+                    // line or two, so five doors read calm. KitRow has no roomy flag yet, so the minimum is asked here.
+                    modifier =
+                        Modifier.heightIn(min = HUB_ROW_HEIGHT.dp)
+                            .testTag("settings-group-${group.name}"),
                     leading = if (large) null else KitRowLeading.Glyph(groupGlyph(group)),
                     supporting =
                         if (group == SettingsGroupId.Server) hubServerLine(state) else null,
@@ -150,6 +154,9 @@ private fun ColumnScope.HubBody(
         }
     }
 }
+
+/** A roomy index row's height (Dart `KitRow.roomyHeight`). */
+internal const val HUB_ROW_HEIGHT = 64 // F: lib/ui/kit/kit_row.dart:121
 
 /** The five hub glyphs, in Flutter's group order. */
 private fun groupGlyph(group: SettingsGroupId) =

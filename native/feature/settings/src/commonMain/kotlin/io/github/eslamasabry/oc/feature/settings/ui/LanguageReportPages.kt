@@ -3,6 +3,12 @@ package io.github.eslamasabry.oc.feature.settings.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kit.row.kitRowGutter
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiDescription
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,6 +72,14 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.LanguageBody(language: AppLanguage, actions: SettingsActions) {
+    // Flutter's picker says what the choice changes before the list (lib/ui/widgets/language_picker.dart:158-159).
+    KitText(
+        stringResource(Res.string.e7LocaleUiDescription),
+        Modifier.padding(horizontal = kitRowGutter()).testTag("language-description"),
+        role = TypeRole.Secondary,
+        tone = TextTone.Secondary,
+    )
+    Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/widgets/language_picker.dart:159
     KitChoiceList(
         choices =
             AppLanguage.entries.map { item ->

@@ -164,14 +164,14 @@ class S8PolishGoldensTest {
         )
 
     @Test
-    fun `P-028 the hub's one-line groups are 56 dp and the phone server is This phone`() =
+    fun `P-028 the hub's group rows are roomy 64 dp and the phone server is This phone`() =
         each(
             "hub",
             check = { v ->
                 if (v.locale == "en") {
                     onAllNodesWithText("On this phone", substring = true).assertCountEquals(0)
                     onNodeWithText("This phone · Connected").assertExists()
-                    if (v.scale == 1f) onNodeWithTag("settings-group-Agent").assertHeightIsEqualTo(56.dp)
+                    if (v.scale == 1f) onNodeWithTag("settings-group-Agent").assertHeightIsEqualTo(64.dp) // F: lib/ui/kit/kit_row.dart:121
                 }
             },
         ) {
