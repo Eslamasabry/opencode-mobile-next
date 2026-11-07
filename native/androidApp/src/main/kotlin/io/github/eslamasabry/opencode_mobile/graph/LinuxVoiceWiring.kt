@@ -647,6 +647,22 @@ internal constructor(
             },
         )
 
+    /** B-147: the update-time start; as [appOpen] but whichever server is selected (see [resumeAfterUpdate]). */
+    private val updateOpen =
+        AppOpenStart(
+            port,
+            starter,
+            clock,
+            mayAct = {
+                val owner = ownerId()
+                foreground &&
+                    owner != null &&
+                    owner.raw !in closedProfiles &&
+                    profiles.profile(owner) != null &&
+                    recovery.policyAllows(owner.raw)
+            },
+        )
+
     /**
      * B-LINUX-025: the phone server's password is made by the app, so when the Keystore lost it (a
      * fresh install, or the migration's `renewedByOwner`) a new one is made — 32 random bytes,
@@ -1594,7 +1610,29 @@ internal constructor(
      * profile exists, the person did not stop the server and it is not running, start it once
      * through the one start path. True when this app open is decided (started, or nothing to do).
      */
-    private suspend fun openStart(): Boolean = lane.withLock {
+    private suspend fun openStart(): Boolean = openStartWith(appOpen)
+
+    /**
+     * E00-S07 H2 / B-147: the first launch after the Flutter → native update brings the phone server back when 2.1.4
+     * left it running and the person had not stopped it. Flutter did that from its update receiver whichever server
+     * was selected; the app-open start only acts for the selected server, so a phone server behind another selected
+     * server stayed off until "Connect to this server". Same start rules as the app-open start (the person's Stop wins,
+     * the idle owner and native recovery are respected, a running server is probed, not replaced), but without the
+     * "selected" condition. Only while the app is in front, so Android allows the foreground-service start (a
+     * `specialUse` service, not under Android 15's `dataSync` cap).
+     *
+     * True when decided (started, already answering, or nothing to do); false to try again on the next launch.
+     */
+    suspend fun resumeAfterUpdate(): Boolean {
+        if (!readyMarkerPresent()) return true // no built-in Linux: nothing to bring back
+        if (!foreground) return false // a foreground-service start needs the app in front
+        // 2.1.4's own record (device-wide builtin_server_recovery): it was wanted and the person had not stopped it.
+        if (withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }) return true
+        if (healingOwner() == null) return true // no phone-server profile to start it for
+        return openStartWith(updateOpen)
+    }
+
+    private suspend fun openStartWith(start: AppOpenStart): Boolean = lane.withLock {
         publish()
         if (withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready)
             return@withLock true
@@ -1609,7 +1647,7 @@ internal constructor(
         facts.update { it.copy(starting = true) }
         val result =
             try {
-                appOpen.run(target)
+                start.run(target)
             } finally {
                 facts.update { it.copy(starting = false) }
             }
