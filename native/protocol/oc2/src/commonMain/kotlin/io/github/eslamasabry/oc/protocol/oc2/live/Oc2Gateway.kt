@@ -271,6 +271,17 @@ internal class Oc2Gateway(
 
     private val log = AppLog.tagged("oc2")
 
+    private fun diagKind(f: Failure): String =
+        when (f) {
+            is Failure.Server -> "Server.${f.status}.${f.tag?.raw?.take(32)}"
+            is Failure.Rejected -> "Rejected.${f.status}.${f.tag?.raw?.take(32)}"
+            is Failure.Refused -> "Refused.${f.reason.name}"
+            is Failure.Network -> "Network.${f.why.name}"
+            is Failure.NotFound -> "NotFound.${f.tag?.raw?.take(40)}"
+            is Failure.Conflict -> "Conflict.${f.tag?.raw?.take(40)}"
+            else -> f::class.simpleName ?: "Failure"
+        }
+
     override fun setSessionDispatchAdmission(
         admit: suspend (SessionId) -> Outcome<Unit>,
         settled: (SessionId) -> Unit,
@@ -291,7 +302,10 @@ internal class Oc2Gateway(
                         dispatchAdmission.filterNotNull().first()
                     } ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
                 else return action()
+        val enterStart = clock.now()
         val accepted = admission.enter(session)
+        val enterMs = (clock.now() - enterStart).inWholeMilliseconds
+        if (enterMs > 5_000) log.w { "the phone dispatch admission took ${enterMs}ms" }
         if (accepted is Outcome.Failed) {
             val kind = accepted.failure::class.simpleName
             log.w { "the phone's dispatch admission refused a request before it left ($kind)" }
@@ -1289,7 +1303,9 @@ internal class Oc2Gateway(
         clientId: String,
         beforeSend: () -> Boolean,
     ): Outcome<PromptAdmission> {
+        val prepareStart = clock.now()
         val prepared = preparePermissions(session)
+        val prepareMs = (clock.now() - prepareStart).inWholeMilliseconds
         if (prepared is Outcome.Failed) {
             // B-063: nothing was posted; the delivery engine reads this as "not sent" because
             // [beforeSend] never ran. The kind names the failed step for Report a problem.
@@ -1298,14 +1314,16 @@ internal class Oc2Gateway(
             return prepared
         }
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
-        return when (
-            val result =
-                json(
-                    "/session/${sid(session)}/prompt",
-                    HttpMethod.Post,
-                    Oc2PromptSend.body(prompt, clientId),
-                )
-        ) {
+        val postStart = clock.now()
+        val posted =
+            json("/session/${sid(session)}/prompt", HttpMethod.Post, Oc2PromptSend.body(prompt, clientId))
+        // B-063: a refused prompt names its kind and the server's tag (never text, ids or
+        // addresses), e.g. LocationNotFoundError when the project's folder is gone.
+        if (posted is Outcome.Failed) {
+            val postMs = (clock.now() - postStart).inWholeMilliseconds
+            log.w { "prompt answered ${diagKind(posted.failure)} after ${postMs}ms (prepared in ${prepareMs}ms)" }
+        }
+        return when (val result = posted) {
             is Outcome.Failed ->
                 if (
                     ((result.failure as? Failure.Refused)?.reason ==

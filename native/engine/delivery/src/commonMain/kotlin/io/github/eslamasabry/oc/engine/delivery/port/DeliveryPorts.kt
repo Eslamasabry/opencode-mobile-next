@@ -52,8 +52,9 @@ public interface SendLink {
 
     /**
      * Sends once. [beforeSend] runs immediately before bytes leave; false refuses with `Failure.Refused` and nothing is
-     * sent. Contract: a `Refused`, `Unavailable` or `StagedRevert` answer means **nothing left the device**; every other
-     * failure, and `PromptAdmission.Uncertain`, may have been delivered. `Confirmed(receiptId)` is admission only.
+     * sent. Contract: a `Refused`, `Unavailable` or `StagedRevert` answer means **nothing left the device**; a
+     * [refusedByServer] answer means the server refused it before admission; every other failure, and
+     * `PromptAdmission.Uncertain`, may have been delivered. `Confirmed(receiptId)` is admission only.
      */
     public suspend fun prompt(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -> Boolean): Outcome<PromptAdmission>
 
@@ -119,3 +120,18 @@ public val Failure.hasStatus: Boolean
 /** [SendLink.prompt]'s contract: these answers promise that nothing left the device. */
 public val Failure.nothingSent: Boolean
     get() = this is Failure.Refused || this is Failure.Unavailable || this is Failure.StagedRevert
+
+/**
+ * B-063: the server answered the prompt and refused it before admission, so it holds nothing to
+ * look up: a not-found (a missing session, or the folder of its project, `LocationNotFoundError`),
+ * a rejected request or a refused sign-in. A conflict (409) is excluded: it says the id was already
+ * admitted. Server errors (5xx) and lost answers stay uncertain.
+ */
+public val Failure.refusedByServer: Boolean
+    get() =
+        when (this) {
+            is Failure.NotFound,
+            is Failure.SignIn -> true
+            is Failure.Rejected -> status == null || (status in 400..499 && status != 409)
+            else -> false
+        }

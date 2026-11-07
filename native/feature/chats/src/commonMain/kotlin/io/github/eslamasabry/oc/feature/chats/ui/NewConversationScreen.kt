@@ -122,6 +122,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.setup == null ->
                 if (state.failure != null) stringResource(Res.string.chatsNewFailed) else working
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
+            state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
             else -> null
         }
@@ -151,7 +152,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // N-48: an unconfirmed send already has its notice above; the reason is said once.
                     if (
                         startBlocked != null && startBlocked != promptHint && !state.busy &&
-                            !state.deliveryUnconfirmed && !state.creationUnconfirmed
+                            !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
+                            !state.folderMissing
                     )
                         KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
@@ -233,6 +235,36 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             secondary = open ?: discard,
                             tertiary = if (open != null) listOf(discard) else emptyList(),
                         )
+                    }
+                    // B-063: the server still lists a project whose folder is gone; a message sent there is
+                    // refused. Say it before Start, with the two ways forward.
+                    if (state.folderMissing && !state.deliveryUnconfirmed) {
+                        KitNotice(stringResource(Res.string.chatsNewFolderMissing), inset)
+                        KitActionBlock(
+                            inset,
+                            secondary =
+                                KitAction(
+                                    stringResource(Res.string.chatsNewFolderRemake),
+                                    actions::remakeFolder,
+                                    working = state.remakingFolder,
+                                ),
+                            tertiary =
+                                listOf(
+                                    KitAction(
+                                        stringResource(Res.string.chatsNewFolderChooseAnother),
+                                        { actions.sheet(NewConversationSheet.Projects) },
+                                    )
+                                ),
+                        )
+                        state.remakeFailure?.let { failure ->
+                            KitErrorNotice(
+                                modifier = inset,
+                                message = stringResource(Res.string.chatsNewFailed),
+                                failure = failure,
+                                detailsLabel = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyDetails),
+                            )
+                        }
                     }
                     if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed), inset)
                     if (state.repairing) KitNotice(stringResource(Res.string.gitRepairLooking), inset)

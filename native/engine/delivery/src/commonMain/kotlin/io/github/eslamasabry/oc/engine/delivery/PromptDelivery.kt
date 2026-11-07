@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
 import io.github.eslamasabry.oc.engine.delivery.port.SendLink
 import io.github.eslamasabry.oc.engine.delivery.port.StopMemory
 import io.github.eslamasabry.oc.engine.delivery.port.nothingSent
+import io.github.eslamasabry.oc.engine.delivery.port.refusedByServer
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueErrors
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRefusal
@@ -609,12 +610,15 @@ public class PromptDelivery(
                 stopNow(ref) // Stop pressed while on the wire: stop again now
         } else {
             // 10. Failed. A refusal the port promises sent nothing, and so does any failure
-            // before the fence passed; anything else may have been delivered.
+            // before the fence passed or a server's refusal (B-063: a missing project folder
+            // answers 404); anything else may have been delivered.
             val reason = failure
-            val left = reachedWire && reason?.nothingSent != true
-            if (!reachedWire && reason != null) {
+            val refused = reason?.refusedByServer == true
+            val left = reachedWire && reason?.nothingSent != true && !refused
+            if ((!reachedWire || refused) && reason != null) {
                 val kind = reason::class.simpleName
-                log.w { "prompt not sent: it failed before the wire ($kind)" }
+                val where = if (refused) "the server refused it" else "it failed before the wire"
+                log.w { "prompt not sent: $where ($kind)" }
             }
             failed(bubble, request, putBack, reason, left)
         }

@@ -45,6 +45,8 @@ public class GatewaySendLink(
     private val observed: ObservedPromptReceipts = ObservedPromptReceipts(),
     private val admitInteractive: suspend () -> Outcome<Unit> = { Outcome.Ok(Unit) },
 ) : SendLink {
+    private val log = io.github.eslamasabry.oc.core.common.AppLog.tagged("delivery")
+
     /** One gateway is one connection epoch; a status-change wrapper over it is the same target. */
     override val epoch: Any
         get() = gateway
@@ -173,21 +175,31 @@ public class GatewaySendLink(
             val confirmed = (result as? Outcome.Ok)?.value as? PromptAdmission.Confirmed
             val failure = (result as? Outcome.Failed)?.failure
             val refusedBeforeSend =
-                (failure != null && !reachedWire) ||
+                (failure != null && (!reachedWire || failure.refusedByServer)) ||
                     failure?.nothingSent == true &&
                         (failure as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain
             if (confirmed == null && !refusedBeforeSend) {
+                var polls = 0
+                var lastLookup = "none"
                 val found =
                     withTimeoutOrNull(ADMISSION_RECONCILE_MS) {
                         var accepted = false
                         while (
                             scope == origin && gateway.events.status.value !is StreamStatus.Stopped
                         ) {
+                            polls++
+                            val looked =
+                                if (capabilities.commandReceipts) lookupAdmission(session, id)
+                                else null
+                            lastLookup =
+                                when (looked) {
+                                    null -> "off"
+                                    is Outcome.Ok -> "ok=${looked.value}"
+                                    is Outcome.Failed -> "failed=${looked.failure::class.simpleName}"
+                                }
                             if (
                                 observed.contains(origin, session, id) ||
-                                    (capabilities.commandReceipts &&
-                                        (lookupAdmission(session, id) as? Outcome.Ok)?.value ==
-                                            true)
+                                    (looked as? Outcome.Ok)?.value == true
                             ) {
                                 accepted = true
                                 break
@@ -196,6 +208,11 @@ public class GatewaySendLink(
                         }
                         accepted
                     } == true
+                if (!found)
+                    log.w {
+                        "send unconfirmed after ${polls} checks (last lookup $lastLookup, " +
+                            "answer ${(result as? Outcome.Failed)?.failure?.let { it::class.simpleName } ?: "uncertain"})"
+                    }
                 if (
                     found && scope == origin && gateway.events.status.value !is StreamStatus.Stopped
                 )

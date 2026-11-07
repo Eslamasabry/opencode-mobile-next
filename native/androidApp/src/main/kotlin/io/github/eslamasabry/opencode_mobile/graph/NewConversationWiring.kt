@@ -116,6 +116,16 @@ class AndroidNewConversationHost(
         return projectCreation.create(server, name)
     }
 
+    override suspend fun folderExists(profile: ProfileId, directory: String): Boolean? {
+        val server = projectServer(profile) ?: return null
+        return projectCreation.exists(server, directory)
+    }
+
+    override suspend fun remakeFolder(profile: ProfileId, directory: String): Outcome<String> {
+        val server = projectServer(profile) ?: return refused()
+        return projectCreation.createAt(server, directory)
+    }
+
     private fun refused(): Outcome.Failed =
         Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
 

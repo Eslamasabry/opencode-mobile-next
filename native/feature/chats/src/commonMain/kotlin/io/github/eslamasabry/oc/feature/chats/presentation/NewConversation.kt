@@ -98,6 +98,17 @@ public interface NewConversationHost {
     public suspend fun createProject(profile: ProfileId, name: String): Outcome<String> =
         Outcome.Failed(Failure.Unavailable(FeatureId("projectFolderCreation")))
 
+    /**
+     * B-063: whether [directory] is really there on [profile]'s server, read where the app can look
+     * (its own phone server); null when it can't tell. The server keeps listing a project whose
+     * folder is gone, and a message sent there is refused.
+     */
+    public suspend fun folderExists(profile: ProfileId, directory: String): Boolean? = null
+
+    /** B-063: makes [directory] again as an empty Git project; answers its path. */
+    public suspend fun remakeFolder(profile: ProfileId, directory: String): Outcome<String> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("projectFolderCreation")))
+
     public val servers: StateFlow<List<NewConversationServer>>
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
@@ -294,6 +305,10 @@ public data class NewConversationUi(
     val askingProjectName: Boolean = false,
     val creatingProject: Boolean = false,
     val projectFailure: Failure? = null,
+    /** B-063: the chosen project's folder is not on its server any more; Start waits for a choice. */
+    val folderMissing: Boolean = false,
+    val remakingFolder: Boolean = false,
+    val remakeFailure: Failure? = null,
 ) {
     val canCopy: Boolean
         get() = setup?.projects?.any { it.directory == directory && it.separateCopy } == true
@@ -355,6 +370,9 @@ public interface NewConversationActions {
 
     /** The name dialog's answer: makes the folder with Git and picks it; null closes the dialog. */
     public fun createProject(name: String?) {}
+
+    /** B-063: makes the missing project folder again (empty, with Git). */
+    public fun remakeFolder() {}
 }
 
 @AssistedInject
@@ -449,6 +467,7 @@ public class NewConversationViewModel(
                             )
                         }
                         restore(profile, setup.directory)
+                        setup.directory?.let { checkFolder(profile, it) }
                     }
             }
         }
@@ -593,8 +612,11 @@ public class NewConversationViewModel(
                 separateCopy = false,
                 repairAvailable = host.canRepair(profile, directory.trim()),
                 repair = null,
+                folderMissing = false,
+                remakeFailure = null,
             )
         }
+        checkFolder(profile, directory.trim())
         viewModelScope.launch {
             edits.withLock {
                 if (before.text.isNotEmpty()) {
@@ -736,6 +758,37 @@ public class NewConversationViewModel(
         }
     }
 
+    /** B-063: a project whose folder is gone says so before Start, never after a refused send. */
+    private fun checkFolder(profile: ProfileId, directory: String) {
+        viewModelScope.launch {
+            val there = host.folderExists(profile, directory)
+            mutable.update {
+                if (it.profile == profile && it.directory == directory)
+                    it.copy(folderMissing = there == false)
+                else it
+            }
+        }
+    }
+
+    override fun remakeFolder() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        val directory = shown.directory ?: return
+        if (!shown.folderMissing || shown.remakingFolder) return
+        mutable.update { it.copy(remakingFolder = true, remakeFailure = null) }
+        viewModelScope.launch {
+            val made = host.remakeFolder(profile, directory)
+            mutable.update {
+                if (it.profile != profile || it.directory != directory) it.copy(remakingFolder = false)
+                else
+                    when (made) {
+                        is Outcome.Ok -> it.copy(remakingFolder = false, folderMissing = false)
+                        is Outcome.Failed -> it.copy(remakingFolder = false, remakeFailure = made.failure)
+                    }
+            }
+        }
+    }
+
     private fun loadImports() {
         val shown = mutable.value
         val profile = shown.profile ?: return
@@ -824,7 +877,8 @@ public class NewConversationViewModel(
                 shown.text.isBlank() ||
                 shown.setup == null ||
                 shown.creationUnconfirmed ||
-                shown.deliveryUnconfirmed
+                shown.deliveryUnconfirmed ||
+                shown.folderMissing
         )
             return
         if (shown.separateCopy) {
