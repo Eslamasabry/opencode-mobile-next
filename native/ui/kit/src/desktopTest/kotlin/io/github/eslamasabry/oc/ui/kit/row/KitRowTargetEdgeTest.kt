@@ -35,7 +35,7 @@ class KitRowTargetEdgeTest {
     }
 
     @Test
-    fun `B-KIT-112 a row's labelled ⋯ and a row's ⋯ menu share one centre line, 28 dp from the edge`() =
+    fun `B-KIT-112 a row's labelled more glyph and its more menu share one centre line, 28 dp from the edge`() =
         runDesktopComposeUiTest(412, 400) {
             setContent {
                 KitTheme {
