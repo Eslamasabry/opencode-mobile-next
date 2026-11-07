@@ -157,6 +157,27 @@ class CompareTest(unittest.TestCase):
         self.assertFalse(v.ok)
         self.assertIn("finished 3 -> 4", v.detail)
 
+    def test_B_150_channels_native_adds_pass_when_every_old_channel_keeps_id_and_importance(self):
+        # The 2.1.4 run: native adds four channels of its own; every Flutter channel is unchanged.
+        before = {"finished": 3, "live": 2}
+        after = dict(before, opencode_builtin_server=2, opencode_coding_action=4,
+                     opencode_coding_action_quiet=2, opencode_coding_status=2)
+        v = self.verdicts(state(channels=before), state(channels=after))["channels"]
+        self.assertTrue(v.ok)
+        self.assertIn("new after: opencode_builtin_server", v.detail)
+
+    def test_B_150_channels_a_removed_old_channel_fails(self):
+        v = self.verdicts(state(channels={"finished": 3, "live": 2}),
+                          state(channels={"finished": 3, "opencode_builtin_server": 2}))["channels"]
+        self.assertFalse(v.ok)
+        self.assertIn("missing after: live", v.detail)
+
+    def test_B_150_channels_a_changed_importance_fails_even_with_additions(self):
+        v = self.verdicts(state(channels={"finished": 3}),
+                          state(channels={"finished": 2, "opencode_coding_status": 2}))["channels"]
+        self.assertFalse(v.ok)
+        self.assertIn("finished 3 -> 2", v.detail)
+
     def test_B_MIGR_013_a_lost_grant_or_app_op_fails(self):
         self.assertFalse(self.verdicts(state(), state(runtimeGrants={}))["grants"].ok)
         self.assertFalse(self.verdicts(state(), state(appops={"SCHEDULE_EXACT_ALARM": "default"}))["grants"].ok)

@@ -272,8 +272,11 @@ def compare(before: dict, after: dict) -> list[Verdict]:
                        f"pinned {sorted(pins_b)} -> {sorted(pins_a)}; dynamic {sorted(dyn_b)} -> {sorted(dyn_a)}"
                        if pins_b or dyn_b else "Part A left no shortcut"))
 
+    # B-150: the update may add channels of its own; every channel the old app had keeps its id and the person's
+    # importance. A removed or changed channel fails; additions are listed in the detail only.
     bc, ac = before.get("channels", {}), after.get("channels", {})
-    out.append(Verdict("channels", "Notification channels and their importance identical", bool(bc) and bc == ac,
+    kept = all(k in ac and ac[k] == v for k, v in bc.items())
+    out.append(Verdict("channels", "Every old notification channel kept with its importance", bool(bc) and kept,
                        _diff(bc, ac) if bc else "no channel before the update"))
 
     bg, ag = before.get("runtimeGrants", {}), after.get("runtimeGrants", {})
