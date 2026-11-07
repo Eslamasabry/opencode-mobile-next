@@ -2,10 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.action
 
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
@@ -56,7 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwapGrow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -94,7 +90,6 @@ public fun KitIconButton(
     kitAssert(label.isNotBlank()) { "KitIconButton: an icon button needs a label (B-KIT-019)" }
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val specs = KitMotion.specs
     val on = enabled.isEnabled
     val ink = if (!on) colors.text3 else if (selected == true) colors.accent else colors.tone(tone) // F: lib/ui/kit/kit_icon_button.dart:glyphColor
     val interactions = remember { MutableInteractionSource() }
@@ -144,18 +139,18 @@ public fun KitIconButton(
                 KitWorkingMark(colors.accent, size = size.dp)
             }
         } else {
-            AnimatedContent(
-                targetState = icon,
-                transitionSpec = { fadeIn(specs.quick()) togetherWith fadeOut(specs.quick()) },
-                label = "kit-icon-swap",
-            ) { glyph -> KitGlyph(glyph, ink, size.dp) }
+            // M-015: the glyph cross-fades on QUICK; the copied check also grows from 0.9 (Full only).
+            KitSwapGrow(icon, grows = { it == KitIcons.check }) { glyph ->
+                KitGlyph(glyph, ink, size.dp)
+            }
         }
     }
     }
 }
 
 /**
- * The copy variant (Dart `KitIconButton.copy`): copies [text] and shows a check for the copied hold. [mask] prepares
+ * The copy variant (Dart `KitIconButton.copy`): copies [text], plays the light copy haptic (`Send`, as Dart
+ * `KitCopy.copy`), and cross-fades to a check for the copied hold (M-015). [mask] prepares
  * the text just before the write; when it masked something, the button's name reads [maskedLabel] for the copied hold
  * and is announced once (a polite live region), like Flutter's single copy announcement.
  */
@@ -185,6 +180,7 @@ public fun KitIconButtonCopy(
             masked = out.masked
             copied = true
         },
+        haptic = KitHaptic.Send,
         modifier =
             if (maskedLabel == null) modifier
             else
