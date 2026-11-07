@@ -17,10 +17,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewMo
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsAllScreen
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
+import io.github.eslamasabry.oc.feature.chats.ui.homeAppNoticeStatus
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.status.KitStatus
-import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -49,21 +48,8 @@ public class ChatsEntries(
             val state by vm.state.collectAsStateWithLifecycle()
             val appNotice by appNotices.status.collectAsStateWithLifecycle()
             val replyOffer by appNotices.replyOffer.collectAsStateWithLifecycle()
-            val appStatus = appNotice?.let { notice ->
-                KitStatus(
-                    if (notice.stoppedApp) KitStatusKind.AppStopped else KitStatusKind.Info,
-                    notice.message,
-                    id = notice.id,
-                    action =
-                        notice.action?.let { action ->
-                            notice.actionLabel?.let { label ->
-                                KitLineAction(label, { appNotices.act(action) })
-                            }
-                        },
-                    onDismiss = { appNotices.dismiss(notice.id) },
-                    dismissLabel = notice.dismissLabel,
-                )
-            }
+            val appStatus =
+                appNotice?.let { homeAppNoticeStatus(it, appNotices::act, appNotices::dismiss) }
             val offerContent: (@androidx.compose.runtime.Composable () -> Unit)? =
                 replyOffer?.let { offer ->
                     {

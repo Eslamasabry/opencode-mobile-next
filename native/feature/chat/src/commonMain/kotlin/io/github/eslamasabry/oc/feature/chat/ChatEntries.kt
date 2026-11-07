@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.feature.chat.inbox.ui.ChatInboxSlot
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteViewModel
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
+import io.github.eslamasabry.oc.feature.chat.presentation.shownInChat
 import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveScreen
 import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveViewModel
 import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
@@ -168,7 +169,7 @@ public class ChatEntries(
             LaunchedEffect(startVisible) { startVm.visible(startVisible) }
             val appNotice by appNotices.status.collectAsStateWithLifecycle()
             val replyOffer by appNotices.replyOffer.collectAsStateWithLifecycle()
-            val appNoticeStatus = appNotice?.let { notice ->
+            val appNoticeStatus = appNotice.shownInChat()?.let { notice ->
                 KitStatus(
                     if (notice.stoppedApp) KitStatusKind.AppStopped else KitStatusKind.Info,
                     notice.message,
