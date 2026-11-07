@@ -30,7 +30,19 @@ Branch `native/s17-content` from `native/screens-merge22` (e6a10900e). Orders: 1
 | `part-kit_scanner` | 13 | 0 | 0 | 13 | 0 |
 | **order 18, kit-content** | **131** | **0** | **0** | **131** | **22** |
 
-LOG_PANEL_ROWS
+| other orders | goldens | rendered before | pass before | rendered after | pass after |
+|---|---:|---:|---:|---:|---:|
+| `part-kit_log_panel` (08) | 26 | 0 | 0 | 26 | 1 |
+| `part-kit_qr` (06) | 10 | 10 | 2 | 10 | 2 (no change; the misses are 1.3-3.2 px in the Copy button row, `:ui:kit`) |
+| `part-kit_web_preview` (23) | 8 | 0 | 0 | 0 | 0 (Android-only part) |
+
+Log panel: a new `KitLogPanel(lines: KitLogBuffer, …)` overload ports `kit_log_panel.dart` (neither existing
+log panel was that port). Its text lines sit within 1 px of Flutter's; what fails is the Wrap/Copy glyph weight and
+the fold chevron (`KitIconButton`/`KitIcons`, `KitDetailsFold`), `KitErrorNotice`'s smaller message (read_failed)
+and the smaller `KitJumpPill` (scrolled_up). In a strict run 11 of its 12 gate methods fail on the align gate where
+the panel matches Flutter: words at 28 dp (16 gutter + 12 panel inset) and a 27 dp gap under the header. The same
+conflict hits the terminal output shots. **Decision for the lead:** a rule for inset surfaces, or baseline lines;
+nothing was baselined.
 
 ## What changed
 
@@ -86,7 +98,7 @@ case can render it from kit-content. It needs a common frame (address bar, error
 
 ## Tests in a normal run (`./gradlew :ui:kit-content:desktopTest`)
 
-143 tests, 6 fail, all on guard findings named above, none on a pre-existing test: `KitViewerGateTest.markdown`
+143 tests, 6 fail (before the log panel; its 11 gate methods add to these in a strict run), all on guard findings named above, none on a pre-existing test: `KitViewerGateTest.markdown`
 (blank source lines, item 2), `KitViewerGateTest.loading` (item 6), `KitImageGalleryGateTest.states` and
 `KitImageMarkupGateTest.states` (KitTopBar 7 dp), `KitTerminalViewGateTest.output` and `.scaled_and_arabic`.
 Nothing was added to a baseline. Robolectric `testAndroidHostTest` cannot start in this container ("Thermal status
