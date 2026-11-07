@@ -54,7 +54,11 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
     val title =
         when (state.page) {
             ServerSettingsPage.Home ->
-                state.facts?.name ?: stringResource(Res.string.serverSettingsTitle)
+                when (val home = state.homeTitle) {
+                    is ServerSettingsTitle.Named -> home.name
+                    ServerSettingsTitle.PhoneServer -> stringResource(Res.string.kitCapPhoneBuiltinTitle)
+                    ServerSettingsTitle.Generic -> stringResource(Res.string.serverSettingsTitle)
+                }
             ServerSettingsPage.Model -> stringResource(Res.string.settingsV3ModelNew)
             ServerSettingsPage.Check -> stringResource(Res.string.connCheckTitle)
             ServerSettingsPage.Shell -> stringResource(Res.string.serverSettingsShell)

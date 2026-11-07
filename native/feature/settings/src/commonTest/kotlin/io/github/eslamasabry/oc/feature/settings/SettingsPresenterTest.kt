@@ -134,6 +134,34 @@ class SettingsPresenterTest {
         }
 
     @Test
+    fun `P-114 Back from a search result returns to the results, a second Back clears them`() =
+        rig {
+            p.onSearchEntries(
+                listOf(
+                    SettingsSearchEntry(SettingsRowId.Appearance, "Appearance", "theme"),
+                    SettingsSearchEntry(SettingsRowId.ShowReasoning, "Show reasoning", "thinking"),
+                ),
+            )
+            p.onQuery("appearance"); settle()
+            p.onTarget(SettingsRowId.Appearance); settle()
+            assertEquals(SettingsPage.Appearance, ui.page)
+            assertTrue(p.onBack()); settle()
+            // Not the row's group (This app): the results the person tapped from.
+            assertEquals(SettingsPage.Hub, ui.page)
+            assertEquals("appearance", ui.hub.query)
+            assertEquals(listOf(SettingsRowId.Appearance), ui.hub.results)
+            assertTrue(p.onBack()); settle()
+            assertEquals("", ui.hub.query)
+            // A switch opens its group to flip it there; Back still returns to the results.
+            p.onQuery("reasoning"); settle()
+            p.onTarget(SettingsRowId.ShowReasoning); settle()
+            assertEquals(SettingsPage.Group(SettingsRowId.ShowReasoning.group), ui.page)
+            assertTrue(p.onBack()); settle()
+            assertEquals(SettingsPage.Hub, ui.page)
+            assertEquals(listOf(SettingsRowId.ShowReasoning), ui.hub.results)
+        }
+
+    @Test
     fun `B-NAV-073 a search result opens the page that holds the row`() =
         rig {
             p.onRow(SettingsRowId.About); settle()

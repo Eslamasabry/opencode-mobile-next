@@ -145,7 +145,26 @@ public data class ServerSettingsUi(
     val resetDone: Boolean = false,
     val disconnectConfirm: Boolean = false,
     val agents: ImmutableList<String>? = null,
-)
+) {
+    /** What the Home page's top bar names (the screen turns it into words). */
+    public val homeTitle: ServerSettingsTitle
+        get() {
+            val f = facts ?: return ServerSettingsTitle.Generic
+            // P-114: the built-in server is saved as "This phone", which is also This phone's own
+            // page; its settings say "Server on this phone" so the two pages never share a title.
+            return if (f.managedOnPhone) ServerSettingsTitle.PhoneServer
+            else ServerSettingsTitle.Named(f.name)
+        }
+}
+
+/** The Home page title: the saved name, the phone's own server, or "Server settings" while loading. */
+public sealed interface ServerSettingsTitle {
+    public data class Named(val name: String) : ServerSettingsTitle
+
+    public data object PhoneServer : ServerSettingsTitle
+
+    public data object Generic : ServerSettingsTitle
+}
 
 public interface ServerSettingsActions {
     public fun back()

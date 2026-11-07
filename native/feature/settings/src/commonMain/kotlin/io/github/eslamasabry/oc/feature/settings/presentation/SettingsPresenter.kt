@@ -665,16 +665,21 @@ public class SettingsPresenter(
 
     override fun onTarget(row: SettingsRowId) {
         if (row !in SettingsStructure.searchable(currentFacts.value)) return
-        onOpen(SettingsPage.Group(row.group))
-        local.update { it.copy(query = "", focusedRow = row) }
         // Like Flutter's search results, a page or outside row opens its destination; a switch
         // stays highlighted in its group so the person can flip it there.
+        // P-114: the destination opens straight from the results, and the query is kept, so Back
+        // returns to the results (not to the row's group); a second Back clears the search.
         val p = prefs.value
         val door =
             SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps)
                 .firstOrNull { it.id == row }
                 ?.door
-        if (door != null && door !is SettingsDoor.Switch) onRow(row)
+        if (door != null && door !is SettingsDoor.Switch) {
+            onRow(row)
+            return
+        }
+        onOpen(SettingsPage.Group(row.group))
+        local.update { it.copy(focusedRow = row) }
     }
 
     override fun onPhraseChips(on: Boolean) {
