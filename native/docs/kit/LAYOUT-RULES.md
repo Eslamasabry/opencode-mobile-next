@@ -46,6 +46,10 @@ in a group whose rows have one is a violation: give it the same leading slot, or
 A list never shows one thing twice: two rows of one list with the same words (title and supporting line) are a
 `twin-row` (E20-S08: a project sheet listed a folder twice). Dedupe the data (by path, by id) before it reaches the list.
 
+A floating panel (a menu, marked `Modifier.kitFloating(...)`) fits inside the window between the system bars and
+scrolls when it is longer; one that runs past the window's edge is `off-window`. A menu whose items have glyphs keeps
+the glyph's slot on the items without one, so its labels start on one edge (E20-S08).
+
 ## 4. Touch targets
 
 Every tappable is at least **48 × 48 dp** (kit-v2 §8.3: "Touch targets stay 48 dp everywhere"; `tokens.minTarget`).

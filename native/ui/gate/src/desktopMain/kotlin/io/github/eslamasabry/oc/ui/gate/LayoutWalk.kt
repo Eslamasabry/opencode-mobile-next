@@ -65,6 +65,7 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
             if (window == Window.Tablet && !n.chrome) caps(n)
             if (screen && n.pageRules) edges(n)
             if (screen && window == Window.Phone && !n.chrome) contentEdge(n)
+            floating(n)
         }
         spacing()
         if (screen) titleEdges()
@@ -129,6 +130,19 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
         if (abs(n.bounds.left - gutter) > TITLE_EDGE) {
             add(n, "content-edge", "$slot starts at x ${fmt(n.bounds.left)}, the page's words at ${fmt(gutter)}")
         }
+    }
+
+    /**
+     * A floating panel the kit marks (a menu) fits inside the window and scrolls when it is longer (E20-S08: the
+     * Go to menu's last item was cut at the bottom). Its laid-out box, not the clipped one, is checked.
+     */
+    private fun floating(n: Item) {
+        val name = n.config.getOrNull(KitLayoutMarks.Floating) ?: return
+        val at = n.node.positionInWindow
+        val size = n.node.size
+        val h = window.h.toFloat()
+        val out = at.x < -CUT || at.y < -CUT || at.x + size.width > w + CUT || at.y + size.height > h + CUT
+        if (out) add(n, "off-window", "$name at ${fmt(at.x)},${fmt(at.y)} size ${size.width} x ${size.height}")
     }
 
     /** Each words-or-control node and the nearest sibling below it that shares columns with it. */

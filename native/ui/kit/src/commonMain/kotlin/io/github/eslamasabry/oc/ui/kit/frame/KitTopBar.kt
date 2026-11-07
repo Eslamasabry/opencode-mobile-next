@@ -278,7 +278,7 @@ public fun KitTopBar(
                 Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit!!, -1f)
+                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
                 Box(Modifier.weight(1f))
                 actionRow()
             }

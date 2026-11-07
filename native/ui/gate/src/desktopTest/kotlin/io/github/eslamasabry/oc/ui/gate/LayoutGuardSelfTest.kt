@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitContentEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitList
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import kotlin.test.Test
@@ -172,6 +173,14 @@ class LayoutGuardSelfTest {
         assertEquals(listOf("Three"), edges.map { it.subject })
         val aligned = rules { Column(Modifier.kitList("test")) { row(16, "One"); row(16, "Two"); row(16, "Three") } }
         assertTrue("title-edge" !in aligned)
+    }
+
+    @Test
+    fun `E20-S08 a floating panel running past the window's bottom is reported`() {
+        val past = rules(frame = Frame.Part) { Box(Modifier.offset(y = 880.dp).size(200.dp, 100.dp).kitFloating("menu")) }
+        assertTrue("off-window" in past, past.toString())
+        val inside = rules(frame = Frame.Part) { Box(Modifier.offset(y = 700.dp).size(200.dp, 100.dp).kitFloating("menu")) }
+        assertTrue("off-window" !in inside, inside.toString())
     }
 
     @Test
