@@ -173,6 +173,23 @@ ML Kit is additionally covered by Google's ML Kit terms of service. None of
 these are used anywhere else in the app: the camera is opened only by the
 pairing scanner, only while that screen is on top, and no frame is stored.
 
+### Firebase Crashlytics and Google Analytics for Firebase (opt-in)
+
+- Components: `firebase_core`, `firebase_crashlytics` and `firebase_analytics`
+  Flutter packages (BSD 3-Clause, in the inventory below)
+- Android libraries they pull in: the Firebase Android BoM 35.1.0
+  (`firebase-common`, `firebase-crashlytics`, `firebase-analytics`), Apache
+  License 2.0 (see `LICENSES/Apache-2.0.txt`), with the measurement libraries
+  under Google's Firebase and Google Analytics terms of service.
+
+They are compiled into every APK, but they run only in builds that contain the
+maintainer's private Firebase configuration, and only after the person turns on
+Settings > Privacy and data > "Send crash reports and setup counts to the
+developer (Google Firebase)". Without the configuration they never start.
+Collection is off in the manifest until consent; the advertising-ID permission
+is removed; advertising ID, SSAID, ad personalisation and automatic screen
+reporting are off. What is sent is listed in PRIVACY.md.
+
 ### Termux terminal-emulator (the local terminal's PTY)
 
 - Component: `terminal-emulator` library of Termux, used unmodified as the
@@ -260,6 +277,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 
 | Package | Version | License | Copyright line in the package's LICENSE | Role |
 |---|---|---|---|---|
+| `_flutterfire_internals` | 1.3.79 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
 | `android_file_picker` | 1.1.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
 | `args` | 2.7.0 | BSD-3-Clause | Copyright 2013, the Dart project authors | runtime |
 | `async` | 2.13.1 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
@@ -292,6 +310,14 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `file_selector_macos` | 0.9.5+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `file_selector_platform_interface` | 2.7.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `file_selector_windows` | 0.9.3+6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `firebase_analytics` | 13.0.1 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
+| `firebase_analytics_platform_interface` | 6.0.9 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
+| `firebase_analytics_web` | 0.6.3+15 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
+| `firebase_core` | 5.1.0 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
+| `firebase_core_platform_interface` | 8.1.1 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
+| `firebase_core_web` | 4.1.0 | BSD-3-Clause | Copyright 2020 The Chromium Authors. All rights reserved | runtime |
+| `firebase_crashlytics` | 6.0.1 | BSD-3-Clause | Copyright 2019 The Chromium Authors. All rights reserved | runtime |
+| `firebase_crashlytics_platform_interface` | 3.9.2 | BSD-3-Clause | Copyright 2020, the Chromium project authors. All rights reserved | runtime |
 | `fixnum` | 1.1.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `flutter_lints` | 6.0.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | test-only |
 | `flutter_plugin_android_lifecycle` | 2.0.35 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
