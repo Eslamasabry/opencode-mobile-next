@@ -2,15 +2,16 @@ package io.github.eslamasabry.oc.ui.kit.content.rb.o18
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerContent
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerKeys
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerModal
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerSource
 import io.github.eslamasabry.oc.ui.kit.content.viewer.ViewerPdfPage
@@ -204,10 +205,10 @@ Read [the widget guide](https://docs.flutter.dev/ui) for more.
 
     /** The finding scene's taps: More, Find in file, type "name", Next (kit_viewer_golden_test.dart:298-310). */
     private val finding: androidx.compose.ui.test.ComposeUiTest.() -> Unit = {
-        onNodeWithTag(KitViewerKeys.MORE).performClick()
+        onNodeWithContentDescription("More").performSemanticsAction(SemanticsActions.OnClick)
         waitForIdle()
         mainClock.advanceTimeBy(1_000)
-        onNodeWithText("Find in file").performClick()
+        onNodeWithText("Find in file").performSemanticsAction(SemanticsActions.OnClick)
         waitForIdle()
         mainClock.advanceTimeBy(1_000)
         onNode(hasSetTextAction()).performClick()
@@ -215,7 +216,8 @@ Read [the widget guide](https://docs.flutter.dev/ui) for more.
         waitForIdle()
         mainClock.advanceTimeBy(1_000)
         waitForIdle()
-        onNodeWithTag(KitViewerKeys.FIND_NEXT).performClick()
+        // A tap, as the Dart test's tester.tap: no mouse left hovering over the button (no hover wash, no tooltip).
+        onNodeWithContentDescription("Next match").performSemanticsAction(SemanticsActions.OnClick)
     }
 
     private fun shot(state: String, size: String = "") {
