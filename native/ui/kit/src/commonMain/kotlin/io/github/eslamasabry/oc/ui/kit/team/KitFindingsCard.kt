@@ -75,7 +75,7 @@ public fun KitFindingsCard(
     actions: List<KitAction> = emptyList(),
 ) {
     Box(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
-        TeamCard(title, status, state, summary, primary = primary, actions = actions) {
+        KitTeamCard(title, status, state, summary = summary, primary = primary, actions = actions) {
             findings.forEach { finding ->
                 Row(Modifier.fillMaxWidth().padding(vertical = Space.S2.dp), verticalAlignment = Alignment.Top) {
                     FindingCheck(finding, KitFindingsRules.canToggle(state, finding))

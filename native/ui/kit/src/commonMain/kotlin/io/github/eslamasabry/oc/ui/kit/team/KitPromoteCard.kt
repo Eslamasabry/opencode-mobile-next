@@ -29,6 +29,6 @@ public fun KitPromoteCard(
     actions: List<KitAction> = emptyList(),
 ) {
     Box(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
-        TeamCard(title, status, state, summary, items, primary, actions = actions, flat = false, neutralStatus = true)
+        KitTeamCard(title, status, state, summary = summary, items = items, primary = primary, actions = actions, neutralStatus = true)
     }
 }

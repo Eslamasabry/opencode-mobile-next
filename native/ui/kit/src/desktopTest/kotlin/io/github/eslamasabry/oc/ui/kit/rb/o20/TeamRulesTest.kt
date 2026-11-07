@@ -47,10 +47,10 @@ class TeamRulesTest {
 
     @Test fun `B-KIT-2003 actions hide while stale or loading`() {
         // team_parts.dart:142-143
-        assertFalse(KitTeamRules.mutations(KitTeamState.Stale))
-        assertFalse(KitTeamRules.mutations(KitTeamState.Loading))
+        assertFalse(KitTeamRules.allowsActions(KitTeamState.Stale))
+        assertFalse(KitTeamRules.allowsActions(KitTeamState.Loading))
         listOf(KitTeamState.Empty, KitTeamState.Running, KitTeamState.NeedsYou, KitTeamState.Stalled, KitTeamState.Failed, KitTeamState.Done)
-            .forEach { assertTrue(KitTeamRules.mutations(it), it.name) }
+            .forEach { assertTrue(KitTeamRules.allowsActions(it), it.name) }
     }
 
     @Test fun `B-KIT-2004 the counted bar shows only for an honest count`() {
@@ -67,7 +67,7 @@ class TeamRulesTest {
 
     @Test fun `B-KIT-2005 the card heading glyph shows only for failed and needs-you`() {
         // team_parts.dart:152
-        assertEquals(setOf(KitTeamState.Failed, KitTeamState.NeedsYou), KitTeamState.entries.filter { KitTeamRules.headingGlyph(it) }.toSet())
+        assertEquals(setOf(KitTeamState.Failed, KitTeamState.NeedsYou), KitTeamState.entries.filter { KitTeamRules.cardMarked(it) }.toSet())
     }
 
     @Test fun `B-KIT-2006 findings severity chip and toggling`() {

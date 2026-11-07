@@ -67,16 +67,15 @@ public fun KitPlanCard(
     actions: List<KitAction> = emptyList(),
 ) {
     Box(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
-        TeamCard(
+        KitTeamCard(
             title,
             status,
             state,
-            summary,
-            items,
-            primary,
-            secondary,
-            actions,
-            flat = false,
+            summary = summary,
+            items = items,
+            primary = primary,
+            secondary = secondary,
+            actions = actions,
             neutralStatus = phases.isNotEmpty(),
         ) {
             phases.forEach { phase ->

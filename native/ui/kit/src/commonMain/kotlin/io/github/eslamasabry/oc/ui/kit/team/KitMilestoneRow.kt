@@ -30,6 +30,6 @@ public fun KitMilestoneRow(
     total: Int? = null,
 ) {
     Box(modifier.kitMaxWidth(CapRole.List).fillMaxWidth()) {
-        TeamRow(title, status, state, detail, meta, onPressed = onPressed, completed = completed, total = total)
+        KitTeamRow(title, status, state = state, detail = detail, meta = meta, onPressed = onPressed, completed = completed, total = total)
     }
 }

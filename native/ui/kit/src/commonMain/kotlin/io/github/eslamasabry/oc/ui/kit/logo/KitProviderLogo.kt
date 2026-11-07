@@ -20,6 +20,7 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.svg.SvgDecoder
+import io.github.eslamasabry.oc.ui.kit.platform.isStaticKitSvg
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /**
