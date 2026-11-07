@@ -55,6 +55,9 @@ public enum class KitIconSize(public val dp: Int) {
     Small(20),
     Medium(22),
     Large(24),
+
+    /** The floating action's one glyph on its 56 dp disc (Dart `tokens.iconSize(context, 28)`). */
+    Fab(28),
 }
 
 /**

@@ -68,6 +68,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitScreen
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
+import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE
 import io.github.eslamasabry.oc.ui.kit.action.KitFab
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
@@ -242,7 +243,7 @@ public fun ChatsScreen(
       Box(Modifier.fillMaxSize()) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-            contentPadding = PaddingValues(bottom = if (showFab) 96.dp else Space.S4.dp),
+            contentPadding = PaddingValues(bottom = Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp),
         ) {
             state.home.opening?.let { opening ->
                 item(key = "opening-status") { OpeningStatus(opening, actions) }
@@ -380,12 +381,15 @@ public fun ChatsScreen(
         }
         // The Undo bar sits at the bottom edge; the New button rides above it while it shows.
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
-            if (showFab) {
+            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
+            // it no longer covers a row's time. It fades out while the server cannot start one yet.
+            if (listed) {
                 KitFab(
                     label = stringResource(Res.string.chatsHomeNewChat),
                     icon = KitIcons.add,
                     onClick = actions::newConversation,
-                    modifier = Modifier.padding(Space.S4.dp),
+                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
+                    visible = showFab,
                 )
             }
             val undo = state.archiveUndo

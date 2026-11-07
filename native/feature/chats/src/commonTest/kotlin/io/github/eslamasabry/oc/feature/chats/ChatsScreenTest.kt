@@ -106,11 +106,12 @@ class ChatsScreenTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(), actions) } }
             onNodeWithText("No conversations yet").assertExists()
-            onAllNodesWithText("New conversation").assertCountEquals(1)
+            // P-107: the round floating button says its words to a screen reader; they are not drawn.
+            onAllNodesWithContentDescription("New conversation").assertCountEquals(1)
             onNodeWithText("Open a project").performClick()
             onNodeWithText("Connect a computer").performClick()
             onNodeWithText("See what an agent can do").performClick()
-            onNodeWithText("New conversation").performClick()
+            onNodeWithContentDescription("New conversation").performClick()
             assertEquals(listOf("projects", "computer", "demo", "new"), actions.calls)
         }
 
@@ -132,7 +133,8 @@ class ChatsScreenTest {
             // One name for one thing (design review §2.3): the placeholder row and the floating button both say
             // "New conversation".
             onAllNodesWithContentDescription("New conversation", substring = true).assertCountEquals(1)
-            onAllNodesWithText("New conversation").assertCountEquals(1)
+            // P-107: the floating button is round and draws no words, so it never covers a row's time with them.
+            onAllNodesWithText("New conversation").assertCountEquals(0)
             onAllNodesWithText("New chat").assertCountEquals(0)
             onAllNodesWithContentDescription("New chat", substring = true).assertCountEquals(0)
             // One status word per row: the needs-you row says it once, the running row says Working.
@@ -164,8 +166,8 @@ class ChatsScreenTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(), actions) } }
             onNodeWithText("No conversations yet").assertExists()
-            onAllNodesWithText("New conversation").assertCountEquals(1)
-            onNodeWithText("New conversation").performClick()
+            onAllNodesWithContentDescription("New conversation").assertCountEquals(1)
+            onNodeWithContentDescription("New conversation").performClick()
             assertEquals(listOf("new"), actions.calls)
         }
 
