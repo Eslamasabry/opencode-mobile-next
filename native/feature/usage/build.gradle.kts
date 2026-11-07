@@ -9,6 +9,9 @@ kotlin {
         // KitLimitBar (pace marker) and KitTrendLine (cost chart), B-159/B-160.
         implementation(project(":ui:kit-content"))
     }
+    sourceSets.getByName("desktopTest").dependencies {
+        implementation(project(":ui:gate")) // order 50 renders the usage page against Flutter's goldens
+    }
 }
 
 // Goldens for Usage › Limits and Cost (desktop, Skiko software raster): `-Poc.recordGoldens=true` writes them,

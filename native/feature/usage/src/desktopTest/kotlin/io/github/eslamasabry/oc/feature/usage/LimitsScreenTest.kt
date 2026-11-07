@@ -105,9 +105,11 @@ class LimitsScreenTest {
     fun `B-159 pulling down, or the accessibility action, reads the limits again`() = runComposeUiTest {
         val actions = Actions()
         setContent { Screen(LimitsFixtures.state(), actions) }
-        onNodeWithTag("usage-limits").performSemanticsAction(SemanticsActions.CustomActions) { list ->
-            list.first { it.label == "Refresh" }.action()
-        }
+        val refresh =
+            onNodeWithTag("usage-limits").fetchSemanticsNode().config[SemanticsActions.CustomActions].first {
+                it.label == "Refresh"
+            }
+        runOnIdle { refresh.action() }
         assertEquals(1, actions.refreshes)
     }
 
