@@ -333,6 +333,15 @@ internal class Oc2Gateway(
     ): Outcome<WorkspaceProject> =
         worktrees.rename(projectId, projectDirectory, name, clock.now().toEpochMilliseconds())
 
+    /**
+     * B-164: "Always allowed actions" (Flutter ops_sessions.dart listSavedPermissions): the current project's saved
+     * grants, so a 2.1.4 always-allow rule stays visible and removable after the update.
+     */
+    override suspend fun savedPermissions(): Outcome<ImmutableList<SavedPermission>> = savedGrants()
+
+    /** B-164: Flutter ops_sessions.dart removeSavedPermission (`DELETE /api/permission/saved/{id}`). */
+    override suspend fun removeSavedPermission(id: String): Outcome<Unit> = revokeGrant(id)
+
     /** Flutter ops_sessions.dart: OpenCode 2 makes no share link (`sessionShare` is off). */
     override suspend fun shareSession(id: SessionId): Outcome<String?> = unavailable("sessionShare")
 
@@ -2348,7 +2357,7 @@ internal class Oc2Gateway(
                 sessionCompact = false,
                 persistentPermissionGrants = false,
                 permissionRequests = true,
-                savedPermissionList = false,
+                savedPermissionList = true,
                 messageCompletionEndsRun = false,
                 sessionRevert = true,
                 sessionImportExport = true,

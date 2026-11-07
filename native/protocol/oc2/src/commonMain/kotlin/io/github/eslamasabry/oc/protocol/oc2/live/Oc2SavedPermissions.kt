@@ -9,8 +9,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.*
 
 /**
- * Flutter ops_sessions.dart's current-project saved grants; all requests retain the gateway's
- * location.
+ * Flutter ops_sessions.dart's current-project saved grants. Only `/project/current` carries the gateway's location;
+ * `/permission/saved` is resolved by project id and never carries one (plan 04, map/protocols.md).
  */
 internal suspend fun Oc2Gateway.savedGrants(): Outcome<ImmutableList<SavedPermission>> {
     val at = location.value
@@ -22,7 +22,7 @@ internal suspend fun Oc2Gateway.savedGrants(): Outcome<ImmutableList<SavedPermis
     val reply =
         json(
             "/permission/saved",
-            query = loc(at, mapOf("projectID" to id?.takeIf(String::isNotBlank))),
+            query = mapOf("projectID" to id?.takeIf(String::isNotBlank)),
         )
     if (reply is Outcome.Failed) return reply
     val raw = (reply as Outcome.Ok).value
@@ -44,10 +44,5 @@ internal suspend fun Oc2Gateway.savedGrants(): Outcome<ImmutableList<SavedPermis
 
 internal suspend fun Oc2Gateway.revokeGrant(id: String): Outcome<Unit> {
     if (id.isBlank()) return Failure.Refused(RefusalReason.InvalidAddress).failed()
-    return json(
-            "/permission/saved/${id.encodeURLPathPart()}",
-            HttpMethod.Delete,
-            query = loc(location.value),
-        )
-        .map {}
+    return json("/permission/saved/${id.encodeURLPathPart()}", HttpMethod.Delete).map {}
 }
