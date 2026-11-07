@@ -319,10 +319,6 @@
     <string name="kitCapPhoneBuiltinWhy">This phone has no server of its own yet.</string>
     <string name="kitCapPhoneBuiltinEnable">Set up this phone</string>
     <string name="kitCapPhoneBuiltinOffer">Run agents right on this phone. Set it up?</string>
-    <string name="kitCapPhoneTermuxTitle">Server in Termux</string>
-    <string name="kitCapPhoneTermuxWhy">Needs Termux on this phone.</string>
-    <string name="kitCapPhoneTermuxEnable">Set up with Termux</string>
-    <string name="kitCapPhoneTermuxOffer">Run this phone's server in Termux instead?</string>
     <string name="kitCapPhoneAnyTitle">Server on this phone</string>
     <string name="kitCapPhoneAnyWhy">Needs a server running on this phone.</string>
     <string name="kitCapModelAuthTitle">Model sign-in</string>
@@ -339,10 +335,6 @@
     <string name="kitCapTeamControlWhy">Answer this on the computer that runs the team.</string>
     <string name="kitCapTeamControlEnable">See how to set it up</string>
     <string name="kitCapTeamControlOffer">Control the team from here once the computer is set up. See how?</string>
-    <string name="kitCapClaudeLocalTitle">Claude Code on this phone</string>
-    <string name="kitCapClaudeLocalWhy">Needs Termux on this phone and a Claude subscription.</string>
-    <string name="kitCapClaudeLocalEnable">Add Claude Code</string>
-    <string name="kitCapClaudeLocalOffer">Add Claude Code to this phone? It needs a Claude subscription.</string>
     <string name="kitCapVoiceModelTitle">Voice typing</string>
     <string name="kitCapVoiceModelWhy">Needs a voice model on this phone.</string>
     <string name="kitCapVoiceModelEnable">Download voice model</string>
@@ -403,7 +395,6 @@
     <string name="kitCapFlagPromptAttachmentsTitle">Attach photos and files</string>
     <string name="kitCapFlagPromptAttachmentsWhy">This server can't take photos or files with a prompt.</string>
     <string name="kitHostThisPhone">this phone</string>
-    <string name="kitHostTermux">Termux</string>
     <string name="kitHostOpenCode2">computers with OpenCode 2</string>
     <string name="kitHostCodex">Codex</string>
     <string name="kitHostPaseo">Paseo</string>

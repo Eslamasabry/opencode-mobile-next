@@ -5,4 +5,26 @@
     <string name="e7LocaleUiClose">閉じる</string>
     <string name="kitComposerStop">返信を停止</string>
     <string name="chatsNewPrompt">何に取り組みましょうか？</string>
+    <string name="termuxPermissionDenied">Android がこのアプリに Termux でのコマンド実行を許可しませんでした。</string>
+    <string name="e7SetupTermuxNoAnswer">Termux から応答がありませんでした。「コピーして Termux を開く」をタップし、Termux に行を貼り付けて Enter を押してから、ここに戻ってください。</string>
+    <string name="e7SetupTermuxOutdated">この Termux は古すぎて、アプリから使えません。最新版をインストールしてから、「セットアップを続ける」をタップしてください。</string>
+    <string name="termuxInAppInsteadDetail">新しく始めます。このアプリ内で動くので Termux は不要です。</string>
+    <string name="termuxGuideTitle">Termux を一度だけ接続</string>
+    <string name="e7SetupCopyOpenTermux">コピーして Termux を開く</string>
+    <string name="e7SetupGetTermux">Termux を入手</string>
+    <string name="e7SetupInstallTermuxDetail">Termux の最新の F-Droid 版をインストールしてから、ここに戻ってください。</string>
+    <string name="e7SetupSetupNotStarted">Termux は開きましたが、セットアップが始まりませんでした。もう一度試してください。それでも同じ場合は、エラーレポートをコピーしてください。</string>
+    <string name="e7SetupCheckingTermuxShort">Termux を確認中…</string>
+    <string name="phoneSetupStartUseTermux">代わりに Termux を使う</string>
+    <string name="phoneSetupStartTermuxHeadline">OpenCode は Termux でセットアップ済みです</string>
+    <string name="phoneSetupStartTermuxBody">以前に Termux でセットアップしたものです。接続すれば引き続き使えます。</string>
+    <string name="phoneSetupStartUseTermuxOne">Termux のものを使う</string>
+    <string name="phoneSetupStartUseTermuxOneDetail">OpenCode は Termux にもセットアップされています。代わりにそちらに接続します。</string>
+    <string name="phoneSetupStartTermuxNotAllowed">Termux はインストールされていますが、このアプリはまだ許可されていません。Termux 側の設定を完了してください。</string>
+    <string name="phoneSetupTermuxAllowHow">Termux で、コピーした行を貼り付けて Enter を押してください。</string>
+    <string name="phoneSetupTermuxLeaveHint">アプリを離れても大丈夫です。Termux は動き続け、戻ってくるとこの一覧は現在の状況から表示されます。</string>
+    <string name="phoneSetupTermuxCost">初回は約 10〜15 分、Termux のストレージを使用します</string>
+    <string name="phoneSetupStartTermuxProgressHeadline">Termux でのセットアップは %1$d% 完了</string>
+    <string name="phoneSetupTermuxGetCurrent">最新の Termux を入手</string>
+    <string name="phoneSetupTermuxOtherRuntime">Termux では別の OpenCode がすでに動いています。「このスマートフォン上で」で切り替えてから、セットアップを続けてください。</string>
 </resources>

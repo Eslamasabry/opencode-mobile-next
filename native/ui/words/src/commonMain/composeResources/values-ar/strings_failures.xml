@@ -24,7 +24,6 @@
     <string name="e7ConnectionFailure22">استخدم شهادة من جهة موثوقة، أو عنوان Tailscale Serve.</string>
     <string name="e7ConnectionFailure23">للشهادة الموقّعة ذاتيًا، عدّل هذا الخادم وتحقق من بصمتها قبل الوثوق بها.</string>
     <string name="e7ConnectionFailure24">لا خدمة تستقبل الاتصالات على هذا الجهاز</string>
-    <string name="e7ConnectionFailure26">هل تشغّل OpenCode في Termux؟ افتح Termux وتأكّد من أن الخادم ما زال قيد التشغيل.</string>
     <string name="e7ConnectionFailure27">هل تستخدم adb reverse أو إعادة توجيه SSH؟ تأكّد من أن النفق ما زال متصلًا، ثم أعد المحاولة.</string>
     <string name="e7ConnectionFailure28">هل تريد الاتصال بكمبيوتر آخر؟ غيّر عنوان الخادم إلى عنوان HTTPS الخاص به أو أعد الاقتران.</string>
     <string name="e7ConnectionFailure29">لم يستجب الخادم في الوقت المحدد</string>
@@ -60,7 +59,6 @@
     <string name="agentErrorServerDiskFull">نفدت مساحة القرص على الجهاز الذي يشغّل OpenCode.</string>
     <string name="agentErrorServerDiskFullHint">حرّر بعض المساحة هناك ثم حاول مجددًا.</string>
     <string name="phoneServerStoppedTitle">الخادم على هذا الهاتف متوقف</string>
-    <string name="phoneServerStoppedBody">يتوقف عند إعادة تشغيل الهاتف أو عندما يغلق Android تطبيق Termux لتوفير البطارية. محادثاتك محفوظة؛ شغّله مجددًا للمتابعة.</string>
     <string name="inAppServerStoppedTitle">OpenCode داخل التطبيق متوقف</string>
     <string name="inAppServerStoppedBody">يتوقف عند إغلاق التطبيق لفترة أو تحديثه. محادثاتك محفوظة؛ شغّله مجددًا للمتابعة.</string>
     <string name="inAppServerNotRespondingTitle">OpenCode داخل التطبيق لا يستجيب</string>

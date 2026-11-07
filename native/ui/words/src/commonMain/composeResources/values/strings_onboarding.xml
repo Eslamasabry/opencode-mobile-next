@@ -2,9 +2,7 @@
 <!-- Converted once from lib/l10n/app_en.arb by native/tools/strings (plan 06 §13.3).
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
-    <string name="setupOutputWaiting">Waiting for Termux output…</string>
     <string name="demoSetUpServer">Set up your own server</string>
-    <string name="termuxGuideTitle">Connect Termux once</string>
     <string name="demoTaskTitle">Try a small change</string>
     <string name="demoTaskInstruction">Send the sample prompt below, then review the proposed edit.</string>
     <string name="setupSwitchProgressTitle">Switching to %1$s</string>
@@ -15,14 +13,12 @@
     <string name="e7SetupFollowLog">Follow the server log</string>
     <string name="e7SetupVerifyContinue">Verify &amp; continue</string>
     <string name="e7SetupAccessibleTerminal">Use accessible transcript and input</string>
-    <string name="e7SetupCopyOpenTermux">Copy &amp; open Termux</string>
     <string name="e7SetupStopTerminalDetail">The running process and its child processes will be terminated.</string>
     <string name="e7SetupObservedVersionSaveFailed">The local server is ready, but its observed version could not be saved. Refresh setup to try again.</string>
     <string name="e7SetupConfirmUpdate">Update managed OpenCode?</string>
     <string name="e7SetupInstallServiceDetail">Official installer plus a systemd user service that survives closed terminals and reboots.</string>
     <string name="e7SetupUpdateHost">Update OpenCode on the host</string>
     <string name="e7SetupKeepAfterLogout">Keep it running after logout</string>
-    <string name="e7SetupGetTermux">Get Termux</string>
     <string name="e7SetupRestartServer">Restart the server</string>
     <string name="e7SetupResumeSetup">Retry — resumes where setup left off</string>
     <string name="e7SetupHidePassword">Hide server password</string>
@@ -30,17 +26,13 @@
     <string name="e7SetupFirstSetupDuration">First-time setup can take 10–15 minutes. You can leave this screen and return; setup keeps running.</string>
     <string name="e7SetupNoTerminals">No terminal processes</string>
     <string name="e7SetupInstallService">Install OpenCode as a background service</string>
-    <string name="e7SetupInstallTermuxDetail">Install the current F-Droid build of Termux, then return here.</string>
     <string name="e7SetupStopBeforeUpdate">Stop active generation before updating OpenCode.</string>
     <string name="e7SetupRestartingLocal">Restarting the local server</string>
     <string name="e7SetupInteractiveTerminal">Use interactive terminal</string>
     <string name="e7SetupInstallingUbuntu">Setting up Ubuntu</string>
-    <string name="e7SetupWaitingTermux">Waiting for Termux to respond. This can take a little while.</string>
     <string name="e7SetupPastePassword">Paste server password</string>
     <string name="e7SetupSavingLocal">Saving local server settings</string>
     <string name="e7SetupCopyFailureReport">Copy failure report</string>
-    <string name="e7SetupStartingSetup">Starting setup in Termux</string>
-    <string name="e7SetupSetupNotStarted">Termux opened but the setup did not start. Retry once; if it happens again, copy the failure report.</string>
     <string name="e7SetupStepUnavailable">not yet available</string>
     <string name="e7SetupUpdateHostDetail">When the server reports an update, Settings offers the native upgrade first; this is the host-side equivalent.</string>
     <string name="e7SetupPreparingModels">Getting models ready</string>
@@ -53,10 +45,7 @@
     <string name="e7SetupTerminalActions">Terminal actions</string>
     <string name="e7SetupReadPassword">Read the server password for this app</string>
     <string name="e7SetupStartInstalled">Start installed OpenCode?</string>
-    <string name="e7SetupCheckingTermux">Checking Termux connection</string>
-    <string name="e7SetupCheckingTermuxShort">Checking Termux...</string>
     <string name="e7SetupLinuxService">Set up OpenCode 2</string>
-    <string name="e7SetupSetupLost">Lost track of the setup running in Termux</string>
     <string name="e7SetupReportCopied">Failure report copied.</string>
     <string name="e7SetupAppSettings">Allow the permission in Settings</string>
     <string name="e7SetupAndroidOnly">Setup on this phone is Android only</string>
@@ -70,12 +59,10 @@
     <string name="e7SetupPairingInstructions">On your computer run “opencode2 pair”, then paste or scan the code it prints.</string>
     <string name="e7SetupHostDaily">Day-to-day — run on your computer</string>
     <string name="e7SetupReadingProgress">Reading setup progress</string>
-    <string name="e7SetupVerifyTermuxFailed">Termux bridge verification failed.</string>
     <string name="e7SetupUbuntuOnly">Ubuntu is installed. OpenCode is not installed yet.</string>
     <string name="e7SetupUpdateInterruption">The server will be briefly unavailable. Active generation should be stopped first.</string>
     <string name="e7SetupRunningOnPhone">OpenCode is running on this phone.</string>
     <string name="e7SetupLocalStopped">The local server is stopped. Its installed files are kept.</string>
-    <string name="e7SetupUnsupportedSetup">Setting up on the device itself works only on Android phones. On this computer, start OpenCode yourself and add it as a server.</string>
     <string name="e7SetupSendKey">Sends this key to the terminal</string>
     <string name="e7SetupRemoveTerminal">Remove terminal?</string>
     <string name="e7SetupElapsedSeconds">%1$ds elapsed</string>
@@ -103,7 +90,6 @@
     <string name="e7SetupIncludeScheme">Include https:// or http://. Remote HTTP needs your permission.</string>
     <string name="e7SetupCompleteUrl">Enter a complete server URL, such as https://server.example:4096.</string>
     <string name="e7SetupUrlScheme">Server URLs must use https:// or http://.</string>
-    <string name="e7SetupTermuxUrlScheme">Server URLs must use https://, or http:// for local Termux.</string>
     <string name="e7SetupUrlCredentials">Do not put credentials in the URL. Use the fields below.</string>
     <string name="e7SetupUrlQuery">Remove query parameters and fragments from the server URL.</string>
     <string name="e7SetupUrlPath">Remove the path from the server URL. Enter only its origin.</string>
@@ -126,10 +112,6 @@
     <string name="e7SetupCodexPlain">ws:// works only for a server on this phone. Use a wss:// address for another computer.</string>
     <string name="e7SetupCodexDirectory">Enter an absolute Codex project directory.</string>
     <string name="e7SetupCodexToken">Enter a valid Codex connection token.</string>
-    <string name="e7SetupRefreshPackages">Refreshing Termux packages</string>
-    <string name="e7SetupRepairPackages">Repairing the Termux package set</string>
-    <string name="e7SetupInstallDependencies">Installing Termux dependencies</string>
-    <string name="e7SetupPrepareTermux">Preparing Termux</string>
     <string name="e7SetupInstallUbuntu">Installing Ubuntu environment</string>
     <string name="e7SetupRefreshModels">Refreshing the OpenCode model catalog</string>
     <string name="e7SetupStartLocalServer">Starting the local server</string>
@@ -161,12 +143,6 @@
     <string name="e7SetupRemoveInterruptedFailed">Could not remove the interrupted app-owned Ubuntu install</string>
     <string name="e7SetupCheckStorageFailed">Could not check available storage before setup</string>
     <string name="e7SetupReadStorageFailed">Could not read available storage before setup</string>
-    <string name="e7SetupRepositoryFailed">Could not select the official Termux package repository</string>
-    <string name="e7SetupRepositoryRefreshFailed">Could not refresh packages.termux.dev; check the network and retry</string>
-    <string name="e7SetupRepairFailed">Could not repair the interrupted Termux package transaction</string>
-    <string name="e7SetupUpgradeFailed">Could not complete the safe Termux package upgrade</string>
-    <string name="e7SetupDependenciesFailed">Could not install the Termux dependencies</string>
-    <string name="e7SetupDependenciesUnusable">Termux dependencies are still unusable after the package repair</string>
     <string name="e7SetupUbuntuUnusable">An existing Ubuntu container is not usable; setup will not delete it</string>
     <string name="e7SetupExtractionFailed">Ubuntu Base extraction did not create a usable container</string>
     <string name="e7SetupLockFailed">Setup manager could not claim its launch lock</string>
@@ -177,8 +153,6 @@
     <string name="e7SetupProbeHttp">The address responded, but not like an OpenCode server (HTTP %1$s). Check that the URL points at opencode serve.</string>
     <string name="e7SetupProbeError">Connection test failed: %1$s</string>
     <string name="e7SetupServerExit">OpenCode server exited (code %1$s)</string>
-    <string name="e7SetupCommandFailed">Termux command failed.</string>
-    <string name="e7SetupUnexpectedBridge">Termux returned an unexpected bridge response.</string>
     <string name="e7SetupSetupQueued">Setup queued</string>
     <string name="e7SetupNoSetup">No setup has been started</string>
     <string name="e7SetupManagerMissingAfterLaunch">Setup manager is missing after launch</string>
@@ -246,7 +220,6 @@
     <string name="phoneSetupStartSetUp">Set up OpenCode on this phone</string>
     <string name="phoneSetupStartIncludes">Includes %1$s.</string>
     <string name="phoneSetupStartCustomize">Choose what to install</string>
-    <string name="phoneSetupStartUseTermux">Use Termux instead</string>
     <string name="phoneSetupStartByAddress">Connect to a computer by address</string>
     <string name="phoneSetupStartSetUpHere">Set it up in this app instead</string>
     <string name="phoneSetupStartProgressHeadline">Setup is %1$d% done</string>
@@ -256,8 +229,6 @@
     <string name="phoneSetupStartReadyHeadline">OpenCode is ready on this phone</string>
     <string name="phoneSetupStartReadyBody">Open it to start a conversation.</string>
     <string name="phoneSetupStartOpen">Open</string>
-    <string name="phoneSetupStartTermuxHeadline">OpenCode is already set up in Termux</string>
-    <string name="phoneSetupStartTermuxBody">You set it up with Termux before. Connect to keep using it.</string>
     <string name="phoneSetupStartConnect">Connect</string>
     <string name="phoneSetupStartFailed">That didn't work: %1$s</string>
     <string name="phoneSetupStartCustomizeTitle">Choose what to install</string>
@@ -278,28 +249,20 @@
     <string name="phoneSetupPreflightOpenStorage">Open Storage settings</string>
     <string name="phoneSetupOpenWelcomeShowProgress">Show progress</string>
     <string name="workLoadingLabel">Loading</string>
-    <string name="phoneSetupStartUseTermuxOne">Use the one in Termux</string>
-    <string name="phoneSetupStartUseTermuxOneDetail">OpenCode is also set up in Termux. Connect to it instead.</string>
-    <string name="phoneSetupStartTermuxNotAllowed">Termux is installed but hasn't let this app in yet. Finish its setup.</string>
     <string name="phoneSetupCustomizeAllInstalled">Every optional tool is already on this phone.</string>
     <string name="phoneSetupCustomizeIncluded">Required</string>
     <string name="phoneSetupProgressStopContinueLater">Continue any time from On this phone.</string>
     <string name="setupTerminalTitle">Setup output</string>
     <string name="demoScreenFinished">That's the whole loop: a prompt, a reply and a reviewed edit.</string>
-    <string name="phoneSetupTermuxAllowHow">In Termux, paste the copied line and press Enter.</string>
     <string name="phoneSetupTermuxUpdatingTitle">Updating this phone</string>
     <string name="phoneSetupTermuxStartingTitle">Starting the server</string>
     <string name="phoneSetupTermuxConnecting">Connecting</string>
-    <string name="phoneSetupTermuxLeaveHint">You can leave the app. Termux keeps working and this list picks up where it is when you come back.</string>
-    <string name="phoneSetupTermuxCost">About 10–15 minutes the first time, in Termux's storage</string>
     <string name="voiceComponentRemove">Remove voice typing</string>
     <string name="voiceComponentRemoveTitle">Remove voice typing?</string>
     <string name="voiceComponentRemoveBody">Deletes the speech model and frees %1$s. Voice typing stops working until you add it here again.</string>
     <string name="demoScreenReset">Reset demo</string>
     <string name="demoScreenLeave">Leave demo</string>
     <string name="demoScreenDisclosure">Everything here is simulated on this device. No server, provider, or files are accessed.</string>
-    <string name="phoneSetupStartTermuxProgressHeadline">Setup in Termux is %1$d% done</string>
-    <string name="phoneSetupTermuxGetCurrent">Get the current Termux</string>
     <string name="phoneSetupUnsupportedTitle">Connect a server</string>
     <string name="phoneSetupUnsupportedBody">Setting up on the device itself works only on Android phones. On your computer, run this command, then add the server here with the code it prints.</string>
     <string name="setupProgressViewFailedStep">This step didn't finish. What went wrong is under Details.</string>

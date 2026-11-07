@@ -14,7 +14,6 @@
     <string name="mcpSavedStatus">Saved in OpenCode</string>
     <string name="mcpRetryReconnect">Try reconnecting again</string>
     <string name="mcpStillDisconnected">OpenCode is still disconnected. Try again.</string>
-    <string name="managedHealthLifetime">Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.</string>
     <string name="monitorSession">Conversation</string>
     <string name="monitorUnknown">Unknown</string>
     <string name="monitorLastChecked">Last checked</string>
@@ -32,7 +31,6 @@
     <string name="managedRecoverySettingsUnreadable">Recovery settings could not be read. Check the server before enabling recovery.</string>
     <string name="managedRecoveryEnableFailed">Could not enable recovery. Start the managed server, then try again.</string>
     <string name="managedRecoveryOwnershipChanged">The managed operation changed. Check the server before enabling recovery again.</string>
-    <string name="managedRecoveryUncertain">Recovery paused because Termux did not confirm the result. Refresh to continue.</string>
     <string name="managedRecoveryRetryDisable">Try disabling recovery again</string>
     <string name="codexConnectionVerified">Connection verified. Save and connect to continue.</string>
     <string name="codexApprovalRecoveryNotice">After reconnecting, review any pending approvals on your computer.</string>

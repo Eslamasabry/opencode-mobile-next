@@ -154,7 +154,6 @@
     <string name="integrationsSignInUncertainNext">Revisa el servidor antes de empezar de nuevo</string>
     <string name="filesAccessNeededTitle">Archivos ocultos</string>
     <string name="filesAccessNeededBody">Esta carpeta está en el almacenamiento compartido del teléfono y la app aún no puede leer la mayoría de sus archivos. Solo se muestran los elementos ocultos.</string>
-    <string name="filesAccessNeededTermuxBody">Esta carpeta está en el almacenamiento compartido del teléfono y Termux aún no puede leer la mayoría de sus archivos. Solo se muestran los elementos ocultos.</string>
     <string name="folderBrowserPlaceLabel">Lugar</string>
     <string name="folderBrowserPlaceProjects">Espacio de proyectos</string>
     <string name="folderBrowserPlacePhone">Este teléfono</string>

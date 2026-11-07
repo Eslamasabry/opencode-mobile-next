@@ -80,9 +80,6 @@
     <string name="usageWidgetTitle">Usage widget</string>
     <string name="quotaMonitorSourceChanged">The account on this server changed, so checks stopped. Open Remaining usage on that server and read it again.</string>
     <string name="openCodeConnectionLabel">OpenCode</string>
-    <string name="termuxGuideOpenFailed">The command was copied, but Termux could not open. Open Termux yourself or try Copy &amp; open Termux again.</string>
-    <string name="termuxGuideCopyOpenFailed">Could not copy the command or open Termux.</string>
-    <string name="termuxPermissionDenied">Android didn't let this app run commands in Termux.</string>
     <string name="launchShortcutWaiting">Connecting to the saved server. The new conversation opens when it is ready.</string>
     <string name="launchShortcutNoServer">Choose a server, then start a new conversation.</string>
     <string name="launchShortcutReentry">Enter the credentials for the saved server, then start a new conversation.</string>
@@ -215,7 +212,6 @@
     <string name="e7SetupNoOutput">No terminal output yet.</string>
     <string name="e7SetupOpenSetupGuide">Open the setup guide</string>
     <string name="e7SetupCameraFailedDetail">Another app may be holding the camera. Pasting the pairing code works either way.</string>
-    <string name="e7SetupTermuxNoAnswer">Termux didn't answer. Tap Copy &amp; open Termux, paste the line in Termux and press Enter, then come back here.</string>
     <string name="e7SetupHttpsHint">Prefer HTTPS. Remote HTTP needs your permission for each server.</string>
     <string name="e7SetupPasteInstead">Paste it instead</string>
     <string name="e7SetupEndInputKey">End of input, Control D</string>
@@ -223,7 +219,6 @@
     <string name="e7SetupServerOperation">Server operation in progress</string>
     <string name="e7SetupUnsavedProfile">The server has not been saved.</string>
     <string name="e7SetupCheckingInstall">Checking installed environment...</string>
-    <string name="e7SetupInspectTermuxFailed">Android could not inspect Termux.</string>
     <string name="e7SetupUsername">Username (optional)</string>
     <string name="e7SetupSaveToFinish">Connected — save to finish.</string>
     <string name="e7SetupPasswordStartupHint">Shown when the server starts. Leave empty if it has none.</string>
@@ -236,7 +231,6 @@
     <string name="e7SetupCameraFailed">The camera could not be opened</string>
     <string name="e7SetupCameraDisabled">Camera access is turned off</string>
     <string name="e7SetupPastePairing">Paste pairing code</string>
-    <string name="e7SetupThisDevice">This device (Termux)</string>
     <string name="e7SetupTransportReconnecting">The server transport is reconnecting.</string>
     <string name="e7SetupMissingPasswordShort">The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.</string>
     <string name="e7SetupScanPairing">Scan pairing code</string>
@@ -249,7 +243,6 @@
     <string name="e7SetupInputDisconnected">Input is unavailable while disconnected.</string>
     <string name="e7SetupCameraPrivacy">The camera is used only to read the QR that opencode2 pair prints, and only while this screen is open. You can paste the code instead — it does exactly the same thing.</string>
     <string name="e7SetupIsV2">This is an OpenCode 2 server.</string>
-    <string name="e7SetupTermuxOutdated">This Termux is too old for the app to use. Install the current one, then tap Continue setup.</string>
     <string name="e7SetupCameraNeeded">Camera access is needed to scan</string>
     <string name="e7SetupPairingDesktopHint">Check that the server is running, and that the address it printed is one this machine can reach.</string>
     <string name="e7SetupAboutNotices">About and open source notices</string>
@@ -510,7 +503,6 @@
     <string name="productErrorUnexpected">The server's answer didn't make sense to the app. Try again, or report the problem.</string>
     <string name="productErrorDevice">Something on this device didn't work. Try again.</string>
     <string name="productErrorStorage">The app couldn't read or save a file on this device.</string>
-    <string name="productErrorTermux">Termux didn't finish that. Check that Termux is installed and open, then try again.</string>
     <string name="productErrorDetailsLabel">Error details</string>
     <string name="productErrorServer">The server had a problem (error %1$d). Try again in a moment.</string>
     <string name="consentSaveFailed">Your answer couldn't be saved on this phone, so nothing was changed. Try again.</string>
@@ -553,7 +545,6 @@
     <string name="commandSheetAgentFallback">This agent</string>
     <string name="mcpCatalogTitle">MCP catalogue</string>
     <string name="termuxInAppInstead">Set up On this phone instead</string>
-    <string name="termuxInAppInsteadDetail">A fresh start that runs inside this app. No Termux needed.</string>
     <string name="freeModelSignIn">Add an API key</string>
     <string name="integrationsSignedInUnusable">Signed in, but this server can't use it</string>
     <string name="kitTurnLiveSeconds">%1$d s</string>
@@ -561,7 +552,6 @@
     <string name="kitComposerRailRetry">Try again</string>
     <string name="addServerCleartextWarning">This private network or Tailscale address uses plain HTTP. Your password and code travel unencrypted at the HTTP layer. Use it only on a private network you trust or through Tailscale; it is risky on public Wi-Fi.</string>
     <string name="storageAccessAllow">Allow access to files</string>
-    <string name="storageTermuxAllow">Open Termux</string>
     <string name="phoneScanGit">Git</string>
     <string name="chatsHomeAllProjects">All projects</string>
     <string name="chatsHomeNeedsYou">Needs you</string>

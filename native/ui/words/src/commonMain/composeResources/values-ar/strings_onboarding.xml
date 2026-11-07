@@ -2,9 +2,7 @@
 <!-- Converted once from lib/l10n/app_ar.arb by native/tools/strings (plan 06 §13.3).
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
-    <string name="setupOutputWaiting">بانتظار مخرجات Termux…</string>
     <string name="demoSetUpServer">إعداد خادمك الخاص</string>
-    <string name="termuxGuideTitle">ربط Termux مرة واحدة</string>
     <string name="demoTaskTitle">جرّب تغييرًا بسيطًا</string>
     <string name="demoTaskInstruction">أرسل الطلب النموذجي أدناه، ثم راجع التعديل المقترح.</string>
     <string name="setupSwitchProgressTitle">جارٍ التبديل إلى %1$s</string>
@@ -15,14 +13,12 @@
     <string name="e7SetupFollowLog">متابعة سجل الخادم</string>
     <string name="e7SetupVerifyContinue">التحقق والمتابعة</string>
     <string name="e7SetupAccessibleTerminal">استخدام سجل وإدخال ميسّرين</string>
-    <string name="e7SetupCopyOpenTermux">النسخ وفتح Termux</string>
     <string name="e7SetupStopTerminalDetail">ستتوقف العملية الجارية والعمليات التابعة لها.</string>
     <string name="e7SetupObservedVersionSaveFailed">الخادم المحلي جاهز، لكن تعذّر حفظ الإصدار الذي رصده التطبيق. حدّث الإعداد للمحاولة مجددًا.</string>
     <string name="e7SetupConfirmUpdate">تحديث OpenCode الذي يديره التطبيق؟</string>
     <string name="e7SetupInstallServiceDetail">أداة التثبيت الرسمية مع خدمة مستخدم systemd تستمر بعد إغلاق الطرفية وإعادة التشغيل.</string>
     <string name="e7SetupUpdateHost">تحديث OpenCode على الكمبيوتر المضيف</string>
     <string name="e7SetupKeepAfterLogout">متابعة التشغيل بعد تسجيل الخروج</string>
-    <string name="e7SetupGetTermux">الحصول على Termux</string>
     <string name="e7SetupRestartServer">إعادة تشغيل الخادم</string>
     <string name="e7SetupResumeSetup">المحاولة مجددًا — يستأنف الإعداد من حيث توقف</string>
     <string name="e7SetupHidePassword">إخفاء كلمة مرور الخادم</string>
@@ -30,17 +26,13 @@
     <string name="e7SetupFirstSetupDuration">قد يستغرق الإعداد الأول من 10 إلى 15 دقيقة. يمكنك مغادرة هذه الشاشة والعودة إليها؛ سيستمر الإعداد.</string>
     <string name="e7SetupNoTerminals">لا توجد عمليات في الطرفية</string>
     <string name="e7SetupInstallService">تثبيت OpenCode كخدمة في الخلفية</string>
-    <string name="e7SetupInstallTermuxDetail">ثبّت الإصدار الحالي من Termux عبر F-Droid، ثم عُد إلى هنا.</string>
     <string name="e7SetupStopBeforeUpdate">أوقف التوليد الجاري قبل تحديث OpenCode.</string>
     <string name="e7SetupRestartingLocal">جارٍ إعادة تشغيل الخادم المحلي</string>
     <string name="e7SetupInteractiveTerminal">استخدام الطرفية التفاعلية</string>
     <string name="e7SetupInstallingUbuntu">جارٍ إعداد Ubuntu</string>
-    <string name="e7SetupWaitingTermux">في انتظار استجابة Termux. قد يستغرق ذلك بعض الوقت.</string>
     <string name="e7SetupPastePassword">لصق كلمة مرور الخادم</string>
     <string name="e7SetupSavingLocal">جارٍ حفظ إعدادات الخادم المحلي</string>
     <string name="e7SetupCopyFailureReport">نسخ تقرير الخطأ</string>
-    <string name="e7SetupStartingSetup">جارٍ بدء الإعداد في Termux</string>
-    <string name="e7SetupSetupNotStarted">فُتح Termux لكن الإعداد لم يبدأ. حاول مجددًا؛ وإذا تكررت المشكلة، انسخ تقرير الخطأ.</string>
     <string name="e7SetupStepUnavailable">غير متاح بعد</string>
     <string name="e7SetupUpdateHostDetail">عندما يعلن الخادم عن تحديث، تتيح الإعدادات تحديثه مباشرةً. هذا الأمر ينفّذ التحديث نفسه على الكمبيوتر المضيف.</string>
     <string name="e7SetupPreparingModels">جارٍ تجهيز النماذج</string>
@@ -53,10 +45,7 @@
     <string name="e7SetupTerminalActions">إجراءات الطرفية</string>
     <string name="e7SetupReadPassword">عرض كلمة مرور الخادم لهذا التطبيق</string>
     <string name="e7SetupStartInstalled">تشغيل OpenCode المثبّت؟</string>
-    <string name="e7SetupCheckingTermux">جارٍ التحقق من الاتصال بـ Termux</string>
-    <string name="e7SetupCheckingTermuxShort">جارٍ التحقق من Termux…</string>
     <string name="e7SetupLinuxService">إعداد OpenCode 2</string>
-    <string name="e7SetupSetupLost">تعذّرت متابعة الإعداد الجاري في Termux</string>
     <string name="e7SetupReportCopied">تم نسخ تقرير الخطأ.</string>
     <string name="e7SetupAppSettings">إعدادات التطبيق</string>
     <string name="e7SetupAndroidOnly">الإعداد على هذا الهاتف متاح على Android فقط</string>
@@ -70,12 +59,10 @@
     <string name="e7SetupPairingInstructions">شغّل «opencode2 pair» على حاسوبك، ثم الصق الرمز الذي يعرضه أو امسحه بالكاميرا.</string>
     <string name="e7SetupHostDaily">الاستخدام اليومي — نفّذ على الكمبيوتر</string>
     <string name="e7SetupReadingProgress">جارٍ قراءة تقدّم الإعداد</string>
-    <string name="e7SetupVerifyTermuxFailed">تعذّر التحقق من الاتصال بـ Termux.</string>
     <string name="e7SetupUbuntuOnly">Ubuntu مثبّت، لكن OpenCode لم يُثبّت بعد.</string>
     <string name="e7SetupUpdateInterruption">سيتوقف الخادم لفترة قصيرة. أوقف التوليد الجاري أولًا.</string>
     <string name="e7SetupRunningOnPhone">يعمل OpenCode على هذا الهاتف.</string>
     <string name="e7SetupLocalStopped">الخادم المحلي متوقف. ملفاته المثبتة محفوظة.</string>
-    <string name="e7SetupUnsupportedSetup">يتطلب الإعداد على الجهاز تطبيق Termux على Android. على هذا الكمبيوتر، شغّل `opencode serve` ثم أضفه كخادم.</string>
     <string name="e7SetupSendKey">يرسل هذا المفتاح إلى الطرفية</string>
     <string name="e7SetupRemoveTerminal">إزالة الطرفية؟</string>
     <string name="e7SetupElapsedSeconds">انقضت %1$d ث</string>
@@ -103,7 +90,6 @@
     <string name="e7SetupIncludeScheme">أضف https:// أو http://. يتطلب HTTP البعيد إذنك.</string>
     <string name="e7SetupCompleteUrl">أدخل عنوان URL كاملًا للخادم، مثل https://server.example:4096.</string>
     <string name="e7SetupUrlScheme">يجب أن تبدأ عناوين الخادم بـ https:// أو http://.</string>
-    <string name="e7SetupTermuxUrlScheme">يجب أن تستخدم عناوين الخوادم https://، أو http:// لـ Termux المحلي.</string>
     <string name="e7SetupUrlCredentials">لا تضع بيانات الدخول في عنوان URL. استخدم الحقول أدناه.</string>
     <string name="e7SetupUrlQuery">أزل معاملات الاستعلام والجزء الذي يبدأ بـ # من عنوان URL للخادم.</string>
     <string name="e7SetupUrlPath">أزل المسار من عنوان URL للخادم. أدخل البروتوكول والمضيف والمنفذ فقط.</string>
@@ -126,10 +112,6 @@
     <string name="e7SetupCodexPlain">يُسمح باتصال WebSocket غير المشفّر لخادم Codex المحلي فقط.</string>
     <string name="e7SetupCodexDirectory">أدخل مسارًا مطلقًا لمجلد مشروع Codex.</string>
     <string name="e7SetupCodexToken">أدخل رمز اتصال صالحًا لـ Codex.</string>
-    <string name="e7SetupRefreshPackages">جارٍ تحديث قائمة حزم Termux</string>
-    <string name="e7SetupRepairPackages">جارٍ إصلاح حزم Termux</string>
-    <string name="e7SetupInstallDependencies">جارٍ تثبيت متطلبات Termux</string>
-    <string name="e7SetupPrepareTermux">جارٍ تجهيز Termux</string>
     <string name="e7SetupInstallUbuntu">جارٍ تثبيت Ubuntu</string>
     <string name="e7SetupRefreshModels">جارٍ تحديث قائمة نماذج OpenCode</string>
     <string name="e7SetupStartLocalServer">جارٍ تشغيل الخادم المحلي</string>
@@ -161,12 +143,6 @@
     <string name="e7SetupRemoveInterruptedFailed">تعذّرت إزالة تثبيت Ubuntu غير المكتمل الذي يملكه التطبيق</string>
     <string name="e7SetupCheckStorageFailed">تعذّر التحقق من مساحة التخزين المتاحة قبل الإعداد</string>
     <string name="e7SetupReadStorageFailed">تعذّرت قراءة مساحة التخزين المتاحة قبل الإعداد</string>
-    <string name="e7SetupRepositoryFailed">تعذّر اختيار مستودع حزم Termux الرسمي</string>
-    <string name="e7SetupRepositoryRefreshFailed">تعذّر تحديث packages.termux.dev؛ تحقّق من الشبكة وحاول مجددًا</string>
-    <string name="e7SetupRepairFailed">تعذّر إصلاح عملية حزم Termux غير المكتملة</string>
-    <string name="e7SetupUpgradeFailed">تعذّر إكمال الترقية الآمنة لحزم Termux</string>
-    <string name="e7SetupDependenciesFailed">تعذّر تثبيت متطلبات Termux</string>
-    <string name="e7SetupDependenciesUnusable">متطلبات Termux ما زالت غير صالحة للاستخدام بعد إصلاح الحزم</string>
     <string name="e7SetupUbuntuUnusable">تثبيت Ubuntu الحالي غير صالح للاستخدام؛ لن يحذفه الإعداد</string>
     <string name="e7SetupExtractionFailed">لم ينتج عن فك ضغط Ubuntu Base تثبيت صالح للاستخدام</string>
     <string name="e7SetupLockFailed">تعذّر على مدير الإعداد حجز عملية تشغيله</string>
@@ -177,8 +153,6 @@
     <string name="e7SetupProbeHttp">استجاب العنوان، لكن ليس كخادم OpenCode (HTTP %1$s). تحقّق من أن عنوان URL يشير إلى opencode serve.</string>
     <string name="e7SetupProbeError">فشل اختبار الاتصال: %1$s</string>
     <string name="e7SetupServerExit">توقف خادم OpenCode (الرمز %1$s)</string>
-    <string name="e7SetupCommandFailed">فشل تنفيذ الأمر في Termux.</string>
-    <string name="e7SetupUnexpectedBridge">أعاد Termux استجابة غير متوقعة للتحقق من الاتصال.</string>
     <string name="e7SetupSetupQueued">الإعداد في قائمة الانتظار</string>
     <string name="e7SetupNoSetup">لم يبدأ أي إعداد بعد</string>
     <string name="e7SetupManagerMissingAfterLaunch">مدير الإعداد غير موجود بعد التشغيل</string>
@@ -258,7 +232,6 @@
     <string name="phoneSetupStartSetUp">ابدأ الإعداد</string>
     <string name="phoneSetupStartIncludes">يشمل %1$s.</string>
     <string name="phoneSetupStartCustomize">تخصيص</string>
-    <string name="phoneSetupStartUseTermux">استخدام Termux بدلًا من ذلك</string>
     <string name="phoneSetupStartByAddress">الاتصال بحاسوب عبر عنوانه</string>
     <string name="phoneSetupStartSetUpHere">إعداده داخل هذا التطبيق بدلًا من ذلك</string>
     <string name="phoneSetupStartProgressHeadline">اكتمل الإعداد بنسبة %1$d٪</string>
@@ -268,8 +241,6 @@
     <string name="phoneSetupStartReadyHeadline">OpenCode جاهز على هذا الهاتف</string>
     <string name="phoneSetupStartReadyBody">افتحه لبدء محادثة.</string>
     <string name="phoneSetupStartOpen">فتح</string>
-    <string name="phoneSetupStartTermuxHeadline">OpenCode مُعدّ مسبقًا في Termux</string>
-    <string name="phoneSetupStartTermuxBody">أعددته عبر Termux من قبل. اتصل لمواصلة استخدامه.</string>
     <string name="phoneSetupStartConnect">اتصال</string>
     <string name="phoneSetupStartFailed">لم ينجح ذلك: %1$s</string>
     <string name="phoneSetupStartCustomizeTitle">اختر ما تريد تثبيته</string>
@@ -290,28 +261,20 @@
     <string name="phoneSetupPreflightOpenStorage">فتح إعدادات التخزين</string>
     <string name="phoneSetupOpenWelcomeShowProgress">عرض التقدّم</string>
     <string name="workLoadingLabel">جارٍ التحميل</string>
-    <string name="phoneSetupStartUseTermuxOne">استخدام النسخة في Termux</string>
-    <string name="phoneSetupStartUseTermuxOneDetail">أُعدّ OpenCode أيضًا في Termux. اتصل به بدلًا من ذلك.</string>
-    <string name="phoneSetupStartTermuxNotAllowed">Termux مثبّت، لكنه لم يسمح لهذا التطبيق بالوصول بعد. أكمل إعداده.</string>
     <string name="phoneSetupCustomizeAllInstalled">كل الأدوات الاختيارية موجودة على هذا الهاتف بالفعل.</string>
     <string name="phoneSetupCustomizeIncluded">مطلوب</string>
     <string name="phoneSetupProgressStopContinueLater">يمكنك المتابعة في أي وقت من «على هذا الهاتف».</string>
     <string name="setupTerminalTitle">مخرجات الإعداد</string>
     <string name="demoScreenFinished">هذه هي الخطوات كاملة: طلب وردّ وتعديل تمت مراجعته.</string>
-    <string name="phoneSetupTermuxAllowHow">في Termux، الصق السطر المنسوخ واضغط Enter.</string>
     <string name="phoneSetupTermuxUpdatingTitle">جارٍ تحديث هذا الهاتف</string>
     <string name="phoneSetupTermuxStartingTitle">جارٍ تشغيل الخادم</string>
     <string name="phoneSetupTermuxConnecting">جارٍ الاتصال</string>
-    <string name="phoneSetupTermuxLeaveHint">يمكنك مغادرة التطبيق. يواصل Termux العمل وتتابع هذه القائمة من الحالة الحالية عند عودتك.</string>
-    <string name="phoneSetupTermuxCost">نحو 10–15 دقيقة في المرة الأولى، في مساحة تخزين Termux</string>
     <string name="voiceComponentRemove">إزالة الكتابة الصوتية</string>
     <string name="voiceComponentRemoveTitle">هل تريد إزالة الكتابة الصوتية؟</string>
     <string name="voiceComponentRemoveBody">يحذف نموذج الكلام ويوفّر %1$s. تتوقف الكتابة الصوتية حتى تضيفها من هنا مجددًا.</string>
     <string name="demoScreenReset">إعادة ضبط العرض التجريبي</string>
     <string name="demoScreenLeave">مغادرة العرض التجريبي</string>
     <string name="demoScreenDisclosure">كل شيء هنا محاكاة على هذا الجهاز. لا يجري الوصول إلى أي خادم أو مزوّد أو ملفات.</string>
-    <string name="phoneSetupStartTermuxProgressHeadline">اكتمل %1$d% من الإعداد في Termux</string>
-    <string name="phoneSetupTermuxGetCurrent">تنزيل أحدث إصدار من Termux</string>
     <string name="phoneSetupUnsupportedTitle">الاتصال بخادم</string>
     <string name="phoneSetupUnsupportedBody">لا يمكن الإعداد على الجهاز نفسه إلا على هواتف Android. شغّل هذا الأمر على حاسوبك، ثم أضف الخادم هنا بالرمز الذي يعرضه.</string>
     <string name="setupProgressViewFailedStep">لم تكتمل هذه الخطوة. ستجد سبب المشكلة في التفاصيل.</string>

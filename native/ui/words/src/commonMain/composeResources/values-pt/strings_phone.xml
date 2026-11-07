@@ -14,6 +14,5 @@
     <string name="aiteamComponentStagePreparing">Preparando o AI Team</string>
     <string name="voiceComponentTitle">Digitação por voz</string>
     <string name="voiceComponentSummary">Fale em vez de digitar, mesmo off-line</string>
-    <string name="phoneSetupTermuxOtherRuntime">O Termux já executa o outro OpenCode. Troque em “Neste celular” e continue a configuração.</string>
     <string name="freeModelNotice">Você está usando o modelo gratuito do OpenCode, que é mais lento. Adicione uma chave de API do seu provedor para usar o seu.</string>
 </resources>

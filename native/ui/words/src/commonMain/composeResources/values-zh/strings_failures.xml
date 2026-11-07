@@ -24,7 +24,6 @@
     <string name="e7ConnectionFailure22">使用受信任机构签发的证书，或 Tailscale Serve 地址。</string>
     <string name="e7ConnectionFailure23">如果是自签名证书，请编辑此服务器并先核对其指纹再信任。</string>
     <string name="e7ConnectionFailure24">此手机上没有响应</string>
-    <string name="e7ConnectionFailure26">在 Termux 中运行 OpenCode？请打开 Termux，检查服务器是否仍在运行。</string>
     <string name="e7ConnectionFailure27">使用了 adb reverse 或 SSH 转发？请检查隧道是否仍然连通，然后重试。</string>
     <string name="e7ConnectionFailure28">要连接另一台计算机？请把服务器改为它的 HTTPS 地址，或重新配对。</string>
     <string name="e7ConnectionFailure29">服务器未及时响应</string>
@@ -58,7 +57,6 @@
     <string name="agentErrorServerDiskFull">运行 OpenCode 的电脑磁盘空间已满。</string>
     <string name="agentErrorServerDiskFullHint">请在那台电脑上释放一些空间，然后重试。</string>
     <string name="phoneServerStoppedTitle">此手机上的服务器已停止</string>
-    <string name="phoneServerStoppedBody">手机重启或 Android 为省电关闭 Termux 时，它会停止。你的对话会保留；请重新启动以继续。</string>
     <string name="inAppServerStoppedTitle">应用内的 OpenCode 已停止</string>
     <string name="inAppServerStoppedBody">应用关闭一段时间或更新后，它会停止。你的对话会保留；请重新启动以继续。</string>
     <string name="inAppServerNotRespondingTitle">应用内的 OpenCode 没有响应</string>

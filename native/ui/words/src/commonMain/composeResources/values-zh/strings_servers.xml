@@ -14,7 +14,6 @@
     <string name="mcpSavedStatus">已保存在 OpenCode 中</string>
     <string name="mcpRetryReconnect">再次尝试重新连接</string>
     <string name="mcpStillDisconnected">OpenCode 仍处于断开状态。请重试。</string>
-    <string name="managedHealthLifetime">Android 可能会停止任一应用。保持手机连接活跃，并不能保证 Termux 服务器整夜持续运行。</string>
     <string name="monitorSession">对话</string>
     <string name="monitorUnknown">未知</string>
     <string name="monitorLastChecked">上次检查</string>
@@ -32,7 +31,6 @@
     <string name="managedRecoverySettingsUnreadable">无法读取恢复设置。启用恢复前请先检查服务器。</string>
     <string name="managedRecoveryEnableFailed">无法启用恢复。请启动托管服务器后重试。</string>
     <string name="managedRecoveryOwnershipChanged">托管操作已变更。再次启用恢复前请先检查服务器。</string>
-    <string name="managedRecoveryUncertain">Termux 未确认结果，恢复已暂停。请刷新以继续。</string>
     <string name="managedRecoveryRetryDisable">再次尝试禁用恢复</string>
     <string name="codexConnectionVerified">连接已验证。保存并连接以继续。</string>
     <string name="codexApprovalRecoveryNotice">重新连接后，请在你的电脑上检查待处理的批准。</string>

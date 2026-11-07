@@ -565,7 +565,6 @@
     <string name="integrationsKeySavedPending">%1$s 的密钥已保存。服务器尚未加载它。</string>
     <string name="filesAccessNeededTitle">文件已隐藏</string>
     <string name="filesAccessNeededBody">此文件夹位于手机的共享存储中，应用暂时无法读取其中大部分文件。只显示隐藏项。</string>
-    <string name="filesAccessNeededTermuxBody">此文件夹位于手机的共享存储中，Termux 暂时无法读取其中大部分文件。只显示隐藏项。</string>
     <string name="folderBrowserPlaceLabel">位置</string>
     <string name="folderBrowserPlaceProjects">项目空间</string>
     <string name="folderBrowserPlacePhone">此手机</string>

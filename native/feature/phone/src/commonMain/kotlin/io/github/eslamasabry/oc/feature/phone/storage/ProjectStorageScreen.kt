@@ -41,11 +41,10 @@ import io.github.eslamasabry.oc.ui.words.res.manageSpaceDeletedLabel
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceExportFirst
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceIntro
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceIntroNothingToExport
-import io.github.eslamasabry.oc.ui.words.res.manageSpaceKeptAll
+import io.github.eslamasabry.oc.ui.words.res.manageSpaceKeptAllComputers
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceKeptComputers
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceKeptGit
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceKeptLabel
-import io.github.eslamasabry.oc.ui.words.res.manageSpaceKeptTermux
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceLostProjects
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceLostServer
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceLostSettings
@@ -334,7 +333,6 @@ public fun ProjectStorageScreen(
                     }
                 if (manageSpace)
                     KitRowGroup(label = stringResource(Res.string.manageSpaceKeptLabel)) {
-                        KitRow(title = stringResource(Res.string.manageSpaceKeptTermux))
                         KitRow(title = stringResource(Res.string.manageSpaceKeptComputers))
                         KitRow(title = stringResource(Res.string.manageSpaceKeptGit))
                     }
@@ -372,7 +370,7 @@ public fun ProjectStorageScreen(
                                         facts.savedServers,
                                     )
                             )
-                            add(stringResource(Res.string.manageSpaceKeptAll))
+                            add(stringResource(Res.string.manageSpaceKeptAllComputers))
                         },
                 )
             else null,

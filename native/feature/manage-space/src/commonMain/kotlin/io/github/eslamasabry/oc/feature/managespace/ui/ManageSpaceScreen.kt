@@ -305,10 +305,6 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                         leadingTiles = true,
                     ) {
                         KitRow(
-                            title = stringResource(Res.string.manageSpaceKeptTermux),
-                            leading = KitRowLeading.Glyph(KitIcons.terminal),
-                        )
-                        KitRow(
                             title = stringResource(Res.string.manageSpaceKeptComputers),
                             leading = KitRowLeading.Glyph(KitIcons.computer),
                         )
@@ -380,7 +376,7 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
                                 )
                                 add(
                                     KitConsequence(
-                                        stringResource(Res.string.manageSpaceKeptAll),
+                                        stringResource(Res.string.manageSpaceKeptAllComputers),
                                         KitConsequenceMark.Kept,
                                     )
                                 )

@@ -2,13 +2,7 @@
 <!-- Converted once from lib/l10n/app_ru.arb by native/tools/strings (plan 06 §13.3).
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
-    <string name="termuxGuideTitle">Подключите Termux один раз</string>
     <string name="setupSwitchProgressTitle">Переключение на %1$s</string>
-    <string name="e7SetupCopyOpenTermux">Скопировать и открыть Termux</string>
-    <string name="e7SetupGetTermux">Установить Termux</string>
-    <string name="e7SetupInstallTermuxDetail">Установите актуальную версию Termux из F-Droid и вернитесь сюда.</string>
-    <string name="e7SetupSetupNotStarted">Termux открылся, но настройка не началась. Повторите попытку один раз; если не получится, скопируйте отчёт об ошибке.</string>
-    <string name="e7SetupCheckingTermuxShort">Проверка Termux…</string>
     <string name="e7SetupAppSettings">Разрешить в настройках</string>
     <string name="e7SetupElapsedSeconds">Прошло %1$d с</string>
     <string name="e7SetupElapsedMinutes">Прошло %1$d мин %2$d с</string>
@@ -53,7 +47,6 @@
     <string name="phoneSetupStartSetUp">Настроить OpenCode на этом телефоне</string>
     <string name="phoneSetupStartIncludes">Включает %1$s.</string>
     <string name="phoneSetupStartCustomize">Выбрать, что установить</string>
-    <string name="phoneSetupStartUseTermux">Использовать Termux</string>
     <string name="phoneSetupStartByAddress">Подключиться к компьютеру по адресу</string>
     <string name="phoneSetupStartSetUpHere">Настроить в этом приложении</string>
     <string name="phoneSetupStartProgressHeadline">Настройка выполнена на %1$d%</string>
@@ -63,8 +56,6 @@
     <string name="phoneSetupStartReadyHeadline">OpenCode готов на этом телефоне</string>
     <string name="phoneSetupStartReadyBody">Откройте его, чтобы начать чат.</string>
     <string name="phoneSetupStartOpen">Открыть</string>
-    <string name="phoneSetupStartTermuxHeadline">OpenCode уже настроен в Termux</string>
-    <string name="phoneSetupStartTermuxBody">Вы уже настраивали его через Termux. Подключитесь, чтобы пользоваться дальше.</string>
     <string name="phoneSetupStartConnect">Подключиться</string>
     <string name="phoneSetupStartFailed">Не получилось: %1$s</string>
     <string name="phoneSetupStartCustomizeTitle">Выбор компонентов</string>
@@ -83,23 +74,15 @@
     <string name="phoneSetupPreflightOpenStorage">Открыть настройки памяти</string>
     <string name="phoneSetupOpenWelcomeShowProgress">Показать ход</string>
     <string name="workLoadingLabel">Загрузка</string>
-    <string name="phoneSetupStartUseTermuxOne">Использовать версию из Termux</string>
-    <string name="phoneSetupStartUseTermuxOneDetail">OpenCode также настроен в Termux. Подключитесь к нему.</string>
-    <string name="phoneSetupStartTermuxNotAllowed">Termux установлен, но ещё не разрешил доступ этому приложению. Завершите его настройку.</string>
     <string name="phoneSetupCustomizeAllInstalled">Все дополнительные инструменты уже есть на этом телефоне.</string>
     <string name="phoneSetupCustomizeIncluded">Обязательно</string>
     <string name="phoneSetupProgressStopContinueLater">Продолжить можно в любой момент в разделе «На этом телефоне».</string>
-    <string name="phoneSetupTermuxAllowHow">В Termux вставьте скопированную строку и нажмите Enter.</string>
     <string name="phoneSetupTermuxUpdatingTitle">Обновление этого телефона</string>
     <string name="phoneSetupTermuxStartingTitle">Запуск сервера</string>
     <string name="phoneSetupTermuxConnecting">Подключение</string>
-    <string name="phoneSetupTermuxLeaveHint">Можно выйти из приложения. Termux продолжит работу, а при возвращении список покажет текущий шаг.</string>
-    <string name="phoneSetupTermuxCost">В первый раз около 10–15 минут, в хранилище Termux</string>
     <string name="voiceComponentRemove">Удалить голосовой ввод</string>
     <string name="voiceComponentRemoveTitle">Удалить голосовой ввод?</string>
     <string name="voiceComponentRemoveBody">Модель распознавания речи будет удалена, освободится %1$s. Голосовой ввод не будет работать, пока вы не добавите его здесь снова.</string>
-    <string name="phoneSetupStartTermuxProgressHeadline">Настройка в Termux выполнена на %1$d%</string>
-    <string name="phoneSetupTermuxGetCurrent">Установить актуальный Termux</string>
     <string name="welcomePhoneCost">%1$s · загрузка %2$s</string>
     <string name="welcomePhoneSetUp">Настроить на этом телефоне</string>
     <string name="welcomePhoneSettingUp">Настройка · %1$d%</string>

@@ -13,7 +13,6 @@
     <string name="homeShellProjectUnavailableShort">%1$s no tiene herramientas de proyecto.</string>
     <string name="chatsNewAgentNeedsProjectsFolder">%1$s solo trabaja en los proyectos de este teléfono. Elige uno de ellos.</string>
     <string name="workRunawayStopped">%1$s detenido</string>
-    <string name="workRunawayStopFailed">No se pudo detener %1$s. Inténtalo de nuevo o deténlo desde Termux.</string>
     <string name="workRunawayHelper">Un proceso %1$s sobrante lleva %2$s ocupado sin nada que hacer</string>
     <string name="workRunawayHelperInProject">Un proceso %1$s sobrante en %2$s lleva %3$s ocupado sin nada que hacer</string>
     <string name="workRunawaySeeRunning">Ver qué se está ejecutando</string>
@@ -70,4 +69,5 @@
     <string name="workServerRestartBodyCommand">El comando en ejecución también se detendrá. Tus conversaciones se conservan.</string>
     <string name="chatsReturnBriefUnknown">No se puede saber qué hay de nuevo en este servidor</string>
     <string name="chatsReturnBriefMore">y %1$d más</string>
+    <string name="workRunawayStopFailedRetry">No se pudo detener %1$s. Inténtalo de nuevo.</string>
 </resources>

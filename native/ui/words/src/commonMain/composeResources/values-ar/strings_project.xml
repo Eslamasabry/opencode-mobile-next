@@ -600,7 +600,6 @@
     <string name="integrationsKeySavedPending">حُفظ مفتاح %1$s. لم يحمّله الخادم بعد.</string>
     <string name="filesAccessNeededTitle">الملفات مخفية</string>
     <string name="filesAccessNeededBody">هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع التطبيق قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط.</string>
-    <string name="filesAccessNeededTermuxBody">هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع Termux قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط.</string>
     <string name="folderBrowserPlaceLabel">المكان</string>
     <string name="folderBrowserPlaceProjects">مساحة المشاريع</string>
     <string name="folderBrowserPlacePhone">هذا الهاتف</string>

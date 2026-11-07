@@ -37,7 +37,7 @@ internal fun RunawayMessage.words(): String =
             stringResource(Res.string.workRunawayHelper, helper, busyFor.words())
         is RunawayMessage.HelperInProject ->
             stringResource(Res.string.workRunawayHelperInProject, helper, project, busyFor.words())
-        is RunawayMessage.StopFailed -> stringResource(Res.string.workRunawayStopFailed, helper)
+        is RunawayMessage.StopFailed -> stringResource(Res.string.workRunawayStopFailedRetry, helper)
     }
 
 @Composable

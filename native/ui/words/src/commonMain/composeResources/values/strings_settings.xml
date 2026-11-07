@@ -122,7 +122,6 @@
     <string name="e7SettingsUi85">Delete drafts?</string>
     <string name="e7SettingsUi86">Drafts deleted</string>
     <string name="e7SettingsUi87">Could not delete the drafts. Check device storage and try again.</string>
-    <string name="e7SettingsUi93">Servers, providers, voice, files, Termux, and updates</string>
     <string name="e7SettingsStorageSummary">%1$s of unsent work — %2$s (%3$s) and %4$s (%5$s). Queued prompts are discarded after %6$d days.</string>
     <plurals name="e7SettingsStorageSummary__queued">
         <item quantity="one">1 queued prompt</item>
@@ -430,7 +429,6 @@
     </plurals>
     <string name="manageSpaceLostSettings__eq0">All settings</string>
     <string name="manageSpaceLostSettings__eq1">1 saved server and all settings</string>
-    <string name="manageSpaceKeptAll">Termux, your computers and anything pushed to git stay</string>
     <string name="manageSpaceWaitForExport">Wait for the export to finish</string>
     <string name="manageSpaceDeletedLabel">Clearing deletes</string>
     <string name="manageSpaceServer">On this phone</string>
@@ -443,7 +441,6 @@
     <string name="manageSpaceSavedServers__eq0">No saved servers</string>
     <string name="manageSpaceSavedServers__eq1">1 saved server</string>
     <string name="manageSpaceKeptLabel">Stays</string>
-    <string name="manageSpaceKeptTermux">Termux and the projects in it</string>
     <string name="manageSpaceKeptComputers">Your computers and their servers</string>
     <string name="manageSpaceKeptGit">Anything you pushed to git</string>
     <plurals name="projectExportDetail">
@@ -786,4 +783,6 @@
     <string name="browserModeCors">The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.</string>
     <!-- E07-S01: Android refused its battery question; its battery settings page opened instead. -->
     <string name="backgroundBatterySettingsInstead">Android didn't show its question, so its battery settings opened instead. Set this app to Unrestricted there.</string>
+    <string name="privacyPagesSummary">Servers, providers, voice, files, and updates</string>
+    <string name="manageSpaceKeptAllComputers">Your computers and anything pushed to git stay</string>
 </resources>

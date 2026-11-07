@@ -133,7 +133,6 @@
     <string name="handoffUiComputerUnsupported">此服务器无法提供在电脑上继续该对话的命令。</string>
     <string name="handoffUiComputerChanged">此对话已移动，或其服务器已变更。请返回后重试。</string>
     <string name="workRunawayStopped">已停止 %1$s</string>
-    <string name="workRunawayStopFailed">无法停止 %1$s。请重试，或在 Termux 中停止它。</string>
     <string name="workStalled">已停滞</string>
     <string name="lastKnownUpdatedJustNow">刚刚更新</string>
     <string name="lastKnownUpdatedAgo">更新于%1$s</string>
@@ -265,7 +264,6 @@
     <string name="gitRepairWorking">正在修复 %1$s…</string>
     <string name="gitRepairLooking">正在查找缺失的 Git 文件…</string>
     <string name="gitRepairRestoring">正在恢复 %1$d / %2$d 个 Git 文件…</string>
-    <string name="gitRepairAskingTermux">正在从 Termux 复制 %1$d / %2$d 个 Git 文件…</string>
     <string name="gitRepairChecking">正在用 Git 检查项目…</string>
     <string name="gitRepairDoneTitle">%1$s 已修复</string>
     <plurals name="gitRepairDoneBody">
@@ -275,13 +273,8 @@
     <string name="gitRepairHealthyTitle">没有缺失的文件</string>
     <string name="gitRepairHealthyBody">Git 现在可以读取 %1$s。</string>
     <string name="gitRepairStart">开始对话</string>
-    <string name="gitRepairTermuxNotAllowedTitle">文件位于 Termux 中</string>
-    <string name="gitRepairTermuxNotAllowedBody">允许应用在 Termux 中运行命令，它就会把它们复制回来。</string>
     <string name="gitRepairAllow">允许并修复</string>
-    <string name="gitRepairTermuxNoAnswerTitle">Termux 没有应答</string>
-    <string name="gitRepairTermuxNoAnswerBody">请先打开一次 Termux 使其启动，再回到这里重新修复。</string>
     <string name="gitRepairAgain">再次修复</string>
-    <string name="gitRepairOpenTermux">打开 Termux</string>
     <string name="gitRepairCannotTitle">无法修复 %1$s</string>
     <plurals name="gitRepairMissingBody">
         <item quantity="other">本机已不再有 %1$d 个 Git 文件。请从托管处重新克隆该项目，或恢复一份副本。</item>
@@ -292,4 +285,5 @@
     <string name="gitRepairClose">关闭</string>
     <string name="chatsReturnBriefUnknown">无法确定此服务器上有哪些新内容</string>
     <string name="chatsReturnBriefMore">以及另外%1$d个</string>
+    <string name="workRunawayStopFailedRetry">无法停止 %1$s。请重试。</string>
 </resources>

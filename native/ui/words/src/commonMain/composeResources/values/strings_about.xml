@@ -18,16 +18,10 @@
     <string name="e7SharedStartTalking">Start talking</string>
     <string name="e7SharedPickAProjectAndSendYourFirst">Pick a project and send your first message. The work happens on your computer; this app shows it and lets you steer.</string>
     <string name="e7SharedAdvanced">Advanced</string>
-    <string name="e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals">HTTPS, SSH tunnels, older servers, Termux internals</string>
     <string name="e7SharedHTTPSSSHTunnelsOlderServers">HTTPS, SSH tunnels, older servers</string>
     <string name="e7SharedReachAServerOverHTTPSOrA">Reach a server over HTTPS or a tunnel</string>
     <string name="e7SharedPairingWorksWhenTheAddressTheServer">Pairing works when this device can reach the server address. A remote HTTP address asks for your permission before sending the password. Prefer HTTPS or a private Tailscale connection.</string>
     <string name="e7SharedOlderServersWithoutPairing">Older servers without pairing</string>
-    <string name="e7SharedOnDeviceViaTermuxAutomated">On-device via Termux (automated)</string>
-    <string name="e7SharedUseTheOnDeviceTermuxCardOn">Use the “On-device (Termux)” card on the Servers screen. The app installs Termux, unlocks the bridge, sets up opencode, starts the server and connects — all guided.</string>
-    <string name="e7SharedOnlyTwoTapsNeedYouPersonallyDownloading">Only two taps need you personally: downloading the Termux APK and pasting one unlock line inside Termux once — both required by Android’s security model, not by this app.</string>
-    <string name="e7SharedPreferManualInsideTermuxRun">Prefer manual? Inside Termux run:</string>
-    <string name="e7SharedTheChrootSharesTheNetworkStackSo">The chroot shares the network stack, so http://127.0.0.1:4096 works from this app. Run `termux-wake-lock` to keep it alive.</string>
     <string name="e7SharedSecurityNotes">Security notes</string>
     <string name="e7SharedAlwaysSetOPENCODESERVERPASSWORDWhenBinding">Always set OPENCODE_SERVER_PASSWORD when binding beyond localhost.</string>
     <string name="e7SharedPasswordsAreStoredInTheAndroidKeystore">Passwords are stored in the Android Keystore on this device only.</string>

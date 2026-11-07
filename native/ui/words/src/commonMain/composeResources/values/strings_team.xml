@@ -397,9 +397,7 @@
     <string name="teamUiPhoneFailedCity">Gas City could not create the city. The output below says why.</string>
     <string name="teamUiPhoneFailedSupervisorExited">The supervisor stopped right after starting. The output below says why.</string>
     <string name="teamUiPhoneFailedHealth">The supervisor started but never answered on %1$s.</string>
-    <string name="teamUiPhoneFailedInterrupted">The setup stopped before it finished. Android may have stopped Termux while the app was away; nothing is lost.</string>
     <string name="teamUiPhoneFailedReason">Reason: %1$s</string>
-    <string name="teamUiPhoneDispatchFailed">Termux did not start the step. Open Termux once, then try again.</string>
     <string name="teamUiPhoneSectionTitle">On this phone</string>
     <string name="teamUiPhoneStatusChecking">Checking…</string>
     <string name="teamUiPhoneStatusNotInstalled">Not installed</string>
@@ -425,9 +423,6 @@
     <string name="teamUiPhoneKeepRunningTitle">Keep it running</string>
     <string name="teamUiPhoneKeepRunningSubtitle">Stop Android from closing the team in the background</string>
     <string name="teamUiPhoneTipsIntro">Android stops background work it considers excessive, and the team is exactly that: dozens of short gc and bd processes and an agent at full CPU. Three things keep it alive.</string>
-    <string name="teamUiPhoneTipWakeLock">Keep Termux in front, or hold its wake lock: run termux-wake-lock in Termux, or tap Acquire wakelock in its notification. Screen off without it ends the run.</string>
-    <string name="teamUiPhoneTipBattery">Settings › Apps › Termux › Battery › Unrestricted, and switch off your phone maker's auto-clean for Termux.</string>
-    <string name="teamUiPhoneTipPhantom">Android 12 and later still kill the child processes of a background app (the phantom process killer). Turn that off once, from Termux itself over Wireless debugging; no computer needed:</string>
     <string name="teamUiPhoneTipsCopy">Copy commands</string>
     <string name="teamUiPhoneRemoveTitle">Delete AI Team from this phone?</string>
     <string name="teamUiPhoneActionFailed">That did not work: %1$s</string>
@@ -511,10 +506,8 @@
     <string name="teamDiscoverNeedsServer">What it needs on %1$s</string>
     <string name="teamDiscoverDownloadTitle">About %1$s to download</string>
     <string name="teamDiscoverInAppDownloadBody">Installed once, next to OpenCode on this phone.</string>
-    <string name="teamDiscoverTermuxDownloadBody">Installed into Termux, next to OpenCode.</string>
     <string name="teamDiscoverBatteryTitle">More battery while it works</string>
     <string name="teamDiscoverInAppBatteryBody">Several agents run at once, and Android may stop some if it runs too many.</string>
-    <string name="teamDiscoverTermuxBatteryBody">Keep Termux open while it works; Android may stop it in the background. Nothing is lost.</string>
     <string name="teamDiscoverProjectTitle">You choose the projects</string>
     <string name="teamDiscoverProjectBody">Turn it on for each project you want it to work on.</string>
     <string name="teamDiscoverComputerTitle">Runs on %1$s</string>

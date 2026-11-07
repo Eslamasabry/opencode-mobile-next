@@ -133,7 +133,6 @@
     <string name="handoffUiComputerUnsupported">لا يمكن لهذا الخادم تقديم أمر يتيح متابعة محادثة على كمبيوتر.</string>
     <string name="handoffUiComputerChanged">انتقلت هذه المحادثة أو تغيّر خادمها. ارجع وحاول مجددًا.</string>
     <string name="workRunawayStopped">أُوقفت %1$s</string>
-    <string name="workRunawayStopFailed">تعذّر إيقاف %1$s. حاول مجددًا أو أوقفها من Termux.</string>
     <string name="workStalled">متعثر</string>
     <string name="lastKnownUpdatedJustNow">حُدّثت الآن</string>
     <string name="lastKnownUpdatedAgo">حُدّثت منذ %1$s</string>
@@ -278,7 +277,6 @@
     <string name="gitRepairWorking">جارٍ إصلاح %1$s…</string>
     <string name="gitRepairLooking">جارٍ البحث عن ملفات Git المفقودة…</string>
     <string name="gitRepairRestoring">جارٍ إرجاع %1$d من %2$d من ملفات Git…</string>
-    <string name="gitRepairAskingTermux">جارٍ نسخ %1$d من %2$d من ملفات Git من Termux…</string>
     <string name="gitRepairChecking">جارٍ فحص المشروع باستخدام Git…</string>
     <string name="gitRepairDoneTitle">تم إصلاح %1$s</string>
     <plurals name="gitRepairDoneBody">
@@ -293,13 +291,8 @@
     <string name="gitRepairHealthyTitle">لم يكن هناك شيء مفقود</string>
     <string name="gitRepairHealthyBody">يمكن لـ Git قراءة %1$s الآن.</string>
     <string name="gitRepairStart">ابدأ المحادثة</string>
-    <string name="gitRepairTermuxNotAllowedTitle">الملفات في Termux</string>
-    <string name="gitRepairTermuxNotAllowedBody">اسمح للتطبيق بتشغيل الأوامر في Termux، وسيعيد نسخها.</string>
     <string name="gitRepairAllow">اسمح وأصلح</string>
-    <string name="gitRepairTermuxNoAnswerTitle">لم يستجب Termux</string>
-    <string name="gitRepairTermuxNoAnswerBody">افتح Termux مرة ليبدأ، ثم عد إلى هنا وأصلح من جديد.</string>
     <string name="gitRepairAgain">أصلح من جديد</string>
-    <string name="gitRepairOpenTermux">افتح Termux</string>
     <string name="gitRepairCannotTitle">تعذّر إصلاح %1$s</string>
     <plurals name="gitRepairMissingBody">
         <item quantity="zero">لم تعد %1$d من ملفات Git موجودة على هذا الهاتف. انسخ المشروع من جديد من مكان استضافته، أو استعد نسخة منه.</item>
@@ -346,4 +339,5 @@
     <string name="chats_back">رجوع</string>
     <string name="chatsReturnBriefUnknown">لا يمكن معرفة الجديد على هذا الخادم</string>
     <string name="chatsReturnBriefMore">و%1$d أخرى</string>
+    <string name="workRunawayStopFailedRetry">تعذّر إيقاف %1$s. حاول مجددًا.</string>
 </resources>

@@ -5,4 +5,26 @@
     <string name="e7LocaleUiClose">Fechar</string>
     <string name="kitComposerStop">Parar a resposta</string>
     <string name="chatsNewPrompt">No que vamos trabalhar?</string>
+    <string name="termuxPermissionDenied">O Android não permitiu que este app execute comandos no Termux.</string>
+    <string name="e7SetupTermuxNoAnswer">O Termux não respondeu. Toque em “Copiar e abrir o Termux”, cole a linha no Termux, pressione Enter e volte aqui.</string>
+    <string name="e7SetupTermuxOutdated">Esta versão do Termux é antiga demais para o app. Instale a atual e toque em “Continuar a configuração”.</string>
+    <string name="termuxInAppInsteadDetail">Um novo começo que roda dentro deste app. Não precisa do Termux.</string>
+    <string name="termuxGuideTitle">Conecte o Termux uma vez</string>
+    <string name="e7SetupCopyOpenTermux">Copiar e abrir o Termux</string>
+    <string name="e7SetupGetTermux">Baixar o Termux</string>
+    <string name="e7SetupInstallTermuxDetail">Instale a versão atual do Termux do F-Droid e volte aqui.</string>
+    <string name="e7SetupSetupNotStarted">O Termux abriu, mas a configuração não começou. Tente mais uma vez; se acontecer de novo, copie o relatório da falha.</string>
+    <string name="e7SetupCheckingTermuxShort">Verificando o Termux…</string>
+    <string name="phoneSetupStartUseTermux">Usar o Termux</string>
+    <string name="phoneSetupStartTermuxHeadline">O OpenCode já está configurado no Termux</string>
+    <string name="phoneSetupStartTermuxBody">Você já o configurou com o Termux. Conecte-se para continuar usando.</string>
+    <string name="phoneSetupStartUseTermuxOne">Usar o do Termux</string>
+    <string name="phoneSetupStartUseTermuxOneDetail">O OpenCode também está configurado no Termux. Conecte-se a ele.</string>
+    <string name="phoneSetupStartTermuxNotAllowed">O Termux está instalado, mas ainda não liberou este app. Conclua a configuração dele.</string>
+    <string name="phoneSetupTermuxAllowHow">No Termux, cole a linha copiada e pressione Enter.</string>
+    <string name="phoneSetupTermuxLeaveHint">Você pode sair do app. O Termux continua trabalhando e esta lista mostra o ponto atual quando você voltar.</string>
+    <string name="phoneSetupTermuxCost">Cerca de 10–15 minutos na primeira vez, no armazenamento do Termux</string>
+    <string name="phoneSetupStartTermuxProgressHeadline">A configuração no Termux está %1$d% concluída</string>
+    <string name="phoneSetupTermuxGetCurrent">Baixar o Termux atual</string>
+    <string name="phoneSetupTermuxOtherRuntime">O Termux já executa o outro OpenCode. Troque em “Neste celular” e continue a configuração.</string>
 </resources>

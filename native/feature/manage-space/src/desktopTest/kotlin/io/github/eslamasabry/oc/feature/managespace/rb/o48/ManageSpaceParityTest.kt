@@ -68,7 +68,13 @@ class ManageSpaceParityTest {
             assertEquals(0, actions.deleted)
             onNodeWithText("2 projects (\u20663.0 MB\u2069)").assertExists()
             onNodeWithText("2 saved servers and all settings").assertExists()
-            onNodeWithText("Termux, your computers and anything pushed to git stay").assertExists()
+            // The kept line names computers and git; Termux is no longer part of the app (2026-11-07).
+            onNodeWithText(
+                    "your computers and anything pushed to git stay",
+                    substring = true,
+                    ignoreCase = true,
+                )
+                .assertExists()
         }
 
     @Test

@@ -14,7 +14,6 @@
     <string name="mcpSavedStatus">محفوظ في OpenCode</string>
     <string name="mcpRetryReconnect">إعادة محاولة الاتصال</string>
     <string name="mcpStillDisconnected">لا يزال OpenCode غير متصل. حاول مجددًا.</string>
-    <string name="managedHealthLifetime">قد يوقف Android أيًا من التطبيقين. إبقاء اتصال تطبيق الهاتف نشطًا لا يضمن استمرار خادم Termux طوال الليل.</string>
     <string name="monitorSession">محادثة</string>
     <string name="monitorUnknown">غير معروف</string>
     <string name="monitorLastChecked">آخر تحقق</string>
@@ -32,7 +31,6 @@
     <string name="managedRecoverySettingsUnreadable">تعذّرت قراءة إعدادات الاستعادة. افحص الخادم قبل تفعيل الاستعادة.</string>
     <string name="managedRecoveryEnableFailed">تعذّر تفعيل الاستعادة. شغّل الخادم الذي يديره التطبيق، ثم أعد المحاولة.</string>
     <string name="managedRecoveryOwnershipChanged">تغيّرت العملية التي يديرها التطبيق. افحص الخادم قبل تفعيل الاستعادة مجددًا.</string>
-    <string name="managedRecoveryUncertain">توقفت الاستعادة مؤقتًا لأن Termux لم يؤكد النتيجة. اضغط «تحديث» للمتابعة.</string>
     <string name="managedRecoveryRetryDisable">إعادة محاولة تعطيل الاستعادة</string>
     <string name="codexConnectionVerified">تم التحقق من الاتصال. احفظ واتصل للمتابعة.</string>
     <string name="codexApprovalRecoveryNotice">بعد إعادة الاتصال، راجع أي موافقات معلّقة على الكمبيوتر.</string>

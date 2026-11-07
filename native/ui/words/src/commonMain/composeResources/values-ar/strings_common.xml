@@ -84,9 +84,6 @@
     <string name="usageWidgetTitle">أداة الاستخدام</string>
     <string name="quotaMonitorSourceChanged">تغيّر الحساب على هذا الخادم، لذا توقفت الفحوص. افتح الاستخدام المتبقي على ذلك الخادم واقرأه مجددًا.</string>
     <string name="openCodeConnectionLabel">OpenCode</string>
-    <string name="termuxGuideOpenFailed">تم نسخ الأمر، لكن تعذّر فتح Termux. افتحه بنفسك أو حاول «نسخ وفتح Termux» مجددًا.</string>
-    <string name="termuxGuideCopyOpenFailed">تعذّر نسخ الأمر أو فتح Termux.</string>
-    <string name="termuxPermissionDenied">رفض Android إذن أوامر Termux. اسمح به في إعدادات تطبيق OpenCode.</string>
     <string name="launchShortcutWaiting">جارٍ الاتصال بالخادم المحفوظ. تُفتح المحادثة الجديدة عندما يصبح جاهزًا.</string>
     <string name="launchShortcutNoServer">اختر خادمًا، ثم ابدأ محادثة جديدة.</string>
     <string name="launchShortcutReentry">أدخل بيانات اعتماد الخادم المحفوظ، ثم ابدأ محادثة جديدة.</string>
@@ -219,7 +216,6 @@
     <string name="e7SetupNoOutput">لا توجد مخرجات في الطرفية بعد.</string>
     <string name="e7SetupOpenSetupGuide">فتح دليل الإعداد</string>
     <string name="e7SetupCameraFailedDetail">قد يستخدم تطبيق آخر الكاميرا. يمكنك لصق رمز الاقتران في جميع الأحوال.</string>
-    <string name="e7SetupTermuxNoAnswer">لم يستجب Termux. افتحه، ونفّذ أمر السماح بالتحكم، ثم تحقّق مجددًا.</string>
     <string name="e7SetupHttpsHint">يُفضّل HTTPS. يتطلب HTTP البعيد إذنك لكل خادم.</string>
     <string name="e7SetupPasteInstead">لصق الرمز بدلًا من مسحه</string>
     <string name="e7SetupEndInputKey">نهاية الإدخال، Control D</string>
@@ -227,7 +223,6 @@
     <string name="e7SetupServerOperation">جارٍ تنفيذ إجراء على الخادم</string>
     <string name="e7SetupUnsavedProfile">لم يُحفظ الخادم.</string>
     <string name="e7SetupCheckingInstall">جارٍ التحقق من التثبيت الحالي…</string>
-    <string name="e7SetupInspectTermuxFailed">تعذّر على Android التحقق من Termux.</string>
     <string name="e7SetupUsername">اسم المستخدم (اختياري)</string>
     <string name="e7SetupSaveToFinish">تم الاتصال — احفظ لإكمال الإعداد.</string>
     <string name="e7SetupPasswordStartupHint">تظهر عند تشغيل الخادم. اتركها فارغة إن لم تكن له كلمة مرور.</string>
@@ -240,7 +235,6 @@
     <string name="e7SetupCameraFailed">تعذّر فتح الكاميرا</string>
     <string name="e7SetupCameraDisabled">الوصول إلى الكاميرا معطّل</string>
     <string name="e7SetupPastePairing">لصق رمز الاقتران</string>
-    <string name="e7SetupThisDevice">هذا الجهاز (Termux)</string>
     <string name="e7SetupTransportReconnecting">جارٍ إعادة الاتصال بالخادم.</string>
     <string name="e7SetupMissingPasswordShort">كلمة المرور المحفوظة غير متاحة. أدخلها مجددًا، أو اتركها فارغة فقط إذا لم يعد الخادم يتطلبها.</string>
     <string name="e7SetupScanPairing">مسح رمز الاقتران</string>
@@ -253,7 +247,6 @@
     <string name="e7SetupInputDisconnected">الإدخال غير متاح أثناء انقطاع الاتصال.</string>
     <string name="e7SetupCameraPrivacy">تُستخدم الكاميرا فقط لقراءة رمز QR الذي يعرضه الأمر opencode2 pair، أثناء فتح هذه الشاشة. يمكنك لصق الرمز بدلًا من مسحه للحصول على النتيجة نفسها.</string>
     <string name="e7SetupIsV2">هذا خادم OpenCode 2.</string>
-    <string name="e7SetupTermuxOutdated">إصدار Termux هذا قديم ولا يستطيع التطبيق التحكم فيه. ثبّت الإصدار الحالي من F-Droid أو GitHub، ثم تحقّق مجددًا.</string>
     <string name="e7SetupCameraNeeded">يلزم السماح بالكاميرا لمسح الرمز</string>
     <string name="e7SetupPairingDesktopHint">تحقّق من تشغيل الخادم وإمكانية وصول هذا الجهاز إلى العنوان الذي عرضه.</string>
     <string name="e7SetupAboutNotices">حول التطبيق وإشعارات المصدر المفتوح</string>
@@ -542,7 +535,6 @@
     <string name="productErrorUnexpected">تعذّر على التطبيق فهم رد الخادم. حاول مجددًا، أو أبلغ عن المشكلة.</string>
     <string name="productErrorDevice">تعطّل شيء على هذا الجهاز. حاول مجددًا.</string>
     <string name="productErrorStorage">تعذّر على التطبيق قراءة ملف على هذا الجهاز أو حفظه.</string>
-    <string name="productErrorTermux">لم يُكمل Termux هذا الإجراء. تحقّق من أن Termux مثبّت ومفتوح، ثم حاول مجددًا.</string>
     <string name="productErrorDetailsLabel">تفاصيل الخطأ</string>
     <string name="productErrorServer">واجه الخادم مشكلة (الخطأ %1$d). حاول مجددًا بعد قليل.</string>
     <string name="consentSaveFailed">تعذّر حفظ إجابتك على هذا الهاتف، لذا لم يتغيّر شيء. حاول مجددًا.</string>
@@ -593,7 +585,6 @@
     <string name="commandSheetAgentFallback">هذا الوكيل</string>
     <string name="mcpCatalogTitle">دليل MCP</string>
     <string name="termuxInAppInstead">إعداد «على هذا الهاتف» بدلًا منه</string>
-    <string name="termuxInAppInsteadDetail">بداية جديدة تعمل داخل هذا التطبيق. لا حاجة إلى Termux.</string>
     <string name="freeModelSignIn">إضافة مفتاح API</string>
     <string name="integrationsSignedInUnusable">تم تسجيل الدخول، لكن هذا الخادم لا يستطيع استخدامه</string>
     <string name="kitTurnLiveSeconds">%1$d ث</string>
@@ -601,7 +592,6 @@
     <string name="kitComposerRailRetry">إعادة المحاولة</string>
     <string name="addServerCleartextWarning">يستخدم عنوان الشبكة الخاصة أو Tailscale هذا HTTP غير المشفّر. تنتقل كلمة المرور والشيفرة دون تشفير في طبقة HTTP. استخدمه فقط على شبكة خاصة تثق بها أو عبر Tailscale؛ فهو خطر على شبكات Wi-Fi العامة.</string>
     <string name="storageAccessAllow">السماح بالوصول إلى الملفات</string>
-    <string name="storageTermuxAllow">فتح Termux</string>
     <string name="phoneScanGit">Git</string>
     <string name="chatsHomeAllProjects">كل المشاريع</string>
     <string name="chatsHomeNeedsYou">بانتظارك</string>
