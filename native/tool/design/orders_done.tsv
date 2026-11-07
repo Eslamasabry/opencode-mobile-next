@@ -1,0 +1,9 @@
+# Orders merged into the native integration head (rb_gate.py order_done reads this next to RB_STATE/<NN>.done).
+# A DEPENDS_ON <NN> waiver stops deferring once NN is listed here: the shot is measured and must pass.
+# Add a line when an order's merge lands (coordinator or lead); never remove one. Source: SCOREBOARD-2026-11-07 item 0.2.
+# order	merge commit	note
+07	c4f9c8540	merge: s15-rb-07
+08	b9b5bb022	merge(ui): order ui.08.* (last ui.08 merge on screens-merge22)
+09	1febfca33	merge: s15-rb-09
+12	56953e43a	merge: s15-rb-12
+15	b64cc8dcd	merge(ui): order ui.15.* (last ui.15 merge on screens-merge22)
