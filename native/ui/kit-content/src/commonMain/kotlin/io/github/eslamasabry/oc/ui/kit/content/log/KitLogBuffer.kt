@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.content.log
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 /** How a log line reads: a plain line, a warning or an error (said in words, not only colour). */
 public enum class KitLogLevel { Normal, Warning, Error }
 
@@ -22,12 +27,15 @@ public class KitLogBuffer(public val capacity: Int = DEFAULT_CAPACITY) {
     private var partial = ""
     private var partialLevel = KitLogLevel.Normal
 
-    /** The visible lines, oldest first, the partial line last. */
-    public var lines: List<KitLogLine> = emptyList()
+    /**
+     * The visible lines, oldest first, the partial line last. Snapshot state (Dart `KitLogBuffer` is a
+     * `ValueNotifier`): a [KitLogPanel] reading it recomposes when a chunk arrives.
+     */
+    public var lines: List<KitLogLine> by mutableStateOf(emptyList())
         private set
 
     /** Lines dropped past [capacity] since the last [clear] or [replaceText]. */
-    public var dropped: Int = 0
+    public var dropped: Int by mutableIntStateOf(0)
         private set
 
     public fun add(line: KitLogLine) {
