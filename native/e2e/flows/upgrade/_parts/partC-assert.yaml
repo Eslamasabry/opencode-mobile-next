@@ -41,7 +41,9 @@ appId: ${APP_ID}
 
 # Text Smallest, style Soft with the tweak, finished-work notifications on: nothing reset to defaults. Flutter 2.1.4
 # (walked 2026-11-07) shows each choice in its Appearance chip ("Text size, Smallest, ...", "Shape, Sharp, Roomy,
-# ...") and the text size under its slider ("Smallest, Text size").
+# ...") and the text size under its slider ("Smallest, Text size"). Native (B-152, walked 2026-11-07 on 5ff3ac113):
+# settings search has no "Text size" row; Settings > This app > Appearance shows its chips with the title and the
+# value on separate lines ("Style" / "Soft", "Text & motion" / "Smallest, full motion").
 - runFlow:
     label: "PC S5 settings kept"
     optional: true
@@ -49,30 +51,54 @@ appId: ${APP_ID}
       - runFlow: ../../_sub/to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
       - runFlow:
-          file: ../../_sub/settings-search.yaml
-          env:
-            QUERY: ${output.t.textSizeTitle}
-      - tapOn:
-          text: ${output.s.textSizeTitle + '(\n(?s).*)?'}
-          index: 1
-      - extendedWaitUntil:
-          visible: ${output.s.textSizeSmallest + ', ' + output.s.textSizeTitle}
-          timeout: 15000
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - runFlow:
+                file: ../../_sub/settings-search.yaml
+                env:
+                  QUERY: ${output.t.textSizeTitle}
+            - tapOn:
+                text: ${output.s.textSizeTitle + '(\n(?s).*)?'}
+                index: 1
+            - extendedWaitUntil:
+                visible: ${output.s.textSizeSmallest + ', ' + output.s.textSizeTitle}
+                timeout: 15000
+            - runFlow:
+                when:
+                  visible: ${output.s.tourNotNow}
+                commands:
+                  - tapOn: ${output.s.tourNotNow}
+            - tapOn: ${output.s.kitGuideBack}
+            - assertVisible: ${output.s.appearanceChipStyle + '(\n|, )' + output.s.appearanceSurfaceSoft + '(?s).*'}
+            - tapOn: ${output.s.appearanceChipStyle + '(\n|, )(?s).*'}
+            - assertVisible: ${output.s.appearanceChipShape + ', ' + output.s.appearanceFineTuneCornersSharp + '(?s).*'}
       - runFlow:
           when:
-            visible: ${output.s.tourNotNow}
+            true: ${output.phase == 'native'}
           commands:
-            - tapOn: ${output.s.tourNotNow}
-      - tapOn: ${output.s.kitGuideBack}
-      - assertVisible: ${output.s.appearanceChipStyle + '(\n|, )' + output.s.appearanceSurfaceSoft + '(?s).*'}
-      - tapOn: ${output.s.appearanceChipStyle + '(\n|, )(?s).*'}
-      - assertVisible: ${output.s.appearanceChipShape + ', ' + output.s.appearanceFineTuneCornersSharp + '(?s).*'}
+            - runFlow: ../../_sub/native-appearance.yaml
+            - takeScreenshot: ${(output.phase || 'flutter') + '-appearance'}
       - runFlow: ../../_sub/back-to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
       - runFlow: ../../_sub/open-notifications.yaml
-      - assertVisible:
-          text: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
-          checked: true
+      # Flutter 2.1.4 merges the switch and its words into one checked node; native keeps the words as children of
+      # the checked row (walked in run 3).
+      - runFlow:
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - assertVisible:
+                text: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
+                checked: true
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - assertVisible:
+                containsChild:
+                  text: ${output.s.notifyFinishedRuns}
+                checked: true
       - runFlow: ../../_sub/back-to-conversations.yaml
       - evalScript: ${output.pc.S5 = true}
 
@@ -84,8 +110,21 @@ appId: ${APP_ID}
       - runFlow: ../../_sub/to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
       - runFlow: ../../_sub/open-servers.yaml
-      # Flutter 2.1.4: "Computer at 10.0.2.2:4097\nConnected · OpenCode 2"; native: "10.0.2.2:4097 · Connected · OpenCode 2".
-      - assertVisible: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '(\n| · )' + output.s.serverRowConnected + '(?s).*'}  # literal-ok: built from fixture data
+      # Flutter 2.1.4: one node "Computer at 10.0.2.2:4097\nConnected · OpenCode 2". Native 5ff3ac113 (run 3): a row
+      # holding "Computer at 10.0.2.2:4097" and "Connected" as separate children.
+      - runFlow:
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - assertVisible: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '(\n| · )' + output.s.serverRowConnected + '(?s).*'}  # literal-ok: built from fixture data
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - assertVisible:
+                containsDescendants:
+                  - text: ${'.*' + output.fx.serverAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+                  - text: ${output.s.serverRowConnected + '( · .*)?'}
       - assertNotVisible: ${output.s.e7SetupServerPassword + '(,(?s).*)?'}
       - assertNotVisible: ${output.c.e7SetupCertificate}
       - assertNotVisible: ${output.s.e7ConnectionFailure20}
@@ -116,23 +155,47 @@ appId: ${APP_ID}
       - takeScreenshot: ${(output.phase || 'flutter') + '-chat'}
       - evalScript: ${output.pc.chatMessages = true}
 
-# 2.1.4: Attach and more > More > Prompts > Saved prompts.
+# The saved prompt, the always-allow rule and the queued prompt, each its own section so one gap does not hide the
+# others (S7 needs all three and the draft). Saved prompts: 2.1.4 Attach and more > More > Prompts > Saved prompts;
+# native (B-152, walked 2026-11-07) the conversation's More actions > Go to > Saved prompts.
 - runFlow:
-    label: "PC S7 saved prompt, rule, queued prompt"
+    label: "PC S7 saved prompt"
     optional: true
     commands:
       - runFlow: ../../_sub/to-conversations.yaml
       - tapOn: "Upgrade draft(, .*)?"  # literal-ok: title seeded in Part A
       - runFlow: ../../_sub/settle-chat.yaml
-      - runFlow: ../../_sub/composer-more-tools.yaml
       - runFlow:
           when:
-            notVisible: ${output.s.promptStashTitle + '(?s).*'}
+            true: ${output.phase != 'native'}
           commands:
-            - tapOn: ${output.s.usagePrompts}
-      - tapOn: ${output.s.promptStashTitle + '(?s).*'}
-      - assertVisible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
+            - runFlow: ../../_sub/composer-more-tools.yaml
+            - runFlow:
+                when:
+                  notVisible: ${output.s.promptStashTitle + '(?s).*'}
+                commands:
+                  - tapOn: ${output.s.usagePrompts}
+            - tapOn: ${output.s.promptStashTitle + '(?s).*'}
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - tapOn: ${output.s.kitTopBarMore}
+            - tapOn: ${output.s.sessionMenuGoTo}
+            - tapOn: ${output.s.promptStashTitle}
+      - extendedWaitUntil:
+          visible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
+          timeout: 15000
+      - takeScreenshot: ${(output.phase || 'flutter') + '-saved-prompts'}
       - runFlow: ../../_sub/back-to-conversations.yaml
+      - evalScript: ${output.pc.savedPrompt = true}
+
+# The always-allowed shell command: Settings search "Always allowed actions" (both apps' search index the row).
+- runFlow:
+    label: "PC S7 always-allow rule"
+    optional: true
+    commands:
+      - runFlow: ../../_sub/to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
       - runFlow:
           file: ../../_sub/settings-search.yaml
@@ -143,14 +206,36 @@ appId: ${APP_ID}
           index: 1
       - assertVisible: "(?s).*\\bls\\b.*"  # literal-ok: the always-allowed shell command from Part A
       - runFlow: ../../_sub/back-to-conversations.yaml
-      # The prompt queued for FX-OC2-B (still cut off) waits on this phone: 2.1.4 cannot open an unreachable server's
-      # conversations, but its Servers row says "1 prompt waiting to send".
+      - evalScript: ${output.pc.rule = true}
+
+# The prompt queued for FX-OC2-B (still cut off) waits on this phone: 2.1.4 cannot open an unreachable server's
+# conversations, but its Servers row says "1 prompt waiting to send".
+- runFlow:
+    label: "PC S7 queued prompt waiting"
+    optional: true
+    commands:
+      - runFlow: ../../_sub/to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
       - runFlow: ../../_sub/open-servers.yaml
-      - assertVisible: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '\n' + output.re.serverRowQueuedWaiting + '(?s).*'}  # literal-ok: built from fixture data and strings
+      # Flutter 2.1.4: one node "<name>\n1 prompt waiting to send". Native 5ff3ac113 (run 3): a row holding
+      # "Computer at 10.0.2.2:4098" and "1 prompt waiting to send · Not connected" as separate children.
+      - runFlow:
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - assertVisible: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '\n' + output.re.serverRowQueuedWaiting + '(?s).*'}  # literal-ok: built from fixture data and strings
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - assertVisible:
+                containsDescendants:
+                  - text: ${'.*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+                  - text: ${output.re.serverRowQueuedWaiting + '( · .*)?'}
       - runFlow: ../../_sub/back-to-conversations.yaml
-      # S7 also needs the draft, checked in the section before.
-      - evalScript: ${output.pc.S7 = output.pc.chatMessages === true}
+      - evalScript: ${output.pc.queued = true}
+# S7 also needs the draft, checked in the chat section before.
+- evalScript: ${output.pc.S7 = output.pc.chatMessages === true && output.pc.savedPrompt === true && output.pc.rule === true && output.pc.queued === true}
 
 # A new prompt sends and its reply arrives. The prompt names the app under test, so Part B's reply never counts here.
 - runFlow:
@@ -176,6 +261,8 @@ appId: ${APP_ID}
 
 # Built-in Linux, the phone project and its server are there without reinstall; the server runs. Flutter 2.1.4:
 # Settings > Server > This phone shows "Everything is running"; the phone's conversations hold the project my-app.
+# Native (B-152): the same taps open the This phone server page, which reads "Server healthy" once its server runs
+# ("Not connected" with "Connect to this server" while it does not).
 - runFlow:
     label: "PC S8 built-in Linux"
     optional: true
@@ -186,46 +273,58 @@ appId: ${APP_ID}
       - tapOn: ${output.s.settingsV3ThisPhone + '(\n(?s).*)?'}
       - assertNotVisible: ${output.s.phoneSetupStartSetUp}
       - extendedWaitUntil:
-          visible: ${output.c.thisPhoneAnswerRunning}
+          visible: ${'(?s).*(' + output.s.thisPhoneAnswerRunning + '|' + output.s.e7SettingsUi59 + ').*'}  # literal-ok: either app's running line, both from strings
           timeout: 60000
       - takeScreenshot: ${(output.phase || 'flutter') + '-linux'}
       - runFlow: ../../_sub/back-to-conversations.yaml
       - evalScript: ${output.pc.S8 = true}
 
-# `pwd && ls` in the phone's terminal. Flutter 2.1.4: a conversation's project chip > Files > More > Terminal opens
+# `pwd && ls` in the project's terminal. Flutter 2.1.4: a conversation's project chip > Files > More > Terminal opens
 # the Built-in Linux terminal ("Runs on Built-in Linux"). Its screen text is not exposed to accessibility on 2.1.4,
 # so the command's output is checked only where the app exposes it (optional) and shown in the screenshot.
+# Native (B-152, walked 2026-11-07): the chip opens the project ("Project", no Files tab) with Terminal in its top
+# bar; that is the project's server terminal (FX-OC2's project app). Native exposes the output, so `ls` must list the
+# project's notes.txt.
 - runFlow:
     label: "PC terminal"
     optional: true
     commands:
       - runFlow: ../../_sub/to-conversations.yaml
       - runFlow:
-          file: ../../_sub/open-project-tools.yaml
-          env:
-            TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
-      - tapOn: ${output.s.libraryTerminalTitle}
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - runFlow:
+                file: ../../_sub/open-project-tools.yaml
+                env:
+                  TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
+            - tapOn: ${output.s.libraryTerminalTitle}
+            - runFlow:
+                when:
+                  visible: ${output.s.terminalScreenUsePhone}
+                commands:
+                  - tapOn: ${output.s.terminalScreenUsePhone}
+            - runFlow:
+                when:
+                  visible: ${output.s.localTerminalNewShell}
+                commands:
+                  - tapOn: ${output.s.localTerminalNewShell}
+            - extendedWaitUntil:
+                visible: ${output.c.localTerminalSemantics}
+                timeout: 60000
+            - assertVisible: ${output.re.terminalPlaceSwitchLabel}
+            - tapOn: ${output.c.localTerminalSemantics}
+            - inputText: "pwd && ls"  # literal-ok: the shell command under test
+            - pressKey: Enter
+            - extendedWaitUntil:
+                visible: ".*my-app.*"  # literal-ok: ls lists the phone project Part A created
+                timeout: 15000
+                optional: true
       - runFlow:
           when:
-            visible: ${output.s.terminalScreenUsePhone}
+            true: ${output.phase == 'native'}
           commands:
-            - tapOn: ${output.s.terminalScreenUsePhone}
-      - runFlow:
-          when:
-            visible: ${output.s.localTerminalNewShell}
-          commands:
-            - tapOn: ${output.s.localTerminalNewShell}
-      - extendedWaitUntil:
-          visible: ${output.c.localTerminalSemantics}
-          timeout: 60000
-      - assertVisible: ${output.re.terminalPlaceSwitchLabel}
-      - tapOn: ${output.c.localTerminalSemantics}
-      - inputText: "pwd && ls"  # literal-ok: the shell command under test
-      - pressKey: Enter
-      - extendedWaitUntil:
-          visible: ".*my-app.*"  # literal-ok: ls lists the phone project Part A created
-          timeout: 15000
-          optional: true
+            - runFlow: ../../_sub/native-project-terminal.yaml
       - takeScreenshot: ${(output.phase || 'flutter') + '-terminal'}
       - stopApp
       - launchApp
@@ -239,18 +338,39 @@ appId: ${APP_ID}
     commands:
       - runFlow: ../../_sub/to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
-      - runFlow:
-          file: ../../_sub/settings-search.yaml
-          env:
-            QUERY: ${output.t.voiceComponentTitle}
-      - tapOn:
-          text: ${output.s.voiceComponentTitle + '(\n(?s).*)?'}
-          index: 1
       # Flutter 2.1.4's Voice typing page lists each speech model with its state: the pack Part A set up reads
-      # "High accuracy\nInstalled · ...".
-      - extendedWaitUntil:
-          visible: ${output.s.e7VoiceUiAccurate + '\n' + output.s.e7VoiceUiInstalled + '(?s).*'}
-          timeout: 15000
+      # "High accuracy\nInstalled · ...". Native (B-152): search finds the row "Voice" (not "Voice typing"); its page
+      # opens Voice typing, where the High accuracy model reads "Installed · <its description>" on its own line.
+      - runFlow:
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - runFlow:
+                file: ../../_sub/settings-search.yaml
+                env:
+                  QUERY: ${output.t.voiceComponentTitle}
+            - tapOn:
+                text: ${output.s.voiceComponentTitle + '(\n(?s).*)?'}
+                index: 1
+            - extendedWaitUntil:
+                visible: ${output.s.e7VoiceUiAccurate + '\n' + output.s.e7VoiceUiInstalled + '(?s).*'}
+                timeout: 15000
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - runFlow:
+                file: ../../_sub/settings-search.yaml
+                env:
+                  QUERY: ${output.t.settingsHubVoice}
+            - tapOn:
+                text: ${output.s.settingsHubVoice + '(\n(?s).*)?'}
+                index: 1
+            - tapOn: ${output.s.voiceComponentTitle + '(\n(?s).*)?'}
+            - extendedWaitUntil:
+                visible: ${output.s.e7VoiceUiAccurate}
+                timeout: 15000
+            - assertVisible: ${output.s.e7VoiceUiInstalled + ' · ' + output.s.e7VoiceUiAccurateDetail}
       - takeScreenshot: ${(output.phase || 'flutter') + '-voice'}
       - runFlow: ../../_sub/back-to-conversations.yaml
       - evalScript: ${output.pc.voiceReady = true}
@@ -262,10 +382,30 @@ appId: ${APP_ID}
     commands:
       - runFlow: ../../_sub/to-conversations.yaml
       - runFlow:
-          file: ../../_sub/open-project-tools.yaml
-          env:
-            TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
-      - tapOn: ${output.s.scheduleTitle}
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - runFlow:
+                file: ../../_sub/open-project-tools.yaml
+                env:
+                  TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
+            - tapOn: ${output.s.scheduleTitle}
+      # Native (B-152): the list (SchedulesRoute.List) opens only from a schedule's notification at 5ff3ac113; no
+      # screen links it (ServersUi.openSchedules has no caller). Its natural place is the conversation's More
+      # actions > Go to, beside Saved prompts: tried there, so the step fails until a link exists.
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - tapOn: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
+            - runFlow: ../../_sub/settle-chat.yaml
+            - tapOn: ${output.s.kitTopBarMore}
+            - tapOn: ${output.s.sessionMenuGoTo}
+            - scrollUntilVisible:
+                element: ${output.s.scheduleTitle}
+                direction: DOWN
+                timeout: 5000
+            - tapOn: ${output.s.scheduleTitle}
       - extendedWaitUntil:
           visible: ".*e2e:echo daily upgrade.*"  # literal-ok: the schedule Part A made
           timeout: 15000

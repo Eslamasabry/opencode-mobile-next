@@ -218,10 +218,13 @@ class Verdict:
     title: str
     ok: bool
     detail: str
+    # B-153: Part A could not set this up on Flutter 2.1.4 or the emulator, so the update is not judged on it. Never
+    # a pass: the record lists it as NOT RUN with the reason.
+    not_run: bool = False
 
     @property
     def word(self) -> str:
-        return "PASS" if self.ok else "FAIL"
+        return "NOT RUN" if self.not_run else "PASS" if self.ok else "FAIL"
 
 
 def _diff(a: dict, b: dict) -> str:
@@ -239,7 +242,9 @@ def _diff(a: dict, b: dict) -> str:
 
 
 def compare(before: dict, after: dict) -> list[Verdict]:
-    """Host-side assertions of Part C (E00-S09). A thing Part A did not set up is a FAIL, never a skip."""
+    """Host-side assertions of Part C (E00-S09). A thing Part A did not set up is a FAIL, never a skip, except the
+    B-153 seeds 2.1.4 or the emulator cannot make (a placed widget, a pinned shortcut, an armed alarm before the
+    update): those are NOT RUN with the reason, never PASS."""
     out: list[Verdict] = []
 
     b_in, a_in = before.get("rootfsInodes", -1), after.get("rootfsInodes", -1)
@@ -256,11 +261,14 @@ def compare(before: dict, after: dict) -> list[Verdict]:
 
     ok = before.get("alarms", 0) > 0 and after.get("alarms", 0) > 0
     out.append(Verdict("schedule-armed", "Scheduled prompt still has an alarm armed", ok,
-                       f"app alarms {before.get('alarms', 0)} -> {after.get('alarms', 0)}"))
+                       f"app alarms {before.get('alarms', 0)} -> {after.get('alarms', 0)}"
+                       + ("" if before.get("alarms", 0) > 0 else " (B-153: 2.1.4 armed no alarm before the update)"),
+                       not_run=before.get("alarms", 0) <= 0))
 
     bw, aw = before.get("widgets", {}), after.get("widgets", {})
     out.append(Verdict("widgets", "Placed widgets kept", bool(bw) and bw == aw,
-                       _diff(bw, aw) if bw else "Part A placed no widget"))
+                       _diff(bw, aw) if bw else "B-153: Part A placed no widget (place-widget does not place on API 35)",
+                       not_run=not bw))
     bt, at = before.get("tiles", []), after.get("tiles", [])
     out.append(Verdict("tiles", "Quick Settings tiles kept", bool(bt) and bt == at,
                        f"{bt} -> {at}" if bt else "Part A added no tile"))
@@ -270,7 +278,8 @@ def compare(before: dict, after: dict) -> list[Verdict]:
     ok = bool(pins_b or dyn_b) and pins_b == pins_a and dyn_b <= dyn_a
     out.append(Verdict("shortcuts", "Launcher shortcuts kept", ok,
                        f"pinned {sorted(pins_b)} -> {sorted(pins_a)}; dynamic {sorted(dyn_b)} -> {sorted(dyn_a)}"
-                       if pins_b or dyn_b else "Part A left no shortcut"))
+                       if pins_b or dyn_b else "B-153: Part A left no shortcut (2.1.4 has no pin action)",
+                       not_run=not (pins_b or dyn_b)))
 
     # B-150: the update may add channels of its own; every channel the old app had keeps its id and the person's
     # importance. A removed or changed channel fails; additions are listed in the detail only.
