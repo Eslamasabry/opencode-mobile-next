@@ -1,7 +1,14 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -31,6 +38,11 @@ internal const val REPLY_ACTION_RISE: Int = REPLY_ACTION_INSET - Space.S1
  * S4 sides), the first glyph lined up with the text — Copy then More at the same glyph size and tone, their 48 dp
  * targets side by side with no extra gap, the row tucked one kit step under the last line. [metadata] (a failed or
  * stopped line, an end note) follows the actions on the same row.
+ *
+ * [arriving] (M-009): the turn has just ended in front of the person, so the row enters as Flutter's `KitEntrance`
+ * does: it fades in and rises [FOOTER_RISE_DP] into place over STANDARD (250 ms) on Enter, paint only (the row is
+ * laid out, tappable and read out from the first frame). Calm fades without the rise; reduced motion shows it at once.
+ * A footer composed for a turn that ended earlier (history, scrolling back) passes false and is simply there.
  */
 @Composable
 public fun KitReplyFooter(
@@ -39,10 +51,11 @@ public fun KitReplyFooter(
     onCopy: (() -> Unit)?,
     onMore: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    arriving: Boolean = false,
     metadata: @Composable () -> Unit = {},
 ) {
     Row(
-        modifier.fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp),
+        modifier.footerEntrance(arriving).fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (onCopy != null || onMore != null)
@@ -68,4 +81,28 @@ private fun Modifier.replyActionEdge(): Modifier = layout { measurable, constrai
     val width = (placeable.width - inset).coerceAtLeast(0)
     val height = (placeable.height - rise).coerceAtLeast(0)
     layout(width, height) { placeable.placeRelative(-inset, -rise) }
+}
+
+/** Flutter `KitEntrance.rise` (6 dp; native `MotionTokens.ENTRANCE_RISE_DP` still says 8, a `:ui:design` item). */
+internal const val FOOTER_RISE_DP: Int = 6
+
+/** The footer's look at entrance [progress] 0..1: its alpha and how far (dp) it still sits below its place. */
+internal fun footerEntranceAt(progress: Float, travels: Boolean): Pair<Float, Float> {
+    val p = progress.coerceIn(0f, 1f)
+    return p to if (travels) FOOTER_RISE_DP * (1f - p) else 0f
+}
+
+@Composable
+private fun Modifier.footerEntrance(arriving: Boolean): Modifier {
+    val state = KitMotion.state
+    if (!arriving || state.reduced) return this
+    val specs = KitMotion.specs
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(progress) { progress.animateTo(1f, specs.pace(KitPace.Standard)) }
+    val travels = state.travels
+    return this.graphicsLayer {
+        val (alpha, below) = footerEntranceAt(progress.value, travels)
+        this.alpha = alpha
+        translationY = below.dp.toPx()
+    }
 }

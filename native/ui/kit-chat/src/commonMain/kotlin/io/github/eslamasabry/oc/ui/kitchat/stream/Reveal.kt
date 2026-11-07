@@ -27,8 +27,15 @@ public object RevealPace {
     /** Characters per second when there is no backlog (the demo value the owner felt). */
     public const val BASE_CPS: Float = 45f
 
-    /** A backlog drains in about 250 ms: the reveal never lags the network by more. */
+    /**
+     * A backlog drains in 250 ms: the reveal never lags the network by more (M-009, `MotionTokens.REVEAL_MAX_LAG_MS`).
+     * A hard deadline, not a rate: the words that arrived last are all laid out 250 ms after they arrived, so the
+     * reply's footer (which enters over STANDARD when the turn ends) and the text finish together.
+     */
     public const val DRAIN_S: Float = 0.25f
+
+    /** [DRAIN_S] in frame nanos. */
+    public const val DRAIN_NS: Long = 250_000_000L
 
     /** Each fresh word fades over 250 ms (KitMotion.standard). */
     public const val FADE_NS: Long = 250_000_000L
@@ -64,6 +71,12 @@ internal constructor(initialShown: Int, private val predecessor: RevealState?) {
     /** Frames the clock ran (tests read it to prove the clock parks when idle). */
     public var frames: Int = 0
         private set
+
+    /** When every character seen so far must be laid out (frame nanos); 0 = no deadline yet. */
+    private var deadline: Long = 0L
+
+    /** The text length the deadline was set for. */
+    private var seenLength: Int = initialShown
 
     /** Word landings: the only times the block re-lays out. */
     public var landings: Int = 0
@@ -102,8 +115,17 @@ internal constructor(initialShown: Int, private val predecessor: RevealState?) {
             return 0f
         }
         val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(RevealPace.MAX_DT_S)
-        var carry =
-            carryIn + maxOf(RevealPace.BASE_CPS, (text.length - shown) / RevealPace.DRAIN_S) * dt
+        // M-009: new words (or a block that just got its turn after the one before it) restart the 250 ms deadline.
+        if (text.length > seenLength || last == 0L || deadline == 0L) deadline = now + RevealPace.DRAIN_NS
+        seenLength = text.length
+        val backlog = (text.length - shown).coerceAtLeast(0)
+        val left = (deadline - now) / 1e9f
+        // Never slower than the base pace, and linear to the deadline: what is left lands by the deadline, never later
+        // (the old rate, backlog / 250 ms re-taken every frame, only decayed toward it and trailed for over a second).
+        val step =
+            if (left <= 0f) backlog.toFloat()
+            else maxOf(RevealPace.BASE_CPS * dt, backlog * (dt / left).coerceAtMost(1f))
+        var carry = carryIn + step
         val want = shown + carry.toInt()
         carry -= carry.toInt()
         val snapped = text.wordEndAtOrAfter(want).coerceAtMost(text.length)
