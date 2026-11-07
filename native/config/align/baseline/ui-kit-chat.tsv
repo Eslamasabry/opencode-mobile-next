@@ -1,5 +1,17 @@
 # Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
 # shot	rule	subject
+kit_code_block_code_header	gap-step	"class ConnectionController extends Chang"
+kit_code_block_code_header_1280x800	gap-step	"class ConnectionController extends Chang"
+kit_code_block_code_header_text2	gap-step	"class ConnectionController extends Chang"
+kit_code_block_code_header_text2_1280x800	gap-step	"class ConnectionController extends Chang"
+kit_code_block_command_wrapped	gap-step	"$"
+kit_code_block_command_wrapped_1280x800	gap-step	"$"
+kit_code_block_empty	start-edge	"Empty"
+kit_code_block_empty_1280x800	start-edge	"Empty"
+kit_code_block_output_capped	gap-step	"Show all # lines" [kit-code-more]
+kit_code_block_output_capped_1280x800	gap-step	"Show all # lines" [kit-code-more]
+kit_code_block_wrapped	start-edge	"final message = "This line is written lo"
+kit_code_block_wrapped_1280x800	start-edge	"final message = "This line is written lo"
 kit_composer_idle_empty	target	"Ask OpenCode…"
 kit_row_default	row-height	"Fix the login bug" [kit-row]
 kit_step_glow_fail_flash	icon-squeezed	icon
