@@ -52,7 +52,7 @@ class LiveLooksCTest {
     fun `E20-S28 C every look compiles and sets only uniforms its program declares`() {
         mine.forEach { look ->
             assertNotNull(RuntimeEffect.makeForShader(look.shader), "${look.id} compiles")
-            val rec = Recorder(DARK, 1f, 2.625f, 1080f, 2400f, 0f)
+            val rec = Recorder(DARK, 1f)
             look.uniforms(rec)
             assertTrue(rec.names.isNotEmpty(), "${look.id} sets its own knob")
             rec.names.forEach { assertTrue(look.shader.contains("uniform float $it;"), "${look.id} declares $it") }
@@ -63,20 +63,22 @@ class LiveLooksCTest {
     fun `E20-S28 C text stays readable over every pixel at Subtle Normal and Bold in dark and light`() {
         for (theme in listOf(DARK, LIGHT)) {
             for (strength in listOf(.7f, 1f, 1.6f)) {
-                mine.forEach { look ->
-                    val px = render(look, theme, strength, t = 12f)
-                    var worst = Double.MAX_VALUE
-                    var drift = 0
-                    for (i in px.indices step 4) {
-                        val rgb = (px[i].u() shl 16) or (px[i + 1].u() shl 8) or px[i + 2].u()
-                        worst = min(worst, contrast(theme.text2, rgb))
-                        drift = max(drift, channelDelta(theme.ground, rgb))
-                    }
-                    assertTrue(worst >= 4.5, "${look.id} ${theme.name} x$strength: secondary text contrast $worst")
-                    assertTrue(drift <= 60, "${look.id} ${theme.name} x$strength: strays $drift/255 from the ground")
-                }
+                mine.forEach { look -> checkReadable(look, theme, strength) }
             }
         }
+    }
+
+    private fun checkReadable(look: LiveLook, theme: Theme, strength: Float) {
+        val px = render(look, theme, strength, t = 12f)
+        var worst = Double.MAX_VALUE
+        var drift = 0
+        for (i in px.indices step 4) {
+            val rgb = (px[i].u() shl 16) or (px[i + 1].u() shl 8) or px[i + 2].u()
+            worst = min(worst, contrast(theme.text2, rgb))
+            drift = max(drift, channelDelta(theme.ground, rgb))
+        }
+        assertTrue(worst >= 4.5, "${look.id} ${theme.name} x$strength: secondary text contrast $worst")
+        assertTrue(drift <= 60, "${look.id} ${theme.name} x$strength: strays $drift/255 from the ground")
     }
 
     @Test
@@ -90,19 +92,23 @@ class LiveLooksCTest {
         }
     }
 
-    private class Theme(val name: String, val ground: Int, val accent: Int, val ink: Int, val text2: Int, val dark: Boolean)
+    private class Theme(
+        val name: String,
+        val ground: Int,
+        val accent: Int,
+        val ink: Int,
+        val text2: Int,
+        val dark: Boolean,
+    )
 
     /** A LiveUniforms over a Skia builder; [names] records the look's own uniforms. */
-    private class Recorder(
-        theme: Theme,
-        override val intensity: Float,
-        override val density: Float,
-        override val width: Float,
-        override val height: Float,
-        override val time: Float,
-        val builder: RuntimeShaderBuilder? = null,
-    ) : LiveUniforms {
+    private class Recorder(theme: Theme, override val intensity: Float, val builder: RuntimeShaderBuilder? = null) :
+        LiveUniforms {
         override val dark: Boolean = theme.dark
+        override val density: Float = DENSITY
+        override val width: Float = W.toFloat()
+        override val height: Float = H.toFloat()
+        override val time: Float = 0f
         val names = mutableListOf<String>()
 
         override fun float(name: String, value: Float) {
@@ -122,18 +128,23 @@ class LiveLooksCTest {
     }
 
     private fun render(look: LiveLook, theme: Theme, strength: Float, t: Float): ByteArray {
-        val w = 270
-        val h = 600
-        val density = 2.625f / 4f
+        val w = W
+        val h = H
+        val density = DENSITY
         val b = RuntimeShaderBuilder(RuntimeEffect.makeForShader(look.shader))
         b.uniform(LiveShaderLib.RES, w.toFloat(), h.toFloat())
         b.uniform(LiveShaderLib.TIME, t)
         b.uniform(LiveShaderLib.INTENSITY, strength)
         b.uniform(LiveShaderLib.DENSITY, density)
         b.uniform(LiveShaderLib.DARK, if (theme.dark) 1f else 0f)
-        listOf(LiveShaderLib.GROUND to theme.ground, LiveShaderLib.ACCENT to theme.accent, LiveShaderLib.INK to theme.ink)
-            .forEach { (n, c) -> b.uniform(n, ch(c, 16), ch(c, 8), ch(c, 0), 1f) }
-        look.uniforms(Recorder(theme, strength, density, w.toFloat(), h.toFloat(), t, b))
+        val colors =
+            listOf(
+                LiveShaderLib.GROUND to theme.ground,
+                LiveShaderLib.ACCENT to theme.accent,
+                LiveShaderLib.INK to theme.ink,
+            )
+        colors.forEach { (n, c) -> b.uniform(n, ch(c, 16), ch(c, 8), ch(c, 0), 1f) }
+        look.uniforms(Recorder(theme, strength, b))
         val surface = Surface.makeRasterN32Premul(w, h)
         surface.canvas.drawRect(Rect.makeWH(w.toFloat(), h.toFloat()), Paint().apply { shader = b.makeShader() })
         val bmp = Bitmap()
@@ -143,6 +154,9 @@ class LiveLooksCTest {
     }
 
     private companion object {
+        const val W = 270
+        const val H = 600
+        const val DENSITY = 2.625f / 4f
         val DARK = Theme("dark", 0x0B0C0E, 0x3DDC8A, 0xF3F3F1, 0xA3A5AB, dark = true)
         val LIGHT = Theme("light", 0xF3F3F1, 0x087F43, 0x111214, 0x50535A, dark = false)
 
@@ -151,7 +165,8 @@ class LiveLooksCTest {
         fun Byte.u(): Int = toInt() and 0xFF
 
         fun lum(rgb: Int): Double {
-            fun lin(c: Int): Double = (c / 255.0).let { if (it <= .03928) it / 12.92 else ((it + .055) / 1.055).pow(2.4) }
+            fun lin(c: Int): Double =
+                (c / 255.0).let { if (it <= .03928) it / 12.92 else ((it + .055) / 1.055).pow(2.4) }
             return .2126 * lin((rgb shr 16) and 0xFF) + .7152 * lin((rgb shr 8) and 0xFF) + .0722 * lin(rgb and 0xFF)
         }
 
