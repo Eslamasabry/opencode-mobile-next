@@ -439,7 +439,7 @@ private fun ButtonLine(text: String, style: androidx.compose.ui.text.TextStyle, 
                 val placeable = measurable.measure(constraints)
                 val nearest = kotlin.math.round(exact[0]).toInt()
                 val width = if (nearest in 1 until placeable.width) nearest.coerceAtLeast(constraints.minWidth) else placeable.width
-                layout(width, placeable.height) { placeable.placeRelative((width - placeable.width) / 2, 0) }
+                layout(width, placeable.height) { placeable.placeRelative((width - placeable.width) / 2, 0) } // NV: half the sub-pixel trim
             },
         style = style,
         maxLines = maxLines,
