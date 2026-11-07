@@ -15,8 +15,8 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeChunk
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -88,23 +88,19 @@ fun PolishChunkScene() {
     }
 }
 
-/** The app's + tray choices, in its own words (P-004). */
-val polishTray: List<KitTrayAction> =
+/** The + tray as Flutter draws it (one row: Photos, Camera, File, More; E20-S20). */
+val polishTray: List<KitComposerTrayAction> =
     listOf(
-        KitTrayAction("Attach file", KitTrayKind.File) {},
-        KitTrayAction("Photo library", KitTrayKind.Photo) {},
-        KitTrayAction("Take photo", KitTrayKind.Camera) {},
-        KitTrayAction("Paste image from clipboard", KitTrayKind.Clipboard) {},
-        KitTrayAction("Reuse a prompt", KitTrayKind.History) {},
-        KitTrayAction("Commands", KitTrayKind.Commands) {},
-        KitTrayAction("Saved prompts", KitTrayKind.Saved) {},
-        KitTrayAction("Send later or repeat", KitTrayKind.Schedule) {},
+        KitComposerTrayAction("Photos", KitIcons.images, {}),
+        KitComposerTrayAction("Camera", KitIcons.camera, {}),
+        KitComposerTrayAction("File", KitIcons.attach, {}),
+        KitComposerTrayAction("More", KitIcons.more, {}),
     )
 
-/** P-004: distinct glyphs, centred labels with 4 dp sides. */
+/** The open tray on the page edge. */
 @Composable
 fun PolishTrayScene() {
-    Edge("polish-tray") { KitComposerTray(polishTray, Modifier.padding(horizontal = 16.dp)) }
+    Edge("polish-tray") { KitComposerTray(open = true, actions = polishTray, modifier = Modifier.padding(horizontal = 16.dp)) }
 }
 
 /** P-011: an opened work line: one 16 dp edge, one icon column, one text edge. */

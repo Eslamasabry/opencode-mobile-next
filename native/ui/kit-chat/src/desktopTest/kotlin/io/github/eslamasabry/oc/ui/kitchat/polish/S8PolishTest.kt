@@ -25,9 +25,6 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.code.codeCornerReserve
 import io.github.eslamasabry.oc.ui.kitchat.code.codeOverflows
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
-import io.github.eslamasabry.oc.ui.kitchat.composer.trayPerRow
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -167,52 +164,6 @@ class S8PolishTest {
             val layout = textLayout(onNodeWithText(long, useUnmergedTree = true))
             assertEquals(1, layout.lineCount)
         }
-
-    // ---- P-004: the + tray ----
-
-    @Test
-    fun `P-004 every tray choice draws its own glyph`() {
-        val icons = KitTrayKind.entries.map { it.icon }
-        assertEquals(icons.size, icons.toSet().size, "two tray choices share a glyph")
-    }
-
-    @Test
-    fun `P-004 a wrapped tray label is centred line by line and keeps 4 dp from its cell`() =
-        runComposeUiTest {
-            val label = "Paste image from clipboard"
-            setContent {
-                ChatTestTheme {
-                    KitComposerTray(
-                        listOf(
-                            KitTrayAction(label, KitTrayKind.Clipboard) {},
-                            KitTrayAction("Reuse a prompt", KitTrayKind.History) {},
-                            KitTrayAction("Commands", KitTrayKind.Commands) {},
-                            KitTrayAction("Send later or repeat", KitTrayKind.Schedule) {},
-                        ),
-                        Modifier.width(360.dp),
-                    )
-                }
-            }
-            val node = onNodeWithText(label, useUnmergedTree = true)
-            val box = node.box()
-            val cell = 360f / 4
-            assertTrue(box.left >= Space.S1 - 0.5f, "label starts ${box.left} dp into its cell")
-            assertTrue(box.right <= cell - Space.S1 + 0.5f, "label ends at ${box.right} of a $cell dp cell")
-            val layout = textLayout(node)
-            assertTrue(layout.lineCount > 1, "the label wraps in a $cell dp cell")
-            for (line in 0 until layout.lineCount) {
-                val left = layout.getLineLeft(line)
-                val right = layout.size.width - layout.getLineRight(line)
-                assertTrue(abs(left - right) <= 1.5f, "line $line: $left px before, $right px after")
-            }
-        }
-
-    @Test
-    fun `P-004 the tray takes three choices to a row at large text so whole words fit`() {
-        assertEquals(4, trayPerRow(1f))
-        assertEquals(4, trayPerRow(1.15f))
-        assertEquals(3, trayPerRow(1.3f))
-    }
 
     // ---- P-011: the opened tool group has one start edge ----
 
