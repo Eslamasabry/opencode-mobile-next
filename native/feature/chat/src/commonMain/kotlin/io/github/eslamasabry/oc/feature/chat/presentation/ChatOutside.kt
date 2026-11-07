@@ -25,12 +25,18 @@ public interface ChatOutside {
     public suspend fun openPhoneFile(ref: ConversationRef, path: String): Outcome<PhoneFileOpen> = Outcome.Ok(PhoneFileOpen.Preview)
 
     /**
-     * Puts [text] on the clipboard verbatim (a reply is the person's to paste). False = it did not
-     * work.
+     * E15-S05: [text] through the app's one redactor (`Redactor.redact`, Flutter `KitRedact.text`), so a key, token or
+     * password a server or tool printed never reaches the clipboard or another app. The presenter masks every piece
+     * of server text before [copy] and [share]; only the person's own prompt goes verbatim. No default on purpose.
+     */
+    public fun mask(text: String): String
+
+    /**
+     * Puts [text] on the clipboard as given: the presenter has already [mask]ed server text. False = it did not work.
      */
     public fun copy(text: String): Boolean
 
-    /** Opens the system share sheet with [text] (this app is not offered as a target). */
+    /** Opens the system share sheet with [text], already [mask]ed (this app is not offered as a target). */
     public fun share(text: String): Boolean
 
     /**
@@ -65,6 +71,8 @@ public sealed interface LinkCheck {
 @Inject
 @ContributesBinding(AppScope::class)
 public class NoChatOutside : ChatOutside {
+    override fun mask(text: String): String = text // nothing leaves the app: copy and share refuse
+
     override fun copy(text: String): Boolean = false
 
     override fun share(text: String): Boolean = false

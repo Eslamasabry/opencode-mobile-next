@@ -45,6 +45,8 @@ public data class ChatUi(
      * is true.
      */
     val guardBack: Boolean,
+    /** The last copy the chat made (E15-S05): the screen announces it once, saying when a key was hidden. */
+    val copied: CopiedUi? = null,
     /** P12-CHAT-FEEL: the "Select text" sheet over one message's words; null = closed. */
     val select: SelectTextUi? = null,
     /**
@@ -291,6 +293,9 @@ public class PictureUi(
 public data class SelectTextUi(val id: Long, val text: String)
 
 public data class ClipUi(val id: Long, val text: String)
+
+/** One copy made ([id] grows with each); [masked] = the redactor hid something that looked like a password or key. */
+public data class CopiedUi(val id: Long, val masked: Boolean)
 
 public data class ReadAloudUi(val id: Long, val rowKey: String, val text: String)
 

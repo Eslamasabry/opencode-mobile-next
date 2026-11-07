@@ -60,6 +60,8 @@ class ChatFeelScreenTest {
     private class Outside : ChatOutside {
         val calls = mutableListOf<String>()
 
+        override fun mask(text: String): String = text
+
         override fun copy(text: String): Boolean = true.also { calls += "copy $text" }
 
         override fun share(text: String): Boolean = true.also { calls += "share $text" }

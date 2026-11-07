@@ -34,6 +34,9 @@ class ChatFeelPresenterTest {
         var check: LinkCheck = LinkCheck.Ask("example.com")
         var opens = true
 
+        /** Stands for the app's Redactor: the fake key below is the only secret it knows. */
+        override fun mask(text: String): String = text.replace(FAKE_KEY, "•••")
+
         override fun copy(text: String): Boolean = copyWorks.also { calls += "copy $text" }
 
         override fun share(text: String): Boolean = true.also { calls += "share $text" }
@@ -115,7 +118,7 @@ class ChatFeelPresenterTest {
     }
 
     @Test
-    fun `09-6_6 copy and share hand the words to the platform verbatim, and a failed copy says so`() {
+    fun `09-6_6 copy and share hand the words to the platform, and a failed copy says so`() {
         world.transcript.value =
             stateOf(prompt("u1", "Fix **the** build"), block("u1", "a1", "p", 0, "Done."), block("u1", "a1", "p", 7, "All green."), footer("u1"))
         val p = presenter()
@@ -129,6 +132,43 @@ class ChatFeelPresenterTest {
         outside.copyWorks = false
         p.copyText("x")
         assertEquals(ChatStatusKind.ActionFailed, p.current().status?.kind)
+    }
+
+    @Test
+    fun `B-SEC-145 a reply's copy and share go through the redactor and the copy says something was hidden`() {
+        world.transcript.value =
+            stateOf(prompt("u1", "my key is $FAKE_KEY"), block("u1", "a1", "p", 0, "Use `$FAKE_KEY`."), footer("u1"))
+        val p = presenter()
+        p.openMessageMenu("footer:u1")
+        p.messageAction(p.current().menu!!.target, MessageAction.Copy)
+        p.openMessageMenu("footer:u1")
+        p.messageAction(p.current().menu!!.target, MessageAction.Share)
+        assertEquals(listOf("copy Use `•••`.", "share Use `•••`."), outside.calls)
+        assertEquals(true, p.current().copied?.masked, "the confirmation says a key was hidden")
+    }
+
+    @Test
+    fun `B-SEC-145 the person's own prompt copies and shares verbatim and claims nothing was hidden`() {
+        world.transcript.value = stateOf(prompt("u1", "my key is $FAKE_KEY"), block("u1", "a1", "p", 0, "ok"), footer("u1"))
+        val p = presenter()
+        p.openMessageMenu("prompt:u1")
+        p.messageAction(p.current().menu!!.target, MessageAction.Copy)
+        p.openMessageMenu("prompt:u1")
+        p.messageAction(p.current().menu!!.target, MessageAction.Share)
+        assertEquals(listOf("copy my key is $FAKE_KEY", "share my key is $FAKE_KEY"), outside.calls)
+        assertEquals(false, p.current().copied?.masked)
+    }
+
+    @Test
+    fun `B-SEC-145 a code block's or tool output's Copy is server text and is masked`() {
+        val p = presenter()
+        p.copyText("export TOKEN=$FAKE_KEY")
+        assertEquals(listOf("copy export TOKEN=•••"), outside.calls)
+        val first = assertNotNull(p.current().copied)
+        assertTrue(first.masked)
+        p.copyText("plain")
+        val second = assertNotNull(p.current().copied)
+        assertTrue(second.id > first.id && !second.masked, "each copy is announced once, plainly when nothing was hidden")
     }
 
     @Test
@@ -222,5 +262,10 @@ class ChatFeelPresenterTest {
         world.picture = Outcome.Failed(Failure.Unexpected())
         p.openPicture("gone.png", "gone.png")
         assertTrue(p.current().picture!!.failed, "a plain line, never the error text")
+    }
+
+    private companion object {
+        /** A fake key, split so the source holds no whole key-shaped literal. */
+        val FAKE_KEY = "sk-" + "live-123456"
     }
 }
