@@ -49,6 +49,7 @@ class KitIconGateTest {
     )
 
     private fun sizeLabel(size: KitIconSize, arabic: Boolean) = when (size) {
+        KitIconSize.Tiny -> if (arabic) "صغير جداً · 16" else "Tiny · 16"
         KitIconSize.Small -> if (arabic) "صغير · 20" else "Small · 20"
         KitIconSize.Medium -> if (arabic) "متوسط · 22" else "Medium · 22"
         KitIconSize.Large -> if (arabic) "كبير · 24" else "Large · 24"
@@ -82,7 +83,8 @@ class KitIconGateTest {
         Gutter {
             Column(Modifier.fillMaxWidth()) {
                 DirectionRow(arabic)
-                for (size in KitIconSize.entries) {
+                // The Flutter golden's three sizes; Tiny (16, native only) is checked by KitIconSizeTest.
+                for (size in listOf(KitIconSize.Small, KitIconSize.Medium, KitIconSize.Large)) {
                     Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
                         KitText(sizeLabel(size, arabic), role = TypeRole.Label)
                         Spacer(Modifier.height(6.dp))

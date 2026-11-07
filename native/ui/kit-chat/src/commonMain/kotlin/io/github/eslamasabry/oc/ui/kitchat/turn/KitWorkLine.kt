@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
@@ -199,9 +200,9 @@ public fun KitWorkLine(
                         KitWorkState.WaitingForYou -> Box(Modifier.size(iconSize), contentAlignment = Alignment.Center) {
                             Box(Modifier.size(8.dp).background(colors.attention, CircleShape))
                         }
-                        KitWorkState.EndedFailed -> KitIcon(KitIcons.warning, Modifier.size(iconSize), tone = TextTone.Secondary)
-                        KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, Modifier.size(iconSize), tone = TextTone.Secondary)
-                        KitWorkState.Done -> KitIcon(KitIcons.fileText, Modifier.size(iconSize), tone = TextTone.Secondary)
+                        KitWorkState.EndedFailed -> KitIcon(KitIcons.warning, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
+                        KitWorkState.Stopped -> KitIcon(KitIcons.stopCircle, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
+                        KitWorkState.Done -> KitIcon(KitIcons.fileText, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
                     }
                     // One live line: when the step changes the new words fade in over the old (QUICK; instant
                     // under reduced motion). While running it is one polite live region, so the screen reader
@@ -216,7 +217,7 @@ public fun KitWorkLine(
                             maxLines = 1,
                         )
                     }
-                    KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, Modifier.size(iconSize), tone = TextTone.Secondary)
+                    KitIcon(if (expanded) KitIcons.chevronUp else KitIcons.chevronDown, size = KitIconSize.Tiny, tone = TextTone.Secondary, growsWithText = true)
                 }
             }
             KitReveal(visible = expanded) {
