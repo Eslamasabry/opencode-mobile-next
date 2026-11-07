@@ -4,15 +4,25 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 
 /**
- * Motion level as far as P2 needs it. The kit's `MotionPolicy` (Full/Calm/Off, Saver, heat; plan 08 §3, unit M0)
- * replaces this; until then the only input is the system animator scale ("Remove animations" sets it to 0).
+ * How much pages move (M-013): Full slides and grows, Calm only cross-fades, Off is instant. [motionLevelOf] reads
+ * the system animator scale ("Remove animations" sets it to 0); [shellLevel] folds in the kit's resolved level (the
+ * person's Animations choice, battery saver and heat), so Calm never turns page transitions off.
  */
-public enum class ShellMotionLevel { Full, Off }
+public enum class ShellMotionLevel { Full, Calm, Off }
 
 public fun motionLevelOf(animatorScale: Float): ShellMotionLevel =
     if (animatorScale == 0f) ShellMotionLevel.Off else ShellMotionLevel.Full
+
+/** The stricter of the system level and the kit's resolved [MotionLevel]. */
+public fun shellLevel(system: ShellMotionLevel, kit: MotionLevel): ShellMotionLevel =
+    when {
+        system == ShellMotionLevel.Off || kit == MotionLevel.Off -> ShellMotionLevel.Off
+        system == ShellMotionLevel.Calm || kit == MotionLevel.Calm -> ShellMotionLevel.Calm
+        else -> ShellMotionLevel.Full
+    }
 
 /** Plan 08 §5.4: the predictive-back gate that replaces the demo's 700 ms latch. No timers; state only. */
 public enum class GateState { Idle, Opening, Closing, Gesture, GestureSettling }
