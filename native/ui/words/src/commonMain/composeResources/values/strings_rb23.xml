@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Order 23 (native UI rebuild): copied from lib/l10n/app_en.arb at 8302de537. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">Preview isn't available here</string>
+    <string name="rb23_devPreviewUnsupportedBody">This device cannot show the page inside the app. Open it in a browser instead.</string>
+</resources>

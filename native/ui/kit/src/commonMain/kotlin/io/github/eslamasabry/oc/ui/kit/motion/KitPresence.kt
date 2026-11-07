@@ -3,9 +3,12 @@ package io.github.eslamasabry.oc.ui.kit.motion
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,6 +27,17 @@ import androidx.compose.ui.unit.IntSize
  */
 @Composable
 public fun KitPresence(visible: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    KitPresence(visible, Orientation.Horizontal, modifier, content)
+}
+
+/** [KitPresence] whose slot opens along [axis] (Dart `KitPresence.axis`): horizontal in a row, vertical in a column. */
+@Composable
+public fun KitPresence(
+    visible: Boolean,
+    axis: Orientation,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
     val state = KitMotion.state
     if (state.reduced) {
         if (visible) Box(modifier) { content() }
@@ -31,14 +45,17 @@ public fun KitPresence(visible: Boolean, modifier: Modifier = Modifier, content:
     }
     val specs = KitMotion.specs
     val travels = state.travels
+    val horizontal = axis == Orientation.Horizontal
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
         enter =
-            if (travels) expandHorizontally(specs.spatialFast<IntSize>()) + fadeIn(specs.pace(KitPace.Quick))
+            if (travels && horizontal) expandHorizontally(specs.spatialFast<IntSize>()) + fadeIn(specs.pace(KitPace.Quick))
+            else if (travels) expandVertically(specs.spatialFast<IntSize>()) + fadeIn(specs.pace(KitPace.Quick))
             else fadeIn(specs.pace(KitPace.Quick)),
         exit =
-            if (travels) shrinkHorizontally(specs.spatialFast<IntSize>()) + fadeOut(specs.pace(KitPace.Quick))
+            if (travels && horizontal) shrinkHorizontally(specs.spatialFast<IntSize>()) + fadeOut(specs.pace(KitPace.Quick))
+            else if (travels) shrinkVertically(specs.spatialFast<IntSize>()) + fadeOut(specs.pace(KitPace.Quick))
             else fadeOut(specs.pace(KitPace.Quick)),
         label = "kit.presence",
     ) {

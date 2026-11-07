@@ -1,0 +1,2 @@
+kit_spec_block_empty_light	DEPENDS_ON 05	the editable spec block is part-kit_field (order 05): its edge, label gap and height; the label and layout around it match
+kit_spec_block_empty_dark	DEPENDS_ON 05	the editable spec block is part-kit_field (order 05): its edge, label gap and height; the label and layout around it match

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Order 23 (native UI rebuild): copied from lib/l10n/app_ar.arb at 8302de537. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">المعاينة غير متاحة هنا</string>
+    <string name="rb23_devPreviewUnsupportedBody">لا يستطيع هذا الجهاز عرض الصفحة داخل التطبيق. افتحها في المتصفح بدلاً من ذلك.</string>
+</resources>
