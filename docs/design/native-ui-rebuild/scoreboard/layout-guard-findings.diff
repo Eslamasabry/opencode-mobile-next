@@ -1,0 +1,151 @@
+diff --git a/native/config/layout/baseline/feature-chat.tsv b/native/config/layout/baseline/feature-chat.tsv
+index aca6e82a5..27c2eefaa 100644
+--- a/native/config/layout/baseline/feature-chat.tsv
++++ b/native/config/layout/baseline/feature-chat.tsv
+@@ -1,48 +1,43 @@
+ # Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
+ # shot	window	rule	subject
++chat_find_open	phone	content-edge	Fix flaky checkout test
++chat_find_open	phone	edge-tap	Copy
+ chat_find_open	phone	edge-tap	Fix the flaky checkout test
+-chat_find_open	phone	edge-tap	More for this reply
+ chat_find_open	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_find_open	phone	overlap	shopfront
+ chat_find_open	phone	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
++chat_find_open	tablet	edge-tap	Copy
+ chat_find_open	tablet	edge-tap	Fix the flaky checkout test
+-chat_find_open	tablet	edge-tap	More for this reply
+ chat_find_open	tablet	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_find_open	tablet	overlap	shopfront
+ chat_find_open	tablet	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+ chat_find_open	tablet	wide-text	# of # matches
+ chat_find_open	tablet	wide-text	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_load_error	phone	overlap	shopfront
++chat_load_error	phone	content-edge	Fix flaky checkout test
+ chat_load_error	phone	small-target	Ask OpenCode…
+-chat_load_error	tablet	overlap	shopfront
+ chat_load_error	tablet	small-target	Ask OpenCode…
+-chat_loading	phone	overlap	shopfront
++chat_loading	phone	content-edge	Fix flaky checkout test
+ chat_loading	phone	small-target	Ask OpenCode…
+-chat_loading	tablet	overlap	shopfront
+ chat_loading	tablet	small-target	Ask OpenCode…
++chat_transcript_turn	phone	content-edge	Fix flaky checkout test
++chat_transcript_turn	phone	edge-tap	Copy
+ chat_transcript_turn	phone	edge-tap	Fix the flaky checkout test
+-chat_transcript_turn	phone	edge-tap	More for this reply
+ chat_transcript_turn	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_transcript_turn	phone	overlap	shopfront
+ chat_transcript_turn	phone	small-target	Ask OpenCode…
+ chat_transcript_turn	phone	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
++chat_transcript_turn	tablet	edge-tap	Copy
+ chat_transcript_turn	tablet	edge-tap	Fix the flaky checkout test
+-chat_transcript_turn	tablet	edge-tap	More for this reply
+ chat_transcript_turn	tablet	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_transcript_turn	tablet	overlap	shopfront
+ chat_transcript_turn	tablet	small-target	Ask OpenCode…
+ chat_transcript_turn	tablet	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+ chat_transcript_turn	tablet	wide-text	The flakiness comes from ⁨CheckoutBloc⁩ racing t
++chat_transcript_turn_1280x800	phone	content-edge	Fix flaky checkout test
++chat_transcript_turn_1280x800	phone	edge-tap	Copy
+ chat_transcript_turn_1280x800	phone	edge-tap	Fix the flaky checkout test
+-chat_transcript_turn_1280x800	phone	edge-tap	More for this reply
+ chat_transcript_turn_1280x800	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_transcript_turn_1280x800	phone	overlap	shopfront
+ chat_transcript_turn_1280x800	phone	small-target	Ask OpenCode…
+ chat_transcript_turn_1280x800	phone	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
++chat_transcript_turn_1280x800	tablet	edge-tap	Copy
+ chat_transcript_turn_1280x800	tablet	edge-tap	Fix the flaky checkout test
+-chat_transcript_turn_1280x800	tablet	edge-tap	More for this reply
+ chat_transcript_turn_1280x800	tablet	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+-chat_transcript_turn_1280x800	tablet	overlap	shopfront
+ chat_transcript_turn_1280x800	tablet	small-target	Ask OpenCode…
+ chat_transcript_turn_1280x800	tablet	tight	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+ chat_transcript_turn_1280x800	tablet	wide-text	The flakiness comes from ⁨CheckoutBloc⁩ racing t
+diff --git a/native/config/layout/baseline/ui-kit-chat.tsv b/native/config/layout/baseline/ui-kit-chat.tsv
+index f1e797843..d73bebaf6 100644
+--- a/native/config/layout/baseline/ui-kit-chat.tsv
++++ b/native/config/layout/baseline/ui-kit-chat.tsv
+@@ -1,19 +1,53 @@
+ # Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
+ # shot	window	rule	subject
++kit_composer_idle_empty	phone	small-target	Ask OpenCode…
++kit_composer_idle_empty	tablet	small-target	Ask OpenCode…
++kit_markdown_default	phone	small-target	(unnamed)
++kit_markdown_default	tablet	small-target	(unnamed)
++kit_markdown_default_1280x800	phone	small-target	(unnamed)
++kit_markdown_default_1280x800	tablet	small-target	(unnamed)
++kit_markdown_default_text2	phone	small-target	(unnamed)
++kit_markdown_default_text2	tablet	small-target	(unnamed)
+ kit_request_card_answered	phone	tight	Undo
+ kit_request_card_answered	tablet	tight	Undo
++kit_step_glow_background_t40	tablet	wide-text	lib/a.dart
++kit_step_glow_background_t40	tablet	wide-text	lib/b.dart
++kit_step_glow_done	tablet	wide-text	lib/a.dart
++kit_step_glow_done	tablet	wide-text	lib/b.dart
++kit_step_glow_fail_flash	tablet	wide-text	lib/a.dart
++kit_step_glow_fail_flash	tablet	wide-text	lib/b.dart
++kit_step_glow_failed	tablet	wide-text	lib/a.dart
++kit_step_glow_failed	tablet	wide-text	lib/b.dart
++kit_step_glow_finish_spring	tablet	wide-text	lib/a.dart
++kit_step_glow_finish_spring	tablet	wide-text	lib/b.dart
+ kit_step_glow_finish_tick	tablet	wide-text	lib/a.dart
+ kit_step_glow_finish_tick	tablet	wide-text	lib/b.dart
+ kit_step_glow_first_t40	tablet	wide-text	lib/a.dart
+ kit_step_glow_first_t40	tablet	wide-text	lib/b.dart
++kit_step_glow_last_t40	tablet	wide-text	lib/a.dart
++kit_step_glow_last_t40	tablet	wide-text	lib/b.dart
++kit_step_glow_queued	tablet	wide-text	lib/a.dart
++kit_step_glow_queued	tablet	wide-text	lib/b.dart
+ kit_step_glow_reduced	tablet	wide-text	lib/a.dart
+ kit_step_glow_reduced	tablet	wide-text	lib/b.dart
+ kit_step_glow_running_t10	tablet	wide-text	lib/a.dart
+ kit_step_glow_running_t10	tablet	wide-text	lib/b.dart
++kit_step_glow_running_t40	tablet	wide-text	lib/a.dart
++kit_step_glow_running_t40	tablet	wide-text	lib/b.dart
+ kit_step_glow_running_t40_ar_text2	tablet	wide-text	lib/a.dart
+ kit_step_glow_running_t40_ar_text2	tablet	wide-text	lib/b.dart
+-kit_step_glow_waiting_breathe	phone	clipped	
+-kit_step_glow_waiting_breathe	tablet	clipped	
++kit_step_glow_running_t55	tablet	wide-text	lib/a.dart
++kit_step_glow_running_t55	tablet	wide-text	lib/b.dart
++kit_step_glow_running_t80	tablet	wide-text	lib/a.dart
++kit_step_glow_running_t80	tablet	wide-text	lib/b.dart
++kit_step_glow_stalled	tablet	wide-text	lib/a.dart
++kit_step_glow_stalled	tablet	wide-text	lib/b.dart
++kit_step_glow_stop_fade	tablet	wide-text	lib/a.dart
++kit_step_glow_stop_fade	tablet	wide-text	lib/b.dart
++kit_step_glow_stopped	tablet	wide-text	lib/a.dart
++kit_step_glow_stopped	tablet	wide-text	lib/b.dart
++kit_step_glow_waiting	tablet	wide-text	lib/a.dart
++kit_step_glow_waiting	tablet	wide-text	lib/b.dart
+ kit_step_glow_waiting_breathe	tablet	wide-text	lib/a.dart
+ kit_step_glow_waiting_breathe	tablet	wide-text	lib/b.dart
+ kit_step_timeline_collapsed	phone	tight	Read # file · searched once · edited # file · ra
+@@ -21,8 +55,4 @@ kit_step_timeline_collapsed	phone	tight	The screen is in and the route points to
+ kit_step_timeline_collapsed	tablet	tight	Read # file · searched once · edited # file · ra
+ kit_step_timeline_collapsed	tablet	tight	The screen is in and the route points to it.
+ kit_step_timeline_collapsed	tablet	wide-control	Read # file · searched once · edited # file · ra
+-kit_work_line_default_text2	phone	clipped	
+-kit_work_line_default_text2	phone	clipped	
+-kit_work_line_default_text2	tablet	clipped	
+-kit_work_line_default_text2	tablet	clipped	
+ kit_work_line_default_text2	tablet	wide-row	
+diff --git a/native/config/layout/baseline/ui-kit.tsv b/native/config/layout/baseline/ui-kit.tsv
+index d8697feae..354d3f116 100644
+--- a/native/config/layout/baseline/ui-kit.tsv
++++ b/native/config/layout/baseline/ui-kit.tsv
+@@ -24,8 +24,13 @@ kit_signal_home_ar	phone	tight	Design review
+ kit_signal_home_ar	tablet	edge-text	# min
+ kit_signal_home_ar	tablet	tight	# min
+ kit_signal_home_ar	tablet	tight	Design review
++kit_tappable_disabled	tablet	wide-control	Archive "Fix the login bug"
++kit_tappable_disabled_1280x800	tablet	wide-control	Archive "Fix the login bug"
+ kit_tappable_enabled	tablet	wide-control	Archive "Fix the login bug"
++kit_tappable_enabled_1280x800	tablet	wide-control	Archive "Fix the login bug"
+ kit_tappable_enabled_text2	tablet	wide-control	Archive "Fix the login bug"
++kit_tappable_enabled_text2_1280x800	tablet	wide-control	Archive "Fix the login bug"
+ kit_tappable_focused	tablet	wide-control	Archive "Fix the login bug"
++kit_tappable_focused_1280x800	tablet	wide-control	Archive "Fix the login bug"
+ kit_tappable_hovered	tablet	wide-control	Archive "Fix the login bug"
+ kit_tappable_pressed	tablet	wide-control	Archive "Fix the login bug"

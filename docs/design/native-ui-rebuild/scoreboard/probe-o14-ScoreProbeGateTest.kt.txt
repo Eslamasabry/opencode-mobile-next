@@ -1,0 +1,71 @@
+package io.github.eslamasabry.oc.ui.kitchat.rb.o14
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
+import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.TestStreamingMarkdown
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
+import kotlin.test.Test
+
+/**
+ * SCOREBOARD PROBE (native/rb-score, 2026-11-07), measurement only, never committed: order 14 has no gate cases on
+ * the integration head, so these render the scenes of kit_markdown_golden_test.dart and kit_message_golden_test.dart
+ * with today's native parts to measure how far the chat reading surface is from Flutter.
+ */
+class ScoreProbeGateTest {
+    private val actions = KitMarkdownActions(onLink = {})
+    private val reply = """
+## Reconnect after the phone sleeps
+
+The controller now **refetches** the session instead of replaying events.
+See [the protocol notes](https://opencode.ai/docs) for why.
+
+- `ConnectionController.resume()` reopens the stream
+- Missed deltas are *never* replayed
+- The session list refreshes once
+
+> Deltas and tool progress never replay after a reconnect.
+
+```dart
+await controller.resume();
+final sessions = await gateway.listSessions();
+```
+""".trimStart()
+
+    private fun md(name: String, scale: Float? = null) =
+        FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen, textScale = scale) {
+            KitStandaloneRedaction { Column(Modifier.padding(16.dp).widthIn(max = 700.dp)) { KitMarkdown(TestStreamingMarkdown.parse(reply), actions) } }
+        }
+
+    @Test fun markdown_default() { md("kit_markdown_default") }
+    @Test fun markdown_default_1280x800() { md("kit_markdown_default_1280x800") }
+    @Test fun markdown_default_text2() { md("kit_markdown_default_text2", 2f) }
+
+    private val prompt = "Fix the flaky checkout test. It fails about one run in five on CI."
+    private val answer = "The flakiness comes from `CheckoutBloc` racing the price refresh: `applyCoupon()` awaits the " +
+        "network before the total settles, so the assertion sometimes reads the old total. I made the test wait for the " +
+        "settled state."
+
+    private fun msg(name: String, scale: Float? = null) =
+        FlutterGoldenGate.check(name, textScale = scale) {
+            Column(
+                Modifier.widthIn(max = 700.dp).fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                KitPromptBubble(prompt)
+                KitMarkdown(TestStreamingMarkdown.parse(answer), actions)
+            }
+        }
+
+    @Test fun message_default() { msg("kit_message_default") }
+    @Test fun message_default_1280x800() { msg("kit_message_default_1280x800") }
+    @Test fun message_default_text2() { msg("kit_message_default_text2", 2f) }
+}
