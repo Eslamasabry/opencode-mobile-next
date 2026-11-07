@@ -88,10 +88,27 @@ half3 lvLayer(float k, float g) {
     return mix(c, uAccent.rgb, half(clamp(g, 0.0, 1.0)));
 }
 
-// Opaque output with triangular dither (one 8-bit step) so slow gradients never band.
+// The most a look may move the ground's luma (gamma-encoded). Over ground at most this far away, secondary text keeps
+// at least 4.5:1 on the kit's dark and light grounds, so every look stays readable at every intensity.
+const float LV_MAX_LUMA = 0.15;
+
+// Keeps c within LV_MAX_LUMA of the ground's luma: untouched below 60% of it, a soft knee above, so peaks (a glyph
+// head, a trace core) flatten out instead of clipping.
+half3 lvKeepContrast(half3 c) {
+    float3 w = float3(0.2126, 0.7152, 0.0722);
+    float dl = dot(float3(c) - float3(uGround.rgb), w);
+    float a = abs(dl);
+    float knee = LV_MAX_LUMA * 0.6;
+    float room = LV_MAX_LUMA - knee;
+    float b = a <= knee ? a : knee + room * (1.0 - exp(-(a - knee) / room));
+    float s = a > 1.0e-5 ? b / a : 1.0;
+    return half3(mix(float3(uGround.rgb), float3(c), s));
+}
+
+// Opaque output, contrast-kept, with triangular dither (one 8-bit step) so slow gradients never band.
 half4 lvOut(half3 c, float2 fc) {
     float n = lvHash(fc) + lvHash(fc + float2(19.19, 47.47)) - 1.0;
-    return half4(clamp(c + half(n / 255.0), 0.0, 1.0), 1.0);
+    return half4(clamp(lvKeepContrast(c) + half(n / 255.0), 0.0, 1.0), 1.0);
 }
 """
 
