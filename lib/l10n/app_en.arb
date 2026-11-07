@@ -41474,7 +41474,7 @@
   "@crashOfferSettingDetail": {
     "description": "Privacy and data: what the crash report offer switch does."
   },
-  "telemetrySettingTitle": "Send crash reports and setup counts to the developer (Google Firebase)",
+  "telemetrySettingTitle": "Send reports to developer",
   "@telemetrySettingTitle": {
     "description": "Privacy and data: switch that turns on sending crash reports (Google Firebase Crashlytics) and setup analytics counts (Google Analytics for Firebase) to the developer."
   },

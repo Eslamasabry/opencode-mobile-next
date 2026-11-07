@@ -33930,8 +33930,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.';
 
   @override
-  String get telemetrySettingTitle =>
-      'Send crash reports and setup counts to the developer (Google Firebase)';
+  String get telemetrySettingTitle => 'Send reports to developer';
 
   @override
   String get telemetrySettingDetail =>

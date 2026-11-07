@@ -53465,7 +53465,7 @@ abstract class AppLocalizations {
   /// Privacy and data: switch that turns on sending crash reports (Google Firebase Crashlytics) and setup analytics counts (Google Analytics for Firebase) to the developer.
   ///
   /// In en, this message translates to:
-  /// **'Send crash reports and setup counts to the developer (Google Firebase)'**
+  /// **'Send reports to developer'**
   String get telemetrySettingTitle;
 
   /// Privacy and data: what the crash-report and setup-counts switch sends. Must match PRIVACY.md.

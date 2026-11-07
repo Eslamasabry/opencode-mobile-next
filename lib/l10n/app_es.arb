@@ -8877,9 +8877,20 @@
   "crashOfferSection": "Informes de fallos",
   "crashOfferSettingTitle": "Ofrecer informes de fallos",
   "crashOfferSettingDetail": "Cuando la aplicación se cierre inesperadamente, ofrece un informe que puedes revisar antes. Nunca se envía nada por sí solo.",
-  "telemetrySettingTitle": "Enviar informes de fallos y recuentos de la configuración al desarrollador (Google Firebase)",
+  "telemetrySettingTitle": "Enviar informes al desarrollador",
   "telemetrySettingDetail": "Envía informes de fallos y errores a Google Firebase Crashlytics, y recuentos a Google Analytics for Firebase: aperturas de la aplicación, qué pasos de la configuración se alcanzan o fallan, cuánto tardaron la configuración y la primera respuesta, y las ofertas de actualización. Solo palabras y rangos fijos, con el modelo de tu teléfono, la versión de Android y la de la aplicación. Ni mensajes, ni archivos, ni direcciones, ni contraseñas, ni ID de publicidad.",
   "voiceAutoSetupUnknownNetwork": "Este teléfono no puede saber si esta conexión gasta datos.",
   "phoneSetupErrorNodeUnsupported": "El sistema de este teléfono no puede ejecutar Node.js dentro de Linux integrado. Aún puedes usar OpenCode Mobile conectándote a tu ordenador.",
-  "phoneSetupConnectComputer": "Conectar un ordenador"
+  "phoneSetupConnectComputer": "Conectar un ordenador",
+  "integrationsProvidersLoadFailed": "No se pudieron cargar los proveedores",
+  "integrationsMcpServersLoadFailed": "No se pudieron cargar los servidores MCP",
+  "integrationsResourcesLoadFailed": "No se pudieron cargar los recursos MCP",
+  "integrationsListFailedBody": "El servidor no envió esta lista. Inténtalo de nuevo.",
+  "integrationsFolderMissing": "La carpeta de este proyecto ya no está en el servidor. Abre otro proyecto.",
+  "integrationsProvidersUnsupported": "Este servidor no muestra proveedores",
+  "integrationsMcpServersUnsupported": "Este servidor no muestra servidores MCP",
+  "integrationsResourcesUnsupported": "Este servidor no muestra recursos MCP",
+  "integrationsListUnsupportedBody": "Su versión no ofrece esta lista.",
+  "integrationsWaitingTitle": "Esperando al servidor",
+  "integrationsWaitingBody": "Esta página se carga sola cuando el servidor esté conectado."
 }

@@ -34092,8 +34092,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'بعد أن يُغلق التطبيق بشكل غير متوقع، يعرض عليك تقريرًا تراجعه أولًا. لا يُرسَل أي شيء تلقائيًا أبدًا.';
 
   @override
-  String get telemetrySettingTitle =>
-      'إرسال تقارير الأعطال وإحصاءات الإعداد إلى المطوّر (Google Firebase)';
+  String get telemetrySettingTitle => 'إرسال التقارير إلى المطوّر';
 
   @override
   String get telemetrySettingDetail =>

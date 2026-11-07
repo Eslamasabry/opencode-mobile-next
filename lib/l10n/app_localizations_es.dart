@@ -19570,44 +19570,47 @@ class AppLocalizationsEs extends AppLocalizations {
   String get integrationsPageLoadFailed => 'No se pudo cargar esta página';
 
   @override
-  String get integrationsProvidersLoadFailed => 'Could not load providers';
+  String get integrationsProvidersLoadFailed =>
+      'No se pudieron cargar los proveedores';
 
   @override
-  String get integrationsMcpServersLoadFailed => 'Could not load MCP servers';
+  String get integrationsMcpServersLoadFailed =>
+      'No se pudieron cargar los servidores MCP';
 
   @override
-  String get integrationsResourcesLoadFailed => 'Could not load MCP resources';
+  String get integrationsResourcesLoadFailed =>
+      'No se pudieron cargar los recursos MCP';
 
   @override
   String get integrationsListFailedBody =>
-      'The server didn\'t send this list. Try again.';
+      'El servidor no envió esta lista. Inténtalo de nuevo.';
 
   @override
   String get integrationsFolderMissing =>
-      'This project\'s folder isn\'t on the server any more. Open another project.';
+      'La carpeta de este proyecto ya no está en el servidor. Abre otro proyecto.';
 
   @override
   String get integrationsProvidersUnsupported =>
-      'This server doesn\'t list providers';
+      'Este servidor no muestra proveedores';
 
   @override
   String get integrationsMcpServersUnsupported =>
-      'This server doesn\'t list MCP servers';
+      'Este servidor no muestra servidores MCP';
 
   @override
   String get integrationsResourcesUnsupported =>
-      'This server doesn\'t list MCP resources';
+      'Este servidor no muestra recursos MCP';
 
   @override
   String get integrationsListUnsupportedBody =>
-      'Its version doesn\'t offer this list.';
+      'Su versión no ofrece esta lista.';
 
   @override
-  String get integrationsWaitingTitle => 'Waiting for the server';
+  String get integrationsWaitingTitle => 'Esperando al servidor';
 
   @override
   String get integrationsWaitingBody =>
-      'This page loads by itself once the server is connected.';
+      'Esta página se carga sola cuando el servidor esté conectado.';
 
   @override
   String kitLastKnownRefreshing(String updated) {
@@ -34356,8 +34359,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cuando la aplicación se cierre inesperadamente, ofrece un informe que puedes revisar antes. Nunca se envía nada por sí solo.';
 
   @override
-  String get telemetrySettingTitle =>
-      'Enviar informes de fallos y recuentos de la configuración al desarrollador (Google Firebase)';
+  String get telemetrySettingTitle => 'Enviar informes al desarrollador';
 
   @override
   String get telemetrySettingDetail =>
