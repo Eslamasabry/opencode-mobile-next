@@ -26,10 +26,9 @@ how the native app reads it. Story E00-S01.
 storage files, and the image-picker cache. A key that native names but does not adopt (the `pausedByUser` tile flag
 lives under a new native key) is `MISSING` with a note.
 
-## Gaps this ledger records (`MISSING`, 21 rows)
+## Gaps this ledger records (`MISSING`, 15 rows)
 
-- Audit 2026-11-06: `oc.chatTail.`, `oc.lastProject.`, `oc.chatNoticesSeen.`, `oc.withdrawnPrompts.`,
-  `oc.providerRuntimeRefresh.v1.`, `oc.providerRuntimeUnloadable.`, `oc.scheduleReceipts.`,
+- Audit 2026-11-06: `oc.scheduleReceipts.`,
   `local_agents_offer_skipped` (now READ by `:feature:onboarding` `LocalAgentsOffer` and in Appendix A.3, E00-S06;
   still missing from `FlutterKey`),
   `oc_background_native` / `pausedByUser`, `camera_permissions` / `camera_requested`, `voice_permissions` /
@@ -59,6 +58,9 @@ git worktree add ../../../../flutter-2.1.4 origin/master   # optional: rescan th
   `READ` reader file exists.
 - `B-MIGR-007 every registry shape and secret name has a store ledger row` — `FlutterKey` / `SecretKey` agree with it.
 - `B-MIGR-005 the 2026-11-06 audit gaps are MISSING rows`.
+- `B-MIGR-005 the adopted chat keys are read in place by engine connection (E00-S03)`: `oc.chatTail.`,
+  `oc.lastProject.`, `oc.chatNoticesSeen.`, `oc.withdrawnPrompts.`, `oc.providerRuntimeRefresh.v1.` and
+  `oc.providerRuntimeUnloadable.` were audit gaps; `AdoptedChatKeys` in `:engine:connection` now reads them in place.
 
 When a native reader lands, change the row to `READ` with its path; the audit test then needs the gap removed from
 its list in the same commit.

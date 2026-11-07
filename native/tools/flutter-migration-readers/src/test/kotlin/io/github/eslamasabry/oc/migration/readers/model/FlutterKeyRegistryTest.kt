@@ -286,12 +286,24 @@ class FlutterKeyRegistryTest {
     @Test
     fun `B-MIGR-005 the 2026-11-06 audit gaps are MISSING rows`() {
         val gaps = listOf(
-            "oc.chatTail.", "oc.lastProject.", "oc.chatNoticesSeen.", "oc.withdrawnPrompts.", "oc.providerRuntimeRefresh.v1.",
-            "oc.providerRuntimeUnloadable.", "oc.scheduleReceipts.", "oc_background_native",
+            "oc.scheduleReceipts.", "oc_background_native",
             "oc_background_native/pausedByUser", "camera_permissions", "voice_permissions", "termux-setup-v2.json", ".TermuxResultService",
         )
         val wrong = gaps.filter { g -> ledger.rowsFor(g).none { it.status == LedgerStatus.MISSING && it.audit != null } }
         assertEquals(emptyList(), wrong, "audit gaps must stay MISSING (with the audit named) until a native reader lands")
+    }
+
+    @Test
+    fun `B-MIGR-005 the adopted chat keys are read in place by engine connection (E00-S03)`() {
+        val adopted = listOf(
+            "oc.chatTail.", "oc.lastProject.", "oc.chatNoticesSeen.", "oc.withdrawnPrompts.", "oc.providerRuntimeRefresh.v1.",
+            "oc.providerRuntimeUnloadable.",
+        )
+        for (name in adopted) {
+            val row = ledger.rowsFor(name).single { it.kind == "pref" }
+            assertEquals(LedgerStatus.READ, row.status, name)
+            assertTrue(File(repoRoot, row.nativeReader).readText().contains("\"$name\""), "$name: ${row.nativeReader}")
+        }
     }
 
     @Test
