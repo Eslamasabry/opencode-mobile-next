@@ -1568,7 +1568,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get setupOutputWaiting => '正在等待 Termux 输出…';
+  String get setupOutputWaiting => '正在等待输出…';
 
   @override
   String get uncertainAuthDetail => '服务器可能已开始此次登录但未确认。重新开始前请先在服务器上检查。';
@@ -1632,10 +1632,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get quotaMiniMax => 'MiniMax';
-
-  @override
-  String get managedHealthLifetime =>
-      'Android 可能会停止任一应用。保持手机连接活跃，并不能保证 Termux 服务器整夜持续运行。';
 
   @override
   String get quotaBudgetOff => '关闭';
@@ -1766,52 +1762,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get monitorCheckInDue => '该检查了';
-
-  @override
-  String managedRecoveryAttempts(int attempts) {
-    return '已用尝试：$attempts/3。该上限在应用重启后仍然有效。';
-  }
-
-  @override
-  String get managedRecoveryExhausted => '已达恢复上限。请先检查服务器并手动启动它，然后再重置重试额度。';
-
-  @override
-  String get managedRecoveryBackground => '应用处于后台时，恢复会等待。';
-
-  @override
-  String get managedRecoveryChecking => '正在检查托管恢复操作…';
-
-  @override
-  String managedRecoveryNext(String time) {
-    return '下次恢复尝试不早于 $time。';
-  }
-
-  @override
-  String get managedRecoveryCheck => '检查恢复状态';
-
-  @override
-  String get managedRecoveryReset => '重置重试额度';
-
-  @override
-  String get managedRecoverySaveFailed => '无法保存恢复设置。请重试。';
-
-  @override
-  String get managedRecoveryRevokeFailed => '无法保存或撤销恢复。请保留此服务器并重试，然后再移除它。';
-
-  @override
-  String get managedRecoverySettingsUnreadable => '无法读取恢复设置。启用恢复前请先检查服务器。';
-
-  @override
-  String get managedRecoveryEnableFailed => '无法启用恢复。请启动托管服务器后重试。';
-
-  @override
-  String get managedRecoveryOwnershipChanged => '托管操作已变更。再次启用恢复前请先检查服务器。';
-
-  @override
-  String get managedRecoveryUncertain => 'Termux 未确认结果，恢复已暂停。请刷新以继续。';
-
-  @override
-  String get managedRecoveryRetryDisable => '再次尝试禁用恢复';
 
   @override
   String get pluginMappingUnavailable => '此插件或命令在此已不可用。请刷新并检查你的关联。';
@@ -2004,19 +1954,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get projectConfiguredFolder => '已配置的文件夹';
-
-  @override
-  String get termuxGuideTitle => '连接一次 Termux';
-
-  @override
-  String get termuxGuideOpenFailed =>
-      '命令已复制，但无法打开 Termux。请自行打开 Termux，或再试一次“复制并打开 Termux”。';
-
-  @override
-  String get termuxGuideCopyOpenFailed => '无法复制命令或打开 Termux。';
-
-  @override
-  String get termuxPermissionDenied => 'Android 不允许本应用在 Termux 中运行命令。';
 
   @override
   String get launchShortcutWaiting => '正在连接已保存的服务器。就绪后会打开新对话。';
@@ -2730,29 +2667,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oc2DiscoveryEditorTitle => 'OpenCode 2';
 
   @override
-  String get setupSwitchPending => '升级到 OpenCode 2 尚未完成。已保存的对话会保留。请重试。';
-
-  @override
-  String setupSwitchRetry(String runtime) {
-    return '再次尝试 $runtime';
-  }
-
-  @override
   String get setupSwitchFailed => '无法完成升级到 OpenCode 2。已保存的对话会保留。请重试。';
-
-  @override
-  String setupSwitchProfileName(String runtime) {
-    return '此手机 · $runtime';
-  }
-
-  @override
-  String get setupSwitchMissingCredential =>
-      '无法读取已保存的服务器密码。你的对话和文件会保留。请恢复对已保存密码的访问，然后重试。';
-
-  @override
-  String setupSwitchProgressTitle(String runtime) {
-    return '正在切换到 $runtime';
-  }
 
   @override
   String e7ConnectionFailure1(int attempts) {
@@ -2822,10 +2737,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7ConnectionFailure24 => '此手机上没有响应';
-
-  @override
-  String get e7ConnectionFailure26 =>
-      '在 Termux 中运行 OpenCode？请打开 Termux，检查服务器是否仍在运行。';
 
   @override
   String get e7ConnectionFailure27 =>
@@ -2983,10 +2894,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SharedAdvanced => '高级';
 
   @override
-  String get e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals =>
-      'HTTPS、SSH 隧道、旧版服务器、Termux 内部细节';
-
-  @override
   String get e7SharedHTTPSSSHTunnelsOlderServers => 'HTTPS、SSH 隧道、旧版服务器';
 
   @override
@@ -3006,24 +2913,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get e7SharedThenAddTheServerManuallyWithUsername =>
       '然后手动添加服务器，用户名填 opencode，密码填上面的密码。';
-
-  @override
-  String get e7SharedOnDeviceViaTermuxAutomated => '通过 Termux 在设备上运行（自动）';
-
-  @override
-  String get e7SharedUseTheOnDeviceTermuxCardOn =>
-      '使用“服务器”页面上的“本机（Termux）”卡片。应用会安装 Termux、解锁桥接、配置 opencode、启动服务器并连接 — 全程有引导。';
-
-  @override
-  String get e7SharedOnlyTwoTapsNeedYouPersonallyDownloading =>
-      '只有两步需要你亲自操作：下载 Termux APK，以及在 Termux 中粘贴一次解锁命令 — 这两步是 Android 安全模型的要求，而非本应用的要求。';
-
-  @override
-  String get e7SharedPreferManualInsideTermuxRun => '想手动操作？在 Termux 中运行：';
-
-  @override
-  String get e7SharedTheChrootSharesTheNetworkStackSo =>
-      'chroot 与主机共用网络栈，因此本应用可以访问 http://127.0.0.1:4096。运行 `termux-wake-lock` 可保持其存活。';
 
   @override
   String get e7SharedSecurityNotes => '安全须知';
@@ -3587,12 +3476,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SettingsUi49 => '升级完成前活动服务器已更改';
 
   @override
-  String get e7SettingsUi50 => '更新受管理的 OpenCode';
-
-  @override
-  String get e7SettingsUi51 => '安装最新的稳定版服务器、刷新模型、安全重启并重新连接。';
-
-  @override
   String get e7SettingsUi52 => '上一个版本';
 
   @override
@@ -3680,7 +3563,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SettingsUi92 => '隐私与数据使用';
 
   @override
-  String get e7SettingsUi93 => '服务器、服务商、语音、文件、Termux 和更新';
+  String get e7SettingsUi93 => '服务器、服务商、语音、文件和更新';
 
   @override
   String get e7SettingsUi94 => '语音许可与来源';
@@ -4203,9 +4086,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7WorkspaceStopSharing => '停止分享';
-
-  @override
-  String get e7WorkspaceDisconnect => '断开连接';
 
   @override
   String get e7WorkspaceBackExit => '再按一次返回即可退出';
@@ -6098,13 +5978,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupCameraFailedDetail => '可能有其他应用正在占用相机。粘贴配对码同样有效。';
 
   @override
-  String get e7SetupTermuxNoAnswer =>
-      'Termux 没有响应。请点按“复制并打开 Termux”，在 Termux 中粘贴那一行并按回车，然后回到这里。';
-
-  @override
-  String get e7SetupCopyOpenTermux => '复制并打开 Termux';
-
-  @override
   String get e7SetupStopTerminalDetail => '正在运行的进程及其子进程将被终止。';
 
   @override
@@ -6137,9 +6010,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupKeepAfterLogout => '退出登录后保持运行';
 
   @override
-  String get e7SetupGetTermux => '获取 Termux';
-
-  @override
   String get e7SetupRestartServer => '重启服务器';
 
   @override
@@ -6170,9 +6040,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupCheckingInstall => '正在检查已安装的环境...';
 
   @override
-  String get e7SetupInspectTermuxFailed => 'Android 无法检查 Termux。';
-
-  @override
   String get e7SetupUsername => '用户名（可选）';
 
   @override
@@ -6198,9 +6065,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupPasswordStartupHint => '服务器启动时会显示。如果没有密码则留空。';
 
   @override
-  String get e7SetupInstallTermuxDetail => '安装最新的 F-Droid 版 Termux，然后回到这里。';
-
-  @override
   String get e7SetupStopBeforeUpdate => '更新 OpenCode 前请先停止正在进行的生成。';
 
   @override
@@ -6223,9 +6087,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7SetupUsbAccess => '通过 USB 从这部手机访问';
-
-  @override
-  String get e7SetupWaitingTermux => '正在等待 Termux 响应。这可能需要一些时间。';
 
   @override
   String get e7SetupDiscardChanges => '要放弃服务器的更改吗？';
@@ -6259,16 +6120,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7SetupServers => '服务器';
-
-  @override
-  String get e7SetupStartingSetup => '正在 Termux 中开始设置';
-
-  @override
-  String get e7SetupSetupNotStarted =>
-      'Termux 已打开，但设置没有开始。请重试一次；如果仍然如此，请复制故障报告。';
-
-  @override
-  String get e7SetupThisDevice => '此设备（Termux）';
 
   @override
   String get e7SetupTransportReconnecting => '服务器传输正在重新连接。';
@@ -6354,10 +6205,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupChooseContinue => '选择继续方式';
 
   @override
-  String get e7SetupTermuxOutdated =>
-      '这个版本的 Termux 太旧，应用无法使用。请安装最新版，然后点按“继续设置”。';
-
-  @override
   String get e7SetupCameraNeeded => '扫描需要相机访问权限';
 
   @override
@@ -6371,12 +6218,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7SetupTestConnection => '测试连接';
-
-  @override
-  String get e7SetupCheckingTermux => '正在检查 Termux 连接';
-
-  @override
-  String get e7SetupCheckingTermuxShort => '正在检查 Termux…';
 
   @override
   String get e7SetupDefaultServer => 'OpenCode 服务器';
@@ -6394,13 +6235,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupAboutNotices => '关于与开源声明';
 
   @override
-  String get e7SetupSetupLost => '丢失了在 Termux 中运行的设置进程';
-
-  @override
   String get e7SetupReportCopied => '已复制故障报告。';
-
-  @override
-  String get e7SetupAppSettings => '在设置中允许该权限';
 
   @override
   String get e7SetupNoCamera => '此设备没有相机';
@@ -6503,9 +6338,6 @@ class AppLocalizationsZh extends AppLocalizations {
       'Android 不会再次询问，因此需要在应用设置中更改：开启相机后再返回。粘贴代码无需任何权限，现在就能用。';
 
   @override
-  String get e7SetupVerifyTermuxFailed => 'Termux 桥接验证失败。';
-
-  @override
   String get e7SetupUbuntuOnly => 'Ubuntu 已安装，OpenCode 尚未安装。';
 
   @override
@@ -6528,10 +6360,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7SetupSendCommand => '向终端发送命令';
-
-  @override
-  String get e7SetupUnsupportedSetup =>
-      '在设备本机上设置仅适用于 Android 手机。在这台电脑上，请自行启动 OpenCode 并将其添加为服务器。';
 
   @override
   String get e7SetupSendKey => '向终端发送此按键';
@@ -6587,31 +6415,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String e7SetupPaired(String host) {
     return '已与 $host 配对。';
-  }
-
-  @override
-  String e7SetupStartFailed(String detail) {
-    return '无法保存或启动本地设置：$detail';
-  }
-
-  @override
-  String e7SetupRestartFailed(String detail) {
-    return '无法重启本地服务器：$detail';
-  }
-
-  @override
-  String e7SetupStopFailed(String detail) {
-    return '无法停止本地服务器：$detail';
-  }
-
-  @override
-  String e7SetupElapsedSeconds(int seconds) {
-    return '已用时 $seconds 秒';
-  }
-
-  @override
-  String e7SetupElapsedMinutes(int minutes, int seconds) {
-    return '已用时 $minutes 分 $seconds 秒';
   }
 
   @override
@@ -6719,10 +6522,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupUrlScheme => '服务器 URL 必须使用 https:// 或 http://。';
 
   @override
-  String get e7SetupTermuxUrlScheme =>
-      '服务器 URL 必须使用 https://，本地 Termux 可用 http://。';
-
-  @override
   String get e7SetupUrlCredentials => '不要在 URL 中包含凭据。请使用下方的字段。';
 
   @override
@@ -6793,18 +6592,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get e7SetupCodexToken => '请输入有效的 Codex 连接令牌。';
-
-  @override
-  String get e7SetupRefreshPackages => '正在刷新 Termux 软件包';
-
-  @override
-  String get e7SetupRepairPackages => '正在修复 Termux 软件包集';
-
-  @override
-  String get e7SetupInstallDependencies => '正在安装 Termux 依赖';
-
-  @override
-  String get e7SetupPrepareTermux => '正在准备 Termux';
 
   @override
   String get e7SetupInstallUbuntu => '正在安装 Ubuntu 环境';
@@ -6900,25 +6687,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupReadStorageFailed => '设置前无法读取可用存储空间';
 
   @override
-  String get e7SetupRepositoryFailed => '无法选择 Termux 官方软件包仓库';
-
-  @override
-  String get e7SetupRepositoryRefreshFailed =>
-      '无法刷新 packages.termux.dev；请检查网络后重试';
-
-  @override
-  String get e7SetupRepairFailed => '无法修复被中断的 Termux 软件包事务';
-
-  @override
-  String get e7SetupUpgradeFailed => '无法完成 Termux 软件包的安全升级';
-
-  @override
-  String get e7SetupDependenciesFailed => '无法安装 Termux 依赖';
-
-  @override
-  String get e7SetupDependenciesUnusable => '软件包修复后 Termux 依赖仍无法使用';
-
-  @override
   String get e7SetupUbuntuUnusable => '现有的 Ubuntu 容器无法使用；设置不会删除它';
 
   @override
@@ -6959,21 +6727,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get e7SetupUpdatePassword => '更新密码';
 
   @override
-  String e7SetupLastSetupDetail(String detail) {
-    return '上次设置的输出：$detail';
-  }
-
-  @override
-  String e7SetupBridgeDetail(String detail) {
-    return '桥接详情：$detail';
-  }
-
-  @override
-  String e7SetupDiagnosticsUnavailable(String detail) {
-    return '诊断信息不可用：$detail';
-  }
-
-  @override
   String e7SetupProbeHttp(String status) {
     return '该地址有响应，但不像 OpenCode 服务器（HTTP $status）。请检查 URL 是否指向 opencode serve。';
   }
@@ -6987,15 +6740,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String e7SetupServerExit(String code) {
     return 'OpenCode 服务器已退出（代码 $code）';
   }
-
-  @override
-  String get e7SetupCheckTermux => '在此手机上';
-
-  @override
-  String get e7SetupCommandFailed => 'Termux 命令执行失败。';
-
-  @override
-  String get e7SetupUnexpectedBridge => 'Termux 返回了意外的桥接响应。';
 
   @override
   String get e7SetupSetupQueued => '设置已排队';
@@ -8769,252 +8513,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get teamUiRunLabelRawTitle => '提供商标题';
 
   @override
-  String get termuxStorageTitle => '本机存储';
-
-  @override
-  String termuxStorageRowUsed(String size) {
-    return '已使用 $size';
-  }
-
-  @override
-  String get termuxStorageRowNotScanned => '尚未扫描';
-
-  @override
-  String get termuxStorageRowScanning => '正在计算…';
-
-  @override
-  String get termuxStorageScanAction => '扫描存储';
-
-  @override
-  String get termuxStorageRescanAction => '再次扫描';
-
-  @override
-  String get termuxStorageIntro =>
-      '查看 Termux 在本机占用的空间。此处只能清理会自行重建的缓存；你的项目、登录信息和对话都会保留。';
-
-  @override
-  String get termuxStorageScanning => '正在计算存储';
-
-  @override
-  String get termuxStorageScanningDetail => '大型缓存需要一两分钟。你可以离开此页面，扫描会继续。';
-
-  @override
-  String get termuxStorageCancel => '停止扫描';
-
-  @override
-  String get termuxStorageCancelled => '扫描已停止';
-
-  @override
-  String get termuxStorageFailed => '扫描未完成。请重试。';
-
-  @override
-  String termuxStorageTotal(String size) {
-    return 'Termux 中已计算 $size';
-  }
-
-  @override
-  String termuxStorageDeletableTotal(String size) {
-    return '可清理 $size';
-  }
-
-  @override
-  String get termuxStorageScannedJustNow => '刚刚扫描';
-
-  @override
-  String termuxStorageScannedMinutesAgo(int minutes) {
-    return '$minutes 分钟前扫描';
-  }
-
-  @override
-  String termuxStorageScannedHoursAgo(int hours) {
-    return '$hours 小时前扫描';
-  }
-
-  @override
-  String get termuxStorageCatBuildCaches => '构建缓存';
-
-  @override
-  String get termuxStorageNoteBuildCaches =>
-      '仅包括 Gradle 缓存和 npm 下载的内容缓存。可能需要重新下载，因此离线构建会受影响。清理前请停止构建和软件包安装。';
-
-  @override
-  String get termuxStorageCatAgentScratch => '智能体临时文件';
-
-  @override
-  String get termuxStorageNoteAgentScratch =>
-      '临时文件夹可能包含未完成的工作或其他工具使用的文件。此处仅显示其大小，无法在此移除。';
-
-  @override
-  String get termuxStorageCatProjectBuildOutputs => '名称与构建相关的文件夹';
-
-  @override
-  String get termuxStorageNoteProjectBuildOutputs =>
-      '名为 build、.dart_tool、node_modules 或 target 的文件夹也可能包含你的文件。仅凭名称无法证明可以丢弃，因此无法在此移除。';
-
-  @override
-  String get termuxStorageCatToolchains => '工具链';
-
-  @override
-  String get termuxStorageNoteToolchains =>
-      'Android SDK、Java 和 Flutter 的安装。它们可能支撑其他项目，无法在此移除。';
-
-  @override
-  String get termuxStorageCatAiTeam => 'AI 团队';
-
-  @override
-  String get termuxStorageNoteAiTeam =>
-      '团队文件夹、数据库和工具可能包含你需要保留的工作。即使团队已停止，也无法在此移除。';
-
-  @override
-  String get termuxStorageCatOpenCode => 'OpenCode 本身';
-
-  @override
-  String get termuxStorageNoteOpenCode => '服务器、其登录信息和对话历史。对话有单独的页面。';
-
-  @override
-  String get termuxStorageCatProjects => '项目（你的文件）';
-
-  @override
-  String get termuxStorageNoteProjects => '列出是为了让你看到大小。绝不从此处移除。';
-
-  @override
-  String get termuxStorageWillRemove => '“清理”会移除什么';
-
-  @override
-  String get termuxStorageNothingHere => '这里没有内容';
-
-  @override
-  String termuxStorageCleanConfirmTitle(String size, String category) {
-    return '删除$category的 $size？';
-  }
-
-  @override
-  String get termuxStorageCleanConfirmBody =>
-      '仅删除列出的 Gradle 和 npm 内容缓存？可能需要重新下载，离线构建会受影响。请先停止构建和软件包安装。之后请再次扫描以更新计算结果。';
-
-  @override
-  String termuxStorageCleanConfirm(String size) {
-    return '删除 $size';
-  }
-
-  @override
-  String get termuxStorageKeep => '保留';
-
-  @override
-  String get termuxStorageCleaning => '正在删除…';
-
-  @override
-  String termuxStorageFreed(String size) {
-    return '已移除 $size';
-  }
-
-  @override
-  String get termuxStorageFreedNothing => '没有移除任何内容';
-
-  @override
-  String termuxStorageInUse(String process) {
-    return '正被$process使用。请先在“本机运行中”停止它。';
-  }
-
-  @override
-  String termuxStorageRefusedCount(int count) {
-    return '$count 个路径未予处理';
-  }
-
-  @override
-  String termuxStorageProjectBuild(String size, String build) {
-    return '$size · 构建相关文件夹中 $build';
-  }
-
-  @override
-  String get termuxStorageOpenRunning => '打开“本机运行中”';
-
-  @override
-  String termuxStorageBytesGb(String value) {
-    return '$value GB';
-  }
-
-  @override
-  String termuxStorageBytesMb(String value) {
-    return '$value MB';
-  }
-
-  @override
-  String termuxStorageBytesKb(String value) {
-    return '$value KB';
-  }
-
-  @override
-  String termuxStorageBytesB(String value) {
-    return '$value B';
-  }
-
-  @override
-  String get termuxProcsTitle => '本机运行中';
-
-  @override
-  String get termuxProcsRowLoading => '正在检查…';
-
-  @override
   String get termuxProcsAutoRefresh => '打开期间每 10 秒刷新';
-
-  @override
-  String termuxProcsStopSemantics(String name) {
-    return '停止 $name';
-  }
-
-  @override
-  String termuxProcsStopOneTitle(String name) {
-    return '停止 $name？';
-  }
-
-  @override
-  String get termuxProcsStopOneBody => '会先礼貌地停止，5 秒后强制结束。';
-
-  @override
-  String get termuxProcsProtected => '受保护 · 请从“本机”控制';
-
-  @override
-  String termuxProcsOrphanParentGone(String elapsed) {
-    return '其父进程已消失 · 已运行 $elapsed';
-  }
-
-  @override
-  String termuxProcsOrphanCpu(String cpu) {
-    return '占用 $cpu CPU，无归属';
-  }
 
   @override
   String get termuxProcsStopping => '正在停止…';
 
   @override
-  String termuxProcsStopped(int count) {
-    return '已停止 $count 个';
-  }
-
-  @override
-  String termuxProcsStoppedForced(int count, int forced) {
-    return '已停止 $count 个（$forced 个需强制结束）';
-  }
-
-  @override
-  String termuxProcsRemaining(int count) {
-    return '$count 个未能停止';
-  }
-
-  @override
-  String termuxProcsRefused(int count) {
-    return '$count 个受保护，未停止';
-  }
-
-  @override
-  String get termuxProcsEmpty => '手机服务器中没有正在运行的内容';
-
-  @override
   String get termuxProcsCommand => '命令';
-
-  @override
-  String get termuxProcsFolder => '文件夹';
 
   @override
   String termuxProcsDurationSeconds(int seconds) {
@@ -9037,240 +8542,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get teamUiPhoneOptionalTag => '可选 · 实验性';
-
-  @override
   String get teamUiPhoneChooseProjectTitle => '选择一个项目';
-
-  @override
-  String get teamUiPhoneContinue => '继续';
 
   @override
   String get teamUiPhoneSuccessTitle => 'AI 团队已在本机运行';
 
   @override
-  String get teamUiPhoneRetry => '重试';
-
-  @override
-  String teamUiPhoneFailedChecksum(String name) {
-    return '下载的 $name 与此构建固定的校验和不符，因此未安装。其中任何内容都未保留；请检查网络后重试。';
-  }
-
-  @override
-  String get teamUiPhoneFailedUnsupportedArch => '本机的处理器不是团队运行时所需的 64 位 ARM。';
-
-  @override
-  String get teamUiPhoneFailedDownload => '下载未完成。请检查连接后重试。';
-
-  @override
-  String teamUiPhoneFailedDownloadDns(String host) {
-    return '手机无法找到下载服务器 $host。请确认手机已联网，且没有私有 DNS 或广告拦截器拦截，然后重试。';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadConnect(String host) {
-    return '手机无法连接下载服务器 $host。请检查连接后重试；下载会从中断处继续。';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadTimeout(String host) {
-    return '下载服务器 $host 应答超时。请在更稳定的网络下重试；下载会从中断处继续。';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadTls(String host) {
-    return '无法与 $host 建立安全连接。请确认手机的日期和时间正确，且没有代理干扰，然后重试。';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadHttp(String host, String code) {
-    return '下载服务器 $host 拒绝了该文件（HTTP $code）。请稍后重试；若持续出现，说明此应用版本的 AI 团队下载暂不可用。';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadInterrupted(String host) {
-    return '下载过程中与 $host 的连接中断。请重试；下载会从中断处继续。';
-  }
-
-  @override
-  String get teamUiPhoneFailedDownloadWrite => '下载无法保存到本机。请腾出空间后重试。';
-
-  @override
-  String teamUiPhoneFailedDownloadOther(String host, String code) {
-    return '从 $host 下载失败（错误 $code）。请检查连接后重试。';
-  }
-
-  @override
-  String get teamUiPhoneFailedPackages =>
-      'Ubuntu 无法安装前置依赖（tmux、jq、lsof、procps）。下方输出说明了是哪一个。';
-
-  @override
-  String get teamUiPhoneFailedProject => '项目文件夹不存在，或不是 git 仓库。';
-
-  @override
-  String get teamUiPhoneFailedCity => 'Gas City 无法创建 city。下方输出说明了原因。';
-
-  @override
-  String get teamUiPhoneFailedSupervisorExited => '监督进程启动后立即停止。下方输出说明了原因。';
-
-  @override
-  String teamUiPhoneFailedHealth(String url) {
-    return '监督进程已启动，但从未在 $url 上应答。';
-  }
-
-  @override
-  String get teamUiPhoneFailedInterrupted =>
-      '设置在完成前停止了。应用不在时 Android 可能停止了 Termux；没有内容丢失。';
-
-  @override
-  String teamUiPhoneFailedReason(String reason) {
-    return '原因：$reason';
-  }
-
-  @override
-  String get teamUiPhoneDispatchFailed => 'Termux 未启动该步骤。请先打开一次 Termux，然后重试。';
-
-  @override
-  String get teamUiPhoneSectionTitle => '在本机上';
-
-  @override
-  String get teamUiPhoneStatusChecking => '正在检查…';
-
-  @override
-  String get teamUiPhoneStatusNotInstalled => '未安装';
-
-  @override
-  String get teamUiPhoneStatusInstalled => '已安装 · 尚无 city';
-
-  @override
-  String get teamUiPhoneStatusStopped => '已停止';
-
-  @override
-  String get teamUiPhoneStatusStarting => '正在启动…';
-
-  @override
-  String get teamUiPhoneStatusStopping => '正在停止…';
-
-  @override
-  String teamUiPhoneStatusWorking(String verb) {
-    return '工作中…（$verb）';
-  }
-
-  @override
-  String teamUiPhoneStatusRunning(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '运行中 · $count 个智能体',
-      one: '运行中 · 1 个智能体',
-      zero: '运行中',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get teamUiPhoneStatusFailed => '未运行 · 上一步骤失败';
-
-  @override
-  String teamUiPhoneStatusUnreachable(String url) {
-    return '已启动，但未在 $url 上应答';
-  }
-
-  @override
-  String get teamUiPhoneStatusUnknown => '无法读取状态';
-
-  @override
-  String teamUiPhoneVersions(String gc, String bd, String dolt) {
-    return 'gc $gc · bd $bd · dolt $dolt';
-  }
-
-  @override
-  String get teamUiPhoneStopTitle => '停止本机上的团队？';
-
-  @override
-  String get teamUiPhoneStopBody => '正在运行的智能体会在原处停止。没有内容丢失；再次启动后运行会继续。';
-
-  @override
-  String get teamUiPhoneKilled => '应用不在时 Android 停止了团队。没有内容丢失。';
-
-  @override
-  String get teamUiPhoneKeepRunningTitle => '保持运行';
-
-  @override
-  String get teamUiPhoneKeepRunningSubtitle => '阻止 Android 在后台关闭团队';
-
-  @override
-  String get teamUiPhoneTipsIntro =>
-      'Android 会停止它认为过度的后台工作，而团队正是如此：数十个短命的 gc 和 bd 进程，外加一个跑满 CPU 的智能体。以下三点能让它保持存活。';
-
-  @override
-  String get teamUiPhoneTipWakeLock =>
-      '让 Termux 保持在前台，或持有其唤醒锁：在 Termux 中运行 termux-wake-lock，或在它的通知中点按‘获取唤醒锁’。没有它而熄屏会结束运行。';
-
-  @override
-  String get teamUiPhoneTipBattery =>
-      '设置 › 应用 › Termux › 电池 › 不受限制，并关闭手机厂商针对 Termux 的自动清理。';
-
-  @override
-  String get teamUiPhoneTipPhantom =>
-      'Android 12 及更高版本仍会杀死后台应用的子进程（幻影进程杀手）。可通过无线调试在 Termux 内部一次性关闭它，无需电脑：';
-
-  @override
-  String get teamUiPhoneTipsCopy => '复制命令';
-
-  @override
-  String get teamUiPhoneRemoveTitle => '从此手机删除 AI 团队？';
-
-  @override
-  String teamUiPhoneActionFailed(String reason) {
-    return '操作失败：$reason';
-  }
-
-  @override
-  String get teamUiPhoneNotAvailable =>
-      '本机不可用。运行团队需要 64 位 Linux 环境；此设备或此构建无法提供。';
-
-  @override
-  String teamUiPhoneFailedNoSpace(String detail) {
-    return '本机空间不足。$detail 请腾出一些空间（本机的‘存储’可以清理构建缓存），然后重试。';
-  }
-
-  @override
-  String get phoneServerConnect => '连接';
-
-  @override
-  String get phoneServerOpen => '打开';
-
-  @override
   String get phoneServerStart => '启动';
 
   @override
-  String get phoneServerStop => '停止';
-
-  @override
-  String get phoneServerMore => '更多服务器操作';
-
-  @override
-  String get phoneServerForget => '忘记已保存的登录信息';
-
-  @override
-  String get phoneServerStartFailed => '服务器未能启动。请打开“管理设置”查看原因。';
-
-  @override
   String get phoneServerRestartFailed => '服务器未能重启。请打开“管理设置”查看原因。';
-
-  @override
-  String get phoneServerStopFailed => '无法停止服务器。请重试。';
-
-  @override
-  String get termuxStorageCatSharedCaches => '其他缓存与软件包数据';
-
-  @override
-  String get termuxStorageNoteSharedCaches =>
-      '共享缓存、软件包安装和下载文件夹可能支撑其他工具，或包含值得保留的文件。无法在此移除。';
-
-  @override
-  String get termuxStorageRescanRequired => '上次扫描 · 再次扫描后才能继续清理';
 
   @override
   String get safetyStopSharingTitle => '停止分享此对话？';
@@ -9302,10 +8583,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get safetyMcpDisconnectKeep => '保持连接';
-
-  @override
-  String get safetyStopOrphanBody =>
-      '没有任何东西在等待它，但它正在进行的工作会丢失。它会先收到正常停止信号，5 秒后被强制停止。';
 
   @override
   String get settingsHubGroupNotifications => '通知与后台';
@@ -9340,7 +8617,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '服务器 配置 主机 网址 密码 切换 添加 编辑 移除 连接';
 
   @override
-  String get settingsHubSearchPhoneAliases => '手机 termux 本地 设备端 安卓 安装 设置 存储 服务';
+  String get settingsHubSearchPhoneAliases => '手机 本地 设备端 安卓 安装 设置 存储 服务 linux';
 
   @override
   String get settingsHubSearchAccountsAliases => '账号 codex 登录 退出';
@@ -9556,13 +8833,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get discoverReferencesAliases => '参考 参考资料 文档 来源 上下文';
-
-  @override
-  String get discoverRunningNowAliases =>
-      '当前运行 此手机上的运行 进程 termux 服务 停止 忙碌 内存 后台';
-
-  @override
-  String get discoverStorageAliases => '存储 在此手机上 磁盘空间 清理 termux';
 
   @override
   String get discoverMonitorAliases => '已保存服务器 需要处理 监控 其他服务器 等待 服务器需要处理';
@@ -9887,156 +9157,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localAgentTitle => '此手机上的 Claude Code';
 
   @override
-  String get localAgentOfferBody =>
-      '无需电脑，直接在这里运行 Claude Code。应用会把 Node.js、Paseo 守护进程和 Claude Code 安装到它已管理的 Ubuntu 中，且只能在此手机上访问。';
-
-  @override
-  String get localAgentOfferSize =>
-      'Node.js 约需下载 60 MB，另加软件包；安装后约占 1 GB。需要 2 GB 可用空间。';
-
-  @override
-  String get localAgentOfferWarning =>
-      'Android 可能会在后台停止 Termux。让 OpenCode 服务器保持运行的电池设置同样适用于它。';
-
-  @override
-  String get localAgentSetUp => '设置 Claude Code';
-
-  @override
-  String get localAgentNotNow => '暂不';
-
-  @override
-  String get localAgentNeedsUbuntuBody =>
-      'Claude Code 运行在本应用设置的 Ubuntu 中。请先完成“在这部手机上”的设置，再回到这里。';
-
-  @override
-  String get localAgentOpenSetup => '打开手机设置向导';
-
-  @override
-  String get localAgentNeedsTermuxBody =>
-      'Claude Code 目前需要 Termux；应用内置的 Linux 还不能运行它。请设置 Termux 以在此使用。';
-
-  @override
-  String get localAgentSetUpWithTermux => '使用 Termux 设置';
-
-  @override
-  String get localAgentStepNode => 'Node.js';
-
-  @override
-  String get localAgentStepPaseo => 'Paseo 守护进程';
-
-  @override
-  String get localAgentStepClaude => 'Claude Code';
-
-  @override
-  String get localAgentStepSignIn => '登录 Claude';
-
-  @override
-  String get localAgentStepStart => '在此手机上启动';
-
-  @override
-  String get localAgentInstalling => '正在设置 Claude Code';
-
-  @override
-  String get localAgentLeaveNote => '你可以离开此屏幕。安装会在 Termux 中继续进行。';
-
-  @override
-  String get localAgentSignInBody =>
-      'Termux 会打开，Claude Code 会显示一个链接。请在浏览器中批准，将代码粘贴回 Termux，然后返回这里。本应用从不查看或保存你的 Claude 登录信息。';
-
-  @override
-  String get localAgentSignInAlready => '我已登录';
-
-  @override
-  String localAgentSignInOpenFailed(String command) {
-    return '无法打开 Termux。请自行打开 Termux 并运行：$command';
-  }
-
-  @override
-  String get localAgentSignInMissing => '尚未找到 Claude 登录信息。';
-
-  @override
-  String get localAgentReadyTitle => 'Claude Code 正在此手机上运行';
-
-  @override
-  String get localAgentReadyBody => '它只在此手机上监听（127.0.0.1），并由本应用保管的密码保护。';
-
-  @override
-  String localAgentVersions(String claude, String paseo, String node) {
-    return 'Claude Code $claude · Paseo $paseo · Node.js $node';
-  }
-
-  @override
-  String get localAgentInstalledTitle => 'Claude Code 已安装但未运行';
-
-  @override
-  String get localAgentKilled => '应用在后台时，Android 停止了 Claude Code。没有丢失任何内容。';
-
-  @override
-  String get localAgentFailedTitle => 'Claude Code 设置已停止';
-
-  @override
-  String localAgentFailedNoSpace(String detail) {
-    return '此手机空间不足。$detail请释放一些空间后重试。';
-  }
-
-  @override
-  String get localAgentFailedDownload => '无法下载 Node.js。请检查网络后重试。';
-
-  @override
-  String get localAgentFailedChecksum =>
-      'Node.js 下载内容与固定的校验和不一致，因此未安装任何内容。请重试；如果再次发生，说明网络中有东西在篡改该文件。';
-
-  @override
-  String get localAgentFailedNativeBuild =>
-      '某个软件包需要原生模块，而此手机没有现成的构建。未编译任何内容；下方输出中指出了该模块。';
-
-  @override
-  String get localAgentFailedPackages => '无法安装软件包。请检查网络后重试。';
-
-  @override
-  String get localAgentFailedPortInUse => '此手机的 6767 端口已被其他程序占用。请停止该程序后重试。';
-
-  @override
-  String get localAgentFailedTimeout => 'Claude Code 在两分钟内没有响应。下方输出显示了它打印的内容。';
-
-  @override
-  String get localAgentFailedInterrupted => 'Android 在该步骤完成前将其中断。请重试，它会从中断处继续。';
-
-  @override
-  String get localAgentFailedUnsupported => 'Claude Code 需要 64 位手机。';
-
-  @override
-  String get localAgentFailedDaemon => 'Claude Code 已停止或没有响应。请重新启动它。';
-
-  @override
-  String localAgentFailedReason(String detail) {
-    return '已停止：$detail';
-  }
-
-  @override
-  String get localAgentProjectTitle => '选择项目文件夹';
-
-  @override
-  String get localAgentProjectBody => 'Claude Code 在此手机 Ubuntu 的某个文件夹内工作。';
-
-  @override
-  String get localAgentProjectPathLabel => '或输入 Ubuntu 内的路径';
-
-  @override
-  String get localAgentProjectPathInvalid =>
-      '请输入完整路径，例如 /root/projects/my-app。';
-
-  @override
-  String localAgentConnectFailed(String detail) {
-    return '无法连接到此手机上的 Claude Code。$detail';
-  }
-
-  @override
-  String localAgentCardActionFailed(String detail) {
-    return '操作失败。$detail';
-  }
-
-  @override
   String get localAgentRestartTitle => '在此手机上重启 Claude Code？';
 
   @override
@@ -10062,9 +9182,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localAgentRemoveKeep => '保留';
-
-  @override
-  String get localAgentMore => '更多 Claude Code 操作';
 
   @override
   String get firstRunAgentsSideBySide =>
@@ -10250,15 +9367,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get localAgentUpdate => '更新 Claude Code';
-
-  @override
-  String get localAgentUpdateAvailable => '更新后将加入最新的 Claude 模型，例如 Opus 5.5。';
-
-  @override
-  String get localAgentUpdateNow => '更新';
-
-  @override
   String get modelNewBadge => '新';
 
   @override
@@ -10284,13 +9392,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setupStoppedByRestart => '手机已重启，因此本地服务器已停止。需要时请再次启动。';
-
-  @override
-  String get phoneServerStoppedTitle => '此手机上的服务器已停止';
-
-  @override
-  String get phoneServerStoppedBody =>
-      '手机重启或 Android 为省电关闭 Termux 时，它会停止。你的对话会保留；请重新启动以继续。';
 
   @override
   String get phoneServerStartAndConnect => '启动并连接';
@@ -10409,18 +9510,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get phoneSetupProgressTitle => '正在这部手机上设置 OpenCode';
-
-  @override
-  String get phoneSetupProgressStopTitle => '要停止设置吗？';
-
-  @override
-  String get phoneSetupProgressStopMessage => '已完成的部分会保留。';
-
-  @override
-  String get phoneSetupProgressStopConfirm => '停止设置';
-
-  @override
-  String get phoneSetupProgressKeepGoing => '继续进行';
 
   @override
   String get builtinServerChooseRuntime => '选择哪个 OpenCode';
@@ -10845,13 +9934,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phoneSetupStartOtherWays => '其他方式';
 
   @override
-  String get phoneSetupStartUseTermux => '改用 Termux';
-
-  @override
   String get phoneSetupStartByAddress => '通过地址连接到电脑';
-
-  @override
-  String get phoneSetupStartSetUpHere => '改为在本应用内设置';
 
   @override
   String phoneSetupStartProgressHeadline(int percent) {
@@ -10875,15 +9958,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get phoneSetupStartOpen => '打开';
-
-  @override
-  String get phoneSetupStartTermuxHeadline => 'OpenCode 已在 Termux 中设置好';
-
-  @override
-  String get phoneSetupStartTermuxBody => '你之前用 Termux 设置过。连接后即可继续使用。';
-
-  @override
-  String get phoneSetupStartConnect => '连接';
 
   @override
   String phoneSetupStartFailed(String reason) {
@@ -11247,16 +10321,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get workServerRestartBody => '正在进行的智能体回合将会停止。你的对话会保留。';
 
   @override
-  String workRunaway(String duration) {
-    return 'OpenCode 已空转忙碌 $duration';
-  }
-
-  @override
-  String workRunawayInProject(String project, String duration) {
-    return 'OpenCode 在 $project 中已空转忙碌 $duration';
-  }
-
-  @override
   String get connectStartingPhone => '正在这部手机上启动 OpenCode…';
 
   @override
@@ -11397,33 +10461,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverRowConnected => '已连接';
 
   @override
-  String phoneServerRowStatus(String runtime, String state) {
-    return '$runtime · $state';
-  }
-
-  @override
-  String get phoneServerRowRestarting => '正在重启';
-
-  @override
-  String get phoneServerRowNotAnswering => '没有响应';
-
-  @override
-  String get phoneServerRowNotRunning => '未运行';
-
-  @override
-  String get phoneServerRowDetails => '详情';
-
-  @override
-  String get localAgentRowOptional => '可选';
-
-  @override
   String get localAgentPageTitle => 'Claude Code';
-
-  @override
-  String get managedRecoveryRowTitle => '崩溃后重启';
-
-  @override
-  String get managedRecoveryRowDetail => '最多尝试 3 次，且仅在此应用打开时进行。绝不会安装或更新任何内容。';
 
   @override
   String pluginsTeamRowFound(String server) {
@@ -11534,9 +10572,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localTerminalSemantics => '此手机上的终端。点按即可输入；长按可选择文字。';
-
-  @override
-  String get phoneServerTermuxTitle => 'Termux';
 
   @override
   String get globalSessionsLoadFailedTitle => '无法加载对话';
@@ -11680,18 +10715,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get teamDiscoverInAppDownloadBody => '安装一次，位于本机 OpenCode 旁边。';
 
   @override
-  String get teamDiscoverTermuxDownloadBody => '安装到 Termux 中，位于 OpenCode 旁边。';
-
-  @override
   String get teamDiscoverBatteryTitle => '工作时更耗电';
 
   @override
   String get teamDiscoverInAppBatteryBody =>
       '会有多个智能体同时运行；如果数量过多，Android 可能会停止其中一些。';
-
-  @override
-  String get teamDiscoverTermuxBatteryBody =>
-      '工作时请保持 Termux 打开；Android 可能会在后台停止它。没有内容丢失。';
 
   @override
   String get teamDiscoverProjectTitle => '项目由你选择';
@@ -13949,18 +12977,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kitCapPhoneBuiltinOffer => '直接在本机运行智能体。要设置吗？';
 
   @override
-  String get kitCapPhoneTermuxTitle => 'Termux 中的服务器';
-
-  @override
-  String get kitCapPhoneTermuxWhy => '需要本机安装 Termux。';
-
-  @override
-  String get kitCapPhoneTermuxEnable => '使用 Termux 设置';
-
-  @override
-  String get kitCapPhoneTermuxOffer => '改为在 Termux 中运行本机的服务器？';
-
-  @override
   String get kitCapPhoneAnyTitle => '本机上的服务器';
 
   @override
@@ -14012,7 +13028,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kitCapClaudeLocalTitle => '本机的 Claude Code';
 
   @override
-  String get kitCapClaudeLocalWhy => '需要本机安装 Termux 并订阅 Claude。';
+  String get kitCapClaudeLocalWhy => '需要本机的内置 Linux 并订阅 Claude。';
 
   @override
   String get kitCapClaudeLocalEnable => '添加 Claude Code';
@@ -14212,9 +13228,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kitHostThisPhone => '本机';
 
   @override
-  String get kitHostTermux => 'Termux';
-
-  @override
   String get kitHostOpenCode2 => '装有 OpenCode 2 的电脑';
 
   @override
@@ -14276,11 +13289,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get searchClaudeCodeGateDevice =>
-      'Claude Code 只能通过 Termux 在手机上运行，而此设备没有 Termux。请在装有 Paseo 的电脑上运行，并把那台电脑添加为服务器。';
+      'Claude Code 只能在应用内置的 Linux 中于手机上运行，而此设备没有该环境。请在装有 Paseo 的电脑上运行，并把那台电脑添加为服务器。';
 
   @override
   String get searchClaudeCodeGateDesktop =>
-      '此手机上的 Claude Code 适用于装有 Termux 的 Android 手机。在电脑上请用 Paseo 运行 Claude Code，并将其添加为服务器。';
+      '此手机上的 Claude Code 适用于带内置 Linux 的 Android 手机。在电脑上请用 Paseo 运行 Claude Code，并将其添加为服务器。';
 
   @override
   String get searchClaudeCodeGateServers => '打开服务器';
@@ -14798,20 +13811,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverSwitcherCurrentMenu => '服务器操作';
 
   @override
-  String get localAgentEntryStillStarting => '仍在启动 · 可能需要一分钟';
-
-  @override
-  String get localAgentEntryDidNotStart => '未能启动';
-
-  @override
-  String get localAgentEntryRemoving => '正在移除';
-
-  @override
-  String localAgentEntrySignedOut(String state) {
-    return '$state · 未登录 Claude';
-  }
-
-  @override
   String get formRendererSending => '正在发送你的回答…';
 
   @override
@@ -15065,36 +14064,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importEnvironmentId => '云环境 ID';
 
   @override
-  String get phoneSetupStartUseTermuxOne => '使用 Termux 里的那个';
-
-  @override
-  String get phoneSetupStartUseTermuxOneDetail =>
-      'Termux 中也设置了 OpenCode。改为连接到它。';
-
-  @override
-  String get phoneSetupStartTermuxNotAllowed =>
-      '已安装 Termux，但它还没有允许本应用访问。请先完成它的设置。';
-
-  @override
   String get phoneSetupCustomizeAllInstalled => '所有可选工具都已在这部手机上。';
 
   @override
   String get phoneSetupCustomizeIncluded => '必需';
 
   @override
-  String get termuxProcsLoadFailedTitle => '无法读取正在运行的内容';
-
-  @override
-  String get termuxProcsEmptyBody => '当 OpenCode、AI 团队或构建在此运行时会显示在此列表中。';
-
-  @override
-  String get termuxProcsNotStoppedTitle => '并非全部已停止';
-
-  @override
   String get termuxProcsCopyCommand => '复制命令';
-
-  @override
-  String get termuxProcsOpenControls => '打开“本机”';
 
   @override
   String get termuxProcsProcessId => '进程 ID';
@@ -15103,31 +14079,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get termuxProcsParentId => '父进程 ID';
 
   @override
-  String get termuxProcsAboutOpenCode => '本机 OpenCode 服务器的一部分。';
-
-  @override
-  String get termuxProcsAboutAiTeam => 'AI 团队的一部分。停止它会停止团队正在进行的工作。';
-
-  @override
-  String get termuxProcsAboutBuild => '构建辅助程序。下次构建需要时会重新启动它。';
-
-  @override
-  String get termuxProcsAboutOrphan => '没有内容在等待它，因此停止它是安全的。';
-
-  @override
-  String get termuxProcsAboutOther => '由本机上的其他程序启动。';
-
-  @override
   String get termuxProcsNoRestart => '无法从这里重新启动。';
-
-  @override
-  String get termuxProcsStopGroupTeamLost => '团队正在处理的任何任务也会停止。';
-
-  @override
-  String get termuxProcsStopGroupTeamRestart => '你可以从 AI 团队重新启动团队。';
-
-  @override
-  String get phoneSetupProgressStopContinueLater => '随时可以从“在这部手机上”继续。';
 
   @override
   String get teamMergeFailedNext => '未合并任何内容。请按主机提示修复后重试，或审查更改。';
@@ -15244,35 +14196,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setupTerminalTitle => '设置输出';
-
-  @override
-  String get teamPhoneStopTeam => '停止团队';
-
-  @override
-  String get teamPhoneStartTeam => '启动团队';
-
-  @override
-  String get teamPhoneStartTeamAgain => '再次启动团队';
-
-  @override
-  String get teamPhoneDeleteTeam => '从此手机删除团队';
-
-  @override
-  String get teamPhoneRemoveBody => '团队将停止，且此服务器的 AI 团队会关闭。';
-
-  @override
-  String get teamPhoneRemoveLost => '团队的程序、文件及其任务列表会被删除';
-
-  @override
-  String get teamPhoneRemoveKept => '你的项目文件及其 git 历史会保留';
-
-  @override
-  String teamPhoneRemoveFrees(int size) {
-    return '释放约 $size MB';
-  }
-
-  @override
-  String get teamPhoneRemoveConfirm => '删除团队';
 
   @override
   String get productStatesActionFailedTitle => '无法完成';
@@ -17397,9 +16320,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localAgentStopNamed => '停止 Claude Code';
 
   @override
-  String get localAgentStartNamed => '启动 Claude Code';
-
-  @override
   String monitorSwitchToTitle(String server) {
     return '切换到 $server？';
   }
@@ -17582,9 +16502,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get thisPhoneHostInApp => '应用内';
 
   @override
-  String get thisPhoneHostTermux => 'Termux 中';
-
-  @override
   String get thisPhoneSetUp => '设置 OpenCode';
 
   @override
@@ -17618,25 +16535,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get thisPhoneBusy => '请等待当前步骤完成';
-
-  @override
-  String get phoneSetupTermuxAllowHow => '在 Termux 中粘贴复制的那一行并按回车。';
-
-  @override
-  String get phoneSetupTermuxUpdatingTitle => '正在更新这部手机';
-
-  @override
-  String get phoneSetupTermuxStartingTitle => '正在启动服务器';
-
-  @override
-  String get phoneSetupTermuxConnecting => '正在连接';
-
-  @override
-  String get phoneSetupTermuxLeaveHint =>
-      '你可以离开应用。Termux 会继续工作，你回来时这个列表会显示最新进度。';
-
-  @override
-  String get phoneSetupTermuxCost => '首次约需 10–15 分钟，占用 Termux 的存储空间';
 
   @override
   String removeFromPhoneKeepBody(String size) {
@@ -17732,51 +16630,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get termuxProcsKindParentGone => '父进程已消失';
-
-  @override
-  String get termuxProcsKindNoOwner => '无归属';
-
-  @override
-  String termuxProcsStopOrphans(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '停止 $count 个孤立辅助进程',
-      one: '停止 1 个孤立辅助进程',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String termuxProcsStopOrphansTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '停止 $count 个孤立辅助进程？',
-      one: '停止该孤立辅助进程？',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get teamPhoneStopTeamRow => '停止本机上的团队';
-
-  @override
-  String get teamPhoneStopTeamRowSupporting => '智能体在原处停止；不会丢失任何内容';
-
-  @override
-  String teamUiPhoneWorkingOn(String name) {
-    return '正在处理 $name';
-  }
-
-  @override
-  String get teamUiPhoneVersionsLabel => '引擎版本';
-
-  @override
-  String get teamUiPhoneProjectLabel => '项目文件夹';
-
-  @override
   String get phoneServerNameInSentence => '应用内的 Ubuntu';
 
   @override
@@ -17807,17 +16660,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get teamAgentLastCommandLabel => '最后一条命令';
-
-  @override
-  String get termuxStorageOnlyBuildCaches => '此处只能清理构建缓存';
-
-  @override
-  String get termuxStorageWhereItIs => '位置';
-
-  @override
-  String termuxStorageCleanBuildCaches(String size) {
-    return '清理构建缓存（$size）';
-  }
 
   @override
   String get monitorBackgroundChecks => '后台检查';
@@ -17981,10 +16823,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get thisPhoneAddToolsDetail => 'Python、AI Team、语音输入等';
-
-  @override
-  String get phoneSetupTermuxOtherRuntime =>
-      'Termux 正在运行另一个版本的 OpenCode。请先在“在这部手机上”中切换，然后继续设置。';
 
   @override
   String get undoFromHereNowAction => '立即撤销';
@@ -18198,11 +17036,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get automationSavedRulesDetail => '智能体在此处可以不经询问就运行的操作。';
 
   @override
-  String phoneSetupStartTermuxProgressHeadline(int percent) {
-    return 'Termux 中的设置已完成 $percent%';
-  }
-
-  @override
   String get teamPhoneReadyChooseTitle => '选择团队的项目';
 
   @override
@@ -18237,9 +17070,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get teamHomeTurnOffFailed => '无法停止本机上的团队，因此它仍在运行。请重试。';
 
   @override
-  String get teamHomeHostStopped => '已停止';
-
-  @override
   String get teamHomeHostCooling => '正在降温';
 
   @override
@@ -18254,9 +17084,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String teamHomeHeatStoppedLine(String time) {
     return '手机在 $time 温度过高，因此团队已停止。工作已保留，手机降温后它会重新启动。';
   }
-
-  @override
-  String get teamHomePhoneControls => '保持运行、停止或移除';
 
   @override
   String teamHomeSpentToday(String usage) {
@@ -18509,9 +17336,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get productErrorStorage => '应用无法在此设备上读取或保存文件。';
 
   @override
-  String get productErrorTermux => 'Termux 未能完成该操作。请确认 Termux 已安装并已打开，然后重试。';
-
-  @override
   String get productErrorDetailsLabel => '错误详情';
 
   @override
@@ -18585,51 +17409,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get teamGateCardIfIgnoredReview => '工作会等待审查。不会丢失任何内容。';
 
   @override
-  String termuxProcsBudget(int count, int limit) {
-    return '$count / $limit 个后台进程';
-  }
-
-  @override
-  String termuxProcsBudgetNote(int limit) {
-    return '所有应用合计超过 $limit 个时，Android 12 及更高版本可能会停止最旧的进程。';
-  }
-
-  @override
-  String termuxProcsBudgetOver(int limit) {
-    return '超过 $limit 个：Android 可能随时停止其中最旧的。';
-  }
-
-  @override
-  String get termuxProcsLoadFailedBody => 'Termux 没有应答。请打开 Termux 后重试。';
-
-  @override
-  String get termuxProcsRefreshFailed => '无法再次读取列表，因此显示上次读取的结果。';
-
-  @override
-  String get termuxProcsStopFailed => '无法停止。请重试，或在 Termux 中停止它。';
-
-  @override
-  String get termuxProcsKindOpenCode => 'OpenCode 服务器';
-
-  @override
-  String get termuxProcsKindAiTeam => 'AI 团队';
-
-  @override
-  String get termuxProcsKindClaudeCode => 'Claude Code';
-
-  @override
-  String get termuxProcsKindDevService => '开发服务';
-
-  @override
-  String get termuxProcsKindTerminal => '终端';
-
-  @override
-  String get termuxProcsKindHelper => '辅助进程';
-
-  @override
-  String get termuxProcsKindHostApp => 'Termux 应用';
-
-  @override
   String get termuxProcsBusy => '繁忙';
 
   @override
@@ -18639,51 +17418,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String termuxProcsRunningFor(String elapsed) {
     return '已运行 $elapsed';
   }
-
-  @override
-  String termuxProcsStopKindBody(String names) {
-    return '$names：每个都会先礼貌停止，5 秒后强制结束。';
-  }
-
-  @override
-  String termuxProcsStopKind(int count, String things) {
-    return '停止全部 $count 个$things';
-  }
-
-  @override
-  String termuxProcsStopKindTitle(int count, String things) {
-    return '停止全部 $count 个$things？';
-  }
-
-  @override
-  String get termuxProcsKindsAiTeam => 'AI 团队进程';
-
-  @override
-  String get termuxProcsKindsClaudeCode => 'Claude Code 进程';
-
-  @override
-  String get termuxProcsKindsDevServices => '开发服务';
-
-  @override
-  String get termuxProcsKindsTerminals => '终端';
-
-  @override
-  String get termuxProcsKindsHelpers => '辅助进程';
-
-  @override
-  String get termuxProcsStopDevRestart => '下次构建需要时会重新启动它们。';
-
-  @override
-  String get termuxProcsAboutClaudeCode => 'Claude Code，编程智能体。停止它会结束它正在编写的回答。';
-
-  @override
-  String get termuxProcsAboutTerminal => '一个终端。停止它会关闭它以及其中运行的内容。';
-
-  @override
-  String get termuxProcsAboutHostApp => 'Termux 应用本身。不会从此处停止。';
-
-  @override
-  String get termuxProcsAverageCpu => '平均处理器占用';
 
   @override
   String get termuxProcsCpuTime => '处理器时间';
@@ -18837,9 +17571,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appNewConversationFailed => '无法开始新对话';
 
   @override
-  String get rootPhoneServerStartFailed => 'OpenCode 未能在此手机上启动';
-
-  @override
   String get connectionFailureLocalCodexBody => '此手机上应有本地 Codex 监听器响应，但没有任何响应。';
 
   @override
@@ -18933,9 +17664,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceAutoSetupMobileData => '你正在使用移动数据。此次下载会计入你的流量套餐。';
-
-  @override
-  String get voiceAutoSetupMaybeMetered => '此连接可能会计入流量套餐。';
 
   @override
   String voiceAutoSetupDownload(String size) {
@@ -19111,16 +17839,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get teamStartRunKeepInBacklog => '留在待办';
-
-  @override
-  String workRunawayStopped(String helper) {
-    return '已停止 $helper';
-  }
-
-  @override
-  String workRunawayStopFailed(String helper) {
-    return '无法停止 $helper。请重试，或在 Termux 中停止它。';
-  }
 
   @override
   String get serverSettingsUpdateCommandsDetail => '请在服务器所在电脑的终端中运行；本应用无法为它更新。';
@@ -20325,19 +19043,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addServerTailscaleNext => '输入地址';
 
   @override
-  String get phoneSetupTermuxGetCurrent => '获取最新版 Termux';
-
-  @override
-  String get phoneSetupUnsupportedTitle => '连接服务器';
-
-  @override
-  String get phoneSetupUnsupportedBody =>
-      '在设备本机上设置仅适用于 Android 手机。请在你的电脑上运行此命令，然后用它输出的代码在这里添加服务器。';
-
-  @override
-  String get termuxStorageStageTotal => '整个 Termux 安装';
-
-  @override
   String get setupProgressViewFailedStep => '此步骤未完成。出错原因见“详情”。';
 
   @override
@@ -20346,42 +19051,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String workRunawayHelper(String helper, String duration) {
-    return '残留的 $helper 进程已空转忙碌 $duration';
-  }
-
-  @override
-  String workRunawayHelperInProject(
-    String helper,
-    String project,
-    String duration,
-  ) {
-    return '$project 中残留的 $helper 进程已空转忙碌 $duration';
-  }
-
-  @override
-  String get workRunawaySeeRunning => '查看正在运行的内容';
-
-  @override
   String thisPhoneUpToDate(String version) {
     return '已是最新 · $version';
   }
-
-  @override
-  String thisPhoneUpdateTitle(String runtime) {
-    return '更新 $runtime？';
-  }
-
-  @override
-  String thisPhoneUpdateBody(String version) {
-    return '安装版本 $version，重启此手机上的服务器并重新连接。';
-  }
-
-  @override
-  String get thisPhoneUpdateKept => '你的对话会保留。服务器重启期间会离线约一分钟。';
-
-  @override
-  String get thisPhoneUpdateBusy => '仍在写入回复。请先停止或等它完成，然后再更新。';
 
   @override
   String get thisPhoneStartAgain => '再次启动';
@@ -20402,11 +19074,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String thisPhoneCheckFailed(String runtime) {
     return '此手机无法检查 $runtime。请稍后重试。';
-  }
-
-  @override
-  String thisPhoneSwitchStopped(String runtime) {
-    return '切换后 $runtime 未能启动。你的对话会保留。';
   }
 
   @override
@@ -20492,355 +19159,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatWatchBackToWorker => '返回工作者';
 
   @override
-  String get migrationTitle => '从 Termux 迁移';
-
-  @override
-  String get migrationChecking => '正在检查 Termux 和手机存储…';
-
-  @override
-  String get migrationReviewIntro =>
-      '你的项目会被复制到本应用内的 OpenCode。Termux 中的任何内容都不会被更改或删除。';
-
-  @override
-  String get migrationGroupMoves => '已复制，可直接使用';
-
-  @override
-  String get migrationGroupExports => '已私密保存，未启用';
-
-  @override
-  String get migrationGroupNotMoved => '未迁移';
-
-  @override
-  String get migrationItemProjects => '项目';
-
-  @override
-  String get migrationItemConfig => 'MCP 与智能体设置';
-
-  @override
-  String get migrationItemSessions => '对话历史（备份副本）';
-
-  @override
-  String get migrationItemGitConfig => 'Git 设置';
-
-  @override
-  String get migrationItemShellFiles => 'Shell 设置';
-
-  @override
-  String get migrationItemAiTeam => 'AI Team';
-
-  @override
-  String get migrationItemProjectsWhat =>
-      'Into a new folder in On this phone. Nothing there is overwritten.';
-
-  @override
-  String get migrationItemConfigWhat => '使用前请先检查：其中的命令和路径可能只适用于 Termux。';
-
-  @override
-  String get migrationItemSessionsWhat =>
-      '可能包含你的登录信息，应用不会打开它。Termux 仍保留可用的历史记录。';
-
-  @override
-  String get migrationItemGitConfigWhat => '你的 Git 名称、邮箱和选项，供你检查。';
-
-  @override
-  String get migrationItemShellFilesWhat =>
-      '保留 .bashrc、.zshrc 等 shell 启动文件；它们永远不会被执行。';
-
-  @override
-  String get migrationItemAiTeamWhat => '团队保存的状态。设置过程会重新安装其工具。';
-
-  @override
-  String migrationItemSize(String size, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 个文件',
-      one: '1 个文件',
-    );
-    return '$size · $_temp0';
-  }
-
-  @override
-  String get migrationSizeUnknown => '大小未知';
-
-  @override
-  String get migrationExportsNote =>
-      'Private copies stay in On this phone. Nothing in them runs or turns on by itself.';
-
-  @override
-  String get migrationNotMovedSignIn => 'AI 提供商的登录：迁移后需重新登录';
-
-  @override
-  String migrationNotMovedSignInNamed(String names) {
-    return '$names 的登录：迁移后需重新登录';
-  }
-
-  @override
-  String get migrationNotMovedKeys => 'SSH 密钥和已保存的 Git 密码';
-
-  @override
-  String get migrationNotMovedTools => '已安装的工具和缓存：设置过程会重新安装';
-
-  @override
-  String get migrationTermuxKept => 'Termux 保持原样，其服务器会继续运行，直到你将其移除';
-
-  @override
-  String get migrationKeepOpen =>
-      '复制期间请保持应用打开。离开应用时 Android 会停止它，回来后它会从当前进度继续。';
-
-  @override
-  String get migrationStart => 'Copy to On this phone';
-
-  @override
-  String get migrationChooseOne => '请至少选择一项要复制的内容。';
-
-  @override
-  String get migrationPacking => '正在 Termux 中准备你的文件…';
-
-  @override
-  String get migrationCopying => '正在将文件复制到本应用…';
-
-  @override
-  String get migrationUnpacking => '正在导入你的文件…';
-
-  @override
-  String get migrationVerifying => '正在检查已复制的文件…';
-
-  @override
-  String get migrationSwitching => 'Connecting to On this phone…';
-
-  @override
-  String get migrationStepConnect => 'Connect to On this phone';
-
-  @override
-  String get migrationStop => '停止复制';
-
-  @override
-  String get migrationStopTitle => '停止复制？';
-
-  @override
-  String get migrationStopBody => '你可以稍后从“此手机”继续。';
-
-  @override
-  String get migrationStopKept => '已复制的部分会保留';
-
-  @override
-  String get migrationKeepGoing => '继续复制';
-
-  @override
-  String get migrationCancelled => '复制已停止。你可以稍后继续。';
-
-  @override
-  String get migrationCancelledBody => '已复制的内容会保留，Termux 不会被更改。';
-
-  @override
-  String get migrationStoppedLeaving =>
-      '已停止，因为应用离开了屏幕：Android 不允许它在后台运行。已复制的内容会保留。';
-
-  @override
-  String get migrationResume => '继续复制';
-
-  @override
-  String get migrationNeedsSpace => '复制前需要更多可用空间。';
-
-  @override
-  String migrationNeedsSpaceBody(String needed, String free) {
-    return '需要约 $needed，当前可用 $free。请释放此手机的空间，或减少复制项。';
-  }
-
-  @override
-  String migrationNeedsSpaceBodyUnknown(String needed) {
-    return '需要约 $needed，但无法读取可用空间。请释放此手机的空间，或减少复制项。';
-  }
-
-  @override
-  String get migrationChooseFewer => '选择更少的项';
-
-  @override
-  String get migrationNeedsBuiltin => 'Set up On this phone first.';
-
-  @override
-  String migrationNeedsBuiltinBody(String runtime) {
-    return '你的项目会迁移到本应用内的 OpenCode，因此需要先完成设置。设置过程会安装 Linux 和 $runtime，之后会在这里继续。';
-  }
-
-  @override
-  String get migrationSetUpBuiltin => 'Set up On this phone';
-
-  @override
-  String get migrationSetupFailed => '设置无法启动。请重试，或从“此手机”中进行设置。';
-
-  @override
-  String get migrationTermuxNotAnswering => 'Termux 无响应';
-
-  @override
-  String get migrationTermuxUnavailable => '请打开 Termux，然后重试。';
-
-  @override
-  String get migrationOpenTermux => '打开 Termux';
-
-  @override
-  String get migrationFailedTitle => '迁移已停止';
-
-  @override
-  String get migrationSourceChanged => '复制期间文件发生了变化。请在 Termux 空闲时重试。';
-
-  @override
-  String get migrationSourceBusy => 'Termux 正在完成上一步。请稍后重试。';
-
-  @override
-  String get migrationUnsupportedFiles => '此项包含无法安全复制的文件。';
-
-  @override
-  String get migrationUnsupportedFilesFix =>
-      '链接、套接字和 Git 工作树无法复制。请在 Termux 中移除它们后重试，或手动复制该项目。';
-
-  @override
-  String get migrationLinkedFileUnreadable =>
-      '此项目的部分 Git 历史在 Termux 中无法读取，因此无法安全迁移。';
-
-  @override
-  String get migrationLinkedFileUnreadableFix =>
-      '打开 Termux，在该项目中运行 git fsck 查看缺失了什么，然后重试。你手机上的内容未被更改。';
-
-  @override
-  String get migrationTooLarge => '此项超出迁移大小或文件数量限制。';
-
-  @override
-  String get migrationTooLargeFix =>
-      '每项最多 512 MB 和 20,000 个文件。请在 Termux 中删除 node_modules 等构建目录，然后重试。';
-
-  @override
-  String get migrationVerificationFailed => '无法验证副本。你的 Termux 文件未被更改。';
-
-  @override
-  String get migrationDestinationChanged => '已导入的文件发生了变化。它们不会被覆盖。';
-
-  @override
-  String get migrationDestinationChangedFix =>
-      'The files in On this phone stay as you left them.';
-
-  @override
-  String get migrationStorageFailed => '无法保存副本。请检查手机存储后重试。';
-
-  @override
-  String get migrationTimedOut => '此步骤耗时过长。请保持应用打开并继续。';
-
-  @override
-  String get migrationSelectionChanged => '请使用已保存的迁移选择继续。';
-
-  @override
-  String get migrationConnectionFailed =>
-      'Files are copied, but On this phone could not connect.';
-
-  @override
-  String get migrationFailureCode => '原因';
-
-  @override
-  String get migrationFailureItem => '项目';
-
-  @override
-  String get migrationOpenThisPhone => '打开“此手机”';
-
-  @override
-  String get migrationDoneTitle => '已从 Termux 迁移';
-
-  @override
-  String get migrationDone => '文件已复制。你的 Termux 服务器仍然可用。';
-
-  @override
-  String get migrationSignInAgain => '重新登录你的 AI 提供商';
-
-  @override
-  String migrationSignInAgainNamed(String names) {
-    return '$names 出现在你的 Termux 设置中。在此登录即可使用它们。';
-  }
-
-  @override
-  String get migrationSignInAgainAny =>
-      '登录信息永远不会从 Termux 迁移过来。在你于此登录之前，回复将使用 OpenCode 的免费模型，速度较慢。';
-
-  @override
-  String get migrationProjectsWhere => '你的项目';
-
-  @override
-  String migrationProjectsWhereBody(String folder) {
-    return 'In the folder $folder in On this phone';
-  }
-
-  @override
-  String get migrationExportsWhere => '私有副本';
-
-  @override
-  String migrationExportsWhereBody(String items) {
-    return '$items: saved in On this phone, not turned on';
-  }
-
-  @override
-  String get migrationRemoveTermux => '准备好后移除 Termux 服务器';
-
-  @override
-  String get migrationRemoveTermuxBody =>
-      '我们不会替你移除任何内容。在此之前它会继续工作，你可以在“服务器”中切回它。';
-
-  @override
-  String get migrationOpenBuiltin => 'Open On this phone';
-
-  @override
-  String get migrationDetailProjects => '项目文件夹';
-
-  @override
-  String get migrationDetailExports => '私有副本文件夹';
-
-  @override
-  String get migrationUnfinishedTitle => '迁移未完成';
-
-  @override
-  String get migrationUnfinishedBody => '继续即可从停止处接着进行。已复制的内容会保留，Termux 不会被更改。';
-
-  @override
-  String get migrationUnavailableTitle => '无法开始迁移';
-
-  @override
-  String get migrationUnavailableBody => '应用无法为复制准备私有存储。请重试；若反复出现，请重启应用。';
-
-  @override
-  String get migrationRowBody =>
-      'Copy your projects to the server on this phone. Termux stays as it is.';
-
-  @override
-  String get migrationRowResume => 'Resume moving to On this phone';
-
-  @override
-  String get migrationRowResumeBody => '完成前已停止。已复制的内容会保留。';
-
-  @override
-  String get migrationRowRunning => 'Moving to On this phone';
-
-  @override
-  String get migrationRowDoneBody => '准备好后移除 Termux 服务器。';
-
-  @override
-  String get migrationOffer => '要把你的 Termux 项目迁移到本应用吗？Termux 保持原样。';
-
-  @override
-  String get migrationOfferAction => '查看迁移内容';
-
-  @override
   String get integrationsSignInUncertainNext => '重新开始前请先检查服务器';
-
-  @override
-  String teamHomeLastKnownTasks(String time) {
-    return '$time 时的任务';
-  }
-
-  @override
-  String teamHomeLastKnownAgents(String time) {
-    return '$time 时的智能体';
-  }
-
-  @override
-  String get teamHomeStoppedStartFirst => '请先重新启动团队，才能给它任务或打开任务。';
 
   @override
   String get inAppServerStartExitedBody =>
@@ -20880,107 +19199,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String integrationsEnvironmentNote(String name) {
     return '要在不使用应用的情况下连接 $name，请在服务器运行的位置设置此项，然后重启服务器。';
   }
-
-  @override
-  String get termuxProblemAccessHeard =>
-      'OpenCode 正在 Termux 中运行，但此应用暂时无法访问 Termux。允许访问后即可连接。';
-
-  @override
-  String get termuxProblemAccessNeeded =>
-      '此应用暂时无法访问 Termux。请允许访问，这样它才能找到 OpenCode 并连接。';
-
-  @override
-  String get termuxProblemAccessBlocked =>
-      'Android 阻止了此应用访问 Termux。请在此应用的权限中开启“Run commands in Termux environment”。';
-
-  @override
-  String get termuxProblemOtherAppsOff =>
-      'Termux 尚不接受来自其他应用的命令。在 Termux 中运行一行命令即可允许。';
-
-  @override
-  String get termuxProblemAsleep =>
-      'Termux 没有响应。可能是 Android 将其休眠了。请打开 Termux 唤醒它。';
-
-  @override
-  String termuxProblemNotAnswering(String runtime) {
-    return '$runtime 已在 Termux 中设置，但没有响应。重启通常能恢复。';
-  }
-
-  @override
-  String get termuxProblemNotInstalled => '此手机上没有 Termux。请重新安装，或改为设置应用内服务器。';
-
-  @override
-  String get termuxProblemOutdated =>
-      '此 Termux 版本过旧，应用无法使用。请从 F-Droid 安装最新版 Termux。';
-
-  @override
-  String termuxProblemUnknown(String runtime) {
-    return '此手机无法检查 Termux 中的 $runtime。请稍后再试。';
-  }
-
-  @override
-  String get termuxFixAllowAccess => '允许访问 Termux';
-
-  @override
-  String get termuxFixOpenPermissions => '打开此应用的权限';
-
-  @override
-  String get termuxFixAllowOtherApps => '在 Termux 中允许其他应用';
-
-  @override
-  String get termuxFixOpenTermux => '打开 Termux';
-
-  @override
-  String termuxFixRestart(String runtime) {
-    return '在 Termux 中重启 $runtime';
-  }
-
-  @override
-  String get termuxFixGetTermux => '获取 Termux';
-
-  @override
-  String get termuxFixGetCurrentTermux => '获取最新版 Termux';
-
-  @override
-  String get termuxOtherAppsTitle => '允许其他应用';
-
-  @override
-  String get termuxOtherAppsBody =>
-      '在 Termux 中粘贴这一行并按回车，然后回到这里。“打开 Termux”会为你复制它。';
-
-  @override
-  String get termuxLeadRunning => 'OpenCode 正在 Termux 中运行';
-
-  @override
-  String get termuxLeadAccessLine => '此应用暂时无法访问 Termux。允许访问后即可连接到你的对话。';
-
-  @override
-  String get termuxLeadSetUp => 'OpenCode 已在 Termux 中设置';
-
-  @override
-  String get termuxLeadTermuxOnly => '本机已安装 Termux';
-
-  @override
-  String get termuxLeadRunningBody => '连接以读取你的对话。';
-
-  @override
-  String get termuxLeadStoppedBody => '它已停止。启动后即可读取你的对话。';
-
-  @override
-  String get termuxLeadConnect => '连接到 Termux 中的服务器';
-
-  @override
-  String get termuxLeadStart => '启动 Termux 中的服务器';
-
-  @override
-  String get termuxInAppInstead => '改为设置应用内服务器';
-
-  @override
-  String get termuxInAppInsteadDetail => '全新开始，在本应用内运行，无需 Termux。';
-
-  @override
-  String get termuxInAppInsteadBlocked =>
-      '在此应用内重新开始。如需从 Termux 迁移项目，请先修复 Termux 访问权限。';
 
   @override
   String get aboutBundledComponents => '内置组件';
@@ -21062,7 +19280,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get manageSpaceKeptAll => 'Termux、你的电脑，以及已推送到 git 的内容都会保留';
+  String get manageSpaceKeptAll => '你的电脑以及已推送到 git 的内容都会保留';
 
   @override
   String get manageSpaceWaitForExport => '请等待导出完成';
@@ -21093,9 +19311,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get manageSpaceKeptLabel => '保留';
-
-  @override
-  String get manageSpaceKeptTermux => 'Termux 及其中的项目';
 
   @override
   String get manageSpaceKeptComputers => '你的电脑及其服务器';
@@ -21309,34 +19524,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String integrationsKeySavedPending(String name) {
     return '$name 的密钥已保存。服务器尚未加载它。';
   }
-
-  @override
-  String migrationReviewSpace(String needed, String free) {
-    return '需要约 $needed · 可用 $free';
-  }
-
-  @override
-  String migrationReviewSpaceUnknown(String needed) {
-    return '需要约 $needed · 可用空间未知';
-  }
-
-  @override
-  String get migrationReviewSpaceShort => '可用空间不足。请减少选择的项，或释放此手机的空间。';
-
-  @override
-  String get migrationDiscard => '丢弃已保存的副本';
-
-  @override
-  String get migrationDiscardTitle => '丢弃此已保存的副本？';
-
-  @override
-  String get migrationDiscardBody => '临时副本文件将被删除。已导入的文件和 Termux 中的所有内容都会保留。';
-
-  @override
-  String get migrationDiscardFailed => '无法删除已保存的副本。请稍后重试。';
-
-  @override
-  String get migrationStopping => '正在停止…';
 
   @override
   String get pickerConnectProvider => '连接服务商';
@@ -23498,31 +21685,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '没有文件访问权限就无法显示此文件夹中的文件，因此它没有被打开。请允许访问，或在应用的项目空间中选择一个文件夹。';
 
   @override
-  String get storageTermuxTitle => '允许 Termux 访问存储？';
-
-  @override
-  String get storageTermuxBody =>
-      '你的服务器运行在 Termux 中，而 Termux 目前还无法读取手机的共享存储。缺少该权限时，此文件夹只会显示 .git 之类的隐藏项。';
-
-  @override
-  String get storageTermuxAllow => '打开 Termux';
-
-  @override
-  String get storageTermuxStillTitle => '在 Termux 中允许访问存储';
-
-  @override
-  String get storageTermuxStillBody =>
-      '在 Termux 中，当 Android 询问时允许存储访问（命令为 termux-setup-storage），然后再次打开该文件夹。';
-
-  @override
   String get filesAccessNeededTitle => '文件已隐藏';
 
   @override
   String get filesAccessNeededBody => '此文件夹位于手机的共享存储中，应用暂时无法读取其中大部分文件。只显示隐藏项。';
-
-  @override
-  String get filesAccessNeededTermuxBody =>
-      '此文件夹位于手机的共享存储中，Termux 暂时无法读取其中大部分文件。只显示隐藏项。';
 
   @override
   String get storageRestartTitle => '重启以打开文件夹？';
@@ -30986,11 +29152,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String gitRepairAskingTermux(int done, int total) {
-    return '正在从 Termux 复制 $done / $total 个 Git 文件…';
-  }
-
-  @override
   String get gitRepairChecking => '正在用 Git 检查项目…';
 
   @override
@@ -31019,27 +29180,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gitRepairStart => '开始对话';
-
-  @override
-  String get gitRepairTermuxNotAllowedTitle => '文件位于 Termux 中';
-
-  @override
-  String get gitRepairTermuxNotAllowedBody => '允许应用在 Termux 中运行命令，它就会把它们复制回来。';
-
-  @override
-  String get gitRepairAllow => '允许并修复';
-
-  @override
-  String get gitRepairTermuxNoAnswerTitle => 'Termux 没有应答';
-
-  @override
-  String get gitRepairTermuxNoAnswerBody => '请先打开一次 Termux 使其启动，再回到这里重新修复。';
-
-  @override
-  String get gitRepairAgain => '再次修复';
-
-  @override
-  String get gitRepairOpenTermux => '打开 Termux';
 
   @override
   String gitRepairCannotTitle(String project) {
@@ -32135,12 +30275,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get thisPhoneAnswerStopFailed => 'The server didn\'t stop';
 
   @override
-  String get thisPhoneAnswerSwitchStopped => 'The switch didn\'t finish';
-
-  @override
-  String get thisPhoneAnswerTermux => 'Can\'t reach Termux';
-
-  @override
   String get thisPhoneAnswerRecovery => 'The server can\'t restart safely';
 
   @override
@@ -32635,9 +30769,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get welcomeMoreWays => '其他设置方式';
-
-  @override
-  String get welcomeDemoLine => '模拟对话';
 
   @override
   String kitProgressRingPercent(String percent) {
@@ -34132,4 +32263,15 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get telemetrySettingDetail =>
       'Sends crash and failure reports to Google Firebase Crashlytics: the kind of error, the code locations it happened in, your phone model and Android version, and the app version. No messages, files, addresses or passwords.';
+
+  @override
+  String get voiceAutoSetupUnknownNetwork =>
+      'This phone can\'t tell whether this connection costs data.';
+
+  @override
+  String get termuxRetiredNotice =>
+      'Termux 已不再受支持。请在此手机上设置内置 Linux，或连接你的电脑。你在 Termux 中的项目仍然在那里；把它们复制到手机的共享存储，或用 Git 推送，即可迁移过来。';
+
+  @override
+  String get termuxRetiredSetUpLinux => '设置内置 Linux';
 }
