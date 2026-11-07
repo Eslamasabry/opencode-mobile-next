@@ -284,6 +284,8 @@ public fun KitTopBar(
             }
             Row(
                 Modifier.fillMaxWidth()
+                    // A step under Back: a tappable title is a control of its own, never against it.
+                    .padding(top = if (onTitleTap != null) Space.S1.dp else 0.dp)
                     .heightIn(min = if (onTitleTap != null) tokens.minTarget.dp else 0.dp)
                     .padding(start = titleStart),
                 verticalAlignment = Alignment.CenterVertically,
