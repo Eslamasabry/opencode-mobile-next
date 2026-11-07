@@ -1,3 +1,13 @@
 # Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
 # shot	rule	subject
 chats_home_sheet	gap-step	"All projects"
+chats_home_sheet	icon-label	icon by "All projects"
+chats_home_sheet	icon-label	icon by "Other folders"
+chats_home_sheet	icon-label	icon by "alpha"
+chats_home_sheet	icon-label	icon by "beta"
+chats_home_sheet	icon-label	icon by "gamma"
+chats_home_sheet_1280x800	icon-label	icon by "All projects"
+chats_home_sheet_1280x800	icon-label	icon by "Other folders"
+chats_home_sheet_1280x800	icon-label	icon by "alpha"
+chats_home_sheet_1280x800	icon-label	icon by "beta"
+chats_home_sheet_1280x800	icon-label	icon by "gamma"

@@ -13,6 +13,7 @@ kit_code_block_output_capped_1280x800	gap-step	"Show all # lines" [kit-code-more
 kit_code_block_wrapped	start-edge	"final message = "This line is written lo"
 kit_code_block_wrapped_1280x800	start-edge	"final message = "This line is written lo"
 kit_composer_idle_empty	target	"Ask OpenCode…"
+kit_row_default	icon-label	icon by "Fix the login bug"
 kit_row_default	row-height	"Fix the login bug" [kit-row]
 kit_step_glow_fail_flash	icon-squeezed	icon
 kit_step_glow_failed	icon-squeezed	icon

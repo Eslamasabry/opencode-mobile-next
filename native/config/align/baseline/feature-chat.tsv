@@ -1,5 +1,6 @@
 # Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
 # shot	rule	subject
+chat_approval_plus	icon-label	icon by "Commands and agents"
 chat_find_open	start-edge	"# of # matches"
 chat_loading	gap-step	(unnamed)
 chat_transcript_turn	target	"Ask OpenCode…"
