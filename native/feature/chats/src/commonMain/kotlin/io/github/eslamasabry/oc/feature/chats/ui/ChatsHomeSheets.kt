@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeProjectKind
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -161,13 +163,21 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
                 if (project.runningCount > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
                 if (project.directory in state.projectNeedsYou) add(stringResource(Res.string.chatsFilterNeedsYouWord))
             }
+            val facts = state.projectFacts[project.directory]
             KitRow(
                 title = project.name,
-                leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = selected),
+                // F: lib/ui/screens/chats/chats_project_sheet.dart:85-88 (chatsProjectIcon(project.kind))
+                leading = KitRowLeading.Glyph(projectKindGlyph(facts?.kind), current = selected),
                 supporting = parts.joinToString(" · "),
                 supportingMaxLines = 2, // F: lib/ui/screens/chats/chats_project_sheet.dart:94
                 selected = selected,
-                trailing = if (selected) KitRowTrailing.Check else KitRowTrailing.None,
+                // F: lib/ui/screens/chats/chats_project_sheet.dart:96-107 (the "Git" pill, then the check)
+                trailing =
+                    when {
+                        facts?.git == true -> KitRowTrailing.Chip(stringResource(Res.string.phoneScanGit), KitIcons.branch, checked = selected)
+                        selected -> KitRowTrailing.Check
+                        else -> KitRowTrailing.None
+                    },
                 onClick = { actions.chooseProject(project.directory) },
             )
         }
@@ -347,3 +357,19 @@ internal fun OpeningRow(row: ChatsOpeningRow) {
 
 @Composable
 private fun title(value: RowTitle): String = rowTitleWords(value)
+
+/** The glyph of a project's kind (Dart `phoneProjectKindIcon`, lib/ui/widgets/phone_project_kind.dart): the plain open folder when unknown. */
+internal fun projectKindGlyph(kind: HomeProjectKind?): ImageVector =
+    when (kind) {
+        HomeProjectKind.Dart -> KitIcons.layers
+        HomeProjectKind.Node -> KitIcons.packageBox
+        HomeProjectKind.Python -> KitIcons.dataObject
+        HomeProjectKind.Rust -> KitIcons.processor
+        HomeProjectKind.Go -> KitIcons.terminal
+        HomeProjectKind.Java -> KitIcons.code
+        HomeProjectKind.Ruby -> KitIcons.database
+        HomeProjectKind.Php -> KitIcons.globe
+        HomeProjectKind.Dotnet -> KitIcons.category
+        HomeProjectKind.Cpp -> KitIcons.function
+        null -> KitIcons.folderOpen
+    }

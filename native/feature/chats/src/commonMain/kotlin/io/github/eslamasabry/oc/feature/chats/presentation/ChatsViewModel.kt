@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
+import kotlinx.collections.immutable.toImmutableMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.zacsweers.metro.AppScope
@@ -152,6 +153,8 @@ public class ChatsViewModel(
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
+            // G4: the project sheet's kind glyphs and "Git" pills.
+            .combine(home.projectFacts) { base, facts -> base.copy(projectFacts = facts.toImmutableMap()) }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
