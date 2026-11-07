@@ -13,12 +13,19 @@ private val meshPaint = Paint()
 internal actual fun drawLiveVertices(
     scope: DrawScope,
     cols: Int,
-    rows: Int,
     positions: FloatArray,
     colors: IntArray,
     indices: ShortArray,
 ) {
     scope.drawIntoCanvas { canvas ->
-        canvas.nativeCanvas.drawVertices(VertexMode.TRIANGLES, positions, colors, null, indices, BlendMode.DST, meshPaint)
+        canvas.nativeCanvas.drawVertices(
+            VertexMode.TRIANGLES,
+            positions,
+            colors,
+            null,
+            indices,
+            BlendMode.DST,
+            meshPaint,
+        )
     }
 }

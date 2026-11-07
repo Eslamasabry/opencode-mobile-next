@@ -44,7 +44,8 @@ public class KitLiveFlowThreads : KitLiveStyle() {
             val ang = fbm(q.x / w * 1.5 + t * .01, q.y / w * 1.5) * PI * 4 // F: lib/ui/kit/live_background/styles/kit_live_flow_threads.dart:43
             q.x += cos(ang) * sp
             q.y += sin(ang) * sp
-            if (q.x < 0 || q.x > w || q.y < 0 || q.y > h) {
+            val inside = q.x in 0.0..w && q.y in 0.0..h
+            if (!inside) {
                 q.x = st.rnd.nextDouble() * w
                 q.y = st.rnd.nextDouble() * h
                 q.clear()
@@ -66,7 +67,8 @@ public class KitLiveFlowThreads : KitLiveStyle() {
         private var start = 0
         var count = 0
             private set
-        val path = Path()
+        /** Made on the first draw, where a canvas exists. */
+        val path: Path by lazy { Path() }
 
         fun clear() {
             start = 0

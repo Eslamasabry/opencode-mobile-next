@@ -19,6 +19,7 @@ class KitLiveHoneycombParityTest {
     }
 
     @Test fun theLatticeCoversThePageWithCellsOfASixteenthOfItsWidth() {
+        LiveRender.ensureGraphics()
         val r = 412 / 16.0
         val geo = KitLiveHoneycomb.Geo.of(Size(412f, 915f), r)
         // Rows half a hexagon's height apart, from one above the page to past its bottom; odd rows shifted 1.5 r.

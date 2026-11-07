@@ -32,7 +32,7 @@ public class KitLiveLiquidBlobs : KitLiveStyle() {
         b.set(i++, .5 + .25 * sin(tt * .4 + 2), 1.3 + .2 * cos(tt * .9), .05, teal) // F: lib/ui/kit/live_background/styles/kit_live_liquid_blobs.dart:29-32
         b.set(i, .5, 2.0 - run * .45, .06 * run, glow) // F: lib/ui/kit/live_background/styles/kit_live_liquid_blobs.dart:34
         val alpha = .15 * a // F: lib/ui/kit/live_background/styles/kit_live_liquid_blobs.dart:47
-        paintField(scope, size, frame, "f", DIV, every = EVERY) { u, v ->
+        scope.paintField(size, frame, DIV, every = EVERY) { u, v ->
             var s = 0.0
             var r = 0.0
             var g = 0.0

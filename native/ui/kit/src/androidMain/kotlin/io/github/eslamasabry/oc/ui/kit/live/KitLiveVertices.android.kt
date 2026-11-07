@@ -23,7 +23,6 @@ private val dst = RectF()
 internal actual fun drawLiveVertices(
     scope: DrawScope,
     cols: Int,
-    rows: Int,
     positions: FloatArray,
     colors: IntArray,
     indices: ShortArray,
@@ -46,12 +45,13 @@ internal actual fun drawLiveVertices(
                 meshPaint,
             )
         } else {
-            drawAsBitmap(native, cols, rows, positions, colors)
+            drawAsBitmap(native, cols, positions, colors)
         }
     }
 }
 
-private fun drawAsBitmap(native: Canvas, cols: Int, rows: Int, positions: FloatArray, colors: IntArray) {
+private fun drawAsBitmap(native: Canvas, cols: Int, positions: FloatArray, colors: IntArray) {
+    val rows = colors.size / cols
     val bitmap =
         fallbacks.getOrPut(colors) { Bitmap.createBitmap(cols, rows, Bitmap.Config.ARGB_8888) }
     bitmap.setPixels(colors, 0, cols, 0, 0, cols, rows)

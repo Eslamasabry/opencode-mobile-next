@@ -20,7 +20,8 @@ class KitLiveMeshParityTest {
     }
 
     @Test fun colourHelpersPackAsFlutter() {
-        assertContentEquals(doubleArrayOf(5.0, 10.0, 15.0), mixRgb(doubleArrayOf(0.0, 0.0, 0.0), doubleArrayOf(10.0, 20.0, 30.0), .5))
+        val mixed = mixRgb(doubleArrayOf(0.0, 0.0, 0.0), doubleArrayOf(10.0, 20.0, 30.0), .5)
+        assertContentEquals(doubleArrayOf(5.0, 10.0, 15.0), mixed)
         assertEquals(0x80FF0001.toInt(), packArgb(300.0, -4.0, 1.4, .5))
     }
 

@@ -20,7 +20,11 @@ class KitLiveLooksGateTest {
     }
 
     @Test fun kit_live_honeycomb() {
-        FlutterGoldenGate.check("kit_live_honeycomb", frame = FlutterGoldenGate.Frame.Screen, content = scene(KitLiveHoneycomb()))
+        FlutterGoldenGate.check(
+            "kit_live_honeycomb",
+            frame = FlutterGoldenGate.Frame.Screen,
+            content = scene(KitLiveHoneycomb()),
+        )
     }
 
     @Test fun kit_live_matrixrain() {

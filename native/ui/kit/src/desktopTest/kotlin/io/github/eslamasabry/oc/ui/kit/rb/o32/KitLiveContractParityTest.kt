@@ -109,10 +109,10 @@ class KitLiveContractParityTest {
         assertEquals(h, hash2(3, 7))
         // Negative cells hash through their 32-bit pattern.
         assertEquals(hash2(-1, 0), hash2(0xFFFFFFFFL, 0))
-        // sRGB-linear mixing, never Oklab: half of black to white is 50 % grey.
+        // sRGB-linear mixing, never Oklab: half of black to white is 50 % grey (to the 8-bit step a colour keeps).
         val grey = mixColor(Color.Black, Color.White, .5)
-        assertEquals(.5f, grey.red, 1e-6f)
-        assertEquals(.5f, grey.green, 1e-6f)
+        assertEquals(.5f, grey.red, 1f / 255)
+        assertEquals(.5f, grey.green, 1f / 255)
         val p = LiveRender.palette(false)
         assertEquals(.7, strengthOf(LiveRender.frame(p)), 1e-12)
         assertEquals(1.6, strengthOf(LiveRender.frame(LiveRender.palette(true), strength = 1.6)), 1e-12)

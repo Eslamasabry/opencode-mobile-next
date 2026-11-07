@@ -82,7 +82,8 @@ public class KitLiveMatrixRain(public val glyphs: String = DEFAULT_GLYPHS) : Kit
         private var style = TextStyle.Default
 
         fun ensure(fs: Double, family: FontFamily, set: String, measurer: TextMeasurer) {
-            if (fs == this.fs && family == this.family && set == this.set && measurer === this.measurer) return
+            val sameFace = fs == this.fs && family == this.family
+            if (sameFace && set == this.set && measurer === this.measurer) return
             this.fs = fs
             this.family = family
             this.set = set

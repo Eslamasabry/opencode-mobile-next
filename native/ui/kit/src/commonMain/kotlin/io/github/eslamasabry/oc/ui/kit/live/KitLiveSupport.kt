@@ -13,6 +13,12 @@ import kotlin.math.sin
  * Interim copy of order 31's support file (orders 31-33 run in parallel).
  */
 
+/** Dart's `%` on doubles: never negative for a positive divisor. */
+internal fun dmod(a: Double, b: Double): Double {
+    val r = a % b
+    return if (r < 0) r + kotlin.math.abs(b) else r
+}
+
 /** A hash of up to three numbers into 0..1 (Dart `liveHash`). */
 public fun liveHash(a: Double, b: Double = 0.0, c: Double = 0.0): Double {
     val s = sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453 // F: lib/ui/kit/live_background/styles/kit_live_support.dart:13

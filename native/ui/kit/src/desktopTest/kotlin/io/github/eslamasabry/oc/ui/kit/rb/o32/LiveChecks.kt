@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.rb.o32
 
+import io.github.eslamasabry.oc.ui.kit.live.KitLiveMemory
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveStyle
 import io.github.eslamasabry.oc.ui.kit.live.kitLiveStyles
 import kotlin.math.ceil
@@ -17,16 +18,22 @@ internal object LiveChecks {
         assertTrue(id.encodeToByteArray().contentEquals(style.id.encodeToByteArray()))
     }
 
-    /** Same clock, same picture; three seconds on, another picture; something shows over the ground. */
+    /**
+     * Same clock, same picture; three seconds on (the look's memory carried through the frames between, as on a page),
+     * another picture; something shows over the ground.
+     */
     fun deterministicAndAlive(style: KitLiveStyle) {
         for (dark in listOf(true, false)) {
             val p = LiveRender.palette(dark)
             val a = LiveRender.pixels(style, p)
             val b = LiveRender.pixels(style, p)
             assertContentEquals(a, b, "${style.id}: same t, same picture")
-            val c = LiveRender.pixels(style, p, t = LiveRender.T + 3)
+            val memory = KitLiveMemory()
+            var c = LiveRender.pixels(style, p, memory = memory)
+            for (k in 1..36) c = LiveRender.pixels(style, p, t = LiveRender.T + k / 12.0, memory = memory)
             assertFalse(a.contentEquals(c), "${style.id}: it is alive")
-            assertTrue(LiveRender.maxDelta(a, p) > 0, "${style.id}: it is visible")
+            // Visible once it has run (flow threads draws nothing on its very first frame, as in Flutter).
+            assertTrue(LiveRender.maxDelta(c, p) > 0, "${style.id}: it is visible")
         }
     }
 

@@ -66,10 +66,9 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
         appearance.liveBackground && !appearance.saver && appearance.liveStyle == AuroraImage.ID && strength > 0f &&
             !motion.stillFrame
     // Every other look the app draws (Dart kit_live_background.dart:262-271): the same switch, cap and Saver.
+    val lookOn = appearance.liveBackground && !appearance.saver && strength > 0f
     val drawn =
-        if (appearance.liveBackground && !appearance.saver && appearance.liveStyle != AuroraImage.ID && strength > 0f &&
-            !motion.stillFrame
-        ) {
+        if (lookOn && appearance.liveStyle != AuroraImage.ID && !motion.stillFrame) {
             kitLiveStyleById(appearance.liveStyle)
         } else {
             null

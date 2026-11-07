@@ -44,7 +44,8 @@ public abstract class KitLiveStyle {
     public abstract fun paint(scope: DrawScope, size: Size, frame: KitLiveFrame)
 }
 
-/** What a look is given for one frame (Dart `KitLiveFrame`). */
+/** What a look is given for one frame (Dart `KitLiveFrame`, field for field, plus the text tools a look needs). */
+@Suppress("LongParameterList") // mirrors the Dart class
 public class KitLiveFrame(
     /** Seconds on the shared clock; never resets, so a page change carries on where the last one was. */
     public val t: Double,
@@ -60,7 +61,8 @@ public class KitLiveFrame(
     public val mono: FontFamily = FontFamily.Monospace,
 )
 
-/** The theme's colours a look may use (Dart `KitLivePalette`). */
+/** The theme's colours a look may use (Dart `KitLivePalette`, field for field). */
+@Suppress("LongParameterList") // mirrors the Dart class
 public class KitLivePalette(
     public val ground: Color,
     /** Primary text colour. */

@@ -24,6 +24,15 @@ import org.jetbrains.skia.Rect
 /** Paints looks off screen, as the Flutter tests do (`test/kit_live_styles_industrial_test.dart` `_render`). */
 internal object LiveRender {
     val phone = Size(412f, 915f)
+
+    /**
+     * Paths, paints and bitmaps need the desktop graphics backend. A Compose UI test registers it and clears it when it
+     * ends, so every off-screen render registers it again first.
+     */
+    @OptIn(androidx.compose.ui.InternalComposeUiApi::class)
+    fun ensureGraphics() {
+        androidx.compose.ui.platform.registerSkikoComposeImplementation()
+    }
     const val T = 7.3
 
     fun palette(dark: Boolean): KitLivePalette = KitLivePalette.of(Graphite.of(dark).toKitColors())
@@ -38,28 +47,28 @@ internal object LiveRender {
         memory: KitLiveMemory = KitLiveMemory(),
     ): KitLiveFrame = KitLiveFrame(t, running, strength, p, memory, measurer, FontFamily.Monospace)
 
-    /** Ground then [style] at [size] dp drawn at [density], as ARGB pixels. */
+    /** Ground then [style] on the 412×915 phone at density 1, as ARGB pixels. */
     fun pixels(
         style: KitLiveStyle,
         p: KitLivePalette,
-        size: Size = phone,
-        density: Float = 1f,
         t: Double = T,
         running: Double = 0.0,
-        strength: Double = 1.0,
         memory: KitLiveMemory = KitLiveMemory(),
     ): IntArray {
-        val w = Math.round(size.width * density)
-        val h = Math.round(size.height * density)
+        ensureGraphics()
+        val w = Math.round(phone.width)
+        val h = Math.round(phone.height)
         val image = ImageBitmap(w, h)
-        draw(Canvas(image), style, size, density, frame(p, t, running, strength, memory))
+        draw(Canvas(image), style, phone, 1f, frame(p, t, running, memory = memory))
         val out = IntArray(w * h)
         image.readPixels(out)
         return out
     }
 
     fun draw(canvas: Canvas, style: KitLiveStyle, size: Size, density: Float, frame: KitLiveFrame) {
-        CanvasDrawScope().draw(Density(density), LayoutDirection.Ltr, canvas, Size(size.width * density, size.height * density)) {
+        ensureGraphics()
+        val px = Size(size.width * density, size.height * density)
+        CanvasDrawScope().draw(Density(density), LayoutDirection.Ltr, canvas, px) {
             drawRect(frame.palette.ground)
             scale(density, density, pivot = Offset.Zero) { style.paint(this, size, frame) }
         }

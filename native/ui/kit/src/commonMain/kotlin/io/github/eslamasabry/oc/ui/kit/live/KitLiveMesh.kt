@@ -33,7 +33,7 @@ public class KitLiveMesh : KitLiveStyle() {
         m.set(i++, .3 + .2 * sin(tt * .3), .9 + .1 * cos(tt * .8), third) // F: lib/ui/kit/live_background/styles/kit_live_mesh.dart:29
         m.set(i, .7 + .15 * sin(tt * .5 + 1), 1.5 - .25 * run + .1 * cos(tt * .9), glow) // F: lib/ui/kit/live_background/styles/kit_live_mesh.dart:31-33
         val alpha = .13 * a * (.8 + .2 * sin(tt)) // F: lib/ui/kit/live_background/styles/kit_live_mesh.dart:36
-        paintField(scope, size, frame, "f", DIV, every = EVERY) { u, v ->
+        scope.paintField(size, frame, DIV, every = EVERY) { u, v ->
             var w = 0.0
             var r = 0.0
             var g = 0.0

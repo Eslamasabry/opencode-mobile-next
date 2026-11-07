@@ -21,6 +21,7 @@ class KitLiveFrameCostTest {
         kitLiveStyles.map { if (it is KitLiveMatrixRain) KitLiveMatrixRain(KitLiveMatrixRain.ASCII_GLYPHS) else it }
 
     @Test fun everyLookRecordsAPhoneFrameUnderFourMilliseconds() {
+        LiveRender.ensureGraphics()
         val density = 2.625f
         val size = LiveRender.phone
         val p = LiveRender.palette(true)

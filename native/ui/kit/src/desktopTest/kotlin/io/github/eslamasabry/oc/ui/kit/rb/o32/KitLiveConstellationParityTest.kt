@@ -35,7 +35,7 @@ class KitLiveConstellationParityTest {
         val memory = KitLiveMemory()
         val p = LiveRender.palette(true)
         // Many small steps never leave the page.
-        for (k in 0..400) LiveRender.pixels(style, p, size = LiveRender.phone, t = k * .1, memory = memory)
+        for (k in 0..400) LiveRender.pixels(style, p, t = k * .1, memory = memory)
         val st = memory.of("s") { KitLiveConstellation.Stars(0.0, 0.0) }
         for (i in 0 until KitLiveConstellation.COUNT) assertTrue(st.x[i] in 0.0..412.0 && st.y[i] in 0.0..915.0)
     }
