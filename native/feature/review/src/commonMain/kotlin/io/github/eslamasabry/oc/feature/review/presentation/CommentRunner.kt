@@ -33,16 +33,31 @@ internal class CommentRunner(
         val waiting = book.comments.value.filter { it.status == CommentStatus.Pending }.map { it.anchor.path }.toSet()
         if (waiting.isEmpty()) return
         val set = (review.changes(null) as? Outcome.Ok)?.value ?: return
-        for (path in waiting) {
-            val file = set.files.firstOrNull { it.path == path } ?: continue
-            if (!file.hasDiff) continue
+        for (file in set.files.filter { it.path in waiting && it.hasDiff }) {
             val diff = TurnChanges.asFileDiff(file)
-            book.reconcile(path, CommentResolve.version(diff), CommentResolve.diffFile(diff))
+            book.reconcile(file.path, CommentResolve.version(diff), CommentResolve.diffFile(diff))
         }
     }
 
     private suspend fun versions(): Map<String, String> {
         val set = (review.changes(null) as? Outcome.Ok)?.value ?: return emptyMap()
-        return set.files.filter { it.hasDiff }.associate { it.path to CommentResolve.version(TurnChanges.asFileDiff(it)) }
+        return set.files
+            .filter { it.hasDiff }
+            .associate { it.path to CommentResolve.version(TurnChanges.asFileDiff(it)) }
     }
+}
+
+/**
+ * The review pages' way to the conversation's agent (B-155, B-156): its [comments], the [sender] that reaches the agent
+ * (null: nothing can be sent, so comments and the guide are not offered), the [guideAsk] and the conversation's cached
+ * [guides] by change set ([ReviewGuidePrompt.key]).
+ */
+public class ReviewAgentPorts(
+    public val comments: ReviewCommentBook? = null,
+    public val sender: ReviewPromptSender? = null,
+    public val guideAsk: ReviewGuideAsk? = null,
+    public val guides: MutableMap<String, ReviewGuide> = HashMap(),
+) {
+    internal fun runner(review: ConversationReview): CommentRunner? =
+        if (comments != null && sender != null) CommentRunner(review, comments, sender) else null
 }

@@ -134,7 +134,9 @@ public class ConversationReview(
                             editCount.update { it + 1 }
                         }
                     is GatewayEvent.PartUpserted ->
-                        if (event.part.sessionId == session.raw && TurnChanges.isCompletedEdit(event.part)) editCount.update { it + 1 }
+                        if (event.part.sessionId == session.raw && TurnChanges.isCompletedEdit(event.part)) {
+                            editCount.update { it + 1 }
+                        }
                     GatewayEvent.Connected -> {
                         refresh() // the stream is volatile: reconcile by refetch
                         editCount.update { it + 1 }

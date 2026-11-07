@@ -29,7 +29,7 @@ public data class GuideSection(val title: String, val why: String, val files: Im
 /** A guide for one change set: [sections] core first, then the [alsoChanged] glue files. */
 public data class ReviewGuide(val sections: ImmutableList<GuideSection>, val alsoChanged: ImmutableList<String>)
 
-/** Asks this conversation's agent [prompt] and returns its reply text (the reply to the prompt that carries [marker]). */
+/** Asks this conversation's agent [prompt]; returns its reply (to the prompt that carries [marker]). */
 public fun interface ReviewGuideAsk {
     public suspend fun ask(prompt: String, marker: String): Outcome<String>
 }
@@ -40,9 +40,11 @@ public object ReviewGuidePrompt {
     public const val MAX_TITLE: Int = 80
     public const val MAX_WHY: Int = 200
     public const val MAX_PATHS: Int = 50
+    private const val KEY_CHARS = 12
+    private const val HEX = 16
 
     /** The marker the reply is found by; [key] names the change set. */
-    public fun marker(key: String): String = "[review-guide ${key.take(12)}]"
+    public fun marker(key: String): String = "[review-guide ${key.take(KEY_CHARS)}]"
 
     /**
      * The prompt (content for the agent, English like the other review prompts). Only paths are listed, at most
@@ -64,45 +66,52 @@ public object ReviewGuidePrompt {
 
     /** A key for the change set: the guide is cached under it and made again when it changes. */
     public fun key(rows: List<ChangeRowUi>): String =
-        rows.sortedBy { it.path }.joinToString("|") { "${it.path}:${it.added}:${it.removed}" }.hashCode().toUInt().toString(16)
+        rows.sortedBy { it.path }
+            .joinToString("|") { "${it.path}:${it.added}:${it.removed}" }
+            .hashCode()
+            .toUInt()
+            .toString(HEX)
 
     /**
      * Reads the agent's answer. Unknown paths are dropped, files no section names go to "Also changed", glue sections
      * fold there too, and text is cut to one bounded line. Null when the reply holds no usable JSON.
      */
     public fun parse(reply: String, paths: List<String>): ReviewGuide? {
-        val start = reply.indexOf('{')
-        val end = reply.lastIndexOf('}')
-        if (start < 0 || end <= start) return null
-        val root = parseJson(reply.substring(start, end + 1)) as? JsonObject ?: return null
-        val raw = root["sections"] as? JsonArray ?: return null
         val known = paths.toSet()
         val used = HashSet<String>()
         val core = ArrayList<GuideSection>()
         val glue = LinkedHashSet<String>()
-        for (item in raw) {
-            val obj = item as? JsonObject ?: continue
-            val files =
-                (obj["files"] as? JsonArray).orEmpty()
-                    .mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.trim() }
-                    .filter { it in known && it !in used }
-                    .distinct()
-            if (files.isEmpty()) continue
+        for (obj in sections(reply)) {
+            val files = files(obj, known, used)
             used += files
-            if ((obj["glue"] as? JsonPrimitive)?.booleanOrNull == true || core.size >= MAX_SECTIONS) {
-                glue += files
-                continue
-            }
-            val title = line(obj["title"], MAX_TITLE)
-            if (title.isEmpty()) {
-                glue += files
-                continue
-            }
-            core += GuideSection(title, line(obj["why"], MAX_WHY), files.toImmutableList())
+            val section = section(obj, files).takeIf { files.isNotEmpty() && core.size < MAX_SECTIONS }
+            if (section == null) glue += files else core += section
         }
-        if (core.isEmpty()) return null
         glue += paths.filter { it !in used }
-        return ReviewGuide(core.toImmutableList(), glue.toImmutableList())
+        return if (core.isEmpty()) null else ReviewGuide(core.toImmutableList(), glue.toImmutableList())
+    }
+
+    /** The section objects of the JSON in [reply] (the agent may wrap it in words); none when there is no JSON. */
+    private fun sections(reply: String): List<JsonObject> {
+        val start = reply.indexOf('{')
+        val end = reply.lastIndexOf('}')
+        val root = if (start < 0 || end <= start) null else parseJson(reply.substring(start, end + 1)) as? JsonObject
+        return (root?.get("sections") as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
+    }
+
+    /** The section's known paths, each once across the guide. */
+    private fun files(obj: JsonObject, known: Set<String>, used: Set<String>): List<String> =
+        (obj["files"] as? JsonArray).orEmpty()
+            .mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.trim() }
+            .filter { it in known && it !in used }
+            .distinct()
+
+    /** A core section, or null for glue (marked so, or untitled): its files go under "Also changed". */
+    private fun section(obj: JsonObject, files: List<String>): GuideSection? {
+        val glue = (obj["glue"] as? JsonPrimitive)?.booleanOrNull == true
+        val title = line(obj["title"], MAX_TITLE)
+        if (glue || title.isEmpty()) return null
+        return GuideSection(title, line(obj["why"], MAX_WHY), files.toImmutableList())
     }
 
     private fun line(element: JsonElement?, max: Int): String {
@@ -130,20 +139,23 @@ public class AgentGuideAsk(
 ) : ReviewGuideAsk {
     override suspend fun ask(prompt: String, marker: String): Outcome<String> {
         if (review.state.value.running) return Outcome.Failed(Failure.Busy(BusyKind.SessionBusy))
-        var seen = review.edits.value
-        when (val sent = sender.send(prompt)) {
-            is Outcome.Failed -> return sent
-            is Outcome.Ok -> Unit
-        }
+        val seen = review.edits.value
+        val sent = sender.send(prompt)
+        return if (sent is Outcome.Failed) sent else awaitReply(marker, seen)
+    }
+
+    private suspend fun awaitReply(marker: String, sentAt: Long): Outcome<String> {
+        var seen = sentAt
         var checks = 0
-        while (checks < maxChecks) {
+        var reply: String? = null
+        while (reply == null && checks < maxChecks) {
             seen = review.edits.first { it > seen }
-            if (review.state.value.running) continue
-            checks++
-            val history = review.history() as? Outcome.Ok ?: continue
-            replyTo(history.value.messages, marker)?.let { return Outcome.Ok(it) }
+            if (!review.state.value.running) {
+                checks++
+                reply = (review.history() as? Outcome.Ok)?.value?.messages?.let { replyTo(it, marker) }
+            }
         }
-        return Outcome.Failed(Failure.UnreadableReply())
+        return reply?.let { Outcome.Ok(it) } ?: Outcome.Failed(Failure.UnreadableReply())
     }
 
     public companion object {

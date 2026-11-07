@@ -9,8 +9,10 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RevertKind
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.SessionRevert
 import io.github.eslamasabry.oc.core.model.SessionStatus
+import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.testing.FakeOperationsGateway
 import io.github.eslamasabry.oc.core.testing.FakeServerGateway
 import kotlinx.collections.immutable.persistentListOf
@@ -273,14 +275,14 @@ class ConversationReviewTest {
     fun `B-156 a completed edit of this conversation moves the edits signal, others do not`() = runTest(UnconfinedTestDispatcher()) {
         val r = review()
         val start = r.edits.value
-        fake.base.events.emit(GatewayEvent.PartUpserted(edit("a.kt", 1, 0, status = io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Running)))
+        fake.base.events.emit(GatewayEvent.PartUpserted(edit("a.kt", 1, 0, status = ToolStatus.Running)))
         fake.base.events.emit(GatewayEvent.PartUpserted(edit("a.kt", 1, 0).copy(sessionId = "ses_other")))
         runCurrent()
         assertEquals(start, r.edits.value)
         fake.base.events.emit(GatewayEvent.PartUpserted(edit("a.kt", 1, 0)))
         runCurrent()
         assertEquals(start + 1, r.edits.value)
-        fake.base.events.emit(GatewayEvent.RunEnded(S, io.github.eslamasabry.oc.core.domain.events.RunOutcome.Succeeded))
+        fake.base.events.emit(GatewayEvent.RunEnded(S, RunOutcome.Succeeded))
         runCurrent()
         assertEquals(start + 2, r.edits.value)
     }

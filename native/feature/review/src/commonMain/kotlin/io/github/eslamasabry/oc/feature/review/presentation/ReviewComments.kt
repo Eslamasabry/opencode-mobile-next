@@ -112,9 +112,13 @@ public object CommentLines {
         val out = ArrayList<Pair<Int, String>?>()
         fun take(line: DiffLine) {
             when (side) {
-                CommentSide.New -> line.newNo?.takeIf { line.kind != DiffLineKind.Hunk && line.kind != DiffLineKind.Removed }?.let { out += it to line.text }
+                CommentSide.New ->
+                    line.newNo
+                        ?.takeIf { line.kind != DiffLineKind.Hunk && line.kind != DiffLineKind.Removed }
+                        ?.let { out += it to line.text }
                 // The old side a comment can sit on is what was removed (context reads as the new side).
-                CommentSide.Old -> line.oldNo?.takeIf { line.kind == DiffLineKind.Removed }?.let { out += it to line.text }
+                CommentSide.Old ->
+                    line.oldNo?.takeIf { line.kind == DiffLineKind.Removed }?.let { out += it to line.text }
             }
         }
         for (segment in file.segments) {
@@ -143,8 +147,10 @@ public object CommentLines {
             val lines = side(file, side).filterNotNull()
             for (i in 0..lines.size - wanted.size) {
                 val window = lines.subList(i, i + wanted.size)
-                if (window.map { redact(it.second) } == wanted && window.zipWithNext().all { (a, b) -> b.first == a.first + 1 }) {
-                    return CommentAnchor(file.path, side, window.first().first, window.last().first, wanted.toImmutableList())
+                val consecutive = window.zipWithNext().all { (a, b) -> b.first == a.first + 1 }
+                if (consecutive && window.map { redact(it.second) } == wanted) {
+                    val (start, end) = window.first().first to window.last().first
+                    return CommentAnchor(file.path, side, start, end, wanted.toImmutableList())
                 }
             }
         }
@@ -152,23 +158,9 @@ public object CommentLines {
     }
 
     /** True when [raw] still appears as consecutive lines of [lines]. */
-    public fun contains(lines: List<Pair<Int, String>?>, raw: List<String>): Boolean {
-        if (raw.isEmpty()) return true
-        var run = 0
-        var i = 0
-        while (i < lines.size) {
-            val line = lines[i]
-            if (line != null && line.second == raw[run]) {
-                run++
-                if (run == raw.size) return true
-            } else if (run > 0) {
-                i -= run // retry from the line after the run's start
-                run = 0
-            }
-            i++
-        }
-        return false
-    }
+    public fun contains(lines: List<Pair<Int, String>?>, raw: List<String>): Boolean =
+        raw.isEmpty() ||
+            (0..lines.size - raw.size).any { start -> raw.indices.all { k -> lines[start + k]?.second == raw[k] } }
 }
 
 /**
@@ -178,10 +170,10 @@ public object CommentLines {
  */
 public object CommentResolve {
     public fun resolved(comment: LineComment, version: String, now: DiffFile?): Boolean {
-        if (comment.status != CommentStatus.Pending) return false
-        if (comment.sentVersion == null || comment.sentVersion == version) return false
-        if (now == null) return true
-        return !CommentLines.contains(CommentLines.side(now, comment.anchor.side), comment.raw)
+        val sent = comment.sentVersion
+        val newer = comment.status == CommentStatus.Pending && sent != null && sent != version
+        val touched = now == null || !CommentLines.contains(CommentLines.side(now, comment.anchor.side), comment.raw)
+        return newer && touched
     }
 
     /** A version of one file's diff: changes whenever its text does. */
@@ -214,7 +206,8 @@ public class ReviewCommentBook {
     public val drafts: List<LineComment> get() = mutable.value.filter { it.status == CommentStatus.Draft }
 
     public fun add(anchor: CommentAnchor, text: String, raw: List<String>): LineComment {
-        val comment = LineComment("c${++counter}", anchor, text.trim(), raw = (raw.ifEmpty { anchor.quote }).toImmutableList())
+        val lines = raw.ifEmpty { anchor.quote }.toImmutableList()
+        val comment = LineComment("c${++counter}", anchor, text.trim(), raw = lines)
         mutable.update { (it + comment).toImmutableList() }
         return comment
     }
@@ -226,7 +219,9 @@ public class ReviewCommentBook {
     /** Marks [ids] sending; returns the ones that were drafts. */
     public fun sending(ids: Set<String>): List<LineComment> {
         val taken = mutable.value.filter { it.id in ids && it.status == CommentStatus.Draft }
-        mutable.update { list -> list.map { if (it in taken) it.copy(status = CommentStatus.Sending) else it }.toImmutableList() }
+        mutable.update { list ->
+            list.map { if (it in taken) it.copy(status = CommentStatus.Sending) else it }.toImmutableList()
+        }
         return taken
     }
 
@@ -247,7 +242,8 @@ public class ReviewCommentBook {
     public fun reconcile(path: String, version: String, now: DiffFile?) {
         mutable.update { list ->
             list.map { c ->
-                if (c.anchor.path == path && CommentResolve.resolved(c, version, now)) c.copy(status = CommentStatus.Resolved) else c
+                val fixed = c.anchor.path == path && CommentResolve.resolved(c, version, now)
+                if (fixed) c.copy(status = CommentStatus.Resolved) else c
             }.toImmutableList()
         }
     }

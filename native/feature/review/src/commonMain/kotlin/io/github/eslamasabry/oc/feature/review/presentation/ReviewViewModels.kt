@@ -45,10 +45,7 @@ public class ChangesViewModel(
                 RouteNavigation(nav, route.ref, route.messageId),
                 viewModelScope,
                 drafts.sendBack(route.ref),
-                notes.comments,
-                agent.sender(route.ref),
-                agent.guideAsk(route.ref),
-                notes.guides,
+                ReviewAgentPorts(notes.comments, agent.sender(route.ref), agent.guideAsk(route.ref), notes.guides),
             )
         }
     public val state: StateFlow<ChangesUi> = presenter.state
@@ -92,7 +89,7 @@ public class ChangesViewModel(
 public class FileDiffViewModel(
     @Assisted route: ReviewRoute.File,
     hub: ReviewHub,
-    nav: AppNavigator,
+    private val nav: AppNavigator,
     agent: ReviewAgent,
 ) : ViewModel(), FileDiffActions {
     private val presenter =
@@ -100,16 +97,17 @@ public class FileDiffViewModel(
             hub.review(route.ref),
             route.path,
             route.messageId,
-            route.staged,
+            when {
+                route.staged -> FileDiffSource.Staged
+                route.workingTree -> FileDiffSource.WorkingTree
+                else -> FileDiffSource.Changes
+            },
             viewModelScope,
-            route.workingTree,
-            hub.notes(route.ref).comments,
-            agent.sender(route.ref),
-            RouteNavigation(nav, route.ref, route.messageId),
+            ReviewAgentPorts(hub.notes(route.ref).comments, agent.sender(route.ref)),
         )
     public val state: StateFlow<FileDiffUi> = presenter.state
 
-    override fun back(): Unit = presenter.back()
+    override fun back(): Unit = nav.back()
 
     override fun retry(): Unit = presenter.retry()
 

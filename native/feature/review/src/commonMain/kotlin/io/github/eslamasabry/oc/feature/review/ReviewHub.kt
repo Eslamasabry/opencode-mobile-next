@@ -25,7 +25,7 @@ public interface ReviewGraphAccessors {
     public val reviewGateway: ServerGateway
     public val reviewOperations: ServerOperationsGateway
 
-    /** The conversation's send pipeline: line comments and the guide question reach its agent through it (B-155/156). */
+    /** The conversation's send pipeline: line comments and the guide question reach its agent (B-155/156). */
     public val reviewDelivery: ConnectionDelivery
 }
 
