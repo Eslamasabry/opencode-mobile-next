@@ -24,7 +24,7 @@ class KitDiffModelParityTest {
         assertEquals(listOf("Modified", "Added", "Deleted", "Renamed"), DiffFileStatus.entries.map { it.name }) // :27
     }
 
-    @Test fun `before-after status: null before is added, null after deleted, an empty before is modified`() {
+    @Test fun `before-after status - null before is added, null after deleted, an empty before is modified`() {
         assertEquals(DiffFileStatus.Added, DiffModel.fromBeforeAfter("a", null, "x").status)
         assertEquals(DiffFileStatus.Added, DiffModel.fromBeforeAfter("a", null, "").status)
         assertEquals(DiffFileStatus.Deleted, DiffModel.fromBeforeAfter("a", "x", null).status)
@@ -76,7 +76,7 @@ class KitDiffModelParityTest {
         assertEquals(listOf(1, 3, 1, 3), listOf(hunk.oldStart, hunk.oldEnd, hunk.newStart, hunk.newEnd))
     }
 
-    @Test fun `highlighting: json lines use javascript, empty or long lines and big or binary files stay plain`() {
+    @Test fun `highlighting - json lines use javascript, empty or long lines and big or binary files stay plain`() {
         assertEquals("javascript", DiffModel.lineGrammar("json"))
         assertEquals("dart", DiffModel.lineGrammar("dart"))
         assertNull(DiffModel.lineGrammar(null))

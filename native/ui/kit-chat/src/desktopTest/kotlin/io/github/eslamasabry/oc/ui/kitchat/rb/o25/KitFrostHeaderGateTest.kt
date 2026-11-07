@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
@@ -27,6 +30,8 @@ import kotlin.test.Test
  * and a code block, 140 dp down inside the gutter (the shot `kit_frost_header`).
  */
 class KitFrostHeaderGateTest {
+    private val wrap: @Composable (@Composable () -> Unit) -> Unit = { CompositionLocalProvider(LocalKitRedactor provides Redactor()) { it() } }
+
     private val header: @Composable () -> Unit = {
         val state = rememberKitFrostState()
         Box(Modifier.padding(FlutterKitTokens.GUTTER.dp)) {
@@ -46,7 +51,7 @@ class KitFrostHeaderGateTest {
         }
     }
 
-    @Test fun kit_frost_header() { FlutterGoldenGate.check("kit_frost_header", motion = MotionLevel.Full, content = header) }
+    @Test fun kit_frost_header() { FlutterGoldenGate.check("kit_frost_header", motion = MotionLevel.Full, wrap = wrap, content = header) }
 
-    @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_frost_header", content = header) }
+    @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_frost_header", wrap = wrap, content = header) }
 }

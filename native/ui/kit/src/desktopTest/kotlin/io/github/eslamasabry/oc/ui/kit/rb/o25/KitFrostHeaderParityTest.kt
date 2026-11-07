@@ -10,7 +10,9 @@ import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostHeader
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostHeaderHost
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostTopClaim
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
@@ -49,6 +51,7 @@ class KitFrostHeaderParityTest {
     @Test fun `the frame lays the bar on top at its own height and the content below it, painted under the bar`() =
         runComposeUiTest {
             setContent {
+                KitTheme(platform = DesktopKitPlatform()) {
                 val host = KitFrostHeaderHost()
                 KitFrostHeader.Frame(
                     host,
@@ -57,6 +60,7 @@ class KitFrostHeaderParityTest {
                     modifier = Modifier.size(300.dp, 600.dp),
                 ) {
                     Box(Modifier.testTag("content"))
+                }
                 }
             }
             onNodeWithTag("bar").assertTopPositionInRootIsEqualTo(0.dp)

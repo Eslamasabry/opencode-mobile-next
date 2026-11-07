@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.runComposeUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitWidgetPreviewBackground
 import io.github.eslamasabry.oc.ui.kit.KitWidgetPreviewSize
 import kotlin.test.Test
@@ -23,7 +24,7 @@ class KitWidgetStylePreviewTest {
 
     @Test fun `the preview is one node read by the caller's label`() = runComposeUiTest {
         setContent {
-            KitTheme {
+            KitTheme(platform = DesktopKitPlatform()) {
                 KitWidgetStylePreview(0xFF101010.toInt(), -1, -1, 0xFF4187CD.toInt(), wide = true, semanticsLabel = "Widget preview")
             }
         }
