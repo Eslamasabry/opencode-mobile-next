@@ -152,8 +152,9 @@ public object SettingsStructure {
                             SettingsDoor.Outside(SettingsOutside.DefaultShell).takeIf { connected }
                         SettingsRowId.Voice ->
                             SettingsDoor.Page(SettingsPage.Voice).takeIf { p.voice || p.readAloud }
+                        // Saved permissions belong to a server (Flutter gates them on it).
                         SettingsRowId.Permissions ->
-                            SettingsDoor.Outside(SettingsOutside.Permissions)
+                            SettingsDoor.Outside(SettingsOutside.Permissions).takeIf { connected }
                         SettingsRowId.Notifications ->
                             SettingsDoor.Page(SettingsPage.Notifications).takeIf { p.notifications }
                         SettingsRowId.Background ->
