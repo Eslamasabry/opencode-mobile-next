@@ -36,7 +36,11 @@ internal fun HostPanel(state: HostPanelUi, actions: HostPanelActions) {
     var confirmRemove by remember { mutableStateOf<Boolean?>(null) }
     var clipboard by remember { mutableStateOf<String?>(null) }
     var clipVersion by remember { mutableLongStateOf(0) }
-    KitClipboardEffect(if (clipboard == null) null else clipVersion, clipboard) { clipboard = null }
+    KitClipboardEffect(
+        if (clipboard == null) null else clipVersion,
+        clipboard,
+        onDone = { clipboard = null },
+    )
     KitRowGroup {
         KitRow(
             stringResource(Res.string.hostSecTitle),

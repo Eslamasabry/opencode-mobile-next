@@ -108,7 +108,7 @@ public fun ServerEditorScreen(
     }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip) { clip = null }
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
     val copyLabel = stringResource(Res.string.handoffCopyCommand)
     val copiedLabel = stringResource(Res.string.kitCopied)
     // App-authored commands with no credential; the block hands over its displayed source.

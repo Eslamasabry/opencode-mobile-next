@@ -617,7 +617,7 @@ private fun CapabilitiesBody(state: ServerSettingsUi) {
 private fun ReachComputerBody() {
     var copied by remember { mutableStateOf<String?>(null) }
     var copyId by remember { mutableLongStateOf(0) }
-    KitClipboardEffect(if (copied == null) null else copyId, copied) { copied = null }
+    KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null })
     KitText(stringResource(Res.string.reachIntro))
     KitSectionLabel(stringResource(Res.string.reachTailscaleHeading))
     listOf(

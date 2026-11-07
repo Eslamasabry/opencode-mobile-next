@@ -29,7 +29,7 @@ public fun CodexProbeScreen(state: CodexProbeUi, actions: CodexProbeActions) {
     val token = remember { TextFieldState() }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip) { clip = null }
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.codexNativeWorking))
         else KitEnabled.Enabled

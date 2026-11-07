@@ -62,9 +62,11 @@ internal fun FileShareSheet(
     sizeBytes: Long?,
 ) {
     var copying by remember(share is ShareSheetUi.Running) { mutableStateOf(false) }
-    KitClipboardEffect(if (copying) 1L else null, (share as? ShareSheetUi.Running)?.url) {
-        copying = false
-    }
+    KitClipboardEffect(
+        if (copying) 1L else null,
+        (share as? ShareSheetUi.Running)?.url,
+        onDone = { copying = false },
+    )
     val closeLabel = stringResource(Res.string.kitTopBarClose)
     KitSheet(
         visible = share != null,

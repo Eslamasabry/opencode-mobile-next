@@ -22,7 +22,7 @@ internal fun ComputerCommands() {
     var backend by remember { mutableStateOf(BackendKind.OpenCode2) }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip) { clip = null }
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
     KitButton(
         stringResource(Res.string.firstRunShowCommands),
         { expanded = !expanded },

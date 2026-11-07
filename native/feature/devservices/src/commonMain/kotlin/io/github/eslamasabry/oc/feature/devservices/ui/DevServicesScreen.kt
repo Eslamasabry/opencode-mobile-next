@@ -92,7 +92,7 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
         copyRevision += 1
         copyRequest = copyRevision to mask(it)
     }
-    KitClipboardEffect(copyRequest?.first, copyRequest?.second) { copyRequest = null }
+    KitClipboardEffect(copyRequest?.first, copyRequest?.second, onDone = { copyRequest = null })
     val canAdd = state.available && state.readable && !state.busy
     KitScreen(
         topBar = {

@@ -43,7 +43,7 @@ internal fun HostSetupContentSheet(
     val server = serverName ?: stringResource(Res.string.e7SetupDefaultServer)
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip) { clip = null }
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
     val copy: (String) -> Unit = { value ->
         clipId++
         clip = value
