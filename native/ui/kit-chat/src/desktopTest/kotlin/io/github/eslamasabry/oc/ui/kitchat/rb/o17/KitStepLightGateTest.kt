@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -38,8 +40,24 @@ import kotlin.test.Test
  */
 @OptIn(ExperimentalTestApi::class)
 class KitStepLightGateTest {
+    @Composable
     private fun view(id: String, kind: KitToolKind, title: String, subject: String?, detail: String?, status: KitToolStatus) =
-        KitToolView(id, kind, title, subject, detail, status, null, null, null, "")
+        KitToolView(id, kind, title, subject, detail, status, null, null, null, statusWords(status))
+
+    /** The row's status words, Flutter's ARB strings (kitToolWaiting … kitToolStopped) in the shot's locale. */
+    @Composable
+    private fun statusWords(status: KitToolStatus): String {
+        val ar = LocalLayoutDirection.current == LayoutDirection.Rtl
+        return when (status) {
+            KitToolStatus.Pending -> if (ar) "بانتظار" else "Waiting"
+            KitToolStatus.Running -> if (ar) "قيد التشغيل" else "Running"
+            KitToolStatus.WaitingForYou -> if (ar) "بانتظارك" else "Waiting for you"
+            KitToolStatus.Done -> if (ar) "مكتمل" else "Done"
+            KitToolStatus.Failed -> if (ar) "فشل" else "Failed"
+            KitToolStatus.Stopped -> if (ar) "متوقف" else "Stopped"
+        }
+    }
+
 
     private fun timeline(status: KitToolStatus, first: Boolean = false, last: Boolean = false): @Composable () -> Unit = {
         Column(Modifier.padding(12.dp)) { // F: test/goldens/kit/kit_step_light_golden_test.dart:81
