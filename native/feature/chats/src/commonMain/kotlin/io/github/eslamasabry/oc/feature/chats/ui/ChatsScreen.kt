@@ -1,9 +1,10 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.design.layout.Layout
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxHeight
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunningBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunning
-import io.github.eslamasabry.oc.ui.design.layout.CapRole
-import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
 import io.github.eslamasabry.oc.ui.kit.state.KitAnswerScale
 import io.github.eslamasabry.oc.ui.kit.state.KitStatusAnswer
@@ -236,7 +237,14 @@ public fun ChatsScreen(
             // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox. Nothing to
             // filter on a list that holds nothing yet, so the chips wait for the first conversation.
             Column {
-                KitPageHeading(stringResource(Res.string.chatsHomeTitle), line = needsLine, onLine = actions::showInbox)
+                // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
+                // as much under it when no "need you" line (whose own target gives that air) follows.
+                KitPageHeading(
+                    stringResource(Res.string.chatsHomeTitle),
+                    Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
+                    line = needsLine,
+                    onLine = actions::showInbox,
+                )
                 if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) Filters(state, actions)
             }
         },
@@ -251,7 +259,7 @@ public fun ChatsScreen(
             contentPadding =
                 PaddingValues(
                     bottom =
-                        if (state.phase == ChatsPhase.Empty && state.home.opening == null) 0.dp
+                        if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
                         else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
                 ),
         ) {
@@ -424,17 +432,25 @@ private fun CalmPage(title: String, body: String, primary: KitAction, tertiary: 
     BoxWithConstraints(modifier) {
         // F: kit_state_view.dart:438 `_calmLift = .1` of the room, kept under the words.
         val lift = maxHeight * CALM_LIFT
+        // F: kit_state_view.dart:542,630-640: the state's room is at most the state width (KitLayout.stateMaxWidth) from
+        // the column's start, railed by the gutter; on a phone that is the whole width less the gutters.
         Column(
-            Modifier.fillMaxSize().padding(bottom = Space.S4.dp),
+            Modifier.fillMaxHeight()
+                .widthIn(max = Layout.STATE_MAX_WIDTH.dp)
+                .fillMaxWidth()
+                .padding(start = gutter, end = gutter, bottom = Space.S4.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Spacer(Modifier)
             KitEntrance(Modifier.fillMaxWidth().padding(top = Space.S5.dp, bottom = Space.S5.dp + lift)) {
-                KitStatusAnswer(answer = title, line = body, scale = KitAnswerScale.Calm)
+                // The answer caps itself at the conversation width; centre that cap in the state's room.
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                    KitStatusAnswer(answer = title, line = body, scale = KitAnswerScale.Calm)
+                }
             }
-            KitEntrance(Modifier.fillMaxWidth().padding(horizontal = gutter)) {
+            KitEntrance(Modifier.fillMaxWidth()) {
                 Column(
-                    Modifier.fillMaxWidth().kitMaxWidth(CapRole.State),
+                    Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
