@@ -1,0 +1,4 @@
+<resources>
+    <!-- B-165: the words Flutter settings_search_catalog.dart gives the rows inside Appearance (bilingual in every locale). -->
+    <string name="settingsSearchAppearanceInsideAliases">appearance effects مظهر تأثيرات text size font bigger smaller large small read reading zoom حجم النص الخط أكبر أصغر كبير صغير قراءة تكبير background live background wallpaper look aurora moving behind خلفية حية خلفية الشاشة مظهر شفق متحركة animations animation motion movement reduce reduced calm celebrations celebration confetti حركة تحريك رسوم تقليل هادئ احتفال احتفالات glow glowing border ring light edge replying reply running blue outline box توهج متوهج وهج حد حدود إطار حافة حلقة الرد ضوء</string>
+</resources>
