@@ -26,8 +26,11 @@ import io.github.eslamasabry.oc.feature.chats.presentation.UnsupportedAppNotices
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.opencode_mobile.R
-import java.text.DateFormat
-import java.util.Date
+import android.icu.text.RelativeDateTimeFormatter
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
@@ -54,6 +57,7 @@ class AndroidAppNotices(
     private val navigator: AppNavigator,
     private val preferences: AppPreferences,
     private val thermal: ThermalRuntime,
+    private val clock: Clock,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : AppNotices {
@@ -77,6 +81,31 @@ class AndroidAppNotices(
         scope.launch { notice.state.collect { termuxMoveState.value = it } }
     }
 
+    /** P-015: "12 minutes ago" / "2 hours ago" today, "on 6 Nov 2026" for an earlier day, in the app's language. */
+    private fun exitTimeWords(time: ExitNoticeTime): String {
+        val locale = words.localized().resources.configuration.locales[0]
+        val relative = RelativeDateTimeFormatter.getInstance(locale)
+        return when (time) {
+            is ExitNoticeTime.MinutesAgo ->
+                relative.format(
+                    time.minutes.toDouble(),
+                    RelativeDateTimeFormatter.Direction.LAST,
+                    RelativeDateTimeFormatter.RelativeUnit.MINUTES,
+                )
+            is ExitNoticeTime.HoursAgo ->
+                relative.format(
+                    time.hours.toDouble(),
+                    RelativeDateTimeFormatter.Direction.LAST,
+                    RelativeDateTimeFormatter.RelativeUnit.HOURS,
+                )
+            is ExitNoticeTime.OnDay ->
+                words.text(
+                    R.string.andr_appExitOnDate,
+                    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale).format(time.date),
+                )
+        }
+    }
+
     fun start() {
         if (started) return
         started = true
@@ -94,13 +123,7 @@ class AndroidAppNotices(
                     val dismiss = words.text(R.string.andr_notifyDismiss)
                     when {
                         exit != null -> {
-                            val at =
-                                DateFormat.getDateTimeInstance(
-                                        DateFormat.SHORT,
-                                        DateFormat.SHORT,
-                                        words.localized().resources.configuration.locales[0],
-                                    )
-                                    .format(Date(exit.at.toEpochMilliseconds()))
+                            val at = exitTimeWords(exitNoticeTime(exit.at, clock.now(), ZoneId.systemDefault()))
                             val why =
                                 words.text(
                                     when (exit.kind) {
