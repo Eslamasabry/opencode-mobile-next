@@ -117,7 +117,7 @@ if $BUILD; then
   rm -rf "$OUT" && mkdir -p "$OUT"
   say "  building    :androidApp:assembleSwitchRelease, lintSwitchRelease, unit tests (this takes a while)"
   (cd "$NATIVE" && ./gradlew --console=plain :androidApp:assembleSwitchRelease :androidApp:lintSwitchRelease \
-    :androidApp:testSwitchReleaseUnitTest) >"$OUT/gradle.log" 2>&1 ||
+    :androidApp:testSwitchDebugUnitTest) >"$OUT/gradle.log" 2>&1 ||
     fail "the build or a gate failed; see $OUT/gradle.log$($GO && echo " (the bump commit is local: push it to keep the number spent, never reuse it)")"
   say "  gate        :quality:test with the merged switch-release manifest (component freeze)"
   (cd "$NATIVE" && ./gradlew --console=plain :quality:test -Poc.mergedManifest=required) >>"$OUT/gradle.log" 2>&1 ||
