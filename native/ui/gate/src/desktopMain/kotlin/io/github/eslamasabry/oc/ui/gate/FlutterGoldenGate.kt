@@ -171,6 +171,7 @@ object FlutterGoldenGate {
                 val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
                 val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
                 result[mode] = compare("${name}_$mode", ref, native)
+                emptyComposition("${name}_$mode", ref, native)?.let { failures += AssertionError(it) }
             } catch (e: Exception) {
                 failures += e
             } catch (e: AssertionError) {
@@ -182,6 +183,19 @@ object FlutterGoldenGate {
             throw first
         }
         return result
+    }
+
+    /**
+     * Scoreboard 2026-11-07 A7: a scene that draws nothing (one ground colour, or a lone scrim) where the Flutter golden
+     * has ink is named as such, not left as a large box %. The usual cause is a modal composed without the
+     * `KitSheetHost` that shows it, which a release-mode kit only logs.
+     */
+    internal fun emptyComposition(shot: String, ref: GateRef, native: BufferedImage): String? {
+        if (!isBlank(native)) return null
+        val golden = goldenFile(shot, ref).takeIf { it.isFile }?.let { ImageIO.read(it) } ?: return null
+        if (isBlank(golden)) return null
+        return "empty composition: $shot drew nothing (one colour over the whole window) where the Flutter golden " +
+            "has a picture. A sheet, dialog or confirm needs a KitSheetHost around it in the gate case."
     }
 
     /** The layout row of one gate case: `<name> TAB PASS|FAIL TAB <the guard's message on one line, or ->`. */
