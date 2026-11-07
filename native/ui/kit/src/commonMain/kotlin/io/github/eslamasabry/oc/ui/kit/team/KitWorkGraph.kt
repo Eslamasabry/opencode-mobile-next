@@ -948,7 +948,7 @@ private fun CanvasZoom(label: String, child: Size, modifier: Modifier, content: 
                 },
             ) { content() }
         }
-        val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Pill, SurfaceLevel.Surface2, ownFill = colorsSurface2()))
+        val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Pill, SurfaceLevel.Surface2, ownFill = LocalKitColors.current.surface2))
         Row(
             Modifier.align(Alignment.BottomEnd)
                 .padding(end = Space.S4.dp, bottom = Space.S4.dp)
@@ -974,5 +974,3 @@ private fun CanvasZoom(label: String, child: Size, modifier: Modifier, content: 
     }
 }
 
-@Composable
-private fun colorsSurface2(): Color = LocalKitColors.current.surface2
