@@ -73,7 +73,7 @@ internal fun rememberAuroraPlate(look: String?): Pair<ImageBitmap, ColorFilter>?
 }
 
 /**
- * One still frame of [look] (null: the plain ground) behind a tiny mock conversation, for a look's choice card (Dart
+ * One still frame of [look] (null or a look the app does not draw: the plain ground) behind a tiny mock conversation, for a look's choice card (Dart
  * `_LookSample` and `liveMockChat`, `lib/ui/kit/kit_option_card.dart:755-783` and
  * `lib/ui/kit/live_background/live_mock_chat.dart` at GLASS_REF 1bbdc3f9c). Still, so a grid of samples costs no
  * battery; drawn at the samples' strength 1.6 (`kit_option_card.dart:773`). The message and the box are drawn as the
@@ -86,6 +86,7 @@ internal fun KitLiveLookStill(look: String?, modifier: Modifier = Modifier) {
     val ground = LocalKitColors.current.ground
     val plate = rememberAuroraPlate(look)
     val alpha = AuroraImage.alphaFor(1.6f) // FG: lib/ui/kit/kit_option_card.dart:773
+    val style = kitLiveStyleById(look)
     val corner = (FlutterKitTokens.ICON_TILE_RADIUS + Space.S1).dp // FG: lib/ui/kit/kit_option_card.dart:766
     Box(
         modifier
@@ -94,6 +95,7 @@ internal fun KitLiveLookStill(look: String?, modifier: Modifier = Modifier) {
             .drawBehind { plate?.let { (image, filter) -> drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(0.0)) } }
             .clearAndSetSemantics {}
     ) {
+        if (style != null) KitLiveLayer(style, 1.6f, animate = false, modifier = Modifier.matchParentSize()) // FG: lib/ui/kit/kit_option_card.dart:773
         MockChat(scale = .7f) // FG: lib/ui/kit/kit_option_card.dart:776
     }
 }

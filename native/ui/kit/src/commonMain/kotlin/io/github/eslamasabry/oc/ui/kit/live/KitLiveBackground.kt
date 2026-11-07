@@ -31,16 +31,18 @@ import kotlin.time.TimeSource
 
 /**
  * The ground of a page (Dart `KitLiveBackground`, `lib/ui/kit/kit_live_background.dart` at GLASS_REF 1bbdc3f9c): the
- * page's flat ground and, when the person turned Background on and chose the painted aurora (Glass's own look,
- * [AuroraImage]), that picture on it. The other looks are not drawn by the native app yet, so with one of them chosen
- * the page keeps its flat ground. Off by default: a person who never turns it on sees exactly the flat ground as before.
+ * page's flat ground and, when the person turned Background on, the chosen look on it: the painted aurora (Glass's own
+ * look, [AuroraImage]) or one of the painted looks in [kitLiveStyles], drawn in its own layer by [KitLiveLayer] on the
+ * shared [KitLiveClock] (12 ticks a second, resting after half a minute with no touch). A stored look the native app
+ * does not draw yet keeps the flat ground. Off by default: a person who never turns it on sees exactly the flat ground.
  *
  * The picture is the only thing Glass panes blur ([io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop]); the
  * page's own content is never recorded. It drifts very slowly at six frames a second while motion is Full, rests after
  * half a minute with no touch and carries on at the next one (Dart `KitLiveClock.idleAfter`), and holds one still frame
- * under Calm, Off, reduced motion, tests and screenshots. Saver hides it. Nothing else moves, shines or changes colour.
+ * under Calm, Off, reduced motion, tests and screenshots. A painted look shows its still frame under Calm, Off and
+ * reduced motion, and nothing under tests and screenshots (Flutter paints only the flat ground there). Saver hides it.
  *
- * States: off (flat ground), painted (the aurora), still (its first frame).
+ * States: off (flat ground), painted (the aurora or a look), still (its first frame).
  */
 @Composable
 public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
@@ -56,6 +58,14 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
         appearance.liveBackground && !appearance.saver && appearance.liveStyle == AuroraImage.ID && strength > 0f &&
             !motion.stillFrame
     val plate = rememberAuroraPlate(if (shows) appearance.liveStyle else null)
+    // Any other look the native app draws (kit_live_background.dart:257-262): still frame unless motion is Full.
+    val look =
+        if (appearance.liveBackground && !appearance.saver && strength > 0f && !motion.stillFrame) {
+            kitLiveStyleById(appearance.liveStyle)
+        } else {
+            null
+        }
+    val looks = look != null && motion.ambientLoops
     val painted = plate != null
     val ground = colors.ground
     val accent = roles.accent
@@ -93,9 +103,9 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
                 drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(if (drifts) seconds.toDouble() else 0.0))
             }
         }
-    // A touch wakes a resting drift; it never consumes the touch.
+    // A touch wakes a resting drift or look; it never consumes the touch.
     val touch =
-        if (!drifts) {
+        if (!drifts && !looks) {
             Modifier
         } else {
             Modifier.pointerInput(Unit) {
@@ -103,12 +113,14 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
                     while (true) {
                         awaitPointerEvent(PointerEventPass.Initial)
                         lastTouch[0] = TimeSource.Monotonic.markNow()
+                        KitLiveClock.instance.input()
                     }
                 }
             }
         }
     // One shape whether or not the look is painted, so the page keeps its state when it turns on or loads.
     Box(modifier.then(ground0).then(source).then(touch)) {
+        if (look != null) KitLiveLayer(look, strength, animate = motion.ambientLoops, modifier = Modifier.matchParentSize())
         CompositionLocalProvider(LocalKitGlassBackdrop provides backdrop) { content() }
     }
 }
