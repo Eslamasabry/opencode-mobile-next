@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.rb.o23
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
@@ -14,7 +15,8 @@ import kotlin.test.Test
  */
 class KitPresenceGateTest {
     private val shown: @Composable () -> Unit = {
-        Row {
+        // Flutter's Row is mainAxisSize.max: it fills the gallery width and starts its child at the reading edge.
+        Row(Modifier.fillMaxWidth()) {
             KitPresence(visible = true, modifier = Modifier.weight(1f, fill = false)) { KitText("Find the latest finance hub project in the folder") }
         }
     }
