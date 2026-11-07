@@ -144,4 +144,19 @@ void main() {
     expect(find.text('Item 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('prominentDividers uses prominent dividers between rows', (
+    tester,
+  ) async {
+    final group = KitSliverRowGroup(
+      itemCount: 3,
+      prominentDividers: true,
+      itemBuilder: (context, index) => _row('Item $index'),
+    );
+    await tester.pumpWidget(_app([group]));
+    final dividers =
+        tester.widgetList<KitDivider>(find.byType(KitDivider)).toList();
+    expect(dividers, hasLength(2));
+    expect(dividers.first.thickness, 1.0);
+  });
 }
