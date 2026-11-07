@@ -25,6 +25,9 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFold
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepSentence
+import io.github.eslamasabry.oc.ui.kitchat.tool.kitOnStepRail
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -111,8 +114,10 @@ internal fun TranscriptDetail(
         return
     }
     if (part.type == PartType.Text) {
-        // Words between steps sit on the reply's 16 dp edge like the rest of the reply, never on the screen's.
-        Box(Modifier.padding(horizontal = Space.S4.dp)) { DetailMarkdown(key, part.text, reply) }
+        // Inside an opened work line the words are a sentence on the rail (a dot, the steps' text edge, Flutter
+        // `KitStepTimeline.sentence`); anywhere else they sit on the reply's 16 dp edge, never on the screen's.
+        if (kitOnStepRail()) KitStepSentence { DetailMarkdown(key, part.text, reply) }
+        else Box(Modifier.padding(horizontal = Space.S4.dp)) { DetailMarkdown(key, part.text, reply) }
         return
     }
     if (part.type == PartType.Reasoning) {
@@ -130,16 +135,30 @@ internal fun TranscriptDetail(
             folds.open.remove(key)
             folds.open[defaultKey] = reasoningExpanded
         }
-        KitExpandRow(
-            // The whole first line, cut by the layout with an ellipsis (a character count cut words in half).
-            title = plain.lineSequence().first().trim(),
-            titleMaxLines = 2,
-            expanded = folds.open[key] ?: reasoningExpanded,
-            onExpandedChange = { folds.open[key] = it },
-            modifier = Modifier.testTag("assistant-reasoning-block"),
-        ) {
-            DetailMarkdown(key, part.text, reply)
-        }
+        val thoughtTitle = plain.lineSequence().first().trim()
+        val open = folds.open[key] ?: reasoningExpanded
+        // On an opened work line's rail a thought is one line like every step: a dot, its words, no chevron (Flutter
+        // `_Fold` on a timeline); anywhere else it keeps its row with the kit's chevron.
+        if (kitOnStepRail())
+            KitStepFold(
+                title = thoughtTitle,
+                expanded = open,
+                onToggle = { folds.open[key] = !open },
+                modifier = Modifier.testTag("assistant-reasoning-block"),
+            ) {
+                DetailMarkdown(key, part.text, reply)
+            }
+        else
+            KitExpandRow(
+                // The whole first line, cut by the layout with an ellipsis (a character count cut words in half).
+                title = thoughtTitle,
+                titleMaxLines = 2, // NV: unchanged off the rail (two lines of the thought's first line)
+                expanded = open,
+                onExpandedChange = { folds.open[key] = it },
+                modifier = Modifier.testTag("assistant-reasoning-block"),
+            ) {
+                DetailMarkdown(key, part.text, reply)
+            }
         return
     }
     // U6: changes of model or agent are kept in message Details.
