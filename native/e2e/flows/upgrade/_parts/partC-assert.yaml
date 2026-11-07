@@ -84,7 +84,8 @@ appId: ${APP_ID}
       - runFlow: ../../_sub/to-conversations.yaml
       - runFlow: ../../_sub/open-settings.yaml
       - runFlow: ../../_sub/open-servers.yaml
-      - assertVisible: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '\n' + output.s.serverRowConnected + '(?s).*'}  # literal-ok: built from fixture data
+      # Flutter 2.1.4: "Computer at 10.0.2.2:4097\nConnected · OpenCode 2"; native: "10.0.2.2:4097 · Connected · OpenCode 2".
+      - assertVisible: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '(\n| · )' + output.s.serverRowConnected + '(?s).*'}  # literal-ok: built from fixture data
       - assertNotVisible: ${output.s.e7SetupServerPassword + '(,(?s).*)?'}
       - assertNotVisible: ${output.c.e7SetupCertificate}
       - assertNotVisible: ${output.s.e7ConnectionFailure20}

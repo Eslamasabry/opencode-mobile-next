@@ -649,7 +649,9 @@ def main(argv=None) -> int:
     leak = summary.exists() and "SECRET IN LOGCAT" in summary.read_text(encoding="utf-8")
     verdicts += [say(l) for l in ui_verdicts(maestro_statuses(out / "run"), flow_passed)]
     verdicts += [say(l) for l in state_verdicts(out / "state")]
-    verdicts.append(say(Line("flow", "E2E-39 passed end to end", flow_passed,
+    # Assertion steps are optional (a failed one is WARNED and the flow goes on), so a PASSED flow means it ran to
+    # the end, not that every assertion held: those are the lines above.
+    verdicts.append(say(Line("flow", "E2E-39 ran to the end (assertions are judged one by one above)", flow_passed,
                              ", ".join(f"{f['flow']} {f['result']}" for f in flows) or "no result")))
     if leak:
         verdicts.append(say(Line("log-scan", "No fixture password or canary in logcat", False, "found in logcat")))
