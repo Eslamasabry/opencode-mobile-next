@@ -70,6 +70,28 @@ manager and goal screens are dsh's own web UI. They would not show up in our app
 DeepSeek models alone are already available through OpenCode 2. The real extra is dsh's agent behaviour and
 its plugins, and that only matters to people who want to use or write dsh plugins.
 
+### Showing dsh's web UI inside the app
+
+Possible, but not with the preview screen we have, and not for free.
+
+- On the phone, `dsh web` in the built-in Linux listens on `127.0.0.1:3080`. proot shares the phone's network,
+  so the app can reach it. On a computer it is loopback-only; the phone would need a tunnel, which we don't have.
+- Our only WebView is `KitWebPreview` (`:android:webview`, owner PREVIEW-QR). It is built for untrusted dev pages:
+  its policy refuses websockets, and it clears cookies on open and close. dsh's web UI is a live app; guides
+  say it needs websockets and a session cookie. So it would not work in the preview as it is.
+- Login: community guides say `dsh web` prints a one-time token in its URL, which the browser swaps for a
+  cookie. The app would read that URL from dsh's output and open it. The token must never be logged.
+  Not checked against the official source.
+- Risk: any app on the phone can reach `127.0.0.1:3080`. The token and cookie are the only guard, and the UI can
+  run shell commands and install plugins. A WebView mode that allows websockets and keeps cookies is a new,
+  weaker security profile and needs a security review, not a tweak to the preview.
+- What a person would get: dsh's own screens (trajectory view, plugin manager, goals) next to our chat. They are
+  not kit parts and not translated to Arabic, so they would not match the app.
+
+Cheaper first step: an "Open dsh in your browser" action that sends the token URL through the external link
+policy. No new WebView code; the phone's browser can reach the same loopback address. Only worth doing if we
+add dsh as an agent at all.
+
 ## Can we turn off the uploads
 
 Yes, for most of it. Sources disagree on what is on by default, so we would turn everything off ourselves and
