@@ -8,6 +8,8 @@ import '../l10n/app_localizations.dart';
 import '../ui/app_iconography.dart';
 import '../ui/kit/kit_status_line.dart';
 import '../ui/kit/kit_status_slot.dart';
+import '../telemetry/analytics_events.dart';
+import '../telemetry/telemetry_provider.dart';
 
 enum AppUpdateState { current, available, restartRequired, unavailable }
 
@@ -267,6 +269,7 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
 
   void _showReady() {
     if (!mounted || _ready) return;
+    AppTelemetry.track(AnalyticsEvent.updateOffered);
     setState(() => _ready = true);
   }
 

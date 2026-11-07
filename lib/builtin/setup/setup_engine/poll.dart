@@ -370,6 +370,18 @@ extension _SetupEnginePoll on ChannelSetupEngine {
   /// Records each finished component, and the finished job, as spans timed
   /// by the native runner's own clock (setup.json's startedAt/endedAt).
   void _traceFinished(SetupJobRecord record) {
+    final counted = _countsForAnalytics(record);
+    for (final component in record.components) {
+      if (!counted) break;
+      if ((component.state == 'running' ||
+              component.state == 'done' ||
+              component.state == 'failed') &&
+          _traced.add('${record.jobId}/${component.id}/reached')) {
+        AppTelemetry.track(AnalyticsEvent.setupStepReached, {
+          'step': AnalyticsSetupStep.of(component.id),
+        });
+      }
+    }
     for (final component in record.components) {
       final started = component.startedAt;
       final ended = component.endedAt;
@@ -380,10 +392,21 @@ extension _SetupEnginePoll on ChannelSetupEngine {
         continue;
       }
       if (component.state == 'failed') {
+        final exit = _exitCodeOf(component);
         AppTelemetry.failure('setup_step_failed', {
           'step': component.id,
-          'exit': _exitCodeOf(component),
+          'exit': exit,
         });
+        final variant = component.data['nodeVariant'];
+        if (counted) {
+          AppTelemetry.track(AnalyticsEvent.setupStepFailed, {
+            'step': AnalyticsSetupStep.of(component.id),
+            'kind': analyticsFailureKind(exit: exit, error: component.error),
+            'compat_mode': _ranInCompatibilityMode(record, component),
+            if (variant != null && variant.isNotEmpty)
+              'node_variant': AnalyticsNodeVariant.of(variant),
+          });
+        }
       }
       PerfTrace.recordDuration(
         'setup.component',
@@ -402,7 +425,38 @@ extension _SetupEnginePoll on ChannelSetupEngine {
         attrs: {'state': record.state},
         error: record.state == 'done' ? null : record.state,
       );
+      if (counted && record.state == 'done') {
+        AppTelemetry.track(AnalyticsEvent.setupDone, {
+          'minutes': AnalyticsBuckets.minutesOf(
+            Duration(milliseconds: record.updatedAt - record.startedAt),
+          ),
+        });
+      }
     }
+  }
+
+  /// Whether [record] belongs in setup analytics: a job this app run saw
+  /// working, or one that changed in the last half hour. An old finished
+  /// job read again at start-up is not counted twice.
+  bool _countsForAnalytics(SetupJobRecord record) {
+    if (record.state == 'running') _traced.add('${record.jobId}/live');
+    if (_traced.contains('${record.jobId}/live')) return true;
+    final age = _clock().millisecondsSinceEpoch - record.updatedAt;
+    return age >= 0 && age < const Duration(minutes: 30).inMilliseconds;
+  }
+
+  /// Whether [component] was run again in compatibility mode (issue #117):
+  /// its data says so, or the job's log shows the retry line.
+  bool _ranInCompatibilityMode(
+    SetupJobRecord record,
+    SetupJobComponent component,
+  ) {
+    if (component.data['compat'] == 'true') return true;
+    final labels = {
+      'Trying again in compatibility mode',
+      strings().phoneSetupStageCompat,
+    };
+    return labels.any((label) => record.logTail.contains('==> $label'));
   }
 
   void _resetFloors(String jobId) {

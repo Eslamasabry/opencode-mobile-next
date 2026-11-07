@@ -43,6 +43,8 @@ import 'tailscale_setup_screen.dart';
 import 'settings_screen.dart' show openServerPage;
 import '../../state/tailscale_address.dart';
 import 'capabilities_screen.dart' show openExternalAgents;
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 
 part 'servers/servers_state.dart';
 part 'servers/servers_actions.dart';

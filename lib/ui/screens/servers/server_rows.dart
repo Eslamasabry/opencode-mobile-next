@@ -268,7 +268,12 @@ class _WelcomeView extends StatelessWidget {
         key: const ValueKey('welcome-primary'),
         hero: true,
         label: copy.welcomeComputerConnect,
-        onPressed: busy || phoneWorking ? null : onComputer,
+        onPressed: busy || phoneWorking
+            ? null
+            : () {
+                AppTelemetry.track(AnalyticsEvent.connectComputerChosen);
+                onComputer();
+              },
       ),
     };
     final quiet = <Widget>[

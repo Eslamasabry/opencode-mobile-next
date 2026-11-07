@@ -15,6 +15,8 @@ import '../app_iconography.dart';
 import '../kit/kit.dart';
 import '../screens/phone_setup/phone_setup_routes.dart';
 import '../screens/servers_screen.dart' show ServersRouteRequest;
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 
 class TermuxRetiredNotice extends StatelessWidget {
   const TermuxRetiredNotice({
@@ -46,14 +48,17 @@ class TermuxRetiredNotice extends StatelessWidget {
         KitAction(
           key: const ValueKey('termux-retired-connect-computer'),
           label: l10n.chatsHomeConnectComputer,
-          onPressed:
-              onConnectComputer ??
-              () => unawaited(
-                Navigator.of(context).pushNamed(
-                  '/servers',
-                  arguments: const ServersRouteRequest.add(),
-                ),
+          onPressed: () {
+            AppTelemetry.track(AnalyticsEvent.connectComputerChosen);
+            final connect = onConnectComputer;
+            if (connect != null) return connect();
+            unawaited(
+              Navigator.of(context).pushNamed(
+                '/servers',
+                arguments: const ServersRouteRequest.add(),
               ),
+            );
+          },
         ),
       ],
     );
