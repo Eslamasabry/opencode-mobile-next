@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- B-156: comment on a diff line, and the agent fixes it. -->
+    <string name="reviewCommentTitleLine">Comment on line %1$s</string>
+    <string name="reviewCommentTitleLines">Comment on lines %1$s–%2$s</string>
+    <string name="reviewCommentField">What should the agent change?</string>
+    <string name="reviewCommentAdd">Add comment</string>
+    <string name="reviewCommentLine">Line %1$s</string>
+    <string name="reviewCommentLines">Lines %1$s–%2$s</string>
+    <string name="reviewCommentRemovedLine">Removed line %1$s</string>
+    <string name="reviewCommentRemovedLines">Removed lines %1$s–%2$s</string>
+    <string name="reviewCommentDraft">Not sent</string>
+    <string name="reviewCommentSending">Sending</string>
+    <string name="reviewCommentWaiting">Waiting for the agent</string>
+    <string name="reviewCommentFixed">Fixed</string>
+    <string name="reviewCommentRemove">Remove</string>
+    <string name="reviewCommentsLabel">Your comments</string>
+    <string name="reviewCommentHint">Tap a line number, then Comment, to ask the agent for a change there.</string>
+    <string name="reviewCommentNotPlaced">Couldn't tell which lines those are. Pick the lines again.</string>
+    <string name="reviewCommentsSendFailed">Couldn't send the comments. They're kept here.</string>
+    <plurals name="reviewSendComments">
+        <item quantity="one">Send %1$d comment</item>
+        <item quantity="other">Send %1$d comments</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="one">%1$d comment is waiting for the agent.</item>
+        <item quantity="other">%1$d comments are waiting for the agent.</item>
+    </plurals>
+    <!-- B-155: Guided review. -->
+    <string name="reviewGuided">Guided</string>
+    <string name="reviewGuidedSupporting">The agent walks you through its change, most important first</string>
+    <string name="reviewGuideMaking">Asking the agent to walk you through its change…</string>
+    <string name="reviewGuideFallback">Couldn't make a guide this time. Showing every file.</string>
+    <string name="reviewGuideBusy">The guide waits until the agent finishes. Showing every file for now.</string>
+    <string name="reviewGuideAlsoChanged">Also changed</string>
+</resources>
