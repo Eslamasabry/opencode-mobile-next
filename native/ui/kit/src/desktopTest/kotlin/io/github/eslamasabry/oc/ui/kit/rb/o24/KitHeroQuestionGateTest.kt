@@ -15,5 +15,15 @@ class KitHeroQuestionGateTest {
     }
     @Test fun kit_hero_question_default() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_hero_question_default", modes = listOf("dark", "light")) { scene() } }
     @Test fun kit_hero_question_default_1280x800() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_hero_question_default_1280x800", modes = listOf("dark", "light")) { scene() } }
+    @Test fun kit_hero_question_default_text2() {
+        FlutterGoldenGate.check(
+            wrap = { content -> FlutterCapture(content) }, name = "kit_hero_question_default_text2", modes = listOf("dark"),
+        ) { scene() }
+    }
+    @Test fun kit_hero_question_default_text2_1280x800() {
+        FlutterGoldenGate.check(
+            wrap = { content -> FlutterCapture(content) }, name = "kit_hero_question_default_text2_1280x800", modes = listOf("dark"),
+        ) { scene() }
+    }
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_hero_question", caps = mapOf("KitHeroQuestion" to "reading")) { KitHeroQuestion("Where should your agent run?") } }
 }
