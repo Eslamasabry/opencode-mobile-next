@@ -22,6 +22,12 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitViewerEmpty
 import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
+import io.github.eslamasabry.oc.ui.design.layout.Layout
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 
 /** Test tag of the lazy line list of the Text and Code bodies. */
 public const val KIT_VIEWER_LINES_TAG: String = "kit-viewer-lines"
@@ -64,6 +70,25 @@ public fun KitViewerTextBody(text: String, modifier: Modifier = Modifier, wrap: 
                     KitText(line.ifEmpty { " " }, maxLines = if (wrap) Int.MAX_VALUE else 1)
                 }
             }
+        }
+    }
+}
+
+/**
+ * Markdown as prose on the reading rails (Dart `_Prose`): the gutter at the sides, space4 above and below, centred at
+ * the reading width on a wide window. [markdown] is the host's renderer (the chat kit's `KitMarkdown`, which this
+ * module cannot reach); without one the document's words show as plain reading text.
+ */
+@Composable
+internal fun ViewerProse(source: String, interactive: Boolean, markdown: (@Composable (String) -> Unit)?) {
+    val tokens = LocalKitTokens.current
+    Box(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = tokens.gutter.dp, vertical = Space.S4.dp),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Box(Modifier.widthIn(max = Layout.READING_WIDTH.dp).fillMaxWidth()) {
+            if (markdown != null) markdown(source) else KitText(source)
         }
     }
 }

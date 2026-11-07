@@ -39,6 +39,36 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.kitViewerPage
 import io.github.eslamasabry.oc.ui.words.res.kitViewerPageFailed
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.eslamasabry.oc.ui.design.layout.Layout
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.content.image.KitImage
+import io.github.eslamasabry.oc.ui.kit.content.image.KitImageSource
+import io.github.eslamasabry.oc.ui.kit.content.image.KitZoomView
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitPixelRatio
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import kotlin.math.floor
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /** One page's state, owned by the host's page queue (S5-VIEWER `PdfPages`). */
 @Immutable
@@ -127,5 +157,91 @@ public fun KitPdfPage(
                 kind = KitTextKind.Frame,
             )
         }
+    }
+}
+
+// --- The Flutter viewer's PDF body (lib/ui/kit/kit_viewer_bodies.dart `_KitPdfBody`, `_KitPdfPageView`) -----------
+
+/**
+ * Every page of [content] stacked in one zoomable list, each `min(available − 2 × space3, reading width)` wide (floored)
+ * and centred, space3 above and below the list; a page renders only while it is composed (PERF-4). Rounded as a panel
+ * on a wide window, square on a phone.
+ */
+@Composable
+internal fun ViewerPdfBody(content: KitViewerContent.Pdf, name: String) {
+    val wide = LocalKitWindow.current.cls.isWide
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val pageWidth = floor(minOf(maxWidth.value - Space.S3 * 2f, Layout.READING_WIDTH.toFloat())).dp // F: lib/ui/kit/kit_viewer_bodies.dart:106
+        KitZoomView(name, Modifier.fillMaxSize()) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = Space.S3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                items(content.pageCount, key = { it }) { index ->
+                    ViewerPdfPageView(index, content.pageCount, pageWidth, wide, content.renderPage, content.cancelPage)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ViewerPdfPageView(
+    index: Int,
+    count: Int,
+    width: Dp,
+    rounded: Boolean,
+    render: suspend (index: Int, widthPx: Int) -> ViewerPdfPage,
+    cancel: ((Int) -> Unit)?,
+) {
+    val colors = LocalKitColors.current
+    val label = stringResource(Res.string.kitViewerPage, (index + 1).toString(), count.toString())
+    val widthPx = maxOf(1, (width.value * kitPixelRatio()).roundToInt())
+    var attempt by remember { mutableIntStateOf(0) }
+    var page by remember { mutableStateOf<ViewerPdfPage?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    LaunchedEffect(index, widthPx, attempt) {
+        failed = false
+        var done = false
+        try {
+            page = render(index, widthPx)
+            done = true
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            if (!done) cancel?.invoke(index)
+            throw e
+        } catch (_: Exception) {
+            failed = true
+        }
+    }
+    val shown = page
+    val height =
+        if (shown != null && shown.width > 0) (width.value * shown.height / shown.width).roundToInt().dp
+        else (width.value * sqrt(2f)).roundToInt().dp // NV: √2 of Dart math.sqrt2 (kit_viewer_bodies.dart:216), an A-series page
+    val shape = if (rounded) KitShapeId.Panel else KitShapeId.Square
+    Column(
+        Modifier.padding(bottom = Space.S3.dp).testTag("$KIT_PDF_PAGE_TAG${index + 1}"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        when {
+            failed ->
+                Box(Modifier.size(width, height), contentAlignment = Alignment.Center) {
+                    KitStateView(
+                        KitStateKind.Error,
+                        stringResource(Res.string.kitViewerPageFailed, (index + 1).toString()),
+                        icon = KitIcons.error,
+                        primary = KitAction(stringResource(Res.string.kitTryAgain), onClick = { attempt++ }),
+                    )
+                }
+            shown != null -> KitImage(KitImageSource.Memory(shown.bytes), label, width = width, height = height, shape = shape)
+            else -> {
+                // A page not drawn yet: the document's opaque ground, edged as the style edges code.
+                val fill = if (colors.dark) colors.surface1 else colors.ground
+                val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Code, shape, ownFill = fill))
+                Box(Modifier.size(width, height).then(look.modifier).clip(look.shape).semantics { contentDescription = label })
+            }
+        }
+        Spacer(Modifier.height(Space.S1.dp))
+        KitText(label, Modifier.clearAndSetSemantics {}, role = TypeRole.Caption, tabular = true)
     }
 }
