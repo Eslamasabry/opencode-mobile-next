@@ -1,18 +1,28 @@
-# From the welcome screen: connect a computer by typed address and password, land on Conversations.
-# env: ADDRESS (bare host:port or URL), PASSWORD
+# From the first-run screen: connect a computer by typed address and password, land on Conversations.
+# Flutter 2.1.4: "Connect to my computer" opens the add-server wizard (server-form.yaml); "Save & connect" ends it.
+# env: ADDRESS (a URL: 2.1.4 puts https:// in front of a bare host:port), PASSWORD
 appId: ${APP_ID}
 ---
 - tapOn: ${output.s.welcomeComputerConnect}
-- tapOn: ${output.s.e7SetupServerUrl}
-- inputText: ${ADDRESS}
-- tapOn: ${output.s.e7SetupServerPassword}
-- inputText: ${PASSWORD}
-- hideKeyboard
-- tapOn: ${output.s.e7SetupTestConnection}
+- runFlow:
+    file: server-form.yaml
+    env:
+      ADDRESS: ${ADDRESS}
+      PASSWORD: ${PASSWORD}
 - extendedWaitUntil:
     visible: ${output.rc.e7SetupProbeV2}
     timeout: 30000
-- tapOn: ${output.s.e7SetupConnect}
+- tapOn: ${output.s.onboardingSaveConnect}
+# 2.1.4 ends the wizard on "Ready": "{name} is connected" with "Open {name}".
+- extendedWaitUntil:
+    visible: ${output.s.addServerReadyBody}
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible: ${output.re.addServerReadyOpen}
+    commands:
+      - tapOn: ${output.re.addServerReadyOpen}
 - extendedWaitUntil:
     visible: ${output.s.chatsHomeTitle}
     timeout: 60000

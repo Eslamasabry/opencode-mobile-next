@@ -1,0 +1,7 @@
+# Start a Part C section from the Conversations list whatever the last section left: bring the app to the front
+# (it may have left the app or a deep screen) and press Back until Conversations shows. English UI.
+appId: ${APP_ID}
+---
+- launchApp:
+    stopApp: false
+- runFlow: back-to-conversations.yaml

@@ -1,0 +1,16 @@
+# Settings open: open the Notifications page. Flutter 2.1.4 finds no "Finished work" in settings search; the
+# Notifications page ("Notifications" under This app) holds it as "Finished work\nSeveral arrive as one notification."
+appId: ${APP_ID}
+---
+- runFlow:
+    file: settings-search.yaml
+    env:
+      QUERY: ${output.t.settingsV3Notifications}
+# The result row: Flutter joins "Notifications\nThis app", native keeps the lines apart; index 1 skips the search
+# field, which holds the query.
+- tapOn:
+    text: ${output.s.settingsV3Notifications + '(\n(?s).*)?'}
+    index: 1
+- extendedWaitUntil:
+    visible: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
+    timeout: 15000

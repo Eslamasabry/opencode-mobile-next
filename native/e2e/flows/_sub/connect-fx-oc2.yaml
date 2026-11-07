@@ -5,5 +5,5 @@ appId: ${APP_ID}
 - runFlow:
     file: connect-server.yaml
     env:
-      ADDRESS: ${output.fx.serverAddress}
+      ADDRESS: ${output.fx.serverUrl}
       PASSWORD: ${SERVER_PASSWORD}

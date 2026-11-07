@@ -9,7 +9,7 @@ Steps (each prints one PASS / FAIL line):
   2. Take the emulator lock, start AVD --avd on port 5584 (emulator-5584): from snapshot flutter-2.1.4-seeded when
      the AVD has it (Part A already done; its fixture state lives next to it under --seed-home), else wiped, so Part A
      seeds the Flutter app from nothing and the snapshot is saved for the next run.
-  3. Start the E2E-39 fixtures (fxctl.py, state kept under --seed-home so the snapshot's saved passwords keep
+  3. Start the E2E-39 fixtures and FX-CTL (fixtures/fx.py, state kept under --seed-home so the snapshot's saved passwords keep
      working), then `run.py --app native --flows E2E-39`: Part A (unless restored), Part B on Flutter, the
      install-native hook (saves the device state to before.json, then `adb install -r`), the first native launch,
      the upgrade-capture hook (after-migration.json), Part C on native and the native-only checks.
@@ -46,18 +46,27 @@ from . import device_state, run  # noqa: E402
 HERE = pathlib.Path(__file__).resolve().parent
 E2E = HERE.parent
 REPO = E2E.parent.parent
-FXCTL = E2E / "fixtures" / "fxctl.py"
+FX = E2E / "fixtures" / "fx.py"
 APP_ID = "io.github.eslamasabry.opencode_mobile"
 PORT = 5584
 SERIAL = f"emulator-{PORT}"
 DEFAULT_SNAPSHOT = "flutter-2.1.4-seeded"
 FLOW = "E2E-39"
 # E2E-39's header fixtures that have a server script; fx-proxy is the fixtures' own front proxy.
-FIXTURES = ("FX-OC2", "FX-OC2-B", "FX-TLS", "FX-LINUXDL", "FX-GH")
+FIXTURES = ("FX-OC2", "FX-OC2-B", "FX-TLS", "FX-LINUXDL", "FX-GH", "fx-proxy")
+# What run.py and the flows read outside native/: gen_strings.py (strings.js) and the flow catalog. A sparse checkout
+# that holds only native/ (and docs/) cannot run the gate.
+NEEDED_FILES = ("lib/l10n/app_en.arb", "lib/l10n/app_ar.arb", "android/app/src/main/res/values/strings.xml",
+                "docs/design/native-rewrite-2026-11-01/catalog/e2e-flows.md")
+RAM_NEEDED_KB = 7 * 1024 * 1024       # plan 02 §7.8, checked before the gate boots its own AVD
+FLOW_TIMEOUT_S = 3 * 3600
+SNAPSHOT_FREE_BYTES = 10 * 1024 ** 3  # a snapshot save on a full disk pauses the emulator for good
 OWNED_MARK = ".oc-upgrade-e2e"
 
 # Part C, as the UI proves it: (id, what the owner reads, Maestro labels that must all have COMPLETED).
 UI_ASSERTIONS = (
+    ("part-b", "Part C passed on the Flutter app first (the baseline)", ("S2",)),
+    ("first-launch", "A first launch killed mid-migration resumes", ("S10",)),
     ("conversations", "Conversations shown, no welcome screen and no first-run guide", ("S4",)),
     ("settings", "Language, text size, style and notification choices kept", ("S5",)),
     ("servers", "Servers listed and connect without re-typing passwords", ("S6",)),
@@ -202,8 +211,19 @@ def avd_home(env=os.environ) -> pathlib.Path:
     return pathlib.Path(base) / "avd"
 
 
+def avd_dir(avd: str, env=os.environ) -> pathlib.Path:
+    """The AVD's folder: the path= line of <avd home>/<avd>.ini when there is one (avdmanager -p puts AVDs
+    elsewhere, e.g. on Storage2), else <avd home>/<avd>.avd."""
+    ini = avd_home(env) / f"{avd}.ini"
+    with contextlib.suppress(OSError):
+        for line in ini.read_text(encoding="utf-8").splitlines():
+            if line.startswith("path="):
+                return pathlib.Path(line[len("path="):].strip())
+    return avd_home(env) / f"{avd}.avd"
+
+
 def avd_has_snapshot(avd: str, snapshot: str, env=os.environ) -> bool:
-    return (avd_home(env) / f"{avd}.avd" / "snapshots" / snapshot).is_dir()
+    return (avd_dir(avd, env) / "snapshots" / snapshot).is_dir()
 
 
 def emulator_cmd(emulator: str, avd: str, snapshot: str | None) -> list[str]:
@@ -258,6 +278,13 @@ def reset_owned_dir(path: pathlib.Path) -> None:
     (path / OWNED_MARK).write_text("made by native/tool/qa/upgrade_e2e.sh\n")
 
 
+def fixtures_env_from_state(state: pathlib.Path) -> dict:
+    """The env fx.py wrote for run.py: the per-run passwords and FX_CTL (the flows' fixture dispatcher)."""
+    data = json.loads(state.read_text(encoding="utf-8"))
+    env = data.get("env", {})
+    return {k: env[k] for k in ("SERVER_PASSWORD", "SERVER_B_PASSWORD", "FX_CTL") if k in env}
+
+
 def fixtures_env(fx_dir: pathlib.Path) -> dict:
     secrets = {}
     path = fx_dir / "secrets.env"
@@ -291,27 +318,59 @@ def run_py_cmd(args, out: pathlib.Path, seeded: bool, fx_env_file: pathlib.Path 
     cmd = [sys.executable, "-I", str(HERE / "run.py"), "--app", "native", "--flows", FLOW,
            "--native-apk", os.path.abspath(args.native_apk), "--expect-signer", args.expect_signer,
            "--serial", SERIAL, "--no-retry", "--lock", args.lock, "--out", str(out / "run"),
-           "--state-dir", str(out / "state"), "--maestro", args.maestro, "--adb", args.adb]
+           "--state-dir", str(out / "state"), "--maestro", args.maestro, "--adb", args.adb,
+           # Part A (built-in Linux and the voice pack from the real hosts), Part B and the native part take about
+           # an hour on the PC emulator; run.py's default is 3600 s.
+           "--flow-timeout", str(FLOW_TIMEOUT_S)]
     if args.avd:
         cmd += ["--expect-avd", args.avd]
     if seeded:
         cmd.append("--seeded")
     else:
         cmd += ["--apk", os.path.abspath(args.flutter_apk)]
-        if not args.no_save_snapshot:
+        if not args.no_save_snapshot and snapshot_space_ok(args):
             cmd += ["--save-seed-snapshot", args.snapshot]
     if fx_env_file:
         cmd += ["--fixtures-env", str(fx_env_file)]
-    if args.skip_resource_checks:
-        cmd.append("--skip-resource-checks")
+    # run.py's RAM check runs with the gate's own AVD already booted (it would ask for 7 GB on top of it): the gate
+    # checks before booting instead (preflight) and always tells run.py to skip it.
+    cmd.append("--skip-resource-checks")
     return cmd
+
+
+def snapshot_space_ok(args, env=os.environ) -> bool:
+    """Room for the seeded snapshot (RAM image plus disk deltas) next to the AVD."""
+    if not args.avd:
+        return True
+    target = avd_dir(args.avd, env)
+    probe = target if target.exists() else target.parent
+    try:
+        return shutil.disk_usage(probe).free >= SNAPSHOT_FREE_BYTES
+    except OSError:
+        return True
+
+
+def preflight(args, env=os.environ) -> None:
+    """Refuse before taking the emulator: files outside native/ the flows need, and the host RAM."""
+    missing = [f for f in NEEDED_FILES if not (REPO / f).exists()]
+    if missing:
+        raise Refused(f"this checkout lacks {', '.join(missing)} (a sparse checkout? add lib/l10n, "
+                      "android/app/src/main/res and docs to it)")
+    if args.skip_resource_checks or args.use_running:
+        return
+    with open("/proc/meminfo") as fh:
+        avail = next(int(l.split()[1]) for l in fh if l.startswith("MemAvailable"))
+    if avail < RAM_NEEDED_KB:
+        raise Refused(f"only {avail // 1024} MB RAM available before booting the AVD; 7 GB needed "
+                      "(--skip-resource-checks to override)")
 
 
 # ---------------------------------------------------------------- step 4: judging
 
 def maestro_statuses(debug_root: pathlib.Path) -> dict[str, str]:
     """{label: status} from Maestro's commands-*.json (debug output). A label seen twice keeps the worst status."""
-    rank = {"FAILED": 3, "COMPLETED": 2, "WARNED": 2, "SKIPPED": 1, "PENDING": 0, "RUNNING": 0}
+    # E2E-39's assertion steps are optional runFlows, so the flow goes on after one fails: WARNED is a failed one.
+    rank = {"FAILED": 4, "WARNED": 3, "COMPLETED": 2, "SKIPPED": 1, "PENDING": 0, "RUNNING": 0}
     found: dict[str, str] = {}
 
     def visit(node):
@@ -330,7 +389,8 @@ def maestro_statuses(debug_root: pathlib.Path) -> dict[str, str]:
             for v in node:
                 visit(v)
 
-    for f in sorted(debug_root.rglob("commands-*.json")):
+    # Maestro 2.12 writes commands.json (one per flow, --flatten-debug-output); older versions commands-(<flow>).json.
+    for f in sorted(debug_root.rglob("commands*.json")):
         with contextlib.suppress(OSError, json.JSONDecodeError):
             visit(json.loads(f.read_text(encoding="utf-8")))
     return found
@@ -342,10 +402,10 @@ def ui_verdicts(statuses: dict[str, str], flow_passed: bool) -> list[Line]:
         states = []
         for prefix in prefixes:
             hits = [s for label, s in statuses.items() if label == prefix or label.startswith(prefix + " ")]
-            states.append(max(hits, key=lambda s: s == "FAILED") if hits else None)
-        if all(s in ("COMPLETED", "WARNED") for s in states):
+            states.append(max(hits, key=lambda s: {"FAILED": 2, "WARNED": 1}.get(s, 0)) if hits else None)
+        if all(s == "COMPLETED" for s in states):
             out.append(Line(aid, title, True))
-        elif any(s == "FAILED" for s in states):
+        elif any(s in ("FAILED", "WARNED") for s in states):
             out.append(Line(aid, title, False, "failed on the device; see maestro.log and the failure screenshot"))
         elif flow_passed and all(s is None for s in states):
             out.append(Line(aid, title, True, "flow passed; per-step status not reported by Maestro"))
@@ -380,6 +440,13 @@ def collect_screens(run_out: pathlib.Path, dest: pathlib.Path) -> list[tuple[str
             target = dest / f"failure-{len(shots) + 1}.png"
             shutil.copyfile(png, target)
             shots.append((target.name, "Where the flow stopped (Maestro's failure screenshot)."))
+    # Maestro 2.12 keeps a failed run's screenshots as debug/<flow>/screenshots/step-NNN-<command>.png: the
+    # highest step is where it stopped.
+    steps = sorted(run_out.rglob("debug/*/screenshots/step-*.png"), key=lambda p: (str(p.parent), p.name))
+    if steps and not any(f.startswith("failure-") for f, _ in shots):
+        target = dest / f"failure-{len(shots) + 1}.png"
+        shutil.copyfile(steps[-1], target)
+        shots.append((target.name, f"Where the flow stopped ({steps[-1].stem})."))
     return shots
 
 
@@ -460,7 +527,7 @@ def parse_args(argv=None):
     ap.add_argument("--no-save-snapshot", action="store_true", help="do not save the snapshot after Part A")
     ap.add_argument("--seed-home", default=os.environ.get("OC_E2E_SEED_HOME", "~/.cache/oc-e2e/seeds"),
                     help="where each snapshot's fixture state (and per-snapshot fixture passwords) is kept")
-    ap.add_argument("--fixtures-env", help="JSON env of fixtures someone already started (skips fxctl.py)")
+    ap.add_argument("--fixtures-env", help="JSON env of fixtures someone already started (skips fx.py)")
     ap.add_argument("--lock", default=run.DEFAULT_LOCK, help="the emulator lock (OC_EMULATOR_LOCK)")
     ap.add_argument("--out", type=pathlib.Path, help="run output (default native/e2e/runner/out/upgrade-<stamp>)")
     ap.add_argument("--evidence-dir", help="default docs/qa/native-switch-<date> (a -2, -3 suffix if it exists)")
@@ -508,6 +575,11 @@ def main(argv=None) -> int:
                           "runPy": run_py_cmd(args, out, restore, None)}, indent=1))
         return 0
 
+    try:
+        preflight(args)
+    except Refused as e:
+        print(f"FAIL setup: {e}")
+        return 2
     out.mkdir(parents=True, exist_ok=True)
     proc = None
     fx_started = False
@@ -549,12 +621,13 @@ def main(argv=None) -> int:
                     reset_owned_dir(seed)
                 fx_dir.mkdir(parents=True, exist_ok=True)
                 fx_started = True
-                rc = subprocess.run([sys.executable, "-I", str(FXCTL), "start", "--run-dir", str(fx_dir),
-                                     *FIXTURES]).returncode
+                rc = subprocess.run([sys.executable, "-I", str(FX), "start", "--ids", ",".join(FIXTURES),
+                                     "--run-dir", str(fx_dir), "--state", str(fx_dir / "fixtures-state.json")]
+                                    ).returncode
                 if rc != 0:
                     raise Refused("a fixture did not start (see the fxctl lines above)")
                 fx_env_file = fx_dir / "fixtures-env.json"
-                write_private_json(fx_env_file, {"env": fixtures_env(fx_dir)})
+                write_private_json(fx_env_file, {"env": fixtures_env_from_state(fx_dir / "fixtures-state.json")})
             say(Line("fixtures", "E2E-39 fixtures ready", True, "given" if args.fixtures_env else str(fx_dir)))
 
             env = {**os.environ, "OC_EMULATOR_LOCK_FD": str(lock_fd)}
@@ -576,7 +649,9 @@ def main(argv=None) -> int:
     leak = summary.exists() and "SECRET IN LOGCAT" in summary.read_text(encoding="utf-8")
     verdicts += [say(l) for l in ui_verdicts(maestro_statuses(out / "run"), flow_passed)]
     verdicts += [say(l) for l in state_verdicts(out / "state")]
-    verdicts.append(say(Line("flow", "E2E-39 passed end to end", flow_passed,
+    # Assertion steps are optional (a failed one is WARNED and the flow goes on), so a PASSED flow means it ran to
+    # the end, not that every assertion held: those are the lines above.
+    verdicts.append(say(Line("flow", "E2E-39 ran to the end (assertions are judged one by one above)", flow_passed,
                              ", ".join(f"{f['flow']} {f['result']}" for f in flows) or "no result")))
     if leak:
         verdicts.append(say(Line("log-scan", "No fixture password or canary in logcat", False, "found in logcat")))
@@ -594,9 +669,11 @@ def main(argv=None) -> int:
 
 def _shutdown(adb, proc, args, fx_started, fx_dir) -> None:
     if fx_started:
-        subprocess.run([sys.executable, "-I", str(FXCTL), "stop", "--run-dir", str(fx_dir)], check=False)
-        with contextlib.suppress(FileNotFoundError):
-            (fx_dir / "fixtures-env.json").unlink()
+        subprocess.run([sys.executable, "-I", str(FX), "stop", "--state", str(fx_dir / "fixtures-state.json")],
+                       check=False)
+        for name in ("fixtures-env.json", "fixtures-state.json"):
+            with contextlib.suppress(FileNotFoundError):
+                (fx_dir / name).unlink()
     if proc is not None and not args.keep_emulator and proc.poll() is None:
         stop_emulator(adb, proc)
 

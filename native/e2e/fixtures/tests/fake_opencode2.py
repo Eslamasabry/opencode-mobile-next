@@ -6,9 +6,9 @@ FX_OC2_BIN to this file (it is executable; the shebang finds python3 on PATH).
 
 * HTTP Basic auth, user ``opencode``, password from env OPENCODE_PASSWORD (falls back
   to OPENCODE_SERVER_PASSWORD; refuses to start without one; never prints it).
-* GET /api/health, GET/POST /api/session (honours ``id`` and ``title``; 409 on a
+* GET /api/health and /api/info (2.1.1), GET/POST /api/session (honours ``id`` and ``title``; 409 on a
   reused id), GET /api/session/{id}, GET /api/session/{id}/message,
-  POST /api/session/{id}/prompt, POST /api/session/import, GET /api/location,
+  POST /api/session/{id}/prompt, POST /api/session/import (and 2.1.1's /api/experimental/session/import), GET /api/location,
   GET /api/model.
 * GET /api/event: SSE over chunked transfer encoding: ``server.connected`` then an
   ``fx.heartbeat`` data event every 200 ms.
@@ -89,7 +89,7 @@ class Handler(BaseHTTPRequestHandler):
                              {"WWW-Authenticate": 'Basic realm="Secure Area"'})
         m = self.command
         parts = [p for p in path.split("/") if p]
-        if m == "GET" and path == "/api/health":
+        if m == "GET" and path in ("/api/health", "/api/info"):
             return self.send(200, {"healthy": True, "version": "0.0.0-fake", "pid": os.getpid()})
         if m == "GET" and path == "/api/fx/env":
             keys = ["HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "TMPDIR"]
@@ -129,7 +129,7 @@ class Handler(BaseHTTPRequestHandler):
                 SESSIONS[sid] = info
                 MESSAGES[sid] = []
             return self.send(200, {"data": info})
-        if path == "/api/session/import" and m == "POST":
+        if path in ("/api/session/import", "/api/experimental/session/import") and m == "POST":
             body = self.body()
             info = body.get("info") or {}
             sid = info.get("id")

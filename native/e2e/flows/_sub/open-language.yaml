@@ -1,0 +1,13 @@
+# Settings open: open the app language choice. Flutter 2.1.4: settings search "Language" lists "Language\nThis app"
+# (twice); it opens the This app page, whose "Language\n<current>" row opens a sheet of languages.
+appId: ${APP_ID}
+---
+- runFlow:
+    file: settings-search.yaml
+    env:
+      QUERY: ${output.t.settingsV3Language}
+# index 1 skips the search field (it holds the query); Flutter joins a row's lines, native keeps them apart.
+- tapOn:
+    text: ${output.s.settingsV3Language + '(\n(?s).*)?'}
+    index: 1
+- tapOn: ${output.s.settingsV3Language + '(\n(?s).*)?'}

@@ -1,0 +1,11 @@
+# In a conversation just opened: make Flutter 2.1.4 republish its accessibility tree. After the route animation its
+# tree can keep the positions from mid-animation (about 100 px low), and Maestro then misses the composer's buttons;
+# a trip to the home screen and back refreshes it (walked 2026-11-07; scrolling or waiting does not).
+appId: ${APP_ID}
+---
+- runFlow: dismiss-notices.yaml
+- waitForAnimationToEnd
+- pressKey: Home
+- launchApp:
+    stopApp: false
+- waitForAnimationToEnd

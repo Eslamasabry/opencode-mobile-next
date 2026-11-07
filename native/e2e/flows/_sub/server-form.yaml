@@ -1,0 +1,38 @@
+# The add-server wizard of Flutter 2.1.4 (walked 2026-11-07): step 1 "What runs there" -> OpenCode on a computer;
+# step 2 "Pair or enter the address" -> Enter the address instead -> Server URL and Server password -> Test
+# connection. Steps the app does not show are skipped, so a form without the wizard works too. On 2.1.4 the text
+# fields expose their label as the start of the hint ("Server URL\nhttps://server.example, Prefer HTTPS..."), so they
+# are matched as "label, then anything".
+# env: ADDRESS (bare host:port or URL), PASSWORD. Leaves the form tested, not yet saved.
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      visible: ${output.c.addServerTypeOpenCode}
+    commands:
+      - tapOn: ${output.c.addServerTypeOpenCode}
+- runFlow:
+    when:
+      notVisible: ${output.s.e7SetupServerUrl + '(?s).*'}
+    commands:
+      - tapOn: ${output.s.addServerManual}
+- tapOn: ${output.s.e7SetupServerUrl + '(?s).*'}
+- inputText: ${ADDRESS}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupServerPassword + '(,(?s).*)?'}
+- inputText: ${PASSWORD}
+- hideKeyboard
+- scrollUntilVisible:
+    element: ${output.s.e7SetupTestConnection}
+- tapOn: ${output.s.e7SetupTestConnection}
+# Plain HTTP to a private address (the fixtures, 10.0.2.2) asks once: "Use it anyway", then "Allow HTTP for this
+# server"; 2.1.4 then tests the connection again by itself.
+- runFlow:
+    when:
+      visible: ${output.s.addServerCleartextConfirm}
+    commands:
+      - tapOn: ${output.s.addServerCleartextConfirm}
+      - extendedWaitUntil:
+          visible: ${output.s.serverTrustHttpAccept}
+          timeout: 10000
+      - tapOn: ${output.s.serverTrustHttpAccept}

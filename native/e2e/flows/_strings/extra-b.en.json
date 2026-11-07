@@ -56,6 +56,10 @@
   "text": "اللغة",
   "source": "lib/l10n/app_ar.arb settingsV3Language (tapped while the app is Arabic during the English run)"
  },
+ "x_ar_this_app": {
+  "text": "هذا التطبيق",
+  "source": "lib/l10n/app_ar.arb settingsHubGroupThisApp (tapped while the app is Arabic during the English run)"
+ },
  "x_ar_use_system_language": {
   "text": "استخدام لغة النظام",
   "source": "lib/l10n/app_ar.arb e7LocaleUiSystem (tapped while the app is Arabic during the English run)"

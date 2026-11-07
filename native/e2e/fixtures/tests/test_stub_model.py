@@ -220,6 +220,11 @@ class StubModelHttpTest(unittest.TestCase):
         body = chat("e2e:ask-edit", system="Generate a short title for this conversation.", stream=False)
         self.assertEqual(self.post(body)["text"], stub_model.TITLE)
 
+    def test_stub_agent_request_with_tools_is_never_a_title_request(self) -> None:
+        # OpenCode 2.1.1's main agent prompt mentions both words and offers tools.
+        body = chat("e2e:echo hello", OC2_TOOLS, system="Generate code. Keep the session title short.")
+        self.assertEqual(self.post(body)["text"], "ECHO hello")
+
     def test_stub_perf_stream_6000_is_fixed_6000_words_three_fences(self) -> None:
         text = stub_model.perf_stream_text()
         self.assertEqual(len(text.split()), 6000)

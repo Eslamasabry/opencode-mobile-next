@@ -1,0 +1,10 @@
+# Close a background-service notice ("Background connection stopped…", "OpenCode Mobile was closed…") when one shows.
+# Flutter 2.1.4 shows it above Conversations and chats after the app was stopped; while it shows, the accessibility
+# tree of a chat opened under it keeps stale positions and Maestro misses the composer (walked 2026-11-07).
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      visible: ${output.s.notifyDismiss}
+    commands:
+      - tapOn: ${output.s.notifyDismiss}
