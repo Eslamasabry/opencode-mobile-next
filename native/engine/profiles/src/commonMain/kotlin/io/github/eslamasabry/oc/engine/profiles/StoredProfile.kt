@@ -136,29 +136,59 @@ public object StoredProfileJson {
 
     /** Every readable profile of [raw], in stored order (Dart `load`). */
     public fun decodeList(raw: String?): List<StoredProfile> =
-        rows(raw).orEmpty().mapNotNull { (it as? Map<*, *>)?.let(::decode) }
+        distinctNames(rows(raw).orEmpty().mapNotNull { (it as? Map<*, *>)?.let(::decode) })
 
     public fun encodeRows(rows: List<Any?>): String = DartJson.encode(rows)
 
     /**
-     * A display name never exposes an address. Older Flutter rows used the host/IP as their
-     * name, or “Computer at <ip>”; normalize those on read without changing the stored address.
-     * A person's chosen name wins. If pairing supplies a hostname it is saved as that name.
+     * Dart `plainServerName` (`lib/state/profiles/validation.dart`, 2.1.4): a bare IP address (what the name defaulted
+     * to before) reads "Computer at 192.168.1.5", this device by any of its names reads "This phone", and a host name
+     * or a name the person typed is kept as is (B-149: 2.1.4 servers keep the label they had). A blank name, or one
+     * that is a whole URL, takes the same rule from the server's address.
      */
     public fun plainServerName(name: String, address: String = ""): String {
         val value = name.trim()
-        val legacyHost = value.removePrefix("Computer at ").trim()
-        val host = (ProfileOrigins.serverOrigin(address)?.host ?: ProfileOrigins.serverOrigin(legacyHost)?.host ?: legacyHost)
+        val bare = value.replace(BRACKETS, "")
+        if (value.isNotEmpty() && AddressRules.isLoopback(bare)) return "This phone"
+        if (IPV4.matches(value) || (':' in value && IPV6ISH.matches(value))) return "Computer at $bare"
+        if (value.isNotEmpty() && value != "Computer" && "://" !in value) return name
+        val host = (ProfileOrigins.serverOrigin(address)?.host ?: ProfileOrigins.serverOrigin(value)?.host ?: "")
             .removeSurrounding("[", "]")
-        val bare = legacyHost.removeSurrounding("[", "]")
-        val isAddress = value.isEmpty() || value == "Computer" || value.startsWith("Computer at ") ||
-            IPV4.matches(bare) || (':' in bare && IPV6ISH.matches(bare)) || "://" in value ||
-            AddressRules.isLoopback(bare)
-        if (!isAddress) return value
+        if (host.isEmpty()) return "Computer"
         if (AddressRules.isLoopback(host)) return "This phone"
-        if (host.isNotEmpty() && !IPV4.matches(host) && ':' !in host && HOSTNAME.matches(host))
-            return host.removeSuffix(".")
-        return "Computer"
+        if (IPV4.matches(host) || ':' in host) return "Computer at $host"
+        return if (HOSTNAME.matches(host)) host.removeSuffix(".") else "Computer"
+    }
+
+    /**
+     * Dart `_distinctServerName` (`lib/ui/widgets/phone_server_names.dart`): when two saved servers would read the same
+     * ("Computer at 10.0.2.2" three times) the port is added, a secure address that shares its name with a plain one
+     * says "(secure)", and when the port is the same too the server's number among them. "This phone" is never
+     * changed. Only the shown name changes; [profiles] keep their order.
+     */
+    public fun distinctNames(profiles: List<StoredProfile>): List<StoredProfile> {
+        val groups = profiles.filter { it.name != "This phone" }.groupBy { it.name }
+        return profiles.map { profile ->
+            val same = groups[profile.name]
+            if (profile.name == "This phone" || same == null || same.size < 2) return@map profile
+            fun portOf(p: StoredProfile): String = explicitPort(p.baseUrl)?.let { ":$it" }.orEmpty()
+            fun secure(p: StoredProfile): Boolean = p.baseUrl.trim().lowercase().startsWith("https://")
+            val port = portOf(profile)
+            val tag = if (secure(profile) && same.any { !secure(it) }) " (secure)" else ""
+            val withPort = profile.name + port + tag
+            val samePort = same.filter { portOf(it) == port }
+            val name = if (samePort.size < 2) withPort else "$withPort (${samePort.indexOf(profile) + 1})"
+            profile.copy(name = name)
+        }
+    }
+
+    /** Dart `Uri.hasPort ? uri.port`: only a port written in the address counts. */
+    private fun explicitPort(url: String): Int? {
+        val authority = url.trim().substringAfter("://", "").substringBefore('/').substringBefore('?')
+            .substringBefore('#').substringAfterLast('@')
+        val tail = if (authority.startsWith("[")) authority.substringAfter("]", "") else authority
+        val port = tail.substringAfter(':', "")
+        return if (':' in tail && port.isNotEmpty() && port.all(Char::isDigit)) port.toIntOrNull() else null
     }
 
     /** Dart `OrchestrationConfig.fromJson` gate: a map with a non-empty string `url`; anything else is "plugin off". */
@@ -181,4 +211,5 @@ public object StoredProfileJson {
     private val HOSTNAME = Regex("""^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9.])?$""")
     private val IPV4 = Regex("""^\d{1,3}(?:\.\d{1,3}){3}$""")
     private val IPV6ISH = Regex("""^[0-9a-fA-F:.\[\]]+$""")
+    private val BRACKETS = Regex("""[\[\]]""")
 }
