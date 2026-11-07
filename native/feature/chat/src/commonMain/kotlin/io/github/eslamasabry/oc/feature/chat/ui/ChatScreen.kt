@@ -584,6 +584,7 @@ public fun ChatScreen(
                                     exit = KitTopBarExit.Back,
                                     exitLabel = stringResource(Res.string.kitTopBarBack),
                                     onExit = actions::leaveRequested,
+                                    backBesideTitle = true, // E20-S13: the chat bar is one compact block
                                     actions =
                                         listOfNotNull(
                                             context,

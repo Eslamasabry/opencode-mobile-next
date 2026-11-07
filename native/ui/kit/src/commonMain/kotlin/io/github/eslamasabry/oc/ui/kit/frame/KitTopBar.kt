@@ -87,6 +87,11 @@ public fun KitTopBar(
     actions: List<KitLineAction> = emptyList(),
     large: Boolean = false,
     more: (@Composable (hidden: List<KitLineAction>) -> Unit)? = null,
+    /**
+     * E20-S13 (the chat header): Back sits on the title's row and the subtitle or scope line right under the title, one
+     * compact block instead of three rows. The title then starts beside Back, not on the gutter.
+     */
+    backBesideTitle: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -279,6 +284,47 @@ public fun KitTopBar(
                 titleRow()
             }
         }
+        val under: (@Composable () -> Unit)? =
+            scope
+                ?: subtitle?.let {
+                    {
+                        KitText(
+                            it,
+                            Modifier.padding(horizontal = Space.S2.dp).kitContentEdge("bar-subtitle"),
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Secondary,
+                            kind = KitTextKind.Frame,
+                            maxLines = 1,
+                        )
+                    }
+                }
+        if (back && backBesideTitle) {
+            // E20-S13: one block. Back, then the title with its line tight under it (the kit's 2 dp step), then the
+            // actions; Back and the actions centre on the block.
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).testTag("kit-top-bar-compact"),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
+                Column(Modifier.weight(1f).padding(vertical = Space.S1.dp)) {
+                    Box(
+                        if (under != null) Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, 0.dp)
+                        else Modifier
+                    ) {
+                        title()
+                    }
+                    if (under != null)
+                        Box(
+                            Modifier.padding(start = if (scope != null) Space.S1.dp else 0.dp)
+                                .riseToText(lineLine, TITLE_LINE_GAP, if (scope != null) Space.S2.dp else 0.dp)
+                        ) {
+                            under()
+                        }
+                }
+                actionRow()
+            }
+            return@Column
+        }
         if (back) {
             Row(
                 Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
@@ -319,20 +365,6 @@ public fun KitTopBar(
             if (exit == KitTopBarExit.Close && onExit != null)
                 ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
         }
-        val under: (@Composable () -> Unit)? =
-            scope
-                ?: subtitle?.let {
-                    {
-                        KitText(
-                            it,
-                            Modifier.padding(horizontal = Space.S2.dp).kitContentEdge("bar-subtitle"),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                            kind = KitTextKind.Frame,
-                            maxLines = 1,
-                        )
-                    }
-                }
         if (under != null) {
             // Under the title's first letter; the scope's own words keep their 8 dp inset like the title's.
             val lead = titleStart + if (scope != null) Space.S1.dp else 0.dp
