@@ -53,6 +53,10 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 
 /**
  * The words and the callback of the inline "Tell it what to do instead" reply that Deny opens.
@@ -86,6 +90,13 @@ private const val LARGE_TEXT = 2.0f
  * then).
  *
  * Text: title and summary reading (full size); buttons frame (≤ 1.3×); subject mono, left to right.
+ *
+ * [look] = [KitRequestLook.Question] is the card in a conversation (C-007, Flutter kit_request_question.dart): the
+ * "● Needs you · [waitingAge]" tag inside the card ([waitingMore]: "1 more request is waiting"), the 4 dp attention
+ * edge, the ask at the title size, the targets (or [subject]) in one bordered block with the [onDetails] link, and
+ * [alwaysLabel] ("Always allow flutter") as a centred underlined link under the answers. The host words it: no label
+ * above the card, no extra sentences ([summary], [toolLabel] are drawn only when given). [copyLabel] is not used in this
+ * look.
  */
 @Composable
 public fun KitPermissionCard(
@@ -107,14 +118,20 @@ public fun KitPermissionCard(
     copyLabel: String? = null,
     copiedLabel: String? = null,
     denyReply: KitDenyReply? = null,
+    look: KitRequestLook = KitRequestLook.Standard,
+    waitingAge: String? = null,
+    waitingMore: String? = null,
+    onDetails: (() -> Unit)? = null,
 ) {
     require(enabled || disabledReason != null) {
         "KitPermissionCard: a card that cannot answer must say why"
     }
     val colors = LocalKitColors.current
     val reason = if (enabled) null else disabledReason
+    val question = look == KitRequestLook.Question
     KitRequestFrame(
         modifier = modifier,
+        look = look,
         answers = {
             Answers(
                 allowOnceLabel,
@@ -128,9 +145,14 @@ public fun KitPermissionCard(
                 secondary,
                 denyReply,
                 onDenyJustDeny = onDeny,
+                question = question,
             )
         },
     ) {
+        if (question) {
+            QuestionWords(title, summary, toolLabel, targets, subject, waitingAge, waitingMore, onDetails)
+            return@KitRequestFrame
+        }
         KitText(
             title,
             Modifier.semantics {
@@ -184,6 +206,7 @@ private fun Answers(
     secondary: Boolean,
     denyReply: KitDenyReply?,
     onDenyJustDeny: () -> Unit,
+    question: Boolean,
 ) {
     var replying by rememberSaveable { mutableStateOf(false) }
     val specs = KitMotion.specs
@@ -208,6 +231,7 @@ private fun Answers(
                 enabled, reason, secondary,
                 // M-005: Deny is an answer only when it does not open the reply field first.
                 denyAnswers = denyReply == null,
+                question = question,
             )
         }
     }
@@ -255,13 +279,16 @@ private fun AnswerButtons(
     reason: String?,
     secondary: Boolean,
     denyAnswers: Boolean = true,
+    question: Boolean = false,
 ) {
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val style = LocalKitTypography.current.style(TypeRole.Button)
     val availability = KitEnabled.of(enabled, reason)
     val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
-    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+    // Spaced line by line: the reason and the standard Always button sit 8 dp under the pair; the question look's link
+    // carries its own 4 dp (kit_request_question.dart:188-191).
+    Column {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val half = (maxWidth - Space.S2.dp) / 2 // F: lib/ui/kit/kit_request_card.dart:965
             fun fits(label: String): Boolean = with(density) {
@@ -286,9 +313,80 @@ private fun AnswerButtons(
                 else { reject(Modifier.fillMaxWidth()); allow(Modifier.fillMaxWidth()) }
             }
         }
-        if (!enabled && reason != null) KitText(reason, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        if (!enabled && reason != null) KitText(reason, Modifier.padding(top = Space.S2.dp), role = TypeRole.Secondary, tone = TextTone.Secondary)
         if (alwaysLabel != null && onAlways != null) {
-            KitButton(alwaysLabel, onAlways, Modifier.fillMaxWidth().testTag("permission-card-always"), role = KitButtonRole.Secondary, enabled = availability, haptic = ANSWER_HAPTIC)
+            if (question) AlwaysLink(alwaysLabel, onAlways, enabled, reason)
+            else KitButton(alwaysLabel, onAlways, Modifier.padding(top = Space.S2.dp).fillMaxWidth().testTag("permission-card-always"), role = KitButtonRole.Secondary, enabled = availability, haptic = ANSWER_HAPTIC)
+        }
+    }
+}
+
+/**
+ * The question look's words (kit_request_question.dart:100-167): "● Needs you · 3 s", 8 dp, the ask at the title size
+ * (22/28; the headline from 1.3× text), the one line of why 4 dp under it, then 16 dp down the block of what it runs.
+ */
+@Composable
+private fun QuestionWords(
+    title: String,
+    summary: String?,
+    toolLabel: String?,
+    targets: List<KitRequestTarget>,
+    subject: String?,
+    waitingAge: String?,
+    waitingMore: String?,
+    onDetails: (() -> Unit)?,
+) {
+    KitRequestNeedsYouTag(waitingAge, more = waitingMore)
+    KitText(
+        title,
+        Modifier.padding(top = Space.S2.dp).semantics {
+            heading()
+            liveRegion = LiveRegionMode.Polite
+        },
+        role = questionTitleRole((LocalKitAppDensity.current ?: LocalDensity.current).fontScale),
+        tone = TextTone.Primary,
+        kind = KitTextKind.Reading,
+    )
+    for (line in listOf(summary, toolLabel)) {
+        if (!line.isNullOrEmpty())
+            KitText(line, Modifier.padding(top = Space.S1.dp), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
+    }
+    val shown = targets.ifEmpty { listOfNotNull(subject?.takeIf { it.isNotBlank() }?.let { KitRequestTarget(it) }) }
+    if (shown.isNotEmpty()) KitRequestTargetBlock(shown, Modifier.padding(top = Space.S4.dp), onDetails)
+}
+
+/** The ask reads at the title size; from 1.3× text, the headline (kit_request_question.dart:76-77). */
+internal fun questionTitleRole(fontScale: Float): TypeRole = if (fontScale < TITLE_MAX_SCALE) TypeRole.Title else TypeRole.Headline
+
+private const val TITLE_MAX_SCALE = 1.3f
+
+/**
+ * The named standing grant ("Always allow flutter") as the question look's quiet act: centred under the answers,
+ * secondary words underlined in the tertiary ink, 12 dp of air above and below as its own target
+ * (kit_request_card.dart:1144-1235, `centred`). Off while the card cannot answer, saying why.
+ */
+@Composable
+private fun AlwaysLink(label: String, onAlways: () -> Unit, enabled: Boolean, reason: String?) {
+    val colors = LocalKitColors.current
+    Box(Modifier.fillMaxWidth().padding(top = Space.S1.dp), contentAlignment = Alignment.Center) {
+        KitTappable(
+            onAlways,
+            Modifier.testTag("permission-card-always"),
+            enabled = enabled,
+            disabledReason = if (enabled) null else (reason ?: label),
+            onClickLabel = label,
+            haptic = ANSWER_HAPTIC,
+        ) {
+            BasicText(
+                label,
+                Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
+                style =
+                    LocalKitTypography.current.style(TypeRole.Secondary).copy(
+                        color = colors.text2,
+                        textAlign = TextAlign.Center,
+                        textDecoration = TextDecoration.Underline,
+                    ),
+            )
         }
     }
 }

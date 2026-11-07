@@ -19,6 +19,13 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.foundation.text.BasicText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -114,3 +121,89 @@ public fun KitRequestTargets(
 }
 
 private const val TARGET_LIMIT: Int = 3
+
+/** A single command wraps to at most this many lines in the question block (kit_request_question.dart:309). */
+private const val SINGLE_TARGET_LINES: Int = 3
+
+/**
+ * The question look's block (Flutter `_targetBlock`, kit_request_question.dart:247-437): what the request will run or
+ * touch in one bordered mono block on the ground, code radius, a hairline between lines. A single command wraps to three
+ * lines with its change size and the [onDetails] link ("Details", accent, underlined) on its own line's end; several
+ * show the first three, one line each, then a footer with "+n more" and Details. With no [onDetails], Details only
+ * appears when lines are hidden, and shows them in place. No copy mark: the request's details hold the copy.
+ */
+@Composable
+public fun KitRequestTargetBlock(
+    targets: List<KitRequestTarget>,
+    modifier: Modifier = Modifier,
+    onDetails: (() -> Unit)? = null,
+) {
+    if (targets.isEmpty()) return
+    var expanded by remember(targets) { mutableStateOf(false) }
+    val colors = LocalKitColors.current
+    val shape = KitShapeId.Code.toShape()
+    val single = targets.size == 1
+    val shown = if (expanded) targets else targets.take(TARGET_LIMIT)
+    val hidden = targets.size - shown.size
+    val details: (() -> Unit)? = onDetails ?: if (targets.size > TARGET_LIMIT) ({ expanded = !expanded }) else null
+    val detailsWord = stringResource(if (onDetails == null && expanded) Res.string.kitDetailsHide else Res.string.kitDetails)
+    val link: @Composable () -> Unit = { if (details != null) DetailsLink(detailsWord, details) }
+    Column(
+        modifier
+            .fillMaxWidth()
+            .testTag("kit-request-target-block")
+            .clip(shape)
+            .background(colors.ground)
+            .border(kitHairline(), colors.hairline, shape),
+    ) {
+        shown.forEachIndexed { index, target ->
+            if (index > 0) KitDivider()
+            Row(
+                Modifier.fillMaxWidth().padding(start = Space.S3.dp, end = if (single && details != null) Space.S1.dp else Space.S3.dp),
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                KitMonoLtr(
+                    target.text,
+                    Modifier.weight(1f).padding(vertical = Space.S3.dp),
+                    TextTone.Primary,
+                    maxLines = if (single) SINGLE_TARGET_LINES else 1,
+                )
+                target.change?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true) }
+                if (single) link()
+            }
+        }
+        if (!single && (hidden > 0 || details != null)) {
+            KitDivider()
+            Row(
+                Modifier.fillMaxWidth().padding(start = Space.S3.dp, end = Space.S2.dp),
+                horizontalArrangement = if (hidden > 0) Arrangement.SpaceBetween else Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (hidden > 0)
+                    KitText(
+                        pluralStringResource(Res.plurals.kitRequestMoreTargets, hidden, hidden),
+                        Modifier.padding(vertical = Space.S3.dp),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                link()
+            }
+        }
+    }
+}
+
+/** "Details" as the block's own link: secondary size, accent ink, underlined (kit_request_question.dart:262-281). */
+@Composable
+private fun DetailsLink(word: String, onClick: () -> Unit) {
+    val colors = LocalKitColors.current
+    KitTappable(onClick, Modifier.testTag("kit-request-details"), onClickLabel = word) {
+        BasicText(
+            word,
+            Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
+            style =
+                LocalKitTypography.current.style(TypeRole.Secondary)
+                    .copy(color = colors.accent, textDecoration = TextDecoration.Underline),
+        )
+    }
+}

@@ -5,6 +5,17 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.LayoutDirection
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.ColumnScope
@@ -43,19 +54,38 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestNeedsYouLabel
 import org.jetbrains.compose.resources.stringResource
 
 /**
+ * How a waiting request card is drawn (Flutter `KitRequestLook`, lib/ui/kit/kit_request_card.dart part
+ * kit_request_question.dart:3-16).
+ */
+public enum class KitRequestLook {
+    /** The needs-you card every list and sheet uses: the attention surface and line all round. */
+    Standard,
+
+    /**
+     * The conversation's question: a calm `surface1` card under the attention line at half strength, with a 4 dp
+     * attention edge at its start; "● Needs you · 3 s" inside it, the ask at the title size, what it will run in one
+     * bordered mono block with Details in it, Reject and the primary, and the named standing grant as an underlined link.
+     */
+    Question,
+}
+
+/**
  * One bounded request surface for permissions and questions, with answers always outside its
- * scrolling words.
+ * scrolling words. [look] picks the needs-you frame ([KitRequestLook]).
  */
 @Composable
 public fun KitRequestFrame(
     modifier: Modifier = Modifier,
+    look: KitRequestLook = KitRequestLook.Standard,
     answers: @Composable ColumnScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.toShape()
+    val question = look == KitRequestLook.Question
     val face =
         if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
+        else if (question) Modifier.questionFace(shape)
         else
             Modifier.clip(shape)
                 .background(colors.surface1)
@@ -68,15 +98,79 @@ public fun KitRequestFrame(
     ) {
         Column(
             Modifier.fillMaxWidth().then(face),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            // Question look: the answers sit space4 under the words (kit_request_question.dart:183-186).
+            verticalArrangement = Arrangement.spacedBy(if (question) Space.S4.dp else Space.S3.dp),
         ) {
             Column(
                 Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                // The question look spaces its own lines (tag 8, title 4, block 16); the standard card keeps 8.
+                verticalArrangement = if (question) Arrangement.Top else Arrangement.spacedBy(Space.S2.dp),
                 content = content,
             )
             answers()
         }
+    }
+}
+
+/**
+ * The question look's face (kit_request_shape.dart:54-200 with `edge`): `surface1`, the attention colour at half
+ * strength as a hairline border, and a [FlutterKitTokens.NEEDS_YOU_EDGE_WIDTH] attention edge along the start side,
+ * inside the corners; the words start that much further in.
+ */
+@Composable
+private fun Modifier.questionFace(shape: Shape): Modifier {
+    val colors = LocalKitColors.current
+    val edge = FlutterKitTokens.NEEDS_YOU_EDGE_WIDTH.dp
+    return clip(shape)
+        .background(colors.surface1)
+        .drawBehind {
+            val w = edge.toPx()
+            val x = if (layoutDirection == LayoutDirection.Rtl) size.width - w else 0f
+            drawRect(colors.attention, topLeft = Offset(x, 0f), size = Size(w, size.height))
+        }
+        .border(kitHairline(), colors.attention.copy(alpha = FlutterKitTokens.NEEDS_YOU_LINE_ALPHA), shape)
+        .padding(start = Space.S4.dp + edge, top = Space.S4.dp, end = Space.S4.dp, bottom = Space.S4.dp)
+}
+
+/**
+ * "● Needs you · 3 s" (kit_request_question.dart:201-245): the 8 dp attention dot and the words in the label role and
+ * attention ink while the request waits, with [age] (the short age words, counting seconds for the first minute) and
+ * [more] ("1 more request is waiting") after it. Once it no longer waits, no dot and the secondary ink. Under Signal the
+ * printed needs-you mark says it.
+ */
+@Composable
+public fun KitRequestNeedsYouTag(
+    age: String?,
+    modifier: Modifier = Modifier,
+    waiting: Boolean = true,
+    more: String? = null,
+) {
+    val label = stringResource(Res.string.kitRequestNeedsYouLabel)
+    val text = listOfNotNull(label, age, more?.trimEnd('.', '。')).joinToString(" · ")
+    if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
+        KitSignalNeedsYou(text, waiting = waiting, modifier = modifier)
+        return
+    }
+    val colors = LocalKitColors.current
+    Row(
+        modifier.testTag("kit-request-needs-you"),
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (waiting) {
+            Box(
+                Modifier.size(FlutterKitTokens.NEEDS_YOU_DOT_SIZE.dp)
+                    .clip(CircleShape)
+                    .background(colors.attention)
+                    .testTag("kit-request-needs-you-dot")
+            )
+        }
+        KitText(
+            text,
+            role = TypeRole.Label,
+            tone = if (waiting) TextTone.Attention else TextTone.Secondary,
+            tabular = true,
+        )
     }
 }
 
