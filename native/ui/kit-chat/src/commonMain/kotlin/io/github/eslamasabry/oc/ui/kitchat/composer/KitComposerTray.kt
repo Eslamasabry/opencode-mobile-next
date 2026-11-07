@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,182 +11,152 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
-public enum class KitTrayKind {
-    Photo,
-    Camera,
-    File,
-    Clipboard,
-    /** A saved or recent prompt to reuse (drawn with the document glyph). */
-    History,
-    /** The commands launcher (a slash). */
-    Commands,
-    /** Clear the draft words (a cross). */
-    Clear,
-    /** Send later or repeat (a clock face). */
-    Schedule,
-}
-
-private const val PER_ROW = 4
-
-/** The caller closes the tray before running an action, preserving the editor and its keyboard. */
-public class KitTrayAction(
+/**
+ * One round button of the composer's tray (Dart `KitComposerTrayAction`): a kit glyph, its one word, and the reason
+ * it is off ([disabledReason], e.g. "Available when the current run finishes"). The caller closes the tray before
+ * [onPick] runs.
+ */
+public class KitComposerTrayAction(
     public val label: String,
-    public val kind: KitTrayKind,
+    public val icon: ImageVector,
     public val onPick: () -> Unit,
+    public val disabledReason: String? = null,
+    public val testTag: String? = null,
 )
 
-/** The attachment choices attached to the editor itself; whole labels wrap at large text sizes. */
+/**
+ * What "+" opens (Flutter `_ComposerTray`, plus-menu concept C, owner 20 Oct 2026): the message box grows upward by
+ * ONE compact row of round matte buttons with a word under each (Photos, Camera, File, More), and a hairline between
+ * the row and the field. No sheet, no glass. It comes and goes with [KitReveal]'s fold and fade (instant with reduced
+ * motion). At a large text size on a narrow phone the words shrink together until the longest fits its share of the
+ * row: whole words in one size, never "Ph…".
+ *
+ * States: closed, open, a button off with its reason
+ * Text: frame (one line, shared fit)
+ * Motion: KitReveal (fold + fade STANDARD in, QUICK out); Off = instant
+ * Replaces: _ComposerTray, _TrayButton (lib/ui/kit/chat/kit_composer_tray.dart)
+ */
 @Composable
-public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
-    Column(modifier.fillMaxWidth().testTag("kit-composer-tray")) {
-        // Four to a row: eight choices stay readable and 48 dp wide at large text sizes.
-        actions.chunked(PER_ROW).forEach { rowActions ->
-        Row(
-            Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            rowActions.forEach { action ->
-                KitTappable(action.onPick, Modifier.weight(1f), onClickLabel = action.label) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-                    ) {
-                        Box(
-                            Modifier.size(48.dp).background(colors.surface3, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Canvas(Modifier.size(22.dp)) {
-                                val stroke = Stroke(1.7.dp.toPx())
-                                when (action.kind) {
-                                    KitTrayKind.Photo -> {
-                                        drawRect(
-                                            colors.text1,
-                                            Offset(size.width * .1f, size.height * .15f),
-                                            Size(size.width * .8f, size.height * .7f),
-                                            style = stroke,
-                                        )
-                                        drawCircle(
-                                            colors.text1,
-                                            size.width * .09f,
-                                            Offset(size.width * .68f, size.height * .34f),
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .13f, size.height * .78f),
-                                            Offset(size.width * .42f, size.height * .43f),
-                                            stroke.width,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .42f, size.height * .43f),
-                                            Offset(size.width * .78f, size.height * .81f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Camera -> {
-                                        drawRoundRect(
-                                            colors.text1,
-                                            Offset(size.width * .06f, size.height * .22f),
-                                            Size(size.width * .88f, size.height * .62f),
-                                            style = stroke,
-                                        )
-                                        drawCircle(
-                                            colors.text1,
-                                            size.width * .21f,
-                                            center,
-                                            style = stroke,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .32f, size.height * .12f),
-                                            Offset(size.width * .65f, size.height * .12f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Commands -> {
-                                        // A slash, mirrored in right-to-left by the caller's layout.
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .34f, size.height * .86f),
-                                            Offset(size.width * .66f, size.height * .14f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Clear -> {
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .2f, size.height * .2f),
-                                            Offset(size.width * .8f, size.height * .8f),
-                                            stroke.width,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .8f, size.height * .2f),
-                                            Offset(size.width * .2f, size.height * .8f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Schedule -> {
-                                        drawCircle(colors.text1, size.width * .42f, center, style = stroke)
-                                        drawLine(
-                                            colors.text1,
-                                            center,
-                                            Offset(size.width * .5f, size.height * .22f),
-                                            stroke.width,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            center,
-                                            Offset(size.width * .72f, size.height * .6f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.File,
-                                    KitTrayKind.Clipboard,
-                                    KitTrayKind.History -> {
-                                        drawRect(
-                                            colors.text1,
-                                            Offset(size.width * .22f, size.height * .12f),
-                                            Size(size.width * .58f, size.height * .78f),
-                                            style = stroke,
-                                        )
-                                        for (y in listOf(.42f, .59f, .75f)) drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .35f, size.height * y),
-                                            Offset(size.width * .67f, size.height * y),
-                                            stroke.width,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        KitText(
-                            action.label,
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Primary,
-                            maxLines = 3,
-                        )
-                    }
+public fun KitComposerTray(open: Boolean, actions: List<KitComposerTrayAction>, modifier: Modifier = Modifier) {
+    KitReveal(open && actions.isNotEmpty(), modifier) {
+        Column(Modifier.fillMaxWidth().testTag("kit-composer-tray")) {
+            TrayRow(actions, Modifier.fillMaxWidth().padding(top = Space.S3.dp, bottom = Space.S2.dp))
+            KitDivider(Modifier.padding(horizontal = Space.S3.dp))
+        }
+    }
+}
+
+/** The one size factor every label of the row shares (Flutter `_ComposerTray`): 1 when the widest word fits. */
+public fun kitTrayLabelFit(widest: Float, room: Float): Float =
+    if (widest <= 0f || widest <= room) 1f else (room / widest).coerceIn(0f, 1f)
+
+@Composable
+private fun TrayRow(actions: List<KitComposerTrayAction>, modifier: Modifier) {
+    val app = LocalKitAppDensity.current ?: LocalDensity.current
+    val base = LocalKitTypography.current.style(TypeRole.Secondary)
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        // KitText's frame size for this role (min(platform size, 1.3 × spec)), measured once per label set and width.
+        val specSp = base.fontSize.value
+        val frame = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
+        val unit = Density(app.density, 1f)
+        val roomPx = constraints.maxWidth.toFloat() / actions.size - 2 * Space.S1 * app.density
+        val fit =
+            remember(actions.map { it.label }, constraints.maxWidth, frame, base) {
+                val k = frame / specSp
+                val style =
+                    base.copy(
+                        fontSize = frame.sp,
+                        lineHeight = (base.lineHeight.value * k).sp,
+                        letterSpacing = (base.letterSpacing.value * k).sp,
+                    )
+                val widest =
+                    actions.maxOfOrNull {
+                        measurer.measure(it.label, style, maxLines = 1, softWrap = false, density = unit).size.width
+                    } ?: 0
+                // A pixel of slack keeps rounding from ever cutting the longest word.
+                kitTrayLabelFit(widest.toFloat(), (roomPx - 1f).coerceAtLeast(0f))
+            }
+        // Under the shrunk scale KitText's frame size is exactly frame × fit (a linear density never meets the cap).
+        val labelDensity = if (fit < 1f) Density(app.density, frame * fit / specSp) else null
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            actions.forEach { action ->
+                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                    TrayButton(action, labelDensity)
                 }
             }
-            repeat(PER_ROW - rowActions.size) { Box(Modifier.weight(1f)) }
         }
+    }
+}
+
+@Composable
+private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val enabled = action.disabledReason == null
+    KitTappable(
+        onClick = action.onPick,
+        modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
+        enabled = enabled,
+        disabledReason = action.disabledReason,
+        onClickLabel = action.label,
+    ) {
+        Column(
+            Modifier.padding(Space.S1.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
+            // A round matte disc (Solid's control face), the glyph at the card-mark size.
+            Box(
+                Modifier.size(tokens.minTarget.dp).background(colors.surface3, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                KitIcon(
+                    action.icon,
+                    size = KitIconSize.Medium,
+                    tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                )
+            }
+            val label: @Composable () -> Unit = {
+                KitText(
+                    action.label,
+                    role = TypeRole.Secondary,
+                    tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                    kind = KitTextKind.Frame,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            if (labelDensity == null) label()
+            else CompositionLocalProvider(LocalKitAppDensity provides labelDensity, content = label)
         }
-        Box(Modifier.fillMaxWidth().size(1.dp).background(colors.hairline))
     }
 }
