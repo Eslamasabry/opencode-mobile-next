@@ -77,8 +77,11 @@ public sealed interface AnswerPhase {
     public data object NoLongerNeeded : AnswerPhase
 }
 
-/** How long a card of a stopped run says "No longer needed" before it leaves (well inside 2 s). */
-public val RETIRED_SHOWN: Duration = 1.2.seconds
+/**
+ * How long a card of a stopped run says "No longer needed" before it leaves. P-109: at 1.2 s the line (eleven words)
+ * was gone before it could be read; three seconds reads it once at an easy pace.
+ */
+public val RETIRED_SHOWN: Duration = 3.seconds
 
 /** One request waiting on the person, oldest first in [RequestsEngine.pending]. */
 public sealed interface PendingRequest {

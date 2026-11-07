@@ -9,8 +9,11 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -164,8 +167,49 @@ class RequestSlotGoldensTest {
     }
 
     @Test
-    fun `E06-S01 two cards, each with its own answers`() = scene("two-cards", listOf(shell, edit)) {
-        assertEquals(2, onAllNodesWithText("Allow").fetchSemanticsNodes().size)
+    fun `E06-S01 P-103 two cards, the first in full and the second one line`() = scene("two-cards", listOf(shell, edit)) {
+        assertEquals(1, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "only the first card is open")
+        assertEquals(1, onAllNodesWithTag("chat-request-folded").fetchSemanticsNodes().size)
+        onNodeWithContentDescription("Request 2 of 2", substring = true).assertExists()
+    }
+
+    @Test
+    fun `P-103 a one-line request opens in full on tap and the rest stay one line`() {
+        Locale.setDefault(Locale.forLanguageTag("en"))
+        runDesktopComposeUiTest(412, 2200) {
+            setContent {
+                Themed(variants.first()) {
+                    ChatRequestSlot(RequestSlotUi(listOf(shell, ask, edit, fetch).toImmutableList()), NoActions, nowMs = null)
+                }
+            }
+            waitForIdle()
+            assertEquals(3, onAllNodesWithTag("chat-request-folded").fetchSemanticsNodes().size)
+            onAllNodesWithTag("chat-request-folded")[1].performClick()
+            waitForIdle()
+            assertEquals(2, onAllNodesWithTag("chat-request-folded").fetchSemanticsNodes().size)
+            assertEquals(2, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "the opened card has its own answers")
+        }
+    }
+
+    @Test
+    fun `P-103 the card a link opened the chat for is the one in full`() {
+        Locale.setDefault(Locale.forLanguageTag("en"))
+        runDesktopComposeUiTest(412, 2200) {
+            setContent {
+                Themed(variants.first()) {
+                    ChatRequestSlot(
+                        RequestSlotUi(listOf(shell, edit).toImmutableList(), focused = edit.id),
+                        NoActions,
+                        nowMs = null,
+                    )
+                }
+            }
+            waitForIdle()
+            assertEquals(1, onAllNodesWithTag("chat-request-folded").fetchSemanticsNodes().size)
+            onAllNodesWithText("npm test", substring = true, useUnmergedTree = true).fetchSemanticsNodes().let {
+                assertTrue(it.isNotEmpty(), "the first card is the folded one, still named")
+            }
+        }
     }
 
     @Test
@@ -182,6 +226,8 @@ class RequestSlotGoldensTest {
     fun `E06-S03 a stopped run's card says No longer needed, never Needs your decision`() =
         scene("no-longer-needed", listOf(permission("p1", "bash", "npm test", CardState.NoLongerNeeded), edit)) {
             onAllNodesWithText("No longer needed", substring = true).fetchSemanticsNodes().let { assertEquals(1, it.size) }
+            // P-109: a plain row on the page's 16 dp edge, not the card's inset (its words sat at 77 dp).
+            onNodeWithTag("chat-request-no-longer-needed").assertExists()
             assertEquals(1, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "only the waiting card has answers")
         }
 

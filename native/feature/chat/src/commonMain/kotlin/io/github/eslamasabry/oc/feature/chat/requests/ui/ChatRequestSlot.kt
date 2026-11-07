@@ -4,12 +4,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import io.github.eslamasabry.oc.ui.design.type.TextTone
-import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestAnsweredRow
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestStack
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestStackRules
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardRules
@@ -111,6 +119,10 @@ public fun ChatRequestSlot(
     // instead of swapping in.
     val held = remember { RequestSlotHold() }
     val cards = held.cards(state.cards)
+    // P-103: the first waiting card in full, the others one line each until the person opens one.
+    var opened by remember { mutableStateOf(emptySet<RequestId>()) }
+    val open = RequestStackRules.stillOpened(opened, cards)
+    val folded = RequestStackRules.folded(cards, open, state.focused)
     KitReveal(visible = state.cards.isNotEmpty(), modifier = modifier) {
         val total = cards.size
         KitRequestStack(
@@ -125,7 +137,11 @@ public fun ChatRequestSlot(
                 )
             },
         ) { card ->
-            key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+            // The row and the card cross-fade (QUICK; instant under reduced motion); the size never animates.
+            KitSwap(card.id in folded, alignment = Alignment.TopStart) { isFolded ->
+                if (isFolded) FoldedRequestRow(card) { opened = open + card.id }
+                else key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+            }
         }
     }
     state.sheet?.let { ChatQuestionSheet(it, actions) }
@@ -213,6 +229,22 @@ private fun RequestCard(card: RequestCardUi, actions: ChatRequestActions, nowMs:
     }
 }
 
+/**
+ * P-103: a waiting request after the first, as one line naming what it asks ("Run a shell command, npm test") on the
+ * page's 16 dp edge; a tap opens it in full. Its place in the stack is spoken by the stack's label.
+ */
+@Composable
+private fun FoldedRequestRow(card: RequestCardUi, onOpen: () -> Unit) {
+    KitExpandRow(
+        title = cardTarget(card),
+        expanded = false,
+        onExpandedChange = { if (it) onOpen() },
+        leading = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+        titleMaxLines = 1,
+        modifier = Modifier.testTag("chat-request-folded"),
+    ) {}
+}
+
 /** What a card asks about, in a few words: the ask and its target, or the question. */
 @Composable
 private fun cardTarget(card: RequestCardUi): String {
@@ -238,17 +270,15 @@ private fun NoLongerNeededLine(card: RequestCardUi) {
             is RequestCardUi.Permission -> askQuestion(card.ask)
             is RequestCardUi.Question -> card.question.ifBlank { card.title }
         }
-    KitRequestAnsweredRow(
-        icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+    // P-109: a plain row on the page's 16 dp edge (the answered row sat on the card's inset, its words at 77 dp).
+    KitRow(
         title = title,
-        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-    ) {
-        KitText(
+        supporting =
             "${stringResource(Res.string.chatRequestNoLongerNeeded)} · ${stringResource(Res.string.chatRequestNoLongerNeededWhy)}",
-            role = TypeRole.Secondary,
-            tone = TextTone.Secondary,
-        )
-    }
+        leading = KitRowLeading.Glyph(if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions),
+        supportingMaxLines = 2,
+        modifier = Modifier.testTag("chat-request-no-longer-needed").semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 @Composable

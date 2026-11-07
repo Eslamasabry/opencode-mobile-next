@@ -1,13 +1,17 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.ui.STEP_DURATION_MIN_MS
 import io.github.eslamasabry.oc.feature.chat.ui.shownStepDurationMs
 import io.github.eslamasabry.oc.feature.chat.ui.stepRowSubject
+import io.github.eslamasabry.oc.feature.chat.ui.stepWaitsForYou
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -52,5 +56,19 @@ class StepRowRulesTest {
         // Other kinds and settled steps are left to the engine.
         assertNull(stepRowSubject(ToolKind.Shell, StepState.Pending, null, input, ""))
         assertNull(stepRowSubject(ToolKind.Write, StepState.Done, null, input, ""))
+    }
+
+    @Test
+    fun `P-105 a step still open while its turn waits for the person waits for them, not runs`() {
+        assertTrue(stepWaitsForYou(StepState.Running, WorkLineState.WaitingForYou), "Write c.txt behind an approval")
+        assertTrue(stepWaitsForYou(StepState.Pending, WorkLineState.WaitingForYou))
+        assertFalse(stepWaitsForYou(StepState.Running, WorkLineState.Running))
+        assertFalse(stepWaitsForYou(StepState.Done, WorkLineState.WaitingForYou), "a finished step keeps its own status")
+    }
+
+    @Test
+    fun `P-102 a stopped or never-run step shows no elapsed time`() {
+        assertNull(shownStepDurationMs(StepState.Stopped, 133_000, 2_000, 140_000), "read as 'Stopped 2m 13s'")
+        assertNull(shownStepDurationMs(StepState.NotRun, 5_000, 2_000, 140_000))
     }
 }

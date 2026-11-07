@@ -13,7 +13,11 @@ public enum class KitToolKind { Shell, Read, Edit, Write, Patch, Search, WebFetc
  * draws them. Stopped is the person's or the server's stop, never an error; Failed is drawn neutral (no danger colour,
  * plan 09 R8 and §9.5).
  */
-public enum class KitToolStatus { Pending, Running, Done, Failed, Stopped }
+/**
+ * How a step stands. [WaitingForYou]: the step is blocked on the person (an approval or a question); it is drawn with
+ * the attention mark and no clock, never as running (P-105).
+ */
+public enum class KitToolStatus { Pending, Running, Done, Failed, Stopped, WaitingForYou }
 
 /**
  * One step of the agent's work, as the kit draws it (kit-local UI model, plan 09 §0.4 C5). Every word is the caller's:

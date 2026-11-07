@@ -73,7 +73,8 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         Canvas(modifier.size(size)) {
             when (view.status) {
                 KitToolStatus.Running,
-                KitToolStatus.Pending -> {
+                KitToolStatus.Pending,
+                KitToolStatus.WaitingForYou -> {
                     val width = this.size.minDimension * .55f
                     drawRoundRect(
                         Color(palette.head.v),
@@ -82,7 +83,11 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
                         cornerRadius = androidx.compose.ui.geometry.CornerRadius(width / 2f),
                     )
                     val lit =
-                        if (running) Color(SignalPalette.LampGreen.v) else Color(palette.siding.v)
+                        when {
+                            running -> Color(SignalPalette.LampGreen.v)
+                            view.status == KitToolStatus.WaitingForYou -> Color(SignalPalette.LampRed.v)
+                            else -> Color(palette.siding.v)
+                        }
                     val alpha =
                         if (running && motion.ambientLoops)
                             .65f + .35f * kotlin.math.abs(pulse.floatValue * 2f - 1f)

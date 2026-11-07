@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
+import io.github.eslamasabry.oc.ui.words.res.kitWorkWaitingForYou
 import io.github.eslamasabry.oc.ui.words.res.liveStepDelegating
 import io.github.eslamasabry.oc.ui.words.res.liveStepEditing
 import io.github.eslamasabry.oc.ui.words.res.liveStepFetching
@@ -150,6 +151,7 @@ internal fun TurnWorkLine(
                     onOpenFile,
                     KitToolRail(index == 0, index == shown.lastIndex),
                     reply,
+                    waitingForYou = stepWaitsForYou(step.state, work.state),
                 )
             }
         } else {
@@ -162,7 +164,15 @@ internal fun TurnWorkLine(
                     val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
                     if (!seen.add(stepIdentity(step))) continue
                     if (skipped++ >= hidden)
-                        StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply = reply)
+                        StepRow(
+                            step,
+                            nowMs,
+                            folds,
+                            onOpenSession,
+                            onOpenFile,
+                            reply = reply,
+                            waitingForYou = stepWaitsForYou(step.state, work.state),
+                        )
                 }
                 is WorkEntryUi.Detail ->
                     if (skipped >= hidden)
@@ -231,8 +241,9 @@ private fun StepRow(
     onOpenFile: ((ToolArtifact) -> Unit)?,
     rail: KitToolRail? = null,
     reply: ReplyActions? = null,
+    waitingForYou: Boolean = false,
 ) {
-    val key = "step:${step.partId}"
+    val key = "step:${step.partId}""
     val f = step.facts
     val out = step.output
     val view =
@@ -245,15 +256,20 @@ private fun StepRow(
                 stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput)
                     ?: stepSubjectWords(f),
             detail = stepDetailWords(f),
-            status = step.state.toKit(),
+            // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
+            status = if (waitingForYou) KitToolStatus.WaitingForYou else step.state.toKit(),
             // E20-S14: under a tenth of a second there is no time to show ("0.0s" said nothing).
             durationLabel =
-                shownStepDurationMs(step.state, step.durationMs, step.startedAtMs, nowMs)?.let {
-                    durationWords(it)
-                },
+                if (waitingForYou) null
+                else
+                    shownStepDurationMs(step.state, step.durationMs, step.startedAtMs, nowMs)?.let {
+                        durationWords(it)
+                    },
             added = f.added,
             removed = f.removed,
-            statusLabel = stepStatus(step.state, f.exitCode),
+            statusLabel =
+                if (waitingForYou) stringResource(Res.string.kitWorkWaitingForYou)
+                else stepStatus(step.state, f.exitCode),
         )
     val text = out.text.takeIf { it.isNotEmpty() }
     val shell = f.kind == ToolKind.Shell

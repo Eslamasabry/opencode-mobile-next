@@ -155,12 +155,15 @@ public class TurnFactsPresenter(private val clock: Clock) {
             readingOutcome = feed.lastOutcome
         }
         val stopped = feed.lastOutcome is RunOutcome.Interrupted
-        val work = turnWork(snapshot, feed.busy, stopped = stopped, waitingForYou = waitingForYou)
+        // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.
+        val work =
+            turnWork(snapshot, feed.busy, stopped = stopped, waitingForYou = waitingForYou)
+                .mapValues { StoppedSteps.settle(it.value) }
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {
             val newest = index == snapshot.turns.lastIndex
             if (newest && feed.busy) continue
-            result(turn, feed.timings[turn.turnId])?.let { results[turn.turnId] = it }
+            result(turn, feed.timings[turn.turnId], work[turn.turnId])?.let { results[turn.turnId] = it }
         }
         val compacting =
             feed.busy && snapshot.messages.lastOrNull()?.parts?.any(::isCompactionLineLive) == true
@@ -177,12 +180,12 @@ public class TurnFactsPresenter(private val clock: Clock) {
         )
     }
 
-    private fun result(turn: LedgerTurn, timing: ReplyTiming?): TurnResultUi? {
+    private fun result(turn: LedgerTurn, timing: ReplyTiming?, work: TurnWork?): TurnResultUi? {
         val run = runResult(turn.messages, historyComplete = turn.turnId != "head") ?: return null
         return TurnResultUi(
             outcome = run.outcome.kind,
             files = editedFileStats(turn.messages),
-            commands = run.commands,
+            commands = StoppedSteps.ranCommands(run.commands, work),
             notes = run.notes,
             timing = timing,
         )
