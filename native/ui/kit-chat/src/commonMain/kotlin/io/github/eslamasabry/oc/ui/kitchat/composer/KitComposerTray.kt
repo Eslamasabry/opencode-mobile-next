@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,31 +12,40 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
-public enum class KitTrayKind {
-    Photo,
-    Camera,
-    File,
-    Clipboard,
-    /** A saved or recent prompt to reuse (drawn with the document glyph). */
-    History,
-    /** The commands launcher (a slash). */
-    Commands,
+/** What a tray choice does; each draws its own Phosphor glyph ([icon]), so no two choices look alike (P-004). */
+public enum class KitTrayKind(internal val icon: ImageVector) {
+    /** Photo library (Flutter's tray: `images`). */
+    Photo(KitIcons.images),
+    /** Take a photo. */
+    Camera(KitIcons.camera),
+    /** Attach a file (Flutter's tray: the paper clip). */
+    File(KitIcons.attach),
+    /** Paste an image from the clipboard. */
+    Clipboard(KitIcons.paste),
+    /** A recent prompt to reuse (the history clock). */
+    History(KitIcons.history),
+    /** A saved prompt (a bookmark), apart from the recent ones in [History]. */
+    Saved(KitIcons.bookmark),
+    /** The commands launcher. */
+    Commands(KitIcons.terminal),
     /** Clear the draft words (a cross). */
-    Clear,
+    Clear(KitIcons.close),
     /** Send later or repeat (a clock face). */
-    Schedule,
+    Schedule(KitIcons.clock),
 }
 
 private const val PER_ROW = 4
@@ -70,116 +78,17 @@ public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Mo
                             Modifier.size(48.dp).background(colors.surface3, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Canvas(Modifier.size(22.dp)) {
-                                val stroke = Stroke(1.7.dp.toPx())
-                                when (action.kind) {
-                                    KitTrayKind.Photo -> {
-                                        drawRect(
-                                            colors.text1,
-                                            Offset(size.width * .1f, size.height * .15f),
-                                            Size(size.width * .8f, size.height * .7f),
-                                            style = stroke,
-                                        )
-                                        drawCircle(
-                                            colors.text1,
-                                            size.width * .09f,
-                                            Offset(size.width * .68f, size.height * .34f),
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .13f, size.height * .78f),
-                                            Offset(size.width * .42f, size.height * .43f),
-                                            stroke.width,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .42f, size.height * .43f),
-                                            Offset(size.width * .78f, size.height * .81f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Camera -> {
-                                        drawRoundRect(
-                                            colors.text1,
-                                            Offset(size.width * .06f, size.height * .22f),
-                                            Size(size.width * .88f, size.height * .62f),
-                                            style = stroke,
-                                        )
-                                        drawCircle(
-                                            colors.text1,
-                                            size.width * .21f,
-                                            center,
-                                            style = stroke,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .32f, size.height * .12f),
-                                            Offset(size.width * .65f, size.height * .12f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Commands -> {
-                                        // A slash, mirrored in right-to-left by the caller's layout.
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .34f, size.height * .86f),
-                                            Offset(size.width * .66f, size.height * .14f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Clear -> {
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .2f, size.height * .2f),
-                                            Offset(size.width * .8f, size.height * .8f),
-                                            stroke.width,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .8f, size.height * .2f),
-                                            Offset(size.width * .2f, size.height * .8f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.Schedule -> {
-                                        drawCircle(colors.text1, size.width * .42f, center, style = stroke)
-                                        drawLine(
-                                            colors.text1,
-                                            center,
-                                            Offset(size.width * .5f, size.height * .22f),
-                                            stroke.width,
-                                        )
-                                        drawLine(
-                                            colors.text1,
-                                            center,
-                                            Offset(size.width * .72f, size.height * .6f),
-                                            stroke.width,
-                                        )
-                                    }
-                                    KitTrayKind.File,
-                                    KitTrayKind.Clipboard,
-                                    KitTrayKind.History -> {
-                                        drawRect(
-                                            colors.text1,
-                                            Offset(size.width * .22f, size.height * .12f),
-                                            Size(size.width * .58f, size.height * .78f),
-                                            style = stroke,
-                                        )
-                                        for (y in listOf(.42f, .59f, .75f)) drawLine(
-                                            colors.text1,
-                                            Offset(size.width * .35f, size.height * y),
-                                            Offset(size.width * .67f, size.height * y),
-                                            stroke.width,
-                                        )
-                                    }
-                                }
-                            }
+                            KitIcon(action.kind.icon, size = KitIconSize.Medium, tone = TextTone.Primary)
                         }
+                        // P-004: every label is centred in its cell, one line or wrapped, and keeps 4 dp from the cell's
+                        // sides so a long word never reaches the next cell or loses a letter at the edge.
                         KitText(
                             action.label,
+                            Modifier.fillMaxWidth().padding(horizontal = Space.S1.dp),
                             role = TypeRole.Secondary,
                             tone = TextTone.Primary,
                             maxLines = 3,
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
