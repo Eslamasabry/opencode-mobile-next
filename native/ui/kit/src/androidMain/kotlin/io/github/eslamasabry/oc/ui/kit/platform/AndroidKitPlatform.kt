@@ -219,7 +219,8 @@ public class AndroidKitPlatform(
  */
 internal fun hapticConstant(kind: KitHaptic, sdk: Int): Int? =
     when (kind) {
-        KitHaptic.Send -> HapticFeedbackConstants.VIRTUAL_KEY
+        // Motion lead 2026-11-07: the person's words leaving is a confirmation, not a key click.
+        KitHaptic.Send -> if (sdk >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
         KitHaptic.Done -> if (sdk >= 30) HapticFeedbackConstants.CONFIRM else null
         KitHaptic.Commit -> HapticFeedbackConstants.KEYBOARD_TAP
         KitHaptic.LongPress -> HapticFeedbackConstants.LONG_PRESS

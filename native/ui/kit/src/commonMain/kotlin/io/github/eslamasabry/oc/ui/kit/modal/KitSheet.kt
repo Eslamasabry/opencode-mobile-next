@@ -48,6 +48,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +70,7 @@ import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -85,6 +91,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowTitle
+import io.github.eslamasabry.oc.ui.kit.motion.KitGrowMotion
+import io.github.eslamasabry.oc.ui.kit.motion.kitMorphTarget
 import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -212,6 +221,7 @@ internal class SheetEntry {
     var leading: KitAction? by mutableStateOf(null)
     var secondaryDismisses: Boolean by mutableStateOf(false)
     var grows: Boolean by mutableStateOf(false)
+    var morph: Any? by mutableStateOf(null)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
     var body: @Composable ColumnScope.() -> Unit by mutableStateOf({})
@@ -257,9 +267,10 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                 Modifier.zIndex(1f)
                     .then(if (state.isDialogShowing) Modifier.clearAndSetSemantics {} else Modifier)
             ) {
-                SheetLayer(state)
+                // A sheet's own bar never claims the title of the page that grew from a row.
+                CompositionLocalProvider(LocalKitGrowTitle provides null) { SheetLayer(state) }
             }
-            Box(Modifier.zIndex(2f)) { DialogLayer(state) }
+            Box(Modifier.zIndex(2f)) { CompositionLocalProvider(LocalKitGrowTitle provides null) { DialogLayer(state) } }
         }
     }
 }
@@ -307,6 +318,7 @@ public fun KitSheet(
     showClose: Boolean = true,
     leading: KitAction? = null,
     growsInPlace: Boolean = false,
+    morphFrom: Any? = null,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -333,6 +345,7 @@ public fun KitSheet(
         entry.leading = leading
         entry.secondaryDismisses = secondaryDismisses
         entry.grows = growsInPlace
+        entry.morph = morphFrom
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
@@ -356,13 +369,20 @@ private fun SheetLayer(state: KitSheetHostState) {
         KitPredictiveBack(enabled = state.isShowing && !state.isDialogShowing) {
             if (state.shown.targetState) entry.requestDismiss()
         }
+    // The sheet under the finger (motion lead 2026-11-07): its offset, shared by the panel and the scrim.
+    val drag = remember(entry) { SheetDrag() }
     AnimatedVisibility(
         state.shown,
         enter = still.enter { fadeIn(specs.enter()) },
         exit = still.exit { fadeOut(specs.exit()) },
     ) {
         Box(
-            Modifier.fillMaxSize().background(colors.scrim).testTag("kit-sheet-scrim").pointerInput(
+            Modifier.fillMaxSize()
+                // The scrim lightens as the sheet is pulled down (read in the draw phase only).
+                .graphicsLayer { alpha = 1f - drag.fraction() }
+                .background(colors.scrim)
+                .testTag("kit-sheet-scrim")
+                .pointerInput(
                 entry
             ) {
                 detectTapGestures { entry.requestDismiss() }
@@ -382,11 +402,20 @@ private fun SheetLayer(state: KitSheetHostState) {
         when (placement) {
             KitSheetPlacement.Bottom ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                    // A sheet that grows out of its card (kitMorphSource) lets the morph carry it; it only fades.
+                    val morphs = entry.morph != null && KitMotion.state.travels
                     AnimatedVisibility(
                         state.shown,
                         enter =
-                            still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
-                        exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
+                            still.enter {
+                                if (morphs) fadeIn(specs.quick())
+                                else slideInVertically(specs.spatial<IntOffset>()) { it }
+                            },
+                        exit =
+                            still.exit {
+                                if (morphs) fadeOut(specs.exit())
+                                else slideOutVertically(specs.exit<IntOffset>()) { it }
+                            },
                     ) {
                         val sized =
                             when {
@@ -402,10 +431,15 @@ private fun SheetLayer(state: KitSheetHostState) {
                             Modifier.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp)
                                 .fillMaxWidth()
                                 .then(sized)
+                                .kitMorphTarget(entry.morph, state.shown.targetState, KitGrowMotion.ROW_CORNER)
+                                .onSizeChanged { drag.height = it.height }
+                                .graphicsLayer { translationY = drag.offset.value }
                                 .predictiveShrink(back, TransformOrigin(0.5f, 1f))
                                 .clip(KitShapeId.Sheet.shape()),
                             handle = true,
                             shape = KitShapeId.Sheet,
+                            drag = drag,
+                            stillShown = { state.shown.targetState },
                         )
                     }
                 }
@@ -501,7 +535,14 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
     }
 
 @Composable
-private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, shape: KitShapeId) {
+private fun SheetPanel(
+    entry: SheetEntry,
+    modifier: Modifier,
+    handle: Boolean,
+    shape: KitShapeId,
+    drag: SheetDrag? = null,
+    stillShown: () -> Boolean = { true },
+) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     // Glass: the sheet is a frosted pane (opaque over the page whenever nothing blurs); every other
@@ -528,7 +569,8 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, s
             )
     ) {
         if (handle) {
-            val density = LocalDensity.current
+            val scope = rememberCoroutineScope()
+            val specs = KitMotion.specs
             Box(
                 Modifier.fillMaxWidth()
                     .height(tokens.handleBand.dp)
@@ -539,18 +581,32 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, s
                                 true
                             }
                     }
-                    .pointerInput(entry, entry.dismissible) {
-                        var pulled = 0f
+                    .pointerInput(entry, entry.dismissible, drag) {
+                        if (drag == null) return@pointerInput
+                        val tracker = VelocityTracker()
                         detectVerticalDragGestures(
-                            onDragStart = { pulled = 0f },
+                            onDragStart = { tracker.resetTracking() },
                             onVerticalDrag = { change, amount ->
                                 change.consume()
-                                pulled += amount
+                                tracker.addPosition(change.uptimeMillis, change.position)
+                                scope.launch { drag.offset.snapTo(SheetDragRules.follow(drag.offset.value, amount)) }
                             },
                             onDragEnd = {
-                                if (pulled > with(density) { 48.dp.toPx() }) entry.requestDismiss()
+                                val velocity = tracker.calculateVelocity().y
+                                val dismiss =
+                                    entry.dismissible &&
+                                        SheetDragRules.dismisses(drag.offset.value, drag.height, velocity, this@pointerInput)
+                                if (dismiss) entry.requestDismiss()
+                                scope.launch {
+                                    // Gone: carry the finger's speed off the bottom edge. Kept (or asked to keep
+                                    // unsaved words): settle home on the release spring, the one place a spring may
+                                    // overshoot slightly.
+                                    if (dismiss && !stillShown())
+                                        drag.offset.animateTo(drag.height.toFloat(), specs.spatial(), velocity)
+                                    else drag.offset.animateTo(0f, specs.release(), velocity)
+                                }
                             },
-                            onDragCancel = { pulled = 0f },
+                            onDragCancel = { scope.launch { drag.offset.animateTo(0f, specs.release()) } },
                         )
                     },
                 contentAlignment = Alignment.Center,
@@ -828,5 +884,34 @@ private fun SheetQuestion(entry: SheetEntry) {
                     onClick = { answer(false) },
                 )
         )
+    }
+}
+
+/** A bottom sheet's drag: how far the finger pulled it down (px) and the panel's height. */
+@Stable
+internal class SheetDrag {
+    val offset: Animatable<Float, AnimationVector1D> = Animatable(0f)
+    var height: Int by mutableIntStateOf(0)
+
+    /** 0 at rest, 1 when pulled its full height: the scrim fades by it. */
+    fun fraction(): Float = if (height > 0) (offset.value / height).coerceIn(0f, 1f) else 0f
+}
+
+/** Drag-to-dismiss as pure rules (motion lead 2026-11-07). Pixels and px/s; down is positive. */
+public object SheetDragRules {
+    /** A pull past a quarter of the sheet's height dismisses on release. */
+    public const val DISMISS_SHARE: Float = 0.25f
+
+    /** A downward flick faster than this dismisses however short (dp per second). */
+    public const val FLING_DP_PER_S: Float = 1000f
+
+    /** The sheet follows the finger 1:1 downward and never rises past its resting place (no gap under it). */
+    public fun follow(offset: Float, delta: Float): Float = (offset + delta).coerceAtLeast(0f)
+
+    public fun dismisses(offset: Float, height: Int, velocity: Float, density: Density): Boolean {
+        val flingPx = with(density) { FLING_DP_PER_S.dp.toPx() }
+        if (velocity > flingPx) return true
+        if (velocity < -flingPx) return false
+        return height > 0 && offset > height * DISMISS_SHARE
     }
 }

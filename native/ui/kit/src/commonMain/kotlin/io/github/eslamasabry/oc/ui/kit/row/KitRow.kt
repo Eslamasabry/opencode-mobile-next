@@ -61,6 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
+import io.github.eslamasabry.oc.ui.kit.motion.kitGrowTitle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -340,7 +341,7 @@ private fun RowBody(
                     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                         KitText(
                             if (titleIsFileName) kitBreakableFileName(title) else title,
-                            Modifier.weight(1f).testTag("kit-row-title"),
+                            Modifier.weight(1f).kitGrowTitle(growKey).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
                             tone = if (!enabled || unavailable) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
                             maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),

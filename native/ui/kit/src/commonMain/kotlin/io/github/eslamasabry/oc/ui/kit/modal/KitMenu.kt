@@ -34,6 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.Alignment
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
@@ -250,9 +253,25 @@ private fun MenuPopup(
             exit = fadeOut(specs.exit()),
             label = "kit.menu",
         ) {
+            // The panel grows from the control that opened it (motion lead 2026-11-07): scale 0.9 → 1 on SpatialFast
+            // around the anchor's centre on the side it opens from, read in the draw phase. Full only.
+            val panelBox = remember { mutableStateOf(IntRect.Zero) }
+            val scale by transition.animateFloat(
+                transitionSpec = {
+                    if (targetState == EnterExitState.Visible) specs.spatialFast() else specs.exit()
+                },
+                label = "kit.menu.scale",
+            ) { if (it == EnterExitState.Visible || !motion.travels) 1f else MENU_FROM_SCALE }
             KitMenuPanel(
                 modifier =
-                    Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit).layout { measurable, constraints ->
+                    Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)
+                        .onGloballyPositioned { panelBox.value = it.boundsInWindow().toIntRect() }
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            transformOrigin = MenuPlacement.origin(anchor, panelBox.value, opensAbove.value)
+                        }
+                        .layout { measurable, constraints ->
                         if (!constraints.hasBoundedHeight) {
                             val placeable = measurable.measure(constraints.copy(minHeight = 0))
                             return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
@@ -400,6 +419,15 @@ public data class MenuWindow(
  */
 public object MenuPlacement {
     /**
+     * Where the panel grows from: the anchor's centre across, clamped into the panel, and the edge nearest the anchor
+     * (the top when it opens below, the bottom when above).
+     */
+    public fun origin(anchor: IntRect, panel: IntRect, opensAbove: Boolean): TransformOrigin {
+        val x = if (panel.width > 0) ((anchor.center.x - panel.left).toFloat() / panel.width).coerceIn(0f, 1f) else 0.5f
+        return TransformOrigin(x, if (opensAbove) 1f else 0f)
+    }
+
+    /**
      * The box a menu opens from (P-108): its [own] anchor, or the control just [pressed] when its own is empty (a
      * zero-size box: the screen-level menu of a row's ⋯), so the menu never opens over the control that opened it.
      */
@@ -460,3 +488,6 @@ private class MenuPosition(
         return MenuPlacement.offset(override ?: anchorBounds, popupContentSize, layoutDirection == LayoutDirection.Rtl, window)
     }
 }
+
+/** A menu grows from 90 % of its size at Full (scale and fade, never from nothing). */
+internal const val MENU_FROM_SCALE: Float = 0.9f

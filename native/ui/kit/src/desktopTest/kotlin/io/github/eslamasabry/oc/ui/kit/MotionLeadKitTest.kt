@@ -22,12 +22,20 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.unit.Density
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.SheetDragRules
+import kotlin.test.assertFalse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Motion lead 2026-11-07: lists breathe (inserts and removals glide, never pop). Each test
+ * Motion lead 2026-11-07: lists breathe (inserts and removals glide, never pop) and sheets follow the finger. Each test
  * drives the test clock by hand and checks a frame in the middle of the move, plus the reduced-motion path.
  */
 class MotionLeadKitTest {
@@ -108,4 +116,44 @@ class MotionLeadKitTest {
             repeat(2) { mainClock.advanceTimeByFrame() }
             assertEquals(before + 56.dp, top("C"))
         }
+
+    @Test
+    fun `MOT-SHEET a short slow pull springs the sheet back, a long pull dismisses it`() =
+        runDesktopComposeUiTest(400, 800) {
+            var open by mutableStateOf(true)
+            setContent {
+                KitTheme(KitAppearance(), FakeKitPlatform(), "en") {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        KitSheet(visible = open, title = "Model", onDismissRequest = { open = false }) {
+                            KitText("sheet body")
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val rest = top("sheet body")
+            // A short, slow pull from the handle: the sheet follows, then returns.
+            onNodeWithTag("kit-sheet").performTouchInput {
+                swipeDown(startY = top + 8f, endY = top + 40f, durationMillis = 600)
+            }
+            waitForIdle()
+            assertTrue(open, "a short slow pull keeps the sheet")
+            assertEquals(rest, top("sheet body"), "and it settles back home")
+            onNodeWithTag("kit-sheet").performTouchInput {
+                swipeDown(startY = top + 8f, endY = top + 8f + height * 0.6f, durationMillis = 400)
+            }
+            waitForIdle()
+            assertFalse(open, "a pull past a quarter of its height dismisses it")
+        }
+
+    @Test
+    fun `MOT-SHEET release rules - a quarter of the height or a downward flick dismisses, an upward flick keeps`() {
+        val d = Density(2f)
+        assertFalse(SheetDragRules.dismisses(offset = 100f, height = 800, velocity = 0f, density = d))
+        assertTrue(SheetDragRules.dismisses(offset = 201f, height = 800, velocity = 0f, density = d))
+        assertTrue(SheetDragRules.dismisses(offset = 20f, height = 800, velocity = 2500f, density = d), "a flick")
+        assertFalse(SheetDragRules.dismisses(offset = 500f, height = 800, velocity = -2500f, density = d))
+        assertEquals(0f, SheetDragRules.follow(10f, -30f), "never rises past rest")
+        assertEquals(40f, SheetDragRules.follow(10f, 30f), "follows the finger 1:1")
+    }
 }
