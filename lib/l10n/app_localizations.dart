@@ -30692,6 +30692,72 @@ abstract class AppLocalizations {
   /// **'Could not load this page'**
   String get integrationsPageLoadFailed;
 
+  /// Providers page: headline when the list of providers did not load (issue #124); the body says why
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load providers'**
+  String get integrationsProvidersLoadFailed;
+
+  /// Providers and MCP page: headline when the list of MCP servers did not load; the body says why
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load MCP servers'**
+  String get integrationsMcpServersLoadFailed;
+
+  /// Providers and MCP page: headline when the list of MCP resources did not load; the body says why
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load MCP resources'**
+  String get integrationsResourcesLoadFailed;
+
+  /// Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t send this list. Try again.'**
+  String get integrationsListFailedBody;
+
+  /// Providers and MCP page: body when the server says the open project's folder does not exist on it
+  ///
+  /// In en, this message translates to:
+  /// **'This project\'s folder isn\'t on the server any more. Open another project.'**
+  String get integrationsFolderMissing;
+
+  /// Providers page: calm state when the server has no provider list (an older or newer server version); not an error
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t list providers'**
+  String get integrationsProvidersUnsupported;
+
+  /// MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t list MCP servers'**
+  String get integrationsMcpServersUnsupported;
+
+  /// MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t list MCP resources'**
+  String get integrationsResourcesUnsupported;
+
+  /// Providers and MCP page: body under the 'This server doesn't list …' states
+  ///
+  /// In en, this message translates to:
+  /// **'Its version doesn\'t offer this list.'**
+  String get integrationsListUnsupportedBody;
+
+  /// Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the server'**
+  String get integrationsWaitingTitle;
+
+  /// Providers and MCP page: body under 'Waiting for the server'
+  ///
+  /// In en, this message translates to:
+  /// **'This page loads by itself once the server is connected.'**
+  String get integrationsWaitingBody;
+
   /// KitLastKnown (slice-speed-ui): the label over remembered rows while a fresh read is under way; updated is how old the rows are ("Updated 5m ago").
   ///
   /// In en, this message translates to:

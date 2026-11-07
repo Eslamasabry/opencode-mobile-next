@@ -23084,6 +23084,50 @@
   "@integrationsPageLoadFailed": {
     "description": "Providers and MCP page: headline when more than one of its sections (providers, MCP servers, resources) failed to load; one Try again reloads them all"
   },
+  "integrationsProvidersLoadFailed": "Could not load providers",
+  "@integrationsProvidersLoadFailed": {
+    "description": "Providers page: headline when the list of providers did not load (issue #124); the body says why"
+  },
+  "integrationsMcpServersLoadFailed": "Could not load MCP servers",
+  "@integrationsMcpServersLoadFailed": {
+    "description": "Providers and MCP page: headline when the list of MCP servers did not load; the body says why"
+  },
+  "integrationsResourcesLoadFailed": "Could not load MCP resources",
+  "@integrationsResourcesLoadFailed": {
+    "description": "Providers and MCP page: headline when the list of MCP resources did not load; the body says why"
+  },
+  "integrationsListFailedBody": "The server didn't send this list. Try again.",
+  "@integrationsListFailedBody": {
+    "description": "Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text"
+  },
+  "integrationsFolderMissing": "This project's folder isn't on the server any more. Open another project.",
+  "@integrationsFolderMissing": {
+    "description": "Providers and MCP page: body when the server says the open project's folder does not exist on it"
+  },
+  "integrationsProvidersUnsupported": "This server doesn't list providers",
+  "@integrationsProvidersUnsupported": {
+    "description": "Providers page: calm state when the server has no provider list (an older or newer server version); not an error"
+  },
+  "integrationsMcpServersUnsupported": "This server doesn't list MCP servers",
+  "@integrationsMcpServersUnsupported": {
+    "description": "MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error"
+  },
+  "integrationsResourcesUnsupported": "This server doesn't list MCP resources",
+  "@integrationsResourcesUnsupported": {
+    "description": "MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error"
+  },
+  "integrationsListUnsupportedBody": "Its version doesn't offer this list.",
+  "@integrationsListUnsupportedBody": {
+    "description": "Providers and MCP page: body under the 'This server doesn't list …' states"
+  },
+  "integrationsWaitingTitle": "Waiting for the server",
+  "@integrationsWaitingTitle": {
+    "description": "Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error"
+  },
+  "integrationsWaitingBody": "This page loads by itself once the server is connected.",
+  "@integrationsWaitingBody": {
+    "description": "Providers and MCP page: body under 'Waiting for the server'"
+  },
   "kitLastKnownRefreshing": "{updated} · Refreshing",
   "@kitLastKnownRefreshing": {
     "description": "KitLastKnown (slice-speed-ui): the label over remembered rows while a fresh read is under way; updated is how old the rows are (\"Updated 5m ago\").",

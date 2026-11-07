@@ -57,14 +57,23 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   List<McpResourceInfo>? _resources;
   List<IntegrationInfo>? _integrations;
   Object? _integrationsSource;
-  String? _serverError;
+
+  /// What stopped each list from loading (the thrown object, never shown
+  /// itself: [_sectionLoadState] words it), or null.
+  Object? _serverError;
   String? _removalError;
   final Set<String> _removingMcp = {};
   int? _serversLocationRevision;
   ServerOperationsGateway? _serversRepository;
   Object? _serversSource;
-  String? _resourceError;
-  String? _integrationError;
+  Object? _resourceError;
+  Object? _integrationError;
+
+  /// The server's connection is not ready (starting, reconnecting, the app
+  /// coming back from the background): the lists wait for it and load by
+  /// themselves once it is, instead of saying they could not load.
+  bool _waitingForConnection = false;
+  bool _loading = false;
   final Set<String> _busy = {};
   _PendingMcpOAuth? _pendingMcpOAuth;
   bool _finishingMcpOAuth = false;
@@ -126,18 +135,33 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   /// The connection was replaced (the app came back from the background and
-  /// reconnected): the lists are read again for it, and the waits on
-  /// automatic sign-ins are picked up again, instead of the page sitting on
-  /// "could not load" until someone taps Try again.
+  /// reconnected, or another server or project was opened), or it is ready
+  /// after the page waited for it: the lists are read again for it, and the
+  /// waits on automatic sign-ins are picked up again, instead of the page
+  /// sitting on "could not load" until someone taps Try again. In every
+  /// mode: the MCP tab of Settings › Tools never loads providers, and once
+  /// waited on a provider list that never came (issue #124).
   void _onControllerChanged() {
-    if (!mounted ||
-        _integrations == null ||
-        !_catalogAvailable ||
-        _integrationsSource == _mcpSource ||
-        _reloadedForSource == _mcpSource) {
-      return;
+    if (!mounted || !_catalogAvailable || _loading) return;
+    final source = _mcpSource;
+    final controller = widget.controller;
+    final bool reload;
+    final Object key;
+    if (_waitingForConnection) {
+      reload = controller.repository != null && !controller.lifecycleSuspended;
+      // Once per connection state, so a connection that is still not
+      // ready does not reload on every change.
+      key = (source, controller.status);
+    } else {
+      reload =
+          (_showProviders &&
+              _integrations != null &&
+              _integrationsSource != source) ||
+          (_showMcp && _serversSource != null && _serversSource != source);
+      key = source;
     }
-    _reloadedForSource = _mcpSource;
+    if (!reload || _reloadedForSource == key) return;
+    _reloadedForSource = key;
     unawaited(_load().then((_) => _attachAutoSignIns()));
   }
 
@@ -182,24 +206,43 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   Future<void> _load() async {
     if (!_catalogAvailable) return;
-    await widget.controller.prunePendingIntegrationAuth();
-    if (!mounted) return;
-    final repository = await widget.controller.prepareActionRepository();
-    if (!mounted) return;
-    if (repository == null) {
-      final message = _l10n.e7LibraryOpenCodeIsReconnectingTryAgainShortly;
-      setState(() {
-        _serverError = message;
-        _resourceError = message;
-        _integrationError = message;
-      });
-      return;
+    _loading = true;
+    try {
+      await widget.controller.prunePendingIntegrationAuth();
+      if (!mounted) return;
+      final ServerOperationsGateway? repository;
+      try {
+        repository = await widget.controller.prepareActionRepository();
+      } catch (error) {
+        // The connection refused the work (a history move still running):
+        // every list says so with its reason, not a stuck skeleton.
+        if (mounted) {
+          setState(() {
+            _waitingForConnection = false;
+            _serverError = error;
+            _resourceError = error;
+            _integrationError = error;
+          });
+        }
+        return;
+      }
+      if (!mounted) return;
+      if (repository == null) {
+        setState(() => _waitingForConnection = true);
+        return;
+      }
+      setState(() => _waitingForConnection = false);
+      await Future.wait([
+        if (_showMcp) _loadServers(repository),
+        if (_showMcp) _loadResources(repository),
+        if (_showProviders) _loadIntegrations(repository),
+      ]);
+    } finally {
+      _loading = false;
+      // The connection may have changed while this load ran (its results
+      // were then dropped): read the lists again for the current one.
+      if (mounted) _onControllerChanged();
     }
-    await Future.wait([
-      if (_showMcp) _loadServers(repository),
-      if (_showMcp) _loadResources(repository),
-      if (_showProviders) _loadIntegrations(repository),
-    ]);
   }
 
   Future<void> _loadServers(ServerOperationsGateway repository) async {
@@ -226,9 +269,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           _serversSource = source;
         });
       }
-    } catch (_) {
+    } catch (error) {
       if (currentScope() && generation == _serverLoadGeneration) {
-        setState(() => _serverError = _l10n.mcpLoadFailed);
+        setState(() => _serverError = error);
       }
     }
   }
@@ -244,11 +287,11 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           generation == _resourceLoadGeneration) {
         setState(() => _resources = resources);
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted &&
           source == _mcpSource &&
           generation == _resourceLoadGeneration) {
-        setState(() => _resourceError = _l10n.mcpLoadFailed);
+        setState(() => _resourceError = error);
       }
     }
   }
@@ -272,7 +315,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       if (mounted &&
           source == _mcpSource &&
           generation == _integrationLoadGeneration) {
-        setState(() => _integrationError = productErrorText(error));
+        setState(() => _integrationError = error);
       }
     }
   }
