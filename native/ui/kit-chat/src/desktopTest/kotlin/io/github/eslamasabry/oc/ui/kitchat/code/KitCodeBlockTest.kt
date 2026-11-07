@@ -73,7 +73,7 @@ class KitCodeBlockTest {
         }
 
     @Test
-    fun `N9 QA wave4 Copy says Copied (P-001: as a check icon) for a moment and a one-line block stays one line tall`() =
+    fun `N9 QA wave4 Copy says Copied (P-001 as a check icon) for a moment and a one-line block stays one line tall`() =
         runComposeUiTest {
             mainClock.autoAdvance = false
             setContent {

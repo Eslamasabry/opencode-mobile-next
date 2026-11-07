@@ -143,9 +143,10 @@ class S8PolishTest {
                 }
             }
             val a = onNodeWithText(streamed, useUnmergedTree = true).box()
-            val b = onNodeWithText(settled, useUnmergedTree = true).box()
+            // The chunk draws its first line on its own (it alone keeps clear of Copy).
+            val b = onNodeWithText("d = 4", useUnmergedTree = true).box()
             near(a.left, b.left, 0.5f, "text start")
-            near(a.height, b.height, 0.5f, "three lines' height")
+            near(a.height / 3, b.height, 0.5f, "line height")
         }
 
     @Test
