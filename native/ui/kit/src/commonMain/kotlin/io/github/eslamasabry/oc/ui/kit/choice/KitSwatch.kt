@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.choice
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -284,7 +284,7 @@ private fun ThemeTile(swatch: KitSwatch, hovered: Boolean, focused: Boolean) {
         Modifier
             .fillMaxWidth()
             .then(look.modifier)
-            .border(hairline(), border, shape)
+            .kitHairlineBorder(hairline(), border, shape)
             .heightIn(min = FlutterKitTokens.MIN_TARGET.dp)
             .padding(Space.S2.dp + hairline()), // F: lib/ui/kit/kit_swatch.dart:378
     ) {
@@ -352,10 +352,10 @@ private fun AccentTile(swatch: KitSwatch, focused: Boolean) {
     ) {
         Box(
             Modifier
-                .then(if (swatch.selected) Modifier.border(hairline(), colors.text1, CircleShape).padding(hairline()) else Modifier) // F: lib/ui/kit/kit_swatch.dart:492
+                .then(if (swatch.selected) Modifier.kitHairlineBorder(hairline(), colors.text1, CircleShape).padding(hairline()) else Modifier) // F: lib/ui/kit/kit_swatch.dart:492
                 .size(FlutterKitTokens.MARK_SIZE.dp) // F: lib/ui/kit/kit_swatch.dart:460
                 .background(fill, CircleShape)
-                .border(hairline(), colors.hairline, CircleShape),
+                .kitHairlineBorder(hairline(), colors.hairline, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             if (swatch.selected) {

@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +32,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -471,7 +472,7 @@ private fun SurfaceBox(
     val look = kitSurfaceLook(KitSurfaceInput(role = surfaceRole, shape = shape, level = level, ownFill = argbColor(own), pressed = inset))
     val hairline = kitHairline()
     var box = modifier.then(look.modifier)
-    if (outlined) box = box.border(hairline, argbColor(roles.hairline), look.shape)
+    if (outlined) box = box.kitHairlineBorder(hairline, argbColor(roles.hairline), look.shape)
     if (clip) box = box.clip(look.shape)
     Box(box.padding(padding.dp())) { content() }
 }
@@ -547,3 +548,23 @@ private fun PanelBody(title: String?, icon: ImageVector?, content: @Composable (
         content()
     }
 }
+
+/**
+ * A border of exactly [width], painted inside [shape] the way Flutter's `Border.all` (stroke aligned inside) paints it.
+ * Compose's `Modifier.border` rounds a stroke up to a whole pixel, so a one-physical-pixel hairline at a pixel ratio
+ * above the picture's density (the golden gate renders a DPR-3 scene into a 1x picture) came out three times as heavy as
+ * Flutter's. Here a sub-pixel width stays sub-pixel (antialiased), and at a device's own density it is the same one
+ * physical pixel `Modifier.border` draws. F: lib/ui/kit/kit_tokens.dart:315-318 (hairlineWidth).
+ */
+public fun Modifier.kitHairlineBorder(width: Dp, color: Color, shape: Shape): Modifier =
+    drawWithCache {
+        val w = width.toPx()
+        if (w <= 0f || color.alpha == 0f || size.minDimension <= w) return@drawWithCache onDrawWithContent { drawContent() }
+        val inner = Size(size.width - w, size.height - w)
+        val outline = shape.createOutline(inner, layoutDirection, this)
+        val stroke = Stroke(w)
+        onDrawWithContent {
+            drawContent()
+            translate(w / 2f, w / 2f) { drawOutline(outline, color, style = stroke) }
+        }
+    }
