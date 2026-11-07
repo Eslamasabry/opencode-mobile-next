@@ -17,6 +17,8 @@ kotlin {
         implementation(libs.compose.desktop.currentos)
         // ChatsGateTest renders the real Conversations screen through the golden-diff gate (test-only module).
         implementation(project(":ui:gate"))
+        // E05-S21: HomeBackExitScreenTest drives Back through a navigation-event dispatcher, as Android's input does.
+        implementation(libs.navigationevent.compose)
     }
 }
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))

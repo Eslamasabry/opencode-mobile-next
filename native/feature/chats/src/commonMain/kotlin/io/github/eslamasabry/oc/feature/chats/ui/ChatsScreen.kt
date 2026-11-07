@@ -178,7 +178,11 @@ public fun ChatsScreen(
     actions: ChatsActions,
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
+    root: Boolean = false,
 ) {
+    // E05-S21: on the bare list (the whole back stack) the first Back says "Press back again to exit" in the one
+    // status line; called first so sheets, dialogs and a filled search registered below close before it.
+    val backExit = homeBackExitStatus(root)
     // Flutter's home bar (KitTopBar.shell): the server pill opens the switcher; Search and Settings sit on their own
     // round faces. No overflow: Servers is the pill, Inbox is the needs-you line, the rest are rows at the list's end.
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
@@ -230,7 +234,7 @@ public fun ChatsScreen(
                 if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) Filters(state, actions)
             }
         },
-        status = appStatus,
+        status = backExit ?: appStatus,
         width = KitScreenWidth.Reading,
     ) {
       Box(Modifier.fillMaxSize()) {
