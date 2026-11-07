@@ -312,7 +312,24 @@ public data class NewConversationUi(
 ) {
     val canCopy: Boolean
         get() = setup?.projects?.any { it.directory == directory && it.separateCopy } == true
+
+    /**
+     * E20-S08: the project sheet's rows, one per folder. A server can list the same folder twice (a worktree, a
+     * trailing "/"); the first listing wins, and it says Separate copy when any listing of that folder does.
+     */
+    val projectChoices: List<NewConversationProject>
+        get() =
+            setup?.projects.orEmpty().groupBy { projectPathKey(it.directory) }.values.map { same ->
+                same.first().copy(separateCopy = same.any { it.separateCopy })
+            }
+
+    /** Whether [project] is the chosen folder, however its path is spelled. */
+    public fun isChosen(project: NewConversationProject): Boolean =
+        directory != null && projectPathKey(project.directory) == projectPathKey(directory)
 }
+
+/** One spelling per folder: no trailing "/" (the root stays "/"). */
+internal fun projectPathKey(path: String): String = path.trim().trimEnd('/').ifEmpty { if (path.isBlank()) "" else "/" }
 
 public interface NewConversationActions {
     public fun openCreatedConversation() {}

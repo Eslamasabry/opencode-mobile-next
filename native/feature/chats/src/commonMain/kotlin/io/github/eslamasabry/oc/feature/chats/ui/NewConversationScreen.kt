@@ -418,8 +418,9 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
             val working = stringResource(Res.string.serversWorking)
             // Recent projects first, one tap each; then New project as an obvious row; the typed path stays folded.
             KitRowGroup(leadingTiles = true) {
-                state.setup?.projects.orEmpty().forEach { project ->
-                    val chosen = project.directory == state.directory
+                // E20-S08: one row per folder (the server listed some twice).
+                state.projectChoices.forEach { project ->
+                    val chosen = state.isChosen(project)
                     KitRow(
                         title = project.name,
                         // The end of the path tells same-named projects apart; it is never cut mid-name.

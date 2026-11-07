@@ -68,6 +68,7 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
         }
         spacing()
         if (screen) titleEdges()
+        if (screen) twinRows()
         return found
     }
 
@@ -179,6 +180,24 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
             }
         }
     }
+
+    /**
+     * A list never lists one thing twice (E20-S08: the project sheet showed a folder twice): two rows of one list
+     * with the same words, title and supporting line alike, are reported.
+     */
+    private fun twinRows() {
+        val rows = items.filter { it.tap && it.bleed && it.visible && it.pageRules }
+        for (members in rows.groupBy { r -> r.ancestors.lastOrNull { isList(it) }?.id ?: -1 }.values) {
+            for (twins in members.groupBy { wordsIn(it) }.filter { it.key.isNotBlank() && it.value.size > 1 }.values) {
+                twins.drop(1).forEach { add(it, "twin-row", "listed ${twins.size} times in one list") }
+            }
+        }
+    }
+
+    /** Every line of words inside [row], in reading order. */
+    private fun wordsIn(row: Item): String =
+        items.filter { it.text && it.ancestors.any { a -> a.id == row.node.id } }
+            .joinToString(" | ") { t -> t.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }.orEmpty() }
 
     /** The start (left, LTR) of the first line of words inside a row: the top-most text node, then the start-most. */
     private fun titleStart(row: Item): Float? =

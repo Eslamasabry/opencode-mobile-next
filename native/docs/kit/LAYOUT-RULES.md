@@ -43,6 +43,9 @@ Rows stacked in one list column (the same list and the same row box) start their
 list is a `KitRowGroup` (`kitList`), a lazy list (collection info) or a vertical scroller. A row without a leading tile
 in a group whose rows have one is a violation: give it the same leading slot, or move it to its own group.
 
+A list never shows one thing twice: two rows of one list with the same words (title and supporting line) are a
+`twin-row` (E20-S08: a project sheet listed a folder twice). Dedupe the data (by path, by id) before it reaches the list.
+
 ## 4. Touch targets
 
 Every tappable is at least **48 × 48 dp** (kit-v2 §8.3: "Touch targets stay 48 dp everywhere"; `tokens.minTarget`).

@@ -175,6 +175,23 @@ class LayoutGuardSelfTest {
     }
 
     @Test
+    fun `E20-S08 one list showing the same row twice is reported`() {
+        @Composable
+        fun row(title: String, supporting: String) =
+            Box(tap(Modifier.fillMaxWidth().height(64.dp).kitEdge(KitEdge.Bleed))) {
+                Column(Modifier.padding(horizontal = 16.dp)) { BasicText(title); BasicText(supporting) }
+            }
+        val twice = findings {
+            Column(Modifier.kitList("test")) { row("shopfront", "~/shopfront"); row("shopfront", "~/shopfront") }
+        }
+        assertEquals(listOf("twin-row"), twice.filter { it.rule == "twin-row" }.map { it.rule })
+        val apart = rules {
+            Column(Modifier.kitList("test")) { row("shopfront", "~/shopfront"); row("shopfront", "~/old/shopfront") }
+        }
+        assertTrue("twin-row" !in apart, apart.toString())
+    }
+
+    @Test
     fun `E20-S08 a bar title off the page's content edge is reported on a phone`() {
         val off = rules { BasicText("Title", Modifier.padding(start = 64.dp).kitContentEdge("bar-title")) }
         assertTrue("content-edge" in off, off.toString())
