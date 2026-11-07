@@ -12,13 +12,13 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 
 /**
  * A late part arriving (Dart `KitEntrance`; plan 08 §5.15): it fades in over STANDARD and, at Full, rises
- * ENTRANCE_RISE (8 dp) into place, paint only. It plays when composed and again whenever [key] changes; [play] false
+ * ENTRANCE_RISE (6 dp, Dart `KitEntrance.rise`) into place, paint only. It plays when composed and again whenever [key] changes; [play] false
  * shows it at once (a part that was there from the start: first build final, R8).
  *
  * States: arriving, at rest
  * Text: none (content decides)
  * Cap: none
- * Motion: fade STANDARD + 8 dp rise; Calm = fade; Off = instant (class Travel)
+ * Motion: fade STANDARD + 6 dp rise; Calm = fade; Off = instant (class Travel)
  * Replaces: KitEntrance (lib/ui/kit/motion/kit_reveal.dart), EntranceReveal (lib/ui/widgets/entrance.dart)
  */
 @Composable

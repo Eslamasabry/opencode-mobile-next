@@ -72,8 +72,9 @@ public object JumpPillRules {
     public fun riseDp(edge: KitJumpEdge, state: KitMotionState): Int =
         when {
             !state.travels -> 0
-            edge == KitJumpEdge.Bottom -> MotionTokens.ENTRANCE_RISE_DP
-            else -> -MotionTokens.ENTRANCE_RISE_DP
+            // Flutter kit_jump_pill.dart: `tokens.space2` (8 dp), not the 6 dp entrance rise.
+            edge == KitJumpEdge.Bottom -> Space.S2
+            else -> -Space.S2
         }
 }
 
