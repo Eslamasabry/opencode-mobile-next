@@ -1,13 +1,18 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
@@ -25,23 +29,34 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.layout.CapAlign
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitBottomInset
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -49,6 +64,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitSinceStillWaiting
 import kotlinx.coroutines.delay
@@ -69,6 +85,15 @@ public enum class KitStateKind { Loading, Working, Empty, Finished, Error, Missi
 /** One extra way out an error state offers (pure; B-KIT-034). */
 public enum class ErrorWay { TryAgain, SwitchServer, CopyDetails, ReportProblem }
 
+/** Where a [KitStateView] sits (Dart `KitStateSize`). */
+public enum class KitStateSize {
+    /** Fills the body, centred vertically, with no card around it. */
+    Page,
+
+    /** Inside a list: the same slots at smaller type, starting at the gutter. */
+    Inline,
+}
+
 /** Pure rules of [KitStateView] (B-KIT-034). */
 public object StateViewRules {
     /** True once the wait has lasted [STATE_ESCALATE_AFTER]. A slow wait is never called a failure. */
@@ -85,25 +110,44 @@ public object StateViewRules {
      * when its handler exists ("no handler, no button").
      */
     public fun errorWays(failure: Failure?, canRetry: Boolean, canSwitch: Boolean, canReport: Boolean): List<ErrorWay> =
+        errorWays(failure, canRetry, canSwitch, canReport, failure?.details != null)
+
+    /** [errorWays] with the details given apart from the failure (Dart `KitStateView.error(details:)`). */
+    public fun errorWays(
+        failure: Failure?,
+        canRetry: Boolean,
+        canSwitch: Boolean,
+        canReport: Boolean,
+        hasDetails: Boolean,
+    ): List<ErrorWay> =
         buildList {
             if (canRetry) add(ErrorWay.TryAgain)
             if (isNetwork(failure)) {
                 if (canSwitch) add(ErrorWay.SwitchServer)
             }
-            if (failure?.details != null) add(ErrorWay.CopyDetails)
+            if (hasDetails) add(ErrorWay.CopyDetails)
             if (!isNetwork(failure) && canReport) add(ErrorWay.ReportProblem)
         }
 
     /** Missing capability: a prerequisite must offer its enable action (refused without one). */
     public fun missingIsValid(prerequisite: Boolean, hasEnable: Boolean): Boolean = !prerequisite || hasEnable
+
+    /** The words under the title once a wait escalated: always the escalation's own 8 s (Dart `KitSince.slowLabel`). */
+    public fun slowSeconds(): Long = STATE_ESCALATE_AFTER.inWholeSeconds
 }
+
+/** How far above the middle of its room a calm page sets its words (Dart `_calmLift`). */
+private const val CALM_LIFT: Float = .1f // F: lib/ui/kit/kit_state_view.dart:438
 
 /**
  * A whole state (Dart `KitStateView`; plan 06 §7.6): an icon tile, a title that says the state now, at most two short
  * [body] sentences, an optional [progress], then the actions in the one hierarchy. There is no free-text error
  * parameter: an [KitStateKind.Error] takes the [failure] (its sentence comes from the screen, mapped through
  * `:ui:words`, as [body]) and adds the kit's ways out — Try again ([onRetry]), Switch server ([onSwitchServer]) for
- * network failures, Copy details (the failure's already-redacted details) and Report a problem ([onReport]).
+ * network failures, Copy details ([details], by default the failure's redacted details) and Report a problem
+ * ([onReport]); the details fold under the actions. A [KitStateKind.Missing] states its [cost] above its enable action.
+ * [KitStateKind.Calm] draws no tile: one big calm line, the next step, and the actions at the bottom of the page.
+ * A [size] of [KitStateSize.Page] fills the height it is given and centres; [KitStateSize.Inline] sits in a list.
  * With [since] the view escalates once at 8 s: the body becomes "Still waiting after 8 s" and the [onSlow] ways out
  * unfold (at most two); the title stays. Working → Finished plays `Done` once (not under motion Off).
  *
@@ -133,14 +177,15 @@ public fun KitStateView(
     onReport: (() -> Unit)? = null,
     retryLabel: String? = null,
     switchServerLabel: String? = null,
+    size: KitStateSize = KitStateSize.Page,
+    details: Redacted? = failure?.details,
+    cost: List<String> = emptyList(),
 ) {
     kitAssert(onSlow.size <= 2) { "KitStateView.onSlow: at most two ways out" }
     kitAssert(kind != KitStateKind.Missing || StateViewRules.missingIsValid(prerequisite, primary != null)) {
         "KitStateView.missing: a prerequisite without its enable action is refused (B-KIT-034)"
     }
     kitAssert(onRetry == null || retryLabel != null) { "KitStateView: Try again needs its words" }
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
     val motion = KitMotion.state
@@ -154,6 +199,14 @@ public fun KitStateView(
         previous.kind = kind
     }
 
+    val page = size == KitStateSize.Page
+    // A page's state sits in the middle; an inline one starts at the gutter, where the words around it do.
+    val capped = modifier.fillMaxWidth().kitMaxWidth(CapRole.State, if (page) CapAlign.Center else CapAlign.Start)
+    if (kind == KitStateKind.Calm) {
+        CalmState(title, body, primary, tertiary, page, capped)
+        return
+    }
+
     var slow by remember(since) { mutableStateOf(since != null && StateViewRules.isSlow(since.elapsedNow())) }
     if (since != null && !slow) {
         LaunchedEffect(since) {
@@ -161,22 +214,7 @@ public fun KitStateView(
             slow = true
         }
     }
-    val shownBody =
-        if (slow && since != null) stringResource(Res.string.kitSinceStillWaiting, since.elapsedNow().inWholeSeconds.coerceAtLeast(STATE_ESCALATE_AFTER.inWholeSeconds))
-        else body
-
-    val tint =
-        when (kind) {
-            KitStateKind.Loading, KitStateKind.Working -> colors.accent
-            KitStateKind.Finished -> colors.success
-            KitStateKind.Error -> colors.text1
-            else -> colors.text2
-        }
-    val glyph = icon ?: when (kind) {
-        KitStateKind.Error -> KitPartGlyphs.Warning
-        KitStateKind.Finished -> KitPartGlyphs.Check
-        else -> KitPartGlyphs.Ring
-    }
+    val shownBody = if (slow && since != null) stringResource(Res.string.kitSinceStillWaiting, StateViewRules.slowSeconds()) else body
 
     @Suppress("DEPRECATION") // see KitField: no common plain-text clipboard write without the manager yet
     val clipboard = LocalClipboardManager.current
@@ -184,14 +222,14 @@ public fun KitStateView(
     val reportLabel = stringResource(Res.string.kitReportProblem)
     val (p, s, t) =
         if (kind == KitStateKind.Error) {
-            val ways = StateViewRules.errorWays(failure, onRetry != null, onSwitchServer != null, onReport != null)
+            val ways = StateViewRules.errorWays(failure, onRetry != null, onSwitchServer != null, onReport != null, details != null)
             val extra =
                 ways.mapNotNull { w ->
                     when (w) {
                         ErrorWay.CopyDetails ->
                             KitAction(copyLabel, onClick = {
-                                failure?.details?.let { clipboard.setText(AnnotatedString(it.text)) }
-                            }, haptic = KitHaptic.Send)
+                                details?.let { clipboard.setText(AnnotatedString(it.text)) }
+                            }, icon = KitIcons.copy, haptic = KitHaptic.Send)
                         ErrorWay.ReportProblem -> KitAction(reportLabel, onClick = onReport)
                         else -> null
                     }
@@ -202,34 +240,149 @@ public fun KitStateView(
                 tertiary + extra,
             )
         } else {
-            Triple(primary, secondary, tertiary + if (slow) onSlow else emptyList())
+            Triple(primary, secondary, tertiary)
         }
+    val foldText = if (kind == KitStateKind.Error) details else null
+    val detailsLabel = stringResource(Res.string.kitDetails)
 
-    // The state keeps the gutter itself: in a list or a bare page its words and buttons never touch the screen edges.
-    Box(modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = STATE_MAX_WIDTH_DP.dp).fillMaxWidth().testTag("kit-state-view"),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            if (kind != KitStateKind.Calm) {
-                Box(
-                    Modifier.size((tokens.iconTile + Space.S4).dp).clip(KitShapeId.Tile.shape()).background(colors.surface3),
-                    contentAlignment = Alignment.Center,
-                ) { KitGlyph(glyph, tint, tokens.smallIcon.dp) }
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val tint =
+        when (kind) {
+            KitStateKind.Loading, KitStateKind.Working -> colors.accent
+            KitStateKind.Finished -> colors.success
+            KitStateKind.Error -> colors.text1
+            else -> colors.text2
+        }
+    val glyph = icon ?: when (kind) {
+        KitStateKind.Error -> KitIcons.error
+        KitStateKind.Missing -> KitIcons.locked
+        KitStateKind.Finished -> KitPartGlyphs.Check
+        else -> KitPartGlyphs.Ring
+    }
+    val gap = if (page) Space.S5 else Space.S3
+    val tileSize = if (page) FlutterKitTokens.MARK_SIZE else tokens.iconTile
+    val tileRadius = if (page) FlutterKitTokens.MARK_RADIUS else FlutterKitTokens.ICON_TILE_RADIUS
+    val glyphSize = if (page) FlutterKitTokens.MARK_ICON_SIZE else tokens.smallIcon
+
+    val column: @Composable () -> Unit = {
+        Column(Modifier.fillMaxWidth().testTag("kit-state-view").semantics { liveRegion = LiveRegionMode.Polite }) {
+            // The tile is made for the person's Style like every other tile (KitSurface.tile's control surface).
+            val look = kitSurfaceLook(
+                KitSurfaceInput(SurfaceRole.Control, KitShapeId.Tile, SurfaceLevel.Surface3, ownFill = colors.surface3, radius = tileRadius.dp),
+            )
+            Box(Modifier.size(tileSize.dp).then(look.modifier).testTag("kit-state-icon"), contentAlignment = Alignment.Center) {
+                KitGlyph(glyph, tint, glyphSize.dp)
             }
-            KitText(title, Modifier.semantics { heading() }, role = TypeRole.Title, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(gap.dp))
+            KitText(title, Modifier.semantics { heading() }, role = if (page) TypeRole.Title else TypeRole.Headline)
             shownBody?.let {
-                KitText(
-                    it,
-                    Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    role = TypeRole.Body,
-                    tone = TextTone.Secondary,
-                    textAlign = TextAlign.Center,
-                )
+                Spacer(Modifier.height((if (page) Space.S2 else Space.S1).dp))
+                KitText(it, role = if (page) TypeRole.Body else TypeRole.Secondary, tone = TextTone.Secondary)
             }
-            progress?.let { KitProgressView(it) }
-            KitActionBlock(primary = p, secondary = s, tertiary = t)
+            progress?.let {
+                Spacer(Modifier.height(gap.dp))
+                KitProgressView(it)
+            }
+            if (cost.isNotEmpty()) {
+                Spacer(Modifier.height(gap.dp))
+                KitCostNotice(cost)
+            }
+            if (p != null || s != null || t.isNotEmpty()) {
+                Spacer(Modifier.height((if (page) Space.S6 else Space.S3).dp))
+                KitActionBlock(primary = p, secondary = s, tertiary = t)
+            }
+            if (slow && onSlow.isNotEmpty()) {
+                Spacer(Modifier.height((if (page) Space.S3 else Space.S2).dp))
+                KitActionBlock(tertiary = onSlow)
+            }
+            if (foldText != null) {
+                Spacer(Modifier.height((if (page) Space.S3 else Space.S1).dp))
+                KitDetailsFold(label = detailsLabel, copyLabel = copyLabel, text = foldText)
+            }
+        }
+    }
+
+    if (!page) {
+        Box(capped.padding(start = tokens.gutter.dp, top = tokens.gutter.dp, end = tokens.gutter.dp, bottom = Space.S2.dp)) {
+            column()
+        }
+        return
+    }
+    BoxWithConstraints(capped) {
+        val bounded = constraints.hasBoundedHeight
+        Box(
+            Modifier.fillMaxWidth()
+                .then(if (bounded) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .heightIn(min = if (bounded) maxHeight else 0.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(Modifier.padding(horizontal = tokens.gutter.dp, vertical = FlutterKitTokens.STATE_VERTICAL_PADDING.dp)) {
+                column()
+            }
+        }
+    }
+}
+
+/** Dart `KitStateView.calm`: no tile, one big calm line, the next step, the actions at the bottom. */
+@Composable
+private fun CalmState(
+    title: String,
+    body: String?,
+    primary: KitAction?,
+    tertiary: List<KitAction>,
+    page: Boolean,
+    modifier: Modifier,
+) {
+    val tokens = LocalKitTokens.current
+    val quiet = tertiary.take(2) // F: lib/ui/kit/kit_state_view.dart:565
+    val answer: @Composable () -> Unit = {
+        KitStatusAnswer(title, line = body, scale = if (page) KitAnswerScale.Calm else KitAnswerScale.Compact)
+    }
+    val quietRow: @Composable () -> Unit = {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally)) {
+            quiet.forEach { KitButton(it, role = KitButtonRole.Tertiary) }
+        }
+    }
+    if (!page) {
+        Column(modifier.padding(vertical = Space.S6.dp).semantics { liveRegion = LiveRegionMode.Polite }) {
+            answer()
+            if (quiet.isNotEmpty()) {
+                Spacer(Modifier.height(Space.S3.dp))
+                quietRow()
+            }
+        }
+        return
+    }
+    val hasBottom = primary != null || quiet.isNotEmpty()
+    val inset = kitBottomInset().bottom
+    BoxWithConstraints(modifier) {
+        val bounded = constraints.hasBoundedHeight
+        val spread = bounded && hasBottom
+        // Optical centre: a little above the middle of the room, where the eye expects the middle to be.
+        val lift = if (spread) maxHeight * CALM_LIFT else 0.dp
+        // Above the dock and the gesture bar, like a list's end.
+        val end = Space.S4.dp + if (bounded) inset else 0.dp
+        Column(
+            Modifier.fillMaxWidth()
+                .then(if (bounded) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .heightIn(min = if (bounded) maxHeight else 0.dp)
+                .padding(bottom = end)
+                .padding(horizontal = tokens.gutter.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+            verticalArrangement = if (spread) Arrangement.SpaceBetween else Arrangement.Center,
+        ) {
+            if (spread) Spacer(Modifier.height(0.dp))
+            Box(Modifier.padding(top = Space.S5.dp, bottom = Space.S5.dp + lift)) { answer() }
+            if (hasBottom) {
+                Column(Modifier.fillMaxWidth()) {
+                    primary?.let { KitButton(it, Modifier.fillMaxWidth(), KitButtonRole.Primary) }
+                    if (quiet.isNotEmpty()) {
+                        if (primary != null) Spacer(Modifier.height(Space.S2.dp))
+                        quietRow()
+                    }
+                }
+            }
         }
     }
 }
