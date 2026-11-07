@@ -8,7 +8,9 @@ Spanish, complete (#122, thanks @Lxchoooo). The Termux app integration is
 removed: built-in Linux is the only way to run an agent on the phone, and old
 Termux setups get a notice with a way forward. Node.js setup adapts on phones
 where it crashed (#117, #119) and stops early with a way out. A VPN is no
-longer shown as mobile data for the voice download. Optional crash reports and
+longer shown as mobile data for the voice download. The Integrations page
+loads again after a reconnect and explains a list the server doesn't offer
+(#124). Optional crash reports and
 setup analytics, off unless you turn them on, and a crash report offer after
 an unexpected exit. Full notes:
 [docs/releases/v2.1.5+63.md](docs/releases/v2.1.5+63.md).
