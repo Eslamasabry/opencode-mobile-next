@@ -252,6 +252,9 @@ dependencies {
     implementation(
         libs.androidx.profileinstaller
     ) // installs a baseline profile on sideloaded builds (start-up proof)
+    // A library brings Fragment 1.1/1.2 in transitively; registerForActivityResult needs >= 1.3.0 or results can reach
+    // the wrong caller (lint InvalidFragmentVersionForActivityResult, fatal on release-style builds).
+    implementation(libs.androidx.fragment)
     // P3 stream proof screen (benchmark build type only)
     listOf(":feature:chat", ":ui:kit-chat").forEach { "benchmarkImplementation"(project(it)) }
     "benchmarkImplementation"(libs.compose.foundation)

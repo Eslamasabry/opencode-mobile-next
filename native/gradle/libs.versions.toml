@@ -39,6 +39,7 @@ coil = "3.6.3"
 androidx-core = "1.19.1"
 work = "2.12.0"
 profileinstaller = "1.4.1"
+fragment = "1.8.9"
 firebase-bom = "35.1.0"
 google-services = "4.5.0"
 firebase-crashlytics-gradle = "3.0.8"
@@ -103,6 +104,7 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx
 # Crash reporting adapter (Crashlytics only; no Analytics, Performance or Remote Config). Used by :androidApp only.
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 # --- Tests
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
