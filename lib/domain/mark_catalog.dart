@@ -96,6 +96,8 @@ const Map<String, String> _agentMarks = {
   'codex': 'codex',
   'gemini': 'gemini',
   'antigravity': 'google',
+  'antigravity_claude': 'anthropic',
+  'antigravity_3p': 'anthropic',
   'agy': 'google',
   'qwen': 'qwen',
   'kilo': 'kilocode',
