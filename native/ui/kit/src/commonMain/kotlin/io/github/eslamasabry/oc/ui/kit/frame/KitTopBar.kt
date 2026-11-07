@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -36,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitContentEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -257,6 +260,9 @@ public fun KitTopBar(
             .testTag("kit-top-bar"),
     ) {
         val hasLine = scope != null || subtitle != null
+        val typography = LocalKitTypography.current
+        val titleLine = typography.style(TypeRole.Headline).lineHeight
+        val lineLine = typography.style(TypeRole.Secondary).lineHeight
         // E20-S08: the title's words start on the page gutter, the transcript's and the rows' edge, also beside a
         // Back button (they sat 48 dp further in, past it). Back, and the actions, take the line above the title.
         val titleStart = (tokens.gutter - Space.S1 - Space.S2).dp
@@ -284,6 +290,13 @@ public fun KitTopBar(
             }
             Row(
                 Modifier.fillMaxWidth()
+                    // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and
+                    // it stays above the line's targets, so the line can sit right under it without taking its taps.
+                    .then(
+                        if (hasLine)
+                            Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, if (onTitleTap != null) Space.S1.dp else 0.dp)
+                        else Modifier
+                    )
                     // A step under Back: a tappable title is a control of its own, never against it.
                     .padding(top = if (onTitleTap != null) Space.S1.dp else 0.dp)
                     .heightIn(min = if (onTitleTap != null) tokens.minTarget.dp else 0.dp)
@@ -330,7 +343,16 @@ public fun KitTopBar(
             Box(
                 Modifier.fillMaxWidth()
                     .padding(start = lead)
-                    .then(if (scope != null) Modifier.tuckedTarget(Space.S2.dp) else Modifier)
+                    .then(
+                        when {
+                            // E20-S10 (owner's phone: "new · This phone" sat far below "Hi" on a row of its own): under
+                            // a Back bar's title the line's words start the kit's tight title/subtitle step under the
+                            // title's words, as a hub bar's do; its targets keep their 48 dp below.
+                            back -> Modifier.riseToText(lineLine, TITLE_LINE_GAP, if (scope != null) Space.S2.dp else 0.dp)
+                            scope != null -> Modifier.tuckedTarget(Space.S2.dp)
+                            else -> Modifier
+                        }
+                    )
             ) {
                 under()
             }
@@ -371,6 +393,55 @@ private const val ACTIONS_SHARE = 0.35f
 
 /** A large bar's actions sit beside a title that may wrap, so they may take a little more. */
 private const val LARGE_ACTIONS_SHARE = 0.45f
+
+/** The kit's tight title/subtitle step (a hub bar's title column): the line's words this far under the title's. */
+private val TITLE_LINE_GAP = 2.dp
+
+/**
+ * How tall the words inside [p] are, from its first and last baselines and one [line] height, or null when it has no
+ * baselines. A frame text capped below the window's font scale makes this a little too tall, never too short.
+ */
+private fun androidx.compose.ui.layout.MeasureScope.wordsHeight(
+    p: androidx.compose.ui.layout.Placeable,
+    line: androidx.compose.ui.unit.TextUnit,
+): Int? {
+    val first = p[androidx.compose.ui.layout.FirstBaseline]
+    val last = p[androidx.compose.ui.layout.LastBaseline]
+    if (first == androidx.compose.ui.layout.AlignmentLine.Unspecified || last == androidx.compose.ui.layout.AlignmentLine.Unspecified || !line.isSp) return null
+    return (last - first) + line.roundToPx()
+}
+
+/**
+ * E20-S10: reports the content's height only down to the bottom of its vertically centred words (below [top], the
+ * padding above the centred area), so what follows starts right under them. Unchanged without baselines.
+ */
+private fun Modifier.endUnderText(line: androidx.compose.ui.unit.TextUnit, top: androidx.compose.ui.unit.Dp): Modifier =
+    layout { measurable, constraints ->
+        val p = measurable.measure(constraints)
+        val pad = top.roundToPx()
+        val words = wordsHeight(p, line)
+        val inner = (p.height - pad).coerceAtLeast(0)
+        val bottom = if (words == null) p.height else pad + (inner + words.coerceAtMost(inner)) / 2
+        layout(p.width, bottom.coerceIn(0, p.height)) { p.place(0, 0) }
+    }
+
+/**
+ * E20-S10: rises so the content's vertically centred words start [gap] under what is above it, and reports [bottom]
+ * less height below (a target overlapping the empty edge under the bar). Unchanged without baselines.
+ */
+private fun Modifier.riseToText(
+    line: androidx.compose.ui.unit.TextUnit,
+    gap: androidx.compose.ui.unit.Dp,
+    bottom: androidx.compose.ui.unit.Dp,
+): Modifier =
+    layout { measurable, constraints ->
+        val p = measurable.measure(constraints)
+        val words = wordsHeight(p, line)
+        val slack = if (words == null) 0 else ((p.height - words) / 2).coerceAtLeast(0)
+        val rise = (slack - gap.roundToPx()).coerceAtLeast(-gap.roundToPx())
+        val height = (p.height - rise - bottom.roundToPx()).coerceAtLeast(0)
+        layout(p.width, height) { p.place(0, -rise) }
+    }
 
 /** Reports [by] less height above and below than the content takes, so a 48 dp target can overlap empty edges. */
 private fun Modifier.tuckedTarget(by: androidx.compose.ui.unit.Dp): Modifier =
