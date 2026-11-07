@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.agent
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
@@ -126,7 +125,10 @@ public fun KitAgentChoice(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, level = SurfaceLevel.Surface2, ownFill = colors.surface1, selected = selected)
         )
     val solid = LocalKitStyle.current.style == Style.Solid
-    val edge = if (solid) Modifier.border(kitHairline(), colors.hairline, look.shape) else Modifier
+    val hairline = kitHairline()
+    val edge = if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, look.shape) else Modifier
+    // Dart `EdgeInsets.all(space5).add(decoration.padding)`: a drawn border takes its room inside the card.
+    val inset = Space.S5.dp + if (solid) hairline else 0.dp
     val ink = if (selected && !solid) look.words else null
     val markBox = (FlutterKitTokens.MARK_SIZE + Space.S2).dp
     val mark: @Composable () -> Unit = {
@@ -152,9 +154,11 @@ public fun KitAgentChoice(
                 .heightIn(min = agentChoiceMinHeight(wide, large))
                 .then(look.modifier)
                 .then(edge)
-                .padding(Space.S5.dp)
                 .clearAndSetSemantics {}
         ) {
+          // Compose lays out on whole pixels: the two sub-pixel hairlines of Flutter's height go to the bottom, rounded, so
+          // rows of cards keep Flutter's pitch.
+          Box(Modifier.fillMaxWidth().padding(start = inset, top = Space.S5.dp, end = inset, bottom = Space.S5.dp + (inset - Space.S5.dp) * 2)) {
             if (wide) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     mark()
@@ -169,8 +173,11 @@ public fun KitAgentChoice(
                     Spacer(Modifier.height(Space.S5.dp))
                     words()
                 }
-                Box(Modifier.align(Alignment.TopEnd).offset(x = Space.S1.dp, y = -Space.S1.dp)) { Badge(selected) }
             }
+          }
+            // Dart PositionedDirectional(top: -space1, end: -space1) over the padded column: placed from the card's
+            // own edge here, so the badge sits in the card and not past its column.
+            if (!wide) Box(Modifier.align(Alignment.TopEnd).padding(top = inset - Space.S1.dp, end = inset - Space.S1.dp)) { Badge(selected) }
         }
     }
 }
@@ -216,8 +223,10 @@ private fun AgentMark(slug: String, tint: Color, box: Dp) {
     val pixels = with(LocalDensity.current) { box.roundToPx() }.coerceIn(1, 256) // NV: the platform SVG decoder's pixel range (KitPlatform.svgPainter)
     val painter = remember(svg, platform, pixels) { svg?.let { platform.svgPainter(it, pixels) } }
     val shown = painter ?: if (slug.isEmpty()) rememberVectorPainter(KitIcons.terminal) else null
-    Box(Modifier.size(box)) {
-        if (shown != null) Image(shown, null, Modifier.size(box), colorFilter = ColorFilter.tint(tint))
+    // Dart KitIcon.mark: the picture is 0.84 of its square, centred; FittedBox scales that square to the box.
+    val drawn = box * 0.84f // F: lib/ui/kit/kit_icon.dart:252
+    Box(Modifier.size(box), contentAlignment = Alignment.Center) {
+        if (shown != null) Image(shown, null, Modifier.size(if (painter != null) drawn else box), colorFilter = ColorFilter.tint(tint))
     }
 }
 
@@ -229,6 +238,11 @@ private fun Badge(selected: Boolean) {
     val scale by animateFloatAsState(if (selected) 1f else FlutterKitMotion.MARK_FROM, specs.pace(KitPace.Standard), label = "kit.agent.badge.scale")
     val alpha by animateFloatAsState(if (selected) 1f else 0f, specs.pace(KitPace.Quick), label = "kit.agent.badge.alpha")
     val accent = colors.accent
+    // Fully faded: nothing to draw (Dart's AnimatedOpacity at 0 paints nothing either).
+    if (alpha == 0f) {
+        Spacer(Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S1).dp))
+        return
+    }
     Box(
         Modifier.size((FlutterKitTokens.ICON_TILE_SIZE - Space.S1).dp)
             .scale(scale)

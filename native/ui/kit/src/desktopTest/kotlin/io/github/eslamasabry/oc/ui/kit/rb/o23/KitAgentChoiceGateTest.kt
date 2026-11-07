@@ -25,9 +25,18 @@ internal val PERSONAS =
         Triple("OpenCode", "Any model, free ones too", "opencode"),
     )
 
+/**
+ * Flutter's `assets/marks/opencode.svg` at 8302de537. The app's copy (`androidApp/src/main/assets/marks/opencode.svg`)
+ * is a newer two-tone mark, so the scene takes the reference one; evidence/23.md asks the asset owner to align it.
+ */
+private const val FLUTTER_OPENCODE_MARK =
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0.0 0.0 24.0 24.0\">" +
+        "<g fill=\"currentColor\"><path d=\"M16 6H8v12h8V6zm4 16H4V2h16v20z\"></path></g></svg>"
+
 /** The app's marks (`androidApp/src/main/assets/marks/<slug>.svg`, the same files as Flutter's `assets/marks/`). */
 internal val MARKS = KitLogoLoader { id, _ ->
-    File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$id.svg").takeIf { it.isFile }?.readText()
+    if (id == "opencode") FLUTTER_OPENCODE_MARK
+    else File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$id.svg").takeIf { it.isFile }?.readText()
 }
 
 /**
