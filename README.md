@@ -88,7 +88,7 @@ All screens are real captures from the app.
    - **Just show me:** a simulated conversation, no server needed.
 3. **Start a conversation.** Pick an agent and a model and describe the change. Add your own provider key in Settings when you want more than the free models.
 
-Coming from Termux? **Move from Termux** copies your projects into the app. More help is in [SUPPORT.md](SUPPORT.md) and the in-app guide.
+Coming from Termux? The app no longer runs anything in Termux: built-in Linux is its only engine on the phone. Your projects in Termux stay where they are; copy them to the phone's shared storage or push them with Git, then open them in the app. More help is in [SUPPORT.md](SUPPORT.md) and the in-app guide.
 
 ## Compatibility
 
