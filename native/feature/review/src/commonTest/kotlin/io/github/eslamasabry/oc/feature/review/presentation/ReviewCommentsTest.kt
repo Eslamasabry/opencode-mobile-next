@@ -39,11 +39,23 @@ import kotlin.test.assertTrue
 
 private val SES = SessionId("ses_c")
 
-private fun anchor(path: String = "src/a.kt", start: Int = 42, end: Int = start, quote: List<String> = listOf("val x = 1"), side: CommentSide = CommentSide.New) =
+private fun anchor(
+    path: String = "src/a.kt",
+    start: Int = 42,
+    end: Int = start,
+    quote: List<String> = listOf("val x = 1"),
+    side: CommentSide = CommentSide.New,
+) =
     CommentAnchor(path, side, start, end, quote.toImmutableList())
 
 private fun ask(id: String, at: Long, text: String = "make it so") =
-    MessageWithParts(MessageInfo(id, SES.raw, Role.User, time = MsgTime(at, at)), persistentListOf(Part("p$id", id, SES.raw, PartType.Text, "text", text = text)))
+    MessageWithParts(
+        MessageInfo(id, SES.raw, Role.User, time = MsgTime(at, at)),
+        persistentListOf(Part("p$id", id, SES.raw, PartType.Text, "text", text = text)),
+    )
+
+private fun pair(before: String, after: String) =
+    JsonObject(mapOf("before" to JsonPrimitive(before), "after" to JsonPrimitive(after)))
 
 private fun editPart(id: String, path: String, before: String, after: String) =
     Part(
@@ -57,21 +69,30 @@ private fun editPart(id: String, path: String, before: String, after: String) =
             ToolState(
                 ToolStatus.Completed,
                 input = JsonObject(mapOf("filePath" to JsonPrimitive(path))),
-                metadata = JsonObject(mapOf("filediff" to JsonObject(mapOf("before" to JsonPrimitive(before), "after" to JsonPrimitive(after))))),
+                metadata = JsonObject(mapOf("filediff" to pair(before, after))),
                 completedAtMs = 1,
             ),
     )
 
 private fun edited(id: String, at: Long, path: String, before: String, after: String) =
-    MessageWithParts(MessageInfo(id, SES.raw, Role.Assistant, time = MsgTime(at, at)), persistentListOf(editPart(id, path, before, after)))
+    MessageWithParts(
+        MessageInfo(id, SES.raw, Role.Assistant, time = MsgTime(at, at)),
+        persistentListOf(editPart(id, path, before, after)),
+    )
 
 /** One chronological page of history the test rewrites as the agent "edits". */
-private class HistoryFake(val base: FakeServerGateway = FakeServerGateway(listOf(Session(SES)))) : ServerGateway by base {
+private class HistoryFake(
+    val base: FakeServerGateway = FakeServerGateway(listOf(Session(SES))),
+) : ServerGateway by base {
     var history: List<MessageWithParts> = emptyList()
 
     override suspend fun session(id: SessionId) = Session(id).ok()
 
-    override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> =
+    override suspend fun messagePage(
+        id: SessionId,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<ServerPage<MessageWithParts>> =
         ServerPage(history.toImmutableList(), null).ok()
 }
 
@@ -96,7 +117,8 @@ class ReviewCommentsTest {
     fun `B-156 a range and a removed line say so`() {
         val range = LineComment("c1", anchor(start = 3, end = 5, quote = listOf("fun a() {", "  b()", "}")), "split it")
         assertEquals("In src/a.kt lines 3-5 `fun a() { …`: split it", ReviewCommentPrompt.one(range))
-        val removed = LineComment("c2", anchor(start = 7, side = CommentSide.Old, quote = listOf("log(token)")), "keep this")
+        val removedAt = anchor(start = 7, side = CommentSide.Old, quote = listOf("log(token)"))
+        val removed = LineComment("c2", removedAt, "keep this")
         assertEquals("In src/a.kt removed line 7 `log(token)`: keep this", ReviewCommentPrompt.one(removed))
     }
 
@@ -114,7 +136,11 @@ class ReviewCommentsTest {
             ReviewCommentPrompt.format(
                 listOf(
                     LineComment("c1", anchor(), "rename this"),
-                    LineComment("c2", anchor(path = "b.kt", start = 2, quote = listOf("call()")), "check null\nand log"),
+                    LineComment(
+                        "c2",
+                        anchor(path = "b.kt", start = 2, quote = listOf("call()")),
+                        "check null\nand log",
+                    ),
                     LineComment("c3", anchor(), " "), // blank: never sent
                 ),
             )
@@ -129,7 +155,8 @@ class ReviewCommentsTest {
     @Test
     fun `B-156 a selection is placed on the lines it came from`() {
         val file = DiffModel.fromBeforeAfter("a.kt", "one\ntwo\nthree\n", "one\nTWO\nthree\nfour\n", null)
-        assertEquals(CommentAnchor("a.kt", CommentSide.New, 2, 2, persistentListOf("TWO")), CommentLines.anchor(file, "TWO"))
+        val two = CommentAnchor("a.kt", CommentSide.New, 2, 2, persistentListOf("TWO"))
+        assertEquals(two, CommentLines.anchor(file, "TWO"))
         assertEquals(listOf(3, 4), CommentLines.anchor(file, "three\nfour")?.let { listOf(it.start, it.end) })
         val removed = CommentLines.anchor(file, "two")
         assertEquals(CommentSide.Old, removed?.side)
@@ -141,7 +168,8 @@ class ReviewCommentsTest {
 
     @Test
     fun `B-156 a sent comment is fixed once the agent's edit changes its line, not before`() {
-        val sent = LineComment("c1", anchor(start = 1, quote = listOf("val x = 1")), "rename", CommentStatus.Pending, sentVersion = "v1")
+        val at = anchor(start = 1, quote = listOf("val x = 1"))
+        val sent = LineComment("c1", at, "rename", CommentStatus.Pending, sentVersion = "v1")
         val same = DiffModel.fromBeforeAfter("src/a.kt", "", "val x = 1\nval y = 2\n", null)
         val elsewhere = DiffModel.fromBeforeAfter("src/a.kt", "", "val x = 1\nval y = 3\n", null)
         val touched = DiffModel.fromBeforeAfter("src/a.kt", "", "val count = 1\nval y = 2\n", null)
@@ -149,7 +177,8 @@ class ReviewCommentsTest {
         assertFalse(CommentResolve.resolved(sent, "v2", same))
         assertFalse(CommentResolve.resolved(sent, "v2", elsewhere), "an edit elsewhere leaves it waiting")
         assertTrue(CommentResolve.resolved(sent, "v2", touched))
-        assertFalse(CommentResolve.resolved(sent.copy(status = CommentStatus.Draft), "v2", touched), "a draft is never fixed")
+        val draft = sent.copy(status = CommentStatus.Draft)
+        assertFalse(CommentResolve.resolved(draft, "v2", touched), "a draft is never fixed")
         // Lines moving down (an insert above) do not count as touching it.
         val moved = DiffModel.fromBeforeAfter("src/a.kt", "", "import a\nval x = 1\nval y = 2\n", null)
         assertFalse(CommentResolve.resolved(sent, "v3", moved))
@@ -160,12 +189,18 @@ class ReviewCommentsTest {
 
     private fun TestScope.review() = ConversationReview(SES, gateways, backgroundScope)
 
+    private fun TestScope.diffPage(source: FileDiffSource, agent: ReviewAgentPorts) =
+        FileDiffPresenter(review(), "src/a.kt", null, source, scope = backgroundScope, agent = agent)
+
     @Test
-    fun `B-156 comment, send in one prompt, wait, and resolve when the agent edits that line`() = runTest(UnconfinedTestDispatcher()) {
-        fake.history = listOf(ask("u1", 1), edited("a1", 2, "src/a.kt", "val x = 1\nval y = 2\n", "val x = 10\nval y = 2\n"))
+    fun `B-156 comment, send in one prompt, wait, and resolve when the agent edits that line`() = runTest(
+        UnconfinedTestDispatcher(),
+    ) {
+        fake.history =
+            listOf(ask("u1", 1), edited("a1", 2, "src/a.kt", "val x = 1\nval y = 2\n", "val x = 10\nval y = 2\n"))
         val book = ReviewCommentBook()
         val sent = Sent()
-        val page = FileDiffPresenter(review(), "src/a.kt", null, staged = false, scope = backgroundScope, comments = book, sender = sent)
+        val page = diffPage(FileDiffSource.Changes, ReviewAgentPorts(book, sent))
         assertTrue(page.state.value.canComment)
         val file = CommentResolve.diffFile(assertNotNull(page.state.value.diff))
         page.comment(CommentLines.anchor(file, "val x = 10"))
@@ -188,7 +223,8 @@ class ReviewCommentsTest {
         assertEquals(listOf(CommentStatus.Pending, CommentStatus.Pending), page.state.value.comments.map { it.status })
 
         // The agent edits line 2 only: line 1 waits, line 2 is fixed.
-        fake.history += listOf(ask("u2", 3), edited("a2", 4, "src/a.kt", "val x = 10\nval y = 2\n", "val x = 10\nval y = 20\n"))
+        fake.history +=
+            listOf(ask("u2", 3), edited("a2", 4, "src/a.kt", "val x = 10\nval y = 2\n", "val x = 10\nval y = 20\n"))
         fake.base.events.emit(GatewayEvent.PartUpserted(editPart("a2", "src/a.kt", "", "").copy(sessionId = SES.raw)))
         runCurrent()
         assertEquals(listOf(CommentStatus.Pending, CommentStatus.Resolved), page.state.value.comments.map { it.status })
@@ -197,14 +233,15 @@ class ReviewCommentsTest {
         fake.history += edited("a3", 5, "src/a.kt", "val x = 10\nval y = 20\n", "val count = 10\nval y = 20\n")
         fake.base.events.emit(GatewayEvent.PartUpserted(editPart("a3", "src/a.kt", "", "").copy(sessionId = SES.raw)))
         runCurrent()
-        assertEquals(listOf(CommentStatus.Resolved, CommentStatus.Resolved), page.state.value.comments.map { it.status })
+        val both = listOf(CommentStatus.Resolved, CommentStatus.Resolved)
+        assertEquals(both, page.state.value.comments.map { it.status })
     }
 
     @Test
     fun `B-156 a failed send keeps the comments as drafts with the reason`() = runTest(UnconfinedTestDispatcher()) {
         fake.history = listOf(ask("u1", 1), edited("a1", 2, "src/a.kt", "a\n", "b\n"))
         val sent = Sent().apply { fail = Failure.Server(500) }
-        val page = FileDiffPresenter(review(), "src/a.kt", null, staged = false, scope = backgroundScope, comments = ReviewCommentBook(), sender = sent)
+        val page = diffPage(FileDiffSource.Changes, ReviewAgentPorts(ReviewCommentBook(), sent))
         page.comment(CommentLines.anchor(CommentResolve.diffFile(page.state.value.diff!!), "b"))
         page.commentText("why b")
         page.sendComments()
@@ -214,11 +251,13 @@ class ReviewCommentsTest {
     }
 
     @Test
-    fun `B-156 the undo's preview takes no comments, and a blank comment is not added`() = runTest(UnconfinedTestDispatcher()) {
+    fun `B-156 the undo's preview takes no comments, and a blank comment is not added`() = runTest(
+        UnconfinedTestDispatcher(),
+    ) {
         fake.history = listOf(ask("u1", 1), edited("a1", 2, "src/a.kt", "a\n", "b\n"))
         val book = ReviewCommentBook()
-        assertFalse(FileDiffPresenter(review(), "src/a.kt", null, staged = true, scope = backgroundScope, comments = book, sender = Sent()).state.value.canComment)
-        val page = FileDiffPresenter(review(), "src/a.kt", null, staged = false, scope = backgroundScope, comments = book, sender = Sent())
+        assertFalse(diffPage(FileDiffSource.Staged, ReviewAgentPorts(book, Sent())).state.value.canComment)
+        val page = diffPage(FileDiffSource.Changes, ReviewAgentPorts(book, Sent()))
         page.comment(CommentLines.anchor(CommentResolve.diffFile(page.state.value.diff!!), "b"))
         page.commentText("   ")
         assertTrue(book.comments.value.isEmpty())
@@ -226,14 +265,17 @@ class ReviewCommentsTest {
     }
 
     @Test
-    fun `B-156 the Changes page sends every draft of the conversation and counts the waiting ones`() = runTest(UnconfinedTestDispatcher()) {
-        fake.history = listOf(ask("u1", 1), edited("a1", 2, "src/a.kt", "a\n", "b\n"), edited("a2", 3, "b.kt", "c\n", "d\n"))
+    fun `B-156 the Changes page sends every draft of the conversation and counts the waiting ones`() = runTest(
+        UnconfinedTestDispatcher(),
+    ) {
+        fake.history =
+            listOf(ask("u1", 1), edited("a1", 2, "src/a.kt", "a\n", "b\n"), edited("a2", 3, "b.kt", "c\n", "d\n"))
         val book = ReviewCommentBook()
         book.add(anchor(path = "src/a.kt", start = 1, quote = listOf("b")), "one", listOf("b"))
         book.add(anchor(path = "b.kt", start = 1, quote = listOf("d")), "two", listOf("d"))
         book.add(anchor(path = "b.kt", start = 1, quote = listOf("d")), "three", listOf("d"))
         val sent = Sent()
-        val page = ChangesPresenter(review(), null, NoNav, backgroundScope, comments = book, sender = sent)
+        val page = ChangesPresenter(review(), null, NoNav, backgroundScope, agent = ReviewAgentPorts(book, sent))
         assertEquals(3, page.state.value.drafts)
         page.sendComments()
         assertEquals(1, sent.texts.size, "one prompt for all three")
@@ -243,9 +285,9 @@ class ReviewCommentsTest {
 }
 
 internal object NoNav : ReviewNavigation {
-    override fun back() {}
+    override fun back() = Unit
 
-    override fun openFile(path: String, staged: Boolean) {}
+    override fun openFile(path: String, staged: Boolean) = Unit
 
-    override fun openStaged() {}
+    override fun openStaged() = Unit
 }

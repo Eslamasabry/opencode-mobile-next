@@ -42,7 +42,10 @@ import kotlin.test.assertTrue
 private val G = SessionId("ses_g")
 
 private fun said(id: String, at: Long, role: Role, text: String) =
-    MessageWithParts(MessageInfo(id, G.raw, role, time = MsgTime(at, at)), persistentListOf(Part("p$id", id, G.raw, PartType.Text, "text", text = text)))
+    MessageWithParts(
+        MessageInfo(id, G.raw, role, time = MsgTime(at, at)),
+        persistentListOf(Part("p$id", id, G.raw, PartType.Text, "text", text = text)),
+    )
 
 private fun edit(id: String, at: Long, path: String, after: String = "new\n") =
     MessageWithParts(
@@ -79,7 +82,11 @@ private class GuideFake(val base: FakeServerGateway = FakeServerGateway(listOf(S
 
     override suspend fun session(id: SessionId) = Session(id).ok()
 
-    override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> =
+    override suspend fun messagePage(
+        id: SessionId,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<ServerPage<MessageWithParts>> =
         ServerPage(history.toImmutableList(), null).ok()
 }
 
@@ -96,7 +103,8 @@ private class Asked(var reply: (String) -> Outcome<String>) : ReviewGuideAsk {
 private const val GUIDE =
     """Here you go:
 {"sections":[
- {"title":"Retry the upload","why":"Uploads failed on flaky networks, so they now retry three times.","files":["src/upload.kt"],"glue":false},
+ {"title":"Retry the upload","why":"Uploads failed on flaky networks, so they now retry three times.",
+  "files":["src/upload.kt"],"glue":false},
  {"title":"Tests","why":"Cover the retry.","files":["test/upload_test.kt"],"glue":true},
  {"title":"Made up","why":"x","files":["not/changed.kt"]}
 ]}"""
@@ -129,7 +137,8 @@ class ReviewGuideTest {
         assertNull(ReviewGuidePrompt.parse("{\"sections\": \"no\"}", paths))
         assertNull(ReviewGuidePrompt.parse("{not json}", paths))
         assertNull(ReviewGuidePrompt.parse("""{"sections":[{"title":"T","files":["elsewhere.kt"]}]}""", paths))
-        val long = ReviewGuidePrompt.parse("""{"sections":[{"title":"${"t".repeat(200)}","why":"a\nb","files":["src/upload.kt"]}]}""", paths)!!
+        val longReply = """{"sections":[{"title":"${"t".repeat(200)}","why":"a\nb","files":["src/upload.kt"]}]}"""
+        val long = ReviewGuidePrompt.parse(longReply, paths)!!
         assertEquals(ReviewGuidePrompt.MAX_TITLE, long.sections.single().title.length)
         assertEquals("a b", long.sections.single().why)
     }
@@ -139,21 +148,33 @@ class ReviewGuideTest {
 
     private fun TestScope.review() = ConversationReview(G, gateways, backgroundScope)
 
+    private fun TestScope.changes(ask: ReviewGuideAsk) =
+        ChangesPresenter(review(), null, NoNav, backgroundScope, agent = ReviewAgentPorts(null, { Unit.ok() }, ask))
+
     private fun changed() {
-        fake.history = listOf(said("u1", 1, Role.User, "fix uploads"), edit("a1", 2, "src/upload.kt"), edit("a2", 3, "src/imports.kt"), edit("a3", 4, "test/upload_test.kt"))
+        fake.history =
+            listOf(
+                said("u1", 1, Role.User, "fix uploads"),
+                edit("a1", 2, "src/upload.kt"),
+                edit("a2", 3, "src/imports.kt"),
+                edit("a3", 4, "test/upload_test.kt"),
+            )
     }
 
     @Test
-    fun `B-155 Guided asks once per change set and shows the cached guide again`() = runTest(UnconfinedTestDispatcher()) {
+    fun `B-155 Guided asks once per change set and shows the cached guide again`() = runTest(
+        UnconfinedTestDispatcher(),
+    ) {
         changed()
         val ask = Asked { GUIDE.ok() }
-        val page = ChangesPresenter(review(), null, NoNav, backgroundScope, guideAsk = ask)
+        val page = changes(ask)
         assertTrue(page.state.value.canGuide)
         assertEquals(GuideUi.Off, page.state.value.guide)
         page.guided(true)
         val ready = assertIs<GuideUi.Ready>(page.state.value.guide)
         assertEquals(listOf("src/upload.kt"), ready.guide.sections.single().files)
-        assertFalse("old\n" in ask.prompts.single() || "new\n" in ask.prompts.single(), "no file contents in the question")
+        val question = ask.prompts.single()
+        assertFalse("old\n" in question || "new\n" in question, "no file contents in the question")
         page.guided(false)
         assertEquals(GuideUi.Off, page.state.value.guide)
         page.guided(true)
@@ -164,11 +185,11 @@ class ReviewGuideTest {
     @Test
     fun `B-155 a failed guide falls back to the plain list`() = runTest(UnconfinedTestDispatcher()) {
         changed()
-        val page = ChangesPresenter(review(), null, NoNav, backgroundScope, guideAsk = Asked { Outcome.Failed(Failure.Server(500)) })
+        val page = changes(Asked { Outcome.Failed(Failure.Server(500)) })
         page.guided(true)
         assertEquals(GuideUi.Fallback(Failure.Server(500)), page.state.value.guide)
         assertEquals(3, page.state.value.files.size)
-        val unreadable = ChangesPresenter(review(), null, NoNav, backgroundScope, guideAsk = Asked { "sorry".ok() })
+        val unreadable = changes(Asked { "sorry".ok() })
         unreadable.guided(true)
         assertIs<Failure.UnreadableReply>(assertIs<GuideUi.Fallback>(unreadable.state.value.guide).failure)
     }
@@ -186,7 +207,7 @@ class ReviewGuideTest {
     fun `B-155 the guide is made again when the files change`() = runTest(UnconfinedTestDispatcher()) {
         changed()
         val ask = Asked { GUIDE.ok() }
-        val page = ChangesPresenter(review(), null, NoNav, backgroundScope, guideAsk = ask)
+        val page = changes(ask)
         page.guided(true)
         fake.history += edit("a4", 5, "src/upload.kt", after = "newer\n")
         fake.base.events.emit(GatewayEvent.RunEnded(G, RunOutcome.Succeeded))

@@ -190,18 +190,18 @@ class ReviewPresenterTest {
 
     @Test
     fun `B-CHAT-058 a changed file opens its diff from the turn's records`() = runTest(UnconfinedTestDispatcher()) {
-        val ui = FileDiffPresenter(review(), "src/a.kt", "a1", staged = false, backgroundScope).state.value
+        val ui = FileDiffPresenter(review(), "src/a.kt", "a1", FileDiffSource.Changes, backgroundScope).state.value
         assertEquals("a\n", ui.diff?.before)
         assertEquals("b\n", ui.diff?.after)
         assertEquals("a.kt", ui.name)
-        val gone = FileDiffPresenter(review(), "src/zzz.kt", "a1", staged = false, backgroundScope).state.value
+        val gone = FileDiffPresenter(review(), "src/zzz.kt", "a1", FileDiffSource.Changes, backgroundScope).state.value
         assertTrue(gone.missing)
     }
 
     @Test
     fun `B-PROTO-031 a staged file opens the server's preview, never a new working-tree diff`() = runTest(UnconfinedTestDispatcher()) {
         fake.staged = SessionRevert(MessageId("u1"), null, null, persistentListOf(FileDiff("x.kt", patch = "@@ -1 +1 @@\n-a\n+b")))
-        val ui = FileDiffPresenter(review(), "x.kt", null, staged = true, backgroundScope).state.value
+        val ui = FileDiffPresenter(review(), "x.kt", null, FileDiffSource.Staged, backgroundScope).state.value
         assertEquals("@@ -1 +1 @@\n-a\n+b", ui.diff?.patch)
     }
 
@@ -369,7 +369,7 @@ class ReviewPresenterTest {
         assertEquals("/work/a", vcs.at.single().directory)
         p.openFile("lib/x.kt")
         assertEquals(listOf("working lib/x.kt"), nav.went)
-        val file = FileDiffPresenter(review(), "lib/x.kt", null, staged = false, scope = backgroundScope, workingTree = true)
+        val file = FileDiffPresenter(review(), "lib/x.kt", null, FileDiffSource.WorkingTree, scope = backgroundScope)
         assertEquals("lib/x.kt", file.state.value.diff?.file)
     }
 
