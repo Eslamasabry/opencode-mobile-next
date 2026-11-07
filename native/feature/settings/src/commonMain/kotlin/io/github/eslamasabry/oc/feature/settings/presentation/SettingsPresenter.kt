@@ -321,7 +321,13 @@ public class SettingsPresenter(
                         question = l.appearanceQuestion?.takeIf { it in appearanceQuestions(f) },
                     ),
             voice = e.voice,
-            notifications = e.notifications,
+            // Flutter shows "Usage alerts" on every phone that notifies; here the row exists
+            // only when the host can open Usage › Alerts (absent, never dead).
+            notifications =
+                e.notifications?.let {
+                    if (f.canOpen(SettingsOutside.UsageAlerts)) it.copy(usageAlertsShown = true)
+                    else it
+                },
             updates = e.updates,
             about = about,
             whatsNew = whatsNew(l, f),
@@ -681,6 +687,15 @@ public class SettingsPresenter(
         }
         if (place == SettingsOutside.WhatsNew) {
             showWhatsNew()
+            return
+        }
+        // Notices and quiet hours live in this module: their pages open here, never a dead row.
+        if (place == SettingsOutside.Notices) {
+            onOpen(SettingsPage.Notices)
+            return
+        }
+        if (place == SettingsOutside.QuietHours) {
+            onOpen(SettingsPage.Notifications)
             return
         }
         // Voice notices open the in-app licence list when this build can read the bundled licences.
