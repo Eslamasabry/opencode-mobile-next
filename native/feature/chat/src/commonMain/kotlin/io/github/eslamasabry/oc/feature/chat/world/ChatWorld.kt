@@ -333,6 +333,11 @@ public data class DraftFacts(
     val repeatAllowed: Boolean = false,
     val attachments: List<PromptAttachment> = emptyList(),
     val savedAttachments: List<PromptAttachment> = emptyList(),
+    /**
+     * B-144: saved files not shown yet (kept in the saved draft); sending waits for them. Empty
+     * while they only wait for the conversation's place.
+     */
+    val heldBackAttachments: List<String> = emptyList(),
 ) {
     /**
      * The Back guard is on only while there is something to lose (07 §3.4). Whitespace without

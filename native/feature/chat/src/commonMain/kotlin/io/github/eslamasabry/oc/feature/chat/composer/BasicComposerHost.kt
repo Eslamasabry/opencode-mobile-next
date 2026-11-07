@@ -115,6 +115,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentUnsupporte
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelButton
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefault
 import io.github.eslamasabry.oc.ui.words.res.draftRetrySave
+import io.github.eslamasabry.oc.ui.words.res.draftAttachmentsFailed
 import io.github.eslamasabry.oc.ui.words.res.draftSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitComposerAddToTurn
 import io.github.eslamasabry.oc.ui.words.res.kitComposerField
@@ -470,6 +471,14 @@ public fun BasicComposer(
                                 actions::retrySave,
                             )
                     },
+            )
+        } else if (state.draft.heldBackAttachments.isNotEmpty()) {
+            // B-144: the words are back; a saved file is kept in the draft but not shown yet.
+            KitErrorNotice(
+                message = stringResource(Res.string.draftAttachmentsFailed),
+                retry =
+                    KitLineAction(stringResource(Res.string.draftRetrySave), actions::retrySave),
+                modifier = Modifier.testTag("chat-draft-files-held"),
             )
         }
         val attachmentFailure = state.attachmentFailure

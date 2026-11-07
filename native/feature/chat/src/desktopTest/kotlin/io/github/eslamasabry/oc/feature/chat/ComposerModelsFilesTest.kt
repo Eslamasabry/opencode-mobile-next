@@ -82,6 +82,10 @@ class ComposerModelsFilesTest {
             calls += "attach $kind"
         }
 
+        override fun retrySave() {
+            calls += "retrySave"
+        }
+
         val variants = mutableListOf<String>()
     }
 
@@ -337,6 +341,25 @@ class ComposerModelsFilesTest {
             onNodeWithText("Photo library").performClick()
             waitForIdle()
             assertTrue("attach Photos" in actions.calls)
+        }
+
+    @Test
+    fun `B-144 restored words with a held-back file say so in plain words, not Draft not saved`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val draft =
+                DraftFacts(
+                    text = "@notes.txt upgrade draft text",
+                    saved = "@notes.txt upgrade draft text",
+                    heldBackAttachments = listOf("notes.txt"),
+                )
+            setContent { Theme { KitSheetHost { BasicComposer(ui(draft = draft), actions, chrome) } } }
+            onNodeWithText("Attachments need recovery or could not be saved. Retry before sending.")
+                .assertIsDisplayed()
+            onNodeWithText("Draft not saved. Copy your text or retry.").assertDoesNotExist()
+            onNodeWithText("Try saving draft again").performClick()
+            waitForIdle()
+            assertTrue("retrySave" in actions.calls)
         }
 
     @Test
