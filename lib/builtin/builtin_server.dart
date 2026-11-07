@@ -13,6 +13,7 @@ import '../state/profiles.dart';
 import 'builtin_linux.dart';
 import 'deliberate_stop.dart';
 import 'quota_collector_host.dart';
+import 'setup/node_compat.dart';
 import 'setup/setup_engine.dart' show ChannelSetupEngine;
 import 'team/builtin_team.dart';
 
@@ -214,6 +215,9 @@ class BuiltinServerStartFailure {
 ///
 /// The single start path: the setup screen and the opening card both call
 /// it, so the two can never start the server differently.
+///
+/// [nodeCompat] reads this phone's Node.js safe mode (issue #117); the
+/// server starts with its environment.
 Future<BuiltinServerStartFailure?> startBuiltinServer({
   required BuiltinLinux linux,
   required ServerProfile profile,
@@ -223,6 +227,7 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
   int? recoveryGeneration,
   bool migrateLegacyHistory = false,
   Future<void> Function(ServerProfile profile)? saveRenewedPassword,
+  Future<NodeCompatState?> Function() nodeCompat = NodeCompatStore.load,
 }) async {
   const cancelled = BuiltinServerStartFailure.detail(
     'The server start was not confirmed.',
@@ -275,6 +280,8 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
     if (!wanted()) return cancelled;
     final script = BuiltinLinux.serverScript(
       runtime: BuiltinLinux.runtimeFor(profile.flavor),
+      // This phone's Node.js safe mode, if it needs one (issue #117).
+      nodeCompat: await nodeCompat(),
     );
     step = 'start';
     if (recoveryGeneration == null) {

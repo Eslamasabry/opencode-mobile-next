@@ -1,10 +1,13 @@
 import 'dart:ui' show Locale;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../../state/move_to_opencode2.dart';
 import '../../state/profiles.dart';
 import '../builtin_linux.dart';
 import '../builtin_server.dart';
+import 'node_compat.dart';
 import 'setup_engine.dart';
 
 /// The last step of a setup job: start OpenCode inside the app and connect
@@ -32,6 +35,23 @@ class BuiltinSetupFinisher {
   final AppLocalizations Function() strings;
 
   BuiltinLinux get linux => starter.linux;
+
+  /// Copies the Node.js safe mode the Node step chose inside Linux (issue
+  /// #117) into the app's preference, which the server start reads. A read
+  /// that fails changes nothing: Linux's own file still reaches the server.
+  Future<void> syncNodeCompat() async {
+    try {
+      final read = await linux.run(
+        'cat ${NodeCompat.stateFile} 2>/dev/null || true',
+        timeout: const Duration(seconds: 30),
+      );
+      if (!read.ok) return;
+      await NodeCompatStore.write(
+        await SharedPreferences.getInstance(),
+        NodeCompat.parseState(read.output),
+      );
+    } catch (_) {}
+  }
 
   Future<String?> call(SetupFinishRequest request) async {
     final l10n = strings();
@@ -64,6 +84,7 @@ class BuiltinSetupFinisher {
           p.backend == ServerBackend.openCode &&
           BuiltinLinux.managesServerUrl(p.baseUrl),
     );
+    await syncNodeCompat();
     var running = false;
     try {
       running = (await linux.status()).serverRunning;

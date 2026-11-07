@@ -8,6 +8,7 @@ import '../platform/platform_capabilities.dart';
 import '../state/profiles.dart' show ServerProfile;
 import '../termux/bridge.dart' show TermuxBridge, TermuxRuntime;
 import '../termux/opencode_ubuntu_setup.dart';
+import 'setup/node_compat.dart' show NodeCompat, NodeCompatState;
 import 'setup/setup_contract.dart' show setupToolsChanged;
 
 part 'builtin_linux_types.dart';
@@ -1197,9 +1198,14 @@ fi
   ///
   /// OpenCode 2 gets the Termux runner's isolated XDG folders, so its data and
   /// config never mix with OpenCode 1 installed in the same Ubuntu.
+  ///
+  /// [nodeCompat] is this phone's Node.js safe mode, when it needs one
+  /// (issue #117, node_compat.dart): the server, and the agents it starts,
+  /// get the same environment Node gets.
   static String serverScript({
     TermuxRuntime runtime = TermuxRuntime.defaultForNewInstall,
     int port = serverPort,
+    NodeCompatState? nodeCompat,
   }) {
     if (port < 1024 || port > 65535) {
       throw ArgumentError.value(
@@ -1235,6 +1241,7 @@ fi
         'export OPENCODE_SERVER_PASSWORD="\$password"\n'
         'export OPENCODE_PASSWORD="\$password"\n'
         'unset password\n'
+        '${NodeCompat.serverExports(nodeCompat)}'
         'exec $binary serve --hostname 127.0.0.1 --port $port\n';
   }
 }
