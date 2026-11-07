@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.PermissionReply
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.engine.requests.consent.AlwaysAllowInvitation
@@ -244,6 +246,13 @@ public class RequestsEngine(
                     is GatewayEvent.PermissionAsked ->
                         upsert(PendingRequest.Permission(event.request))
                     is GatewayEvent.PermissionSettled -> remove(event.requestId)
+                    // E06-S01: a question answered elsewhere leaves within the event, not at the
+                    // next reread (~40 s); a new one gets its card at once.
+                    is GatewayEvent.QuestionAsked ->
+                        if (port.capabilities.value.legacyQuestionRequests)
+                            upsert(PendingRequest.Question(event.question))
+                    is GatewayEvent.QuestionSettled -> remove(event.requestId)
+                    is GatewayEvent.RunEnded -> if (stopsAsks(event.outcome)) retireSession(event.sessionId)
                     else -> Unit
                 }
             }
@@ -258,6 +267,17 @@ public class RequestsEngine(
                             upsert(PendingRequest.Permission(event.request))
                     is GatewayEvent.PermissionSettled ->
                         if (event.sessionId in watched) remove(event.requestId)
+                    is GatewayEvent.QuestionAsked ->
+                        if (
+                            event.question.sessionId in watched &&
+                                port.capabilities.value.legacyQuestionRequests
+                        )
+                            upsert(PendingRequest.Question(event.question))
+                    is GatewayEvent.QuestionSettled ->
+                        if (event.sessionId in watched) remove(event.requestId)
+                    is GatewayEvent.RunEnded ->
+                        if (event.sessionId in watched && stopsAsks(event.outcome))
+                            retireSession(event.sessionId)
                     else -> Unit
                 }
             }
@@ -435,6 +455,9 @@ public class RequestsEngine(
             when (val phase = entry.phase) {
                 is AnswerPhase.Sending -> return phase.result.await()
                 is AnswerPhase.Sent -> return Unit.ok()
+                // The run was stopped: a late answer (a notification action) runs nothing.
+                AnswerPhase.NoLongerNeeded ->
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
                 is AnswerPhase.Held ->
                     send(id, phase, expectedRequest)?.let {
                         return it
@@ -469,27 +492,74 @@ public class RequestsEngine(
      * of them must not run a command after the person stopped the turn. A newer request that reuses
      * an id belongs to its own turn, and an already-dispatched reply keeps its real receipt. Call
      * only after the server accepted Stop; a failed or uncertain interrupt changes nothing.
+     *
+     * E06-S03: a retired card says "No longer needed" ([AnswerPhase.NoLongerNeeded]) for
+     * [RETIRED_SHOWN] and then leaves; it never keeps saying it needs a decision.
      */
     public suspend fun discardStopped(captured: List<PendingRequest>): Unit =
         withContext(lane) {
-            val retired = mutableListOf<RequestId>()
-            state.update { current ->
-                retired.clear()
-                current
-                    .filterNot { entry ->
-                        val retire =
-                            dispatched.none { it === entry.phase } &&
-                                captured.any { it.id == entry.id && entry.sameIncarnation(it) }
-                        if (retire) retired += entry.id
-                        retire
-                    }
-                    .toImmutableList()
-            }
-            // The atomic removal above wins against answer()/answerNow() claims; their delayed
-            // jobs check the captured phase and send nothing once it is gone. Remember settlement
-            // before a reread can bring an old server snapshot back.
-            retired.forEach(::remove)
+            retire { entry -> captured.any { it.id == entry.id && entry.sameIncarnation(it) } }
         }
+
+    /**
+     * The server ended [session]'s run without finishing it (Stop from anywhere: another device, a
+     * notification, the web, or the server itself): its asks can no longer be answered.
+     */
+    private fun retireSession(session: SessionId) {
+        retire { it.sessionId == session }
+    }
+
+    /** Lane only. Marks matching asks [AnswerPhase.NoLongerNeeded], then removes them. */
+    private fun retire(which: (PendingRequest) -> Boolean) {
+        val retired = mutableListOf<PendingRequest>()
+        state.update { current ->
+            retired.clear()
+            current
+                .map { entry ->
+                    if (which(entry) && retirable(entry))
+                        entry.withPhase(AnswerPhase.NoLongerNeeded).also { retired += it }
+                    else entry
+                }
+                .toImmutableList()
+        }
+        if (retired.isEmpty()) return
+        // The atomic phase change above wins against answer()/answerNow() claims; their delayed
+        // jobs check the captured phase and send nothing once it changed. Remember settlement
+        // before a reread can bring an old server snapshot back.
+        retired.forEach { entry ->
+            settled.add(entry.id)
+            offered.update { it - entry.id }
+            confirmedInvitations.update { it - entry.id }
+        }
+        while (settled.size > SETTLED_KEPT) settled.remove(settled.first())
+        scope.launch(lane) {
+            delay(RETIRED_SHOWN)
+            retired.forEach { entry ->
+                val now = state.value.firstOrNull { it.id == entry.id }
+                if (now != null && now.phase == AnswerPhase.NoLongerNeeded && now.sameIncarnation(entry))
+                    remove(entry.id)
+            }
+        }
+    }
+
+    /**
+     * Waiting, held, refused and not-yet-dispatched answers retire; a reply already on the wire
+     * keeps its real receipt, and a sent one leaves on its own.
+     */
+    private fun retirable(entry: PendingRequest): Boolean =
+        when (val phase = entry.phase) {
+            AnswerPhase.Waiting,
+            is AnswerPhase.Held,
+            is AnswerPhase.NotAccepted -> true
+            is AnswerPhase.Sending -> dispatched.none { it === phase }
+            is AnswerPhase.Sent,
+            AnswerPhase.NoLongerNeeded -> false
+        }
+
+    /** A run that ends like this leaves nothing waiting on the person. */
+    private fun stopsAsks(outcome: RunOutcome): Boolean =
+        outcome is RunOutcome.Interrupted ||
+            (outcome is RunOutcome.Failed && outcome.kind == MessageErrorKind.Aborted)
 
     /** Leaving the chat: its held answers go now (plan 09 §5.1). */
     public suspend fun flushHeld(session: SessionId) {
