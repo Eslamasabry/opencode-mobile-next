@@ -20232,7 +20232,7 @@
   "@appUpdateDownloadFailed": {
     "description": "Status text when update download encounters an error."
   },
-  "appUpdateRetry": "Retry",
+  "appUpdateRetry": "Try again",
   "@appUpdateRetry": {
     "description": "Button to retry a failed update download."
   },

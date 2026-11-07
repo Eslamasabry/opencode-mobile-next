@@ -853,17 +853,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.totalQueuedPromptCount, 0);
+    // The result notice heads the page, above the rows scrolled to.
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('privacy-clear-result')),
+      -200,
+      scrollable: _verticalScroll,
+    );
     expect(find.text('Queued prompts deleted'), findsOneWidget);
+    await tester.scrollUntilVisible(usage, 200, scrollable: _verticalScroll);
     expect(find.textContaining('Nothing is waiting to send'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('clear-session-drafts')));
+    final drafts = find.byKey(const ValueKey('clear-session-drafts'));
+    await tester.scrollUntilVisible(drafts, 200, scrollable: _verticalScroll);
+    await tester.tap(drafts);
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Delete 1 draft'));
     await tester.pumpAndSettle();
 
     expect(controller.totalSessionDraftCount, 0);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('privacy-clear-result')),
+      -200,
+      scrollable: _verticalScroll,
+    );
     expect(find.text('Drafts deleted'), findsOneWidget);
   });
 
