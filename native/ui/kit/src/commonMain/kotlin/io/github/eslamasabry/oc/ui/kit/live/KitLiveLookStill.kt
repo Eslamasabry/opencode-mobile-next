@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +26,8 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -39,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.res.Res
 import io.github.eslamasabry.oc.ui.kit.res.aurora_dark
 import io.github.eslamasabry.oc.ui.kit.res.aurora_light
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import org.jetbrains.compose.resources.imageResource
 import kotlin.math.min
@@ -73,20 +80,22 @@ internal fun rememberAuroraPlate(look: String?): Pair<ImageBitmap, ColorFilter>?
 }
 
 /**
- * One still frame of [look] (null: the plain ground) behind a tiny mock conversation, for a look's choice card (Dart
+ * A sample of [look] (null: the plain ground) behind a tiny mock conversation, for a look's choice card (Dart
  * `_LookSample` and `liveMockChat`, `lib/ui/kit/kit_option_card.dart:755-783` and
- * `lib/ui/kit/live_background/live_mock_chat.dart` at GLASS_REF 1bbdc3f9c). Still, so a grid of samples costs no
- * battery; drawn at the samples' strength 1.6 (`kit_option_card.dart:773`). The message and the box are drawn as the
- * style in force draws them.
+ * `lib/ui/kit/live_background/live_mock_chat.dart` at GLASS_REF 1bbdc3f9c), drawn at the samples' strength 1.6
+ * (`kit_option_card.dart:773`). A shader look runs live on the page's clock while the card is on screen and motion is
+ * Full, and rests on its still frame when scrolled away; the painted aurora is a still frame. The message and the box
+ * are drawn as the style in force draws them.
  *
- * States: none.
+ * States: still, live.
  */
 @Composable
 internal fun KitLiveLookStill(look: String?, modifier: Modifier = Modifier) {
     val ground = LocalKitColors.current.ground
     val plate = rememberAuroraPlate(look)
-    val alpha = AuroraImage.alphaFor(1.6f) // FG: lib/ui/kit/kit_option_card.dart:773
+    val alpha = AuroraImage.alphaFor(SAMPLE_STRENGTH)
     val corner = (FlutterKitTokens.ICON_TILE_RADIUS + Space.S1).dp // FG: lib/ui/kit/kit_option_card.dart:766
+    val shaderLook = LiveLooks.shader(look)
     Box(
         modifier
             .clip(RoundedCornerShape(corner))
@@ -94,9 +103,36 @@ internal fun KitLiveLookStill(look: String?, modifier: Modifier = Modifier) {
             .drawBehind { plate?.let { (image, filter) -> drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(0.0)) } }
             .clearAndSetSemantics {}
     ) {
+        if (shaderLook != null) LiveSample(shaderLook, Modifier.matchParentSize())
         MockChat(scale = .7f) // FG: lib/ui/kit/kit_option_card.dart:776
     }
 }
+
+/** The look's shader at thumbnail size, live only while it is on screen. */
+@Composable
+private fun LiveSample(look: LiveLook, modifier: Modifier) {
+    val clock = LocalLiveClock.current ?: rememberLiveFrameClock()
+    var onScreen by remember { mutableStateOf(false) }
+    val animates = LocalKitMotion.current.ambientLoops && onScreen
+    if (animates) {
+        DisposableEffect(clock) {
+            clock.acquire()
+            onDispose { clock.release() }
+        }
+    }
+    val time = rememberLiveTime(clock, animates)
+    LiveShaderLayer(
+        look,
+        SAMPLE_STRENGTH,
+        time,
+        modifier.onGloballyPositioned { coordinates ->
+            val bounds = coordinates.boundsInWindow()
+            onScreen = coordinates.isAttached && bounds.width > 0f && bounds.height > 0f
+        },
+    )
+}
+
+private const val SAMPLE_STRENGTH: Float = 1.6f // FG: lib/ui/kit/kit_option_card.dart:773
 
 /** Dart `liveMockChat` (`live_mock_chat.dart:15-89`): a message, some lines, the message box. */
 @Composable
