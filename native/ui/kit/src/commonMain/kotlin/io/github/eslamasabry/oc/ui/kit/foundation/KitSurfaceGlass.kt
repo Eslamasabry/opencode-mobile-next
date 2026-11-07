@@ -160,6 +160,8 @@ internal fun kitGlassSheet(shape: io.github.eslamasabry.oc.ui.design.tokens.KitS
 /** The Glass pane's face (Dart `_KitSurfacePainter.paint`): shadows outside it, then the tint, the glow and the rim. */
 internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier =
     drawBehind {
+        // A pane laid out at zero size (a fold or grow animation's first frame) draws nothing.
+        if (size.width <= 0f || size.height <= 0f) return@drawBehind
         val shape = d.shape()
         val outline = shape.createOutline(size, layoutDirection, this)
         val rtl = layoutDirection == LayoutDirection.Rtl
@@ -227,7 +229,8 @@ internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier =
             val e = d.edgeEnd ?: d.edgeStart
             if (s != null && e != null && (s.alpha > 0 || e.alpha > 0)) {
                 val w = d.edgeWidthDp.dp.toPx()
-                inset(w / 2f) {
+                // The rim is inset by half its width: a pane narrower than the rim has no inside to draw it in.
+                if (size.width > w && size.height > w) inset(w / 2f) {
                     val rim = shape.createOutline(size, layoutDirection, this)
                     if (s == e) {
                         drawOutline(rim, Color(s.v), style = Stroke(w))
