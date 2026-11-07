@@ -10,7 +10,10 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
@@ -19,8 +22,10 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import kotlinx.coroutines.launch
 
 /**
- * Horizontal source scroller: edge fades reveal overflow and a separate thumb strip never paints
- * over the last line.
+ * Horizontal source scroller (Dart `_CodeScroller`, kit_code_block_parts.dart): one sideways scroller for every line,
+ * a `space6` fade of the block's [fill] at an edge while more content is off-screen there, and, while the lines
+ * overflow or under a fine pointer, a `space2` strip under the last line for the thumb, so it never sits on text. The
+ * thumb shows at rest only under a fine pointer; on touch, only while the lines move.
  */
 @Composable
 internal fun CodeOverflow(
@@ -35,26 +40,30 @@ internal fun CodeOverflow(
     BoxWithConstraints(modifier) {
         val width = constraints.maxWidth.toFloat().coerceAtLeast(1f)
         val hasOverflow = scroll.maxValue in 1 until Int.MAX_VALUE
-        val thumbOn = hasOverflow && (fine.finePointer || scroll.isScrollInProgress)
+        val thumbOn = hasOverflow && (fine.finePointer || scroll.isScrollInProgress) // F: lib/ui/kit/kit_code_block_parts.dart:184
         Box(
-            Modifier.fillMaxWidth().drawWithContent {
+            // The fades thin the lines out toward an edge (the content's own alpha, in its own layer), which reads as
+            // Flutter's fade of the block's fill over them and leaves the fill itself untouched.
+            Modifier.fillMaxWidth().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
                 drawContent()
                 if (hasOverflow) {
-                    val fade = minOf(24.dp.toPx(), size.width / 4f)
+                    val fade = Space.S6.dp.toPx() // F: lib/ui/kit/kit_code_block.dart:1069
                     if (scroll.value > 0)
                         drawRect(
-                            Brush.horizontalGradient(listOf(fill, fill.copy(alpha = 0f)), 0f, fade),
+                            Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), 0f, fade),
                             size = Size(fade, size.height),
+                            blendMode = BlendMode.DstOut,
                         )
                     if (scroll.value < scroll.maxValue)
                         drawRect(
                             Brush.horizontalGradient(
-                                listOf(fill.copy(alpha = 0f), fill),
+                                listOf(Color.Transparent, Color.Black),
                                 size.width - fade,
                                 size.width,
                             ),
                             Offset(size.width - fade, 0f),
                             Size(fade, size.height),
+                            blendMode = BlendMode.DstOut,
                         )
                     if (thumbOn) {
                         val thumb =
@@ -75,7 +84,7 @@ internal fun CodeOverflow(
         ) {
             Row(
                 Modifier.horizontalScroll(scroll)
-                    .padding(bottom = if (hasOverflow) Space.S2.dp else 0.dp)
+                    .padding(bottom = if (fine.finePointer || hasOverflow) Space.S2.dp else 0.dp) // F: lib/ui/kit/kit_code_block_parts.dart:191,192
             ) {
                 content()
             }
