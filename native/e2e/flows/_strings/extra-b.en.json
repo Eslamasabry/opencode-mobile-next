@@ -79,5 +79,9 @@
  "x_ar_widget_conversations_title": {
   "text": "المحادثات",
   "source": "android/app/src/main/res/values-ar/widget_v2_strings.xml widget_conversations_title"
+ },
+ "x_native_terminal_send_to": {
+  "text": "Send to terminal",
+  "source": "native :ui:words remoteTerminalInput (the native terminal's command field; Flutter has no such field)"
  }
 }

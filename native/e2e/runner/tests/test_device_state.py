@@ -152,6 +152,21 @@ class CompareTest(unittest.TestCase):
     def test_B_MIGR_013_no_armed_schedule_after_the_update_fails(self):
         self.assertFalse(self.verdicts(state(), state(alarms=0))["schedule-armed"].ok)
 
+    def test_B_153_a_seed_part_a_could_not_make_is_not_run_never_pass(self):
+        before = state(widgets={}, shortcuts={"pinned": [], "dynamic": []}, alarms=0)
+        out = self.verdicts(before, state(versionCode=10062, widgets={}, alarms=0,
+                                          shortcuts={"pinned": [], "dynamic": []}))
+        for vid in ("widgets", "shortcuts", "schedule-armed"):
+            self.assertTrue(out[vid].not_run, vid)
+            self.assertFalse(out[vid].ok, vid)
+            self.assertEqual("NOT RUN", out[vid].word)
+            self.assertIn("B-153", out[vid].detail)
+
+    def test_B_153_a_seeded_widget_lost_by_the_update_is_still_a_failure(self):
+        v = self.verdicts(state(), state(versionCode=10062, widgets={}))["widgets"]
+        self.assertFalse(v.not_run)
+        self.assertEqual("FAIL", v.word)
+
     def test_B_MIGR_013_a_changed_channel_importance_fails(self):
         v = self.verdicts(state(), state(channels={"finished": 4}))["channels"]
         self.assertFalse(v.ok)

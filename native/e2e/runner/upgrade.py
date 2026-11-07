@@ -91,6 +91,8 @@ SCREENS = {
     "voice": "Voice typing set up and ready, nothing downloaded again.",
     "schedule": "Scheduled prompts: the seeded schedule is still listed.",
     "linux": "This phone: built-in Linux and its server running.",
+    "appearance": "Appearance: the style and text size chosen on 2.1.4.",
+    "saved-prompts": "Saved prompts: the prompt saved for later on 2.1.4.",
 }
 
 
@@ -104,9 +106,18 @@ class Line:
     title: str
     ok: bool
     detail: str = ""
+    not_run: bool = False  # B-153: nothing to judge (the seed could not be made); never counted as a pass
+
+    @property
+    def word(self) -> str:
+        return "NOT RUN" if self.not_run else "PASS" if self.ok else "FAIL"
+
+    @property
+    def failed(self) -> bool:
+        return not self.ok and not self.not_run
 
     def text(self) -> str:
-        return f"{'PASS' if self.ok else 'FAIL'} {self.id}: {self.title}" + (f" ({self.detail})" if self.detail else "")
+        return f"{self.word} {self.id}: {self.title}" + (f" ({self.detail})" if self.detail else "")
 
 
 def say(line: Line) -> Line:
@@ -423,7 +434,7 @@ def state_verdicts(state_dir: pathlib.Path) -> list[Line]:
                      f"missing {', '.join(missing)}: the flow stopped before it was read")]
     b = json.loads(before.read_text(encoding="utf-8"))
     a = json.loads(after.read_text(encoding="utf-8"))
-    return [Line(v.id, v.title, v.ok, v.detail) for v in device_state.compare(b, a)]
+    return [Line(v.id, v.title, v.ok, v.detail, v.not_run) for v in device_state.compare(b, a)]
 
 
 def collect_screens(run_out: pathlib.Path, dest: pathlib.Path) -> list[tuple[str, str]]:
@@ -463,16 +474,25 @@ def evidence_dir(args, today: dt.date) -> pathlib.Path:
     return path
 
 
+def verdict_word(lines: list[Line]) -> str:
+    """FAIL when a check failed; INCOMPLETE when every check that ran passed but some could not run (B-153)."""
+    if not lines or any(l.failed for l in lines):
+        return "FAIL"
+    return "INCOMPLETE" if any(l.not_run for l in lines) else "PASS"
+
+
 def write_record(dest: pathlib.Path, *, flutter: dict, native: dict, expect_signer: str, avd: str | None,
                  seeded_from: str | None, gates: list[Line], verdicts: list[Line],
                  shots: list[tuple[str, str]], run_out: pathlib.Path, today: dt.date) -> pathlib.Path:
-    ok = all(l.ok for l in gates + verdicts) and bool(verdicts)
-    rows = "\n".join(f"| {l.id} | {l.title} | {'PASS' if l.ok else '**FAIL**'} | {l.detail.replace('|', '/')} |"
-                     for l in gates + verdicts)
+    lines = gates + verdicts
+    word = verdict_word(lines)
+    not_run = sum(l.not_run for l in lines)
+    rows = "\n".join(f"| {l.id} | {l.title} | {'**FAIL**' if l.failed else l.word} | {l.detail.replace('|', '/')} |"
+                      for l in lines)
     screens = "\n".join(f"- `screens/{f}`: {s}" for f, s in shots) or "- none were saved (the flow stopped first)"
     text = f"""# Native switch upgrade gate, {today.isoformat()}
 
-**Verdict: {'PASS' if ok else 'FAIL'}** ({sum(l.ok for l in gates + verdicts)} of {len(gates + verdicts)} checks passed)
+**Verdict: {word}** ({sum(l.ok for l in lines)} of {len(lines)} checks passed{f', {not_run} not run' if not_run else ''})
 
 Written by `native/tool/qa/upgrade_e2e.sh` (E00-S09). The released Flutter app was seeded (E2E-39 Part A), checked
 (Part B), replaced with the native app by `adb install -r` (never uninstalled) and checked again (Part C).
@@ -661,10 +681,12 @@ def main(argv=None) -> int:
     readme = write_record(dest, flutter=flutter, native=native, expect_signer=args.expect_signer, avd=args.avd,
                           seeded_from=args.snapshot if restore else None, gates=gates, verdicts=verdicts,
                           shots=shots, run_out=out, today=today)
-    failed = [l.id for l in verdicts if not l.ok]
+    failed = [l.id for l in verdicts if l.failed]
+    not_run = [l.id for l in verdicts if l.not_run]
     print(f"evidence: {readme}")
-    print(f"VERDICT: {'FAIL' if failed else 'PASS'}" + (f" ({', '.join(failed)})" if failed else ""))
-    return 1 if failed else 0
+    print(f"VERDICT: {verdict_word(gates + verdicts)}" + (f" ({', '.join(failed)})" if failed else "")
+          + (f"; not run: {', '.join(not_run)}" if not_run else ""))
+    return 1 if failed or not_run else 0
 
 
 def _shutdown(adb, proc, args, fx_started, fx_dir) -> None:

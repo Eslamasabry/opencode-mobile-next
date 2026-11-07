@@ -1,0 +1,30 @@
+# Native (B-152): from Conversations, open the project terminal of the seeded conversation and run `pwd && ls`.
+# The chat header's project chip ("Project app on Computer. Opens its files and tools.") opens the project, whose top
+# bar holds Terminal; with no terminal yet, New terminal starts one. Native exposes the output to accessibility, so
+# `ls` must list the project's notes.txt (walked 2026-11-07 on 5ff3ac113).
+appId: ${APP_ID}
+---
+- tapOn: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
+- runFlow: settle-chat.yaml
+- tapOn: ${output.re.chatProjectChipFilesSemantics}
+- tapOn: ${output.s.libraryTerminalTitle}
+- extendedWaitUntil:
+    visible: ${output.s.x_native_terminal_send_to}
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      notVisible: ${output.s.x_native_terminal_send_to}
+    commands:
+      - tapOn: ${output.s.e7SetupNewTerminal}
+- extendedWaitUntil:
+    visible: ${output.s.x_native_terminal_send_to}
+    timeout: 60000
+- tapOn:
+    text: ${output.s.x_native_terminal_send_to}
+    index: 1
+- inputText: "pwd && ls"  # literal-ok: the shell command under test
+- tapOn: ${output.s.kitComposerSend}
+- extendedWaitUntil:
+    visible: ${'(?s).*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (ls lists the project's notes.txt)
+    timeout: 20000

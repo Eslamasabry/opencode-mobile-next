@@ -1,0 +1,16 @@
+# Native (B-152): Settings open: Settings > This app > Appearance, and check the kept choices on its chips. Each chip
+# shows its title and its value on separate lines ("Style" / "Soft", "Text & motion" / "Smallest, full motion");
+# settings search has no "Text size" row (walked 2026-11-07 on 5ff3ac113).
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.settingsHubGroupThisApp + '(\n(?s).*)?'}
+- tapOn: ${output.s.e7AppearanceTitle + '(\n(?s).*)?'}
+- extendedWaitUntil:
+    visible: ${output.s.appearanceGroupComfort}
+    timeout: 15000
+- assertVisible:
+    text: ${output.s.textSizeSmallest + '(, .*)?'}
+    below: ${output.s.appearanceGroupComfort}
+- assertVisible:
+    text: ${output.s.appearanceSurfaceSoft}
+    below: ${output.s.appearanceChipStyle}

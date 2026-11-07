@@ -374,3 +374,20 @@ class RunnerSupportTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VerdictWordTest(unittest.TestCase):
+    """B-153: a check with nothing to judge is NOT RUN; the gate is then INCOMPLETE, never PASS."""
+
+    def test_not_run_lines_make_the_gate_incomplete_not_pass(self):
+        lines = [upgrade.Line("a", "A", True), upgrade.Line("w", "W", False, "B-153", not_run=True)]
+        self.assertEqual("INCOMPLETE", upgrade.verdict_word(lines))
+        self.assertEqual("NOT RUN w: W (B-153)", lines[1].text())
+        self.assertFalse(lines[1].failed)
+
+    def test_a_failed_line_wins_over_not_run(self):
+        lines = [upgrade.Line("a", "A", False), upgrade.Line("w", "W", False, not_run=True)]
+        self.assertEqual("FAIL", upgrade.verdict_word(lines))
+
+    def test_all_passed_is_pass(self):
+        self.assertEqual("PASS", upgrade.verdict_word([upgrade.Line("a", "A", True)]))
