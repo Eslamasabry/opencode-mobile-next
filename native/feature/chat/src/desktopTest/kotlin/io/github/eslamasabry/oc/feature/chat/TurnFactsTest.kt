@@ -12,6 +12,7 @@ import androidx.compose.ui.test.filterToOne
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -346,8 +347,22 @@ class TurnFactsTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             onNodeWithText("Read 1 file · edited 1 file · ran 1 command").assertIsDisplayed().performClick()
-            onNodeWithText("Shell", substring = true).assertIsDisplayed()
+            // E20-S25: a shell step's line is its command in mono (Flutter `_buildTimelineStep`).
+            onNodeWithText("npm test", substring = true).assertIsDisplayed()
             onNodeWithText("4.2s", substring = true).assertIsDisplayed()
+        }
+
+    @Test
+    fun `E20-S25 the opened work line's steps hang off the rail with no chevron of their own`() =
+        runComposeUiTest {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
+            onNodeWithText("Read 1 file · edited 1 file · ran 1 command").assertIsDisplayed().performClick()
+            waitForIdle()
+            // The group's line has the one chevron; the three steps each draw a node on the rail and no chevron.
+            onAllNodesWithTag("kit-step-timeline-chevron", useUnmergedTree = true).assertCountEquals(1)
+            onAllNodesWithTag("kit-tool-chevron", useUnmergedTree = true).assertCountEquals(0)
+            onAllNodesWithTag("kit-step-node", useUnmergedTree = true).assertCountEquals(3)
         }
 
     @Test

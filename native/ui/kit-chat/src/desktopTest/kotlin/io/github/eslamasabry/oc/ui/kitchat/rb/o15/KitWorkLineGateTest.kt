@@ -9,6 +9,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kitchat.tool.kitWorkIcon
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import kotlin.test.Test
@@ -28,7 +29,7 @@ class KitWorkLineGateTest {
             Column(Modifier.padding(horizontal = 16.dp)) { // F: kit_work_line_golden_test.dart:35
                 KitText("I will look at how the app starts, then fix the failing test.")
                 Spacer(Modifier.height(8.dp))
-                KitWorkLine("Read 3 files · edited 1 file · ran 2 commands", "Done", KitWorkState.Done, expanded = false, onToggle = {}) {}
+                KitWorkLine("Read 3 files · edited 1 file · ran 2 commands", null, KitWorkState.Done, expanded = false, onToggle = {}, icon = kitWorkIcon(read = 3, edited = 1, ran = 2)) {}
                 Spacer(Modifier.height(8.dp))
                 KitText("The test passes now; the change is one line.")
             }

@@ -18,23 +18,31 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitChevron
  */
 @Composable
 internal fun KitToolGlyph(kind: KitToolKind, color: Color, size: Dp, modifier: Modifier = Modifier) {
-    Image(kind.icon(), null, modifier.size(size), colorFilter = ColorFilter.tint(color))
+    KitToolGlyph(kind.icon(), color, size, modifier)
 }
 
+/** [icon] drawn at [size] (a node's glyph is 0.6 of its tile, between the kit's icon sizes). */
+@Composable
+internal fun KitToolGlyph(icon: ImageVector, color: Color, size: Dp, modifier: Modifier = Modifier) {
+    Image(icon, null, modifier.size(size), colorFilter = ColorFilter.tint(color))
+}
+
+/** Dart `_glyphFor` (lib/ui/kit/chat/kit_tool_row.dart:304-315): every edit is the note-with-pencil glyph. */
 internal fun KitToolKind.icon(): ImageVector =
     when (this) {
         KitToolKind.Shell -> KitIcons.terminal
         KitToolKind.Read -> KitIcons.fileText
-        KitToolKind.Edit -> KitIcons.edit
-        KitToolKind.Write -> KitIcons.editNote
-        KitToolKind.Patch -> KitIcons.code
+        KitToolKind.List -> KitIcons.folderOpen
+        KitToolKind.Edit,
+        KitToolKind.Write,
+        KitToolKind.Patch -> KitIcons.editNote
         KitToolKind.Search -> KitIcons.search
         KitToolKind.WebFetch -> KitIcons.globe
         KitToolKind.SubAgent -> KitIcons.agent
         KitToolKind.Todo -> KitIcons.checklist
         KitToolKind.Question -> KitIcons.question
         KitToolKind.Card -> KitIcons.article
-        KitToolKind.Other -> KitIcons.more
+        KitToolKind.Other -> KitIcons.tools
     }
 
 /**

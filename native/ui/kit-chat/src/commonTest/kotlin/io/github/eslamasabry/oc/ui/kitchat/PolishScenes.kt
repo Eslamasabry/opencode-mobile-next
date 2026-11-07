@@ -20,7 +20,6 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
-import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRail
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
@@ -114,9 +113,8 @@ fun PolishWorkScene() {
                     KitToolView("s2", KitToolKind.Shell, "Ran", "flutter test", null, KitToolStatus.Done, "3.1s", null, null, "Done"),
                     KitToolView("s3", KitToolKind.Edit, "Edited", "lib/list.dart", null, KitToolStatus.Done, "0.2s", 4, 1, "Done"),
                 )
-            steps.forEachIndexed { i, v ->
-                KitToolRow(v, opened = false, onToggle = {}, rail = KitToolRail(i == 0, i == steps.lastIndex))
-            }
+            // E20-S25: the opened work line draws the rail itself; each step only takes its place on it.
+            steps.forEach { v -> KitToolRow(v, opened = false, onToggle = {}, body = {}) }
         }
     }
 }

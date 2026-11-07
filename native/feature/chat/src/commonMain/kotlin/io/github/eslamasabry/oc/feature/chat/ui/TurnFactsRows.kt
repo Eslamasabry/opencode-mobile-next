@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
@@ -8,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
@@ -19,6 +21,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -26,10 +29,10 @@ import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
-import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRail
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
+import io.github.eslamasabry.oc.ui.kitchat.tool.kitWorkIcon
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
@@ -115,8 +118,10 @@ internal fun TurnWorkLine(
     val expanded = folds.open[key] ?: kitState.opensByDefault
     val summary = workSummary(work)
     val now = work.now
-    // The line names the real current step, with its count, while the turn runs; open or folded.
-    val label = if (now != null) nowWords(now, work.counts) else summary
+    // Folded while the turn runs, the line names the real current step with its count; opened, it says the summary
+    // and the running step on the rail carries the progress (Flutter `KitWorkLine`).
+    val nowLabel = if (now != null) nowWords(now, work.counts) else null
+    val c = work.counts
     val hidden =
         if (work.state == WorkLineState.Running)
             (work.steps.size - KIT_WORK_STEP_CAP - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
@@ -132,27 +137,21 @@ internal fun TurnWorkLine(
             )
         } else null
     KitWorkLine(
-        label = label,
+        label = summary,
         stateWords = workStateWords(work.state),
         state = kitState,
         expanded = expanded,
         onToggle = { folds.open[key] = it },
         earlier = earlier,
-        modifier = Modifier.testTag("chat-work-line"),
+        icon = kitWorkIcon(c.read, c.searched, c.listed, c.edited, c.ran, c.fetched, c.delegated, c.other),
+        now = nowLabel,
+        // The reply's 16 dp edge: the line's glyph and the rail sit on it, the steps' words one column in.
+        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
     ) {
         if (entries.isEmpty()) {
             val shown = work.steps.drop(hidden).distinctBy(::stepIdentity)
-            shown.forEachIndexed { index, step ->
-                StepRow(
-                    step,
-                    nowMs,
-                    folds,
-                    onOpenSession,
-                    onOpenFile,
-                    KitToolRail(index == 0, index == shown.lastIndex),
-                    reply,
-                    waitingForYou = stepWaitsForYou(step.state, work.state),
-                )
+            shown.forEach { step ->
+                StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(step.state, work.state))
             }
         } else {
             var skipped = 0
@@ -164,15 +163,7 @@ internal fun TurnWorkLine(
                     val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
                     if (!seen.add(stepIdentity(step))) continue
                     if (skipped++ >= hidden)
-                        StepRow(
-                            step,
-                            nowMs,
-                            folds,
-                            onOpenSession,
-                            onOpenFile,
-                            reply = reply,
-                            waitingForYou = stepWaitsForYou(step.state, work.state),
-                        )
+                        StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(step.state, work.state))
                 }
                 is WorkEntryUi.Detail ->
                     if (skipped >= hidden)
@@ -239,7 +230,6 @@ private fun StepRow(
     folds: TranscriptFolds,
     onOpenSession: ((String) -> Unit)?,
     onOpenFile: ((ToolArtifact) -> Unit)?,
-    rail: KitToolRail? = null,
     reply: ReplyActions? = null,
     waitingForYou: Boolean = false,
 ) {
@@ -291,7 +281,6 @@ private fun StepRow(
     val more = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines)
     KitToolRow(
         view = view,
-        rail = rail,
         opened = folds.open[key] == true,
         onToggle = { folds.open[key] = !(folds.open[key] ?: false) },
         modifier = Modifier.testTag("chat-step-${step.partId}"),
@@ -396,7 +385,7 @@ private fun ToolKind.toKit(): KitToolKind =
     when (this) {
         ToolKind.Read,
         ToolKind.Lsp -> KitToolKind.Read
-        ToolKind.List,
+        ToolKind.List -> KitToolKind.List
         ToolKind.Glob,
         ToolKind.Grep,
         ToolKind.ConnectorSearch -> KitToolKind.Search

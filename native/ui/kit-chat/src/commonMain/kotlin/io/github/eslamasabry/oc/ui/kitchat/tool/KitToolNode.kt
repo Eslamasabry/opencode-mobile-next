@@ -3,10 +3,8 @@ package io.github.eslamasabry.oc.ui.kitchat.tool
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.SignalPalette
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.icon.KitStatusIcon
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -33,7 +34,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.rememberLoopPhase
  * identity.
  */
 @Composable
-internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier) {
+internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier, onRail: Boolean = false) {
     val colors = LocalKitColors.current
     val motion = KitMotion.state
     val running = view.status == KitToolStatus.Running
@@ -101,6 +102,42 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
                         style = Stroke(1.5.dp.toPx()),
                     )
             }
+        }
+        return
+    }
+    if (onRail) {
+        // Flutter's step node (kit_step_light.dart `_StepLightState.build`): the glyph in its small tile, the light round
+        // it while the step runs; a step that finishes flashes once (a tick that springs back to the glyph, a neutral
+        // outline that fades before the failed mark, the accent outline fading on a stop).
+        val icon = view.kind.icon()
+        val tickShare =
+            MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
+        val settling = finishedFromRunning && transition.value < 1f
+        when (view.status) {
+            KitToolStatus.Running -> KitStepTile(icon, KitStepNodeLook.Running, size, modifier)
+            KitToolStatus.Pending -> KitStepTile(icon, KitStepNodeLook.Queued, size, modifier)
+            KitToolStatus.Done ->
+                if (settling && transition.value < tickShare)
+                    // F: lib/ui/kit/chat/kit_step_light.dart:222-229 the tick in success while it lands
+                    KitStepTile(KitIcons.check, KitStepNodeLook.Plain, size, modifier, glyphColor = colors.success)
+                else if (settling) {
+                    // F: lib/ui/kit/chat/kit_step_light.dart:233 the glyph grows back from .4 of its size
+                    val t = (transition.value - tickShare) / (1f - tickShare)
+                    KitStepTile(icon, KitStepNodeLook.Plain, size, modifier, glyphScale = .4f + .6f * t) // F: lib/ui/kit/chat/kit_step_light.dart:240
+                } else KitStepTile(icon, KitStepNodeLook.Plain, size, modifier)
+            KitToolStatus.Failed ->
+                if (settling)
+                    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+                        KitStepTile(icon, KitStepNodeLook.Plain, size)
+                        StillOutline(colors.text2.copy(alpha = 1f - transition.value), size)
+                    }
+                // F: lib/ui/kit/chat/kit_tool_row.dart:705 a failed step settles on the failed mark
+                else KitStatusIcon(StatusTone.Failure, modifier)
+            KitToolStatus.Stopped ->
+                Box(modifier.size(size), contentAlignment = Alignment.Center) {
+                    KitStepTile(icon, KitStepNodeLook.Plain, size)
+                    if (settling) StillOutline(colors.accent.copy(alpha = 1f - transition.value), size)
+                }
         }
         return
     }
