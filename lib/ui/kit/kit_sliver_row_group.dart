@@ -46,6 +46,8 @@ class KitSliverRowGroup extends StatelessWidget {
     this.leadingIcons,
     this.margin,
     this.gapBefore,
+    this.divider,
+    this.prominentDividers = false,
   }) : assert(itemCount >= 0),
        assert(
          itemCount == 0 || itemBuilder != null,
@@ -88,6 +90,12 @@ class KitSliverRowGroup extends StatelessWidget {
   /// The space above the label; see [KitSectionLabel.gapBefore]. Without a
   /// label, a number here is a plain gap above the panel.
   final double? gapBefore;
+
+  /// A custom divider between rows, instead of the default hairline rule.
+  final Widget? divider;
+
+  /// Whether separators between rows are prominent (clearly visible, e.g. for chat feeds).
+  final bool prominentDividers;
 
   @override
   Widget build(BuildContext context) => KitMaxWidth.sliver(
@@ -135,7 +143,16 @@ class KitSliverRowGroup extends StatelessWidget {
     final back = EdgeInsets.symmetric(horizontal: reach);
     // The rules between the rows stop at the margin at the end too, as the
     // section rule above them does.
-    final rule = KitDivider(inset: inset, endInset: reach);
+    final rule = divider ??
+        (prominentDividers
+            ? KitDivider.prominent(
+                inset: inset,
+                endInset: reach,
+                color: tokens.roles.isDark
+                    ? const Color(0x33FFFFFF)
+                    : const Color(0x26000000),
+              )
+            : KitDivider(inset: inset, endInset: reach));
 
     Widget? item(BuildContext context, int index) {
       final Widget? row = index < head

@@ -821,6 +821,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       label: label,
       gapBefore: first ? 0 : null,
       leadingIcons: false,
+      prominentDividers: true,
       itemCount: group.length,
       itemBuilder: (context, index) {
         final item = group[index];

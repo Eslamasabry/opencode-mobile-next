@@ -160,6 +160,11 @@ void main() {
     );
     expect(find.text(KitBidi.auto('Allow running the tests?')), findsNothing);
     expect(find.text('Git'), findsNothing);
+    // Adjacent chats are separated by prominent dividers so they don't look combined.
+    final dividers =
+        tester.widgetList<KitDivider>(find.byType(KitDivider)).toList();
+    expect(dividers, isNotEmpty);
+    expect(dividers.any((d) => d.thickness == 1.0), isTrue);
   });
 
   clocked('a reply that finished since it was opened shows Done in the state '

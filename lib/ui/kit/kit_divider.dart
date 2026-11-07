@@ -34,17 +34,34 @@ class KitDivider extends StatelessWidget {
     super.key,
     this.inset = KitDividerInset.none,
     this.endInset = 0,
+    this.color,
+    this.thickness,
   }) : assert(endInset >= 0),
        _axis = Axis.horizontal,
        _section = false;
 
   /// A vertical hairline between items in a row, such as a toolbar's
   /// groups. It is as tall as its parent allows.
-  const KitDivider.vertical({super.key})
-    : inset = KitDividerInset.none,
-      endInset = 0,
-      _axis = Axis.vertical,
-      _section = false;
+  const KitDivider.vertical({
+    super.key,
+    this.color,
+    this.thickness,
+  })  : inset = KitDividerInset.none,
+        endInset = 0,
+        _axis = Axis.vertical,
+        _section = false;
+
+  /// A prominent horizontal divider with visible contrast (e.g. for chat feeds
+  /// or separating content items where standard hairlines are too faint).
+  const KitDivider.prominent({
+    super.key,
+    this.inset = KitDividerInset.none,
+    this.endInset = 0,
+    this.color,
+    this.thickness = 1.0,
+  })  : assert(endInset >= 0),
+        _axis = Axis.horizontal,
+        _section = false;
 
   /// The rule above a section's label, edge to edge: the `divider` role
   /// asked with `selected: true`. A style draws it only when it answers
@@ -53,6 +70,8 @@ class KitDivider extends StatelessWidget {
   const KitDivider.section({super.key})
     : inset = KitDividerInset.none,
       endInset = 0,
+      color = null,
+      thickness = null,
       _axis = Axis.horizontal,
       _section = true;
 
@@ -64,6 +83,12 @@ class KitDivider extends StatelessWidget {
   /// reach out into the page margin (Paper) passes that reach, so its lines
   /// still end at the margin, where the section rule ends.
   final double endInset;
+
+  /// Explicit color override, if any.
+  final Color? color;
+
+  /// Explicit thickness override in logical pixels, if any.
+  final double? thickness;
 
   final Axis _axis;
   final bool _section;
@@ -88,7 +113,14 @@ class KitDivider extends StatelessWidget {
                 _axis == Axis.horizontal && inset != KitDividerInset.none,
           );
     if (rule == null) return const SizedBox.shrink();
-    final thickness = rule.width;
+    final effectiveThickness = thickness ?? rule.width;
+    final defaultVisibleColor = tokens.roles.isDark
+        ? const Color(0x33FFFFFF)
+        : const Color(0x26000000);
+    final effectiveColor = color ??
+        (thickness != null && thickness! >= 1.0
+            ? defaultVisibleColor
+            : rule.color);
     final dpr = MediaQuery.devicePixelRatioOf(context);
     // TEST-5: an internal key so the part's own tests can find the painted
     // line itself, unambiguously, regardless of the inset padding around
@@ -98,9 +130,9 @@ class KitDivider extends StatelessWidget {
       key: const ValueKey('kit-divider-line'),
       child: _KitHairline(
         axis: _axis,
-        thickness: thickness,
+        thickness: effectiveThickness,
         devicePixelRatio: dpr,
-        color: rule.color,
+        color: effectiveColor,
       ),
     );
     if (_axis == Axis.vertical) return line;
