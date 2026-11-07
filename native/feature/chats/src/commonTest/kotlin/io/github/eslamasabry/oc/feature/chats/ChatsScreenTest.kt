@@ -132,8 +132,10 @@ class ChatsScreenTest {
             onNodeWithContentDescription("Fix the reconnect loop", substring = true).assertExists()
             // One name for one thing (design review §2.3): the placeholder row and the floating button both say
             // "New conversation".
-            onAllNodesWithContentDescription("New conversation", substring = true).assertCountEquals(1)
-            // P-107: the floating button is round and draws no words, so it never covers a row's time with them.
+            onAllNodesWithContentDescription("New conversation", substring = true).assertCountEquals(2)
+            // P-107: the floating button is round and draws no words, so it never covers a row's time with them; it
+            // is the one node named exactly "New conversation".
+            onAllNodesWithContentDescription("New conversation").assertCountEquals(1)
             onAllNodesWithText("New conversation").assertCountEquals(0)
             onAllNodesWithText("New chat").assertCountEquals(0)
             onAllNodesWithContentDescription("New chat", substring = true).assertCountEquals(0)
