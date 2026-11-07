@@ -33,7 +33,6 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
@@ -55,7 +54,7 @@ private const val ELLIPSIS = "…" // F: lib/ui/kit/kit_breadcrumb.dart:21 (the 
  * last, each ancestor one tap back. When the trail does not fit, the middle folders fold into one "…" crumb that opens
  * a menu of them. [onSelected] gets -1 for the root and i for `segments[i]`, never the current folder.
  *
- * Text: chrome. Cap: list (960).
+ * Text: reading (the crumbs scale fully, as Dart `KitText` secondary does). Cap: list (960).
  */
 @Composable
 public fun KitBreadcrumb(
@@ -178,7 +177,6 @@ private fun Ancestor(
             Modifier.padding(horizontal = Space.S2.dp).widthIn(max = (textWidth + Space.S2 * 2f).dp), // F: lib/ui/kit/kit_breadcrumb.dart:266
             role = TypeRole.Secondary,
             tone = TextTone.Secondary,
-            kind = KitTextKind.Frame,
             maxLines = 1,
         )
     }
@@ -205,8 +203,7 @@ private fun MoreCrumb(hidden: List<Int>, segments: List<String>, onSelected: (In
                 Modifier.padding(horizontal = Space.S2.dp),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
-                kind = KitTextKind.Frame,
-                maxLines = 1,
+                    maxLines = 1,
             )
         }
     }
