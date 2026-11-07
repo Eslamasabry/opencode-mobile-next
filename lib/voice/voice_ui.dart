@@ -569,6 +569,7 @@ class _VoiceAutomaticSetupBodyState extends State<_VoiceAutomaticSetupBody>
           final pack = _setup.pack!;
           final size = voiceSizeText(strings, _setup.downloadBytes);
           final unmetered = _setup.network == VoiceSetupNetwork.unmetered;
+          final metered = _setup.network == VoiceSetupNetwork.metered;
           children.addAll([
             KitText(strings.voiceAutoSetupOffer, role: KitTextRole.body),
             SizedBox(height: tokens.space2),
@@ -583,9 +584,9 @@ class _VoiceAutomaticSetupBodyState extends State<_VoiceAutomaticSetupBody>
               KitNotice(
                 key: const Key('voice-auto-setup-metered'),
                 icon: AppIconography.warning,
-                message: _setup.network == VoiceSetupNetwork.metered
+                message: metered
                     ? strings.voiceAutoSetupMobileData
-                    : strings.voiceAutoSetupMaybeMetered,
+                    : strings.voiceAutoSetupUnknownNetwork,
               ),
             ],
             SizedBox(height: tokens.space3),
@@ -593,9 +594,9 @@ class _VoiceAutomaticSetupBodyState extends State<_VoiceAutomaticSetupBody>
           ]);
           primary = KitAction(
             key: const Key('voice-auto-setup-download'),
-            label: unmetered
-                ? strings.voiceAutoSetupDownload(size)
-                : strings.voiceAutoSetupDownloadMobile(size),
+            label: metered
+                ? strings.voiceAutoSetupDownloadMobile(size)
+                : strings.voiceAutoSetupDownload(size),
             icon: AppIconography.download,
             onPressed: () =>
                 unawaited(_setup.confirmDownload(allowMetered: !unmetered)),

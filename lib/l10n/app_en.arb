@@ -23972,10 +23972,6 @@
   "@voiceAutoSetupMobileData": {
     "description": "First mic tap voice setup sheet (P10.4): warning on mobile data; the size is on the button"
   },
-  "voiceAutoSetupMaybeMetered": "This connection may count against a data plan.",
-  "@voiceAutoSetupMaybeMetered": {
-    "description": "First mic tap voice setup sheet (P10.4): warning when the network type is unknown; the size is on the button"
-  },
   "voiceAutoSetupDownload": "Download {size}",
   "@voiceAutoSetupDownload": {
     "description": "First mic tap voice setup sheet (P10.4): primary button on Wi-Fi; {size} is the download size",
@@ -44049,7 +44045,15 @@
     "description": "Privacy and data: what the crash report offer switch does."
   },
   "telemetrySettingTitle": "Send crash reports to the developer (Google Firebase)",
-  "@telemetrySettingTitle": {"description": "Privacy and data: switch that turns on sending crash reports to the developer through Google Firebase Crashlytics."},
+  "@telemetrySettingTitle": {
+    "description": "Privacy and data: switch that turns on sending crash reports to the developer through Google Firebase Crashlytics."
+  },
   "telemetrySettingDetail": "Sends crash and failure reports to Google Firebase Crashlytics: the kind of error, the code locations it happened in, your phone model and Android version, and the app version. No messages, files, addresses or passwords.",
-  "@telemetrySettingDetail": {"description": "Privacy and data: one sentence on what the crash-report switch sends."}
+  "@telemetrySettingDetail": {
+    "description": "Privacy and data: one sentence on what the crash-report switch sends."
+  },
+  "voiceAutoSetupUnknownNetwork": "This phone can't tell whether this connection costs data.",
+  "@voiceAutoSetupUnknownNetwork": {
+    "description": "First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows"
+  }
 }
