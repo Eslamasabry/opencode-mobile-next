@@ -11,6 +11,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.engine.linuxsetup.SetupEngine
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.coroutines.flow.StateFlow
 
 /** PhoneSetupNavigator → the routes of :ui:routes. */
@@ -22,6 +23,11 @@ public class RoutedPhoneSetupNavigator(private val nav: AppNavigator) : PhoneSet
     override fun thisPhone() {
         nav.back()
         nav.open(PhoneRoute.ThisPhone)
+    }
+
+    override fun connectComputer() {
+        nav.back()
+        nav.open(ServersRoute.Edit())
     }
 }
 
@@ -58,4 +64,6 @@ public class PhoneSetupViewModel(
     override fun done(): Unit = model.done()
 
     override fun reportFailure(): Unit = model.reportFailure()
+
+    override fun connectComputer(): Unit = model.connectComputer()
 }

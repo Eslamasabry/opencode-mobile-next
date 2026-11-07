@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNoSpace
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOffline
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoProgram
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoStart
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNodeCannotRun
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeWontRun
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorPackageRepair
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupNotificationDone
@@ -359,6 +360,7 @@ private fun failureLine(line: SetupFailureLine): String =
                 SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
                 SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
                 SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
+                SetupError.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
                 SetupError.Interrupted -> stringResource(Res.string.phoneSetupErrorInterrupted)
                 SetupError.NoInternet -> stringResource(Res.string.phoneSetupErrorNoInternet)
                 is SetupError.NoSpace -> stringResource(Res.string.phoneSetupErrorNoSpace, e.title)

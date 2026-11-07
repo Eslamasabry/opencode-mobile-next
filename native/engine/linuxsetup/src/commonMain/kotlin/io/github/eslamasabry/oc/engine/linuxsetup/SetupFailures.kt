@@ -23,6 +23,9 @@ public sealed interface SetupProblem {
     public data object OpenCodeWontRun : SetupProblem
     public data object OpenCodeNoStart : SetupProblem
 
+    /** Node.js crashed in every safe mode ([NodeCompat.FAILURE_LINE]): the page offers a computer instead (#117). */
+    public data object NodeCannotRun : SetupProblem
+
     /** The stable recovery code `runtime_ownership_unknown`: the page offers the recovery, not a retry. */
     public data object RuntimeOwnershipUnknown : SetupProblem
 
@@ -63,6 +66,9 @@ public object SetupProblemWordsEn {
                 "OpenCode was downloaded, but its program does not run on this phone. Details show what it said."
             SetupProblem.OpenCodeNoStart -> // phoneSetupErrorOpenCodeNoStart
                 "OpenCode was installed, but it did not start. Continue to try again; Details show what it said."
+            SetupProblem.NodeCannotRun -> // phoneSetupErrorNodeCannotRun
+                "This phone's system can't run Node.js inside built-in Linux. " +
+                    "You can still use OpenCode Mobile by connecting to your computer."
             SetupProblem.RuntimeOwnershipUnknown -> RUNTIME_OWNERSHIP_UNKNOWN
             is SetupProblem.StartFailed -> // phoneSetupErrorInstall('OpenCode'); the details stay under Details
                 "Could not install OpenCode"
@@ -110,6 +116,7 @@ public fun describeSetupFailure(
     Regex("""Another OpenCode server is already using port (\d+) on this phone\.""")
         .find(reason)?.groupValues?.get(1)?.toIntOrNull()?.takeIf { it in 1024..65535 }
         ?.let { return both(SetupProblem.PortBusy(it)) }
+    if (NodeCompat.cannotRun(reason, logTail)) return both(SetupProblem.NodeCannotRun)
     if (step) return both(SetupProblem.CannotStart)
     when {
         reason.startsWith(OpenCodeInstallFailure.NO_PROGRAM) -> return both(SetupProblem.OpenCodeNoProgram)

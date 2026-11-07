@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressTone
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
@@ -58,6 +59,9 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInstall
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInterrupted
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNoInternet
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNoSpace
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNodeCannotRun
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupNodeConnectComputer
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupNodeReportFailure
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOffline
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoProgram
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorOpenCodeNoStart
@@ -300,7 +304,24 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
                 copyLabel = stringResource(Res.string.kitCopyDetails),
             )
             if (state.reportFailed) KitNotice(stringResource(Res.string.diagnosticsUnavailable))
-            KitActionBlock(
+            // Node.js cannot run on this phone (#117): Continue would only fail again; a computer is the way on.
+            val cannotRun =
+                progress.state == SetupState.Failed && progress.error == SetupProblem.NodeCannotRun
+            KitReveal(cannotRun) {
+                KitActionBlock(
+                    primary =
+                        KitAction(
+                            stringResource(Res.string.phoneSetupNodeConnectComputer),
+                            actions::connectComputer,
+                        ),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.phoneSetupNodeReportFailure),
+                            actions::reportFailure,
+                        ),
+                )
+            }
+            if (!cannotRun) KitActionBlock(
                 primary =
                     KitAction(
                         stringResource(Res.string.setupProgressViewContinue),
@@ -366,6 +387,7 @@ internal fun problemWords(problem: SetupProblem): String =
             stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupProblem.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupProblem.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
+        SetupProblem.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
         is SetupProblem.StartFailed ->
             SetupMessages.plain(problem.details)?.let { setupMessageWords(it) }
                 ?: stringResource(Res.string.setupProgressViewFailedUnknown)

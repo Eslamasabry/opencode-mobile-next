@@ -186,6 +186,7 @@ private fun SetupError.words(): String =
         SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
+        SetupError.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
         SetupError.Interrupted -> stringResource(Res.string.phoneSetupErrorInterrupted)
         SetupError.NoInternet -> stringResource(Res.string.phoneSetupErrorNoInternet)
         is SetupError.NoSpace -> stringResource(Res.string.phoneSetupErrorNoSpace, title)

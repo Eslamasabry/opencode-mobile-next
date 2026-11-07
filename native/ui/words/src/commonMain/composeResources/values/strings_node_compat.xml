@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node.js cannot run inside built-in Linux on this phone (issues #117/#119; twin of the Flutter fix/117-adapt copy). -->
+<resources>
+    <string name="phoneSetupErrorNodeCannotRun">This phone's system can't run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.</string>
+    <string name="phoneSetupNodeConnectComputer">Connect a computer</string>
+    <string name="phoneSetupNodeReportFailure">Report this failure</string>
+</resources>

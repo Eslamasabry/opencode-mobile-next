@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -90,6 +92,12 @@ public interface SetupJourneyActions {
     public fun openStorage()
 
     public fun done()
+
+    /** Node.js cannot run on this phone (#117): use OpenCode through a computer instead. */
+    public fun connectComputer() {}
+
+    /** Node.js cannot run on this phone (#117): send the failure as a problem report. */
+    public fun reportFailure() {}
 }
 
 /**
@@ -270,6 +278,15 @@ public class SetupJourneyViewModel(
     override fun done() {
         nav.back()
         nav.open(PhoneRoute.ThisPhone)
+    }
+
+    override fun connectComputer() {
+        nav.back()
+        nav.open(ServersRoute.Edit())
+    }
+
+    override fun reportFailure() {
+        nav.open(SettingsRoute.ReportProblem)
     }
 
     @AssistedFactory

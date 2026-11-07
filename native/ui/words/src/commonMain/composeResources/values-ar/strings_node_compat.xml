@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="phoneSetupErrorNodeCannotRun">لا يستطيع نظام هذا الهاتف تشغيل Node.js داخل Linux المدمج. ما زال بإمكانك استخدام OpenCode Mobile بربطه بحاسوبك.</string>
+    <string name="phoneSetupNodeConnectComputer">ربط حاسوب</string>
+    <string name="phoneSetupNodeReportFailure">الإبلاغ عن هذا الفشل</string>
+</resources>
