@@ -13,13 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
@@ -50,6 +53,13 @@ public enum class KitTrayKind(internal val icon: ImageVector) {
 
 private const val PER_ROW = 4
 
+/** P-004: at large text a quarter of the phone is too narrow for a whole word ("Commands"); three to a row. */
+private const val PER_ROW_LARGE = 3
+
+/** How many choices share a row: whole words fit their cell at every text size. */
+internal fun trayPerRow(textScale: Float): Int =
+    if (TextScalePolicy.isLargeText(textScale)) PER_ROW_LARGE else PER_ROW
+
 /** The caller closes the tray before running an action, preserving the editor and its keyboard. */
 public class KitTrayAction(
     public val label: String,
@@ -62,8 +72,9 @@ public class KitTrayAction(
 public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     Column(modifier.fillMaxWidth().testTag("kit-composer-tray")) {
-        // Four to a row: eight choices stay readable and 48 dp wide at large text sizes.
-        actions.chunked(PER_ROW).forEach { rowActions ->
+        // Four to a row (three at large text): every label keeps whole words and every target 48 dp.
+        val perRow = trayPerRow((LocalKitAppDensity.current ?: LocalDensity.current).fontScale)
+        actions.chunked(perRow).forEach { rowActions ->
         Row(
             Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -93,7 +104,7 @@ public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Mo
                     }
                 }
             }
-            repeat(PER_ROW - rowActions.size) { Box(Modifier.weight(1f)) }
+            repeat(perRow - rowActions.size) { Box(Modifier.weight(1f)) }
         }
         }
         Box(Modifier.fillMaxWidth().size(1.dp).background(colors.hairline))

@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kitchat.code.codeOverflows
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
+import io.github.eslamasabry.oc.ui.kitchat.composer.trayPerRow
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -205,6 +206,13 @@ class S8PolishTest {
                 assertTrue(abs(left - right) <= 1.5f, "line $line: $left px before, $right px after")
             }
         }
+
+    @Test
+    fun `P-004 the tray takes three choices to a row at large text so whole words fit`() {
+        assertEquals(4, trayPerRow(1f))
+        assertEquals(4, trayPerRow(1.15f))
+        assertEquals(3, trayPerRow(1.3f))
+    }
 
     // ---- P-011: the opened tool group has one start edge ----
 
