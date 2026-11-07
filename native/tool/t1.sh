@@ -19,6 +19,7 @@
 #   - detekt on the touched modules plus the baseline ratchet (tool/qa/detekt.sh, plan 03 check 11; always, E02-S03);
 #   - the layout guard's baseline ratchet (tool/qa/layout_baseline.sh; always, E02-S13; the guard itself runs in each
 #     touched module's desktopTest);
+#   - the alignment gate's baseline ratchet (layout_baseline.sh --kind align; always; docs/kit/ALIGN-RULES.md);
 #   - the versionCode ledger check (tool/version_code.sh check, E01-S09; always).
 # --record <module> re-records that module's Roborazzi goldens (VPS only: the one golden host; OC_GOLDEN_HOST=1 marks
 # a host as allowed). Base: --base, $OC_BASE, native/main, origin/native/main.
@@ -152,6 +153,12 @@ oc_status "$(( rc == 0 ? 0 : (rc == 1 ? 1 : 2) ))"
 oc_step layout-baseline "$OC_NATIVE/tool/qa/layout_baseline.sh" --base "$base"
 rc=$?
 grep -E '^layout ratchet: .*(FAIL|GREW|NEW|could not run)|^  \+ ' "$OC_RUN_DIR/layout-baseline.log" | head -20 | sed 's/^/  /' | tee -a "$OC_SUMMARY"
+oc_status "$(( rc == 0 ? 0 : (rc == 1 ? 1 : 2) ))"
+
+# The alignment gate (docs/kit/ALIGN-RULES.md) also runs inside every FlutterGoldenGate shot; its baselines only shrink.
+oc_step align-baseline "$OC_NATIVE/tool/qa/layout_baseline.sh" --kind align --base "$base"
+rc=$?
+grep -E '^align ratchet: .*(FAIL|GREW|NEW|could not run)|^  \+ ' "$OC_RUN_DIR/align-baseline.log" | head -20 | sed 's/^/  /' | tee -a "$OC_SUMMARY"
 oc_status "$(( rc == 0 ? 0 : (rc == 1 ? 1 : 2) ))"
 
 fails="$(oc_failing_tests)"

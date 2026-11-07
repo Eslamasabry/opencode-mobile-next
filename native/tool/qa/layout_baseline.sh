@@ -5,6 +5,8 @@
 #   native/tool/qa/layout_baseline.sh [--base <ref>]
 #
 #   --base <ref>  the ref to compare with (default: $OC_BASE, native/main, origin/native/main)
+#   --kind <k>    which guard's baselines: layout (default, native/config/layout/baseline) or align (the alignment
+#                 gate, native/config/align/baseline; tool/qa/align_baseline.sh)
 #
 # Fails when a file in native/config/layout/baseline/ gains a line, or a baseline file appears for a module that had
 # none, compared with merge-base(<base>, HEAD). Before the base carries that folder at all (the commit that adopts the
@@ -14,27 +16,29 @@ set -uo pipefail
 # shellcheck source=../lib/common.sh
 source "$(dirname "$0")/../lib/common.sh"
 
-base_arg=""
+base_arg="" kind="layout"
 while (($#)); do
   case "$1" in
     --base) base_arg="${2:-}"; shift 2 ;;
-    -h | --help) sed -n '2,13p' "$0"; exit 0 ;;
-    *) oc_usage "layout_baseline.sh [--base R]" ;;
+    --kind) kind="${2:-}"; shift 2 ;;
+    -h | --help) sed -n '2,15p' "$0"; exit 0 ;;
+    *) oc_usage "layout_baseline.sh [--base R] [--kind layout|align]" ;;
   esac
 done
+case "$kind" in layout | align) ;; *) oc_usage "layout_baseline.sh [--base R] [--kind layout|align]" ;; esac
 
-baseline_dir="$OC_NATIVE/config/layout/baseline"
-top="$(oc_repo_root)" || { echo "layout ratchet: could not run (needs git)"; exit 2; }
-base="$(oc_resolve_base "$base_arg")" || { echo "layout ratchet: could not run (unknown base '${base_arg:-${OC_BASE:-native/main}}')"; exit 2; }
-mb="$(git -C "$top" merge-base "$base" HEAD)" || { echo "layout ratchet: could not run (no merge-base with $base)"; exit 2; }
+baseline_dir="$OC_NATIVE/config/$kind/baseline"
+top="$(oc_repo_root)" || { echo "$kind ratchet: could not run (needs git)"; exit 2; }
+base="$(oc_resolve_base "$base_arg")" || { echo "$kind ratchet: could not run (unknown base '${base_arg:-${OC_BASE:-native/main}}')"; exit 2; }
+mb="$(git -C "$top" merge-base "$base" HEAD)" || { echo "$kind ratchet: could not run (no merge-base with $base)"; exit 2; }
 rel="${baseline_dir#"$top/"}"
 if [[ -z "$(git -C "$top" ls-tree -d --name-only "$mb" -- "$rel")" ]]; then
-  echo "layout ratchet: bootstrap ($base has no $rel yet; this change adopts the layout guard)"
+  echo "$kind ratchet: bootstrap ($base has no $rel yet; this change adopts the $kind guard)"
   exit 0
 fi
-python3 -I - "$top" "$mb" "$rel" <<'PY'
+python3 -I - "$top" "$mb" "$rel" "$kind" <<'PY'
 import os, subprocess, sys
-top, mb, rel = sys.argv[1:4]
+top, mb, rel, kind = sys.argv[1:5]
 def lines(text):
     return {l for l in text.splitlines() if l.strip() and not l.startswith("#")}
 def at_base(path):
@@ -52,16 +56,16 @@ for name in sorted(os.listdir(here)) if os.path.isdir(here) else []:
     if before is None:
         if now:
             grown += 1
-            print(f"layout ratchet: NEW baseline {path} with {len(now)} lines (a module without one starts at zero findings)")
+            print(f"{kind} ratchet: NEW baseline {path} with {len(now)} lines (a module without one starts at zero findings)")
         continue
     added = sorted(now - before)
     if added:
         grown += 1
-        print(f"layout ratchet: {path} GREW by {len(added)} (fix the screen; baselines only shrink):")
+        print(f"{kind} ratchet: {path} GREW by {len(added)} (fix the screen; baselines only shrink):")
         for a in added[:20]:
             print(f"  + {a}")
     elif len(now) < len(before):
-        print(f"layout ratchet: {path} shrank {len(before)} -> {len(now)}")
-print("layout ratchet: " + ("FAIL" if grown else "ok") + f" (compared with {mb[:12]})")
+        print(f"{kind} ratchet: {path} shrank {len(before)} -> {len(now)}")
+print(f"{kind} ratchet: " + ("FAIL" if grown else "ok") + f" (compared with {mb[:12]})")
 sys.exit(1 if grown else 0)
 PY
