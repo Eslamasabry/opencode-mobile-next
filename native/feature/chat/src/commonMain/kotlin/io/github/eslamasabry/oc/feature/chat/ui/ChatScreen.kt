@@ -271,6 +271,11 @@ public fun ChatScreen(
     onLoadServerCommands: () -> Unit = {},
     /** N-48: an unconfirmed bubble's Review opens the waiting sends (Send again, Discard). */
     onReviewPending: (() -> Unit)? = null,
+    /**
+     * Back shows where the chat was opened from somewhere (Flutter `KitTopBarExit.auto`); false for a chat at its
+     * window's root, whose title starts on the gutter.
+     */
+    canGoBack: Boolean = true,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
@@ -584,6 +589,7 @@ public fun ChatScreen(
                                         extraActions = unitActions + listOfNotNull(context),
                                         onProject = actions::openFiles,
                                         onBranch = actions::openGit,
+                                        canGoBack = canGoBack,
                                     )
                                 }
                             } else
@@ -591,7 +597,7 @@ public fun ChatScreen(
                                     title =
                                         state.title
                                             ?: stringResource(Res.string.commandUntitledChat),
-                                    exit = KitTopBarExit.Back,
+                                    exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,
                                     exitLabel = stringResource(Res.string.kitTopBarBack),
                                     onExit = actions::leaveRequested,
                                     backBesideTitle = true, // E20-S13: the chat bar is one compact block
