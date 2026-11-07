@@ -27599,7 +27599,7 @@ abstract class AppLocalizations {
   /// Button to retry a failed update download.
   ///
   /// In en, this message translates to:
-  /// **'Retry'**
+  /// **'Try again'**
   String get appUpdateRetry;
 
   /// Title of the sheet listing the agents and commands a conversation started (was 'Tasks', which also meant to-dos and team tasks).

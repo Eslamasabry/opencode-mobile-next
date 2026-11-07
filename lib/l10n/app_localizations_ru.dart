@@ -17339,7 +17339,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Failed to download update. Check connection and retry.';
 
   @override
-  String get appUpdateRetry => 'Retry';
+  String get appUpdateRetry => 'Try again';
 
   @override
   String get runningWorkTitle => 'Work in this conversation';

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/widgets.dart';
 
 import '../platform/platform_capabilities.dart';
@@ -91,8 +92,14 @@ class InAppUpdateNotice extends StatefulWidget {
 
 class _InAppUpdateNoticeState extends State<InAppUpdateNotice>
     with WidgetsBindingObserver {
+  // Release builds only: debug APKs cannot run on the pinned engine, and a
+  // widget test that mounts the app must not start a GitHub check (its
+  // delayed timer outlived every such test, #126).
   bool get _enabled =>
-      widget.enabledOverride ?? platformCapabilities.isAndroid;
+      widget.enabledOverride ??
+      (kReleaseMode && platformCapabilities.isAndroid);
+
+  Timer? _delay;
 
   @override
   void initState() {
@@ -113,7 +120,8 @@ class _InAppUpdateNoticeState extends State<InAppUpdateNotice>
   void _triggerCheck() {
     if (!_enabled) return;
     // Delay slightly to give the UI a moment to finish launching/routing
-    Future<void>.delayed(const Duration(milliseconds: 1200), () {
+    _delay?.cancel();
+    _delay = Timer(const Duration(milliseconds: 1200), () {
       if (!mounted) return;
       final targetContext = widget.navigatorKey?.currentContext ?? context;
       if (targetContext.mounted) {
@@ -129,6 +137,7 @@ class _InAppUpdateNoticeState extends State<InAppUpdateNotice>
 
   @override
   void dispose() {
+    _delay?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

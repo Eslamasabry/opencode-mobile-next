@@ -139,10 +139,16 @@ void main() {
     });
 
     test('a message the language does not carry reads English, not Arabic', () {
-      // A Settings string none of the five carries yet (Chinese carries
-      // almost every message since 2.0, so the probe must be one it lacks).
-      for (final code in _languages) {
-        expect(_arb(code).containsKey('settingsHubSearch'), isFalse);
+      // A Settings string a partly translated language lacks. Spanish is
+      // complete since 2.1.5 (#122) and Chinese carries almost every
+      // message, so only the languages without the probe are checked, and
+      // at least one must lack it.
+      final lacking = [
+        for (final code in _languages)
+          if (!_arb(code).containsKey('settingsHubSearch')) code,
+      ];
+      expect(lacking, isNotEmpty);
+      for (final code in lacking) {
         final l10n = lookupAppLocalizations(Locale(code));
         expect(l10n.settingsHubSearch, english.settingsHubSearch, reason: code);
       }
