@@ -59,6 +59,20 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 
 /** Dart `KitButtonRole`: primary = accent fill, secondary = surface3, tertiary = words only. */
 public enum class KitButtonRole {
@@ -84,6 +98,11 @@ public data class KitAction(
     val haptic: KitHaptic? = null,
     /** What a screen reader says instead of [label] (e.g. the label plus its object). */
     val semanticsLabel: String? = null,
+    /**
+     * The key combination that does the same ("Ctrl+Enter"): shown after the label on a fine pointer from the expanded
+     * window up. Display only; the shortcut layer binds it.
+     */
+    val shortcut: String? = null,
 ) {
     /** True when a tap would run the action now. */
     val runnable: Boolean
@@ -122,6 +141,8 @@ public fun KitButton(
     haptic: KitHaptic? = null,
     fullWidth: Boolean = false,
     hero: Boolean = false,
+    expand: Boolean = true,
+    shortcut: String? = null,
 ) {
     kitAssert(label.isNotBlank()) { "KitButton: a button needs words (B-KIT-011)" }
     kitAssert(enabled !is KitEnabled.Disabled || enabled.reason.isNotBlank()) {
@@ -158,15 +179,14 @@ public fun KitButton(
             !on -> if (heroWaits) heroWords else if (hero) colors.text2 else colors.text3
             role == KitButtonRole.Primary && destructive -> colors.ground
             role == KitButtonRole.Primary -> colors.onAccent
-            // A text action is in the accent, as KitInlineAction is, so it never reads as plain text.
-            role == KitButtonRole.Tertiary && !destructive -> colors.accent
-            else -> colors.text1
+            // Green is the one accent for the primary action only: a tertiary action is neutral text1, which still
+            // reads apart from disabled text3 (R5).
+            else -> colors.text1 // F: lib/ui/kit/kit_buttons.dart:732
         }
     val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
     val ink =
         if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent
-        else if (role == KitButtonRole.Tertiary && !destructive) TextTone.Accent
         else TextTone.Primary
     // The style decides the face (B-KIT-043..045); Solid keeps the fill above. A tertiary button has no face.
     val look =
@@ -186,8 +206,18 @@ public fun KitButton(
             )
         }
     val wordsColor = look?.words?.takeIf { on } ?: easedWords
-    val minHeight = if (hero) tokens.minTarget + Space.S2 else if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
-    val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
+    // Dart: a hero is minTarget + space2 tall; an expanded button buttonHeight; a tertiary or a button in a row
+    // (expand false) the touch target.
+    val minHeight =
+        if (hero) tokens.minTarget + Space.S2
+        else if (role == KitButtonRole.Tertiary || !expand) tokens.minTarget
+        else tokens.buttonHeight
+    // A tertiary button keeps space2 on both sides; a filled one the app theme's 16, with or without its glyph.
+    val pad = if (role == KitButtonRole.Tertiary) Space.S2 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
+    val padStart = pad
+    // The app theme's filled buttons keep 12 above and below their words, so large text grows the button; a tertiary
+    // button's own padding is horizontal only.
+    val padV = if (role == KitButtonRole.Tertiary) 0 else FILLED_VERTICAL_PAD_DP
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
     val reduced = KitMotion.state.reduced
@@ -208,6 +238,7 @@ public fun KitButton(
                 .then(modifier)
                 .then(if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
                 .heightIn(min = minHeight.dp)
+                .widthIn(min = if (role == KitButtonRole.Tertiary || !expand) tokens.minTarget.dp else 0.dp)
                 .graphicsLayer {
                     if (press > 0f) {
                         val scale = 1f - PRESS_SHRINK * press
@@ -251,15 +282,15 @@ public fun KitButton(
                         }
                     else Modifier
                 )
-                .padding(horizontal = pad.dp),
+                .padding(start = padStart.dp, end = pad.dp, top = padV.dp, bottom = padV.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when {
-            working -> KitWorkingMark(wordsColor, size = tokens.smallIcon.dp)
+            working -> ButtonSpinner(wordsColor, tokens.smallIcon.dp)
             icon != null -> KitGlyph(icon, wordsColor, tokens.smallIcon.dp)
         }
-        KitButtonWords(label, wordsColor, maxLines)
+        KitButtonWords(label, wordsColor, maxLines, shortcut, role)
     }
 }
 
@@ -281,6 +312,10 @@ private fun Modifier.kitBleed(x: Dp): Modifier =
         val width = (placeable.width - 2 * px).coerceIn(constraints.minWidth, constraints.maxWidth)
         layout(width, placeable.height) { placeable.placeRelative(-px, 0) }
     }
+
+/** The app theme's filled button side padding (Dart `filledButtonTheme`). */
+private const val FILLED_SIDE_PAD_DP = 16 // F: lib/ui/app_theme.dart:370
+private const val FILLED_VERTICAL_PAD_DP = 12 // F: lib/ui/app_theme.dart:370
 
 /** The full-width button's cap (direction §5.6). */
 private const val FILL_MAX_WIDTH_DP = 480
@@ -320,6 +355,7 @@ public fun KitButton(
     role: KitButtonRole = KitButtonRole.Primary,
     fullWidth: Boolean = false,
     hero: Boolean = false,
+    expand: Boolean = true,
 ) {
     val run = action.onClick
     kitAssert(run != null || !action.enabled.isEnabled) {
@@ -340,28 +376,101 @@ public fun KitButton(
         haptic = action.haptic,
         fullWidth = fullWidth,
         hero = hero,
+        expand = expand,
+        shortcut = action.shortcut,
     )
 }
 
 @Composable
-private fun KitButtonWords(label: String, color: Color, maxLines: Int) {
+private fun KitButtonWords(label: String, color: Color, maxLines: Int, shortcut: String?, role: KitButtonRole) {
     // Tone is resolved by the caller's eased colour; KitText takes a tone, so the words draw
     // through a tone-free path.
-    KitTextColored(label, color, maxLines)
+    val window = LocalKitWindow.current
+    // Visual language §5: the shortcut shows on a fine pointer, from the expanded window up.
+    if (shortcut == null || !window.finePointer || !window.cls.isWide) {
+        KitTextColored(label, color, maxLines)
+        return
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.weight(1f, fill = false)) { KitTextColored(label, color, maxLines) }
+        Spacer(Modifier.width(Space.S1.dp))
+        // Mono, text3 on a tertiary button and the button's own words otherwise; always left to right.
+        val mono = LocalKitTypography.current.style(TypeRole.Mono)
+        val hint = if (role == KitButtonRole.Tertiary) LocalKitColors.current.text3 else color
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            ButtonLine(shortcut, mono.copy(color = hint, textDirection = TextDirection.Ltr), 1)
+        }
+    }
 }
 
 @Composable
 private fun KitTextColored(text: String, color: Color, maxLines: Int) {
-    androidx.compose.runtime.CompositionLocalProvider(
-        LocalKitColors provides LocalKitColors.current.copy(text1 = color)
-    ) {
-        KitText(
-            text,
-            role = TypeRole.Button,
-            tone = TextTone.Primary,
-            kind = KitTextKind.Frame,
-            maxLines = maxLines,
+    // Dart `_KitButtonLabel`: a plain Text in the theme's button style, so the label follows the person's text size in
+    // full (2.0x text draws 2.0x words and a taller button), not the 1.3x chrome cap. A style with type of its own
+    // keeps firm 600 words, and so does Arabic (the system Arabic face at 500 reads too thin on a filled button).
+    val arabic = LocalKitLocaleTag.current.startsWith("ar")
+    val firm = LocalKitStyle.current.spec.tokens.type.firmWeights || arabic
+    val base = LocalKitTypography.current.style(TypeRole.Button)
+    ButtonLine(
+        text,
+        base.copy(
+            color = color,
+            fontWeight = if (firm) FontWeight.W600 else base.fontWeight, // F: lib/ui/kit/kit_buttons.dart:805
             textAlign = TextAlign.Center,
+            textDirection = TextDirection.Content,
+        ),
+        maxLines,
+    )
+}
+
+/**
+ * One line of a button's words. Flutter lays words out at their fractional width; Compose rounds a paragraph up to the
+ * next pixel, so a row of buttons drifted a pixel per item. A one-line text reports its width rounded to the nearest
+ * pixel instead.
+ */
+@Composable
+private fun ButtonLine(text: String, style: androidx.compose.ui.text.TextStyle, maxLines: Int) {
+    val exact = remember { FloatArray(1) }
+    BasicText(
+        text,
+        Modifier
+            .kitMaxWidth(CapRole.Reading, io.github.eslamasabry.oc.ui.design.layout.CapAlign.Center)
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val nearest = kotlin.math.round(exact[0]).toInt()
+                val width = if (nearest in 1 until placeable.width) nearest.coerceAtLeast(constraints.minWidth) else placeable.width
+                layout(width, placeable.height) { placeable.placeRelative((width - placeable.width) / 2, 0) }
+            },
+        style = style,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = {
+            exact[0] = if (it.lineCount == 1 && !it.hasVisualOverflow) it.multiParagraph.getLineRight(0) - it.multiParagraph.getLineLeft(0) else 0f
+        },
+    )
+}
+
+/**
+ * The small spinner a working button shows, in the button's own words colour (Dart `_Spinner`): the kit's spinner
+ * stroke with no track; under reduced motion a still three-quarter arc from the top (MOT-7).
+ */
+@Composable
+private fun ButtonSpinner(color: Color, size: Dp) {
+    val stroke = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.SPINNER_STROKE.dp
+    if (!KitMotion.state.reduced) {
+        KitWorkingMark(color, size = size, strokeWidth = stroke)
+        return
+    }
+    androidx.compose.foundation.Canvas(Modifier.size(size)) {
+        val w = stroke.toPx()
+        drawArc(
+            color = color,
+            startAngle = -90f, // NV: Material's CircularProgressIndicator starts its arc at 12 o'clock
+            sweepAngle = 360f * .75f, // NV: one turn times the still value .75 (kit_buttons.dart:856)
+            useCenter = false,
+            topLeft = Offset(w / 2, w / 2), // NV: the stroke sits inside the box, as Material insets it
+            size = androidx.compose.ui.geometry.Size(this.size.width - w, this.size.height - w),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(w),
         )
     }
 }

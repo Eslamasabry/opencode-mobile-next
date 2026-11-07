@@ -37,7 +37,8 @@ public data class KitLineAction(
 )
 
 /**
- * A tertiary words-only action in a 48 dp target (Dart `KitButton` tertiary inside lines).
+ * A tertiary words-only action in a 48 dp target (Dart `KitButton` tertiary inside lines): text1 words, text3 when
+ * disabled, never the accent (the accent is the primary action's alone).
  * Kit-internal.
  */
 @Composable
@@ -51,13 +52,14 @@ internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifie
         enabled = action.enabled,
         disabledReason = action.disabledReason,
         shape = KitShapeId.Button,
-        ink = TextTone.Accent,
+        ink = TextTone.Primary,
     ) {
         KitText(
             action.label,
             Modifier.padding(horizontal = Space.S3.dp),
             role = TypeRole.Button,
-            tone = if (action.enabled) TextTone.Accent else TextTone.Tertiary,
+            // Dart KitButton tertiary: neutral text1 words, text3 when disabled (kit_buttons.dart:732-733).
+            tone = if (action.enabled) TextTone.Primary else TextTone.Tertiary,
             kind = KitTextKind.Frame,
             maxLines = maxLines,
         )
