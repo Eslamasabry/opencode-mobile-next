@@ -34,7 +34,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.rememberLoopPhase
  * identity.
  */
 @Composable
-internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier) {
+internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modifier, onRail: Boolean = false) {
     val colors = LocalKitColors.current
     val motion = KitMotion.state
     val running = view.status == KitToolStatus.Running
@@ -100,37 +100,77 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         }
         return
     }
-    // Flutter's step node (kit_step_light.dart `_StepLightState.build`): the glyph in its small tile, the light round
-    // it while the step runs; a step that finishes flashes once (a tick that springs back to the glyph, a neutral
-    // outline that fades before the failed mark, the accent outline fading on a stop).
-    val icon = view.kind.icon()
-    val tickShare =
-        MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
-    val settling = finishedFromRunning && transition.value < 1f
-    when (view.status) {
-        KitToolStatus.Running -> KitStepTile(icon, KitStepNodeLook.Running, size, modifier)
-        KitToolStatus.Pending -> KitStepTile(icon, KitStepNodeLook.Queued, size, modifier)
-        KitToolStatus.Done ->
-            if (settling && transition.value < tickShare)
-                // F: lib/ui/kit/chat/kit_step_light.dart:222-229 the tick in success while it lands
-                KitStepTile(KitIcons.check, KitStepNodeLook.Plain, size, modifier, glyphColor = colors.success)
-            else if (settling) {
-                // F: lib/ui/kit/chat/kit_step_light.dart:233 the glyph grows back from .4 of its size
-                val t = (transition.value - tickShare) / (1f - tickShare)
-                KitStepTile(icon, KitStepNodeLook.Plain, size, modifier, glyphScale = .4f + .6f * t) // F: lib/ui/kit/chat/kit_step_light.dart:240
-            } else KitStepTile(icon, KitStepNodeLook.Plain, size, modifier)
-        KitToolStatus.Failed ->
-            if (settling)
+    if (onRail) {
+        // Flutter's step node (kit_step_light.dart `_StepLightState.build`): the glyph in its small tile, the light round
+        // it while the step runs; a step that finishes flashes once (a tick that springs back to the glyph, a neutral
+        // outline that fades before the failed mark, the accent outline fading on a stop).
+        val icon = view.kind.icon()
+        val tickShare =
+            MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
+        val settling = finishedFromRunning && transition.value < 1f
+        when (view.status) {
+            KitToolStatus.Running -> KitStepTile(icon, KitStepNodeLook.Running, size, modifier)
+            KitToolStatus.Pending -> KitStepTile(icon, KitStepNodeLook.Queued, size, modifier)
+            KitToolStatus.Done ->
+                if (settling && transition.value < tickShare)
+                    // F: lib/ui/kit/chat/kit_step_light.dart:222-229 the tick in success while it lands
+                    KitStepTile(KitIcons.check, KitStepNodeLook.Plain, size, modifier, glyphColor = colors.success)
+                else if (settling) {
+                    // F: lib/ui/kit/chat/kit_step_light.dart:233 the glyph grows back from .4 of its size
+                    val t = (transition.value - tickShare) / (1f - tickShare)
+                    KitStepTile(icon, KitStepNodeLook.Plain, size, modifier, glyphScale = .4f + .6f * t) // F: lib/ui/kit/chat/kit_step_light.dart:240
+                } else KitStepTile(icon, KitStepNodeLook.Plain, size, modifier)
+            KitToolStatus.Failed ->
+                if (settling)
+                    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+                        KitStepTile(icon, KitStepNodeLook.Plain, size)
+                        StillOutline(colors.text2.copy(alpha = 1f - transition.value), size)
+                    }
+                // F: lib/ui/kit/chat/kit_tool_row.dart:705 a failed step settles on the failed mark
+                else KitStatusIcon(StatusTone.Failure, modifier)
+            KitToolStatus.Stopped ->
                 Box(modifier.size(size), contentAlignment = Alignment.Center) {
                     KitStepTile(icon, KitStepNodeLook.Plain, size)
-                    StillOutline(colors.text2.copy(alpha = 1f - transition.value), size)
+                    if (settling) StillOutline(colors.accent.copy(alpha = 1f - transition.value), size)
                 }
-            // F: lib/ui/kit/chat/kit_tool_row.dart:705 a failed step settles on the failed mark
-            else KitStatusIcon(StatusTone.Failure, modifier)
-        KitToolStatus.Stopped ->
-            Box(modifier.size(size), contentAlignment = Alignment.Center) {
-                KitStepTile(icon, KitStepNodeLook.Plain, size)
-                if (settling) StillOutline(colors.accent.copy(alpha = 1f - transition.value), size)
+        }
+        return
+    }
+    // Flutter's step node: the bare tool glyph (no tile); a running step's glyph turns live and the step light
+    // draws its rounded square around it.
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+        val showTick =
+            finishedFromRunning &&
+                view.status == KitToolStatus.Done &&
+                transition.value <
+                    MotionTokens.STEP_TICK.toFloat() /
+                        (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
+        if (showTick)
+            Canvas(Modifier.size(size * .6f)) {
+                drawLine(
+                    colors.success,
+                    Offset(0f, this.size.height * .5f),
+                    Offset(this.size.width * .35f, this.size.height * .85f),
+                    2.dp.toPx(),
+                )
+                drawLine(
+                    colors.success,
+                    Offset(this.size.width * .35f, this.size.height * .85f),
+                    Offset(this.size.width, this.size.height * .1f),
+                    2.dp.toPx(),
+                )
+            }
+        else KitToolGlyph(view.kind, if (running) colors.live else colors.text2, if (running) size * .7f else size * .9f)
+        if (running)
+            KitStepLight(KitStepLightState.Working, colors.live, size, animate = !motion.reduced)
+        else if (finishedFromRunning && transition.value < 1f && view.status != KitToolStatus.Done)
+            Canvas(Modifier.size(size)) {
+                drawRoundRect(
+                    if (view.status == KitToolStatus.Stopped) colors.accent else colors.text2,
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(this.size.width * .3f),
+                    alpha = 1f - transition.value,
+                    style = Stroke(1.8.dp.toPx()),
+                )
             }
     }
 }

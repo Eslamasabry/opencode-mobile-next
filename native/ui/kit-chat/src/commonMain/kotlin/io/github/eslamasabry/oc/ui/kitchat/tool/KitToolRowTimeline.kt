@@ -197,9 +197,9 @@ internal fun TimelineStep(
     val forward = onOpen != null && body == null
 
     val lineBox: @Composable BoxScope.() -> Unit = {
-        Box(Modifier.fillMaxWidth().heightIn(min = m.stepLine).align(Alignment.CenterStart), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.fillMaxWidth().heightIn(min = m.stepLine).align(Alignment.CenterStart).testTag("kit-step-line"), contentAlignment = Alignment.CenterStart) {
             Row(
-                Modifier.fillMaxWidth().padding(vertical = pad).testTag("kit-step-line"),
+                Modifier.fillMaxWidth().padding(vertical = pad),
                 verticalAlignment = if (wide) Alignment.Top else Alignment.CenterVertically,
             ) {
                 Box(Modifier.weight(1f)) { sentence() }
@@ -232,7 +232,7 @@ internal fun TimelineStep(
         box = m.stepLine,
         top = 0.dp,
         modifier = modifier.widthIn(max = 700.dp), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
-        node = { KitToolNode(view, m.glyph) },
+        node = { KitToolNode(view, m.glyph, onRail = true) },
     ) {
         Column(Modifier.fillMaxWidth()) {
             when {

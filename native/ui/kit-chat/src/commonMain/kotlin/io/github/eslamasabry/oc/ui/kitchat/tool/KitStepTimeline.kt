@@ -63,7 +63,6 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
-import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -142,17 +141,20 @@ public fun KitStepTimeline(
                             mark != null -> mark()
                             // F: lib/ui/kit/chat/kit_step_timeline.dart:976 the glyph carries the step light
                             live -> KitStepTile(icon, KitStepNodeLook.Running, m.glyph)
-                            else -> KitIcon(icon, size = KitIconSize.Small, tone = TextTone.Secondary, growsWithText = true)
+                            // F: lib/ui/kit/chat/kit_step_timeline.dart:982 the glyph at the rail's size in text2 (drawn, so it
+                            // carries no text of its own)
+                            else -> KitToolGlyph(icon, colors.text2, m.glyph)
                         }
                     }
                     Spacer(Modifier.width(m.column - m.glyph)) // F: lib/ui/kit/chat/kit_step_timeline.dart:994
-                    // F: lib/ui/kit/chat/kit_step_timeline.dart:1008-1020 two lines, whole from 1.3x text. When the words
-                    // change (the live step moves on) the new ones fade in over the old (QUICK; instant when reduced).
-                    KitSwap(label, Modifier.weight(1f, fill = false), alignment = Alignment.TopStart) { shown ->
-                        KitText(shown, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = if (m.wide) Int.MAX_VALUE else 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:1019
+                    // Two lines cut at a word; from 1.3x text one line with an ellipsis (Flutter's Text with an ellipsis
+                    // and no maxLines stops at its first line, as kit_work_line_default_text2 shows).
+                    Box(Modifier.weight(1f, fill = false)) {
+                        KitText(label, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = if (m.wide) 1 else 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:1008-1019
                     }
                     Spacer(Modifier.width(Space.S1.dp)) // F: lib/ui/kit/chat/kit_step_timeline.dart:1022
-                    Box(Modifier.height(m.first).testTag("kit-step-timeline-chevron"), contentAlignment = Alignment.Center) {
+                    // F: lib/ui/kit/chat/kit_step_timeline.dart:1023 decoration: the line carries the expanded state
+                    Box(Modifier.height(m.first).testTag("kit-step-timeline-chevron").clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
                         // F: lib/ui/kit/motion/kit_motion_parts.dart:272-302 KitSpin.chevron: 20 dp text2, half a turn on STANDARD
                         KitSpin(if (expanded) .5f else 0f, pace = KitPace.Standard) { // F: lib/ui/kit/motion/kit_motion_parts.dart:295
                             KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
