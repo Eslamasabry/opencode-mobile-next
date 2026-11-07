@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -43,8 +45,24 @@ class KitStepTimelineGateTest {
         fun t(en: String, ar: String) = if (this.ar) ar else en
     }
 
+    @Composable
     private fun view(id: String, kind: KitToolKind, title: String, subject: String?, detail: String?, status: KitToolStatus, took: String?, added: Int? = null) =
-        KitToolView(id, kind, title, subject, detail, status, took, added, null, "")
+        KitToolView(id, kind, title, subject, detail, status, took, added, null, statusWords(status))
+
+    /** The row's status words, Flutter's ARB strings (kitToolWaiting … kitToolStopped) in the shot's locale. */
+    @Composable
+    private fun statusWords(status: KitToolStatus): String {
+        val ar = LocalLayoutDirection.current == LayoutDirection.Rtl
+        return when (status) {
+            KitToolStatus.Pending -> if (ar) "بانتظار" else "Waiting"
+            KitToolStatus.Running -> if (ar) "قيد التشغيل" else "Running"
+            KitToolStatus.WaitingForYou -> if (ar) "بانتظارك" else "Waiting for you"
+            KitToolStatus.Done -> if (ar) "مكتمل" else "Done"
+            KitToolStatus.Failed -> if (ar) "فشل" else "Failed"
+            KitToolStatus.Stopped -> if (ar) "متوقف" else "Stopped"
+        }
+    }
+
 
     private fun scene(scene: String, ar: Boolean = false): @Composable () -> Unit = {
         val w = Words(ar)
