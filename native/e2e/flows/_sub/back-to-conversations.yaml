@@ -9,3 +9,4 @@ appId: ${APP_ID}
     commands:
       - back
 - assertVisible: ${output.s.chatsHomeAllProjects}
+- runFlow: dismiss-notices.yaml

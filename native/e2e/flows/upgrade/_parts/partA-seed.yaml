@@ -17,6 +17,14 @@ tags: [linux-setup]
     env:
       HOOK: permission
       ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+# Exact alarms: without them 2.1.4 arms a schedule only through WorkManager (elapsed time), which Part C's clock
+# jump cannot fire. A phone that had the app's schedule on had granted this.
+# adb: appop
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: appop
+      ARGS: '{"op": "SCHEDULE_EXACT_ALARM", "mode": "allow"}'
 # Flutter 2.1.4 opens on "Where should your agent run?" with "On this phone" chosen; choosing the computer card
 # turns the main button into "Connect to my computer" (connect-server.yaml taps it).
 - extendedWaitUntil:

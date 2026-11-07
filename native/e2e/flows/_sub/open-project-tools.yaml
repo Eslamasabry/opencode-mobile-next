@@ -4,6 +4,7 @@
 appId: ${APP_ID}
 ---
 - tapOn: ${TITLE}  # literal-ok: the caller's title regex
+- runFlow: settle-chat.yaml
 - tapOn: ${output.re.chatProjectChipFilesSemantics}
 - extendedWaitUntil:
     visible: ${output.s.shellTabFiles}

@@ -240,14 +240,11 @@ tags: [parity, slice-6, g6, upgrade, linux-setup]
             ARGS: '{"bump": "minor"}'
       # The app is Arabic again after Part C: switch to English for this step.
       - tapOn: ${output.s.x_ar_settings}
-      - tapOn: ${output.s.x_ar_settings_search}
-      - setClipboard:
-          text: ${output.t.x_ar_language}
-      - pasteText
-      - hideKeyboard
-      - tapOn: ${output.s.x_ar_language}
+      - tapOn: ${output.s.x_ar_this_app}
+      - tapOn: ${output.s.x_ar_language + '\n(?s).*'}
       - tapOn: ${output.s.e7LocaleUiEnglish}
-      - back
+      - runFlow: ../_sub/back-to-conversations.yaml
+      - runFlow: ../_sub/open-settings.yaml
       - runFlow:
           file: ../_sub/settings-search.yaml
           env:

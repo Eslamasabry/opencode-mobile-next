@@ -4,8 +4,15 @@
 appId: ${APP_ID}
 ---
 - tapOn: ${output.s.kitComposerTools}
+- extendedWaitUntil:
+    visible: ${output.s.composerTrayFile}
+    timeout: 5000
+    optional: true
+# The tray's More sits right of its File; a background-service banner may show its own More above.
 - runFlow:
     when:
-      visible: ${output.s.composerTrayMore}
+      visible: ${output.s.composerTrayFile}
     commands:
-      - tapOn: ${output.s.composerTrayMore}
+      - tapOn:
+          text: ${output.s.composerTrayMore}
+          rightOf: ${output.s.composerTrayFile}

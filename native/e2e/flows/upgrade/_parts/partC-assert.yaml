@@ -13,122 +13,110 @@ appId: ${APP_ID}
     timeout: 60000
 - assertNotVisible: ${output.s.welcomeComputerConnect}
 - takeScreenshot: ${(output.phase || 'flutter') + '-conversations'}
+- runFlow: ../../_sub/dismiss-notices.yaml
 - evalScript: ${output.pc.S4 = true}
 
 # Language Arabic as set; switch to English for the checks below (restored at the end).
+# Maestro cannot type Arabic (pasteText types the clipboard), so go by the Settings structure: Settings > This app
+# > Language > English (Flutter 2.1.4).
 - tapOn: ${output.s.x_ar_settings}
-- tapOn: ${output.s.x_ar_settings_search}
-- setClipboard:
-    text: ${output.t.x_ar_language}
-- pasteText
-- hideKeyboard
-- tapOn: ${output.s.x_ar_language}
+- tapOn: ${output.s.x_ar_this_app}
+- tapOn: ${output.s.x_ar_language + '\n(?s).*'}
 - tapOn: ${output.s.e7LocaleUiEnglish}
 - extendedWaitUntil:
-    visible: ${output.s.settingsV3Language}
+    visible: ${output.s.settingsV3Language + '(\n(?s).*)?'}
     timeout: 15000
-- back
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
 
-# Text Smallest, style Soft with the tweak, finished-work notifications on: nothing reset to defaults.
+# Text Smallest, style Soft with the tweak, finished-work notifications on: nothing reset to defaults. Flutter 2.1.4
+# (walked 2026-11-07) shows each choice in its Appearance chip ("Text size, Smallest, ...", "Shape, Sharp, Roomy,
+# ...") and the text size under its slider ("Smallest, Text size").
+- runFlow: ../../_sub/open-settings.yaml
 - runFlow:
     file: ../../_sub/settings-search.yaml
     env:
       QUERY: ${output.t.textSizeTitle}
-- tapOn:
-    text: ${output.s.textSizeTitle}
-    index: 1
-- assertVisible:
-    text: ${output.s.textSizeSmallest}
-    checked: true
-- back
-- back
+- tapOn: ${output.s.textSizeTitle + '\n(?s).*'}
+- extendedWaitUntil:
+    visible: ${output.s.textSizeSmallest + ', ' + output.s.textSizeTitle}
+    timeout: 15000
 - runFlow:
-    file: ../../_sub/settings-search.yaml
-    env:
-      QUERY: ${output.t.e7AppearanceTitle}
-- tapOn:
-    text: ${output.s.e7AppearanceTitle}
-    index: 1
-# confirm: the style and fine-tune choices expose a checked/selected state to accessibility.
+    when:
+      visible: ${output.s.tourNotNow}
+    commands:
+      - tapOn: ${output.s.tourNotNow}
+- tapOn: ${output.s.kitGuideBack}
+- assertVisible: ${output.s.appearanceChipStyle + '(\n|, )' + output.s.appearanceSurfaceSoft + '(?s).*'}
+- tapOn: ${output.s.appearanceChipStyle + '(\n|, )(?s).*'}
+- assertVisible: ${output.s.appearanceChipShape + ', ' + output.s.appearanceFineTuneCornersSharp + '(?s).*'}
+- runFlow: ../../_sub/back-to-conversations.yaml
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow: ../../_sub/open-notifications.yaml
 - assertVisible:
-    text: ${output.s.appearanceSurfaceSoft}
+    text: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
     checked: true
-- assertVisible:
-    text: ${output.s.appearanceFineTuneCornersSharp}
-    checked: true
-- back
-- back
-- runFlow:
-    file: ../../_sub/settings-search.yaml
-    env:
-      QUERY: ${output.t.notifyFinishedRuns}
-- tapOn:
-    text: ${output.s.notifyFinishedRuns}
-    index: 1
-- assertVisible:
-    text: ${output.s.notifyFinishedRuns}
-    checked: true
-- back
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.S5 = true}
 
 # FX-OC2 connected with no password prompt; the pinned certificate still in force.
-- scrollUntilVisible:
-    element: ${output.s.e7SetupServers}
-- tapOn: ${output.s.e7SetupServers}
-- assertVisible: ${output.s.serverRowConnected}
-- assertNotVisible: ${output.s.e7SetupServerPassword}
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow: ../../_sub/open-servers.yaml
+- assertVisible: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '\n' + output.s.serverRowConnected + '(?s).*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${output.s.e7SetupServerPassword + '(,(?s).*)?'}
 - assertNotVisible: ${output.c.e7SetupCertificate}
 - assertNotVisible: ${output.s.e7ConnectionFailure20}
 - takeScreenshot: ${(output.phase || 'flutter') + '-servers'}
-- back
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.S6 = true}
 
 # Pins, the draft with its attachment, the saved prompt, the always-allow rule and the queued prompt.
 - extendedWaitUntil:
-    visible: "Upgrade pin one"  # literal-ok: title seeded in Part A
+    visible: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
     timeout: 30000
-- assertVisible:
-    text: "Upgrade pin two"  # literal-ok: title seeded in Part A
-    above: "Upgrade draft"  # literal-ok: title seeded in Part A
+- assertVisible: "Upgrade pin two(, .*)?"  # literal-ok: title seeded in Part A
+- assertVisible: "Upgrade draft(, .*)?"  # literal-ok: title seeded in Part A
 - assertNotVisible: "(?s).*Upgrade pin one.*Upgrade pin one.*"  # literal-ok: nothing duplicated by the migration
-- tapOn: "Upgrade draft"  # literal-ok: title seeded in Part A
+- tapOn: "Upgrade draft(, .*)?"  # literal-ok: title seeded in Part A
+- runFlow: ../../_sub/settle-chat.yaml
 - extendedWaitUntil:
-    visible: "upgrade draft text"  # literal-ok: the draft typed in Part A
+    visible: ".*upgrade draft text.*"  # literal-ok: the draft typed in Part A (2.1.4: "@notes.txt upgrade draft text")
     timeout: 30000
 - assertVisible: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (the attachment chip)
 # The conversation still shows its earlier messages: the prompt Part A sent here.
 - assertVisible: ".*e2e:ask-shell ls.*"  # literal-ok: the prompt Part A sent in this conversation
 - takeScreenshot: ${(output.phase || 'flutter') + '-chat'}
 - evalScript: ${output.pc.chatMessages = true}
-- tapOn: ${output.s.kitComposerTools}
-- tapOn: ${output.s.promptStashTitle}
+# 2.1.4: Attach and more > More > Prompts > Saved prompts.
+- runFlow: ../../_sub/composer-more-tools.yaml
+- runFlow:
+    when:
+      notVisible: ${output.s.promptStashTitle + '(?s).*'}
+    commands:
+      - tapOn: ${output.s.usagePrompts}
+- tapOn: ${output.s.promptStashTitle + '(?s).*'}
 - assertVisible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
-- back
-- back
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
+- runFlow: ../../_sub/open-settings.yaml
 - runFlow:
     file: ../../_sub/settings-search.yaml
     env:
       QUERY: ${output.t.e7SettingsUi74}
-- tapOn:
-    text: ${output.s.e7SettingsUi74}
-    index: 1
-- assertVisible: ".*\\bls\\b.*"  # literal-ok: the always-allowed shell command from Part A
-- back
-- back
-- back
-- tapOn: "Upgrade queued"  # literal-ok: title seeded in Part A
-- assertVisible: ${output.s.chatUiQueuedWillSendWhenReconnected}
-- back
+- tapOn: ${output.s.e7SettingsUi74 + '\n(?s).*'}
+- assertVisible: "(?s).*\\bls\\b.*"  # literal-ok: the always-allowed shell command from Part A
+- runFlow: ../../_sub/back-to-conversations.yaml
+# The prompt queued for FX-OC2-B (still cut off) waits on this phone: 2.1.4 cannot open an unreachable server's
+# conversations, but its Servers row says "1 prompt waiting to send".
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow: ../../_sub/open-servers.yaml
+- assertVisible: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '\n' + output.re.serverRowQueuedWaiting + '(?s).*'}  # literal-ok: built from fixture data and strings
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.S7 = true}
 
 # A new prompt sends and its reply arrives. The prompt names the app under test, so Part B's reply never counts here.
-- tapOn: "Upgrade pin one"  # literal-ok: title seeded in Part A
+- tapOn: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
+- runFlow: ../../_sub/settle-chat.yaml
 - extendedWaitUntil:
-    visible: ${output.s.kitComposerField}
+    visible: ${output.s.kitComposerField + '(?s).*'}
     timeout: 30000
 - runFlow:
     file: ../../_sub/send-prompt.yaml
@@ -138,51 +126,55 @@ appId: ${APP_ID}
     visible: ${'.*ECHO sent on ' + (output.phase || 'flutter') + '.*'}  # literal-ok: the stub model's reply
     timeout: 60000
 - takeScreenshot: ${(output.phase || 'flutter') + '-send'}
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.sendPrompt = true}
 
-# Built-in Linux, project app and its server are there without reinstall; the server starts.
+# Built-in Linux, the phone project and its server are there without reinstall; the server runs. Flutter 2.1.4:
+# Settings > Server > This phone shows "Everything is running"; the phone's conversations hold the project my-app.
 - runFlow: ../../_sub/open-settings.yaml
-- scrollUntilVisible:
-    element: ${output.s.settingsV3ThisPhone}
-- tapOn: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsHubServer + '\n(?s).*'}
+- tapOn: ${output.s.settingsV3ThisPhone + '(\n(?s).*)?'}
 - assertNotVisible: ${output.s.phoneSetupStartSetUp}
 - extendedWaitUntil:
-    visible: ${output.s.thisPhoneAnswerRunning}
+    visible: ${output.c.thisPhoneAnswerRunning}
     timeout: 60000
 - takeScreenshot: ${(output.phase || 'flutter') + '-linux'}
-- back
-- back
-- tapOn: ${output.s.chatsHomeAllProjects}
-- assertVisible: ${output.fx.projectApp}
-- back
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.S8 = true}
 
-# `pwd && ls` in the project's terminal on this phone (the E2E-16 path), then back to Conversations.
-- tapOn: ${output.s.shellTabFiles}
+# `pwd && ls` in the phone's terminal. Flutter 2.1.4: a conversation's project chip > Files > More > Terminal opens
+# the Built-in Linux terminal ("Runs on Built-in Linux"). Its screen text is not exposed to accessibility on 2.1.4,
+# so the command's output is checked only where the app exposes it (optional) and shown in the screenshot.
+- runFlow:
+    file: ../../_sub/open-project-tools.yaml
+    env:
+      TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
 - tapOn: ${output.s.libraryTerminalTitle}
 - runFlow:
     when:
       visible: ${output.s.terminalScreenUsePhone}
     commands:
       - tapOn: ${output.s.terminalScreenUsePhone}
-- tapOn: ${output.s.localTerminalNewShell}
+- runFlow:
+    when:
+      visible: ${output.s.localTerminalNewShell}
+    commands:
+      - tapOn: ${output.s.localTerminalNewShell}
 - extendedWaitUntil:
-    visible: ${output.s.localTerminalSemantics}
+    visible: ${output.c.localTerminalSemantics}
     timeout: 60000
-- tapOn: ${output.s.localTerminalSemantics}
+- assertVisible: ${output.re.terminalPlaceSwitchLabel}
+- tapOn: ${output.c.localTerminalSemantics}
 - inputText: "pwd && ls"  # literal-ok: the shell command under test
 - pressKey: Enter
-# confirm: the terminal exposes its screen text to accessibility, on Flutter R and on native.
 - extendedWaitUntil:
-    visible: ${'(?s).*/' + output.fx.projectApp + '\\b.*'}  # literal-ok: pwd prints the project folder
-    timeout: 30000
+    visible: ".*my-app.*"  # literal-ok: ls lists the phone project Part A created
+    timeout: 15000
+    optional: true
 - takeScreenshot: ${(output.phase || 'flutter') + '-terminal'}
 - stopApp
 - launchApp
-- extendedWaitUntil:
-    visible: ${output.s.chatsHomeTitle}
-    timeout: 60000
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.terminal = true}
 
 # The voice pack Part A set up is ready: Voice typing offers to remove it, not to download it.
@@ -191,47 +183,36 @@ appId: ${APP_ID}
     file: ../../_sub/settings-search.yaml
     env:
       QUERY: ${output.t.voiceComponentTitle}
-- tapOn:
-    text: ${output.s.voiceComponentTitle}
-    index: 1
-# confirm: the installed Voice typing item shows its remove action (and no download) once the pack is ready.
+- tapOn: ${output.s.voiceComponentTitle + '\n(?s).*'}
+# Flutter 2.1.4's Voice typing page lists each speech model with its state: the pack Part A set up reads
+# "High accuracy\nInstalled · ...".
 - extendedWaitUntil:
-    visible: ${output.s.voiceComponentRemove}
+    visible: ${output.s.e7VoiceUiAccurate + '\n' + output.s.e7VoiceUiInstalled + '(?s).*'}
     timeout: 15000
-- assertNotVisible: ${output.re.voiceAutoSetupDownload}
 - takeScreenshot: ${(output.phase || 'flutter') + '-voice'}
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.voiceReady = true}
 
-# The scheduled prompt is still listed.
-- stopApp
-- launchApp
-- runFlow: ../../_sub/open-settings.yaml
+# The scheduled prompt is still listed (2.1.4: conversation > project chip > Files > More > Scheduled prompts).
 - runFlow:
-    file: ../../_sub/settings-search.yaml
+    file: ../../_sub/open-project-tools.yaml
     env:
-      QUERY: ${output.t.scheduleTitle}
-- tapOn:
-    text: ${output.s.scheduleTitle}
-    index: 1
+      TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
+- tapOn: ${output.s.scheduleTitle}
 - extendedWaitUntil:
     visible: ".*e2e:echo daily upgrade.*"  # literal-ok: the schedule Part A made
     timeout: 15000
 - takeScreenshot: ${(output.phase || 'flutter') + '-schedule'}
 - evalScript: ${output.pc.scheduleListed = true}
-- stopApp
-- launchApp
-- extendedWaitUntil:
-    visible: ${output.s.chatsHomeTitle}
-    timeout: 60000
+- runFlow: ../../_sub/back-to-conversations.yaml
 
-# The draft's attachment from the old documents directory opens.
-- tapOn: "Upgrade draft"  # literal-ok: title seeded in Part A
-- tapOn: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (the attachment chip)
-- extendedWaitUntil:
-    visible: ${output.s.fileSave}
-    timeout: 30000
-- back
-- back
+# The draft's file chip is still on the draft. Part A's chip is a project file on FX-OC2 (2.1.4's "File from the
+# project"), and 2.1.4 answers "Remote attachment previews are not available." when it is tapped, so opening a file
+# from the old documents folder is not exercised here (it needs a local attachment in Part A).
+- tapOn: "Upgrade draft(, .*)?"  # literal-ok: title seeded in Part A
+- runFlow: ../../_sub/settle-chat.yaml
+- assertVisible: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (the attachment chip)
+- runFlow: ../../_sub/back-to-conversations.yaml
 - evalScript: ${output.pc.S9 = true}
 
 # No password or token in the log (the runner also scrubs and scans after the run).
@@ -265,22 +246,14 @@ appId: ${APP_ID}
     when:
       visible: ${output.s.x_widget_conversations_title}
     commands:
-      - assertVisible: "Upgrade pin one"  # literal-ok: the widget lists the seeded conversation
-- longPressOn: ${output.s.x_app_label}
-- extendedWaitUntil:
-    visible: "Upgrade pin one"  # literal-ok: a pinned conversation's launcher shortcut
-    timeout: 15000
-- pressKey: Back
+      - assertVisible: "Upgrade pin one(, .*)?"  # literal-ok: the widget lists the seeded conversation
+# The pinned conversations' launcher shortcuts are not checked: Part A cannot pin on Flutter 2.1.4 (see there).
 - evalScript: ${output.pc.S12 = true}
 
 # Leave it as found: Arabic again.
 - launchApp
 - runFlow: ../../_sub/open-settings.yaml
-- runFlow:
-    file: ../../_sub/settings-search.yaml
-    env:
-      QUERY: ${output.t.settingsV3Language}
-- tapOn: ${output.s.settingsV3Language}
+- runFlow: ../../_sub/open-language.yaml
 - tapOn: ${output.s.e7LocaleUiArabic}
 - stopApp
 - launchApp

@@ -2,7 +2,7 @@
 # switcher (Flutter 2.1.4: "<server>, Connected, Switch server" opens a "Servers" sheet). env: NAME
 appId: ${APP_ID}
 ---
-- tapOn: ${'(?s).*' + output.s.kitTopBarSwitchServer}  # literal-ok: the top bar reads "<server>, <state>, Switch server"
+- tapOn: ${'(?s).+, ' + output.s.kitTopBarSwitchServer}  # literal-ok: the top bar reads "<server>, <state>, Switch server" (an error card has a bare "Switch server" button)
 - tapOn: ${NAME + '(\n(?s).*)?'}  # literal-ok: the caller's server name regex
 - extendedWaitUntil:
     visible: ${output.s.chatsHomeAllProjects}
