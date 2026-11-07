@@ -63,7 +63,9 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
+import io.github.eslamasabry.oc.ui.kit.foundation.ChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
@@ -115,6 +117,9 @@ public fun KitComposerBox(
         corner = corner,
     ) {
         val colors = LocalKitColors.current
+        // E20-S30: on the chat's translucent bottom veil the face is translucent too (the surface colour at the veil's
+        // alpha), so the transcript scrolling under it shows through, blurred by the veil. Glass keeps its own pane.
+        val veil = LocalKitChromeVeil.current
         val look =
             kitSurfaceLook(
                 KitSurfaceInput(
@@ -123,6 +128,7 @@ public fun KitComposerBox(
                     level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Surface2,
                     ownFill = colors.surface2,
                     radius = radius,
+                    faceAlpha = composerFaceAlpha(veil, style.style),
                 )
             )
         val solid = style.style == io.github.eslamasabry.oc.ui.design.style.Style.Solid
@@ -448,6 +454,10 @@ public fun KitComposerStopRing(
         }
     }
 }
+
+/** E20-S30: the composer face's alpha on [veil] under [style]: the veil's, except Glass (its own pane) and no veil. */
+internal fun composerFaceAlpha(veil: ChromeVeil?, style: io.github.eslamasabry.oc.ui.design.style.Style): Float =
+    if (veil == null || style == io.github.eslamasabry.oc.ui.design.style.Style.Glass) 1f else veil.faceAlpha
 
 /** The visible Send disc; the target around it is 48 dp. */
 private const val DISC = 40
