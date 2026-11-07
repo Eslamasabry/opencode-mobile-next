@@ -178,7 +178,7 @@ class ChatCardSlotTest {
         onNodeWithText("Postgres").assertIsDisplayed()
         // Flutter's answered row (kitAnsweredRow): the title line itself is the toggle, named "Show the card".
         onNodeWithContentDescription("Show the card").performClick()
-        onNodeWithText("Two options").assertIsDisplayed()
+        onNodeWithText("Two options", useUnmergedTree = true).assertIsDisplayed()
         answered.flow.value = answered.flow.value.copy(cards = persistentListOf(entry(card(input(choice, body)), state = CardState.PassedOver)))
         onNodeWithText("Not answered").assertIsDisplayed()
     }

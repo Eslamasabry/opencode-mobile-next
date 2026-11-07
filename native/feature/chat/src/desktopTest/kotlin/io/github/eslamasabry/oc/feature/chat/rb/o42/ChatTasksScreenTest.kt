@@ -75,10 +75,12 @@ class ChatTasksScreenTest {
                     )
                 }
             }
-            onNodeWithTag("kit-task-mark-InProgress", useUnmergedTree = true).assertExists()
+            // The mark's own box clears its semantics (it is read by its label), so its "kit-task-mark-*" tag is not in
+            // the tree; the drawn faces inside keep theirs: the still working dot (motion Off), then the waiting ring.
+            onNodeWithTag("kit-task-working-still", useUnmergedTree = true).assertExists()
             runOnIdle { running = false }
-            onNodeWithTag("kit-task-mark-Todo", useUnmergedTree = true).assertExists()
-            onNodeWithTag("kit-task-mark-InProgress", useUnmergedTree = true).assertDoesNotExist()
+            onNodeWithTag("kit-task-waiting", useUnmergedTree = true).assertExists()
+            onNodeWithTag("kit-task-working-still", useUnmergedTree = true).assertDoesNotExist()
             onNodeWithContentDescription("In progress").assertExists()
             onNodeWithText("Wait for the settled state").assertExists()
         }
