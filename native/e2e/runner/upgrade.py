@@ -59,11 +59,14 @@ FIXTURES = ("FX-OC2", "FX-OC2-B", "FX-TLS", "FX-LINUXDL", "FX-GH", "fx-proxy")
 NEEDED_FILES = ("lib/l10n/app_en.arb", "lib/l10n/app_ar.arb", "android/app/src/main/res/values/strings.xml",
                 "docs/design/native-rewrite-2026-11-01/catalog/e2e-flows.md")
 RAM_NEEDED_KB = 7 * 1024 * 1024       # plan 02 §7.8, checked before the gate boots its own AVD
+FLOW_TIMEOUT_S = 3 * 3600
 SNAPSHOT_FREE_BYTES = 10 * 1024 ** 3  # a snapshot save on a full disk pauses the emulator for good
 OWNED_MARK = ".oc-upgrade-e2e"
 
 # Part C, as the UI proves it: (id, what the owner reads, Maestro labels that must all have COMPLETED).
 UI_ASSERTIONS = (
+    ("part-b", "Part C passed on the Flutter app first (the baseline)", ("S2",)),
+    ("first-launch", "A first launch killed mid-migration resumes", ("S10",)),
     ("conversations", "Conversations shown, no welcome screen and no first-run guide", ("S4",)),
     ("settings", "Language, text size, style and notification choices kept", ("S5",)),
     ("servers", "Servers listed and connect without re-typing passwords", ("S6",)),
@@ -315,7 +318,10 @@ def run_py_cmd(args, out: pathlib.Path, seeded: bool, fx_env_file: pathlib.Path 
     cmd = [sys.executable, "-I", str(HERE / "run.py"), "--app", "native", "--flows", FLOW,
            "--native-apk", os.path.abspath(args.native_apk), "--expect-signer", args.expect_signer,
            "--serial", SERIAL, "--no-retry", "--lock", args.lock, "--out", str(out / "run"),
-           "--state-dir", str(out / "state"), "--maestro", args.maestro, "--adb", args.adb]
+           "--state-dir", str(out / "state"), "--maestro", args.maestro, "--adb", args.adb,
+           # Part A (built-in Linux and the voice pack from the real hosts), Part B and the native part take about
+           # an hour on the PC emulator; run.py's default is 3600 s.
+           "--flow-timeout", str(FLOW_TIMEOUT_S)]
     if args.avd:
         cmd += ["--expect-avd", args.avd]
     if seeded:
@@ -363,7 +369,8 @@ def preflight(args, env=os.environ) -> None:
 
 def maestro_statuses(debug_root: pathlib.Path) -> dict[str, str]:
     """{label: status} from Maestro's commands-*.json (debug output). A label seen twice keeps the worst status."""
-    rank = {"FAILED": 3, "COMPLETED": 2, "WARNED": 2, "SKIPPED": 1, "PENDING": 0, "RUNNING": 0}
+    # E2E-39's assertion steps are optional runFlows, so the flow goes on after one fails: WARNED is a failed one.
+    rank = {"FAILED": 4, "WARNED": 3, "COMPLETED": 2, "SKIPPED": 1, "PENDING": 0, "RUNNING": 0}
     found: dict[str, str] = {}
 
     def visit(node):
@@ -395,10 +402,10 @@ def ui_verdicts(statuses: dict[str, str], flow_passed: bool) -> list[Line]:
         states = []
         for prefix in prefixes:
             hits = [s for label, s in statuses.items() if label == prefix or label.startswith(prefix + " ")]
-            states.append(max(hits, key=lambda s: s == "FAILED") if hits else None)
-        if all(s in ("COMPLETED", "WARNED") for s in states):
+            states.append(max(hits, key=lambda s: {"FAILED": 2, "WARNED": 1}.get(s, 0)) if hits else None)
+        if all(s == "COMPLETED" for s in states):
             out.append(Line(aid, title, True))
-        elif any(s == "FAILED" for s in states):
+        elif any(s in ("FAILED", "WARNED") for s in states):
             out.append(Line(aid, title, False, "failed on the device; see maestro.log and the failure screenshot"))
         elif flow_passed and all(s is None for s in states):
             out.append(Line(aid, title, True, "flow passed; per-step status not reported by Maestro"))

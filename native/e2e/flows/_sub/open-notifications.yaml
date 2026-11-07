@@ -6,7 +6,11 @@ appId: ${APP_ID}
     file: settings-search.yaml
     env:
       QUERY: ${output.t.settingsV3Notifications}
-- tapOn: ${output.s.settingsV3Notifications + '\n(?s).*'}
+# The result row: Flutter joins "Notifications\nThis app", native keeps the lines apart; index 1 skips the search
+# field, which holds the query.
+- tapOn:
+    text: ${output.s.settingsV3Notifications + '(\n(?s).*)?'}
+    index: 1
 - extendedWaitUntil:
     visible: ${output.s.notifyFinishedRuns + '(\n(?s).*)?'}
     timeout: 15000

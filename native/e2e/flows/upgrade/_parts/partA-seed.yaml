@@ -206,7 +206,9 @@ tags: [linux-setup]
     file: ../../_sub/settings-search.yaml
     env:
       QUERY: ${output.t.textSizeTitle}
-- tapOn: ${output.s.textSizeTitle + '\n(?s).*'}
+- tapOn:
+    text: ${output.s.textSizeTitle + '(\n(?s).*)?'}
+    index: 1
 - swipe:
     from:
       text: ${'.*, ' + output.s.textSizeTitle}  # literal-ok: the slider reads "<size>, Text size"
@@ -235,7 +237,7 @@ tags: [linux-setup]
 # then "OpenCode is ready" names the first project. The name field's accessibility node covers the whole column, so
 # Maestro cannot focus it: the project keeps 2.1.4's suggested name "my-app" (Part C looks for that name).
 - runFlow: ../../_sub/open-settings.yaml
-- tapOn: ${output.s.settingsHubServer + '\n(?s).*'}
+- tapOn: ${output.s.settingsHubServer + '(\n(?s).*)?'}
 - tapOn: ${output.s.settingsV3ThisPhone + '(\n(?s).*)?'}
 - tapOn: ${output.s.phoneSetupStartSetUp}
 - repeat:

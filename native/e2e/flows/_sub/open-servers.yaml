@@ -4,7 +4,7 @@ appId: ${APP_ID}
 ---
 - runFlow:
     when:
-      visible: ${output.s.settingsHubServer + '\n(?s).*'}
+      visible: ${output.s.settingsHubServer + '(\n(?s).*)?'}
     commands:
-      - tapOn: ${output.s.settingsHubServer + '\n(?s).*'}
+      - tapOn: ${output.s.settingsHubServer + '(\n(?s).*)?'}
 - tapOn: ${output.s.e7SetupServers + '(\n(?s).*)?'}

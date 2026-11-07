@@ -266,6 +266,12 @@ class VerdictTest(unittest.TestCase):
         self.assertFalse(out["schedule"].ok)  # S12 never completed
         self.assertIn("not reached", out["voice-ready"].detail)
 
+    def test_a_failed_optional_assertion_step_warned_is_a_failure(self):
+        root = self.debug_tree([self.cmd("S6 servers", "WARNED"), self.cmd("S5 settings", "COMPLETED")])
+        out = {l.id: l for l in upgrade.ui_verdicts(upgrade.maestro_statuses(root), flow_passed=True)}
+        self.assertFalse(out["servers"].ok)
+        self.assertTrue(out["settings"].ok)
+
     def test_every_ui_assertion_label_exists_in_the_flow(self):
         flow = (upgrade.E2E / "flows/upgrade/E2E-39-upgrade-in-place.yaml").read_text()
         for aid, _, labels in upgrade.UI_ASSERTIONS:

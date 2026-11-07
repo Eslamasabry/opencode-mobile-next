@@ -6,7 +6,8 @@ appId: ${APP_ID}
     file: settings-search.yaml
     env:
       QUERY: ${output.t.settingsV3Language}
+# index 1 skips the search field (it holds the query); Flutter joins a row's lines, native keeps them apart.
 - tapOn:
-    text: ${output.s.settingsV3Language + '\n(?s).*'}
-    index: 0
-- tapOn: ${output.s.settingsV3Language + '\n(?s).*'}
+    text: ${output.s.settingsV3Language + '(\n(?s).*)?'}
+    index: 1
+- tapOn: ${output.s.settingsV3Language + '(\n(?s).*)?'}
