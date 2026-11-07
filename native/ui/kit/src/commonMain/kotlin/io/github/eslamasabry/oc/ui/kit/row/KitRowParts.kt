@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.runtime.getValue
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -122,7 +126,7 @@ public sealed interface KitRowTrailing {
 }
 
 @Composable
-internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
+internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean, selected: Boolean = false) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val tone = if (dim) TextTone.Tertiary else TextTone.Primary
@@ -138,8 +142,18 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
         }
         return
     }
+    // P-113: a selected row is filled with surface3, the tile's own colour, so its tile vanished ("This phone" read as
+    // tileless). On the highlight the tile steps to the panel's surface1; the change eases with the selection.
+    val fill by animateColorAsState(
+        when (rowTileLevel(selected)) {
+            SurfaceLevel.Surface1 -> colors.surface1
+            else -> colors.surface3
+        },
+        KitMotion.specs.quick(),
+        label = "kit-row-tile",
+    )
     Box(
-        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.shape()).clearAndSetSemantics {},
+        Modifier.size(tile.dp).background(fill, KitShapeId.Tile.shape()).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         when (leading) {
@@ -227,3 +241,12 @@ internal fun RowStateMark(tone: KitRowStateTone) {
         }
     }
 }
+
+/**
+ * The surface a row's leading tile is drawn in (P-113): surface3 at rest, and the panel's surface1 on a selected row,
+ * whose highlight is surface3 ([SELECTED_ROW_LEVEL]) and would swallow a surface3 tile.
+ */
+internal fun rowTileLevel(selected: Boolean): SurfaceLevel = if (selected) SurfaceLevel.Surface1 else SurfaceLevel.Surface3
+
+/** The surface a selected row is filled with (E20-S08; Flutter's chosen-row surface3). */
+internal val SELECTED_ROW_LEVEL: SurfaceLevel = SurfaceLevel.Surface3

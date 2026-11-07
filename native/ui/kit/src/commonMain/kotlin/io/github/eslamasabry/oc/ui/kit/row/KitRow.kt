@@ -260,7 +260,7 @@ private fun RowBody(
                     )
                 }
             }
-            leading != null -> RowLeadingTile(leading, dim = !enabled)
+            leading != null -> RowLeadingTile(leading, dim = !enabled, selected = selected)
             state != null -> RowStateMark(state.tone)
         }
         BoxWithConstraints(Modifier.weight(1f)) {
