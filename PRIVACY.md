@@ -46,15 +46,22 @@ and is identified on the host by your Tailscale login; the app keeps a
 record of each action and its receipt under the same server-scoped keys.
 The front never receives a password from the app.
 
-## Optional crash reports and setup analytics
+## Optional crash reports and usage analytics
 
-Off by default. In **Settings > Privacy and data** one switch, "Send reports to
-developer", turns on two
+Off by default, and opt-in only. On the first start after installing or
+updating to 2.1.5, a build that can send these asks once, "Help improve
+OpenCode Mobile?", with two answers: "Share anonymous usage" turns them on,
+"Not now" leaves them off and the app does not ask again. Either way the
+answer can be changed at any time in **Settings > Privacy and data**, where
+one switch, "Send reports to developer", turns on two
 services run by Google, so Google receives the data under its own terms:
 **Google Firebase Crashlytics** for crash and failure reports, and **Google
 Analytics for Firebase** for the counts listed below. Nothing is collected or
 sent while the switch is off. Turn it off at any time to stop; unsent reports
-are discarded and the analytics data kept on the phone is reset. The app
+are discarded, and the analytics data kept on the phone is reset together with
+its random install identifier, so turning it on again later starts afresh.
+There is no tracking across apps or websites, no advertising and no account;
+nothing sent identifies you by name, email or phone number. The app
 contains no performance-monitoring or remote-config code.
 
 ### Crash and error reports
@@ -72,10 +79,10 @@ anything that is not a short plain code, and removes secrets from the rest
 before it leaves the app. A native (Java or C) crash report carries the
 crashed thread's code locations and the device facts above, not your data.
 
-### Setup analytics
+### Usage analytics
 
-So the developer can see where setting up fails, the app counts exactly these
-events, and no others:
+So the developer can see where setting up fails and which parts of the app are
+used, the app counts exactly these events, and no others:
 
 | Event | What it carries |
 | --- | --- |
@@ -87,6 +94,9 @@ events, and no others:
 | `connect_computer_chosen` | nothing |
 | `update_offered` | nothing |
 | `update_installed` | nothing |
+| `screen_view` | `screen`: the kind of page, one of conversations, chat, new_chat, servers, this_phone, setup, privacy, appearance, integrations, settings, files, git, review, team, usage, agents, about, other |
+| `feature_used` | `feature`: one of voice, camera, file_attach, agent_switch, model_switch, server_add, git_action, review_open |
+| `session_length` | `minutes` the app was in front before going to the background: a range (under 1, 1 to 5, 5 to 15, 15 to 60, over 60) |
 
 Every value is one of the fixed words above; the app drops anything else, so
 no free text, paths, server addresses or anything from your conversations can
@@ -96,8 +106,9 @@ coarse location (country and region) it works out from the connection without
 keeping the IP address. It also counts a few events of its own, such as the
 first open and the length of a session. The advertising ID and Android ID
 (SSAID) are never collected (the app does not even hold the advertising-ID
-permission), ad personalisation and ad storage are denied, screens are not
-reported, and no data is exported to any other Google product.
+permission), ad personalisation and ad storage are denied, Analytics does not
+report screens by itself (only the page kinds above), and no data is exported
+to any other Google product.
 
 The separate "Offer crash reports" switch is unchanged: it offers to prepare a
 report you review and send yourself through GitHub, with no third party.

@@ -124,7 +124,9 @@ The app connects only to the servers you choose. Passwords stay in Android's key
 Nothing goes to the developer unless you turn on **Settings > Privacy and data > Send reports to developer**. It is off by default, and turning it off stops it. When on:
 
 - **Crash and error reports** go to Google Firebase Crashlytics: the kind of error, code locations, the setup step that failed with its exit code, phone model, Android version and app version.
-- **Setup counts** go to Google Analytics for Firebase, exactly these events with fixed values only: `app_open` (cold or warm), `setup_step_reached` (step), `setup_step_failed` (step; crash, timeout, network, space or other; compatibility mode; Node.js safe mode), `setup_done` (minutes, as a range), `first_reply` (phone or computer; seconds, as a range), `connect_computer_chosen`, `update_offered`, `update_installed`.
+- **Usage counts** go to Google Analytics for Firebase, exactly these events with fixed values only: `app_open` (cold or warm), `setup_step_reached` (step), `setup_step_failed` (step; crash, timeout, network, space or other; compatibility mode; Node.js safe mode), `setup_done` (minutes, as a range), `first_reply` (phone or computer; seconds, as a range), `connect_computer_chosen`, `update_offered`, `update_installed`, `screen_view` (the kind of page, from a fixed list), `feature_used` (voice, camera, file_attach, agent_switch, model_switch, server_add, git_action or review_open), `session_length` (minutes, as a range).
+
+On the first start after installing or updating, the app asks once, "Help improve OpenCode Mobile?"; "Not now" leaves everything off and it never asks again.
 
 Never sent: messages, prompts, files, paths, server addresses, usernames, passwords, keys, tokens or the advertising ID.
 

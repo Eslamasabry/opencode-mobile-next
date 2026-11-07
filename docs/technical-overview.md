@@ -227,7 +227,13 @@ adapter without it.
 
 `Telemetry.track(AnalyticsEvent, props)` sends only the events and values in
 `analytics_events.dart` (`analyticsSchema`): fixed names, enum or bucket
-values, no free text. Adding an event means adding it there, to PRIVACY.md
+values, no free text. `screen_view` comes from `AnalyticsNavigatorObserver`
+(page kind via `AnalyticsScreen.of`), `feature_used` from
+`AppTelemetry.feature` at each feature, `app_open`/`session_length`/
+`update_installed` from `AnalyticsLifecycle`. The one-time question
+(`lib/ui/widgets/telemetry_consent.dart`, key `oc.telemetryConsentAsked`)
+shows on the root route once `TelemetryStartup.ready` says a vendor is built
+in. Adding an event means adding it there, to PRIVACY.md
 (English and `assets/l10n/PRIVACY.ar.md`), to README "What is sent" and to
 `test/telemetry_analytics_test.dart`. The manifest keeps analytics collection
 off until consent, removes the `AD_ID` permission and turns off advertising
