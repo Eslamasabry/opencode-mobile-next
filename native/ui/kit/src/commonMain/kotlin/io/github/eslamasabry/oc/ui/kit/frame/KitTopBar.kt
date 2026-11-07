@@ -47,6 +47,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouBadge
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarSwitchProject
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarSwitchServer
+import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * How the bar leaves the page: Back at the start, Close at the end (LAY-8), or nothing at a root or
@@ -354,8 +372,8 @@ public fun KitTopBar(
                             Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, if (onTitleTap != null) Space.S1.dp else 0.dp)
                         else Modifier
                     )
-                    // A step under Back: a tappable title is a control of its own, never against it.
-                    .padding(top = if (onTitleTap != null) Space.S1.dp else 0.dp)
+                    // A step under Back (layout guard "tight": 4 dp); a tappable title is a control of its own too.
+                    .padding(top = Space.S1.dp)
                     .heightIn(min = if (onTitleTap != null) tokens.minTarget.dp else 0.dp)
                     .padding(start = titleStart),
                 verticalAlignment = Alignment.CenterVertically,
@@ -493,3 +511,186 @@ private fun Modifier.tuckedTarget(by: androidx.compose.ui.unit.Dp): Modifier =
         val placeable = measurable.measure(constraints)
         layout(placeable.width, (placeable.height - 2 * inset).coerceAtLeast(0)) { placeable.place(0, -inset) }
     }
+
+/** Where the shell's controls sit (Dart `KitShellControlsLayout`). */
+public enum class KitShellControlsLayout {
+    /** One row: the server pill at the start; search and, on a phone, the Settings gear at the end. */
+    Bar,
+
+    /** The PC sidebar header: the server pill, the project switcher, then a full-width search that looks like a field. */
+    Sidebar,
+}
+
+/**
+ * The shell's top controls (Dart `KitShellControls`, kit_top_bar.dart): the server pill, search and, on a phone, the
+ * Settings gear. In the bar the pill is one line at the start ("name · state"); search and the gear are round icon
+ * buttons at the end. In the sidebar the name is never cut and the state is a second line ("Connected" is left to the
+ * green dot there and stays in the spoken label); the project switcher and a field-like search follow.
+ *
+ * States: connected, reconnecting, not answering, needs-you badge Text: frame Cap: Fill Motion: the pill's mark only
+ * Replaces: KitShellControls (lib/ui/kit/kit_top_bar.dart)
+ */
+@Composable
+public fun KitShellControls(
+    server: String,
+    serverStatus: String,
+    serverTone: KitConnectionTone,
+    onServer: () -> Unit,
+    modifier: Modifier = Modifier,
+    needsYou: Int = 0,
+    project: String? = null,
+    onProject: (() -> Unit)? = null,
+    onSearch: (() -> Unit)? = null,
+    onSettings: (() -> Unit)? = null,
+    showServer: Boolean = true,
+    layout: KitShellControlsLayout = KitShellControlsLayout.Bar,
+) {
+    val tokens = LocalKitTokens.current
+    val switchServer = stringResource(Res.string.kitTopBarSwitchServer)
+    val searchLabel = stringResource(Res.string.kitTopBarSearch)
+    if (layout == KitShellControlsLayout.Bar) {
+        Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            // Dart: Flexible(Align(centerStart, pill)), or a Spacer without the pill.
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                if (showServer) {
+                    KitNeedsYouBadge(needsYou) {
+                        KitConnectionPill(server, serverStatus, serverTone, switchServer, onServer)
+                    }
+                }
+            }
+            if (onSearch != null || onSettings != null) {
+                Box(Modifier.width(Space.S2.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.S4.dp), verticalAlignment = Alignment.CenterVertically) { // F: lib/ui/kit/kit_top_bar.dart:1194
+                    if (onSearch != null)
+                        KitIconButton(
+                            icon = KitIcons.search,
+                            label = searchLabel,
+                            onClick = onSearch,
+                            round = true,
+                            size = if (onSettings != null) 22 else 24, // F: lib/ui/kit/kit_top_bar.dart:1164
+                        )
+                    if (onSettings != null)
+                        KitIconButton(
+                            icon = KitIcons.settingsGear,
+                            label = stringResource(Res.string.librarySettingsTitle),
+                            onClick = onSettings,
+                            round = true,
+                            size = 24, // F: lib/ui/kit/kit_top_bar.dart:1173
+                        )
+                }
+            }
+        }
+        return
+    }
+    val colors = LocalKitColors.current
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) { // F: lib/ui/kit/kit_top_bar.dart:1205
+        KitNeedsYouBadge(needsYou) { SidebarServerPill(server, serverStatus, serverTone, "$server, $serverStatus, $switchServer", onServer) }
+        if (project != null && onProject != null) {
+            val switchProject = stringResource(Res.string.kitTopBarSwitchProject)
+            KitTappable(
+                onClick = onProject,
+                modifier = Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = "$project, $switchProject" }, // NV: Dart joins the name and its l10n words with ", " (kit_top_bar.dart:1215)
+                shape = KitShapeId.Button,
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(horizontal = Space.S3.dp, vertical = Space.S1.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    KitText(KitBidi.auto(project), Modifier.weight(1f), role = TypeRole.Headline, kind = KitTextKind.Frame, maxLines = 2) // F: lib/ui/kit/kit_top_bar.dart:1232
+                    Box(Modifier.width(Space.S1.dp))
+                    KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
+                }
+            }
+        }
+        if (onSearch != null) {
+            ShellPillSurface(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .kitTappable(onClick = onSearch, shape = KitShapeId.Pill)
+                        .clearAndSetSemantics { contentDescription = searchLabel }
+                        .heightIn(min = tokens.minTarget.dp)
+                        .padding(horizontal = Space.S3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    KitIcon(KitIcons.search, size = KitIconSize.Small, tone = TextTone.Secondary)
+                    Box(Modifier.width(Space.S2.dp))
+                    KitText(searchLabel, Modifier.weight(1f), role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+                }
+            }
+        }
+    }
+}
+
+/** The pill's surface: `surface2` as a control, the style's own look (Dart `KitTappable(surface: surface2)` on KitGlass). */
+@Composable
+private fun ShellPillSurface(modifier: Modifier, content: @Composable () -> Unit) {
+    val colors = LocalKitColors.current
+    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Control, KitShapeId.Pill, SurfaceLevel.Surface2, ownFill = colors.surface2))
+    Box(modifier.then(look.modifier)) { content() }
+}
+
+/** The sidebar's server pill (Dart `_KitServerPillContent`, expand): the mark, the whole name, the state word under it unless ok. */
+@Composable
+private fun SidebarServerPill(server: String, status: String, tone: KitConnectionTone, spoken: String, onClick: () -> Unit) {
+    val tokens = LocalKitTokens.current
+    val colors = LocalKitColors.current
+    ShellPillSurface(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth()
+                .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
+                .clearAndSetSemantics { contentDescription = spoken }
+                .heightIn(min = tokens.minTarget.dp)
+                .padding(start = Space.S3.dp, end = Space.S2.dp, top = Space.S1.dp, bottom = Space.S1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val dot =
+                when (tone) {
+                    KitConnectionTone.Ok -> colors.success
+                    KitConnectionTone.Working -> colors.accent
+                    KitConnectionTone.Problem -> colors.attention
+                    KitConnectionTone.Off -> colors.text3
+                }
+            Box(Modifier.size(tokens.smallIcon.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(Space.S2.dp).drawBehind { drawCircle(dot) })
+            }
+            Box(Modifier.width(Space.S2.dp))
+            Column(Modifier.weight(1f)) {
+                KitText(KitBidi.auto(server), role = TypeRole.RowTitle, kind = KitTextKind.Frame)
+                if (tone != KitConnectionTone.Ok) KitText(status, role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+            }
+            Box(Modifier.width(Space.S1.dp))
+            KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
+        }
+    }
+}
+
+/**
+ * The shell's bar on compact and medium windows (Dart `KitTopBar.shell`): [controls] (a [KitShellControls] in its bar
+ * layout), then the page's [trailing] actions, on the gutter with space4 above, a step below and a touch target's
+ * height at least.
+ *
+ * Text: frame Cap: Fill Motion: none Replaces: KitTopBar.shell (lib/ui/kit/kit_top_bar.dart)
+ */
+@Composable
+public fun KitShellTopBar(
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
+    controls: @Composable () -> Unit,
+) {
+    val tokens = LocalKitTokens.current
+    Row(
+        modifier
+            .fillMaxWidth()
+            .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = Space.S4.dp, bottom = Space.S1.dp) // F: lib/ui/kit/kit_top_bar.dart:353
+            .heightIn(min = tokens.minTarget.dp)
+            .semantics { isTraversalGroup = true }
+            .testTag("kit-shell-top-bar"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.weight(1f)) { controls() }
+        if (trailing != null) {
+            Box(Modifier.width(Space.S2.dp))
+            trailing()
+        }
+    }
+}
