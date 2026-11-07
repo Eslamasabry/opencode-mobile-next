@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -20,6 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -31,6 +35,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -42,11 +47,14 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInset
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
-import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
@@ -54,6 +62,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
@@ -62,9 +71,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitConfirmKeepEditing
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmKeepRunning
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeName
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeNameReason
-import io.github.eslamasabry.oc.ui.words.res.kitConsequenceInfo
-import io.github.eslamasabry.oc.ui.words.res.kitConsequenceKept
-import io.github.eslamasabry.oc.ui.words.res.kitConsequenceLost
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
@@ -184,7 +190,7 @@ public fun KitConfirm(
         dismissible = !working,
     ) {
         Column(
-            Modifier.fillMaxWidth().testTag("kit-confirm-content").onKeyEvent { event ->
+            Modifier.kitMaxWidth(CapRole.Confirm).fillMaxWidth().testTag("kit-confirm-content").onKeyEvent { event ->
                 when {
                     event.type != KeyEventType.KeyDown -> false
                     event.key == Key.Escape -> {
@@ -242,6 +248,8 @@ public fun KitConfirm(
                     state = typed,
                     label = stringResource(Res.string.kitConfirmTypeName, name),
                     kind = KitFieldKind.Mono,
+                    // InputDecoration.labelText (kit_confirm_sheet.dart:556-560): the words sit inside the empty field.
+                    labelShown = false,
                     enabled =
                         KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
                     imeAction =
@@ -344,90 +352,112 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
         }
         alternatives.forEach {
             Spacer(Modifier.height(Space.S2.dp))
-            KitButton(it, Modifier.fillMaxWidth(), role = KitButtonRole.Tertiary)
+            // KitInset (kit_buttons.dart:1270-1290): start-aligned at its own width. Flutter also pulls it back by the
+            // tertiary padding (space 2), which would put its box inside the 16 dp page gutter the layout guard holds
+            // (edge-text); the box stays on the rail (evidence/12.md).
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                KitButton(it, role = KitButtonRole.Tertiary)
+            }
         }
         Spacer(Modifier.height(Space.S3.dp))
         KitButton(cancel, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary)
     }
 }
 
+/** What a fact in a [KitMarkedConsequences] panel says about the thing (Dart `KitConsequenceMark`, kit_consequences.dart). */
 public enum class KitConsequenceMark {
+    /** A plain fact with no verdict: a small `text2` dot. */
     Neutral,
+
+    /** Goes with the act (loses data or ends work): the strong neutral warning glyph (never red). */
     Lost,
+
+    /** Survives the act: a `text2` check. */
     Kept,
+
+    /** A fact: the `text2` info glyph. */
     Info,
 }
 
+/** One counted fact ("3 queued prompts will be deleted"); [icon] overrides the mark's glyph (Dart `KitConsequence`). */
 @Immutable
 public data class KitConsequence(
     val text: String,
     val mark: KitConsequenceMark = KitConsequenceMark.Neutral,
+    val icon: ImageVector? = null,
 )
 
-/** Counted facts distinguish losses from retained data without using colour alone. */
+/**
+ * The consequences panel (Dart `KitConsequences`, lib/ui/kit/kit_consequences.dart): one inset panel (`surface1` in
+ * dark, the ground in light) of one-line facts, each a small mark, space 3, then the words as a row title, with
+ * hairlines between them inset to the words. The marks are hidden from screen readers; the words say the fact.
+ *
+ * States: none (a static list)
+ * Text: reading (row title)
+ * Cap: reading (720)
+ * Motion: none
+ * Replaces: KitConsequences, KitConsequence, KitConsequenceMark (lib/ui/kit/kit_consequences.dart)
+ */
 @Composable
 public fun KitMarkedConsequences(items: List<KitConsequence>, modifier: Modifier = Modifier) {
-    Column(
-        modifier.fillMaxWidth().testTag("kit-consequences"),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    if (items.isEmpty()) return
+    val colors = LocalKitColors.current
+    val small = LocalKitTokens.current.smallIcon.dp
+    val hairline = kitHairline()
+    KitSurfaceInset(
+        modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().testTag("kit-consequences"),
+        padding = KitSurfacePadding.None,
     ) {
-        items.forEach { item ->
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                KitConsequenceGlyph(item.mark)
-                KitText(item.text, Modifier.weight(1f), role = TypeRole.Body)
+        Column(Modifier.fillMaxWidth()) {
+            items.forEachIndexed { index, item ->
+                // Between two facts a hairline that takes no room (Divider height 0), starting under the words: space 4 +
+                // the mark + space 3 (kit_consequences.dart:110-116); it mirrors in RTL.
+                val rule =
+                    if (index == 0) Modifier
+                    else
+                        Modifier.drawBehind {
+                            val inset = (Space.S4.dp + small + Space.S3.dp).toPx()
+                            val x0 = if (layoutDirection == LayoutDirection.Rtl) 0f else inset
+                            val x1 = if (layoutDirection == LayoutDirection.Rtl) size.width - inset else size.width
+                            drawLine(colors.hairline, Offset(x0, 0f), Offset(x1, 0f), hairline.toPx())
+                        }
+                Row(
+                    Modifier.fillMaxWidth().then(rule).padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    ConsequenceMark(item) // decoration: no semantics node of its own
+                    Spacer(Modifier.width(Space.S3.dp))
+                    KitText(item.text, Modifier.weight(1f), role = TypeRole.RowTitle)
+                }
             }
         }
     }
 }
 
-/** A real glyph per mark, tinted by meaning and named for screen readers; the neutral mark is the plain dot. */
+/** The row's leading mark (Dart `KitConsequences._mark`): the mark's glyph, or the neutral dot drawn small as a bullet. */
 @Composable
-private fun KitConsequenceGlyph(mark: KitConsequenceMark) {
-    when (mark) {
-        KitConsequenceMark.Lost ->
-            KitIcon(KitIcons.removeCircle, size = KitIconSize.Small, tone = TextTone.Attention,
-                label = stringResource(Res.string.kitConsequenceLost))
-        KitConsequenceMark.Kept ->
-            KitIcon(KitIcons.checkCircle, size = KitIconSize.Small, tone = TextTone.Success,
-                label = stringResource(Res.string.kitConsequenceKept))
-        KitConsequenceMark.Info ->
-            KitIcon(KitIcons.info, size = KitIconSize.Small, tone = TextTone.Secondary,
-                label = stringResource(Res.string.kitConsequenceInfo))
-        KitConsequenceMark.Neutral ->
-            Box(Modifier.size(KitIconSize.Small.dp.dp), contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier.size(6.dp)
-                        .clip(KitShapeId.Circle.shape())
-                        .background(LocalKitColors.current.text2)
-                )
-            }
+private fun ConsequenceMark(item: KitConsequence) {
+    val colors = LocalKitColors.current
+    val small = LocalKitTokens.current.smallIcon.dp
+    if (item.icon == null && item.mark == KitConsequenceMark.Neutral) {
+        // A space 2 dot (radius space 1) centred on the mark's box (kit_consequences.dart:74-85).
+        val dot = colors.text2
+        Spacer(Modifier.size(small).drawBehind { drawCircle(dot, radius = Space.S1.dp.toPx()) })
+        return
     }
+    val glyph =
+        item.icon
+            ?: when (item.mark) {
+                KitConsequenceMark.Info -> KitIcons.info
+                KitConsequenceMark.Lost -> KitIcons.warning
+                KitConsequenceMark.Kept -> KitIcons.check
+                KitConsequenceMark.Neutral -> KitIcons.statusDot
+            }
+    KitGlyph(glyph, if (item.mark == KitConsequenceMark.Lost) colors.text1 else colors.text2, small)
 }
 
-/** What will happen, one line each, with a neutral mark (Dart `KitConsequences`). */
+/** What will happen, one plain fact per line, in the consequences panel with the neutral dot (Dart `KitConsequences`). */
 @Composable
 public fun KitConsequences(lines: List<String>, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
-    Column(
-        modifier.fillMaxWidth().testTag("kit-consequences").semantics(mergeDescendants = false) {},
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
-        lines.forEach { line ->
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                Box(
-                    Modifier.padding(top = 9.dp)
-                        .size(6.dp)
-                        .clip(KitShapeId.Circle.shape())
-                        .background(colors.text2)
-                )
-                KitText(line, Modifier.weight(1f), role = TypeRole.Body)
-            }
-        }
-    }
+    KitMarkedConsequences(lines.map { KitConsequence(it, KitConsequenceMark.Neutral) }, modifier)
 }
