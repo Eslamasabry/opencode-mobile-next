@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 /** Plan 09 §9.1 `InlineAnnotatedTotalityTest` and the inline rules of B-CHAT-064 and R15/R17. */
 class InlineAnnotatedTest {
-    private val style = KitMdInlineStyle(Color.Blue, Color.Gray, Color.LightGray, FontFamily.Monospace)
+    private val style = KitMdInlineStyle(Color.Blue, FontFamily.Monospace)
     private val opened = mutableListOf<KitSpanKind>()
     private val sink = KitMdLinkSink { opened += it }
 

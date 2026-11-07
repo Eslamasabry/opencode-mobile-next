@@ -10,14 +10,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.TextUnit
 
-/** Colours and the mono family of inline Markdown, taken from the kit theme once per theme. */
+/**
+ * Colours and the mono face of inline Markdown, taken from the kit theme once per theme. [link] is `roles.partner`
+ * (Flutter `kit_markdown.dart` `_link`, C-017); a confirmed path is [pathLink], the accent (Flutter `_KitMdPathChip`).
+ * Inline code and paths are [mono] at [monoSize] (the Mono role, 13 sp; C-016) and carry no tint.
+ */
 @Immutable
 public data class KitMdInlineStyle(
     val link: Color,
-    val codeFill: Color,
-    val pathFill: Color,
     val mono: FontFamily,
+    val monoSize: TextUnit = TextUnit.Unspecified,
+    val pathLink: Color = link,
 )
 
 /** Where taps on inline links and confirmed path chips go. Plain lambdas (C5); the kit never opens anything (R17). */
@@ -79,15 +84,14 @@ public fun inlineAnnotated(
         val from = before[a]
         val to = afterClose[b]
         when (kind) {
-            KitSpanKind.Bold -> builder.addStyle(SpanStyle(fontWeight = FontWeight.SemiBold), from, to)
+            // C-023: Flutter draws `**bold**` at w700 (kit_markdown.dart `_spansOf`).
+            KitSpanKind.Bold -> builder.addStyle(SpanStyle(fontWeight = FontWeight.Bold), from, to)
             KitSpanKind.Italic -> builder.addStyle(SpanStyle(fontStyle = FontStyle.Italic), from, to)
             KitSpanKind.Strike -> builder.addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough), from, to)
-            // The mono face marks code; its soft tint is drawn by MdText around the glyphs (KIT_MD_CODE_TAG), one
-            // rounded run per line, never a line-tall span background with hard white edges.
-            KitSpanKind.Code -> {
-                builder.addStyle(SpanStyle(fontFamily = style.mono), from, to)
-                builder.addStringAnnotation(KIT_MD_CODE_TAG, "", from, to)
-            }
+            // C-016: the mono face at the Mono size marks code; no tint and no padding (Flutter `_codeSpan`: a tinted
+            // run beside thin prose fails the contrast check).
+            KitSpanKind.Code ->
+                builder.addStyle(SpanStyle(fontFamily = style.mono, fontSize = style.monoSize), from, to)
             is KitSpanKind.Link ->
                 builder.addLink(
                     LinkAnnotation.Clickable(
@@ -107,11 +111,12 @@ public fun inlineAnnotated(
                     to,
                 )
             is KitSpanKind.Path -> {
-                builder.addStyle(SpanStyle(fontFamily = style.mono), from, to)
-                builder.addStringAnnotation(KIT_MD_CODE_TAG, "", from, to)
+                builder.addStyle(SpanStyle(fontFamily = style.mono, fontSize = style.monoSize), from, to)
                 if (confirmed(kind.path)) {
+                    // Flutter `_KitMdPathChip`: a readable path is accent, underlined mono.
+                    val look = SpanStyle(color = style.pathLink, textDecoration = TextDecoration.Underline)
                     builder.addLink(
-                        LinkAnnotation.Clickable(tag = kind.path, styles = TextLinkStyles(SpanStyle(color = style.link))) {
+                        LinkAnnotation.Clickable(tag = kind.path, styles = TextLinkStyles(look)) {
                             sink.open(kind)
                         },
                         from,
@@ -123,6 +128,3 @@ public fun inlineAnnotated(
     }
     return builder.toAnnotatedString()
 }
-
-/** Marks a code or path run in a built string; MdText draws its tint. */
-internal const val KIT_MD_CODE_TAG: String = "kit-md-code"
