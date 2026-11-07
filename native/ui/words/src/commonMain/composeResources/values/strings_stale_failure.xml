@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- E19-S03: Report this failure, for a failure saved by an older app version. -->
+    <string name="staleFailureTitle">Report this failure?</string>
+    <string name="staleFailureBody">This happened on %1$s. Version %2$s may already fix it.</string>
+    <string name="staleFailureUpdateFirst">Update first</string>
+    <string name="staleFailureReportAnyway">Report anyway</string>
+</resources>
