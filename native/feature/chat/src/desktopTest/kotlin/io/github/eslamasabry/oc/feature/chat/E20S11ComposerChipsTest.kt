@@ -17,7 +17,6 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -54,7 +53,8 @@ class E20S11ComposerChipsTest {
     }
 
     private val model = ComposerModel("crouton", "crouton-fast-2", "Crouton Fast 2", true)
-    private val approve = "Approve everything"
+    // What the real chip says for either automatic mode (Flutter `chatChipAutoApproveOn`).
+    private val approve = "Auto-approve on"
 
     private fun ui() =
         BasicComposerUi(
@@ -72,7 +72,14 @@ class E20S11ComposerChipsTest {
 
     private val chrome =
         ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = {
-            KitComposerChip(approve, onClick = {}, modifier = Modifier.testTag("approval-chip"), active = true, shrinks = true)
+            // The real approval chip's part (header/ui/ApprovalChip.kt, Flutter `_AutoApprovalIndicator`).
+            io.github.eslamasabry.oc.ui.kit.chip.KitChip(
+                approve,
+                kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
+                selected = true,
+                onClick = {},
+                modifier = Modifier.testTag("approval-chip"),
+            )
         })
 
     private fun scene(width: Int, locale: String, check: androidx.compose.ui.test.ComposeUiTest.() -> Unit) =
@@ -89,19 +96,27 @@ class E20S11ComposerChipsTest {
         }
 
     @Test
-    fun `E20-S11 the model's name shows whole and the approval chip shortens first`() {
+    fun `E20-S11 F1 the model's name shows whole, the approval chip leads the strip above the box`() {
         for (width in listOf(360, 600)) for (locale in listOf("en", "ar")) scene(width, locale) {
             val where = "$width dp, $locale"
-            assertFalse(isCut("Crouton Fast 2"), "$where: the model's name is whole")
+            // F1: the strip gives the chips at least half its width and the model the rest (Flutter
+            // kit_composer_status_strip.dart:212-217); at 360 dp right to left the model's words may shorten there.
+            if (width >= 600 || locale == "en")
+                assertFalse(isCut("Crouton Fast 2"), "$where: the model's name is whole")
             val modelChip = boundsOfTag("chat-model-button")
             val chip = boundsOfTag("approval-chip")
-            val send = boundsOfTag("chat-send-button")
+            // The tag sits inside the face's S1 padding.
+            val box = boundsOfTag("kit-composer-box").inflate(4f)
+            // F1 (Flutter chat_composer_region.dart:44-77): the chips ride a strip above the message box, the
+            // approval chip at its start and the model at its end.
+            assertTrue(chip.bottom <= box.top + 0.5f, "$where: the approval chip sits above the box $box")
+            assertTrue(modelChip.bottom <= box.top + 0.5f, "$where: the model chip sits above the box $box")
             if (locale == "en") {
-                assertTrue(modelChip.right <= chip.left + 0.5f, "$where: the model chip leads, $modelChip then $chip")
-                assertTrue(chip.right <= send.left + 0.5f, "$where: the approval chip ends before Send, $chip vs $send")
+                assertTrue(chip.right <= modelChip.left + 0.5f, "$where: the approval chip leads, $chip, $modelChip")
+                assertTrue(modelChip.right <= box.right + 0.5f, "$where: the model chip ends on the box's edge")
             } else {
-                assertTrue(modelChip.left >= chip.right - 0.5f, "$where: right to left the model chip leads, $modelChip")
-                assertTrue(chip.left >= send.right - 0.5f, "$where: the approval chip ends before Send, $chip vs $send")
+                assertTrue(chip.left >= modelChip.right - 0.5f, "$where: right to left the approval chip leads, $chip")
+                assertTrue(modelChip.left >= box.left - 0.5f, "$where: the model chip ends on the box's edge")
             }
             if (width >= 600) assertFalse(isCut(approve), "$where: with room, the approval words are whole too")
         }

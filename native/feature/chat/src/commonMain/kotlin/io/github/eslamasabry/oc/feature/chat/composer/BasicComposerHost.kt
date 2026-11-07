@@ -20,6 +20,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.onClick
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -61,9 +67,11 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerRowFit
+import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
@@ -702,16 +710,11 @@ public fun BasicComposer(
                 }
             }
         }
-        // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row
-        // under a full-width
-        // field, so the message box never shrinks to a sliver.
-        // Looks pass (owner pick, 2026-11-05): one message box. The words on top; under them the
-        // plus, the model
-        // and approval chips (never a row of their own above the box), then Send, or the ringed
-        // Stop while a reply
-        // runs. With words typed during a run, Send stays at the end (they join the turn) and Stop
-        // moves beside
-        // the plus, away from the thumb (Flutter `_stopLeads`).
+        // B8 (QA wave 1): while a reply runs with words typed, Stop and "Add to this turn" sit on their own row
+        // under a full-width field, so the message box never shrinks to a sliver. Otherwise the box is Flutter's
+        // one row: the plus, the words, then the mic, Send, or the ringed Stop while a reply runs. With words typed
+        // during a run, Send stays at the end (they join the turn) and Stop moves beside the plus, away from the
+        // thumb (Flutter `_stopLeads`).
         val waitingRequest = chrome.requestWaiting()
         val stopShown = busy || waitingRequest
         val typed = field.text.isNotBlank() || state.draft.attachments.isNotEmpty()
@@ -753,141 +756,15 @@ public fun BasicComposer(
                 modifier = Modifier.testTag("chat-stop-button"),
             )
         }
-        KitComposerBox(
-            running = busy && !waitingRequest,
-            above = {
-                KitComposerTray(
-                    open = addOpen,
-                    actions =
-                        trayItems.map { item ->
-                            when (item) {
-                                TrayItem.Photos ->
-                                    KitComposerTrayAction(
-                                        stringResource(Res.string.composerTrayPhotos),
-                                        KitIcons.images,
-                                        {
-                                            addOpen = false
-                                            actions.attach(AttachKind.Photos)
-                                        },
-                                        attachBlockedReason,
-                                        "composer-tool-gallery",
-                                    )
-                                TrayItem.Camera ->
-                                    KitComposerTrayAction(
-                                        stringResource(Res.string.composerTrayCamera),
-                                        KitIcons.camera,
-                                        {
-                                            addOpen = false
-                                            actions.attach(AttachKind.Camera)
-                                        },
-                                        attachBlockedReason,
-                                        "composer-tool-camera",
-                                    )
-                                TrayItem.File ->
-                                    KitComposerTrayAction(
-                                        stringResource(Res.string.composerTrayFile),
-                                        KitIcons.attach,
-                                        {
-                                            addOpen = false
-                                            actions.attachFile()
-                                        },
-                                        attachBlockedReason,
-                                        "composer-tool-attach",
-                                    )
-                                TrayItem.More ->
-                                    KitComposerTrayAction(
-                                        stringResource(Res.string.composerTrayMore),
-                                        KitIcons.more,
-                                        {
-                                            addOpen = false
-                                            toolsOpen = true
-                                        },
-                                        testTag = "composer-tray-more",
-                                    )
-                            }
-                        },
-                )
-            },
-            field = {
-                // Keep the editor mounted while an approval or form waits. Submission stays
-                // gated below; hiding it leaves an open conversation with only chips.
-                KitComposerFieldRow(
-                    tail =
-                        if (inlineMic && voice != null) {
-                            { voice.InlineMic(voiceField, Modifier) }
-                        } else null
-                ) {
-                    KitField(
-                        state = field,
-                        // While a reply runs on a steering server the words join it
-                        // (B-PROTO-025).
-                        label =
-                            if (busy && state.steers)
-                                stringResource(Res.string.composerFullSteerHint)
-                            else
-                                stringResource(
-                                    Res.string.upgradeComposerAsk,
-                                    state.models.agent?.takeUnless {
-                                        it.lowercase() in
-                                            setOf(
-                                                "build",
-                                                "plan",
-                                                "compaction",
-                                                "title",
-                                                "summary",
-                                            )
-                                    } ?: chrome.agentName(),
-                                ),
-                        kind = KitFieldKind.Multiline,
-                        // B6: one line when empty, so the conversation keeps its room above the
-                        // keyboard.
-                        multilineLines = 1..5,
-                        composer = true,
-                        imeAction = ImeAction.Send,
-                        onSubmit = {
-                            if (
-                                sendReady &&
-                                    typed &&
-                                    !voiceActive &&
-                                    !state.sending &&
-                                    !waitingRequest
-                            )
-                                send()
-                        },
-                        labelShown = false,
-                        framed = false,
-                        focusRequester = focus,
-                        enabled =
-                            if (editorReady && state.draft.ready) KitEnabled.Enabled
-                            else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
-                        onTextChanged = { accepted ->
-                            editor.userEditSerial += 1
-                            editor.lastReported = accepted
-                            repeatRevision = null
-                            actions.draftChanged(accepted)
-                        },
-                        modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
-                    )
-                }
-            },
-            leading = {
-                // E20-S20: Flutter's "+" ("Attach and more", "Close" while open): it opens the tray, or the
-                // tools list straight away where the server takes no files. Never a dead control.
-                KitComposerAdd(
-                    label =
-                        stringResource(
-                            if (addOpen && trayItems.isNotEmpty()) Res.string.kitComposerTrayClose
-                            else Res.string.kitComposerTools
-                        ),
-                    onClick = {
-                        if (trayItems.isEmpty()) toolsOpen = true else addOpen = !addOpen
-                    },
-                    open = addOpen && trayItems.isNotEmpty(),
-                    modifier = Modifier.testTag("chat-attach-button"),
-                )
-                if (stopShown && typed && !waitingRequest) stopPart()
-            },
-            chips = {
+        // F1 (scoreboard 2026-11-07), Flutter's layout (chat_composer_region.dart:44-77, kit_composer.dart:796-808):
+        // the approval and model chips ride one strip ABOVE the message box (approval at the start, the model at
+        // the end), and the box is one row (plus, the words, mic or Send) until the words outgrow it. Stop keeps
+        // the native Send/Stop morph on the round target.
+        val stopLeads = stopShown && typed && !waitingRequest
+        KitComposerStatusStrip(
+            hasChips = true,
+            modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
+            model = {
                 val named =
                     modelLabel(
                         state.models.selected?.label
@@ -899,63 +776,210 @@ public fun BasicComposer(
                         state.models.variant,
                         state.models.agent,
                     )
-                // N-52: "DeepSeek V4.1 Flash Free · Free" said it twice and pushed Ask first under the mic.
+                // N-52: "DeepSeek V4.1 Flash Free · Free" said it twice.
                 val free = stringResource(Res.string.upgradeComposerFree)
                 val freeWord = free.trimStart(' ', '·').trim()
-                KitComposerChip(
-                    label =
-                        named +
-                            if (chrome.freeModel() && !named.contains(freeWord, ignoreCase = true)) free
-                            else "",
-                    onClick = {
-                        // B3: the keyboard never stays open over the picker.
-                        focusManager.clearFocus()
-                        modelsOpen = true
-                    },
-                    semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
-                    modifier = Modifier.testTag("chat-model-button"),
-                    // E20-S11: the model's name has priority on the line (the approval chip shortens first); it
-                    // ends in "…" only when even a short approval chip leaves it no room.
-                    shrinks = true,
-                )
-                chrome.rowChips()
+                val chipWords =
+                    named + if (chrome.freeModel() && !named.contains(freeWord, ignoreCase = true)) free else ""
+                val modelName = stringResource(Res.string.composerPreviewModelButton)
+                val openModels = {
+                    // B3: the keyboard never stays open over the picker.
+                    focusManager.clearFocus()
+                    modelsOpen = true
+                }
+                // Spoken as before: "Model", then the model's words as its state (09-10_3), one node around the kit's
+                // chip; the chip's own label stays the visible words.
+                Box(
+                    Modifier.testTag("chat-model-button").clearAndSetSemantics {
+                        contentDescription = modelName
+                        stateDescription = chipWords
+                        role = Role.Button
+                        onClick { openModels(); true }
+                    }
+                ) {
+                    KitComposerModelChip(label = chipWords, onClick = openModels)
+                }
             },
-            trailing = {
-                if (primaryIsStop) stopPart()
-                else
-                    KitComposerPrimaryAction(
-                        // Without voice the empty box shows a disabled Send, never an empty slot
-                        // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).
-                        hasMessage = inlineMic || voice == null,
-                        mic = { voice?.Mic(voiceField, Modifier) },
-                        send = {
-                            KitComposerSend(
-                                label = sendLabel,
-                                onClick = send,
-                                enabled =
-                                    if (sendReady && !voiceActive) KitEnabled.Enabled
-                                    else
-                                        KitEnabled.Disabled(
-                                            stringResource(Res.string.kitComposerField)
-                                        ),
-                                working = state.sending,
-                                onLongClick =
-                                    chrome.sendLater
-                                        ?.takeIf { typed && sendReady }
-                                        ?.let { later ->
+        ) {
+            chrome.rowChips()
+        }
+        // B8: Stop beside the plus while words wait for the run: the words take the whole width above them.
+        KitComposerRowFit(words, leadingTargets = if (stopLeads) 2 else 1, stack = stopLeads) { stacked ->
+            KitComposerBox(
+                running = busy && !waitingRequest,
+                stacked = stacked,
+                hasLeading = true,
+                above = {
+                    KitComposerTray(
+                        open = addOpen,
+                        actions =
+                            trayItems.map { item ->
+                                when (item) {
+                                    TrayItem.Photos ->
+                                        KitComposerTrayAction(
+                                            stringResource(Res.string.composerTrayPhotos),
+                                            KitIcons.images,
                                             {
-                                                // N-44: the keyboard goes first (the wheel stays in sight).
-                                                focusManager.clearFocus()
-                                                later(field.text.toString())
-                                            }
-                                        },
-                                onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
-                                modifier = Modifier.testTag("chat-send-button"),
-                            )
-                        },
+                                                addOpen = false
+                                                actions.attach(AttachKind.Photos)
+                                            },
+                                            attachBlockedReason,
+                                            "composer-tool-gallery",
+                                        )
+                                    TrayItem.Camera ->
+                                        KitComposerTrayAction(
+                                            stringResource(Res.string.composerTrayCamera),
+                                            KitIcons.camera,
+                                            {
+                                                addOpen = false
+                                                actions.attach(AttachKind.Camera)
+                                            },
+                                            attachBlockedReason,
+                                            "composer-tool-camera",
+                                        )
+                                    TrayItem.File ->
+                                        KitComposerTrayAction(
+                                            stringResource(Res.string.composerTrayFile),
+                                            KitIcons.attach,
+                                            {
+                                                addOpen = false
+                                                actions.attachFile()
+                                            },
+                                            attachBlockedReason,
+                                            "composer-tool-attach",
+                                        )
+                                    TrayItem.More ->
+                                        KitComposerTrayAction(
+                                            stringResource(Res.string.composerTrayMore),
+                                            KitIcons.more,
+                                            {
+                                                addOpen = false
+                                                toolsOpen = true
+                                            },
+                                            testTag = "composer-tray-more",
+                                        )
+                                }
+                            },
                     )
-            },
-        )
+                },
+                field = {
+                    // Keep the editor mounted while an approval or form waits. Submission stays
+                    // gated below; hiding it leaves an open conversation with only chips.
+                    KitComposerFieldRow(
+                        tail =
+                            if (inlineMic && voice != null) {
+                                { voice.InlineMic(voiceField, Modifier) }
+                            } else null
+                    ) {
+                        KitField(
+                            state = field,
+                            // While a reply runs on a steering server the words join it
+                            // (B-PROTO-025).
+                            label =
+                                if (busy && state.steers)
+                                    stringResource(Res.string.composerFullSteerHint)
+                                else
+                                    stringResource(
+                                        Res.string.upgradeComposerAsk,
+                                        state.models.agent?.takeUnless {
+                                            it.lowercase() in
+                                                setOf(
+                                                    "build",
+                                                    "plan",
+                                                    "compaction",
+                                                    "title",
+                                                    "summary",
+                                                )
+                                        } ?: chrome.agentName(),
+                                    ),
+                            kind = KitFieldKind.Multiline,
+                            // B6: one line when empty, so the conversation keeps its room above the
+                            // keyboard.
+                            multilineLines = 1..5,
+                            composer = true,
+                            imeAction = ImeAction.Send,
+                            onSubmit = {
+                                if (
+                                    sendReady &&
+                                        typed &&
+                                        !voiceActive &&
+                                        !state.sending &&
+                                        !waitingRequest
+                                )
+                                    send()
+                            },
+                            labelShown = false,
+                            framed = false,
+                            focusRequester = focus,
+                            enabled =
+                                if (editorReady && state.draft.ready) KitEnabled.Enabled
+                                else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
+                            onTextChanged = { accepted ->
+                                editor.userEditSerial += 1
+                                editor.lastReported = accepted
+                                repeatRevision = null
+                                actions.draftChanged(accepted)
+                            },
+                            modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
+                        )
+                    }
+                },
+                leading = {
+                    // E20-S20: Flutter's "+" ("Attach and more", "Close" while open): it opens the tray, or the
+                    // tools list straight away where the server takes no files. Never a dead control.
+                    KitComposerAdd(
+                        label =
+                            stringResource(
+                                if (addOpen && trayItems.isNotEmpty()) Res.string.kitComposerTrayClose
+                                else Res.string.kitComposerTools
+                            ),
+                        onClick = {
+                            if (trayItems.isEmpty()) toolsOpen = true else addOpen = !addOpen
+                        },
+                        open = addOpen && trayItems.isNotEmpty(),
+                        modifier = Modifier.testTag("chat-attach-button"),
+                    )
+                    if (stopLeads) stopPart()
+                },
+                trailing = {
+                    if (primaryIsStop) stopPart()
+                    else
+                        KitComposerPrimaryAction(
+                            // Without voice the empty box shows a disabled Send, never an empty slot
+                            // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).
+                            hasMessage = inlineMic || voice == null,
+                            mic = { voice?.Mic(voiceField, Modifier) },
+                            send = {
+                                KitComposerSend(
+                                    label = sendLabel,
+                                    onClick = send,
+                                    // F1: an empty box's Send is disabled (Flutter kit_composer.dart:434
+                                    // `_Trailing.sendDisabled`): nothing to send yet.
+                                    enabled =
+                                        if (sendReady && typed && !voiceActive) KitEnabled.Enabled
+                                        else
+                                            KitEnabled.Disabled(
+                                                stringResource(Res.string.kitComposerField)
+                                            ),
+                                    working = state.sending,
+                                    onLongClick =
+                                        chrome.sendLater
+                                            ?.takeIf { typed && sendReady }
+                                            ?.let { later ->
+                                                {
+                                                    // N-44: the keyboard goes first (the wheel stays in sight).
+                                                    focusManager.clearFocus()
+                                                    later(field.text.toString())
+                                                }
+                                            },
+                                    onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
+                                    modifier = Modifier.testTag("chat-send-button"),
+                                )
+                            },
+                        )
+                },
+            )
+        }
     }
     ModelSheet(
         visible = modelsOpen,
@@ -1008,6 +1032,12 @@ public fun BasicComposer(
         )
     }
 }
+
+/**
+ * The room between the chips strip and the message box (F: the strip's 48 dp line centres its 32 dp chips; Flutter's
+ * golden `chat_approval_ask` has the chips' bottom 12 px above the box, 8 of them inside the line).
+ */
+private const val COMPOSER_STRIP_GAP = 4
 
 /** "Model · level · agent": the level and agent only when chosen (Flutter composer.dart:795). */
 private fun modelLabel(model: String, level: String, agent: String?): String =

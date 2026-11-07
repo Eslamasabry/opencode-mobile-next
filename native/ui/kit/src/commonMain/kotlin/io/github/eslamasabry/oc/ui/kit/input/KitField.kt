@@ -437,7 +437,10 @@ private fun FieldBox(
             .heightIn(min = tokens.minTarget.dp)
             .then(
                 when {
-                    composer -> Modifier.padding(vertical = composerPadding)
+                    // The composer's words are centred inside the decoration (below), so the field's own node
+                    // is the whole 48 dp target (F: kit_composer.dart:570-574, "the field's own node is the tap
+                    // target a screen reader and G5 measure"; layout guard small-target).
+                    composer -> Modifier
                     !framed -> Modifier.padding(vertical = Space.S3.dp)
                     // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and
                     // the edge above.
@@ -453,7 +456,7 @@ private fun FieldBox(
                 }
             )
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
-        Box(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().then(if (composer) Modifier.padding(vertical = composerPadding) else Modifier)) {
             if (state.text.isEmpty() && placeholder != null) {
                 KitText(
                     placeholder,
