@@ -39,6 +39,9 @@ class _Recorder implements TelemetryAdapter {
   );
   @override
   Future<void> breadcrumb(String name) async => calls.add('crumb|$name');
+  @override
+  Future<void> event(String name, Map<String, String> props) async =>
+      calls.add('event|$name');
 }
 
 const _anthropic = 'sk-ant-api03-TELEMKEYONEabcdefghijklmnop';
@@ -241,7 +244,10 @@ Authorization: Bearer TELEMBEARERtoken.abc
         scrollable: find.byType(Scrollable).first,
       );
       expect(
-        find.text('Send crash reports to the developer (Google Firebase)'),
+        find.text(
+          'Send crash reports and setup counts to the developer '
+          '(Google Firebase)',
+        ),
         findsOneWidget,
       );
       expect(service.consented, isFalse);

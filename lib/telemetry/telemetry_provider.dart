@@ -1,7 +1,14 @@
-import 'package:flutter/widgets.dart' show BuildContext;
+import 'package:flutter/widgets.dart'
+    show
+        AppLifecycleState,
+        BuildContext,
+        WidgetsBinding,
+        WidgetsBindingObserver;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'analytics_events.dart';
 import 'telemetry.dart';
 
 /// Consent is stored once for the app, not per server profile.
@@ -34,6 +41,12 @@ abstract final class AppTelemetry {
 
   static void failure(String name, [Map<String, Object?> keys = const {}]) =>
       _current.recordFailure(name, keys);
+
+  /// A product analytics event; dropped unless the person agreed.
+  static void track(
+    AnalyticsEvent event, [
+    Map<String, Object?> props = const {},
+  ]) => _current.track(event, props);
 }
 
 /// Code with a `ref` depends only on this. Tests override it with a fake; a
@@ -66,6 +79,60 @@ abstract final class TelemetryStartup {
       );
       await service.start();
       AppTelemetry.install(service);
+      await AnalyticsLifecycle.start(prefs);
     } catch (_) {}
+  }
+}
+
+/// The app version last seen at start-up, so a newer one counts as an
+/// installed update. App-wide, not per server profile.
+const analyticsLastVersionKey = 'oc.telemetry.lastVersion';
+
+/// `app_open` (cold once per process, warm after each return from the
+/// background) and `update_installed`. Inert while consent is off, like
+/// every other event.
+class AnalyticsLifecycle with WidgetsBindingObserver {
+  AnalyticsLifecycle._();
+
+  static AnalyticsLifecycle? _installed;
+  bool _wasAway = false;
+
+  static Future<void> start(
+    SharedPreferences prefs, {
+    Future<String> Function()? version,
+  }) async {
+    AppTelemetry.track(AnalyticsEvent.appOpen, {'kind': 'cold'});
+    try {
+      final current = await (version ?? _appVersion)();
+      final previous = prefs.getString(analyticsLastVersionKey);
+      if (previous != current) {
+        if (previous != null) {
+          AppTelemetry.track(AnalyticsEvent.updateInstalled);
+        }
+        await prefs.setString(analyticsLastVersionKey, current);
+      }
+    } catch (_) {}
+    if (_installed == null) {
+      final observer = _installed = AnalyticsLifecycle._();
+      WidgetsBinding.instance.addObserver(observer);
+    }
+  }
+
+  static Future<String> _appVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    return '${info.version}+${info.buildNumber}';
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        _wasAway = true;
+      case AppLifecycleState.resumed when _wasAway:
+        _wasAway = false;
+        AppTelemetry.track(AnalyticsEvent.appOpen, {'kind': 'warm'});
+      default:
+        break;
+    }
   }
 }

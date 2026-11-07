@@ -4,7 +4,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'telemetry.dart';
 
 /// Firebase Crashlytics as one [TelemetryAdapter]. Only `firebase_core` and
-/// `firebase_crashlytics`: no analytics, performance or remote config.
+/// `firebase_crashlytics`; analytics events go to
+/// `firebase_analytics_adapter.dart`. No performance or remote config.
 ///
 /// Automatic collection is off in the manifest; this adapter turns it on only
 /// when [setCollectionEnabled] says the person agreed. When the build has no
@@ -61,6 +62,10 @@ class FirebaseCrashlyticsAdapter implements TelemetryAdapter {
 
   @override
   Future<void> breadcrumb(String name) async => _crashlytics?.log(name);
+
+  /// Analytics events are not crash reports.
+  @override
+  Future<void> event(String name, Map<String, String> props) async {}
 }
 
 /// An error whose entire text is a fixed identifier.

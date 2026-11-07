@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'telemetry/firebase_analytics_adapter.dart';
 import 'telemetry/firebase_crashlytics_adapter.dart';
 import 'telemetry/telemetry.dart';
 import 'telemetry/telemetry_provider.dart';
@@ -179,7 +180,10 @@ Future<void> main() async {
     unawaited(
       TelemetryStartup.start(
         !kIsWeb && Platform.isAndroid
-            ? FirebaseCrashlyticsAdapter()
+            ? CombinedTelemetryAdapter([
+                FirebaseCrashlyticsAdapter(),
+                FirebaseAnalyticsAdapter(),
+              ])
             : const NoOpTelemetryAdapter(),
       ),
     );

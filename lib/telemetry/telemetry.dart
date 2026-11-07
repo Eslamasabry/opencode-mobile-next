@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../ui/kit/kit_redact.dart';
+import 'analytics_events.dart';
 
 /// The app's own crash and error reporting layer. Vendor-neutral: app code
 /// depends only on [Telemetry]; a vendor is one swappable [TelemetryAdapter]
@@ -37,6 +38,11 @@ abstract interface class Telemetry {
 
   /// A short trail entry shown before a crash, such as `open_settings`.
   void breadcrumb(String name);
+
+  /// A product analytics event (`setup_step_reached`, `{step: 'node'}`).
+  /// Same consent as crash reports. Only events and values listed in
+  /// [analyticsSchema] are sent; anything else is dropped.
+  void track(AnalyticsEvent event, [Map<String, Object?> props = const {}]);
 }
 
 /// The vendor side. Receives only text that [TelemetryService] already
@@ -53,6 +59,10 @@ abstract interface class TelemetryAdapter {
   Future<void> failure(String name, Map<String, String> keys);
 
   Future<void> breadcrumb(String name);
+
+  /// One analytics event whose name and values [TelemetryService] already
+  /// checked against [analyticsSchema].
+  Future<void> event(String name, Map<String, String> props);
 }
 
 /// The default adapter: does nothing, keeps nothing.
@@ -73,6 +83,50 @@ class NoOpTelemetryAdapter implements TelemetryAdapter {
   Future<void> failure(String name, Map<String, String> keys) async {}
   @override
   Future<void> breadcrumb(String name) async {}
+  @override
+  Future<void> event(String name, Map<String, String> props) async {}
+}
+
+/// Several vendors as one adapter (crash reports and analytics). Available
+/// when any of them is; each call reaches only the ones that are.
+class CombinedTelemetryAdapter implements TelemetryAdapter {
+  CombinedTelemetryAdapter(this.adapters);
+  final List<TelemetryAdapter> adapters;
+  final _present = <TelemetryAdapter>[];
+
+  @override
+  Future<bool> probe() async {
+    _present.clear();
+    for (final adapter in adapters) {
+      try {
+        if (await adapter.probe()) _present.add(adapter);
+      } catch (_) {}
+    }
+    return _present.isNotEmpty;
+  }
+
+  Future<void> _each(Future<void> Function(TelemetryAdapter) call) async {
+    for (final adapter in _present) {
+      try {
+        await call(adapter);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Future<void> setCollectionEnabled(bool enabled) =>
+      _each((a) => a.setCollectionEnabled(enabled));
+  @override
+  Future<void> crash(String category, String stack, {required bool fatal}) =>
+      _each((a) => a.crash(category, stack, fatal: fatal));
+  @override
+  Future<void> failure(String name, Map<String, String> keys) =>
+      _each((a) => a.failure(name, keys));
+  @override
+  Future<void> breadcrumb(String name) => _each((a) => a.breadcrumb(name));
+  @override
+  Future<void> event(String name, Map<String, String> props) =>
+      _each((a) => a.event(name, props));
 }
 
 /// Where the consent choice is kept.
@@ -158,6 +212,40 @@ class TelemetryService implements Telemetry {
     final clean = cleanName(name);
     if (clean == null) return;
     _send(() => _adapter.breadcrumb(clean));
+  }
+
+  @override
+  void track(AnalyticsEvent event, [Map<String, Object?> props = const {}]) {
+    if (!_live) return;
+    final safe = cleanProps(event, props);
+    if (safe == null) return;
+    _send(() => _adapter.event(event.wire, safe));
+  }
+
+  /// [props] reduced to what [analyticsSchema] allows for [event]: listed
+  /// keys with listed values (bools as `true`/`false`, enums by name) that
+  /// also pass [analyticsValueIsSafe]. Null when the event is not listed.
+  static Map<String, String>? cleanProps(
+    AnalyticsEvent event,
+    Map<String, Object?> props,
+  ) {
+    final allowed = analyticsSchema[event.wire];
+    if (allowed == null || !analyticsValueIsSafe(event.wire)) return null;
+    final out = <String, String>{};
+    for (final entry in props.entries) {
+      final values = allowed[entry.key];
+      if (values == null) continue;
+      final value = switch (entry.value) {
+        final bool v => '$v',
+        final Enum v => v.name,
+        final String v => v,
+        _ => null,
+      };
+      if (value == null || !values.contains(value)) continue;
+      if (!analyticsValueIsSafe(value)) continue;
+      out[entry.key] = value;
+    }
+    return out;
   }
 
   void _send(Future<void> Function() call) {
