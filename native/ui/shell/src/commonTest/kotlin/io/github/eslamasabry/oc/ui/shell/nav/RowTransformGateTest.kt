@@ -77,6 +77,7 @@ class RowTransformGateTest {
     @Test
     fun `B-KIT-054 reduced motion never enables shared bounds`() {
         GateState.entries.forEach { assertFalse(sharedBoundsEnabled(it, ShellMotionLevel.Off), "$it") }
+        GateState.entries.forEach { assertFalse(sharedBoundsEnabled(it, ShellMotionLevel.Calm), "Calm: $it") }
         assertEquals(ShellMotionLevel.Off, motionLevelOf(0f))
         assertEquals(ShellMotionLevel.Full, motionLevelOf(0.5f))
         assertEquals(ShellMotionLevel.Full, motionLevelOf(1f))

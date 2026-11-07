@@ -52,9 +52,9 @@ public fun ShellNavDisplay(
     baseDecorators: List<NavEntryDecorator<NavKey>>,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
 ) {
-    // Follow the same resolved policy as kit parts: the person's motion choice, system
-    // Remove animations, Saver and heat all apply to navigation too.
-    val effectiveLevel = if (KitMotion.state.travels) level else ShellMotionLevel.Off
+    // Follow the same resolved policy as kit parts: the person's motion choice, system Remove animations, Saver and
+    // heat all apply to navigation too. Calm (and power saver, heat) cross-fades pages; only Off is instant (M-013).
+    val effectiveLevel = shellLevel(level, KitMotion.state.level)
     val levelState = rememberUpdatedState(effectiveLevel)
     val signals = remember { GestureSignals() }
 
@@ -83,7 +83,6 @@ public fun ShellNavDisplay(
     val density = LocalDensity.current
     val width = LocalWindowInfo.current.containerSize.width
     val edgeShiftPx = ShellMotion.edgeShiftPx(width, density.density)
-    val travelPx = with(density) { ShellMotion.PAGE_TRAVEL_DP.dp.roundToPx() }
     val previewCornerPx = with(density) { ShellMotion.PREVIEW_CORNER_DP.dp.toPx() }
 
     val withMotion: (NavKey) -> NavEntry<NavKey> = remember(entryProvider) {
@@ -121,8 +120,8 @@ public fun ShellNavDisplay(
             },
             entryDecorators = baseDecorators + growDecorator,
             sharedTransitionScope = sharedScope,
-            transitionSpec = { forward(targetState.motion(), levelState.value, travelPx) },
-            popTransitionSpec = { pop(initialState.motion(), levelState.value, travelPx) },
+            transitionSpec = { forward(targetState.motion(), levelState.value) },
+            popTransitionSpec = { pop(initialState.motion(), levelState.value) },
             predictivePopTransitionSpec = { edge -> ShellMotion.predictivePop(edge, levelState.value, edgeShiftPx) },
             entryProvider = withMotion,
         )
