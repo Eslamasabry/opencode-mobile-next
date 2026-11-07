@@ -4683,10 +4683,10 @@
   "area": "agents",
   "page": "local-agent-page",
   "action": "Sign in to Claude (Termux terminal)",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/local_agent_screen.dart",
   "native_ref": "feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/ui/AgentsScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "agents",
@@ -4998,19 +4998,19 @@
   "area": "setup",
   "page": "phone-setup-start",
   "action": "Connect (Termux)",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/phone_setup/phone_setup_start_screen.dart",
   "native_ref": "feature/phonesetup/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phonesetup/ui/SetupJourneyScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "setup",
   "page": "phone-setup-start",
   "action": "Other ways: Use Termux instead / Set it up in this app instead / Connect to a computer by address",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/phone_setup/phone_setup_start_screen.dart",
   "native_ref": "feature/phonesetup/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phonesetup/ui/SetupJourneyScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "setup",
@@ -5106,91 +5106,91 @@
   "area": "this-phone",
   "page": "termux-processes",
   "action": "Refresh / pull",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes",
   "action": "Stop all (group)",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes",
   "action": "Stop an orphan",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:67",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes",
   "action": "open details",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes",
   "action": "protected: open On this phone",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes-stop-one-sheet",
   "action": "Stop",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart:253",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes-stop-one-sheet",
   "action": "Keep",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes-stop-group-sheet",
   "action": "Stop {count}",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart:253",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes-stop-group-sheet",
   "action": "Keep",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-processes-details-sheet",
   "action": "Stop",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_processes_screen.dart:253",
   "native_ref": "feature/phone/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phone/ui/RunningScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
@@ -5199,7 +5199,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5208,7 +5208,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5217,7 +5217,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5226,7 +5226,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5235,7 +5235,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5244,7 +5244,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5253,7 +5253,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5262,7 +5262,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5271,7 +5271,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5280,7 +5280,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5289,7 +5289,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5298,7 +5298,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5307,7 +5307,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5316,7 +5316,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5325,7 +5325,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5334,7 +5334,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5343,7 +5343,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5352,7 +5352,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5361,7 +5361,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5370,7 +5370,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5379,7 +5379,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5388,7 +5388,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5397,7 +5397,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5406,7 +5406,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5415,7 +5415,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5424,7 +5424,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5433,7 +5433,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5442,7 +5442,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5451,7 +5451,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5460,7 +5460,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5469,7 +5469,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5478,7 +5478,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5487,7 +5487,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5496,7 +5496,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5505,7 +5505,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5514,7 +5514,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5523,7 +5523,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5532,7 +5532,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5541,7 +5541,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5550,7 +5550,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5559,7 +5559,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5568,7 +5568,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5577,7 +5577,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5586,7 +5586,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5595,7 +5595,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5604,7 +5604,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5613,7 +5613,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5622,7 +5622,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5631,7 +5631,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5640,7 +5640,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5649,7 +5649,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5658,7 +5658,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5667,7 +5667,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5676,79 +5676,79 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_setup_screen.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
   "page": "termux-storage",
   "action": "Scan storage",
-  "status": "PARTIAL",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart:370",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:50",
-  "note": "cleans Linux storage; per-category scan/clean list simplified"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; was: cleans Linux storage; per-category scan/clean list simplified"
  },
  {
   "area": "this-phone",
   "page": "termux-storage",
   "action": "Cancel scan",
-  "status": "PARTIAL",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:50",
-  "note": "cleans Linux storage; per-category scan/clean list simplified"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; was: cleans Linux storage; per-category scan/clean list simplified"
  },
  {
   "area": "this-phone",
   "page": "termux-storage",
   "action": "Scan again",
-  "status": "PARTIAL",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart:298",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:50",
-  "note": "cleans Linux storage; per-category scan/clean list simplified"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; was: cleans Linux storage; per-category scan/clean list simplified"
  },
  {
   "area": "this-phone",
   "page": "termux-storage",
   "action": "Clean",
-  "status": "PARTIAL",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart:2",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:50",
-  "note": "cleans Linux storage; per-category scan/clean list simplified"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; was: cleans Linux storage; per-category scan/clean list simplified"
  },
  {
   "area": "this-phone",
   "page": "termux-storage",
   "action": "Open Running now",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-storage",
   "action": "Copy output",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-storage-clean-sheet",
   "action": "Remove {size}",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
   "page": "termux-storage-clean-sheet",
   "action": "Keep",
-  "status": "PRESENT",
+  "status": "N/A",
   "flutter_ref": "lib/ui/screens/termux_storage_screen.dart:204",
   "native_ref": "feature/linux/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/linux/ui/LinuxStorageScreen.kt:1",
-  "note": ""
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead"
  },
  {
   "area": "this-phone",
@@ -5757,7 +5757,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/setup_terminal.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5766,7 +5766,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_phone_tools.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5775,7 +5775,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_phone_tools.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5784,7 +5784,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_running_server_entry.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5793,7 +5793,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_running_server_entry.dart:406",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5802,7 +5802,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_running_server_entry.dart:407",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5811,7 +5811,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_running_server_entry.dart:408",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -5820,7 +5820,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/termux_running_server_entry.dart",
   "native_ref": "",
-  "note": "Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux setup flows: Termux is migrate-out only (plan/01 D7); native has LinuxMigrationScreen"
  },
  {
   "area": "this-phone",
@@ -7692,7 +7692,7 @@
   "status": "N/A",
   "flutter_ref": "lib/ui/widgets/saved_server_connection_card.dart",
   "native_ref": "",
-  "note": "Termux migrate-out only"
+  "note": "retired: the Termux app is not supported (owner decision 2026-11-07); built-in Linux or a computer instead; Termux migrate-out only"
  },
  {
   "area": "shell",

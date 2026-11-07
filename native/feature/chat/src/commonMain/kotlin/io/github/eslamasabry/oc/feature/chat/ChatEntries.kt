@@ -181,6 +181,14 @@ public class ChatEntries(
                         },
                     onDismiss = { appNotices.dismiss(notice.id) },
                     dismissLabel = notice.dismissLabel,
+                    more =
+                        listOfNotNull(
+                            notice.secondAction?.let { second ->
+                                notice.secondActionLabel?.let { label ->
+                                    KitLineAction(label, { appNotices.act(second) })
+                                }
+                            }
+                        ),
                 )
             }
             var offerDetails by remember(route) { mutableStateOf(false) }

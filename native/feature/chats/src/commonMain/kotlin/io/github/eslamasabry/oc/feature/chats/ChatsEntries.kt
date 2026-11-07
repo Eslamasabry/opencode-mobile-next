@@ -62,6 +62,14 @@ public class ChatsEntries(
                         },
                     onDismiss = { appNotices.dismiss(notice.id) },
                     dismissLabel = notice.dismissLabel,
+                    more =
+                        listOfNotNull(
+                            notice.secondAction?.let { second ->
+                                notice.secondActionLabel?.let { label ->
+                                    KitLineAction(label, { appNotices.act(second) })
+                                }
+                            }
+                        ),
                 )
             }
             val offerContent: (@androidx.compose.runtime.Composable () -> Unit)? =

@@ -983,7 +983,7 @@
 {"id":"B-SEC-174","scope":"switch","slice":2,"module":":android:platform"}
 {"id":"B-SEC-175","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City orchestration transport policy; AI Team/Gas City come after the switch"}
 {"id":"B-SEC-176","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Team-project editor drafts written by the Flutter app are removed by the profile deletion sweep, per target and profile, even though AI Team is not in the app; their secrets are never logged or restored.","amended_at":"2026-11-01"}
-{"id":"B-SEC-177","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-SEC-177","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-SEC-178","scope":"switch","slice":5,"module":":engine:integrations"}
 {"id":"B-SEC-179","scope":"switch","slice":5,"module":":engine:integrations"}
 {"id":"B-SEC-180","scope":"switch","slice":4,"module":":android:widgets"}
@@ -1183,8 +1183,8 @@
 {"id":"B-LINUX-070","scope":"switch","slice":3,"module":":engine:runtime"}
 {"id":"B-LINUX-071","scope":"switch","slice":5,"module":":engine:runtime"}
 {"id":"B-LINUX-072","scope":"switch","slice":5,"module":":engine:project"}
-{"id":"B-LINUX-073","scope":"switch","slice":5,"module":":engine:project"}
-{"id":"B-LINUX-074","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-073","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-074","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-LINUX-075","scope":"switch","slice":3,"module":":engine:runtime"}
 {"id":"B-LINUX-076","scope":"switch","slice":3,"module":":engine:runtime"}
 {"id":"B-LINUX-077","scope":"switch","slice":3,"module":":engine:runtime"}
@@ -1337,28 +1337,28 @@
 {"id":"B-LINUX-224","scope":"switch","slice":5,"module":":engine:project"}
 {"id":"B-LINUX-225","scope":"switch","slice":5,"module":":engine:project"}
 {"id":"B-LINUX-226","scope":"switch","slice":5,"module":":engine:project"}
-{"id":"B-LINUX-227","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-228","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-229","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-230","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-231","scope":"switch","slice":5,"module":":engine:runtime"}
-{"id":"B-LINUX-232","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-233","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-LINUX-234","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-LINUX-235","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-LINUX-236","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-LINUX-237","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-LINUX-238","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-LINUX-239","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-227","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-228","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-229","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-230","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-231","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-232","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-233","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-234","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-235","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-236","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-237","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-238","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-239","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-LINUX-240","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-241","scope":"switch","slice":5,"module":":engine:runtime"}
-{"id":"B-LINUX-242","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-243","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-244","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-241","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-242","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-243","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-244","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-LINUX-245","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-246","scope":"switch","slice":3,"module":":engine:runtime"}
-{"id":"B-LINUX-247","scope":"switch","slice":5,"module":":engine:runtime"}
-{"id":"B-LINUX-248","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-246","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-247","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-LINUX-248","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-LINUX-249","scope":"switch","slice":3,"module":":engine:runtime"}
 {"id":"B-LINUX-250","scope":"switch","slice":3,"module":":engine:runtime"}
 {"id":"B-LINUX-251","scope":"switch","slice":5,"module":":engine:project"}
@@ -1574,7 +1574,7 @@
 {"id":"B-STATE-161","scope":"switch","slice":3,"module":":engine:composer"}
 {"id":"B-STATE-162","scope":"switch","slice":3,"module":":engine:composer"}
 {"id":"B-STATE-163","scope":"switch","slice":5,"module":":engine:project"}
-{"id":"B-STATE-164","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-STATE-164","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-SEC-184","scope":"switch","slice":1,"module":":protocol:oc2"}
 {"id":"B-SEC-185","scope":"switch","slice":4,"module":":android:platform"}
 {"id":"B-SEC-186","scope":"switch","slice":4,"module":":android:platform"}
@@ -1583,8 +1583,8 @@
 {"id":"B-SEC-189","scope":"switch","slice":5,"module":":engine:runtime"}
 {"id":"B-SEC-190","scope":"switch","slice":4,"module":":androidApp"}
 {"id":"B-SEC-191","scope":"switch","slice":1,"module":":core:net"}
-{"id":"B-SEC-192","scope":"switch","slice":5,"module":":android:termux"}
-{"id":"B-SEC-193","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-SEC-192","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
+{"id":"B-SEC-193","scope":"dropped","slice":null,"module":null,"decision":"OWNER-2026-11-07","reason":"The Termux app is not supported in native (owner decision 2026-11-07): built-in Linux is the only engine on the phone and a computer is the other way; the Termux bridge, import and tools are removed"}
 {"id":"B-ANDR-122","scope":"switch","slice":4,"module":":android:platform"}
 {"id":"B-ANDR-123","scope":"switch","slice":4,"module":":android:platform"}
 {"id":"B-ANDR-124","scope":"dropped","slice":null,"module":null,"decision":"NG17","reason":"Shorebird patch state; the native app has no code push, only the release updater"}
@@ -1648,3 +1648,5 @@
 {"id":"B-BUILD-036","scope":"switch","slice":6,"module":":androidApp"}
 {"id":"B-MIGR-014","scope":"switch","slice":6,"module":":androidApp"}
 {"id":"B-MIGR-015","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-MIGR-016","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-SEC-194","scope":"switch","slice":6,"module":":quality"}

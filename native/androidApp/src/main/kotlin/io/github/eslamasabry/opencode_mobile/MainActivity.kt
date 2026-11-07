@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
+import io.github.eslamasabry.opencode_mobile.graph.termuxRetired
 import io.github.eslamasabry.opencode_mobile.graph.IncomingShareHost
 import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
 import io.github.eslamasabry.opencode_mobile.graph.ProviderLogoGraph
@@ -30,7 +31,6 @@ import io.github.eslamasabry.opencode_mobile.graph.appGraph
 import io.github.eslamasabry.opencode_mobile.graph.migration
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
 import io.github.eslamasabry.opencode_mobile.graph.projectExport
-import io.github.eslamasabry.opencode_mobile.graph.termuxMigration
 
 /** Frozen FQCN (ADR §9.9). EntryRouter and ActivityResults attach here in slice 2. */
 class MainActivity : ComponentActivity() {
@@ -54,9 +54,8 @@ class MainActivity : ComponentActivity() {
         graph.composerFiles.attach(this)
         graph.androidSessionImportFiles.attach(this)
         graph.projectExport.attach(this)
-        graph.termuxMigration.attach(this)
-        // E09-S04: the once-only Termux notice joins the app notice slot (idempotent).
-        (graph as AppNoticesAccessors).appNotices.follow(graph.termuxMigration.moveNotice)
+        // The once-only Termux notice joins the app notice slot (idempotent).
+        (graph as AppNoticesAccessors).appNotices.follow(graph.termuxRetired.notice)
         // DecorView's DecorContext need not wrap this Activity; pass the actual window for
         // system-bar contrast.
         val platform = AndroidKitPlatform(window.decorView, window)
@@ -127,17 +126,10 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         appGraph.projectExport.activate(this)
-        appGraph.termuxMigration.activate(this)
         platformHub.onResumed(this)
     }
 
-    override fun onStop() {
-        appGraph.termuxMigration.onAppLeftForeground()
-        super.onStop()
-    }
-
     override fun onDestroy() {
-        appGraph.termuxMigration.detach(this)
         appGraph.projectExport.detach(this)
         shellReady = false
         appGraph.composerFiles.detach(this)

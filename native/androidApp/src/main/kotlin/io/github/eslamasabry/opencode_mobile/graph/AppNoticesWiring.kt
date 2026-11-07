@@ -9,9 +9,6 @@ import io.github.eslamasabry.oc.android.background.FirstReplyNotifyOffer
 import io.github.eslamasabry.oc.android.background.LiveModeError
 import io.github.eslamasabry.oc.android.background.NotifyOfferFailure
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
-import io.github.eslamasabry.oc.android.termux.TermuxMoveNotice
-import io.github.eslamasabry.oc.android.termux.TermuxMoveNoticeState
-import io.github.eslamasabry.oc.android.termux.TermuxMoveNoticeWord
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -25,6 +22,7 @@ import io.github.eslamasabry.oc.feature.background.presentation.PauseReason
 import io.github.eslamasabry.oc.feature.chats.presentation.UnsupportedAppNotices
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.opencode_mobile.R
 import java.text.DateFormat
 import java.util.Date
@@ -67,14 +65,18 @@ class AndroidAppNotices(
     private var offerPending = false
     private var offerJob: Job? = null
     private var started = false
-    private var termuxMove: TermuxMoveNotice? = null
-    private val termuxMoveState = MutableStateFlow<TermuxMoveNoticeState?>(null)
 
-    /** E09-S04: shows [notice] in the slot, below every live condition. Only the first call counts. */
-    fun follow(notice: TermuxMoveNotice) {
-        if (termuxMove != null) return
-        termuxMove = notice
-        scope.launch { notice.state.collect { termuxMoveState.value = it } }
+    private var termuxRetired: TermuxRetiredNotice? = null
+    private val termuxRetiredShown = MutableStateFlow(false)
+
+    /**
+     * Owner decision 2026-11-07: shows the once-only "Termux is no longer supported" notice in the slot, below every
+     * live condition. Only the first call counts.
+     */
+    fun follow(notice: TermuxRetiredNotice) {
+        if (termuxRetired != null) return
+        termuxRetired = notice
+        scope.launch { notice.shown.collect { termuxRetiredShown.value = it } }
     }
 
     fun start() {
@@ -215,10 +217,10 @@ class AndroidAppNotices(
                         else -> null
                     }
                 }
-                // E09-S04: the Termux move notice ranks last; it waits behind any live condition.
+                // The Termux notice ranks last; it waits behind any live condition.
                 .let { conditions ->
-                    combine(conditions, termuxMoveState) { condition, move ->
-                        condition ?: move?.let(::termuxMoveNotice)
+                    combine(conditions, termuxRetiredShown) { condition, termux ->
+                        condition ?: termuxRetiredNotice().takeIf { termux }
                     }
                 }
                 .collect { mutableStatus.value = it }
@@ -297,18 +299,14 @@ class AndroidAppNotices(
         }
     }
 
-    private fun termuxMoveNotice(move: TermuxMoveNoticeState): AppNotice =
+    private fun termuxRetiredNotice(): AppNotice =
         AppNotice(
-            TERMUX_MOVE,
-            words.text(
-                when (move.message) {
-                    TermuxMoveNoticeWord.NoticeSetupRunning ->
-                        R.string.andr_termuxMoveNoticeSetupRunning
-                    else -> R.string.andr_termuxMoveNotice
-                }
-            ),
+            TermuxRetiredNotice.ID,
+            words.text(R.string.andr_termuxRetiredNotice),
             action = AppNoticeAction.SetUpBuiltInLinux,
-            actionLabel = words.text(R.string.andr_termuxMoveNoticeSetUpBuiltin),
+            actionLabel = words.text(R.string.andr_termuxRetiredSetUpBuiltin),
+            secondAction = AppNoticeAction.ConnectComputer,
+            secondActionLabel = words.text(R.string.andr_termuxRetiredConnectComputer),
             dismissLabel = words.text(R.string.andr_notifyDismiss),
         )
 
@@ -356,8 +354,12 @@ class AndroidAppNotices(
             AppNoticeAction.ResumeBackground ->
                 background.launchOnMain { background.notice().resume() }
             AppNoticeAction.SetUpBuiltInLinux -> {
-                termuxMove?.let { scope.launch { it.close() } }
+                closeTermuxRetired()
                 navigator.open(PhoneRoute.ThisPhone)
+            }
+            AppNoticeAction.ConnectComputer -> {
+                closeTermuxRetired()
+                navigator.open(ServersRoute.Edit())
             }
         }
     }
@@ -367,8 +369,12 @@ class AndroidAppNotices(
             "app-exit" -> exits.dismiss()
             "thermal" -> thermal.dismiss()
             "background-pause" -> background.launchOnMain { background.notice().dismiss() }
-            TERMUX_MOVE -> termuxMove?.let { scope.launch { it.close() } }
+            TermuxRetiredNotice.ID -> closeTermuxRetired()
         }
+    }
+
+    private fun closeTermuxRetired() {
+        termuxRetired?.let { scope.launch { it.close() } }
     }
 
     override fun answerReplyOffer(allow: Boolean) {
@@ -379,8 +385,6 @@ class AndroidAppNotices(
         }
     }
 }
-
-private const val TERMUX_MOVE = "termux-move"
 
 @dev.zacsweers.metro.ContributesTo(AppScope::class)
 interface AppNoticesAccessors {
