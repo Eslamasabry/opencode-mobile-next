@@ -237,7 +237,8 @@ dependencies {
     // getString outside composition: LinuxWiring's job notice words, SettingsWiring's
     // shareAppMessage; P6's proof too.
     implementation(libs.compose.resources)
-    debugImplementation(libs.compose.foundation) // P6 proof screen (debug only)
+    // IncomingShareNotice (main) lays out with Box; debug and benchmark had it, release did not compile (B-133).
+    implementation(libs.compose.foundation)
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
     implementation(
