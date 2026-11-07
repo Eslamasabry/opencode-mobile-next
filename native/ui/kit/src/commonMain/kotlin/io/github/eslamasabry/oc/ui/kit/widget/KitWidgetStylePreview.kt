@@ -1,31 +1,24 @@
 package io.github.eslamasabry.oc.ui.kit.widget
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
-import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.KitWidgetPreview
+import io.github.eslamasabry.oc.ui.kit.KitWidgetPreviewBackground
+import io.github.eslamasabry.oc.ui.kit.KitWidgetPreviewSize
 
 /**
- * A cosmetic widget preview, using the RemoteViews renderer's resolved palette. The bars are deliberately a
- * drawing, not invented conversation or usage data. Wide and square show how the same colours read at both sizes.
+ * The widget-style screen's preview, drawn as Flutter draws it there: `KitWidgetPreview` (lib/ui/kit/
+ * kit_widget_style_form.dart:61-73) — sample conversations in the app's own parts, the chosen [accent], a card
+ * (square) or the list layout ([wide]). The RemoteViews palette is kept in the signature for existing callers: [text]
+ * and [muted] are the launcher's, not the preview's, and [background] only tells a see-through ground (alpha 0) when
+ * [ground] is not given.
  */
 @Composable
 public fun KitWidgetStylePreview(
@@ -36,25 +29,24 @@ public fun KitWidgetStylePreview(
     wide: Boolean,
     semanticsLabel: String,
     modifier: Modifier = Modifier,
+    ground: KitWidgetPreviewBackground? = null,
 ) {
-    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Column(
-            Modifier.widthIn(max = if (wide) 360.dp else 180.dp)
-                .fillMaxWidth()
-                .clip(KitShapeId.Panel.shape())
-                .background(Color(background))
-                .padding(Space.S4.dp)
-                .testTag("widget-style-preview")
-                .semantics { contentDescription = semanticsLabel },
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                Box(Modifier.size(10.dp).clip(KitShapeId.Circle.shape()).background(Color(accent)))
-                Box(Modifier.fillMaxWidth(0.7f).height(8.dp).clip(KitShapeId.Pill.shape()).background(Color(text)))
-            }
-            Box(Modifier.fillMaxWidth(0.9f).height(6.dp).clip(KitShapeId.Pill.shape()).background(Color(muted)))
-            Box(Modifier.fillMaxWidth(0.6f).height(6.dp).clip(KitShapeId.Pill.shape()).background(Color(muted)))
-            Box(Modifier.fillMaxWidth().height(4.dp).clip(KitShapeId.Pill.shape()).background(Color(accent)))
-        }
+    Box(
+        modifier.fillMaxWidth().testTag("widget-style-preview").clearAndSetSemantics { contentDescription = semanticsLabel },
+        contentAlignment = Alignment.Center,
+    ) {
+        KitWidgetPreview(
+            size = widgetStylePreviewSize(wide),
+            background = ground ?: widgetStylePreviewGround(background),
+            accent = Color(accent),
+        )
     }
 }
+
+/** Square shows the card layout, wide the list (the launcher's 2x2 and 4x2 cells). */
+public fun widgetStylePreviewSize(wide: Boolean): KitWidgetPreviewSize =
+    if (wide) KitWidgetPreviewSize.List else KitWidgetPreviewSize.Card
+
+/** A resolved ground with no alpha is the see-through one; any other is drawn solid. */
+public fun widgetStylePreviewGround(background: Int): KitWidgetPreviewBackground =
+    if (Color(background).alpha == 0f) KitWidgetPreviewBackground.Transparent else KitWidgetPreviewBackground.Solid
