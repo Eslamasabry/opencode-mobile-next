@@ -73,6 +73,21 @@ public object ScheduleWorkPolicy {
 
     /** Unique work names running in this process; [WorkScheduleAlarms.replace] never cancels them. */
     internal val running: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    /**
+     * How a re-arm treats the occurrence's existing unique work (B-148).
+     * - Its worker is running (the clock moved back before it was due): queue the re-armed attempt after it.
+     * - It is already due (the clock jumped forward, or the app came back after the time): replace the pending work
+     *   with one that runs now. WorkManager counts a delay in elapsed time, so the old work would otherwise wait out
+     *   its original delay after a wall-clock jump. The durable claim keeps the occurrence to one send.
+     * - Otherwise keep what is armed.
+     */
+    public fun rearmPolicy(running: Boolean, dueAtMs: Long, nowMs: Long): ExistingWorkPolicy =
+        when {
+            running -> ExistingWorkPolicy.APPEND_OR_REPLACE
+            dueAtMs <= nowMs -> ExistingWorkPolicy.REPLACE
+            else -> ExistingWorkPolicy.KEEP
+        }
 }
 
 /**
@@ -113,9 +128,7 @@ public class WorkScheduleAlarms(
                     .addTag(TAG)
                     .addTag(profileTag(profileId))
                     .build()
-            // The occurrence's own worker is still running (the clock moved back before it was due): queue the
-            // re-armed attempt after it instead of being swallowed by KEEP.
-            val policy = if (entry.workName in ScheduleWorkPolicy.running) ExistingWorkPolicy.APPEND_OR_REPLACE else ExistingWorkPolicy.KEEP
+            val policy = ScheduleWorkPolicy.rearmPolicy(entry.workName in ScheduleWorkPolicy.running, entry.dueAtMs, nowMs())
             work.enqueueUniqueWork(entry.workName, policy, request)
         }
         armed.edit().putStringSet(profileId, names).apply()
