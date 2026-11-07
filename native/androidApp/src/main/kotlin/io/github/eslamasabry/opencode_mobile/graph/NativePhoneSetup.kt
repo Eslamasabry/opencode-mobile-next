@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.runtime.components.*
 import io.github.eslamasabry.oc.engine.runtime.install.InstallPrelude
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallScripts
 import io.github.eslamasabry.oc.engine.runtime.install.SetupHost
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
@@ -62,6 +63,7 @@ class NativePhoneSetup(
     private val switchGate: NativeRuntimeSwitch,
     private val payloadGuard: PhonePayloadGuard,
     private val voice: NativeVoiceSetup,
+    private val reporting: Reporting,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -391,9 +393,31 @@ class NativePhoneSetup(
             )
             .also { value ->
                 engine = value
-                scope.launch { value.progress.collect { shown.value = it } }
+                scope.launch {
+                    var reportedJob: String? = null
+                    value.progress.collect {
+                        shown.value = it
+                        if (it.state == SetupState.Failed && it.jobId != reportedJob) {
+                            reportedJob = it.jobId
+                            reportStepFailed(it)
+                        }
+                    }
+                }
                 scope.launch { value.toolsChanged.collect { changed.value = it } }
             }
+    }
+
+    /** A non-fatal for the developer: which component and which kind of error, never the log or any text. */
+    private fun reportStepFailed(progress: SetupProgress) {
+        val failed = progress.components.firstOrNull { it.error != null } ?: progress.components.firstOrNull { it.state == ComponentState.Failed }
+        val kind = (failed?.error ?: progress.error)?.let { it::class.simpleName } ?: "unknown"
+        reporting.reportFailure(
+            "setup_step_failed",
+            mapOf(
+                "step" to (failed?.id ?: "unknown").lowercase().replace(Regex("[^a-z0-9_]"), "_"),
+                "error" to kind.replace(Regex("([a-z0-9])([A-Z])"), "$1_$2").lowercase(),
+            ),
+        )
     }
 
     /** The setup journey's choices (screens-3): every component, with the voice pack sized first. */

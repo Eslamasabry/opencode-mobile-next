@@ -253,7 +253,12 @@ public data class AboutFacts(
     val notices: Boolean = true,
 )
 
-public data class PrivacyUi(val collect: WhatWeCollect, val saving: Boolean = false)
+public data class PrivacyUi(
+    val collect: WhatWeCollect,
+    val saving: Boolean = false,
+    /** The crash-report switch; null while this build has no way to send one. */
+    val crashReports: Boolean? = null,
+)
 
 public enum class SettingsNote {
     AppearanceNotSaved,

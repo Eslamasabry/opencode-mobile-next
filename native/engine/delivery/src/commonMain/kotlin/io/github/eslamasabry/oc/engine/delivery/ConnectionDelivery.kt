@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.delivery
 
+import io.github.eslamasabry.oc.engine.analytics.NoReporting
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -91,6 +93,7 @@ public class ConnectionDelivery(
     dispatchers: AppDispatchers,
     tracers: Set<PromptTracing> = emptySet(),
     private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
+    private val reporting: Reporting = NoReporting,
 ) {
     private val tracing: PromptTracing? = tracers.firstOrNull()
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
@@ -158,6 +161,7 @@ public class ConnectionDelivery(
             },
             clock,
             scope,
+            reporting,
         )
     }
 

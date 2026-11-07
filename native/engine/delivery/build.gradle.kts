@@ -8,6 +8,7 @@ plugins { id("oc.kmp.library") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        implementation(project(":engine:analytics")) // non-fatal reports (prompt_not_accepted) through the vendor-neutral layer
         implementation(project(":core:model"))
         implementation(project(":core:domain"))
         api(project(":core:data")) // DeliveryStorage exposes the adopted store and writer lanes

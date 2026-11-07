@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /** Which sink is bound. The vendor ids are reserved for senders written later over `:core:net` (plan 16 §5.5). */
-public enum class SinkId { None, DebugJson, Aptabase, PostHog, Plausible, Custom }
+public enum class SinkId { None, DebugJson, Aptabase, PostHog, Plausible, Custom, Crashlytics }
 
 /** None: nothing is kept on disk and nothing is handed on. LocalDebug: stays on the phone. Remote: leaves the phone. */
 public enum class SinkKind { None, LocalDebug, Remote }

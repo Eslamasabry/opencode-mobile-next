@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
@@ -59,6 +60,7 @@ public class SettingsPresenter(
     private val licenses: VoiceLicenseSource? = null,
     private val serverPage: SettingsServerDoor? = null,
     private val localData: LocalDataSettings? = null,
+    private val reporting: Reporting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -67,6 +69,7 @@ public class SettingsPresenter(
         val allPacks: Boolean = false,
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
+        val crashReports: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
         val crash: CrashUi? = null,
@@ -322,7 +325,7 @@ public class SettingsPresenter(
             updates = e.updates,
             about = about,
             whatsNew = whatsNew(l, f),
-            privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
+            privacy = e.collect?.let { PrivacyUi(it, l.consentSaving, l.crashReports ?: reporting?.reportingConsent?.value) },
             localData =
                 localData?.let {
                     LocalDataUi(
@@ -794,6 +797,12 @@ public class SettingsPresenter(
     override fun onUpdateAction() {
         val port = updates ?: return
         run(SettingsNote.UpdateFailed) { port.act() }
+    }
+
+    override fun onCrashReports(on: Boolean) {
+        val port = reporting ?: return
+        port.setReportingConsent(on)
+        local.update { it.copy(crashReports = port.reportingConsent.value) }
     }
 
     override fun onDetailedUsage(on: Boolean) {

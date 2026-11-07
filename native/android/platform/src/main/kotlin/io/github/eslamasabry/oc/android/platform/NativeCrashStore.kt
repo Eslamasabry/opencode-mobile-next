@@ -15,6 +15,7 @@ import java.util.Properties
 class NativeCrashStore(private val directory: File) {
     private companion object {
         const val MAX_CONSENT_BYTES = 32L
+        const val MAX_FRAMES = 30
     }
     private val fileName = "native-last-crash.properties"
     private val allowedClasses = setOf("java.lang.SecurityException", "java.io.IOException",
@@ -45,9 +46,17 @@ class NativeCrashStore(private val directory: File) {
         }
     }
 
-    fun install(): Thread.UncaughtExceptionHandler {
+    /**
+     * [onCrash] (optional) sees the category and safe frames of a fatal crash before it is handed on: the
+     * whitelisted exception class and `Class.method:line` frames only, never a message, cause or thread. The
+     * original exception is still not passed down the handler chain.
+     */
+    fun install(onCrash: ((category: String, frames: List<String>) -> Unit)? = null): Thread.UncaughtExceptionHandler {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         val handler = Thread.UncaughtExceptionHandler { thread, error ->
+            if (onCrash != null) {
+                try { onCrash(summary(error)["exceptionClass"] as String, safeFrames(error)) } catch (_: Throwable) { }
+            }
             try { write(error) } catch (_: Throwable) { }
             finally {
                 // Preserve Android's fatal handling, but never hand its logger (or any later
@@ -118,6 +127,13 @@ class NativeCrashStore(private val directory: File) {
 
     private val allowedMessages = setOf("Permission denied", "Input/output failure", "Missing value",
         "Invalid argument", "Invalid state", "Interrupted operation", "[redacted]")
+
+    /** `Class.method:line` for the top frames; code identifiers and numbers only, no file names. */
+    private fun safeFrames(error: Throwable): List<String> =
+        error.stackTrace.asSequence().take(MAX_FRAMES)
+            .filter { it.lineNumber > 0 }
+            .map { "${it.className}.${it.methodName}:${it.lineNumber}" }
+            .toList()
 
     private fun summary(error: Throwable): Map<String, Any?> {
         val kind = when (error) {

@@ -111,6 +111,9 @@ public interface SettingsActions {
 
     public fun onDetailedUsage(on: Boolean)
 
+    /** The Privacy switch "Send crash reports to the developer". */
+    public fun onCrashReports(on: Boolean) {}
+
     public fun onNoteSeen()
 
     /** Appearance › Text size: applies at the app root at once (B-KIT-059). */

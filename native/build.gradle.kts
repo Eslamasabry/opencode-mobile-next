@@ -11,6 +11,9 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.metro) apply false
+    // Applied by :androidApp only when the private Firebase config is present (OC_GOOGLE_SERVICES_DIR).
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 }
 
 // Q-TESTROT: one task that compiles every module's unit-test sources (desktop, Android host, JVM, Android unit

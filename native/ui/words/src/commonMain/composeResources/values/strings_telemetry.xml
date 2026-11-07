@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="telemetryCrashReportsTitle">Send crash reports to the developer (Google Firebase)</string>
+    <string name="telemetryCrashReportsBody">When the app crashes or a step fails, it sends the kind of problem, the app and Android version and a short list of code locations. It never sends your messages, files, addresses or keys.</string>
+</resources>

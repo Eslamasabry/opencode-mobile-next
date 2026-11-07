@@ -44,6 +44,7 @@ interface AndroidAppGraph : ViewModelGraph {
             @Provides
             redactor: Redactor, // built in onCreate step 2, before any secret is read (ADR §9.7)
             @Provides launch: LaunchMode,
+            @Provides reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
         ): AndroidAppGraph
     }
 }

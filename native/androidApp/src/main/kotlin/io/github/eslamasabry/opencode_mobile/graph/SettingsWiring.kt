@@ -204,6 +204,7 @@ class AndroidSettingsHost(
     buildInfo: AppBuildInfo,
     appScope: AppCoroutineScope,
     analyticsEngine: AnalyticsEngine,
+    override val reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
     private val dispatchers: AppDispatchers,
     private val diagnosticsLog: Diagnostics,
     private val crashSettings: AppCrashDiagnostics,
