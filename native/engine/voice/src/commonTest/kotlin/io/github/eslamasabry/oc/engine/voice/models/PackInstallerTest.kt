@@ -258,6 +258,74 @@ class PackInstallerTest {
         }
 
     @Test
+    fun `B-MEDIA-027 E13-S04 a cancelled re-download keeps the installed model and deletes only its staged files`() =
+        runTest {
+            val installer = installer()
+            assertIs<Outcome.Ok<InstalledPack>>(installer.install(pack))
+            fetcher.stallAfter = 2_000
+            val job = launch { installer.install(pack, replaceExisting = true) }
+            runCurrent()
+            assertEquals(2_000L, files.size("${installer.replacingDir(pack)}/${pack.files[0].name}.part"))
+            assertNotNull(installer.installed(pack), "the installed model keeps working during the re-download")
+            job.cancel()
+            runCurrent()
+            assertNotNull(installer.installed(pack))
+            assertTrue(installer.verifyFully(pack))
+            assertEquals(0L, installer.partialBytes(pack), "nothing is offered as a partial download")
+            assertFalse(files.isDirectory(installer.replacingDir(pack)))
+            assertFalse(files.isDirectory(installer.stagingDir(pack)))
+            assertFalse(installer.isBusy(pack))
+        }
+
+    @Test
+    fun `B-MEDIA-027 E13-S04 a re-download that fails verification keeps the installed model and no staged files`() =
+        runTest {
+            val installer = installer()
+            assertIs<Outcome.Ok<InstalledPack>>(installer.install(pack))
+            fetcher.bodies[pack.urlFor(pack.files[1])] = bytesOf(5_000, 99)
+            assertEquals(MediaProblem.DownloadChecksum, problem(installer.install(pack, replaceExisting = true)))
+            assertTrue(installer.verifyFully(pack))
+            assertEquals(0L, installer.partialBytes(pack))
+            assertFalse(files.isDirectory(installer.replacingDir(pack)))
+        }
+
+    @Test
+    fun `B-MEDIA-027 E13-S04 a re-download stages apart, never resumes, and swaps in the verified files`() =
+        runTest {
+            val installer = installer()
+            assertIs<Outcome.Ok<InstalledPack>>(installer.install(pack))
+            // A stray replacing part from a process that died mid re-download is not resumed.
+            files.createDirectories(installer.replacingDir(pack))
+            files.openAppend("${installer.replacingDir(pack)}/${pack.files[0].name}.part").apply {
+                write(ByteArray(1_200) { 7 }, 0, 1_200)
+                close()
+            }
+            fetcher.requests.clear()
+            assertIs<Outcome.Ok<InstalledPack>>(installer.install(pack, replaceExisting = true))
+            assertEquals(2, fetcher.requests.size)
+            assertTrue(fetcher.requests.all { it.rangeStart == null })
+            assertTrue(installer.verifyFully(pack))
+            assertEquals(listOf(pack.dirName), files.list(root))
+        }
+
+    @Test
+    fun `B-MEDIA-012 E13-S04 a cancelled first download still keeps its part and Try again resumes it`() =
+        runTest {
+            fetcher.stallAfter = 2_000
+            val installer = installer()
+            val job = launch { installer.install(pack, replaceExisting = true) } // nothing installed yet
+            runCurrent()
+            job.cancel()
+            runCurrent()
+            assertEquals(2_000L, installer.partialBytes(pack))
+            assertFalse(files.isDirectory(installer.replacingDir(pack)))
+            fetcher.stallAfter = null
+            fetcher.requests.clear()
+            assertIs<Outcome.Ok<InstalledPack>>(installer.install(pack))
+            assertEquals(2_000L, fetcher.requests.first().rangeStart)
+        }
+
+    @Test
     fun `B-MEDIA-027 a first install whose publishing fails leaves no model and no marker`() =
         runTest {
             files.failMove = { from, to -> from.endsWith(".part") && to.endsWith("/dec.int8.onnx") }
