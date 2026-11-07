@@ -290,8 +290,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     // An open conversation proves the helper runs, whatever the flags say.
     final open = _paSources.values.firstOrNull?.gateway;
     if (open != null && !open.isClosed) {
-      baseReadings =
-          await PaseoProviderUsageGateway.over(open.transport).read();
+      baseReadings = await PaseoProviderUsageGateway.over(
+        open.transport,
+      ).read();
     } else if (_paHostRunning || _paHelperAvailable) {
       // No project's conversations are open yet (right after the app starts):
       // one short connection to the helper that is already running, closed
@@ -301,8 +302,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       if (host == null || directory == null) return null;
       final gateway = await host.openGateway(directory);
       try {
-        baseReadings =
-            await PaseoProviderUsageGateway.over(gateway.transport).read();
+        baseReadings = await PaseoProviderUsageGateway.over(
+          gateway.transport,
+        ).read();
       } finally {
         gateway.close();
       }
@@ -311,31 +313,17 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
 
     final readings = <ProviderUsageReading>[...baseReadings];
-    final antigravityRow =
-        _paRows.where((r) => r.id == 'antigravity').firstOrNull;
+    final antigravityRow = _paRows
+        .where((r) => r.id == 'antigravity')
+        .firstOrNull;
     if (antigravityRow != null &&
         antigravityRow.status == PhoneAgentStatus.ready) {
       if (!readings.any((r) => r.providerId == 'antigravity')) {
         final agyReadings = await _readAntigravityUsage();
+        // Only what the CLI reports; nothing when it reports nothing (the
+        // Usage page then says this provider reports no limits).
         if (agyReadings != null && agyReadings.isNotEmpty) {
           readings.addAll(agyReadings);
-        } else {
-          readings.add(
-            ProviderUsageReading(
-              providerId: 'antigravity',
-              displayName: 'Antigravity (Gemini Models)',
-              fetchedAt: DateTime.now().toUtc(),
-              windows: const [
-                ProviderUsageWindowReading(
-                  windowId: '5h',
-                  durationSeconds: 18000,
-                  label: '5-hour',
-                  remainingPercent: 100,
-                  resetsAt: null,
-                ),
-              ],
-            ),
-          );
         }
       }
     } else if (antigravityRow != null &&
@@ -364,7 +352,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   AntigravityQuotaClient? _paAntigravityClient;
   AntigravityQuotaClient get _paEnsureAntigravityClient =>
-      _paAntigravityClient ??= AntigravityQuotaClient();
+      _paAntigravityClient ??= AntigravityQuotaClient(
+        runner: BuiltinLinux.supported
+            ? (script, {timeout = const Duration(seconds: 20)}) async {
+                final res = await BuiltinLinux().run(script, timeout: timeout);
+                return (exitCode: res.exitCode, output: res.output);
+              }
+            : null,
+      );
 
   @visibleForTesting
   set paAntigravityClient(AntigravityQuotaClient? client) =>
