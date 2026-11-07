@@ -20,6 +20,18 @@ class KitLiveLookPreviewGateTest {
         }
     }
 
+    private val on: @androidx.compose.runtime.Composable () -> Unit = {
+        // _part: 16 dp around the tile, aurora at normal intensity, Live background on.
+        Box(Modifier.padding(16.dp)) { KitLiveLookPreview(onTap = {}, enabled = true, lookName = "Aurora drift", lookId = "aurora") }
+    }
+
+    @Test fun kit_live_look_preview_on() { FlutterGoldenGate.check("kit_live_look_preview_on", content = on) }
+    @Test fun kit_live_look_preview_on_1280x800() { FlutterGoldenGate.check("kit_live_look_preview_on_1280x800", content = on) }
+    @Test fun kit_live_look_preview_on_text2() { FlutterGoldenGate.check("kit_live_look_preview_on_text2", modes = listOf("dark"), content = on) }
+    @Test fun kit_live_look_preview_on_text2_1280x800() {
+        FlutterGoldenGate.check("kit_live_look_preview_on_text2_1280x800", modes = listOf("dark"), content = on)
+    }
+
     @Test fun matrix() {
         FlutterGoldenGate.matrix("part-kit_live_look_preview", caps = mapOf("KitLiveLookPreview" to "reading")) {
             KitLiveLookPreview(onTap = {})
