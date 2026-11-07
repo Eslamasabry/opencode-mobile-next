@@ -55,4 +55,9 @@ class KitRedactParityTest {
         assertEquals("",KitRedact.text(""))
         assertFalse(KitRedact.containsSecret("/src/main.dart 8302de537"))
     }
+    /** E15-S05: a masked value inside inline code keeps its closing backtick, so Markdown stays paired. */
+    @Test fun inlineCodeKeepsItsBackticks() {
+        assertEquals("`OPENAI_API_KEY=•••` and `ghp_•••`", KitRedact.text("`OPENAI_API_KEY=" + "a".repeat(20) + "` and `ghp_" + "b".repeat(24) + "`"))
+        assertEquals("`\"Authorization\": •••`", KitRedact.text("`\"Authorization\": example`"))
+    }
 }

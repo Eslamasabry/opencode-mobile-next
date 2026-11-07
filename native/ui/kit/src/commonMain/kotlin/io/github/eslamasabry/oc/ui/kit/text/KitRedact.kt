@@ -99,7 +99,7 @@ public object KitRedact {
         if (start < s.length && isQuote(s[start])) return quoted(s, start)
         if (lead.isNotEmpty()) {
             var end = start
-            while (end < s.length && s[end] !in ",}]\r\n") end++
+            while (end < s.length && s[end] !in ",}]`\r\n") end++
             return masked(start, end)
         }
         return masked(start, lineEnd(s, start))
@@ -114,7 +114,7 @@ public object KitRedact {
         if (start < s.length && isQuote(s[start])) return quoted(s, start)
         if (INVOCATION.matchAt(s, start) != null && DECLARATION.containsMatchIn(s.substring(0, m.range.first))) return null
         var end = start
-        while (end < s.length && s[end] !in " \t\r\n\"',;&#<>") {
+        while (end < s.length && s[end] !in " \t\r\n\"',;&#<>`") {
             if (s.startsWith("*/", end)) break
             end++
         }
