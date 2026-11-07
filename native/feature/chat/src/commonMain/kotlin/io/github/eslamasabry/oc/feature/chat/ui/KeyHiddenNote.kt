@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +48,8 @@ internal fun KeyHiddenNote(copyId: Long?, masked: Boolean, message: String, dism
                 id = "chat-key-hidden-$it",
                 onDismiss = { noted = null },
                 dismissLabel = dismissLabel,
+                // The shield says "protected", not an empty choice (the neutral line's default ring read as a radio).
+                icon = KitIcons.shield,
             )
         }
     )
