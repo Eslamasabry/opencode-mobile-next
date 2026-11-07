@@ -19413,6 +19413,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get integrationsPageLoadFailed => 'تعذّر تحميل هذه الصفحة';
 
   @override
+  String get integrationsProvidersLoadFailed => 'تعذّر تحميل المزوّدين';
+
+  @override
+  String get integrationsMcpServersLoadFailed => 'تعذّر تحميل خوادم MCP';
+
+  @override
+  String get integrationsResourcesLoadFailed => 'تعذّر تحميل موارد MCP';
+
+  @override
+  String get integrationsListFailedBody =>
+      'لم يرسل الخادم هذه القائمة. حاول مرة أخرى.';
+
+  @override
+  String get integrationsFolderMissing =>
+      'مجلد هذا المشروع لم يعد موجودًا على الخادم. افتح مشروعًا آخر.';
+
+  @override
+  String get integrationsProvidersUnsupported => 'هذا الخادم لا يعرض المزوّدين';
+
+  @override
+  String get integrationsMcpServersUnsupported =>
+      'هذا الخادم لا يعرض خوادم MCP';
+
+  @override
+  String get integrationsResourcesUnsupported => 'هذا الخادم لا يعرض موارد MCP';
+
+  @override
+  String get integrationsListUnsupportedBody => 'إصداره لا يوفّر هذه القائمة.';
+
+  @override
+  String get integrationsWaitingTitle => 'في انتظار الخادم';
+
+  @override
+  String get integrationsWaitingBody =>
+      'تُحمَّل هذه الصفحة تلقائيًا عند اتصال الخادم.';
+
+  @override
   String kitLastKnownRefreshing(String updated) {
     return '$updated · جارٍ التحديث';
   }

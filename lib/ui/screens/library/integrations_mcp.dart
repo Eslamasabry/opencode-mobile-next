@@ -366,7 +366,6 @@ extension _IntegrationsMcp on _IntegrationsScreenState {
   }
 
   Future<void> _retryServers() async {
-    final actionL10n = _l10n;
     final controller = widget.controller;
     final profile = controller.profile;
     final location = controller.locationRevision;
@@ -377,44 +376,39 @@ extension _IntegrationsMcp on _IntegrationsScreenState {
         controller.locationRevision == location;
     try {
       _set(() => _removalError = null);
-      final repository = await controller.prepareActionRepository();
-      if (!currentScope()) return;
-      if (repository == null) {
-        throw StateError(actionL10n.e7LibraryMCPUnavailable);
-      }
+      final repository = await _repositoryOrWait();
+      if (!currentScope() || repository == null) return;
       await _loadServers(repository);
-    } catch (_) {
-      if (currentScope()) {
-        _set(() => _serverError = actionL10n.mcpLoadFailed);
-      }
+    } catch (error) {
+      if (currentScope()) _set(() => _serverError = error);
     }
   }
 
   Future<void> _retryIntegrations() async {
     try {
-      await _loadIntegrations(await _requireActionRepository());
+      final repository = await _repositoryOrWait();
+      if (repository != null) await _loadIntegrations(repository);
     } catch (error) {
-      if (mounted) _set(() => _integrationError = productErrorText(error));
+      if (mounted) _set(() => _integrationError = error);
     }
   }
 
   Future<void> _retryResources() async {
     try {
-      await _loadResources(await _requireActionRepository());
+      final repository = await _repositoryOrWait();
+      if (repository != null) await _loadResources(repository);
     } catch (error) {
-      if (mounted) _set(() => _resourceError = productErrorText(error));
+      if (mounted) _set(() => _resourceError = error);
     }
   }
 
-  bool get _providersFailed =>
-      _showProviders &&
-      (_integrationError != null ||
-          (_integrations != null && _integrationsSource != _mcpSource));
-  bool get _serversFailed =>
-      _showMcp &&
-      (_serverError != null ||
-          (_serversSource != null && _serversSource != _mcpSource));
-  bool get _resourcesFailed => _showMcp && _resourceError != null;
+  /// The action repository, or null after marking the page as waiting for
+  /// the connection (it loads by itself once the connection is ready).
+  Future<ServerOperationsGateway?> _repositoryOrWait() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (mounted) _set(() => _waitingForConnection = repository == null);
+    return repository;
+  }
 
   /// One Try again for the page (one primary per screen, LAY-12): the
   /// first section that failed carries it, and it reloads every section
@@ -425,39 +419,4 @@ extension _IntegrationsMcp on _IntegrationsScreenState {
     if (_serversFailed) _retryServers(),
     if (_resourcesFailed) _retryResources(),
   ]);
-
-  /// The first section that failed, in page order; null when none did.
-  _Section? get _firstFailed => _providersFailed
-      ? _Section.providers
-      : _serversFailed
-      ? _Section.servers
-      : _resourcesFailed
-      ? _Section.resources
-      : null;
-
-  /// The one load error for [section]'s failure, or nothing: when several
-  /// sections failed (a server that could not answer at all) the page says
-  /// so once, at the first of them, with the one Try again that reloads
-  /// every failed section (one primary per screen, LAY-12; nothing shown
-  /// twice).
-  Widget? _loadError(_Section section, {required Key key, String? body}) {
-    if (_firstFailed != section) return null;
-    final l10n = _l10n;
-    final failed = [
-      _providersFailed,
-      _serversFailed,
-      _resourcesFailed,
-    ].where((failed) => failed).length;
-    return _railed(
-      KitStateView.error(
-        key: key,
-        title: failed > 1
-            ? l10n.integrationsPageLoadFailed
-            : l10n.e7LibraryCouldNotLoadThisSection,
-        body: body,
-        size: KitStateSize.inline,
-        retry: KitAction(label: l10n.commonRetry, onPressed: _retryFailed),
-      ),
-    );
-  }
 }

@@ -19386,6 +19386,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get integrationsPageLoadFailed => 'Could not load this page';
 
   @override
+  String get integrationsProvidersLoadFailed => 'Could not load providers';
+
+  @override
+  String get integrationsMcpServersLoadFailed => 'Could not load MCP servers';
+
+  @override
+  String get integrationsResourcesLoadFailed => 'Could not load MCP resources';
+
+  @override
+  String get integrationsListFailedBody =>
+      'The server didn\'t send this list. Try again.';
+
+  @override
+  String get integrationsFolderMissing =>
+      'This project\'s folder isn\'t on the server any more. Open another project.';
+
+  @override
+  String get integrationsProvidersUnsupported =>
+      'This server doesn\'t list providers';
+
+  @override
+  String get integrationsMcpServersUnsupported =>
+      'This server doesn\'t list MCP servers';
+
+  @override
+  String get integrationsResourcesUnsupported =>
+      'This server doesn\'t list MCP resources';
+
+  @override
+  String get integrationsListUnsupportedBody =>
+      'Its version doesn\'t offer this list.';
+
+  @override
+  String get integrationsWaitingTitle => 'Waiting for the server';
+
+  @override
+  String get integrationsWaitingBody =>
+      'This page loads by itself once the server is connected.';
+
+  @override
   String kitLastKnownRefreshing(String updated) {
     return '$updated · Refreshing';
   }
