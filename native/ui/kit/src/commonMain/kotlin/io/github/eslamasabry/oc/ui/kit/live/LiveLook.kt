@@ -7,10 +7,12 @@ package io.github.eslamasabry.oc.ui.kit.live
  * [LiveLooks]. [shader] is the body only: the host prepends [LiveShaderLib.PRELUDE], which declares the shared uniforms
  * (`uRes`, `uTime`, `uIntensity`, `uDensity`, `uDark`, `uGround`, `uAccent`, `uPartner`, `uGlow`) and the small noise,
  * gradient and dither library, so the body only defines `half4 main(float2 fragCoord)` (and its own helpers and extra
- * uniforms). End with `return liveOut(colour);` so every look gets the same dithering and contrast cap.
+ * uniforms). End with `return liveOut(colour, fragCoord);` (or the output of a helper set, [LiveShaderLib.TINT] or
+ * [LiveShaderLib.LAYER]) so every look gets dithering and a contrast cap.
  *
  * [uniforms] runs on every drawn frame, after the host has set the shared uniforms: set any look-specific uniform
- * through [LiveUniforms] here. It must not allocate (no lists, no boxing, no string building): it runs at 30 fps.
+ * through [LiveUniforms] here. It must not allocate (no lists, no boxing, no string building): it runs on every display
+ * frame (up to 120 a second).
  */
 public interface LiveLook {
     public val id: String
