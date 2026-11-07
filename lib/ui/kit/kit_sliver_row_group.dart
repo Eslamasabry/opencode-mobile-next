@@ -143,15 +143,10 @@ class KitSliverRowGroup extends StatelessWidget {
     final back = EdgeInsets.symmetric(horizontal: reach);
     // The rules between the rows stop at the margin at the end too, as the
     // section rule above them does.
-    final rule = divider ??
+    final rule =
+        divider ??
         (prominentDividers
-            ? KitDivider.prominent(
-                inset: inset,
-                endInset: reach,
-                color: tokens.roles.isDark
-                    ? const Color(0x33FFFFFF)
-                    : const Color(0x26000000),
-              )
+            ? KitDivider.prominent(inset: inset, endInset: reach)
             : KitDivider(inset: inset, endInset: reach));
 
     Widget? item(BuildContext context, int index) {

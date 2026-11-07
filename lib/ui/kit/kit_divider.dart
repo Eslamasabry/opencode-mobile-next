@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'kit_surface_look.dart';
+import 'kit_layout.dart';
 import 'kit_tokens.dart';
 
 /// Where a horizontal [KitDivider] starts (visual language §4: "separators
@@ -38,18 +39,17 @@ class KitDivider extends StatelessWidget {
     this.thickness,
   }) : assert(endInset >= 0),
        _axis = Axis.horizontal,
-       _section = false;
+       _section = false,
+       _prominent = false;
 
   /// A vertical hairline between items in a row, such as a toolbar's
   /// groups. It is as tall as its parent allows.
-  const KitDivider.vertical({
-    super.key,
-    this.color,
-    this.thickness,
-  })  : inset = KitDividerInset.none,
-        endInset = 0,
-        _axis = Axis.vertical,
-        _section = false;
+  const KitDivider.vertical({super.key, this.color, this.thickness})
+    : inset = KitDividerInset.none,
+      endInset = 0,
+      _axis = Axis.vertical,
+      _section = false,
+      _prominent = false;
 
   /// A prominent horizontal divider with visible contrast (e.g. for chat feeds
   /// or separating content items where standard hairlines are too faint).
@@ -58,10 +58,11 @@ class KitDivider extends StatelessWidget {
     this.inset = KitDividerInset.none,
     this.endInset = 0,
     this.color,
-    this.thickness = 1.0,
-  })  : assert(endInset >= 0),
-        _axis = Axis.horizontal,
-        _section = false;
+    this.thickness = KitLayout.prominentRule,
+  }) : assert(endInset >= 0),
+       _axis = Axis.horizontal,
+       _section = false,
+       _prominent = true;
 
   /// The rule above a section's label, edge to edge: the `divider` role
   /// asked with `selected: true`. A style draws it only when it answers
@@ -73,7 +74,8 @@ class KitDivider extends StatelessWidget {
       color = null,
       thickness = null,
       _axis = Axis.horizontal,
-      _section = true;
+      _section = true,
+      _prominent = false;
 
   /// Where the line starts. Ignored on [KitDivider.vertical], which has no
   /// direction.
@@ -92,6 +94,11 @@ class KitDivider extends StatelessWidget {
 
   final Axis _axis;
   final bool _section;
+
+  /// The stronger line for lists whose rows must read apart (the
+  /// conversations feed on OLED dark screens): 1 dp, in the theme's own
+  /// tertiary ink instead of the faint hairline.
+  final bool _prominent;
 
   @override
   Widget build(BuildContext context) {
@@ -113,13 +120,19 @@ class KitDivider extends StatelessWidget {
                 _axis == Axis.horizontal && inset != KitDividerInset.none,
           );
     if (rule == null) return const SizedBox.shrink();
-    final effectiveThickness = thickness ?? rule.width;
-    final defaultVisibleColor = tokens.roles.isDark
-        ? const Color(0x33FFFFFF)
-        : const Color(0x26000000);
-    final effectiveColor = color ??
-        (thickness != null && thickness! >= 1.0
-            ? defaultVisibleColor
+    // A style that draws its own rule (Brutal's ink) keeps it; on every other
+    // style the prominent line is the theme's tertiary ink at 30 %, so it
+    // follows light/dark, the theme's tint and the chosen style.
+    final styled = rule.color != tokens.roles.hairline;
+    final effectiveThickness =
+        thickness ??
+        (_prominent && rule.width < KitLayout.prominentRule
+            ? KitLayout.prominentRule
+            : rule.width);
+    final effectiveColor =
+        color ??
+        (_prominent && !styled
+            ? tokens.roles.text3.withValues(alpha: 0.3)
             : rule.color);
     final dpr = MediaQuery.devicePixelRatioOf(context);
     // TEST-5: an internal key so the part's own tests can find the painted

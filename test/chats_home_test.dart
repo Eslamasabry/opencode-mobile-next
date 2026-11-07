@@ -8,6 +8,7 @@ import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/kit/kit_context_ring.dart';
+import 'package:opencode_mobile/ui/kit/kit_divider.dart' show KitDivider;
 import 'package:opencode_mobile/ui/kit/kit_feed_item.dart' show KitFeedItem;
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart' show KitIconButton;
 import 'package:opencode_mobile/ui/kit/motion/kit_reveal.dart' show KitEntrance;
@@ -161,8 +162,9 @@ void main() {
     expect(find.text(KitBidi.auto('Allow running the tests?')), findsNothing);
     expect(find.text('Git'), findsNothing);
     // Adjacent chats are separated by prominent dividers so they don't look combined.
-    final dividers =
-        tester.widgetList<KitDivider>(find.byType(KitDivider)).toList();
+    final dividers = tester
+        .widgetList<KitDivider>(find.byType(KitDivider))
+        .toList();
     expect(dividers, isNotEmpty);
     expect(dividers.any((d) => d.thickness == 1.0), isTrue);
   });

@@ -36,6 +36,10 @@ abstract final class KitLayout {
   /// Forms, settings and a sheet's content.
   static const double readingWidth = 720;
 
+  /// The prominent divider's line: one logical pixel, for lists whose rows
+  /// must read apart on dark OLED screens (KitDivider.prominent).
+  static const double prominentRule = 1;
+
   /// A list on its own.
   static const double listWidth = 960;
 
