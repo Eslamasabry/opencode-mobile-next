@@ -36,8 +36,6 @@ import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAddServerDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAddServerPaseoDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAddServerPaseoTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAddServerTitle
-import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAddToolClaudeDetail
-import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAddToolClaudeTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAllowBackgroundDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAllowBackgroundTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityAllowCameraDetail
@@ -53,8 +51,6 @@ import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityModelSignInDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityModelSignInTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityPhoneSetupDetail
-import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityPhoneSetupTermuxDetail
-import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityPhoneSetupTermuxTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityPhoneSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityProjectChooseDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityProjectChooseTitle
@@ -71,7 +67,6 @@ import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityTeamHostGuideDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityTeamHostGuideTitle
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityTeamTurnOnDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityTeamTurnOnTitle
-import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityTermuxMigrationOnly
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityVoiceModelSetupDetail
 import io.github.eslamasabry.oc.ui.words.res.nativeCapabilityVoiceModelSetupTitle
 import org.jetbrains.compose.resources.StringResource
@@ -116,8 +111,6 @@ public fun CapabilitiesScreen(state: CapabilitiesUi, actions: CapabilitiesAction
                                             Res.string.nativeCapabilityTeamDeferred
                                         CapabilityFlowLimit.ExternalAgentsDropped ->
                                             Res.string.nativeCapabilityExternalDropped
-                                        CapabilityFlowLimit.TermuxMigrationOnly ->
-                                            Res.string.nativeCapabilityTermuxMigrationOnly
                                     }
                                 )
                             } ?: stringResource(words.second),
@@ -142,9 +135,6 @@ private fun flowWords(flow: CapabilityEnableFlow): Pair<StringResource, StringRe
         CapabilityEnableFlow.PhoneSetup ->
             Res.string.nativeCapabilityPhoneSetupTitle to
                 Res.string.nativeCapabilityPhoneSetupDetail
-        CapabilityEnableFlow.PhoneSetupTermux ->
-            Res.string.nativeCapabilityPhoneSetupTermuxTitle to
-                Res.string.nativeCapabilityPhoneSetupTermuxDetail
         CapabilityEnableFlow.ServerGeneration ->
             Res.string.nativeCapabilityServerGenerationTitle to
                 Res.string.nativeCapabilityServerGenerationDetail
@@ -154,9 +144,6 @@ private fun flowWords(flow: CapabilityEnableFlow): Pair<StringResource, StringRe
         CapabilityEnableFlow.AddServerPaseo ->
             Res.string.nativeCapabilityAddServerPaseoTitle to
                 Res.string.nativeCapabilityAddServerPaseoDetail
-        CapabilityEnableFlow.AddToolClaude ->
-            Res.string.nativeCapabilityAddToolClaudeTitle to
-                Res.string.nativeCapabilityAddToolClaudeDetail
         CapabilityEnableFlow.ModelSignIn ->
             Res.string.nativeCapabilityModelSignInTitle to
                 Res.string.nativeCapabilityModelSignInDetail

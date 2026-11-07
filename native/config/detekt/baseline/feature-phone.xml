@@ -25,7 +25,7 @@
     <ID>LongMethod:ThisPhoneAnswer.kt$ThisPhoneAnswers$public fun of( state: PhoneServerState, facts: PhoneServerFacts, now: Instant? = null, stopping: Boolean = false, ): ThisPhoneAnswer</ID>
     <ID>LongMethod:ThisPhoneModel.kt$ThisPhoneModel$private fun build( facts: PhoneServerFacts, l: Local, exitNotice: PhoneExitNotice?, reading: PhoneDetailsUi, ): ThisPhoneUi</ID>
     <ID>LongMethod:ThisPhoneScreen.kt$@Composable public fun ThisPhoneScreen( state: ThisPhoneUi, actions: ThisPhoneActions, onAddTools: (() -&gt; Unit)? = null, )</ID>
-    <ID>LongParameterList:PhoneViewModels.kt$ThisPhoneViewModel$( source: PhoneServerSource, settings: KeepAliveSettings, nav: PhoneNavigator, clock: Clock, pacer: Pacer, details: Set&lt;PhoneStateDetails&gt;, phoneStorage: PhoneStorageReadings = NoPhoneStorageReadings(), exits: PhoneExitNotices, processes: PhoneProcessSource, private val migration: PhoneTermuxMigration, phoneDetails: PhoneDetailsSource, )</ID>
+    <ID>LongParameterList:PhoneViewModels.kt$ThisPhoneViewModel$( source: PhoneServerSource, settings: KeepAliveSettings, nav: PhoneNavigator, clock: Clock, pacer: Pacer, details: Set&lt;PhoneStateDetails&gt;, phoneStorage: PhoneStorageReadings = NoPhoneStorageReadings(), exits: PhoneExitNotices, processes: PhoneProcessSource, phoneDetails: PhoneDetailsSource, )</ID>
     <ID>LongParameterList:ThisPhoneModel.kt$ThisPhoneModel$( private val source: PhoneServerSource, private val settings: KeepAliveSettings, private val nav: PhoneNavigator, private val scope: CoroutineScope, private val clock: Clock, private val pacer: Pacer, private val details: Set&lt;PhoneStateDetails&gt; = emptySet(), private val phoneStorage: PhoneStorageReadings? = null, private val exits: PhoneExitNotices = PhoneExitNotices.Absent, private val processes: PhoneProcessSource? = null, private val phoneDetails: PhoneDetailsSource? = null, )</ID>
     <ID>MagicNumber:PhoneDetailsPanel.kt$1000.0</ID>
     <ID>MagicNumber:PhoneWords.kt$PhoneSizes$10</ID>
@@ -48,7 +48,6 @@
     <ID>MagicNumber:ThisPhoneScreen.kt$1_024L</ID>
     <ID>MagicNumber:ThisPhoneScreen.kt$1_048_576L</ID>
     <ID>MagicNumber:ThisPhoneScreen.kt$1_073_741_824L</ID>
-    <ID>MatchingDeclarationName:DesktopPhoneTermuxMigration.kt$DesktopPhoneTermuxMigrationBindings</ID>
     <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
     <ID>MaxLineLength:KeepRunningModel.kt$KeepRunningModel$/** Keep running in the background, including the real phone heat-protection switch and the phone-agent full-speed preference (AI Team remains deferred). */</ID>
     <ID>MaxLineLength:KeepRunningModelTest.kt$KeepRunningModelTest$listOf(KeepAliveStepKind.LockInRecents, KeepAliveStepKind.Background, KeepAliveStepKind.Autostart, KeepAliveStepKind.Battery)</ID>
@@ -80,7 +79,7 @@
     <ID>ReturnCount:ThisPhoneAnswer.kt$PhoneServerState.Companion$public fun of(facts: PhoneServerFacts): PhoneServerState</ID>
     <ID>ReturnCount:ThisPhoneAnswer.kt$ThisPhoneAnswers$public fun of( state: PhoneServerState, facts: PhoneServerFacts, now: Instant? = null, stopping: Boolean = false, ): ThisPhoneAnswer</ID>
     <ID>ReturnCount:ThisPhoneModel.kt$ThisPhoneModel$override fun askUpdate()</ID>
-    <ID>TooManyFunctions:PhoneViewModels.kt$ThisPhoneViewModel : ViewModelThisPhoneActionsThisPhoneMigrationActions</ID>
+    <ID>TooManyFunctions:PhoneViewModels.kt$ThisPhoneViewModel : ViewModelThisPhoneActions</ID>
     <ID>TooManyFunctions:RunningModel.kt$RunningModel : RunningActions</ID>
     <ID>TooManyFunctions:ThisPhoneModel.kt$ThisPhoneModel : ThisPhoneActions</ID>
     <ID>TooManyFunctions:ThisPhoneUi.kt$ThisPhoneActions</ID>

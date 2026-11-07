@@ -363,7 +363,7 @@ class AllConversationsViewModelTest {
                     session("mine", 5, dir = "/root/projects/my-app"),
                     session("home", 4, dir = "/root/aiteam/city"),
                     session("gc", 3, dir = "/work/city/.gc/worktrees/my-app/polecat"),
-                    session("termux", 2, dir = "/data/data/com.termux/files/home/.oc/aiteam/rig"),
+                    session("dotoc", 2, dir = "/home/me/.oc/aiteam/rig"),
                     session("dots", 1, dir = "/root/projects/../aiteam"),
                 )
             )

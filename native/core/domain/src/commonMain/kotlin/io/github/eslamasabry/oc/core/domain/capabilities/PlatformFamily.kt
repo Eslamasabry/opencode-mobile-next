@@ -29,7 +29,7 @@ public fun PlatformCapabilities.Companion.forPlatform(family: PlatformFamily): P
 /** Every platform feature off (iOS, web, and any target not built yet). */
 public fun PlatformCapabilities.Companion.none(): PlatformCapabilities =
     PlatformCapabilities(
-        builtinLinux = false, termuxMigration = false, voice = false, readAloud = false, localPdf = false,
+        builtinLinux = false, voice = false, readAloud = false, localPdf = false,
         promptPhotos = false, backgroundService = false, notifications = false, homeWidgets = false,
         launchShortcuts = false, quickSettingsTiles = false, qrPairing = false, tailscaleHandoff = false,
         usbHostBridge = false, inAppUpdater = false, desktopReleaseCheck = false, wifiFileShare = false,

@@ -12,11 +12,9 @@ import io.github.eslamasabry.oc.core.common.attempt
 public enum class KitEnableFlow(public val wire: String) {
     AddServer("add-server"),
     PhoneSetup("phone-setup"),
-    PhoneSetupTermux("phone-setup-termux"),
     ServerGeneration("server-generation"),
     AddServerCodex("add-server-codex"),
     AddServerPaseo("add-server-paseo"),
-    AddToolClaude("add-tool-claude"),
     ModelSignIn("model-sign-in"),
     TeamTurnOn("team-turn-on"),
     TeamHostGuide("team-host-guide"),
@@ -36,7 +34,6 @@ public enum class KitEnableFlow(public val wire: String) {
 /** Documentation hosts only. Runtime admission always uses live server/platform capabilities. */
 public enum class KitHost {
     ThisPhone,
-    Termux,
     OpenCode2,
     Codex,
     Paseo,
@@ -110,7 +107,6 @@ public class KitCapabilities {
                     "server.any",
                     setOf(
                         KitHost.ThisPhone,
-                        KitHost.Termux,
                         KitHost.OpenCode2,
                         KitHost.Codex,
                         KitHost.Paseo,
@@ -120,7 +116,7 @@ public class KitCapabilities {
                 ),
                 KitCapability(
                     "server.oc2",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     emptySet(),
                     KitEnableFlow.ServerGeneration,
                 ),
@@ -132,53 +128,40 @@ public class KitCapabilities {
                 ),
                 KitCapability(
                     "server.paseo",
-                    setOf(KitHost.Termux, KitHost.Paseo),
+                    setOf(KitHost.Paseo),
                     setOf(KitHost.OpenCode2),
                     KitEnableFlow.AddServerPaseo,
                 ),
                 KitCapability(
                     "phone.builtin",
                     setOf(KitHost.ThisPhone),
-                    setOf(KitHost.Termux),
+                    emptySet(),
                     KitEnableFlow.PhoneSetup,
                 ),
-                KitCapability(
-                    "phone.termux",
-                    setOf(KitHost.Termux),
-                    setOf(KitHost.ThisPhone),
-                    KitEnableFlow.PhoneSetupTermux,
-                ),
-                KitCapability("phone.any", setOf(KitHost.ThisPhone, KitHost.Termux), emptySet()),
+                KitCapability("phone.any", setOf(KitHost.ThisPhone), emptySet()),
                 KitCapability(
                     "model.auth",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Codex, KitHost.Paseo),
                     KitEnableFlow.ModelSignIn,
                 ),
                 KitCapability(
                     "team.on",
                     setOf(KitHost.ThisPhone, KitHost.OpenCode2),
-                    setOf(KitHost.Termux, KitHost.Codex, KitHost.Paseo),
+                    setOf(KitHost.Codex, KitHost.Paseo),
                     KitEnableFlow.TeamTurnOn,
                 ),
-                KitCapability("team.phone", setOf(KitHost.ThisPhone), setOf(KitHost.Termux)),
+                KitCapability("team.phone", setOf(KitHost.ThisPhone), emptySet()),
                 KitCapability(
                     "team.control",
-                    setOf(KitHost.ThisPhone, KitHost.Termux),
+                    setOf(KitHost.ThisPhone),
                     setOf(KitHost.OpenCode2, KitHost.Codex, KitHost.Paseo),
                     KitEnableFlow.TeamHostGuide,
-                ),
-                KitCapability(
-                    "claude.local",
-                    setOf(KitHost.Termux),
-                    emptySet(),
-                    KitEnableFlow.AddToolClaude,
                 ),
                 KitCapability(
                     "voice.model",
                     setOf(
                         KitHost.ThisPhone,
-                        KitHost.Termux,
                         KitHost.OpenCode2,
                         KitHost.Codex,
                         KitHost.Paseo,
@@ -190,18 +173,18 @@ public class KitCapabilities {
                 KitCapability(
                     "mcp.any",
                     emptySet(),
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     KitEnableFlow.McpAdd,
                 ),
                 KitCapability(
                     "project.open",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Codex, KitHost.Paseo),
                     KitEnableFlow.ProjectChoose,
                 ),
                 KitCapability(
                     "project.git",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     emptySet(),
                     KitEnableFlow.ProjectGitInit,
                 ),
@@ -209,7 +192,6 @@ public class KitCapabilities {
                     "perm.notifications",
                     setOf(
                         KitHost.ThisPhone,
-                        KitHost.Termux,
                         KitHost.OpenCode2,
                         KitHost.Codex,
                         KitHost.Paseo,
@@ -221,7 +203,6 @@ public class KitCapabilities {
                     "perm.battery",
                     setOf(
                         KitHost.ThisPhone,
-                        KitHost.Termux,
                         KitHost.OpenCode2,
                         KitHost.Codex,
                         KitHost.Paseo,
@@ -232,14 +213,13 @@ public class KitCapabilities {
                 KitCapability(
                     "perm.camera",
                     setOf(KitHost.OpenCode2),
-                    setOf(KitHost.ThisPhone, KitHost.Termux),
+                    setOf(KitHost.ThisPhone),
                     KitEnableFlow.AllowCamera,
                 ),
                 KitCapability(
                     "perm.mic",
                     setOf(
                         KitHost.ThisPhone,
-                        KitHost.Termux,
                         KitHost.OpenCode2,
                         KitHost.Codex,
                         KitHost.Paseo,
@@ -263,7 +243,6 @@ public class KitCapabilities {
                     "agent.a2a",
                     setOf(
                         KitHost.ThisPhone,
-                        KitHost.Termux,
                         KitHost.OpenCode2,
                         KitHost.Codex,
                         KitHost.Paseo,
@@ -273,49 +252,49 @@ public class KitCapabilities {
                 ),
                 KitCapability(
                     "flag:fileBrowsing+terminal",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Demo),
                 ),
                 KitCapability(
                     "flag:terminal",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Demo),
                 ),
                 KitCapability(
                     "flag:sessionDiff",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Demo),
                 ),
                 KitCapability(
                     "flag:serverCatalog",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Demo),
                 ),
                 KitCapability("flag:toolInventory", emptySet(), emptySet()),
                 KitCapability(
                     "flag:usageStatistics",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     setOf(KitHost.Codex),
                 ),
                 KitCapability(
                     "flag:stagedRevert+sessionNotes",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     emptySet(),
                 ),
                 KitCapability(
                     "flag:worktreeCreate+sessionShare+managedWorkspaces",
                     emptySet(),
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                 ),
                 KitCapability(
                     "flag:developmentServices",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2),
                     emptySet(),
                 ),
                 KitCapability("flag:remoteUpgrade", emptySet(), emptySet()),
                 KitCapability(
                     "flag:promptAttachments",
-                    setOf(KitHost.ThisPhone, KitHost.Termux, KitHost.OpenCode2, KitHost.Demo),
+                    setOf(KitHost.ThisPhone, KitHost.OpenCode2, KitHost.Demo),
                     emptySet(),
                 ),
             )

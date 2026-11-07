@@ -6,10 +6,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCapAgentA2aEnable
 import io.github.eslamasabry.oc.ui.words.res.kitCapAgentA2aOffer
 import io.github.eslamasabry.oc.ui.words.res.kitCapAgentA2aTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCapAgentA2aWhy
-import io.github.eslamasabry.oc.ui.words.res.kitCapClaudeLocalEnable
-import io.github.eslamasabry.oc.ui.words.res.kitCapClaudeLocalOffer
-import io.github.eslamasabry.oc.ui.words.res.kitCapClaudeLocalTitle
-import io.github.eslamasabry.oc.ui.words.res.kitCapClaudeLocalWhy
 import io.github.eslamasabry.oc.ui.words.res.kitCapFlagDevelopmentServicesTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCapFlagDevelopmentServicesWhy
 import io.github.eslamasabry.oc.ui.words.res.kitCapFlagFileBrowsingTerminalTitle
@@ -66,10 +62,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneBuiltinEnable
 import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneBuiltinOffer
 import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneBuiltinTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneBuiltinWhy
-import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneTermuxEnable
-import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneTermuxOffer
-import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneTermuxTitle
-import io.github.eslamasabry.oc.ui.words.res.kitCapPhoneTermuxWhy
 import io.github.eslamasabry.oc.ui.words.res.kitCapProjectGitEnable
 import io.github.eslamasabry.oc.ui.words.res.kitCapProjectGitOffer
 import io.github.eslamasabry.oc.ui.words.res.kitCapProjectGitTitle
@@ -116,7 +108,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitHostCodex
 import io.github.eslamasabry.oc.ui.words.res.kitHostDemo
 import io.github.eslamasabry.oc.ui.words.res.kitHostOpenCode2
 import io.github.eslamasabry.oc.ui.words.res.kitHostPaseo
-import io.github.eslamasabry.oc.ui.words.res.kitHostTermux
 import io.github.eslamasabry.oc.ui.words.res.kitHostThisPhone
 import org.jetbrains.compose.resources.stringResource
 
@@ -166,13 +157,6 @@ public fun kitCapabilityWords(id: String): KitCapabilityWords? =
                 stringResource(Res.string.kitCapPhoneBuiltinEnable),
                 stringResource(Res.string.kitCapPhoneBuiltinOffer),
             )
-        "phone.termux" ->
-            KitCapabilityWords(
-                stringResource(Res.string.kitCapPhoneTermuxTitle),
-                stringResource(Res.string.kitCapPhoneTermuxWhy),
-                stringResource(Res.string.kitCapPhoneTermuxEnable),
-                stringResource(Res.string.kitCapPhoneTermuxOffer),
-            )
         "phone.any" ->
             KitCapabilityWords(
                 stringResource(Res.string.kitCapPhoneAnyTitle),
@@ -207,13 +191,6 @@ public fun kitCapabilityWords(id: String): KitCapabilityWords? =
                 stringResource(Res.string.kitCapTeamControlWhy),
                 stringResource(Res.string.kitCapTeamControlEnable),
                 stringResource(Res.string.kitCapTeamControlOffer),
-            )
-        "claude.local" ->
-            KitCapabilityWords(
-                stringResource(Res.string.kitCapClaudeLocalTitle),
-                stringResource(Res.string.kitCapClaudeLocalWhy),
-                stringResource(Res.string.kitCapClaudeLocalEnable),
-                stringResource(Res.string.kitCapClaudeLocalOffer),
             )
         "voice.model" ->
             KitCapabilityWords(
@@ -379,7 +356,6 @@ public fun kitCapabilityHostWord(host: KitHost): String =
     stringResource(
         when (host) {
             KitHost.ThisPhone -> Res.string.kitHostThisPhone
-            KitHost.Termux -> Res.string.kitHostTermux
             KitHost.OpenCode2 -> Res.string.kitHostOpenCode2
             KitHost.Codex -> Res.string.kitHostCodex
             KitHost.Paseo -> Res.string.kitHostPaseo

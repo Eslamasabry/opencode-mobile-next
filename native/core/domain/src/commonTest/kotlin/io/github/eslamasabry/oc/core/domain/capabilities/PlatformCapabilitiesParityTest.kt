@@ -15,7 +15,7 @@ class PlatformCapabilitiesParityTest {
         assertTrue(PlatformFamily.Android.isAndroid)
         assertFalse(PlatformFamily.Android.isDesktop)
         with(android) {
-            assertTrue(termuxMigration && builtinLinux)
+            assertTrue(builtinLinux)
             assertTrue(voice)
             assertTrue(promptPhotos)
             assertTrue(backgroundService)
@@ -34,7 +34,7 @@ class PlatformCapabilitiesParityTest {
         assertFalse(PlatformFamily.LinuxDesktop.isAndroid)
         assertTrue(PlatformFamily.LinuxDesktop.isDesktop)
         with(linux) {
-            assertFalse(termuxMigration || builtinLinux)
+            assertFalse(builtinLinux)
             assertFalse(voice)
             assertFalse(backgroundService)
             assertFalse(notifications)
@@ -53,7 +53,7 @@ class PlatformCapabilitiesParityTest {
         assertFalse(PlatformFamily.Ios.isAndroid)
         assertFalse(PlatformFamily.Ios.isDesktop)
         with(ios) {
-            listOf(termuxMigration, voice, promptPhotos, backgroundService, notifications, homeWidgets, inAppUpdater,
+            listOf(builtinLinux, voice, promptPhotos, backgroundService, notifications, homeWidgets, inAppUpdater,
                 usbHostBridge, qrPairing, desktopReleaseCheck).forEach { assertFalse(it) }
         }
     }
@@ -68,7 +68,7 @@ class PlatformCapabilitiesParityTest {
         val web = PlatformCapabilities.forPlatform(PlatformFamily.Web)
         assertFalse(PlatformFamily.Web.isAndroid)
         assertFalse(PlatformFamily.Web.isDesktop)
-        assertFalse(web.termuxMigration)
+        assertFalse(web.builtinLinux)
         assertFalse(web.desktopReleaseCheck)
     }
 

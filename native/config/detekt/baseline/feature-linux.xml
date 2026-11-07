@@ -13,8 +13,6 @@
     <ID>CyclomaticComplexMethod:LinuxJob.kt$LinuxJobState.Companion$public fun fromLog(log: String, running: Boolean): LinuxJobState</ID>
     <ID>CyclomaticComplexMethod:LinuxLifetimesPanel.kt$@Composable public fun LinuxLifetimesPanel(state: LinuxLifetimesUi, onRefresh: () -&gt; Unit)</ID>
     <ID>CyclomaticComplexMethod:LinuxLocalStoragePanel.kt$@Composable internal fun LinuxLocalStoragePanel(state: LinuxHomeUi, actions: LinuxHomeActions)</ID>
-    <ID>CyclomaticComplexMethod:LinuxMigrationScreen.kt$@Composable private fun migrationText(text: LinuxMigrationText): String</ID>
-    <ID>CyclomaticComplexMethod:LinuxMigrationScreen.kt$@Composable public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigrationActions)</ID>
     <ID>CyclomaticComplexMethod:LinuxPackagesScreen.kt$@Composable public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesActions)</ID>
     <ID>CyclomaticComplexMethod:LinuxPorts.kt$LinuxPortScan$public fun parse(output: String, processes: Map&lt;Int, String&gt; = emptyMap()): List&lt;LinuxPort&gt;</ID>
     <ID>CyclomaticComplexMethod:LinuxPortsScreen.kt$@Composable private fun PortRow(port: LinuxPort, stopping: Boolean, actions: LinuxPortsActions)</ID>
@@ -37,8 +35,6 @@
     <ID>LongMethod:LinuxEntries.kt$LinuxEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
     <ID>LongMethod:LinuxHomeScreen.kt$@Composable public fun LinuxHomeScreen( state: LinuxHomeUi, actions: LinuxHomeActions, tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null, toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null, )</ID>
     <ID>LongMethod:LinuxLocalStoragePanel.kt$@Composable internal fun LinuxLocalStoragePanel(state: LinuxHomeUi, actions: LinuxHomeActions)</ID>
-    <ID>LongMethod:LinuxMigrationScreen.kt$@Composable private fun migrationText(text: LinuxMigrationText): String</ID>
-    <ID>LongMethod:LinuxMigrationScreen.kt$@Composable public fun LinuxMigrationScreen(state: LinuxMigrationUi, actions: LinuxMigrationActions)</ID>
     <ID>LongMethod:LinuxPackagesScreen.kt$@Composable public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesActions)</ID>
     <ID>LongMethod:LinuxPortsScreen.kt$@Composable private fun PortRow(port: LinuxPort, stopping: Boolean, actions: LinuxPortsActions)</ID>
     <ID>LongMethod:LinuxPortsScreen.kt$@Composable public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions)</ID>
@@ -47,8 +43,8 @@
     <ID>LongMethod:LinuxStorageScreen.kt$@Composable public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageActions)</ID>
     <ID>LongMethod:LinuxToolsPanel.kt$@Composable internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsActions, busy: Boolean)</ID>
     <ID>LongMethod:LinuxWords.kt$@Composable internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -&gt; Unit, onDismiss: () -&gt; Unit)</ID>
-    <ID>LongParameterList:LinuxHomeModel.kt$LinuxHomeModel$( private val manager: LinuxManager, private val watch: LinuxJobWatch, private val lifecycle: LinuxLifecycle, private val reset: LinuxResetFlow, private val nav: LinuxNavigator, private val scope: CoroutineScope, private val pacer: Pacer, private val storage: LinuxLocalStorage? = null, private val setupSource: LinuxSetupSource? = null, private val idleSource: LinuxIdleSource? = null, lifetimesSource: LinuxLifetimesSource? = null, vitalsSource: LinuxVitalsSource? = null, private val migrationOffers: LinuxMigrationOffers? = null, )</ID>
-    <ID>LongParameterList:LinuxViewModels.kt$LinuxHomeViewModel$( manager: LinuxManager, watch: LinuxJobWatch, lifecycle: LinuxLifecycle, reset: LinuxResetFlow, storage: io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage, setup: LinuxSetupSource, idle: LinuxIdleSource, lifetimes: LinuxLifetimesSource, vitals: LinuxVitalsSource, migrationOffers: LinuxMigrationOffers, nav: LinuxNavigator, pacer: Pacer, )</ID>
+    <ID>LongParameterList:LinuxHomeModel.kt$LinuxHomeModel$( private val manager: LinuxManager, private val watch: LinuxJobWatch, private val lifecycle: LinuxLifecycle, private val reset: LinuxResetFlow, private val nav: LinuxNavigator, private val scope: CoroutineScope, private val pacer: Pacer, private val storage: LinuxLocalStorage? = null, private val setupSource: LinuxSetupSource? = null, private val idleSource: LinuxIdleSource? = null, lifetimesSource: LinuxLifetimesSource? = null, vitalsSource: LinuxVitalsSource? = null, )</ID>
+    <ID>LongParameterList:LinuxViewModels.kt$LinuxHomeViewModel$( manager: LinuxManager, watch: LinuxJobWatch, lifecycle: LinuxLifecycle, reset: LinuxResetFlow, storage: io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage, setup: LinuxSetupSource, idle: LinuxIdleSource, lifetimes: LinuxLifetimesSource, vitals: LinuxVitalsSource, nav: LinuxNavigator, pacer: Pacer, )</ID>
     <ID>LoopWithTooManyJumpStatements:LinuxPorts.kt$LinuxPortScan$for</ID>
     <ID>LoopWithTooManyJumpStatements:LinuxPorts.kt$LinuxPrograms$for</ID>
     <ID>LoopWithTooManyJumpStatements:LinuxStorage.kt$LinuxStorage$for</ID>
@@ -68,9 +64,6 @@
     <ID>MagicNumber:LinuxManager.kt$LinuxManager$1024L</ID>
     <ID>MagicNumber:LinuxManager.kt$LinuxManager$3</ID>
     <ID>MagicNumber:LinuxManager.kt$LinuxManager$300</ID>
-    <ID>MagicNumber:LinuxMigrationScreen.kt$10</ID>
-    <ID>MagicNumber:LinuxMigrationScreen.kt$1024</ID>
-    <ID>MagicNumber:LinuxMigrationScreen.kt$1024.0</ID>
     <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$10</ID>
     <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$100</ID>
     <ID>MagicNumber:LinuxPackages.kt$LinuxPackages$3</ID>
@@ -121,8 +114,6 @@
     <ID>MagicNumber:LinuxStorage.kt$LinuxStorageScan.Companion$32</ID>
     <ID>MagicNumber:LinuxStorageScreen.kt$1024L</ID>
     <ID>MagicNumber:SetupOutput.kt$200</ID>
-    <ID>MatchingDeclarationName:DesktopLinuxMigration.kt$DesktopLinuxMigrationBindings</ID>
-    <ID>MatchingDeclarationName:LinuxMigrationWords.kt$LinuxMigrationWord</ID>
     <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"/"</ID>
     <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"/home/oc"</ID>
     <ID>MaxLineLength:LinuxManagerParseTest.kt$LinuxManagerParseTest$"/home/oc/.local/bin"</ID>
@@ -141,13 +132,6 @@
     <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$assertEquals(LinuxProblem.SetupRunning, assertIs&lt;LinuxAnswer.Problem&gt;(manager.cleanup(LinuxStorage.aptCache)).problem)</ID>
     <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$assertIs&lt;LinuxAnswer.Ok&lt;Unit&gt;&gt;(manager.startJob(LinuxJobKind.Install, listOf("htop"), notice = "Installing Linux packages"))</ID>
     <ID>MaxLineLength:LinuxManagerTest.kt$LinuxManagerTest$out(if (Regex("""(^| )12345( |$)""").containsMatchIn(script.lineSequence().first { "/dev/tcp" in it })) "::open 12345\n" else "")</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$else</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$else -&gt; stringResource(Res.string.migrationReviewSpace, required, migrationSize(state.availableBytes))</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$enabled = KitEnabled.of(row.enabled &amp;&amp; !busy, if (busy) stringResource(Res.string.migrationKeepOpen) else detail)</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$if (moves.isNotEmpty()) MigrationChoices(moves, stringResource(Res.string.migrationGroupMoves), state.busy, actions)</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$it.word != LinuxMigrationWord.migrationChooseOne</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$private</ID>
-    <ID>MaxLineLength:LinuxMigrationScreen.kt$state.paragraphs</ID>
     <ID>MaxLineLength:LinuxModelsTest.kt$LinuxHomeModelTest$return LinuxHomeModel(manager, LinuxJobWatch(manager, notices), life, LinuxResetFlow(life, Marker(), FixedClock), nav, backgroundScope, Quiet)</ID>
     <ID>MaxLineLength:LinuxModelsTest.kt$LinuxPagesModelsTest$fun</ID>
     <ID>MaxLineLength:LinuxModelsTest.kt$LinuxPagesModelsTest$private val list = "::pkg bash\t5.2\t1400\tyes\trequired\tii \n::pkg htop\t3.3\t300\t\toptional\tii \n::pkg libx\t1\t1\t\toptional\tii \n"</ID>
@@ -191,7 +175,6 @@
     <ID>ReturnCount:LinuxResetFlow.kt$LinuxResetFlow$public suspend fun resumeIfPending(): Boolean</ID>
     <ID>ReturnCount:LinuxSize.kt$LinuxSize$public fun storage(bytes: Long): StorageByteAmount</ID>
     <ID>ReturnCount:LinuxStorage.kt$LinuxStorage$public fun cleanupPathIsSafe(path: String): Boolean</ID>
-    <ID>SpreadOperator:LinuxMigrationScreen.kt$(resource, *text.arguments.toTypedArray())</ID>
     <ID>TooManyFunctions:KeptServicesViewModel.kt$KeptServicesActions</ID>
     <ID>TooManyFunctions:KeptServicesViewModel.kt$KeptServicesViewModel : ViewModelKeptServicesActions</ID>
     <ID>TooManyFunctions:LinuxHomeModel.kt$LinuxHomeActions : LinuxJobActions</ID>
@@ -213,12 +196,6 @@
     <ID>WildcardImport:KeptServicesScreenTest.kt$import kotlin.test.*</ID>
     <ID>WildcardImport:LinuxBackupsScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:LinuxComponentsPanel.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
-    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>
-    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
-    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
-    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
-    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
-    <ID>WildcardImport:LinuxMigrationScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:LinuxModalHostTest.kt$import androidx.compose.ui.test.*</ID>
     <ID>WildcardImport:LinuxModalHostTest.kt$import io.github.eslamasabry.oc.engine.runtime.backup.*</ID>
     <ID>WildcardImport:LinuxModalHostTest.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>

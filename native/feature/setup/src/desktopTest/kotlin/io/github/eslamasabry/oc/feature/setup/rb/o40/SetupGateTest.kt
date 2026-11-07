@@ -62,9 +62,6 @@ class SetupGateTest {
     @Test fun starting_drawing() {
         FlutterGoldenGate.check("kit_setup_starting") { KitSetupPhone(KitSetupPhoneMood.Starting, Modifier.width(240.dp)) }
     }
-    @Test fun termux_drawing() {
-        FlutterGoldenGate.check("kit_setup_termux") { KitSetupPhone(KitSetupPhoneMood.Termux, Modifier.width(240.dp)) }
-    }
     @Test fun finished_drawing() {
         FlutterGoldenGate.check("kit_setup_ready") { KitSetupPhone(KitSetupPhoneMood.Celebration, Modifier.width(240.dp)) }
     }

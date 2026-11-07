@@ -22,7 +22,6 @@ public enum class KitSetupPhoneMood {
     Fresh,
     Ready,
     Stopped,
-    Termux,
     Starting,
     Celebration,
 }
