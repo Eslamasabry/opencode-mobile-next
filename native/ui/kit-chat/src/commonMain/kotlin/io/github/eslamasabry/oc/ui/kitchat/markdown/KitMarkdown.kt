@@ -1,6 +1,24 @@
 package io.github.eslamasabry.oc.ui.kitchat.markdown
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.ResolvedTextDirection
+import io.github.eslamasabry.oc.ui.design.motion.CurveId
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +49,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
@@ -158,13 +175,11 @@ public fun KitMarkdown(
     live: Boolean = false,
     reveal: KitMdReveal? = null,
 ) {
-    Column(
-        modifier.widthIn(max = 700.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
+    Column(modifier.widthIn(max = 700.dp)) {
         val last = blocks.lastIndex
         blocks.forEachIndexed { i, block ->
             key(block.key) {
+                if (i > 0) Spacer(Modifier.height(kitMdGap(blocks[i - 1], block).dp))
                 KitMarkdownBlock(
                     block,
                     actions,
@@ -178,10 +193,19 @@ public fun KitMarkdown(
 }
 
 /**
+ * C-025: the space between two blocks of one reply, in dp. Flutter `KitMarkdown._buildContent` puts `space3` (12 dp)
+ * between blocks; the items of one list sit `space2` (8 dp) apart (`_KitMdList`, top padding of every item after the
+ * first). The transcript, which shows a reply one block per row, uses the same gaps between its block rows.
+ */
+public fun kitMdGap(before: KitMdBlock, after: KitMdBlock): Int =
+    if (before is KitMdBlock.ListItem && after is KitMdBlock.ListItem) Space.S2 else Space.S3
+
+/**
  * One block (06 §7.8 names: `KitMarkdownProse`, `KitMarkdownHeading`, `KitMarkdownQuote`,
  * `KitMarkdownListItem`, `KitMarkdownTable`, plus code through [KitCodeBlock]). [caret] draws the
  * stream caret after the last word when the block ends in text (a reply ending in code, a table or
- * a rule shows none).
+ * a rule shows none). The caller passes `caret = false` while the turn waits on the person (C-021: Flutter shows no
+ * caret while a request is pending).
  */
 @Composable
 public fun KitMarkdownBlock(
@@ -298,10 +322,16 @@ public fun KitMarkdownHeading(
 }
 
 /**
- * N-49: one level of list nesting: the width of a list marker's column, so a nested item's marker (and an item's
- * quote, table or code) starts under its parent's words, not under its parent's marker.
+ * N-49 / C-022: one level of list nesting, 16 dp (Flutter `_KitMdList`: `space4 * level`). A nested item's marker (and
+ * an item's quote, table or code) moves in by this much per level.
  */
-internal const val KIT_MD_NEST_STEP: Int = Space.S6
+internal const val KIT_MD_NEST_STEP: Int = Space.S4
+
+/**
+ * C-022: the width of a list's marker column at font scale 1 (Flutter `_KitMdList`): `space6` (24 dp) for numbers,
+ * `space4` (16 dp) for bullets and checkboxes. It grows with the font scale so the gap to the words holds.
+ */
+internal fun kitMdMarkerColumn(ordered: Boolean): Int = if (ordered) Space.S6 else Space.S4
 
 /**
  * N-49: a reply block that sits [depth] levels inside a list. The transcript shows a reply one block per row, so a
@@ -316,6 +346,15 @@ public fun KitMdNest(depth: Int, content: @Composable () -> Unit) {
     if (depth <= 0) content()
     else Box(Modifier.padding(start = (KIT_MD_NEST_STEP * depth.coerceAtMost(6)).dp)) { content() }
 }
+
+/** A list item's marker: a checkbox, its number, or a bullet. */
+internal fun kitMdMarker(block: KitMdBlock.ListItem): String =
+    when {
+        block.checked == true -> "☑"
+        block.checked == false -> "☐"
+        block.ordered -> "${block.number ?: 1}."
+        else -> "•"
+    }
 
 /**
  * The widest marker a list item's column must fit (B-101): for a numbered item, zeros of its number's digit count
@@ -337,32 +376,24 @@ public fun KitMarkdownListItem(
     reveal: KitMdReveal? = null,
 ) {
     val style = readingStyle(TypeRole.Body)
-    val marker =
-        when {
-            block.checked == true -> "☑"
-            block.checked == false -> "☐"
-            block.ordered -> "${block.number ?: 1}."
-            else -> "•"
-        }
-    // B-101: every item's words start on one edge. Digits are tabular and the marker column is as wide as the widest
-    // marker of the same digit count (at least two digits), so "1." and "8." (and "9." and "10.") never shift the text.
+    val marker = kitMdMarker(block)
+    // B-101: every item's words start on one edge. Digits are tabular and the column is a fixed width (Flutter: 24 dp
+    // for numbers, 16 dp for bullets, scaled with the text), so "1." and "8." (and "9." and "10.") never shift the
+    // words. A number wider than the column (three digits and up) widens it rather than running into the words.
+    // The marker starts at the column's start edge, as Flutter's KitText does.
     val markerStyle =
-        style.copy(color = LocalKitColors.current.text2, textAlign = TextAlign.End, fontFeatureSettings = "tnum")
+        style.copy(color = LocalKitColors.current.text2, textAlign = TextAlign.Start, fontFeatureSettings = "tnum")
     val measurer = rememberTextMeasurer()
     val widest = kitMdMarkerSample(block.ordered, block.number)
+    val density = LocalDensity.current
     val markerWidth =
-        with(LocalDensity.current) {
+        with(density) {
             val sample = widest?.let { measurer.measure(it, markerStyle, softWrap = false, maxLines = 1).size.width }
-            // The column holds the marker and its S2 gap, as the old min-width column did.
-            maxOf(Space.S6.dp, (sample?.toDp() ?: 0.dp) + Space.S2.dp)
+            maxOf((kitMdMarkerColumn(block.ordered) * fontScale).dp, sample?.toDp() ?: 0.dp)
         }
     Row(modifier.fillMaxWidth().padding(start = (KIT_MD_NEST_STEP * block.depth.coerceIn(0, 6)).dp)) {
         DisableSelection {
-            BasicText(
-                marker,
-                Modifier.width(markerWidth).padding(end = Space.S2.dp),
-                style = markerStyle,
-            )
+            BasicText(marker, Modifier.width(markerWidth), style = markerStyle)
         }
         val muted =
             block.checked == true // done checklist items are muted, never struck through (§9.1)
@@ -406,36 +437,50 @@ public fun KitMarkdownQuote(
     caret: Boolean = false,
     reveal: KitMdReveal? = null,
 ) {
-    val rail = LocalKitColors.current.hairline
+    // C-018 (Flutter `_KitMdQuote`): a focus-ring-wide bar (two device pixels) in text3 at 45 % on the start edge,
+    // 8 dp to the words, which are in the secondary tone.
+    val colors = LocalKitColors.current
+    val rail = colors.text3.copy(alpha = .45f)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Column(
         modifier
             .fillMaxWidth()
             .drawBehind {
-                val w = 3.dp.toPx()
+                val w = kitMdQuoteBarPx(density)
                 drawRect(
                     rail,
                     topLeft = Offset(if (rtl) size.width - w else 0f, 0f),
                     size = Size(w, size.height),
                 )
             }
-            .padding(start = Space.S4.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            .padding(start = Space.S2.dp),
     ) {
         val last = block.children.lastIndex
         block.children.forEachIndexed { i, child ->
             key(child.key) {
-                KitMarkdownBlock(
-                    child,
-                    actions,
-                    live = live && i == last,
-                    caret = caret && i == last,
-                    reveal = reveal,
-                )
+                if (i > 0) Spacer(Modifier.height(kitMdGap(block.children[i - 1], child).dp))
+                CompositionLocalProvider(LocalMdTone provides colors.text2) {
+                    KitMarkdownBlock(
+                        child,
+                        actions,
+                        live = live && i == last,
+                        caret = caret && i == last,
+                        reveal = reveal,
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * C-018: the quote bar's width in pixels: Flutter's `focusRingWidth`, two device pixels, never under one logical
+ * pixel at a density of 1 or less.
+ */
+internal fun kitMdQuoteBarPx(density: Float): Float = if (density <= 1f) maxOf(2f, density) else 2f
+
+/** The tone of reading text inside a block that sets one (a quote's words are secondary); null = text1. */
+private val LocalMdTone = staticCompositionLocalOf<Color?> { null }
 
 /**
  * A table (plan 09 §9.1): measured columns (each as wide as its widest cell, at most 320 dp) inside
@@ -486,6 +531,8 @@ public fun KitMarkdownTable(
                 .semantics { collectionInfo = CollectionInfo(rows.size, columns) }
         ) {
             Layout(
+                // C-024: the table's frame is one device-pixel hairline on every side.
+                modifier = Modifier.border((1f / LocalDensity.current.density).dp, colors.hairline),
                 content = {
                     rows.forEachIndexed { r, row ->
                         for (c in 0 until columns) {
@@ -505,15 +552,13 @@ public fun KitMarkdownTable(
                             BasicText(
                                 text,
                                 Modifier.then(
-                                        if (r == 0) Modifier.background(colors.surface2)
+                                        if (r == 0) Modifier.background(colors.surface1) // C-024: Flutter header band
                                         else Modifier
                                     )
                                     .drawBehind {
-                                        drawRect(
-                                            colors.hairline,
-                                            Offset(0f, size.height - 1f),
-                                            Size(size.width, 1f),
-                                        )
+                                        // C-024 (Flutter `_KitMdTable`): a hairline above every row
+                                        // after the header; the frame draws the outer edges.
+                                        if (r > 0) drawRect(colors.hairline, Offset.Zero, Size(size.width, 1f))
                                     }
                                     .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
                                 style =
@@ -573,33 +618,82 @@ public fun KitMarkdownTable(
     }
 }
 
+/** C-026 (Flutter `_KitMdRule`): the kit's one hairline divider with 4 dp above and below. */
 @Composable
 public fun KitMarkdownRule(modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .fillMaxWidth()
-            .padding(vertical = Space.S2.dp)
-            .height(1.dp)
-            .background(LocalKitColors.current.hairline)
-    )
+    KitDivider(modifier.padding(vertical = Space.S1.dp))
 }
 
 /**
- * The stream caret (B-CHAT-060): a 2 dp bar after the last shown character, drawn over the text. It
- * takes no width, so a line never re-wraps when the caret appears or goes. Still under every motion
- * level (no blink loop, R5).
+ * The stream caret (B-CHAT-060, C-021, C-028; Flutter `KitStreamCaret`): a rounded accent bar 2 dp wide and 16 sp
+ * tall, centred on the line, 2 dp after the last laid-out glyph (before it, in right-to-left text). It takes no width,
+ * so a line never re-wraps when the caret appears or goes. [alpha] is read in the draw phase only: the breath
+ * ([rememberCaretBreath]) changes no layout.
  */
 public fun Modifier.kitStreamCaret(
     layout: () -> TextLayoutResult?,
     at: () -> Int,
     colors: KitColors,
+    alpha: () -> Float = { 1f },
 ): Modifier =
     testTag(STREAM_CARET_TAG).drawWithContent {
         drawContent()
         val l = layout() ?: return@drawWithContent
-        val r = l.getCursorRect(at().coerceIn(0, l.layoutInput.text.length))
-        drawRect(colors.accent, topLeft = Offset(r.left, r.top), size = Size(2.dp.toPx(), r.height))
+        val bar = kitCaretRect(l, at(), this)
+        drawRoundRect(
+            colors.accent,
+            topLeft = bar.topLeft,
+            size = bar.size,
+            cornerRadius = CornerRadius(bar.width / 2f),
+            alpha = alpha().coerceIn(0f, 1f),
+        )
     }
+
+/**
+ * Where the caret's bar goes for a caret after [offset] in [layout] (px): `space1 / 2` (2 dp) past the cursor in the
+ * paragraph's direction, `space1 / 2` wide, 16 sp tall (no taller than the line), centred on the line.
+ */
+internal fun kitCaretRect(layout: TextLayoutResult, offset: Int, density: Density): Rect =
+    with(density) {
+        val at = offset.coerceIn(0, layout.layoutInput.text.length)
+        val r = layout.getCursorRect(at)
+        val w = (Space.S1 * .5f).dp.toPx()
+        val gap = (Space.S1 * .5f).dp.toPx()
+        val h = minOf(CARET_HEIGHT.toPx(), r.height)
+        val rtl = layout.getParagraphDirection(at) == ResolvedTextDirection.Rtl
+        val x = if (rtl) r.left - gap - w else r.left + gap
+        Rect(Offset(x, r.top + (r.height - h) / 2f), Size(w, h))
+    }
+
+/** Flutter `KitStreamCaret`: `textScaler.scale(16)` tall. */
+private val CARET_HEIGHT = 16.sp
+
+/** Flutter `KitStreamCaret.breath`: one breath (down or back up). */
+public const val CARET_BREATH_MS: Int = 1100
+
+/** Flutter `KitStreamCaret`: how far the breath fades the caret. */
+public const val CARET_BREATH_LOW: Float = .25f
+
+/**
+ * C-021: the caret breathes 1.0 → 0.25 and back, [CARET_BREATH_MS] each way on Flutter's `stepEase`
+ * (`easeInOutQuad`), only where ambient loops may run (full motion, not a still frame). Elsewhere it is steady at 1.
+ */
+@Composable
+internal fun rememberCaretBreath(): () -> Float {
+    if (!LocalKitMotion.current.ambientLoops) return { 1f }
+    val breath =
+        rememberInfiniteTransition("caret")
+            .animateFloat(
+                1f,
+                CARET_BREATH_LOW,
+                infiniteRepeatable(tween(CARET_BREATH_MS, easing = StepEase), RepeatMode.Reverse),
+                "breath",
+            )
+    return { breath.value }
+}
+
+private val StepEase =
+    CurveId.StepEase.let { CubicBezierEasing(it.x1, it.y1, it.x2, it.y2) }
 
 /** The test tag of a block drawing the caret. */
 public const val STREAM_CARET_TAG: String = "kit-stream-caret"
@@ -609,24 +703,54 @@ private fun readingStyle(role: TypeRole): TextStyle =
     LocalKitTypography.current
         .style(role)
         .copy(
-            color = LocalKitColors.current.text1,
+            color = LocalMdTone.current ?: LocalKitColors.current.text1,
             textDirection = TextDirection.Content, // prose follows its own direction (R15)
             textMotion = TextMotion.Static, // §8.3: rows move by whole pixels
         )
 
+/**
+ * C-015 (R15; Flutter `_directionOf`): the reading direction of a block from its first strong letter (Hebrew and
+ * Arabic ranges read right to left; Latin, Greek and Cyrillic left to right), or null when it has none, so the
+ * ambient direction applies. Each text block (heading, paragraph, list item, quote line) takes its own.
+ */
+public fun kitMdDirectionOf(text: CharSequence): LayoutDirection? {
+    var i = 0
+    while (i < text.length) {
+        val c = text[i].code
+        if (c.isRtlStrong()) return LayoutDirection.Rtl
+        if (c.isLtrStrong()) return LayoutDirection.Ltr
+        i++
+    }
+    return null
+}
+
+/** Hebrew, Arabic and their presentation forms (Flutter `_directionOf`). */
+private fun Int.isRtlStrong(): Boolean = this in 0x0590..0x08FF || this in 0xFB1D..0xFDFF || this in 0xFE70..0xFEFF
+
+/** Basic and extended Latin letters, Greek and Cyrillic (Flutter `_directionOf`). */
+private fun Int.isLtrStrong(): Boolean =
+    this in 0x41..0x5A || this in 0x61..0x7A || this in 0xC0..0x024F || this in 0x0370..0x058F
+
 @Composable
 private fun rememberInlineStyle(): KitMdInlineStyle {
     val colors = LocalKitColors.current
-    val mono = LocalKitTypography.current.style(TypeRole.Mono).fontFamily
-    return remember(colors, mono) {
-        KitMdInlineStyle(
-            link = colors.accent,
-            codeFill = colors.surface2,
-            pathFill = colors.surface2,
-            mono = mono!!,
-        )
-    }
+    val monoStyle = LocalKitTypography.current.style(TypeRole.Mono)
+    val mono = monoStyle.fontFamily
+    val monoSize = monoStyle.fontSize // C-016: inline code is Mono 13, not the body size
+    return remember(colors, mono, monoSize) { kitMdInlineStyle(colors, monoStyle) }
 }
+
+/**
+ * The inline look from the theme: links in `roles.partner` (C-017), confirmed paths in the accent, code and paths in
+ * the Mono role's face and size (C-016).
+ */
+internal fun kitMdInlineStyle(colors: KitColors, mono: TextStyle): KitMdInlineStyle =
+    KitMdInlineStyle(
+        link = colors.partner,
+        mono = mono.fontFamily ?: androidx.compose.ui.text.font.FontFamily.Monospace,
+        monoSize = mono.fontSize,
+        pathLink = colors.accent,
+    )
 
 /**
  * A sink that always calls the newest [actions], so built strings never go stale and are never
@@ -696,62 +820,27 @@ private fun MdText(
     var textModifier: Modifier =
         if (revealing) Modifier.kitFreshFade({ holder.layout }, state) else Modifier
     if (caret) {
+        // C-028: the caret follows the last laid-out glyph (Flutter's trailing caret span), words still fading in
+        // included, so it never stands on a glyph.
+        val breath = rememberCaretBreath()
         val colors = LocalKitColors.current
-        // The caret follows the words as they fade in, not the laid-out end ahead of them.
-        val revealState = state.takeIf { revealing }
-        textModifier =
-            textModifier.kitStreamCaret(
-                { holder.layout },
-                { revealState?.caretAt(visible.length) ?: visible.length },
-                colors,
-            )
+        textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors, breath)
     }
-    val codeRuns = remember(visible) { visible.getStringAnnotations(KIT_MD_CODE_TAG, 0, visible.length) }
-    if (codeRuns.isNotEmpty()) {
-        val tint = LocalKitColors.current.text1.copy(alpha = .07f)
-        val fontSize = style.fontSize
-        textModifier =
-            Modifier.drawBehind {
-                    val layout = holder.layout ?: return@drawBehind
-                    val size = if (fontSize.isSpecified) fontSize.toPx() else 14.sp.toPx()
-                    val padX = 3.dp.toPx()
-                    val corner = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
-                    for (run in codeRuns) {
-                        val end = run.end.coerceAtMost(layout.layoutInput.text.length)
-                        if (end <= run.start) continue
-                        val first = layout.getLineForOffset(run.start)
-                        val last = layout.getLineForOffset(end - 1)
-                        for (line in first..last) {
-                            val from = maxOf(run.start, layout.getLineStart(line))
-                            val to = minOf(end, layout.getLineEnd(line, visibleEnd = true))
-                            if (to <= from) continue
-                            // The run's own glyph boxes on this line: an offset at a soft wrap belongs to the next
-                            // line, so a horizontal position there jumped back to the start and tinted the words before.
-                            val head = layout.getBoundingBox(from)
-                            val tail = layout.getBoundingBox(to - 1)
-                            val a = minOf(head.left, tail.left)
-                            val b = maxOf(head.right, tail.right)
-                            val base = layout.getLineBaseline(line)
-                            // Kept inside the reading column: a run that starts a line sat 3 dp left of the text's edge.
-                            val left = maxOf(0f, a - padX)
-                            val right = minOf(this.size.width, b + padX)
-                            drawRoundRect(
-                                tint,
-                                topLeft = Offset(left, base - size * .92f),
-                                size = Size(right - left, size * 1.22f),
-                                cornerRadius = corner,
-                            )
-                        }
-                    }
-                }
-                .then(textModifier)
-    }
+    // C-015: the block reads in its own direction, from the whole text (not only what is revealed so far), and fills
+    // the column so a one-line right-to-left heading or paragraph sits on the right edge.
+    val direction = remember(inlines.text) { kitMdDirectionOf(inlines.text) }
+    val directed =
+        when (direction) {
+            LayoutDirection.Rtl -> style.copy(textDirection = TextDirection.Rtl)
+            LayoutDirection.Ltr -> style.copy(textDirection = TextDirection.Ltr)
+            null -> style
+        }
     Box(m) {
         BasicText(
             text = visible,
-            style = style,
+            style = directed,
             onTextLayout = { holder.layout = it },
-            modifier = textModifier,
+            modifier = Modifier.fillMaxWidth().then(textModifier),
         )
     }
 }

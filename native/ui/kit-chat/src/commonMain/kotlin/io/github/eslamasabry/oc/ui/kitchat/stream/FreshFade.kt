@@ -19,11 +19,15 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.motion.CurveId
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-/** EaseOutCubic (plan 08 §5.1 step 5). */
-private val EaseOutCubic = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)
+/**
+ * Flutter's `easeOutCubic` (`KitMotion.enter`, the curve `_KitMdFresh` fades words in on), from its own control
+ * points: Compose's `EaseOutCubic` (0.33, 1, 0.68, 1) is a different curve (plan 06 §4.8).
+ */
+private val EaseOutCubic = CurveId.Enter.let { CubicBezierEasing(it.x1, it.y1, it.x2, it.y2) }
 
 /**
  * Fresh words fade in the draw phase (plan 09 §8.3, plan 08 §5.1 step 5). The text draws fully; for each fresh run,

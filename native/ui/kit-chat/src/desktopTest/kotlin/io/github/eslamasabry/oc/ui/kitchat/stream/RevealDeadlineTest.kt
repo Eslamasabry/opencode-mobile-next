@@ -70,3 +70,44 @@ class RevealDeadlineTest {
         assertEquals(text.length, clock.state.shown)
     }
 }
+
+/**
+ * C-028: a reply's start never hides behind its live tail. In the reversed transcript the newest row composes first,
+ * so when several block rows arrive at once the earlier block was chained behind the live tail and stayed empty until
+ * the reply ended.
+ */
+class RevealOrderTest {
+    @Test
+    fun `C-028 a block chained behind a still-growing block reveals within 250 ms plus the drain`() {
+        val registry = RevealRegistry()
+        // The newest (live tail) composes first; the earlier block of the same part is created after it.
+        val tail = registry.stateFor("b:p:40#0", "b:p", live = true, length = 0)
+        val head = registry.stateFor("b:p:0#0", "b:p", live = true, length = 0)
+        val headText = "The start of the reply, right under the prompt."
+        var tailText = "in the middle."
+        var now = 1_000_000_000L
+        var last = 0L
+        var tailCarry = 0f
+        var headCarry = 0f
+        val start = now
+        while (now - start <= 520_000_000L) {
+            tailText += " more" // the tail keeps streaming, so it is never done
+            tailCarry = tail.advance(now, last, tailCarry, tailText, KitMotionLevel.Full)
+            headCarry = head.advance(now, last, headCarry, headText, KitMotionLevel.Full)
+            last = now
+            now += 16_000_000L
+        }
+        assertTrue(tail.shown > 0)
+        assertEquals(headText.length, head.shown, "the reply's start is all there within 0.5 s")
+    }
+
+    @Test
+    fun `C-028 a block still waits its turn while the block before it finishes quickly`() {
+        val registry = RevealRegistry()
+        val first = registry.stateFor("a", "g", live = true, length = 0)
+        val second = registry.stateFor("b", "g", live = true, length = 0)
+        second.advance(1_000_000_000L, 0L, 0f, "second words", KitMotionLevel.Full)
+        assertEquals(0, second.shown, "words appear in order")
+        first.advance(1_000_000_000L, 0L, 0f, "", KitMotionLevel.Full)
+    }
+}
