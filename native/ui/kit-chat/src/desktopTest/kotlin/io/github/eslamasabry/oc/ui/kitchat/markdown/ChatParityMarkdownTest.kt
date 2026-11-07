@@ -178,7 +178,9 @@ class ChatParityMarkdownTest {
     @Test
     fun `C-022 the marker column grows with the font scale`() =
         runComposeUiTest {
-            setContent { ChatTestTheme(fontScale = 1.5f) { KitMarkdown(TestStreamingMarkdown.parse("- top"), actions) } }
+            setContent {
+                ChatTestTheme(fontScale = 1.5f) { KitMarkdown(TestStreamingMarkdown.parse("- top"), actions) }
+            }
             near(onNodeWithText("top").getBoundsInRoot().left, 24.dp, "16 dp at 150 %")
         }
 
@@ -219,7 +221,10 @@ class ChatParityMarkdownTest {
     fun `C-021 a reply waiting on the person shows no caret`() =
         runComposeUiTest {
             setContent {
-                ChatTestTheme { KitMarkdown(TestStreamingMarkdown.parse("I need to run the tests."), actions, live = true, caret = false) }
+                ChatTestTheme {
+                    val block = TestStreamingMarkdown.parse("I need to run the tests.").single()
+                    KitMarkdownBlock(block, actions, live = true, caret = false)
+                }
             }
             assertEquals(0, onAllNodesWithTag(STREAM_CARET_TAG).fetchSemanticsNodes().size)
         }

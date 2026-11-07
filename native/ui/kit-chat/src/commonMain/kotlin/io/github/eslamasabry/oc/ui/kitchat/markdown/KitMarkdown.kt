@@ -165,8 +165,7 @@ public fun KitMarkdownSelection(modifier: Modifier = Modifier, content: @Composa
  * its tail: settled blocks keep their state and their built text.
  *
  * [live] marks the reply as still streaming: the last block takes the caret (if it ends in text)
- * and is not selectable until the Compose selection-while-streaming fix ships (§7.8). [caret] is false while the
- * turn waits on the person (C-021: Flutter shows no caret while a request is pending).
+ * and is not selectable until the Compose selection-while-streaming fix ships (§7.8).
  */
 @Composable
 public fun KitMarkdown(
@@ -175,7 +174,6 @@ public fun KitMarkdown(
     modifier: Modifier = Modifier,
     live: Boolean = false,
     reveal: KitMdReveal? = null,
-    caret: Boolean = live,
 ) {
     Column(modifier.widthIn(max = 700.dp)) {
         val last = blocks.lastIndex
@@ -186,7 +184,7 @@ public fun KitMarkdown(
                     block,
                     actions,
                     live = live && i == last,
-                    caret = caret && live && i == last,
+                    caret = live && i == last,
                     reveal = reveal,
                 )
             }
@@ -206,7 +204,8 @@ public fun kitMdGap(before: KitMdBlock, after: KitMdBlock): Int =
  * One block (06 §7.8 names: `KitMarkdownProse`, `KitMarkdownHeading`, `KitMarkdownQuote`,
  * `KitMarkdownListItem`, `KitMarkdownTable`, plus code through [KitCodeBlock]). [caret] draws the
  * stream caret after the last word when the block ends in text (a reply ending in code, a table or
- * a rule shows none).
+ * a rule shows none). The caller passes `caret = false` while the turn waits on the person (C-021: Flutter shows no
+ * caret while a request is pending).
  */
 @Composable
 public fun KitMarkdownBlock(
@@ -348,6 +347,15 @@ public fun KitMdNest(depth: Int, content: @Composable () -> Unit) {
     else Box(Modifier.padding(start = (KIT_MD_NEST_STEP * depth.coerceAtMost(6)).dp)) { content() }
 }
 
+/** A list item's marker: a checkbox, its number, or a bullet. */
+internal fun kitMdMarker(block: KitMdBlock.ListItem): String =
+    when {
+        block.checked == true -> "☑"
+        block.checked == false -> "☐"
+        block.ordered -> "${block.number ?: 1}."
+        else -> "•"
+    }
+
 /**
  * The widest marker a list item's column must fit (B-101): for a numbered item, zeros of its number's digit count
  * (at least two) and the dot; null for bullets and checkboxes, which fit the minimum column.
@@ -368,13 +376,7 @@ public fun KitMarkdownListItem(
     reveal: KitMdReveal? = null,
 ) {
     val style = readingStyle(TypeRole.Body)
-    val marker =
-        when {
-            block.checked == true -> "☑"
-            block.checked == false -> "☐"
-            block.ordered -> "${block.number ?: 1}."
-            else -> "•"
-        }
+    val marker = kitMdMarker(block)
     // B-101: every item's words start on one edge. Digits are tabular and the column is a fixed width (Flutter: 24 dp
     // for numbers, 16 dp for bullets, scaled with the text), so "1." and "8." (and "9." and "10.") never shift the
     // words. A number wider than the column (three digits and up) widens it rather than running into the words.
@@ -715,12 +717,19 @@ public fun kitMdDirectionOf(text: CharSequence): LayoutDirection? {
     var i = 0
     while (i < text.length) {
         val c = text[i].code
-        if (c in 0x0590..0x08FF || c in 0xFB1D..0xFDFF || c in 0xFE70..0xFEFF) return LayoutDirection.Rtl
-        if (c in 0x41..0x5A || c in 0x61..0x7A || c in 0xC0..0x024F || c in 0x0370..0x058F) return LayoutDirection.Ltr
+        if (c.isRtlStrong()) return LayoutDirection.Rtl
+        if (c.isLtrStrong()) return LayoutDirection.Ltr
         i++
     }
     return null
 }
+
+/** Hebrew, Arabic and their presentation forms (Flutter `_directionOf`). */
+private fun Int.isRtlStrong(): Boolean = this in 0x0590..0x08FF || this in 0xFB1D..0xFDFF || this in 0xFE70..0xFEFF
+
+/** Basic and extended Latin letters, Greek and Cyrillic (Flutter `_directionOf`). */
+private fun Int.isLtrStrong(): Boolean =
+    this in 0x41..0x5A || this in 0x61..0x7A || this in 0xC0..0x024F || this in 0x0370..0x058F
 
 @Composable
 private fun rememberInlineStyle(): KitMdInlineStyle {
