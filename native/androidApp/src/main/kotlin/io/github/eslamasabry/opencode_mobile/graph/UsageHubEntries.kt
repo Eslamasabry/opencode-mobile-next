@@ -16,7 +16,11 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import io.github.eslamasabry.oc.feature.plans.presentation.*
 import io.github.eslamasabry.oc.feature.plans.ui.*
 import io.github.eslamasabry.oc.feature.usage.UsageEntries
+import io.github.eslamasabry.oc.feature.usage.presentation.LimitsActions
 import io.github.eslamasabry.oc.feature.usage.presentation.UsagePhase
+import io.github.eslamasabry.oc.feature.usage.presentation.UsageTimeZone
+import io.github.eslamasabry.oc.feature.usage.presentation.limitsUi
+import io.github.eslamasabry.oc.feature.usage.ui.LimitsContent
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageViewModel
 import io.github.eslamasabry.oc.feature.usage.ui.UsageContent
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -30,6 +34,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.routes.*
 import io.github.eslamasabry.oc.ui.words.res.*
+import kotlin.time.Clock
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -42,7 +48,11 @@ import org.jetbrains.compose.resources.stringResource
     binding = binding<EntryInstaller>(),
     replaces = [UsageEntries::class],
 )
-class UsageHubEntries(private val source: PlansSource) : EntryInstaller {
+class UsageHubEntries(
+    private val source: PlansSource,
+    private val zone: UsageTimeZone,
+    private val clock: Clock,
+) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<UsageRoute.Hub> { route ->
             val spending =
@@ -55,7 +65,8 @@ class UsageHubEntries(private val source: PlansSource) : EntryInstaller {
             val management by manager.state.collectAsStateWithLifecycle()
             val auth by signIn.state.collectAsStateWithLifecycle()
             val facts by source.snapshot.collectAsStateWithLifecycle()
-            var chosenPlans by rememberSaveable { mutableStateOf(true) }
+            // Cost · Limits · Plans (B-159/B-160); Limits is where the hub opens.
+            var tab by rememberSaveable { mutableStateOf(HubTab.Limits) }
             var actionConsumed by rememberSaveable { mutableStateOf(false) }
             var confirming by rememberSaveable { mutableStateOf(false) }
             var invalidTarget by rememberSaveable { mutableStateOf(false) }
@@ -99,7 +110,18 @@ class UsageHubEntries(private val source: PlansSource) : EntryInstaller {
                 used.server != null &&
                     used.phase != UsagePhase.Unsupported &&
                     used.phase != UsagePhase.NoServer
-            val plansActive = chosenPlans || !hasSpending
+            val shown = if (!hasSpending && tab == HubTab.Cost) HubTab.Limits else tab
+            val plansActive = shown != HubTab.Cost
+            // The countdowns move on their own: a fresh "now" every 30 s and whenever new numbers arrive.
+            var nowMs by remember { mutableLongStateOf(clock.now().toEpochMilliseconds()) }
+            LaunchedEffect(facts) {
+                while (true) {
+                    nowMs = clock.now().toEpochMilliseconds()
+                    delay(30_000)
+                }
+            }
+            val limits = limitsUi(facts, plan.refreshing, nowMs, zone.id())
+            val limitActions = remember(plans) { object : LimitsActions { override fun refresh() = plans.refresh() } }
             when {
                 auth.active -> PlanSignInScreen(auth, signIn)
                 management.page != PlanManagePage.None ->
@@ -144,32 +166,42 @@ class UsageHubEntries(private val source: PlansSource) : EntryInstaller {
                                         stringResource(Res.string.usageHubUnavailableTitle),
                                         body = stringResource(Res.string.usageHubUnavailableBody),
                                     )
-                                } else if (!hasSpending) {
-                                    PlansContent(plan, plans, management, manager, signIn::open)
                                 } else {
+                                    val costBody: @Composable () -> Unit = { UsageContent(used, spending) }
+                                    val limitsBody: @Composable () -> Unit = {
+                                        LimitsContent(limits, limitActions)
+                                    }
+                                    val plansBody: @Composable () -> Unit = {
+                                        PlansContent(plan, plans, management, manager, signIn::open)
+                                    }
+                                    val tabs =
+                                        if (hasSpending) listOf(HubTab.Cost, HubTab.Limits, HubTab.Plans)
+                                        else listOf(HubTab.Limits, HubTab.Plans)
                                     KitTabSwitcher(
                                         tabs =
-                                            listOf(
-                                                KitTab(stringResource(Res.string.usageTabPlans)),
-                                                KitTab(stringResource(Res.string.usageTabSpending)),
-                                            ),
-                                        index = if (plansActive) 0 else 1,
-                                        onSelected = { chosenPlans = it == 0 },
+                                            tabs.map {
+                                                KitTab(
+                                                    stringResource(
+                                                        when (it) {
+                                                            HubTab.Cost -> Res.string.s9UsageTabCost
+                                                            HubTab.Limits -> Res.string.s9UsageTabLimits
+                                                            HubTab.Plans -> Res.string.usageTabPlans
+                                                        }
+                                                    )
+                                                )
+                                            },
+                                        index = tabs.indexOf(shown),
+                                        onSelected = { tab = tabs[it] },
                                         semanticsLabel =
                                             stringResource(Res.string.settingsHubGroupUsage),
                                         bodies =
-                                            listOf(
-                                                {
-                                                    PlansContent(
-                                                        plan,
-                                                        plans,
-                                                        management,
-                                                        manager,
-                                                        signIn::open,
-                                                    )
-                                                },
-                                                { UsageContent(used, spending) },
-                                            ),
+                                            tabs.map {
+                                                when (it) {
+                                                    HubTab.Cost -> costBody
+                                                    HubTab.Limits -> limitsBody
+                                                    HubTab.Plans -> plansBody
+                                                }
+                                            },
                                     )
                                 }
                             }
@@ -194,4 +226,11 @@ class UsageHubEntries(private val source: PlansSource) : EntryInstaller {
             )
         }
     }
+}
+
+/** The hub's tabs (B-159/B-160). Saved by name across configuration changes. */
+private enum class HubTab {
+    Cost,
+    Limits,
+    Plans,
 }
