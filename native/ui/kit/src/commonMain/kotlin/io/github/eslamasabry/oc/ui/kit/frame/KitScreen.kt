@@ -209,7 +209,9 @@ public fun KitScreen(
                 if (ownsLine) KitStatusLineFold(line)
                 Column(Modifier.fillMaxWidth().weight(1f).kitMaxWidth(cap).fillMaxWidth()) {
                     search?.let {
-                        Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        // E20-S08: a step under the field, so the page's first part (an empty state's heading)
+                        // never sits against it.
+                        Box(Modifier.padding(start = LocalKitTokens.current.gutter.dp, end = LocalKitTokens.current.gutter.dp, bottom = Space.S2.dp)) {
                             it()
                         }
                     }

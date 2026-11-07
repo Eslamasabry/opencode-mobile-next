@@ -94,7 +94,7 @@ import io.github.eslamasabry.oc.ui.words.res.voiceNativePartial
 import io.github.eslamasabry.oc.ui.words.res.voiceNativePhoneEngine
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupBusyReason
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupDeletePack
-import io.github.eslamasabry.oc.ui.words.res.voiceSetupDownloadPack
+import io.github.eslamasabry.oc.ui.words.res.voiceSetupDownloadSize
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupDownloadingPack
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupKeepPack
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupModelLabel
@@ -135,17 +135,13 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
             ) {
                 {
                     val row = state.selectedRow!!
+                    // E20-S08: the bottom block already keeps the page's gutter (a second one set the button in
+                    // further than the page), and the button is one line: the model's name is the selected row's.
                     KitActionBlock(
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                            .padding(vertical = Space.S2.dp)
-                            .testTag("voice-model-primary-action"),
+                        Modifier.testTag("voice-model-primary-action"),
                         primary =
                             KitAction(
-                                stringResource(
-                                    Res.string.voiceSetupDownloadPack,
-                                    packName(row.id),
-                                    sizeWords(row.bytes),
-                                ),
+                                stringResource(Res.string.voiceSetupDownloadSize, sizeWords(row.bytes)),
                                 actions::downloadSelected,
                                 icon = KitIcons.download,
                                 enabled =
@@ -288,6 +284,8 @@ private fun Language(state: VoiceSettingsUi, actions: VoiceSettingsPresenter, gu
         enabled =
             if (state.busy) KitEnabled.Disabled(stringResource(Res.string.voiceSetupBusyChoice))
             else KitEnabled.Enabled,
+        // E20-S08: the model list's note above already says it once; TalkBack still hears it here.
+        reasonShown = false,
         onChange = actions::chooseLanguage,
         modifier = gutter.testTag("voice-model-language"),
     )
@@ -460,7 +458,7 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
     val natural = state.natural ?: return
     KitRowGroup(
         label = stringResource(Res.string.readAloudVoiceTitle),
-        note = if (state.busy && natural.available) stringResource(Res.string.voiceSetupBusyChoice) else null,
+        // E20-S08: the busy caption is said once, under the model list; this list was its second copy.
         section = true,
     ) {
         KitChoiceList(
@@ -487,7 +485,8 @@ private fun ReadAloudVoice(state: VoiceSettingsUi, actions: VoiceSettingsPresent
                                     KitEnabled.Disabled(
                                         stringResource(Res.string.voiceNativeNaturalNeedsEngine)
                                     )
-                                state.busy -> KitEnabled.Disabled("") // the group's note says why
+                                // Blank: the model list's note says why, once for the page.
+                                state.busy -> KitEnabled.Disabled("")
                                 else -> KitEnabled.Enabled
                             },
                     ),

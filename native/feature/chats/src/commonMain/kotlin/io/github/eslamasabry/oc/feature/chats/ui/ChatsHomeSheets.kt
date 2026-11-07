@@ -8,6 +8,9 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
@@ -273,6 +276,19 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
+    // E20-S08: while the server opens, the saved titles are a list on the gutter under it; a centred page state
+    // over that list read as two layouts. The words start where the rows do.
+    if (opening.phase != ChatsOpeningPhase.Failed) {
+        KitNotice(
+            message = stringResource(Res.string.homeOpeningSavedTitles),
+            modifier =
+                Modifier.padding(horizontal = io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens.current.gutter.dp)
+                    .testTag("home-opening-connecting"),
+            title = stringResource(Res.string.homeOpeningConnecting, opening.serverName),
+            tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Progress,
+        )
+        return
+    }
     KitStateView(
         kind =
             if (opening.phase == ChatsOpeningPhase.Failed) KitStateKind.Error

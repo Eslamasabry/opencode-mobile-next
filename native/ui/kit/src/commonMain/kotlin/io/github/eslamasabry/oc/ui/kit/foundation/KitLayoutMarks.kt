@@ -32,6 +32,18 @@ public object KitLayoutMarks {
 
     /** Set on a list container: rows inside it share one start edge for their titles. */
     public val List: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitList")
+
+    /**
+     * Set on words that start on the page's content edge, the gutter the transcript and the rows start on (a bar's
+     * title and the line under it), with the slot's name. On a phone the guard holds them to that edge (E20-S08).
+     */
+    public val ContentEdge: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitContentEdge")
+
+    /**
+     * Set on a floating panel (a menu) that must fit inside the window, scrolling when it is longer, with the
+     * panel's name. The guard reports one that runs past the window's edge (E20-S08).
+     */
+    public val Floating: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitFloating")
 }
 
 /** Declares how this part meets the window edge (see [KitEdge]). */
@@ -42,3 +54,9 @@ public fun Modifier.kitMayTruncate(slot: String): Modifier = semantics { this[Ki
 
 /** Declares a list whose rows share one title start edge; [name] names it for the guard's report. */
 public fun Modifier.kitList(name: String): Modifier = semantics { this[KitLayoutMarks.List] = name }
+
+/** Declares words that start on the page's content edge (see [KitLayoutMarks.ContentEdge]); [slot] names them. */
+public fun Modifier.kitContentEdge(slot: String): Modifier = semantics { this[KitLayoutMarks.ContentEdge] = slot }
+
+/** Declares a floating panel that must fit the window (see [KitLayoutMarks.Floating]); [name] names it. */
+public fun Modifier.kitFloating(name: String): Modifier = semantics { this[KitLayoutMarks.Floating] = name }

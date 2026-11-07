@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -124,7 +125,8 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
                     }
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                // Stacked, the glyph stays with the first line of words, not centred on words and buttons.
+                verticalAlignment = if (stacked) Alignment.Top else Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
                 if (status.icon == null) KitStatusGlyph(status.tone.glyph, glyphColor(status.tone, colors))
@@ -137,27 +139,42 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
                         StatusTone.Attention, StatusTone.Failure -> TextTone.Primary
                     }, growsWithText = true,
                 )
-                Column(
-                    Modifier.weight(1f).semantics(mergeDescendants = true) {
-                        liveRegion = LiveRegionMode.Polite
-                    },
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    KitText(
-                        status.message,
-                        Modifier.testTag("kit-status-message"),
-                        role = TypeRole.Body,
-                    )
-                    status.supporting?.let {
-                        KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
-                    }
-                    status.next?.let {
+                // E20-S08: the words and the stacked controls share one start edge. The controls sat on a third edge
+                // (their row was padded to the words, then each button padded its own words again).
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                    Column(
+                        Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+                            liveRegion = LiveRegionMode.Polite
+                        },
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
                         KitText(
-                            it,
-                            Modifier.testTag("kit-status-next"),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
+                            status.message,
+                            Modifier.testTag("kit-status-message"),
+                            role = TypeRole.Body,
                         )
+                        status.supporting?.let {
+                            KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                        }
+                        status.next?.let {
+                            KitText(
+                                it,
+                                Modifier.testTag("kit-status-next"),
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
+                            )
+                        }
+                    }
+                    if (stacked && controlLabels.isNotEmpty()) {
+                        Row(
+                            // The buttons' own padding moves out of the edge, so their words start on the words'.
+                            Modifier.offset(x = -Space.S3.dp).testTag("kit-status-controls"),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            status.action?.let { KitInlineAction(it.copy(testTag = it.testTag ?: "kit-status-action")) }
+                            StatusMore(status, moreLabel)
+                            dismiss?.let { KitInlineAction(it) }
+                        }
                     }
                 }
                 if (!stacked)
@@ -166,16 +183,6 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
                     }
                 if (!stacked) StatusMore(status, moreLabel)
                 if (!stacked) dismiss?.let { KitInlineAction(it) }
-            }
-            if (stacked && controlLabels.isNotEmpty()) {
-                Row(
-                    Modifier.padding(start = (tokens.smallIcon + Space.S3).dp).testTag("kit-status-controls"),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    status.action?.let { KitInlineAction(it.copy(testTag = it.testTag ?: "kit-status-action")) }
-                    StatusMore(status, moreLabel)
-                    dismiss?.let { KitInlineAction(it) }
-                }
             }
         }
     }

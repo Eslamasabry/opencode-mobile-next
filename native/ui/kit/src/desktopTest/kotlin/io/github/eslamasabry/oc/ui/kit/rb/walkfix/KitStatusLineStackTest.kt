@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -54,6 +55,31 @@ class KitStatusLineStackTest {
         assertTrue(words.right - words.left > (line.right - line.left) * 0.75f, "words $words in line $line")
         assertTrue(action.top >= words.bottom, "action $action under words $words")
         assertTrue(dismiss.top >= words.bottom, "dismiss $dismiss under words $words")
+    }
+
+    @Test
+    fun `E20-S08 the stacked buttons' words start on the message's edge`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                Box(Modifier.width(412.dp)) {
+                    KitStatusLine(
+                        KitStatus(
+                            KitStatusKind.AppStopped,
+                            exitWords,
+                            id = "app-exit",
+                            action = KitLineAction("Keep running", {}),
+                            onDismiss = {},
+                            dismissLabel = "Dismiss",
+                        )
+                    )
+                }
+            }
+        }
+        val words = onNodeWithTag("kit-status-message", useUnmergedTree = true).getBoundsInRoot()
+        val keep = onNodeWithText("Keep running", useUnmergedTree = true).getBoundsInRoot()
+        // One edge for the words: the glyph's column, then the message and the buttons' words on the same x
+        // (the buttons sat 12 dp further in, a third edge).
+        assertTrue((keep.left - words.left).value.let { it > -1f && it < 1f }, "button words $keep, message $words")
     }
 
     @Test

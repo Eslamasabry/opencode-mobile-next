@@ -23,7 +23,9 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitContentEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitList
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import kotlin.test.Test
@@ -171,6 +173,41 @@ class LayoutGuardSelfTest {
         assertEquals(listOf("Three"), edges.map { it.subject })
         val aligned = rules { Column(Modifier.kitList("test")) { row(16, "One"); row(16, "Two"); row(16, "Three") } }
         assertTrue("title-edge" !in aligned)
+    }
+
+    @Test
+    fun `E20-S08 a floating panel running past the window's bottom is reported`() {
+        val past = rules(frame = Frame.Part) { Box(Modifier.offset(y = 880.dp).size(200.dp, 100.dp).kitFloating("menu")) }
+        assertTrue("off-window" in past, past.toString())
+        val inside = rules(frame = Frame.Part) { Box(Modifier.offset(y = 700.dp).size(200.dp, 100.dp).kitFloating("menu")) }
+        assertTrue("off-window" !in inside, inside.toString())
+    }
+
+    @Test
+    fun `E20-S08 one list showing the same row twice is reported`() {
+        @Composable
+        fun row(title: String, supporting: String) =
+            Box(tap(Modifier.fillMaxWidth().height(64.dp).kitEdge(KitEdge.Bleed))) {
+                Column(Modifier.padding(horizontal = 16.dp)) { BasicText(title); BasicText(supporting) }
+            }
+        val twice = findings {
+            Column(Modifier.kitList("test")) { row("shopfront", "~/shopfront"); row("shopfront", "~/shopfront") }
+        }
+        assertEquals(listOf("twin-row"), twice.filter { it.rule == "twin-row" }.map { it.rule })
+        val apart = rules {
+            Column(Modifier.kitList("test")) { row("shopfront", "~/shopfront"); row("shopfront", "~/old/shopfront") }
+        }
+        assertTrue("twin-row" !in apart, apart.toString())
+    }
+
+    @Test
+    fun `E20-S08 a bar title off the page's content edge is reported on a phone`() {
+        val off = rules { BasicText("Title", Modifier.padding(start = 64.dp).kitContentEdge("bar-title")) }
+        assertTrue("content-edge" in off, off.toString())
+        val on = rules { BasicText("Title", Modifier.padding(start = 16.dp).kitContentEdge("bar-title")) }
+        assertTrue("content-edge" !in on, on.toString())
+        val unmarked = rules { BasicText("Words", Modifier.padding(start = 64.dp)) }
+        assertTrue("content-edge" !in unmarked, unmarked.toString())
     }
 
     @Test

@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -28,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
@@ -52,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
@@ -154,8 +158,14 @@ public fun KitMenu(
         if (expanded && items.isNotEmpty()) {
             // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
             // the screen's edge under a full-width row).
-            val gutter = with(LocalDensity.current) { LocalKitTokens.current.gutter.dp.roundToPx() }
-            val provider = remember(gutter) { MenuPosition(gutter) }
+            val density = LocalDensity.current
+            val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
+            // E20-S08: the menu fits between the system bars, a step from each; a longer one scrolls (its last
+            // item was cut under the navigation bar).
+            val step = with(density) { Space.S2.dp.roundToPx() }
+            val top = WindowInsets.systemBars.getTop(density) + step
+            val bottom = WindowInsets.systemBars.getBottom(density) + step
+            val provider = remember(gutter, top, bottom) { MenuPosition(gutter, top, bottom) }
             Popup(
                 popupPositionProvider = provider,
                 onDismissRequest = onDismissRequest,
@@ -173,6 +183,14 @@ public fun KitMenu(
                     exit = fadeOut(specs.exit()),
                 ) {
                     KitMenuPanel(
+                        modifier =
+                            Modifier.layout { measurable, constraints ->
+                                val room =
+                                    if (!constraints.hasBoundedHeight) constraints.maxHeight
+                                    else (constraints.maxHeight - top - bottom).coerceAtLeast(0)
+                                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = room))
+                                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                            },
                         items = items,
                         title = title,
                         onChoose = { item ->
@@ -213,8 +231,11 @@ public fun KitMenuPanel(
             .verticalScroll(rememberScrollState())
             .padding(vertical = Space.S1.dp)
             .semantics { if (title != null) paneTitle = title }
+            .kitFloating("menu")
             .testTag("kit-menu")
     ) {
+        // E20-S08: when any item has a glyph, the others keep its slot, so every label starts on one edge.
+        val glyphSlot = items.any { it.icon != null }
         MenuLayout.arrange(items).forEach { entry ->
             when (entry) {
                 KitMenuEntry.Divider ->
@@ -233,14 +254,14 @@ public fun KitMenuPanel(
                         tone = TextTone.Secondary,
                         kind = KitTextKind.Frame,
                     )
-                is KitMenuEntry.Item -> MenuRow(entry.item, onChoose)
+                is KitMenuEntry.Item -> MenuRow(entry.item, glyphSlot, onChoose)
             }
         }
     }
 }
 
 @Composable
-private fun MenuRow(item: KitMenuItem, onChoose: (KitMenuItem) -> Unit) {
+private fun MenuRow(item: KitMenuItem, glyphSlot: Boolean, onChoose: (KitMenuItem) -> Unit) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val on = item.enabled.isEnabled
@@ -260,7 +281,9 @@ private fun MenuRow(item: KitMenuItem, onChoose: (KitMenuItem) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {
         val ink = if (on) colors.text1 else colors.text3
-        item.icon?.let { KitGlyph(it, ink, tokens.smallIcon.dp) }
+        val glyph = item.icon
+        if (glyph != null) KitGlyph(glyph, ink, tokens.smallIcon.dp)
+        else if (glyphSlot) Spacer(Modifier.size(tokens.smallIcon.dp))
         Column(Modifier.weight(1f)) {
             KitText(
                 item.label,
@@ -291,7 +314,8 @@ private fun MenuRow(item: KitMenuItem, onChoose: (KitMenuItem) -> Unit) {
  * Below the anchor, aligned to its end edge; above when there is no room below; kept inside the
  * window by [margin].
  */
-private class MenuPosition(private val margin: Int) : PopupPositionProvider {
+private class MenuPosition(private val margin: Int, private val top: Int = 0, private val bottom: Int = 0) :
+    PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
@@ -307,7 +331,7 @@ private class MenuPosition(private val margin: Int) : PopupPositionProvider {
             else anchorBounds.top - popupContentSize.height
         return IntOffset(
             x.coerceIn(margin, maxOf(margin, windowSize.width - popupContentSize.width - margin)),
-            y.coerceIn(0, maxOf(0, windowSize.height - popupContentSize.height)),
+            y.coerceIn(top, maxOf(top, windowSize.height - popupContentSize.height - bottom)),
         )
     }
 }

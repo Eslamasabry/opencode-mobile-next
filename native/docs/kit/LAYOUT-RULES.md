@@ -31,14 +31,24 @@ A short window (height < 480 dp) keeps the compact layout for parts that stack v
   - Dividers, sheet frames and backgrounds carry no words and no tap, so the edge rule never reads them.
   - Content inside a sideways scroller (a chip row, a carousel) scrolls past the edge by design and is not checked.
 
-The top bar follows the same rule: with no Back or Close, its title's words start on the 16 dp gutter (Flutter
-`kit_top_bar.dart`: "No exit: the title starts on the gutter").
+The top bar follows the same rule: its title's words start on the 16 dp gutter, the edge the transcript and the
+rows start on (Flutter `kit_top_bar.dart`: "No exit: the title starts on the gutter"). With Back, Back and the actions
+take the line above the title (E20-S08: a title beside Back started 48 dp further in than the page's words). The kit
+marks the title and the line under it with `Modifier.kitContentEdge(...)`; on a phone the guard reports marked words
+off the gutter (`content-edge`).
 
 ## 3. One start edge per list
 
 Rows stacked in one list column (the same list and the same row box) start their titles on one edge, within 1 dp. A
 list is a `KitRowGroup` (`kitList`), a lazy list (collection info) or a vertical scroller. A row without a leading tile
 in a group whose rows have one is a violation: give it the same leading slot, or move it to its own group.
+
+A list never shows one thing twice: two rows of one list with the same words (title and supporting line) are a
+`twin-row` (E20-S08: a project sheet listed a folder twice). Dedupe the data (by path, by id) before it reaches the list.
+
+A floating panel (a menu, marked `Modifier.kitFloating(...)`) fits inside the window between the system bars and
+scrolls when it is longer; one that runs past the window's edge is `off-window`. A menu whose items have glyphs keeps
+the glyph's slot on the items without one, so its labels start on one edge (E20-S08).
 
 ## 4. Touch targets
 

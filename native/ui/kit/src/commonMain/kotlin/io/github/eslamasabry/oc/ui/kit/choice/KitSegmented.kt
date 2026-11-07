@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -104,7 +106,8 @@ public object SegmentedRules {
  * bright when the control was disabled). A tap on another enabled
  * segment calls [onChange] once and plays `Select` through the kit seam; a tap on the chosen one does nothing. When a
  * word does not fit its share, or at 2× text, the control stacks into choice rows. A disabled control shows its reason
- * under it; a disabled segment says its own.
+ * under it, on the control's edge; a disabled segment says its own. [reasonShown] = false when the page already says
+ * the same reason once nearby (it then goes to the screen reader only, so it is never shown twice).
  *
  * States: default, selected, disabled, stacked
  * Text: frame
@@ -120,6 +123,7 @@ public fun <T> KitSegmented(
     modifier: Modifier = Modifier,
     enabled: KitEnabled = KitEnabled.Enabled,
     tall: Boolean = false,
+    reasonShown: Boolean = true,
     onChange: (T) -> Unit,
 ) {
     kitAssert(SegmentedRules.validCount(segments.size)) { "KitSegmented needs 2 to 4 segments (B-KIT-031)" }
@@ -135,7 +139,12 @@ public fun <T> KitSegmented(
     val reasons =
         if (!enabled.isEnabled) listOfNotNull(enabled.reason)
         else segments.mapNotNull { it.enabled.reason }.distinct()
-    Column(modifier.fillMaxWidth().semantics { contentDescription = semanticsLabel }) {
+    Column(
+        modifier.fillMaxWidth().semantics {
+            contentDescription = semanticsLabel
+            if (!reasonShown && reasons.isNotEmpty()) stateDescription = reasons.joinToString(". ")
+        }
+    ) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val unscaled = Density(appDensity.density, 1f)
             fun width(text: String, role: TypeRole): Float =
@@ -162,8 +171,9 @@ public fun <T> KitSegmented(
         }
         // In the stack a disabled segment's reason is on its row; only the whole control's reason stays under it.
         // (The stack decision lives inside the constraints, so the segment reasons are shown here for both forms.)
-        if (reasons.isNotEmpty()) {
-            Column(Modifier.padding(start = Space.S2.dp, top = Space.S1.dp)) {
+        // E20-S08: on the control's edge, not 8 dp in (it read as a second, indented copy of the page's caption).
+        if (reasons.isNotEmpty() && reasonShown) {
+            Column(Modifier.padding(top = Space.S1.dp).testTag("kit-segmented-reason")) {
                 reasons.forEach { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame) }
             }
         }

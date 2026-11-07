@@ -64,9 +64,12 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
             truncation(n)
             if (window == Window.Tablet && !n.chrome) caps(n)
             if (screen && n.pageRules) edges(n)
+            if (screen && window == Window.Phone && !n.chrome) contentEdge(n)
+            floating(n)
         }
         spacing()
         if (screen) titleEdges()
+        if (screen) twinRows()
         return found
     }
 
@@ -115,6 +118,31 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
             n.text && textOut -> add(n, "edge-text", "$at, gutter ${fmt(gutter)}..${fmt(w - gutter)}")
             box && boxOut -> add(n, "edge-tap", "$at, needs ${fmt(controlEdge)} dp from the edge")
         }
+    }
+
+    /**
+     * Words the kit puts on the page's content edge (a bar's title, the line under it) start on the gutter, the edge
+     * the transcript and the rows start on (E20-S08: a title past Back sat 48 dp further in). Phone only: a wider
+     * window may centre its content.
+     */
+    private fun contentEdge(n: Item) {
+        val slot = n.config.getOrNull(KitLayoutMarks.ContentEdge) ?: return
+        if (abs(n.bounds.left - gutter) > TITLE_EDGE) {
+            add(n, "content-edge", "$slot starts at x ${fmt(n.bounds.left)}, the page's words at ${fmt(gutter)}")
+        }
+    }
+
+    /**
+     * A floating panel the kit marks (a menu) fits inside the window and scrolls when it is longer (E20-S08: the
+     * Go to menu's last item was cut at the bottom). Its laid-out box, not the clipped one, is checked.
+     */
+    private fun floating(n: Item) {
+        val name = n.config.getOrNull(KitLayoutMarks.Floating) ?: return
+        val at = n.node.positionInWindow
+        val size = n.node.size
+        val h = window.h.toFloat()
+        val out = at.x < -CUT || at.y < -CUT || at.x + size.width > w + CUT || at.y + size.height > h + CUT
+        if (out) add(n, "off-window", "$name at ${fmt(at.x)},${fmt(at.y)} size ${size.width} x ${size.height}")
     }
 
     /** Each words-or-control node and the nearest sibling below it that shares columns with it. */
@@ -166,6 +194,24 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
             }
         }
     }
+
+    /**
+     * A list never lists one thing twice (E20-S08: the project sheet showed a folder twice): two rows of one list
+     * with the same words, title and supporting line alike, are reported.
+     */
+    private fun twinRows() {
+        val rows = items.filter { it.tap && it.bleed && it.visible && it.pageRules }
+        for (members in rows.groupBy { r -> r.ancestors.lastOrNull { isList(it) }?.id ?: -1 }.values) {
+            for (twins in members.groupBy { wordsIn(it) }.filter { it.key.isNotBlank() && it.value.size > 1 }.values) {
+                twins.drop(1).forEach { add(it, "twin-row", "listed ${twins.size} times in one list") }
+            }
+        }
+    }
+
+    /** Every line of words inside [row], in reading order. */
+    private fun wordsIn(row: Item): String =
+        items.filter { it.text && it.ancestors.any { a -> a.id == row.node.id } }
+            .joinToString(" | ") { t -> t.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }.orEmpty() }
 
     /** The start (left, LTR) of the first line of words inside a row: the top-most text node, then the start-most. */
     private fun titleStart(row: Item): Float? =

@@ -20,6 +20,10 @@ import java.util.Locale
  * - `edge-text` / `edge-tap`: words keep the 16 dp page gutter; a control's box keeps at least [Space.S1] from the
  *   window edge (a 48 dp icon button's glyph then lands on the gutter). Screens only.
  * - `title-edge`: rows stacked in one list column start their titles on one edge. Screens only.
+ * - `off-window`: a floating panel the kit marks (a menu) fits inside the window; a longer one scrolls.
+ * - `twin-row`: one list never shows two rows with the same words (a project listed twice). Screens only.
+ * - `content-edge`: words the kit marks for the page's content edge (a bar's title and subtitle) start on the 16 dp
+ *   gutter, where the transcript and the rows start. Screens on a phone only.
  * - `tight` / `overlap` / `off-scale`: a control and its neighbour above or below are at least [Space.S1] apart and
  *   never overlap; two controls are spaced on the 4 dp grid of the spacing scale.
  * - `small-target`: every tappable is at least 48 dp on both sides.

@@ -107,18 +107,8 @@ public fun KitGuideRail(
                 }
                 Spacer(Modifier.width(Space.S2.dp))
                 KitText(group, Modifier.weight(1f).semantics { heading() }, role = TypeRole.Label)
-                val at = items.indexOfFirst { it.id == selected }
-                items.forEachIndexed { index, _ ->
-                    Box(
-                        Modifier.padding(start = Space.S1.dp)
-                            .size(6.dp)
-                            .background(
-                                if (index <= at) colors.accent else colors.hairline,
-                                CircleShape,
-                            )
-                            .clearAndSetSemantics {}
-                    ) // F: lib/ui/kit/kit_guide.dart:455
-                }
+                // E20-S08: no per-group dots here. The guide's foot already says where the person is ("1 of 5");
+                // two dots for the group beside it counted something else and read as a contradiction.
             }
             Spacer(Modifier.height(Space.S2.dp))
         }

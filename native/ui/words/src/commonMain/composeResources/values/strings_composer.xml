@@ -204,6 +204,7 @@
     <string name="runCommandFailedTitle">Couldn't run /%1$s</string>
     <string name="voiceSetupSubtitle">Download a speech model once. After that, voice input runs on this phone without the internet.</string>
     <string name="voiceSetupDownloadPack">Download %1$s (%2$s)</string>
+    <string name="voiceSetupDownloadSize">Download (%1$s)</string>
     <string name="voiceSetupUsePack">Use %1$s</string>
     <string name="voiceSetupRedownloadPack">Download %1$s speech model again</string>
     <string name="voiceSetupDeletePack">Delete %1$s speech model (%2$s)</string>

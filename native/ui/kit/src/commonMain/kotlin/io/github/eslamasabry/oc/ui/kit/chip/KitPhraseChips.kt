@@ -16,7 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -67,7 +69,11 @@ public fun KitPhraseChips(
                 { menu = false },
                 title = menuLabel(phrase),
             ) {
-                Box(Modifier.pointerInput(phrase) { detectTapGestures(onLongPress = { menu = true }) }) {
+                // The long-press menu is also a screen reader action, so hiding never needs the gesture.
+                Box(
+                    Modifier.pointerInput(phrase) { detectTapGestures(onLongPress = { menu = true }) }
+                        .semantics { customActions = listOf(CustomAccessibilityAction(menuLabel(phrase)) { menu = true; true }) }
+                ) {
                     KitChip(phrase, kind = KitChipKind.Action, onClick = { onChoose(phrase) }, spoken = insertLabel(phrase))
                 }
             }

@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -80,7 +81,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
 import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
-import io.github.eslamasabry.oc.ui.words.res.chatPhraseHide
+import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
+import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
+import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
+import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsOptions
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
@@ -487,26 +491,28 @@ public fun BasicComposer(
                 modifier = Modifier.testTag("chat-attachment-failure"),
             )
         }
-        if (state.phrases.isNotEmpty() && !chrome.requestWaiting())
-            KitChipWrap {
-                state.phrases.forEach { phrase ->
-                    KitChip(
-                        label = phrase,
-                        kind = KitChipKind.Action,
-                        onClick = {
-                            if (field.text.isEmpty() && state.draft.attachments.isEmpty()) {
-                                field.edit { replace(0, length, phrase) }
-                                actions.draftChanged(phrase)
-                            }
-                        },
-                    )
-                    KitChip(
-                        label = stringResource(Res.string.chatPhraseHide, phrase),
-                        kind = KitChipKind.Action,
-                        onClick = { actions.hidePhrase(phrase) },
-                    )
-                }
-            }
+        // E20-S08: the phrases only, on one line that scrolls (the kit's phrase row); hiding one is its
+        // long-press menu, and Settings › Phrase suggestions is the visible way back. A "Hide <phrase>" chip
+        // beside every phrase doubled the row and wrapped it to two lines.
+        if (state.phrases.isNotEmpty() && !chrome.requestWaiting()) {
+            val inserts = state.phrases.associateWith { stringResource(Res.string.phraseSuggestionsInsert, it) }
+            val menus = state.phrases.associateWith { stringResource(Res.string.phraseSuggestionsOptions, it) }
+            KitPhraseChips(
+                phrases = state.phrases,
+                label = stringResource(Res.string.phraseChipsRowLabel),
+                insertLabel = { inserts[it] ?: it },
+                menuLabel = { menus[it] ?: it },
+                hideLabel = stringResource(Res.string.phraseChipsHide),
+                onChoose = { phrase ->
+                    if (field.text.isEmpty() && state.draft.attachments.isEmpty()) {
+                        field.edit { replace(0, length, phrase) }
+                        actions.draftChanged(phrase)
+                    }
+                },
+                onHide = actions::hidePhrase,
+                modifier = Modifier.testTag("chat-phrase-chips"),
+            )
+        }
         if (addOpen) {
             val choices = buildList {
                 if (state.filesAvailable)
@@ -840,6 +846,8 @@ public fun BasicComposer(
                     },
                     semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
                     modifier = Modifier.testTag("chat-model-button"),
+                    // E20-S08: the model's name gives way first, so the approval chip is never cut by the mic.
+                    shrinks = true,
                 )
                 chrome.rowChips()
             },

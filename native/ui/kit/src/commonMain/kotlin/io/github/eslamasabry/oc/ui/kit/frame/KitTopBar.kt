@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitInlineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitContentEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -208,7 +209,7 @@ public fun KitTopBar(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     KitText(
                         title,
-                        Modifier.semantics { heading() }.testTag("kit-top-bar-title"),
+                        Modifier.semantics { heading() }.kitContentEdge("bar-title").testTag("kit-top-bar-title"),
                         role = TypeRole.LargeTitle,
                         kind = KitTextKind.Frame,
                         maxLines = 2,
@@ -224,8 +225,8 @@ public fun KitTopBar(
         }
         return
     }
-    // The title sits on the Back arrow's line (Flutter's chat header); the project · branch line or the subtitle
-    // starts under the title's first letter, one left edge for both.
+    // The title starts on the page gutter (E20-S08: Back, when there is one, takes the line above); the project ·
+    // branch line or the subtitle starts under the title's first letter, one left edge for both.
     val back = exit == KitTopBarExit.Back && onExit != null
     val titleRow: @Composable () -> Unit = {
         Row(
@@ -237,6 +238,7 @@ public fun KitTopBar(
                 title,
                 Modifier.weight(1f, fill = false)
                     .semantics { heading() }
+                    .kitContentEdge("bar-title")
                     .testTag("kit-top-bar-title"),
                 role = TypeRole.Headline,
                 kind = KitTextKind.Frame,
@@ -255,27 +257,50 @@ public fun KitTopBar(
             .testTag("kit-top-bar"),
     ) {
         val hasLine = scope != null || subtitle != null
-        Row(
+        // E20-S08: the title's words start on the page gutter, the transcript's and the rows' edge, also beside a
+        // Back button (they sat 48 dp further in, past it). Back, and the actions, take the line above the title.
+        val titleStart = (tokens.gutter - Space.S1 - Space.S2).dp
+        val title: @Composable () -> Unit = {
+            if (onTitleTap != null) {
+                KitTappable(
+                    onClick = onTitleTap,
+                    onClickLabel = titleTapLabel,
+                    shape = KitShapeId.Button,
+                ) {
+                    titleRow()
+                }
+            } else {
+                titleRow()
+            }
+        }
+        if (back) {
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
+                Box(Modifier.weight(1f))
+                actionRow()
+            }
+            Row(
+                Modifier.fillMaxWidth()
+                    // A step under Back: a tappable title is a control of its own, never against it.
+                    .padding(top = if (onTitleTap != null) Space.S1.dp else 0.dp)
+                    .heightIn(min = if (onTitleTap != null) tokens.minTarget.dp else 0.dp)
+                    .padding(start = titleStart),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                title()
+            }
+        } else Row(
             Modifier.fillMaxWidth().heightIn(min = (if (hasLine) tokens.minTarget else tokens.rowHeightOne).dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            if (back) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit!!, -1f)
             // No exit: the title's words start on the gutter, like the page's first row (Flutter kit_top_bar.dart,
             // "the title starts on the gutter"); the bar's 4 dp and the title row's 8 dp leave 4 dp to add.
-            val titleStart = if (back) 0.dp else (tokens.gutter - Space.S1 - Space.S2).dp
             Row(Modifier.weight(1f).padding(start = titleStart), verticalAlignment = Alignment.CenterVertically) {
-                if (onTitleTap != null) {
-                    KitTappable(
-                        onClick = onTitleTap,
-                        onClickLabel = titleTapLabel,
-                        shape = KitShapeId.Button,
-                    ) {
-                        titleRow()
-                    }
-                } else {
-                    titleRow()
-                }
+                title()
             }
             actionRow()
             if (exit == KitTopBarExit.Close && onExit != null)
@@ -287,7 +312,7 @@ public fun KitTopBar(
                     {
                         KitText(
                             it,
-                            Modifier.padding(horizontal = Space.S2.dp),
+                            Modifier.padding(horizontal = Space.S2.dp).kitContentEdge("bar-subtitle"),
                             role = TypeRole.Secondary,
                             tone = TextTone.Secondary,
                             kind = KitTextKind.Frame,
@@ -296,8 +321,8 @@ public fun KitTopBar(
                     }
                 }
         if (under != null) {
-            // Past the Back arrow and its gap; the scope's own words keep their 8 dp inset like the title's.
-            val lead = (if (back) tokens.minTarget + Space.S1 else 0).dp + if (scope != null) Space.S1.dp else 0.dp
+            // Under the title's first letter; the scope's own words keep their 8 dp inset like the title's.
+            val lead = titleStart + if (scope != null) Space.S1.dp else 0.dp
             // The line's words keep their 48 dp targets, but the targets overlap the bar's empty edges by 8 dp so the
             // line reads as the title's second line (Flutter: "my-app · master" right under the title).
             // N-50: only the scope line has targets to tuck; a plain subtitle takes its own room, so the page's first
