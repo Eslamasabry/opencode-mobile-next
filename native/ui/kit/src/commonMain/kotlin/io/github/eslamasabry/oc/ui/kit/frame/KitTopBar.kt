@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitBrandMark
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouBadge
@@ -120,6 +121,10 @@ public fun KitTopBar(
      * compact block instead of three rows. The title then starts beside Back, not on the gutter.
      */
     backBesideTitle: Boolean = false,
+    /** The product mark beside the title, at a root only (Dart `brand`: exit none). */
+    brand: Boolean = false,
+    /** Requests waiting elsewhere: a switcher title carries the amber badge (Dart `needsYou`). */
+    needsYou: Int = 0,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -271,13 +276,17 @@ public fun KitTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
+            // Dart brand: the small mark leads the name, the name in the headline size (kit_top_bar.dart:690-708).
+            val branded = brand && exit == KitTopBarExit.None
+            // space2 to the name: the row's space1 step plus space1 of the mark's own.
+            if (branded) KitBrandMark(Modifier.padding(end = Space.S1.dp))
             KitText(
                 title,
                 Modifier.weight(1f, fill = false)
                     .semantics { heading() }
                     .kitContentEdge("bar-title")
                     .testTag("kit-top-bar-title"),
-                role = titleRole,
+                role = if (branded) TypeRole.Headline else titleRole,
                 kind = KitTextKind.Frame,
                 // Flutter's chat header: a long title takes a second line before it ends in "…" beside the chevron.
                 maxLines = 2,
@@ -302,12 +311,14 @@ public fun KitTopBar(
         val titleStart = (tokens.gutter - Space.S1 - Space.S2).dp
         val title: @Composable () -> Unit = {
             if (onTitleTap != null) {
-                KitTappable(
-                    onClick = onTitleTap,
-                    onClickLabel = titleTapLabel,
-                    shape = KitShapeId.Button,
-                ) {
-                    titleRow()
+                KitNeedsYouBadge(needsYou) {
+                    KitTappable(
+                        onClick = onTitleTap,
+                        onClickLabel = titleTapLabel,
+                        shape = KitShapeId.Button,
+                    ) {
+                        titleRow()
+                    }
                 }
             } else {
                 titleRow()
@@ -582,7 +593,7 @@ public fun KitShellControls(
         }
         return
     }
-    val colors = LocalKitColors.current
+    // The sidebar's words grow with the text size without a cap (Dart KitText.capScale max: infinity).
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) { // F: lib/ui/kit/kit_top_bar.dart:1205
         KitNeedsYouBadge(needsYou) { SidebarServerPill(server, serverStatus, serverTone, "$server, $serverStatus, $switchServer", onServer) }
         if (project != null && onProject != null) {
@@ -596,9 +607,9 @@ public fun KitShellControls(
                     Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(horizontal = Space.S3.dp, vertical = Space.S1.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    KitText(KitBidi.auto(project), Modifier.weight(1f), role = TypeRole.Headline, kind = KitTextKind.Frame, maxLines = 2) // F: lib/ui/kit/kit_top_bar.dart:1232
+                    KitText(KitBidi.auto(project), Modifier.weight(1f), role = TypeRole.Headline, maxLines = 2) // F: lib/ui/kit/kit_top_bar.dart:1232
                     Box(Modifier.width(Space.S1.dp))
-                    KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
+                    KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary, growsWithText = true)
                 }
             }
         }
@@ -612,9 +623,9 @@ public fun KitShellControls(
                         .padding(horizontal = Space.S3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    KitIcon(KitIcons.search, size = KitIconSize.Small, tone = TextTone.Secondary)
+                    KitIcon(KitIcons.search, size = KitIconSize.Small, tone = TextTone.Secondary, growsWithText = true)
                     Box(Modifier.width(Space.S2.dp))
-                    KitText(searchLabel, Modifier.weight(1f), role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+                    KitText(searchLabel, Modifier.weight(1f), role = TypeRole.Label, tone = TextTone.Secondary, maxLines = 1)
                 }
             }
         }
@@ -655,11 +666,11 @@ private fun SidebarServerPill(server: String, status: String, tone: KitConnectio
             }
             Box(Modifier.width(Space.S2.dp))
             Column(Modifier.weight(1f)) {
-                KitText(KitBidi.auto(server), role = TypeRole.RowTitle, kind = KitTextKind.Frame)
-                if (tone != KitConnectionTone.Ok) KitText(status, role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+                KitText(KitBidi.auto(server), role = TypeRole.RowTitle)
+                if (tone != KitConnectionTone.Ok) KitText(status, role = TypeRole.Caption, tone = TextTone.Secondary)
             }
             Box(Modifier.width(Space.S1.dp))
-            KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
+            KitIcon(KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary, growsWithText = true)
         }
     }
 }

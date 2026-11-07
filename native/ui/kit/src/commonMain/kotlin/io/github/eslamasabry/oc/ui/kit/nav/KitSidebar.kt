@@ -79,10 +79,11 @@ public fun KitSidebar(
             .fillMaxHeight()
             .drawBehind {
                 drawRect(ground)
-                // The end border (Dart BorderDirectional end): a hairline-wide band inside the end edge.
-                val stroke = rule.toPx()
-                val x = if (layoutDirection == LayoutDirection.Rtl) 0f else size.width - stroke
-                drawRect(hairline, Offset(x, 0f), Size(stroke, size.height))
+                // The end border (Dart BorderDirectional end): a hairline inside the end edge. A sub-pixel hairline covers
+                // that share of the last pixel column, so it is drawn as that column at the hairline's coverage.
+                val stroke = rule.toPx().coerceAtMost(1f)
+                val x = if (layoutDirection == LayoutDirection.Rtl) 0f else kotlin.math.ceil(size.width) - 1f
+                drawRect(hairline, Offset(x, 0f), Size(1f, size.height), alpha = stroke)
             }
             .kitEdge(KitEdge.Chrome)
             .testTag("kit-sidebar")

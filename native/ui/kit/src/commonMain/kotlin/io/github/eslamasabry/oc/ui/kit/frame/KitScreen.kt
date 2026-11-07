@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
@@ -42,10 +41,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -60,10 +56,12 @@ import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
+import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -258,11 +256,12 @@ public fun KitScreen(
                     // the loading line and the body follow it. Without one, the body starts here.
                     if (header != null) {
                         KitScrollingHeaderFrame(header, Modifier.fillMaxWidth().weight(1f)) {
-                            if (loading) ScreenLoadingLine(loadingLabel)
+                            KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
                             Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
                         }
                     } else {
-                        if (loading) ScreenLoadingLine(loadingLabel)
+                        // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
+                        KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
                         Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
                     }
                     bottomPart?.let {
@@ -277,7 +276,10 @@ public fun KitScreen(
                                     horizontal = LocalKitTokens.current.gutter.dp,
                                     vertical = Space.S2.dp,
                                 )
-                                .testTag("kit-screen-bottom")
+                                .testTag("kit-screen-bottom"),
+                            // Dart's Column(crossAxisAlignment: stretch): the bottom block's child takes the full
+                            // width between the gutters (the page's primary is full width).
+                            propagateMinConstraints = true,
                         ) {
                             it()
                         }
@@ -324,34 +326,6 @@ private fun ScreenSheetHost(modifier: Modifier, content: @Composable () -> Unit)
     } else {
         Box(modifier) { content() }
     }
-}
-
-/**
- * The screen's one loading line, 2 dp under the header (STATE-4): a still accent band with progress
- * semantics. A placeholder for `KitLoadingBar` (S1-KITA2), which replaces it with the moving bar.
- */
-@Composable
-private fun ScreenLoadingLine(label: String?) {
-    val colors = LocalKitColors.current
-    val accent = colors.accent
-    Box(
-        Modifier.fillMaxWidth()
-            .height(LocalKitTokens.current.loadingBar.dp)
-            .background(colors.surface3)
-            .drawBehind {
-                drawLine(
-                    accent,
-                    Offset(0f, size.height / 2),
-                    Offset(size.width / 3, size.height / 2),
-                    size.height,
-                )
-            }
-            .semantics {
-                progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
-                label?.let { contentDescription = it }
-            }
-            .testTag("kit-screen-loading")
-    )
 }
 
 /**
@@ -430,6 +404,7 @@ private fun Panes(
 ) {
     val modifier = Modifier
     val hairline = LocalKitColors.current.hairline
+    val rule = kitHairline()
     val listPane: @Composable () -> Unit = {
         KitScreen(
             topBar =
@@ -465,7 +440,7 @@ private fun Panes(
         val x =
             if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl) 0.5f
             else size.width - 0.5f
-        drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
+        drawPaneRule(hairline, x, rule)
     }
     KitLiveBackground(modifier.fillMaxSize()) {
         ScreenSheetHost(Modifier.fillMaxSize()) {
@@ -486,7 +461,9 @@ private fun Panes(
                         .testTag("kit-screen-pane-detail"),
                     contentAlignment = Alignment.TopCenter,
                 ) {
-                    Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize()) {
+                    // Dart _Centred(paneDetailMaxWidth, fill: true): the pane's view takes the whole pane, so an
+                    // empty state centres in it.
+                    Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize(), propagateMinConstraints = true) {
                         (detail ?: emptyDetail)()
                     }
                 }
@@ -499,7 +476,7 @@ private fun Panes(
                                     if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl)
                                         size.width - 0.5f
                                     else 0.5f
-                                drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
+                                drawPaneRule(hairline, x, rule)
                             }
                             .semantics { isTraversalGroup = true }
                             .testTag("kit-screen-pane-side")
@@ -586,4 +563,14 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
             if (frost != null && !header) Modifier.kitFrost(role, frost)
             else Modifier.background(ground.copy(alpha = 1f))
         )
+}
+
+/**
+ * The panes' rule (Dart `ColoredBox(hairline)` of `KitTokens.hairlineWidth`): one physical pixel. Drawn as the pixel
+ * column at [x] (a pane's first or last) at the hairline's coverage, so a third-of-a-pixel rule reads as Flutter's.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPaneRule(color: androidx.compose.ui.graphics.Color, x: Float, rule: androidx.compose.ui.unit.Dp) {
+    val coverage = rule.toPx().coerceAtMost(1f)
+    val column = if (x < size.width / 2) 0f else kotlin.math.ceil(size.width) - 1f // NV: the start or the end column
+    drawRect(color, Offset(column, 0f), androidx.compose.ui.geometry.Size(1f, size.height), alpha = coverage)
 }
