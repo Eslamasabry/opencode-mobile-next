@@ -2,14 +2,17 @@ package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -25,15 +28,22 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlin.math.min
+import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /**
  * The ground of a page (Dart `KitLiveBackground`, `lib/ui/kit/kit_live_background.dart` at GLASS_REF 1bbdc3f9c): the
- * page's flat ground and, when the person turned Background on and chose the painted aurora (Glass's own look,
- * [AuroraImage]), that picture on it. The other looks are not drawn by the native app yet, so with one of them chosen
- * the page keeps its flat ground. Off by default: a person who never turns it on sees exactly the flat ground as before.
+ * page's flat ground and, when the person turned Background on, the look they chose on it: the painted aurora (Glass's
+ * own look, [AuroraImage]) or one of the drawn looks in [kitLiveStyles]. A look the native app does not draw yet keeps
+ * the page its flat ground. Off by default: a person who never turns it on sees exactly the flat ground as before.
+ *
+ * A drawn look paints in its own graphics layer behind the page ([rememberKitLiveLayer]) and moves on the shared
+ * [KitLiveClock]: twelve ticks a second at most (fewer for a look that asks), nothing drawn between ticks, a rest after
+ * half a minute with no touch, the next touch carrying on where it stopped. A tick redraws that layer only; the page
+ * above never recomposes or redraws for it. Calm, Off and reduced motion hold the look's still frame (its time 0).
  *
  * The picture is the only thing Glass panes blur ([io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop]); the
  * page's own content is never recorded. It drifts very slowly at six frames a second while motion is Full, rests after
@@ -55,6 +65,15 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val shows =
         appearance.liveBackground && !appearance.saver && appearance.liveStyle == AuroraImage.ID && strength > 0f &&
             !motion.stillFrame
+    // Every other look the app draws (Dart kit_live_background.dart:262-271): the same switch, cap and Saver.
+    val drawn =
+        if (appearance.liveBackground && !appearance.saver && appearance.liveStyle != AuroraImage.ID && strength > 0f &&
+            !motion.stillFrame
+        ) {
+            kitLiveStyleById(appearance.liveStyle)
+        } else {
+            null
+        }
     val plate = rememberAuroraPlate(if (shows) appearance.liveStyle else null)
     val painted = plate != null
     val ground = colors.ground
@@ -81,6 +100,27 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
             }
         }
     }
+    // The drawn look's time: the shared clock while motion is Full, its still frame (0) otherwise.
+    val clock = KitLiveClock.instance
+    val moves = drawn != null && motion.ambientLoops
+    var shown by remember { mutableDoubleStateOf(0.0) }
+    if (moves && drawn != null) {
+        LaunchedEffect(clock, drawn) {
+            clock.attach()
+            try {
+                shown = clock.seconds
+                while (true) {
+                    if (!clock.awake) snapshotFlow { clock.awake }.first { it }
+                    delay(KitLiveClock.INTERVAL_US.microseconds)
+                    val ticked = withFrameNanos { clock.advance(it) }
+                    if (ticked && clock.repaintsAt(drawn.framesPerSecond)) shown = clock.seconds
+                }
+            } finally {
+                clock.detach()
+            }
+        }
+    }
+    val look = rememberKitLiveLayer(drawn, strength.toDouble()) { if (moves) shown else 0.0 }
     val alpha = AuroraImage.alphaFor(strength)
     val ground0 = if (painted) Modifier else Modifier.background(ground)
     val source =
@@ -93,9 +133,9 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
                 drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(if (drifts) seconds.toDouble() else 0.0))
             }
         }
-    // A touch wakes a resting drift; it never consumes the touch.
+    // A touch wakes a resting drift or look; it never consumes the touch.
     val touch =
-        if (!drifts) {
+        if (!drifts && !moves) {
             Modifier
         } else {
             Modifier.pointerInput(Unit) {
@@ -103,12 +143,14 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
                     while (true) {
                         awaitPointerEvent(PointerEventPass.Initial)
                         lastTouch[0] = TimeSource.Monotonic.markNow()
+                        clock.input()
                     }
                 }
             }
         }
     // One shape whether or not the look is painted, so the page keeps its state when it turns on or loads.
     Box(modifier.then(ground0).then(source).then(touch)) {
+        Spacer(Modifier.matchParentSize().then(look))
         CompositionLocalProvider(LocalKitGlassBackdrop provides backdrop) { content() }
     }
 }
