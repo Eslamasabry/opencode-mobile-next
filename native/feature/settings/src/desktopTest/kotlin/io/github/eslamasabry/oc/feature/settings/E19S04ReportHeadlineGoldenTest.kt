@@ -5,6 +5,8 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.settings.presentation.ReportUi
@@ -71,6 +73,11 @@ class E19S04ReportHeadlineGoldenTest {
                 }
                 waitForIdle()
                 mainClock.advanceTimeBy(1_000)
+                waitForIdle()
+                // P-022: the report sits in a closed Details fold headed by its plain first line; opened, the text is there.
+                onNodeWithText("The app closed unexpectedly").assertExists()
+                onNodeWithTag("report-text", useUnmergedTree = true).assertDoesNotExist()
+                onNodeWithTag("report-details").performClick()
                 waitForIdle()
                 onNodeWithTag("report-text", useUnmergedTree = true).assertExists()
                 compare("report-problem-headline-${variant.name}")
