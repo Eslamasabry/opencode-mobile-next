@@ -42,6 +42,14 @@ public object RevealPace {
 
     /** A stalled frame never reveals a burst. */
     public const val MAX_DT_S: Float = 0.05f
+
+    /**
+     * C-028: the longest a block waits for the block before it before revealing anyway. The wait keeps words in
+     * reading order; the bound keeps a reply's start from hiding behind its live tail. In the reversed transcript the
+     * newest row composes first, so when several block rows arrive in one frame the earlier ones were chained behind
+     * the live tail and stayed empty until the reply ended ("only the end of the reply showed").
+     */
+    public const val WAIT_NS: Long = 250_000_000L
 }
 
 /** A range of characters still fading in, born at a frame time. */
@@ -85,21 +93,26 @@ internal constructor(initialShown: Int, private val predecessor: RevealState?) {
     public val active: Boolean
         get() = shown < targetLength || runs.isNotEmpty()
 
-    /**
-     * Where the stream caret stands: after the words a reader can see, never ahead of words still fading in. A run
-     * past half of its fade counts as seen. Read in the draw phase only (it reads the frame clock).
-     */
-    internal fun caretAt(laidOut: Int): Int {
-        val now = frameNanos
-        for (r in runs) {
-            if (now - r.bornNanos < RevealPace.FADE_NS / 2) return r.start.coerceIn(0, laidOut)
-        }
-        return laidOut
-    }
-
-    /** Words never appear out of order: a block waits for the block before it in the same part. */
+    /** Words appear in order: a block waits for the block before it in the same part (at most [RevealPace.WAIT_NS]). */
     internal val predecessorDone: Boolean
         get() = predecessor?.let { it.shown >= it.targetLength } ?: true
+
+    /** When this block began waiting for its predecessor (frame nanos); 0 = not waiting. */
+    private var waitingSince: Long = 0L
+
+    /** Once a block begins to reveal it never waits again (its predecessor may still be growing). */
+    private var released: Boolean = predecessor == null
+
+    /** Whether the block may reveal at [now]: its predecessor is done, or it has waited [RevealPace.WAIT_NS]. */
+    internal fun mayReveal(now: Long): Boolean {
+        if (released) return true
+        if (predecessorDone || (waitingSince != 0L && now - waitingSince >= RevealPace.WAIT_NS)) {
+            released = true
+            return true
+        }
+        if (waitingSince == 0L) waitingSince = now
+        return false
+    }
 
     internal fun advance(
         now: Long,
@@ -112,6 +125,12 @@ internal constructor(initialShown: Int, private val predecessor: RevealState?) {
         if (motion == KitMotionLevel.Off) {
             if (shown != text.length) shown = text.length
             runs.clear()
+            return 0f
+        }
+        if (!mayReveal(now)) {
+            // Waiting its turn: nothing lands, and the drain deadline starts when the turn comes.
+            deadline = 0L
+            frameNanos = now
             return 0f
         }
         val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(RevealPace.MAX_DT_S)
@@ -154,7 +173,8 @@ public fun CharSequence.wordEndAtOrAfter(index: Int): Int {
  * are scheduled while idle.
  */
 internal suspend fun RevealState.drive(text: () -> CharSequence, motion: () -> KitMotionLevel) {
-    snapshotFlow { active && predecessorDone }
+    // A block waiting for its predecessor keeps its clock running (at most RevealPace.WAIT_NS), then reveals.
+    snapshotFlow { active }
         .collectLatest { busy ->
             if (!busy) return@collectLatest
             var last = 0L
