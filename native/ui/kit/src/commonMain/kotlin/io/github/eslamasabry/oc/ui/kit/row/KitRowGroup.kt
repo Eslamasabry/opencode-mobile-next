@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
@@ -37,7 +38,12 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * corners) join in S4. A labelled group that follows other parts in one column (a sheet's lists) sets [section]: its
  * label takes the section gap above it, as a standalone `KitSectionLabel` does, so no row touches the next heading.
  *
- * States: default, with label, with note, destructive
+ * Seam (Dart `_KitGroupSeam`, kit_row_group_seam.dart): an unlabelled group whose style frames its panel (Soft,
+ * Brutal, …) set right under another group ([afterGroup]: nothing between them) keeps a space3 gap, so two framed
+ * panels never touch or share an edge; anywhere else, and in flat styles, it keeps its place. Compose cannot see a
+ * sibling, so the caller that stacks two groups says so.
+ *
+ * States: default, with label, with note, destructive, seam under another group
  * Text: none (its rows bring their own)
  * Cap: List
  * Motion: none
@@ -52,6 +58,7 @@ public fun KitRowGroup(
     leadingTiles: Boolean = false,
     destructive: (@Composable () -> Unit)? = null,
     section: Boolean = false,
+    afterGroup: Boolean = false,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -68,8 +75,10 @@ public fun KitRowGroup(
     val onRail = LocalKitOnRail.current
     val panelModifier =
         if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()) else Modifier
-    Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group").kitList("KitRowGroup")) {
+    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
         label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
+        val seam = kitRowGroupSeam(labelled = label != null, gapBefore = 0, frames = panel, afterGroup = afterGroup, gap = Space.S3)
+        if (seam > 0) androidx.compose.foundation.layout.Spacer(Modifier.height(seam.dp).testTag("kit-row-group-seam"))
         Column(panelModifier) {
             // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).
             androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides (onRail && !panel)) {
@@ -80,6 +89,13 @@ public fun KitRowGroup(
         note?.let { KitGroupNote(it) }
     }
 }
+
+/**
+ * The space above a row group (Dart `_KitGroupSeam` and its use in `KitRowGroup.build`, kit_row.dart:1309,1339): [gap]
+ * when the group has no label, no gap of its own before it, a framed panel, and another group right above it; else 0.
+ */
+public fun kitRowGroupSeam(labelled: Boolean, gapBefore: Int, frames: Boolean, afterGroup: Boolean, gap: Int): Int =
+    if (!labelled && gapBefore == 0 && frames && afterGroup) gap else 0
 
 /** True inside a surface whose content already sits on a rail (a KitSheet's body): panels add no gutter of their own. */
 public val LocalKitOnRail: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
