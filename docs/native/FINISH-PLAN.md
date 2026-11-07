@@ -25,12 +25,12 @@ phone (B-158), Play Store.
 
 - [x] T1 Compile everything on the head: app APK + every module's desktopTest sources (G1). Fix what fails.
 - [x] T2 Build the head on the PC, install on the owner phone + emulator, screenshot the daily path.
-- [ ] T3 (in progress: 205 failures on first run, mostly missing goldens; rerun with Flutter goldens fetched) Run the unit tests of the touched modules (kit, kit-chat, chat, chats, composer, settings); fix failures.
+- [x] T3 Run the unit tests of the touched modules (kit, kit-chat, chat, chats, composer, settings); fix failures.
 - [x] T4 Merge the motion lead (fenced: kit motion, shell nav, refresh rate, new motion parts) once its tests pass.
-- [ ] T5 Motion rollout on screens: row→chat transform, animated list items, sheets/menus physics, send morph, rolling numbers, toast pill (G4).
+- [~] T5 (hooks + list motion merged; rolling numbers, toast host, step progress, card→sheet remain) Motion rollout on screens: row→chat transform, animated list items, sheets/menus physics, send morph, rolling numbers, toast pill (G4).
 - [ ] T6 Measure motion on the owner phone: refresh rate, janky %, p99 (G4 numbers).
 - [ ] T7 Scoreboard result (merge 28): list what still fails on the daily path; fix those myself, smallest first (G2).
-- [ ] T8 Kit order 23 (its builder ended without pushing): port it.
+- [x] T8 Kit order 23 (its builder ended without pushing): port it.
 - [ ] T9 Targeted rerun: kit_code_block_* and anything fixed in T7.
 - [ ] T10 Upgrade gate run 4 result: fix every real failure (G5); rerun to 29/29.
 - [ ] T11 Alignment gate: no new findings on the head (G3).
