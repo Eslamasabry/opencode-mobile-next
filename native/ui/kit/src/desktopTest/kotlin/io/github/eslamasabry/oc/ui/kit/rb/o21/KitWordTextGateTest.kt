@@ -14,6 +14,11 @@ import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.rb.o06.FlutterCapture
 import io.github.eslamasabry.oc.ui.kit.text.KitWordCut
 import io.github.eslamasabry.oc.ui.kit.text.KitWordText
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -42,7 +47,15 @@ class KitWordTextGateTest {
     }
 
     private fun shot(name: String, ar: Boolean = false) =
-        FlutterGoldenGate.check(wrap = { FlutterCapture(it) }, name = name) { lines(ar) }
+        FlutterGoldenGate.check(wrap = if (ar) geistAr else ({ c -> FlutterCapture(c) }), name = name) { lines(ar) }
+
+    /** kit_gallery.dart:64-88 keeps captureTheme's Geist primary face under the Arabic locale (as rb/o06 KitKeyValueGateTest). */
+    private val geistAr: @Composable (@Composable () -> Unit) -> Unit = { c ->
+        val fonts = rememberKitFonts(arabic = false)
+        val typography = remember(fonts) { KitTypography(fonts, arabic = false) }
+        CompositionLocalProvider(LocalKitTypography provides typography) { FlutterCapture(c) }
+    }
+
 
     @Test fun kit_word_text_cut() { shot("kit_word_text_cut") }
     @Test fun kit_word_text_cut_360x800() { shot("kit_word_text_cut_360x800") }
