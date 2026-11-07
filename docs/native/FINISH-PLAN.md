@@ -24,7 +24,7 @@ phone (B-158), Play Store.
 ## Task list to RC1 (coordinator works it top to bottom; ticked as done)
 
 - [x] T1 Compile everything on the head: app APK + every module's desktopTest sources (G1). Fix what fails.
-- [ ] T2 Build the head on the PC, install on the owner phone + emulator, screenshot the daily path.
+- [x] T2 Build the head on the PC, install on the owner phone + emulator, screenshot the daily path.
 - [ ] T3 Run the unit tests of the touched modules (kit, kit-chat, chat, chats, composer, settings); fix failures.
 - [ ] T4 Merge the motion lead (fenced: kit motion, shell nav, refresh rate, new motion parts) once its tests pass.
 - [ ] T5 Motion rollout on screens: row→chat transform, animated list items, sheets/menus physics, send morph, rolling numbers, toast pill (G4).
