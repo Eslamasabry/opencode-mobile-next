@@ -148,15 +148,16 @@ class ChatFeelPresenterTest {
     }
 
     @Test
-    fun `B-SEC-145 the person's own prompt copies and shares verbatim and claims nothing was hidden`() {
+    fun `B-SEC-145 E15-S06 the person's own message copies and shares masked and the copy says a key was hidden`() {
         world.transcript.value = stateOf(prompt("u1", "my key is $FAKE_KEY"), block("u1", "a1", "p", 0, "ok"), footer("u1"))
         val p = presenter()
         p.openMessageMenu("prompt:u1")
         p.messageAction(p.current().menu!!.target, MessageAction.Copy)
+        assertEquals(true, p.current().copied?.masked, "the confirmation says a key was hidden")
         p.openMessageMenu("prompt:u1")
         p.messageAction(p.current().menu!!.target, MessageAction.Share)
-        assertEquals(listOf("copy my key is $FAKE_KEY", "share my key is $FAKE_KEY"), outside.calls)
-        assertEquals(false, p.current().copied?.masked)
+        assertEquals(listOf("copy my key is •••", "share my key is •••"), outside.calls)
+        assertTrue(outside.calls.none { FAKE_KEY in it }, "no copy or share path hands over the raw key")
     }
 
     @Test

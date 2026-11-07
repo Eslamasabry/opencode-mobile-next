@@ -93,9 +93,9 @@ public data class TranscriptWords(
 )
 
 /**
- * Copy transcript (Flutter `_transcriptMarkdown`, SEC-13): the person's own prompts stay as they
- * typed them; every other text — the title, replies and reasoning — goes through [mask] first, so a
- * key a tool printed never reaches the clipboard. [rows] are the engine's rows NEWEST FIRST; the
+ * Copy transcript (Flutter `_transcriptMarkdown`): every text — the title, the person's own prompts,
+ * replies and reasoning — goes through [mask] first (E15-S06), so a key the person pasted or a tool
+ * printed never reaches the clipboard. [rows] are the engine's rows NEWEST FIRST; the
  * copy reads oldest first.
  */
 public object TranscriptCopy {
@@ -121,7 +121,7 @@ public object TranscriptCopy {
                     out.append("\n## ")
                         .append(words.user)
                         .append("\n\n")
-                        .append(row.text.trim())
+                        .append(mask(row.text.trim()))
                         .append("\n")
                     lastSpeaker = words.user
                     lastTurn = row.turnId
@@ -164,8 +164,8 @@ public object TranscriptCopy {
     /**
      * Codex chat-header #6 (Flutter `_transcriptMarkdown`): the copy is built from the loaded
      * messages, not the display rows, so tool headings and output, attachments, full reasoning and
-     * errors are all there. Each part is masked as a whole; only the person's own, non-synthetic
-     * words stay verbatim. [messages] are oldest first.
+     * errors are all there. Each part is masked as a whole, the person's own words included
+     * (E15-S06). [messages] are oldest first.
      */
     public fun markdownOf(
         title: String?,
@@ -187,10 +187,7 @@ public object TranscriptCopy {
             for (part in message.parts) {
                 when (part.type) {
                     PartType.Text ->
-                        if (part.text.isNotBlank()) {
-                            if (own && !part.synthetic) out.append(part.text.trim()).append("\n\n")
-                            else put("${part.text.trim()}\n\n")
-                        }
+                        if (part.text.isNotBlank()) put("${part.text.trim()}\n\n")
                     PartType.Reasoning ->
                         if (part.text.isNotBlank())
                             put(

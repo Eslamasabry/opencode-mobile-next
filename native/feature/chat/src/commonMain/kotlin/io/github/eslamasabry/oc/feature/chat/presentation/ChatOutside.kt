@@ -26,13 +26,13 @@ public interface ChatOutside {
 
     /**
      * E15-S05: [text] through the app's one redactor (`Redactor.redact`, Flutter `KitRedact.text`), so a key, token or
-     * password a server or tool printed never reaches the clipboard or another app. The presenter masks every piece
-     * of server text before [copy] and [share]; only the person's own prompt goes verbatim. No default on purpose.
+     * password a server, a tool or the person typed never reaches the clipboard or another app. The presenter masks
+     * every text before [copy] and [share], the person's own prompt included (E15-S06). No default on purpose.
      */
     public fun mask(text: String): String
 
     /**
-     * Puts [text] on the clipboard as given: the presenter has already [mask]ed server text. False = it did not work.
+     * Puts [text] on the clipboard as given: the presenter has already [mask]ed it. False = it did not work.
      */
     public fun copy(text: String): Boolean
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeUnavailable
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
+import io.github.eslamasabry.oc.feature.chat.ui.KeyHiddenNote
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
 import io.github.eslamasabry.oc.feature.chat.header.presentation.DetailsUi
@@ -515,6 +516,13 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                 ClipKind.ResumeCommand,
                 ClipKind.PhoneLink -> copied
             },
+    )
+    // E15-S06: a transcript copy that hid a key says so on screen too, not only to a screen reader.
+    KeyHiddenNote(
+        copyId = clip?.takeIf { it.kind == ClipKind.Transcript }?.id,
+        masked = clip?.masked == true,
+        message = transcriptMasked,
+        dismissLabel = stringResource(Res.string.kitSheetDismiss),
     )
 }
 

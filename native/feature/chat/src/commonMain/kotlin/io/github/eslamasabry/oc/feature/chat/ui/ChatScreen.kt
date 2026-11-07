@@ -839,6 +839,13 @@ public fun ChatScreen(
                         if (state.copied?.masked == true) Res.string.kitCopiedMasked else Res.string.kitCopied
                     ),
                 )
+                // E15-S06: and on screen when the redactor hid something, whichever message was copied.
+                KeyHiddenNote(
+                    copyId = state.copied?.id,
+                    masked = state.copied?.masked == true,
+                    message = stringResource(Res.string.kitCopiedMasked),
+                    dismissLabel = stringResource(Res.string.kitSheetDismiss),
+                )
             }
         }
     }

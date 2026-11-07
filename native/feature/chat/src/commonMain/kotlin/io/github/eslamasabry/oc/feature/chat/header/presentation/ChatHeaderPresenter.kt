@@ -413,7 +413,7 @@ public class ChatHeaderPresenter(
     /** Copy transcript with the person's own words for the headings. */
     override fun copyTranscript(words: TranscriptWords, mask: (String) -> String) {
         local.update { it.copy(menuOpen = false) }
-        // E15-S05: every piece that is not the person's own prompt goes through the app's one redactor; whether it
+        // E15-S06: every piece, the person's own prompts included, goes through the app's one redactor; whether it
         // hid anything is the confirmation's to say.
         var masked = false
         val counting = { piece: String -> mask(piece).also { if (it != piece) masked = true } }
