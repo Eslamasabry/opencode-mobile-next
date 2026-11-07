@@ -75,12 +75,19 @@ object LayoutGuard {
      * to the rules; a screen without a golden can call it directly.
      */
     fun check(shot: String, scene: Scene) {
-        val found = audit(scene)
+        // The alignment gate (AlignGuard) reads the phone window's light render, so it costs no render of its own.
+        var align: AlignGuard.Result? = null
+        val found = audit(scene) { roots, window ->
+            val screen = scene.frame == FlutterGoldenGate.Frame.Screen
+            if (align == null) align = AlignGuard.inspect(roots, window.w, window.h, screen)
+        }
+        val aligned = align?.let { AlignGuard.verdict(shot, it) }
         val keys = found.map { "$shot\t${it.key}" }.toSortedSet()
         out.mkdirs()
         File(out, "$shot.tsv").writeText(found.joinToString("") { "$shot\t${it.key}\t${it.detail}\n" })
         if (System.getenv("OC_LAYOUT_BASELINE") == "update") {
             rewriteBaseline(shot, keys)
+            if (aligned != null) throw AssertionError(aligned)
             return
         }
         val listed = readBaseline().filter { it.startsWith("$shot\t") }.toSet()
@@ -90,17 +97,20 @@ object LayoutGuard {
             stale.forEach { System.err.println("  - $it") }
         }
         val fresh = found.filter { "$shot\t${it.key}" !in listed }
-        if (fresh.isNotEmpty()) {
-            throw AssertionError(
-                "layout guard: $shot breaks ${fresh.size} layout rule(s) (native/docs/kit/LAYOUT-RULES.md):\n" +
-                    fresh.joinToString("\n") { "  ${it.window.name} ${it.rule} \"${it.subject}\": ${it.detail}" } +
-                    "\nFix the screen, or the kit part when one cause breaks many screens. The baseline only shrinks.",
-            )
-        }
+        val layout = if (fresh.isEmpty()) null else
+            "layout guard: $shot breaks ${fresh.size} layout rule(s) (native/docs/kit/LAYOUT-RULES.md):\n" +
+                fresh.joinToString("\n") { "  ${it.window.name} ${it.rule} \"${it.subject}\": ${it.detail}" } +
+                "\nFix the screen, or the kit part when one cause breaks many screens. The baseline only shrinks."
+        val failures = listOfNotNull(layout, aligned)
+        if (failures.isNotEmpty()) throw AssertionError(failures.joinToString("\n\n"))
     }
 
     /** Every finding for [scene] at [windows] in light and dark, once each (light and dark usually agree). */
-    fun audit(scene: Scene, windows: List<Window> = Window.entries): List<Finding> {
+    fun audit(
+        scene: Scene,
+        windows: List<Window> = Window.entries,
+        onPhone: ((List<SemanticsNode>, Window) -> Unit)? = null,
+    ): List<Finding> {
         val all = LinkedHashMap<String, Finding>()
         val screen = scene.frame == FlutterGoldenGate.Frame.Screen
         for (window in windows) for (dark in listOf(false, true)) {
@@ -109,6 +119,7 @@ object LayoutGuard {
                 val roots = onAllNodes(isRoot(), useUnmergedTree = true)
                     .fetchSemanticsNodes(atLeastOneRootRequired = false)
                 for (f in inspect(roots, window, screen)) all.putIfAbsent(f.key, f)
+                if (window == Window.Phone && !dark) onPhone?.invoke(roots, window)
             }
             FlutterGoldenGate.render(
                 axes, dark, MotionLevel.Off, scene.style, scene.frame, scene.wrap, scene.content,
