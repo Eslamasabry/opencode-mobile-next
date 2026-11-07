@@ -75,6 +75,14 @@ public object MotionTokens {
     public const val EFFECTS_FAST_K: Float = 3800f
     public const val EFFECTS_K: Float = 1600f
     public const val EFFECTS_SLOW_K: Float = 800f
+    /**
+     * A part a finger let go of (a sheet, a swiped row, a predictive-back preview cancelled): the one place a spring
+     * may overshoot, and only slightly, so the release reads as physical (motion lead 2026-11-07).
+     */
+    public const val RELEASE_ZETA: Float = 0.82f
+    public const val RELEASE_K: Float = 700f
+    /** A list row moving to its new place (insert, removal, reorder): spatial, no overshoot. */
+    public const val PLACEMENT_K: Float = 900f
 }
 
 /**

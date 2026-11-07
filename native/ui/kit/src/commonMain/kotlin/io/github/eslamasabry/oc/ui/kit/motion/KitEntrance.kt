@@ -18,7 +18,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
  * States: arriving, at rest
  * Text: none (content decides)
  * Cap: none
- * Motion: fade STANDARD + 6 dp rise; Calm = fade; Off = instant (class Travel)
+ * Motion: fade STANDARD + 6 dp rise on the Spatial spring; Calm = fade; Off = instant (class Travel)
  * Replaces: KitEntrance (lib/ui/kit/motion/kit_reveal.dart), EntranceReveal (lib/ui/widgets/entrance.dart)
  */
 @Composable
@@ -29,14 +29,16 @@ public fun KitEntrance(modifier: Modifier = Modifier, key: Any? = Unit, play: Bo
         return
     }
     val specs = KitMotion.specs
-    val progress = remember(key) { Animatable(0f) }
-    LaunchedEffect(progress) { progress.animateTo(1f, specs.pace(KitPace.Standard)) }
-    val rise = if (state.travels) MotionTokens.ENTRANCE_RISE_DP.dp else 0.dp
+    val fade = remember(key) { Animatable(0f) }
+    val rise = remember(key) { Animatable(if (state.travels) 1f else 0f) }
+    LaunchedEffect(fade) { fade.animateTo(1f, specs.pace(KitPace.Standard)) }
+    // The rise rides the spatial spring: it settles softly instead of stopping on a curve's last frame.
+    LaunchedEffect(rise) { rise.animateTo(0f, specs.spatial()) }
+    val risePx = MotionTokens.ENTRANCE_RISE_DP.dp
     Box(
         modifier.graphicsLayer {
-            val p = progress.value
-            alpha = p
-            translationY = rise.toPx() * (1f - p)
+            alpha = fade.value
+            translationY = risePx.toPx() * rise.value
         },
     ) { content() }
 }

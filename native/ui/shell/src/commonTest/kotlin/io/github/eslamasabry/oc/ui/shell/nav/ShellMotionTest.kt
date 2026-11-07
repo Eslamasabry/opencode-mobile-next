@@ -2,11 +2,14 @@ package io.github.eslamasabry.oc.ui.shell.nav
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.fadeOut
 import androidx.navigationevent.NavigationEvent
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
 import kotlin.math.abs
+import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -39,6 +42,18 @@ class ShellMotionTest {
         val full = ShellMotion.predictivePop(NavigationEvent.EDGE_LEFT, ShellMotionLevel.Full, 40)
         assertEquals(EnterTransition.None, full.targetContentEnter, "the page underneath holds still")
         assertNotEquals(ExitTransition.None, full.initialContentExit)
+    }
+
+    @Test
+    fun `MOT-PB a chat that grew from its row shrinks back through its own transform at Full, not the scale preview`() {
+        val keep = fadeOut(snap())
+        val grow = ShellMotion.predictivePop(NavigationEvent.EDGE_LEFT, ShellMotionLevel.Full, 40, RouteMotion.GrowFromRow, keep)
+        assertEquals(EnterTransition.None, grow.targetContentEnter)
+        assertSame(keep, grow.initialContentExit, "the page stays while its own transform carries it")
+        val calm = ShellMotion.predictivePop(NavigationEvent.EDGE_LEFT, ShellMotionLevel.Calm, 40, RouteMotion.GrowFromRow, keep)
+        assertNotEquals(keep, calm.initialContentExit, "Calm keeps the fade preview")
+        val off = ShellMotion.predictivePop(NavigationEvent.EDGE_LEFT, ShellMotionLevel.Off, 40, RouteMotion.GrowFromRow)
+        assertEquals(ExitTransition.None, off.initialContentExit)
     }
 
     @Test

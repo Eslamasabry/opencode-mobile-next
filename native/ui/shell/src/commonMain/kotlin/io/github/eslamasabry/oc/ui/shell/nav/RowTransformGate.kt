@@ -57,9 +57,13 @@ public fun reduce(s: GateState, e: GateEvent): GateState =
         GateEvent.TransitionSettled -> if (s == GateState.Gesture) s else GateState.Idle
     }
 
-/** Shared bounds may run only at Full, outside a gesture and its settling. */
-public fun sharedBoundsEnabled(s: GateState, level: ShellMotionLevel): Boolean =
-    level == ShellMotionLevel.Full && s != GateState.Gesture && s != GateState.GestureSettling
+/**
+ * Shared bounds run at Full, including under a back gesture (motion lead 2026-11-07): the predictive-back gesture seeks
+ * the container transform itself, so the chat shrinks toward its row under the finger and a cancel grows it back. The
+ * gate still records the gesture so a tap or button back mid-gesture is ignored and the pop's direction is known.
+ */
+@Suppress("UNUSED_PARAMETER")
+public fun sharedBoundsEnabled(s: GateState, level: ShellMotionLevel): Boolean = level == ShellMotionLevel.Full
 
 /** Snapshot-backed holder; main thread only. Every event is logged to [trace] (tests and the debug overlay read it). */
 @Stable

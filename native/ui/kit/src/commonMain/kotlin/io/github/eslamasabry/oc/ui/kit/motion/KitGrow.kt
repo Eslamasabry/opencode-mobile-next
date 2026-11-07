@@ -20,12 +20,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Rect
@@ -80,9 +83,12 @@ private class GateConfig(private val host: KitGrowHost) : SharedTransitionScope.
     override val SharedTransitionScope.SharedContentState.isEnabled: Boolean
         get() = host.transformEnabled
 
-    /** A gesture that starts mid-transform turns the shared bounds off at once (plan 08 §5.4). */
+    /**
+     * A transform already running keeps going even if the gate turns it off mid-flight (the person's own Off arriving
+     * mid-open): a box cut off half-grown would jump.
+     */
     override val shouldKeepEnabledForOngoingAnimation: Boolean
-        get() = false
+        get() = true
 
     /** Row gone: never animate toward stale bounds; the page falls back to its own exit (P2-5). */
     override fun SharedTransitionScope.SharedContentState.alternativeTargetBoundsInTransitionScopeAfterRemoval(
@@ -91,9 +97,14 @@ private class GateConfig(private val host: KitGrowHost) : SharedTransitionScope.
     ): Rect? = null
 }
 
-private fun boundsTransform(host: KitGrowHost): BoundsTransform = BoundsTransform { _, _ ->
-    if (host.opening) tween(KitGrowMotion.OPEN_BOUNDS_MS, easing = KitGrowMotion.Emphasized)
-    else tween(KitGrowMotion.RETURN_MS, easing = KitGrowMotion.Emphasized)
+/**
+ * The container's bounds ride springs (motion lead 2026-11-07): opening on the critically damped large-travel spring
+ * (the page arrives without a bounce), returning on the quicker Spatial spring. A spring keeps its speed when the
+ * target moves (the row it shrinks into slides in the list) and when a back gesture hands over mid-flight. A predictive
+ * back gesture seeks the same transition, so the page shrinks toward its row under the finger.
+ */
+private fun boundsTransform(host: KitGrowHost, specs: KitMotionSpecs): BoundsTransform = BoundsTransform { _, _ ->
+    if (host.opening) specs.largeTravel() else specs.spatial()
 }
 
 /** Corner of the growing box: 20 dp while it is a row, 0 dp once it is the page (shapes do not morph by themselves). */
@@ -118,6 +129,7 @@ internal fun Modifier.kitGrowSource(key: Any?): Modifier {
     val host = LocalKitGrowHost.current ?: return this
     if (key == null) return this
     val config = remember(host) { GateConfig(host) }
+    val specs = KitMotion.specs
     with(host.sharedTransitionScope) {
         val state = rememberSharedContentState(GrowKey(key), config)
         val corner = host.animatedVisibilityScope.growCorner(pageSide = false)
@@ -132,7 +144,7 @@ internal fun Modifier.kitGrowSource(key: Any?): Modifier {
                 ),
             ),
             exit = fadeOut(tween(KitGrowMotion.ROW_CONTENT_OUT_MS, easing = KitGrowMotion.EaseOutCubic)),
-            boundsTransform = boundsTransform(host),
+            boundsTransform = boundsTransform(host, specs),
             clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(corner)),
         )
     }
@@ -153,6 +165,7 @@ public fun KitGrowPage(growKey: Any?, content: @Composable () -> Unit) {
         return
     }
     val config = remember(host) { GateConfig(host) }
+    val specs = KitMotion.specs
     val ground = MaterialTheme.colorScheme.background
     val transition = host.animatedVisibilityScope.transition
     val enabled = host.transformEnabled
@@ -194,13 +207,86 @@ public fun KitGrowPage(growKey: Any?, content: @Composable () -> Unit) {
                     animatedVisibilityScope = host.animatedVisibilityScope,
                     enter = EnterTransition.None,
                     exit = ExitTransition.None,
-                    boundsTransform = boundsTransform(host),
+                    boundsTransform = boundsTransform(host, specs),
                     clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(corner)),
                     zIndexInOverlay = 1f,
                 )
                 .drawBehind { drawRect(ground, alpha = if (state.isMatchFound) groundAlpha else wordsAlpha) },
         ) {
-            Box(Modifier.fillMaxSize().skipToLookaheadSize().graphicsLayer { alpha = wordsAlpha }) { content() }
+            Box(Modifier.fillMaxSize().skipToLookaheadSize().graphicsLayer { alpha = wordsAlpha }) {
+                CompositionLocalProvider(LocalKitGrowTitle provides growKey) { content() }
+            }
         }
+    }
+}
+
+/**
+ * The key of the page that grew out of a row, for its bar title ([kitGrowTitle]). `KitGrowPage` provides it; modal
+ * layers clear it so a sheet's own bar never claims the page's title.
+ */
+public val LocalKitGrowTitle: ProvidableCompositionLocal<Any?> = staticCompositionLocalOf { null }
+
+private data class GrowTitleKey(val key: Any)
+
+/**
+ * The title that travels (motion lead 2026-11-07): the row's title and the opened page's bar title share bounds, so the
+ * title flies from the row into the header (and back) while the container grows around it, scaled from its start edge
+ * rather than re-laid out. Drawn above the growing page so the page's fading words never hide it. Same gate as the
+ * container: Full only, never with reduced motion.
+ */
+@Composable
+internal fun Modifier.kitGrowTitle(key: Any?): Modifier {
+    val host = LocalKitGrowHost.current ?: return this
+    if (key == null) return this
+    val config = remember(host) { GateConfig(host) }
+    val specs = KitMotion.specs
+    with(host.sharedTransitionScope) {
+        val state = rememberSharedContentState(GrowTitleKey(key), config)
+        return this@kitGrowTitle.sharedBounds(
+            sharedContentState = state,
+            animatedVisibilityScope = host.animatedVisibilityScope,
+            enter = fadeIn(specs.effectsFast()),
+            exit = fadeOut(specs.effectsFast()),
+            boundsTransform = boundsTransform(host, specs),
+            resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillHeight, Alignment.CenterStart),
+            zIndexInOverlay = 2f,
+        )
+    }
+}
+
+/** The bar title of a page that grew from a row ([LocalKitGrowTitle]); a no-op anywhere else. */
+@Composable
+internal fun Modifier.kitGrowPageTitle(): Modifier = kitGrowTitle(LocalKitGrowTitle.current)
+
+private data class MorphKey(val key: Any)
+
+/**
+ * Card → sheet morph, the card's side (owner reference 2026-11-07): a summary card that opens its full sheet (the
+ * approval card → its details, a usage summary → its breakdown) grows into the sheet and the sheet shrinks back into it.
+ * The card keeps its place in the list while [open] (hidden, so nothing below moves). Pair it with
+ * `KitSheet(morphFrom = key)`. Same gate as the row transform: Full only; Calm and Off open the sheet as usual.
+ */
+@Composable
+public fun Modifier.kitMorphSource(key: Any, open: Boolean): Modifier = kitMorph(key, visible = !open, corner = KitGrowMotion.ROW_CORNER)
+
+/** The sheet's side of [kitMorphSource]; used by `KitSheet`. */
+@Composable
+internal fun Modifier.kitMorphTarget(key: Any?, visible: Boolean, corner: Dp): Modifier =
+    if (key == null) this else kitMorph(key, visible, corner)
+
+@Composable
+private fun Modifier.kitMorph(key: Any, visible: Boolean, corner: Dp): Modifier {
+    val host = LocalKitGrowHost.current ?: return this
+    val config = remember(host) { GateConfig(host) }
+    val specs = KitMotion.specs
+    with(host.sharedTransitionScope) {
+        val state = rememberSharedContentState(MorphKey(key), config)
+        return this@kitMorph.sharedElementWithCallerManagedVisibility(
+            sharedContentState = state,
+            visible = visible,
+            boundsTransform = BoundsTransform { _, _ -> specs.spatial() },
+            zIndexInOverlay = 3f,
+            clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(corner)),
+        )
     }
 }

@@ -73,5 +73,14 @@ public object KitMotionManifest {
             "KitModalMotion.dialog" to KitMotionClass.Travel,
             "KitModalMotion.menu" to KitMotionClass.Travel,
             "KitModalMotion.sheet" to KitMotionClass.Settle,
+            "KitSwapMorph" to KitMotionClass.Travel,
+            "kitItemMotion.placement" to KitMotionClass.Travel,
+            "kitItemMotion.fade" to KitMotionClass.Fade,
+            "KitGrow.title" to KitMotionClass.Transform,
+            "KitRollingNumber" to KitMotionClass.Travel,
+            "KitDissolve" to KitMotionClass.Fade,
+            "KitStepProgress" to KitMotionClass.Fold,
+            "KitToast" to KitMotionClass.Travel,
+            "KitStaggerRow" to KitMotionClass.Travel,
         )
 }

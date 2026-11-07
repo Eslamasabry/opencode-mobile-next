@@ -34,13 +34,13 @@ class RowTransformGateTest {
     }
 
     @Test
-    fun `B-KIT-054 a gesture disables shared bounds until its transition settles, then the next tap transforms`() {
+    fun `MOT-PB a gesture keeps the transform on (the finger drives it), and the next tap still transforms`() {
         var s = run(TapOpen, TransitionSettled, GestureStarted)
         assertEquals(Gesture, s)
-        assertFalse(sharedBoundsEnabled(s, ShellMotionLevel.Full))
+        assertTrue(sharedBoundsEnabled(s, ShellMotionLevel.Full), "the predictive gesture seeks the transform")
         s = reduce(s, GestureCommitted)
         assertEquals(GestureSettling, s)
-        assertFalse(sharedBoundsEnabled(s, ShellMotionLevel.Full), "no shared-bounds flash while the pop finishes")
+        assertTrue(sharedBoundsEnabled(s, ShellMotionLevel.Full), "the committed pop finishes the same flight")
         s = reduce(s, TransitionSettled)
         assertEquals(Idle, s)
         assertTrue(sharedBoundsEnabled(s, ShellMotionLevel.Full))
@@ -56,10 +56,10 @@ class RowTransformGateTest {
     }
 
     @Test
-    fun `B-KIT-054 a gesture during the opening transform turns the transform off at once`() {
+    fun `MOT-PB a gesture during the opening transform takes it over instead of cutting it off`() {
         val s = run(TapOpen, GestureStarted)
         assertEquals(Gesture, s)
-        assertFalse(sharedBoundsEnabled(s, ShellMotionLevel.Full))
+        assertTrue(sharedBoundsEnabled(s, ShellMotionLevel.Full))
     }
 
     @Test

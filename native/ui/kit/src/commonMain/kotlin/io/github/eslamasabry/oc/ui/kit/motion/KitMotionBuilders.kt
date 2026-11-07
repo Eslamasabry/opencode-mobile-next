@@ -6,7 +6,6 @@ import androidx.compose.animation.core.InfiniteRepeatableSpec
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -38,18 +37,18 @@ public enum class KitPace { Quick, Standard }
 
 private fun KitMotionSpecs.ms(v: Int): Int = (v * state.debugTimeScale).roundToInt()
 
-private fun KitMotionSpecs.k(stiffness: Float): Float = stiffness / (state.debugTimeScale * state.debugTimeScale)
-
 private fun <T> KitMotionSpecs.t(duration: Int, delay: Int = 0): FiniteAnimationSpec<T> =
     if (state.reduced) snap() else tween(ms(duration), delayMillis = ms(delay), easing = KitEasing.Enter)
+
+/**
+ * Kept for callers that import the builder (KitJumpPill): the member [KitMotionSpecs.spatialFast] is the one that runs.
+ */
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
+public fun <T> KitMotionSpecs.spatialFast(): FiniteAnimationSpec<T> = this.spatialFast()
 
 /** [KitPace.Quick] = QUICK, [KitPace.Standard] = STANDARD, both on `Enter`. */
 public fun <T> KitMotionSpecs.pace(p: KitPace): FiniteAnimationSpec<T> =
     t(if (p == KitPace.Quick) MotionTokens.QUICK else MotionTokens.STANDARD)
-
-/** `SpatialFast` (ζ 0.9, 1400): chevron turn, tab indicator, slot widths, small drags released. */
-public fun <T> KitMotionSpecs.spatialFast(): FiniteAnimationSpec<T> =
-    if (state.reduced) snap() else spring(MotionTokens.SPATIAL_ZETA, k(MotionTokens.SPATIAL_FAST_K))
 
 private val split: Int get() = (MotionTokens.STANDARD * FADE_THROUGH_SPLIT).roundToInt()
 
