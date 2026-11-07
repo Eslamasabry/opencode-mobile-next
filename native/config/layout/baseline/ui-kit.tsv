@@ -1,0 +1,31 @@
+# Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
+# shot	window	rule	subject
+kit_chip_truncated	phone	ellipsis	A genuinely long label that will never fit insid
+kit_chip_truncated	tablet	ellipsis	A genuinely long label that will never fit insid
+kit_live_look_preview_disabled	tablet	wide-control	Live background is off. Opens the looks.
+kit_live_look_preview_disabled_1280x800	tablet	wide-control	Live background is off. Opens the looks.
+kit_signal_chat	phone	edge-text	# min # s
+kit_signal_chat	phone	tight	# min # s
+kit_signal_chat	tablet	edge-text	# min # s
+kit_signal_chat	tablet	tight	# min # s
+kit_signal_chat_folded	phone	edge-text	# min # s
+kit_signal_chat_folded	phone	tight	# min # s
+kit_signal_chat_folded	tablet	edge-text	# min # s
+kit_signal_chat_folded	tablet	tight	# min # s
+kit_signal_home	phone	edge-text	# min
+kit_signal_home	phone	tight	# min
+kit_signal_home	phone	tight	Design review
+kit_signal_home	tablet	edge-text	# min
+kit_signal_home	tablet	tight	# min
+kit_signal_home	tablet	tight	Design review
+kit_signal_home_ar	phone	edge-text	# min
+kit_signal_home_ar	phone	tight	# min
+kit_signal_home_ar	phone	tight	Design review
+kit_signal_home_ar	tablet	edge-text	# min
+kit_signal_home_ar	tablet	tight	# min
+kit_signal_home_ar	tablet	tight	Design review
+kit_tappable_enabled	tablet	wide-control	Archive "Fix the login bug"
+kit_tappable_enabled_text2	tablet	wide-control	Archive "Fix the login bug"
+kit_tappable_focused	tablet	wide-control	Archive "Fix the login bug"
+kit_tappable_hovered	tablet	wide-control	Archive "Fix the login bug"
+kit_tappable_pressed	tablet	wide-control	Archive "Fix the login bug"

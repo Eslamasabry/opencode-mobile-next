@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.ui.kit.choice.kitSelectTap
 import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 
 /** Flutter KitSwitchRow(onOpen): the words open details; the switch changes only its value. */
 @Composable
@@ -75,6 +77,7 @@ public fun KitOpenSwitchRow(
         Box(
             Modifier.widthIn(min = tokens.minTarget.dp)
                 .heightIn(min = tokens.minTarget.dp)
+                .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
                 .kitSelectTap(checked, Role.Switch, enabled, SwitchRules.haptic(!checked)) {
                     onCheckedChange(!checked)
                 }

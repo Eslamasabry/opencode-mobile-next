@@ -56,6 +56,8 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitRiskNotNow
 import io.github.eslamasabry.oc.ui.words.res.kitRiskTurnOn
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 
 private const val TRACK_W = 52
 private const val TRACK_H = 32
@@ -133,6 +135,7 @@ public fun KitSwitchRow(
         Row(
             Modifier.fillMaxWidth()
                 .heightIn(min = tokens.rowHeightOne.dp)
+                .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
                 .kitSelectTap(
                     selected = checked,
                     role = Role.Switch,

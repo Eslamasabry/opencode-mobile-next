@@ -198,7 +198,10 @@ public fun KitButton(
         modifier =
             // A text action's words sit on the column's edge, like the fields and words around it; its padding and
             // touch target reach into the gutter on both sides, so a centred one stays centred.
+            // The control cap holds whatever the caller passes (kit-v2 §8.6: a part never paints wider than its cap),
+            // inside a text action's reach so its target is capped too.
             (if (role == KitButtonRole.Tertiary && !hero) Modifier.kitBleed(pad.dp) else Modifier)
+                .kitMaxWidth(CapRole.Control)
                 .then(modifier)
                 .then(if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
                 .heightIn(min = minHeight.dp)

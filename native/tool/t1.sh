@@ -17,6 +17,8 @@
 #   - strings touched (:ui:words, :tools:strings): the :tools:strings drift check;
 #   - Android lint as CI runs it: `:androidApp:lintSwitchRelease` (strict LintPolicy; always, E02-S03);
 #   - detekt on the touched modules plus the baseline ratchet (tool/qa/detekt.sh, plan 03 check 11; always, E02-S03);
+#   - the layout guard's baseline ratchet (tool/qa/layout_baseline.sh; always, E02-S13; the guard itself runs in each
+#     touched module's desktopTest);
 #   - the versionCode ledger check (tool/version_code.sh check, E01-S09; always).
 # --record <module> re-records that module's Roborazzi goldens (VPS only: the one golden host; OC_GOLDEN_HOST=1 marks
 # a host as allowed). Base: --base, $OC_BASE, native/main, origin/native/main.
@@ -37,7 +39,7 @@ while (($#)); do
     --record) record="$(oc_norm_module "${2:-}")"; shift 2 ;;
     --where) where="${2:-}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
-    -h | --help) sed -n '2,22p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,24p' "$0"; exit 0 ;;
     *) oc_usage "t1.sh [--base R] [--brief F | --globs G] [--also G] [--record M] [--where vps|local] [--detach] [--dry-run]" ;;
   esac
 done
@@ -143,6 +145,13 @@ fi
 oc_step detekt "$OC_NATIVE/tool/qa/detekt.sh" --base "$base" "${modules[@]}"
 rc=$?
 grep -E '^(ratchet|detekt)[: ].*(FAIL|GREW|NEW|could not run)|^  \+ ' "$OC_RUN_DIR/detekt.log" | head -20 | sed 's/^/  /' | tee -a "$OC_SUMMARY"
+oc_status "$(( rc == 0 ? 0 : (rc == 1 ? 1 : 2) ))"
+
+# The layout guard (E02-S13, docs/kit/LAYOUT-RULES.md): it runs inside the touched modules' desktopTest above (every
+# FlutterGoldenGate shot); here its per-module baselines are held to "only shrink" against the same base.
+oc_step layout-baseline "$OC_NATIVE/tool/qa/layout_baseline.sh" --base "$base"
+rc=$?
+grep -E '^layout ratchet: .*(FAIL|GREW|NEW|could not run)|^  \+ ' "$OC_RUN_DIR/layout-baseline.log" | head -20 | sed 's/^/  /' | tee -a "$OC_SUMMARY"
 oc_status "$(( rc == 0 ? 0 : (rc == 1 ? 1 : 2) ))"
 
 fails="$(oc_failing_tests)"

@@ -42,6 +42,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitChoiceRecommended
 import io.github.eslamasabry.oc.ui.words.res.kitChoiceSelectedCount
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 
 /** Plan 06 §7.5: skeleton rows while choices load. */
 private const val LOADING_ROWS = 3
@@ -219,6 +221,7 @@ public fun KitChoiceRow(
             .fillMaxWidth()
             .then(if (band) Modifier.background(LocalKitColors.current.surface3.copy(alpha = 0.6f)) else Modifier)
             .heightIn(min = tokens.choiceRowMin.dp)
+            .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
             .kitSelectTap(
                 selected = selected,
                 role = if (mark == KitChoiceMark.Check) Role.Checkbox else Role.RadioButton,

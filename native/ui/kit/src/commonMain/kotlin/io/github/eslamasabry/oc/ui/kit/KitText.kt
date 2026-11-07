@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
@@ -56,7 +57,9 @@ public fun KitText(
         TextAlign.Center -> CapAlign.Center
         else -> CapAlign.Start
     }
-    val modifier = modifier.kitMaxWidth(CapRole.Reading, align)
+    // Titles may end in "…" when cut to a few lines; other roles never do (native/docs/kit/LAYOUT-RULES.md §6).
+    val titleCut = if (role in TITLE_ROLES) Modifier.kitMayTruncate("title") else Modifier
+    val modifier = modifier.kitMaxWidth(CapRole.Reading, align).then(titleCut)
     // A title cut to a few lines must end in "…": the layout marks a cut only inside a line, never at a hard line
     // break, so a cut title's line breaks read as spaces.
     val text = if (maxLines != Int.MAX_VALUE && role in TITLE_ROLES) kitTitleLine(text) else text
@@ -130,7 +133,9 @@ public fun KitMonoText(
             textDirection = TextDirection.Ltr,
             textAlign = if (rtl) TextAlign.Right else TextAlign.Left,
         )
-    val box = modifier.kitMaxWidth(CapRole.Reading, CapAlign.Start)
+    // A value cut on purpose may end in "…" (native/docs/kit/LAYOUT-RULES.md §6).
+    val cutMark = if (cut != KitMonoCut.Wrap) Modifier.kitMayTruncate("mono-cut") else Modifier
+    val box = modifier.kitMaxWidth(CapRole.Reading, CapAlign.Start).then(cutMark)
     when (cut) {
         KitMonoCut.Wrap -> BasicText(text, box, style = style, maxLines = maxLines, overflow = if (maxLines == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis)
         KitMonoCut.End -> BasicText(text, box, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)

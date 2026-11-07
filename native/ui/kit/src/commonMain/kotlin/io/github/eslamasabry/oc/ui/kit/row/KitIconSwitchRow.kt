@@ -17,6 +17,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 
 /**
  * Flutter Settings' KitSwitchRow with KitRow.icon: one toggle target, its icon on the shared lead
@@ -38,6 +40,7 @@ public fun KitIconSwitchRow(
         modifier
             .fillMaxWidth()
             .heightIn(min = tokens.rowHeightOne.dp)
+            .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
             .kitSelectTap(checked, Role.Switch, enabled, SwitchRules.haptic(!checked)) {
                 onCheckedChange(!checked)
             }

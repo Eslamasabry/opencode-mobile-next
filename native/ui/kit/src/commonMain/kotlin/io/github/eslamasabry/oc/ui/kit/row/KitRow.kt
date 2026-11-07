@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
@@ -305,7 +306,8 @@ private fun RowBody(
                     if (enabled && supportingSpan != null) {
                         BasicText(
                             supportingSpan,
-                            Modifier.kitMaxWidth(CapRole.Reading).testTag("kit-row-supporting"),
+                            Modifier.kitMaxWidth(CapRole.Reading).testTag("kit-row-supporting")
+                                .kitMayTruncate("row-supporting"),
                             style = LocalKitTypography.current.style(TypeRole.Secondary).copy(
                                 color = colors.text2, textDirection = TextDirection.Content,
                             ),
@@ -329,7 +331,8 @@ private fun RowBody(
                             supportLine?.let {
                                 KitText(
                                     " · $it",
-                                    Modifier.weight(1f, fill = false).testTag("kit-row-supporting"),
+                                    Modifier.weight(1f, fill = false).testTag("kit-row-supporting")
+                                        .kitMayTruncate("row-supporting"),
                                     role = TypeRole.Secondary,
                                     tone = TextTone.Secondary,
                                     maxLines = 1,
@@ -340,7 +343,7 @@ private fun RowBody(
                         supportLine?.let {
                             KitText(
                                 it,
-                                Modifier.testTag("kit-row-supporting"),
+                                Modifier.testTag("kit-row-supporting").kitMayTruncate("row-supporting"),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
                                 maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),

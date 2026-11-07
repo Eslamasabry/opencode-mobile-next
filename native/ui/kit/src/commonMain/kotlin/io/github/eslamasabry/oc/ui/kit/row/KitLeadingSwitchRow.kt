@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 
 /** Flutter KitSwitchRow's leading slot, including provider marks, with one semantic toggle. */
 @Composable
@@ -38,6 +40,7 @@ public fun KitLeadingSwitchRow(
             .heightIn(
                 min = if (supporting == null) tokens.rowHeightOne.dp else tokens.rowHeightTwo.dp
             )
+            .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
             .kitSelectTap(checked, Role.Switch, enabled, SwitchRules.haptic(!checked)) {
                 onCheckedChange(!checked)
             }
