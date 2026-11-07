@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,15 +47,13 @@ public fun KitStatusTag(label: String, tone: KitStatusTagTone, modifier: Modifie
     val ink = if (plain) c.text2 else Color(
         RoleDerivation.readableOn(Argb(base.toArgb()), listOf(Argb(fill.toArgb())), 4.7, Argb(c.text1.toArgb())).v, // F: lib/ui/kit/kit_status_tag.dart:59
     )
-    val shape = RoundedCornerShape(Space.S3.dp)
-    val look = if (plain) null else kitSurfaceLook(
-        KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Button, ownFill = null, color = fill),
-    )
-    val surface = when {
-        look == null -> Modifier.background(fill, shape)
-        look.modifier === Modifier -> Modifier.background(fill, shape) // Solid: the tag's own tint and 12 dp corner
-        else -> look.modifier
-    }
+    // A small control surface in its own tint from the style resolver (Solid: the tint at a space3 corner); the plain
+    // tag is words alone in every style.
+    val surface =
+        if (plain) Modifier
+        else kitSurfaceLook(
+            KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Button, ownFill = fill, color = fill, radius = Space.S3.dp),
+        ).modifier
     val style = LocalKitTypography.current.style(TypeRole.Caption).copy(color = ink)
     KitSwap(label to tone, modifier.kitMaxWidth(CapRole.Chip), alignment = Alignment.CenterStart) { (word, _) ->
         BasicText(
