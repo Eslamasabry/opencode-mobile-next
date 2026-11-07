@@ -96,5 +96,6 @@ public fun KitNeedsYouRow(title: String, reason: KitNeedsYouReason, ifIgnored: S
     val whoOnServer = if (who != null && server != null) stringResource(Res.string.kitNeedsYouWhoOnServer, "⁨$who⁩", "⁨$server⁩") else (who ?: server)?.let { "⁨$it⁩" }
     val age = waiting?.let { stringResource(Res.string.kitNeedsYouWaiting, it) }
     val supporting = listOfNotNull(whoOnServer, age, ifIgnored).joinToString(" · ")
-    KitRow(title, modifier = modifier, supporting = supporting, supportingMaxLines = 2, state = KitRowState(reasonWord, KitRowStateTone.NeedsYou), onClick = onOpen) // F: lib/ui/kit/kit_needs_you.dart:209-211
+    // Title and supporting line each wrap to two lines (F: lib/ui/kit/kit_needs_you.dart:162-170).
+    KitRow(title, modifier = modifier, supporting = supporting, supportingMaxLines = 2, titleMaxLines = 2, state = KitRowState(reasonWord, KitRowStateTone.NeedsYou), onClick = onOpen)
 }
