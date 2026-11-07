@@ -1,20 +1,14 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -24,15 +18,15 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
-import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 
 /**
  * One row of the person's own common phrases above the message box. A tap sends; a long-press opens the
- * Edit / Hide menu. No phrases draws nothing. The row scrolls sideways and starts on the message box's edge.
+ * Edit / Hide menu. No phrases draws nothing. The row is a [KitFilterChips] line (Dart: `KitFilterChips` in
+ * kit_phrase_chips.dart): as wide as its chips while they fit, so the parent places it; past the width it scrolls
+ * sideways with a fading edge. [bleed] false keeps the line on the screen gutter, as Flutter's part does; the chat
+ * composer, whose block already keeps the gutter, passes true so the chips start on the message box's edge (E20-S11).
  */
 @Composable
 public fun KitPhraseChips(
@@ -46,37 +40,33 @@ public fun KitPhraseChips(
     modifier: Modifier = Modifier,
     editLabel: String? = null,
     onEdit: ((String) -> Unit)? = null,
+    bleed: Boolean = true,
 ) {
     if (phrases.isEmpty()) return
-    // The scroller clips; the chips' style shadows keep their room above and below.
-    val room = kitShadowReach()
-    Row(
-        modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth().padding(bottom = Space.S2.dp)
-            .kitShadowRoom(room)
-            .horizontalScroll(rememberScrollState()).semantics { contentDescription = label }
-            .padding(vertical = room),
-        // E20-S11: the phrases start on the message box's own edge, like everything else in the composer (they sat
-        // centred); right to left, on its right edge.
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.Start),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier.kitMaxWidth(CapRole.Conversation)
+            .padding(bottom = Space.S2.dp) // F: lib/ui/kit/chat/kit_phrase_chips.dart:56-58
+            .semantics { contentDescription = label },
     ) {
-        phrases.forEach { phrase ->
-            var menu by remember(phrase) { mutableStateOf(false) }
-            KitMenu(
-                menu,
-                listOfNotNull(
-                    if (editLabel != null && onEdit != null) KitMenuItem(editLabel, { menu = false; onEdit(phrase) }) else null,
-                    KitMenuItem(hideLabel, { menu = false; onHide(phrase) }),
-                ),
-                { menu = false },
-                title = menuLabel(phrase),
-            ) {
-                // The long-press menu is also a screen reader action, so hiding never needs the gesture.
-                Box(
-                    Modifier.pointerInput(phrase) { detectTapGestures(onLongPress = { menu = true }) }
-                        .semantics { customActions = listOf(CustomAccessibilityAction(menuLabel(phrase)) { menu = true; true }) }
+        KitFilterChips(bleed = bleed) {
+            phrases.forEach { phrase ->
+                var menu by remember(phrase) { mutableStateOf(false) }
+                KitMenu(
+                    menu,
+                    listOfNotNull(
+                        if (editLabel != null && onEdit != null) KitMenuItem(editLabel, { menu = false; onEdit(phrase) }) else null,
+                        KitMenuItem(hideLabel, { menu = false; onHide(phrase) }),
+                    ),
+                    { menu = false },
+                    title = menuLabel(phrase),
                 ) {
-                    KitChip(phrase, kind = KitChipKind.Action, onClick = { onChoose(phrase) }, spoken = insertLabel(phrase))
+                    // The long-press menu is also a screen reader action, so hiding never needs the gesture.
+                    Box(
+                        Modifier.pointerInput(phrase) { detectTapGestures(onLongPress = { menu = true }) }
+                            .semantics { customActions = listOf(CustomAccessibilityAction(menuLabel(phrase)) { menu = true; true }) }
+                    ) {
+                        KitChip(phrase, kind = KitChipKind.Action, onClick = { onChoose(phrase) }, spoken = insertLabel(phrase))
+                    }
                 }
             }
         }
