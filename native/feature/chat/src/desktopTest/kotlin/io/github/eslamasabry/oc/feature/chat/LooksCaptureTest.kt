@@ -36,6 +36,7 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class)
 class LooksCaptureTest {
     private class Outside : ChatOutside {
+        override fun mask(text: String) = text
         override fun copy(text: String) = true
         override fun share(text: String) = true
         override fun checkLink(url: String): LinkCheck = LinkCheck.Ask("example.com")

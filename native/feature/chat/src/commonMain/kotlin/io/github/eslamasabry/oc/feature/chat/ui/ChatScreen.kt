@@ -93,6 +93,7 @@ import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
+import io.github.eslamasabry.oc.ui.kitchat.header.KitCopyAnnouncement
 import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
 import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
@@ -175,6 +176,7 @@ import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
+import io.github.eslamasabry.oc.ui.words.res.kitCopiedMasked
 import io.github.eslamasabry.oc.ui.words.res.markdownReaderTitle
 import io.github.eslamasabry.oc.ui.words.res.terminalOpenFull
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
@@ -830,6 +832,13 @@ public fun ChatScreen(
                     onCancel = actions::dismissConfirm,
                 )
                 header?.let { ChatHeaderOverlays(it) }
+                // E15-S05: one announcement per copy (Flutter KitCopy.copy), saying when a key was hidden.
+                KitCopyAnnouncement(
+                    state.copied?.id,
+                    stringResource(
+                        if (state.copied?.masked == true) Res.string.kitCopiedMasked else Res.string.kitCopied
+                    ),
+                )
             }
         }
     }

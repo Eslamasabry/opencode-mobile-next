@@ -7,9 +7,10 @@ import kotlin.test.assertTrue
 
 /**
  * Port of the "redact: false is only for the person's own content (SEC-13)" group in test/redaction_test.dart. Every
- * clipboard write site in production Kotlin is reviewed here, the reviewed counts only shrink, and each entry says why
- * it is safe: the person's own content, text already masked, or the one redacting copy (`KitCopy` in :ui:kit-chat, the
- * port of Flutter's `KitCopy.copy` with its default `redact: true`).
+ * clipboard write and every text share (`putExtra(Intent.EXTRA_TEXT, …)`) in production Kotlin is reviewed here, the
+ * reviewed counts only shrink, and each entry says why it is safe: the person's own content, text already masked, or
+ * the one redacting copy (`KitCopy` in :ui:kit-chat, the port of Flutter's `KitCopy.copy` with its default
+ * `redact: true`). E15-S05 added share intents, the chat's copy/share and Copy transcript.
  */
 class VerbatimCopyReviewTest {
     /** path (from native/) → (count, why the text is the person's own or already masked). */
@@ -21,8 +22,6 @@ class VerbatimCopyReviewTest {
                 (1 to "copies failure.details, a Redacted value built by the one Redactor"),
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/header/KitChatHeaderParts.kt" to
                 (1 to "KitClipboardEffect: the chat header masks everything but the person's own prompts first"),
-            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ChatFeelWiring.kt" to
-                (1 to "a reply or code block the person chose to copy: their own conversation content"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt" to
                 (1 to "the problem report text, already built from scrubbed diagnostics facts"),
             // Dart twin: lib/ui/kit/kit_terminal_view.dart `_KitTerminalOscHost` (redact: false, reviewed in
@@ -35,7 +34,15 @@ class VerbatimCopyReviewTest {
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentTerminalWiring.kt" to
                 (1 to "SignInClipboard.copySensitive: only the sign-in code found in the agent terminal, flagged sensitive"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/DiagnosticsAttentionWiring.kt" to
-                (1 to "the problem report, built by ProblemReports.scrub with events masked by redact and opaqueTokens"),
+                (2 to "the problem report, built by ProblemReports.scrub with events masked by redact and opaqueTokens; " +
+                    "the crash share sheet sends the CrashReportBuilder preview the person saw"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/CrashWiring.kt" to
+                (1 to "shares the crash report preview the person consented to, built from scrubbed crash evidence"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/MigrationWiring.kt" to
+                (1 to "shares the app's own category-only update report (app, step id, failure class; no path or value)"),
+            "android/platform/src/main/kotlin/io/github/eslamasabry/oc/android/platform/AndroidShareService.kt" to
+                (1 to "shareText: its one caller (SettingsWiring.sendText) passes the scrubbed problem report or the " +
+                    "app's own share message"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/HandoffDraftWiring.kt" to
                 (1 to "handoff markdown from HandoffRecordBuilder, which masks every piece with redact and opaqueTokens"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/IncomingShare.kt" to
@@ -81,6 +88,9 @@ class VerbatimCopyReviewTest {
                 (1 to "writes mask.apply(text()); the permission prompt's command passes the redacting KitCopy mask"),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt" to
                 (1 to "writes mask.apply(text()); Active Context tool input/output and reasoning pass the redacting mask"),
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ChatFeelWiring.kt" to
+                (2 to "copy and share write what ChatPresenter hands over: replies, code blocks and tool output after " +
+                    "ChatOutside.mask (KitCopy.safeText with the Redactor); only the person's own prompt is verbatim"),
         )
 
     /** Known unmasked copies awaiting a fix; each names its owner. Empty: E15-S04 fixed the last three. */
@@ -100,6 +110,18 @@ class VerbatimCopyReviewTest {
                 (listOf("mask.apply(text())", "AnnotatedString(out.text)") to listOf("AnnotatedString(text())")),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt" to
                 (listOf("mask.apply(text())", "AnnotatedString(out.text)") to listOf("AnnotatedString(text())")),
+            // E15-S05: the chat's message Copy/Share, code-block and tool-output copies.
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ChatFeelWiring.kt" to
+                (listOf("override fun mask(text: String): String = KitCopy.safeText(redactor, text).text") to emptyList()),
+            "feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/presentation/ChatPresenter.kt" to
+                (listOf("val safe = if (own) text else out.mask(text)", "else out.mask(text)", "out.share(safe)") to
+                    listOf("outside?.copy(text)", "outside?.share(text)", "out.copy(text)", "out.share(text)")),
+            // E15-S05: Copy transcript masks every piece but the person's own prompt through the screen's Redactor.
+            "feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/header/ui/ChatHeaderBar.kt" to
+                (listOf("val mask = rememberKitMask()", "actions.copyTranscript(words, mask)") to emptyList()),
+            "feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/header/presentation/ChatHeaderPresenter.kt" to
+                (listOf("mask(piece)", "markdownOf(titleNow(), messages, words, world.hasOlder.value, counting)", "mask = counting") to
+                    emptyList()),
         )
 
     /** Modules whose copies are server text: a kit copy part used there without the redacting mask fails. */
@@ -108,7 +130,9 @@ class VerbatimCopyReviewTest {
     /** The one file allowed to call the kit copy parts directly in [serverTextModules]: it adds the redacting mask. */
     private val redactingHelper = "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/KitCopy.kt"
 
-    private val copyCall = Regex("""\.(setPrimaryClip|setClipEntry)\(|\bclipboard\w*\.setText\(""")
+    /** A clipboard write, or text handed to another app through the share sheet. */
+    private val copyCall =
+        Regex("""\.(setPrimaryClip|setClipEntry)\(|\bclipboard\w*\.setText\(|\.setText\(\s*AnnotatedString\(|\bputExtra\(\s*Intent\.EXTRA_TEXT\b""")
 
     private fun stripComments(source: String): String =
         source.replace(Regex("""/\*[\s\S]*?\*/"""), "").lines().joinToString("\n") { it.substringBefore("//") }
@@ -183,6 +207,9 @@ class VerbatimCopyReviewTest {
                 for (part in VERBATIM_PARTS) if (part in code)
                     problems += "$path: `$part` copies server text verbatim — use KitCopy (rememberKitRedactedCopyAction, " +
                         "KitRedactedCopyIconButton)"
+                // A new clipboard write in the chat's code is a finding until it is reviewed or pinned to a masking rule.
+                if (copyCall.containsMatchIn(code) && path !in serverTextCopies && path !in reviewedOwnContent)
+                    problems += "$path: writes the clipboard directly — server text copies through KitCopy or ChatOutside.mask"
             }
         }
         assertEquals(emptyList(), problems, problems.joinToString("\n"))
@@ -196,6 +223,27 @@ class VerbatimCopyReviewTest {
                 "clipboard.setText(AnnotatedString(text))\n" +
                 "manager.setPrimaryClip(ClipData.newPlainText(\"l\", text))"
         assertEquals(2, copyCall.findAll(stripComments(sample)).count())
+    }
+
+    @Test
+    fun `B-SEC-145 the scan finds a share intent and a clipboard under any name`() {
+        val sample =
+            "Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, reply)\n" +
+                "putExtra( Intent.EXTRA_TEXT, x)\n" +
+                "cb.setText(AnnotatedString(reply))\n" +
+                "// putExtra(Intent.EXTRA_TEXT, x) in a comment\n" +
+                "intent.getStringExtra(EXTRA_TEXT)\n" +
+                "iterator.setText(text)"
+        assertEquals(3, copyCall.findAll(stripComments(sample)).count())
+    }
+
+    @Test
+    fun `B-SEC-145 an unreviewed share of server text fails the review`() {
+        val reviewed = reviewedOwnContent + redacting + findings
+        val planted = "androidApp/src/main/kotlin/p/NewShare.kt"
+        assertTrue(planted !in reviewed, "a new share site is not reviewed yet")
+        val code = "fun s(reply: String) = Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, reply)"
+        assertEquals(1, copyCall.findAll(stripComments(code)).count(), "so the module scan reports it")
     }
 
     private companion object {

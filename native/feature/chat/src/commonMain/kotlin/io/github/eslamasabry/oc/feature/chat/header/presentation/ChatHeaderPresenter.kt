@@ -413,19 +413,23 @@ public class ChatHeaderPresenter(
     /** Copy transcript with the person's own words for the headings. */
     override fun copyTranscript(words: TranscriptWords, mask: (String) -> String) {
         local.update { it.copy(menuOpen = false) }
+        // E15-S05: every piece that is not the person's own prompt goes through the app's one redactor; whether it
+        // hid anything is the confirmation's to say.
+        var masked = false
+        val counting = { piece: String -> mask(piece).also { if (it != piece) masked = true } }
         val messages = (world as? TurnFeedSource)?.turnFeed?.value?.ledger?.messages.orEmpty()
         val text =
             if (messages.isNotEmpty())
-                TranscriptCopy.markdownOf(titleNow(), messages, words, world.hasOlder.value, mask)
+                TranscriptCopy.markdownOf(titleNow(), messages, words, world.hasOlder.value, counting)
             else
                 TranscriptCopy.markdown(
                     title = titleNow(),
                     rows = world.transcript.value.rows,
                     words = words,
                     partial = world.hasOlder.value,
-                    mask = mask,
+                    mask = counting,
                 )
-        local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.Transcript)) }
+        local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.Transcript, masked)) }
     }
 
     override fun renameRequested() {

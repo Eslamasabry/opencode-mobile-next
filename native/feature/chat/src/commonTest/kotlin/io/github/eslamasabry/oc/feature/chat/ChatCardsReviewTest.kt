@@ -75,6 +75,8 @@ class ChatCardsReviewTest {
     private class Outside : ChatOutside {
         val calls = ArrayList<String>()
 
+        override fun mask(text: String): String = text
+
         override fun copy(text: String): Boolean = false
 
         override fun share(text: String): Boolean = false

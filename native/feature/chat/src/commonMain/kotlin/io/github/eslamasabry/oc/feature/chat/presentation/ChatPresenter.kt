@@ -64,6 +64,7 @@ internal data class ChatLocal(
     val menu: MessageMenuUi? = null,
     val confirm: ChatConfirm? = null,
     val clip: ClipUi? = null,
+    val copied: CopiedUi? = null,
     val readAloud: ReadAloudUi? = null,
     val arrival: PendingArrival? = null,
     val actionFailure: Failure? = null,
@@ -265,6 +266,7 @@ public class ChatPresenter(
             menu = l.menu,
             confirm = l.confirm,
             clip = l.clip,
+            copied = l.copied,
             arrival = arrival,
             capabilities = capsOf(i.capabilities),
             guardBack =
@@ -736,14 +738,17 @@ public class ChatPresenter(
         when (action) {
             MessageAction.Copy -> {
                 val text = textOf(world.transcript.value, target) ?: return
+                // E15-S05: only the person's own prompt copies verbatim; a reply goes through the redactor.
+                val own = target.kind == TargetKind.Prompt
                 if (outside == null) local.update { it.copy(clip = ClipUi(nextId++, text)) }
-                else copyText(text)
+                else copyOut(text, own)
             }
             MessageAction.Share -> {
                 val text =
                     textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
-                if (outside?.share(text) == false)
-                    local.update { it.copy(actionFailure = Failure.Unexpected()) }
+                val out = outside ?: return
+                val safe = if (target.kind == TargetKind.Prompt) text else out.mask(text)
+                if (!out.share(safe)) local.update { it.copy(actionFailure = Failure.Unexpected()) }
             }
             MessageAction.SelectText -> {
                 val text =
@@ -837,10 +842,18 @@ public class ChatPresenter(
         if (outside?.openLink(link.url) != true) local.update { it.copy(linkRefused = true) }
     }
 
+    /** A code block's, a tool output's or a reply's Copy: server text, so always through the redactor (E15-S05). */
     override fun copyText(text: String) {
+        copyOut(text, own = false)
+    }
+
+    /** Masks server text ([own] = the person's own prompt stays verbatim), copies, and says whether it hid anything. */
+    private fun copyOut(text: String, own: Boolean) {
         if (text.isEmpty()) return
-        if (outside?.copy(text) == false)
-            local.update { it.copy(actionFailure = Failure.Unexpected()) }
+        val out = outside ?: return
+        val safe = if (own) text else out.mask(text)
+        if (out.copy(safe)) local.update { it.copy(copied = CopiedUi(nextId++, masked = safe != text)) }
+        else local.update { it.copy(actionFailure = Failure.Unexpected()) }
     }
 
     override fun closeSelection() {

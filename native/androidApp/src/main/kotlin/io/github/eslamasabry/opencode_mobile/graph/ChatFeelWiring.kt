@@ -29,11 +29,13 @@ import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chat.presentation.PhoneFileKind
 import io.github.eslamasabry.oc.feature.chat.presentation.PhoneFileOpen
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.presentation.NoChatOutside
+import io.github.eslamasabry.oc.ui.kitchat.KitCopy
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
@@ -61,6 +63,8 @@ class AndroidChatOutside(
     private val connections: ConnectionRegistry,
     private val activities: ResumedActivities,
     private val dispatchers: AppDispatchers,
+    // E15-S05: the app's one redactor masks server text before the presenter copies or shares it.
+    private val redactor: Redactor,
 ) : ChatOutside {
 
     override fun fileLinkPath(url: String): String? =
@@ -150,6 +154,9 @@ class AndroidChatOutside(
     /** Links the policy approved and the person is being asked about (one at a time on the screen). */
     private val asked = LinkedHashMap<String, ApprovedLink>()
 
+    override fun mask(text: String): String = KitCopy.safeText(redactor, text).text
+
+    /** Writes what the presenter hands over: server text already went through [mask] (B-SEC-145). */
     override fun copy(text: String): Boolean = platformCall {
         val clipboard = application.getSystemService(ClipboardManager::class.java)
         clipboard.setPrimaryClip(ClipData.newPlainText("OpenCode Mobile", text))
