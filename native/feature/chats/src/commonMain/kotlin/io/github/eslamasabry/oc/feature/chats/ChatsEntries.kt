@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 
@@ -30,7 +31,10 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class ChatsEntries(private val appNotices: AppNotices) : EntryInstaller {
+public class ChatsEntries(
+    private val appNotices: AppNotices,
+    private val navigator: AppNavigator,
+) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatsRoute.New> { route ->
             val vm =
@@ -85,7 +89,15 @@ public class ChatsEntries(private val appNotices: AppNotices) : EntryInstaller {
                         )
                     }
                 }
-            ChatsScreen(state, vm, appStatus = appStatus, replyOffer = offerContent)
+            // Home is a Root route, so on top it is the whole back stack: Back there would close the app (E05-S21).
+            val top by navigator.top.collectAsStateWithLifecycle()
+            ChatsScreen(
+                state,
+                vm,
+                appStatus = appStatus,
+                replyOffer = offerContent,
+                root = top == ChatsRoute.Home,
+            )
         }
         entry<ChatsRoute.Attention> {
             val vm =
