@@ -146,14 +146,12 @@ public fun kitCapabilityWhy(
 }
 
 /**
- * Supported then partial hosts, with the phone covering Termux and demo only when no real host
- * exists.
+ * Supported then partial hosts, with demo only when no real host exists.
  */
 @Composable
 public fun kitCapabilityHostsLine(entry: KitCapability): String {
     val hosts = (entry.supported + entry.partly).toMutableSet()
     if (hosts.any { it != KitHost.Demo }) hosts.remove(KitHost.Demo)
-    if (KitHost.ThisPhone in hosts) hosts.remove(KitHost.Termux)
     val ordered =
         KitHost.entries.filter { it in hosts }.map { KitBidi.auto(kitCapabilityHostWord(it)) }
     if (ordered.isEmpty()) return ""

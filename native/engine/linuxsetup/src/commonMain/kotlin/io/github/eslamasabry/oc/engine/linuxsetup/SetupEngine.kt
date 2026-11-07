@@ -61,8 +61,7 @@ public class SetupEngine(
 
     /**
      * Starts (or continues) a job for [ids] plus what they depend on. A running job is watched, never restarted.
-     * Unsafe Termux params refuse before any install script is generated. Unexpected failures publish a failed job
-     * whose Details are redacted; they are never thrown at the caller.
+     * Unexpected failures publish a failed job whose Details are redacted; they are never thrown at the caller.
      */
     public suspend fun run(ids: Set<String>, params: Map<String, Map<String, String>> = emptyMap()): SetupRunRefusal? {
         val read = host.setupStatus()
@@ -76,7 +75,7 @@ public class SetupEngine(
             failStart(null, "setup_status_invalid")
             return null
         }
-        if (kind == SetupHostKind.Builtin && last == null) {
+        if (last == null) {
             val status = host.status()
             if (status is HostReply.Refused) {
                 failStart(status.code ?: status.message, "setup_status_invalid")
@@ -88,9 +87,6 @@ public class SetupEngine(
             return null
         }
         val effective = effectiveJobParams(params, last)
-        if (kind == SetupHostKind.Termux && !TermuxSetupParams.isValid(effective, redactor)) {
-            return SetupRunRefusal(TermuxSetupParams.INVALID_CODE)
-        }
         val job =
             try {
                 expandSelection(components(effective), ids)

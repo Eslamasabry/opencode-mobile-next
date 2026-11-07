@@ -18,16 +18,10 @@
     <string name="e7SharedStartTalking">ابدأ الحديث</string>
     <string name="e7SharedPickAProjectAndSendYourFirst">اختر مشروعًا وأرسل رسالتك الأولى. يجري العمل على حاسوبك، ويعرضه هذا التطبيق ويتيح لك توجيهه.</string>
     <string name="e7SharedAdvanced">خيارات متقدمة</string>
-    <string name="e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals">HTTPS وأنفاق SSH والخوادم الأقدم وتفاصيل Termux</string>
     <string name="e7SharedHTTPSSSHTunnelsOlderServers">HTTPS وأنفاق SSH والخوادم الأقدم</string>
     <string name="e7SharedReachAServerOverHTTPSOrA">الوصول إلى خادم عبر HTTPS أو نفق</string>
     <string name="e7SharedPairingWorksWhenTheAddressTheServer">يعمل الاقتران عندما يستطيع هذا الجهاز الوصول إلى عنوان الخادم. يطلب عنوان HTTP البعيد إذنك قبل إرسال كلمة المرور. يُفضّل HTTPS أو اتصال Tailscale خاص.</string>
     <string name="e7SharedOlderServersWithoutPairing">الخوادم الأقدم بدون اقتران</string>
-    <string name="e7SharedOnDeviceViaTermuxAutomated">على الجهاز عبر Termux (آلي)</string>
-    <string name="e7SharedUseTheOnDeviceTermuxCardOn">استخدم بطاقة «على الجهاز (Termux)» في شاشة الخوادم. يثبّت التطبيق Termux، ويفتح الجسر، ويجهّز opencode، ويشغّل الخادم ويتصل، كل ذلك بإرشاد خطوة بخطوة.</string>
-    <string name="e7SharedOnlyTwoTapsNeedYouPersonallyDownloading">خطوتان فقط تحتاجان إليك شخصيًا: تنزيل حزمة APK الخاصة بـ Termux، ولصق سطر فتح واحد داخل Termux مرة واحدة. كلاهما يفرضه نموذج أمان Android، لا هذا التطبيق.</string>
-    <string name="e7SharedPreferManualInsideTermuxRun">تفضّل الطريقة اليدوية؟ داخل Termux شغّل:</string>
-    <string name="e7SharedTheChrootSharesTheNetworkStackSo">يتشارك chroot مكدّس الشبكة، لذا يعمل http://127.0.0.1:4096 من هذا التطبيق. شغّل `termux-wake-lock` لإبقائه نشطًا.</string>
     <string name="e7SharedSecurityNotes">ملاحظات أمنية</string>
     <string name="e7SharedAlwaysSetOPENCODESERVERPASSWORDWhenBinding">اضبط OPENCODE_SERVER_PASSWORD دائمًا عند الربط خارج localhost.</string>
     <string name="e7SharedPasswordsAreStoredInTheAndroidKeystore">تُخزَّن كلمات المرور في Android Keystore على هذا الجهاز فقط.</string>

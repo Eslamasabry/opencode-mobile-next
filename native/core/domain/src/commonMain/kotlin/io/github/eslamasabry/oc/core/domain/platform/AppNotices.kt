@@ -10,14 +10,20 @@ public data class AppNotice(
     val actionLabel: String? = null,
     val dismissLabel: String,
     val stoppedApp: Boolean = false,
+    /** A second way forward, offered beside [action] (the Termux notice's "Connect a computer"). */
+    val secondAction: AppNoticeAction? = null,
+    val secondActionLabel: String? = null,
 )
 
 public enum class AppNoticeAction {
     ResumeBackground,
     KeepRunning,
 
-    /** E09-S04: the Termux move notice's "Set up built-in Linux" (opens This phone). */
+    /** The Termux notice's "Set up built-in Linux" (opens This phone). */
     SetUpBuiltInLinux,
+
+    /** The Termux notice's "Connect a computer" (opens the new-server form). */
+    ConnectComputer,
 }
 
 /** The one-time question, offered only after a real reply has completed. */

@@ -225,8 +225,7 @@ public fun KitSetupPhone(
                           // lib/ui/kit/scenes/setup_cast.dart:102-105
                           // lib/ui/kit/kit_illustration.dart:167
                         if (
-                            mood == KitSetupPhoneMood.Termux ||
-                                !f.looping ||
+                            !f.looping ||
                                 (f.loop * 4).toInt() % 2 == 0 // NV: SetupCast.cursorOn at setup_cast.dart:115 uses even quarters of the loop
                         )
                             drawLine(
@@ -239,33 +238,6 @@ public fun KitSetupPhone(
                               // lib/ui/kit/kit_illustration.dart:167
                     }
                     when (mood) {
-                        KitSetupPhoneMood.Termux -> {
-                            val termLines = listOf(44f to 22f, 53f to 14f, 62f to 26f, 71f to 18f) // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60
-                            termLines.forEachIndexed {
-                                i,
-                                (y, length) -> // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60
-                                val drawn =
-                                    f.interval(
-                                        .5f + i * .1f, // F: lib/ui/kit/scenes/setup_phone_scene.dart:186
-                                        .7f + i * .1f, // F: lib/ui/kit/scenes/setup_phone_scene.dart:186
-                                    ) // F: lib/ui/kit/scenes/setup_phone_scene.dart:193
-                                if (drawn > 0)
-                                    drawLine(
-                                        if (i == termLines.lastIndex) c.accent else c.text2.faded(.7f), // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,192
-                                        Offset(66f, y), // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,200
-                                        Offset(66 + length * drawn, y), // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,200
-                                        2.5f, // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,193 lib/ui/kit/kit_illustration.dart:167
-                                        StrokeCap.Round,
-                                    ) // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,200
-                                      // lib/ui/kit/kit_illustration.dart:167
-                                if (i == termLines.lastIndex && drawn >= 1) // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,196
-                                    drawCircle(
-                                        c.accent,
-                                        2.4f * f.interval(.88f, 1f, land = true), // F: lib/ui/kit/scenes/setup_phone_scene.dart:197,200
-                                        Offset(66 + length + 6, y), // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,199
-                                    ) // F: lib/ui/kit/scenes/setup_phone_scene.dart:57-60,206-209
-                            }
-                        }
                         KitSetupPhoneMood.Stopped -> {
                             scenePortal(
                                 Offset(80f, 60f), // F: lib/ui/kit/scenes/setup_phone_scene.dart:140-146

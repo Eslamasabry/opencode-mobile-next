@@ -405,9 +405,7 @@
     <string name="teamUiPhoneFailedCity">لم تتمكن Gas City من إنشاء المدينة. يوضح المخرج أدناه السبب.</string>
     <string name="teamUiPhoneFailedSupervisorExited">توقف المشرف مباشرة بعد بدئه. يوضح المخرج أدناه السبب.</string>
     <string name="teamUiPhoneFailedHealth">بدأ المشرف لكنه لم يُجب قط على %1$s.</string>
-    <string name="teamUiPhoneFailedInterrupted">توقف الإعداد قبل اكتماله. ربما أوقف أندرويد Termux أثناء غياب التطبيق؛ لا يُفقد شيء.</string>
     <string name="teamUiPhoneFailedReason">السبب: %1$s</string>
-    <string name="teamUiPhoneDispatchFailed">لم يبدأ Termux الخطوة. افتح Termux مرة واحدة ثم حاول مجددًا.</string>
     <string name="teamUiPhoneSectionTitle">على هذا الهاتف</string>
     <string name="teamUiPhoneStatusChecking">جارٍ التحقق…</string>
     <string name="teamUiPhoneStatusNotInstalled">غير مثبّت</string>
@@ -437,9 +435,6 @@
     <string name="teamUiPhoneKeepRunningTitle">أبقِه يعمل</string>
     <string name="teamUiPhoneKeepRunningSubtitle">قفل الاستيقاظ وإعداد البطارية وقاتل العمليات الشبحية</string>
     <string name="teamUiPhoneTipsIntro">يوقف أندرويد أعمال الخلفية التي يعدّها مفرطة، والفريق كذلك تمامًا: عشرات عمليات gc وbd القصيرة ووكيل يستهلك المعالج بالكامل. ثلاثة أمور تبقيه حيًّا.</string>
-    <string name="teamUiPhoneTipWakeLock">أبقِ Termux في المقدمة، أو فعّل قفل الاستيقاظ فيه: شغّل termux-wake-lock داخل Termux، أو انقر Acquire wakelock في إشعاره. إطفاء الشاشة من دونه ينهي التشغيل.</string>
-    <string name="teamUiPhoneTipBattery">الإعدادات › التطبيقات › Termux › البطارية › غير مقيّد، وأوقف التنظيف التلقائي الخاص بالشركة المصنّعة لهاتفك عن Termux.</string>
-    <string name="teamUiPhoneTipPhantom">لا يزال أندرويد 12 وما بعده يقتل العمليات الفرعية لتطبيق في الخلفية (قاتل العمليات الشبحية). أوقف ذلك مرة واحدة من Termux نفسه عبر تصحيح الأخطاء اللاسلكي؛ لا حاجة إلى حاسوب:</string>
     <string name="teamUiPhoneTipsCopy">نسخ الأوامر</string>
     <string name="teamUiPhoneRemoveTitle">حذف فريق الذكاء الاصطناعي من هذا الهاتف؟</string>
     <string name="teamUiPhoneActionFailed">لم ينجح ذلك: %1$s</string>
@@ -531,10 +526,8 @@
     <string name="teamDiscoverNeedsServer">ما يحتاجه على %1$s</string>
     <string name="teamDiscoverDownloadTitle">تنزيل بنحو %1$s</string>
     <string name="teamDiscoverInAppDownloadBody">يُثبَّت مرة واحدة بجوار OpenCode على هذا الهاتف.</string>
-    <string name="teamDiscoverTermuxDownloadBody">يُثبَّت داخل Termux بجوار OpenCode.</string>
     <string name="teamDiscoverBatteryTitle">بطارية أكثر أثناء عمله</string>
     <string name="teamDiscoverInAppBatteryBody">يعمل عدة وكلاء معًا، وقد يوقف Android بعضهم إن كثروا.</string>
-    <string name="teamDiscoverTermuxBatteryBody">أبقِ Termux مفتوحًا أثناء عمله؛ قد يوقفه Android في الخلفية. لا يضيع شيء.</string>
     <string name="teamDiscoverProjectTitle">أنت تختار المشاريع</string>
     <string name="teamDiscoverProjectBody">شغّله لكل مشروع تريده أن يعمل عليه.</string>
     <string name="teamDiscoverComputerTitle">يعمل على %1$s</string>

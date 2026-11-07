@@ -151,19 +151,7 @@ fi
             "(\n$COPY) || exit $FAILED_EXIT\n"
 
     /**
-     * The Termux runner's step (lib/termux/scripts/manager_script.dart): inside Ubuntu, after the isolated folders and
-     * before the server's `proot-distro login --work-dir /root/projects`, its log piped to the manager; `|| exit 74`.
-     */
-    public val termuxRunnerStep: String =
-        "  proot-distro login opencode-ubuntu -- mkdir -p $OC2_DATA_DIR \\\n" +
-            "    /root/.oc-opencode2/cache /root/.oc-opencode2/state /root/.oc-opencode2/config/opencode || exit 74\n" +
-            "  # Bring the OpenCode 1 chats along before OpenCode 2's first start.\n" +
-            "  proot-distro login opencode-ubuntu -- sh -s 2>&1 <<'OC_HISTORY_COPY' | \"${'$'}manager\" write-log server || exit 74\n" +
-            COPY +
-            "OC_HISTORY_COPY\n"
-
-    /**
-     * The admission as either host runs it (Flutter `_checkHistorySwitch` in lib/state/phone_host.dart): a subshell so
+     * The admission as the host runs it (Flutter `_checkHistorySwitch` in lib/state/phone_host.dart): a subshell so
      * its refusal exit cannot escape before the transport captures stderr, with stderr folded into the output.
      */
     public val admissionScript: String = "(\n$SWITCH_CHECK\n) 2>&1"

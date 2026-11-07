@@ -9,11 +9,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlin.time.Clock
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 /*
  * Thin Metro ViewModels (plan 03 §13.7): each hands viewModelScope to its plain state holder, whose rules are tested
@@ -34,9 +30,8 @@ public class ThisPhoneViewModel(
     phoneStorage: PhoneStorageReadings = NoPhoneStorageReadings(),
     exits: PhoneExitNotices,
     processes: PhoneProcessSource,
-    private val migration: PhoneTermuxMigration,
     phoneDetails: PhoneDetailsSource,
-) : ViewModel(), ThisPhoneActions, ThisPhoneMigrationActions {
+) : ViewModel(), ThisPhoneActions {
     private val model =
         ThisPhoneModel(
             source,
@@ -51,23 +46,7 @@ public class ThisPhoneViewModel(
             processes = processes,
             phoneDetails = phoneDetails,
         )
-    public val state: StateFlow<ThisPhoneUi> =
-        combine(model.state, migration.migration) { ui, offers ->
-                ui.copy(termuxMigration = offers)
-            }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.Eagerly,
-                model.state.value.copy(termuxMigration = migration.migration.value),
-            )
-
-    override fun fixTermux(profileId: String) {
-        viewModelScope.launch { migration.fix(profileId) }
-    }
-
-    override fun openTermuxMigration(profileId: String) {
-        migration.open(profileId)
-    }
+    public val state: StateFlow<ThisPhoneUi> = model.state
 
     override fun act(act: PhoneAct): Unit = model.act(act)
 
@@ -104,10 +83,7 @@ public class ThisPhoneViewModel(
 
     override fun back(): Unit = model.back()
 
-    override fun shown(visible: Boolean) {
-        model.shown(visible)
-        if (visible) viewModelScope.launch { migration.refresh() }
-    }
+    override fun shown(visible: Boolean): Unit = model.shown(visible)
 }
 
 @Inject

@@ -79,21 +79,6 @@ class SetupFinishTest {
     }
 
     @Test
-    fun `B-LINUX-205 the built-in finisher refuses Termux before touching profiles or native`() = runTest {
-        val store = Store()
-        val server = Server()
-        var connected = false
-        val failure =
-            finisher(store, server, onConnect = { connected = true })
-                .finish(SetupFinishRequest(openCodeChanged = true, host = SetupHostKind.Termux))
-        assertEquals(SetupFinishFailure.CannotStart, failure)
-        assertTrue(server.calls.isEmpty())
-        assertEquals(0, store.writes)
-        assertTrue(store.profiles.isEmpty())
-        assertFalse(connected)
-    }
-
-    @Test
     fun `B-LINUX-205 switching the app server to OpenCode 2 takes AI Team along`() = runTest {
         val older = FinishProfile(id = "phone", name = "This phone", baseUrl = url, password = "kept", orchestration = "builtin-team")
         val store = Store(listOf(older))

@@ -34,8 +34,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * second [run] while one is starting returns at once (Flutter's `_starting`), and [cancel] never
  * waits for a start that is still checking.
  *
- * Not ported here: the Termux host's uncertain hand-over, and the process budget wait
- * (`:engine:runtime` budget owns it; the binding admits before calling [run]).
+ * Not ported here: the process budget wait (`:engine:runtime` budget owns it; the binding admits
+ * before calling [run]).
  */
 public class SetupEngine(
     private val host: SetupJobHost,

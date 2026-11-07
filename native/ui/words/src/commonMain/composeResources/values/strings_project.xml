@@ -572,7 +572,6 @@
     <string name="integrationsKeySavedPending">%1$s key saved. The server has not loaded it yet.</string>
     <string name="filesAccessNeededTitle">Files are hidden</string>
     <string name="filesAccessNeededBody">This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.</string>
-    <string name="filesAccessNeededTermuxBody">This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.</string>
     <string name="folderBrowserPlaceLabel">Place</string>
     <string name="folderBrowserPlaceProjects">Project space</string>
     <string name="folderBrowserPlacePhone">This phone</string>

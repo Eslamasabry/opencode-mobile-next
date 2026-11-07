@@ -121,7 +121,6 @@
     <string name="e7SettingsUi85">要删除草稿吗？</string>
     <string name="e7SettingsUi86">已删除草稿</string>
     <string name="e7SettingsUi87">无法删除草稿。请检查设备存储空间后重试。</string>
-    <string name="e7SettingsUi93">服务器、服务商、语音、文件、Termux 和更新</string>
     <string name="e7SettingsStorageSummary">未发送内容共 %1$s：%2$s（%3$s）和 %4$s（%5$s）。排队的提示词在 %6$d 天后会被丢弃。</string>
     <plurals name="e7SettingsStorageSummary__queued">
         <item quantity="other">%1$d 条排队的提示词</item>
@@ -413,7 +412,6 @@
     </plurals>
     <string name="manageSpaceLostSettings__eq0">所有设置</string>
     <string name="manageSpaceLostSettings__eq1">1 台已保存服务器及所有设置</string>
-    <string name="manageSpaceKeptAll">Termux、你的电脑，以及已推送到 git 的内容都会保留</string>
     <string name="manageSpaceWaitForExport">请等待导出完成</string>
     <string name="manageSpaceDeletedLabel">清除会删除</string>
     <string name="manageSpaceServerDetail">Ubuntu、OpenCode、其登录信息和对话</string>
@@ -424,7 +422,6 @@
     <string name="manageSpaceSavedServers__eq0">没有已保存的服务器</string>
     <string name="manageSpaceSavedServers__eq1">1 台已保存服务器</string>
     <string name="manageSpaceKeptLabel">保留</string>
-    <string name="manageSpaceKeptTermux">Termux 及其中的项目</string>
     <string name="manageSpaceKeptComputers">你的电脑及其服务器</string>
     <string name="manageSpaceKeptGit">你推送到 git 的任何内容</string>
     <plurals name="projectExportDetail">
@@ -550,4 +547,6 @@
     <string name="textSizeSmall">小</string>
     <string name="textSizeDefault">默认</string>
     <string name="textSizeLarge">大</string>
+    <string name="privacyPagesSummary">服务器、服务商、语音、文件和更新</string>
+    <string name="manageSpaceKeptAllComputers">你的电脑，以及已推送到 git 的内容都会保留</string>
 </resources>

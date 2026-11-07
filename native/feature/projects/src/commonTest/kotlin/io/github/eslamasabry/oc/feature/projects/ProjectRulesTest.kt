@@ -149,7 +149,7 @@ class ProjectRulesTest {
                     project("mine", "/root/projects/my-app", 10),
                     project("home", "/root/aiteam", 20),
                     project("gc", "/srv/city/.gc/worktrees/my-app/mayor", 30),
-                    project("termux", "/data/data/com.termux/files/home/.oc/aiteam", 40),
+                    project("dotoc", "/home/me/.oc/aiteam", 40),
                 ),
                 emptyList(),
                 emptySet(),

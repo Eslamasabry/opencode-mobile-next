@@ -4,22 +4,17 @@ import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
 import io.github.eslamasabry.oc.feature.git.presentation.GitActions
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairAction
-import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairAppSettings
-import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairDetail
+import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairDetailLocal
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairFailed
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairHealthy
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairMissing
-import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairNoAnswer
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairNotProject
-import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairPermission
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairRestored
-import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairTermuxMissing
 import io.github.eslamasabry.oc.ui.words.res.linuxGitRepairWorking
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -32,7 +27,7 @@ internal fun GitRepairPanel(state: GitUi, actions: GitActions) {
     KitRowGroup {
         KitRow(
             title = stringResource(Res.string.linuxGitRepairAction),
-            supporting = stringResource(Res.string.linuxGitRepairDetail),
+            supporting = stringResource(Res.string.linuxGitRepairDetailLocal),
             supportingMaxLines = 3,
             enabled = !state.working,
             disabledReason = stringResource(Res.string.linuxGitRepairWorking),
@@ -48,27 +43,9 @@ internal fun GitRepairPanel(state: GitUi, actions: GitActions) {
                     pluralStringResource(Res.plurals.linuxGitRepairRestored, report.restored, report.restored)
                 GitLinkRepairResult.MissingObjects ->
                     stringResource(Res.string.linuxGitRepairMissing)
-                GitLinkRepairResult.TermuxMissing ->
-                    stringResource(Res.string.linuxGitRepairTermuxMissing)
-                GitLinkRepairResult.TermuxPermission ->
-                    stringResource(Res.string.linuxGitRepairPermission)
-                GitLinkRepairResult.TermuxUnavailable ->
-                    stringResource(Res.string.linuxGitRepairNoAnswer)
                 GitLinkRepairResult.NotRepository ->
                     stringResource(Res.string.linuxGitRepairNotProject)
             }
-        KitNotice(
-            message = text,
-            notes = report.missing.take(20),
-            actions =
-                if (report.result == GitLinkRepairResult.TermuxPermission)
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.linuxGitRepairAppSettings),
-                            actions::openRepairSettings,
-                        )
-                    )
-                else emptyList(),
-        )
+        KitNotice(message = text, notes = report.missing.take(20))
     }
 }

@@ -44,9 +44,6 @@
     <string name="demoReviewChanges">Revisar cambios</string>
     <string name="handoffCopyCommand">Copiar comando</string>
     <string name="monitorQuiet">Horas de silencio</string>
-    <string name="termuxGuideOpenFailed">Se copió el comando, pero Termux no se pudo abrir. Abre Termux tú mismo o vuelve a probar Copiar y abrir Termux.</string>
-    <string name="termuxGuideCopyOpenFailed">No se pudo copiar el comando ni abrir Termux.</string>
-    <string name="termuxPermissionDenied">Android no permitió que esta app ejecute comandos en Termux.</string>
     <string name="launchShortcutWaiting">Conectando con el servidor guardado. La conversación nueva se abre cuando esté listo.</string>
     <string name="launchShortcutNoServer">Elige un servidor y luego inicia una conversación nueva.</string>
     <string name="launchShortcutReentry">Ingresa las credenciales del servidor guardado y luego inicia una conversación nueva.</string>
@@ -124,7 +121,6 @@
     <string name="e7SetupNoOutput">Aún no hay salida del terminal.</string>
     <string name="e7SetupOpenSetupGuide">Abrir la guía de configuración</string>
     <string name="e7SetupCameraFailedDetail">Puede que otra app esté usando la cámara. Pegar el código de emparejamiento funciona igual.</string>
-    <string name="e7SetupTermuxNoAnswer">Termux no respondió. Toca «Copiar y abrir Termux», pega la línea en Termux, pulsa Intro y vuelve aquí.</string>
     <string name="e7SetupHttpsHint">Prefiere HTTPS. HTTP remoto necesita tu permiso para cada servidor.</string>
     <string name="e7SetupPasteInstead">Pegar en su lugar</string>
     <string name="e7SetupEndInputKey">Fin de entrada, Control D</string>
@@ -132,7 +128,6 @@
     <string name="e7SetupServerOperation">Operación del servidor en curso</string>
     <string name="e7SetupUnsavedProfile">El servidor no se ha guardado.</string>
     <string name="e7SetupCheckingInstall">Comprobando el entorno instalado...</string>
-    <string name="e7SetupInspectTermuxFailed">Android no pudo inspeccionar Termux.</string>
     <string name="e7SetupUsername">Usuario (opcional)</string>
     <string name="e7SetupSaveToFinish">Conectado: guarda para terminar.</string>
     <string name="e7SetupPasswordStartupHint">Se muestra al iniciar el servidor. Déjala vacía si no tiene.</string>
@@ -145,7 +140,6 @@
     <string name="e7SetupCameraFailed">No se pudo abrir la cámara</string>
     <string name="e7SetupCameraDisabled">El acceso a la cámara está desactivado</string>
     <string name="e7SetupPastePairing">Pegar código de emparejamiento</string>
-    <string name="e7SetupThisDevice">Este dispositivo (Termux)</string>
     <string name="e7SetupTransportReconnecting">El transporte del servidor se está reconectando.</string>
     <string name="e7SetupMissingPasswordShort">La contraseña guardada no está disponible. Introdúcela de nuevo, o déjala vacía solo si este servidor ya no requiere una.</string>
     <string name="e7SetupScanPairing">Escanear código de emparejamiento</string>
@@ -158,7 +152,6 @@
     <string name="e7SetupInputDisconnected">La entrada no está disponible sin conexión.</string>
     <string name="e7SetupCameraPrivacy">La cámara se usa solo para leer el QR que imprime opencode2 pair, y solo mientras esta pantalla está abierta. Puedes pegar el código en su lugar: hace exactamente lo mismo.</string>
     <string name="e7SetupIsV2">Este es un servidor OpenCode 2.</string>
-    <string name="e7SetupTermuxOutdated">Esta versión de Termux es demasiado antigua para la app. Instala la actual y toca «Continuar la configuración».</string>
     <string name="e7SetupCameraNeeded">Se necesita acceso a la cámara para escanear</string>
     <string name="e7SetupPairingDesktopHint">Comprueba que el servidor esté en ejecución y que la dirección que imprimió sea accesible desde esta máquina.</string>
     <string name="e7SetupAboutNotices">Acerca de y avisos de código abierto</string>
@@ -364,7 +357,6 @@
     <string name="productErrorUnexpected">La app no entendió la respuesta del servidor. Inténtalo de nuevo o informa del problema.</string>
     <string name="productErrorDevice">Algo en este dispositivo no funcionó. Inténtalo de nuevo.</string>
     <string name="productErrorStorage">La app no pudo leer ni guardar un archivo en este dispositivo.</string>
-    <string name="productErrorTermux">Termux no terminó eso. Comprueba que Termux esté instalado y abierto, e inténtalo de nuevo.</string>
     <string name="productErrorDetailsLabel">Detalles del error</string>
     <string name="productErrorServer">El servidor tuvo un problema (error %1$d). Inténtalo de nuevo en un momento.</string>
     <string name="consentSaveFailed">Tu respuesta no se pudo guardar en este teléfono, así que no se cambió nada. Inténtalo de nuevo.</string>
@@ -399,7 +391,6 @@
     <string name="serverRowMoveQueued__eq1">Mover 1 mensaje en espera a %2$s</string>
     <string name="commandSheetAgentFallback">Este agente</string>
     <string name="termuxInAppInstead">Configurar mejor el servidor integrado</string>
-    <string name="termuxInAppInsteadDetail">Un comienzo nuevo que se ejecuta dentro de esta app. No necesitas Termux.</string>
     <string name="freeModelSignIn">Agregar una clave API</string>
     <string name="integrationsSignedInUnusable">Sesión iniciada, pero este servidor no puede usarla</string>
     <string name="kitTurnLiveSeconds">%1$d s</string>
@@ -407,7 +398,6 @@
     <string name="kitComposerRailRetry">Intentar de nuevo</string>
     <string name="addServerCleartextWarning">Esta dirección de red privada o Tailscale usa HTTP sin cifrar. Tu contraseña y código viajan sin cifrar en la capa HTTP. Úsala solo en una red privada de confianza o con Tailscale; es arriesgado en Wi-Fi público.</string>
     <string name="storageAccessAllow">Permitir acceso a los archivos</string>
-    <string name="storageTermuxAllow">Abrir Termux</string>
     <string name="phoneScanGit">Git</string>
     <string name="chatsHomeAllProjects">Todos los proyectos</string>
     <string name="chatsHomeNeedsYou">Te necesita</string>

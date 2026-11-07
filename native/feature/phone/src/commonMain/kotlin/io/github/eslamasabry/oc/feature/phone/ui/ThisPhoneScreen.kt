@@ -73,10 +73,6 @@ import io.github.eslamasabry.oc.ui.words.res.linuxExitPolicyOff
 import io.github.eslamasabry.oc.ui.words.res.linuxExitRestored
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRow
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
-import io.github.eslamasabry.oc.ui.words.res.linuxMigrationOfferTitle
-import io.github.eslamasabry.oc.ui.words.res.migrationOfferAction
-import io.github.eslamasabry.oc.ui.words.res.migrationRowBody
-import io.github.eslamasabry.oc.ui.words.res.migrationTermuxUnavailable
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardUpdate
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardVersion
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartAddTitle
@@ -100,17 +96,6 @@ import io.github.eslamasabry.oc.ui.words.res.stateStorageRefresh
 import io.github.eslamasabry.oc.ui.words.res.stateStorageSavedServers
 import io.github.eslamasabry.oc.ui.words.res.stateStorageServer
 import io.github.eslamasabry.oc.ui.words.res.stateStorageTitle
-import io.github.eslamasabry.oc.ui.words.res.termuxFixAllowAccess
-import io.github.eslamasabry.oc.ui.words.res.termuxFixAllowOtherApps
-import io.github.eslamasabry.oc.ui.words.res.termuxFixOpenPermissions
-import io.github.eslamasabry.oc.ui.words.res.termuxFixOpenTermux
-import io.github.eslamasabry.oc.ui.words.res.termuxOtherAppsBody
-import io.github.eslamasabry.oc.ui.words.res.termuxProblemAccessBlocked
-import io.github.eslamasabry.oc.ui.words.res.termuxProblemAccessNeeded
-import io.github.eslamasabry.oc.ui.words.res.termuxProblemAsleep
-import io.github.eslamasabry.oc.ui.words.res.termuxProblemNotInstalled
-import io.github.eslamasabry.oc.ui.words.res.termuxProblemOtherAppsOff
-import io.github.eslamasabry.oc.ui.words.res.termuxProblemOutdated
 import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
 import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
 import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
@@ -182,73 +167,6 @@ public fun ThisPhoneScreen(
         BoxWithConstraints(Modifier.fillMaxSize()) {
         val available = maxHeight
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            val migrationActions =
-                actions
-                    as?
-                    io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneMigrationActions
-            if (migrationActions != null)
-                state.termuxMigration.forEach { offer ->
-                    val problem = offer.problem
-                    val fix =
-                        when (problem) {
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Permission -> Res.string.termuxFixAllowAccess
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Blocked -> Res.string.termuxFixOpenPermissions
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .OtherAppsOff -> Res.string.termuxFixAllowOtherApps
-                            else -> Res.string.termuxFixOpenTermux
-                        }
-                    val body =
-                        when (problem) {
-                            null -> Res.string.migrationRowBody
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Missing -> Res.string.termuxProblemNotInstalled
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Permission -> Res.string.termuxProblemAccessNeeded
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Blocked -> Res.string.termuxProblemAccessBlocked
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Unavailable -> Res.string.termuxProblemOutdated
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .OtherAppsOff -> Res.string.termuxProblemOtherAppsOff
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Asleep -> Res.string.termuxProblemAsleep
-                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
-                                .Unknown -> Res.string.migrationTermuxUnavailable
-                        }
-                    KitNotice(
-                        title =
-                            stringResource(Res.string.linuxMigrationOfferTitle, offer.displayName),
-                        message =
-                            stringResource(body) +
-                                if (
-                                    problem ==
-                                        io.github.eslamasabry.oc.feature.phone.presentation
-                                            .PhoneTermuxProblem
-                                            .OtherAppsOff
-                                )
-                                    "\n" + stringResource(Res.string.termuxOtherAppsBody)
-                                else "",
-                        actions =
-                            listOfNotNull(
-                                problem?.let {
-                                    KitLineAction(
-                                        stringResource(fix),
-                                        onClick = {
-                                            migrationActions.fixTermux(offer.profileId)
-                                        },
-                                    )
-                                },
-                                KitLineAction(
-                                    stringResource(Res.string.migrationOfferAction),
-                                    onClick = {
-                                        migrationActions.openTermuxMigration(offer.profileId)
-                                    },
-                                ),
-                            ),
-                    )
-                }
             state.exitNotice?.let { exit ->
                 KitNotice(
                     title =

@@ -31,7 +31,7 @@
     <string name="andr_notifyEnableFailed">The background connection did not start. Open Background settings to try again.</string>
     <string name="andr_pauseBackground">Pause background</string>
     <string name="andr_notifySaveFailed">Your choice could not be saved, so nothing was turned on. Try again.</string>
-    <string name="andr_termuxMoveNotice">This version no longer sets up or manages Termux. Your Termux server still connects while Termux keeps it running. Built-in Linux runs OpenCode inside this app instead.</string>
-    <string name="andr_termuxMoveNoticeSetupRunning">This version no longer sets up or manages Termux. A Termux setup was still running during the update; it carries on in Termux, and your Termux server connects once it\u0027s ready. Built-in Linux runs OpenCode inside this app instead.</string>
-    <string name="andr_termuxMoveNoticeSetUpBuiltin">Set up built-in Linux</string>
+    <string name="andr_termuxRetiredNotice">Termux is no longer supported. Set up built-in Linux on this phone, or connect to your computer. Your projects in Termux are still there; copy them to the phone\u0027s shared storage or push them with Git to bring them over.</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">Set up built-in Linux</string>
+    <string name="andr_termuxRetiredConnectComputer">Connect a computer</string>
 </resources>

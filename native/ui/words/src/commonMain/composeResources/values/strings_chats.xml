@@ -133,7 +133,6 @@
     <string name="handoffUiComputerUnsupported">This server can’t give a command that continues a conversation on a computer.</string>
     <string name="handoffUiComputerChanged">This conversation moved or its server changed. Go back and try again.</string>
     <string name="workRunawayStopped">Stopped %1$s</string>
-    <string name="workRunawayStopFailed">Couldn't stop %1$s. Try again, or stop it from Termux.</string>
     <string name="workStalled">Stalled</string>
     <string name="lastKnownUpdatedJustNow">Updated just now</string>
     <string name="lastKnownUpdatedAgo">Updated %1$s</string>
@@ -270,7 +269,6 @@
     <string name="gitRepairWorking">Repairing %1$s…</string>
     <string name="gitRepairLooking">Looking for missing Git files…</string>
     <string name="gitRepairRestoring">Putting back %1$d of %2$d Git files…</string>
-    <string name="gitRepairAskingTermux">Copying %1$d of %2$d Git files from Termux…</string>
     <string name="gitRepairChecking">Checking the project with Git…</string>
     <string name="gitRepairDoneTitle">%1$s is repaired</string>
     <plurals name="gitRepairDoneBody">
@@ -281,13 +279,8 @@
     <string name="gitRepairHealthyTitle">Nothing was missing</string>
     <string name="gitRepairHealthyBody">Git can read %1$s now.</string>
     <string name="gitRepairStart">Start the conversation</string>
-    <string name="gitRepairTermuxNotAllowedTitle">Files are in Termux</string>
-    <string name="gitRepairTermuxNotAllowedBody">Allow the app to run commands in Termux, and it copies them back.</string>
     <string name="gitRepairAllow">Allow and repair</string>
-    <string name="gitRepairTermuxNoAnswerTitle">Termux didn't answer</string>
-    <string name="gitRepairTermuxNoAnswerBody">Open Termux once so it starts, come back here, and repair again.</string>
     <string name="gitRepairAgain">Repair again</string>
-    <string name="gitRepairOpenTermux">Open Termux</string>
     <string name="gitRepairCannotTitle">Can't repair %1$s</string>
     <plurals name="gitRepairMissingBody">
         <item quantity="one">1 Git file isn't on this phone any more. Clone the project again from where it's hosted, or restore a copy.</item>
@@ -330,4 +323,5 @@
     <string name="chats_back">Back</string>
     <string name="chatsReturnBriefUnknown">Can't tell what's new on this server</string>
     <string name="chatsReturnBriefMore">and %1$d more</string>
+    <string name="workRunawayStopFailedRetry">Couldn't stop %1$s. Try again.</string>
 </resources>

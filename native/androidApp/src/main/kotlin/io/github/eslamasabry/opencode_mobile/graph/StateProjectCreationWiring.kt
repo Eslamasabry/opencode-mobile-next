@@ -56,8 +56,7 @@ class PhoneProjectCreation(
         if (stores.prefs.string("oc.builtinServerOwner") != server.profile.raw) return false
         if (saved.profile.transientTransport || saved.toServerProfile() != graph.profile)
             return false
-        // Termux is migration-only in native. Port 4097 is the app-owned Linux server, not another
-        // localhost host.
+        // Port 4097 is the app-owned Linux server, not another localhost host.
         val origin = graph.profile.origin
         return origin.scheme == "http" &&
             origin.port == PhoneServerScripts.PORT &&

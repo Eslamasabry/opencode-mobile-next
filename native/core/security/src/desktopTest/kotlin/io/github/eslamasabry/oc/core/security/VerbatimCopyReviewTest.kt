@@ -59,8 +59,6 @@ class VerbatimCopyReviewTest {
                 (1 to "rawCopy holds the app's own install and adb commands (port only) and redacted names; fallback is redacted"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TerminalWiring.kt" to
                 (1 to "the person's own terminal selection or transcript (Dart kit_terminal_view.dart, verbatim there too)"),
-            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TermuxMigrationWiring.kt" to
-                (1 to "a fixed, app-written Termux allow-external-apps command with no secret in it"),
             "feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/tools/ui/ToolsScreen.kt" to
                 (1 to "the tool parameter schema after KitRedact.text"),
             "feature/diagnostics/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/diagnostics/ui/KeptScreen.kt" to

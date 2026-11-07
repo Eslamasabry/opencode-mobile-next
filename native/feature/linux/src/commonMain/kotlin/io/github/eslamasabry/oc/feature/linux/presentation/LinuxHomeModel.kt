@@ -89,7 +89,6 @@ public data class LinuxHomeUi(
     val components: List<ComponentRemovalEntry> = emptyList(),
     val componentsLoading: Boolean = false,
     val componentBlock: ComponentRemovalBlock? = null,
-    val migrationOffers: List<LinuxMigrationOffer> = emptyList(),
 ) {
     /** The rows that act on Linux are offered only when it answers. */
     val ready: Boolean
@@ -151,8 +150,6 @@ public interface LinuxHomeActions : LinuxJobActions {
 /** Optional native journeys; existing layout-only consumers need only the base actions. */
 public interface LinuxHomeNativeActions : LinuxHomeActions {
     public fun addVoice()
-
-    public fun openMigration(profileId: String)
 }
 
 /** The job panel's intents, shared by every page that shows the job. */
@@ -175,7 +172,6 @@ public class LinuxHomeModel(
     private val idleSource: LinuxIdleSource? = null,
     lifetimesSource: LinuxLifetimesSource? = null,
     vitalsSource: LinuxVitalsSource? = null,
-    private val migrationOffers: LinuxMigrationOffers? = null,
 ) : LinuxHomeNativeActions {
     private val ui = MutableStateFlow(LinuxHomeUi())
     public val state: StateFlow<LinuxHomeUi> = ui.asStateFlow()
@@ -184,11 +180,6 @@ public class LinuxHomeModel(
     private val lifetimes = lifetimesSource?.let { LinuxLifetimesModel(it, scope) }
 
     init {
-        migrationOffers?.let { offers ->
-            scope.launch {
-                offers.offers.collect { values -> ui.update { it.copy(migrationOffers = values) } }
-            }
-        }
         vitalsSource?.let { source ->
             scope.launch {
                 visible.collectLatest { shown ->
@@ -240,7 +231,6 @@ public class LinuxHomeModel(
     override fun shown(visible: Boolean) {
         this.visible.value = visible
         if (visible) {
-            scope.launch { migrationOffers?.refresh() }
             scope.launch {
                 ui.update { it.copy(presence = manager.presence()) }
                 watch.refresh()
@@ -253,11 +243,6 @@ public class LinuxHomeModel(
     }
 
     override fun open(page: LinuxPage): Unit = nav.open(page)
-
-    override fun openMigration(profileId: String) {
-        if (ui.value.migrationOffers.any { it.profileId == profileId })
-            (nav as? LinuxMigrationNavigator)?.migrate(profileId)
-    }
 
     override fun askRepair() {
         guarded { ui.update { it.copy(confirm = LinuxConfirm.Repair) } }

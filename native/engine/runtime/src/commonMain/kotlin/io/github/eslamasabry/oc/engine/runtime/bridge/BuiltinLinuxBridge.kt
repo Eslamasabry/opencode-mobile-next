@@ -388,7 +388,7 @@ public class BuiltinLinuxBridge(
     public companion object {
         public const val CHANNEL_NAME: String = "io.github.eslamasabry.opencode_mobile/builtin_linux"
 
-        /** Not Termux's 4096: a separate port keeps the in-app server apart from the Termux-managed one. */
+        /** The in-app server's default port. */
         public val SERVER_PORT: Int get() = io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.BUILTIN_PORT
         public val SERVER_URL: String get() = "http://127.0.0.1:$SERVER_PORT"
         public const val SERVER_USERNAME: String = "opencode"

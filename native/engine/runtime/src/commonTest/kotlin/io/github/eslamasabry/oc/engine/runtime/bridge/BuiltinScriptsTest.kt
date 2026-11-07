@@ -23,7 +23,7 @@ class BuiltinScriptsTest {
     fun `B-LINUX-023 the in-app server is its own port, never the Termux-managed one`() {
         assertEquals("http://127.0.0.1:4098", BuiltinLinuxBridge.SERVER_URL)
         assertTrue(BuiltinLinuxBridge.managesServerUrl(BuiltinLinuxBridge.SERVER_URL))
-        // The Termux-managed server (TermuxBridge.managedServerUrl) is 127.0.0.1:4096.
+        // The retired Termux address (127.0.0.1:4096) is not the in-app server.
         assertFalse(BuiltinLinuxBridge.managesServerUrl("http://127.0.0.1:4096"))
         assertFalse(BuiltinLinuxBridge.managesServerUrl("http://0.0.0.0:4098"))
         assertFalse(BuiltinLinuxBridge.managesServerUrl("https://127.0.0.1:4098"))

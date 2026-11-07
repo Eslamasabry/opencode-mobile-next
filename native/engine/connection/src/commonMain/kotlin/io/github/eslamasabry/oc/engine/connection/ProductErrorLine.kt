@@ -30,7 +30,6 @@ public enum class ProductErrorLine(public val wordsKey: String) {
     Storage("productErrorStorage"),
     Secret("serverFailureSecret"),
     Device("productErrorDevice"),
-    Termux("productErrorTermux"),
     Computer("productErrorComputer"),
     ProjectGit("productErrorProjectGit"),
 
@@ -79,7 +78,6 @@ public fun productErrorText(failure: Failure): ProductErrorText {
             is Failure.Device,
             is Failure.Runtime,
             is Failure.Media -> ProductErrorLine.Device
-            is Failure.Termux -> ProductErrorLine.Termux
             is Failure.ComputerDidNotAnswer -> ProductErrorLine.Computer
             is Failure.ProjectGit -> ProductErrorLine.ProjectGit
             is Failure.Refused,

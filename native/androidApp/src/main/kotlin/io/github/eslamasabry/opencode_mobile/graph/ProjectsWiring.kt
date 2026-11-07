@@ -117,9 +117,7 @@ class LiveProjectServers(
                         // isManagedPhoneProfile), never any loopback tunnel to another machine.
                         graph.profile.managedOnPhone ||
                             graph.profile.backend == BackendKind.OpenCode2 &&
-                                graph.profile.origin.toString().let {
-                                    ManagedLocalServer.isTermux(it) || ManagedLocalServer.isBuiltin(it)
-                                },
+                                ManagedLocalServer.isBuiltin(graph.profile.origin.toString()),
                         attention = trackers[id]?.state,
                     )
                 }

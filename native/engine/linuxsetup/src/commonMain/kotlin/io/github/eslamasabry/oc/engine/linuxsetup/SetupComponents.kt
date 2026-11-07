@@ -52,8 +52,7 @@ private const val MB: Long = 1000L * 1000L
 /**
  * Every component the phone setup can install, in dependency order (port of `setupComponents`). [params] are per
  * component id; `opencode` reads `version` (the pin unless a caller asks for another on purpose; only OpenCode 2 is
- * supported). On [SetupHostKind.Termux] the Node check accepts an older working Node, and OpenCode keeps the
- * Termux manager's own script (not ported here: Termux is migrate-out only), so those components carry the check only.
+ * supported).
  *
  * AI Team is listed with its dependencies and weight, without scripts (its scripts are not ported to this module);
  * the voice model is an app-side component ([SetupComponent.app]) offered when [supportsVoice].
@@ -61,12 +60,47 @@ private const val MB: Long = 1000L * 1000L
 public fun setupComponentRegistry(
     titles: SetupComponentTitles = SetupComponentTitles(),
     params: Map<String, Map<String, String>> = emptyMap(),
-    host: SetupHostKind = SetupHostKind.Builtin,
     supportsVoice: Boolean = false,
 ): List<SetupComponent> {
     val version = params[SetupComponentIds.OPENCODE]?.get("version")
-    val builtin = host == SetupHostKind.Builtin
     return buildList {
+        addAll(baseComponents(titles))
+        add(
+            SetupComponent(
+                id = SetupComponentIds.OPENCODE, title = "OpenCode", why = titles.openCodeWhy,
+                dependsOn = listOf(SetupComponentIds.NODE), required = true, estimatedSeconds = 100,
+                downloadBytes = 50 * MB,
+                checkScript = SetupScripts.openCodeNativeCheck(version).orEmpty(),
+                presenceScript = SetupScripts.OPENCODE_PRESENCE,
+                installScript = SetupScripts.openCodeNativeInstall(version).orEmpty(),
+            ),
+        )
+        add(
+            SetupComponent(
+                id = SetupComponentIds.AI_TEAM, title = titles.aiTeam,
+                dependsOn = listOf(SetupComponentIds.ESSENTIALS, SetupComponentIds.OPENCODE), estimatedSeconds = 150,
+            ),
+        )
+        add(
+            SetupComponent(
+                id = SetupComponentIds.START, title = titles.start, why = titles.startWhy,
+                dependsOn = listOf(SetupComponentIds.OPENCODE), required = true, jobStep = true, estimatedSeconds = 15,
+            ),
+        )
+        if (supportsVoice) {
+            add(
+                SetupComponent(
+                    id = SetupComponentIds.VOICE, title = titles.voice, summary = titles.voiceSummary,
+                    estimatedSeconds = 45, app = true,
+                ),
+            )
+        }
+    }
+}
+
+/** Linux, the essentials, Python and Node.js, in [setupComponentRegistry]'s order. */
+private fun baseComponents(titles: SetupComponentTitles): List<SetupComponent> =
+    buildList {
         add(
             SetupComponent(
                 id = SetupComponentIds.LINUX, title = titles.linux, why = titles.linuxWhy, required = true,
@@ -95,40 +129,8 @@ public fun setupComponentRegistry(
                 id = SetupComponentIds.NODE, title = "Node.js", why = titles.nodeWhy,
                 dependsOn = listOf(SetupComponentIds.ESSENTIALS), required = true, estimatedSeconds = 20,
                 downloadBytes = 58 * MB,
-                checkScript = if (builtin) SetupScripts.NODE_CHECK else SetupScripts.TERMUX_NODE_CHECK,
+                checkScript = SetupScripts.NODE_CHECK,
                 presenceScript = SetupScripts.NODE_PRESENCE, installScript = SetupScripts.NODE_INSTALL,
             ),
         )
-        add(
-            SetupComponent(
-                id = SetupComponentIds.OPENCODE, title = "OpenCode", why = titles.openCodeWhy,
-                dependsOn = listOf(SetupComponentIds.NODE), required = true, estimatedSeconds = 100,
-                downloadBytes = 50 * MB,
-                checkScript =
-                    (if (builtin) SetupScripts.openCodeNativeCheck(version) else SetupScripts.openCodeCheck(version)).orEmpty(),
-                presenceScript = SetupScripts.OPENCODE_PRESENCE,
-                installScript = if (builtin) SetupScripts.openCodeNativeInstall(version).orEmpty() else "",
-            ),
-        )
-        add(
-            SetupComponent(
-                id = SetupComponentIds.AI_TEAM, title = titles.aiTeam,
-                dependsOn = listOf(SetupComponentIds.ESSENTIALS, SetupComponentIds.OPENCODE), estimatedSeconds = 150,
-            ),
-        )
-        add(
-            SetupComponent(
-                id = SetupComponentIds.START, title = titles.start, why = titles.startWhy,
-                dependsOn = listOf(SetupComponentIds.OPENCODE), required = true, jobStep = true, estimatedSeconds = 15,
-            ),
-        )
-        if (supportsVoice) {
-            add(
-                SetupComponent(
-                    id = SetupComponentIds.VOICE, title = titles.voice, summary = titles.voiceSummary,
-                    estimatedSeconds = 45, app = true,
-                ),
-            )
-        }
     }
-}

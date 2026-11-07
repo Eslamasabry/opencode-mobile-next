@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.engine.lifecycle
 
-// Port of isPhoneOwnServer (lib/ui/widgets/termux_running_server_entry.dart), looksLikeInAppServer
-// (lib/builtin/builtin_server.dart), isManagedPhoneProfile and isLocalAgentProfile (lib/state/local_agent_server.dart).
+// Port of isPhoneOwnServer, looksLikeInAppServer (lib/builtin/builtin_server.dart) and isLocalAgentProfile
+// (lib/state/local_agent_server.dart).
 // Emulator QA F14: a server reached at the loopback address through `adb reverse` is a server, not "This phone".
-// Only the app's own servers (the in-app one, the Termux one it manages, the agent daemon on this phone) count.
+// Only the app's own servers (the in-app one and the agent daemon on this phone) count.
 
 /** Which protocol a saved server speaks, as far as the "this phone" rule cares. */
 public enum class PhoneServerBackend { OpenCode, Paseo, Other }
@@ -11,38 +11,31 @@ public enum class PhoneServerBackend { OpenCode, Paseo, Other }
 /** The parts of a saved server profile the rule reads. */
 public data class PhoneServerCandidate(val id: String, val baseUrl: String, val backend: PhoneServerBackend = PhoneServerBackend.OpenCode)
 
-/** What this platform can host: the in-app Linux (Android only) and Termux (Android only). */
-public data class PhoneHostSupport(val inAppLinux: Boolean, val termux: Boolean) {
+/** What this platform can host: the in-app Linux (Android only). */
+public data class PhoneHostSupport(val inAppLinux: Boolean) {
     public companion object {
-        public val Android: PhoneHostSupport = PhoneHostSupport(inAppLinux = true, termux = true)
-        public val Elsewhere: PhoneHostSupport = PhoneHostSupport(inAppLinux = false, termux = false)
+        public val Android: PhoneHostSupport = PhoneHostSupport(inAppLinux = true)
+        public val Elsewhere: PhoneHostSupport = PhoneHostSupport(inAppLinux = false)
     }
 }
 
 public object PhoneOwnServers {
-    /** The in-app server's port (BuiltinLinux.serverPort); not Termux's. */
+    /** The in-app server's port (BuiltinLinux.serverPort). */
     private var nativePort: () -> Int = { 4098 }
     public fun configureNativePort(read: () -> Int) { nativePort = read }
     public val IN_APP_PORT: Int get() = nativePort()
     public val IN_APP_URL: String get() = "http://127.0.0.1:$IN_APP_PORT"
 
-    /** The server this app runs in Termux (termuxManagedServerPort). */
-    public const val TERMUX_PORT: Int = 4096
-    public const val TERMUX_URL: String = "http://127.0.0.1:$TERMUX_PORT"
-
-    /** The agent daemon on this phone (TermuxBridge.localAgentsPort). */
+    /** The agent daemon on this phone (localAgentsPort). */
     public const val LOCAL_AGENTS_PORT: Int = 6767
 
     /** True only for the phone's own servers: these lead with the phone mark; any other loopback address is a server. */
     public fun isPhoneOwnServer(profile: PhoneServerCandidate, support: PhoneHostSupport): Boolean =
-        looksLikeInAppServer(profile, support) || (support.termux && (isManagedTermux(profile) || isLocalAgent(profile)))
+        looksLikeInAppServer(profile, support) || (support.inAppLinux && isLocalAgent(profile))
 
     public fun looksLikeInAppServer(profile: PhoneServerCandidate?, support: PhoneHostSupport): Boolean =
         profile != null && profile.backend == PhoneServerBackend.OpenCode && support.inAppLinux &&
             managesExactly(profile.baseUrl, IN_APP_PORT)
-
-    public fun isManagedTermux(profile: PhoneServerCandidate): Boolean =
-        profile.backend == PhoneServerBackend.OpenCode && managesExactly(profile.baseUrl, TERMUX_PORT)
 
     public fun isLocalAgent(profile: PhoneServerCandidate): Boolean {
         if (profile.backend != PhoneServerBackend.Paseo) return false

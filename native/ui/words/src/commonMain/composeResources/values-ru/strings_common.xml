@@ -8,7 +8,6 @@
     <string name="modelServerDefault">По умолчанию на сервере</string>
     <string name="refreshRetry">Повторить</string>
     <string name="commonRetry">Повторить</string>
-    <string name="termuxPermissionDenied">Android не разрешил этому приложению запускать команды в Termux.</string>
     <string name="workspaceDismissNotice">Закрыть</string>
     <string name="onboardingSetupGuide">Руководство по настройке</string>
     <string name="onboardingTermuxSetup">На этом телефоне</string>
@@ -22,9 +21,7 @@
     <string name="chatUiDelegateThisPrompt">Делегировать этот запрос</string>
     <string name="chatUiOpenProviders">Открыть провайдеров</string>
     <string name="e7LibraryReportABug">Сообщить о проблеме</string>
-    <string name="e7SetupTermuxNoAnswer">Termux не ответил. Нажмите «Скопировать и открыть Termux», вставьте строку в Termux, нажмите Enter и вернитесь сюда.</string>
     <string name="e7SetupAddServer">Добавить сервер</string>
-    <string name="e7SetupTermuxOutdated">Эта версия Termux слишком старая для приложения. Установите актуальную и нажмите «Продолжить настройку».</string>
     <string name="e7SetupAboutNotices">О приложении и лицензии открытого ПО</string>
     <string name="phoneSetupProgressTitle">Настройка OpenCode на этом телефоне</string>
     <string name="builtinServerStopped">Не запущен.</string>
@@ -83,7 +80,6 @@
     </plurals>
     <string name="serverRowQueuedWaiting__eq1">%1$d сообщение ждёт отправки</string>
     <string name="termuxInAppInstead">Настроить встроенный сервер</string>
-    <string name="termuxInAppInsteadDetail">Чистый старт внутри этого приложения. Termux не нужен.</string>
     <string name="freeModelSignIn">Добавить API-ключ</string>
     <string name="kitTurnLiveSeconds">%1$d с</string>
     <string name="kitComposerRailRetry">Повторить</string>

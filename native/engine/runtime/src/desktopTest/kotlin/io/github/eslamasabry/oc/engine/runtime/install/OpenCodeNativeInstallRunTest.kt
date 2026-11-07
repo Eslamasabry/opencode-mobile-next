@@ -239,7 +239,7 @@ class OpenCodeNativeInstallRunTest {
         // test/opencode_native_install_test.dart's smoke is opt-in (OC_SMOKE_REAL_OPENCODE=1, ~150 MB from npm).
         // Here: the production script is exactly the pinned one the smoke runs, and dash parses it with the preludes.
         val production = OpenCodeInstallScripts.nativeInstall()
-        assertEquals(OpenCodeInstallScripts.component(SetupHost.Builtin).installScript, production)
+        assertEquals(OpenCodeInstallScripts.component().installScript, production)
         assertTrue("oc_url='${OpenCodePins.v2X64.url}'; oc_sha=${OpenCodePins.v2X64.sha256}" in production)
         if (!Sh.has("dash")) return
         val parsed = Sh.run(listOf("dash", "-n", "-c", InstallPrelude.withPrelude(production)), mapOf("PATH" to "/usr/bin:/bin"))

@@ -84,8 +84,6 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRunningDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorage
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrTitle
-import io.github.eslamasabry.oc.ui.words.res.linuxMigrationOfferBody
-import io.github.eslamasabry.oc.ui.words.res.linuxMigrationOfferTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStop
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStopBody
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStopQuestion
@@ -127,20 +125,6 @@ public fun LinuxHomeScreen(
         loading = state.presence == null || state.working,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            val nativeActions =
-                actions
-                    as? io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeNativeActions
-            state.migrationOffers
-                .filter { nativeActions != null }
-                .forEach { offer ->
-                    KitRow(
-                        title =
-                            stringResource(Res.string.linuxMigrationOfferTitle, offer.displayName),
-                        supporting = stringResource(Res.string.linuxMigrationOfferBody),
-                        supportingMaxLines = 3,
-                        onClick = { nativeActions?.openMigration(offer.profileId) },
-                    )
-                }
             val dismiss =
                 KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {

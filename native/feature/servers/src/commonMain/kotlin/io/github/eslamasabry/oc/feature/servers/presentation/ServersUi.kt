@@ -32,7 +32,6 @@ public data class ServersUi(
     val pairingArrival: Int = 0,
     val pairingProblem: PairingProblem? = null,
     val pairingChecks: ImmutableList<PairingCheck> = persistentListOf(),
-    val importedSignIns: ImportedSignInUi? = null,
 )
 
 public enum class ServerIssue {
@@ -113,12 +112,6 @@ public interface ServersActions {
 
     /** STATE: the setup inspection page (SetupRoute.Home). */
     public fun openStateSetup(id: ProfileId) {}
-
-    public fun reviewImportedSignIns(id: ProfileId) {}
-
-    public fun closeImportedSignIns() {}
-
-    public fun openProviderSignIn() {}
 
     /** STATE: the offline demo conversation. */
     public fun tryOffline() {}

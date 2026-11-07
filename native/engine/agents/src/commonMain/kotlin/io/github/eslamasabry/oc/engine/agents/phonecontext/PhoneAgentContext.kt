@@ -3,8 +3,8 @@ package io.github.eslamasabry.oc.engine.agents.phonecontext
 /**
  * Port of lib/domain/phone_agent_context.dart: what an agent running on the person's phone is told about where it is.
  *
- * OpenCode loads a global `AGENTS.md` into every conversation. The phone servers (Termux and the built-in Ubuntu)
- * write this block into the global file of both OpenCode generations before each start. Only the text between the
+ * OpenCode loads a global `AGENTS.md` into every conversation. The phone server (the built-in Ubuntu) writes this
+ * block into the global file of both OpenCode generations before each start. Only the text between the
  * markers is ours; anything the person wrote in the file stays. The block is agent instruction text (not app copy),
  * byte-identical to the Flutter build.
  */
@@ -19,7 +19,6 @@ public object PhoneAgentContext {
     )
 
     public enum class Host(internal val text: String) {
-        Termux("Ubuntu running in Termux (under proot)"),
         Builtin("the OpenCode Mobile app's built-in Ubuntu"),
     }
 
@@ -62,7 +61,6 @@ public object PhoneAgentContext {
      */
     public fun script(host: Host): String = "${SCRIPT_HEAD}cat <<'OC_CTX_BODY'\n${block(host)}OC_CTX_BODY\n$SCRIPT_TAIL"
 
-    public val termuxScript: String get() = script(Host.Termux)
     public val builtinScript: String get() = script(Host.Builtin)
 
     private const val SCRIPT_HEAD = "oc_ctx_body() {\n"

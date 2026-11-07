@@ -36,17 +36,6 @@ import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class LinuxEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
-        entry<LinuxRoute.Migration> { route ->
-            val vm =
-                assistedMetroViewModel<
-                    io.github.eslamasabry.oc.feature.linux.presentation.LinuxMigrationViewModel,
-                    io.github.eslamasabry.oc.feature.linux.presentation.LinuxMigrationViewModel.Factory,
-                > {
-                    create(route)
-                }
-            val state by vm.state.collectAsStateWithLifecycle()
-            io.github.eslamasabry.oc.feature.linux.ui.LinuxMigrationScreen(state, vm)
-        }
         entry<LinuxRoute.Services> { route ->
             val vm =
                 assistedMetroViewModel<LinuxServicesViewModel, LinuxServicesViewModel.Factory> {

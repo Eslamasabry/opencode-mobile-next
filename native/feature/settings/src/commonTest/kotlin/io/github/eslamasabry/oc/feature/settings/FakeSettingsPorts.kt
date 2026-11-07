@@ -32,7 +32,7 @@ val android: PlatformCapabilities = PlatformCapabilities.android()
 
 val desktop: PlatformCapabilities =
     PlatformCapabilities.android().copy(
-        builtinLinux = false, termuxMigration = false, voice = false, readAloud = false, backgroundService = false,
+        builtinLinux = false, voice = false, readAloud = false, backgroundService = false,
         notifications = false, homeWidgets = false, launchShortcuts = false, quickSettingsTiles = false,
         inAppUpdater = false, desktopReleaseCheck = false,
     )

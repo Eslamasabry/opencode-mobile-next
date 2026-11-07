@@ -38,10 +38,8 @@ internal fun SettingsCapabilityFlows(host: SettingsHost, content: @Composable ()
                 door(KitEnableFlow.ServerGeneration, SettingsOutside.Servers)
                 door(KitEnableFlow.AddServerCodex, SettingsOutside.Servers)
                 door(KitEnableFlow.AddServerPaseo, SettingsOutside.Servers)
-                if (facts.platform.builtinLinux) {
+                if (facts.platform.builtinLinux)
                     door(KitEnableFlow.PhoneSetup, SettingsOutside.ThisPhone)
-                    door(KitEnableFlow.AddToolClaude, SettingsOutside.Agents)
-                }
                 if (facts.server != null) {
                     door(KitEnableFlow.ModelSignIn, SettingsOutside.Providers)
                     door(KitEnableFlow.McpAdd, SettingsOutside.Tools)

@@ -38,7 +38,6 @@
     <ID>CyclomaticComplexMethod:HandoffWords.kt$HandoffWords$public fun stale(reason: HandoffStaleReason, language: Language = Language.En): String</ID>
     <ID>CyclomaticComplexMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun open(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)</ID>
     <ID>CyclomaticComplexMethod:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun start(text: String, name: String)</ID>
-    <ID>CyclomaticComplexMethod:LocalAgentStatus.kt$LocalAgentFailureKind.Companion$public fun parse(raw: String?): LocalAgentFailureKind?</ID>
     <ID>CyclomaticComplexMethod:ModelLibrary.kt$ModelLibrary.Companion$private fun read(raw: JsonElement?, limit: Int?): ImmutableList&lt;ModelRef&gt;</ID>
     <ID>CyclomaticComplexMethod:ModelRecommendations.kt$public fun recommendModels( models: List&lt;CatalogModel&gt;, current: ModelRef? = null, defaults: List&lt;ModelRef&gt; = emptyList(), recent: List&lt;ModelRef&gt; = emptyList(), favorites: List&lt;ModelRef&gt; = emptyList(), limit: Int = 3, ): List&lt;ModelRecommendation&gt;</ID>
     <ID>CyclomaticComplexMethod:PhoneCheck.kt$PhoneCheck$private suspend fun check(owner: OwnerId, agent: AgentDescriptor, automatic: Boolean): PhoneCheckResult</ID>
@@ -50,7 +49,6 @@
     <ID>CyclomaticComplexMethod:SessionImportEngine.kt$SessionImportEngine$public suspend fun send(): Unit</ID>
     <ID>CyclomaticComplexMethod:SignInOutputReader.kt$SignInOutputReader$public fun read(rows: Iterable&lt;SignInRow&gt;, width: Int? = null): SignInOutput</ID>
     <ID>EmptyElseBlock:AgentJson.kt$AgentJson$if (i &gt; 0) out.append(',')</ID>
-    <ID>LargeClass:LocalAgentsScript.kt$LocalAgentsScript</ID>
     <ID>LongMethod:AgentPhoneScripts.kt$AgentPhoneScripts$public fun install(agent: AgentDescriptor): String</ID>
     <ID>LongMethod:AgentReadiness.kt$AgentReadiness$private fun build( descriptor: AgentDescriptor, architecture: AgentArchitecture, server: ServerCapabilities, runtime: PhoneAgentRuntime?, ): AgentRow</ID>
     <ID>LongMethod:HandoffEngine.kt$HandoffEngine$private suspend fun prepareSteps(lastState: String): HandoffPrepared</ID>
@@ -120,8 +118,6 @@
     <ID>MagicNumber:HandoffRecord.kt$4</ID>
     <ID>MagicNumber:HandoffRecord.kt$HandoffRecordBuilder$4</ID>
     <ID>MagicNumber:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$32</ID>
-    <ID>MagicNumber:LocalAgentStatus.kt$LocalAgentStatus.Companion$1000</ID>
-    <ID>MagicNumber:LocalAgentsScript.kt$LocalAgentsScript$5000</ID>
     <ID>MagicNumber:ModelRecommendations.kt$100</ID>
     <ID>MagicNumber:ModelRecommendations.kt$1000</ID>
     <ID>MagicNumber:Oc2Routes.kt$200</ID>
@@ -377,18 +373,6 @@
     <ID>MaxLineLength:HostAgentProvidersTest.kt$HostAgentProvidersTest$assertFailsWith&lt;IllegalArgumentException&gt; { HostAgentPermissionRequest("request-2", "session-1", listOf(allow, allow)) }</ID>
     <ID>MaxLineLength:HostAgentProvidersTest.kt$HostAgentProvidersTest$for</ID>
     <ID>MaxLineLength:HostAgentProvidersTest.kt$HostAgentProvidersTest$provider(availability = HostAgentProviderAvailability.NeedsHostSignIn, loginState = HostAgentLoginState.Unknown)</ID>
-    <ID>MaxLineLength:LocalAgentRuntime.kt$LocalAgentRuntime$is LocalAgentResult.Done -&gt; LocalAgentResult.Done(LocalAgentSignIn.parse(SIGNED_IN.find(r.value)?.groupValues?.get(2)))</ID>
-    <ID>MaxLineLength:LocalAgentRuntime.kt$LocalAgentRuntime$r.value.split('\n').filter { it.startsWith("project=/") }.map { it.substring("project=".length).trim() }</ID>
-    <ID>MaxLineLength:LocalAgentRuntimeTest.kt$LocalAgentRuntimeTest$(if (polls &lt; 3) "phase=installing\nbusy=yes\nstep=paseo\n" else "phase=installed\nbusy=no\ninstalled=yes\n").ok()</ID>
-    <ID>MaxLineLength:LocalAgentRuntimeTest.kt$LocalAgentRuntimeTest$(if (verb == "projects") "project=/root/projects/a\nnoise\nproject=/root/projects/b\n" else "project=/root/projects/c\n").ok()</ID>
-    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$Fixture.Companion$"#!/bin/bash\necho \"Filesystem 1024-blocks Used Available Capacity Mounted on\"\necho \"/dev/x 99999999 1 90000000 1% /\"\n"</ID>
-    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$Fixture.Companion$val root = Files.createTempDirectory(if (shm.isDirectory) shm.toPath() else File(System.getProperty("java.io.tmpdir")).toPath(), "oc-claude-").toFile()</ID>
-    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$File("${fx.ubuntuHome}/.claude/.credentials.json").writeText("{\"claudeAiOauth\":{\"accessToken\":\"sk-secret\"}}")</ID>
-    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$for ((key, value) in LocalAgentsScript.pins) assertTrue("'$key': '$value'" in dart.replace(Regex(":\\s+'"), ": '"), key)</ID>
-    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$fun</ID>
-    <ID>MaxLineLength:LocalAgentScriptFixtureTest.kt$LocalAgentScriptFixtureTest$val repo = generateSequence(File("").absoluteFile) { it.parentFile }.first { File(it, "lib/domain/agent_catalog.dart").isFile }</ID>
-    <ID>MaxLineLength:LocalAgentStatus.kt$LocalAgentPhase$public val isTransient: Boolean get() = this == Installing || this == Starting || this == Stopping || this == Removing</ID>
-    <ID>MaxLineLength:LocalAgentStatus.kt$LocalAgentStatus$get() = if (phase == LocalAgentPhase.Failed) LocalAgentFailure(failureKind ?: LocalAgentFailureKind.Other, message) else null</ID>
     <ID>MaxLineLength:MemoryTest.kt$MemoryTest$assertEquals(listOf("""{"k":"claude:ses_1","t":"Fix the \"login\" bug"}"""), prefs.stringList("oc.conversationTitles.p1"))</ID>
     <ID>MaxLineLength:MemoryTest.kt$MemoryTest$assertEquals(listOf("""{"s":"ses_1","r":"auth failed •••","p":"anthropic","m":"sonnet"}"""), prefs.stringList("oc.agentTurnFailures.p1"))</ID>
     <ID>MaxLineLength:MemoryTest.kt$MemoryTest$fun</ID>
@@ -558,8 +542,6 @@
     <ID>ReturnCount:HelperEndpointMatch.kt$HelperEndpointMatch$public fun matches(candidate: EndpointCandidate): Boolean</ID>
     <ID>ReturnCount:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$private fun event(envelope: GatewayEnvelope)</ID>
     <ID>ReturnCount:IsolatedTaskLaunch.kt$IsolatedTaskLaunch$public fun open(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)</ID>
-    <ID>ReturnCount:LocalAgentRuntime.kt$LocalAgentRuntime$private fun settled(status: LocalAgentStatus): LocalAgentResult&lt;LocalAgentStatus&gt;</ID>
-    <ID>ReturnCount:LocalAgentRuntime.kt$LocalAgentRuntime$private suspend fun dispatch(verb: String, args: List&lt;String&gt; = emptyList()): LocalAgentResult&lt;LocalAgentStatus&gt;</ID>
     <ID>ReturnCount:ModelRecommendations.kt$fun rank(model: CatalogModel): Int</ID>
     <ID>ReturnCount:ModelRef.kt$WireModelRef.Companion$public fun fromJson(value: JsonElement?): WireModelRef?</ID>
     <ID>ReturnCount:ModelRef.kt$public fun catalogEntryModelId(entry: JsonObject): String?</ID>
@@ -599,7 +581,6 @@
     <ID>TooManyFunctions:HandoffEngine.kt$HandoffEngine</ID>
     <ID>TooManyFunctions:HandoffLinks.kt$HandoffLinks</ID>
     <ID>TooManyFunctions:IsolatedTaskLaunch.kt$IsolatedTaskLaunch</ID>
-    <ID>TooManyFunctions:LocalAgentRuntime.kt$LocalAgentRuntime</ID>
     <ID>UnusedParameter:AutoApprovalStore.kt$AutoApprovalStore$profile: ProfileId</ID>
     <ID>WildcardImport:ConnectedHandoffGateway.kt$import kotlinx.serialization.json.*</ID>
   </CurrentIssues>

@@ -13,7 +13,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Ports of setup_engine_test.dart (trace, start errors), setup_inventory_test.dart and setup_termux_host_test.dart. */
+/** Ports of setup_engine_test.dart (trace, start errors) and setup_inventory_test.dart. */
 class SetupEngineTest {
     private val host = FakeSetupHost()
     private val tools = SetupToolsChanged()
@@ -30,10 +30,9 @@ class SetupEngineTest {
         SetupEngine(host, FixedClock(), backgroundScope, tools, components = { inventoryComponents })
 
     private fun TestScope.engine(
-        kind: SetupHostKind = SetupHostKind.Builtin,
         components: (Map<String, Map<String, String>>) -> List<SetupComponent> = { setupComponentRegistry(params = it) },
         log: (() -> String) -> Unit = {},
-    ) = SetupEngine(host, FixedClock(), backgroundScope, tools, kind, components, trace, log)
+    ) = SetupEngine(host, FixedClock(), backgroundScope, tools, components = components, trace = trace, log = log)
 
     // ---- B-LINUX-206 / B-LINUX-207: the shared inventory -----------------------------------------------------------
 
@@ -192,47 +191,11 @@ class SetupEngineTest {
         assertTrue(host.started.isEmpty())
     }
 
-    // ---- B-SEC-170: Termux params -------------------------------------------------------------------------------
-
-    @Test
-    fun `B-SEC-170 unsafe or unknown raw setup params are rejected by the validator`() {
-        for (params in listOf(
-            mapOf("opencode" to mapOf("password" to "fake-value")),
-            mapOf("opencode" to mapOf("runtime" to "unsupported")),
-            mapOf("opencode" to mapOf("version" to "1.2.3; echo injected")),
-            mapOf("_job" to mapOf("adding" to "token=fake-value")),
-        )) {
-            assertFalse(TermuxSetupParams.isValid(params), params.toString())
-        }
-    }
+    // ---- B-SEC-170: setup params ----------------------------------------------------------------------------------
 
     @Test
     fun `B-SEC-170 legacy runtime and version requests normalize to supported OC2`() {
         val params = effectiveJobParams(mapOf("opencode" to mapOf("runtime" to "opencode1", "version" to "1.19.0")), null)
         assertEquals(mapOf("runtime" to "opencode2"), params["opencode"])
-        assertTrue(TermuxSetupParams.isValid(params))
-    }
-
-    @Test
-    fun `B-SEC-170 unsafe effective setup params never generate install scripts`() = runTest {
-        var generated = false
-        val engine =
-            engine(
-                kind = SetupHostKind.Termux,
-                components = {
-                    generated = true
-                    emptyList()
-                },
-            )
-        for (params in listOf(
-            mapOf("opencode" to mapOf("password" to "fake-value")),
-            mapOf("opencode" to mapOf("version" to "2.2.5; echo injected")),
-            mapOf("_job" to mapOf("adding" to "token=fake-value")),
-        )) {
-            assertEquals(SetupRunRefusal(TermuxSetupParams.INVALID_CODE), engine.run(emptySet(), params))
-        }
-        assertFalse(generated)
-        assertTrue(host.statusReads.all { it == "setupStatus" })
-        assertTrue(host.started.isEmpty())
     }
 }

@@ -1,9 +1,8 @@
 package io.github.eslamasabry.oc.engine.runtime.switching
 
 /*
- * Port of `TermuxBridge.managesServerUrl` (lib/termux/bridge.dart), `BuiltinLinux.managesServerUrl`
- * (lib/builtin/builtin_linux.dart) and the `isManagedLocal` test of lib/state/connection/connect.dart: which saved
- * profile is an app-managed OpenCode on this phone.
+ * Port of `BuiltinLinux.managesServerUrl` (lib/builtin/builtin_linux.dart) and the `isManagedLocal` test of
+ * lib/state/connection/connect.dart: which saved profile is an app-managed OpenCode on this phone.
  */
 
 /** The kind of server a profile talks to (Dart `ServerBackend`); only [OpenCode] can be app-managed. */
@@ -20,10 +19,7 @@ public data class LocalProfile(
 )
 
 public object ManagedLocalServer {
-    /** Termux's managed OpenCode. */
-    public const val TERMUX_PORT: Int = 4096
-
-    /** The in-app (built-in Linux) OpenCode: not Termux's 4096, so both can run at once. */
+    /** The in-app (built-in Linux) OpenCode. */
     private var nativePort: () -> Int = { 4098 }
     public fun configureNativePort(read: () -> Int) { nativePort = read }
     public val BUILTIN_PORT: Int get() = nativePort()
@@ -36,15 +32,13 @@ public object ManagedLocalServer {
         return address.first == "127.0.0.1" && address.second == port
     }
 
-    public fun isTermux(value: String?): Boolean = managesUrl(value, TERMUX_PORT)
-
     public fun isBuiltin(value: String?): Boolean = managesUrl(value, BUILTIN_PORT)
 
-    /** An app-managed OpenCode at either managed address; another backend at the same URL is not. */
+    /** An app-managed OpenCode at the managed address; another backend at the same URL is not. */
     public fun isManagedLocal(profile: LocalProfile?): Boolean =
         profile != null &&
             profile.backend == ServerBackendKind.OpenCode &&
-            (isTermux(profile.baseUrl) || isBuiltin(profile.baseUrl))
+            isBuiltin(profile.baseUrl)
 
     /** Dart `looksLikeInAppServer` (without the platform check, which the shell owns). */
     public fun looksLikeInAppServer(profile: LocalProfile?): Boolean =

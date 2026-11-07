@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.runtime.install
 
+import io.github.eslamasabry.oc.engine.runtime.bridge.BuiltinScriptTexts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -18,7 +19,7 @@ class VerbatimScriptsTest {
         )
         assertEquals(
             Sh.releasedDartRaw("lib/termux/opencode_ubuntu_setup.dart", "openCodeUbuntuSetupScript"),
-            OpenCodeUbuntuSetup.SCRIPT,
+            BuiltinScriptTexts.UBUNTU_SETUP,
         )
     }
 }

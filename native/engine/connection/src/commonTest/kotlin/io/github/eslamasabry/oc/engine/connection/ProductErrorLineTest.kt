@@ -87,7 +87,6 @@ class ProductErrorLineTest {
         val device = productErrorText(Failure.Device(Redacted("Libsecret error: Failed to unlock the keyring")))
         assertEquals(ProductErrorLine.Device, device.line)
         assertEquals("Libsecret error: Failed to unlock the keyring", device.details?.text, "native text is only the details")
-        assertEquals(ProductErrorLine.Termux, productErrorText(Failure.Termux(Redacted("bash: line 3: opencode: command not found"))).line)
         assertEquals(ProductErrorLine.Computer, productErrorText(Failure.ComputerDidNotAnswer()).line)
     }
 }

@@ -55,13 +55,10 @@ public interface SetupRunnerPort {
 
 /** What the engine asks of the app once OpenCode is installed: start the server and connect to it. */
 public data class SetupFinishRequest(
-    val host: SetupHost = SetupHost.Builtin,
     /** OpenCode was installed or updated by this job, so a server already running is the old one. */
     val openCodeChanged: Boolean,
     val version: String? = null,
 )
-
-public enum class SetupHost { Builtin, Termux }
 
 /** Starts and connects; Ok when OpenCode answers. */
 public fun interface SetupFinishStep {
@@ -106,8 +103,7 @@ public fun expandSelection(registry: List<SetupPart>, ids: Set<String>): List<Se
  * failed job with Continue, its technical shape kept for Details only. While a job is being started, a record of any
  * other job is old news and never replaces this job's rows. Every job end bumps [toolsChanged] exactly once.
  *
- * Not ported here: app-side components (voice model), the Termux host's uncertain hand-over, cancel, and the process
- * budget wait; each is its own row.
+ * Not ported here: app-side components (voice model), cancel, and the process budget wait; each is its own row.
  */
 public class SetupJobEngine(
     private val runner: SetupRunnerPort,

@@ -24,7 +24,6 @@
     <string name="e7ConnectionFailure22">Usa un certificado de una autoridad de confianza o una dirección de Tailscale Serve.</string>
     <string name="e7ConnectionFailure23">Con un certificado autofirmado, edita este servidor y revisa su huella antes de confiar.</string>
     <string name="e7ConnectionFailure24">Nada respondió en este teléfono</string>
-    <string name="e7ConnectionFailure26">¿Ejecutas OpenCode en Termux? Abre Termux y comprueba que el servidor siga en ejecución.</string>
     <string name="e7ConnectionFailure27">¿Usas adb reverse o un reenvío SSH? Comprueba que el túnel siga conectado e inténtalo de nuevo.</string>
     <string name="e7ConnectionFailure28">¿Te conectas a otra computadora? Cambia el servidor a su dirección HTTPS o vuelve a emparejar.</string>
     <string name="e7ConnectionFailure29">El servidor no respondió a tiempo</string>
@@ -58,7 +57,6 @@
     <string name="agentErrorServerDiskFull">La computadora donde se ejecuta OpenCode se quedó sin espacio en disco.</string>
     <string name="agentErrorServerDiskFullHint">Libera espacio allí y vuelve a intentarlo.</string>
     <string name="phoneServerStoppedTitle">El servidor de este teléfono está detenido</string>
-    <string name="phoneServerStoppedBody">Se detiene cuando el teléfono se reinicia o Android cierra Termux para ahorrar batería. Tus conversaciones se conservan; inícialo de nuevo para continuar.</string>
     <string name="inAppServerStoppedTitle">OpenCode dentro de la app está detenido</string>
     <string name="inAppServerStoppedBody">Se detiene cuando la app se cierra un tiempo o se actualiza. Tus conversaciones se conservan; inícialo de nuevo para continuar.</string>
     <string name="inAppServerNotRespondingTitle">OpenCode dentro de la app no responde</string>

@@ -37,7 +37,7 @@ public data class LinuxRunResult(val exitCode: Int, val output: String) {
     val ok: Boolean get() = exitCode == 0
 }
 
-/** The port that runs one script as root inside the phone's Ubuntu (in-app proot or Termux), within [timeout]. */
+/** The port that runs one script as root inside the phone's Ubuntu (in-app proot), within [timeout]. */
 public fun interface HistoryShellPort {
     public suspend fun run(script: String, timeout: Duration): Outcome<LinuxRunResult>
 }

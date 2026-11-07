@@ -292,10 +292,6 @@
     <string name="kitCapPhoneBuiltinWhy">本机尚无自己的服务器。</string>
     <string name="kitCapPhoneBuiltinEnable">设置本机</string>
     <string name="kitCapPhoneBuiltinOffer">直接在本机运行智能体。要设置吗？</string>
-    <string name="kitCapPhoneTermuxTitle">Termux 中的服务器</string>
-    <string name="kitCapPhoneTermuxWhy">需要本机安装 Termux。</string>
-    <string name="kitCapPhoneTermuxEnable">使用 Termux 设置</string>
-    <string name="kitCapPhoneTermuxOffer">改为在 Termux 中运行本机的服务器？</string>
     <string name="kitCapPhoneAnyTitle">本机上的服务器</string>
     <string name="kitCapPhoneAnyWhy">需要在本机上运行的服务器。</string>
     <string name="kitCapModelAuthTitle">模型登录</string>
@@ -312,10 +308,6 @@
     <string name="kitCapTeamControlWhy">请在运行团队的电脑上应答。</string>
     <string name="kitCapTeamControlEnable">查看如何设置</string>
     <string name="kitCapTeamControlOffer">电脑设置完成后即可从这里控制团队。要查看方法吗？</string>
-    <string name="kitCapClaudeLocalTitle">本机的 Claude Code</string>
-    <string name="kitCapClaudeLocalWhy">需要本机安装 Termux 并订阅 Claude。</string>
-    <string name="kitCapClaudeLocalEnable">添加 Claude Code</string>
-    <string name="kitCapClaudeLocalOffer">要在本机添加 Claude Code 吗？需要 Claude 订阅。</string>
     <string name="kitCapVoiceModelTitle">语音输入</string>
     <string name="kitCapVoiceModelWhy">需要本机有语音模型。</string>
     <string name="kitCapVoiceModelEnable">下载语音模型</string>
@@ -376,7 +368,6 @@
     <string name="kitCapFlagPromptAttachmentsTitle">附加照片和文件</string>
     <string name="kitCapFlagPromptAttachmentsWhy">此服务器无法随提示词附加照片或文件。</string>
     <string name="kitHostThisPhone">本机</string>
-    <string name="kitHostTermux">Termux</string>
     <string name="kitHostOpenCode2">装有 OpenCode 2 的电脑</string>
     <string name="kitHostCodex">Codex</string>
     <string name="kitHostPaseo">Paseo</string>

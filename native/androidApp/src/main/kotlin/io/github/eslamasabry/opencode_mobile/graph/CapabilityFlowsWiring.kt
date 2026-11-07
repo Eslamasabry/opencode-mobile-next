@@ -70,8 +70,6 @@ object CapabilityFlowsWiring {
                                         nav.open(
                                             CapabilityAddComputerRoute(CapabilityComputerKind.Paseo)
                                         )
-                                    CapabilityEnableFlow.AddToolClaude ->
-                                        nav.open(CapabilityPhoneAgentRoute("claude"))
                                     CapabilityEnableFlow.PhoneSetup ->
                                         nav.open(PhoneSetupRoute.Setup)
                                     CapabilityEnableFlow.ModelSignIn ->
@@ -139,8 +137,7 @@ object CapabilityFlowsWiring {
                                     CapabilityEnableFlow.QuotaCollectorGuide -> nav.open(PlansRoute)
                                     CapabilityEnableFlow.TeamTurnOn,
                                     CapabilityEnableFlow.TeamHostGuide,
-                                    CapabilityEnableFlow.AddExternalAgent,
-                                    CapabilityEnableFlow.PhoneSetupTermux ->
+                                    CapabilityEnableFlow.AddExternalAgent ->
                                         return@withContext Outcome.Failed(
                                             Failure.Unavailable(
                                                 io.github.eslamasabry.oc.core.common.FeatureId(
@@ -161,6 +158,5 @@ object CapabilityFlowsWiring {
             CapabilityEnableFlow.TeamTurnOn to CapabilityFlowLimit.TeamAfterSwitch,
             CapabilityEnableFlow.TeamHostGuide to CapabilityFlowLimit.TeamAfterSwitch,
             CapabilityEnableFlow.AddExternalAgent to CapabilityFlowLimit.ExternalAgentsDropped,
-            CapabilityEnableFlow.PhoneSetupTermux to CapabilityFlowLimit.TermuxMigrationOnly,
         )
 }

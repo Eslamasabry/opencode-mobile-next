@@ -94,7 +94,6 @@ class CommonTest {
                 is Failure.Folder -> "Folder"
                 is Failure.ProjectGit -> "ProjectGit"
                 is Failure.StagedRevert -> "StagedRevert"
-                is Failure.Termux -> "Termux"
                 is Failure.Unexpected -> "Unexpected"
                 is Failure.Unknown -> "Unknown"
             }

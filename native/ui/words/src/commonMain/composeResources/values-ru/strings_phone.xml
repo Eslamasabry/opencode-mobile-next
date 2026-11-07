@@ -14,6 +14,5 @@
     <string name="aiteamComponentStagePreparing">Подготовка AI Team</string>
     <string name="voiceComponentTitle">Голосовой ввод</string>
     <string name="voiceComponentSummary">Говорите вместо набора текста, даже без сети</string>
-    <string name="phoneSetupTermuxOtherRuntime">В Termux уже работает другой OpenCode. Переключите его в разделе «На этом телефоне» и продолжите настройку.</string>
     <string name="freeModelNotice">Используется бесплатная модель OpenCode — она медленнее. Добавьте API-ключ своего провайдера, чтобы использовать свою модель.</string>
 </resources>

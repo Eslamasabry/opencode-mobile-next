@@ -16,11 +16,9 @@ public enum class CapabilityEnableFlow(
 ) {
     AddServer("add-server", "server.any"),
     PhoneSetup("phone-setup", "phone.builtin", true),
-    PhoneSetupTermux("phone-setup-termux", "phone.termux", true),
     ServerGeneration("server-generation", "server.oc2"),
     AddServerCodex("add-server-codex", "server.codex"),
     AddServerPaseo("add-server-paseo", "server.paseo"),
-    AddToolClaude("add-tool-claude", "claude.local", true),
     ModelSignIn("model-sign-in", "model.auth"),
     TeamTurnOn("team-turn-on", "team.on"),
     TeamHostGuide("team-host-guide", "team.control"),
@@ -53,7 +51,6 @@ public fun interface CapabilityEnableHandler {
 public enum class CapabilityFlowLimit {
     TeamAfterSwitch,
     ExternalAgentsDropped,
-    TermuxMigrationOnly,
 }
 
 public class CapabilityFlows(
@@ -97,9 +94,6 @@ public enum class CapabilityComputerKind {
 
 @kotlinx.serialization.Serializable
 public data class CapabilityAddComputerRoute(val kind: CapabilityComputerKind) : AppRoute
-
-@kotlinx.serialization.Serializable
-public data class CapabilityPhoneAgentRoute(val agent: String) : AppRoute
 
 @kotlinx.serialization.Serializable
 public data class CapabilityAgentAccountRoute(

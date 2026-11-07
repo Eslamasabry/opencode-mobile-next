@@ -43,7 +43,7 @@ public interface FinishServer {
 
 /** Why the finish did not connect. */
 public sealed interface SetupFinishFailure {
-    /** A Termux job never creates or starts the in-app Ubuntu profile. */
+    /** The finish could not start (the app wiring's marker for a finish that threw). */
     public data object CannotStart : SetupFinishFailure
 
     /** The stable code `runtime_ownership_unknown`. */
@@ -59,7 +59,6 @@ public sealed interface SetupFinishFailure {
 
 public data class SetupFinishRequest(
     val openCodeChanged: Boolean,
-    val host: SetupHostKind = SetupHostKind.Builtin,
     val version: String? = null,
 )
 
@@ -81,7 +80,6 @@ public class SetupFinisher(
     private val replaceNames: Set<String> = emptySet(),
 ) {
     public suspend fun finish(request: SetupFinishRequest): SetupFinishFailure? {
-        if (request.host != SetupHostKind.Builtin) return SetupFinishFailure.CannotStart
         val profile = ensureProfile(request.version)
         teamFollowsRuntime(profile)
         val running =

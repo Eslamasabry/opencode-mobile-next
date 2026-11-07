@@ -35,7 +35,7 @@ public enum class FreezeKind { MainThreadStall, NotResponding }
 public enum class ErrorCategory {
     Refused, Unavailable, Network, TimedOut, Certificate, SignIn, NotFound, Conflict, Busy, Server, Rejected, Incompatible,
     ComputerDidNotAnswer, UnreadableReply, StorageRefused, KeystoreUnavailable, Media, Runtime, Device, Folder, ProjectGit,
-    StagedRevert, Termux, Unexpected, Unknown;
+    StagedRevert, Unexpected, Unknown;
 
     public companion object {
         /** Exhaustive over core's flat Failure (plan 03 §10.1), so a new subtype fails compilation here. */
@@ -63,7 +63,6 @@ public enum class ErrorCategory {
                 is Failure.Folder -> Folder
                 is Failure.ProjectGit -> ProjectGit
                 is Failure.StagedRevert -> StagedRevert
-                is Failure.Termux -> Termux
                 is Failure.Unexpected -> Unexpected
                 is Failure.Unknown -> Unknown
             }

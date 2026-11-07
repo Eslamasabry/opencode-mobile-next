@@ -84,7 +84,7 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchGuideAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchModelModeAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchNotificationsAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchPermissionsAliases
-import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchPhoneAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchPhoneLinuxAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchPrivacyAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchProvidersAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchReasoningAliases
@@ -175,7 +175,7 @@ internal fun aliasWords(row: SettingsRowId): String {
     val key =
         when (row) {
             SettingsRowId.Servers -> Res.string.settingsHubSearchSavedServersAliases
-            SettingsRowId.ThisPhone -> Res.string.settingsHubSearchPhoneAliases
+            SettingsRowId.ThisPhone -> Res.string.settingsHubSearchPhoneLinuxAliases
             SettingsRowId.ModelAndMode -> Res.string.settingsHubSearchModelModeAliases
             SettingsRowId.Providers -> Res.string.settingsHubSearchProvidersAliases
             SettingsRowId.Usage -> Res.string.settingsHubSearchUsageAliases

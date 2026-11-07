@@ -79,9 +79,6 @@
     <string name="usageWidgetTitle">用量小组件</string>
     <string name="quotaMonitorSourceChanged">此服务器上的账号已变更，因此检查已停止。请在该服务器上打开“剩余用量”并重新读取。</string>
     <string name="openCodeConnectionLabel">OpenCode</string>
-    <string name="termuxGuideOpenFailed">命令已复制，但无法打开 Termux。请自行打开 Termux，或再试一次“复制并打开 Termux”。</string>
-    <string name="termuxGuideCopyOpenFailed">无法复制命令或打开 Termux。</string>
-    <string name="termuxPermissionDenied">Android 不允许本应用在 Termux 中运行命令。</string>
     <string name="launchShortcutWaiting">正在连接已保存的服务器。就绪后会打开新对话。</string>
     <string name="launchShortcutNoServer">请选择一个服务器，然后开始新对话。</string>
     <string name="launchShortcutReentry">请输入已保存服务器的凭据，然后开始新对话。</string>
@@ -213,7 +210,6 @@
     <string name="e7SetupNoOutput">终端暂无输出。</string>
     <string name="e7SetupOpenSetupGuide">打开设置指南</string>
     <string name="e7SetupCameraFailedDetail">可能有其他应用正在占用相机。粘贴配对码同样有效。</string>
-    <string name="e7SetupTermuxNoAnswer">Termux 没有响应。请点按“复制并打开 Termux”，在 Termux 中粘贴那一行并按回车，然后回到这里。</string>
     <string name="e7SetupHttpsHint">优先使用 HTTPS。远程 HTTP 需要你为每台服务器单独授权。</string>
     <string name="e7SetupPasteInstead">改为粘贴</string>
     <string name="e7SetupEndInputKey">输入结束，Control D</string>
@@ -221,7 +217,6 @@
     <string name="e7SetupServerOperation">服务器操作进行中</string>
     <string name="e7SetupUnsavedProfile">服务器尚未保存。</string>
     <string name="e7SetupCheckingInstall">正在检查已安装的环境...</string>
-    <string name="e7SetupInspectTermuxFailed">Android 无法检查 Termux。</string>
     <string name="e7SetupUsername">用户名（可选）</string>
     <string name="e7SetupSaveToFinish">已连接：保存即可完成。</string>
     <string name="e7SetupPasswordStartupHint">服务器启动时会显示。如果没有密码则留空。</string>
@@ -234,7 +229,6 @@
     <string name="e7SetupCameraFailed">无法打开相机</string>
     <string name="e7SetupCameraDisabled">相机访问已关闭</string>
     <string name="e7SetupPastePairing">粘贴配对码</string>
-    <string name="e7SetupThisDevice">此设备（Termux）</string>
     <string name="e7SetupTransportReconnecting">服务器传输正在重新连接。</string>
     <string name="e7SetupMissingPasswordShort">已保存的密码不可用。请重新输入；仅当此服务器不再需要密码时才可留空。</string>
     <string name="e7SetupScanPairing">扫描配对码</string>
@@ -247,7 +241,6 @@
     <string name="e7SetupInputDisconnected">断开连接时无法输入。</string>
     <string name="e7SetupCameraPrivacy">相机仅用于读取 opencode2 pair 输出的二维码，且仅在此界面打开时使用。你也可以改为粘贴代码，效果完全相同。</string>
     <string name="e7SetupIsV2">这是一个 OpenCode 2 服务器。</string>
-    <string name="e7SetupTermuxOutdated">这个版本的 Termux 太旧，应用无法使用。请安装最新版，然后点按“继续设置”。</string>
     <string name="e7SetupCameraNeeded">扫描需要相机访问权限</string>
     <string name="e7SetupPairingDesktopHint">请确认服务器正在运行，且它输出的地址可从本机访问。</string>
     <string name="e7SetupAboutNotices">关于与开源声明</string>
@@ -500,7 +493,6 @@
     <string name="productErrorUnexpected">应用无法理解服务器的响应。请重试，或报告该问题。</string>
     <string name="productErrorDevice">此设备上出了点问题。请重试。</string>
     <string name="productErrorStorage">应用无法在此设备上读取或保存文件。</string>
-    <string name="productErrorTermux">Termux 未能完成该操作。请确认 Termux 已安装并已打开，然后重试。</string>
     <string name="productErrorDetailsLabel">错误详情</string>
     <string name="productErrorServer">服务器出现问题（错误 %1$d）。请稍后重试。</string>
     <string name="consentSaveFailed">你的回答未能保存到此手机，因此没有做任何更改。请重试。</string>
@@ -541,7 +533,6 @@
     <string name="commandSheetAgentFallback">此智能体</string>
     <string name="mcpCatalogTitle">MCP 目录</string>
     <string name="termuxInAppInstead">改为设置应用内服务器</string>
-    <string name="termuxInAppInsteadDetail">全新开始，在本应用内运行，无需 Termux。</string>
     <string name="freeModelSignIn">添加 API 密钥</string>
     <string name="integrationsSignedInUnusable">已登录，但此服务器无法使用</string>
     <string name="kitTurnLiveSeconds">%1$d 秒</string>
@@ -549,7 +540,6 @@
     <string name="kitComposerRailRetry">重试</string>
     <string name="addServerCleartextWarning">此私有网络或 Tailscale 地址使用明文 HTTP。你的密码和验证码在 HTTP 层以未加密方式传输。请仅在可信的私有网络或通过 Tailscale 使用；在公共 Wi-Fi 上有风险。</string>
     <string name="storageAccessAllow">允许访问文件</string>
-    <string name="storageTermuxAllow">打开 Termux</string>
     <string name="phoneScanGit">Git</string>
     <string name="chatsHomeAllProjects">所有项目</string>
     <string name="chatsHomeNeedsYou">需要你处理</string>

@@ -102,7 +102,6 @@ class AndroidNewConversationHost(
         directory: String,
     ): Outcome<GitLinkRepairReport> = gitRepair.repairProject(profile, directory)
 
-    override fun openRepairSettings(): Unit = gitRepair.openTermuxSettings()
 
     private fun projectServer(profile: ProfileId) =
         projectServers.servers.value.firstOrNull { it.profile == profile }

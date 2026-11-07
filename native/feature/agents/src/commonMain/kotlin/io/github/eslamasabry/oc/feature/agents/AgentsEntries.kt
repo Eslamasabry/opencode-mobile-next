@@ -24,9 +24,7 @@ import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityAddComputerRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityAgentAccountRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityComputerKind
-import io.github.eslamasabry.oc.ui.routes.CapabilityPhoneAgentRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
-import kotlinx.collections.immutable.toPersistentList
 
 /** The Agents hub and the agent-owned sign-in terminal. */
 @Inject
@@ -49,26 +47,6 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
                 vm.startAdding()
             }
             AgentsScreen(state, vm, hubState, vm)
-        }
-        entry<CapabilityPhoneAgentRoute> { route ->
-            val vm = metroViewModel<AgentsViewModel>()
-            LifecycleResumeEffect(vm) {
-                vm.refreshPhone()
-                onPauseOrDispose {}
-            }
-            val state by vm.state.collectAsStateWithLifecycle()
-            val hubState by vm.hubState.collectAsStateWithLifecycle()
-            val selected =
-                state.copy(
-                    phone =
-                        state.phone.copy(
-                            agents =
-                                state.phone.agents
-                                    .filter { it.id == route.agent }
-                                    .toPersistentList()
-                        )
-                )
-            AgentsScreen(selected, vm, hubState, vm)
         }
         entry<CapabilityAgentAccountRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()

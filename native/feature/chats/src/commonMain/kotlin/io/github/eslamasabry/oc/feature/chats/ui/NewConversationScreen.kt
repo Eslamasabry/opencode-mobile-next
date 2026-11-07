@@ -276,23 +276,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     GitLinkRepairResult.Repaired -> Res.string.linuxGitRepairHealthy
                                     GitLinkRepairResult.MissingObjects ->
                                         Res.string.linuxGitRepairMissing
-                                    GitLinkRepairResult.TermuxMissing ->
-                                        Res.string.linuxGitRepairTermuxMissing
-                                    GitLinkRepairResult.TermuxPermission ->
-                                        Res.string.linuxGitRepairPermission
-                                    GitLinkRepairResult.TermuxUnavailable ->
-                                        Res.string.linuxGitRepairNoAnswer
                                     GitLinkRepairResult.NotRepository ->
                                         Res.string.linuxGitRepairNotProject
                                 }
                             )
                         )
-                        if (result.result == GitLinkRepairResult.TermuxPermission)
-                            KitButton(
-                                stringResource(Res.string.linuxGitRepairAppSettings),
-                                actions::repairSettings,
-                                role = KitButtonRole.Tertiary,
-                            )
                     }
                     // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
                     if (state.failure != null && !state.deliveryUnconfirmed) {

@@ -15,7 +15,7 @@ import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.engine.setupassist.*
-import io.github.eslamasabry.oc.engine.termuxhost.HostScripts
+import io.github.eslamasabry.oc.engine.setupscripts.HostScripts
 import io.github.eslamasabry.oc.feature.settings.integrations.*
 import io.github.eslamasabry.oc.ui.routes.*
 import kotlinx.collections.immutable.*

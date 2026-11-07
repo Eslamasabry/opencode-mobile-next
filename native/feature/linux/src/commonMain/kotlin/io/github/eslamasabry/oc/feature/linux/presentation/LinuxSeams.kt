@@ -31,10 +31,6 @@ public interface LinuxNavigator {
     public fun back()
 }
 
-public interface LinuxMigrationNavigator {
-    public fun migrate(profileId: String)
-}
-
 /**
  * Opens a port's loopback preview in the browser (app-authored URL, through ExternalLinkPolicy in
  * the binding).

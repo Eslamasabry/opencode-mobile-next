@@ -14,6 +14,5 @@
     <string name="aiteamComponentStagePreparing">AI Team を準備しています</string>
     <string name="voiceComponentTitle">音声入力</string>
     <string name="voiceComponentSummary">オフラインでも、入力のかわりに話せます</string>
-    <string name="phoneSetupTermuxOtherRuntime">Termux では別の OpenCode がすでに動いています。「このスマートフォン上で」で切り替えてから、セットアップを続けてください。</string>
     <string name="freeModelNotice">OpenCode の無料モデルを使用中です。速度は遅めです。ご自身のモデルを使うには、プロバイダーの API キーを追加してください。</string>
 </resources>

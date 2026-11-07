@@ -6,16 +6,12 @@
     <string name="nativeCapabilityAddServerDetail">Save the address of a server you run on a computer.</string>
     <string name="nativeCapabilityPhoneSetupTitle">Set up this phone</string>
     <string name="nativeCapabilityPhoneSetupDetail">Install the Linux environment and server on this phone.</string>
-    <string name="nativeCapabilityPhoneSetupTermuxTitle">Set up Termux</string>
-    <string name="nativeCapabilityPhoneSetupTermuxDetail">Connect the environment you run in Termux.</string>
     <string name="nativeCapabilityServerGenerationTitle">Use OpenCode 2</string>
     <string name="nativeCapabilityServerGenerationDetail">Set up the server generation you want to use.</string>
     <string name="nativeCapabilityAddServerCodexTitle">Connect Codex</string>
     <string name="nativeCapabilityAddServerCodexDetail">Connect Codex on your computer.</string>
     <string name="nativeCapabilityAddServerPaseoTitle">Connect Paseo</string>
     <string name="nativeCapabilityAddServerPaseoDetail">Connect the agents on your Paseo computer.</string>
-    <string name="nativeCapabilityAddToolClaudeTitle">Set up Claude on this phone</string>
-    <string name="nativeCapabilityAddToolClaudeDetail">Install Claude in this phone’s Linux environment.</string>
     <string name="nativeCapabilityModelSignInTitle">Sign in to a model provider</string>
     <string name="nativeCapabilityModelSignInDetail">Manage provider accounts for the selected server.</string>
     <string name="nativeCapabilityTeamTurnOnTitle">Set up an AI team</string>
@@ -46,5 +42,4 @@
     <string name="nativeCapabilityAddExternalAgentDetail">Connect an agent through its published agent card.</string>
     <string name="nativeCapabilityTeamDeferred">AI Team is planned after the native switch. Existing team data stays on this phone.</string>
     <string name="nativeCapabilityExternalDropped">Agents from other apps are not part of this app. Your saved data stays as it is.</string>
-    <string name="nativeCapabilityTermuxMigrationOnly">Termux is supported for moving existing data to the built-in environment. New Termux setup is unavailable.</string>
 </resources>

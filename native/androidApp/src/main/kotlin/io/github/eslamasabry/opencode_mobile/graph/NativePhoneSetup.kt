@@ -21,7 +21,6 @@ import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
 import io.github.eslamasabry.oc.engine.runtime.components.*
 import io.github.eslamasabry.oc.engine.runtime.install.InstallPrelude
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallScripts
-import io.github.eslamasabry.oc.engine.runtime.install.SetupHost
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
@@ -285,10 +284,7 @@ class NativePhoneSetup(
                 host,
                 SetupRegistry { params ->
                     val code =
-                        OpenCodeInstallScripts.component(
-                            SetupHost.Builtin,
-                            params[SetupComponentIds.OPENCODE]?.get("version"),
-                        )
+                        OpenCodeInstallScripts.component(params[SetupComponentIds.OPENCODE]?.get("version"))
                     listOf(
                         SetupComponent(
                             SetupComponentIds.LINUX,

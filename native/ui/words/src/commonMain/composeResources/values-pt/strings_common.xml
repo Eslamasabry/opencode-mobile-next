@@ -8,7 +8,6 @@
     <string name="modelServerDefault">Padrão do servidor</string>
     <string name="refreshRetry">Tentar novamente</string>
     <string name="commonRetry">Tentar novamente</string>
-    <string name="termuxPermissionDenied">O Android não permitiu que este app execute comandos no Termux.</string>
     <string name="workspaceDismissNotice">Fechar</string>
     <string name="onboardingSetupGuide">Guia de configuração</string>
     <string name="onboardingTermuxSetup">Neste celular</string>
@@ -22,9 +21,7 @@
     <string name="chatUiDelegateThisPrompt">Delegar esta mensagem</string>
     <string name="chatUiOpenProviders">Abrir provedores</string>
     <string name="e7LibraryReportABug">Relatar um problema</string>
-    <string name="e7SetupTermuxNoAnswer">O Termux não respondeu. Toque em “Copiar e abrir o Termux”, cole a linha no Termux, pressione Enter e volte aqui.</string>
     <string name="e7SetupAddServer">Adicionar servidor</string>
-    <string name="e7SetupTermuxOutdated">Esta versão do Termux é antiga demais para o app. Instale a atual e toque em “Continuar a configuração”.</string>
     <string name="e7SetupAboutNotices">Sobre e avisos de código aberto</string>
     <string name="phoneSetupProgressTitle">Configurando o OpenCode neste celular</string>
     <string name="builtinServerStopped">Não está em execução.</string>
@@ -80,7 +77,6 @@
     </plurals>
     <string name="serverRowQueuedWaiting__eq1">1 mensagem aguardando envio</string>
     <string name="termuxInAppInstead">Configurar o servidor integrado ao app</string>
-    <string name="termuxInAppInsteadDetail">Um novo começo que roda dentro deste app. Não precisa do Termux.</string>
     <string name="freeModelSignIn">Adicionar uma chave de API</string>
     <string name="kitTurnLiveSeconds">%1$d s</string>
     <string name="kitComposerRailRetry">Tentar novamente</string>

@@ -156,8 +156,6 @@ internal object SetupMessageTable {
                 "serverTrustProbeFailed",
             "Some Linux packages need repair. Continue setup to try again. Details show what stopped it." to
                 "phoneSetupErrorPackageRepair",
-            "Termux command failed." to "e7SetupCommandFailed",
-            "Termux returned an unexpected bridge response." to "e7SetupUnexpectedBridge",
             "Setup queued" to "e7SetupSetupQueued",
             "No setup has been started" to "e7SetupNoSetup",
             "Setup manager is missing after launch" to "e7SetupManagerMissingAfterLaunch",
@@ -174,14 +172,10 @@ internal object SetupMessageTable {
                 "e7SetupPasswordRejected",
             "These commands run on the computer that hosts this server — the app cannot run them for you. Copy each one into a terminal on that machine." to
                 "e7SetupHostInstructions",
-            "This version of Termux is too old for the app to control it. Install the current F-Droid or GitHub build of Termux, then check again." to
-                "e7SetupTermuxOutdated",
             "There is nothing to scan with. Run opencode2 pair on the server, copy the code it prints, and paste it into the server editor." to
                 "e7SetupNoCameraDetail",
             "That pairing code carries no server address. Check that the server is actually listening, then run `opencode2 pair` again." to
                 "e7SetupPairAddressMissing",
-            "It drives Termux, which has no desktop equivalent. On this machine, run `opencode serve` yourself and add it as a server." to
-                "e7SetupUnsupportedSetup",
             "The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password." to
                 "e7SetupMissingPasswordLong",
             "The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one." to
@@ -198,8 +192,6 @@ internal object SetupMessageTable {
                 "e7SetupPairShape",
             "A local server exists, but its saved credential is unavailable. Run setup again to replace it safely." to
                 "e7SetupExistingMissingCredential",
-            "Termux opened but the setup did not start. Retry once; if it happens again, copy the failure report." to
-                "e7SetupSetupNotStarted",
             "That pairing code has no `password` field. It may have been truncated — scan or copy the whole code." to
                 "e7SetupPairPasswordMissing",
             "The local server is ready, but its observed version could not be saved. Refresh setup to try again." to
@@ -244,8 +236,6 @@ internal object SetupMessageTable {
                 "e7SetupNotOpenCode",
             "Another app may be holding the camera. Pasting the pairing code works either way." to
                 "e7SetupCameraFailedDetail",
-            "Termux did not answer. Open Termux once, run the unlock line, then verify again." to
-                "e7SetupTermuxNoAnswer",
             "The server did not answer. Check that opencode serve is running on that address." to
                 "e7SetupNoServerAnswer",
             "The server’s TLS certificate was rejected. Use a certificate this phone trusts." to
@@ -270,8 +260,6 @@ internal object SetupMessageTable {
                 "e7SetupUbuntuUnusable",
             "That pairing code lists an address far too long to be a server URL." to
                 "e7SetupPairAddressLong",
-            "Could not refresh packages.termux.dev; check the network and retry" to
-                "e7SetupRepositoryRefreshFailed",
             "Enter a complete server URL, such as https://server.example:4096." to
                 "e7SetupCompleteUrl",
             "The local server port is still in use; no replacement was started" to
@@ -280,25 +268,16 @@ internal object SetupMessageTable {
                 "e7SetupStopTerminalDetail",
             "Codex server URLs must use wss://, or ws:// for a local server." to
                 "e7SetupCodexScheme",
-            "Termux dependencies are still unusable after the package repair" to
-                "e7SetupDependenciesUnusable",
-            "Install the current F-Droid build of Termux, then return here." to
-                "e7SetupInstallTermuxDetail",
             "That host name could not be found. Check the address spelling." to "e7SetupDns",
             "OpenCode updated, but its model catalog could not be refreshed" to
                 "e7SetupModelsRefreshFailed",
             "Server URLs must use https://, or http:// for a local server." to "e7SetupUrlScheme",
             "The local server restarted, but the app could not reconnect." to
                 "e7SetupRestartReconnectFailed",
-            "Waiting for Termux to respond. This can take a little while." to
-                "e7SetupWaitingTermux",
             "No server there yet? The setup guide shows how to start one." to
                 "e7SetupNoServerGuide",
             "That pairing code's `urls` field is not a list of addresses." to "e7SetupPairUrlsType",
-            "Server URLs must use https://, or http:// for local Termux." to
-                "e7SetupTermuxUrlScheme",
             "Remove the path from the server URL. Enter only its origin." to "e7SetupUrlPath",
-            "Could not repair the interrupted Termux package transaction" to "e7SetupRepairFailed",
             "Point the camera at the QR code printed by opencode2 pair." to
                 "e7SetupScanInstruction",
             "Leave empty only if this server no longer uses a password." to
@@ -319,7 +298,6 @@ internal object SetupMessageTable {
             "Ubuntu Base extraction did not create a usable container" to "e7SetupExtractionFailed",
             "Setup manager did not start in an isolated process group" to "e7SetupSetupGroupFailed",
             "Setup stopped unexpectedly; see live output for details" to "e7SetupSetupInterrupted",
-            "Could not select the official Termux package repository" to "e7SetupRepositoryFailed",
             "That pairing code contains an unusable server address." to
                 "e7SetupPairAddressUnusable",
             "The tracked process is not the managed OpenCode server" to "e7SetupIdentityMismatch",
@@ -327,7 +305,6 @@ internal object SetupMessageTable {
             "Could not record the managed server process identity" to "e7SetupRecordIdentityFailed",
             "Terminal control keys. Swipe horizontally for more." to "e7SetupControlKeys",
             "Ubuntu is installed. OpenCode is not installed yet." to "e7SetupUbuntuOnly",
-            "Could not complete the safe Termux package upgrade" to "e7SetupUpgradeFailed",
             "Could not save connection guidance. Retry saving." to "e7SetupGuidanceSaveFailed",
             "That pairing code's `username` field is not text." to "e7SetupPairUsernameType",
             "That pairing code's `password` field is not text." to "e7SetupPairPasswordType",
@@ -347,10 +324,8 @@ internal object SetupMessageTable {
             "Could not check the installed environment." to "e7SetupCheckInstallFailed",
             "Remove the path from the Codex server URL." to "e7SetupCodexPath",
             "Enter an absolute Codex project directory." to "e7SetupCodexDirectory",
-            "Lost track of the setup running in Termux" to "e7SetupSetupLost",
             "Uses a one-time code. Works from a phone." to "e7SetupDeviceCodeHint",
             "The previous runtime record is unreadable" to "e7SetupUnreadablePrevious",
-            "Could not install the Termux dependencies" to "e7SetupDependenciesFailed",
             "Install OpenCode as a background service" to "e7SetupInstallService",
             "Input is unavailable while disconnected." to "e7SetupInputDisconnected",
             "Copied. Run it on the server's computer." to "e7SetupHostCopied",
@@ -375,22 +350,18 @@ internal object SetupMessageTable {
             "Full walkthrough (opens in browser)" to "e7SetupFullWalkthrough",
             "Could not read setup manager status" to "e7SetupReadManagerFailed",
             "Connection token re-entry required" to "e7SetupTokenRequired",
-            "Termux bridge verification failed." to "e7SetupVerifyTermuxFailed",
             "OpenCode is running on this phone." to "e7SetupRunningOnPhone",
             "Enter a complete Codex server URL." to "e7SetupCodexCompleteUrl",
             "Switching the managed local server" to "e7SetupSwitchLocal",
             "Checking installed environment..." to "e7SetupCheckingInstall",
-            "Android could not inspect Termux." to "e7SetupInspectTermuxFailed",
             "Reach it from this phone over USB" to "e7SetupUsbAccess",
             "The runtime switch did not start." to "e7SetupSwitchNotStarted",
             "Day-to-day — run on your computer" to "e7SetupHostDaily",
-            "Repairing the Termux package set" to "e7SetupRepairPackages",
             "Camera access is needed to scan" to "e7SetupCameraNeeded",
             "On-device setup is Android only" to "e7SetupAndroidOnly",
             "Automatic recovery was disabled" to "e7SetupRecoveryWasDisabled",
             "The camera could not be opened" to "e7SetupCameraFailed",
             "Sends this key to the terminal" to "e7SetupSendKey",
-            "Installing Termux dependencies" to "e7SetupInstallDependencies",
             "This is an OpenCode 2 server." to "e7SetupIsV2",
             "About and open source notices" to "e7SetupAboutNotices",
             "Installing Ubuntu environment" to "e7SetupInstallUbuntu",
@@ -405,9 +376,7 @@ internal object SetupMessageTable {
             "The server did not connect." to "e7SetupDidNotConnect",
             "Automatic recovery disabled" to "e7SetupRecoveryDisabled",
             "Password re-entry required" to "e7SetupPasswordRequired",
-            "Checking Termux connection" to "e7SetupCheckingTermux",
             "Terminal input unavailable" to "e7SetupInputUnavailable",
-            "Refreshing Termux packages" to "e7SetupRefreshPackages",
             "Sign in with your account" to "e7SetupAccountHint",
             "Start installed OpenCode?" to "e7SetupStartInstalled",
             "This device has no camera" to "e7SetupNoCamera",
@@ -416,7 +385,6 @@ internal object SetupMessageTable {
             "Stopping the local server" to "e7SetupStoppingLocal",
             "Update managed OpenCode?" to "e7SetupConfirmUpdate",
             "Use interactive terminal" to "e7SetupInteractiveTerminal",
-            "Starting setup in Termux" to "e7SetupStartingSetup",
             "Send command to terminal" to "e7SetupSendCommand",
             "Setup manager is missing" to "e7SetupMissingManager",
             "No terminal output yet." to "e7SetupNoOutput",
@@ -436,7 +404,6 @@ internal object SetupMessageTable {
             "Open the setup guide" to "e7SetupOpenSetupGuide",
             "Hide server password" to "e7SetupHidePassword",
             "Interrupt, Control C" to "e7SetupInterruptKey",
-            "This device (Termux)" to "e7SetupThisDevice",
             "Getting models ready" to "e7SetupPreparingModels",
             "Setup output copied." to "e7SetupOutputCopied",
             "Local server stopped" to "e7SetupStoppedLocal",
@@ -446,10 +413,8 @@ internal object SetupMessageTable {
             "Terminal transcript" to "e7SetupTranscript",
             "Enter a server URL." to "e7SetupEnterUrl",
             "Unknown setup state" to "e7SetupUnknownSetup",
-            "Copy & open Termux" to "e7SetupCopyOpenTermux",
             "Restart the server" to "e7SetupRestartServer",
             "Paste pairing code" to "e7SetupPastePairing",
-            "Checking Termux..." to "e7SetupCheckingTermuxShort",
             "Connection failed." to "e7SetupConnectionFailed",
             "Verify & continue" to "e7SetupVerifyContinue",
             "Setting up Ubuntu" to "e7SetupInstallingUbuntu",
@@ -467,7 +432,6 @@ internal object SetupMessageTable {
             "Resume live view" to "e7SetupResumeLive",
             "Terminal actions" to "e7SetupTerminalActions",
             "Remove terminal?" to "e7SetupRemoveTerminal",
-            "Preparing Termux" to "e7SetupPrepareTermux",
         )
 
     val byEnglish: Map<String, String> = entries.toMap()

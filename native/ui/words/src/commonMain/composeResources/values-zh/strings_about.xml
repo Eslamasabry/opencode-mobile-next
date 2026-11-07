@@ -18,16 +18,10 @@
     <string name="e7SharedStartTalking">开始对话</string>
     <string name="e7SharedPickAProjectAndSendYourFirst">选择一个项目并发送第一条消息。工作在电脑上完成，本应用负责展示并让你随时干预。</string>
     <string name="e7SharedAdvanced">高级</string>
-    <string name="e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals">HTTPS、SSH 隧道、旧版服务器、Termux 内部细节</string>
     <string name="e7SharedHTTPSSSHTunnelsOlderServers">HTTPS、SSH 隧道、旧版服务器</string>
     <string name="e7SharedReachAServerOverHTTPSOrA">通过 HTTPS 或隧道连接服务器</string>
     <string name="e7SharedPairingWorksWhenTheAddressTheServer">配对的前提是本设备能访问服务器地址。使用远程 HTTP 地址时，应用会在发送密码前征求你的同意。建议优先使用 HTTPS 或 Tailscale 私有连接。</string>
     <string name="e7SharedOlderServersWithoutPairing">不支持配对的旧版服务器</string>
-    <string name="e7SharedOnDeviceViaTermuxAutomated">通过 Termux 在设备上运行（自动）</string>
-    <string name="e7SharedUseTheOnDeviceTermuxCardOn">使用“服务器”页面上的“本机（Termux）”卡片。应用会安装 Termux、解锁桥接、配置 opencode、启动服务器并连接 — 全程有引导。</string>
-    <string name="e7SharedOnlyTwoTapsNeedYouPersonallyDownloading">只有两步需要你亲自操作：下载 Termux APK，以及在 Termux 中粘贴一次解锁命令 — 这两步是 Android 安全模型的要求，而非本应用的要求。</string>
-    <string name="e7SharedPreferManualInsideTermuxRun">想手动操作？在 Termux 中运行：</string>
-    <string name="e7SharedTheChrootSharesTheNetworkStackSo">chroot 与主机共用网络栈，因此本应用可以访问 http://127.0.0.1:4096。运行 `termux-wake-lock` 可保持其存活。</string>
     <string name="e7SharedSecurityNotes">安全须知</string>
     <string name="e7SharedAlwaysSetOPENCODESERVERPASSWORDWhenBinding">在 localhost 之外绑定端口时，务必设置 OPENCODE_SERVER_PASSWORD。</string>
     <string name="e7SharedPasswordsAreStoredInTheAndroidKeystore">密码仅保存在本设备的 Android 密钥库中。</string>

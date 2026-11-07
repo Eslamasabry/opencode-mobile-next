@@ -5,8 +5,8 @@ package io.github.eslamasabry.oc.engine.linuxsetup
  * about any particular component, so adding one never changes this file.
  */
 
-/** Where a setup job installs and runs OpenCode: the app's own Linux, or Termux's. */
-public enum class SetupHostKind { Builtin, Termux }
+/** Where a setup job installs and runs OpenCode: only the app's own Linux. */
+public enum class SetupHostKind { Builtin }
 
 /**
  * One installable piece: a check that says whether it is there, and an install that puts it there.

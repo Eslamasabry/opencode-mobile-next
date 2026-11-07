@@ -20,7 +20,6 @@ class LinuxModalHostTest {
         LinuxHomeActions,
         LinuxStorageActions,
         LinuxPackagesActions,
-        LinuxMigrationActions,
         LinuxBackupsActions {
         var confirmed = 0
         var dismissed = 0
@@ -94,10 +93,6 @@ class LinuxModalHostTest {
         override fun askRemove(name: String) {}
 
         override fun askUpdate() {}
-
-        override fun toggle(id: String, selected: Boolean) {}
-
-        override fun command(command: LinuxMigrationCommand) {}
 
         override fun choose(choice: LinuxBackupChoice) {}
 
@@ -195,24 +190,4 @@ class LinuxModalHostTest {
         onNodeWithText("Restore").performClick()
         assertEquals(1, actions.confirmed)
     }
-
-    @Test
-    fun `migration stop names kept data and Keep copying dismisses without confirming`() =
-        runComposeUiTest {
-            val actions = Actions()
-            setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
-                    LinuxMigrationScreen(
-                        LinuxMigrationUi(confirmation = LinuxMigrationCommand.Stop),
-                        actions,
-                    )
-                }
-            }
-            onNodeWithText("Stop copying?").assertIsDisplayed()
-            onNodeWithText("What was copied so far is kept").assertExists()
-            // Flutter's migrationKeepGoing (app_en.arb, 2.1.4+62) is "Keep copying".
-            onNodeWithText("Keep copying").performClick()
-            assertEquals(1, actions.dismissed)
-            assertEquals(0, actions.confirmed)
-        }
 }

@@ -59,8 +59,6 @@ class SetupScenesTest {
 
     @Test fun startingPhone() = phone("starting", KitSetupPhoneMood.Starting)
 
-    @Test fun termuxPhone() = phone("termux", KitSetupPhoneMood.Termux)
-
     @Test fun readyPhone() = phone("phone_ready", KitSetupPhoneMood.Ready)
 
     @Test fun stoppedPhone() = phone("stopped", KitSetupPhoneMood.Stopped)

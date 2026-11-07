@@ -28,7 +28,6 @@
     <string name="settingsHubVoice">语音</string>
     <string name="settingsHubSearchServerAliases">服务器 主机 网址 地址 密码 配置 连接 健康 状态 版本 更新 服务</string>
     <string name="settingsHubSearchSavedServersAliases">服务器 配置 主机 网址 密码 切换 添加 编辑 移除 连接</string>
-    <string name="settingsHubSearchPhoneAliases">手机 termux 本地 设备端 安卓 安装 设置 存储 服务</string>
     <string name="settingsHubSearchAccountsAliases">账号 codex 登录 退出</string>
     <string name="settingsHubSearchExternalAgentsAliases">a2a 外部 智能体 远程</string>
     <string name="settingsHubSearchTailscaleAliases">tailscale vpn 网络 远程 私有</string>
@@ -77,8 +76,6 @@
     <string name="discoverToolsAliases">工具 工具与能力 清单 模型工具</string>
     <string name="discoverSkillsAliases">技能 指令 操作手册</string>
     <string name="discoverReferencesAliases">参考 参考资料 文档 来源 上下文</string>
-    <string name="discoverRunningNowAliases">当前运行 此手机上的运行 进程 termux 服务 停止 忙碌 内存 后台</string>
-    <string name="discoverStorageAliases">存储 在此手机上 磁盘空间 清理 termux</string>
     <string name="discoverMonitorAliases">已保存服务器 需要处理 监控 其他服务器 等待 服务器需要处理</string>
     <string name="discoverConnectionHelpAliases">添加服务器 电脑 连接 配对 配对码 连接帮助 无法连接 排查 网络 被拒绝 超时</string>
     <string name="capabilityScreenAliases">可用 支持 不可用 缺失 功能 隐藏 原因 无法 能力 服务器 支持 shell</string>
@@ -87,8 +84,6 @@
     <string name="effectsAnimations">动效</string>
     <string name="effectsActivityGlow">回复时边框发光</string>
     <string name="searchClaudeCodeGateTitle">此设备上不可用</string>
-    <string name="searchClaudeCodeGateDevice">Claude Code 只能通过 Termux 在手机上运行，而此设备没有 Termux。请在装有 Paseo 的电脑上运行，并把那台电脑添加为服务器。</string>
-    <string name="searchClaudeCodeGateDesktop">此手机上的 Claude Code 适用于装有 Termux 的 Android 手机。在电脑上请用 Paseo 运行 Claude Code，并将其添加为服务器。</string>
     <string name="searchClaudeCodeGateServers">打开服务器</string>
     <string name="monitorBackgroundChecks">后台检查</string>
     <string name="searchArchivedConversations">已归档的对话</string>
@@ -102,4 +97,5 @@
     <string name="discoverChatsAliases">聊天 对话 会话 工作 首页 最近 已固定 新对话 收件箱 活动 需要你处理 审批 权限 提问 表单 等待中 运行中 已完成</string>
     <string name="settingsPhraseChipsSupporting">你的常用短语，显示在消息框上方。根据你在此手机上发送的内容自动学习。</string>
     <string name="settingsHubSearchReasoningAliases">对话记录 显示 思考 推理</string>
+    <string name="settingsHubSearchPhoneLinuxAliases">手机 linux ubuntu 本地 设备端 安卓 安装 设置 存储 服务</string>
 </resources>

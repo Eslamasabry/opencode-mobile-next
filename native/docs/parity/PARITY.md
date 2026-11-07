@@ -2,6 +2,9 @@
 
 Date 2026-11-06. Read-only audit. Native tree: `/home/eslam/Storage2/wt/scr-merge/native` (HEAD 27bc42b60). Flutter: `/home/eslam/Storage2/wt/flutter-ref/lib` and the UX map `docs/ux-system/map/all.json` (356 pages, 1,233 listed actions). Machine-readable rows: `PARITY.json` (1266 rows: 1233 map actions plus 33 extra rows for features found in newer Flutter source that the map predates).
 
+> **2026-11-07 — Termux retired.** The owner removed the Termux app from native: built-in Linux is the only engine on the phone and a computer is the other way. Every row that mentions Termux is now N/A ("retired") in `PARITY.json`; the Termux rows below are history, not to-do. A Flutter user with a Termux setup sees one notice instead.
+
+
 ## How to read the counts
 
 - **PRESENT**: a native screen or control with the same job exists. Most PRESENT rows rest on page-level evidence (the native screen exists and its strings/code were read), not a per-button check; rows with a precise `native_ref` were checked at that line.

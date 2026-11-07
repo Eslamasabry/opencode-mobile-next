@@ -2,13 +2,7 @@
 <!-- Converted once from lib/l10n/app_ja.arb by native/tools/strings (plan 06 §13.3).
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
-    <string name="termuxGuideTitle">Termux を一度だけ接続</string>
     <string name="setupSwitchProgressTitle">%1$s に切り替えています</string>
-    <string name="e7SetupCopyOpenTermux">コピーして Termux を開く</string>
-    <string name="e7SetupGetTermux">Termux を入手</string>
-    <string name="e7SetupInstallTermuxDetail">Termux の最新の F-Droid 版をインストールしてから、ここに戻ってください。</string>
-    <string name="e7SetupSetupNotStarted">Termux は開きましたが、セットアップが始まりませんでした。もう一度試してください。それでも同じ場合は、エラーレポートをコピーしてください。</string>
-    <string name="e7SetupCheckingTermuxShort">Termux を確認中…</string>
     <string name="e7SetupAppSettings">設定で権限を許可する</string>
     <string name="e7SetupElapsedSeconds">%1$d秒経過</string>
     <string name="e7SetupElapsedMinutes">%1$d分%2$d秒経過</string>
@@ -47,7 +41,6 @@
     <string name="phoneSetupStartSetUp">このスマートフォンに OpenCode をセットアップ</string>
     <string name="phoneSetupStartIncludes">%1$s を含みます。</string>
     <string name="phoneSetupStartCustomize">インストールするものを選ぶ</string>
-    <string name="phoneSetupStartUseTermux">代わりに Termux を使う</string>
     <string name="phoneSetupStartByAddress">アドレスを指定してパソコンに接続</string>
     <string name="phoneSetupStartSetUpHere">代わりにこのアプリ内でセットアップ</string>
     <string name="phoneSetupStartProgressHeadline">セットアップは %1$d% 完了</string>
@@ -57,8 +50,6 @@
     <string name="phoneSetupStartReadyHeadline">このスマートフォンで OpenCode の準備ができました</string>
     <string name="phoneSetupStartReadyBody">開いて会話を始めましょう。</string>
     <string name="phoneSetupStartOpen">開く</string>
-    <string name="phoneSetupStartTermuxHeadline">OpenCode は Termux でセットアップ済みです</string>
-    <string name="phoneSetupStartTermuxBody">以前に Termux でセットアップしたものです。接続すれば引き続き使えます。</string>
     <string name="phoneSetupStartConnect">接続</string>
     <string name="phoneSetupStartFailed">うまくいきませんでした: %1$s</string>
     <string name="phoneSetupStartCustomizeTitle">インストールするものを選ぶ</string>
@@ -77,23 +68,15 @@
     <string name="phoneSetupPreflightOpenStorage">ストレージ設定を開く</string>
     <string name="phoneSetupOpenWelcomeShowProgress">進行状況を見る</string>
     <string name="workLoadingLabel">読み込み中</string>
-    <string name="phoneSetupStartUseTermuxOne">Termux のものを使う</string>
-    <string name="phoneSetupStartUseTermuxOneDetail">OpenCode は Termux にもセットアップされています。代わりにそちらに接続します。</string>
-    <string name="phoneSetupStartTermuxNotAllowed">Termux はインストールされていますが、このアプリはまだ許可されていません。Termux 側の設定を完了してください。</string>
     <string name="phoneSetupCustomizeAllInstalled">オプションのツールはすべてこのスマートフォンに入っています。</string>
     <string name="phoneSetupCustomizeIncluded">必須</string>
     <string name="phoneSetupProgressStopContinueLater">「このスマートフォン上で」からいつでも再開できます。</string>
-    <string name="phoneSetupTermuxAllowHow">Termux で、コピーした行を貼り付けて Enter を押してください。</string>
     <string name="phoneSetupTermuxUpdatingTitle">このスマートフォンを更新しています</string>
     <string name="phoneSetupTermuxStartingTitle">サーバーを起動しています</string>
     <string name="phoneSetupTermuxConnecting">接続中</string>
-    <string name="phoneSetupTermuxLeaveHint">アプリを離れても大丈夫です。Termux は動き続け、戻ってくるとこの一覧は現在の状況から表示されます。</string>
-    <string name="phoneSetupTermuxCost">初回は約 10〜15 分、Termux のストレージを使用します</string>
     <string name="voiceComponentRemove">音声入力を削除</string>
     <string name="voiceComponentRemoveTitle">音声入力を削除しますか？</string>
     <string name="voiceComponentRemoveBody">音声認識モデルを削除して %1$s を空けます。ここで再び追加するまで、音声入力は使えません。</string>
-    <string name="phoneSetupStartTermuxProgressHeadline">Termux でのセットアップは %1$d% 完了</string>
-    <string name="phoneSetupTermuxGetCurrent">最新の Termux を入手</string>
     <string name="welcomePhoneCost">%1$s · %2$sのダウンロード</string>
     <string name="welcomePhoneSetUp">このスマートフォンで設定</string>
     <string name="welcomePhoneSettingUp">設定中 · %1$d%</string>

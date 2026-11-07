@@ -2,9 +2,8 @@ package io.github.eslamasabry.oc.engine.runtime.install
 
 /**
  * Port of lib/builtin/setup/components.dart (`OpenCodeAsset`, `OpenCodePins`, `OpenCodeInstallFailure`,
- * `SetupScripts.openCodeNativeInstall` / `openCodeNativeCheck` / `openCodeCheck` / `openCodeInstall`) and the OpenCode
- * row of `setupComponents`: the in-app Ubuntu installs the pinned native OpenCode program, never npm; Termux keeps the
- * shared npm text its own manager runs ([OpenCodeUbuntuSetup]).
+ * `SetupScripts.openCodeNativeInstall` / `openCodeNativeCheck`) and the OpenCode row of `setupComponents`: the in-app
+ * Ubuntu installs the pinned native OpenCode program, never npm.
  */
 public data class OpenCodeAsset(val url: String, val sha256: String, val member: String)
 
@@ -84,10 +83,7 @@ public enum class OpenCodeInstallReason {
     }
 }
 
-/** Which host's Ubuntu the setup installs into (Flutter `SetupHostKind`). */
-public enum class SetupHost { Builtin, Termux }
-
-/** The OpenCode component's scripts for one host (Flutter `setupComponents(...)` row `opencode`). */
+/** The OpenCode component's scripts (Flutter `setupComponents(...)` row `opencode`). */
 public data class OpenCodeComponentScripts(val checkScript: String, val installScript: String)
 
 public object OpenCodeInstallScripts {
@@ -99,38 +95,9 @@ public object OpenCodeInstallScripts {
         return chosen
     }
 
-    /** The in-app host installs the pinned native program; Termux keeps the shared npm text. Only OpenCode 2 installs. */
-    public fun component(host: SetupHost, version: String? = null): OpenCodeComponentScripts =
-        when (host) {
-            SetupHost.Builtin -> OpenCodeComponentScripts(nativeCheck(version), nativeInstall(version))
-            SetupHost.Termux -> OpenCodeComponentScripts(termuxCheck(version), termuxInstall(version))
-        }
-
-    /** Flutter `BuiltinLinux.versionScript(opencode2)` inside `openCodeCheck`. */
-    private const val VERSION_SCRIPT: String = "opencode2 --version"
-
-    /** Flutter `SetupScripts.openCodeCheck`: passes only for OpenCode 2 at the requested version. */
-    public fun termuxCheck(version: String? = null): String {
-        val chosen = selected(version)
-        return "set -e\n" +
-            "installed=${'$'}($VERSION_SCRIPT)\n" +
-            "installed=${'$'}{installed##* v}\n" +
-            "[ \"${'$'}installed\" = '$chosen' ]\n" +
-            "echo \"${'$'}installed\"\n"
-    }
-
-    /** Flutter `SetupScripts.openCodeInstall`: the shared text the Termux manager also runs, fed to `bash -s`. */
-    public fun termuxInstall(version: String? = null): String {
-        val chosen = selected(version)
-        return "set -eu\n" +
-            "oc_stage 'Installing OpenCode $chosen'\n" +
-            "export OC_REQUESTED_VERSION='$chosen'\n" +
-            "export OC_RUNTIME='${ManagedRuntime.OpenCode2.wireName}'\n" +
-            "bash -s <<'OC_PROOT_SETUP'\n" +
-            "${OpenCodeUbuntuSetup.SCRIPT}OC_PROOT_SETUP\n" +
-            "installed=${'$'}(opencode2 --version)\n" +
-            "oc_version \"${'$'}{installed##* v}\"\n"
-    }
+    /** The in-app host installs the pinned native program. Only OpenCode 2 installs. */
+    public fun component(version: String? = null): OpenCodeComponentScripts =
+        OpenCodeComponentScripts(nativeCheck(version), nativeInstall(version))
 
     /**
      * Flutter `SetupScripts.openCodeNativeCheck`: passes only when `opencode2` resolves to the pinned native program this

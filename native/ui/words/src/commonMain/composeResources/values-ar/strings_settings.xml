@@ -126,7 +126,6 @@
     <string name="e7SettingsUi85">حذف المسودات؟</string>
     <string name="e7SettingsUi86">تم حذف المسودات</string>
     <string name="e7SettingsUi87">تعذّر حذف المسودات. تحقّق من مساحة تخزين الجهاز وحاول مجددًا.</string>
-    <string name="e7SettingsUi93">الخوادم والمزوّدون والصوت والملفات وTermux والتحديثات</string>
     <string name="e7SettingsStorageSummary">%1$s من العمل غير المرسل — %2$s (%3$s) و%4$s (%5$s). تُحذف الطلبات في قائمة الانتظار بعد %6$d يومًا.</string>
     <plurals name="e7SettingsStorageSummary__queued">
         <item quantity="zero">لا طلبات في قائمة الانتظار</item>
@@ -494,7 +493,6 @@
     </plurals>
     <string name="manageSpaceLostSettings__eq0">كل الإعدادات</string>
     <string name="manageSpaceLostSettings__eq1">خادم محفوظ واحد وكل الإعدادات</string>
-    <string name="manageSpaceKeptAll">يبقى Termux وحواسيبك وكل ما رفعته إلى git</string>
     <string name="manageSpaceWaitForExport">انتظر اكتمال التصدير</string>
     <string name="manageSpaceDeletedLabel">يحذف المسح</string>
     <string name="manageSpaceServer">على هذا الهاتف</string>
@@ -511,7 +509,6 @@
     <string name="manageSpaceSavedServers__eq0">لا توجد خوادم محفوظة</string>
     <string name="manageSpaceSavedServers__eq1">خادم محفوظ واحد</string>
     <string name="manageSpaceKeptLabel">يبقى</string>
-    <string name="manageSpaceKeptTermux">Termux والمشاريع فيه</string>
     <string name="manageSpaceKeptComputers">حواسيبك وخوادمها</string>
     <string name="manageSpaceKeptGit">كل ما رفعته إلى git</string>
     <plurals name="projectExportDetail">
@@ -877,4 +874,6 @@
     <string name="browserModeMixedContent">الصفحة المفتوحة عبر HTTPS لا تصل إلا إلى خوادم HTTPS؛ فالمتصفح يحجب اتصالات HTTP العادية منها.</string>
     <string name="browserModeCors">يجب أن يسمح الخادم بأصل هذه الصفحة. إذا فشل اختبار الاتصال هنا فورًا بينما يعمل العنوان نفسه من تطبيق الهاتف، فالخادم يرفض طلبات المتصفح من هذا الأصل.</string>
     <string name="backgroundBatterySettingsInstead">لم يعرض Android سؤاله، لذا فُتحت إعدادات البطارية بدلًا منه. اضبط هذا التطبيق على «غير مقيّد» هناك.</string>
+    <string name="privacyPagesSummary">الخوادم والمزوّدون والصوت والملفات والتحديثات</string>
+    <string name="manageSpaceKeptAllComputers">تبقى حواسيبك وكل ما رفعته إلى git</string>
 </resources>

@@ -489,7 +489,6 @@
     <ID>MaxLineLength:OpenCodeNativeInstallTest.kt$OpenCodeNativeInstallTest$assertEquals(OpenCodeInstallReason.Other, OpenCodeInstallReason.of("[oc] OpenCode could not finish updating. Run setup again."))</ID>
     <ID>MaxLineLength:OpenCodeNativeInstallTest.kt$OpenCodeNativeInstallTest$for</ID>
     <ID>MaxLineLength:OpenCodeNativeInstallTest.kt$OpenCodeNativeInstallTest$fun</ID>
-    <ID>MaxLineLength:OpenCodeUbuntuSetup.kt$OpenCodeUbuntuSetup$*</ID>
     <ID>MaxLineLength:OpenCodeUpdate.kt$UpdateRestartResult.RolledBack$public data</ID>
     <ID>MaxLineLength:OpenCodeUpdateTest.kt$OpenCodeUpdateTest$)</ID>
     <ID>MaxLineLength:PhoneBudgetFiles.kt$PhoneBudgetFiles$"- Start as few background programs as you can: Android stops an app that has more than about 30 child processes.\n\n"</ID>

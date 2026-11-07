@@ -138,8 +138,8 @@ class LifecycleReportTest {
     }
 
     @Test
-    fun `B-STATE-025 remote, deleted and Termux profiles do not reach native or HTTP`() = runTest {
-        for (candidate in listOf(null, profile(url = "https://example.test"), profile(url = PhoneOwnServers.TERMUX_URL))) {
+    fun `B-STATE-025 remote, deleted and other loopback profiles do not reach native or HTTP`() = runTest {
+        for (candidate in listOf(null, profile(url = "https://example.test"), profile(url = "http://127.0.0.1:4096"))) {
             controller.refresh(candidate)
             assertEquals(LifecycleReadiness.Unavailable, value.readiness)
         }

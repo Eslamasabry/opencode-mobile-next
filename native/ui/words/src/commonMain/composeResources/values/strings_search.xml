@@ -28,7 +28,6 @@
     <string name="settingsHubVoice">Voice</string>
     <string name="settingsHubSearchServerAliases">server host url address password profile connection health status version update service</string>
     <string name="settingsHubSearchSavedServersAliases">servers profiles host url password switch add edit remove profile connection</string>
-    <string name="settingsHubSearchPhoneAliases">phone termux local on-device on device android install setup storage services</string>
     <string name="settingsHubSearchAccountsAliases">account codex sign in login logout</string>
     <string name="settingsHubSearchExternalAgentsAliases">a2a external agents remote</string>
     <string name="settingsHubSearchTailscaleAliases">tailscale vpn network remote private</string>
@@ -77,8 +76,6 @@
     <string name="discoverToolsAliases">tools tools and capabilities inventory model tools</string>
     <string name="discoverSkillsAliases">skills skill instructions playbook</string>
     <string name="discoverReferencesAliases">references reference docs sources context</string>
-    <string name="discoverRunningNowAliases">running now running on this phone processes termux services stop busy memory background</string>
-    <string name="discoverStorageAliases">storage on this phone disk space clean termux</string>
     <string name="discoverMonitorAliases">saved-server attention monitor other servers waiting server attention</string>
     <string name="discoverConnectionHelpAliases">add server computer connect pair pairing code connection help cannot connect troubleshooting network refused timeout</string>
     <string name="capabilityScreenAliases">available supported not available missing feature hidden why can't capabilities server support shell</string>
@@ -87,8 +84,6 @@
     <string name="effectsAnimations">Motion</string>
     <string name="effectsActivityGlow">Glowing border while replying</string>
     <string name="searchClaudeCodeGateTitle">Not on this device</string>
-    <string name="searchClaudeCodeGateDevice">Claude Code runs on a phone only through Termux, which this device doesn't have. Run it on a computer with Paseo and add that computer as a server.</string>
-    <string name="searchClaudeCodeGateDesktop">Claude Code on this phone is for Android phones with Termux. On a computer, run Claude Code with Paseo and add it as a server.</string>
     <string name="searchClaudeCodeGateServers">Open servers</string>
     <string name="monitorBackgroundChecks">Background checks</string>
     <string name="searchArchivedConversations">Archived conversations</string>
@@ -108,4 +103,5 @@
     <string name="appUpdatesSearchAliases">update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت</string>
     <string name="localAssistantSearchAliases">assistant gemma summarize offline on-device model local ai</string>
     <string name="browserModeSubtitle">What works in this browser and what needs the phone app</string>
+    <string name="settingsHubSearchPhoneLinuxAliases">phone linux ubuntu local on-device on device android install setup storage services</string>
 </resources>

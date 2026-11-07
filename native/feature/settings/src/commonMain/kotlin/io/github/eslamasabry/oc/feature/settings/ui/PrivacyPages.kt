@@ -24,7 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi93
+import io.github.eslamasabry.oc.ui.words.res.privacyPagesSummary
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Off
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashReportsBody
@@ -56,7 +56,7 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
         KitRow(
             title = stringResource(Res.string.privacyPolicyTitle),
             leading = KitRowLeading.Glyph(KitIcons.privacy),
-            supporting = stringResource(Res.string.e7SettingsUi93),
+            supporting = stringResource(Res.string.privacyPagesSummary),
             supportingMaxLines = 2, // F: lib/ui/screens/settings/personal_settings_screens.dart:260
             trailing = KitRowTrailing.Chevron,
             onClick = { actions.onOutside(SettingsOutside.PrivacyPolicy) },

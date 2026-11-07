@@ -85,8 +85,7 @@ class NativeServerSettings(
                                 null,
                                 loaded.profile.backend == BackendKind.Codex,
                                 loaded.profile.backend == BackendKind.OpenCode2 &&
-                                    (ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ||
-                                        ManagedLocalServer.isTermux(loaded.profile.baseUrl)),
+                                    ManagedLocalServer.isBuiltin(loaded.profile.baseUrl),
                                 connectionFailure = connectionFailure,
                             )
                         )
@@ -114,8 +113,7 @@ class NativeServerSettings(
                                     flags,
                                     loaded.profile.backend == BackendKind.Codex,
                                     loaded.profile.backend == BackendKind.OpenCode2 &&
-                                        (ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ||
-                                            ManagedLocalServer.isTermux(loaded.profile.baseUrl)),
+                                        ManagedLocalServer.isBuiltin(loaded.profile.baseUrl),
                                     connectionFailure = failure,
                                 )
                             }

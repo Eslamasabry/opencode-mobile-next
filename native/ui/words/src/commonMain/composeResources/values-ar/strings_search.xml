@@ -28,7 +28,6 @@
     <string name="settingsHubVoice">الصوت</string>
     <string name="settingsHubSearchServerAliases">server host url address password profile connection health status version update service خادم مضيف عنوان كلمة مرور ملف اتصال حالة إصدار تحديث خدمة</string>
     <string name="settingsHubSearchSavedServersAliases">servers profiles host url password switch add edit remove خوادم ملفات مضيف عنوان كلمة مرور تبديل إضافة تعديل إزالة profile connection</string>
-    <string name="settingsHubSearchPhoneAliases">phone termux local on-device on device android install setup storage services هاتف محلي جهاز أندرويد تثبيت إعداد تخزين خدمات</string>
     <string name="settingsHubSearchAccountsAliases">account codex sign in login logout حساب تسجيل دخول خروج</string>
     <string name="settingsHubSearchExternalAgentsAliases">a2a external agents remote وكلاء خارجيون</string>
     <string name="settingsHubSearchTailscaleAliases">tailscale vpn network remote private شبكة خاصة بعيد</string>
@@ -77,8 +76,6 @@
     <string name="discoverToolsAliases">tools capabilities inventory أدوات الأدوات والإمكانات</string>
     <string name="discoverSkillsAliases">skills skill مهارات مهارة تعليمات</string>
     <string name="discoverReferencesAliases">references docs sources مراجع مرجع مستندات مصادر سياق</string>
-    <string name="discoverRunningNowAliases">running processes termux يعمل الآن عمليات خدمات إيقاف على هذا الهاتف</string>
-    <string name="discoverStorageAliases">storage disk space termux التخزين على هذا الهاتف مساحة القرص تنظيف</string>
     <string name="discoverMonitorAliases">monitor attention انتباه الخوادم المحفوظة مراقبة خوادم أخرى بانتظارك</string>
     <string name="discoverConnectionHelpAliases">connection help troubleshooting مساعدة الاتصال تعذر الاتصال استكشاف الأخطاء الشبكة</string>
     <string name="capabilityScreenAliases">available supported missing feature capabilities المتاح مدعوم غير متاح ميزة مفقودة مخفية لماذا إمكانات الخادم</string>
@@ -87,8 +84,6 @@
     <string name="effectsAnimations">الحركة</string>
     <string name="effectsActivityGlow">حدّ متوهّج أثناء الرد</string>
     <string name="searchClaudeCodeGateTitle">غير متاح على هذا الجهاز</string>
-    <string name="searchClaudeCodeGateDevice">يعمل Claude Code على الهاتف فقط عبر Termux، وهو غير موجود على هذا الجهاز. شغّله على حاسوب باستخدام Paseo وأضف ذلك الحاسوب كخادم.</string>
-    <string name="searchClaudeCodeGateDesktop">Claude Code على هذا الهاتف مخصّص لهواتف Android التي تحتوي على Termux. على الحاسوب، شغّل Claude Code باستخدام Paseo وأضفه كخادم.</string>
     <string name="searchClaudeCodeGateServers">فتح الخوادم</string>
     <string name="monitorBackgroundChecks">الفحوص في الخلفية</string>
     <string name="searchArchivedConversations">المحادثات المؤرشفة</string>
@@ -108,4 +103,5 @@
     <string name="appUpdatesSearchAliases">update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت</string>
     <string name="localAssistantSearchAliases">مساعد ملخص دون اتصال نموذج محلي ذكاء اصطناعي</string>
     <string name="browserModeSubtitle">ما الذي يعمل في هذا المتصفح وما الذي يحتاج تطبيق الهاتف</string>
+    <string name="settingsHubSearchPhoneLinuxAliases">phone linux ubuntu local on-device on device android install setup storage services هاتف لينكس محلي جهاز أندرويد تثبيت إعداد تخزين خدمات</string>
 </resources>

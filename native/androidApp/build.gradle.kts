@@ -155,8 +155,6 @@ dependencies {
             ":android:platform", // ANDR: real default-network tracker for consented monitors
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
-            ":android:termux",
-            ":engine:termuxhost",
             ":engine:migration",
             ":feature:gate",
             ":protocol:paseo",

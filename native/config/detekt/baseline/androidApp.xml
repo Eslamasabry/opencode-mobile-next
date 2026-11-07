@@ -264,8 +264,6 @@
     <ID>CyclomaticComplexMethod:SignInOwnershipWiring.kt$SignInOwnership$suspend fun reserve(stillWanted: () -&gt; Boolean): ForegroundLease?</ID>
     <ID>CyclomaticComplexMethod:StateHandoffWiring.kt$AndroidStateHandoffSource$override suspend fun counterpart( ref: ConversationRef, link: HandoffLink, ): Outcome&lt;ConversationRef&gt;</ID>
     <ID>CyclomaticComplexMethod:StoredDevelopmentServices.kt$StoredDevelopmentServices$private fun decode(raw: String): List&lt;DevelopmentService&gt;</ID>
-    <ID>CyclomaticComplexMethod:TermuxMigrationWiring.kt$AndroidTermuxMigration.Session$override suspend fun command(command: LinuxMigrationCommand)</ID>
-    <ID>CyclomaticComplexMethod:TermuxMigrationWiring.kt$private fun migrationUi(page: MigrationPage): LinuxMigrationUi</ID>
     <ID>CyclomaticComplexMethod:ThermalWiring.kt$NativeThermalTeams$override suspend fun pause(target: HeatPausable, now: Instant): HeatHold?</ID>
     <ID>CyclomaticComplexMethod:ThermalWiring.kt$NativeThermalTeams$override suspend fun resume(hold: HeatHold, stillAllowed: () -&gt; Boolean): Boolean</ID>
     <ID>CyclomaticComplexMethod:ThermalWiring.kt$NativeThermalTeams$private suspend fun ask( target: HeatPausable, method: String, address: String, body: JSONObject? = null, ): Answer?</ID>
@@ -400,7 +398,6 @@
     <ID>LongMethod:SettingsServerWiring.kt$NativeServerSettings$override suspend fun check(profile: ProfileId): Outcome&lt;ImmutableList&lt;ConnectionResult&gt;&gt;</ID>
     <ID>LongMethod:SetupWiring.kt$PublicRegistryFetcher$override suspend fun fetch(search: String?): Outcome&lt;List&lt;RegistryListing&gt;&gt;</ID>
     <ID>LongMethod:StateHandoffWiring.kt$AndroidStateHandoffSource$override suspend fun counterpart( ref: ConversationRef, link: HandoffLink, ): Outcome&lt;ConversationRef&gt;</ID>
-    <ID>LongMethod:TermuxMigrationWiring.kt$private fun migrationUi(page: MigrationPage): LinuxMigrationUi</ID>
     <ID>LongMethod:ThermalWiring.kt$NativeThermalTeams$private suspend fun ask( target: HeatPausable, method: String, address: String, body: JSONObject? = null, ): Answer?</ID>
     <ID>LongMethod:UsageHubEntries.kt$UsageHubEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
     <ID>LongMethod:UsageSourcesWiring.kt$AndroidAdditionalUsageSources$override suspend fun read(context: UsageReadContext): Outcome&lt;UsageSourceResult&gt;</ID>
@@ -481,7 +478,6 @@
     <ID>LongParameterList:SettingsWiring.kt$FirstRunStarter$( private val diagnosticsFeed: DiagnosticsFeed, private val stores: PreviewStores, private val connections: ServerConnections, private val nav: AppNavigator, private val dispatchers: AppDispatchers, private val managedMove: io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveSource, appScope: AppCoroutineScope, )</ID>
     <ID>LongParameterList:SetupWiring.kt$AndroidServersSetup$( private val stores: PreviewStores, private val registry: ConnectionRegistry, private val redactor: Redactor, private val clock: Clock, private val dispatchers: AppDispatchers, private val device: DeviceFacts, scope: ProfileScope, )</ID>
     <ID>LongParameterList:SharedFolderWiring.kt$AndroidFilesStorageAccess$( private val app: Application, private val stores: PreviewStores, private val registry: ConnectionRegistry, private val connections: FilesConnections, private val platform: AndroidProjectExport, private val dispatchers: AppDispatchers, private val sharedRoots: NativeSharedProjectFolders, )</ID>
-    <ID>LongParameterList:TermuxMigrationWiring.kt$AndroidTermuxMigration$( private val app: Application, private val stores: PreviewStores, private val dispatchers: AppDispatchers, scope: AppCoroutineScope, redactor: Redactor, private val clock: Clock, private val serverSource: Lazy&lt;PhoneServerSource&gt;, private val navigator: AppNavigator, profileScope: ProfileScope, )</ID>
     <ID>LongParameterList:ThermalWiring.kt$ThermalRuntime$( private val stores: PreviewStores, private val facts: DeviceFacts, private val dispatchers: AppDispatchers, scope: AppCoroutineScope, private val clock: Clock, app: Application, profileScope: ProfileScope, )</ID>
     <ID>LongParameterList:VoiceWiring.kt$AndroidVoiceHub$( private val application: Application, private val dispatchers: AppDispatchers, private val clock: Clock, private val scope: AppCoroutineScope, private val stores: PreviewStores, private val activities: ResumedActivities, private val preferences: AppPreferences, )</ID>
     <ID>LongParameterList:VoiceWiring.kt$PhoneDictation$( private val app: Application, private val permission: MicPermission, private val main: CoroutineDispatcher, private val clock: Clock, private val scope: CoroutineScope, private val language: () -&gt; VoiceLanguage, private val stopReading: suspend () -&gt; Unit, )</ID>
@@ -1101,7 +1097,6 @@
     <ID>MagicNumber:Stream6000.kt$Stream6000$9</ID>
     <ID>MagicNumber:Stream6000.kt$Stream6000$91</ID>
     <ID>MagicNumber:StreamProofActivity.kt$StreamProofActivity$1_000</ID>
-    <ID>MagicNumber:TermuxMigrationWiring.kt$AndroidTermuxMigration$10</ID>
     <ID>MagicNumber:ThermalWiring.kt$NativeThermalTeams$10</ID>
     <ID>MagicNumber:ThermalWiring.kt$NativeThermalTeams$262144</ID>
     <ID>MagicNumber:ThermalWiring.kt$NativeThermalTeams$3</ID>
@@ -1180,7 +1175,6 @@
     <ID>MatchingDeclarationName:GitRepairWiring.kt$AndroidGitLinkRepairService : GitLinkRepairService</ID>
     <ID>MatchingDeclarationName:HandoffDraftWiring.kt$AppHandoffDrafts : AgentHandoffDrafts</ID>
     <ID>MatchingDeclarationName:HomePermissionWiring.kt$HomePermissionAnswerWiring : HomePermissionAnswers</ID>
-    <ID>MatchingDeclarationName:ImportedProviderWiring.kt$AndroidImportedProviderReview : ImportedProviderReview</ID>
     <ID>MatchingDeclarationName:IsolatedTaskWiring.kt$AndroidIsolatedTaskHost : IsolatedTaskHost</ID>
     <ID>MatchingDeclarationName:KeptPromptsWiring.kt$AndroidKeptQueuedPrompts : KeptQueuedPrompts</ID>
     <ID>MatchingDeclarationName:KeptServicesWiring.kt$AndroidKeptServices : KeptServices</ID>
@@ -1369,7 +1363,6 @@
     <ID>MaxLineLength:Stream6000.kt$Stream6000$sb.append("- ").append(sentence(6)).append("\n- ").append(sentence(7)).append("\n- ").append(sentence(5)).append("\n\n")</ID>
     <ID>MaxLineLength:Stream6000.kt$Stream6000$val words = "the agent reads a file then edits one line and runs the tests while the list follows the newest words".split(' ')</ID>
     <ID>MaxLineLength:StreamProofActivity.kt$StreamProofActivity$"history parts=${stream.shape.parts} events=${timed.size} live=${live.size} rows=${handle.state.value.rows.size}"</ID>
-    <ID>MaxLineLength:TermuxMigrationWiring.kt$AndroidTermuxMigration$"mkdir -p ~/.termux; printf '\\nallow-external-apps=true\\n' &gt;&gt; ~/.termux/termux.properties; termux-reload-settings"</ID>
     <ID>MaxLineLength:VoiceWiring.kt$/* * P12-VOICE app wiring (the one Android-only voice file). It builds `:android:voice`'s stack over the app's stores and * asks for the microphone through the resumed activity. P12-FIX-LINUX-VOICE: it types with the offline engine * (sherpa-onnx Whisper, [OfflineSpeechEngine] in LinuxVoiceWiring.kt) over the models in files/voice_models, as the * Flutter app does. The phone's own recognizer ([PhoneDictation]) is only the fallback when the JNI library cannot load. */</ID>
     <ID>MaxLineLength:WidgetOverlayActivity.kt$WidgetOverlayActivity$"io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_PROFILE_ID"</ID>
     <ID>MaxLineLength:WidgetOverlayActivity.kt$WidgetOverlayActivity$"io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_SESSION_ID"</ID>
@@ -1481,7 +1474,6 @@
     <ID>ReturnCount:HandoffDraftWiring.kt$AppHandoffDrafts$override suspend fun prepare( profileId: ProfileId, sessionId: SessionId, ): Outcome&lt;AgentDraftRecord&gt;</ID>
     <ID>ReturnCount:HandoffWiring.kt$AppChatHandoffs$override fun open( ref: ConversationRef, model: ModelRef, label: String, active: () -&gt; Boolean, ): HandoffEngine?</ID>
     <ID>ReturnCount:HomePermissionWiring.kt$HomePermissionAnswerWiring$override suspend fun answer( ref: ConversationRef, requestId: String, allow: Boolean, ): Outcome&lt;Unit&gt;</ID>
-    <ID>ReturnCount:ImportedProviderWiring.kt$AndroidImportedProviderReview$override suspend fun read(profile: ProfileId): Outcome&lt;List&lt;String&gt;&gt;</ID>
     <ID>ReturnCount:IncomingShare.kt$IncomingShare$private fun openIfReady()</ID>
     <ID>ReturnCount:IntegrationsWiring.kt$AndroidIntegrationsSource$override fun open(profile: ProfileId): IntegrationSession?</ID>
     <ID>ReturnCount:IntegrationsWiring.kt$AndroidIntegrationsSource.PinnedSession$private suspend fun &lt;T&gt; guarded(action: suspend () -&gt; Outcome&lt;T&gt;): Outcome&lt;T&gt;</ID>
@@ -1698,7 +1690,6 @@
     <ID>ReturnCount:StateProjectCreationWiring.kt$PhoneProjectCreation$private suspend fun make(path: String): Outcome&lt;String&gt;?</ID>
     <ID>ReturnCount:StateProjectCreationWiring.kt$PhoneProjectCreation$private suspend fun onServerCreate(server: ProjectServer, folder: String): Outcome&lt;String&gt;</ID>
     <ID>ReturnCount:StoredDevelopmentServices.kt$StoredDevelopmentServices$private fun JsonObject.optionalString(name: String): String?</ID>
-    <ID>ReturnCount:TermuxMigrationWiring.kt$AndroidTermuxMigration.&lt;no name provided&gt;$override suspend fun startBuiltin( profile: MigrationProfile, stillWanted: () -&gt; Boolean, ): Boolean</ID>
     <ID>ReturnCount:ThermalWiring.kt$NativeThermalTeams$override suspend fun pause(target: HeatPausable, now: Instant): HeatHold?</ID>
     <ID>ReturnCount:ThermalWiring.kt$NativeThermalTeams$override suspend fun resume(hold: HeatHold, stillAllowed: () -&gt; Boolean): Boolean</ID>
     <ID>ReturnCount:ThermalWiring.kt$NativeThermalTeams$override suspend fun stop(hold: HeatHold): HeatHold</ID>
@@ -1821,7 +1812,6 @@
     <ID>TooManyFunctions:ServerEditorWiring.kt$NativeServerEditor : ServerEditorPort</ID>
     <ID>TooManyFunctions:ServerIntegrationsWiring.kt$NativeServerIntegrations$Session : ServerIntegrationSession</ID>
     <ID>TooManyFunctions:StoredDevelopmentServices.kt$StoredDevelopmentServices : DevelopmentServiceStore</ID>
-    <ID>TooManyFunctions:TermuxMigrationWiring.kt$AndroidTermuxMigration : LinuxMigrationOffersLinuxMigrationSessionsPhoneTermuxMigrationProfileCloserProfileResourceCleaner</ID>
     <ID>TooManyFunctions:ThermalWiring.kt$NativeThermalTeams : HeatPausePort</ID>
     <ID>TopLevelPropertyNaming:AndroidComposerFiles.kt$private const val AttachmentLimitsMaxCount = 5</ID>
     <ID>UnusedParameter:PlatformWiring.kt$PlatformHub$activity: Activity</ID>
@@ -2204,17 +2194,6 @@
     <ID>WildcardImport:StateHandoffWiring.kt$import io.github.eslamasabry.oc.feature.chat.handoff.*</ID>
     <ID>WildcardImport:StateHandoffWiring.kt$import kotlinx.serialization.json.*</ID>
     <ID>WildcardImport:TerminalWiring.kt$import io.github.eslamasabry.oc.feature.projects.terminal.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import dev.zacsweers.metro.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.android.termux.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.core.common.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.core.data.kv.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.core.data.scope.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.engine.profiles.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.feature.linux.presentation.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import kotlinx.coroutines.*</ID>
-    <ID>WildcardImport:TermuxMigrationWiring.kt$import kotlinx.coroutines.flow.*</ID>
     <ID>WildcardImport:TranscriptPreferencesWiring.kt$import dev.zacsweers.metro.*</ID>
     <ID>WildcardImport:UsageHubEntries.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:UsageHubEntries.kt$import dev.zacsweers.metro.*</ID>

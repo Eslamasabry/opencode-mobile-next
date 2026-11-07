@@ -26,5 +26,11 @@ internal fun homeAppNoticeStatus(
             },
         onDismiss = { dismiss(notice.id) },
         dismissLabel = notice.dismissLabel,
+        more =
+            listOfNotNull(
+                notice.secondAction?.let { second ->
+                    notice.secondActionLabel?.let { label -> KitLineAction(label, { act(second) }) }
+                }
+            ),
         icon = if (notice.stoppedApp) KitIcons.restart else null,
     )
