@@ -391,6 +391,7 @@
     <string name="chatUiToggleLongReasoningDetailsAcrossTheTranscript">Toggle long reasoning details across the transcript</string>
     <string name="chatUiToolsAndCapabilities">Tools and capabilities</string>
     <string name="chatUiTranscriptCopiedAsMarkdown">Transcript copied as Markdown</string>
+    <string name="chatUiTranscriptCopiedMasked">Transcript copied as Markdown. Anything that looked like a password or key was hidden.</string>
     <string name="chatUiTranscriptSaved">Transcript saved</string>
     <string name="chatUiVoiceConversationWasInterrupted">Voice conversation was interrupted.</string>
     <string name="chatUiVoiceInput">Voice input</string>

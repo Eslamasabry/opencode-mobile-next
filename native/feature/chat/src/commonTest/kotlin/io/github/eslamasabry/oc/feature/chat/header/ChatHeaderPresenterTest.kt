@@ -292,6 +292,29 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
+    fun `B-SEC-145 copy transcript says when the redactor hid something and not otherwise`() {
+        world.transcript.value = stateOf(block("u1", "a1", "p1", 0, "printed sk-live-123456"))
+        p.copyTranscript(words) { it.replace("sk-live-123456", "••••") }
+        val masked = assertNotNull(p.current().clip)
+        assertEquals(ClipKind.Transcript, masked.kind)
+        assertTrue(masked.masked, "a hidden key is announced")
+        p.clipDone(masked.id)
+
+        world.transcript.value = stateOf(block("u1", "a1", "p1", 0, "all done"))
+        p.copyTranscript(words) { it.replace("sk-live-123456", "••••") }
+        assertFalse(assertNotNull(p.current().clip).masked, "nothing hidden: the plain confirmation")
+    }
+
+    @Test
+    fun `B-SEC-145 a key in the person's own prompt alone does not claim anything was hidden`() {
+        world.transcript.value = stateOf(prompt("u1", "my key is sk-live-123456"))
+        p.copyTranscript(words) { it.replace("sk-live-123456", "••••") }
+        val clip = assertNotNull(p.current().clip)
+        assertTrue("sk-live-123456" in clip.text, "the person's own prompt stays verbatim (SEC-13)")
+        assertFalse(clip.masked)
+    }
+
+    @Test
     fun `details shows server project model and context use`() {
         port.facts.value = port.facts.value.copy(contextTokens = 960, contextLimit = 1000, totalTokens = 1200, model = "gpt-5")
         p.choose(HeaderAction.Details)

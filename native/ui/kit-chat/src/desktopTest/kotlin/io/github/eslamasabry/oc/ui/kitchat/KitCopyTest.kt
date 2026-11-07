@@ -4,15 +4,21 @@
 package io.github.eslamasabry.oc.ui.kitchat
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
+import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitContextMessagePart
@@ -152,5 +158,37 @@ class KitCopyTest {
                 assertTrue(clipboard.writes[1].startsWith("The key "), clipboard.writes[1])
             }
             onAllNodesWithContentDescription(maskedWords).assertCountEquals(2)
+        }
+
+    @Test
+    fun `B-SEC-145 the clipboard effect writes once and announces the caller's words, then goes quiet`() =
+        runComposeUiTest {
+            val clipboard = RecordingClipboard()
+            var clip by mutableStateOf<Pair<Long, String>?>(null)
+            mainClock.autoAdvance = false
+            setContent {
+                ChatTestTheme {
+                    CompositionLocalProvider(LocalClipboardManager provides clipboard) {
+                        KitClipboardEffect(
+                            clip?.first,
+                            clip?.second,
+                            onDone = { id -> if (clip?.first == id) clip = null },
+                            announcement = "Transcript copied as Markdown. Anything that looked like a password or key was hidden.",
+                        )
+                    }
+                }
+            }
+            mainClock.advanceTimeByFrame()
+            onNodeWithTag("kit-copy-announcement").assertExists()
+            onNodeWithContentDescription("Transcript copied", substring = true).assertDoesNotExist()
+            clip = 1L to "# Keys\n\n- `sk-proj-•••`"
+            repeat(3) { mainClock.advanceTimeByFrame() }
+            assertEquals(listOf("# Keys\n\n- `sk-proj-•••`"), clipboard.writes)
+            onNodeWithContentDescription(
+                "Transcript copied as Markdown. Anything that looked like a password or key was hidden."
+            ).assertExists()
+            mainClock.advanceTimeBy(MotionTokens.COPIED_HOLD.toLong() + 100)
+            onNodeWithContentDescription("Transcript copied", substring = true).assertDoesNotExist()
+            assertEquals(1, clipboard.writes.size, "written once")
         }
 }

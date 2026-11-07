@@ -407,6 +407,7 @@
     <string name="chatUiToggleLongReasoningDetailsAcrossTheTranscript">إظهار تفاصيل الاستدلال الطويلة أو إخفاؤها في سجل المحادثة</string>
     <string name="chatUiToolsAndCapabilities">الأدوات والقدرات</string>
     <string name="chatUiTranscriptCopiedAsMarkdown">نُسخ سجل المحادثة بصيغة Markdown</string>
+    <string name="chatUiTranscriptCopiedMasked">نُسخ سجل المحادثة بصيغة Markdown. أُخفي كل ما بدا مثل كلمة مرور أو مفتاح.</string>
     <string name="chatUiTranscriptSaved">حُفظ سجل المحادثة</string>
     <string name="chatUiVoiceConversationWasInterrupted">انقطعت المحادثة الصوتية.</string>
     <string name="chatUiVoiceInput">الإدخال الصوتي</string>

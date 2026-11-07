@@ -88,6 +88,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiAssistant
 import io.github.eslamasabry.oc.ui.words.res.chatUiAttachment
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyShareLink
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ClipKind
+import io.github.eslamasabry.oc.ui.words.res.chatUiShareLinkCopied
+import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptCopiedMasked
+import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptCopiedAsMarkdown
 import io.github.eslamasabry.oc.ui.words.res.chatUiReloadMessages
 import io.github.eslamasabry.oc.ui.words.res.chatUiError
 import io.github.eslamasabry.oc.ui.words.res.chatUiFile
@@ -494,7 +498,24 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
         (sheet as? HeaderSheet.Handoff)?.let { HandoffBody(it, actions) }
     }
     val clip = state.clip
-    KitClipboardEffect(clip?.id, clip?.text, actions::clipDone)
+    // Flutter `_copyTranscript` announces "Transcript copied as Markdown"; E15-S05 says when the redactor hid something.
+    val transcriptCopied = stringResource(Res.string.chatUiTranscriptCopiedAsMarkdown)
+    val transcriptMasked = stringResource(Res.string.chatUiTranscriptCopiedMasked)
+    val linkCopied = stringResource(Res.string.chatUiShareLinkCopied)
+    val copied = stringResource(Res.string.kitCopied)
+    KitClipboardEffect(
+        clip?.id,
+        clip?.text,
+        actions::clipDone,
+        announcement =
+            when (clip?.kind) {
+                null -> copied
+                ClipKind.Transcript -> if (clip?.masked == true) transcriptMasked else transcriptCopied
+                ClipKind.ShareLink -> linkCopied
+                ClipKind.ResumeCommand,
+                ClipKind.PhoneLink -> copied
+            },
+    )
 }
 
 @Composable

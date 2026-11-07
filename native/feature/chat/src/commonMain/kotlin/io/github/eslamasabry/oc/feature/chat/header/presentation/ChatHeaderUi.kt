@@ -157,7 +157,8 @@ public enum class ClipKind {
     PhoneLink,
 }
 
-public data class HeaderClip(val id: Long, val text: String, val kind: ClipKind)
+/** [masked]: the app's one redactor hid something that looked like a password or key (E15-S05); the confirmation says so. */
+public data class HeaderClip(val id: Long, val text: String, val kind: ClipKind, val masked: Boolean = false)
 
 /** Intents, named after what the person wants. */
 public interface ChatHeaderActions {
