@@ -106,22 +106,27 @@ public fun ChatRequestSlot(
     nowMs: Long?,
     modifier: Modifier = Modifier,
 ) {
-    if (state.cards.isEmpty()) return
-    val total = state.cards.size
-    KitRequestStack(
-        items = state.cards,
-        key = { it.id },
-        label = { index, card ->
-            stringResource(
-                Res.string.chatRequestCardLabel,
-                Numbers.format(index + 1),
-                Numbers.format(total),
-                cardTarget(card),
-            )
-        },
-        modifier = modifier,
-    ) { card ->
-        key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+    // P-009: the slot stays composed while its last card folds away (fade + collapse, instant under
+    // reduced motion), and a card that arrives right after another left unfolds in the same stack
+    // instead of swapping in.
+    val held = remember { RequestSlotHold() }
+    val cards = held.cards(state.cards)
+    KitReveal(visible = state.cards.isNotEmpty(), modifier = modifier) {
+        val total = cards.size
+        KitRequestStack(
+            items = cards,
+            key = { it.id },
+            label = { index, card ->
+                stringResource(
+                    Res.string.chatRequestCardLabel,
+                    Numbers.format(index + 1),
+                    Numbers.format(total),
+                    cardTarget(card),
+                )
+            },
+        ) { card ->
+            key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+        }
     }
     state.sheet?.let { ChatQuestionSheet(it, actions) }
     val confirm = state.confirmAlways
