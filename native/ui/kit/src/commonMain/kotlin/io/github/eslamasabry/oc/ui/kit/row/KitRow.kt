@@ -240,10 +240,11 @@ private fun RowBody(
             }
             .then(if (selected) Modifier.kitSelectedFill(colors.surface3, onRail) else Modifier)
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
-            // A row menu's 48 dp target ends near the edge, so its glyph lines up with the chevrons of the rows around it.
+            // A row's 48 dp glyph target (its ⋯ menu or a labelled glyph) ends near the edge, so its glyph lines up
+            // with the chevrons of the rows around it and with the top bar's ⋯ (P-112: Files' row ⋯ sat 12 dp in).
             .padding(
                 start = kitRowGutter(),
-                end = if (trailing is KitRowTrailing.Menu) Space.S1.dp else kitRowGutter(),
+                end = if (rowTargetOnEdge(trailing)) Space.S1.dp else kitRowGutter(),
                 top = Space.S2.dp,
                 bottom = Space.S2.dp,
             )
@@ -416,3 +417,7 @@ private fun Modifier.kitSelectedFill(color: androidx.compose.ui.graphics.Color, 
                 size = androidx.compose.ui.geometry.Size(size.width + 2 * rail, size.height),
             )
         }
+
+/** True when [trailing] is a 48 dp glyph target that ends near the row's edge, on the top bar's ⋯ line (P-112). */
+internal fun rowTargetOnEdge(trailing: KitRowTrailing?): Boolean =
+    trailing is KitRowTrailing.Menu || trailing is KitRowTrailing.IconAction
