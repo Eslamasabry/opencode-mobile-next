@@ -227,7 +227,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", action="append", default=[],
                         help="override a port: ID:name=NUMBER (repeatable)")
     parser.add_argument("--timeout", type=float, help="seconds to wait for ready.json")
-    args = parser.parse_args(argv)
+    # Intermixed: `start --run-dir DIR FX-OC2 FX-TLS` (the README's, the self-tests' and upgrade.py's order) must
+    # parse; plain parse_args() leaves the ids after an option unrecognised.
+    args = parser.parse_intermixed_args(argv)
     if args.command == "list":
         print("\n".join(known_ids()))
         return 0
