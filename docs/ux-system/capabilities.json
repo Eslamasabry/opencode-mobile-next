@@ -339,9 +339,9 @@
    "kind": "taxonomy",
    "hosts": {
     "builtin": {
-     "status": "not",
-     "note": "Claude Code on the phone runs only through the Termux bridge; the page is a dead end on an in-app phone",
-     "evidence": "lib/termux/local_agent_runtime.dart:258-277; lib/ui/widgets/local_agent_onboarding.dart:779-800"
+     "status": "supported",
+     "note": "Built-in Linux installs Claude Code and runs it through the Paseo daemon on the phone; sign-in uses the agent's own CLAUDE_CONFIG_DIR",
+     "evidence": "lib/builtin/agents/agent_scripts.dart:16,56,143; lib/builtin/agents/agent_sign_in.dart:528-539"
     },
     "oc2Computer": {
      "status": "n/a",
@@ -1231,7 +1231,7 @@
   {
    "capability": "claude.local",
    "discover": [
-    "Termux page › 'Claude Code · Optional' row (termux_setup_screen.dart:2365-2376)",
+    "New conversation › Add an agent › Claude Code (built-in Linux, through Paseo)",
     "Search 'Claude Code' on any Android phone (search_index.dart:979-990)",
     "Target: setup v2 Customize/Add tools row 'Claude Code (needs a Claude sign-in)'"
    ],

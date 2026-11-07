@@ -240,7 +240,7 @@ abstract final class KitCapabilities {
     ),
     KitCapability(
       id: 'claude.local',
-      supported: {},
+      supported: {KitHost.thisPhone},
       enableFlow: KitEnableFlows.addToolClaude,
     ),
     KitCapability(
