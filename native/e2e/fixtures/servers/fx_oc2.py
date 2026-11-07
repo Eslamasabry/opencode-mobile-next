@@ -41,6 +41,8 @@ Control actions (POST ctl/<name>, JSON body) besides the core ones:
     lose-clear                      remove lose-response rules (also done by /reset)
     prompt {session, text, delivery?}  send a prompt through the server with auth -> {"status"}
     sessions                        -> {"sessions": {key: id}, "projects": {...}}
+    seed-sessions {project?, titles}  one empty session per title (existing titles reused) -> {"sessions": {title: id}}
+    request-log {text}              -> {"count": n} user messages on the server whose text is exactly ``text``
     model-speed {speed}             stub pace (null = back to FX_STUB_SPEED)
     model-log                       -> {"requests": [...]} the stub model's metadata log
 """
@@ -343,6 +345,60 @@ def seed_sessions(api: Upstream, profile: Profile, projects: dict[str, Path], se
         else:
             raise RuntimeError(f"importing session {seed.key} failed: HTTP {status}")
     return out
+
+
+def seed_titles(api: Upstream, projects: dict[str, Path], body: dict[str, Any]) -> dict[str, str]:
+    """The ``seed-sessions`` action: one empty session per title in a project, {title: id}. A title that
+    already exists in that project is reused, so a flow can call it again after a restart."""
+    project, titles = body.get("project", "app"), body.get("titles")
+    if project not in projects:
+        raise ValueError(f"unknown project {project!r}; known: {sorted(projects)}")
+    if not isinstance(titles, list) or not titles or not all(isinstance(x, str) and x for x in titles):
+        raise ValueError("body needs titles: a non-empty list of strings")
+    directory = str(projects[project])
+    existing = {s.get("title"): s.get("id") for s in list_sessions(api, directory)}
+    out: dict[str, str] = {}
+    for title in titles:
+        if existing.get(title):
+            out[title] = existing[title]
+            continue
+        status, data = api.call("POST", "/api/session", {"title": title, "location": {"directory": directory}})
+        info = (data or {}).get("data") if isinstance(data, dict) else None
+        if status != 200 or not isinstance(info, dict) or not info.get("id"):
+            raise ValueError(f"creating session {title!r} failed: HTTP {status}")
+        out[title] = str(info["id"])
+    return out
+
+
+def list_sessions(api: Upstream, directory: str | None = None) -> list[dict[str, Any]]:
+    path = "/api/session?limit=500" + ("&directory=" + quote(directory) if directory else "")
+    status, data = api.call("GET", path)
+    rows = (data or {}).get("data") if isinstance(data, dict) else data
+    return [r for r in rows if isinstance(r, dict)] if status == 200 and isinstance(rows, list) else []
+
+
+def _message_texts(message: dict[str, Any]) -> list[str]:
+    texts = [message["text"]] if isinstance(message.get("text"), str) else []
+    for part in message.get("parts") or message.get("content") or []:
+        if isinstance(part, dict) and isinstance(part.get("text"), str):
+            texts.append(part["text"])
+    return texts
+
+
+def count_user_prompts(api: Upstream, text: str) -> int:
+    """The ``request-log`` action: how many user messages on this server carry exactly ``text`` (all sessions,
+    all projects). The server's own history, so a prompt the app sent twice counts twice."""
+    count = 0
+    for session in list_sessions(api):
+        status, data = api.call("GET", f"/api/session/{quote(str(session.get('id')))}/message?limit=500")
+        rows = (data or {}).get("data") if isinstance(data, dict) else data
+        if status != 200 or not isinstance(rows, list):
+            continue
+        for message in rows:
+            if isinstance(message, dict) and message.get("type", message.get("role")) == "user" \
+                    and text in (t.strip() for t in _message_texts(message)):
+                count += 1
+    return count
 
 
 # --------------------------------------------------------------------------- front proxy
@@ -703,6 +759,17 @@ def make_setup(profile: Profile) -> Callable[[Fixture], dict[str, Any]]:
             status, data = api.call("POST", f"/api/session/{quote(session)}/prompt", payload)
             item = (data or {}).get("data") if isinstance(data, dict) else None
             return {"status": status, "id": item.get("id") if isinstance(item, dict) else None}
+
+        @fx.control("seed-sessions")
+        def _seed_more(body: dict[str, Any]) -> Any:
+            return {"sessions": seed_titles(api, projects, body)}
+
+        @fx.control("request-log")
+        def _request_log(body: dict[str, Any]) -> Any:
+            text = body.get("text")
+            if not isinstance(text, str) or not text:
+                raise ValueError("body needs text")
+            return {"count": count_user_prompts(api, text)}
 
         @fx.control("sessions")
         def _sessions(_body: dict[str, Any]) -> Any:

@@ -9,5 +9,6 @@
   "FX-GIT": {"daemon": 9418, "http": 8702, "ctl": 8712},
   "FX-LINUXDL": {"http": 8700, "ctl": 8710},
   "FX-USAGE": {"http": 8703, "ctl": 8713},
-  "FX-AUTH": {"http": 8704, "ctl": 8714}
+  "FX-AUTH": {"http": 8704, "ctl": 8714},
+  "FX-CTL": {"http": 8898}
 }

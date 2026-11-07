@@ -13,7 +13,8 @@ paths are served from one origin:
 
 Control (ctl port): approve {user_code?}, deny {user_code?}, expire {user_code?},
 slow-down {interval?}, reject-tokens {on}, disable-device-flow {on},
-set-release {tag_name, body?, assets?}, GET state, plus the shared ones.
+set-release {tag_name, body?, assets?}, publish-release {bump?, from?} (a newer release than
+``from``, default the current one), GET state, plus the shared ones.
 Without user_code, approve/deny/expire act on the newest pending code.
 
 The access token is FX_GH_TOKEN, else FX_GIT_PASSWORD (so a sign-in followed by
@@ -213,6 +214,23 @@ def setup(fx: Fixture) -> dict[str, Any]:
         with st.lock:
             st.release = {**DEFAULT_RELEASE, **body}
         return {"tag_name": body["tag_name"]}
+
+    @fx.control("publish-release")
+    def publish_release(body: dict[str, Any]) -> dict[str, Any]:
+        """A newer release than ``from`` (default: the current one): bump major, minor or patch."""
+        bump = body.get("bump", "minor")
+        if bump not in ("major", "minor", "patch"):
+            raise ValueError("bump must be major, minor or patch")
+        with st.lock:
+            base = str(body.get("from") or st.release.get("tag_name") or "0.0.0")
+        nums = [int(x) for x in base.lstrip("v").split("-")[0].split(".")[:3]] + [0, 0, 0]
+        major, minor, patch = nums[:3]
+        major, minor, patch = {"major": (major + 1, 0, 0), "minor": (major, minor + 1, 0),
+                               "patch": (major, minor, patch + 1)}[bump]
+        name = f"{major}.{minor}.{patch}"
+        with st.lock:
+            st.release = {**DEFAULT_RELEASE, "tag_name": f"v{name}", "name": name}
+        return {"tag_name": f"v{name}"}
 
     fx.state = st.snapshot  # type: ignore[method-assign]
     fx.serve("http", Handler)
