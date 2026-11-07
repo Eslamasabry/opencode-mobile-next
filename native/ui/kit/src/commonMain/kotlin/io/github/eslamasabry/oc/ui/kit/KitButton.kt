@@ -200,7 +200,10 @@ public fun KitButton(
             // touch target reach into the gutter on both sides, so a centred one stays centred.
             // The control cap holds whatever the caller passes (kit-v2 §8.6: a part never paints wider than its cap),
             // inside a text action's reach so its target is capped too.
-            (if (role == KitButtonRole.Tertiary && !hero) Modifier.kitBleed(pad.dp) else Modifier)
+            // In a stacked block the text action fills the column like the buttons above it, so it keeps their
+            // edges exactly instead (E20-S09: the bleed then hit the control cap and shifted it off the gutter).
+            (if (role == KitButtonRole.Tertiary && !hero && !LocalKitStackedAction.current) Modifier.kitBleed(pad.dp)
+            else Modifier)
                 .kitMaxWidth(CapRole.Control)
                 .then(modifier)
                 .then(if (hero) Modifier.kitMaxWidth(CapRole.Control).fillMaxWidth() else if (fullWidth) Modifier.widthIn(max = FILL_MAX_WIDTH_DP.dp).fillMaxWidth() else Modifier)
@@ -259,6 +262,9 @@ public fun KitButton(
         KitButtonWords(label, wordsColor, maxLines)
     }
 }
+
+/** True inside a stacked [io.github.eslamasabry.oc.ui.kit.action.KitActionBlock]: every action there fills one column. */
+internal val LocalKitStackedAction = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /** Measures [x] wider on each side than offered and places the content [x] towards the start, reporting the offered size. */
 private fun Modifier.kitBleed(x: Dp): Modifier =

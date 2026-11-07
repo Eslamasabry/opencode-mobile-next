@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.LocalKitStackedAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
@@ -81,7 +83,10 @@ public fun KitActionBlock(
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                     primary?.let { ActionWithReason(it, KitButtonRole.Primary, Modifier.fillMaxWidth()) }
                     secondary?.let { ActionWithReason(it, KitButtonRole.Secondary, Modifier.fillMaxWidth()) }
-                    shown.forEach { ActionWithReason(it, KitButtonRole.Tertiary, Modifier.fillMaxWidth()) }
+                    // One edge and one width for every action in the stack (E20-S09).
+                    CompositionLocalProvider(LocalKitStackedAction provides true) {
+                        shown.forEach { ActionWithReason(it, KitButtonRole.Tertiary, Modifier.fillMaxWidth()) }
+                    }
                     if (overflow.isNotEmpty()) MoreActions(overflow, Modifier.align(Alignment.End))
                 }
             KitActionLayout.Row ->
