@@ -74,17 +74,26 @@ void main() {
             {
               'name': 'opencode-mobile-2.1.4+65-armeabi-v7a.apk',
               'size': 35000000,
-              'browser_download_url': 'https://download/armeabi.apk',
+              'browser_download_url':
+                  'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.4+65/armeabi.apk',
             },
             {
               'name': 'opencode-mobile-2.1.4+65-arm64-v8a.apk',
               'size': 40000000,
-              'browser_download_url': 'https://download/arm64.apk',
+              'browser_download_url':
+                  'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.4+65/arm64.apk',
             },
             {
               'name': 'opencode-mobile-2.1.4+65.apk',
               'size': 100000000,
-              'browser_download_url': 'https://download/universal.apk',
+              'browser_download_url':
+                  'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.4+65/universal.apk',
+            },
+            {
+              'name': 'SHA256SUMS',
+              'size': 300,
+              'browser_download_url':
+                  'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.4+65/SHA256SUMS',
             },
           ],
         },
@@ -98,7 +107,6 @@ void main() {
       final service = InAppUpdateService(
         dio: dio,
         primaryReleasesUrl: 'https://primary.releases',
-        fallbackReleasesUrl: 'https://fallback.releases',
       );
 
       final result = await service.checkForNewRelease(
@@ -109,52 +117,99 @@ void main() {
       expect(result, isNotNull);
       expect(result!.tag, 'v2.1.4+65');
       expect(result.apkName, 'opencode-mobile-2.1.4+65-arm64-v8a.apk');
-      expect(result.apkUrl, 'https://download/arm64.apk');
+      expect(
+        result.apkUrl,
+        'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.4+65/arm64.apk',
+      );
 
       AppInstaller.getSupportedAbisOverride = null;
     });
 
-    test('falls back to secondary URL when primary is empty', () async {
-      AppInstaller.getSupportedAbisOverride = () async => ['arm64-v8a'];
-
-      final fallbackPayload = jsonEncode([
-        {
-          'tag_name': 'v2.1.4+63',
-          'name': 'OpenCode 2.1.4+63',
-          'body': 'Notes from fallback',
+    test(
+      'only this repository, promoted releases with checksums are offered',
+      () async {
+        AppInstaller.getSupportedAbisOverride = () async => ['arm64-v8a'];
+        Map<String, Object> release(
+          String tag, {
+          bool pre = false,
+          bool sums = true,
+          String host = 'github.com',
+        }) => {
+          'tag_name': tag,
+          'name': tag,
+          'body': '',
           'draft': false,
+          'prerelease': pre,
+          'html_url': 'https://github.com/x',
           'assets': [
             {
-              'name': 'opencode-mobile-2.1.4+63.apk',
-              'size': 90000000,
-              'browser_download_url': 'https://fallback/universal.apk',
+              'name': 'opencode-mobile-arm64-v8a.apk',
+              'size': 1,
+              'browser_download_url':
+                  'https://$host/Eslamasabry/opencode-mobile-next/releases/download/$tag/a.apk',
             },
+            if (sums)
+              {
+                'name': 'SHA256SUMS',
+                'size': 1,
+                'browser_download_url':
+                    'https://$host/Eslamasabry/opencode-mobile-next/releases/download/$tag/SHA256SUMS',
+              },
           ],
-        },
-      ]);
+        };
+        for (final (payload, offered) in [
+          ([release('v2.1.5+66', pre: true)], false),
+          ([release('v2.1.5+66', sums: false)], false),
+          ([release('v2.1.5+66', host: 'evil.example')], false),
+          ([release('v2.1.5+66')], true),
+        ]) {
+          final dio = Dio()
+            ..httpClientAdapter = _RecordingAdapter({
+              'https://primary.releases': jsonEncode(payload),
+            });
+          final service = InAppUpdateService(
+            dio: dio,
+            primaryReleasesUrl: 'https://primary.releases',
+          );
+          final result = await service.checkForNewRelease(
+            ignoreCache: true,
+            currentBuildNumberLoader: () async => 62,
+          );
+          expect(result != null, offered, reason: jsonEncode(payload));
+        }
+        AppInstaller.getSupportedAbisOverride = null;
+      },
+    );
 
-      final dio = Dio();
-      dio.httpClientAdapter = _RecordingAdapter({
-        'https://primary.releases': '[]',
-        'https://fallback.releases': fallbackPayload,
-      });
-
-      final service = InAppUpdateService(
-        dio: dio,
-        primaryReleasesUrl: 'https://primary.releases',
-        fallbackReleasesUrl: 'https://fallback.releases',
+    test('trusted URLs and checksum lines', () {
+      expect(
+        isTrustedDownloadUrl(
+          'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v1/a.apk',
+        ),
+        isTrue,
       );
-
-      final result = await service.checkForNewRelease(
-        ignoreCache: true,
-        currentBuildNumberLoader: () async => 62,
+      expect(
+        isTrustedDownloadUrl(
+          'https://github.com/AltafYafai/opencode-mobile-next/releases/download/v1/a.apk',
+        ),
+        isFalse,
       );
-
-      expect(result, isNotNull);
-      expect(result!.tag, 'v2.1.4+63');
-      expect(result.apkName, 'opencode-mobile-2.1.4+63.apk');
-
-      AppInstaller.getSupportedAbisOverride = null;
+      expect(
+        isTrustedDownloadUrl(
+          'http://github.com/Eslamasabry/opencode-mobile-next/releases/download/v1/a.apk',
+        ),
+        isFalse,
+      );
+      final hex = 'a' * 64;
+      expect(
+        expectedSha256(
+          '$hex  app-arm64-v8a.apk\n${'b' * 64}  other.apk',
+          'app-arm64-v8a.apk',
+        ),
+        hex,
+      );
+      expect(expectedSha256('$hex *app.apk', 'app.apk'), hex);
+      expect(expectedSha256('$hex  other.apk', 'app.apk'), isNull);
     });
 
     test('session dismissal tracks dismissed tags', () {

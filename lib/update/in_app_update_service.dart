@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -25,6 +27,7 @@ class AppReleaseInfo {
     required this.htmlUrl,
     required this.buildNumber,
     this.publishedAt,
+    this.checksumsUrl = '',
   });
 
   final String tag;
@@ -36,6 +39,9 @@ class AppReleaseInfo {
   final String htmlUrl;
   final int buildNumber;
   final DateTime? publishedAt;
+
+  /// The release's SHA256SUMS asset; the APK must match its line there.
+  final String checksumsUrl;
 
   String get formattedSize {
     if (apkSize <= 0) return '';
@@ -62,22 +68,17 @@ class InAppUpdateService implements AppUpdateService {
   InAppUpdateService({
     Dio? dio,
     String? primaryReleasesUrl,
-    String? fallbackReleasesUrl,
     Duration timeout = const Duration(seconds: 15),
   }) : _dio = dio ?? PerfTraceInterceptor.traced(Dio(), 'app-update'),
        _primaryReleasesUrl =
            primaryReleasesUrl ??
            'https://api.github.com/repos/Eslamasabry/opencode-mobile-next/releases',
-       _fallbackReleasesUrl =
-           fallbackReleasesUrl ??
-           'https://api.github.com/repos/AltafYafai/opencode-mobile-next/releases',
        _timeout = timeout;
 
   static final InAppUpdateService instance = InAppUpdateService();
 
   final Dio _dio;
   final String _primaryReleasesUrl;
-  final String _fallbackReleasesUrl;
   final Duration _timeout;
 
   final Set<String> _dismissedSessionTags = <String>{};
@@ -134,18 +135,12 @@ class InAppUpdateService implements AppUpdateService {
 
     final deviceAbis = await AppInstaller.getSupportedAbis();
 
-    AppReleaseInfo? release = await _fetchFromUrl(
+    // Only this app's own repository is an update source.
+    final release = await _fetchFromUrl(
       _primaryReleasesUrl,
       currentBuild,
       deviceAbis,
     );
-    if (release == null && _primaryReleasesUrl != _fallbackReleasesUrl) {
-      release = await _fetchFromUrl(
-        _fallbackReleasesUrl,
-        currentBuild,
-        deviceAbis,
-      );
-    }
 
     _lastCheckTime = now;
     _cachedNewerRelease = release;
@@ -200,7 +195,8 @@ class InAppUpdateService implements AppUpdateService {
 
       for (final item in data) {
         if (item is! Map) continue;
-        if (item['draft'] == true) continue;
+        // Drafts and pre-releases are never offered: only promoted releases.
+        if (item['draft'] == true || item['prerelease'] == true) continue;
         final tagName = item['tag_name'];
         if (tagName is! String) continue;
 
@@ -215,6 +211,10 @@ class InAppUpdateService implements AppUpdateService {
 
         final selectedAsset = _selectBestApkAsset(assets, deviceAbis);
         if (selectedAsset == null) continue;
+        if (!isTrustedDownloadUrl(selectedAsset.downloadUrl)) continue;
+        // A release without published checksums is never offered (fail closed).
+        final sumsUrl = _checksumsUrl(assets);
+        if (sumsUrl == null || !isTrustedDownloadUrl(sumsUrl)) continue;
 
         final publishedAtStr = item['published_at'];
         DateTime? publishedAt;
@@ -229,6 +229,7 @@ class InAppUpdateService implements AppUpdateService {
           changelog: (item['body'] as String?)?.trim() ?? '',
           apkUrl: selectedAsset.downloadUrl,
           apkName: selectedAsset.name,
+          checksumsUrl: sumsUrl,
           apkSize: selectedAsset.size,
           htmlUrl: (item['html_url'] as String?) ?? '',
           buildNumber: build,
@@ -306,7 +307,12 @@ class InAppUpdateService implements AppUpdateService {
         await updateDir.create(recursive: true);
       }
 
-      final targetFile = File('${updateDir.path}/${release.apkName}');
+      if (!isTrustedDownloadUrl(release.apkUrl) ||
+          !isTrustedDownloadUrl(release.checksumsUrl)) {
+        throw StateError('Update source is not this app\'s GitHub releases');
+      }
+      // A fixed name: the asset name from the server never becomes a path.
+      final targetFile = File('${updateDir.path}/update.apk');
       if (await targetFile.exists()) {
         try {
           await targetFile.delete();
@@ -319,7 +325,9 @@ class InAppUpdateService implements AppUpdateService {
         cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
           if (onProgress != null) {
-            final fraction = total > 0 ? (received / total).clamp(0.0, 1.0) : 0.0;
+            final fraction = total > 0
+                ? (received / total).clamp(0.0, 1.0)
+                : 0.0;
             onProgress(fraction, received, total);
           }
         },
@@ -329,6 +337,20 @@ class InAppUpdateService implements AppUpdateService {
         throw StateError('Downloaded APK is empty or missing');
       }
 
+      final sums = await _dio.get<String>(
+        release.checksumsUrl,
+        options: Options(responseType: ResponseType.plain),
+        cancelToken: cancelToken,
+      );
+      final expected = expectedSha256(sums.data ?? '', release.apkName);
+      final actual = sha256.convert(await targetFile.readAsBytes()).toString();
+      if (expected == null || expected != actual) {
+        try {
+          await targetFile.delete();
+        } catch (_) {}
+        throw StateError('The download does not match the release checksum');
+      }
+
       final installed = await AppInstaller.installApk(targetFile.path);
       return installed;
     } catch (e) {
@@ -336,6 +358,41 @@ class InAppUpdateService implements AppUpdateService {
       rethrow;
     }
   }
+}
+
+/// Only https downloads from this app's own GitHub releases are trusted.
+@visibleForTesting
+bool isTrustedDownloadUrl(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || uri.scheme != 'https' || uri.host != 'github.com') {
+    return false;
+  }
+  return uri.path.startsWith(
+    '/Eslamasabry/opencode-mobile-next/releases/download/',
+  );
+}
+
+/// The SHA-256 for [fileName] in a SHA256SUMS text (`<hex>  <name>` lines),
+/// or null when it is not listed.
+@visibleForTesting
+String? expectedSha256(String sums, String fileName) {
+  for (final line in const LineSplitter().convert(sums)) {
+    final m = RegExp(r'^([0-9a-fA-F]{64})\s+\*?(.+)$').firstMatch(line.trim());
+    if (m != null && m.group(2)!.trim() == fileName) {
+      return m.group(1)!.toLowerCase();
+    }
+  }
+  return null;
+}
+
+String? _checksumsUrl(List<dynamic> assets) {
+  for (final a in assets) {
+    if (a is Map && a['name'] == 'SHA256SUMS') {
+      final url = a['browser_download_url'];
+      if (url is String) return url;
+    }
+  }
+  return null;
 }
 
 class _AssetCandidate {

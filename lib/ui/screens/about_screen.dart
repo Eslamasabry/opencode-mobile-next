@@ -130,17 +130,17 @@ class _AboutScreenState extends State<AboutScreen> {
     }
     setState(() => _update = _UpdateCheck.checking);
     try {
-      if (platformCapabilities.isAndroid) {
+      // A new release (a new APK) first; when there is none, the patch check
+      // below still runs. An injected update service (tests) skips this.
+      if (platformCapabilities.isAndroid && widget.updateService == null) {
         final release = await InAppUpdateCoordinator.checkManually(
           context: context,
         );
         if (!mounted) return;
         if (release != null) {
           setState(() => _update = _UpdateCheck.ready);
-        } else {
-          setState(() => _update = _UpdateCheck.current);
+          return;
         }
-        return;
       }
       final service = _service ??=
           widget.updateService ?? ShorebirdAppUpdateService();
