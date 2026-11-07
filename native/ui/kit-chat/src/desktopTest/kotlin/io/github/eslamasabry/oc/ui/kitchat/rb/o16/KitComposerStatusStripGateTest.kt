@@ -40,7 +40,8 @@ class KitComposerStatusStripGateTest {
     private fun strip(ar: Boolean, stop: KitStopState?): @Composable () -> Unit = {
         KitComposerStatusStrip(
             hasChips = true,
-            model = { KitComposerChip("Loading conversation selection…", onClick = {}) },
+            // F: lib/ui/kit/chat/kit_composer_status_strip.dart:303-308 the model label gives way (cut) beside the chips
+            model = { KitComposerChip("Loading conversation selection…", onClick = {}, shrinks = true) },
             stop = stop?.let { s ->
                 {
                     KitComposerStop(
