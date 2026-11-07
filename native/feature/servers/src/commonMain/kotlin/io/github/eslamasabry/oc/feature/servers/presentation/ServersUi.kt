@@ -79,6 +79,9 @@ public interface ServersActions {
     /** Settings › Agents (agents on this phone and on Paseo computers). */
     public fun openAgents() {}
 
+    /** Report a problem from the root page's ⋯ (Dart servers_state.dart:100-105), where Settings is not reachable yet. */
+    public fun reportProblem() {}
+
     /** Opens the pairing scanner (PREVIEW-QR). */
     public fun scanPairing() {}
 

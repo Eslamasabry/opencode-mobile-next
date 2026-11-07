@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.*
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -40,6 +41,7 @@ internal fun ServerSavedRows(
     val ordered = savedServersByUrgency(state)
     val names = distinctServerNames(state.servers.map { it.id to it.name })
     val showKind = kindsDiffer(state.servers.map { state.rows.facts[it.id]?.backend })
+    val flat = LocalKitStyle.current.spec.tokens.flatLists
     KitRowGroup(leadingTiles = true) {
         ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
@@ -138,10 +140,13 @@ internal fun ServerSavedRows(
                     2, // F: lib/ui/screens/servers/server_rows.dart:191-196
                 leading =
                     if (waiting <= 0)
-                        // In the rows' own tile, as on home and Settings, so the lead column lines up.
+                        // Dart KitRowIcon (kit_row_parts.dart:52-66) through _KitRowIconTile (kit_row.dart:994-998): in
+                        // flat lists (Solid) the glyph stands bare in the tile's slot, the one in use in the accent;
+                        // a panel style keeps the tile.
                         KitRowLeading.Glyph(
                             if (phone) KitIcons.phone else KitIcons.server,
-                            tile = true,
+                            tile = !flat,
+                            current = server.connected,
                         )
                     else null,
                 state = if (waiting > 0) KitRowState(null, KitRowStateTone.NeedsYou) else null,

@@ -29,8 +29,16 @@ class ServersGateTest {
 
         var opened: ProfileId? = null
         var removed: ProfileId? = null
+        var reported = 0
+        var backs = 0
 
-        override fun back() {}
+        override fun back() {
+            backs++
+        }
+
+        override fun reportProblem() {
+            reported++
+        }
 
         override fun allowCleartext(allowed: Boolean, address: String) {}
 
@@ -222,10 +230,11 @@ class ServersGateTest {
             }
     }
 
+    // Flutter mounts ServersScreen as the app's home (screen_servers_1_test.dart:149): nothing to pop, so the root bar.
     @Test
     fun saved_servers() {
         FlutterGoldenGate.check("servers_servers_loaded", frame = FlutterGoldenGate.Frame.Screen) {
-            ServersScreen(state, Actions())
+            ServersScreen(state, Actions(), root = true)
         }
     }
 
@@ -235,9 +244,34 @@ class ServersGateTest {
             "servers_servers_loaded_1280x800",
             frame = FlutterGoldenGate.Frame.Screen,
         ) {
-            ServersScreen(state, Actions())
+            ServersScreen(state, Actions(), root = true)
         }
     }
+
+    @Test
+    fun `B-SERVERS-045 the root page carries the product mark and name, with Report a problem behind More`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent { ServersTestTheme { ServersScreen(state, actions, root = true) } }
+            onNodeWithTag("servers-brand-bar").assertExists()
+            onNodeWithText("OpenCode").assertExists()
+            onAllNodesWithText("Servers").assertCountEquals(0)
+            onAllNodesWithContentDescription("Back").assertCountEquals(0)
+            onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("Report a problem").performClick()
+            assertEquals(1, actions.reported)
+        }
+
+    @Test
+    fun `B-SERVERS-046 a pushed servers page keeps Back and its name, without the brand`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent { ServersTestTheme { ServersScreen(state, actions) } }
+            onNodeWithTag("servers-brand-bar").assertDoesNotExist()
+            onNodeWithText("Servers").assertExists()
+            onNodeWithContentDescription("Back").performClick()
+            assertEquals(1, actions.backs)
+        }
 
     @Test
     fun `server tap opens its settings while removal stays a named menu action`() =

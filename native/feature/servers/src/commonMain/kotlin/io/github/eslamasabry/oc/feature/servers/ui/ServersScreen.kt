@@ -48,6 +48,11 @@ public fun ServersScreen(
     tailscale: TailscaleSetup? = null,
     initialHostSetup: Boolean = false,
     initialTailscaleSetup: Boolean = false,
+    /**
+     * The page is the bottom of the stack (Dart `isRoot`, servers_state.dart:83): the whole app before a server is in
+     * use. It then carries the product mark and name, and Report a problem behind ⋯, instead of Back and "Servers".
+     */
+    root: Boolean = false,
 ) {
     var hostSetup by rememberSaveable { mutableStateOf(initialHostSetup) }
     var tailscaleSetup by rememberSaveable { mutableStateOf(initialTailscaleSetup) }
@@ -77,10 +82,19 @@ public fun ServersScreen(
     val empty = state.servers.isEmpty()
     KitScreen(
         topBar = {
-            KitTopBar(
-                title = stringResource(if (state.newConversation) Res.string.serversNewTitle else Res.string.serversTitle),
-                exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::back,
-            )
+            if (root)
+                ServersBrandBar(
+                    name = stringResource(Res.string.openCodeConnectionLabel),
+                    moreLabel = stringResource(Res.string.kitTopBarMore),
+                    menu = listOf(
+                        KitMenuItem(stringResource(Res.string.e7LibraryReportABug), actions::reportProblem, KitIcons.bug),
+                    ),
+                )
+            else
+                KitTopBar(
+                    title = stringResource(if (state.newConversation) Res.string.serversNewTitle else Res.string.serversTitle),
+                    exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::back,
+                )
         },
         loading = state.busy,
         loadingLabel = stringResource(Res.string.serversWorking),

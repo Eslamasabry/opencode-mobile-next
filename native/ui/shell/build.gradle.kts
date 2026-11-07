@@ -15,6 +15,16 @@ kotlin {
     }
 }
 
+// Order 53 compares the shell's frame parts against the frozen Flutter scenes (the :ui:gate module).
+kotlin.sourceSets.getByName("desktopTest").dependencies {
+    implementation(project(":ui:gate"))
+    implementation(libs.compose.desktop.currentos)
+}
+tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+}
+
 // P2: Robolectric host test of the Android animator-scale source (ADR §7.2: Android-only behaviour).
 kotlin.sourceSets.getByName("androidHostTest").dependencies {
     implementation(libs.junit4)
