@@ -120,12 +120,15 @@ private fun LiveSample(look: LiveLook, modifier: Modifier) {
             onDispose { clock.release() }
         }
     }
-    val time: () -> Float = remember(clock, animates) { if (animates) ({ clock.seconds + STILL_SECONDS }) else ({ STILL_SECONDS }) }
+    val time = rememberLiveTime(clock, animates)
     LiveShaderLayer(
         look,
         SAMPLE_STRENGTH,
         time,
-        modifier.onGloballyPositioned { onScreen = it.isAttached && it.boundsInWindow().let { b -> b.width > 0f && b.height > 0f } },
+        modifier.onGloballyPositioned { coordinates ->
+            val bounds = coordinates.boundsInWindow()
+            onScreen = coordinates.isAttached && bounds.width > 0f && bounds.height > 0f
+        },
     )
 }
 

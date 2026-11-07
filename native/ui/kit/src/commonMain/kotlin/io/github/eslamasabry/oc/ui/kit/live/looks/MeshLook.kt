@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
-import kotlin.math.cos
 import kotlin.math.sin
 
 /**
@@ -47,12 +46,31 @@ half4 main(float2 fragCoord) {
 }
 """
 
+    private const val SPEED = .12f
+    private val names = arrayOf("uP0", "uP1", "uP2", "uP3")
+    private val orbits =
+        arrayOf(
+            LiveOrbit(
+                x = LiveWave(mid = .20f, swing = .15f, speed = .7f),
+                y = LiveWave(mid = .10f, swing = .06f, speed = .5f, phase = QUARTER_TURN),
+            ),
+            LiveOrbit(
+                x = LiveWave(mid = .85f, swing = .10f, speed = .6f, phase = QUARTER_TURN),
+                y = LiveWave(mid = .32f, swing = .08f, speed = .4f),
+            ),
+            LiveOrbit(
+                x = LiveWave(mid = .30f, swing = .20f, speed = .3f),
+                y = LiveWave(mid = .62f, swing = .06f, speed = .8f, phase = QUARTER_TURN),
+            ),
+            LiveOrbit(
+                x = LiveWave(mid = .70f, swing = .15f, speed = .5f, phase = 1f),
+                y = LiveWave(mid = .95f, swing = .05f, speed = .9f, phase = QUARTER_TURN),
+            ),
+        )
+
     override fun uniforms(u: LiveUniforms) {
-        val t = u.time * .12f
-        u.float2("uP0", .20f + .15f * sin(t * .7f), .10f + .06f * cos(t * .5f))
-        u.float2("uP1", .85f + .10f * cos(t * .6f), .32f + .08f * sin(t * .4f))
-        u.float2("uP2", .30f + .20f * sin(t * .3f), .62f + .06f * cos(t * .8f))
-        u.float2("uP3", .70f + .15f * sin(t * .5f + 1f), .95f + .05f * cos(t * .9f))
+        val t = u.time * SPEED
+        for (i in orbits.indices) u.float2(names[i], orbits[i].x(t), orbits[i].y(t))
         u.float("uBreath", sin(t))
     }
 }

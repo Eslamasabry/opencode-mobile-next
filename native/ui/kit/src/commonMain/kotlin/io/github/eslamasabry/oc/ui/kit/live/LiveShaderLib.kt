@@ -2,8 +2,9 @@ package io.github.eslamasabry.oc.ui.kit.live
 
 /**
  * The shared head of every look's shader: the uniforms the host sets on every frame and a tiny library (hash, value
- * noise, fbm, a glow blend and the dithered, contrast-capped output). Written in the common subset of AGSL (Android 13+)
- * and SkSL (desktop), so the same text compiles on both: no derivatives, constant loop bounds, no `%` on floats.
+ * noise, fbm, a glow blend and the dithered, contrast-capped output). Written in the common subset of AGSL
+ * (Android 13+) and SkSL (desktop), so the same text compiles on both: no derivatives, constant loop bounds, no `%`
+ * on floats.
  *
  * Coordinates: `fragCoord` is in render pixels; `uRes` is the drawn size in the same pixels; `uDensity` is render
  * pixels per dp. Colours are the theme's sRGB roles, 0..1.
@@ -23,7 +24,7 @@ public object LiveShaderLib {
     /** The smallest shader: compiles wherever runtime shaders exist, so the host can choose the fallback once. */
     internal const val PROBE: String = "half4 main(float2 c) { return half4(0.0); }"
 
-    public val PRELUDE: String =
+    public const val PRELUDE: String =
         """
 uniform float2 uRes;
 uniform float uTime;

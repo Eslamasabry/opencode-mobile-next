@@ -30,7 +30,7 @@ public class LiveFrameClock(
     public val fps: Int = FPS,
     private val idleAfterNanos: Long = IDLE_AFTER_NANOS,
 ) {
-    private val stepNanos: Long = 1_000_000_000L / fps
+    private val stepNanos: Long = NANOS_PER_SECOND / fps
 
     /** Background time in seconds. Read it in a draw block only. */
     public var seconds: Float by mutableFloatStateOf(0f)
@@ -47,6 +47,7 @@ public class LiveFrameClock(
         set(value) {
             if (field != value) {
                 field = value
+                if (!value) restart() // back on screen counts as activity: the idle countdown starts again
                 wake()
             }
         }
@@ -63,6 +64,7 @@ public class LiveFrameClock(
 
     public fun acquire() {
         users++
+        if (users == 1) restart()
         wake()
     }
 
@@ -72,12 +74,16 @@ public class LiveFrameClock(
 
     /** A touch anywhere on the page: wakes a resting clock and restarts the idle countdown. */
     public fun touch() {
+        restart()
+        wake()
+    }
+
+    private fun restart() {
         touched = true
         if (idle) {
             idle = false
             last = NONE // the rest is not counted: time carries on from where it stopped
         }
-        wake()
     }
 
     /**
@@ -89,29 +95,24 @@ public class LiveFrameClock(
             lastActive = nanos
             touched = false
         }
-        if (users == 0 || held) {
-            last = NONE
-            return false
-        }
-        if (nanos - lastActive >= idleAfterNanos) {
-            idle = true
-            last = NONE
-            return false
-        }
-        if (last == NONE) {
-            last = nanos
-            return false
-        }
-        val since = nanos - last
+        val used = users > 0 && !held
+        if (used && nanos - lastActive >= idleAfterNanos) idle = true
+        val running = used && !idle
         // A small slack so a 60 Hz display (16.7 ms) steps on every second frame, not every third.
-        if (since < stepNanos - SLACK_NANOS) return false
-        last = nanos
-        seconds += (minOf(since, MAX_STEP_NANOS) / 1e9).toFloat()
-        return true
+        val steps = running && last != NONE && nanos - last >= stepNanos - SLACK_NANOS
+        when {
+            !running -> last = NONE // the pause is not counted: time carries on where it stopped
+            last == NONE -> last = nanos
+            steps -> {
+                seconds += (minOf(nanos - last, MAX_STEP_NANOS).toDouble() / NANOS_PER_SECOND).toFloat()
+                last = nanos
+            }
+        }
+        return steps
     }
 
     /** How long the runner may sleep after a frame before asking for the next one. */
-    internal fun sleepMillis(): Long = ((stepNanos - SLACK_NANOS) / 1_000_000L).coerceAtLeast(0L)
+    internal fun sleepMillis(): Long = ((stepNanos - SLACK_NANOS) / NANOS_PER_MILLI).coerceAtLeast(0L)
 
     private fun wake() {
         wakes.trySend(Unit)
@@ -119,10 +120,13 @@ public class LiveFrameClock(
 
     public companion object {
         public const val FPS: Int = 30
-        public const val IDLE_AFTER_NANOS: Long = 30_000_000_000L // FG: lib/ui/kit/live_background/kit_live_clock.dart:44
+        /** Rest after this long without a touch (FG: lib/ui/kit/live_background/kit_live_clock.dart:44). */
+        public const val IDLE_AFTER_NANOS: Long = 30_000_000_000L
         private const val MAX_STEP_NANOS: Long = 250_000_000L // FG: lib/ui/kit/live_background/kit_live_support.dart:61
         private const val SLACK_NANOS: Long = 4_000_000L
         private const val NONE: Long = Long.MIN_VALUE
+        private const val NANOS_PER_SECOND: Long = 1_000_000_000L
+        private const val NANOS_PER_MILLI: Long = 1_000_000L
     }
 }
 

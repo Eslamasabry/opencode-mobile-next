@@ -54,10 +54,11 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     // Hook H7: a style may cap the look or hide it (kit_live_background.dart:266-271).
     val strength = style.spec.tokens.live.cap(appearance.liveStrength)
     val on = appearance.liveBackground && !appearance.saver && strength > 0f
-    val shadersSupported = remember(platform) { platform.liveShader(LiveShaderLib.PROBE) != null }
+    val shadersSupported = remember(platform) { platform.liveShaders?.compile(LiveShaderLib.PROBE) != null }
     val render = liveRenderFor(appearance.liveStyle, on, shadersSupported)
     // The painted aurora keeps its earlier gate: it is not drawn under a still-frame (test or screenshot) host.
-    val plate = rememberAuroraPlate(if (render == LiveRender.Painted && !motion.stillFrame) appearance.liveStyle else null)
+    val paints = render == LiveRender.Painted && !motion.stillFrame
+    val plate = rememberAuroraPlate(if (paints) appearance.liveStyle else null)
     val painted = plate != null
     val ground = colors.ground
     val accent = roles.accent
@@ -81,10 +82,12 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
         } else {
             val (image, filter) = plate
             // Six steps a second for the picture: Glass panes re-blur it on every step.
-            val drift = remember(clock) { derivedStateOf { floor(clock.seconds * AuroraImage.FRAMES_PER_SECOND) / AuroraImage.FRAMES_PER_SECOND } }
+            val steps = AuroraImage.FRAMES_PER_SECOND
+            val drift = remember(clock) { derivedStateOf { floor(clock.seconds * steps) / steps } }
             Modifier.kitGlassBackdropSource(backdrop) {
                 drawRect(ground)
-                drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(if (animates) drift.value.toDouble() else 0.0))
+                val at = if (animates) drift.value.toDouble() else 0.0
+                drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at))
             }
         }
     // A touch wakes a resting clock; it never consumes the touch.
@@ -105,7 +108,7 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     Box(modifier.then(ground0).then(source).then(touch)) {
         val look = LiveLooks.shader(appearance.liveStyle)
         if (look != null && render == LiveRender.Shader) {
-            val time: () -> Float = remember(clock, animates) { if (animates) ({ clock.seconds + STILL_SECONDS }) else ({ STILL_SECONDS }) }
+            val time = rememberLiveTime(clock, animates)
             LiveShaderLayer(look, strength, time, Modifier.matchParentSize())
         } else if (render == LiveRender.Still) {
             LiveStill(rememberLivePalette(), strength, Modifier.matchParentSize())

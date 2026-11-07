@@ -2,8 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * Liquid blobs: four soft drops of coloured liquid drift slowly and melt into each other when they meet (metaballs),
@@ -53,11 +51,34 @@ half4 main(float2 fragCoord) {
 }
 """
 
+    private const val SPEED = .15f
+    private val names = arrayOf("uB0", "uB1", "uB2", "uB3")
+    private val orbits =
+        arrayOf(
+            LiveOrbit(
+                x = LiveWave(mid = .30f, swing = .20f, speed = .8f),
+                y = LiveWave(mid = .22f, swing = .14f, speed = .6f, phase = QUARTER_TURN),
+                r = .085f,
+            ),
+            LiveOrbit(
+                x = LiveWave(mid = .70f, swing = .20f, speed = .7f, phase = QUARTER_TURN),
+                y = LiveWave(mid = .48f, swing = .16f, speed = .5f),
+                r = .10f,
+            ),
+            LiveOrbit(
+                x = LiveWave(mid = .50f, swing = .25f, speed = .4f, phase = 2f),
+                y = LiveWave(mid = .78f, swing = .10f, speed = .9f, phase = QUARTER_TURN),
+                r = .08f,
+            ),
+            LiveOrbit(
+                x = LiveWave(mid = .55f, swing = .22f, speed = .33f, phase = 1f + QUARTER_TURN),
+                y = LiveWave(mid = .50f, swing = .30f, speed = .27f),
+                r = .065f,
+            ),
+        )
+
     override fun uniforms(u: LiveUniforms) {
-        val t = u.time * .15f
-        u.float3("uB0", .30f + .20f * sin(t * .8f), .22f + .14f * cos(t * .6f), .085f)
-        u.float3("uB1", .70f + .20f * cos(t * .7f), .48f + .16f * sin(t * .5f), .10f)
-        u.float3("uB2", .50f + .25f * sin(t * .4f + 2f), .78f + .10f * cos(t * .9f), .08f)
-        u.float3("uB3", .55f + .22f * cos(t * .33f + 1f), .50f + .30f * sin(t * .27f), .065f)
+        val t = u.time * SPEED
+        for (i in orbits.indices) u.float3(names[i], orbits[i].x(t), orbits[i].y(t), orbits[i].r)
     }
 }

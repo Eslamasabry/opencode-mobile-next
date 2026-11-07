@@ -11,23 +11,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.math.max
 import kotlin.math.roundToInt
-
-/** The theme colours a look is drawn in (kit colour roles, so every look follows light, dark and the accent). */
-internal data class LivePalette(val ground: Color, val accent: Color, val partner: Color, val glow: Color, val dark: Boolean)
-
-@Composable
-internal fun rememberLivePalette(): LivePalette {
-    val c = LocalKitColors.current
-    return remember(c) { LivePalette(c.ground, c.accent, c.partner, lerp(c.accent, c.text1, GLOW_TOWARD_TEXT), c.dark) }
-}
 
 /**
  * Draws [look]'s shader as one rect over the whole node, in its own layer, at [RENDER_SCALE] of the node's pixels and
@@ -43,7 +32,7 @@ internal fun LiveShaderLayer(
     modifier: Modifier = Modifier,
 ) {
     val platform = LocalKitPlatform.current
-    val program = remember(look, platform) { platform.liveShader(LiveShaderLib.PRELUDE + look.shader) }
+    val program = remember(look, platform) { platform.liveShaders?.compile(LiveShaderLib.PRELUDE + look.shader) }
     val palette = rememberLivePalette()
     if (program == null) {
         LiveStill(palette, strength, modifier)
@@ -115,13 +104,13 @@ internal fun LiveStill(palette: LivePalette, strength: Float, modifier: Modifier
             val top =
                 Brush.radialGradient(
                     listOf(palette.accent.copy(alpha = a), Color.Transparent),
-                    center = Offset(size.width * .15f, size.height * .12f),
+                    center = Offset(size.width * TOP_X, size.height * TOP_Y),
                     radius = r * .7f,
                 )
             val bottom =
                 Brush.radialGradient(
                     listOf(palette.partner.copy(alpha = a * .8f), Color.Transparent),
-                    center = Offset(size.width * .9f, size.height * .85f),
+                    center = Offset(size.width * BOTTOM_X, size.height * BOTTOM_Y),
                     radius = r * .6f,
                 )
             onDrawBehind {
@@ -133,12 +122,26 @@ internal fun LiveStill(palette: LivePalette, strength: Float, modifier: Modifier
     )
 }
 
+/** The time a look reads in draw: the clock while it [animates], else the still frame's moment. */
+@Composable
+internal fun rememberLiveTime(clock: LiveFrameClock, animates: Boolean): () -> Float =
+    remember(clock, animates) {
+        if (animates) {
+            { clock.seconds + STILL_SECONDS }
+        } else {
+            { STILL_SECONDS }
+        }
+    }
+
 /** Share of render pixels per side the shader runs at. */
 internal const val RENDER_SCALE: Float = .5f
 
 /** The moment a still frame shows: a calm, well-composed point of every look. */
 internal const val STILL_SECONDS: Float = 40f
 
-private const val GLOW_TOWARD_TEXT: Float = .3f
+private const val TOP_X: Float = .15f
+private const val TOP_Y: Float = .12f
+private const val BOTTOM_X: Float = .9f
+private const val BOTTOM_Y: Float = .85f
 private const val STILL_ALPHA: Float = .10f
 private const val STILL_ALPHA_MAX: Float = .16f

@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class LiveFrameClockTest {
     private val ms = 1_000_000L
 
-    /** Feeds display frames every [frameMs] for [forMs], starting at [from]; returns the steps and the next frame time. */
+    /** Feeds frames every [frameMs] for [forMs] from [from]; returns the steps and the next frame time. */
     private fun LiveFrameClock.run(from: Long, frameMs: Double, forMs: Long): Pair<Int, Long> {
         var steps = 0
         var t = from
@@ -109,5 +109,21 @@ class LiveFrameClockTest {
         val before = clock.seconds
         clock.frame(5_040 * ms)
         assertEquals(before + .25f, clock.seconds, .001f)
+    }
+
+    @Test
+    fun `B-KIT-LIVE-008 a look that appears after a long quiet spell starts moving, not resting`() {
+        val clock = LiveFrameClock()
+        clock.frame(0)
+        clock.acquire()
+        val (steps, _) = clock.run(60_000 * ms, 1000.0 / 60, 1000)
+        assertFalse(clock.resting)
+        assertTrue(steps >= 28)
+        clock.held = true
+        clock.frame(200_000 * ms)
+        clock.held = false
+        val (after, _) = clock.run(200_000 * ms, 1000.0 / 60, 1000)
+        assertFalse(clock.resting, "coming back to the app counts as activity")
+        assertTrue(after >= 28)
     }
 }

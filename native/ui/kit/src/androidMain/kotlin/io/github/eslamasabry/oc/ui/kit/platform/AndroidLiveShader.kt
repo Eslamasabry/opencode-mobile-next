@@ -27,16 +27,15 @@ internal class AndroidLiveShader(source: String) : LiveShaderProgram() {
 
     companion object {
         /** Null below API 33 or when the text does not compile (the page draws the still fallback). */
-        fun compile(source: String): LiveShaderProgram? =
+        fun compile(source: String): LiveShaderProgram? {
             // Spelled out for lint's API check; the same line as androidRunsLiveShaders (LIVE_SHADER_MIN_SDK).
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || !androidRunsLiveShaders(Build.VERSION.SDK_INT)) {
+            val sdk = Build.VERSION.SDK_INT
+            if (sdk < Build.VERSION_CODES.TIRAMISU || !androidRunsLiveShaders(sdk)) return null
+            return try {
+                AndroidLiveShader(source)
+            } catch (_: IllegalArgumentException) {
                 null
-            } else {
-                try {
-                    AndroidLiveShader(source)
-                } catch (_: IllegalArgumentException) {
-                    null
-                }
             }
+        }
     }
 }

@@ -51,5 +51,5 @@ half4 main(float2 fragCoord) {
 }
 """
 
-    override fun uniforms(u: LiveUniforms) {}
+    override fun uniforms(u: LiveUniforms): Unit = Unit
 }

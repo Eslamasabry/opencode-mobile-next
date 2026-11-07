@@ -32,9 +32,11 @@ class LiveBackgroundDesktopTest {
         var draws = 0
         val times = mutableListOf<Float>()
 
-        override fun liveShader(source: String): LiveShaderProgram? {
-            val real = DesktopLiveShader.compile(source) ?: return null
-            return object : LiveShaderProgram() {
+        override val liveShaders: LiveShaderCompiler =
+            LiveShaderCompiler { source -> DesktopLiveShader.compile(source)?.let(::counted) }
+
+        private fun counted(real: LiveShaderProgram): LiveShaderProgram =
+            object : LiveShaderProgram() {
                 override val brush: Brush
                     get() {
                         draws++
@@ -48,9 +50,9 @@ class LiveBackgroundDesktopTest {
 
                 override fun float3(name: String, x: Float, y: Float, z: Float) = real.float3(name, x, y, z)
 
-                override fun float4(name: String, x: Float, y: Float, z: Float, w: Float) = real.float4(name, x, y, z, w)
+                override fun float4(name: String, x: Float, y: Float, z: Float, w: Float) =
+                    real.float4(name, x, y, z, w)
             }
-        }
     }
 
     @Test

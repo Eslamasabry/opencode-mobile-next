@@ -41,8 +41,10 @@ class LiveLooksTest {
         assertFalse(androidRunsLiveShaders(32))
         assertTrue(androidRunsLiveShaders(33))
         assertTrue(androidRunsLiveShaders(37))
-        assertEquals(LiveRender.Shader, liveRenderFor("mesh", shows = true, shadersSupported = androidRunsLiveShaders(33)))
-        assertEquals(LiveRender.Still, liveRenderFor("mesh", shows = true, shadersSupported = androidRunsLiveShaders(32)))
+        val android13 = androidRunsLiveShaders(33)
+        val android12 = androidRunsLiveShaders(32)
+        assertEquals(LiveRender.Shader, liveRenderFor("mesh", shows = true, shadersSupported = android13))
+        assertEquals(LiveRender.Still, liveRenderFor("mesh", shows = true, shadersSupported = android12))
     }
 
     @Test

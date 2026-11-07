@@ -85,30 +85,32 @@ public object LiveLooks {
     public fun draws(id: String?): Boolean = id == AuroraImage.ID || shader(id) != null
 
     /** The look's name for the picker (Dart `KitLiveStyle.label`), in English and Arabic from `:ui:words`. */
-    public fun label(id: String): StringResource =
-        when (id) {
-            "auroraImage" -> Res.string.rb34LiveStyleAuroraImage
-            "mesh" -> Res.string.liveStyleMesh
-            "dotRipple" -> Res.string.liveStyleDotRipple
-            "topo" -> Res.string.liveStyleTopo
-            "flowThreads" -> Res.string.liveStyleFlowThreads
-            "glowSpill" -> Res.string.liveStyleGlowSpill
-            "lightRays" -> Res.string.liveStyleLightRays
-            "constellation" -> Res.string.liveStyleConstellation
-            "halftone" -> Res.string.liveStyleHalftone
-            "liquidBlobs" -> Res.string.liveStyleLiquidBlobs
-            "matrixRain" -> Res.string.liveStyleMatrixRain
-            "blueprint" -> Res.string.liveStyleBlueprint
-            "circuit" -> Res.string.liveStyleCircuit
-            "oscilloscope" -> Res.string.liveStyleOscilloscope
-            "radar" -> Res.string.liveStyleRadar
-            "honeycomb" -> Res.string.liveStyleHoneycomb
-            "brushedMetal" -> Res.string.liveStyleBrushedMetal
-            "silk" -> Res.string.liveStyleSilk
-            "caustics" -> Res.string.liveStyleCaustics
-            "bokeh" -> Res.string.liveStyleBokeh
-            else -> Res.string.liveStyleAurora
-        }
+    public fun label(id: String): StringResource = names[id] ?: Res.string.liveStyleAurora
+
+    private val names: Map<String, StringResource> =
+        mapOf(
+            "aurora" to Res.string.liveStyleAurora,
+            "auroraImage" to Res.string.rb34LiveStyleAuroraImage,
+            "mesh" to Res.string.liveStyleMesh,
+            "dotRipple" to Res.string.liveStyleDotRipple,
+            "topo" to Res.string.liveStyleTopo,
+            "flowThreads" to Res.string.liveStyleFlowThreads,
+            "glowSpill" to Res.string.liveStyleGlowSpill,
+            "lightRays" to Res.string.liveStyleLightRays,
+            "constellation" to Res.string.liveStyleConstellation,
+            "halftone" to Res.string.liveStyleHalftone,
+            "liquidBlobs" to Res.string.liveStyleLiquidBlobs,
+            "matrixRain" to Res.string.liveStyleMatrixRain,
+            "blueprint" to Res.string.liveStyleBlueprint,
+            "circuit" to Res.string.liveStyleCircuit,
+            "oscilloscope" to Res.string.liveStyleOscilloscope,
+            "radar" to Res.string.liveStyleRadar,
+            "honeycomb" to Res.string.liveStyleHoneycomb,
+            "brushedMetal" to Res.string.liveStyleBrushedMetal,
+            "silk" to Res.string.liveStyleSilk,
+            "caustics" to Res.string.liveStyleCaustics,
+            "bokeh" to Res.string.liveStyleBokeh,
+        )
 
     /** What the Look picker offers, in Flutter's order. */
     public val offered: List<String>
@@ -126,11 +128,11 @@ public enum class LiveRender {
     /** The look's runtime shader (Android 13+, desktop). */
     Shader,
 
-    /** A shader look where the platform has no runtime shaders (Android 8–12): a still gradient in the theme's colours. */
+    /** A shader look where the platform has no runtime shaders (Android 8–12): a still gradient in theme colours. */
     Still,
 }
 
-/** Android runs the looks' AGSL from API 33 (Android 13, `RuntimeShader`); below it the page shows the still fallback. */
+/** Android runs the looks' AGSL from API 33 (Android 13, `RuntimeShader`); below it the page shows a still. */
 public const val LIVE_SHADER_MIN_SDK: Int = 33
 
 /** True where an Android release at [sdkInt] can run the looks' shaders. */

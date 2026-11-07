@@ -21,7 +21,7 @@ Code: `native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/
 | Registry | `LiveLooks.kt` | id → look, picker order, names (English and Arabic from `:ui:words`), renderer choice |
 | Wiring | `KitLiveBackground.kt` | Page ground: flat, shader, still fallback, or the painted aurora (`auroraImage`) |
 | Thumbnails | `KitLiveLookStill.kt` | The picker card runs the same shader small, live only while on screen |
-| Platform | `platform/AndroidLiveShader.kt`, `platform/DesktopLiveShader.kt` | `RuntimeShader` (API 33+) / Skia `RuntimeEffect` behind `KitPlatform.liveShader` |
+| Platform | `platform/AndroidLiveShader.kt`, `platform/DesktopLiveShader.kt` | `RuntimeShader` (API 33+) / Skia `RuntimeEffect` behind `KitPlatform.liveShaders` |
 | Looks | `looks/*.kt` | One file per look: AGSL as a Kotlin raw string, plus its per-frame uniforms |
 
 ### Rendering
@@ -53,7 +53,7 @@ Code: `native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/live/
 
 ### Below Android 13
 
-`KitPlatform.liveShader` returns null below API 33 (`androidRunsLiveShaders`), and the page draws `LiveStill`: the
+`KitPlatform.liveShaders` returns null below API 33 (`androidRunsLiveShaders`), and the page draws `LiveStill`: the
 ground with two soft radial glows in the accent and partner colours, cached with `drawWithCache` and never redrawn per
 frame. No CPU per-frame canvas loop exists anywhere. The painted aurora (`auroraImage`) is a bitmap and draws on every
 API level, as before.
