@@ -23,7 +23,6 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -109,7 +108,14 @@ class E20S08ComposerCraftTest {
     fun `E20-S08 the approval chip is never scrolled under the mic or Send`() = runComposeUiTest {
         val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
         val withChip = chrome {
-            KitComposerChip("Approve everything", onClick = {}, modifier = Modifier.testTag("approval-chip"), active = true)
+            // The real approval chip's part (header/ui/ApprovalChip.kt, Flutter `_AutoApprovalIndicator`).
+            io.github.eslamasabry.oc.ui.kit.chip.KitChip(
+                "Approve everything",
+                kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
+                selected = true,
+                onClick = {},
+                modifier = Modifier.testTag("approval-chip"),
+            )
         }
         setContent {
             Theme {
@@ -128,6 +134,7 @@ class E20S08ComposerCraftTest {
         // box), but the chip keeps room for its start and is never pushed under Send.
         assertTrue(shown.width >= 96f - 0.5f, "the approval chip keeps its least room, was ${shown.width}")
         val model = onNodeWithTag("chat-model-button", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        assertTrue(model.right <= shown.left + 0.5f, "the model chip $model ends before the approval chip $shown")
+        // F1: Flutter's strip order, the approval chip first and the model at the end.
+        assertTrue(shown.right <= model.left + 0.5f, "the approval chip $shown ends before the model chip $model")
     }
 }

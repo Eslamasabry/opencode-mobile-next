@@ -692,7 +692,10 @@ public fun ChatScreen(
                                         state.ref.sessionId.raw,
                                     ),
                                     chrome,
-                                    Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
+                                    // F1: the message box sits 8 dp above the screen's bottom edge, as Flutter's
+                                    // (golden chat_approval_ask: box bottom at 907 of 915); the screen's bottom slot
+                                    // already keeps that room.
+                                    Modifier.fillMaxWidth().padding(top = Space.S2.dp),
                                 )
                         }
                     },

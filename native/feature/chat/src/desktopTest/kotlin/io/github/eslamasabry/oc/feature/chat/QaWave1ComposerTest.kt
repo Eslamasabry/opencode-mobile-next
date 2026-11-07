@@ -153,12 +153,13 @@ class QaWave1ComposerTest {
                 }
             }
         }
-        // The controls share the message box's lower row with Send at its end (N-52): the approval chip stays
-        // whole and clear of Send, because the model chip's words are capped.
+        // F1: the chips ride the strip above the message box (Flutter chat_composer_region.dart:44-77): the approval
+        // chip stays whole, inside the box's width and clear of Send, because the model chip's words are capped.
         val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val send = onNodeWithTag("chat-send-button", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val chip = onNodeWithTag("approval-chip", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        assertTrue(chip.right <= box.right + 0.5f && chip.width > 20f, "chip $chip inside box $box")
+        assertTrue(chip.right <= box.right + 0.5f && chip.width > 20f, "chip $chip inside the box's width $box")
+        assertTrue(chip.bottom <= box.top + 0.5f, "chip $chip on the strip above the box $box")
         assertTrue(chip.right <= send.left + 0.5f, "chip $chip never under Send $send")
     }
 

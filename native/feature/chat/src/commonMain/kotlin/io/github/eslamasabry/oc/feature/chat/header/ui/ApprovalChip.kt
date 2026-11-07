@@ -7,7 +7,9 @@ import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipActions
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipUi
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChoice
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -35,8 +37,8 @@ import org.jetbrains.compose.resources.stringResource
 public class ApprovalChipSlot(public val state: ApprovalChipUi, public val actions: ApprovalChipActions)
 
 /**
- * The approval chip in the composer row, next to the model (Flutter composer status strip): "Ask first",
- * "Auto-approve on" or "Approve everything"; a tap opens the three modes, the current one checked. Only "Approve
+ * The approval chip at the start of the strip above the message box (Flutter composer status strip): "Ask first" or
+ * "Auto-approve on"; a tap opens the three modes, the current one checked. Only "Approve
  * everything" asks first. Hidden where the server never asks.
  */
 @Composable
@@ -60,19 +62,21 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
         modifier = modifier,
         title = stringResource(Res.string.approvalModeMenuLabel),
     ) {
-        // The composer line's own chip, the model chip's twin (it had a different, outlined chip beside it).
-        KitComposerChip(
+        // Flutter `_AutoApprovalIndicator` (approvals_sheet.dart:257-330), at the start of the strip above the
+        // message box: an action chip with the shield, reading "Ask first" while asking and "Auto-approve on" (the
+        // kit's selected check) for either automatic mode; the menu says which one.
+        KitChip(
             label =
                 when (state.choice) {
                     ApprovalChoice.Ask -> stringResource(Res.string.approvalModeAskTitle)
-                    ApprovalChoice.Auto -> stringResource(Res.string.chatChipAutoApproveOn)
-                    ApprovalChoice.Everything -> stringResource(Res.string.approvalModeEverythingTitle)
+                    ApprovalChoice.Auto,
+                    ApprovalChoice.Everything -> stringResource(Res.string.chatChipAutoApproveOn)
                 },
+            kind = KitChipKind.Action,
+            icon = KitIcons.shield,
+            selected = if (state.choice != ApprovalChoice.Ask) true else null,
             onClick = actions::openApprovalMenu,
             modifier = Modifier.testTag("chat-approval-chip"),
-            active = state.choice != ApprovalChoice.Ask,
-            // E20-S11: beside a model name the approval words shorten first ("Approve ev…"); the menu says them whole.
-            shrinks = true,
         )
     }
     KitConfirm(

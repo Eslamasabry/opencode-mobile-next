@@ -126,7 +126,7 @@ class ComposerModelsFilesTest {
             // QA wave 4 B13: once the server confirmed the session uses its default (before that the chip claims nothing).
             setContent { Theme { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) } }
             onNodeWithContentDescription("Model").assertExists()
-            onNodeWithText("Server default").assertIsDisplayed()
+            onNodeWithText("Server default", useUnmergedTree = true).assertIsDisplayed()
         }
 
     @Test
@@ -135,8 +135,8 @@ class ComposerModelsFilesTest {
             val state =
                 mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big), selected = big)))
             setContent { Theme { BasicComposer(state.value, Actions(), chrome) } }
-            onNodeWithText("Big", substring = true).assertIsDisplayed()
-            onNodeWithText("Server default").assertDoesNotExist()
+            onNodeWithText("Big", substring = true, useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithText("Server default", useUnmergedTree = true).assertDoesNotExist()
         }
 
     @Test
@@ -184,7 +184,7 @@ class ComposerModelsFilesTest {
             runOnIdle { state.value = ui(models = ComposerModels(choices = listOf(mini, big), selected = mini)) }
             onAllNodesWithText("Mini").onLast().performClick()
             onNodeWithText("Choose a model").assertDoesNotExist()
-            onNodeWithText("Mini").assertIsDisplayed()
+            onNodeWithText("Mini", useUnmergedTree = true).assertIsDisplayed()
         }
 
     @Test
@@ -265,7 +265,7 @@ class ComposerModelsFilesTest {
                     ) { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) }
                 }
                 onNodeWithContentDescription("النموذج").assertExists()
-                onNodeWithText("الافتراضي من الخادم").assertIsDisplayed()
+                onNodeWithText("الافتراضي من الخادم", useUnmergedTree = true).assertIsDisplayed()
             } finally {
                 Locale.setDefault(before)
             }
@@ -293,7 +293,7 @@ class ComposerModelsFilesTest {
                     agent = "build",
                 )
             setContent { Theme { KitSheetHost { BasicComposer(ui(models = models), actions, chrome) } } }
-            onNodeWithText("build · Thinker · high").assertIsDisplayed()
+            onNodeWithText("build · Thinker · high", useUnmergedTree = true).assertIsDisplayed()
             onNodeWithContentDescription("Model").performClick()
             onNodeWithText("Thinking").assertIsDisplayed()
             // The levels sit on one line (it scrolls sideways instead of wrapping), the chosen one marked.
