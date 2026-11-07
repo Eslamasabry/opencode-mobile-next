@@ -110,9 +110,6 @@ class GitScreenTest {
             override fun repairObjects() {
                 calls += "repairObjects"
             }
-            override fun openRepairSettings() {
-                calls += "repairSettings"
-            }
         }
 
     @Composable

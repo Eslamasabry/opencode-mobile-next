@@ -89,8 +89,6 @@ public interface NewConversationHost {
     public suspend fun repair(profile: ProfileId, directory: String): Outcome<GitLinkRepairReport> =
         Outcome.Failed(Failure.Unavailable(FeatureId("gitLinkRepair")))
 
-    public fun openRepairSettings() {}
-
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
 
@@ -377,8 +375,6 @@ public interface NewConversationActions {
     public fun import(conversation: ImportableConversation)
 
     public fun repair() {}
-
-    public fun repairSettings() {}
 
     public fun retryLoad()
 
@@ -845,7 +841,6 @@ public class NewConversationViewModel(
         }
     }
 
-    override fun repairSettings(): Unit = host.openRepairSettings()
 
     override fun repair() {
         val shown = mutable.value

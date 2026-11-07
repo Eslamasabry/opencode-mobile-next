@@ -10,9 +10,6 @@ public enum class GitLinkRepairResult {
     Healthy,
     Repaired,
     MissingObjects,
-    TermuxMissing,
-    TermuxPermission,
-    TermuxUnavailable,
     NotRepository,
 }
 
@@ -37,5 +34,4 @@ public interface GitLinkRepairService {
     ): Outcome<GitLinkRepairReport> =
         Outcome.Failed(Failure.Unavailable(FeatureId("gitLinkRepair")))
 
-    public fun openTermuxSettings()
 }

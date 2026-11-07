@@ -1,15 +1,10 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import io.github.eslamasabry.oc.android.termux.AndroidGitRepairTermuxFiles
-import io.github.eslamasabry.oc.android.termux.GitObjectRepair
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -97,12 +92,7 @@ class AndroidGitLinkRepairService(
                 val linux = BuiltinLinux.get(app)
                 val projects = File(app.filesDir, "projects")
                 val repair =
-                    GitObjectRepair(
-                        projects,
-                        File(app.filesDir, "git-repair"),
-                        AndroidGitRepairTermuxFiles(app, dispatchers),
-                        current,
-                    ) { path ->
+                    BuiltinGitObjectRepair(projects, current) { path ->
                         if (!current()) false
                         else {
                             val quoted = "'" + path.replace("'", "'\"'\"'") + "'"
@@ -121,20 +111,6 @@ class AndroidGitLinkRepairService(
                 refused()
             }
         }
-
-    override fun openTermuxSettings() {
-        try {
-            app.startActivity(
-                Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.parse("package:${app.packageName}"),
-                    )
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        } catch (_: Exception) {
-            /* The repair remains refused until Android grants the permission. */
-        }
-    }
 
     private fun refused(): Outcome.Failed = Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
 }

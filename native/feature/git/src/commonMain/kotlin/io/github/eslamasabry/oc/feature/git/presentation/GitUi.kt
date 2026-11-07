@@ -105,8 +105,6 @@ public interface GitActions {
 
     public fun repairObjects()
 
-    public fun openRepairSettings()
-
     /** Get latest (`git pull --ff-only`). */
     public fun pull()
 

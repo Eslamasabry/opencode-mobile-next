@@ -73,10 +73,6 @@ public class GitViewModel(
         }
     }
 
-    override fun openRepairSettings() {
-        repair.openTermuxSettings()
-    }
-
     override fun pull(): Unit {
         if (!repairUi.value.running) presenter.pull()
     }
