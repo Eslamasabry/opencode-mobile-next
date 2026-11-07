@@ -338,9 +338,49 @@ abstract class VerifyNativeLibraries : DefaultTask() {
     }
 }
 
+// B-145: installing over Flutter 2.1.4 must keep All-files access. Android resets a storage grant when the update
+// newly requests a wider scope (requestLegacyExternalStorage) or stops requesting the permission, so the MERGED
+// manifest (library manifests included) keeps 2.1.4's shape: MANAGE_EXTERNAL_STORAGE requested without a cap, and no
+// legacy-storage attribute (2.1.4 set neither). StorageAccessManifestTest holds the same rules on the source manifests.
+abstract class VerifyStorageManifest : DefaultTask() {
+    @get:InputFile abstract val manifest: RegularFileProperty
+
+    @TaskAction
+    fun verify() {
+        val ns = "http://schemas.android.com/apk/res/android"
+        val doc =
+            javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                .apply { isNamespaceAware = true }
+                .newDocumentBuilder()
+                .parse(manifest.get().asFile)
+        val problems = mutableListOf<String>()
+        val permissions = doc.getElementsByTagName("uses-permission")
+        val manage =
+            (0 until permissions.length)
+                .map { permissions.item(it) as org.w3c.dom.Element }
+                .filter { it.getAttributeNS(ns, "name") == "android.permission.MANAGE_EXTERNAL_STORAGE" }
+        if (manage.isEmpty()) problems += "MANAGE_EXTERNAL_STORAGE is not requested"
+        if (manage.any { it.hasAttributeNS(ns, "maxSdkVersion") }) problems += "MANAGE_EXTERNAL_STORAGE is capped"
+        val app = doc.getElementsByTagName("application").item(0) as org.w3c.dom.Element
+        for (attr in listOf("requestLegacyExternalStorage", "preserveLegacyExternalStorage")) {
+            if (app.hasAttributeNS(ns, attr)) problems += "application sets android:$attr (2.1.4 did not)"
+        }
+        check(problems.isEmpty()) {
+            "Merged manifest would reset All-files access on the update (B-145):\n" + problems.joinToString("\n")
+        }
+    }
+}
+
 androidComponents.onVariants { variant ->
     if (variant.flavorName !in setOf("preview", "switch")) return@onVariants
     val name = variant.name.replaceFirstChar { it.uppercaseChar() }
+    val storage =
+        tasks.register<VerifyStorageManifest>("verify${name}StorageManifest") {
+            group = "verification"
+            description = "Fails when the merged manifest would reset All-files access on the update (B-145)."
+            manifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
+        }
+    tasks.matching { it.name == "assemble$name" }.configureEach { dependsOn(storage) }
     val verify =
         tasks.register<VerifyNativeLibraries>("verify${name}NativeLibraries") {
             group = "verification"

@@ -137,6 +137,9 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as LinuxAccessors)
             .linuxStartup
             .start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
+        (appGraph as io.github.eslamasabry.opencode_mobile.graph.FirstLaunchAccessors)
+            .firstLaunchHooks
+            .start() // E00-S07: the first app open after the Flutter → native update (plan 05 §7.9)
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }
