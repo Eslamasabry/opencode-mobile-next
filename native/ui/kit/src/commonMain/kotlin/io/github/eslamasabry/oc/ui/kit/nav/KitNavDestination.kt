@@ -44,6 +44,10 @@ public data class KitNavDestination(
     val icon: ImageVector? = null,
     val needsYou: Int = 0,
     val needsYouWords: String? = null,
+    /** The glyph on the chosen destination in the rail (Dart `selectedIcon`); null keeps [icon]. */
+    val selectedIcon: ImageVector? = null,
+    /** Sidebar only: the destination's own list under the destinations (Dart `pane`). */
+    val pane: (@Composable () -> Unit)? = null,
 )
 
 /** Rail and sidebar labels grow up to 2.0×, Flutter's `navLabelMaxScale`. */
@@ -54,11 +58,19 @@ internal const val NAV_LABEL_CAP: Float = 2.0f
  * nav cap). Kit-internal.
  */
 @Composable
-internal fun NavLabel(text: String, role: TypeRole, tone: TextTone, modifier: Modifier = Modifier, center: Boolean = false, maxLines: Int = 2) {
+internal fun NavLabel(
+    text: String,
+    role: TypeRole,
+    tone: TextTone,
+    modifier: Modifier = Modifier,
+    center: Boolean = false,
+    maxLines: Int = 2, // NV: the existing default, unchanged by this order
+    cap: Float = NAV_LABEL_CAP,
+) {
     val base = LocalKitTypography.current.style(role)
     val app = LocalKitAppDensity.current ?: LocalDensity.current
     val spec = base.fontSize.value
-    val target = minOf(with(app) { spec.sp.toDp().value }, spec * NAV_LABEL_CAP)
+    val target = minOf(with(app) { spec.sp.toDp().value }, spec * cap)
     val k = target / spec
     val style =
         base.copy(
