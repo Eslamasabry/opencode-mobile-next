@@ -4,7 +4,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -40,7 +39,7 @@ public fun KitCodeLine(
                 append(text)
                 tokens.forEach { token ->
                     addStyle(
-                        SpanStyle(color = colors[token.role]),
+                        colors.span(token.role),
                         token.start.coerceIn(0, text.length),
                         token.end.coerceIn(token.start.coerceIn(0, text.length), text.length),
                     )

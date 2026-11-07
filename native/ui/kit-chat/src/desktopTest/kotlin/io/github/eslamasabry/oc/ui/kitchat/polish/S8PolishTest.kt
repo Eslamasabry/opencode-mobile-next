@@ -22,8 +22,9 @@ import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeChunk
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
-import io.github.eslamasabry.oc.ui.kitchat.code.codeCornerReserve
+import io.github.eslamasabry.oc.ui.kitchat.code.codeLineInsets
 import io.github.eslamasabry.oc.ui.kitchat.code.codeOverflows
+import io.github.eslamasabry.oc.ui.kitchat.code.codeTextRoom
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
@@ -56,7 +57,7 @@ class S8PolishTest {
     // ---- P-001: code lines are no longer clipped at the Copy/Wrap column ----
 
     @Test
-    fun `P-001 only the first line keeps clear of Copy - the other lines use the block's full width`() =
+    fun `P-001 C-006 every line keeps S3 clear of the Copy column, as in Flutter`() =
         runComposeUiTest {
             val words = (1..120).joinToString(" ") { "ab" }
             setContent {
@@ -67,11 +68,12 @@ class S8PolishTest {
                     )
                 }
             }
-            // The block's text box: 360 dp less S3 on each side. A wrapped line of two-letter words leaves at most
-            // one word's width (about 3 characters) at its end.
-            val inner = 360f - 2 * Space.S3
+            // C-006 supersedes P-001's full-width lines: Flutter lays the lines beside the control column
+            // (`kit_code_block.dart:575-593`), so every line wraps S3 before it, not only the first.
             val second = onNodeWithText(words, useUnmergedTree = true).box()
-            assertTrue(second.width >= inner - 30f, "second line wraps at ${second.width} dp of $inner")
+            val copy = onNodeWithContentDescription("Copy").box()
+            assertTrue(second.right <= copy.left - Space.S3 + 1f, "line ends at ${second.right}, Copy at ${copy.left}")
+            assertTrue(second.width >= copy.left - Space.S3 - Space.S4 - 30f, "second line wraps at ${second.width} dp")
         }
 
     @Test
@@ -109,19 +111,21 @@ class S8PolishTest {
             near(target, copy.height, what = "Copy height")
             near(target, wrap.width, what = "Wrap width")
             near(target, wrap.height, what = "Wrap height")
-            near(block.right, wrap.right, what = "Wrap's end on the block's end")
-            near(wrap.left, copy.right, what = "Copy right before Wrap")
+            // C-006: Wrap sits under Copy (Flutter `kit_code_block.dart:584-592`), Copy 1 dp from the end edge.
+            near(block.right - 1f, copy.right, what = "Copy's end 1 dp inside the block's end")
+            near(copy.left, wrap.left, what = "Wrap in Copy's column")
+            near(copy.bottom, wrap.top, what = "Wrap right under Copy")
         }
 
     @Test
-    fun `P-001 the corner reserve and the overflow rule`() {
-        assertEquals(0, codeCornerReserve(0))
-        assertEquals(FlutterKitTokens.MIN_TARGET - Space.S3, codeCornerReserve(1))
-        assertEquals(2 * FlutterKitTokens.MIN_TARGET - Space.S3, codeCornerReserve(2))
-        // A short block fits; a long line or a first line running into Copy overflows.
-        assertFalse(codeOverflows(longest = 100, first = 100, room = 300, copyReserve = 36))
-        assertTrue(codeOverflows(longest = 301, first = 10, room = 300, copyReserve = 36))
-        assertTrue(codeOverflows(longest = 280, first = 280, room = 300, copyReserve = 36))
+    fun `P-001 C-006 the text room, the overflow rule and the centring insets`() {
+        // 360 less S4, S1, the 48 dp column and the S3 gap (`_plan`, kit_code_block.dart:704-712).
+        assertEquals(280f, codeTextRoom(360f))
+        assertFalse(codeOverflows(longest = 280.4f, room = 280f))
+        assertTrue(codeOverflows(longest = 281f, room = 280f))
+        // A 19 dp mono line centred on the 48 dp Copy target: 14 above, 15 below.
+        assertEquals(14f to 15f, codeLineInsets(19f))
+        assertEquals(0f to 0f, codeLineInsets(60f))
     }
 
     // ---- P-002: a fence's rows draw as one box in one style ----
@@ -144,10 +148,9 @@ class S8PolishTest {
                 }
             }
             val a = onNodeWithText(streamed, useUnmergedTree = true).box()
-            // The chunk draws its first line on its own (it alone keeps clear of Copy).
-            val b = onNodeWithText("d = 4", useUnmergedTree = true).box()
+            val b = onNodeWithText(settled, useUnmergedTree = true).box()
             near(a.left, b.left, 0.5f, "text start")
-            near(a.height / 3, b.height, 0.5f, "line height")
+            near(a.height, b.height, 0.5f, "line height")
         }
 
     @Test

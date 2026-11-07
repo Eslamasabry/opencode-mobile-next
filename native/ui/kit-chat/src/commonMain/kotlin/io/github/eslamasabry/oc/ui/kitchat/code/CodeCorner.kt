@@ -1,26 +1,25 @@
 package io.github.eslamasabry.oc.ui.kitchat.code
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.selection.DisableSelection
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -34,47 +33,123 @@ import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitWrapLines
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
-/** The glyph inside each 48 dp corner button: the reply footer's action size, so every code corner reads alike. */
-private const val CORNER_GLYPH = 20
-
-/** The fade in front of the corner buttons, so a line running under them dissolves instead of being cut. */
-private const val CORNER_FADE = 24
+/**
+ * C-006: the code glyphs are the kit's action size, 24 dp in a 48 dp target (`KitIconButton.copy`, size 24;
+ * `_WrapToggle`, `lib/ui/kit/kit_code_block_parts.dart:247-250`).
+ */
+private const val CODE_GLYPH = 24
 
 /**
- * P-001: how much of the first line's width the corner's [buttons] (48 dp each) cover. The buttons sit flush with the
- * block's outer end edge, so they cover their width less the block's own end padding (S3). Only the first line keeps
- * clear of them; every other line runs the full width.
+ * The room after the Copy target so the copy glyph's ink ends S4 inside the block, on the rail its text starts on:
+ * `KitOptical.endPad(copy, 24, S4 - (48 - 24) / 2)` = max(0, 4 - 24 × 0.125) = 1 dp
+ * (`lib/ui/kit/kit_code_block.dart:606-611`, `lib/ui/kit/kit_optical.dart:32`).
  */
-internal fun codeCornerReserve(buttons: Int): Int =
-    if (buttons <= 0) 0 else buttons * FlutterKitTokens.MIN_TARGET - Space.S3
-
-/** The first line's height in [style] (where the corner centres its buttons); 20 dp when the style has none. */
-@Composable
-internal fun codeFirstLine(style: TextStyle): Dp =
-    with(LocalDensity.current) { style.lineHeight.takeIf { it.isSp }?.toDp() } ?: 20.dp
+internal const val CODE_COPY_END: Int = 1
 
 /**
- * The code block's corner (P-001): Copy and, when lines overflow, Wrap, as 48 dp icon buttons at the end of the first
- * line, centred on it and flush with the block's end edge. They float: they add no height (a one-line block stays one
- * line tall, QA wave 4 N9) and the first line runs under them behind a short fade of the block's [fill], so no line is
- * cut mid-letter. Copy turns into a check for [COPIED_MS] and its name says [copiedLabel] (announced politely). The
- * caller's content sits in the block's padded box; [firstLine] is that box's first line height.
+ * C-006: how the code surface looks (`kit_code_block.dart:263-275`, `:615-633`): `detailsSurface` (dark: surface1;
+ * light: the page's own ground) and, in light only, a hairline edge in text1 at 16 % so Copy and Wrap never float over
+ * bare page. Corners are `codeRadius` (14).
+ */
+@Immutable
+public data class CodeFrameLook(val fill: Color, val edge: Color, val edgeWidth: Dp) {
+    public val radius: Dp
+        get() = FlutterKitTokens.CODE_RADIUS.dp
+}
+
+/** The [CodeFrameLook] of the current theme. */
+@Composable
+public fun codeFrameLook(): CodeFrameLook {
+    val c = LocalKitColors.current
+    return CodeFrameLook(
+        fill = codeFill(c),
+        edge = if (c.dark) Color.Transparent else c.text1.copy(alpha = 0.16f),
+        edgeWidth = kitHairline(),
+    )
+}
+
+/**
+ * The code surface with its rounding and light-mode edge. A part that [continued] from the row above or
+ * [continues] into the row below leaves that side open (no rounding, no edge), so a fence drawn as several rows reads as one box.
+ */
+public fun Modifier.codeSurface(look: CodeFrameLook, continued: Boolean = false, continues: Boolean = false): Modifier {
+    val top = if (continued) 0.dp else look.radius
+    val bottom = if (continues) 0.dp else look.radius
+    return background(look.fill, RoundedCornerShape(top, top, bottom, bottom)).codeEdge(look, continued, continues)
+}
+
+private fun Modifier.codeEdge(look: CodeFrameLook, continued: Boolean, continues: Boolean): Modifier =
+    if (look.edge.alpha == 0f) {
+        this
+    } else {
+        drawBehind {
+            val w = look.edgeWidth.toPx().coerceAtLeast(0.5f)
+            val r = look.radius.toPx()
+            // An open side draws its round rect past the row and clips it: only the straight sides show there.
+            val top = if (continued) -r - w else w / 2
+            val bottom = if (continues) size.height + r + w else size.height - w / 2
+            clipRect {
+                drawRoundRect(
+                    look.edge,
+                    Offset(w / 2, top),
+                    Size(size.width - w, bottom - top),
+                    CornerRadius(r - w / 2),
+                    style = Stroke(w),
+                )
+            }
+        }
+    }
+
+/**
+ * C-006: the room a block's text has when Copy (and Wrap) trail its first line, in dp: the block less its start inset
+ * (S4), its end inset (S1), the 48 dp control column and the S3 gap before it. Flutter measures overflow against this
+ * whether or not Copy shows (`_KitCodeBlockState._plan`, `kit_code_block.dart:704-712`).
+ */
+internal fun codeTextRoom(blockWidth: Float): Float =
+    blockWidth - Space.S4 - Space.S1 - FlutterKitTokens.MIN_TARGET - Space.S3
+
+/** Whether a block whose widest line is [longest] wide overflows [room] (both in the same unit; half-unit slack). */
+internal fun codeOverflows(longest: Float, room: Float): Boolean = longest > room + 0.5f
+
+/**
+ * The inset above and below the lines while Copy sits on the first line, so one line is centred on the 48 dp target
+ * and a one-line block is exactly one target tall (`kit_code_block.dart:1003-1013`): (top, bottom) in dp.
+ */
+internal fun codeLineInsets(lineHeight: Float): Pair<Float, Float> {
+    val room = (FlutterKitTokens.MIN_TARGET - lineHeight).coerceAtLeast(0f)
+    val top = kotlin.math.floor(room / 2)
+    return top to room - top
+}
+
+/** The line height of [style] in dp (19 for mono at 1.0); 19 when the style has none. */
+@Composable
+internal fun codeLineHeight(style: TextStyle): Float =
+    with(androidx.compose.ui.platform.LocalDensity.current) {
+        style.lineHeight.takeIf { it.isSp }?.toDp()?.value
+    } ?: 19f
+
+/**
+ * C-006: Copy at the end of the first line and Wrap **under** it, each a 24 dp glyph in a 48 dp target
+ * (`kit_code_block.dart:584-592`). Copy draws in text1 and turns into a check for [COPIED_MS]; its name then says
+ * [copiedLabel] (announced politely). Wrap is text2, accent while on. The column sits on the reading direction's end
+ * side (it is outside the block's left-to-right text box, as in Flutter).
  */
 @Composable
-internal fun BoxScope.CodeCorner(
-    fill: Color,
-    firstLine: Dp,
+internal fun CodeControls(
     copyLabel: String?,
     copiedLabel: String?,
     onCopy: (() -> Unit)?,
     wrapOn: Boolean? = null,
     onWrap: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     val copying = copyLabel != null && onCopy != null
     val wrapping = wrapOn != null && onWrap != null
@@ -87,32 +162,8 @@ internal fun BoxScope.CodeCorner(
         delay(COPIED_MS)
         copied = false
     }
-    val target = FlutterKitTokens.MIN_TARGET
-    val buttons = (if (copying) 1 else 0) + (if (wrapping) 1 else 0)
-    // The fade covers the first line (and the padding above it) up to the block's end edge.
-    val fadeWidth = (buttons * target + CORNER_FADE).dp
-    Box(
-        Modifier.align(Alignment.TopEnd)
-            .floating(dx = Space.S3.dp, dy = -Space.S2.dp)
-            .width(fadeWidth)
-            .height(firstLine + Space.S2.dp)
-            .background(
-                Brush.horizontalGradient(
-                    0f to fill.copy(alpha = 0f),
-                    CORNER_FADE / fadeWidth.value to fill,
-                    1f to fill,
-                ),
-                // The block's own top-end rounding: the fade never squares its corner.
-                RoundedCornerShape(topEnd = 8.dp),
-            )
-    )
     DisableSelection {
-        Row(
-            Modifier.align(Alignment.TopEnd)
-                .floating(dx = Space.S3.dp, dy = (firstLine - target.dp) / 2)
-                .testTag(CODE_CORNER_TAG),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Column(modifier.testTag(CODE_CORNER_TAG)) {
             if (copying) {
                 val label = if (copied && copiedLabel != null) copiedLabel else copyLabel!!
                 KitIconButton(
@@ -123,8 +174,8 @@ internal fun BoxScope.CodeCorner(
                         taps++
                     },
                     Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    tone = TextTone.Secondary,
-                    size = CORNER_GLYPH,
+                    tone = TextTone.Primary,
+                    size = CODE_GLYPH,
                 )
             }
             if (wrapping) {
@@ -136,24 +187,18 @@ internal fun BoxScope.CodeCorner(
                         toggleableState = if (wrapOn == true) ToggleableState.On else ToggleableState.Off
                     },
                     tone = if (wrapOn == true) TextTone.Accent else TextTone.Secondary,
-                    size = CORNER_GLYPH,
+                    size = CODE_GLYPH,
                 )
             }
         }
     }
 }
 
-/**
- * Lays the corner out without taking room: measured at its natural size, reported as zero high, and shifted by
- * ([dx], [dy]) toward the end and top (mirrors under right to left; the block itself is always left to right).
- */
-private fun Modifier.floating(dx: Dp, dy: Dp): Modifier = layout { measurable, constraints ->
-    val p = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Int.MAX_VALUE))
-    layout(p.width, 0) { p.placeRelative(dx.roundToPx(), dy.roundToPx()) }
-}
+/** `detailsSurface`: surface1 in dark, the page's ground in light (`FlutterKitTokenRoles.detailsSurface`). */
+internal fun codeFill(c: io.github.eslamasabry.oc.ui.kit.theme.KitColors): Color = if (c.dark) c.surface1 else c.ground
 
 /** How long Copy shows its check after a tap. */
 internal const val COPIED_MS: Long = 2_000
 
-/** The corner's buttons, for tests. */
+/** The column holding Copy and Wrap, for tests. */
 public const val CODE_CORNER_TAG: String = "kit-code-corner"
