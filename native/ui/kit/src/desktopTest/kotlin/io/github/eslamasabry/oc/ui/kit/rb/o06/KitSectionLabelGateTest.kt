@@ -33,7 +33,7 @@ class KitSectionLabelGateTest {
             KitRowGroup(label = "Planner") { row("Model", "Opus 5.5 · plans before it edits", KitIcons.agent) }
             KitSectionLabel("MCP servers", explanation = "Tools the agent can call, served by programs this server runs.", trailing = { KitText("3 connected", role = TypeRole.Caption, tone = TextTone.Secondary) })
             KitRowGroup { row("GitHub", "Connected · 12 tools", KitIcons.link); row("Browser", "Connected · 8 tools", KitIcons.terminal) }
-            KitRowGroup(label = "Supervision") { row("Ask before", "Edits outside the project", KitIcons.chat) }
+            KitRowGroup(label = "Supervision", section = true) { row("Ask before", "Edits outside the project", KitIcons.chat) }
         }
     }
     @Test fun kit_section_label_page() { FlutterGoldenGate.check(wrap = { content -> FlutterCapture(content) }, name = "kit_section_label_page", modes = listOf("dark", "light")) { scene() } }

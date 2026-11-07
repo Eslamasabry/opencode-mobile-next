@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -18,6 +17,7 @@ import androidx.compose.ui.geometry.Offset
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.foundation.layout.Arrangement
@@ -209,7 +209,9 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
     Row(
         Modifier.fillMaxWidth()
             .then(track.modifier)
-            .then(if (solid) Modifier.border(hairline, colors.hairline, track.shape) else Modifier)
+            // One physical pixel inside the track's edge (F: lib/ui/kit/kit_segmented.dart:672-675), never rounded up
+            // to a whole picture pixel.
+            .then(if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, track.shape) else Modifier)
             .padding(hairline)
             .selectableGroup(),
     ) {
@@ -255,14 +257,17 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                             drawLine(ink, Offset(x, 0f), Offset(x, size.height), hairline.toPx())
                         }
                     }
-                    .padding(inset)
-                    .then(if (chosen) thumb.modifier else Modifier)
+                    // The 48 dp target is the whole segment (the track is minTarget plus its hairlines); the chosen
+                    // block is drawn inset by half a space1 inside it (F: lib/ui/kit/kit_segmented.dart:629, :678-686).
+                    // A target inside the inset made every track 4 dp taller than Flutter's.
                     .kitSelectTap(chosen, Role.RadioButton, segEnabled, haptic = null, KitShapeId.Tile) {
                         SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
                             haptics(KitHaptic.Select)
                             onChange(it)
                         }
                     }
+                    .padding(inset)
+                    .then(if (chosen) thumb.modifier else Modifier)
                     .padding(horizontal = (Space.S2.toFloat() - Space.S1 / 2f).dp), // F: lib/ui/kit/kit_segmented.dart:629
                 contentAlignment = Alignment.Center,
             ) {

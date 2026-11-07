@@ -24,8 +24,9 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
-import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.design.layout.CapAlign
+import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
+import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.words.res.kitSearchFilter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -289,12 +290,16 @@ public fun KitSearchField(
 
 /**
  * The inline "nothing matches" state under a search (Dart `KitSearchNoMatch`): the person's words isolated, Clear search,
- * and at most one more way forward ([action]). Announced once when it replaces the list.
+ * and at most one more way forward ([action]). The field's count line above it announces the outcome.
+ *
+ * It is the inline size of `KitStateView` (F: lib/ui/kit/kit_state_view.dart:689-835, `KitStateSize.inline`): it starts at
+ * the reading edge, where the list's words do, never centred like a page state: [KitInlineStateView], a small search
+ * tile, the headline-size title, then Clear search over the extra way, both full width, inside the gutter.
  *
  * States: one
  * Text: frame
- * Cap: Reading
- * Motion: none of its own (the host swaps it in)
+ * Cap: State (at the start edge)
+ * Motion: arrives with the kit entrance (fade, 6 dp rise; instant under reduced motion), as Flutter's `KitEntrance`
  * Replaces: KitSearchNoMatch (lib/ui/kit/kit_search_field.dart)
  */
 @Composable
@@ -307,12 +312,11 @@ public fun KitSearchNoMatch(
 ) {
     val q = "“⁨$query⁩”"
     val title = if (what == null) stringResource(Res.string.kitSearchNoMatch, q) else stringResource(Res.string.kitSearchNoMatchIn, "⁨$what⁩", q)
-    KitStateView(
-        kind = KitStateKind.Empty,
-        title = title,
-        modifier = modifier.kitMaxWidth(CapRole.State).semantics { liveRegion = LiveRegionMode.Polite },
-        icon = KitIcons.search,
-        primary = KitAction(label = stringResource(Res.string.kitSearchClear), onClick = onClear),
-        secondary = action,
-    )
+    val clear = KitAction(label = stringResource(Res.string.kitSearchClear), onClick = onClear)
+    // No semantics box of its own: the field's count line ("No results") is the polite live region that announces the
+    // outcome once typing settles, and a box here would start at the gutter, a step the alignment rules do not read
+    // (it sits 14 dp under the count line through the screen's 2 dp loading bar).
+    KitEntrance(modifier.fillMaxWidth().kitMaxWidth(CapRole.State, CapAlign.Start), key = query) {
+        KitInlineStateView(title = title, icon = KitIcons.search, primary = clear, secondary = action)
+    }
 }
