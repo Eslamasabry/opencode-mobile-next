@@ -54,6 +54,10 @@ public object KitLiveSilk : KitLiveStyle() {
         var amp = Double.NaN
         var col = Color.Unspecified
         var peak = Double.NaN
+
+        /** Whether the gradient was built for another band or colour. */
+        fun stale(size: Size, base: Double, amp: Double, col: Color, peak: Double): Boolean =
+            this.size != size || this.base != base || this.amp != amp || this.col != col || this.peak != peak
     }
 
     private class Ribbons {
@@ -89,7 +93,7 @@ public object KitLiveSilk : KitLiveStyle() {
                 x -= step
             }
             path.close()
-            if (ribbon.size != size || ribbon.base != base || ribbon.amp != amp || ribbon.col != col || ribbon.peak != peak) {
+            if (ribbon.stale(size, base, amp, col, peak)) {
                 ribbon.size = size
                 ribbon.base = base
                 ribbon.amp = amp

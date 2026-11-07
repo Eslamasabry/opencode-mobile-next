@@ -59,12 +59,8 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
             !motion.stillFrame
     val plate = rememberAuroraPlate(if (shows) appearance.liveStyle else null)
     // Any other look the native app draws (kit_live_background.dart:257-262): still frame unless motion is Full.
-    val look =
-        if (appearance.liveBackground && !appearance.saver && strength > 0f && !motion.stillFrame) {
-            kitLiveStyleById(appearance.liveStyle)
-        } else {
-            null
-        }
+    val chosen = if (appearance.liveBackground && !appearance.saver && strength > 0f) appearance.liveStyle else null
+    val look = if (motion.stillFrame) null else kitLiveStyleById(chosen)
     val looks = look != null && motion.ambientLoops
     val painted = plate != null
     val ground = colors.ground

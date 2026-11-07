@@ -17,7 +17,8 @@ internal fun checkLook(style: KitLiveStyle, runs: List<Double> = listOf(0.0, 1.0
             for (run in runs) {
                 val worst = maxDelta(render(style, size, p, running = run), p)
                 assertTrue(worst > 0, "${style.id} is visible")
-                assertTrue(worst <= cap + 2, "${style.id} dark=${p.dark} $size run=$run over the ceiling ($worst > $cap)")
+                val what = "${style.id} dark=${p.dark} $size run=$run"
+                assertTrue(worst <= cap + 2, "$what over the ceiling ($worst > $cap)")
             }
         }
         val a = render(style, PHONE, p)

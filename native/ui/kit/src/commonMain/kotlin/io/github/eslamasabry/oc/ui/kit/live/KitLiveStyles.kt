@@ -51,26 +51,27 @@ public val kitLiveStyles: List<KitLiveStyle> = listOf<KitLiveStyle>(
 public fun kitLiveStyleById(id: String?): KitLiveStyle? = kitLiveStyles.firstOrNull { it.id == id }
 
 /** The name the picker shows for the look [id] (Dart `KitLiveStyle.label`), or null for an unknown id. */
-public fun kitLiveStyleLabel(id: String): StringResource? = when (id) {
-    "aurora" -> Res.string.liveStyleAurora
-    "mesh" -> Res.string.liveStyleMesh
-    "dotRipple" -> Res.string.liveStyleDotRipple
-    "topo" -> Res.string.liveStyleTopo
-    "flowThreads" -> Res.string.liveStyleFlowThreads
-    "glowSpill" -> Res.string.liveStyleGlowSpill
-    "lightRays" -> Res.string.liveStyleLightRays
-    "constellation" -> Res.string.liveStyleConstellation
-    "halftone" -> Res.string.liveStyleHalftone
-    "liquidBlobs" -> Res.string.liveStyleLiquidBlobs
-    "matrixRain" -> Res.string.liveStyleMatrixRain
-    "blueprint" -> Res.string.liveStyleBlueprint
-    "circuit" -> Res.string.liveStyleCircuit
-    "oscilloscope" -> Res.string.liveStyleOscilloscope
-    "radar" -> Res.string.liveStyleRadar
-    "honeycomb" -> Res.string.liveStyleHoneycomb
-    "brushedMetal" -> Res.string.liveStyleBrushedMetal
-    "silk" -> Res.string.liveStyleSilk
-    "caustics" -> Res.string.liveStyleCaustics
-    "bokeh" -> Res.string.liveStyleBokeh
-    else -> null
-}
+public fun kitLiveStyleLabel(id: String): StringResource? = labels[id]
+
+private val labels: Map<String, StringResource> = mapOf(
+    "aurora" to Res.string.liveStyleAurora,
+    "mesh" to Res.string.liveStyleMesh,
+    "dotRipple" to Res.string.liveStyleDotRipple,
+    "topo" to Res.string.liveStyleTopo,
+    "flowThreads" to Res.string.liveStyleFlowThreads,
+    "glowSpill" to Res.string.liveStyleGlowSpill,
+    "lightRays" to Res.string.liveStyleLightRays,
+    "constellation" to Res.string.liveStyleConstellation,
+    "halftone" to Res.string.liveStyleHalftone,
+    "liquidBlobs" to Res.string.liveStyleLiquidBlobs,
+    "matrixRain" to Res.string.liveStyleMatrixRain,
+    "blueprint" to Res.string.liveStyleBlueprint,
+    "circuit" to Res.string.liveStyleCircuit,
+    "oscilloscope" to Res.string.liveStyleOscilloscope,
+    "radar" to Res.string.liveStyleRadar,
+    "honeycomb" to Res.string.liveStyleHoneycomb,
+    "brushedMetal" to Res.string.liveStyleBrushedMetal,
+    "silk" to Res.string.liveStyleSilk,
+    "caustics" to Res.string.liveStyleCaustics,
+    "bokeh" to Res.string.liveStyleBokeh,
+)

@@ -47,6 +47,7 @@ public class KitLiveFrame(
 )
 
 /** The theme's colours a look may use (Dart `KitLivePalette`). */
+@Suppress("LongParameterList") // the Dart KitLivePalette's own fields
 public class KitLivePalette(
     public val ground: Color,
     /** Primary text colour. */

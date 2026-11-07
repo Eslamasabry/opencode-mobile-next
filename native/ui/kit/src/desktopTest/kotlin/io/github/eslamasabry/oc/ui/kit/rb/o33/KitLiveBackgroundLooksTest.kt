@@ -113,14 +113,17 @@ class KitLiveBackgroundLooksTest {
         mainClock.advanceTimeBy(3_000)
         waitForIdle()
         val after = onRoot().captureToImage().toAwtImage()
-        assertTrue(KitLiveClock.instance.ticks - ticks in 30..37, "about 12 ticks a second, never more: ${KitLiveClock.instance.ticks - ticks}")
+        val moved = KitLiveClock.instance.ticks - ticks
+        assertTrue(moved in 30..37, "about 12 ticks a second, never more: $moved")
         assertFalse(sameImage(before, after), "the look moved")
         assertEquals(composed, compositions, "the page did not recompose")
         assertEquals(drawn, draws, "the page did not redraw")
     }
 
     private fun sameImage(a: BufferedImage, b: BufferedImage): Boolean {
-        for (y in 0 until a.height step 2) for (x in 0 until a.width step 2) if (a.getRGB(x, y) != b.getRGB(x, y)) return false
+        for (y in 0 until a.height step 2) {
+            for (x in 0 until a.width step 2) if (a.getRGB(x, y) != b.getRGB(x, y)) return false
+        }
         return true
     }
 }

@@ -43,7 +43,8 @@ class KitLiveToolkitParityTest {
     @Test fun smoothAndColourHelpers() {
         assertEquals(.5, smooth(.03, .09, .06), 1e-12)
         rgb(Color(0xFFFF0033)).zip(doubleArrayOf(255.0, 0.0, 51.0)).forEach { (a, b) -> assertEquals(b, a, 1e-5) }
-        assertContentEquals(doubleArrayOf(5.0, 10.0, 15.0), mixRgb(doubleArrayOf(0.0, 0.0, 0.0), doubleArrayOf(10.0, 20.0, 30.0), .5))
+        val mixed = mixRgb(doubleArrayOf(0.0, 0.0, 0.0), doubleArrayOf(10.0, 20.0, 30.0), .5)
+        assertContentEquals(doubleArrayOf(5.0, 10.0, 15.0), mixed)
     }
 
     @Test fun packArgbRoundsAndClamps() {
@@ -58,16 +59,17 @@ class KitLiveToolkitParityTest {
         assertEquals(.7, strengthOf(KitLiveFrame(0.0, 0.0, 1.0, lightPalette, m)), 1e-12)
     }
 
-    private fun fieldAt(size: Size, div: Int, t: Double, m: KitLiveMemory, every: Double, calls: IntArray): LiveFieldCache {
+    private fun fieldAt(size: Size, t: Double, m: KitLiveMemory, every: Double, calls: IntArray): LiveFieldCache {
         val canvas = skiaCanvas(size)
-        paintField(canvas, size, KitLiveFrame(t, 0.0, 1.0, darkPalette, m), "f", div, LiveField { _, _ -> calls[0]++; 0 }, every)
+        val counting = LiveField { _, _ -> calls[0]++; 0 }
+        paintField(canvas, size, KitLiveFrame(t, 0.0, 1.0, darkPalette, m), "f", 3, counting, every)
         return m.of("f") { LiveFieldCache() }
     }
 
     @Test fun paintFieldGridAndRecomputeRules() {
         val m = KitLiveMemory()
         val calls = intArrayOf(0)
-        val c = fieldAt(Size(412f, 915f), 3, 1.0, m, .06, calls)
+        val c = fieldAt(Size(412f, 915f), 1.0, m, .06, calls)
         // About div logical pixels a cell, at least 8 a side.
         assertEquals(137, c.lw)
         assertEquals(305, c.lh)
@@ -76,18 +78,18 @@ class KitLiveToolkitParityTest {
         assertEquals(c.lh * (c.lw + 1) * 2 + (c.lh - 1) * 2, c.indices.size)
         assertEquals(listOf(0, c.lw + 1, 1, c.lw + 2), c.indices.take(4).map { it.toInt() and 0xFFFF })
         // Within `every` seconds the colours are kept.
-        fieldAt(Size(412f, 915f), 3, 1.05, m, .06, calls)
+        fieldAt(Size(412f, 915f), 1.05, m, .06, calls)
         assertEquals((c.lw + 1) * (c.lh + 1), calls[0])
-        fieldAt(Size(412f, 915f), 3, 1.07, m, .06, calls)
+        fieldAt(Size(412f, 915f), 1.07, m, .06, calls)
         assertEquals(2 * (c.lw + 1) * (c.lh + 1), calls[0])
         // Time going back recomputes.
-        fieldAt(Size(412f, 915f), 3, .5, m, .06, calls)
+        fieldAt(Size(412f, 915f), .5, m, .06, calls)
         assertEquals(3 * (c.lw + 1) * (c.lh + 1), calls[0])
         // Tiny surfaces keep eight cells a side; huge ones shrink by .8 until under 65000 points.
-        val small = fieldAt(Size(10f, 10f), 3, 0.0, KitLiveMemory(), 0.0, intArrayOf(0))
+        val small = fieldAt(Size(10f, 10f), 0.0, KitLiveMemory(), 0.0, intArrayOf(0))
         assertEquals(8, small.lw)
         assertEquals(8, small.lh)
-        val big = fieldAt(Size(1200f, 1200f), 3, 0.0, KitLiveMemory(), 0.0, intArrayOf(0))
+        val big = fieldAt(Size(1200f, 1200f), 0.0, KitLiveMemory(), 0.0, intArrayOf(0))
         assertTrue((big.lw + 1) * (big.lh + 1) <= 65000)
         assertEquals(205, big.lw) // 400 -> 320 -> 256 -> 205
     }

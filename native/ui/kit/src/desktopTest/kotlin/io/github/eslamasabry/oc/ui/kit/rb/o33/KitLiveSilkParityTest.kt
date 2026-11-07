@@ -39,8 +39,9 @@ class KitLiveSilkParityTest {
         val base = 915 * .15
         val amp = 915 * .06
         val ph = 1.3
-        assertEquals(base + sin(x / w * 3 + ph) * amp + sin(x / w * 7 - ph * .6) * amp * .3 - amp, S.top(x, w, base, amp, ph), 1e-12)
-        assertEquals(base + sin(x / w * 3 + ph + .8) * amp + sin(x / w * 7 - ph * .6) * amp * .3 + amp, S.bottom(x, w, base, amp, ph), 1e-12)
+        val ripple = sin(x / w * 7 - ph * .6) * amp * .3
+        assertEquals(base + sin(x / w * 3 + ph) * amp + ripple - amp, S.top(x, w, base, amp, ph), 1e-12)
+        assertEquals(base + sin(x / w * 3 + ph + .8) * amp + ripple + amp, S.bottom(x, w, base, amp, ph), 1e-12)
     }
 
     @Test fun visibleUnderItsCeilingDeterministicAndAlive() = checkLook(S)

@@ -21,7 +21,12 @@ import kotlin.test.assertSame
  * Dart VM's `math.Random(308674399)` ones; contact 4 of the radar golden sits where they put it.
  */
 class KitLiveSupportParityTest {
-    private fun frame(t: Double, memory: KitLiveMemory = KitLiveMemory(), strength: Double = 1.0, dark: Boolean = true) =
+    private fun frame(
+        t: Double,
+        memory: KitLiveMemory = KitLiveMemory(),
+        strength: Double = 1.0,
+        dark: Boolean = true,
+    ) =
         KitLiveFrame(t, 0.0, strength, if (dark) darkPalette else lightPalette, memory)
 
     @Test fun liveHashIsTheFractionOfAScaledSine() {

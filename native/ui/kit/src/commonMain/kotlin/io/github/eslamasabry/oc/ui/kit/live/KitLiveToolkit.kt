@@ -1,3 +1,6 @@
+// One Kotlin file per Dart file (kit_live_toolkit.dart): its helpers stay together.
+@file:Suppress("TooManyFunctions")
+
 package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.ui.geometry.Size
@@ -65,11 +68,14 @@ internal class LiveFbmGrid {
         var table = DoubleArray(0)
     }
 
-    private val octaves = Array(OCTAVES) { Octave() }
+    private val o0 = Octave()
+    private val o1 = Octave()
+    private val o2 = Octave()
+    private val octaves = arrayOf(o0, o1, o2)
 
     /** The [nx] column inputs [xs] and [ny] row inputs [ys] of this pass. */
     fun prepare(xs: DoubleArray, nx: Int, ys: DoubleArray, ny: Int) {
-        for (o in 0 until OCTAVES) {
+        for (o in octaves.indices) {
             val q = octaves[o]
             if (q.xi.size < nx) {
                 q.xi = IntArray(nx)
@@ -103,12 +109,15 @@ internal class LiveFbmGrid {
             }
             q.x0 = minX
             q.y0 = minY
-            q.w = maxX - minX + 2
-            val h = maxY - minY + 2
+            q.w = span(minX, maxX)
+            val h = span(minY, maxY)
             if (q.table.size < q.w * h) q.table = DoubleArray(q.w * h)
             for (j in 0 until h) for (i in 0 until q.w) q.table[j * q.w + i] = hash2(minX + i, minY + j)
         }
     }
+
+    /** Lattice points from [lo] to [hi] + 1: each cell needs its far corner too. */
+    private fun span(lo: Int, hi: Int): Int = hi + 1 - lo + 1
 
     private fun octaveOf(o: Int, v: Double, isX: Boolean): Double = when (o) {
         0 -> v
@@ -129,11 +138,7 @@ internal class LiveFbmGrid {
 
     /** [fbm] of column [i]'s x and row [j]'s y. */
     fun at(i: Int, j: Int): Double =
-        noise(octaves[0], i, j) * .6 + noise(octaves[1], i, j) * .3 + noise(octaves[2], i, j) * .1 // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:33-35
-
-    private companion object {
-        const val OCTAVES = 3 // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:33-35
-    }
+        noise(o0, i, j) * .6 + noise(o1, i, j) * .3 + noise(o2, i, j) * .1 // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:33-35
 }
 
 /** Dart `smooth` (kit_live_toolkit.dart:37-40). */
@@ -186,6 +191,42 @@ internal class LiveFieldCache {
     var indices = ShortArray(0)
     var colors = IntArray(0)
     var lastCompute = -1e9 // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:71
+
+    /** Whether the grid was built for [lw] x [lh] cells over [size]. */
+    fun fits(lw: Int, lh: Int, size: Size): Boolean = this.lw == lw && this.lh == lh && w == size.width && h == size.height
+
+    /** Builds the points and the strips of a grid of [lw] x [lh] cells over [size] (kit_live_toolkit.dart:93-124). */
+    fun build(lw: Int, lh: Int, size: Size) {
+        this.lw = lw
+        this.lh = lh
+        w = size.width
+        h = size.height
+        lastCompute = -1e9 // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:99
+        val n = (lw + 1) * (lh + 1)
+        positions = FloatArray(n * 2) // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:101
+        colors = IntArray(n)
+        var k = 0
+        for (y in 0..lh) {
+            for (x in 0..lw) {
+                positions[k++] = x.toFloat() / lw * size.width
+                positions[k++] = y.toFloat() / lh * size.height
+            }
+        }
+        // Flutter's two triangles a cell, (a, b, d) and (b, e, d), as one strip a row: a0 d0 a1 d1 … gives the same
+        // triangles on the same diagonal with a third of the indices; two repeated points join the rows.
+        val idx = ShortArray(lh * (lw + 1) * 2 + (lh - 1) * 2) // NV: a strip of two points a column a row, two joins
+        k = 0
+        for (y in 0 until lh) {
+            val row = y * (lw + 1)
+            if (y > 0) idx[k++] = row.toShort()
+            for (x in 0..lw) {
+                idx[k++] = (row + x).toShort()
+                idx[k++] = (row + lw + 1 + x).toShort()
+            }
+            if (y < lh - 1) idx[k++] = (row + lw + 1 + lw).toShort()
+        }
+        indices = idx
+    }
 }
 
 /**
@@ -194,6 +235,7 @@ internal class LiveFieldCache {
  * [every] seconds. The grid, its indices and its colours live in [KitLiveFrame.memory] and are rewritten in place:
  * nothing is allocated on a frame once the grid exists.
  */
+@Suppress("LongParameterList") // Dart paintField's own parameters
 internal fun paintField(
     canvas: Canvas,
     size: Size,
@@ -210,37 +252,7 @@ internal fun paintField(
         lw = (lw * .8).roundToInt() // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:90
         lh = (lh * .8).roundToInt() // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:91
     }
-    if (c.lw != lw || c.lh != lh || c.w != size.width || c.h != size.height) {
-        c.lw = lw
-        c.lh = lh
-        c.w = size.width
-        c.h = size.height
-        c.lastCompute = -1e9 // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:99
-        val n = (lw + 1) * (lh + 1)
-        c.positions = FloatArray(n * 2) // F: lib/ui/kit/live_background/styles/kit_live_toolkit.dart:101
-        c.colors = IntArray(n)
-        var k = 0
-        for (y in 0..lh) {
-            for (x in 0..lw) {
-                c.positions[k++] = x.toFloat() / lw * size.width
-                c.positions[k++] = y.toFloat() / lh * size.height
-            }
-        }
-        // Flutter's two triangles a cell, (a, b, d) and (b, e, d), as one strip a row: a0 d0 a1 d1 … gives the same
-        // triangles on the same diagonal with a third of the indices; two repeated points join the rows.
-        val idx = ShortArray(lh * (lw + 1) * 2 + (lh - 1) * 2) // NV: a strip of two points a column a row, two joins
-        k = 0
-        for (y in 0 until lh) {
-            val row = y * (lw + 1)
-            if (y > 0) idx[k++] = row.toShort()
-            for (x in 0..lw) {
-                idx[k++] = (row + x).toShort()
-                idx[k++] = (row + lw + 1 + x).toShort()
-            }
-            if (y < lh - 1) idx[k++] = (row + lw + 1 + lw).toShort()
-        }
-        c.indices = idx
-    }
+    if (!c.fits(lw, lh, size)) c.build(lw, lh, size)
     if (frame.t - c.lastCompute >= every || frame.t < c.lastCompute) {
         c.lastCompute = frame.t
         val aspect = size.height.toDouble() / size.width
@@ -253,7 +265,7 @@ internal fun paintField(
             }
         }
     }
-    canvas.liveDrawField(c.positions, c.colors, c.indices, lw, lh, size.width, size.height)
+    canvas.liveDrawField(c)
 }
 
 /**
@@ -261,15 +273,7 @@ internal fun paintField(
  * `drawVertices(…, BlendMode.dst, Paint())`).
  * Each platform hands the arrays to its own canvas without copying them.
  */
-internal expect fun Canvas.liveDrawField(
-    positions: FloatArray,
-    colors: IntArray,
-    indices: ShortArray,
-    lw: Int,
-    lh: Int,
-    width: Float,
-    height: Float,
-)
+internal expect fun Canvas.liveDrawField(field: LiveFieldCache)
 
 /** Dart `Color.computeLuminance`: the design module's, on the 8-bit colour Compose keeps. */
 private fun luminance(c: Color): Double = relativeLuminance(Argb(c.toArgb()))
@@ -288,6 +292,7 @@ internal fun liveContrast(a: Color, b: Color): Double {
  * text3 through [halo] of the ground, each at its floor (AA, or within .2 of the theme's own contrast where that is
  * lower) plus [spare]; with a halo in a dark theme the accent (the glow) is held to its floor too.
  */
+@Suppress("LongParameterList") // Dart liveTextReads's own parameters
 internal fun liveTextReads(
     p: KitLivePalette,
     base: Color,

@@ -51,7 +51,7 @@ class KitLiveTopoParityTest {
         assert(clear > 200)
     }
 
-    /** Idle only: the ambient looks are held by the contrast test (kit_live_background_test.dart), not a ceiling, while running. */
+    /** Idle only: while running, the ambient looks are held by the contrast test (kit_live_background_test.dart). */
     @Test fun visibleUnderItsCeilingDeterministicAndAlive() = checkLook(T, runs = listOf(0.0))
 
     @Test fun thePreparedPassGivesTheSameColoursAsPointByPoint() {

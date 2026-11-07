@@ -53,9 +53,7 @@ internal fun render(
     size: Size,
     p: KitLivePalette,
     running: Double = 0.0,
-    strength: Double = 1.0,
     t: Double = GOLDEN_T,
-    memory: KitLiveMemory = KitLiveMemory(),
 ): IntArray {
     graphicsReady()
     val w = size.width.toInt()
@@ -63,7 +61,7 @@ internal fun render(
     val bitmap = org.jetbrains.skia.Bitmap().apply { allocN32Pixels(w, h) }
     val canvas = org.jetbrains.skia.Canvas(bitmap).asComposeCanvas()
     canvas.drawRect(0f, 0f, size.width, size.height, Paint().apply { color = p.ground })
-    style.paint(canvas, size, KitLiveFrame(t, running, strength, p, memory))
+    style.paint(canvas, size, KitLiveFrame(t, running, 1.0, p, KitLiveMemory()))
     return IntArray(w * h) { i -> bitmap.getColor(i % w, i / w) }
 }
 
@@ -81,7 +79,10 @@ internal fun maxDelta(px: IntArray, p: KitLivePalette): Int {
     val gb = (p.ground.blue * 255 + .5f).toInt()
     var worst = 0
     for (v in px) {
-        worst = maxOf(worst, kotlin.math.abs(((v shr 16) and 0xFF) - gr), kotlin.math.abs(((v shr 8) and 0xFF) - gg), kotlin.math.abs((v and 0xFF) - gb))
+        val dr = kotlin.math.abs(((v shr 16) and 0xFF) - gr)
+        val dg = kotlin.math.abs(((v shr 8) and 0xFF) - gg)
+        val db = kotlin.math.abs((v and 0xFF) - gb)
+        worst = maxOf(worst, dr, dg, db)
     }
     return worst
 }

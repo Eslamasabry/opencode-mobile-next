@@ -23,7 +23,8 @@ import kotlin.test.assertTrue
  * ticks a second. Two numbers per look, medians over 120 frames after 30 warm-up frames:
  * - record: the look's `paint` into a display list (what the UI thread does on a tick on Android: build the layer's
  *   picture; the GPU then draws it on the render thread);
- * - raster: the same frame drawn by Skia on the CPU into a 1080 x 2400 bitmap (an upper bound; the phone's GPU is faster).
+ * - raster: the same frame drawn by Skia on the CPU into a 1080 x 2400 bitmap (an upper bound; the phone's GPU is
+ *   faster).
  * Plus the JVM heap allocated per frame once warm (paths, paints and shaders are reused). `topo-held` is topo with
  * its clock held (the field is not recomputed): what recording the mesh alone costs. `empty` draws nothing: the
  * harness's own time and allocation, to subtract. Numbers go to
@@ -36,15 +37,18 @@ class KitLiveFrameCostTest {
     private val size = Size(px.first / density, px.second / density)
 
     private fun allocated(): Long =
-        (ManagementFactory.getThreadMXBean() as com.sun.management.ThreadMXBean).getThreadAllocatedBytes(Thread.currentThread().id)
+        (ManagementFactory.getThreadMXBean() as com.sun.management.ThreadMXBean)
+            .getThreadAllocatedBytes(Thread.currentThread().id)
 
     @Test fun eachLookRecordsAPhoneFrameWellUnderFourMilliseconds() {
         graphicsReady()
         val out = StringBuilder("look\trecord_median_ms\trecord_p90_ms\traster_median_ms\tbytes_per_frame\n")
         val bitmap = Bitmap().apply { allocN32Pixels(px.first, px.second) }
         val raster = SkCanvas(bitmap)
-        for ((name, look, moves) in looks.map { Triple(it.id, it, true) } + Triple("topo-held", KitLiveTopo as KitLiveStyle, false) +
-            Triple("empty", Empty, true)) {
+        val runs = looks.map { Triple(it.id, it, true) } +
+            Triple("topo-held", KitLiveTopo as KitLiveStyle, false) +
+            Triple("empty", Empty, true)
+        for ((name, look, moves) in runs) {
             val memory = KitLiveMemory()
             val frame = KitLiveFrame(GOLDEN_T, 0.0, 1.0, darkPalette, memory)
             val recorder = PictureRecorder()
@@ -89,7 +93,7 @@ class KitLiveFrameCostTest {
     /** A look that draws nothing: the harness's own cost and allocation (recorder, canvas wrapper). */
     private object Empty : KitLiveStyle() {
         override val id: String = "empty"
-        override fun paint(canvas: androidx.compose.ui.graphics.Canvas, size: Size, frame: KitLiveFrame) {}
+        override fun paint(canvas: androidx.compose.ui.graphics.Canvas, size: Size, frame: KitLiveFrame) = Unit
     }
 
     private companion object {

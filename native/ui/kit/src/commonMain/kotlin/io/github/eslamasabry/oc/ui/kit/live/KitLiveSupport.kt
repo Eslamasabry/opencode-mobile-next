@@ -1,3 +1,6 @@
+// One Kotlin file per Dart file (kit_live_support.dart): its helpers stay together.
+@file:Suppress("TooManyFunctions")
+
 package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.ui.geometry.Size
