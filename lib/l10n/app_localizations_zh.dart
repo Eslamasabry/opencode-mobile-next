@@ -16285,6 +16285,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopReleaseOpenPage => '打开发布页面';
 
   @override
+  String get appUpdatePromptTitle => 'Update available';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'Download and update';
+
+  @override
+  String get appUpdateLater => 'Later';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'Size: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'What\'s new';
+
+  @override
+  String get appUpdateInstall => 'Install';
+
+  @override
+  String get appUpdateDownloading => 'Downloading update…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'Ready to install. Tap Install to finish updating.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'Failed to download update. Check connection and retry.';
+
+  @override
+  String get appUpdateRetry => 'Retry';
+
+  @override
   String get runningWorkTitle => '此对话中的工作';
 
   @override

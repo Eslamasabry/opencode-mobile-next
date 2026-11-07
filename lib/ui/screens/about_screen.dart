@@ -12,6 +12,7 @@ import '../../state/connection.dart';
 import '../../state/factsbook/factsbook_flag.dart';
 import '../../state/factsbook/factsbook_phone_node.dart';
 import 'factsbook/factsbook_routes.dart';
+import '../../update/in_app_update_notice.dart';
 import '../../update/shorebird_update_notice.dart';
 import '../../voice/notices.dart';
 import '../app_theme.dart';
@@ -129,6 +130,18 @@ class _AboutScreenState extends State<AboutScreen> {
     }
     setState(() => _update = _UpdateCheck.checking);
     try {
+      // A new release (a new APK) first; when there is none, the patch check
+      // below still runs. An injected update service (tests) skips this.
+      if (platformCapabilities.isAndroid && widget.updateService == null) {
+        final release = await InAppUpdateCoordinator.checkManually(
+          context: context,
+        );
+        if (!mounted) return;
+        if (release != null) {
+          setState(() => _update = _UpdateCheck.ready);
+          return;
+        }
+      }
       final service = _service ??=
           widget.updateService ?? ShorebirdAppUpdateService();
       if (!service.isAvailable) {

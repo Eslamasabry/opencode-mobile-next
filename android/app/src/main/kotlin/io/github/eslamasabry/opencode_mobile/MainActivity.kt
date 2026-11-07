@@ -18,6 +18,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var projectExport: ProjectExportBridge? = null
     private var byoHostSigner: ByoHostSigner? = null
     private var crashDiagnostics: CrashDiagnosticsBridge? = null
+    private var appUpdateInstaller: AppUpdateInstaller? = null
     private val termux by lazy { TermuxActivityBridge(this, handler) }
     private val launches by lazy { LaunchActivityBridge(this) }
     private val background by lazy { MainActivityBackground(this, handler) }
@@ -30,6 +31,8 @@ class MainActivity : FlutterFragmentActivity() {
         background.cancelBackgroundRequests()
         crashDiagnostics?.dispose()
         crashDiagnostics = CrashDiagnosticsBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        appUpdateInstaller?.dispose()
+        appUpdateInstaller = AppUpdateInstaller(this, flutterEngine.dartExecutor.binaryMessenger)
         nativeReplies?.detach()
         val replies = NativeChannelReplies { action -> handler.post(action) }
         nativeReplies = replies
@@ -75,6 +78,8 @@ class MainActivity : FlutterFragmentActivity() {
         termux.reset()
         projectExport?.dispose()
         projectExport = null
+        appUpdateInstaller?.dispose()
+        appUpdateInstaller = null
         networkMonitor?.dispose()
         networkMonitor = null
         localPdf?.dispose()
