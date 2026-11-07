@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.composer.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 
 /** The attach paths besides the document picker (Flutter "+" sheet rows). */
@@ -26,4 +27,17 @@ public interface ComposerAttachSource {
         kind: AttachKind,
         current: List<PromptAttachment>,
     ): Outcome<List<PromptAttachment>>
+
+    /**
+     * As above, for [conversation]: a camera photo handed back after the app was killed joins this
+     * conversation's draft (E05-S01). Sources that keep no record ignore it.
+     */
+    public suspend fun attach(
+        kind: AttachKind,
+        current: List<PromptAttachment>,
+        conversation: ConversationRef?,
+    ): Outcome<List<PromptAttachment>> = attach(kind, current)
+
+    /** Opens the app's Android settings page, where a refused [kind] (the camera) can be allowed. */
+    public fun openSettings(kind: AttachKind) {}
 }

@@ -74,6 +74,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.composerLaterScheduled
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
@@ -478,10 +479,17 @@ public fun BasicComposer(
                 tone = StatusTone.Failure,
                 actions =
                     listOf(
-                        KitLineAction(
-                            stringResource(Res.string.composerPreviewAttachmentRetry),
-                            actions::attachFile,
-                        )
+                        // E05-S01: a camera refusal is fixed in Android settings, not by picking a file.
+                        if (attachmentFailure.isCameraRefusal())
+                            KitLineAction(
+                                stringResource(Res.string.agentErrorOpenSettings),
+                                actions::openCameraSettings,
+                            )
+                        else
+                            KitLineAction(
+                                stringResource(Res.string.composerPreviewAttachmentRetry),
+                                actions::attachFile,
+                            )
                     ),
                 dismiss =
                     KitLineAction(
@@ -944,6 +952,10 @@ public fun BasicComposer(
 private fun modelLabel(model: String, level: String, agent: String?): String =
     listOfNotNull(agent?.takeIf { it.isNotEmpty() }, model, level.takeIf { it.isNotEmpty() })
         .joinToString(" · ")
+
+internal fun Failure.isCameraRefusal(): Boolean =
+    this is Failure.Media &&
+        (problem == MediaProblem.CameraDenied || problem == MediaProblem.CameraDeniedForever)
 
 /** Plain words per failure kind; raw details stay in the Failure's redacted fold. */
 @Composable
