@@ -429,6 +429,63 @@ class SetupJourneyGateTest {
         }
     }
 
+    /**
+     * test/support/phone_setup_scenes.dart `setup_progress_failed`: Node.js failed downloading because the phone is
+     * offline. Rendered here, on the live PhoneSetupRoute.Setup screen; :feature:setup's SetupRoute.Phone is not opened
+     * by any route and no longer renders this golden.
+     */
+    @Test
+    fun failed() {
+        val offline = SetupError.Offline("Node.js")
+        val progress =
+            SetupProgress(
+                SetupState.Failed,
+                listOf(
+                    ComponentProgress("linux", ComponentState.Done, version = "24.04"),
+                    ComponentProgress("essentials", ComponentState.Done),
+                    ComponentProgress("python", ComponentState.Done, version = "3.12.3"),
+                    ComponentProgress(
+                        "node",
+                        ComponentState.Failed,
+                        stage = "Downloading Node.js 24",
+                        error = offline,
+                    ),
+                    ComponentProgress("opencode", ComponentState.Pending),
+                ),
+                .55,
+                current = "node",
+                error = offline,
+                logTail = "curl: (6) Could not resolve host: nodejs.org\n",
+                jobId = "scene",
+                firstSetup = true,
+            )
+        FlutterGoldenGate.check("setup_progress_failed", frame = FlutterGoldenGate.Frame.Screen) {
+            SetupJourneyScreen(state.copy(progress = progress), Actions())
+        }
+    }
+
+    @Test
+    fun `a stopped job's Continue fills the bottom like Pause does`() = runComposeUiTest {
+        val stopped =
+            SetupProgress(
+                SetupState.Interrupted,
+                listOf(
+                    ComponentProgress("linux", ComponentState.Done),
+                    ComponentProgress("essentials", ComponentState.Pending),
+                ),
+                .5,
+                jobId = "stopped",
+            )
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(state.copy(progress = stopped), Actions())
+            }
+        }
+        // F: phone_setup_progress_screen.dart:351: KitScreen's bottom stretches the button to the control cap.
+        val width = onNodeWithTag("setup-progress-continue").getUnclippedBoundsInRoot().width
+        assertTrue(width >= 380.dp, "Continue is $width wide")
+    }
+
     @Test
     fun `other ways unfolds in place and offers connecting a computer by address`() = runComposeUiTest {
         val actions = Actions()

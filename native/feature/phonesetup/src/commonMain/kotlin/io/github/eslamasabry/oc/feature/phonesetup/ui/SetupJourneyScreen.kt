@@ -780,11 +780,15 @@ private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
         )
         // Ownership recovery requires an app-settings action which this contract does not expose.
         SetupProgressRules.needsOwnershipRecovery(state.progress) -> Unit
+        // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:351 (KitScreen.bottom stretches its button)
         state.progress.canContinue -> KitButton(
             stringResource(Res.string.setupProgressViewContinue), actions::continueSetup, working = state.working,
             icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.play,
+            fullWidth = true,
+            modifier = Modifier.testTag("setup-progress-continue"),
         )
-        state.progress.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
+        state.progress.state == SetupState.Done ->
+            KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done, fullWidth = true)
     }
 }
 
