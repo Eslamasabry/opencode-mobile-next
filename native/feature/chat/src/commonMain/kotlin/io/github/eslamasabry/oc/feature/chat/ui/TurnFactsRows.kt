@@ -243,7 +243,7 @@ private fun StepRow(
     reply: ReplyActions? = null,
     waitingForYou: Boolean = false,
 ) {
-    val key = "step:${step.partId}""
+    val key = "step:${step.partId}"
     val f = step.facts
     val out = step.output
     val view =
