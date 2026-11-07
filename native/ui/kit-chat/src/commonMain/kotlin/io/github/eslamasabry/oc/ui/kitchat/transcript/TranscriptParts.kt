@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +14,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -19,7 +23,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.FrameRateCategory
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -35,10 +38,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkFrame
 import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.drive
@@ -59,6 +59,13 @@ private val Column =
     Modifier.fillMaxWidth()
         .widthIn(max = 700.dp)
         .padding(horizontal = Space.S4.dp, vertical = Space.S1.dp)
+
+/** The same column inside a [KitTurn]: the turn gives every gap (C-001), so the row keeps no padding of its own. */
+private val TurnColumn = Modifier.fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp)
+
+/** The column for a part: its own 4 dp row padding only outside a [KitTurn]. */
+@Composable
+private fun column(): Modifier = if (LocalKitTurn.current) TurnColumn else Column
 
 /** A quiet line inside an opened step's body: the step's own edge, no page gutter. */
 private val StepLine = Modifier.fillMaxWidth().padding(vertical = Space.S1.dp / 2)
@@ -108,7 +115,7 @@ public fun KitReplyBlock(
     val shown = reveal?.shown?.coerceAtMost(text.length) ?: text.length
     val visible = if (shown >= text.length) text else text.substring(0, shown)
     val revealing = reveal != null && (live || reveal.active)
-    var m = modifier.then(columnOf(continued, continues))
+    var m = modifier.then(if (LocalKitTurn.current) TurnColumn else columnOf(continued, continues))
     if (revealing) {
         m = m.clipToBounds().growOnly(enabled = live && motion == KitMotionLevel.Full)
         if (motion == KitMotionLevel.Full)
@@ -186,7 +193,7 @@ private fun styleOf(kind: KitBlockKind): TextStyle {
 public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    Box(modifier.then(Column), contentAlignment = Alignment.CenterEnd) {
+    Box(modifier.then(column()), contentAlignment = Alignment.CenterEnd) {
         Box(Modifier.fillMaxWidth(0.85f), contentAlignment = Alignment.CenterEnd) {
             BasicText(
                 text = text,
@@ -213,7 +220,7 @@ public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
 @Composable
 public fun KitTranscriptActions(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     androidx.compose.foundation.layout.Column(
-        modifier.then(Column).testTag("kit-transcript-actions"),
+        modifier.then(column()).testTag("kit-transcript-actions"),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         content = content,
     )
@@ -225,7 +232,7 @@ public fun KitQuietLine(text: String, modifier: Modifier = Modifier) {
     // E20-S12: inside an opened step the line is already on the step's text edge; the page gutter would push it
     // past the code under it.
     val inStep = io.github.eslamasabry.oc.ui.kitchat.tool.LocalKitStepBody.current
-    Box(modifier.then(if (inStep) StepLine else Column)) {
+    Box(modifier.then(if (inStep) StepLine else column())) {
         BasicText(
             text,
             style =
