@@ -26,17 +26,17 @@ import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
 
-/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */
+/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px), at [shoot]'s font scale. No comparison. */
 @OptIn(ExperimentalTestApi::class)
 internal object Looks {
     private val out = File("/home/eslam/wt/lane-looks/looks-out/screens").also { it.mkdirs() }
 
-    fun shoot(name: String, advanceMs: Long = 1_000, setup: ComposeUiTest.() -> Unit = {}, content: @Composable (dark: Boolean) -> Unit) {
+    fun shoot(name: String, advanceMs: Long = 1_000, fontScale: Float = 1f, setup: ComposeUiTest.() -> Unit = {}, content: @Composable (dark: Boolean) -> Unit) {
         Locale.setDefault(Locale.forLanguageTag("en"))
         for (dark in listOf(false, true)) {
             runDesktopComposeUiTest(1081, 2402) {
                 setContent {
-                  CompositionLocalProvider(LocalDensity provides Density(2.625f)) {
+                  CompositionLocalProvider(LocalDensity provides Density(2.625f, fontScale)) {
                    ChatEnvironment {
                     KitTheme(
                         appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off),
