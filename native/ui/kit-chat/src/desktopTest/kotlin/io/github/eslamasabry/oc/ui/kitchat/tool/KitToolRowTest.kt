@@ -10,7 +10,9 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -65,6 +67,27 @@ class KitToolRowTest {
         onNodeWithText("Didn't finish", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithText("2 s", useUnmergedTree = true).assertIsDisplayed()
     }
+
+    @Test
+    fun `P-105 a step waiting for the person shows the attention mark and its words, never a clock or the live dot`() =
+        runComposeUiTest {
+            setContent {
+                ChatTestTheme {
+                    KitToolRow(
+                        view(
+                            kind = KitToolKind.Write, title = "Write", subject = "c.txt",
+                            status = KitToolStatus.WaitingForYou, statusLabel = "Waiting for you", durationLabel = "24.9s",
+                        ),
+                        opened = false,
+                        onToggle = {},
+                    )
+                }
+            }
+            onNodeWithText("Waiting for you", useUnmergedTree = true).assertIsDisplayed()
+            onNodeWithTag("kit-tool-waiting-you", useUnmergedTree = true).assertIsDisplayed()
+            onAllNodesWithText("24.9s", useUnmergedTree = true).assertCountEquals(0)
+            onAllNodesWithTag("kit-tool-duration", useUnmergedTree = true).assertCountEquals(0)
+        }
 
     @Test
     fun `B-CHAT-062 the body appears only when opened, and a tap on the header asks to toggle`() = runComposeUiTest {

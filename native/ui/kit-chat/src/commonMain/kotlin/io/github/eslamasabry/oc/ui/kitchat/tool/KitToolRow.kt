@@ -296,6 +296,12 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
         when (view.status) {
             KitToolStatus.Done -> Unit
             KitToolStatus.Running -> Box(Modifier.size(8.dp).background(colors.live, CircleShape))
+            // P-105: blocked on the person: the work line's attention dot and the caller's words, no clock.
+            KitToolStatus.WaitingForYou ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                    Box(Modifier.size(8.dp).background(colors.attention, CircleShape).testTag("kit-tool-waiting-you"))
+                    KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = lines)
+                }
             else -> {
                 val mark =
                     when (view.status) {
@@ -316,7 +322,7 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
                 }
             }
         }
-        if (duration != null && view.status != KitToolStatus.Pending) {
+        if (duration != null && view.status != KitToolStatus.Pending && view.status != KitToolStatus.WaitingForYou) {
             KitText(duration, Modifier.testTag("kit-tool-duration"), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
         }
     }

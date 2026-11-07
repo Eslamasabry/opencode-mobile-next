@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -30,6 +31,13 @@ internal fun shownStepDurationMs(
         if (state == StepState.Running) startedAtMs?.let { (nowMs - it).coerceAtLeast(0) } else null
     return (durationMs ?: runningFor)?.takeIf { it >= STEP_DURATION_MIN_MS }
 }
+
+/**
+ * P-105: a step still open while its turn waits for the person (an approval, a question) is blocked on them, not
+ * running: its row shows the attention mark and "Waiting for you", never a live dot and a ticking clock.
+ */
+internal fun stepWaitsForYou(state: StepState, work: WorkLineState): Boolean =
+    work == WorkLineState.WaitingForYou && (state == StepState.Running || state == StepState.Pending)
 
 /** The kinds whose row names a file; their waiting row names it as soon as the streamed input has the path. */
 private val FILE_KINDS = setOf(ToolKind.Read, ToolKind.Edit, ToolKind.Write)
