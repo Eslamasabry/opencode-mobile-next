@@ -53471,7 +53471,7 @@ abstract class AppLocalizations {
   /// Privacy and data: what the crash-report and setup-counts switch sends. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'Sends crash and failure reports to Google Firebase Crashlytics, and counts to Google Analytics for Firebase: app opens, which setup steps are reached or fail, how long setup and the first reply took, and update offers. Only fixed words and ranges, with your phone model, Android version and app version. No messages, files, addresses, passwords or advertising ID.'**
+  /// **'Sends crash reports to Google Firebase Crashlytics, and anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, how far setup gets, how long setup and the first reply took, and update offers. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.'**
   String get telemetrySettingDetail;
 
   /// First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows
@@ -53503,6 +53503,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect a computer'**
   String get phoneSetupConnectComputer;
+
+  /// One-time question on the first start of a build that can send analytics: title.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve OpenCode Mobile?'**
+  String get telemetryConsentTitle;
+
+  /// One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md.
+  ///
+  /// In en, this message translates to:
+  /// **'If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.'**
+  String get telemetryConsentBody;
+
+  /// One-time analytics question: what is sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.'**
+  String get telemetryConsentSends;
+
+  /// One-time analytics question: what is never sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Never sent: your code, conversations, files, server addresses or keys. No advertising ID.'**
+  String get telemetryConsentNever;
+
+  /// One-time analytics question: the button that turns sharing on.
+  ///
+  /// In en, this message translates to:
+  /// **'Share anonymous usage'**
+  String get telemetryConsentShare;
+
+  /// One-time analytics question: the button that leaves sharing off and never asks again.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get telemetryConsentNotNow;
 }
 
 class _AppLocalizationsDelegate

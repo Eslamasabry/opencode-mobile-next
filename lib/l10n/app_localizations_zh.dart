@@ -32251,7 +32251,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get telemetrySettingDetail =>
-      'Sends crash and failure reports to Google Firebase Crashlytics, and counts to Google Analytics for Firebase: app opens, which setup steps are reached or fail, how long setup and the first reply took, and update offers. Only fixed words and ranges, with your phone model, Android version and app version. No messages, files, addresses, passwords or advertising ID.';
+      'Sends crash reports to Google Firebase Crashlytics, and anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, how far setup gets, how long setup and the first reply took, and update offers. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.';
 
   @override
   String get voiceAutoSetupUnknownNetwork =>
@@ -32270,4 +32270,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get phoneSetupConnectComputer => 'Connect a computer';
+
+  @override
+  String get telemetryConsentTitle => 'Help improve OpenCode Mobile?';
+
+  @override
+  String get telemetryConsentBody =>
+      'If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.';
+
+  @override
+  String get telemetryConsentSends =>
+      'Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.';
+
+  @override
+  String get telemetryConsentNever =>
+      'Never sent: your code, conversations, files, server addresses or keys. No advertising ID.';
+
+  @override
+  String get telemetryConsentShare => 'Share anonymous usage';
+
+  @override
+  String get telemetryConsentNotNow => 'Not now';
 }

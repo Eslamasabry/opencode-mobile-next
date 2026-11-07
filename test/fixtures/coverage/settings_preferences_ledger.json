@@ -758,5 +758,9 @@
   "oc.telemetry.lastVersion": {
     "scope": "global",
     "why": "app version seen at the last start, so a newer one counts as update_installed; not about any server"
+  },
+  "oc.telemetryConsentAsked": {
+    "scope": "global",
+    "why": "app-wide: the one-time \"Help improve OpenCode Mobile\" question was asked; set before it shows so it is never asked twice"
   }
 }

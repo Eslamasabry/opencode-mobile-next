@@ -90,6 +90,17 @@ class _RootState extends ConsumerState<_Root> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _startThermalGuard();
     });
+    unawaited(_askTelemetryConsent());
+  }
+
+  /// The one-time "Help improve OpenCode Mobile" question, once the
+  /// reporter knows whether this build can send anything at all.
+  Future<void> _askTelemetryConsent() async {
+    await TelemetryStartup.ready;
+    // Let the first page settle before a sheet rises over it.
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    await askTelemetryConsentOnce(context, prefs: _controller.store.prefs);
   }
 
   void _startThermalGuard() {

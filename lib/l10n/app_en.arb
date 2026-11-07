@@ -41478,7 +41478,7 @@
   "@telemetrySettingTitle": {
     "description": "Privacy and data: switch that turns on sending crash reports (Google Firebase Crashlytics) and setup analytics counts (Google Analytics for Firebase) to the developer."
   },
-  "telemetrySettingDetail": "Sends crash and failure reports to Google Firebase Crashlytics, and counts to Google Analytics for Firebase: app opens, which setup steps are reached or fail, how long setup and the first reply took, and update offers. Only fixed words and ranges, with your phone model, Android version and app version. No messages, files, addresses, passwords or advertising ID.",
+  "telemetrySettingDetail": "Sends crash reports to Google Firebase Crashlytics, and anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, how far setup gets, how long setup and the first reply took, and update offers. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.",
   "@telemetrySettingDetail": {
     "description": "Privacy and data: what the crash-report and setup-counts switch sends. Must match PRIVACY.md."
   },
@@ -41501,5 +41501,17 @@
   "phoneSetupConnectComputer": "Connect a computer",
   "@phoneSetupConnectComputer": {
     "description": "Button on the failed phone setup screen when this phone cannot run Node.js: opens adding a server on a computer"
-  }
+  },
+  "telemetryConsentTitle": "Help improve OpenCode Mobile?",
+  "@telemetryConsentTitle": {"description": "One-time question on the first start of a build that can send analytics: title."},
+  "telemetryConsentBody": "If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.",
+  "@telemetryConsentBody": {"description": "One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md."},
+  "telemetryConsentSends": "Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.",
+  "@telemetryConsentSends": {"description": "One-time analytics question: what is sent."},
+  "telemetryConsentNever": "Never sent: your code, conversations, files, server addresses or keys. No advertising ID.",
+  "@telemetryConsentNever": {"description": "One-time analytics question: what is never sent."},
+  "telemetryConsentShare": "Share anonymous usage",
+  "@telemetryConsentShare": {"description": "One-time analytics question: the button that turns sharing on."},
+  "telemetryConsentNotNow": "Not now",
+  "@telemetryConsentNotNow": {"description": "One-time analytics question: the button that leaves sharing off and never asks again."}
 }

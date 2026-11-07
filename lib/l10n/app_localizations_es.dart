@@ -34363,7 +34363,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get telemetrySettingDetail =>
-      'Envía informes de fallos y errores a Google Firebase Crashlytics, y recuentos a Google Analytics for Firebase: aperturas de la aplicación, qué pasos de la configuración se alcanzan o fallan, cuánto tardaron la configuración y la primera respuesta, y las ofertas de actualización. Solo palabras y rangos fijos, con el modelo de tu teléfono, la versión de Android y la de la aplicación. Ni mensajes, ni archivos, ni direcciones, ni contraseñas, ni ID de publicidad.';
+      'Envía informes de fallos a Google Firebase Crashlytics, y recuentos anónimos a Google Analytics for Firebase: qué tipos de páginas y funciones usas, hasta dónde llega la configuración, cuánto tardaron la configuración y la primera respuesta, y las ofertas de actualización. Solo palabras y rangos fijos, con un ID de instalación aleatorio, el modelo de tu teléfono y la versión de Android. Ni código, ni conversaciones, ni archivos, ni direcciones, ni claves, ni ID de publicidad.';
 
   @override
   String get voiceAutoSetupUnknownNetwork =>
@@ -34382,4 +34382,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get phoneSetupConnectComputer => 'Conectar un ordenador';
+
+  @override
+  String get telemetryConsentTitle => '¿Ayudas a mejorar OpenCode Mobile?';
+
+  @override
+  String get telemetryConsentBody =>
+      'Si aceptas, la aplicación envía recuentos de uso anónimos e informes de fallos al desarrollador a través de Google Firebase. Puedes desactivarlo cuando quieras en Ajustes › Privacidad y datos.';
+
+  @override
+  String get telemetryConsentSends =>
+      'Se envía: qué páginas y funciones usas, hasta dónde llega la configuración e informes de fallos, con un ID de instalación aleatorio.';
+
+  @override
+  String get telemetryConsentNever =>
+      'Nunca se envía: tu código, conversaciones, archivos, direcciones de servidores ni claves. Ningún ID de publicidad.';
+
+  @override
+  String get telemetryConsentShare => 'Compartir uso anónimo';
+
+  @override
+  String get telemetryConsentNotNow => 'Ahora no';
 }

@@ -34096,7 +34096,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get telemetrySettingDetail =>
-      'يرسل تقارير الأعطال والإخفاقات إلى Google Firebase Crashlytics، وإحصاءات إلى Google Analytics for Firebase: مرات فتح التطبيق، وخطوات الإعداد التي بلغتها أو تعثّرت فيها، والمدة التي استغرقها الإعداد وأول رد، وعروض التحديث. كلمات ونطاقات ثابتة فقط، مع طراز هاتفك وإصدار أندرويد وإصدار التطبيق. لا رسائل ولا ملفات ولا عناوين ولا كلمات مرور ولا معرّف إعلاني.';
+      'يرسل تقارير الأعطال إلى Google Firebase Crashlytics، وإحصاءات مجهولة إلى Google Analytics for Firebase: أنواع الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، والمدة التي استغرقها الإعداد وأول رد، وعروض التحديث. كلمات ونطاقات ثابتة فقط، مع معرّف تثبيت عشوائي وطراز هاتفك وإصدار أندرويد. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلاني.';
 
   @override
   String get voiceAutoSetupUnknownNetwork =>
@@ -34115,4 +34115,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSetupConnectComputer => 'ربط حاسوب';
+
+  @override
+  String get telemetryConsentTitle => 'هل تساعد في تحسين التطبيق؟';
+
+  @override
+  String get telemetryConsentBody =>
+      'إن وافقت، يرسل التطبيق إحصاءات استخدام مجهولة وتقارير الأعطال إلى المطوّر عبر Google Firebase. يمكنك إيقاف ذلك في أي وقت من الإعدادات › الخصوصية والبيانات.';
+
+  @override
+  String get telemetryConsentSends =>
+      'يُرسل: الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، وتقارير الأعطال، مع معرّف تثبيت عشوائي.';
+
+  @override
+  String get telemetryConsentNever =>
+      'لا يُرسل أبدًا: شيفرتك ومحادثاتك وملفاتك وعناوين خوادمك ومفاتيحك. ولا معرّف إعلاني.';
+
+  @override
+  String get telemetryConsentShare => 'مشاركة الاستخدام المجهول';
+
+  @override
+  String get telemetryConsentNotNow => 'ليس الآن';
 }
