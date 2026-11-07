@@ -3,6 +3,9 @@
     <string name="homeOpeningConnecting">جارٍ الاتصال بـ %1$s</string>
     <string name="homeOpeningFailed">%1$s لا يستجيب</string>
     <string name="homeOpeningSavedTitles">هذه عناوين المحادثات المحفوظة من المرة السابقة. يمكنك فتحها عندما يستجيب الخادم.</string>
+    <string name="homeOpeningStarting">جارٍ تشغيل هذا الهاتف…</string>
+    <string name="homeOpeningWaiting">ستظهر محادثاتك هنا عندما يستجيب.</string>
+    <string name="homeOpeningFailedBody">تأكد من أن الخادم يعمل وأن هذا الهاتف يستطيع الوصول إليه، ثم أعد المحاولة.</string>
     <string name="homeWatchedServers">الخوادم المراقَبة</string>
     <string name="homeInboxCount">الوارد · %1$s</string>
     <string name="homeSourcesFailed">تعذر تغيير اتصالات هذه القائمة. حاول مجددًا.</string>

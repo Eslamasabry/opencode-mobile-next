@@ -19,4 +19,16 @@ kotlin {
         implementation(project(":ui:gate"))
     }
 }
+// E20-S09 desktop goldens (Skiko software raster): `-Poc.recordGoldens=true` writes them, otherwise they are compared.
+tasks.withType<Test>().configureEach {
+    systemProperty(
+        "oc.goldens.dir",
+        layout.projectDirectory.dir("src/desktopTest/goldens").asFile.absolutePath,
+    )
+    systemProperty(
+        "oc.goldens.record",
+        providers.gradleProperty("oc.recordGoldens").orElse("false").get(),
+    )
+}
+
 apply(from = rootProject.file("gradle/desktop-golden-fonts.gradle"))
