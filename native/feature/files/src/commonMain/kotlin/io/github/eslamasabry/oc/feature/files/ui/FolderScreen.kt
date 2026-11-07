@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.files.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -230,6 +231,8 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 else surfaceLabel,
                             removeFilterLabel = stringResource(Res.string.filesSearchNames),
                             onClearFilter = { actions.selectSurface(FileSearchSurface.Files) },
+                            // E20-S10 (owner's phone): the "Project" title sat almost on the field; the kit's step.
+                            modifier = Modifier.padding(top = Space.S2.dp).testTag("files-search"),
                         )
                     })
                 else null,
