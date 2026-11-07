@@ -317,7 +317,6 @@ void main() {
       'url': ['settings-category-server', 'settings-saved-servers'],
       'password': ['settings-category-server', 'settings-saved-servers'],
       'profile': ['settings-category-server', 'settings-saved-servers'],
-      'termux': ['search-result-settings-on-this-phone'],
       'local': ['search-result-settings-on-this-phone'],
       'on-device': ['search-result-settings-on-this-phone'],
       'alerts': ['settings-category-background'],

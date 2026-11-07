@@ -493,6 +493,9 @@ void main() {
       await _settle(tester);
       expect(_key('team-host-guide'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(const SizedBox());
+      controller.dispose();
+      await tester.pump(const Duration(minutes: 1));
     });
 
     testWidgets('a phone short of space is told how much to free', (

@@ -178,27 +178,6 @@
   "backgroundWorkPromoted": "Subagents are continuing in the background.",
   "libraryNoModel": "No model selected",
   "chatAttachmentUnsupported": "Images, PDFs, text files, and Excel or Word files (.xlsx, .docx) can be attached.",
-  "termuxRestartTitle": "Restart the local server?",
-  "@termuxRestartTitle": {
-    "description": "Confirmation title before restarting the managed Termux server"
-  },
-  "termuxRestartMessage": "OpenCode will be briefly unavailable. The app will keep your current project and reconnect automatically.",
-  "@termuxRestartMessage": {
-    "description": "Confirmation explanation before restarting the managed Termux server"
-  },
-  "termuxRestartBusyMessage": "{count, plural, =1{1 conversation is generating. Restarting will interrupt it.} other{{count} conversations are generating. Restarting will interrupt them.}}",
-  "@termuxRestartBusyMessage": {
-    "description": "Additional restart warning when one or more sessions are generating",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxRestartConfirm": "Restart",
-  "@termuxRestartConfirm": {
-    "description": "Confirmation button that starts a managed Termux server restart"
-  },
   "chatCopyCompleteReply": "Copy complete reply",
   "chatCopyReplySoFar": "Copy reply so far",
   "commandRunTitle": "Run /{command}",
@@ -10279,38 +10258,6 @@
   "@localAgentTitle": {
     "description": "On this phone setup: title of the block that installs and runs Claude Code in the managed Ubuntu; also the saved server's name."
   },
-  "localAgentRestartTitle": "Restart Claude Code on this phone?",
-  "@localAgentRestartTitle": {
-    "description": "Confirm sheet: restarting the daemon."
-  },
-  "localAgentRestartBody": "Claude Code is briefly unavailable and anything it is doing right now is interrupted. Your conversations stay on the phone.",
-  "@localAgentRestartBody": {
-    "description": "Confirm sheet: what restarting the daemon costs."
-  },
-  "localAgentStopTitle": "Stop Claude Code on this phone?",
-  "@localAgentStopTitle": {
-    "description": "Confirm sheet: stopping the daemon."
-  },
-  "localAgentStopBody": "Anything Claude Code is doing on this phone is interrupted, and this app disconnects from it. Your projects, conversations and Claude sign-in stay; start it again to continue.",
-  "@localAgentStopBody": {
-    "description": "Confirm sheet: what stopping the daemon costs."
-  },
-  "localAgentRemove": "Remove from this phone",
-  "@localAgentRemove": {
-    "description": "Claude Code block: menu action that uninstalls it."
-  },
-  "localAgentRemoveTitle": "Remove Claude Code from this phone?",
-  "@localAgentRemoveTitle": {
-    "description": "Confirm sheet: removing the install."
-  },
-  "localAgentRemoveBody": "Stops it and deletes Node.js, Paseo and Claude Code from Ubuntu, about 1 GB. Your projects and your Claude sign-in stay.",
-  "@localAgentRemoveBody": {
-    "description": "Confirm sheet: what removing deletes and keeps."
-  },
-  "localAgentRemoveKeep": "Keep it",
-  "@localAgentRemoveKeep": {
-    "description": "Confirm sheet: cancels the removal."
-  },
   "firstRunAgentsSideBySide": "They run side by side on the same computer. Start with one, and add the others any time from the server name at the top.",
   "firstRunPaseoTitle": "Agents through Paseo",
   "agentErrorConnectionDropped": "The connection to the model dropped.",
@@ -20371,10 +20318,6 @@
         "type": "String"
       }
     }
-  },
-  "localAgentStopNamed": "Stop Claude Code",
-  "@localAgentStopNamed": {
-    "description": "Confirm button and menu item that stop Claude Code on this phone."
   },
   "monitorSwitchToTitle": "Switch to {server}?",
   "@monitorSwitchToTitle": {

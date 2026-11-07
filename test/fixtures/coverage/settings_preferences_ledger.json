@@ -339,10 +339,6 @@
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
-  "oc.managedServerRecovery.": {
-    "scope": "profile",
-    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
-  },
   "oc.mobile.permissionRequests": {
     "scope": "other",
     "why": "not a local preference: a metadata field stored on the OpenCode 2 session itself, deleted with the session on the server"
@@ -668,14 +664,6 @@
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
   "oc.teamWorkspace.": {
-    "scope": "profile",
-    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
-  },
-  "oc.termuxMigration.": {
-    "scope": "other",
-    "why": "keyed by migration id, removed when it finishes"
-  },
-  "oc.termuxMigrationOffer.": {
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },

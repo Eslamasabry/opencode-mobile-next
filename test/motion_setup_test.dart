@@ -64,11 +64,12 @@ Widget _card({
   home: Scaffold(
     body: SavedServerConnectionCard(
       profileName: 'Laptop',
-      baseUrl: 'http://127.0.0.1:4096',
+      baseUrl: phone ? 'http://127.0.0.1:4097' : 'http://127.0.0.1:4096',
       error: error,
       attempts: 1,
       onChangeServer: () {},
       onRetry: () {},
+      inAppServer: phone,
       onStartPhoneServer: phone ? () {} : null,
       startingPhoneServer: starting,
       notAnswering: notAnswering,

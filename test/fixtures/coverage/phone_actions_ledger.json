@@ -42,9 +42,6 @@
   "app setup.report-failure": "reachable: Setup progress > Report this failure; proof: test/setup_progress_report_test.dart :: a failed row offers Report with the job",
   "app setup.run": "reachable: Phone setup > Set up OpenCode on this phone; proof: test/phone_setup_start_screen_test.dart :: Set up runs the default selection, then opens the progress",
   "app setup.storage-settings": "reachable: Phone setup > Open Storage settings (low space); proof: test/phone_setup_start_screen_test.dart :: low space names how much to free and offers Storage",
-  "app setup.termux-allow": "reachable: Setup with Termux > Allow Termux; proof: test/phone_setup_termux_screen_test.dart :: Allow copies the unlock line and opens Termux",
-  "app setup.termux-get": "reachable: Setup with Termux > Get Termux; proof: test/phone_setup_termux_screen_test.dart :: without Termux the first row waits on the person",
-  "app setup.termux-update": "reachable: This phone > Update OpenCode (Termux); proof: test/phone_setup_termux_screen_test.dart :: an update ends back where it was opened",
   "app setup.uninstall-linux": "not offered: removing the phone's Linux and every tool at once is on the This phone page (owned by the settings lane), not on the setup pages",
   "app setup.voice-remove": "reachable: Choose what to install > Voice typing > Remove (asks first); proof: test/phone_setup_voice_item_test.dart :: Add tools shows it installed with its removal",
   "app storage.allow-files": "reachable: Opening a shared folder > Allow access to files (asks first); proof: test/shared_storage_access_flow_test.dart :: explains first, then opens the system page, then proceeds",
@@ -58,8 +55,5 @@
   "native openStorageSettings": "reachable: Phone setup > Open Storage settings (low space); proof: test/phone_setup_start_screen_test.dart :: low space names how much to free and offers Storage",
   "native remove": "not offered: removing the phone's Linux is on the This phone page (owned by the settings lane), not on the setup or agents pages",
   "native runAgentSetupCheck": "reachable: Agents > Check this phone; proof: test/agents_ui_test.dart :: Check this phone shows each step in plain words",
-  "native startSetup": "reachable: Phone setup > Set up OpenCode on this phone; proof: test/phone_setup_start_screen_test.dart :: Set up runs the default selection, then opens the progress",
-  "termux completeSetupStep": "not offered: the app marks a step it finished itself as done; no control exists or is needed",
-  "termux restart": "reachable: This phone > Update OpenCode (Termux); proof: test/phone_setup_termux_screen_test.dart :: an update ends back where it was opened",
-  "termux startSetup": "reachable: Setup with Termux > Allow Termux, then the install starts; proof: test/phone_setup_termux_job_screen_test.dart :: Allow copies the unlock line and opens Termux"
+  "native startSetup": "reachable: Phone setup > Set up OpenCode on this phone; proof: test/phone_setup_start_screen_test.dart :: Set up runs the default selection, then opens the progress"
 }

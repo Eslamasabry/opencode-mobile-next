@@ -442,10 +442,11 @@ class _RootState extends ConsumerState<_Root> {
             status.phase == ConnectionStatusPhase.notAnswering &&
             status.since != null;
     final inAppStartFailed = !pending && startFailure != null;
-    // A saved setup from Termux, which the app no longer runs: the one
-    // notice about it, while the connect keeps trying in case a server
-    // still answers there.
-    final termuxRetired = isTermuxRetiredProfile(profile);
+    // A saved setup from Termux, which the app no longer runs: once nothing
+    // answers there, the one notice about it takes the card's place (the
+    // connect keeps trying in case a server still answers there).
+    final termuxRetired =
+        isTermuxRetiredProfile(profile) && (error != null || notAnswering);
     final Widget card = termuxRetired
         ? Padding(
             padding: EdgeInsetsDirectional.all(KitTokens.of(context).gutter),

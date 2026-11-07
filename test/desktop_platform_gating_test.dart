@@ -215,14 +215,14 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('documents both paths on Android', (tester) async {
+    testWidgets('documents the pairing path on Android, without Termux', (
+      tester,
+    ) async {
       await pumpGuide(tester);
 
       expect(find.byKey(const ValueKey('guide-pair-command')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('guide-termux-section')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('guide-termux-section')), findsNothing);
+      expect(find.textContaining('Termux'), findsNothing);
       expect(find.textContaining('Android Keystore'), findsOneWidget);
       expect(
         find.text('Scan the QR or paste the code in this app'),
@@ -230,7 +230,7 @@ void main() {
       );
     });
 
-    testWidgets('drops the Termux path on desktop', (tester) async {
+    testWidgets('keeps to the remote path on desktop', (tester) async {
       onDesktop();
       await pumpGuide(tester);
 
