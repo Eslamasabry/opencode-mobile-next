@@ -50,7 +50,8 @@ class NetworkMonitor(context: Context, messenger: BinaryMessenger) : EventChanne
             }
 
             override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) = deliver {
-                if (network == defaultNetwork) sink?.success(reading(caps, activeMetered = false))  // capabilities alone in callbacks
+                // Capabilities alone in callbacks.
+                if (network == defaultNetwork) sink?.success(reading(caps, activeMetered = false))
             }
 
             override fun onLost(network: Network) = deliver {
