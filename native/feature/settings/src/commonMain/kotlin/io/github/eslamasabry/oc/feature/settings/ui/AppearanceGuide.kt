@@ -11,6 +11,9 @@ import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -59,12 +62,19 @@ internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: Settin
             Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
                 .padding(top = Space.S4.dp),
             role = TypeRole.Secondary,
+            tone = TextTone.Secondary, // F: lib/ui/screens/settings/appearance_screen.dart:658
         )
-        KitRowGroup {
-            KitRow(
-                title = stringResource(Res.string.appearanceGuideSkip),
-                onClick = actions::onAppearanceSkip,
-            )
+        // Skip is a row that acts in place, so its words take the accent (appearance_screen.dart:661-670); it is
+        // offered only before the first question, as in Flutter.
+        if (record.seen.isEmpty()) {
+            Spacer(Modifier.height(Space.S2.dp)) // F: lib/ui/screens/settings/appearance_screen.dart:663
+            KitRowGroup {
+                KitRow(
+                    title = stringResource(Res.string.appearanceGuideSkip),
+                    titleAccent = true,
+                    onClick = actions::onAppearanceSkip,
+                )
+            }
         }
     } else {
         KitGuideRail(

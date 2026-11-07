@@ -17,7 +17,12 @@ import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import androidx.compose.runtime.mutableStateOf
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideRecord
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** Scoreboard 2026-11-07, group H: settings layout that differed from Flutter's goldens. */
@@ -73,5 +78,37 @@ class ScoreGroupHTest {
             ).assertExists().getBoundsInRoot()
         val first = onNodeWithText("Use system language").getBoundsInRoot()
         assertTrue(words.bottom < first.top, "the description comes before the choices")
+    }
+
+    @Test
+    fun `B-KIT-017 Skip the guide is an accent action row offered only before the first question`() = runComposeUiTest {
+        fun ui(seen: Boolean) =
+            SettingsUi(
+                stack = persistentListOf(SettingsPage.Appearance),
+                appearance =
+                    AppearanceUi(
+                        guide =
+                            AppearanceGuideRecord(
+                                seen = if (seen) listOf(AppearanceQuestion.Mode) else emptyList()
+                            ),
+                        questions = AppearanceQuestion.entries.toImmutableList(),
+                    ),
+            )
+        val state = mutableStateOf(ui(seen = false))
+        var skipped = 0
+        val actions =
+            object : SettingsActions by RecordingActions() {
+                override fun onAppearanceSkip() {
+                    skipped++
+                }
+            }
+        setContent { Phone { SettingsScreen(state.value, actions) } }
+        // F: lib/ui/screens/settings/appearance_screen.dart:661-670 (titleAccent: true, only while nothing is seen)
+        onNodeWithText("Skip the guide").assertExists().performClick()
+        assertEquals(1, skipped)
+        // The accent colour itself is checked by the settings_appearance_guided_solid_home gate shot.
+        state.value = ui(seen = true)
+        waitForIdle()
+        onNodeWithText("Skip the guide").assertDoesNotExist()
     }
 }
