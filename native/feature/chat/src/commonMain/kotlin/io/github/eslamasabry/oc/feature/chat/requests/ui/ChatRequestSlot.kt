@@ -11,6 +11,10 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardRules
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotHold
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -254,11 +258,13 @@ private fun PermissionWaiting(
     val mask = rememberKitMask()
     val always = card.canAlwaysAllow && !card.invitation
     val request = card.captured?.request
+    val copies = RequestCardRules.copiesTargets(card.ask)
     KitPermissionCard(
-        title = askQuestion(card.ask),
-        toolLabel = askToolLine(card.ask),
-        copyLabel = stringResource(Res.string.approvalCopyAsk),
-        copiedLabel = stringResource(Res.string.approvalCopied),
+        // P-013: a file named by its one target line is not named again in the question.
+        title = askQuestion(if (RequestCardRules.questionOmitsName(card.ask)) card.ask.copy(name = null) else card.ask),
+        toolLabel = if (RequestCardRules.showsToolLine(card.ask)) askToolLine(card.ask) else null,
+        copyLabel = if (copies) stringResource(Res.string.approvalCopyAsk) else null,
+        copiedLabel = if (copies) stringResource(Res.string.approvalCopied) else null,
         denyReply =
             KitDenyReply(
                 fieldLabel = stringResource(Res.string.approvalReplyLabel),
