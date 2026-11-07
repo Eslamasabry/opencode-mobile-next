@@ -1,0 +1,4 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+settings_hub_loaded	start-edge	"Search settings"
+settings_notifications_loaded	row-height	"Usage alerts" [kit-row]

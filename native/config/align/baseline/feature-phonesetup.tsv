@@ -1,0 +1,4 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+setup_customize	gap-step	"Linux base"
+setup_progress_running	start-edge	"#%"

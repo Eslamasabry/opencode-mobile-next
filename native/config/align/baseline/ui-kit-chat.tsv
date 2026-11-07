@@ -1,0 +1,14 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+kit_composer_idle_empty	target	"Ask OpenCode…"
+kit_row_default	row-height	"Fix the login bug" [kit-row]
+kit_step_glow_fail_flash	icon-squeezed	icon
+kit_step_glow_failed	icon-squeezed	icon
+kit_step_glow_queued	icon-squeezed	icon
+kit_step_glow_stop_fade	icon-squeezed	icon
+kit_step_glow_stopped	icon-squeezed	icon
+kit_step_glow_waiting	icon-squeezed	icon
+kit_step_glow_waiting_breathe	icon-squeezed	icon
+kit_step_timeline_collapsed	icon-label	icon by "Read # file · searched once · edited # f"
+kit_work_line_default_text2	icon-squeezed	icon by "Read # files · edited # file · ran # com"
+kit_work_line_default_text2	start-edge	icon by "Read # files · edited # file · ran # com"

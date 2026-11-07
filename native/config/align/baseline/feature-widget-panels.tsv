@@ -1,0 +1,32 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+widget_overlay_after_reply	gap-step	"Write a message" [widget-message]
+widget_overlay_after_reply	start-edge	"Send after this reply"
+widget_overlay_after_reply	start-edge	"Write a message"
+widget_overlay_configure	gap-step	"Editing files"
+widget_overlay_configure	gap-step	"Fix the sign-in page"
+widget_overlay_configure	gap-step	"Stop"
+widget_overlay_configure	gap-step	(unnamed)
+widget_overlay_configure	start-edge	"Accent colour"
+widget_overlay_configure	start-edge	"Background"
+widget_overlay_configure	start-edge	"Editing files"
+widget_overlay_configure	start-edge	"Fix the sign-in page"
+widget_overlay_configure	start-edge	"Green"
+widget_overlay_configure	start-edge	"Stop"
+widget_overlay_configure	start-edge	"Widget style"
+widget_overlay_failed	gap-step	"Write a message" [widget-message]
+widget_overlay_failed	start-edge	"Add to this turn"
+widget_overlay_failed	start-edge	"The conversation changed. Your message i" [kit-notice-message]
+widget_overlay_failed	start-edge	"Write a message"
+widget_overlay_project	gap-step	"All projects"
+widget_overlay_project	start-edge	"All projects"
+widget_overlay_project	start-edge	"IPTV_King"
+widget_overlay_project	start-edge	"Show conversations from"
+widget_overlay_project	start-edge	"oc_app"
+widget_overlay_project	start-edge	"settings-demo"
+widget_overlay_steer	gap-step	"Write a message" [widget-message]
+widget_overlay_steer	start-edge	"Add to this turn"
+widget_overlay_steer	start-edge	"Write a message"
+widget_overlay_voice	gap-step	"Write a message" [widget-message]
+widget_overlay_voice	start-edge	"New message"
+widget_overlay_voice	start-edge	"Write a message"

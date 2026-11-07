@@ -1,0 +1,6 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+kit_qr_too_long	icon-label	icon by "This is too long for a QR code. Copy the"
+kit_qr_too_long_1280x800	icon-label	icon by "This is too long for a QR code. Copy the"
+kit_qr_too_long_text2	icon-label	icon by "This is too long for a QR code. Copy the"
+kit_qr_too_long_text2_1280x800	icon-label	icon by "This is too long for a QR code. Copy the"

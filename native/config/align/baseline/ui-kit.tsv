@@ -1,0 +1,45 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+kit_chip_focused	start-edge	"file.txt" [kit-chip-label]
+kit_dialog_alert	start-edge	"Could not add file"
+kit_dialog_alert	start-edge	"The file is larger than the server accep"
+kit_icon_button_default_text2	start-edge	"Retry the connection to this server"
+kit_icon_button_hover	start-edge	"Retry connection"
+kit_row_default	row-height	"Fix the login bug" [kit-row]
+kit_row_default_1280x800	row-height	"Fix the login bug" [kit-row]
+kit_search_field_disabled	gap-step	"Appearance"
+kit_search_field_disabled	start-edge	"Search sessions"
+kit_search_field_empty	gap-step	"Appearance"
+kit_search_field_empty	start-edge	"Search settings"
+kit_search_field_filtered	gap-step	"Appearance"
+kit_search_field_filtered	start-edge	"# results"
+kit_search_field_filtered	start-edge	"Symbols" [kit-chip-label]
+kit_search_field_nomatch	gap-step	"Nothing in ⁨models⁩ matches “⁨opus⁩”"
+kit_search_field_partial	gap-step	"Appearance"
+kit_search_field_results	gap-step	"Appearance"
+kit_search_field_typing	gap-step	"Appearance"
+kit_search_field_typing_1280x800	gap-step	"Appearance"
+kit_search_field_typing_text2	gap-step	"Appearance"
+kit_search_field_typing_text2_1280x800	gap-step	"Appearance"
+kit_sheet_attention	gap-step	"English"
+kit_sheet_consequences	gap-step	"# queued prompts will be deleted"
+kit_sheet_default	gap-step	"English"
+kit_sheet_disabled	gap-step	"English"
+kit_sheet_full_1280x800	gap-step	"English"
+kit_sheet_half	gap-step	"English"
+kit_sheet_keyboard_open	gap-step	"English"
+kit_sheet_not_dismissible	gap-step	"English"
+kit_sheet_oneclose	gap-step	"oc_app"
+kit_sheet_oneclose_1280x800	gap-step	"oc_app"
+kit_sheet_text250	gap-step	"oc_app"
+kit_sheet_text250_1280x800	gap-step	"oc_app"
+kit_sheet_with_icon	gap-step	"English"
+kit_sheet_with_icon_1280x800	gap-step	"English"
+kit_sheet_with_icon_text2	gap-step	"English"
+kit_sheet_with_icon_text2_1280x800	gap-step	"English"
+kit_signal_chat	start-edge	"# min # s" [kit-feed-timer]
+kit_signal_chat_folded	start-edge	"# min # s" [kit-feed-timer]
+kit_signal_home	gap-step	"Design review" [kit-row]
+kit_signal_home	start-edge	"# min" [kit-feed-timer]
+kit_signal_home_ar	gap-step	"Design review" [kit-row]
+kit_signal_home_ar	start-edge	"# min" [kit-feed-timer]
