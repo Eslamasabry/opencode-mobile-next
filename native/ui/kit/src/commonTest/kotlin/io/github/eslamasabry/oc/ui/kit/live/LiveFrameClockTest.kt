@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** E20-S28: the one live clock steps at most 30 times a second, rests after 30 s without a touch and wakes on one. */
+/** E20-S28: the one live clock follows the display's refresh, rests after 30 s without a touch and wakes on one. */
 class LiveFrameClockTest {
     private val ms = 1_000_000L
 
@@ -22,14 +22,13 @@ class LiveFrameClockTest {
     }
 
     @Test
-    fun `B-KIT-LIVE-001 the clock steps at most 30 times a second on a 60 Hz and a 120 Hz display`() {
-        val sixty = LiveFrameClock().apply { acquire() }
-        val (s60, _) = sixty.run(0, 1000.0 / 60, 1000)
-        assertTrue(s60 in 28..30, "60 Hz: $s60 steps")
-        val oneTwenty = LiveFrameClock().apply { acquire() }
-        val (s120, _) = oneTwenty.run(0, 1000.0 / 120, 1000)
-        assertTrue(s120 in 28..30, "120 Hz: $s120 steps")
-        assertEquals(1f, oneTwenty.seconds, .05f)
+    fun `B-KIT-LIVE-001 the clock steps on every display frame at 60, 90 and 120 Hz, with no cap of its own`() {
+        for (hz in listOf(60, 90, 120)) {
+            val clock = LiveFrameClock().apply { acquire() }
+            val (steps, _) = clock.run(0, 1000.0 / hz, 1000)
+            assertTrue(steps in hz - 2..hz, "$hz Hz: $steps steps")
+            assertEquals(1f, clock.seconds, .05f)
+        }
     }
 
     @Test
@@ -69,7 +68,7 @@ class LiveFrameClockTest {
         assertTrue(clock.wantsFrames)
         // Two minutes later the person touches; the first frames after it step by one frame, not by two minutes.
         val (steps, _) = clock.run(t + 120_000 * ms, 1000.0 / 60, 1000)
-        assertTrue(steps >= 28)
+        assertTrue(steps >= 58)
         assertEquals(before + 1f, clock.seconds, .1f)
     }
 
@@ -118,12 +117,12 @@ class LiveFrameClockTest {
         clock.acquire()
         val (steps, _) = clock.run(60_000 * ms, 1000.0 / 60, 1000)
         assertFalse(clock.resting)
-        assertTrue(steps >= 28)
+        assertTrue(steps >= 58)
         clock.held = true
         clock.frame(200_000 * ms)
         clock.held = false
         val (after, _) = clock.run(200_000 * ms, 1000.0 / 60, 1000)
         assertFalse(clock.resting, "coming back to the app counts as activity")
-        assertTrue(after >= 28)
+        assertTrue(after >= 58)
     }
 }

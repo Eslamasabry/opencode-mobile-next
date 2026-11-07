@@ -11,27 +11,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 
 /**
  * The one clock every live background and look thumbnail on a page reads (E20-S28). It turns display frames into calm
  * background time:
  *
- * - at most [fps] steps a second (30): a background never needs more, and every skipped frame is GPU time saved;
+ * - it steps on every display frame (vsync through `withFrameNanos`), so a look follows the screen's own refresh rate
+ *   (60, 90 or 120 Hz) with no cap of its own (owner, 11-07);
  * - it rests after [idleAfterNanos] (30 s) without a touch and wakes on the next one ([touch]);
- * - it holds while nothing uses it ([acquire] / [release]) or while [held] (app hidden, Saver, heat);
+ * - it holds while nothing uses it ([acquire] / [release]) or while [held] (app hidden, Saver, heat); the display
+ *   stops sending frames while the screen is off or the app is in the background, and Battery Saver and heat force
+ *   Calm motion, which holds one still frame (see [KitLiveBackground]);
  * - it never jumps: one step is at most a quarter second, so time carries on smoothly after a pause.
  *
  * [seconds] is snapshot state read only in draw blocks, so a step redraws the background layer and recomposes nothing.
  * The decision logic ([frame]) is plain code, driven by frame times, so tests drive it without a display.
  */
 @Stable
-public class LiveFrameClock(
-    public val fps: Int = FPS,
-    private val idleAfterNanos: Long = IDLE_AFTER_NANOS,
-) {
-    private val stepNanos: Long = NANOS_PER_SECOND / fps
-
+public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS) {
     /** Background time in seconds. Read it in a draw block only. */
     public var seconds: Float by mutableFloatStateOf(0f)
         private set
@@ -87,8 +84,8 @@ public class LiveFrameClock(
     }
 
     /**
-     * One display frame at [nanos] (monotonic). Returns true when background time stepped, which is at most [fps]
-     * times a second.
+     * One display frame at [nanos] (monotonic). Returns true when background time stepped: on every frame while the
+     * clock runs, however fast the display refreshes.
      */
     public fun frame(nanos: Long): Boolean {
         if (lastActive == NONE || touched) {
@@ -98,8 +95,7 @@ public class LiveFrameClock(
         val used = users > 0 && !held
         if (used && nanos - lastActive >= idleAfterNanos) idle = true
         val running = used && !idle
-        // A small slack so a 60 Hz display (16.7 ms) steps on every second frame, not every third.
-        val steps = running && last != NONE && nanos - last >= stepNanos - SLACK_NANOS
+        val steps = running && last != NONE && nanos > last
         when {
             !running -> last = NONE // the pause is not counted: time carries on where it stopped
             last == NONE -> last = nanos
@@ -111,22 +107,16 @@ public class LiveFrameClock(
         return steps
     }
 
-    /** How long the runner may sleep after a frame before asking for the next one. */
-    internal fun sleepMillis(): Long = ((stepNanos - SLACK_NANOS) / NANOS_PER_MILLI).coerceAtLeast(0L)
-
     private fun wake() {
         wakes.trySend(Unit)
     }
 
     public companion object {
-        public const val FPS: Int = 30
         /** Rest after this long without a touch (FG: lib/ui/kit/live_background/kit_live_clock.dart:44). */
         public const val IDLE_AFTER_NANOS: Long = 30_000_000_000L
         private const val MAX_STEP_NANOS: Long = 250_000_000L // FG: lib/ui/kit/live_background/kit_live_support.dart:61
-        private const val SLACK_NANOS: Long = 4_000_000L
         private const val NONE: Long = Long.MIN_VALUE
         private const val NANOS_PER_SECOND: Long = 1_000_000_000L
-        private const val NANOS_PER_MILLI: Long = 1_000_000L
     }
 }
 
@@ -134,8 +124,8 @@ public class LiveFrameClock(
 public val LocalLiveClock: ProvidableCompositionLocal<LiveFrameClock?> = staticCompositionLocalOf { null }
 
 /**
- * Remembers a clock and runs it: the only `withFrameNanos` loop of the live backgrounds. While the clock wants no
- * frames the loop sleeps on its wake channel, so a resting or unused clock costs nothing.
+ * Remembers a clock and runs it: the only `withFrameNanos` loop of the live backgrounds, one step per vsync. While the
+ * clock wants no frames the loop sleeps on its wake channel, so a resting or unused clock costs nothing.
  */
 @Composable
 internal fun rememberLiveFrameClock(): LiveFrameClock {
@@ -146,8 +136,7 @@ internal fun rememberLiveFrameClock(): LiveFrameClock {
                 clock.wakes.receive()
                 continue
             }
-            val stepped = withFrameNanos { clock.frame(it) }
-            if (stepped) delay(clock.sleepMillis())
+            withFrameNanos { clock.frame(it) }
         }
     }
     return clock
