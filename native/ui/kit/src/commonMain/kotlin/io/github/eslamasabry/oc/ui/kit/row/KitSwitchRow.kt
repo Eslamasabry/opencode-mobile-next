@@ -239,9 +239,12 @@ public fun KitSwitchRow(
     val untilLabels = KitUntil.entries.associateWith { kitUntilLabel(it) }
     val line = SwitchRules.supporting(supporting, on, enabled.reason, checked, scope, riskSpec?.current, until) { untilLabels.getValue(it) }
     val choose: (KitUntil) -> Unit = { picked ->
-        riskSpec?.onUntil?.invoke(picked)
-        if (on) onCheckedChange(true)
-        asking = false
+        // Turned unavailable while the step is open: nothing is confirmed (B-KIT-027 KITA2-9).
+        if (on) {
+            riskSpec?.onUntil?.invoke(picked)
+            onCheckedChange(true)
+            asking = false
+        }
     }
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List)) {
         Row(
@@ -298,7 +301,7 @@ public fun KitSwitchRow(
                 enter = if (reduced) EnterTransition.None else expandVertically(specs.enter()) + fadeIn(specs.enter()),
                 exit = if (reduced) ExitTransition.None else shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
             ) {
-                RiskStep(scope, until, untilLabels, choose) { asking = false }
+                RiskStep(scope, until, untilLabels, enabled, choose) { asking = false }
             }
         }
     }
@@ -324,6 +327,7 @@ private fun RiskStep(
     scope: String,
     until: List<KitUntil>,
     labels: Map<KitUntil, String>,
+    enabled: KitEnabled,
     choose: (KitUntil) -> Unit,
     fold: () -> Unit,
 ) {
@@ -334,11 +338,11 @@ private fun RiskStep(
         KitText(scope, role = TypeRole.Secondary, tone = TextTone.Secondary)
         Spacer(Modifier.size(Space.S3.dp))
         if (until.size == 1) {
-            KitButton(stringResource(Res.string.kitRiskTurnOn), { choose(until.single()) }, role = KitButtonRole.Secondary, fullWidth = true, haptic = KitHaptic.ToggleOn)
+            KitButton(stringResource(Res.string.kitRiskTurnOn), { choose(until.single()) }, role = KitButtonRole.Secondary, enabled = enabled, fullWidth = true, haptic = KitHaptic.ToggleOn)
         } else {
             until.forEachIndexed { i, u ->
                 if (i > 0) Spacer(Modifier.size(Space.S2.dp))
-                KitButton(labels.getValue(u), { choose(u) }, role = KitButtonRole.Secondary, fullWidth = true, haptic = KitHaptic.ToggleOn)
+                KitButton(labels.getValue(u), { choose(u) }, role = KitButtonRole.Secondary, enabled = enabled, fullWidth = true, haptic = KitHaptic.ToggleOn)
             }
         }
         Spacer(Modifier.size(Space.S2.dp))
