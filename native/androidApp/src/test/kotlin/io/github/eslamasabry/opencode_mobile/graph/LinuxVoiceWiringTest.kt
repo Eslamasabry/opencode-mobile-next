@@ -60,6 +60,13 @@ class LinuxVoiceWiringTest {
         val script = PhoneServerScripts.server()
         assertEquals(io.github.eslamasabry.opencode_mobile.BuildConfig.PHONE_SERVER_PORT, PhoneServerScripts.PORT)
         assertTrue(script.endsWith("exec opencode2 serve --hostname 127.0.0.1 --port ${PhoneServerScripts.PORT}\n"))
+        // Node.js the server starts keeps this phone's saved safe mode (#117).
+        assertTrue(
+            script.contains(
+                io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts.SERVER_ENV +
+                    "exec opencode2 serve"
+            )
+        )
         assertTrue("cd /root/projects\n" in script)
         assertTrue("[ -s /root/.oc-builtin/server.password ] ||" in script)
         assertTrue("export OPENCODE_SERVER_USERNAME=opencode\n" in script)

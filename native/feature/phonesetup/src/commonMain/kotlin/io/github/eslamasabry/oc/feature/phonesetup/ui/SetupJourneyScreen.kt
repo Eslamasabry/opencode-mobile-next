@@ -33,6 +33,11 @@ import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorNodeCannotRun
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupNodeConnectComputer
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupNodeReportFailure
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -709,6 +714,20 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
 
 @Composable
 private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
+    // Node.js cannot run on this phone (#117): Continue would only fail again, so the way on is a computer.
+    val cannotRun = nodeCannotRun(state.progress)
+    KitReveal(cannotRun) {
+        KitActionBlock(
+            primary =
+                KitAction(
+                    stringResource(Res.string.phoneSetupNodeConnectComputer),
+                    actions::connectComputer,
+                ),
+            secondary =
+                KitAction(stringResource(Res.string.phoneSetupNodeReportFailure), actions::reportFailure),
+        )
+    }
+    if (cannotRun) return
     when {
         state.progress.state == SetupState.Running -> KitButton(
             stringResource(Res.string.phoneSetupRingPause), { actions.askStop(); actions.confirmStop() },
@@ -724,6 +743,12 @@ private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
         state.progress.state == SetupState.Done -> KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
     }
 }
+
+/** The job ended because Node.js crashed in every safe mode (the Node install's give-up line, #117). */
+internal fun nodeCannotRun(progress: SetupProgress): Boolean =
+    progress.state == SetupState.Failed &&
+        (progress.error == SetupError.NodeCannotRun ||
+            progress.components.any { it.error == SetupError.NodeCannotRun })
 
 /** UI memory from Flutter's _track / _measuredOf: a new job resets it; a new stage resets only its arc. */
 internal class JourneyProgressMemory {
@@ -805,6 +830,7 @@ private fun runtimeProblem(error: SetupError?): String =
         SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
+        SetupError.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
         else -> stringResource(Res.string.setupProgressViewFailedUnknown)
     }
 

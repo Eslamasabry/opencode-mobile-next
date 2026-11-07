@@ -58,9 +58,11 @@ node --version | sed 's/^v//'
 
     /**
      * Node from its official pinned download instead of Ubuntu's `npm` package. The download sits outside /tmp so a
-     * force-stopped run resumes it, and is deleted once unpacked. npm's global folder is /usr/local.
+     * force-stopped run resumes it, and is deleted once unpacked. npm's global folder is /usr/local. The phone is checked
+     * before the download and Node after unpacking ([NodeCompatScripts]): a phone that crashes Node gets a safe mode.
      */
     public val NODE_INSTALL: String = """set -eu
+${NodeCompatScripts.FUNCTIONS}
 case "${'$'}(uname -m)" in
   aarch64|arm64) node_arch=arm64; node_sha=$NODE_SHA256_ARM64 ;;
   x86_64|amd64) node_arch=x64; node_sha=$NODE_SHA256_X64 ;;
@@ -68,7 +70,7 @@ case "${'$'}(uname -m)" in
 esac
 node_version=$NODE_VERSION
 node_file=/var/cache/oc-setup/node-${'$'}node_version-linux-${'$'}node_arch.tar.gz
-oc_stage 'Downloading Node.js $NODE_PLAIN'
+${NodeCompatScripts.EARLY_CHECK}oc_stage 'Downloading Node.js $NODE_PLAIN'
 oc_download "$NODE_BASE_URL/${'$'}node_version/node-${'$'}node_version-linux-${'$'}node_arch.tar.gz" \
   "${'$'}node_file" "${'$'}node_sha"
 oc_stage 'Unpacking Node.js'
@@ -78,7 +80,7 @@ oc_untar "${'$'}node_file" /opt/node.new 1
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/${'$'}tool /usr/local/bin/${'$'}tool; done
-npm config set prefix /usr/local
+${NodeCompatScripts.START_CHECK}npm config set prefix /usr/local
 rm -f "${'$'}node_file"
 oc_version "${'$'}(node --version | sed 's/^v//')"
 """

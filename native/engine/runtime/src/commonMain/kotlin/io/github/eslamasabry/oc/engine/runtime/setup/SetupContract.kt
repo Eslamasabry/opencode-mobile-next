@@ -161,6 +161,9 @@ public sealed interface SetupError {
     /** `phoneSetupErrorOpenCodeNoStart`. */
     public data object OpenCodeNoStart : SetupError
 
+    /** `phoneSetupErrorNodeCannotRun`: Node.js crashed in every safe mode; the page offers a computer (#117). */
+    public data object NodeCannotRun : SetupError
+
     /** `phoneSetupErrorInterrupted`. */
     public data object Interrupted : SetupError
 

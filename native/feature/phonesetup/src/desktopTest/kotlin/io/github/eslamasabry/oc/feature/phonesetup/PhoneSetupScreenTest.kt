@@ -83,6 +83,14 @@ class PhoneSetupScreenTest {
         override fun done() {
             calls += "done"
         }
+
+        override fun reportFailure() {
+            calls += "report"
+        }
+
+        override fun connectComputer() {
+            calls += "connectComputer"
+        }
     }
 
     private val items =
@@ -205,6 +213,32 @@ class PhoneSetupScreenTest {
         }
         show(PhoneSetupUi(checking = false, items = items, progress = failed), actions)
         assertEquals(listOf("continue"), actions.calls)
+    }
+
+    @Test
+    fun `B-LINUX-203 Node that cannot run here offers a computer and a report instead of Continue`() {
+        val actions = Recorder()
+        val failed =
+            SetupProgress(
+                state = SetupState.Failed,
+                components = listOf(ComponentProgress("node", ComponentState.Failed, error = SetupProblem.NodeCannotRun)),
+                overall = 0.4,
+                error = SetupProblem.NodeCannotRun,
+                logTail = "[oc] probe both-version 139 # node --version",
+                jobId = "setup-1",
+            )
+        check = {
+            onNodeWithText(
+                "This phone's system can't run Node.js inside built-in Linux. " +
+                    "You can still use OpenCode Mobile by connecting to your computer."
+            ).assertExists()
+            onAllNodesWithText("Continue setup").assertCountEquals(0)
+            onAllNodesWithText("[oc] probe", substring = true).assertCountEquals(0)
+            onNodeWithText("Connect a computer").performClick()
+            onNodeWithText("Report this failure").performClick()
+        }
+        show(PhoneSetupUi(checking = false, items = items, progress = failed), actions)
+        assertEquals(listOf("connectComputer", "report"), actions.calls)
     }
 
     @Test

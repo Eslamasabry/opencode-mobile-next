@@ -235,6 +235,7 @@ class NativeServerRecipeTest {
             "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
             "export OPENCODE_PASSWORD=\"\$password\"\n" +
             "unset password\n" +
+            NodeCompatState.SERVER_ENV +
             "exec $binary serve --hostname 127.0.0.1 --port 4098\n"
 
     private fun request(

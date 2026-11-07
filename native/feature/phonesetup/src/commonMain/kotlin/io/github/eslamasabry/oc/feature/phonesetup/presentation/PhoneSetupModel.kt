@@ -62,6 +62,9 @@ public interface PhoneSetupNavigator {
 
     /** This phone, once setup is done. */
     public fun thisPhone()
+
+    /** A computer's connection form: the way on when Node.js cannot run on this phone (#117). */
+    public fun connectComputer() {}
 }
 
 /** One component the start page lists. */
@@ -104,6 +107,8 @@ public interface PhoneSetupActions {
     public fun openStorage()
 
     public fun reportFailure() {}
+
+    public fun connectComputer() {}
 
     public fun done()
 }
@@ -236,4 +241,6 @@ public class PhoneSetupModel(
     }
 
     override fun done(): Unit = nav.thisPhone()
+
+    override fun connectComputer(): Unit = nav.connectComputer()
 }

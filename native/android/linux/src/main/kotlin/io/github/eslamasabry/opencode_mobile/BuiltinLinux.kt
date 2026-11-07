@@ -381,14 +381,19 @@ class BuiltinLinux(private val context: Context) {
      * null. proot is given --kill-on-exit, so stopping it stops everything the script started.
      */
     @Synchronized
-    fun start(script: String, log: File?, agentUser: Boolean = false): Process {
+    fun start(
+        script: String,
+        log: File?,
+        agentUser: Boolean = false,
+        compat: Boolean = false,
+    ): Process {
         check(installed) { "Ubuntu is not installed in the app yet" }
         processes.removeAll { !it.isAlive }
-        return ProcessBuilder(prootCommand(listOf("/bin/sh", "-c", script), agentUser))
+        return ProcessBuilder(prootCommand(listOf("/bin/sh", "-c", script), agentUser, compat))
             .redirectErrorStream(true)
             .apply {
                 environment().clear()
-                environment().putAll(prootEnvironment())
+                environment().putAll(prootEnvironment(compat))
                 if (log != null) {
                     log.parentFile?.mkdirs()
                     redirectOutput(ProcessBuilder.Redirect.appendTo(log))
@@ -2583,6 +2588,12 @@ class BuiltinLinux(private val context: Context) {
         return if (compat) base + ("PROOT_NO_SECCOMP" to "1") else base
     }
 
+    /**
+     * Whether the server's proot runs in compatibility mode: the Node install found that Node.js only runs that way
+     * on this phone and wrote `proot-compat` under its saved safe mode (NodeCompatState, issue #117).
+     */
+    private fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
+
     // ---- long-running services ---------------------------------------------
 
     /**
@@ -3670,13 +3681,14 @@ class BuiltinLinux(private val context: Context) {
                             "/bin/sh",
                             "-c",
                             gate,
-                        )
+                        ),
+                        compat = serverCompat(),
                     )
                 )
                 .redirectErrorStream(true)
                 .apply {
                     environment().clear()
-                    environment().putAll(prootEnvironment())
+                    environment().putAll(prootEnvironment(serverCompat()))
                     environment()["OC_RUNTIME_OWNER"] = nonce
                 }
                 .start()
@@ -3850,7 +3862,7 @@ class BuiltinLinux(private val context: Context) {
 
     private fun startManualServer(script: String, log: File): Process {
         val recipe = serverRecipe
-        return if (recipe == null) start(script, log)
+        return if (recipe == null) start(script, log, compat = serverCompat())
         else startManualWithRecipe(script, log, recipe)
     }
 
@@ -3869,7 +3881,7 @@ class BuiltinLinux(private val context: Context) {
                 disarmRestoration("ownershipUnknown")
                 false
             }
-        return if (!capable) start(script, log)
+        return if (!capable) start(script, log, compat = serverCompat())
         else
             try {
                 startGatedServer(script, log, recipe)
@@ -3878,7 +3890,7 @@ class BuiltinLinux(private val context: Context) {
                 // Start.
                 if (!error.legacySafe || !serverRestartWanted) throw error
                 disarmRestoration("ownershipUnknown")
-                start(script, log)
+                start(script, log, compat = serverCompat())
             }
     }
 
@@ -5613,7 +5625,7 @@ exec gc supervisor run
         // Commit before launch: a guest can survive Android app process death.
         // A failed/uncertain launch keeps only this bounded admission marker.
         scheduledPhoneLease.begin(profile, token, budget, scheduledPhoneClock())
-        val process = start(script, serviceLogFile(SERVER))
+        val process = start(script, serviceLogFile(SERVER), compat = serverCompat())
         process.outputStream.close()
         services[SERVER] = serviceStarted(SERVER, process, selectedServerPort, null, script)
         scheduledPhoneProcesses[token] = process
@@ -5813,7 +5825,7 @@ exec gc supervisor run
         } else {
             synchronized(recoveryLock) {
                 check(nativeAdmitted(profile, supervisorGeneration))
-                start(script, log)
+                start(script, log, compat = name == SERVER && serverCompat())
             }
         }
     }
@@ -5829,7 +5841,7 @@ exec gc supervisor run
             check(activityResumed && restartWanted && recoveryGeneration == expectedGeneration) {
                 "The phone server could not restart."
             }
-            start(script, log).also {
+            start(script, log, compat = serverCompat()).also {
                 confirmedRecoveryAttempt = null
                 recoveryAttempt = RecoveryAttempt(it, expectedGeneration)
             }

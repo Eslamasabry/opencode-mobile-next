@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
 import io.github.eslamasabry.oc.engine.runtime.components.*
 import io.github.eslamasabry.oc.engine.runtime.install.InstallPrelude
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallScripts
+import io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
@@ -661,6 +662,7 @@ class NativePhoneSetup(
             "set -e\n[ \"\$(node --version)\" = '${PaseoPhoneScripts.NODE_VERSION}' ]\ncommand -v npm >/dev/null\n[ \"\$(npm config get prefix)\" = /usr/local ]\nnode --version | sed 's/^v//'\n"
         val NODE_INSTALL =
             $$"""set -eu
+$${NodeCompatScripts.FUNCTIONS}
 case "$(uname -m)" in
   aarch64|arm64) node_arch=arm64; node_sha=$${PaseoPhoneScripts.NODE_ARM64_SHA256} ;;
   x86_64|amd64) node_arch=x64; node_sha=$${PaseoPhoneScripts.NODE_X64_SHA256} ;;
@@ -668,16 +670,16 @@ case "$(uname -m)" in
 esac
 node_version=$${PaseoPhoneScripts.NODE_VERSION}
 node_file=/var/cache/oc-setup/node-$node_version-linux-$node_arch.tar.gz
-oc_stage 'Downloading Node.js'
+$${NodeCompatScripts.EARLY_CHECK}oc_stage 'Downloading Node.js'
 oc_download "https://nodejs.org/dist/$node_version/node-$node_version-linux-$node_arch.tar.gz" "$node_file" "$node_sha"
 oc_stage 'Unpacking Node.js'
 rm -rf /opt/node.new
 mkdir -p /opt/node.new
 oc_untar "$node_file" /opt/node.new 1
-[ "$(/opt/node.new/bin/node --version)" = "$node_version" ]
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/$tool /usr/local/bin/$tool; done
+$${NodeCompatScripts.START_CHECK}[ "$(node --version)" = "$node_version" ]
 npm config set prefix /usr/local
 rm -f "$node_file"
 oc_version "$(node --version | sed 's/^v//')"

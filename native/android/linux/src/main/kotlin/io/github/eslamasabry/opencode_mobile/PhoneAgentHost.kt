@@ -304,4 +304,6 @@ private fun hostScript(port: Int): String {
             exec /home/oc/.local/bin/paseo daemon run --home "${'$'}HOME/paseo" </dev/null
         """
         .trimIndent()
+        // Node.js the host and its agents start keeps this phone's safe mode (#117).
+        .replace("exec /home/oc/.local/bin/paseo", NodeCompatState.SERVER_ENV + "exec /home/oc/.local/bin/paseo")
 }

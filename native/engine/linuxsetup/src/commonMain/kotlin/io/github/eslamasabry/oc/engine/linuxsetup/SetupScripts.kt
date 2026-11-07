@@ -68,11 +68,15 @@ node --version | sed 's/^v//'
 
     public const val NODE_PRESENCE: String = "[ -e /opt/node ] || [ -L /opt/node ] || command -v node >/dev/null 2>&1"
 
-    /** Node from its official pinned download, resumable from /var/cache/oc-setup, deleted once unpacked. */
+    /**
+     * Node from its official pinned download, resumable from /var/cache/oc-setup, deleted once unpacked. The phone is
+     * checked before the download and Node after unpacking ([NodeCompat]): a phone that crashes Node gets a safe mode.
+     */
     public val NODE_INSTALL: String
         get() {
             val plain = NodePins.VERSION.replaceFirst("v", "")
             return """set -eu
+${NodeCompat.FUNCTIONS}
 case "${'$'}(uname -m)" in
   aarch64|arm64) node_arch=arm64; node_sha=${NodePins.SHA256_ARM64} ;;
   x86_64|amd64) node_arch=x64; node_sha=${NodePins.SHA256_X64} ;;
@@ -80,7 +84,7 @@ case "${'$'}(uname -m)" in
 esac
 node_version=${NodePins.VERSION}
 node_file=/var/cache/oc-setup/node-${'$'}node_version-linux-${'$'}node_arch.tar.gz
-oc_stage 'Downloading Node.js ${plain}'
+${NodeCompat.EARLY_CHECK}oc_stage 'Downloading Node.js ${plain}'
 oc_download "${NodePins.BASE_URL}/${'$'}node_version/node-${'$'}node_version-linux-${'$'}node_arch.tar.gz" \
   "${'$'}node_file" "${'$'}node_sha"
 oc_stage 'Unpacking Node.js'
@@ -90,7 +94,7 @@ oc_untar "${'$'}node_file" /opt/node.new 1
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/${'$'}tool /usr/local/bin/${'$'}tool; done
-npm config set prefix /usr/local
+${NodeCompat.START_CHECK}npm config set prefix /usr/local
 rm -f "${'$'}node_file"
 oc_version "${'$'}(node --version | sed 's/^v//')"
 """

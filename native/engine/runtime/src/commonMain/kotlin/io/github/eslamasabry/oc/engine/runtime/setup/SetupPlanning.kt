@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.engine.runtime.setup
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.engine.runtime.setup.registry.NodeCompatScripts
 
 /**
  * Port of the pure parts of lib/builtin/setup/setup_engine/progress_helpers.dart and the check
@@ -283,6 +284,7 @@ public object SetupPlanning {
             ?.let {
                 return both(SetupError.PortBusy(it))
             }
+        if (NodeCompatScripts.cannotRun(reason, logTail)) return both(SetupError.NodeCannotRun)
         if (step) return both(SetupError.CannotStart)
         if (reason.startsWith(OpenCodeInstallFailure.NO_PROGRAM))
             return both(SetupError.OpenCodeNoProgram)

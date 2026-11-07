@@ -140,6 +140,9 @@ internal object SetupMessageTable {
                 "phoneSetupErrorOpenCodeWontRun",
             "OpenCode was installed, but it did not start. Continue to try again; Details show what it said." to
                 "phoneSetupErrorOpenCodeNoStart",
+            // The Node install's give-up line (#117, NodeCompatScripts.FAILURE_LINE).
+            "[oc] Node.js cannot run on this phone's system, also in a safe mode" to
+                "phoneSetupErrorNodeCannotRun",
             "Include https:// or http:// in the server address." to "e7SetupIncludeScheme",
             "Server URLs must use https:// or http://." to "e7SetupUrlScheme",
             "Enter a server port between 1 and 65535." to "serverTrustInvalidPort",
