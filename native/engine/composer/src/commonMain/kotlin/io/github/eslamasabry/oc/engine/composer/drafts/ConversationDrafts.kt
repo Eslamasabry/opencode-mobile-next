@@ -392,11 +392,7 @@ internal constructor(
                             recovery.attachments,
                             recovery.unavailable,
                             place = place,
-                            awaiting =
-                                place == null &&
-                                    saved?.attachments.orEmpty().any {
-                                        schemeOf(it.url.orEmpty()) == "file"
-                                    },
+                            awaiting = waitsForPlace(place, recovery.unavailable),
                         )
                         .ok()
                 }
@@ -486,6 +482,7 @@ internal constructor(
                 is Outcome.Ok -> recovery.value
                 is Outcome.Failed -> return recovery
             }
+        val waits = waitsForPlace(place, back.unavailable)
         snapshots.update { before ->
             if (
                 before.fenced ||
@@ -501,13 +498,26 @@ internal constructor(
                             attachments = back.attachments,
                             savedAttachments = back.attachments,
                             heldBackAttachments = back.unavailable,
-                            heldBackWaitsForPlace = place == null && back.unavailable.isNotEmpty(),
+                            heldBackWaitsForPlace = waits,
                             restoreRevision = before.public.restoreRevision + 1,
                         ),
-                    awaitingLocation = place == null && back.unavailable.isNotEmpty(),
+                    awaitingLocation = waits,
                 )
         }
         return if (snapshots.value.public.heldBackAttachments.isEmpty()) Unit.ok() else unavailable()
+    }
+
+    /**
+     * True when every held-back file is a project-file reference and this conversation's folder is
+     * not known yet (no place, or the connection's default without a folder): nothing to say yet.
+     */
+    private fun waitsForPlace(place: DraftLocation?, unavailable: List<String>): Boolean {
+        if (unavailable.isEmpty() || place?.directory != null) return false
+        val files =
+            drafts.draft(ref.profileId.raw, ref.sessionId.raw)?.attachments.orEmpty()
+                .filter { schemeOf(it.url.orEmpty()) == "file" }
+                .map { it.filename }
+        return unavailable.all { it in files }
     }
 
     public fun changed(text: String) {
