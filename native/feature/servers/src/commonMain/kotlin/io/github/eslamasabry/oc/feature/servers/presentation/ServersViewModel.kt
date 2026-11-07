@@ -57,7 +57,6 @@ public class ServersViewModel(
      */
     private val probe: PairingProbe = NoPairingProbe,
     private val monitoring: Set<ServerMonitoring> = emptySet(),
-    private val imported: ImportedProviderReview? = null,
     private val connectionChecks: Set<ServerConnectionCheck> = emptySet(),
     private val readSharing: Set<ServerReadSharing> = emptySet(),
 ) : ViewModel(), ServersActions, ServerDisconnectActions {
@@ -97,10 +96,6 @@ public class ServersViewModel(
                     servers = ordered,
                     rows = facts,
                     busy = own.busy || busy,
-                    importedSignIns =
-                        own.importedSignIns?.takeIf { review ->
-                            servers.any { it.id == review.profile }
-                        },
                     readSharing =
                         readSharing
                             .singleOrNull()
@@ -264,36 +259,6 @@ public class ServersViewModel(
     override fun openPlans(): Unit = nav.open(PlansRoute)
 
     override fun openSetup(id: ProfileId): Unit = nav.open(ServersRoute.SetupAssist(id))
-
-    override fun reviewImportedSignIns(id: ProfileId) = operation {
-        when (
-            val result =
-                imported?.read(id)
-                    ?: Outcome.Failed(
-                        Failure.Unavailable(
-                            io.github.eslamasabry.oc.core.common.FeatureId(
-                                "migration.providerReview"
-                            )
-                        )
-                    )
-        ) {
-            is Outcome.Ok ->
-                local.update { it.copy(importedSignIns = ImportedSignInUi(id, result.value)) }
-            is Outcome.Failed ->
-                local.update {
-                    it.copy(importedSignIns = ImportedSignInUi(id, emptyList(), failed = true))
-                }
-        }
-    }
-
-    override fun closeImportedSignIns() {
-        local.update { it.copy(importedSignIns = null) }
-    }
-
-    override fun openProviderSignIn() {
-        closeImportedSignIns()
-        nav.open(io.github.eslamasabry.oc.ui.routes.IntegrationsRoute)
-    }
 
     override fun openConnectorCatalog(id: ProfileId) {
         val location = connections.currentLocation(id)

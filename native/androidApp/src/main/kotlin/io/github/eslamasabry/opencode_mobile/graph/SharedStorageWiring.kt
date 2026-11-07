@@ -14,8 +14,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
-import io.github.eslamasabry.oc.android.termux.AndroidGitRepairTermuxFiles
-import io.github.eslamasabry.oc.android.termux.GitRepairTermuxState
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -33,8 +31,8 @@ import java.net.URI
 import kotlinx.coroutines.withContext
 
 /**
- * The app and Termux have different Android UIDs. A remote server's /sdcard never requests a phone
- * permission.
+ * Only the app's own built-in Linux server asks for this phone's shared storage. A remote server's /sdcard never
+ * requests a phone permission.
  */
 @SingleIn(AppScope::class)
 @ContributesIntoSet(AppScope::class, binding = binding<SharedStorageAccess>())
@@ -46,8 +44,6 @@ class AndroidSharedStorageAccess(
     private val registry: ConnectionRegistry,
     private val dispatchers: AppDispatchers,
 ) : SharedStorageAccess {
-    private val termux by lazy { AndroidGitRepairTermuxFiles(application, dispatchers) }
-
     override suspend fun check(
         profile: ProfileId,
         directory: String?,
@@ -78,7 +74,7 @@ class AndroidSharedStorageAccess(
             } catch (_: Exception) {
                 return SharedStorageBlock.None.ok()
             }
-        // These are the two managed local hosts, not backend-driven feature visibility.
+        // The managed local host, not backend-driven feature visibility.
         if (origin.scheme != "http" || origin.host != "127.0.0.1")
             return SharedStorageBlock.None.ok()
         val block =
@@ -90,20 +86,6 @@ class AndroidSharedStorageAccess(
                         is Outcome.Ok ->
                             if (granted.value) SharedStorageBlock.None
                             else SharedStorageBlock.AppAccess
-                    }
-                4096 ->
-                    withContext(dispatchers.io) {
-                        if (termux.available() != GitRepairTermuxState.Ready)
-                            SharedStorageBlock.None
-                        else
-                            when (termux.sharedStorageReadable()) {
-                                true -> SharedStorageBlock.None
-                                false -> SharedStorageBlock.TermuxAccess
-                                null ->
-                                    SharedStorageBlock
-                                        .None // unknown is not a grant; attempt the real file
-                            // operation
-                            }
                     }
                 else -> SharedStorageBlock.None
             }
@@ -171,12 +153,6 @@ class AndroidSharedStorageAccess(
                                 4711,
                             )
                         }
-                    }
-                    SharedStorageBlock.TermuxAccess -> {
-                        val launch =
-                            application.packageManager.getLaunchIntentForPackage("com.termux")
-                                ?: error("Termux unavailable")
-                        application.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                     }
                 }
             }

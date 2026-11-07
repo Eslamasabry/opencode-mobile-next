@@ -58,7 +58,7 @@ internal class PhoneCardsQualifier(
 
     /**
      * Flutter `_genUiManaged`: the profile's address is the built-in Linux server (`http://127.0.0.1:4097`), whichever
-     * profile currently owns the runtime. A Termux or remote address is never set up from here.
+     * profile currently owns the runtime. Any other address is never set up from here.
      */
     override fun managed(profileId: String): Boolean =
         try {

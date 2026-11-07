@@ -120,9 +120,6 @@ import io.github.eslamasabry.oc.ui.words.res.stateReaderWrap
 import io.github.eslamasabry.oc.ui.words.res.stateStorageAppAction
 import io.github.eslamasabry.oc.ui.words.res.stateStorageAppBody
 import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
-import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxAction
-import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxBody
-import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -570,19 +567,16 @@ private fun SharedStorageNotice(state: FileUi, actions: FileActions) {
     val title =
         when (block) {
             SharedStorageBlock.AppAccess -> Res.string.stateStorageAppTitle
-            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxTitle
             SharedStorageBlock.None -> return
         }
     val body =
         when (block) {
             SharedStorageBlock.AppAccess -> Res.string.stateStorageAppBody
-            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxBody
             SharedStorageBlock.None -> return
         }
     val action =
         when (block) {
             SharedStorageBlock.AppAccess -> Res.string.stateStorageAppAction
-            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxAction
             SharedStorageBlock.None -> return
         }
     KitStateView(

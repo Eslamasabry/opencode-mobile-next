@@ -177,7 +177,6 @@ internal object PhoneServerScripts {
 
     fun configurePort(read: () -> Int) {
         selectedPort = read
-        io.github.eslamasabry.oc.android.termux.configureBuiltinServerPort(read)
         io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers.configureNativePort(read)
         io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.configureNativePort(
             read

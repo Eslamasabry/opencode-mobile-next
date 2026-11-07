@@ -156,7 +156,6 @@ public fun ServersScreen(
             state.issue?.let { KitErrorNotice(issueWords(it, state.failure), failure = state.failure,
                 detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails)) }
         }
-        ImportedSignInsSheet(state.importedSignIns, actions)
         ConnectionCheckSheet(state.connectionCheck, actions)
     }
 }

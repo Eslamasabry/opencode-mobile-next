@@ -75,7 +75,7 @@ class AgentsHubWiring(
             ?: saved.firstOrNull { isBuiltIn(it.profile.baseUrl) }?.id
     }
 
-    /** The Flutter built-in server's exact address rule; Termux's port 4096 is a separate host. */
+    /** The Flutter built-in server's exact address rule; any other port is a separate host. */
     private fun isBuiltIn(address: String): Boolean =
         try {
             val uri = URI(address)

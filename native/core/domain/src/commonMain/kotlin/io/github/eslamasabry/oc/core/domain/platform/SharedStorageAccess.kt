@@ -10,7 +10,6 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 public enum class SharedStorageBlock {
     None,
     AppAccess,
-    TermuxAccess,
 }
 
 /**

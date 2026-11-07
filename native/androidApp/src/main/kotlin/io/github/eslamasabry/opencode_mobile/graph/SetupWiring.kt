@@ -324,7 +324,7 @@ class BuiltinSetupFinisher(
     private val clock: Clock,
 ) : SetupFinisher {
     override suspend fun finish(request: SetupFinishRequest): Outcome<Unit> {
-        // A Termux job must never create or start the in-app Ubuntu profile.
+        // Only a built-in Linux job creates or starts the in-app Ubuntu profile.
         if (request.host != SetupHostKind.Builtin) return Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val warmed = stores.warm()
         if (warmed is Outcome.Failed) return warmed

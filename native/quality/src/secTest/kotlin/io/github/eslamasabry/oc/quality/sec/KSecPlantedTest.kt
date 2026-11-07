@@ -117,7 +117,7 @@ class KSecPlantedTest {
                 val b = PendingIntent.getBroadcast(ctx, 2, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
                 val c = PendingIntent.getForegroundService(ctx, 3, i, FLAG_MUTABLE)
             """)
-            .file("android/termux/$am/TermuxActivityCommands.kt", "val r = PendingIntent.getService(ctx, id, i, FLAG_ONE_SHOT or FLAG_MUTABLE)")
+            .file("android/platform/$am/PackageInstallerUpdater.kt", "val r = PendingIntent.getService(ctx, id, i, FLAG_ONE_SHOT or FLAG_MUTABLE)")
             .file("feature/chat/$cm/NotAndroid.kt", "val x = PendingIntent.getActivity(ctx, 1, i, 0)")
         assertCaught(SecTextRules.kSec7(t.files(), liveConfig), "K-SEC-7", 2, "getActivity and getForegroundService without FLAG_IMMUTABLE")
     }
