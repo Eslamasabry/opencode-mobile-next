@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlinx.collections.immutable.ImmutableList
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -269,5 +271,74 @@ class KitCodeBlockTest {
             assertTrue("export KEY=" in shown, shown)
             onNodeWithContentDescription("Copy").performClick()
             assertFalse("sk-canary-123456" in copied.orEmpty())
+        }
+
+    // ---- order 08: the Flutter rules of kit_code_block.dart, as pure functions ----
+
+    @Test
+    fun `08 the plan puts Copy on the first line only when the block has no words for a header`() {
+        // A 380 dp block, no words, Copy: inline; a line wider than 380 - 16 - 4 - 48 - 12 = 300 dp offers Wrap.
+        assertEquals(CodePlan(inline = true, wrapToggle = false), codePlan(380f, false, false, true, true, 300f, null))
+        assertEquals(CodePlan(inline = true, wrapToggle = true), codePlan(380f, false, false, true, true, 300.6f, null))
+        // Words (a file name): Copy goes to the header; the room is the block less space4 on each side.
+        assertEquals(CodePlan(inline = false, wrapToggle = false), codePlan(380f, true, false, true, true, 348f, null))
+        assertEquals(CodePlan(inline = false, wrapToggle = true), codePlan(380f, true, false, true, true, 349f, null))
+        // A command never offers Wrap; a gutter takes its width and space2 from the room.
+        assertEquals(CodePlan(inline = true, wrapToggle = false), codePlan(380f, false, false, true, false, 999f, 8f))
+        assertEquals(CodePlan(inline = false, wrapToggle = false), codePlan(Float.POSITIVE_INFINITY, false, false, true, true, 999f, null))
+        // No Copy and nothing overflowing: no inline controls at all.
+        assertEquals(CodePlan(inline = false, wrapToggle = false), codePlan(380f, false, false, false, true, 10f, null))
+    }
+
+    @Test
+    fun `08 the Copy glyph's ink ends on the text inset`() {
+        // KitOptical.endPad(copy, 24, 16 - (48 - 24) / 2) = 4 - 24 * .125 = 1 dp, the chat block's CODE_COPY_END.
+        assertEquals(1f, codeCopyEnd())
+        assertEquals(CODE_COPY_END.toFloat(), codeCopyEnd())
+    }
+
+    @Test
+    fun `08 lines split after one trailing newline and know their offsets`() {
+        assertEquals(listOf("a", "bc", ""), codeSplitLines("a\nbc\n\n"))
+        assertEquals(listOf("a", "bc"), codeSplitLines("a\nbc\n"))
+        assertEquals(listOf(0, 2, 5), codeLineStarts(listOf("a", "bc", "")))
+    }
+
+    @Test
+    fun `08 find marks paint accent at 18 percent and the active one at 38 percent`() {
+        val accent = Color(0xFF00AA55)
+        // Line 2 starts at 4 in "abc\ndefg"; mark 0 covers "ef" (5 until 7), mark 1 (the active one) "g".
+        val marked = markLine(AnnotatedString("defg"), 4, listOf(5 until 7, 7 until 8), active = 1, accent = accent)
+        val styles = marked.spanStyles.map { Triple(it.start, it.end, it.item.background.alpha) }
+        assertEquals(2, styles.size)
+        assertEquals(1 to 3, styles[0].first to styles[0].second)
+        assertTrue(kotlin.math.abs(styles[0].third - .18f) < .01f)
+        assertEquals(3 to 4, styles[1].first to styles[1].second)
+        assertTrue(kotlin.math.abs(styles[1].third - .38f) < .01f)
+        assertEquals(AnnotatedString("abc"), markLine(AnnotatedString("abc"), 0, listOf(5 until 7), null, accent))
+    }
+
+    @Test
+    fun `08 words give the block a header with the file name, the counts and a labelled Copy`() =
+        runComposeUiTest {
+            var copied: String? = null
+            setContent {
+                ChatTestTheme {
+                    androidx.compose.foundation.layout.Column {
+                        KitCodeBlock(
+                            "val a = 1", KitCodeKind.Code, language = CodeLanguage.Kotlin, onCopy = { copied = it },
+                            fileName = "lib/a.kt", added = 4, removed = 1,
+                        )
+                        KitCodeBlock("adb one\nadb two", KitCodeKind.Command, onCopy = {}, copyWords = "Copy commands")
+                        KitCodeBlock("", KitCodeKind.Code)
+                    }
+                }
+            }
+            onNodeWithText("lib/a.kt", useUnmergedTree = true).assertExists()
+            onNodeWithContentDescription("4 added, 1 removed", useUnmergedTree = true).assertExists()
+            onNodeWithText("Copy commands", useUnmergedTree = true).assertExists()
+            onNodeWithText("Empty", useUnmergedTree = true).assertExists()
+            onNodeWithContentDescription("Copy code").performClick()
+            assertEquals("val a = 1", copied)
         }
 }

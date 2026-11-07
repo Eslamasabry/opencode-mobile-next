@@ -173,7 +173,7 @@ internal fun CodeControls(
                         onCopy!!()
                         taps++
                     },
-                    Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    Modifier.testTag(CODE_COPY_TAG).semantics { liveRegion = LiveRegionMode.Polite },
                     tone = TextTone.Primary,
                     size = CODE_GLYPH,
                 )
