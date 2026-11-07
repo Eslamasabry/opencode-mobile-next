@@ -55,6 +55,10 @@ import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
+import io.github.eslamasabry.oc.ui.kit.foundation.ChromeVeil
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitChromeVeil
+import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropVeil
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
@@ -167,7 +171,10 @@ public fun KitScreen(
             val density = LocalDensity.current
             // B-102: the body's room includes the chrome's ground fade, so at rest the last line sits above the
             // composer's 16 dp fade (and the first under the bar's 12 dp one) instead of being cut by it.
-            val faded = !kitChromeIsGlass()
+            // E20-S30: a veiled bottom block (every style but Glass, when the body records itself) lets the body scroll
+            // under it as Glass does, so it adds no fade room either: the newest line rests on the list's own padding.
+            val veil = if (frost != null && !kitChromeIsGlass()) rememberKitChromeVeil() else null
+            val faded = !kitChromeIsGlass() && veil == null
             val padding =
                 with(density) {
                     PaddingValues(
@@ -199,14 +206,17 @@ public fun KitScreen(
                         Modifier.align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
-                            .kitChromeGround(FrostRole.Composer, frost)
+                            .then(
+                                if (veil != null && frost != null) Modifier.kitChromeVeil(veil, frost)
+                                else Modifier.kitChromeGround(FrostRole.Composer, frost)
+                            )
                             .padding(
                                 horizontal = LocalKitTokens.current.gutter.dp,
                                 vertical = Space.S2.dp,
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        it()
+                        CompositionLocalProvider(LocalKitChromeVeil provides veil) { it() }
                     }
                 }
             }
@@ -507,6 +517,16 @@ internal const val COMPOSER_FADE_DP = 16
 
 /** How far the chat header's ground fades down into the body. */
 internal const val HEADER_FADE_DP = 12
+
+/**
+ * E20-S30: the bottom block as a translucent veil over the body that scrolls under it: the body blurred (API 31+, at
+ * half resolution) under the page's ground at the veil's alpha, with a hairline along its top. No ground band, no fade.
+ */
+@Composable
+private fun Modifier.kitChromeVeil(veil: ChromeVeil, frost: KitFrostState): Modifier {
+    val colors = LocalKitColors.current
+    return kitBackdropVeil(frost, veil, colors.ground, topEdge = colors.hairline)
+}
 
 /** Glass frosts what scrolls behind the chrome instead of fading it, so it adds no fade room. */
 @Composable

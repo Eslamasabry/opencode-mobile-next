@@ -96,7 +96,18 @@ public data class KitSurfaceInput(
     val radius: Dp? = null,
     /** A floating sheet-radius card rounds all corners; edge-attached sheets keep their bottom square. */
     val roundSheetBottom: Boolean = false,
+    /**
+     * E20-S30: the face's fill keeps this much of its alpha (1 = as the style paints it). The composer lying on the
+     * chat's translucent bottom veil passes the veil's alpha so the transcript shows through it. Glass ignores it (its
+     * panes are already translucent); edges and shadows are unchanged.
+     */
+    val faceAlpha: Float = 1f,
 )
+
+private fun Argb.faded(a: Float): Argb = withAlpha(alpha / 255f * a)
+
+private fun SurfaceDecoration.faded(a: Float): SurfaceDecoration =
+    if (a >= 1f) this else copy(fill = fill?.faded(a), fillStart = fillStart?.faded(a))
 
 private fun Color.toArgb(): Argb = Argb(
     ((alpha * 255f + .5f).toInt() shl 24) or ((red * 255f + .5f).toInt() shl 16) or ((green * 255f + .5f).toInt() shl 8) or (blue * 255f + .5f).toInt(),
@@ -153,7 +164,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val blurs = kitGlassBlurs(if (glass) backdrop else null)
     val decoration =
         if (!glass) {
-            resolved
+            resolved?.faded(input.faceAlpha)
         } else {
             val ground = roles.ground.withAlpha(1f)
             val spots = if (blurs && backdrop != null) listOf(ground) + backdrop.frostedSpots else listOf(ground)
@@ -164,12 +175,13 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     // holds through a fade (kit_surface_look.dart:1257-1266).
     val frost = Modifier.kitSurfaceGlass(if (glass) decoration else null)
     // The plain look as a decoration, so Solid can fade to and from the other styles.
-    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = input.ownFill?.toArgb())
+    val ownFill = input.ownFill?.let { if (input.faceAlpha >= 1f) it else it.copy(alpha = it.alpha * input.faceAlpha) }
+    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = ownFill?.toArgb())
     val shown = rememberSurfaceFade(decoration, plain, style.style)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     if (shown == null) {
         if (decoration == null) {
-            val own = input.ownFill
+            val own = ownFill
             val modifier = if (own == null) Modifier else Modifier.background(own, shape)
             return KitSurfaceLook(modifier, words, shape, own != null && own.alpha > 0f)
         }
