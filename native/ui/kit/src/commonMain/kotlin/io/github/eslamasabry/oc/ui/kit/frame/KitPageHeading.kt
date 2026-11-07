@@ -1,29 +1,52 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
+/** The quiet line's look (Dart `kit_page_heading.dart`, `_buildContent`): the needs-you line is amber at label weight. */
+internal data class KitPageHeadingLineLook(val role: TypeRole, val tone: TextTone, val chevronForward: Boolean)
+
+internal fun kitPageHeadingLineLook(lineNeedsYou: Boolean): KitPageHeadingLineLook =
+    if (lineNeedsYou) KitPageHeadingLineLook(TypeRole.Label, TextTone.Attention, chevronForward = true)
+    else KitPageHeadingLineLook(TypeRole.Body, TextTone.Secondary, chevronForward = false)
+
 /**
- * A page's own large title and one quiet line under it (Dart `KitPageHeading`): the body of a shell tab names itself
- * here, since the shell's bar has no title. Reading text: it follows the person's size. With [onLine] the line is the
- * heading's link (KitHeadingLine, the needs-you amber with its 48 dp target).
+ * A page's own heading under a bar that carries no title (Dart `KitPageHeading`): the large title, then one quiet line
+ * close under it saying what the page belongs to ("neon-breaker") or where it is ("neon-breaker / src").
  *
- * States: default, with line
+ * With [onLine] the line is a switcher: a chevron after the words and a 48 dp target that reaches up into the title's
+ * line gap, labelled [lineTapLabel] for screen readers. With [lineNeedsYou] the line is the page's one needs-you line
+ * ("2 need you"): amber at label weight with a forward chevron. [lineNeedsYou] defaults to true when [onLine] is set
+ * and no [lineTapLabel] is given, which keeps the Chats home's needs-you line as it was.
+ *
+ * States: default, switcher, needs-you, plain line (disabled)
  * Text: reading
  * Cap: Reading
  * Motion: none
@@ -31,21 +54,53 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
  * Replaces: KitPageHeading (lib/ui/kit/kit_page_heading.dart)
  */
 @Composable
-public fun KitPageHeading(title: String, modifier: Modifier = Modifier, line: String? = null, onLine: (() -> Unit)? = null) {
+public fun KitPageHeading(
+    title: String,
+    modifier: Modifier = Modifier,
+    line: String? = null,
+    onLine: (() -> Unit)? = null,
+    lineTapLabel: String? = null,
+    lineNeedsYou: Boolean = onLine != null && lineTapLabel == null,
+) {
     val tokens = LocalKitTokens.current
     Column(
         modifier
-            .kitMaxWidth(CapRole.Reading, io.github.eslamasabry.oc.ui.design.layout.CapAlign.Start)
+            .kitMaxWidth(CapRole.Reading, CapAlign.Start)
             .fillMaxWidth()
-            .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = Space.S2.dp, bottom = Space.S3.dp)
+            // A step of air under the bar: gutter at both sides, space2 on top.
+            .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = Space.S2.dp)
             .testTag("kit-page-heading"),
-        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        KitText(title, Modifier.semantics { heading() }, role = TypeRole.LargeTitle)
-        line?.let {
-            // A line that opens something ("2 need you" → Inbox) is the heading's visible link.
-            if (onLine != null) KitHeadingLine(it, onLine)
-            else KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
+        KitText(title, Modifier.semantics { heading() }, role = TypeRole.LargeTitle, maxLines = 2) // F: lib/ui/kit/kit_page_heading.dart:133
+        if (line != null) {
+            val look = kitPageHeadingLineLook(lineNeedsYou)
+            val words: @Composable () -> Unit = { KitText(line, role = look.role, tone = look.tone, maxLines = 1) } // F: lib/ui/kit/kit_page_heading.dart:76
+            // The words sit a step up, close under the title, as one heading. Flutter lifts the whole 48 dp target
+            // into the title's line gap; here the target keeps the kit's control gap (space1) under the title, so no
+            // control overlaps the words above, and only its words move up: the picture and the heading's height
+            // stay Flutter's.
+            val lifted = Modifier.offset(y = -Space.S2.dp)
+            val target = Modifier.defaultMinSize(minHeight = tokens.minTarget.dp)
+            if (onLine == null) {
+                Box(lifted.then(target), contentAlignment = Alignment.CenterStart) { words() }
+            } else {
+                val clear = Space.S1.dp
+                val dropped = Modifier.layout { m, c ->
+                    val p = m.measure(c)
+                    layout(p.width, p.height) { p.place(0, clear.roundToPx()) }
+                }
+                KitTappable(onLine, dropped.then(target), onClickLabel = lineTapLabel ?: line, ink = look.tone) {
+                    Row(Modifier.offset(y = -(Space.S2 + Space.S1).dp).then(target), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f, fill = false)) { words() }
+                        Spacer(Modifier.width(Space.S1.dp))
+                        KitIcon(
+                            if (look.chevronForward) KitIcons.chevronRight else KitIcons.chevronDown,
+                            size = KitIconSize.Small,
+                            tone = look.tone,
+                        )
+                    }
+                }
+            }
         }
     }
 }
