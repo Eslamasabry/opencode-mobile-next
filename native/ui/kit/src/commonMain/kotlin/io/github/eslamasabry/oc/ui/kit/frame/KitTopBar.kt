@@ -79,11 +79,12 @@ public enum class KitTopBarExit {
 /** The bar title's size (P-016), pure so it is tested without Compose. */
 public object TopBarTitle {
     /**
-     * A page names itself in the large title size (28 sp), a clear step above the 16 sp row titles under it, as home's
-     * heading does. A switcher title (the chat header's conversation name, which renames on a tap) stays at the
-     * headline size: it shares its line with the conversation's actions and is not a page heading.
+     * Every pushed page names itself at the headline size with the page-title weight (Flutter `_KitTopBarTitle`:
+     * `KitText.styleOf(context, KitTextRole.headline, pageTitle: true)`), switcher or not; the large title belongs
+     * to a tab's own body heading (`KitPageHeading`), never to the bar. [switcher] is kept for callers' clarity.
      */
-    public fun role(switcher: Boolean): TypeRole = if (switcher) TypeRole.Headline else TypeRole.LargeTitle
+    @Suppress("UNUSED_PARAMETER")
+    public fun role(switcher: Boolean): TypeRole = TypeRole.Headline // F: lib/ui/kit/kit_top_bar.dart:591
 }
 
 /**
