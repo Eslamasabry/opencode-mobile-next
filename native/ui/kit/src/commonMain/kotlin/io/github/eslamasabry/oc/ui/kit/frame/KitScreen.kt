@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -267,7 +268,10 @@ public fun KitScreen(
                                     horizontal = LocalKitTokens.current.gutter.dp,
                                     vertical = Space.S2.dp,
                                 )
-                                .testTag("kit-screen-bottom")
+                                .testTag("kit-screen-bottom"),
+                            // Dart's Column(crossAxisAlignment: stretch): the bottom block's child takes the full
+                            // width between the gutters (the page's primary is full width).
+                            propagateMinConstraints = true,
                         ) {
                             it()
                         }
@@ -420,6 +424,7 @@ private fun Panes(
 ) {
     val modifier = Modifier
     val hairline = LocalKitColors.current.hairline
+    val rule = kitHairline()
     val listPane: @Composable () -> Unit = {
         KitScreen(
             topBar =
@@ -455,7 +460,7 @@ private fun Panes(
         val x =
             if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl) 0.5f
             else size.width - 0.5f
-        drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
+        drawPaneRule(hairline, x, rule)
     }
     KitLiveBackground(modifier.fillMaxSize()) {
         ScreenSheetHost(Modifier.fillMaxSize()) {
@@ -476,7 +481,9 @@ private fun Panes(
                         .testTag("kit-screen-pane-detail"),
                     contentAlignment = Alignment.TopCenter,
                 ) {
-                    Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize()) {
+                    // Dart _Centred(paneDetailMaxWidth, fill: true): the pane's view takes the whole pane, so an
+                    // empty state centres in it.
+                    Box(Modifier.widthIn(max = Layout.PANE_DETAIL_MAX_WIDTH.dp).fillMaxSize(), propagateMinConstraints = true) {
                         (detail ?: emptyDetail)()
                     }
                 }
@@ -489,7 +496,7 @@ private fun Panes(
                                     if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl)
                                         size.width - 0.5f
                                     else 0.5f
-                                drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
+                                drawPaneRule(hairline, x, rule)
                             }
                             .semantics { isTraversalGroup = true }
                             .testTag("kit-screen-pane-side")
@@ -566,4 +573,14 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
             if (frost != null && !header) Modifier.kitFrost(role, frost)
             else Modifier.background(ground.copy(alpha = 1f))
         )
+}
+
+/**
+ * The panes' rule (Dart `ColoredBox(hairline)` of `KitTokens.hairlineWidth`): one physical pixel. Drawn as the pixel
+ * column at [x] (a pane's first or last) at the hairline's coverage, so a third-of-a-pixel rule reads as Flutter's.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPaneRule(color: androidx.compose.ui.graphics.Color, x: Float, rule: androidx.compose.ui.unit.Dp) {
+    val coverage = rule.toPx().coerceAtMost(1f)
+    val column = if (x < size.width / 2) 0f else kotlin.math.ceil(size.width) - 1f // NV: the start or the end column
+    drawRect(color, Offset(column, 0f), androidx.compose.ui.geometry.Size(1f, size.height), alpha = coverage)
 }
