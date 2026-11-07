@@ -71,7 +71,8 @@ class RequestsEngineTest {
             engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
 
             engine.discardStopped(captured)
-            assertEquals(listOf("p2"), engine.pending.value.map { it.id.raw })
+            // E06-S03: the card says "No longer needed" for a moment, then leaves.
+            assertEquals(AnswerPhase.NoLongerNeeded, engine.phaseOf("p1"))
             assertIs<Outcome.Failed>(engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once), captured.single()))
             advanceTimeBy(HELD_ANSWER + 1.milliseconds)
             runCurrent()
@@ -108,7 +109,7 @@ class RequestsEngineTest {
             assertTrue(port.replies.isEmpty())
 
             engine.discardStopped(captured)
-            assertNull(engine.phaseOf("p1"))
+            assertEquals(AnswerPhase.NoLongerNeeded, engine.phaseOf("p1"))
             gate.complete(Unit)
             assertEquals(Outcome.Ok(Unit), answer.await())
             assertTrue(port.replies.isEmpty())

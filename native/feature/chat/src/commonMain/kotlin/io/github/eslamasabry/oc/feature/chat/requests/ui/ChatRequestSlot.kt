@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestAnsweredRow
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestStack
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,7 +67,9 @@ import io.github.eslamasabry.oc.ui.words.res.approvalReplyLabel
 import io.github.eslamasabry.oc.ui.words.res.approvalReplySend
 import io.github.eslamasabry.oc.ui.kitchat.request.KitDenyReply
 import io.github.eslamasabry.oc.ui.words.res.chatRequestIfIgnored
-import io.github.eslamasabry.oc.ui.words.res.chatRequestMoreWaiting
+import io.github.eslamasabry.oc.ui.words.res.chatRequestCardLabel
+import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeeded
+import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeededWhy
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherField
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
@@ -75,19 +80,20 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
 import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The request slot above the composer (plan 09 §5.1, §6.4; plan 08 §5.8): at most one card, never a
+ * The request slot above the composer (plan 09 §5.1, §6.4; plan 08 §5.8; E06-S01): one card per
+ * request of this conversation, in arrival order, each answered on its own in any order; never a
  * modal, never taking focus from the composer. Waiting: the ask with Allow once / Reject in place
  * and Always allow as a quiet action where the server keeps grants (a tap opens the one confirm).
  * After a tap: the collapsed line "Allowed · Undo" for 3 s, then the receipt (Sending → the card
- * leaves / Not confirmed yet / Not accepted · Try again).
+ * leaves / Not confirmed yet / Not accepted · Try again). A card whose run was stopped says "No
+ * longer needed" and leaves (E06-S03).
  *
  * [nowMs] is the screen's clock for the card's age ("Needs you · waiting 20 seconds"); null shows
- * no age. Motion (plan 08 §5.8: the card unfolds on arrival, the body folds into the line) waits
- * for `KitReveal` from the kit-chat owner; until then the slot changes in place.
+ * no age. Cards unfold on arrival and fold away when they leave, and several cards scroll inside a
+ * bounded slot so the composer stays on screen ([KitRequestStack]).
  */
 @Composable
 public fun ChatRequestSlot(
@@ -96,60 +102,22 @@ public fun ChatRequestSlot(
     nowMs: Long?,
     modifier: Modifier = Modifier,
 ) {
-    val card = state.card ?: return
-    key(card.id, card.captured) {
-        LaunchedEffect(card.id) { actions.shown(card.id) }
-        Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            when (val phase = card.state) {
-                CardState.Waiting -> {
-                    val since = card.waitingSinceMs
-                    KitRequestWaitingCaption(
-                        waiting =
-                            if (nowMs != null && since != null) waitedWords(nowMs - since) else null
-                    )
-                    when (card) {
-                        is RequestCardUi.Permission -> {
-                            PermissionWaiting(card, state.moreWaiting, actions)
-                            state.invitationFailure?.let {
-                                KitErrorNotice(
-                                    stringResource(Res.string.consentAlwaysAllowFailed),
-                                    failure = it,
-                                )
-                            }
-                            if (card.invitation) {
-                                val request = card.captured?.request
-                                val mask = rememberKitMask()
-                                val what = request?.let {
-                                    it.always.ifEmpty { it.patterns }.joinToString(", ").ifEmpty { it.permission }
-                                }
-                                KitAskLine(
-                                    icon = KitIcons.privacy,
-                                    question = if (what != null) stringResource(Res.string.consentAlwaysAllowQuestion, KitBidi.ltr(mask(what)))
-                                        else stringResource(Res.string.invitation40Question),
-                                    accept = KitAction(stringResource(Res.string.chatUiAlwaysAllow), {
-                                        actions.performReviewed(card, ReviewedRequestAction.AskAlways)
-                                    }),
-                                    decline = KitAction(stringResource(Res.string.consentAlwaysAllowDecline), {
-                                        actions.keepAsking(card.id)
-                                    }),
-                                )
-                            }
-                        }
-                        is RequestCardUi.Question ->
-                            QuestionWaiting(card, state.moreWaiting, actions)
-                    }
-                }
-                is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions)
-                is CardState.Sending ->
-                    AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sending, null)
-                is CardState.Sent ->
-                    AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sent, null)
-                is CardState.NotAccepted ->
-                    AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
-                        actions.performReviewed(card, ReviewedRequestAction.Retry)
-                    }
-            }
-        }
+    if (state.cards.isEmpty()) return
+    val total = state.cards.size
+    KitRequestStack(
+        items = state.cards,
+        key = { it.id },
+        label = { index, card ->
+            stringResource(
+                Res.string.chatRequestCardLabel,
+                Numbers.format(index + 1),
+                Numbers.format(total),
+                cardTarget(card),
+            )
+        },
+        modifier = modifier,
+    ) { card ->
+        key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
     }
     state.sheet?.let { ChatQuestionSheet(it, actions) }
     val confirm = state.confirmAlways
@@ -176,6 +144,104 @@ public fun ChatRequestSlot(
     )
 }
 
+/**
+ * One request's card. The stack makes it one TalkBack group that starts with its place and what it
+ * asks about ("Request 2 of 4: Run npm test"), so cards are never confused with one another.
+ */
+@Composable
+private fun RequestCard(card: RequestCardUi, actions: ChatRequestActions, nowMs: Long?) {
+    LaunchedEffect(card.id) { actions.shown(card.id) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        when (val phase = card.state) {
+            CardState.Waiting -> {
+                val since = card.waitingSinceMs
+                KitRequestWaitingCaption(
+                    waiting =
+                        if (nowMs != null && since != null) waitedWords(nowMs - since) else null
+                )
+                when (card) {
+                    is RequestCardUi.Permission -> {
+                        PermissionWaiting(card, actions)
+                        card.invitationFailure?.let {
+                            KitErrorNotice(
+                                stringResource(Res.string.consentAlwaysAllowFailed),
+                                failure = it,
+                            )
+                        }
+                        if (card.invitation) {
+                            val request = card.captured?.request
+                            val mask = rememberKitMask()
+                            val what = request?.let {
+                                it.always.ifEmpty { it.patterns }.joinToString(", ").ifEmpty { it.permission }
+                            }
+                            KitAskLine(
+                                icon = KitIcons.privacy,
+                                question = if (what != null) stringResource(Res.string.consentAlwaysAllowQuestion, KitBidi.ltr(mask(what)))
+                                    else stringResource(Res.string.invitation40Question),
+                                accept = KitAction(stringResource(Res.string.chatUiAlwaysAllow), {
+                                    actions.performReviewed(card, ReviewedRequestAction.AskAlways)
+                                }),
+                                decline = KitAction(stringResource(Res.string.consentAlwaysAllowDecline), {
+                                    actions.keepAsking(card.id)
+                                }),
+                            )
+                        }
+                    }
+                    is RequestCardUi.Question -> QuestionWaiting(card, actions)
+                }
+            }
+            is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions)
+            is CardState.Sending ->
+                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sending, null)
+            is CardState.Sent ->
+                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sent, null)
+            is CardState.NotAccepted ->
+                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
+                    actions.performReviewed(card, ReviewedRequestAction.Retry)
+                }
+            CardState.NoLongerNeeded -> NoLongerNeededLine(card)
+        }
+    }
+}
+
+/** What a card asks about, in a few words: the ask and its target, or the question. */
+@Composable
+private fun cardTarget(card: RequestCardUi): String {
+    val mask = rememberKitMask()
+    return when (card) {
+        is RequestCardUi.Permission -> {
+            val what = askWhat(card.ask)
+            val question = askQuestion(card.ask)
+            if (what != null && what !in question) "$question, ${KitBidi.ltr(mask(what))}" else question
+        }
+        is RequestCardUi.Question -> card.question.ifBlank { card.title }
+    }
+}
+
+/**
+ * E06-S03: the run that asked was stopped. No answers, no "Needs your decision": the ask in small
+ * words and "No longer needed · The run stopped, so nothing was sent." until the card leaves.
+ */
+@Composable
+private fun NoLongerNeededLine(card: RequestCardUi) {
+    val title =
+        when (card) {
+            is RequestCardUi.Permission -> askQuestion(card.ask)
+            is RequestCardUi.Question -> card.question.ifBlank { card.title }
+        }
+    KitRequestAnsweredRow(
+        icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+        title = title,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    ) {
+        KitText(
+            "${stringResource(Res.string.chatRequestNoLongerNeeded)} · ${stringResource(Res.string.chatRequestNoLongerNeededWhy)}",
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+        )
+    }
+}
+
 @Composable
 private fun receiptWords(card: RequestCardUi, words: AnswerWords): String =
     answerLine(words, (card as? RequestCardUi.Permission)?.ask, rememberKitMask())
@@ -183,7 +249,6 @@ private fun receiptWords(card: RequestCardUi, words: AnswerWords): String =
 @Composable
 private fun PermissionWaiting(
     card: RequestCardUi.Permission,
-    moreWaiting: Int,
     actions: ChatRequestActions,
 ) {
     val mask = rememberKitMask()
@@ -203,7 +268,7 @@ private fun PermissionWaiting(
                 emptyReason = stringResource(Res.string.approvalReplyEmpty),
                 onSend = { actions.performReviewed(card, ReviewedRequestAction.RejectWith(it)) },
             ),
-        summary = waitsLine(moreWaiting),
+        summary = stringResource(Res.string.chatRequestIfIgnored),
         subject = null,
         targets =
             card.ask.targets.map { target ->
@@ -238,13 +303,12 @@ private fun PermissionWaiting(
 @Composable
 private fun QuestionWaiting(
     card: RequestCardUi.Question,
-    moreWaiting: Int,
     actions: ChatRequestActions,
 ) {
     KitQuestionCard(
         title = card.title,
         question = card.question,
-        summary = waitsLine(moreWaiting),
+        summary = stringResource(Res.string.chatRequestIfIgnored),
         choices = card.options,
         onChoose = { actions.performReviewed(card, ReviewedRequestAction.Choose(it)) },
         answerLabel = stringResource(Res.string.kitRequestAnswer),
@@ -320,13 +384,4 @@ private fun AnsweredLine(words: String, receipt: KitReceiptState, onRetry: (() -
         KitText(words, Modifier.weight(1f), role = TypeRole.Body, kind = KitTextKind.Frame)
         KitReceipt(receipt, onRetry = onRetry)
     }
-}
-
-/** "The agent waits until you answer. Nothing is lost." plus how many more wait. */
-@Composable
-private fun waitsLine(moreWaiting: Int): String {
-    val waits = stringResource(Res.string.chatRequestIfIgnored)
-    return if (moreWaiting > 0)
-        "$waits ${pluralStringResource(Res.plurals.chatRequestMoreWaiting, moreWaiting, Numbers.format(moreWaiting))}"
-    else waits
 }

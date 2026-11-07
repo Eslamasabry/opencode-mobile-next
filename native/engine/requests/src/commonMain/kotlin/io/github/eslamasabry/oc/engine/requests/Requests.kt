@@ -11,6 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 
 /**
@@ -67,7 +68,17 @@ public sealed interface AnswerPhase {
 
     /** The server refused the answer; the request stays, and Try again resends the same answer. */
     public data class NotAccepted(val answer: RequestAnswer, val failure: Failure) : AnswerPhase
+
+    /**
+     * The run that asked was stopped (the person's Stop, or the server ended the turn): nothing will
+     * be sent and nothing can be answered. The card says "No longer needed" for
+     * [RETIRED_SHOWN] and then leaves (E06-S03).
+     */
+    public data object NoLongerNeeded : AnswerPhase
 }
+
+/** How long a card of a stopped run says "No longer needed" before it leaves (well inside 2 s). */
+public val RETIRED_SHOWN: Duration = 1.2.seconds
 
 /** One request waiting on the person, oldest first in [RequestsEngine.pending]. */
 public sealed interface PendingRequest {
@@ -126,17 +137,22 @@ public sealed interface PendingRequest {
 }
 
 /**
- * The card one chat shows: the oldest waiting request of the session, and how many more wait behind
- * it.
+ * One chat's requests: [all] of them in arrival order (E06-S01: the chat shows one card each),
+ * the oldest ([current]) and how many wait behind it (kept for summaries such as the header).
  */
-public data class SessionRequests(val current: PendingRequest?, val moreWaiting: Int) {
+public data class SessionRequests(
+    val current: PendingRequest?,
+    val moreWaiting: Int,
+    val all: ImmutableList<PendingRequest> = current?.let { persistentListOf(it) } ?: NoRequests,
+) {
     public companion object {
         public val None: SessionRequests = SessionRequests(null, 0)
 
         /** Pure: [all] is the engine's oldest-first list. */
         public fun of(all: List<PendingRequest>, session: SessionId): SessionRequests {
             val mine = all.filter { it.sessionId == session }
-            return if (mine.isEmpty()) None else SessionRequests(mine.first(), mine.size - 1)
+            return if (mine.isEmpty()) None
+            else SessionRequests(mine.first(), mine.size - 1, mine.toImmutableList())
         }
     }
 }

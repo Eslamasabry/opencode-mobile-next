@@ -82,7 +82,7 @@ public class ChatRequestsModel(
                 where,
                 mine,
                 _ ->
-                slot(selected(all, mine.focused), caps, where, mine)
+                slot(all, caps, where, mine)
             }
             .stateIn(scope, SharingStarted.Eagerly, current())
 
@@ -109,7 +109,7 @@ public class ChatRequestsModel(
     }
 
     override fun shown(id: RequestId) {
-        if (current().card?.id == id) engine.markShown(id)
+        if (current().cardFor(id) != null) engine.markShown(id)
     }
 
     override fun allowOnce(id: RequestId) {
@@ -237,17 +237,11 @@ public class ChatRequestsModel(
     }
 
     override fun undo(id: RequestId) {
-        current()
-            .card
-            ?.takeIf { it.id == id }
-            ?.let { performReviewed(it, ReviewedRequestAction.Undo) }
+        current().cardFor(id)?.let { performReviewed(it, ReviewedRequestAction.Undo) }
     }
 
     override fun retry(id: RequestId) {
-        current()
-            .card
-            ?.takeIf { it.id == id }
-            ?.let { performReviewed(it, ReviewedRequestAction.Retry) }
+        current().cardFor(id)?.let { performReviewed(it, ReviewedRequestAction.Retry) }
     }
 
     /**
@@ -256,12 +250,12 @@ public class ChatRequestsModel(
      */
     override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction) {
         val reviewed = card.captured ?: return
-        val currentCard = current().card ?: return
+        // E06-S01: any card on screen can be answered, in any order; only that exact card.
+        val currentCard = current().cardFor(card.id) ?: return
         if (
             reviewed.id != card.id ||
                 reviewed.sessionId != session ||
-                !engine.isCurrent(reviewed) ||
-                currentCard.id != card.id
+                !engine.isCurrent(reviewed)
         )
             return
         when (action) {
@@ -378,44 +372,82 @@ public class ChatRequestsModel(
 
     /** The slot as of now (actions decide on this, never on a frame that may be behind). */
     private fun current(): RequestSlotUi =
-        slot(
-            selected(engine.pending.value, local.value.focused),
-            capabilities.value,
-            place.value,
-            local.value,
-        )
+        slot(engine.pending.value, capabilities.value, place.value, local.value)
 
     /**
-     * A monitor/deep link chooses one exact waiting card. This is display-only and never answers
-     * it.
+     * A monitor/deep link names one exact waiting card. This is display-only and never answers it;
+     * every card stays in arrival order.
      */
     public fun focus(id: RequestId): Unit = local.update { it.copy(focused = id) }
 
-    private fun selected(all: List<PendingRequest>, focused: RequestId?): SessionRequests {
-        val normal = SessionRequests.of(all, session)
-        val mine = all.filter { it.sessionId == session }
-        val chosen = mine.firstOrNull { it.id == focused } ?: return normal
-        return SessionRequests(chosen, mine.size - 1)
-    }
-
     private fun permissionCard(id: RequestId): RequestCardUi.Permission? =
-        (current().card as? RequestCardUi.Permission)?.takeIf { it.id == id }
+        current().cardFor(id) as? RequestCardUi.Permission
 
     private fun questionCard(id: RequestId): RequestCardUi.Question? =
-        (current().card as? RequestCardUi.Question)?.takeIf {
-            it.id == id && it.state == CardState.Waiting
+        (current().cardFor(id) as? RequestCardUi.Question)?.takeIf {
+            it.state == CardState.Waiting
         }
 
     private fun slot(
-        requests: SessionRequests,
+        all: List<PendingRequest>,
         caps: ServerCapabilities,
         where: RequestPlace,
         mine: Local,
     ): RequestSlotUi {
-        val request = requests.current ?: return RequestSlotUi()
+        val requests = SessionRequests.of(all, session).all
+        if (requests.isEmpty()) return RequestSlotUi()
+        val cards = requests.map { card(it, caps, where, mine) }.toImmutableList()
+        val confirm =
+            cards
+                .filterIsInstance<RequestCardUi.Permission>()
+                .firstOrNull {
+                    mine.confirm != null &&
+                        mine.confirm.request === it.captured?.request &&
+                        it.canAlwaysAllow &&
+                        it.state == CardState.Waiting &&
+                        (!mine.confirmInvitation || it.invitation)
+                }
+                ?.let {
+                    AlwaysConfirmUi(
+                        it.id,
+                        it.ask.always,
+                        it.captured,
+                        invitation = mine.confirmInvitation,
+                    )
+                }
+        val sheet =
+            requests
+                .filterIsInstance<PendingRequest.Question>()
+                .firstOrNull {
+                    mine.sheet?.question === it.question && it.phase == AnswerPhase.Waiting
+                }
+                ?.let {
+                    val drafts =
+                        mine.questionDrafts[QuestionDraftKey(it.question)]?.takeIf { drafts ->
+                            drafts.size == it.question.prompts.size
+                        } ?: QuestionSheet.emptyDraft(it.question)
+                    QuestionSheetUi(
+                        it.question,
+                        drafts,
+                        QuestionSheet.block(it.question, drafts) == null,
+                    )
+                }
+        return RequestSlotUi(
+            cards,
+            confirm,
+            sheet,
+            focused = mine.focused?.takeIf { id -> cards.any { it.id == id } },
+        )
+    }
+
+    private fun card(
+        request: PendingRequest,
+        caps: ServerCapabilities,
+        where: RequestPlace,
+        mine: Local,
+    ): RequestCardUi {
         val state = cardState(request.phase)
-        val card =
-            when (request) {
+        return when (request) {
                 is PendingRequest.Permission ->
                     RequestCardUi.Permission(
                         id = request.id,
@@ -431,6 +463,8 @@ public class ChatRequestsModel(
                             caps.persistentPermissionGrants && request.request.canAlwaysAllow,
                         captured = request.copy(phase = AnswerPhase.Waiting),
                         invitation = engine.isInvited(request.id),
+                        invitationFailure =
+                            mine.invitationFailure.takeIf { mine.invitationFailureFor == request.id },
                     )
                 is PendingRequest.Question -> {
                     val prompt = request.question.prompts.firstOrNull()
@@ -461,44 +495,6 @@ public class ChatRequestsModel(
                     )
                 }
             }
-        val confirm =
-            (card as? RequestCardUi.Permission)
-                ?.takeIf {
-                    mine.confirm?.request === it.captured?.request &&
-                        mine.confirm != null &&
-                        it.canAlwaysAllow &&
-                        it.state == CardState.Waiting &&
-                        (!mine.confirmInvitation || it.invitation)
-                }
-                ?.let {
-                    AlwaysConfirmUi(
-                        it.id,
-                        it.ask.always,
-                        it.captured,
-                        invitation = mine.confirmInvitation,
-                    )
-                }
-        val sheet =
-            (request as? PendingRequest.Question)
-                ?.takeIf { mine.sheet?.question === it.question && state == CardState.Waiting }
-                ?.let {
-                    val drafts =
-                        mine.questionDrafts[QuestionDraftKey(it.question)]?.takeIf { drafts ->
-                            drafts.size == it.question.prompts.size
-                        } ?: QuestionSheet.emptyDraft(it.question)
-                    QuestionSheetUi(
-                        it.question,
-                        drafts,
-                        QuestionSheet.block(it.question, drafts) == null,
-                    )
-                }
-        return RequestSlotUi(
-            card,
-            requests.moreWaiting,
-            confirm,
-            sheet,
-            invitationFailure = mine.invitationFailure.takeIf { mine.invitationFailureFor == request.id },
-        )
     }
 
     private fun cardState(phase: AnswerPhase): CardState =
@@ -508,6 +504,7 @@ public class ChatRequestsModel(
             is AnswerPhase.Sending -> CardState.Sending(words(phase.answer))
             is AnswerPhase.Sent -> CardState.Sent(words(phase.answer))
             is AnswerPhase.NotAccepted -> CardState.NotAccepted(words(phase.answer))
+            AnswerPhase.NoLongerNeeded -> CardState.NoLongerNeeded
         }
 
     private fun words(answer: RequestAnswer): AnswerWords =
