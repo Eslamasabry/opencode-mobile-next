@@ -11,18 +11,28 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * What the chat's request slot shows above the composer (plan 09 §5.1, §6.4): at most one card, the
- * oldest waiting request of this conversation, how many more wait, and the Always allow confirm
- * while it is open. No copy: every word is chosen by the screen from `:ui:words`; server text (a
- * question and its options) is data.
+ * What the chat's request slot shows above the composer (plan 09 §5.1, §6.4; E06-S01): one card
+ * per request of this conversation, in arrival order, so each can be answered in any order and
+ * nothing hides behind "N more waiting"; plus the Always allow confirm while it is open. No copy:
+ * every word is chosen by the screen from `:ui:words`; server text (a question and its options) is
+ * data. [focused] is the card a monitor/deep link opened the chat for (display only).
  */
 public data class RequestSlotUi(
-    val card: RequestCardUi? = null,
-    val moreWaiting: Int = 0,
+    val cards: ImmutableList<RequestCardUi> = persistentListOf(),
     val confirmAlways: AlwaysConfirmUi? = null,
     val sheet: QuestionSheetUi? = null,
-    val invitationFailure: Failure? = null,
-)
+    val focused: RequestId? = null,
+) {
+    /** One card alone (previews and tests). */
+    public constructor(card: RequestCardUi?) : this(card?.let { persistentListOf(it) } ?: persistentListOf())
+
+    /** The oldest card: whether the slot holds anything at all. */
+    val card: RequestCardUi?
+        get() = cards.firstOrNull()
+
+    /** The card for [id], when it is on screen. */
+    public fun cardFor(id: RequestId): RequestCardUi? = cards.firstOrNull { it.id == id }
+}
 
 /**
  * One request card. [waitingSinceMs] is when this phone first showed it (null until it is shown).
@@ -49,6 +59,8 @@ public sealed interface RequestCardUi {
         val canAlwaysAllow: Boolean,
         override val captured: PendingRequest.Permission? = null,
         val invitation: Boolean = false,
+        /** Why the Always allow invitation of this card could not be saved. */
+        val invitationFailure: Failure? = null,
     ) : RequestCardUi
 
     /**
@@ -93,6 +105,9 @@ public sealed interface CardState {
 
     /** The server refused it: the card says so and offers Try again. */
     public data class NotAccepted(val words: AnswerWords) : CardState
+
+    /** The run that asked was stopped: "No longer needed", then the card leaves (E06-S03). */
+    public data object NoLongerNeeded : CardState
 }
 
 /** The words of the collapsed line, as a choice (the screen resolves it). */

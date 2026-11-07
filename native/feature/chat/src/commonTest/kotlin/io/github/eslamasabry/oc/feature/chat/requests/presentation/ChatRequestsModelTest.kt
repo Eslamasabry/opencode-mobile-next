@@ -113,7 +113,7 @@ class ChatRequestsModelTest {
     }
 
     @Test
-    fun `B-CHAT-123 the chat shows its own oldest ask, worded from the request, and how many more wait`() =
+    fun `B-CHAT-123 the chat shows its own asks first to last, worded from the request`() =
         runTest {
             val (_, model) = model()
             ask(shell("p1"), shell("p2", session = other), shell("p3"))
@@ -125,7 +125,8 @@ class ChatRequestsModelTest {
             assertEquals("npm install", card.ask.name)
             assertEquals("neon⁠-⁠breaker", card.ask.where)
             assertEquals(CardState.Waiting, card.state)
-            assertEquals(1, slot.moreWaiting)
+            // E06-S01: every ask of this chat has its own card; the other chat's ask is not here.
+            assertEquals(listOf("p1", "p3"), slot.cards.map { it.id.raw })
             assertNull(card.waitingSinceMs)
 
             model.shown(RequestId("p1"))
@@ -178,9 +179,12 @@ class ChatRequestsModelTest {
         runTest {
             val (_, model) = model()
             ask(shell("p1"), shell("p2", session = other), shell("p3"))
+            val stale = model.state.value.cardFor(RequestId("p3"))!!
+            // p3 is asked again with other contents: the card the person saw is stale.
+            ask(shell("p3").copy(patterns = persistentListOf("rm -rf build")))
 
             model.allowOnce(RequestId("p2"))
-            model.allowOnce(RequestId("p3"))
+            model.performReviewed(stale, ReviewedRequestAction.AllowOnce)
             model.retry(RequestId("p1"))
             model.leave()
             assertEquals(emptyList(), port.replies)
@@ -348,5 +352,103 @@ class ChatRequestsModelTest {
             assertEquals(listOf("reply p1 Once", "reply p1 Once"), port.replies)
             assertEquals(CardState.Sent(AnswerWords.Allowed), model.state.value.card?.state)
             advanceTimeBy(5.seconds)
+        }
+
+    @Test
+    fun `E06-S01 three asks and a question show four cards in arrival order, answered in any order`() =
+        runTest {
+            port.capabilities.value = ServerCapabilities()
+            val (_, model) = model()
+            ask(shell("p1"))
+            port.questions = listOf(question("q1"))
+            port.events.emit(GatewayEvent.QuestionAsked(question("q1")))
+            runCurrent()
+            ask(shell("p2"), shell("p3"))
+
+            val slot = model.state.value
+            assertEquals(listOf("p1", "q1", "p2", "p3"), slot.cards.map { it.id.raw })
+            assertEquals(listOf(true, false, true, true), slot.cards.map { it is RequestCardUi.Permission })
+            assertEquals(List(4) { CardState.Waiting }, slot.cards.map { it.state })
+
+            // The third card first, then the question: each answers only itself.
+            model.allowOnce(RequestId("p2"))
+            model.choose(RequestId("q1"), "Yes")
+            runCurrent()
+            val held = model.state.value.cards.associate { it.id.raw to it.state }
+            assertEquals(CardState.Held(AnswerWords.Allowed), held["p2"])
+            assertEquals(CardState.Held(AnswerWords.Chose("Yes")), held["q1"])
+            assertEquals(CardState.Waiting, held["p1"])
+            assertEquals(CardState.Waiting, held["p3"])
+            passHold()
+            assertEquals(setOf("reply p2 Once", "answer q1 [[Yes]]"), port.replies.toSet())
+
+            // The server settles p2: that card alone leaves, on the event.
+            port.events.emit(GatewayEvent.PermissionSettled(chat, RequestId("p2")))
+            runCurrent()
+            assertEquals(listOf("p1", "q1", "p3"), model.state.value.cards.map { it.id.raw })
+        }
+
+    @Test
+    fun `E06-S01 Always allow confirm and shown age belong to the card that asked`() =
+        runTest {
+            val (_, model) = model()
+            ask(shell("p1"), shell("p2"))
+
+            model.shown(RequestId("p2"))
+            model.askAlwaysAllow(RequestId("p2"))
+            runCurrent()
+            assertEquals(RequestId("p2"), model.state.value.confirmAlways?.id)
+            assertNull(model.state.value.cardFor(RequestId("p1"))?.waitingSinceMs)
+            assertEquals(clock.now.toEpochMilliseconds(), model.state.value.cardFor(RequestId("p2"))?.waitingSinceMs)
+            model.confirmAlwaysAllow()
+            passHold()
+            assertEquals(listOf("reply p2 Always"), port.replies)
+            assertEquals(CardState.Waiting, model.state.value.cardFor(RequestId("p1"))?.state)
+        }
+
+    @Test
+    fun `E06-S03 after Stop every card says No longer needed, answers nothing, and leaves within 2 s`() =
+        runTest {
+            val (engine, model) = model()
+            ask(shell("p1"), shell("p2"), shell("p3", session = other))
+            model.allowOnce(RequestId("p2"))
+            runCurrent()
+
+            engine.discardStopped(engine.pending.value.filter { it.sessionId == chat })
+            runCurrent()
+            assertEquals(
+                listOf(CardState.NoLongerNeeded, CardState.NoLongerNeeded),
+                model.state.value.cards.map { it.state },
+            )
+            model.allowOnce(RequestId("p1"))
+            model.undo(RequestId("p2"))
+            runCurrent()
+            assertEquals(listOf(CardState.NoLongerNeeded, CardState.NoLongerNeeded), model.state.value.cards.map { it.state })
+
+            advanceTimeBy(2.seconds)
+            runCurrent()
+            assertEquals(emptyList(), model.state.value.cards)
+            assertEquals(emptyList(), port.replies)
+        }
+
+    @Test
+    fun `E06-S03 a run stopped elsewhere clears this chat's cards too`() =
+        runTest {
+            val (_, model) = model()
+            ask(shell("p1"))
+
+            port.events.emit(
+                GatewayEvent.RunEnded(
+                    chat,
+                    io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted(
+                        io.github.eslamasabry.oc.core.domain.events.InterruptReason.User
+                    ),
+                )
+            )
+            runCurrent()
+            assertEquals(CardState.NoLongerNeeded, model.state.value.card?.state)
+            advanceTimeBy(2.seconds)
+            runCurrent()
+            assertNull(model.state.value.card)
         }
 }
