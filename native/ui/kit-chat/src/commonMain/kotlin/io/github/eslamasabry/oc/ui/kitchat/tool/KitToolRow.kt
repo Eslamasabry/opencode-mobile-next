@@ -53,6 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFrameText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
@@ -303,7 +304,7 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
                         else -> KitIcons.radioEmpty
                     }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitIcon(mark, Modifier.size(16.dp), tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)
+                    KitIcon(mark, size = KitIconSize.Tiny, tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary)
                     KitText(
                         view.statusLabel,
                         role = TypeRole.Secondary,

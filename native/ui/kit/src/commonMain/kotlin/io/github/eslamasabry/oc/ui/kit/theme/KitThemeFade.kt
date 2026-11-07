@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.graphics.lerp
 
 /**
@@ -77,6 +78,10 @@ internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFa
             return@LaunchedEffect
         }
         progress.snapTo(0f)
+        // P-116: the first fading frame recomposes every part in the new colours' path (it measured ~95 ms of a
+        // 200 ms fade left on the emulator). The fade's clock starts once that frame is under way, so all of MS is
+        // seen as motion instead of being spent on one long first frame.
+        withFrameNanos {}
         progress.animateTo(1f, tween(ThemeFade.MS, easing = LinearEasing))
     }
     // Motion Off and still frames show the new colours on the same frame.

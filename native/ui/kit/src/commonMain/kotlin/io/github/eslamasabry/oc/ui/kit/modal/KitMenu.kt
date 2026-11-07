@@ -27,13 +27,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +57,8 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPressOrigin
+import io.github.eslamasabry.oc.ui.kit.foundation.toIntRect
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
@@ -162,31 +162,35 @@ public fun KitMenu(
 ) {
     // P-017: where the anchor sits in the window, so the panel's height can be held to the side it opens on and
     // never cover the control that opened it.
-    var anchorTop by remember { mutableIntStateOf(0) }
-    var anchorBottom by remember { mutableIntStateOf(0) }
-    Box(
-        modifier.onGloballyPositioned {
-            val b = it.boundsInWindow()
-            anchorTop = b.top.roundToInt()
-            anchorBottom = b.bottom.roundToInt()
-        }
-    ) {
+    var own by remember { mutableStateOf(IntRect.Zero) }
+    // P-108: a menu with no anchor of its own (a screen-level menu a row's ⋯ opens through its state) opens from the
+    // control just pressed, not from the empty box in the screen's corner (which put it over that ⋯).
+    val origin = LocalKitPressOrigin.current
+    val open = expanded && items.isNotEmpty()
+    val pressed = remember(open) { if (open) origin.take() else null }
+    Box(modifier.onGloballyPositioned { own = it.boundsInWindow().toIntRect() }) {
         anchor()
-        if (expanded && items.isNotEmpty()) {
-            MenuPopup(items, title, onDismissRequest, anchorTop, anchorBottom)
+        if (open) {
+            val at = MenuPlacement.anchorFor(own, pressed)
+            MenuPopup(items, title, onDismissRequest, at, override = at.takeIf { it != own })
         }
     }
 }
 
-/** The open menu: placed by [MenuPlacement] from the anchor's window edges [anchorTop] and [anchorBottom]. */
+/**
+ * The open menu: placed by [MenuPlacement] from [anchor] (window px); [override] replaces the anchor box the popup is
+ * given when the menu opens from a pressed control instead of its own.
+ */
 @Composable
 private fun MenuPopup(
     items: List<KitMenuItem>,
     title: String?,
     onDismissRequest: () -> Unit,
-    anchorTop: Int,
-    anchorBottom: Int,
+    anchor: IntRect,
+    override: IntRect?,
 ) {
+    val anchorTop = anchor.top
+    val anchorBottom = anchor.bottom
     // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
     // the screen's edge under a full-width row).
     val density = LocalDensity.current
@@ -196,7 +200,7 @@ private fun MenuPopup(
     val step = with(density) { Space.S2.dp.roundToPx() }
     val top = WindowInsets.systemBars.getTop(density) + step
     val bottom = WindowInsets.systemBars.getBottom(density) + step
-    val provider = remember(gutter, top, bottom) { MenuPosition(gutter, top, bottom) }
+    val provider = remember(gutter, top, bottom, override) { MenuPosition(gutter, top, bottom, override) }
     Popup(
         popupPositionProvider = provider,
         onDismissRequest = onDismissRequest,
@@ -365,6 +369,13 @@ public data class MenuWindow(
  * ([room]; it scrolls). It never covers the control that opened it.
  */
 public object MenuPlacement {
+    /**
+     * The box a menu opens from (P-108): its [own] anchor, or the control just [pressed] when its own is empty (a
+     * zero-size box: the screen-level menu of a row's ⋯), so the menu never opens over the control that opened it.
+     */
+    public fun anchorFor(own: IntRect, pressed: IntRect?): IntRect =
+        if (pressed != null && own.width == 0 && own.height == 0) pressed else own
+
     /** The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room. */
     public fun room(anchorTop: Int, anchorBottom: Int, window: MenuWindow): Int =
         maxOf(window.height - window.bottom - anchorBottom, anchorTop - window.top).coerceAtLeast(0)
@@ -403,8 +414,12 @@ public object MenuPlacement {
     }
 }
 
-private class MenuPosition(private val margin: Int, private val top: Int = 0, private val bottom: Int = 0) :
-    PopupPositionProvider {
+private class MenuPosition(
+    private val margin: Int,
+    private val top: Int = 0,
+    private val bottom: Int = 0,
+    private val override: IntRect? = null,
+) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
@@ -412,6 +427,6 @@ private class MenuPosition(private val margin: Int, private val top: Int = 0, pr
         popupContentSize: IntSize,
     ): IntOffset {
         val window = MenuWindow(windowSize.width, windowSize.height, margin, top, bottom)
-        return MenuPlacement.offset(anchorBounds, popupContentSize, layoutDirection == LayoutDirection.Rtl, window)
+        return MenuPlacement.offset(override ?: anchorBounds, popupContentSize, layoutDirection == LayoutDirection.Rtl, window)
     }
 }

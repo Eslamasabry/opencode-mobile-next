@@ -44,11 +44,20 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
-/** The three designed sizes (Dart `KitIconSize`, VL §7): 20 inline and in rows, 22 for a card mark, 24 for controls. */
+/**
+ * The designed sizes (Dart `KitIconSize`, VL §7): 20 inline and in rows, 22 for a card mark, 24 for controls, and 16
+ * for a mark inside a secondary-size line (a step's status, a tool row's outcome). The glyph is drawn at the size it
+ * is given, so a host passes [KitIcon]'s `size`, never a `Modifier.size` that would crop a larger glyph (P-101).
+ */
 public enum class KitIconSize(public val dp: Int) {
+    /** A mark in a secondary-size line: a work step's or a tool row's status (P-101). */
+    Tiny(16),
     Small(20),
     Medium(22),
     Large(24),
+
+    /** The floating action's one glyph on its 56 dp disc (Dart `tokens.iconSize(context, 28)`). */
+    Fab(28),
 }
 
 /**
