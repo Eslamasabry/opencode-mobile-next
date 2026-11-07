@@ -188,7 +188,9 @@ internal fun TimelineStep(
             KitToolStatus.Failed -> {
                 { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Primary, maxLines = wordLines) }
             }
+            // F: lib/ui/kit/chat/kit_tool_row.dart:1240 waitingForYou shows its word in secondary
             KitToolStatus.Pending,
+            KitToolStatus.WaitingForYou,
             KitToolStatus.Stopped -> {
                 { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = wordLines) }
             }

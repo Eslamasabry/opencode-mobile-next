@@ -116,6 +116,8 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         when (view.status) {
             KitToolStatus.Running -> KitStepTile(icon, KitStepNodeLook.Running, size, modifier)
             KitToolStatus.Pending -> KitStepTile(icon, KitStepNodeLook.Queued, size, modifier)
+            // F: lib/ui/kit/chat/kit_tool_row.dart:694 waitingForYou draws the waiting node
+            KitToolStatus.WaitingForYou -> KitStepTile(icon, KitStepNodeLook.Waiting, size, modifier)
             KitToolStatus.Done ->
                 if (settling && transition.value < tickShare)
                     // F: lib/ui/kit/chat/kit_step_light.dart:222-229 the tick in success while it lands
