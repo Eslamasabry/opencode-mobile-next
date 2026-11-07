@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.usage.presentation
 
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -36,6 +37,24 @@ public object UsageFigures {
     /** Models most expensive first, then by steps. */
     public fun models(models: List<UsageModel>): List<UsageModel> =
         models.sortedWith(compareByDescending<UsageModel> { it.cost }.thenByDescending { it.steps })
+
+    /**
+     * A provider's share of [total], 0..1; null when either cost cannot be stated or nothing was spent (a share of
+     * zero dollars is not a number the page can show).
+     */
+    public fun share(cost: Double?, total: Double): Double? =
+        if (cost == null || !cost.isFinite() || !total.isFinite() || total <= 0.0) null
+        else (cost / total).coerceIn(0.0, 1.0)
+
+    /**
+     * Agent steps for every calendar day of the report, oldest first, with the days the server left out as zero
+     * (B-160 chart). Only the server's day labels are used; nothing is spread or estimated. Empty when the zone
+     * cannot be read or the report covers no whole day.
+     */
+    public fun dailySteps(report: UsageReport, zoneId: String): List<UsageDay> {
+        val byDay = report.activity.groupBy { it.date }.mapValues { (_, v) -> v.sumOf { it.steps } }
+        return UsageCalendar.daysBetween(report.fromMs, report.toMs, zoneId).map { UsageDay(it, byDay[it] ?: 0) }
+    }
 
     /** Days with activity, newest first, at most [limit]. */
     public fun activeDays(days: List<UsageDay>, limit: Int = 31): List<UsageDay> =

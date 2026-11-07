@@ -292,7 +292,9 @@ public class UsageViewModel(
                                     (s.range == UsageRange.AllTime && query.fromMs == null))
                         val answer = value.copy(coversRequest = covers)
                         lastGood = filters to answer
-                        val owner = budgetAccess.singleOrNull()?.open(server)
+                        // Budgets keep Flutter's stored format, which has no 24-hour, 7-day or 90-day range.
+                        val owner =
+                            if (s.range.hasBudgets) budgetAccess.singleOrNull()?.open(server) else null
                         if (mine != generation) {
                             owner?.dispose()
                             return@launch

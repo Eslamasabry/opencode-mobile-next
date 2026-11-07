@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgets
+import io.github.eslamasabry.oc.feature.usage.presentation.UsageBudgetAccess
 import io.github.eslamasabry.oc.feature.usage.presentation.UsagePhase
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageProject
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageQuery
@@ -234,4 +236,29 @@ class UsageViewModelTest {
         assertEquals(UsagePhase.Ready, other.state.value.phase)
         assertEquals(UsageScope.AllProjects, other.state.value.scope)
     }
+
+    @Test
+    fun `B-160 the 24-hour, 7-day and 90-day ranges read usage but never open budgets in Flutter's stored format`() =
+        runTest {
+            val opened = mutableListOf<ProfileId>()
+            val access =
+                object : UsageBudgetAccess {
+                    override suspend fun open(profile: ProfileId): UsageBudgets? {
+                        opened += profile
+                        return null
+                    }
+                }
+            val source = Source()
+            val vm = UsageViewModel(UsageRoute.Hub(null), source, UsageTimeZone { "Africa/Cairo" }, clock, Navigator(), setOf(access))
+            assertEquals(listOf(home), opened) // 30 days, the default, has budgets
+            for (range in listOf(UsageRange.Last24Hours, UsageRange.SevenDays, UsageRange.NinetyDays)) {
+                vm.chooseRange(range)
+                assertEquals(UsagePhase.Ready, vm.state.value.phase)
+                assertFalse(vm.state.value.budgetsAvailable)
+            }
+            assertEquals(listOf(home), opened)
+            assertEquals(4, source.queries.size)
+            vm.chooseRange(UsageRange.ThirtyDays)
+            assertEquals(listOf(home, home), opened)
+        }
 }
