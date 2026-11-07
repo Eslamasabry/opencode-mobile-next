@@ -34128,4 +34128,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get termuxRetiredSetUpLinux => 'جهّز لينكس المدمج';
+
+  @override
+  String get phoneSetupErrorNodeUnsupported =>
+      'لا يستطيع نظام هذا الهاتف تشغيل Node.js داخل Linux المدمج. ما زال بإمكانك استخدام OpenCode Mobile بربطه بحاسوبك.';
+
+  @override
+  String get phoneSetupConnectComputer => 'ربط حاسوب';
 }

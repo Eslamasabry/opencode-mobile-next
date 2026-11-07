@@ -9,6 +9,7 @@ import '../../state/download_size.dart';
 import '../builtin_linux.dart';
 import 'aiteam_scripts.dart';
 import 'component_updates.dart';
+import 'node_compat.dart';
 import 'setup_contract.dart';
 import 'voice_component.dart';
 
@@ -352,6 +353,7 @@ node --version | sed 's/^v//'
     final pins = builtinNodePins;
     final plain = _nodeVersion.replaceFirst('v', '');
     return '''set -eu
+${NodeCompat.prelude}
 case "\$(uname -m)" in
   aarch64|arm64) node_arch=arm64; node_sha=${pins['node_sha256_arm64']} ;;
   x86_64|amd64) node_arch=x64; node_sha=${pins['node_sha256_x64']} ;;
@@ -359,6 +361,10 @@ case "\$(uname -m)" in
 esac
 node_version=$_nodeVersion
 node_file=/var/cache/oc-setup/node-\$node_version-linux-\$node_arch.tar.gz
+# Issue #117: a phone that crashes threaded and OpenSSL programs is found
+# before the 58 MB download.
+oc_stage 'Checking this phone'
+oc_node_phone_check || exit \$?
 oc_stage 'Downloading Node.js $plain'
 oc_download "${pins['node_base_url']}/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz" \\
   "\$node_file" "\$node_sha"
@@ -371,7 +377,10 @@ rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/\$tool /usr/local/bin/\$tool; done
 oc_stage 'Checking that Node.js starts'
-/opt/node/bin/node --version
+# Starts Node and npm; after a crash, finds the safe mode this phone needs
+# (or ends the step, node_compat.dart).
+oc_node_adapt || exit \$?
+node --version
 npm config set prefix /usr/local
 rm -f "\$node_file"
 oc_version "\$(node --version | sed 's/^v//')"

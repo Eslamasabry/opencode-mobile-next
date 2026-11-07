@@ -32274,4 +32274,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get termuxRetiredSetUpLinux => '设置内置 Linux';
+
+  @override
+  String get phoneSetupErrorNodeUnsupported =>
+      'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.';
+
+  @override
+  String get phoneSetupConnectComputer => 'Connect a computer';
 }

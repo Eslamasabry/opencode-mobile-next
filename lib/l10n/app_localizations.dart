@@ -53503,6 +53503,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set up built-in Linux'**
   String get termuxRetiredSetUpLinux;
+
+  /// Setup error when Node.js crashes on this phone's system in every safe mode the app tried (issue #117); the screen then offers connecting a computer
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.'**
+  String get phoneSetupErrorNodeUnsupported;
+
+  /// Button on the failed phone setup screen when this phone cannot run Node.js: opens adding a server on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a computer'**
+  String get phoneSetupConnectComputer;
 }
 
 class _AppLocalizationsDelegate

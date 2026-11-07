@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
+import 'package:opencode_mobile/builtin/setup/node_compat.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
@@ -89,7 +90,9 @@ SetupProgress sceneJob({
   ComponentProgress? current,
   String? error,
   String log = '',
+  bool phoneUnsupported = false,
 }) => SetupProgress(
+  phoneUnsupported: phoneUnsupported,
   state: state,
   overall: overall,
   etaSeconds: eta,
@@ -366,6 +369,28 @@ final setupScenes = <SetupScene>[
         error: 'Exit code 6',
       ),
       log: 'curl: (6) Could not resolve host: nodejs.org\n',
+    ),
+  ),
+  // Issue #117: Node.js crashes on this phone in every safe mode.
+  SetupScene(
+    'setup_progress_node_unsupported',
+    home: _progress,
+    push: true,
+    progress: sceneJob(
+      state: SetupState.failed,
+      overall: .55,
+      done: {'linux', 'essentials', 'python'},
+      phoneUnsupported: true,
+      current: const ComponentProgress(
+        id: 'node',
+        state: ComponentState.failed,
+        stage: 'Checking that Node.js starts',
+        error: NodeCompatFailure.unsupported,
+      ),
+      log:
+          '[oc] probe version 139 # node --version\n'
+          '[oc] probe armcap 139 # OPENSSL_armcap=0 node -e <work>\n'
+          '${NodeCompatFailure.unsupported}\n',
     ),
   ),
   SetupScene(

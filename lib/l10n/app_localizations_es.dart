@@ -34386,4 +34386,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get termuxRetiredSetUpLinux => 'Configurar Linux integrado';
+
+  @override
+  String get phoneSetupErrorNodeUnsupported =>
+      'El sistema de este teléfono no puede ejecutar Node.js dentro de Linux integrado. Aún puedes usar OpenCode Mobile conectándote a tu ordenador.';
+
+  @override
+  String get phoneSetupConnectComputer => 'Conectar un ordenador';
 }

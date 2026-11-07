@@ -12,6 +12,7 @@ import '../../l10n/app_localizations.dart';
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
 import 'components.dart';
+import 'node_compat.dart';
 import 'preflight.dart';
 import 'setup_contract.dart';
 import 'setup_scripts.dart';
