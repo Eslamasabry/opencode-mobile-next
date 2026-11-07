@@ -39,64 +39,64 @@ class AppUpdateInstaller(
 
     private fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "getSupportedAbis" -> {
-                result.success(Build.SUPPORTED_ABIS.toList())
-            }
-            "canRequestPackageInstalls" -> {
-                val canInstall = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    activity.packageManager.canRequestPackageInstalls()
-                } else {
-                    true
-                }
-                result.success(canInstall)
-            }
-            "openInstallPermissionSettings" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    try {
-                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                            data = Uri.parse("package:${activity.packageName}")
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        activity.startActivity(intent)
-                        result.success(true)
-                    } catch (e: Exception) {
-                        result.error("permission_error", e.message, null)
-                    }
-                } else {
-                    result.success(true)
-                }
-            }
-            "installApk" -> {
-                val path = call.argument<String>("filePath")
-                if (path == null) {
-                    result.error("invalid_arg", "filePath must not be null", null)
-                    return
-                }
-                val file = File(path)
-                if (!file.exists() || !file.canRead()) {
-                    result.error("file_not_found", "APK file does not exist or is unreadable: $path", null)
-                    return
-                }
-
-                try {
-                    val contentUri = FileProvider.getUriForFile(
-                        activity,
-                        "${activity.packageName}.fileprovider",
-                        file,
-                    )
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(contentUri, "application/vnd.android.package-archive")
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    }
-                    activity.startActivity(intent)
-                    result.success(true)
-                } catch (e: ActivityNotFoundException) {
-                    result.error("no_installer", "No activity found to install package: ${e.message}", null)
-                } catch (e: Exception) {
-                    result.error("install_failed", e.message, null)
-                }
-            }
+            "getSupportedAbis" -> result.success(Build.SUPPORTED_ABIS.toList())
+            "canRequestPackageInstalls" -> result.success(canRequestPackageInstalls())
+            "openInstallPermissionSettings" -> openInstallPermissionSettings(result)
+            "installApk" -> installApk(call.argument<String>("filePath"), result)
             else -> result.notImplemented()
+        }
+    }
+
+    private fun canRequestPackageInstalls(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity.packageManager.canRequestPackageInstalls()
+        } else {
+            true
+        }
+
+    private fun openInstallPermissionSettings(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            result.success(true)
+            return
+        }
+        try {
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                data = Uri.parse("package:${activity.packageName}")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            activity.startActivity(intent)
+            result.success(true)
+        } catch (e: Exception) {
+            result.error("permission_error", e.message, null)
+        }
+    }
+
+    private fun installApk(path: String?, result: MethodChannel.Result) {
+        if (path == null) {
+            result.error("invalid_arg", "filePath must not be null", null)
+            return
+        }
+        val file = File(path)
+        if (!file.exists() || !file.canRead()) {
+            result.error("file_not_found", "APK file does not exist or is unreadable: $path", null)
+            return
+        }
+        try {
+            val contentUri = FileProvider.getUriForFile(
+                activity,
+                "${activity.packageName}.fileprovider",
+                file,
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(contentUri, "application/vnd.android.package-archive")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+            activity.startActivity(intent)
+            result.success(true)
+        } catch (e: ActivityNotFoundException) {
+            result.error("no_installer", "No activity found to install package: ${e.message}", null)
+        } catch (e: Exception) {
+            result.error("install_failed", e.message, null)
         }
     }
 }
