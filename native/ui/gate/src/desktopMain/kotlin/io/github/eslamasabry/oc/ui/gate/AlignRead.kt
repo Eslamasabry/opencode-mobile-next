@@ -45,9 +45,11 @@ internal object AlignRead {
         } else {
             Offset(at.x + n.size.width, at.y + n.size.height)
         }
-        val box = Box(at.x / d, at.y / d, far.x / d, far.y / d)
+        // A layer that turns the node (a chevron rotated 180° when open) maps its far corner before its origin: sort
+        // the corners so the box is never inverted (an inverted box made withText's coerceIn throw).
+        val box = Box(minOf(at.x, far.x) / d, minOf(at.y, far.y) / d, maxOf(at.x, far.x) / d, maxOf(at.y, far.y) / d)
         // window px per local px: 1 unless a layer scales the node
-        val k = if (n.size.width > 0) (far.x - at.x) / n.size.width else 1f
+        val k = if (n.size.width > 0) kotlin.math.abs(far.x - at.x) / n.size.width else 1f
         val words = c.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }.orEmpty()
         val isText = SemanticsProperties.Text in c && SemanticsProperties.EditableText !in c
         val glyph = isText && words.length == 1 && words[0].code in PUA_FIRST..PUA_LAST

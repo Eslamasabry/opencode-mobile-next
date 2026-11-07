@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard.Window
@@ -41,6 +42,14 @@ class AlignReadTest {
         assertTrue("icon-squeezed" in rules { KitIcon(KitIcons.check, Modifier.size(16.dp)) })
         val right = rules { KitIcon(KitIcons.check, size = KitIconSize.Small) }
         assertTrue("icon-squeezed" !in right && "icon-size" !in right, right.toString())
+    }
+
+    @Test
+    fun `B-GATE-201 a word turned half round by a layer is read without an inverted box`() {
+        // Before the fix the turned node's far corner lay before its origin and AlignRead threw
+        // "Cannot coerce value to an empty range" (every opened KitStepTimeline: its chevron turns 180°).
+        val result = align { KitText("Turned", Modifier.padding(16.dp).graphicsLayer { rotationZ = 180f }) }
+        assertTrue(result.findings.none { it.rule == "crash" }, result.findings.toString())
     }
 
     @Test
