@@ -91,6 +91,8 @@ class ReleaseShapeTest {
         assertTrue(abi.contains("reset()"))
         assertTrue(abi.contains("include(\"arm64-v8a\", \"x86_64\")"))
         assertTrue(abi.contains("isUniversalApk = true"))
+        // The universal APK is 64-bit only: dependencies' 32-bit copies are dropped from release packaging.
+        assertTrue(build.contains("variant.packaging.jniLibs.excludes.addAll(\"lib/armeabi-v7a/**\", \"lib/x86/**\")"))
         // Each split APK is checked for its own ABI's native libraries; the universal one for both.
         assertTrue(build.contains("filter { \"-\$it-\" in apk.name }"))
     }

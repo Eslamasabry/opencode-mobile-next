@@ -525,6 +525,9 @@ abstract class VerifyReleaseIdentity : DefaultTask() {
 }
 
 androidComponents.onVariants(androidComponents.selector().withBuildType("release")) { variant ->
+    // E01-S08 / release-identity.md (D-10 pending: 64-bit only): libraries bring 32-bit copies (armeabi-v7a, x86) that
+    // would let a 32-bit phone install a universal APK whose built-in Linux cannot run there. Release ships 64-bit only.
+    variant.packaging.jniLibs.excludes.addAll("lib/armeabi-v7a/**", "lib/x86/**")
     if (variant.flavorName != "switch") return@onVariants
     val identity =
         tasks.register<VerifyReleaseIdentity>("verifySwitchReleaseIdentity") {
