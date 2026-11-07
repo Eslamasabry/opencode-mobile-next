@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 
 import androidx.compose.foundation.layout.widthIn
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
+import androidx.compose.ui.layout.Layout
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -13,7 +15,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -40,8 +40,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -93,7 +91,7 @@ public fun KitComposerBox(
     modifier: Modifier = Modifier,
     wide: Boolean = false,
     leading: @Composable RowScope.() -> Unit = {},
-    chips: @Composable RowScope.() -> Unit = {},
+    chips: @Composable () -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
     stacked: Boolean = true,
     above: @Composable () -> Unit = {},
@@ -107,7 +105,6 @@ public fun KitComposerBox(
     val corner =
         StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
     val shadowRoom = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
-    val chipScroll = rememberScrollState()
     KitComposerGlow(
         active = running,
         modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(),
@@ -191,17 +188,11 @@ public fun KitComposerBox(
                     leading()
                     if (largeText) Spacer(Modifier.weight(1f))
                     else
-                        Row(
-                            // The line scrolls sideways; the chips' style shadows keep their room above and below.
-                            // N-52: a chip that does not fit fades out at the edge it scrolls under (the mic, Send)
-                            // instead of being cut by it.
-                            Modifier.weight(1f)
-                                .kitShadowRoom(shadowRoom)
-                                .kitComposerChipsFade(chipScroll)
-                                .horizontalScroll(chipScroll)
-                                .padding(vertical = shadowRoom),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                        // E20-S08: the line never scrolls a chip under the mic or Send. Chips after the first
+                        // (the approval mode) keep their words; the first (the model) takes the room left and
+                        // ends in "…".
+                        KitComposerChipLine(
+                            Modifier.weight(1f).kitShadowRoom(shadowRoom).padding(vertical = shadowRoom)
                         ) {
                             chips()
                         }
@@ -227,6 +218,11 @@ public fun KitComposerChip(
     semanticsLabel: String? = null,
     /** A choice that is on (auto-approve): the accent's soft tint and accent words, same size and shape. */
     active: Boolean = false,
+    /**
+     * E20-S08: this chip gives up its room first when the line is full (the model's name), its words ending in
+     * "…". It goes first in the line; a chip that does not shrink is never cut.
+     */
+    shrinks: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     KitTappable(
@@ -250,8 +246,10 @@ public fun KitComposerChip(
             icon?.let { KitIcon(it, size = KitIconSize.Small, tone = TextTone.Secondary) }
             KitText(
                 label,
-                // No weight: inside the sideways chip line a weight measures to zero and left only the chevron.
-                Modifier.widthIn(max = COMPOSER_CHIP_WORDS_MAX.dp),
+                // The chip line gives a bounded width (it no longer scrolls), so the words take what the glyphs
+                // leave and the caret stays. Only a chip that [shrinks] may end in "…".
+                Modifier.weight(1f, fill = false).widthIn(max = COMPOSER_CHIP_WORDS_MAX.dp)
+                    .then(if (shrinks) Modifier.kitMayTruncate("composer-chip") else Modifier),
                 role = TypeRole.Label,
                 tone = if (active) TextTone.Accent else TextTone.Primary,
                 kind = KitTextKind.Frame,
@@ -451,25 +449,33 @@ private const val RING = 44
 /** The longest a composer chip's words grow before they end in "…" (the model's name stays readable). */
 private const val COMPOSER_CHIP_WORDS_MAX = 180
 
-/** The chips line's edge fade (as `KitFilterChips`): an edge with more chips past it fades over 24 dp. */
-private fun Modifier.kitComposerChipsFade(scroll: androidx.compose.foundation.ScrollState): Modifier =
-    graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
-        .drawWithContent {
-            drawContent()
-            val rtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
-            val left = if (rtl) scroll.value < scroll.maxValue else scroll.value > 0
-            val right = if (rtl) scroll.value > 0 else scroll.value < scroll.maxValue
-            if (!left && !right) return@drawWithContent
-            val edge = (24.dp.toPx() / size.width).coerceIn(0f, .5f)
-            val solid = Color.Black
-            val clear = Color.Transparent
-            drawRect(
-                androidx.compose.ui.graphics.Brush.horizontalGradient(
-                    0f to if (left) clear else solid,
-                    edge to solid,
-                    (1f - edge) to solid,
-                    1f to if (right) clear else solid,
-                ),
-                blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
-            )
+/**
+ * The message box's chip line (E20-S08): one row that ends before the action button. Every chip after the first is
+ * measured whole first; the first (the model chip, which [KitComposerChip.shrinks]) gets the width that is left. A
+ * line too narrow for the later chips still never draws past its end: they get what is left, in order.
+ */
+@Composable
+private fun KitComposerChipLine(modifier: Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { measurables, constraints ->
+        val gap = Space.S2.dp.roundToPx()
+        val max = constraints.maxWidth
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        var used = 0
+        val tail =
+            measurables.drop(1).map { m ->
+                m.measure(loose.copy(maxWidth = (max - used).coerceAtLeast(0))).also { if (it.width > 0) used += it.width + gap }
+            }
+        val head = measurables.firstOrNull()?.measure(loose.copy(maxWidth = (max - used).coerceAtLeast(0)))
+        val placed = listOfNotNull(head) + tail
+        val shown = placed.filter { it.width > 0 }
+        val width = (shown.sumOf { it.width } + gap * (shown.size - 1).coerceAtLeast(0)).coerceIn(constraints.minWidth, max)
+        val height = (placed.maxOfOrNull { it.height } ?: 0).coerceAtLeast(constraints.minHeight)
+        layout(width, height) {
+            var x = 0
+            placed.forEach { p ->
+                p.placeRelative(x, (height - p.height) / 2)
+                if (p.width > 0) x += p.width + gap
+            }
         }
+    }
+}
