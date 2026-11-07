@@ -292,23 +292,7 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
 /** The plain title of a kept error, chosen by where it came from; the technical text stays under Details. */
 @Composable
 private fun errorTitle(source: String): String =
-    stringResource(
-        when {
-            source == "sse" || source.startsWith("sse.") || source == "events" ->
-                Res.string.recentErrorConnection
-            source == "thermal" || source.startsWith("thermal.") || source == "android.thermal" ->
-                Res.string.recentErrorTemperature
-            source == "flutter" || source == "widget" || source == "crash.widget" ->
-                Res.string.recentErrorScreen
-            source == "crash.last" || source == "crash.native" -> Res.string.crashKindClosed
-            source == "crash.anr" -> Res.string.crashKindNotResponding
-            source == "android.exit" -> Res.string.recentErrorAndroidExit
-            source == "bootstrap" || source == "bootstrap-reset" || source == "notify-migration" ->
-                Res.string.recentErrorStartup
-            source == "report-problem" -> Res.string.recentErrorReportStore
-            else -> Res.string.recentErrorGeneric
-        }
-    )
+    stringResource(io.github.eslamasabry.oc.feature.diagnostics.presentation.ReportHeadlines.ofSource(source).words)
 
 /** Where time went in this run (Flutter `PerfTraceSection`): steps by name, Copy and Clear. */
 @Composable

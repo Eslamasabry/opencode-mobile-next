@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- E19-S04: Report a problem names a memory exit in plain words, not as the raw exit record. -->
+<resources>
+    <string name="reportHeadlineLowMemory">Android closed the app to free memory</string>
+</resources>

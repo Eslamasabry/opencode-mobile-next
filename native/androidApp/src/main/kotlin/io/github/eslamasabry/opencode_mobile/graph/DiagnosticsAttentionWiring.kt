@@ -57,6 +57,8 @@ import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReports
 import io.github.eslamasabry.oc.engine.diagnostics.report.AppErrorCapture
 import io.github.eslamasabry.oc.engine.diagnostics.report.ProblemThermalReadings
 import io.github.eslamasabry.oc.engine.diagnostics.report.ReportProblemStartup
+import io.github.eslamasabry.oc.feature.diagnostics.presentation.ReportHeadlines
+import io.github.eslamasabry.oc.feature.diagnostics.ui.text
 import io.github.eslamasabry.oc.engine.diagnostics.perf.formatMs
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptErrorRow
@@ -434,13 +436,13 @@ class GitHubProblemReporter(
     }
 
     /** The preview and the eventual issue link share this immutable, already scrubbed report. */
-    fun preview(connection: String?, description: String = ""): String {
+    suspend fun preview(connection: String?, description: String = ""): String {
         val current = prepare(connection, description)
         prepared = current
         return current.problem.text
     }
 
-    private fun prepare(connection: String?, description: String): Prepared {
+    private suspend fun prepare(connection: String?, description: String): Prepared {
         val stored =
             report.current?.report?.entries?.map { e ->
                 ProblemReportEvent(
@@ -452,7 +454,9 @@ class GitHubProblemReporter(
                 )
             }
         val events = ProblemReports.events(stored, diagnostics.errors.value)
-        val latest = events.firstOrNull { it.isError }
+        // E19-S04: the title is plain words for the newest real problem (a force-stop or an update is
+        // none); the raw exit record stays only under Diagnostics.
+        val headline = if (attachment == null) ReportHeadlines.newest(events)?.text() else null
         val problem =
             ProblemReport.build(
                 redactor = redactor,
@@ -465,8 +469,7 @@ class GitHubProblemReporter(
                 // Like Flutter: only the surface's own error is attached; the newest kept error
                 // only titles a report that has neither an attachment nor a description.
                 error = attachment,
-                fallbackTitle =
-                    if (attachment == null) latest?.message?.lineSequence()?.firstOrNull() else null,
+                fallbackTitle = headline,
                 events = events,
                 update = updateCheck,
             )
