@@ -18,7 +18,8 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class TranscriptLayoutTest {
-    @Test fun shortHistoryStartsAtTopAndKeepsReadingOrder() = runComposeUiTest {
+    // C-002 (parity audit 2026-11-07): Flutter's reversed list rests a short chat on the composer, not under the header.
+    @Test fun shortHistorySitsOnTheBottomAndKeepsReadingOrder() = runComposeUiTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
                 KitTranscriptList(rememberTranscriptListState(), "reply", "Latest", KitMotionLevel.Off, Modifier.height(600.dp)) {
@@ -29,7 +30,8 @@ class TranscriptLayoutTest {
         }
         val prompt = onNodeWithText("Prompt").fetchSemanticsNode().boundsInRoot
         val reply = onNodeWithText("Reply").fetchSemanticsNode().boundsInRoot
-        assertTrue(prompt.top < 100f, "A short history starts at the top, as Flutter does")
+        val list = onNodeWithTag("transcript-list").fetchSemanticsNode().boundsInRoot
+        assertTrue(prompt.top - list.top > list.height / 2, "A short history sits on the bottom, as Flutter does")
         assertTrue(prompt.bottom <= reply.top)
     }
 }
