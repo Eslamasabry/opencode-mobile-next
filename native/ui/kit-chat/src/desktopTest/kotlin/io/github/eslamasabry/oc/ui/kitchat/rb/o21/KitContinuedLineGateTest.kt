@@ -1,20 +1,26 @@
 package io.github.eslamasabry.oc.ui.kitchat.rb.o21
 
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
+import io.github.eslamasabry.oc.ui.kitchat.rb.o06.FlutterCapture
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitContinuedLine
 import kotlin.test.Test
 
-/** The default scene of test/goldens/kit/kit_continued_line_*: "Continued in Claude Code" at the top start. */
+/** test/goldens/kit/kit_continued_line_golden_test.dart: "Continued in Claude Code", live and gone. */
 class KitContinuedLineGateTest {
-    private val scene: @androidx.compose.runtime.Composable () -> Unit = {
-        KitContinuedLine(text = "Continued in Claude Code", onOpen = {})
+    private fun scene(gone: Boolean): @androidx.compose.runtime.Composable () -> Unit = {
+        KitContinuedLine(text = "Continued in Claude Code", onOpen = {}, gone = gone)
     }
 
-    @Test fun default() {
-        for (size in listOf("", "_1280x800")) FlutterGoldenGate.check("kit_continued_line_default$size", content = scene)
+    private fun shots(state: String, gone: Boolean) {
+        for (suffix in listOf("", "_1280x800", "_text2", "_text2_1280x800")) {
+            FlutterGoldenGate.check(wrap = { FlutterCapture(it) }, name = "kit_continued_line_$state$suffix", content = scene(gone))
+        }
     }
+
+    @Test fun kit_continued_line_default() { shots("default", gone = false) }
+    @Test fun kit_continued_line_disabled() { shots("disabled", gone = true) }
 
     @Test fun matrix() {
-        FlutterGoldenGate.matrix("part-kit_continued_line", caps = mapOf("KitContinuedLine" to "wrapper"), content = scene)
+        FlutterGoldenGate.matrix("part-kit_continued_line", caps = mapOf("KitContinuedLine" to "conversation"), content = scene(false))
     }
 }
