@@ -296,7 +296,7 @@ public fun KitChart(
         }
         Canvas(Modifier.fillMaxWidth().height((plotHeight + labelRoom).dp)) {
             drawChart(
-                ChartPaint(kind, labels, shown, inks, colors.hairline, colors.text3, axisStyle, measurer, rtl, labelRoom.dp.toPx()),
+                ChartPaint(kind, labels, shown, inks, colors.hairline, colors.text3, axisStyle, measurer, rtl, labelRoom.dp.toPx(), (plotHeight + labelRoom).dp.toPx()),
                 progress.value,
             )
         }
@@ -333,6 +333,8 @@ private class ChartPaint(
     val measurer: TextMeasurer,
     val rtl: Boolean,
     val labelRoom: Float,
+    /** The box's exact height (the canvas itself is a whole number of pixels tall). */
+    val height: Float,
 )
 
 /** A laid-out label and its width as Flutter's TextPainter reports it (the intrinsic width, capped). */
@@ -369,7 +371,7 @@ private fun DrawScope.drawChart(p: ChartPaint, progress: Float) {
             if (p.rtl) 0f else axisWidth,
             4.dp.toPx(), // F: lib/ui/kit/kit_chart.dart:381
             if (p.rtl) size.width - axisWidth else size.width,
-            size.height - p.labelRoom,
+            p.height - p.labelRoom,
         )
     if (plot.width <= 0 || plot.height <= 0) return
     val yOf = { v: Double -> (plot.bottom - (v - scale.min) / (scale.max - scale.min) * plot.height).toFloat() }

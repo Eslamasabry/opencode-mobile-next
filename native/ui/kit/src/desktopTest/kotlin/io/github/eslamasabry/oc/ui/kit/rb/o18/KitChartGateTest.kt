@@ -12,6 +12,7 @@ import kotlin.test.Test
 
 /** The scenes of test/goldens/kit/kit_chart_golden_test.dart at 8302de537, each padded 16 dp on both sides (`_pad`). */
 class KitChartGateTest {
+    private val cap: @Composable (@Composable () -> Unit) -> Unit = { ChartCapture(it) }
     private val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
 
     private fun pad(chart: @Composable (Modifier) -> Unit): @Composable () -> Unit = { chart(Modifier.padding(horizontal = 16.dp)) }
@@ -57,14 +58,14 @@ class KitChartGateTest {
         KitChart(kind = KitChartKind.Bar, labels = labels, series = listOf(KitChartSeries("Value", List(6) { 0.0 })), modifier = it)
     }
 
-    @Test fun kit_chart_default() { FlutterGoldenGate.check("kit_chart_default", content = default) }
-    @Test fun kit_chart_default_1280x800() { FlutterGoldenGate.check("kit_chart_default_1280x800", content = default) }
-    @Test fun kit_chart_default_ar() { FlutterGoldenGate.check("kit_chart_default_ar", modes = listOf("dark"), content = default) }
-    @Test fun kit_chart_default_text2() { FlutterGoldenGate.check("kit_chart_default_text2", modes = listOf("dark"), content = default) }
-    @Test fun kit_chart_default_text2_1280x800() { FlutterGoldenGate.check("kit_chart_default_text2_1280x800", modes = listOf("dark"), content = default) }
-    @Test fun kit_chart_line() { FlutterGoldenGate.check("kit_chart_line", content = line) }
-    @Test fun kit_chart_negative() { FlutterGoldenGate.check("kit_chart_negative", content = negative) }
-    @Test fun kit_chart_single() { FlutterGoldenGate.check("kit_chart_single", content = single) }
-    @Test fun kit_chart_zero() { FlutterGoldenGate.check("kit_chart_zero", content = zero) }
+    @Test fun kit_chart_default() { FlutterGoldenGate.check("kit_chart_default", wrap = cap, content = default) }
+    @Test fun kit_chart_default_1280x800() { FlutterGoldenGate.check("kit_chart_default_1280x800", wrap = cap, content = default) }
+    @Test fun kit_chart_default_ar() { FlutterGoldenGate.check("kit_chart_default_ar", wrap = cap, modes = listOf("dark"), content = default) }
+    @Test fun kit_chart_default_text2() { FlutterGoldenGate.check("kit_chart_default_text2", wrap = cap, modes = listOf("dark"), content = default) }
+    @Test fun kit_chart_default_text2_1280x800() { FlutterGoldenGate.check("kit_chart_default_text2_1280x800", wrap = cap, modes = listOf("dark"), content = default) }
+    @Test fun kit_chart_line() { FlutterGoldenGate.check("kit_chart_line", wrap = cap, content = line) }
+    @Test fun kit_chart_negative() { FlutterGoldenGate.check("kit_chart_negative", wrap = cap, content = negative) }
+    @Test fun kit_chart_single() { FlutterGoldenGate.check("kit_chart_single", wrap = cap, content = single) }
+    @Test fun kit_chart_zero() { FlutterGoldenGate.check("kit_chart_zero", wrap = cap, content = zero) }
     @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_chart", caps = mapOf("KitChart" to "reading"), content = default) }
 }
