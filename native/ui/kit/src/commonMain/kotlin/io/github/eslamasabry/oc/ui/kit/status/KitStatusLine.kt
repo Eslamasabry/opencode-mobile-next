@@ -117,7 +117,7 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
                         statusControlsStack(
                             available = constraints.maxWidth,
                             lead = tokens.smallIcon.dp.roundToPx() + gap,
-                            message = oneLine(status.message, TypeRole.Body),
+                            message = oneLine(status.message, STATUS_MESSAGE_ROLE),
                             controls =
                                 controlLabels.map { oneLine(it, TypeRole.Button) + 2 * Space.S3.dp.roundToPx() },
                             gap = gap,
@@ -148,10 +148,13 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
                         },
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
+                        // P-014: the line's words sit at the secondary size, under the row titles beside them (Body's
+                        // 24 dp line stood taller than a 22 dp row title); primary ink keeps them the line's message.
                         KitText(
                             status.message,
                             Modifier.testTag("kit-status-message"),
-                            role = TypeRole.Body,
+                            role = STATUS_MESSAGE_ROLE,
+                            tone = TextTone.Primary,
                         )
                         status.supporting?.let {
                             KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary)
@@ -240,3 +243,6 @@ internal fun glyphColor(tone: StatusTone, colors: KitColors) =
         StatusTone.Attention,
         StatusTone.Failure -> colors.text1
     }
+
+/** The status line's and a title-less notice's message size (P-014). */
+internal val STATUS_MESSAGE_ROLE: TypeRole = TypeRole.Secondary
