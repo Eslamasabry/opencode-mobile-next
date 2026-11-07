@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** E20-S20: the composer's "+" tray copies Flutter's `_ComposerTray` (one row, a word under each, shared fit). */
 @OptIn(ExperimentalTestApi::class)
@@ -78,7 +79,10 @@ class KitComposerTrayTest {
             listOf("Photos", "Camera", "File", "More").map { word ->
                 val layout = textLayout(word)
                 assertFalse(layout.isLineEllipsized(0), "$word is whole")
-                assertFalse(layout.hasVisualOverflow, "$word fits")
+                assertTrue(
+                    layout.multiParagraph.maxIntrinsicWidth <= layout.layoutInput.constraints.maxWidth,
+                    "$word fits its share of the row",
+                )
                 layout.layoutInput.style.fontSize
             }
         assertEquals(1, sizes.distinct().size, "every word shares one size: $sizes")
@@ -113,7 +117,7 @@ class KitComposerTrayTest {
                 }
             }
         }
-        onNodeWithTag("kit-composer-tray").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.InvisibleToUser))
+        onNodeWithTag("kit-composer-tray").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.HideFromAccessibility))
         onNodeWithTag("kit-composer-add-open", useUnmergedTree = true).assertExists()
         open = false
         waitForIdle()

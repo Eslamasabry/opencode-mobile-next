@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -151,8 +150,9 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
                     role = TypeRole.Secondary,
                     tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
                     kind = KitTextKind.Frame,
+                    // The column centres the word; centring inside the text too would lay it out in the full slot
+                    // and push its last pixels past a word-sized box.
                     maxLines = 1,
-                    textAlign = TextAlign.Center,
                 )
             }
             if (labelDensity == null) label()

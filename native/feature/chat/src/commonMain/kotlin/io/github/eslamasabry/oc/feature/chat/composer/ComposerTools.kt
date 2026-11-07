@@ -136,15 +136,16 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
                     modifier = Modifier.testTag("composer-tool-attach"),
                 )
             else
+                // Flutter `KitRow.unavailable`: the reason takes the supporting line.
                 KitRow(
                     title = stringResource(Res.string.chatUiAttachFile),
-                    supporting =
-                        if (state.imagesOnly)
-                            stringResource(Res.string.composerToolsAgentPicturesOnly, choices.agentName)
-                        else stringResource(Res.string.composerToolsTextOnly),
                     supportingMaxLines = 2,
                     leading = KitRowLeading.Glyph(KitIcons.attach),
                     enabled = false,
+                    disabledReason =
+                        if (state.imagesOnly)
+                            stringResource(Res.string.composerToolsAgentPicturesOnly, choices.agentName)
+                        else stringResource(Res.string.composerToolsTextOnly),
                     modifier = Modifier.testTag("composer-tool-attach"),
                 )
         }
