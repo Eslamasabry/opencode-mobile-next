@@ -7,6 +7,7 @@ import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import java.io.File
 import kotlin.test.Test
@@ -25,7 +26,7 @@ class KitIconSizeGuardTest {
     fun `B-KIT-101 the tiny size is 16 dp and the glyph box is exactly that`() {
         assertEquals(16, KitIconSize.Tiny.dp)
         runDesktopComposeUiTest(200, 200) {
-            setContent { KitTheme { KitIcon(KitIcons.error, Modifier.testTag("icon"), size = KitIconSize.Tiny) } }
+            setContent { KitTheme(platform = FakeKitPlatform(), localeTag = "en") { KitIcon(KitIcons.error, Modifier.testTag("icon"), size = KitIconSize.Tiny) } }
             val bounds = onNodeWithTag("icon").getBoundsInRoot()
             assertEquals(16.dp, bounds.right - bounds.left)
             assertEquals(16.dp, bounds.bottom - bounds.top)

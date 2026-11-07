@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPressOrigin
@@ -85,7 +86,7 @@ class KitMenuPressOriginTest {
             val origin = KitPressOrigin()
             setContent {
                 CompositionLocalProvider(LocalKitPressOrigin provides origin) {
-                    KitTheme {
+                    KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
                         var open by remember { mutableStateOf(false) }
                         Box(Modifier.fillMaxSize()) {
                             Box(Modifier.align(Alignment.BottomEnd).padding(bottom = 200.dp, end = 16.dp).testTag("more")) {

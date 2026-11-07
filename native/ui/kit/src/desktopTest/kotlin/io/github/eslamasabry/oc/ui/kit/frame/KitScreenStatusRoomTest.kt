@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Constraints
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -36,7 +37,7 @@ class KitScreenStatusRoomTest {
                 List(12) { "OpenCode Mobile was closed at 3:10 PM. Your phone's OpenCode stopped with it." }
                     .joinToString(" ")
             setContent {
-                KitTheme {
+                KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
                     KitScreen(
                         topBar = { KitTopBar("Conversations") },
                         status =

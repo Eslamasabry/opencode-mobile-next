@@ -8,6 +8,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -38,7 +39,7 @@ class KitRowTargetEdgeTest {
     fun `B-KIT-112 a row's labelled more glyph and its more menu share one centre line, 28 dp from the edge`() =
         runDesktopComposeUiTest(412, 400) {
             setContent {
-                KitTheme {
+                KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
                     Column(Modifier.fillMaxWidth()) {
                         KitRow(
                             title = "README.md",
@@ -53,8 +54,8 @@ class KitRowTargetEdgeTest {
                     }
                 }
             }
-            val glyph = onNodeWithTag("kit-row-icon-action").getBoundsInRoot()
-            val menu = onNodeWithTag("kit-row-menu").getBoundsInRoot()
+            val glyph = onNodeWithTag("kit-row-icon-action", useUnmergedTree = true).getBoundsInRoot()
+            val menu = onNodeWithTag("kit-row-menu", useUnmergedTree = true).getBoundsInRoot()
             val glyphCentre = (glyph.left + glyph.right) / 2
             val menuCentre = (menu.left + menu.right) / 2
             assertTrue(abs((glyphCentre - menuCentre).value) < 0.5f, "glyph $glyphCentre, menu $menuCentre")
