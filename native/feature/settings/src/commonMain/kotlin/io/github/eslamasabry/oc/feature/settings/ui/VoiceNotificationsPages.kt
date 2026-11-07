@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -154,13 +156,18 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             supporting = stringResource(Res.string.notifyBlockedMessage),
             supportingMaxLines = Int.MAX_VALUE,
         )
-        KitButton(
-            stringResource(Res.string.notifyTurnOnInAndroid),
-            { actions.onOutside(SettingsOutside.AndroidNotificationSettings) },
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-            role = KitButtonRole.Primary,
-            fullWidth = true,
-        )
+        // The gutter sits outside the button: KitButton caps its own box (control cap, 400 dp) and a padding passed
+        // in counts against that cap, which left the button 12 dp short of the rows' end edge on a phone. Flutter's
+        // button fills the column (lib/ui/screens/settings/notifications_settings_screen.dart:565-576).
+        Box(Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+            KitButton(
+                stringResource(Res.string.notifyTurnOnInAndroid),
+                { actions.onOutside(SettingsOutside.AndroidNotificationSettings) },
+                Modifier.testTag("notifications-open-settings"),
+                role = KitButtonRole.Primary,
+                fullWidth = true,
+            )
+        }
         Spacer(Modifier.height(Space.S6.dp))
     }
     KitRowGroup(leadingTiles = true, label = stringResource(Res.string.notifySectionWhat)) {
