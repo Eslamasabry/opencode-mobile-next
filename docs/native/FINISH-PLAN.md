@@ -20,6 +20,24 @@ RC1 is the first build that meets all seven gates. Each gate is measured, not ju
 Out of RC1 (later, owner decides): Glass and school galleries (order 34-37), AI Team screens, pull requests from the
 phone (B-158), Play Store.
 
+
+## Task list to RC1 (coordinator works it top to bottom; ticked as done)
+
+- [ ] T1 Compile everything on the head: app APK + every module's desktopTest sources (G1). Fix what fails.
+- [ ] T2 Build the head on the PC, install on the owner phone + emulator, screenshot the daily path.
+- [ ] T3 Run the unit tests of the touched modules (kit, kit-chat, chat, chats, composer, settings); fix failures.
+- [ ] T4 Merge the motion lead (fenced: kit motion, shell nav, refresh rate, new motion parts) once its tests pass.
+- [ ] T5 Motion rollout on screens: row→chat transform, animated list items, sheets/menus physics, send morph, rolling numbers, toast pill (G4).
+- [ ] T6 Measure motion on the owner phone: refresh rate, janky %, p99 (G4 numbers).
+- [ ] T7 Scoreboard result (merge 28): list what still fails on the daily path; fix those myself, smallest first (G2).
+- [ ] T8 Kit order 23 (its builder ended without pushing): port it.
+- [ ] T9 Targeted rerun: kit_code_block_* and anything fixed in T7.
+- [ ] T10 Upgrade gate run 4 result: fix every real failure (G5); rerun to 29/29.
+- [ ] T11 Alignment gate: no new findings on the head (G3).
+- [ ] T12 Release shape: build the switch release (3.0.0 / 10010, R8, ABI splits) and run the identity gate with the test key; owner key only with the owner present (G6).
+- [ ] T13 Flutter 2.1.5: suite result, release compile, owner yes to publish.
+- [ ] T14 RC1: final build, tracker/backlog updated, owner walk (G7).
+
 ## Rules for builders (no stepping on each other)
 
 1. One owner per module per wave. The table below is the only source; a builder that needs a change outside its
