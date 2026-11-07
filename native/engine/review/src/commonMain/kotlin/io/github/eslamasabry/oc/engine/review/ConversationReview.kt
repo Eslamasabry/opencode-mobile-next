@@ -101,6 +101,13 @@ public class ConversationReview(
     private val mutable = MutableStateFlow(ReviewState())
     public val state: StateFlow<ReviewState> = mutable.asStateFlow()
     private val lane = Mutex()
+    private val editCount = MutableStateFlow(0L)
+
+    /**
+     * Moves when the conversation's files may have changed: a completed edit tool of this conversation, the end of
+     * its turn, or a reconnect (the stream is volatile). Open review pages read their files again on each step.
+     */
+    public val edits: StateFlow<Long> = editCount.asStateFlow()
 
     init {
         scope.launch {
@@ -121,8 +128,17 @@ public class ConversationReview(
                         }
                     is GatewayEvent.SessionUpserted -> if (event.session.id == session) adopt(event.session.stagedRevert)
                     is GatewayEvent.RunStarted -> if (event.sessionId == session) mutable.update { it.copy(running = true) }
-                    is GatewayEvent.RunEnded -> if (event.sessionId == session) mutable.update { it.copy(running = false) }
-                    GatewayEvent.Connected -> refresh() // the stream is volatile: reconcile by refetch
+                    is GatewayEvent.RunEnded ->
+                        if (event.sessionId == session) {
+                            mutable.update { it.copy(running = false) }
+                            editCount.update { it + 1 }
+                        }
+                    is GatewayEvent.PartUpserted ->
+                        if (event.part.sessionId == session.raw && TurnChanges.isCompletedEdit(event.part)) editCount.update { it + 1 }
+                    GatewayEvent.Connected -> {
+                        refresh() // the stream is volatile: reconcile by refetch
+                        editCount.update { it + 1 }
+                    }
                     else -> Unit
                 }
             }

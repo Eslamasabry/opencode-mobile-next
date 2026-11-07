@@ -75,6 +75,9 @@ public object TurnChanges {
         return kind to state
     }
 
+    /** True for a completed, executed edit, write or patch tool: the files may have changed. */
+    public fun isCompletedEdit(part: Part): Boolean = editTool(part) != null
+
     /** Paths first seen, once, at most [max] (B-CHAT-120). */
     public fun editedPaths(messages: Iterable<MessageWithParts>, max: Int = MAX_FILES): ImmutableList<String> {
         val out = ArrayList<String>()
