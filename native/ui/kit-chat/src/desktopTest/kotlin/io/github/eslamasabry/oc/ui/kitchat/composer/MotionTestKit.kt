@@ -2,8 +2,10 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 
 import androidx.compose.foundation.Indication
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -14,6 +16,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatformFamily
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** A silent platform that records haptics and lets a test set battery saver, heat and the animator scale. */
@@ -33,7 +36,10 @@ class RecordingPlatform(signals: KitSystemSignals = KitSystemSignals()) : KitPla
     override fun frostEffect(spec: FrostSpec, density: Float): RenderEffect? = null
 }
 
-/** The real KitTheme at a chosen motion level (the chat's own test theme is pinned to Off + still frames). */
+/**
+ * The real KitTheme at a chosen motion level (the chat's own test theme is pinned to Off + still frames), with the chat's
+ * [LocalKitRedactor] as the chat host provides it: mono chat parts never draw without one.
+ */
 @Composable
 fun MotionTheme(
     level: MotionLevel = MotionLevel.Full,
@@ -49,5 +55,7 @@ fun MotionTheme(
         dark -> AppearanceMode.Dark
         else -> AppearanceMode.Light
     }
-    KitTheme(KitAppearance(mode = mode, motion = level), platform, localeTag, stillFrame, content)
+    KitTheme(KitAppearance(mode = mode, motion = level), platform, localeTag, stillFrame) {
+        CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
+    }
 }

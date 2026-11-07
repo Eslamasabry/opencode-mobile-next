@@ -46,11 +46,11 @@ class ActiveContextScreenTest {
         onNodeWithText("Assistant").performClick()
         onNodeWithText("Assistant message").assertExists()
         onNodeWithTag("kit-details-body").assertDoesNotExist()
-        onNodeWithText("msg_checkout").assertDoesNotExist()
+        onNodeWithText("msg_checkout", useUnmergedTree = true).assertDoesNotExist()
         onNodeWithContentDescription("Copy Tool output · read").performClick()
         runOnIdle { assertEquals(message.content.first().text, clipboard.getText()?.text) }
         onNodeWithText("Details").performClick()
-        onNodeWithText("msg_checkout").assertExists()
+        onNodeWithText("msg_checkout", useUnmergedTree = true).assertExists()
         onNodeWithContentDescription("Back").performClick()
         onNodeWithText("Assistant").assertExists()
     }

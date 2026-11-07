@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -92,7 +93,8 @@ class ContinueOnComputerScreenTest {
         onNodeWithText("Continue on computer").assertIsDisplayed()
         onNodeWithText("cd '/home/me/app' && opencode2 --session 'ses_1'", substring = true).assertIsDisplayed()
         onNodeWithText("Terminal command").assertIsDisplayed()
-        onNodeWithText("Copy command").performClick()
+        // The unified KitCodeBlock (Flutter's) names its Copy icon with the command's copy label.
+        onNodeWithContentDescription("Copy command").performClick()
         assertEquals(1, actions.copies)
     }
 

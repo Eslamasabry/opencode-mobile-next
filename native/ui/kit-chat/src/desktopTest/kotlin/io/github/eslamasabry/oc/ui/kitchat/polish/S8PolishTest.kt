@@ -188,8 +188,9 @@ class S8PolishTest {
             val summary = onNodeWithText("Read 1 file", useUnmergedTree = true).box()
             val step = onNodeWithText("Opened", useUnmergedTree = true).box()
             near(summary.left, step.left, 0.5f, "step name edge")
-            // 16 dp page edge + the 16 dp mark + one 8 dp step (the auditor's 105 px at 2.625 px per dp).
-            near(Space.S4 + 16f + Space.S2, step.left, 0.5f, "text edge")
+            // Flutter's step timeline (kit_step_timeline.dart:736 `_Rail.column`): the 20 dp glyph + one 12 dp step. The
+            // work line has no page gutter of its own any more; the transcript gives it the 16 dp edge.
+            near(20f + Space.S3, step.left, 0.5f, "text edge")
         }
 
     private fun textLayout(node: SemanticsNodeInteraction): TextLayoutResult {

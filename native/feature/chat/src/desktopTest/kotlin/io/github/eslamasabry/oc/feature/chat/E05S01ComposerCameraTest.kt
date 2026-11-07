@@ -59,9 +59,17 @@ class E05S01ComposerCameraTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     /** B-STATE-088 the camera is told which conversation's draft a recovered photo belongs to. */
+    /** A world whose draft store keeps the files it is given (the plain fake refuses draft attachments). */
+    private class KeepingWorld : FakeChatWorld() {
+        override suspend fun replaceAttachments(files: List<PromptAttachment>): Outcome<Unit> {
+            draft.value = draft.value.copy(attachments = files)
+            return Outcome.Ok(Unit)
+        }
+    }
+
     @Test
     fun `B-STATE-088 Take photo names the conversation and attaches the photo`() = runTest {
-        val world = FakeChatWorld()
+        val world = KeepingWorld()
         val source = CameraSource(Outcome.Ok(listOf(photo)))
         val vm = BasicComposerViewModel(ComposerTarget("p1", "s1"), Worlds(world), emptySet(), setOf(source))
         vm.state.test {

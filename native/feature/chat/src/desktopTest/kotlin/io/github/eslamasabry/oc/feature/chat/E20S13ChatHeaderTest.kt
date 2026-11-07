@@ -83,9 +83,13 @@ class E20S13ChatHeaderTest {
             assertTrue(back.right <= title.left + 0.5f, "${scale}x: Back leads the title")
             val gap = line.top - title.bottom
             assertTrue(gap in 0f..4f, "${scale}x: the line starts the kit's tight step under the title, was $gap")
-            // The three-row bar took a 48 dp Back row on top of the title and the line.
+            // The three-row bar took a 48 dp Back row on top of the title and the line. Flutter's chat bar
+            // (kit_top_bar.dart, chat_top_bar.dart) is one row: 4 dp, the title's first line centred on the 48 dp
+            // controls, the scope line's 48 dp target, 4 dp (91 dp at 1x in chat_one_bar_two_servers). The tucked
+            // native line may be shorter, never taller; the old three-row bar was taller still.
             val bar = boundsOfTag("kit-top-bar")
-            assertTrue(bar.height < title.height + line.height + 24f, "${scale}x: one compact block, was ${bar.height}")
+            val flutterBar = 4f + 24f + title.height / 2 + 48f + 4f
+            assertTrue(bar.height <= flutterBar + 0.5f, "${scale}x: one compact block, was ${bar.height}, Flutter's $flutterBar")
         }
     }
 

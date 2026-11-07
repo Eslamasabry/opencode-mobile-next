@@ -74,7 +74,7 @@ class S10MotionTest {
     }
 
     @Test
-    fun `M-002 the plus turns an eighth of a turn over QUICK and is part-way at 75 ms`() = runComposeUiTest {
+    fun `M-002 the plus turns an eighth of a turn over QUICK and is part-way at 32 ms`() = runComposeUiTest {
         mainClock.autoAdvance = false
         var open by mutableStateOf(false)
         plus(MotionLevel.Full) { open }
@@ -82,10 +82,12 @@ class S10MotionTest {
         val square = width("kit-composer-add")
         open = true
         mainClock.advanceTimeByFrame()
-        mainClock.advanceTimeBy(75)
+        // QUICK rides Flutter's easeOutCubic (`Enter`), which has covered ~88 % of the turn by half time (75 ms):
+        // too close to √2 to tell apart from a one-frame flip, so the in-between frame is read at 32 ms.
+        mainClock.advanceTimeBy(32)
         // A square turned by θ is (|cos θ| + |sin θ|) times as wide: 1 at rest, √2 at 45°.
         val mid = width("kit-composer-add-open") / square
-        assertTrue(mid > 1.02f && mid < sqrt(2f) - 0.02f, "part-way through the turn at 75 ms (x$mid)")
+        assertTrue(mid > 1.02f && mid < sqrt(2f) - 0.02f, "part-way through the turn at 32 ms (x$mid)")
         mainClock.advanceTimeBy(200)
         assertEquals(sqrt(2f), width("kit-composer-add-open") / square, 0.02f, "a whole eighth of a turn after QUICK")
         open = false
@@ -146,17 +148,17 @@ class S10MotionTest {
         face = KitPrimaryFace.Stop
         mainClock.advanceTimeByFrame()
         mainClock.advanceTimeBy(64)
-        onNodeWithTag("send").assertExists() // both while they cross-fade: nothing swaps in one frame
-        onNodeWithTag("stop").assertExists()
+        onNodeWithTag("send", useUnmergedTree = true).assertExists() // both while they cross-fade: nothing swaps in one frame
+        onNodeWithTag("stop", useUnmergedTree = true).assertExists()
         mainClock.advanceTimeBy(150)
-        onNodeWithTag("send").assertDoesNotExist()
+        onNodeWithTag("send", useUnmergedTree = true).assertDoesNotExist()
         level = MotionLevel.Off
         mainClock.advanceTimeByFrame()
         face = KitPrimaryFace.Mic
         mainClock.advanceTimeByFrame()
         mainClock.advanceTimeByFrame()
-        onNodeWithTag("stop").assertDoesNotExist()
-        onNodeWithTag("mic").assertExists()
+        onNodeWithTag("stop", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithTag("mic", useUnmergedTree = true).assertExists()
     }
 
     // ---- M-005: approval card -----------------------------------------------------------------------------------
@@ -326,32 +328,24 @@ class S10MotionTest {
             }
         }
 
+    /**
+     * The work line is Flutter's step timeline now (kit_step_timeline.dart `_Line.build`): its lead is the step light's
+     * tile while the folded line runs and the bare glyph otherwise, swapped in place with no switcher, at every motion
+     * level. The live tile is the only `kit-step-node` a lone line draws.
+     */
     @Test
-    fun `M-020 the work line's mark cross-fades from the live dot to done`() = runComposeUiTest {
-        mainClock.autoAdvance = false
-        var state by mutableStateOf(KitWorkState.Running)
-        workLine(MotionLevel.Full, { state }, { false })
-        mainClock.advanceTimeByFrame()
-        state = KitWorkState.Done
-        mainClock.advanceTimeByFrame()
-        mainClock.advanceTimeBy(64)
-        onNodeWithTag("kit-work-mark-running", useUnmergedTree = true).assertExists()
-        onNodeWithTag("kit-work-mark-done", useUnmergedTree = true).assertExists()
-        mainClock.advanceTimeBy(200)
-        onNodeWithTag("kit-work-mark-running", useUnmergedTree = true).assertDoesNotExist()
-    }
-
-    @Test
-    fun `M-020 with reduced motion the work line's mark changes at once`() = runComposeUiTest {
-        mainClock.autoAdvance = false
-        var state by mutableStateOf(KitWorkState.Running)
-        workLine(MotionLevel.Off, { state }, { false })
-        mainClock.advanceTimeByFrame()
-        state = KitWorkState.Done
-        mainClock.advanceTimeByFrame()
-        mainClock.advanceTimeByFrame()
-        onNodeWithTag("kit-work-mark-running", useUnmergedTree = true).assertDoesNotExist()
-        onNodeWithTag("kit-work-mark-done", useUnmergedTree = true).assertExists()
+    fun `M-020 the work line's lead goes from the live tile to the glyph at once, as Flutter's timeline does`() {
+        for (level in listOf(MotionLevel.Full, MotionLevel.Off)) runComposeUiTest {
+            mainClock.autoAdvance = false
+            var state by mutableStateOf(KitWorkState.Running)
+            workLine(level, { state }, { false })
+            mainClock.advanceTimeByFrame()
+            onNodeWithTag("kit-step-node", useUnmergedTree = true).assertExists()
+            state = KitWorkState.Done
+            mainClock.advanceTimeByFrame()
+            mainClock.advanceTimeByFrame()
+            onNodeWithTag("kit-step-node", useUnmergedTree = true).assertDoesNotExist()
+        }
     }
 
     @Test
@@ -360,13 +354,13 @@ class S10MotionTest {
         var open by mutableStateOf(false)
         workLine(MotionLevel.Full, { KitWorkState.Done }, { open })
         mainClock.advanceTimeByFrame()
-        val folded = onNodeWithTag("kit-work-chevron", useUnmergedTree = true).captureToImage().toPixelMap()
+        val folded = onNodeWithTag("kit-step-timeline-chevron", useUnmergedTree = true).captureToImage().toPixelMap()
         open = true
         mainClock.advanceTimeByFrame()
         mainClock.advanceTimeBy(32)
-        val mid = onNodeWithTag("kit-work-chevron", useUnmergedTree = true).captureToImage().toPixelMap()
+        val mid = onNodeWithTag("kit-step-timeline-chevron", useUnmergedTree = true).captureToImage().toPixelMap()
         mainClock.advanceTimeBy(600)
-        val opened = onNodeWithTag("kit-work-chevron", useUnmergedTree = true).captureToImage().toPixelMap()
+        val opened = onNodeWithTag("kit-step-timeline-chevron", useUnmergedTree = true).captureToImage().toPixelMap()
         fun pixels(m: androidx.compose.ui.graphics.PixelMap) =
             (0 until m.width).flatMap { x -> (0 until m.height).map { y -> m[x, y] } }
         assertNotEquals(pixels(folded), pixels(opened), "down when folded, up when open")

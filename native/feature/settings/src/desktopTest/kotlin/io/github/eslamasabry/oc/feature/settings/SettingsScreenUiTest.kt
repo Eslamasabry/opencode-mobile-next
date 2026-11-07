@@ -82,7 +82,8 @@ class SettingsScreenUiTest {
             tap("This app")
             tap("Appearance")
             onNodeWithText("Light or dark?").assertExists()
-            onNodeWithText("Graphite").assertExists()
+            // A theme card reads as one control; its name is a drawn word inside it.
+            onNodeWithText("Graphite", useUnmergedTree = true).assertExists()
             tap("Calm")
             assertEquals(MotionLevel.Calm, choices.value.value.motion)
             onNodeWithText("Drawings appear, nothing keeps moving and nothing celebrates").assertExists()
@@ -94,7 +95,9 @@ class SettingsScreenUiTest {
             show()
             presenter.onOpen(SettingsPage.Appearance); waitForIdle()
             tap("See all 31 themes")
-            tap("Coffee")
+            // The pack card is one merged control; tap it through its drawn name.
+            onNodeWithText("Coffee", useUnmergedTree = true).performScrollTo().performClick()
+            waitForIdle()
             assertTrue(choices.writes.any { it is PersonalChange.Pack })
         }
 

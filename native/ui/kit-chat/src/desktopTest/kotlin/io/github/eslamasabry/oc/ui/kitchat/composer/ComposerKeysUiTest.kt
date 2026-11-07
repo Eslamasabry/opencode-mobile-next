@@ -148,16 +148,16 @@ class ComposerKeysUiTest {
             face = "send"
             mainClock.advanceTimeByFrame()
             mainClock.advanceTimeBy(64)
-            onNodeWithTag("mic").assertExists() // both faces while they cross-fade
-            onNodeWithTag("send").assertExists()
+            onNodeWithTag("mic", useUnmergedTree = true).assertExists() // both faces while they cross-fade
+            onNodeWithTag("send", useUnmergedTree = true).assertExists()
             mainClock.advanceTimeBy(150)
-            onNodeWithTag("mic").assertDoesNotExist()
+            onNodeWithTag("mic", useUnmergedTree = true).assertDoesNotExist()
             level = MotionLevel.Off
             mainClock.advanceTimeByFrame()
             face = "pill"
             mainClock.advanceTimeByFrame()
             mainClock.advanceTimeByFrame()
-            onNodeWithTag("send").assertDoesNotExist()
-            onNodeWithTag("pill").assertExists()
+            onNodeWithTag("send", useUnmergedTree = true).assertDoesNotExist()
+            onNodeWithTag("pill", useUnmergedTree = true).assertExists()
         }
 }

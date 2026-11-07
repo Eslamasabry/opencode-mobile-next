@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.cards.AgentCard
 import io.github.eslamasabry.oc.engine.cards.CardAgent
 import io.github.eslamasabry.oc.engine.cards.CardAnswer
@@ -38,6 +39,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -102,7 +104,8 @@ class ChatCardSlotTest {
     @Composable
     private fun Root(host: ChatCardSlotHost, content: @Composable () -> Unit) {
         KitTheme(platform = platform, appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "en", stillFrame = true) {
-            CompositionLocalProvider(LocalChatCards provides host, content = content)
+            // The chat host provides the redactor: mono chat parts (the card's Details) never draw without one.
+            CompositionLocalProvider(LocalChatCards provides host, LocalKitRedactor provides Redactor(), content = content)
         }
     }
 
@@ -110,8 +113,9 @@ class ChatCardSlotTest {
     fun `B-CHAT-004 a choice card shows its words and one tap answers with that option`() = runComposeUiTest {
         val host = Host(entry(card(input(choice))))
         setContent { Root(host) { ChatTurnCards("t1") } }
-        onNodeWithText("OpenCode asks").assertIsDisplayed()
-        onNodeWithText("Pick a database").assertIsDisplayed()
+        // The heading is read as one announcement (kitRequestHeading); its caption and title are drawn words under it.
+        onNodeWithText("OpenCode asks", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithText("Pick a database", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithText("SQLite").performClick()
         assertEquals(listOf<CardAnswer>(CardAnswer.Choice(listOf("sq"))), host.answers)
     }
@@ -172,7 +176,8 @@ class ChatCardSlotTest {
         val answered = Host(entry(card(input(choice, body)), state = CardState.Answered, summary = "Postgres"))
         setContent { Root(answered) { ChatTurnCards("t1") } }
         onNodeWithText("Postgres").assertIsDisplayed()
-        onNodeWithText("Show the card").performClick()
+        // Flutter's answered row (kitAnsweredRow): the title line itself is the toggle, named "Show the card".
+        onNodeWithContentDescription("Show the card").performClick()
         onNodeWithText("Two options").assertIsDisplayed()
         answered.flow.value = answered.flow.value.copy(cards = persistentListOf(entry(card(input(choice, body)), state = CardState.PassedOver)))
         onNodeWithText("Not answered").assertIsDisplayed()
