@@ -62,7 +62,7 @@ public fun KitSectionLabel(
     val words: @Composable () -> Unit = {
         KitText(shown, Modifier.semantics { heading(); contentDescription = text }, role = TypeRole.Label, tone = TextTone.Secondary)
     }
-    Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().onGloballyPositioned { hasAbove = it.positionInParent().y > 0f }.padding(horizontal = margin ?: tokens.gutter.dp).padding(top = gap, bottom = (tokens.labelGap.dp - reach).coerceAtLeast(0.dp)).testTag("kit-section-label")) {
+    Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().onGloballyPositioned { hasAbove = it.positionInParent().y > 0f }.padding(horizontal = margin ?: kitRowGutter()).padding(top = gap, bottom = (tokens.labelGap.dp - reach).coerceAtLeast(0.dp)).testTag("kit-section-label")) {
         if (ruled) {
             KitDivider(section = true)
             Spacer(Modifier.height((Space.S2.dp - reach).coerceAtLeast(0.dp)))

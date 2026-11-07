@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
@@ -158,7 +161,8 @@ public fun KitModelSheet(
                     label = stringResource(Res.string.chatModelsSearch),
                     onSearch = { query = it },
                     state = search,
-                    modifier = Modifier.fillMaxWidth().testTag("chat-model-search"),
+                    // P-008: a step (8 dp) between the field and the first row; the row's band sat 2 dp under it.
+                    modifier = Modifier.fillMaxWidth().padding(bottom = Space.S2.dp).testTag("chat-model-search"),
                 )
             val sections =
                 remember(options, favorites, recent, current, query) {

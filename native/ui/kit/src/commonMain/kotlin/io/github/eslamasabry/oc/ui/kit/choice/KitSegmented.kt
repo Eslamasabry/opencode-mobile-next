@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -97,6 +99,14 @@ public object SegmentedRules {
     /** What a tap on [tapped] does: the new value, or null when it is the selected one (no callback) or disabled. */
     public fun <T> onTap(tapped: KitSegment<T>, selected: T, groupEnabled: Boolean): T? =
         if (!groupEnabled || !tapped.enabled.isEnabled || tapped.value == selected) null else tapped.value
+
+    /**
+     * Whether the tall track draws a hairline after segment [index] (at its end edge): between two resting segments
+     * only, never beside the chosen block (Flutter `kit_segmented.dart`). With three segments and the last chosen, the
+     * one seam is between the first two: that is the design, not a missing divider (P-027).
+     */
+    public fun seamAfter(index: Int, count: Int, selectedIndex: Int, tall: Boolean): Boolean =
+        tall && index < count - 1 && index != selectedIndex && index + 1 != selectedIndex
 }
 
 /**
@@ -229,13 +239,21 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             val ink = inkColors.tone(words)
             // The chosen glyph and check take the accent, the control's one accent mark.
             val glyph = if (chosen && on) colors.accent else ink
-            val seam = i < segments.size - 1 && tall && i != selectedIndex && i + 1 != selectedIndex
+            // The tall track parts its resting segments with a hairline at each one's end edge (its left in
+            // Arabic), none beside the chosen block (Flutter BorderDirectional.end); a seam eases in and out as the
+            // choice moves.
+            val seam = SegmentedRules.seamAfter(i, segments.size, selectedIndex, tall)
+            val seamAlpha by animateFloatAsState(if (seam) 1f else 0f, specs.quick(), label = "segment-seam")
             val seamColor = colors.hairline
             Box(
                 Modifier.weight(1f)
                     .let { if (tall) it.height(tallHeight) else it.heightIn(min = tokens.minTarget.dp) }
                     .drawBehind {
-                        if (seam) drawLine(seamColor, Offset(size.width, 0f), Offset(size.width, size.height), hairline.toPx())
+                        if (seamAlpha > 0f) {
+                            val x = if (layoutDirection == LayoutDirection.Rtl) 0f else size.width
+                            val ink = seamColor.copy(alpha = seamColor.alpha * seamAlpha)
+                            drawLine(ink, Offset(x, 0f), Offset(x, size.height), hairline.toPx())
+                        }
                     }
                     .padding(inset)
                     .then(if (chosen) thumb.modifier else Modifier)

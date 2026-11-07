@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusGlyph
+import io.github.eslamasabry.oc.ui.kit.status.STATUS_MESSAGE_ROLE
 import io.github.eslamasabry.oc.ui.kit.status.glyphColor
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -125,7 +126,8 @@ public fun KitNotice(
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             Box(
-                Modifier.width(LEAD_SLOT.dp).padding(top = 2.dp),
+                // The glyph sits on the first line: a 22 dp title line, or the 18 dp message line it overhangs.
+                Modifier.width(LEAD_SLOT.dp).padding(top = noticeGlyphNudge(title)),
                 contentAlignment = Alignment.TopCenter,
             ) { // NV: icon nudged onto the first text line
                 if (icon != null || tone == StatusTone.Neutral) {
@@ -152,7 +154,8 @@ public fun KitNotice(
                 KitText(
                     message,
                     Modifier.testTag("kit-notice-message"),
-                    role = if (title == null) TypeRole.Body else TypeRole.Secondary,
+                    // P-014: never larger than a row title beside it; without a title the words keep primary ink.
+                    role = if (title == null) STATUS_MESSAGE_ROLE else TypeRole.Secondary,
                     tone = if (title == null) TextTone.Primary else TextTone.Secondary,
                 )
                 notes.forEach { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
@@ -191,6 +194,9 @@ public fun KitNotice(
         }
     }
 }
+
+/** How far the notice's glyph drops to sit on its first line (a title's, else the message's). */
+private fun noticeGlyphNudge(title: String?): androidx.compose.ui.unit.Dp = if (title != null) 2.dp else 0.dp
 
 /**
  * The cost of an install or turn-on, stated before its primary (Dart `KitNotice.cost`; KIT-37): the

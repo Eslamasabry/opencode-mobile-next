@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /**
  * A noninteractive row with Flutter KitRow.below on its text rail (commands, previews and details).
@@ -29,7 +28,7 @@ public fun KitContentRow(
         ) // F: lib/ui/screens/host_management_screen.dart:131,133
         Box(
             Modifier.fillMaxWidth()
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp)
+                .padding(horizontal = kitRowGutter(), vertical = Space.S2.dp)
         ) {
             below()
         }

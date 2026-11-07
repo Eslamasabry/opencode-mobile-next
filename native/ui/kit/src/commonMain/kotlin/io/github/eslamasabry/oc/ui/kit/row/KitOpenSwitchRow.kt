@@ -60,7 +60,7 @@ public fun KitOpenSwitchRow(
         ) {
             Column(
                 Modifier.fillMaxWidth()
-                    .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
+                    .padding(horizontal = kitRowGutter(), vertical = Space.S2.dp)
             ) {
                 KitText(title, role = TypeRole.RowTitle, maxLines = kitRowTitleLines(scale))
                 (enabled.reason ?: supporting)?.let {

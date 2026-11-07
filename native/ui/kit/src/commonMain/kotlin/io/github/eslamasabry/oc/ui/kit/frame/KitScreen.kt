@@ -90,10 +90,11 @@ public enum class KitScreenWidth(internal val cap: CapRole) {
  * The one screen frame (Dart `KitScreen` v2). With [topBar] (or [page]) it is a page: the ground,
  * the bar in the top safe area, and the bottom block lifted above the keyboard; without, it is a
  * body inside a host and builds no frame. Top to bottom: bar → the one status line → [search] →
- * [header] → the one loading line → [body] → [bottom]. There is no other slot (R9: no new bar
- * levels). A screen with no status slot above it owns the window's slot; one under a slot (a tab
- * body, a pane) contributes its [status] instead of drawing a second line. It hosts the screen's
- * sheets.
+ * [header] → the one loading line → [body] → [bottom]. The [header] scrolls with the body (P-006):
+ * it slides up under the bar as the body scrolls and comes back at the body's top, the cut fading
+ * over 12 dp. There is no other slot (R9: no new bar levels). A screen with no status slot above
+ * it owns the window's slot; one under a slot (a tab body, a pane) contributes its [status] instead
+ * of drawing a second line. It hosts the screen's sheets.
  *
  * States: default, loading, status, search, keyboard Text: none (its slots bring their own) Cap:
  * Fill (the body is capped by [width] from medium up) Motion: none of its own (the status line
@@ -212,13 +213,22 @@ public fun KitScreen(
                     search?.let {
                         // E20-S08: a step under the field, so the page's first part (an empty state's heading)
                         // never sits against it.
-                        Box(Modifier.padding(start = LocalKitTokens.current.gutter.dp, end = LocalKitTokens.current.gutter.dp, bottom = Space.S2.dp)) {
+                        val gutter = LocalKitTokens.current.gutter.dp
+                        Box(Modifier.padding(start = gutter, end = gutter, bottom = Space.S2.dp)) {
                             it()
                         }
                     }
-                    header?.invoke(this)
-                    if (loading) ScreenLoadingLine(loadingLabel)
-                    Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                    // P-006: the header (a page heading, its chips) is the body's first part and scrolls away with it;
+                    // the loading line and the body follow it. Without one, the body starts here.
+                    if (header != null) {
+                        KitScrollingHeaderFrame(header, Modifier.fillMaxWidth().weight(1f)) {
+                            if (loading) ScreenLoadingLine(loadingLabel)
+                            Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                        }
+                    } else {
+                        if (loading) ScreenLoadingLine(loadingLabel)
+                        Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                    }
                     bottomPart?.let {
                         Box(
                             Modifier.fillMaxWidth()

@@ -122,7 +122,7 @@ public fun KitSwitchRow(
             titleMaxLines = 2, // F: lib/ui/kit/kit_row_parts.dart:425
             trailing = KitRowTrailing.Locked(lockedLabel),
         )
-        if (below != null) Box(Modifier.padding(start = tokens.gutter.dp, end = tokens.gutter.dp)) { below() }
+        if (below != null) Box(Modifier.padding(start = kitRowGutter(), end = kitRowGutter())) { below() }
         return
     }
     val specs = KitMotion.specs
@@ -152,7 +152,7 @@ public fun KitSwitchRow(
                         SwitchTap.Refuse, SwitchTap.Ignore -> Unit
                     }
                 }
-                .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+                .padding(horizontal = kitRowGutter(), vertical = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
@@ -172,7 +172,7 @@ public fun KitSwitchRow(
             exit = shrinkVertically(specs.exit()) + fadeOut(specs.exit()),
         ) {
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
+                Modifier.fillMaxWidth().padding(horizontal = kitRowGutter(), vertical = Space.S2.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 KitText(risk.orEmpty(), role = TypeRole.Secondary, tone = TextTone.Primary)

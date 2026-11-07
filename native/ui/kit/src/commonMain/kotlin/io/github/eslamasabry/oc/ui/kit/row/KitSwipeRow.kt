@@ -102,7 +102,7 @@ public fun KitSwipeRow(
             Row(
                 Modifier.matchParentSize()
                     .background(colors.surface3)
-                    .padding(horizontal = tokens.gutter.dp)
+                    .padding(horizontal = kitRowGutter())
                     .alpha(reveal)
                     .clearAndSetSemantics {},
                 verticalAlignment = Alignment.CenterVertically,

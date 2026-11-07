@@ -33,7 +33,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -78,7 +77,6 @@ public fun KitFactRow(
         }
     val line = if (waitingForOk) stringResource(Res.string.kitFactWaitingLine, base) else base
     val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
     val surface =
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, ownFill = colors.surface1)
@@ -115,7 +113,7 @@ public fun KitFactRow(
         modifier
             .kitMaxWidth(CapRole.List)
             .fillMaxWidth()
-            .padding(horizontal = tokens.gutter.dp, vertical = Space.S1.dp)
+            .padding(horizontal = kitRowGutter(), vertical = Space.S1.dp)
     ) {
         Column(
             Modifier.fillMaxWidth()

@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
 import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.ui.design.motion.resolveMotion
@@ -48,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
+import io.github.eslamasabry.oc.ui.kit.theme.rememberKitThemeFade
 import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
 
 /**
@@ -109,7 +111,7 @@ public fun KitTheme(
                 styleState.style,
             )
         }
-    val colors = remember(roles) { roles.toKitColors() }
+    val targetColors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
     val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
@@ -121,7 +123,12 @@ public fun KitTheme(
             appearance.motion,
             appearance.saver,
         )
-    val motion = remember(level, stillFrame) { KitMotionState(level, stillFrame) }
+    // P-029: a theme change fades over 200 ms on one clock; while it runs, the parts' own colour easing follows it
+    // frame by frame instead of trailing behind it.
+    val fade = rememberKitThemeFade(targetColors, fades = level != MotionLevel.Off && !stillFrame)
+    val colors = fade.colors
+    val motion =
+        remember(level, stillFrame, fade.fading) { KitMotionState(level, stillFrame, themeFading = fade.fading) }
     val direction = if (isRtl(localeTag)) LayoutDirection.Rtl else LayoutDirection.Ltr
     val ripple = remember { kitRippleConfiguration() }
     val selection =
@@ -139,7 +146,7 @@ public fun KitTheme(
                     signals.finePointer,
                 )
         }
-    platform.SystemBars(darkContent = !roles.dark, ground = colors.ground)
+    platform.SystemBars(darkContent = !colors.dark, ground = colors.ground)
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides effectiveAppearance,

@@ -242,8 +242,8 @@ private fun RowBody(
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             // A row menu's 48 dp target ends near the edge, so its glyph lines up with the chevrons of the rows around it.
             .padding(
-                start = tokens.gutter.dp,
-                end = if (trailing is KitRowTrailing.Menu) Space.S1.dp else tokens.gutter.dp,
+                start = kitRowGutter(),
+                end = if (trailing is KitRowTrailing.Menu) Space.S1.dp else kitRowGutter(),
                 top = Space.S2.dp,
                 bottom = Space.S2.dp,
             )

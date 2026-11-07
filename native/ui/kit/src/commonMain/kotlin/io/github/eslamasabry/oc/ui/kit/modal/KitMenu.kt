@@ -26,7 +26,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -136,12 +143,12 @@ public object MenuLayout {
 
 /**
  * The one popup menu (Dart `showKitMenu`, plan 06 §7.4), as screen state: shown while [expanded],
- * anchored to [anchor] (below its end edge; above when there is no room). Auto-dismissing items close
- * before selection by default; [KitMenuItem.dismissal] can defer it until after selection or
- * leave dismissal to the action owner. Dismissing (outside tap, Back) calls [onDismissRequest]
+ * anchored to [anchor] ([MenuPlacement]: from its start edge, below it or above it, never over it).
+ * Auto-dismissing items close before selection by default; [KitMenuItem.dismissal] can defer it
+ * until after selection or leave dismissal to the action owner. Dismissing (outside tap, Back) calls [onDismissRequest]
  * and runs nothing. An empty [items] never opens.
  *
- * States: closed, open Text: frame Cap: Menu (320) Motion: drops a few dp as it fades in at Full;
+ * States: closed, open Text: frame Cap: Menu (320) Motion: slides a few dp out from its anchor as it fades in at Full;
  * Calm fades; Off appears at once Replaces: showKitMenu, KitMenuPanel (lib/ui/kit/kit_menu.dart)
  */
 @Composable
@@ -153,57 +160,86 @@ public fun KitMenu(
     title: String? = null,
     anchor: @Composable () -> Unit,
 ) {
-    Box(modifier) {
+    // P-017: where the anchor sits in the window, so the panel's height can be held to the side it opens on and
+    // never cover the control that opened it.
+    var anchorTop by remember { mutableIntStateOf(0) }
+    var anchorBottom by remember { mutableIntStateOf(0) }
+    Box(
+        modifier.onGloballyPositioned {
+            val b = it.boundsInWindow()
+            anchorTop = b.top.roundToInt()
+            anchorBottom = b.bottom.roundToInt()
+        }
+    ) {
         anchor()
         if (expanded && items.isNotEmpty()) {
-            // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
-            // the screen's edge under a full-width row).
-            val density = LocalDensity.current
-            val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
-            // E20-S08: the menu fits between the system bars, a step from each; a longer one scrolls (its last
-            // item was cut under the navigation bar).
-            val step = with(density) { Space.S2.dp.roundToPx() }
-            val top = WindowInsets.systemBars.getTop(density) + step
-            val bottom = WindowInsets.systemBars.getBottom(density) + step
-            val provider = remember(gutter, top, bottom) { MenuPosition(gutter, top, bottom) }
-            Popup(
-                popupPositionProvider = provider,
-                onDismissRequest = onDismissRequest,
-                properties = PopupProperties(focusable = true),
-            ) {
-                val motion = KitMotion.state
-                val specs = KitMotion.specs
-                val shown = remember { MutableTransitionState(false).apply { targetState = true } }
-                AnimatedVisibility(
-                    shown,
-                    enter =
-                        fadeIn(specs.quick()) +
-                            if (motion.travels) slideInVertically(specs.quick()) { -it / 16 }
-                            else fadeIn(specs.quick()),
-                    exit = fadeOut(specs.exit()),
-                ) {
-                    KitMenuPanel(
-                        modifier =
-                            Modifier.layout { measurable, constraints ->
-                                val room =
-                                    if (!constraints.hasBoundedHeight) constraints.maxHeight
-                                    else (constraints.maxHeight - top - bottom).coerceAtLeast(0)
-                                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = room))
-                                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                            },
-                        items = items,
-                        title = title,
-                        onChoose = { item ->
-                            if (item.dismissal == KitMenuDismissal.BeforeSelect) onDismissRequest()
-                            item.onSelect()
-                            if (item.dismissal == KitMenuDismissal.AfterSelect) onDismissRequest()
-                        },
-                    )
-                }
-            }
+            MenuPopup(items, title, onDismissRequest, anchorTop, anchorBottom)
         }
     }
 }
+
+/** The open menu: placed by [MenuPlacement] from the anchor's window edges [anchorTop] and [anchorBottom]. */
+@Composable
+private fun MenuPopup(
+    items: List<KitMenuItem>,
+    title: String?,
+    onDismissRequest: () -> Unit,
+    anchorTop: Int,
+    anchorBottom: Int,
+) {
+    // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
+    // the screen's edge under a full-width row).
+    val density = LocalDensity.current
+    val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
+    // E20-S08: the menu fits between the system bars, a step from each; a longer one scrolls (its last
+    // item was cut under the navigation bar).
+    val step = with(density) { Space.S2.dp.roundToPx() }
+    val top = WindowInsets.systemBars.getTop(density) + step
+    val bottom = WindowInsets.systemBars.getBottom(density) + step
+    val provider = remember(gutter, top, bottom) { MenuPosition(gutter, top, bottom) }
+    Popup(
+        popupPositionProvider = provider,
+        onDismissRequest = onDismissRequest,
+        properties = PopupProperties(focusable = true),
+    ) {
+        val motion = KitMotion.state
+        val specs = KitMotion.specs
+        val shown = remember { MutableTransitionState(false).apply { targetState = true } }
+        // The panel drops from the anchor when it opens below and rises when it opens above.
+        val opensAbove = remember { mutableStateOf(false) }
+        val slide = slideInVertically(specs.quick()) { if (opensAbove.value) it / SLIDE_SHARE else -it / SLIDE_SHARE }
+        AnimatedVisibility(
+            shown,
+            enter = fadeIn(specs.quick()) + if (motion.travels) slide else fadeIn(specs.quick()),
+            exit = fadeOut(specs.exit()),
+        ) {
+            KitMenuPanel(
+                modifier =
+                    Modifier.layout { measurable, constraints ->
+                        if (!constraints.hasBoundedHeight) {
+                            val placeable = measurable.measure(constraints.copy(minHeight = 0))
+                            return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                        }
+                        val window = MenuWindow(constraints.maxWidth, constraints.maxHeight, gutter, top, bottom)
+                        val room = MenuPlacement.room(anchorTop, anchorBottom, window)
+                        val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = room))
+                        opensAbove.value = MenuPlacement.opensAbove(anchorTop, anchorBottom, placeable.height, window)
+                        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                    },
+                items = items,
+                title = title,
+                onChoose = { item ->
+                    if (item.dismissal == KitMenuDismissal.BeforeSelect) onDismissRequest()
+                    item.onSelect()
+                    if (item.dismissal == KitMenuDismissal.AfterSelect) onDismissRequest()
+                },
+            )
+        }
+    }
+}
+
+/** The opening slide: a sixteenth of the panel's height, toward it from the anchor. */
+private const val SLIDE_SHARE = 16
 
 /**
  * The menu's panel on its own (Dart `KitMenuPanel`): `surface2`, a hairline, at most 320 dp, rows
@@ -311,9 +347,62 @@ private fun MenuRow(item: KitMenuItem, glyphSlot: Boolean, onChoose: (KitMenuIte
 }
 
 /**
- * Below the anchor, aligned to its end edge; above when there is no room below; kept inside the
- * window by [margin].
+ * The window a menu opens in, in px: its size, the [margin] kept from each side, and the room kept free at the [top]
+ * and [bottom] (the system bars and a step).
  */
+public data class MenuWindow(
+    val width: Int,
+    val height: Int,
+    val margin: Int = 0,
+    val top: Int = 0,
+    val bottom: Int = 0,
+)
+
+/**
+ * Where a menu opens (P-017), pure so it is tested without a window. Across: the panel starts on the anchor's start
+ * edge when it fits there, else ends on its end edge, else is held inside the window margin. Down: below the anchor
+ * when the panel fits, else above when it fits there, else on the roomier side with its height held to that side
+ * ([room]; it scrolls). It never covers the control that opened it.
+ */
+public object MenuPlacement {
+    /** The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room. */
+    public fun room(anchorTop: Int, anchorBottom: Int, window: MenuWindow): Int =
+        maxOf(window.height - window.bottom - anchorBottom, anchorTop - window.top).coerceAtLeast(0)
+
+    /** True when a panel [height] tall opens above its anchor. */
+    public fun opensAbove(anchorTop: Int, anchorBottom: Int, height: Int, window: MenuWindow): Boolean {
+        val below = window.height - window.bottom - anchorBottom
+        val above = anchorTop - window.top
+        return when {
+            height <= below -> false
+            height <= above -> true
+            else -> above > below
+        }
+    }
+
+    /** The panel's top-left corner in the window. */
+    public fun offset(anchor: IntRect, content: IntSize, rtl: Boolean, window: MenuWindow): IntOffset {
+        val minX = window.margin
+        val maxX = maxOf(window.margin, window.width - content.width - window.margin)
+        // The reading start edge of the anchor, then its end edge: the panel grows away from the edge it starts on.
+        val fromStart = if (rtl) anchor.right - content.width else anchor.left
+        val fromEnd = if (rtl) anchor.left else anchor.right - content.width
+        val x =
+            when {
+                fromStart in minX..maxX -> fromStart
+                fromEnd in minX..maxX -> fromEnd
+                else -> fromEnd.coerceIn(minX, maxX)
+            }
+        val y =
+            if (opensAbove(anchor.top, anchor.bottom, content.height, window)) {
+                (anchor.top - content.height).coerceAtLeast(window.top)
+            } else {
+                anchor.bottom.coerceAtMost(maxOf(anchor.bottom, window.height - window.bottom - content.height))
+            }
+        return IntOffset(x, y)
+    }
+}
+
 private class MenuPosition(private val margin: Int, private val top: Int = 0, private val bottom: Int = 0) :
     PopupPositionProvider {
     override fun calculatePosition(
@@ -322,16 +411,7 @@ private class MenuPosition(private val margin: Int, private val top: Int = 0, pr
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
     ): IntOffset {
-        val x =
-            if (layoutDirection == LayoutDirection.Ltr) anchorBounds.right - popupContentSize.width
-            else anchorBounds.left
-        val below = anchorBounds.bottom
-        val y =
-            if (below + popupContentSize.height <= windowSize.height) below
-            else anchorBounds.top - popupContentSize.height
-        return IntOffset(
-            x.coerceIn(margin, maxOf(margin, windowSize.width - popupContentSize.width - margin)),
-            y.coerceIn(top, maxOf(top, windowSize.height - popupContentSize.height - bottom)),
-        )
+        val window = MenuWindow(windowSize.width, windowSize.height, margin, top, bottom)
+        return MenuPlacement.offset(anchorBounds, popupContentSize, layoutDirection == LayoutDirection.Rtl, window)
     }
 }

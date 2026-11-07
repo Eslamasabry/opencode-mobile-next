@@ -56,7 +56,9 @@ public fun KitRowGroup(
 ) {
     val tokens = LocalKitTokens.current
     val hairline = LocalKitColors.current.hairline
-    val inset = (tokens.gutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
+    // The rows inside a panel keep their gutter (the panel is a surface of its own), so read it inside the panel.
+    val rowGutter = kitRowGutterDp(LocalKitOnRail.current && LocalKitStyle.current.spec.tokens.flatLists, tokens.gutter)
+    val inset = (rowGutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
     val colors = LocalKitColors.current
     // Solid and Signal run lists flat on the page; Soft and Brutal set a group on a panel with 18 dp corners.
     val panel = !LocalKitStyle.current.spec.tokens.flatLists
@@ -69,8 +71,11 @@ public fun KitRowGroup(
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group").kitList("KitRowGroup")) {
         label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
         Column(panelModifier) {
-            HairlineColumn(inset, tokens.gutter.dp, hairline, rows)
-            destructive?.let { HairlineColumn(tokens.gutter.dp, tokens.gutter.dp, hairline, it, ruleAbove = true) }
+            // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).
+            androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides (onRail && !panel)) {
+                HairlineColumn(inset, rowGutter.dp, hairline, rows)
+                destructive?.let { HairlineColumn(rowGutter.dp, rowGutter.dp, hairline, it, ruleAbove = true) }
+            }
         }
         note?.let { KitGroupNote(it) }
     }
@@ -79,6 +84,16 @@ public fun KitRowGroup(
 /** True inside a surface whose content already sits on a rail (a KitSheet's body): panels add no gutter of their own. */
 public val LocalKitOnRail: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
     androidx.compose.runtime.staticCompositionLocalOf { false }
+
+/**
+ * The space a row, a section label or a list hairline keeps from its box's edge: the page gutter, or none on a sheet's
+ * rail, where the rail already is the margin (P-008: rows on a sheet started 16 dp past its title, a third edge).
+ */
+public fun kitRowGutterDp(onRail: Boolean, gutter: Int): Int = if (onRail) 0 else gutter
+
+/** [kitRowGutterDp] here. */
+@Composable
+public fun kitRowGutter(): Dp = kitRowGutterDp(LocalKitOnRail.current, LocalKitTokens.current.gutter).dp
 
 /** Where the separators go, written by the measure pass and read by the draw pass of the same node. */
 private class Seams {
