@@ -43,6 +43,9 @@ public class StorageFullException : RuntimeException("storage full")
  *
  * Layout under [root] (= `files/voice_models`, read in place): `<pack>-<rev>/<file>`, `.installed.json`,
  * `.native-verified.json`; staging `<pack>-<rev>.installing/<file>.part`; `<file>.voice-backup` during a replace.
+ * A re-download of an installed pack ("Download again") stages in its own `<pack>-<rev>.replacing/` instead: the
+ * installed model keeps working until the new files are verified and swapped in, and a cancel or failure deletes
+ * only that folder (E13-S04). A first download's `.installing/` parts stay for resume (M3).
  * One [Mutex] per pack directory: same-pack installs and removes serialize, and a remove waits for an install.
  */
 public class PackInstaller(
@@ -63,7 +66,10 @@ public class PackInstaller(
 
     public fun stagingDir(spec: ModelPackSpec): String = "$root/${spec.dirName}.installing"
 
-    private fun partPath(spec: ModelPackSpec, file: ModelFile) = "${stagingDir(spec)}/${file.name}.part"
+    /** Where a re-download of an installed pack stages; never resumed, never counted as a partial download. */
+    public fun replacingDir(spec: ModelPackSpec): String = "$root/${spec.dirName}.replacing"
+
+    private fun partPath(staging: String, file: ModelFile) = "$staging/${file.name}.part"
 
     private fun markerPath(spec: ModelPackSpec) = "${packDir(spec)}/${InstalledMarker.NAME}"
 
@@ -77,7 +83,7 @@ public class PackInstaller(
     /** Bytes already in the pack's `.part` files (each capped at its pinned length), for resume and the storage check. */
     public suspend fun partialBytes(spec: ModelPackSpec): Long =
         withContext(dispatchers.io) {
-            spec.files.sumOf { file -> (files.size(partPath(spec, file)) ?: 0L).coerceAtMost(file.bytes) }
+            spec.files.sumOf { file -> (files.size(partPath(stagingDir(spec), file)) ?: 0L).coerceAtMost(file.bytes) }
         }
 
     /**
@@ -116,6 +122,9 @@ public class PackInstaller(
      * Downloads (resuming kept `.part` files), verifies twice, publishes with rollback, then writes the marker.
      * [onActivity] runs on every answer from the network (a response, each body chunk), unthrottled: the manager's
      * stall watch reads it, since [onProgress] is throttled to 1 % steps.
+     *
+     * [replaceExisting] on an installed pack stages in [replacingDir]: nothing of the installed model changes until
+     * the new files are verified, and a cancel or failure deletes only the staged files (E13-S04).
      */
     public suspend fun install(
         spec: ModelPackSpec,
@@ -124,44 +133,71 @@ public class PackInstaller(
         onProgress: (InstallProgress) -> Unit = {},
     ): Outcome<InstalledPack> =
         lockOf(spec).withLock {
-            if (!replaceExisting) installed(spec)?.let { return@withLock it.ok() }
-            var phase = Phase.Downloading
-            try {
-                withContext(dispatchers.io) { files.createDirectories(stagingDir(spec)) }
-                val progress = ProgressThrottle(spec.totalBytes, clock, onProgress)
-                var before = 0L
-                for (file in spec.files) {
-                    val result =
-                        downloadFile(spec, file, onActivity) { received -> progress.report(before + received) }
-                    if (result is Outcome.Failed) return@withLock result
-                    before += file.bytes
+            val current = installed(spec)
+            if (!replaceExisting && current != null) return@withLock current.ok()
+            if (current == null) return@withLock stageAndPublish(spec, stagingDir(spec), false, onActivity, onProgress)
+            val staging = replacingDir(spec)
+            // A replace never resumes a dead process's parts; if they can't go, a resume is still verified.
+            withContext(dispatchers.io) { orNullOnIoError { files.deleteTree(staging) } }
+            val result =
+                try {
+                    stageAndPublish(spec, staging, true, onActivity, onProgress)
+                } catch (e: CancellationException) {
+                    withContext(NonCancellable + dispatchers.io) { cleanStaging(staging) }
+                    throw e
                 }
-                phase = Phase.Verifying
-                progress.verifying()
-                for (file in spec.files) {
-                    if (!verifyStaged(spec, file)) {
-                        withContext(dispatchers.io) { files.delete(partPath(spec, file)) }
-                        return@withLock media(MediaProblem.DownloadChecksum)
-                    }
-                }
-                // Second pass right before publishing: nothing changed the staged bytes in between.
-                if (spec.files.any { !verifyStaged(spec, it) }) {
-                    withContext(NonCancellable + dispatchers.io) { cleanStaging(spec) }
-                    return@withLock media(MediaProblem.DownloadVerification)
-                }
-                phase = Phase.Publishing
-                val published = publish(spec)
-                if (published is Outcome.Failed) return@withLock published
-                withContext(NonCancellable + dispatchers.io) { cleanAfterPublish(spec) }
-                InstalledPack(spec, packDir(spec)).ok()
-            } catch (e: CancellationException) {
-                // M3: a cancel while downloading keeps the .part files; later phases clean the staged files.
-                if (phase != Phase.Downloading) withContext(NonCancellable + dispatchers.io) { cleanStaging(spec) }
-                throw e
-            } catch (e: StorageFullException) {
-                media(MediaProblem.DownloadNoSpace, e)
-            }
+            if (result is Outcome.Failed) withContext(NonCancellable + dispatchers.io) { cleanStaging(staging) }
+            result
         }
+
+    /** Under the pack lock: download into [staging], verify, publish. [replacing] also clears a stale first-download. */
+    private suspend fun stageAndPublish(
+        spec: ModelPackSpec,
+        staging: String,
+        replacing: Boolean,
+        onActivity: () -> Unit,
+        onProgress: (InstallProgress) -> Unit,
+    ): Outcome<InstalledPack> {
+        var phase = Phase.Downloading
+        try {
+            withContext(dispatchers.io) { files.createDirectories(staging) }
+            val progress = ProgressThrottle(spec.totalBytes, clock, onProgress)
+            var before = 0L
+            for (file in spec.files) {
+                val result =
+                    downloadFile(staging, spec, file, onActivity) { received -> progress.report(before + received) }
+                if (result is Outcome.Failed) return result
+                before += file.bytes
+            }
+            phase = Phase.Verifying
+            progress.verifying()
+            for (file in spec.files) {
+                if (!verifyStaged(staging, file)) {
+                    withContext(dispatchers.io) { files.delete(partPath(staging, file)) }
+                    return media(MediaProblem.DownloadChecksum)
+                }
+            }
+            // Second pass right before publishing: nothing changed the staged bytes in between.
+            if (spec.files.any { !verifyStaged(staging, it) }) {
+                withContext(NonCancellable + dispatchers.io) { cleanStaging(staging) }
+                return media(MediaProblem.DownloadVerification)
+            }
+            phase = Phase.Publishing
+            val published = publish(spec, staging)
+            if (published is Outcome.Failed) return published
+            withContext(NonCancellable + dispatchers.io) {
+                cleanAfterPublish(spec, staging)
+                if (replacing) cleanStaging(stagingDir(spec)) // a first download's leftovers are useless now
+            }
+            return InstalledPack(spec, packDir(spec)).ok()
+        } catch (e: CancellationException) {
+            // M3: a cancel while downloading keeps the .part files; later phases clean the staged files.
+            if (phase != Phase.Downloading) withContext(NonCancellable + dispatchers.io) { cleanStaging(staging) }
+            throw e
+        } catch (e: StorageFullException) {
+            return media(MediaProblem.DownloadNoSpace, e)
+        }
+    }
 
     /** Deletes every file of the pack: the model files, markers, staged parts, backups and temporaries. */
     public suspend fun remove(spec: ModelPackSpec): Outcome<Unit> =
@@ -169,6 +205,7 @@ public class PackInstaller(
             attemptIo {
                 files.deleteTree(packDir(spec))
                 files.deleteTree(stagingDir(spec))
+                files.deleteTree(replacingDir(spec))
             }
         }
 
@@ -179,12 +216,13 @@ public class PackInstaller(
     // ---- download one file
 
     private suspend fun downloadFile(
+        staging: String,
         spec: ModelPackSpec,
         file: ModelFile,
         activity: () -> Unit,
         progress: (Long) -> Unit,
     ): Outcome<Unit> {
-        val part = partPath(spec, file)
+        val part = partPath(staging, file)
         var offset = withContext(dispatchers.io) { files.size(part) ?: 0L }
         if (offset > file.bytes) {
             withContext(dispatchers.io) { files.delete(part) }
@@ -276,8 +314,8 @@ public class PackInstaller(
 
     // ---- verify
 
-    private suspend fun verifyStaged(spec: ModelPackSpec, file: ModelFile): Boolean =
-        withContext(dispatchers.io) { hashMatches(partPath(spec, file), file) }
+    private suspend fun verifyStaged(staging: String, file: ModelFile): Boolean =
+        withContext(dispatchers.io) { hashMatches(partPath(staging, file), file) }
 
     private suspend fun verifyFilesFully(spec: ModelPackSpec): Boolean = spec.files.all { hashMatches(fileIn(spec, it), it) }
 
@@ -301,7 +339,7 @@ public class PackInstaller(
 
     // ---- publish
 
-    private suspend fun publish(spec: ModelPackSpec): Outcome<Unit> =
+    private suspend fun publish(spec: ModelPackSpec, staging: String): Outcome<Unit> =
         withContext(NonCancellable + dispatchers.io) {
             val dir = packDir(spec)
             val published = mutableListOf<String>()
@@ -315,7 +353,7 @@ public class PackInstaller(
                         files.move(target, "$target$BACKUP")
                         backedUp += target
                     }
-                    files.move(partPath(spec, file), target)
+                    files.move(partPath(staging, file), target)
                     published += target
                 }
                 val tmp = "${markerPath(spec)}.tmp"
@@ -333,15 +371,15 @@ public class PackInstaller(
             }
         }
 
-    private fun cleanAfterPublish(spec: ModelPackSpec) {
+    private fun cleanAfterPublish(spec: ModelPackSpec, staging: String) {
         orNullOnIoError {
             for (file in spec.files) files.delete("${packDir(spec)}/${file.name}$BACKUP")
-            files.deleteTree(stagingDir(spec))
+            files.deleteTree(staging)
         }
     }
 
-    private fun cleanStaging(spec: ModelPackSpec) {
-        orNullOnIoError { files.deleteTree(stagingDir(spec)) }
+    private fun cleanStaging(staging: String) {
+        orNullOnIoError { files.deleteTree(staging) }
     }
 
     // ---- records

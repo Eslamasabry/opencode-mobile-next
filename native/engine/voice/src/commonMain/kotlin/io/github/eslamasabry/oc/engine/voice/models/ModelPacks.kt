@@ -219,8 +219,9 @@ public class ModelPacks(
             lane.withLock {
                 if (closed) return@withLock null
                 if (running != null) return busy()
-                val partial = installer.partialBytes(spec)
                 val installedNow = installer.installed(spec) != null
+                // A re-download of an installed pack stages apart and never resumes the first download's parts.
+                val partial = if (replaceExisting && installedNow) 0L else installer.partialBytes(spec)
                 val support =
                     PackSupport.supportFor(spec, probed, installedNow, partial, replaceExisting)
                 if (support is Support.Blocked) {
@@ -289,10 +290,7 @@ public class ModelPacks(
                 }
             } catch (e: CancellationException) {
                 withContext(NonCancellable) {
-                    val partial = installer.partialBytes(spec)
-                    val status =
-                        if (partial > 0) PackStatus.Partial(partial, spec.totalBytes)
-                        else PackStatus.Missing
+                    val status = restingStatus(spec)
                     lane.withLock { settle(run, spec, status, run.interruptedBy) }
                 }
                 if (run.interruptedBy == null) run.result.cancel(e)
@@ -313,18 +311,22 @@ public class ModelPacks(
                 }
                 is Outcome.Failed -> {
                     val problem = (result.failure as? Failure.Media)?.problem ?: MediaProblem.DownloadIncomplete
-                    val partial = installer.partialBytes(spec)
-                    settle(
-                        run,
-                        spec,
-                        if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing,
-                        problem,
-                    )
+                    settle(run, spec, restingStatus(spec), problem)
                 }
             }
         }
         run.result.complete(result)
         return result
+    }
+
+    /**
+     * The row once a download stops without installing: a re-download that was cancelled or failed leaves the
+     * installed pack Installed (E13-S04); otherwise the kept `.part` bytes, or Missing.
+     */
+    private suspend fun restingStatus(spec: ModelPackSpec): PackStatus {
+        if (installer.installed(spec) != null) return PackStatus.Installed
+        val partial = installer.partialBytes(spec)
+        return if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing
     }
 
     /** Under [lane]: ends [run]'s job (unless a newer one already replaced it) and records the pack's new row. */
@@ -354,13 +356,13 @@ public class ModelPacks(
 
     private suspend fun interrupt(run: Running, problem: MediaProblem) {
         val spec = specOf(run.pack) ?: return
-        val partial = installer.partialBytes(spec)
+        val status = restingStatus(spec)
         val ended =
             lane.withLock {
                 if (running !== run || run.result.isCompleted) return@withLock false
                 generation++
                 run.interruptedBy = problem
-                settle(run, spec, if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing, problem)
+                settle(run, spec, status, problem)
                 true
             }
         if (!ended) return
@@ -385,10 +387,8 @@ public class ModelPacks(
     private suspend fun endUnstarted(run: Running) {
         if (run.result.isCompleted) return
         val spec = specOf(run.pack) ?: return
-        val partial = installer.partialBytes(spec)
-        lane.withLock {
-            settle(run, spec, if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing, null)
-        }
+        val status = restingStatus(spec)
+        lane.withLock { settle(run, spec, status, null) }
         run.result.cancel()
     }
 
