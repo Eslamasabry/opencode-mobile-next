@@ -174,6 +174,8 @@ public data class ProjectPageUi(
     val creating: Boolean = false,
     val createFailure: Failure? = null,
     val canStartIsolated: Boolean = false,
+    /** B-163: the server runs scheduled prompts, so the page offers "Scheduled prompts". */
+    val canSchedule: Boolean = false,
     val copies: List<io.github.eslamasabry.oc.core.model.WorktreeInfo> = emptyList(),
     val copiesFailure: Failure? = null,
     val copiesLoading: Boolean = false,
@@ -223,6 +225,9 @@ public interface ProjectPageActions : ProjectWorkspaceActions {
     public fun onResume() {}
 
     public fun developmentServices()
+
+    /** B-163: this server's scheduled prompts, a new one seeded with this project. */
+    public fun openSchedules() {}
 
     public fun back()
 
