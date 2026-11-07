@@ -128,6 +128,9 @@ public interface BasicComposerActions {
 
     /** Photos, camera or clipboard picture, where the platform offers them. */
     public fun attach(kind: AttachKind) {}
+
+    /** After a camera refusal: the app's Android settings page (E05-S01). */
+    public fun openCameraSettings() {}
 }
 
 /** What a typed field asks the suggestion strip for (Flutter `_activeAgentQuery`, slash match). */
@@ -228,6 +231,8 @@ public class BasicComposerViewModel(
     private val selectingModel = MutableStateFlow(false)
     private val attachmentFailure = MutableStateFlow<Failure?>(null)
     private val targetKey = "${target.profileId}/${target.sessionId}"
+    private val conversation: ConversationRef? =
+        target.sessionId?.let { ConversationRef(ProfileId(target.profileId), SessionId(it)) }
 
     private val savedHistory = MutableStateFlow<List<String>>(emptyList())
     private val historyLoading = MutableStateFlow(false)
@@ -504,7 +509,7 @@ public class BasicComposerViewModel(
         val generation = w.draftGeneration
         viewModelScope.launch {
             try {
-                when (val picked = source.attach(kind, w.draft.value.attachments)) {
+                when (val picked = source.attach(kind, w.draft.value.attachments, conversation)) {
                     is Outcome.Ok -> {
                         if (picked.value.isEmpty()) {
                             // A cancel changes nothing; an empty clipboard says so in plain words.
@@ -538,6 +543,11 @@ public class BasicComposerViewModel(
                 pickingFile.value = false
             }
         }
+    }
+
+    override fun openCameraSettings() {
+        attachmentFailure.value = null
+        attachSources.firstOrNull { AttachKind.Camera in it.kinds }?.openSettings(AttachKind.Camera)
     }
 
     /** Read directly, never through [state]: StateFlow publishes later than a tap can arrive. */
