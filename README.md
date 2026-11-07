@@ -117,7 +117,16 @@ The app is being rebuilt in native Kotlin, with Kotlin Multiplatform and Jetpack
 
 ## Privacy
 
-The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. Crash and error reports can also go to the developer through Google Firebase Crashlytics, but only if you turn on **Settings > Privacy and data > Send crash reports to the developer (Google Firebase)**; it is off by default, sends only the kind of error, code locations and device model, and turning it off stops it. See [PRIVACY.md](PRIVACY.md).
+The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
+
+### What is sent
+
+Nothing goes to the developer unless you turn on **Settings > Privacy and data > Send crash reports and setup counts to the developer (Google Firebase)**. It is off by default, and turning it off stops it. When on:
+
+- **Crash and error reports** go to Google Firebase Crashlytics: the kind of error, code locations, the setup step that failed with its exit code, phone model, Android version and app version.
+- **Setup counts** go to Google Analytics for Firebase, exactly these events with fixed values only: `app_open` (cold or warm), `setup_step_reached` (step), `setup_step_failed` (step; crash, timeout, network, space or other; compatibility mode; Node.js variant), `setup_done` (minutes, as a range), `first_reply` (phone or computer; seconds, as a range), `connect_computer_chosen`, `update_offered`, `update_installed`.
+
+Never sent: messages, prompts, files, paths, server addresses, usernames, passwords, keys, tokens or the advertising ID.
 
 ## Development
 
@@ -140,4 +149,4 @@ CI runs analysis, Android lint, the test suite in six shards and a signed releas
 
 [MIT](LICENSE). Bundled fonts, models and packages are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-OpenCode Mobile is an independent community project. It is not built, maintained, endorsed by, or affiliated with the official OpenCode team. It is not affiliated with Anthropic. It was built with substantial AI assistance. Thanks to the OpenCode team for the agent this app is a window onto.
+OpenCode Mobile is an independent community project. It is not built, maintained, endorsed by, or affiliated with the official OpenCode team. It is not affiliated with Anthropic. Built with AI coding agents and reviewed by the maintainer. Thanks to the OpenCode team for the agent this app is a window onto.

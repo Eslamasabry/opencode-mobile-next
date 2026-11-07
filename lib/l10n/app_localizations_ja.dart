@@ -33943,11 +33943,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get telemetrySettingTitle =>
-      'Send crash reports to the developer (Google Firebase)';
+      'Send crash reports and setup counts to the developer (Google Firebase)';
 
   @override
   String get telemetrySettingDetail =>
-      'Sends crash and failure reports to Google Firebase Crashlytics: the kind of error, the code locations it happened in, your phone model and Android version, and the app version. No messages, files, addresses or passwords.';
+      'Sends crash and failure reports to Google Firebase Crashlytics, and counts to Google Analytics for Firebase: app opens, which setup steps are reached or fail, how long setup and the first reply took, and update offers. Only fixed words and ranges, with your phone model, Android version and app version. No messages, files, addresses, passwords or advertising ID.';
 
   @override
   String get voiceAutoSetupUnknownNetwork =>

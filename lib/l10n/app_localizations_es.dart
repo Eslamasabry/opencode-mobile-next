@@ -34370,11 +34370,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get telemetrySettingTitle =>
-      'Enviar informes de fallos al desarrollador (Google Firebase)';
+      'Enviar informes de fallos y recuentos de la configuración al desarrollador (Google Firebase)';
 
   @override
   String get telemetrySettingDetail =>
-      'Envía informes de fallos y errores a Google Firebase Crashlytics: el tipo de error, las partes del código donde ocurrió, el modelo de tu teléfono y la versión de Android, y la versión de la aplicación. Ni mensajes, ni archivos, ni direcciones, ni contraseñas.';
+      'Envía informes de fallos y errores a Google Firebase Crashlytics, y recuentos a Google Analytics for Firebase: aperturas de la aplicación, qué pasos de la configuración se alcanzan o fallan, cuánto tardaron la configuración y la primera respuesta, y las ofertas de actualización. Solo palabras y rangos fijos, con el modelo de tu teléfono, la versión de Android y la de la aplicación. Ni mensajes, ni archivos, ni direcciones, ni contraseñas, ni ID de publicidad.';
 
   @override
   String get voiceAutoSetupUnknownNetwork =>

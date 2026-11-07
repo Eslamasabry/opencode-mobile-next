@@ -1,11 +1,12 @@
 # Privacy Policy
 
-**Effective date: September 6, 2026**
+**Effective date: November 7, 2026**
 
 OpenCode for Android is a client for OpenCode servers. It does not provide a
-developer-operated account, advertising or analytics service. It can send crash
-and error reports to the developer, but only if you turn that on (see
-"Optional crash and error reports" below). The app does not sell personal data.
+developer-operated account or advertising. It can send crash and error reports
+and a few counts of which setup steps are reached to the developer, but only if
+you turn that on (see "Optional crash reports and setup analytics" below). The
+app does not sell personal data.
 
 ## Where your data goes
 
@@ -45,14 +46,18 @@ and is identified on the host by your Tailscale login; the app keeps a
 record of each action and its receipt under the same server-scoped keys.
 The front never receives a password from the app.
 
-## Optional crash and error reports
+## Optional crash reports and setup analytics
 
-Off by default. In **Settings > Privacy and data** the switch "Send crash
-reports to the developer (Google Firebase)" sends crash and failure reports to
-**Google Firebase Crashlytics**, a service run by Google, so Google receives
-them under its own terms. Nothing is collected or sent while the switch is off,
-and the app contains no Firebase Analytics, performance or remote-config code.
-Turn the switch off at any time to stop; unsent reports are discarded.
+Off by default. In **Settings > Privacy and data** one switch, "Send crash
+reports and setup counts to the developer (Google Firebase)", turns on two
+services run by Google, so Google receives the data under its own terms:
+**Google Firebase Crashlytics** for crash and failure reports, and **Google
+Analytics for Firebase** for the counts listed below. Nothing is collected or
+sent while the switch is off. Turn it off at any time to stop; unsent reports
+are discarded and the analytics data kept on the phone is reset. The app
+contains no performance-monitoring or remote-config code.
+
+### Crash and error reports
 
 When on, a report contains only: the kind of error (for example "Invalid
 state") and the code locations (library, line and column) it happened in; for
@@ -66,6 +71,33 @@ paths, server addresses, usernames, passwords, keys or tokens; the app drops
 anything that is not a short plain code, and removes secrets from the rest
 before it leaves the app. A native (Java or C) crash report carries the
 crashed thread's code locations and the device facts above, not your data.
+
+### Setup analytics
+
+So the developer can see where setting up fails, the app counts exactly these
+events, and no others:
+
+| Event | What it carries |
+| --- | --- |
+| `app_open` | `kind`: cold (the app started) or warm (it came back from the background) |
+| `setup_step_reached` | `step`: one of linux, essentials, python, node, opencode, aiteam, voice, start, other |
+| `setup_step_failed` | `step` (as above); `kind`: crash, timeout, network, space or other; `compat_mode`: true or false; `node_variant`: standard, compat, legacy or other, when the step picked one |
+| `setup_done` | `minutes`: a range (under 2, 2 to 5, 5 to 10, 10 to 20, 20 to 40, over 40) |
+| `first_reply` | `server_kind`: phone or computer; `seconds`: a range (under 5, 5 to 15, 15 to 30, 30 to 60, 60 to 180, over 180, unknown) |
+| `connect_computer_chosen` | nothing |
+| `update_offered` | nothing |
+| `update_installed` | nothing |
+
+Every value is one of the fixed words above; the app drops anything else, so
+no free text, paths, server addresses or anything from your conversations can
+be sent. Google Analytics adds on its own a random app-instance identifier,
+the phone model, Android version, app version, language, the time, and a
+coarse location (country and region) it works out from the connection without
+keeping the IP address. It also counts a few events of its own, such as the
+first open and the length of a session. The advertising ID and Android ID
+(SSAID) are never collected (the app does not even hold the advertising-ID
+permission), ad personalisation and ad storage are denied, screens are not
+reported, and no data is exported to any other Google product.
 
 The separate "Offer crash reports" switch is unchanged: it offers to prepare a
 report you review and send yourself through GitHub, with no third party.

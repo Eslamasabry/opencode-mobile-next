@@ -53474,16 +53474,16 @@ abstract class AppLocalizations {
   /// **'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.'**
   String get crashOfferSettingDetail;
 
-  /// Privacy and data: switch that turns on sending crash reports to the developer through Google Firebase Crashlytics.
+  /// Privacy and data: switch that turns on sending crash reports (Google Firebase Crashlytics) and setup analytics counts (Google Analytics for Firebase) to the developer.
   ///
   /// In en, this message translates to:
-  /// **'Send crash reports to the developer (Google Firebase)'**
+  /// **'Send crash reports and setup counts to the developer (Google Firebase)'**
   String get telemetrySettingTitle;
 
-  /// Privacy and data: one sentence on what the crash-report switch sends.
+  /// Privacy and data: what the crash-report and setup-counts switch sends. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'Sends crash and failure reports to Google Firebase Crashlytics: the kind of error, the code locations it happened in, your phone model and Android version, and the app version. No messages, files, addresses or passwords.'**
+  /// **'Sends crash and failure reports to Google Firebase Crashlytics, and counts to Google Analytics for Firebase: app opens, which setup steps are reached or fail, how long setup and the first reply took, and update offers. Only fixed words and ranges, with your phone model, Android version and app version. No messages, files, addresses, passwords or advertising ID.'**
   String get telemetrySettingDetail;
 
   /// First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows

@@ -34112,11 +34112,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get telemetrySettingTitle =>
-      'إرسال تقارير الأعطال إلى المطوّر (Google Firebase)';
+      'إرسال تقارير الأعطال وإحصاءات الإعداد إلى المطوّر (Google Firebase)';
 
   @override
   String get telemetrySettingDetail =>
-      'يرسل تقارير الأعطال والإخفاقات إلى Google Firebase Crashlytics: نوع الخطأ ومواضع الشيفرة التي وقع فيها، وطراز هاتفك وإصدار أندرويد وإصدار التطبيق. لا رسائل ولا ملفات ولا عناوين ولا كلمات مرور.';
+      'يرسل تقارير الأعطال والإخفاقات إلى Google Firebase Crashlytics، وإحصاءات إلى Google Analytics for Firebase: مرات فتح التطبيق، وخطوات الإعداد التي بلغتها أو تعثّرت فيها، والمدة التي استغرقها الإعداد وأول رد، وعروض التحديث. كلمات ونطاقات ثابتة فقط، مع طراز هاتفك وإصدار أندرويد وإصدار التطبيق. لا رسائل ولا ملفات ولا عناوين ولا كلمات مرور ولا معرّف إعلاني.';
 
   @override
   String get voiceAutoSetupUnknownNetwork =>

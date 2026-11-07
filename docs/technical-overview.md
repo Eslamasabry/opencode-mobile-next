@@ -216,19 +216,30 @@ dart run tool/prompt_test.dart http://127.0.0.1:4097   # needs model auth
 Stop only the scratch process you started; never target an owner server.
 
 
-### Crash reporting (opt-in)
+### Crash reporting and setup analytics (opt-in)
 
 `lib/telemetry/` is the app's own reporting layer; app code depends only on
-`Telemetry`, and Firebase Crashlytics is one `TelemetryAdapter`
-(`firebase_crashlytics_adapter.dart`). Consent is off by default
-(Settings > Privacy and data) and nothing reaches an adapter without it.
+`Telemetry`. Firebase Crashlytics (`firebase_crashlytics_adapter.dart`) and
+Google Analytics for Firebase (`firebase_analytics_adapter.dart`) are two
+`TelemetryAdapter`s joined by `CombinedTelemetryAdapter`. One consent switch,
+off by default (Settings > Privacy and data), covers both; nothing reaches an
+adapter without it.
+
+`Telemetry.track(AnalyticsEvent, props)` sends only the events and values in
+`analytics_events.dart` (`analyticsSchema`): fixed names, enum or bucket
+values, no free text. Adding an event means adding it there, to PRIVACY.md
+(English and `assets/l10n/PRIVACY.ar.md`), to README "What is sent" and to
+`test/telemetry_analytics_test.dart`. The manifest keeps analytics collection
+off until consent, removes the `AD_ID` permission and turns off advertising
+ID, SSAID, ad personalisation and automatic screen reporting. No BigQuery
+export or other paid Firebase product is used.
 
 The private Firebase file `google-services-io.github.eslamasabry.opencode_mobile.json`
 is never in git. `android/app/build.gradle.kts` looks for it in
 `OC_GOOGLE_SERVICES_DIR` (Gradle property or environment variable; default
 `~/.config/oc-app/firebase`), copies it to the git-ignored
 `android/app/google-services.json` and applies the Google Services and
-Crashlytics Gradle plugins only then. Without it the app builds, the switch is
+Crashlytics Gradle plugins only then (analytics needs only Google Services). Without it the app builds, the switch is
 not shown and the no-op reporter is used. For CI, `android-release.yml` would
 need the file from a secret (for example a base64 secret written into a
 directory named by `OC_GOOGLE_SERVICES_DIR` before the build); the workflow is
