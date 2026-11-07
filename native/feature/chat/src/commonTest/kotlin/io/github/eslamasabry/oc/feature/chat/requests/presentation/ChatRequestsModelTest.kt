@@ -29,6 +29,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import io.github.eslamasabry.oc.engine.requests.RETIRED_SHOWN
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -407,7 +408,7 @@ class ChatRequestsModelTest {
         }
 
     @Test
-    fun `E06-S03 after Stop every card says No longer needed, answers nothing, and leaves within 2 s`() =
+    fun `E06-S03 P-109 after Stop every card says No longer needed long enough to read, answers nothing, then leaves`() =
         runTest {
             val (engine, model) = model()
             ask(shell("p1"), shell("p2"), shell("p3", session = other))
@@ -425,7 +426,11 @@ class ChatRequestsModelTest {
             runCurrent()
             assertEquals(listOf(CardState.NoLongerNeeded, CardState.NoLongerNeeded), model.state.value.cards.map { it.state })
 
+            // P-109: at 1.2 s the line was gone before it could be read.
             advanceTimeBy(2.seconds)
+            runCurrent()
+            assertEquals(listOf(CardState.NoLongerNeeded, CardState.NoLongerNeeded), model.state.value.cards.map { it.state })
+            advanceTimeBy(RETIRED_SHOWN)
             runCurrent()
             assertEquals(emptyList(), model.state.value.cards)
             assertEquals(emptyList(), port.replies)
@@ -447,7 +452,7 @@ class ChatRequestsModelTest {
             )
             runCurrent()
             assertEquals(CardState.NoLongerNeeded, model.state.value.card?.state)
-            advanceTimeBy(2.seconds)
+            advanceTimeBy(RETIRED_SHOWN + 1.milliseconds)
             runCurrent()
             assertNull(model.state.value.card)
         }
