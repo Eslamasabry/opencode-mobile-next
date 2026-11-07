@@ -202,14 +202,12 @@ public fun KitChoiceCard(
                 val k = box / KitIconSize.Large.dp.dp
                 Box(Modifier.size(box), contentAlignment = Alignment.Center) {
                     CompositionLocalProvider(LocalKitColors provides colors.copy(text1 = iconColor)) {
-                        KitIcon(
-                            icon,
+                        Box(
                             Modifier.requiredSize(KitIconSize.Large.dp.dp).graphicsLayer {
                                 scaleX = k
                                 scaleY = k
                             },
-                            size = KitIconSize.Large,
-                        )
+                        ) { KitIcon(icon, size = KitIconSize.Large) }
                     }
                 }
             }
