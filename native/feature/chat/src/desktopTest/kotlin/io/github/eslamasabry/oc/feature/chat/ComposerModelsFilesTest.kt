@@ -204,19 +204,24 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `09-10_6 the plus is never a dead control and opens the file picker when files are its only choice`() =
+    fun `09-10_6 the plus is never a dead control and opens the tray when files are its only choice`() =
         runComposeUiTest {
             // Flutter's composer plus always opens (attachments are gated on the server's capability, not on the
-            // chosen model, chat_attachments.dart); the owner's one-box composer dropped the native-only
-            // explained-disabled plus. With files the only choice, the plus says so and opens the picker directly.
+            // chosen model, chat_attachments.dart). E20-S20: with files the only choice it opens Flutter's tray,
+            // File and More, and File opens the picker.
             val actions = Actions()
             val state =
                 mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big), selected = big)))
-            setContent { Theme { BasicComposer(state.value, actions, chrome) } }
+            setContent { Theme { KitSheetHost { BasicComposer(state.value, actions, chrome) } } }
             onNodeWithTag("chat-attach-button").assertIsEnabled()
-            onNodeWithContentDescription("Attach file").assertExists()
+            onNodeWithContentDescription("Attach and more").assertExists()
             onNodeWithTag("chat-attach-button").performClick()
+            onNodeWithTag("kit-composer-tray").assertIsDisplayed()
+            onNodeWithText("More").assertIsDisplayed()
+            onNodeWithText("File").performClick()
+            waitForIdle()
             assertEquals(listOf("attachFile"), actions.calls)
+            onNodeWithTag("kit-composer-tray").assertDoesNotExist()
         }
 
     @Test
@@ -321,7 +326,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `B-CHAT-009 the Add sheet lists file, photos and clipboard rows where the platform offers them`() =
+    fun `B-CHAT-009 the tray offers Photos, File and More where the platform offers them, never a paste button`() =
         runComposeUiTest {
             val actions = Actions()
             val state =
@@ -333,12 +338,15 @@ class ComposerModelsFilesTest {
                         )
                 )
             setContent { Theme { KitSheetHost { BasicComposer(state, actions, chrome) } } }
-            // The plus opens the tray on the message box itself (no sheet title since the one-box composer).
-            onNodeWithContentDescription("Attach").performClick()
+            // The plus opens Flutter's one-row tray on the message box itself (E20-S20); the clipboard picture is
+            // pasted from the keyboard, as in Flutter, never a tray button.
+            onNodeWithContentDescription("Attach and more").performClick()
             onNodeWithTag("kit-composer-tray").assertIsDisplayed()
-            onNodeWithText("Attach file").assertIsDisplayed()
-            onNodeWithText("Take photo").assertDoesNotExist()
-            onNodeWithText("Photo library").performClick()
+            onNodeWithText("File").assertIsDisplayed()
+            onNodeWithText("More").assertIsDisplayed()
+            onNodeWithText("Camera").assertDoesNotExist()
+            onNodeWithText("Paste image from clipboard").assertDoesNotExist()
+            onNodeWithText("Photos").performClick()
             waitForIdle()
             assertTrue("attach Photos" in actions.calls)
         }
@@ -371,11 +379,15 @@ class ComposerModelsFilesTest {
                 openSavedPrompts = { opened += 1 },
             )
         setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), withPrompts) } } }
+        // E20-S20: + → More → Prompts, Flutter's place for saved prompts.
         onNodeWithTag("chat-attach-button").performClick()
+        onNodeWithText("More").performClick()
+        onNodeWithText("Prompts").performClick()
         onNodeWithText("Saved prompts").performClick()
         waitForIdle()
         assertEquals(1, opened)
         onNodeWithTag("kit-composer-tray").assertDoesNotExist()
+        onNodeWithTag("composer-tools-sheet").assertDoesNotExist()
     }
 
     @Test

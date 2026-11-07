@@ -68,9 +68,9 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
@@ -82,31 +82,22 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
-import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
-import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsOptions
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
-import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
 import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
-import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
-import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
 import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
 import io.github.eslamasabry.oc.ui.words.res.composerFullPasteEmpty
-import io.github.eslamasabry.oc.ui.words.res.composerFullPasteImage
 import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoDenied
-import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoLibrary
 import io.github.eslamasabry.oc.ui.words.res.composerFullStale
 import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
-import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
 import io.github.eslamasabry.oc.ui.words.res.composerKeptMissingFiles
 import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreRefused
 import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreTitle
-import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentDismiss
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentFailed
 import io.github.eslamasabry.oc.ui.words.res.chatUiDelegateThisPrompt
@@ -125,6 +116,12 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerSend
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
+import io.github.eslamasabry.oc.ui.words.res.kitComposerTools
+import io.github.eslamasabry.oc.ui.words.res.composerTrayCamera
+import io.github.eslamasabry.oc.ui.words.res.composerTrayFile
+import io.github.eslamasabry.oc.ui.words.res.composerTrayMore
+import io.github.eslamasabry.oc.ui.words.res.composerTrayPhotos
+import io.github.eslamasabry.oc.ui.words.res.chatUiAvailableWhenTheCurrentRunFinishes
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
@@ -396,6 +393,18 @@ public fun BasicComposer(
         }
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
+    var toolsOpen by remember(state.targetKey) { mutableStateOf(false) }
+    val trayItems =
+        ComposerTrayRules.items(
+            state.attachmentsSupported,
+            state.imagesOnly,
+            state.filesAvailable,
+            state.attachKinds,
+        )
+    val attachBlockedReason =
+        if (ComposerTrayRules.attachBlocked(state))
+            stringResource(Res.string.chatUiAvailableWhenTheCurrentRunFinishes)
+        else null
     var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
     // Clear draft text keeps attachments and can be undone (Flutter composer_tools.dart).
     var clearedText by remember(state.targetKey) { mutableStateOf<String?>(null) }
@@ -571,118 +580,63 @@ public fun BasicComposer(
                 modifier = Modifier.testTag("chat-phrase-chips"),
             )
         }
-        if (addOpen) {
-            val choices = buildList {
-                if (state.filesAvailable)
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.composerPreviewAttachFile),
-                            KitTrayKind.File,
-                        ) {
-                            addOpen = false
-                            actions.attachFile()
-                        }
-                    )
-                if (AttachKind.Photos in state.attachKinds)
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.composerFullPhotoLibrary),
-                            KitTrayKind.Photo,
-                        ) {
-                            addOpen = false
-                            actions.attach(AttachKind.Photos)
-                        }
-                    )
-                if (AttachKind.Camera in state.attachKinds)
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.composerFullTakePhoto),
-                            KitTrayKind.Camera,
-                        ) {
-                            addOpen = false
-                            actions.attach(AttachKind.Camera)
-                        }
-                    )
-                if (AttachKind.Clipboard in state.attachKinds)
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.composerFullPasteImage),
-                            KitTrayKind.Clipboard,
-                        ) {
-                            addOpen = false
-                            actions.attach(AttachKind.Clipboard)
-                        }
-                    )
-                // PORT-SCREENS-1: reuse a prompt from this conversation or recent sends.
-                if (refreshHistory != null)
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.chatHistoryTitle),
-                            KitTrayKind.History,
-                        ) {
-                            addOpen = false
-                            refreshHistory()
-                            historyOpen = true
-                        }
-                    )
-            }
-            val words = field.text.toString()
-            val tools = buildList {
-                chrome.openCommands?.let { open ->
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.composerFullCommands),
-                            KitTrayKind.Commands,
-                        ) {
-                            addOpen = false
-                            open()
-                        }
-                    )
-                }
-                chrome.openSavedPrompts?.let { open ->
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.promptStashTitle),
-                            KitTrayKind.History,
-                        ) {
-                            addOpen = false
-                            open()
-                        }
-                    )
-                }
-                chrome.sendLater?.let { later ->
-                    if (words.isNotBlank())
-                        add(
-                            KitTrayAction(
-                                stringResource(Res.string.tipSendLaterTitle),
-                                KitTrayKind.Schedule,
-                            ) {
-                                addOpen = false
-                                // N-44: the keyboard goes first, so the sheet's wheel is never under its button.
-                                focusManager.clearFocus()
-                                later(words)
-                            }
-                        )
-                }
-                if (words.isNotEmpty())
-                    add(
-                        KitTrayAction(
-                            stringResource(Res.string.composerClearTextTitle),
-                            KitTrayKind.Clear,
-                        ) {
-                            addOpen = false
-                            clearedText = words
-                            field.edit { replace(0, length, "") }
-                            editor.userEditSerial += 1
-                            editor.lastReported = ""
-                            repeatRevision = null
-                            actions.draftChanged("")
-                        }
-                    )
-            }
-            KitComposerTray(choices + tools)
-            voice?.Options(voiceField, Modifier.fillMaxWidth()) { addOpen = false }
+        // E20-S20: the tray lives inside the message box (KitComposerBox `above`, Flutter concept C); its More, and
+        // "+" on a server that takes no files, open the tools list (Flutter `_openTools`).
+        val words = field.text.toString()
+        val clearWords: () -> Unit = {
+            clearedText = words
+            field.edit { replace(0, length, "") }
+            editor.userEditSerial += 1
+            editor.lastReported = ""
+            repeatRevision = null
+            actions.draftChanged("")
         }
+        // Flutter keeps "Voice conversation" under the More list's "More tools", never in the tray.
+        val conversationRow: (@Composable (close: () -> Unit) -> Unit)? =
+            if (voice == null) null
+            else ({ close -> voice.Options(voiceField, Modifier.fillMaxWidth(), close) })
+        ComposerToolsSheet(
+            visible = toolsOpen,
+            onDismiss = { toolsOpen = false },
+            choices =
+                ComposerToolsChoices(
+                    state = state,
+                    inTray = trayItems,
+                    agentName = chrome.agentName(),
+                    attachCount = state.draft.attachments.size,
+                    blockedReason = attachBlockedReason,
+                    attach = if (state.filesAvailable) actions::attachFile else null,
+                    photos =
+                        if (AttachKind.Photos in state.attachKinds) {
+                            { actions.attach(AttachKind.Photos) }
+                        } else null,
+                    camera =
+                        if (AttachKind.Camera in state.attachKinds) {
+                            { actions.attach(AttachKind.Camera) }
+                        } else null,
+                    commands = chrome.openCommands,
+                    reuse =
+                        refreshHistory?.let { refresh ->
+                            {
+                                refresh()
+                                historyOpen = true
+                            }
+                        },
+                    saved = chrome.openSavedPrompts,
+                    sendLater =
+                        chrome.sendLater
+                            ?.takeIf { words.isNotBlank() }
+                            ?.let { later ->
+                                {
+                                    // N-44: the keyboard goes first, so the sheet's wheel is never under its button.
+                                    focusManager.clearFocus()
+                                    later(words)
+                                }
+                            },
+                    clearText = clearWords.takeIf { words.isNotEmpty() },
+                    conversation = conversationRow,
+                ),
+        )
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-attachments")) {
@@ -801,6 +755,59 @@ public fun BasicComposer(
         }
         KitComposerBox(
             running = busy && !waitingRequest,
+            above = {
+                KitComposerTray(
+                    open = addOpen,
+                    actions =
+                        trayItems.map { item ->
+                            when (item) {
+                                TrayItem.Photos ->
+                                    KitComposerTrayAction(
+                                        stringResource(Res.string.composerTrayPhotos),
+                                        KitIcons.images,
+                                        {
+                                            addOpen = false
+                                            actions.attach(AttachKind.Photos)
+                                        },
+                                        attachBlockedReason,
+                                        "composer-tool-gallery",
+                                    )
+                                TrayItem.Camera ->
+                                    KitComposerTrayAction(
+                                        stringResource(Res.string.composerTrayCamera),
+                                        KitIcons.camera,
+                                        {
+                                            addOpen = false
+                                            actions.attach(AttachKind.Camera)
+                                        },
+                                        attachBlockedReason,
+                                        "composer-tool-camera",
+                                    )
+                                TrayItem.File ->
+                                    KitComposerTrayAction(
+                                        stringResource(Res.string.composerTrayFile),
+                                        KitIcons.attach,
+                                        {
+                                            addOpen = false
+                                            actions.attachFile()
+                                        },
+                                        attachBlockedReason,
+                                        "composer-tool-attach",
+                                    )
+                                TrayItem.More ->
+                                    KitComposerTrayAction(
+                                        stringResource(Res.string.composerTrayMore),
+                                        KitIcons.more,
+                                        {
+                                            addOpen = false
+                                            toolsOpen = true
+                                        },
+                                        testTag = "composer-tray-more",
+                                    )
+                            }
+                        },
+                )
+            },
             field = {
                 // Keep the editor mounted while an approval or form waits. Submission stays
                 // gated below; hiding it leaves an open conversation with only chips.
@@ -864,27 +871,18 @@ public fun BasicComposer(
                 }
             },
             leading = {
+                // E20-S20: Flutter's "+" ("Attach and more", "Close" while open): it opens the tray, or the
+                // tools list straight away where the server takes no files. Never a dead control.
                 KitComposerAdd(
                     label =
                         stringResource(
-                            if (addOpen) Res.string.kitComposerTrayClose
-                            else if (state.attachKinds.isEmpty() && chrome.openSavedPrompts == null)
-                                Res.string.composerPreviewAttachFile
-                            else Res.string.composerFullAttach
+                            if (addOpen && trayItems.isNotEmpty()) Res.string.kitComposerTrayClose
+                            else Res.string.kitComposerTools
                         ),
                     onClick = {
-                        if (
-                            state.attachKinds.isEmpty() &&
-                                voice == null &&
-                                refreshHistory == null &&
-                                chrome.openCommands == null &&
-                                chrome.openSavedPrompts == null &&
-                                chrome.sendLater == null
-                        )
-                            actions.attachFile()
-                        else addOpen = !addOpen
+                        if (trayItems.isEmpty()) toolsOpen = true else addOpen = !addOpen
                     },
-                    open = addOpen,
+                    open = addOpen && trayItems.isNotEmpty(),
                     modifier = Modifier.testTag("chat-attach-button"),
                 )
                 if (stopShown && typed && !waitingRequest) stopPart()

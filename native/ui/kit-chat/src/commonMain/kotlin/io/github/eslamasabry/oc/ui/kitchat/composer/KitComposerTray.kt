@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,103 +11,152 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
-/** What a tray choice does; each draws its own Phosphor glyph ([icon]), so no two choices look alike (P-004). */
-public enum class KitTrayKind(internal val icon: ImageVector) {
-    /** Photo library (Flutter's tray: `images`). */
-    Photo(KitIcons.images),
-    /** Take a photo. */
-    Camera(KitIcons.camera),
-    /** Attach a file (Flutter's tray: the paper clip). */
-    File(KitIcons.attach),
-    /** Paste an image from the clipboard. */
-    Clipboard(KitIcons.paste),
-    /** A recent prompt to reuse (the history clock). */
-    History(KitIcons.history),
-    /** A saved prompt (a bookmark), apart from the recent ones in [History]. */
-    Saved(KitIcons.bookmark),
-    /** The commands launcher. */
-    Commands(KitIcons.terminal),
-    /** Clear the draft words (a cross). */
-    Clear(KitIcons.close),
-    /** Send later or repeat (a clock face). */
-    Schedule(KitIcons.clock),
-}
-
-private const val PER_ROW = 4
-
-/** P-004: at large text a quarter of the phone is too narrow for a whole word ("Commands"); three to a row. */
-private const val PER_ROW_LARGE = 3
-
-/** How many choices share a row: whole words fit their cell at every text size. */
-internal fun trayPerRow(textScale: Float): Int =
-    if (TextScalePolicy.isLargeText(textScale)) PER_ROW_LARGE else PER_ROW
-
-/** The caller closes the tray before running an action, preserving the editor and its keyboard. */
-public class KitTrayAction(
+/**
+ * One round button of the composer's tray (Dart `KitComposerTrayAction`): a kit glyph, its one word, and the reason
+ * it is off ([disabledReason], e.g. "Available when the current run finishes"). The caller closes the tray before
+ * [onPick] runs.
+ */
+public class KitComposerTrayAction(
     public val label: String,
-    public val kind: KitTrayKind,
+    public val icon: ImageVector,
     public val onPick: () -> Unit,
+    public val disabledReason: String? = null,
+    public val testTag: String? = null,
 )
 
-/** The attachment choices attached to the editor itself; whole labels wrap at large text sizes. */
+/**
+ * What "+" opens (Flutter `_ComposerTray`, plus-menu concept C, owner 20 Oct 2026): the message box grows upward by
+ * ONE compact row of round matte buttons with a word under each (Photos, Camera, File, More), and a hairline between
+ * the row and the field. No sheet, no glass. It comes and goes with [KitReveal]'s fold and fade (instant with reduced
+ * motion). At a large text size on a narrow phone the words shrink together until the longest fits its share of the
+ * row: whole words in one size, never "Ph…".
+ *
+ * States: closed, open, a button off with its reason
+ * Text: frame (one line, shared fit)
+ * Motion: KitReveal (fold + fade STANDARD in, QUICK out); Off = instant
+ * Replaces: _ComposerTray, _TrayButton (lib/ui/kit/chat/kit_composer_tray.dart)
+ */
 @Composable
-public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Modifier) {
-    val colors = LocalKitColors.current
-    Column(modifier.fillMaxWidth().testTag("kit-composer-tray")) {
-        // Four to a row (three at large text): every label keeps whole words and every target 48 dp.
-        val perRow = trayPerRow((LocalKitAppDensity.current ?: LocalDensity.current).fontScale)
-        actions.chunked(perRow).forEach { rowActions ->
-        Row(
-            Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            rowActions.forEach { action ->
-                KitTappable(action.onPick, Modifier.weight(1f), onClickLabel = action.label) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-                    ) {
-                        Box(
-                            Modifier.size(48.dp).background(colors.surface3, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            KitIcon(action.kind.icon, size = KitIconSize.Medium, tone = TextTone.Primary)
-                        }
-                        // P-004: every label is centred in its cell, one line or wrapped, and keeps 4 dp from the cell's
-                        // sides so a long word never reaches the next cell or loses a letter at the edge.
-                        KitText(
-                            action.label,
-                            Modifier.fillMaxWidth().padding(horizontal = Space.S1.dp),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Primary,
-                            maxLines = 3,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+public fun KitComposerTray(open: Boolean, actions: List<KitComposerTrayAction>, modifier: Modifier = Modifier) {
+    KitReveal(open && actions.isNotEmpty(), modifier) {
+        Column(Modifier.fillMaxWidth().testTag("kit-composer-tray")) {
+            TrayRow(actions, Modifier.fillMaxWidth().padding(top = Space.S3.dp, bottom = Space.S2.dp))
+            KitDivider(Modifier.padding(horizontal = Space.S3.dp))
+        }
+    }
+}
+
+/** The one size factor every label of the row shares (Flutter `_ComposerTray`): 1 when the widest word fits. */
+public fun kitTrayLabelFit(widest: Float, room: Float): Float =
+    if (widest <= 0f || widest <= room) 1f else (room / widest).coerceIn(0f, 1f)
+
+@Composable
+private fun TrayRow(actions: List<KitComposerTrayAction>, modifier: Modifier) {
+    val app = LocalKitAppDensity.current ?: LocalDensity.current
+    val base = LocalKitTypography.current.style(TypeRole.Secondary)
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        // KitText's frame size for this role (min(platform size, 1.3 × spec)), measured once per label set and width.
+        val specSp = base.fontSize.value
+        val frame = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
+        val unit = Density(app.density, 1f)
+        val roomPx = constraints.maxWidth.toFloat() / actions.size - 2 * Space.S1 * app.density
+        val fit =
+            remember(actions.map { it.label }, constraints.maxWidth, frame, base) {
+                val k = frame / specSp
+                val style =
+                    base.copy(
+                        fontSize = frame.sp,
+                        lineHeight = (base.lineHeight.value * k).sp,
+                        letterSpacing = (base.letterSpacing.value * k).sp,
+                    )
+                val widest =
+                    actions.maxOfOrNull {
+                        measurer.measure(it.label, style, maxLines = 1, softWrap = false, density = unit).size.width
+                    } ?: 0
+                // A pixel of slack keeps rounding from ever cutting the longest word.
+                kitTrayLabelFit(widest.toFloat(), (roomPx - 1f).coerceAtLeast(0f))
+            }
+        // Under the shrunk scale KitText's frame size is exactly frame × fit (a linear density never meets the cap).
+        val labelDensity = if (fit < 1f) Density(app.density, frame * fit / specSp) else null
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            actions.forEach { action ->
+                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                    TrayButton(action, labelDensity)
                 }
             }
-            repeat(perRow - rowActions.size) { Box(Modifier.weight(1f)) }
         }
+    }
+}
+
+@Composable
+private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val enabled = action.disabledReason == null
+    KitTappable(
+        onClick = action.onPick,
+        modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
+        enabled = enabled,
+        disabledReason = action.disabledReason,
+        onClickLabel = action.label,
+    ) {
+        Column(
+            Modifier.padding(Space.S1.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
+            // A round matte disc (Solid's control face), the glyph at the card-mark size.
+            Box(
+                Modifier.size(tokens.minTarget.dp).background(colors.surface3, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                KitIcon(
+                    action.icon,
+                    size = KitIconSize.Medium,
+                    tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                )
+            }
+            val label: @Composable () -> Unit = {
+                KitText(
+                    action.label,
+                    role = TypeRole.Secondary,
+                    tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                    kind = KitTextKind.Frame,
+                    // The column centres the word; centring inside the text too would lay it out in the full slot
+                    // and push its last pixels past a word-sized box.
+                    maxLines = 1,
+                )
+            }
+            if (labelDensity == null) label()
+            else CompositionLocalProvider(LocalKitAppDensity provides labelDensity, content = label)
         }
-        Box(Modifier.fillMaxWidth().size(1.dp).background(colors.hairline))
     }
 }
