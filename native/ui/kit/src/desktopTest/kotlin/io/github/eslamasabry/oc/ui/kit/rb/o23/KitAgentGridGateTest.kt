@@ -6,7 +6,7 @@ import kotlin.test.Test
 
 /**
  * test/goldens/kit/kit_agent_grid_golden_test.dart: the first five persona cards (the odd fifth spans the row, sideways),
- * 412x915 and 1280x800, light and dark; 2.0 text dark only. Approximations as in [AgentCards].
+ * 412x915 and 1280x800, light and dark; 2.0 text dark only.
  */
 class KitAgentGridGateTest {
     private val part: @Composable () -> Unit = { AgentCards(5) }
