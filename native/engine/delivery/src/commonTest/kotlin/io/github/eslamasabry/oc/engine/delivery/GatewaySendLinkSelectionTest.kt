@@ -111,6 +111,8 @@ class GatewaySendLinkSelectionTest {
     fun `B-STATE-119 DLV-12 without the facet an advertised switching capability fails closed, inline semantics stay`() =
         runTest {
             val fake = FakeServerGateway(listOf(Session(S1)))
+            // The fake starts at ServerCapabilities.Unknown (switching off): advertise it, with no facet.
+            fake.capabilities.value = ServerCapabilities(sessionModelProviderSwitching = true)
             val link = GatewaySendLink(P1, "http://h", fake)
             val refused = link.applySelection(S1, sel(), null)
             assertIs<Outcome.Failed>(refused)

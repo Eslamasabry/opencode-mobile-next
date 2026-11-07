@@ -54,13 +54,8 @@ internal object WidgetActionBridge {
         val app = context.applicationContext
         val error = submissionError(app, payload)
         if (error != null) {
-            if (error == "busy") {
-                // A durable claim may have crossed the server boundary before a process or reply
-                // was lost.
-                val uncertain = result(payload, "uncertain", "uncertainDelivery")
-                publishResult(app, payload, uncertain)
-                return uncertain
-            }
+            // As in Flutter: a claimed id (the same tap again) is a "busy" rejection that never
+            // dispatches; the claim stays, so an uncertain delivery is never replayed.
             val refused = result(payload, "rejected", error)
             publishResult(app, payload, refused)
             return refused

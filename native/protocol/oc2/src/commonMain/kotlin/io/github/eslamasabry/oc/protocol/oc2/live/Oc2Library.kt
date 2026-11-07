@@ -179,7 +179,7 @@ internal class Oc2Library(
 
     suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome<Unit> {
         if (scope != McpConfigScope.RuntimeLocation)
-            return Failure.Unavailable(FeatureId("mcpPersistentScope")).failed()
+            return Failure.Unavailable(FeatureId("mcpConfigWrites")).failed()
         val name = draft.name.trim()
         if (!safeName(name)) return Failure.UnreadableReply().failed()
         val config = draftConfig(draft) ?: return Failure.UnreadableReply().failed()

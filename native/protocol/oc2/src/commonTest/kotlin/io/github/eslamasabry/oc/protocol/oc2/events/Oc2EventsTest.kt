@@ -65,6 +65,16 @@ class Oc2EventsTest {
         assertEquals("bash", asked.request.action)
         assertEquals(listOf("rm -rf*"), asked.request.resources)
         assertIs<Oc2Event.Unknown>(env("""{"type":"permission.asked","data":{"action":"bash"}}""").event)
+        // OpenCode 1's `permission.updated` is not an OC2 ask (Flutter's api2 union drops it).
+        val legacy = assertIs<Oc2Event.Unknown>(
+            env(
+                """
+                {"type":"permission.updated","data":{"id":"per_1","sessionID":"ses_1","action":"bash","resources":["x"],
+                 "source":{"type":"tool","messageID":"msg_1","id":"call_1"}}}
+                """,
+            ).event,
+        )
+        assertFalse(legacy.ignored)
 
         val replied = assertIs<Oc2Event.PermissionReplied>(
             env("""{"type":"permission.replied","data":{"sessionID":"ses_1","requestID":"per_1","reply":"once"}}""").event,
@@ -254,8 +264,11 @@ class Oc2EventsTest {
             assertTrue(event.ignored, type)
         }
         assertFalse(assertIs<Oc2Event.Unknown>(env("""{"type":"brand.new","data":{}}""").event).ignored)
+        // The generic payload carries a session: a permission ask without one cannot be answered
+        // (the reply route is /session/<id>/permission/<id>/reply), so it decodes to Unknown; a reply
+        // names its request.
         for (type in Oc2EventRegistry.typed) {
-            val event = env("""{"type":"$type","data":{"id":"x","form":{"id":"f"}}}""").event
+            val event = env("""{"type":"$type","data":{"id":"x","sessionID":"s","requestID":"x","form":{"id":"f"}}}""").event
             assertFalse(event is Oc2Event.Unknown || event is Oc2Event.PassThrough, type)
         }
     }

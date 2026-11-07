@@ -892,7 +892,11 @@ public class ComposerVoicePresenter(
         merge(words)
         previewBase = null
         val send = sendAfterWrite
-        endUi(null)
+        // A tap stopped by the pause (the setting is on) says why it stopped: the words are in the
+        // box, nothing was sent (B-MEDIA-017 "stops by itself after the pause and says why").
+        val stoppedByPause =
+            !send && endedBy == VoiceEnd.Silence && mode == VoiceMode.Tap && field?.dictationOnly != true
+        endUi(if (stoppedByPause) VoiceNote.StoppedAfterPause else null)
         if (send) field?.let { f -> if (f.canSend() && f.text().isNotBlank()) f.send() }
     }
 

@@ -18,6 +18,7 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * STREAM-FIX JVM benchmark, UI half: the `perf:stream-6000` reply streams at its recorded pace
@@ -34,6 +35,13 @@ import kotlin.test.assertTrue
  * times only). The deterministic gates: in `chunked` no frame lays out more than a chunk's worth of
  * characters, and the per-frame layout work of the last tenth is no larger than the first tenth's.
  * Wall times are reported, and checked only loosely (shared container, software raster).
+ *
+ * Time budget: `runComposeUiTest`'s default 60 s timeout is not a measurement, and on a slower host
+ * it killed the run with no frame numbers at all. Each run now states its own budget, [FRAME_BUDGET_MS]
+ * of wall time per 16 ms test frame (plus a fixed setup allowance), and the harness checks the
+ * mean frame against it with the numbers in the message. The `whole` run is the contrast only: it
+ * stops [CONTRAST_TAIL_FRAMES] frames after its open fence settles, since the prose after it is
+ * the same work the `chunked` run already measures.
  */
 @OptIn(ExperimentalTestApi::class)
 class ReplyStreamFrameBenchmark {
@@ -54,6 +62,10 @@ class ReplyStreamFrameBenchmark {
         val tenth: IntArray,
         val inFence: BooleanArray,
         val finalRows: List<FeedRow>,
+        /** Reply characters published by each frame (the text the rows cover). */
+        val published: IntArray,
+        /** The last frame with an open fence at the live edge, or -1. */
+        val lastFenceFrame: Int,
     )
 
     /**
@@ -69,6 +81,8 @@ class ReplyStreamFrameBenchmark {
         val publications = arrayOfNulls<List<FeedRow>>(n)
         val tenth = IntArray(n)
         val fence = BooleanArray(n)
+        val published = IntArray(n)
+        var publishedChars = 0
         val text = StringBuilder()
         var rows = emptyList<FeedRow>()
         var next = 0
@@ -86,20 +100,40 @@ class ReplyStreamFrameBenchmark {
             ) { // the engine's ≤ 1 publish per 50 ms
                 rows = feed.rows(text.toString(), ended)
                 publications[f] = rows
+                publishedChars = text.length
                 lastPublish = now
                 dirty = false
             }
             tenth[f] = (text.length * 10L / (reply.length + 1)).toInt()
             fence[f] = (rows.firstOrNull()?.let { it.live && it.kind == KitBlockKind.Code }) == true
+            published[f] = publishedChars
         }
-        return FrameSchedule(publications, tenth, fence, feed.rows(reply, ended = true))
+        return FrameSchedule(
+            publications,
+            tenth,
+            fence,
+            feed.rows(reply, ended = true),
+            published,
+            fence.lastIndexOf(true),
+        )
     }
 
-    private fun stream(name: String, chunkLines: Int): Frames {
+    /**
+     * Streams the reply into the list frame by frame. With [contrastOnly] the run stops
+     * [CONTRAST_TAIL_FRAMES] after the open fence settles and checks what was published so far.
+     */
+    private fun stream(name: String, chunkLines: Int, contrastOnly: Boolean = false): Frames {
         val reply = P3Fixtures.reply()
         val schedule = prepareFrames(reply, chunkLines)
+        val n =
+            if (contrastOnly && schedule.lastFenceFrame >= 0) {
+                minOf(schedule.publications.size, schedule.lastFenceFrame + 1 + CONTRAST_TAIL_FRAMES)
+            } else {
+                schedule.publications.size
+            }
+        val budgetMs = SETUP_BUDGET_MS + (n + 121L) * FRAME_BUDGET_MS
         lateinit var result: Frames
-        runComposeUiTest {
+        runComposeUiTest(testTimeout = budgetMs.milliseconds) {
             mainClock.autoAdvance = false
             val registry = RevealRegistry()
             var rows by mutableStateOf(emptyList<FeedRow>())
@@ -135,7 +169,6 @@ class ReplyStreamFrameBenchmark {
                 }
             }
             mainClock.advanceTimeByFrame()
-            val n = schedule.publications.size
             val ns = LongArray(n)
             val chars = LongArray(n)
             val layouts = IntArray(n)
@@ -154,18 +187,39 @@ class ReplyStreamFrameBenchmark {
                 comps[f] = compositions - k0
                 if (list.lazy.firstVisibleItemIndex != 0) notAtEdge++
             }
-            rows = schedule.finalRows
+            val meanMs = ns.average() / 1e6
+            assertTrue(
+                meanMs <= FRAME_BUDGET_MS,
+                "$name: mean wall time per test frame %.2f ms over the %d ms budget (p50 %.2f, %d frames)"
+                    .format(meanMs, FRAME_BUDGET_MS, ns.sorted()[n / 2] / 1e6, n),
+            )
+            val expected =
+                if (n == schedule.publications.size) {
+                    rows = schedule.finalRows
+                    reply
+                } else {
+                    reply.substring(0, schedule.published[n - 1])
+                }
             repeat(120) { mainClock.advanceTimeByFrame() }
             assertEquals(0, notAtEdge, "$name: frames where the newest row was not at the bottom")
             assertEquals(0, registry.activeCount, "$name: blocks still revealing at the end")
             val drawn = rows.reversed().joinToString("") { it.text }.filterNot { it.isWhitespace() }
             assertEquals(
-                reply.filterNot { it.isWhitespace() },
+                expected.filterNot { it.isWhitespace() },
                 drawn,
                 "$name: every character, in order",
             )
             result =
-                Frames(name, ns, chars, layouts, comps, schedule.tenth, schedule.inFence, rows.size)
+                Frames(
+                    name,
+                    ns,
+                    chars,
+                    layouts,
+                    comps,
+                    schedule.tenth.copyOf(n),
+                    schedule.inFence.copyOf(n),
+                    rows.size,
+                )
         }
         return result
     }
@@ -180,7 +234,9 @@ class ReplyStreamFrameBenchmark {
         fun ms(ix: List<Int>, p: Double) =
             "%.2f".format(LongArray(ix.size) { ns[ix[it]] }.pct(p) / 1e6)
         fun list(f: (List<Int>) -> String) =
-            (0 until 10).joinToString(",", "[", "]") { t -> f(select(warm) { tenth[it] == t }) }
+            (0 until 10).joinToString(",", "[", "]") { t ->
+                select(warm) { tenth[it] == t }.let { if (it.isEmpty()) "null" else f(it) }
+            }
         val all = select(warm) { true }
         out["${name}_frames"] = ns.size
         out["${name}_rows"] = rows
@@ -203,7 +259,7 @@ class ReplyStreamFrameBenchmark {
 
     @Test
     fun `B-CHAT-096 PB-11 a 6,000-word reply lays out a bounded chunk per frame, not the growing block`() {
-        val whole = stream("whole", Int.MAX_VALUE)
+        val whole = stream("whole", Int.MAX_VALUE, contrastOnly = true)
         val chunked = stream("chunked", 16)
         val out = LinkedHashMap<String, Any>()
         whole.report(out)
@@ -223,6 +279,7 @@ class ReplyStreamFrameBenchmark {
             whole.layoutChars.max() > 5 * maxChars,
             "the P3 shape re-lays out the growing fence (${whole.layoutChars.max()})",
         )
+        assertTrue(whole.inFence.any { it }, "the contrast run reached the open fence")
         // Flat: the last tenth lays out no more per frame than the first tenths do.
         fun Frames.meanChars(t: Int) =
             (60 until ns.size).filter { tenth[it] == t }.map { layoutChars[it] }.average()
@@ -241,5 +298,20 @@ class ReplyStreamFrameBenchmark {
             fenceP50 <= proseP50 * 2 + 2,
             "chunked open fence p50 $fenceP50 ms vs prose $proseP50 ms",
         )
+    }
+
+    private companion object {
+        /**
+         * Wall time allowed per 16 ms test frame. This container measures p50 ≈ 3 ms; a
+         * phone-hosted container is several times slower. Over this, the run is not measuring
+         * layout any more.
+         */
+        const val FRAME_BUDGET_MS = 40L
+
+        /** Composition setup, class loading and the first frames' JIT. */
+        const val SETUP_BUDGET_MS = 30_000L
+
+        /** Frames the contrast run keeps after its fence settles (about two seconds). */
+        const val CONTRAST_TAIL_FRAMES = 120
     }
 }

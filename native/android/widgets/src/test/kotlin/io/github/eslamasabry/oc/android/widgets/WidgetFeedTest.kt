@@ -124,10 +124,7 @@ class WidgetFeedTest {
             (0 until receivers.length)
                 .map { (receivers.item(it) as Element).getAttributeNS(ns, "name") }
                 .toSet()
-        assertEquals(
-            frozen + "io.github.eslamasabry.opencode_mobile.WidgetActionReceiver",
-            declared,
-        )
+        assertEquals(frozen, declared)
     }
 
     @Test

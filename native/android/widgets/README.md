@@ -37,7 +37,7 @@ PNGs, copied with every provider class name unchanged, fed from the native engin
 | `src/main/kotlin/io/github/eslamasabry/opencode_mobile/` | 35 copies from `android/app/src/main/kotlin/…`, original package (the OS stores these FQCNs). |
 | `src/main/kotlin/io/github/eslamasabry/oc/android/widgets/` | Native-authored: the seams (`FrozenComponents.kt`, `WidgetActionRuntime.kt`, `NativeStrings.kt`), the engine feed (`WidgetFeed.kt`, `LiveWidgetDispatch.kt`) and the publish side of `WidgetSurface` (`AndroidWidgetSurface.kt`). |
 | `src/main/res/` | Widget layouts, provider XML, drawables, the 14 preview PNGs, `colors.xml` (both themes) and `widget_v2_strings.xml` verbatim; `strings.xml` (en, ar) and `styles.xml` are verbatim subsets (only what the copies read); `widget_seams.xml` is native-authored. |
-| `src/main/AndroidManifest.xml` | The seven provider receivers and `WidgetActionReceiver`, as in the Flutter manifest but with the FQCN written out (a library resolves `.Name` against its own namespace). |
+| `src/main/AndroidManifest.xml` | The seven provider receivers, as in the Flutter manifest but with the FQCN written out (a library resolves `.Name` against its own namespace). |
 | `src/test/kotlin/io/github/eslamasabry/opencode_mobile/` | The 12 JVM test classes plan 11 §4.3 lists for widgets. |
 | `src/test/kotlin/io/github/eslamasabry/oc/android/widgets/` | Native-authored, row-named tests of the seams, the feed and the surface. |
 | `TWINS-rows.md` | The rows for `native/TWINS.md` (coordinator-owned): source, last source commit, and whether the copy is byte-identical or carries a seam. |
