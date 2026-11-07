@@ -98,6 +98,12 @@ public sealed interface KitRowTrailing {
     /** A chosen row, with the check after its words (Flutter project/model choices). */
     public data object Check : KitRowTrailing
 
+    /**
+     * A quiet fact pill before the row's end, and the check when [checked] (Flutter chats_project_sheet.dart:96-107:
+     * `Row(spacing: space2, [KitChip(label, icon), chosen])`, the project sheet's "Git").
+     */
+    public data class Chip(val label: String, val icon: ImageVector? = null, val checked: Boolean = false) : KitRowTrailing
+
     /** The lock glyph and explanation of an always-on setting. */
     public data class Locked(val text: String) : KitRowTrailing
 

@@ -124,6 +124,13 @@ public interface ChatsHomeExtras {
     /** B-161: the folders the home lists now, so [branches] reads those and only those. */
     public fun wantBranches(places: Set<BranchPlace>) {}
 
+    /**
+     * G4: each project folder's kind and whether it is a git repository, by directory, for the project sheet's glyphs
+     * and "Git" pill. The connection owner fills it; by default every project shows the plain folder and no pill.
+     */
+    public val projectFacts: StateFlow<Map<String, HomeProjectFacts>>
+        get() = NoHomeRowFacts.projectFacts
+
     /** B-162: the usage limits known now, for the Usage row's line; by default none, and the row says "Usage". */
     public val usageLimits: StateFlow<ImmutableList<HomeUsageLimit>>
         get() = NoHomeRowFacts.usageLimits

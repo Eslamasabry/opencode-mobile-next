@@ -7,32 +7,107 @@ import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlin.test.Test
 
-/** Real Conversations UI with Flutter chats_home_golden_test.dart's scene words and states. */
+/**
+ * Real Conversations UI with test/goldens/chats_home_golden_test.dart's scene words and states (Flutter `_source`): six
+ * conversations at 2026-10-03 12:00, the projects alpha (dart, git), beta (node) and gamma, and two more in temp and home
+ * folders for the project sheet. Flutter's ChatsHomeScreen draws no bar (the shell's bar sits above it,
+ * chats_home_screen.dart:32), so neither does the page here (`shellBar = false`).
+ *
+ * Not rendered here: `chats_home_leftover_*` (the "node is still busy" line comes from the shell's runaway watcher, which
+ * the home's state does not carry yet) and the `chats_new_*` start screen (NewConversationScreen gate cases).
+ */
 class ChatsGateTest {
     private val actions = RecordingChatsActions()
-    private fun row(id: String, title: String, project: String, status: RowStatus, age: RelativeAge) =
-        ConversationRowUi(id, ConversationRef(ProfileId("p1"), SessionId(id)), RowTitle.Text(title), project, status, age)
-    private fun mixedState() = ChatsUi(
-        phase = ChatsPhase.List, needsYou = 2, running = 1,
-        today = persistentListOf(
-            row("login", "Fix the login bug", "alpha", RowStatus.NeedsYou, RelativeAge.Minutes(2)),
-            row("database", "Which database should we use", "gamma", RowStatus.NeedsYou, RelativeAge.Minutes(40)),
-            row("dark", "Add dark mode", "beta", RowStatus.Running, RelativeAge.Minutes(9)),
-            row("build", "Explain the build", "alpha", RowStatus.Done, RelativeAge.Hours(3)),
-        ),
-        earlier = persistentListOf(
-            row("rename", "Rename the settings page and move its tests next to it", "beta", RowStatus.None, RelativeAge.Days(3)),
-            row("release", "Plan the release notes", "gamma", RowStatus.None, RelativeAge.Days(9)),
-        ),
-        allCount = 6,
-        projectChoices = persistentListOf(ProjectSummary("/alpha", "alpha", 2, 0, 0), ProjectSummary("/beta", "beta", 2, 1, 0), ProjectSummary("/gamma", "gamma", 2, 0, 0)),
-    )
-    private fun shot(name: String, state: ChatsUi) = FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen) { ChatsScreen(state, actions) }
+
+    private fun row(id: String, title: String, project: String, status: RowStatus, minutesAgo: Long) =
+        ConversationRowUi(
+            id,
+            ConversationRef(ProfileId("p1"), SessionId(id)),
+            RowTitle.Text(title),
+            project,
+            status,
+            updatedAtMs = NOW - minutesAgo * MINUTE,
+            directory = "/root/projects/$project",
+        )
+
+    private val login = row("a", "Fix the login bug", "alpha", RowStatus.NeedsYou, 2)
+    private val database = row("e", "Which database should we use", "gamma", RowStatus.NeedsYou, 40)
+    private val dark = row("b", "Add dark mode", "beta", RowStatus.Running, 9)
+    private val build = row("c", "Explain the build", "alpha", RowStatus.Done, 3 * 60)
+    private val rename = row("d", "Rename the settings page and move its tests next to it", "beta", RowStatus.None, 3 * DAY)
+    private val release = row("f", "Plan the release notes", "gamma", RowStatus.None, 9 * DAY)
+
+    private val projects =
+        persistentListOf(
+            ProjectSummary("/root/projects/alpha", "alpha", 2, 0, 0),
+            ProjectSummary("/root/projects/beta", "beta", 2, 1, 0),
+            ProjectSummary("/root/projects/gamma", "gamma", 2, 0, 0),
+        )
+
+    private fun mixedState() =
+        ChatsUi(
+            phase = ChatsPhase.List,
+            needsYou = 2,
+            running = 1,
+            today = persistentListOf(login, database, dark, build),
+            earlier = persistentListOf(rename, release),
+            allCount = 6,
+            nowMs = NOW,
+            projectChoices = projects,
+            projectNeedsYou = persistentSetOf("/root/projects/alpha", "/root/projects/gamma"),
+            projectFacts =
+                persistentMapOf(
+                    "/root/projects/alpha" to HomeProjectFacts(HomeProjectKind.Dart, git = true),
+                    "/root/projects/beta" to HomeProjectFacts(HomeProjectKind.Node),
+                ),
+        )
+
+    private fun shot(name: String, state: ChatsUi) =
+        FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen) { ChatsScreen(state, actions, shellBar = false) }
+
+    // G1, G2: the list under its heading and chips, rows one hairline apart.
     @Test fun mixed() { shot("chats_home_mixed", mixedState()) }
     @Test fun mixedWide() { shot("chats_home_mixed_1280x800", mixedState()) }
-    @Test fun projectSheet() { shot("chats_home_sheet", mixedState().copy(sheet = ChatsHomeSheet.Projects)) }
-    @Test fun empty() { shot("chats_home_empty", ChatsUi(phase = ChatsPhase.Empty)) }
-    @Test fun emptyWide() { shot("chats_home_empty_1280x800", ChatsUi(phase = ChatsPhase.Empty)) }
+
+    // Running only (Flutter initialFilter: running).
+    private fun runningState() =
+        mixedState().copy(
+            filters = ChatsFilters(running = true),
+            today = persistentListOf(dark),
+            earlier = persistentListOf(),
+        )
+    @Test fun running() { shot("chats_home_running", runningState()) }
+    @Test fun runningWide() { shot("chats_home_running_1280x800", runningState()) }
+
+    // G4: the project sheet over the list, with the Other folders row (scratch and home notes: 8 in all).
+    private fun sheetState() =
+        mixedState().copy(allCount = 8, otherFoldersCount = 2, sheet = ChatsHomeSheet.Projects)
+    @Test fun projectSheet() { shot("chats_home_sheet", sheetState()) }
+    @Test fun projectSheetWide() { shot("chats_home_sheet_1280x800", sheetState()) }
+
+    // G3: the calm first-run page.
+    @Test fun empty() { shot("chats_home_empty", ChatsUi(phase = ChatsPhase.Empty, nowMs = NOW)) }
+    @Test fun emptyWide() { shot("chats_home_empty_1280x800", ChatsUi(phase = ChatsPhase.Empty, nowMs = NOW)) }
+
+    // G3: Running on alpha with nothing running there (Flutter "chats-empty-running").
+    private fun noMatchState() =
+        mixedState().copy(
+            phase = ChatsPhase.NoMatch,
+            filters = ChatsFilters(projectDirectory = "/root/projects/alpha", running = true),
+            today = persistentListOf(),
+            earlier = persistentListOf(),
+        )
+    @Test fun noMatch() { shot("chats_home_nomatch", noMatchState()) }
+    @Test fun noMatchWide() { shot("chats_home_nomatch_1280x800", noMatchState()) }
+
+    private companion object {
+        /** 2026-10-03 12:00 UTC, Flutter's `_now`. */
+        const val NOW = 1_791_028_800_000L
+        const val MINUTE = 60_000L
+        const val DAY = 24 * 60L
+    }
 }

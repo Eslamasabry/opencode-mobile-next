@@ -1,5 +1,13 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunningBody
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeNothingRunning
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
+import io.github.eslamasabry.oc.ui.kit.state.KitAnswerScale
+import io.github.eslamasabry.oc.ui.kit.state.KitStatusAnswer
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -21,23 +28,14 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionPill
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
 import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
 import io.github.eslamasabry.oc.ui.kit.frame.KitShellBar
-import io.github.eslamasabry.oc.ui.kit.state.KitStartState
-import io.github.eslamasabry.oc.ui.kit.state.KitStartWay
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
-import io.github.eslamasabry.oc.ui.words.res.homeStartOpenProject
-import io.github.eslamasabry.oc.ui.words.res.homeStartOpenProjectDetail
-import io.github.eslamasabry.oc.ui.words.res.homeStartConnectDetail
-import io.github.eslamasabry.oc.ui.words.res.homeStartDemo
-import io.github.eslamasabry.oc.ui.words.res.homeStartDemoDetail
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeConnectComputer
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouSpan
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -82,7 +80,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
@@ -106,8 +103,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
-import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitSummaryCard
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.style.KitRunningFeedLine
@@ -163,7 +158,6 @@ import io.github.eslamasabry.oc.ui.words.res.returnBriefSeen
 import io.github.eslamasabry.oc.ui.words.res.teamProjectDigest
 import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
-import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.eslamasabry.oc.ui.words.res.agentPersonaOtherName
@@ -181,6 +175,12 @@ public fun ChatsScreen(
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
     root: Boolean = false,
+    /**
+     * G1: the app's own bar (server pill, Search, Settings) above the page. Flutter's home draws none: "the server pill
+     * and search belong to the shell's own bar" (lib/ui/screens/chats/chats_home_screen.dart:32), so the page alone,
+     * as its goldens show it, is this screen with [shellBar] false. The page's ground is the same either way.
+     */
+    shellBar: Boolean = true,
 ) {
     // E05-S21: on the bare list (the whole back stack) the first Back says "Press back again to exit" in the one
     // status line; called first so sheets, dialogs and a filled search registered below close before it.
@@ -189,7 +189,9 @@ public fun ChatsScreen(
     // round faces. No overflow: Servers is the pill, Inbox is the needs-you line, the rest are rows at the list's end.
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
-    val listed = state.phase == ChatsPhase.List || state.phase == ChatsPhase.Empty
+    // G3: the empty page carries New conversation as its own full-width button at the bottom (Flutter
+    // KitStateView.calm), so the floating + only rides over a list.
+    val listed = state.phase == ChatsPhase.List
     val showFab = listed && state.home.opening == null
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
@@ -201,7 +203,7 @@ public fun ChatsScreen(
         if (state.needsYou == 0) null
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
-        topBar = {
+        topBar = if (!shellBar) null else ({
             KitShellBar(
                 actions = barActions,
                 connection = state.connection?.let { connection ->
@@ -227,7 +229,9 @@ public fun ChatsScreen(
                     }
                 },
             )
-        },
+        }),
+        // E20-S27: framed without the bar too, so the page lies on one continuous ground behind heading and list.
+        page = true,
         header = {
             // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox. Nothing to
             // filter on a list that holds nothing yet, so the chips wait for the first conversation.
@@ -240,9 +244,16 @@ public fun ChatsScreen(
         width = KitScreenWidth.Reading,
     ) {
       Box(Modifier.fillMaxSize()) {
+        // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
+        // between list items put every row 4 px lower than the one before it.
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
-            contentPadding = PaddingValues(bottom = Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp),
+            // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        if (state.phase == ChatsPhase.Empty && state.home.opening == null) 0.dp
+                        else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                ),
         ) {
             state.home.opening?.let { opening ->
                 item(key = "opening-status") { OpeningStatus(opening, actions) }
@@ -302,55 +313,19 @@ public fun ChatsScreen(
                 ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
                 ChatsPhase.Empty ->
                     item(key = "empty") {
-                        // First run: what the list will hold, then the obvious next steps as rows. New conversation is
-                        // the floating button, in the same place it will always be (no slab of a button up here).
-                        KitStartState(
+                        // A person with no computer saved may have come for one: the quiet second way in, only then.
+                        CalmPage(
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                            icon = KitIcons.chat,
-                            ways = buildList {
-                                add(
-                                    KitStartWay(
-                                        stringResource(Res.string.homeStartOpenProject),
-                                        actions::openProjects,
-                                        KitIcons.folderOpen,
-                                        stringResource(Res.string.homeStartOpenProjectDetail),
-                                    )
-                                )
-                                if (!state.hasComputer)
-                                    add(
-                                        KitStartWay(
-                                            stringResource(Res.string.chatsHomeConnectComputer),
-                                            actions::connectComputer,
-                                            KitIcons.computer,
-                                            stringResource(Res.string.homeStartConnectDetail),
-                                        )
-                                    )
-                                add(
-                                    KitStartWay(
-                                        stringResource(Res.string.homeStartDemo),
-                                        actions::openDemo,
-                                        KitIcons.sparkle,
-                                        stringResource(Res.string.homeStartDemoDetail),
-                                    )
-                                )
-                            },
+                            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+                            tertiary =
+                                if (state.hasComputer) null
+                                else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
+                            modifier = Modifier.fillParentMaxSize(),
                         )
                     }
                 ChatsPhase.NoMatch ->
-                    item(key = "no-match") {
-                        KitStateView(
-                            kind = KitStateKind.Empty,
-                            modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-                            title = stringResource(Res.string.chatsHomeNoMatchTitle),
-                            body = stringResource(Res.string.chatsHomeNoMatchBody),
-                            primary =
-                                KitAction(
-                                    stringResource(Res.string.chatsHomeClearFilters),
-                                    actions::clearFilters,
-                                ),
-                        )
-                    }
+                    item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
                 ChatsPhase.List -> {
                     val today = state.today.filterNot { it.key in briefKeys }
                     val earlier = state.earlier.filterNot { it.key in briefKeys }
@@ -412,17 +387,67 @@ public fun ChatsScreen(
     }
 }
 
+/**
+ * G3: a filtered list that holds nothing, as Flutter's calm states (lib/ui/screens/chats/chats_home_screen.dart:686-716):
+ * Running on says "Nothing running" with New conversation and "Show all conversations"; any other filter says nothing
+ * matches, with Clear filters.
+ */
 @Composable
-private fun SearchField(actions: ChatsActions) {
-    val field = rememberTextFieldState()
-    // The first value is the empty field itself, not something the person typed.
-    LaunchedEffect(field) {
-        snapshotFlow { field.text.toString() }.drop(1).collect { actions.search(it) }
-    }
-    Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-        KitSearchField(label = stringResource(Res.string.kitTopBarSearch), onSearch = {}, state = field)
+private fun CalmNoMatchPage(state: ChatsUi, actions: ChatsActions, modifier: Modifier) {
+    if (state.filters.running && !state.filters.needsYou)
+        CalmPage(
+            title = stringResource(Res.string.chatsHomeNothingRunning),
+            body = stringResource(Res.string.chatsHomeNothingRunningBody),
+            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+            tertiary = KitAction(stringResource(Res.string.chatsHomeShowAll), actions::toggleRunning),
+            modifier = modifier,
+        )
+    else
+        CalmPage(
+            title = stringResource(Res.string.chatsHomeNoMatchTitle),
+            body = stringResource(Res.string.chatsHomeNoMatchBody),
+            primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
+            tertiary = null,
+            modifier = modifier,
+        )
+}
+
+/**
+ * G3: Flutter's calm page (lib/ui/kit/kit_state_view.dart `_buildCalm`, page size): one calm line and its body a little
+ * above the middle of the room, the full-width [primary] at the bottom where the floating + would be, and the quiet
+ * [tertiary] under it. Both rise in once (KitEntrance; still under reduced motion). Arranged from kit parts; the kit's
+ * KitStateView has no calm page form yet (proposed to the kit owner).
+ */
+@Composable
+private fun CalmPage(title: String, body: String, primary: KitAction, tertiary: KitAction?, modifier: Modifier) {
+    val gutter = LocalKitTokens.current.gutter.dp
+    BoxWithConstraints(modifier) {
+        // F: kit_state_view.dart:438 `_calmLift = .1` of the room, kept under the words.
+        val lift = maxHeight * CALM_LIFT
+        Column(
+            Modifier.fillMaxSize().padding(bottom = Space.S4.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Spacer(Modifier)
+            KitEntrance(Modifier.fillMaxWidth().padding(top = Space.S5.dp, bottom = Space.S5.dp + lift)) {
+                KitStatusAnswer(answer = title, line = body, scale = KitAnswerScale.Calm)
+            }
+            KitEntrance(Modifier.fillMaxWidth().padding(horizontal = gutter)) {
+                Column(
+                    Modifier.fillMaxWidth().kitMaxWidth(CapRole.State),
+                    verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    KitButton(primary, fullWidth = true)
+                    tertiary?.let { KitButton(it, role = KitButtonRole.Tertiary, expand = false) }
+                }
+            }
+        }
     }
 }
+
+/** How far above the middle of its room a calm page sets its words, as a share of the room's height. */
+private const val CALM_LIFT = .1f // F: lib/ui/kit/kit_state_view.dart:438
 
 @Composable
 private fun Filters(state: ChatsUi, actions: ChatsActions) {

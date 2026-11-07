@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats
 
+import kotlin.math.abs
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasSetTextAction
@@ -101,18 +103,77 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `SCREENS-NAV-27 the empty home offers ways to start as rows and New conversation once`() =
+    fun `SCREENS-NAV-27 G3 the empty home is Flutter's calm page with New conversation as its one button`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(), actions) } }
             onNodeWithText("No conversations yet").assertExists()
-            // P-107: the round floating button says its words to a screen reader; they are not drawn.
-            onAllNodesWithContentDescription("New conversation").assertCountEquals(1)
-            onNodeWithText("Open a project").performClick()
+            onNodeWithText("Say what you want to build, and an agent gets to work.").assertExists()
+            // F: chats_home_screen.dart:744-761: the full-width button says its words; no floating + over an empty page,
+            // and none of the old start rows.
+            onAllNodesWithContentDescription("New conversation").assertCountEquals(0)
+            onAllNodesWithText("Open a project").assertCountEquals(0)
+            onAllNodesWithText("See what an agent can do").assertCountEquals(0)
+            onNodeWithText("New conversation").performClick()
             onNodeWithText("Connect a computer").performClick()
-            onNodeWithText("See what an agent can do").performClick()
-            onNodeWithContentDescription("New conversation").performClick()
-            assertEquals(listOf("projects", "computer", "demo", "new"), actions.calls)
+            assertEquals(listOf("new", "computer"), actions.calls)
+        }
+
+    @Test
+    fun `SCREENS-NAV-27 G3 the calm words sit above the middle and the button at the bottom`() =
+        runComposeUiTest {
+            setContent { Themed { ChatsScreen(ui(), RecordingChatsActions()) } }
+            val root = onRoot().fetchSemanticsNode().boundsInRoot
+            val words = onNodeWithText("No conversations yet").fetchSemanticsNode().boundsInRoot
+            val button = onNodeWithText("New conversation").fetchSemanticsNode().boundsInRoot
+            // Centred across the page, in the upper part of the room under the heading, and the button in the bottom
+            // quarter (a top-aligned state put the words right under the heading).
+            assertTrue(abs(words.center.x - root.center.x) < 2f, "words centred: ${words.center.x} vs ${root.center.x}")
+            assertTrue(words.top > root.height * 0.25f && words.bottom < root.center.y, "words above the middle: $words")
+            assertTrue(button.top > root.height * 0.75f, "button at the bottom: $button in $root")
+        }
+
+    @Test
+    fun `SCREENS-NAV-27 G3 Running with nothing running says so and offers New conversation and Show all`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            val state =
+                ChatsState.build(
+                    ChatFeedSnapshot(persistentListOf(item("old", "/work/api", at = 5, title = "Done thing"))),
+                    ReturnBrief.None,
+                    ChatsFilters(running = true),
+                    10_000,
+                    true,
+                )
+            setContent { Themed { ChatsScreen(state, actions) } }
+            // F: chats_home_screen.dart:686-707 (KitStateView.calm "chats-empty-running")
+            onNodeWithText("Nothing running").assertExists()
+            onAllNodesWithText("No matching conversations").assertCountEquals(0)
+            onNodeWithText("Show all conversations").performClick()
+            onNodeWithText("New conversation").performClick()
+            assertEquals(listOf("running", "new"), actions.calls)
+        }
+
+    @Test
+    fun `SCREENS-NAV-27 G2 one row follows the next with only its hairline between them`() =
+        runComposeUiTest {
+            setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions()) } }
+            val first = onNodeWithContentDescription("Fix the reconnect loop", substring = true).fetchSemanticsNode().boundsInRoot
+            val second = onNodeWithContentDescription("Theme packs", substring = true).fetchSemanticsNode().boundsInRoot
+            val (upper, lower) = if (first.top < second.top) first to second else second to first
+            // F: KitSliverRowGroup: a 0.5-1 dp hairline and no other gap (the 4 dp list spacing put each row 4 px lower).
+            assertTrue(lower.top - upper.bottom <= 1.5f, "gap between rows: ${lower.top - upper.bottom}")
+        }
+
+    @Test
+    fun `SCREENS-NAV-27 G1 the page alone draws no bar, as Flutter's home leaves the bar to the shell`() =
+        runComposeUiTest {
+            setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions(), shellBar = false) } }
+            onNodeWithText("Conversations").assertExists()
+            onAllNodesWithContentDescription("Search").assertCountEquals(0)
+            onAllNodesWithContentDescription("Settings").assertCountEquals(0)
+            // The heading is the page's first part (Flutter: 16 dp under the top edge, chats_home_mixed golden y≈20-48).
+            assertTrue(onNodeWithText("Conversations").fetchSemanticsNode().boundsInRoot.top < 40f)
         }
 
     @Test

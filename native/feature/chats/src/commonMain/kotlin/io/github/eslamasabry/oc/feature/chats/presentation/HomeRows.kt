@@ -14,9 +14,20 @@ public data class BranchPlace(val profile: ProfileId, val directory: String)
 /** One usage limit as the home's Usage row names it: whose limit ([name]) and how much of it is left today. */
 public data class HomeUsageLimit(val name: String, val percentLeft: Int)
 
+/** A project's kind as the folder scan names it (Dart `PhoneProjectKind`); it picks the project's glyph. */
+public enum class HomeProjectKind { Dart, Node, Python, Rust, Go, Java, Ruby, Php, Dotnet, Cpp }
+
+/**
+ * What the project sheet says about one project folder beyond its counts (Dart `ProjectSummary.kind` / `isGit`,
+ * chats_project_sheet.dart:85-107): its kind glyph and the "Git" pill.
+ */
+public data class HomeProjectFacts(val kind: HomeProjectKind? = null, val git: Boolean = false)
+
 /** The defaults [ChatsHomeExtras] falls back on: no branch is known and no usage limit. */
 internal object NoHomeRowFacts {
     val branches: StateFlow<Map<BranchPlace, String>> = MutableStateFlow(emptyMap<BranchPlace, String>()).asStateFlow()
+    val projectFacts: StateFlow<Map<String, HomeProjectFacts>> =
+        MutableStateFlow(emptyMap<String, HomeProjectFacts>()).asStateFlow()
     val usageLimits: StateFlow<ImmutableList<HomeUsageLimit>> =
         MutableStateFlow<ImmutableList<HomeUsageLimit>>(persistentListOf()).asStateFlow()
 }

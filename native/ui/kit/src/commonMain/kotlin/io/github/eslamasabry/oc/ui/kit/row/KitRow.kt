@@ -433,6 +433,16 @@ private fun RowBody(
                             text = { trailing.text },
                             label = trailing.label,
                         )
+                    trailing is KitRowTrailing.Chip ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            io.github.eslamasabry.oc.ui.kit.chip.KitChip(trailing.label, icon = trailing.icon)
+                            if (trailing.checked)
+                                io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                                    io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
+                                    Modifier.testTag("kit-row-check"),
+                                    size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                                )
+                        }
                     trailing == KitRowTrailing.Chevron ->
                         if (chevronEnds) Box(Modifier.padding(end = chevronEndPad(tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)))) { RowChevron() }
                         else RowChevron()

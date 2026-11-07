@@ -174,6 +174,9 @@ public data class ChatsUi(
     val updateReady: Boolean = false,
     val projectChoices: ImmutableList<ProjectSummary> = persistentListOf(),
     val projectNeedsYou: ImmutableSet<String> = persistentSetOf(),
+    /** G4: kind and git facts of [projectChoices] by directory (glyph and "Git" pill); absent = plain folder. */
+    val projectFacts: kotlinx.collections.immutable.ImmutableMap<String, HomeProjectFacts> =
+        kotlinx.collections.immutable.persistentMapOf(),
     val allCount: Int = 0,
     val otherFoldersCount: Int = 0,
     val otherFoldersSelected: Boolean = false,
