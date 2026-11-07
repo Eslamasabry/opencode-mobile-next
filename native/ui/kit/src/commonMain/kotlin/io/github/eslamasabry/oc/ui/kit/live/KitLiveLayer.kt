@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -24,7 +25,8 @@ import kotlinx.coroutines.flow.first
  * else; the page above never recomposes or redraws because of the look. Paths, paints and shaders live in the look's
  * [KitLiveMemory] and the frame object is reused, so a tick allocates nothing.
  *
- * [animate] false (reduced motion, Calm, motion Off, a still sample) draws the look's still frame (t = 0) once.
+ * [animate] false (reduced motion, Calm, motion Off, a still sample) draws the look's still frame (t = 0) once; under
+ * tests and screenshots (`KitMotionState.stillFrame`) it draws nothing, as Flutter's tests paint only the ground.
  */
 @Composable
 internal fun KitLiveLayer(
@@ -34,6 +36,11 @@ internal fun KitLiveLayer(
     modifier: Modifier = Modifier,
     clock: KitLiveClock = KitLiveClock.instance,
 ) {
+    // Tests and screenshots: Flutter paints no look there (kit_live_background.dart:256-261, KitMotion.loops).
+    if (LocalKitMotion.current.stillFrame) {
+        Spacer(modifier)
+        return
+    }
     val palette = KitLivePalette.of(LocalKitRoles.current)
     val memory = remember(style) { KitLiveMemory() }
     val frame = remember(memory) { KitLiveFrame(0.0, 0.0, strength.toDouble(), palette, memory) }
