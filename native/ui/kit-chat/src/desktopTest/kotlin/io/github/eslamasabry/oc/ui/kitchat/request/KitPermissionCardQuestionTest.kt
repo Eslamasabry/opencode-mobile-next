@@ -89,7 +89,8 @@ class KitPermissionCardQuestionTest {
             val ask = onNodeWithText(title, useUnmergedTree = true).getUnclippedBoundsInRoot()
             val image = onRoot().captureToImage()
             val pixels = image.toPixelMap()
-            val scale = image.width / onRoot().getUnclippedBoundsInRoot().width.value
+            val root = onRoot().getUnclippedBoundsInRoot()
+            val scale = image.width / (root.right - root.left).value
             // The words start 16 dp + the 4 dp edge in; 2 dp in from the card's start is the edge.
             val x = ((ask.left - 18.dp).value * scale).toInt()
             val y = (((ask.top + ask.bottom) / 2).value * scale).toInt()
