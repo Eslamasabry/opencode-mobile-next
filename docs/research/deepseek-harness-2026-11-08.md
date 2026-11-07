@@ -7,7 +7,7 @@ Date: 2026-11-08. Asked by: Rootalith, issue #128. Status: research only, no cod
 DeepSeek Harness is real. It is an official DeepSeek project. It can speak ACP, so it could become one more
 phone or computer agent through Paseo, like Gemini CLI or Qwen Code. It is not ready to add today. Our
 installer pins one checked download per agent, and dsh needs about 90 npm packages at install time. It is
-also a developer preview that sends session logs to DeepSeek by default. Recommendation: do not add it now.
+also a developer preview that can send session logs and other data to DeepSeek; most of that can be turned off. Recommendation: do not add it now.
 Watch it, and revisit when it ships a self-contained build or a stable 1.0.
 
 ## What it is
@@ -37,8 +37,8 @@ Watch it, and revisit when it ships a self-contained build or a stable 1.0.
 - Auth: model access is a plugin. The default is the DeepSeek API (an API key from the DeepSeek platform).
   Ollama and other providers can be plugged in. There is no browser sign-in.
 - Sessions: persisted locally (headless and ACP can resume by session id); config lives in `$DSH_HOME`. The
-  exact session path is not documented in what we read. **Session logs are uploaded to DeepSeek by default on the official
-  API.** This can be turned off in settings or by disabling that plugin.
+  exact session path is not documented in what we read. Data sent to DeepSeek: see "Can we turn off the uploads"
+  below.
 - Tool approvals: permission presets. New sessions use `workspace-write` (writes limited to the workspace and
   temp; reads and network are not limited). Sandboxing uses bwrap on Linux; bwrap usually does not work in
   proot. The `sdk-minimal` profile runs with full access and no approvals.
@@ -47,6 +47,73 @@ Watch it, and revisit when it ships a self-contained build or a stable 1.0.
   ordinary Node code with full access to the user account.
 - Safety notice (SAFETY.md): no security audit; can run model-written commands, load third-party plugins,
   touch files, network and credentials. It advises a disposable VM or container.
+
+## What it offers that we don't have
+
+Our app is a client: it shows what an agent does. Tool approvals, live sessions, diffs, steering and switching
+between agents already exist in the app, for every agent. So the issue's main points are not new for us.
+What dsh adds is inside the agent, not in the app:
+
+- **Everything is swappable.** The model, tools, session log and agent loop are plugins. A person can change how
+  the agent works without forking it. No other agent we ship goes that far.
+- **Built-in extras, from its package list** (names seen in npm, behaviour not tested): long-running goals,
+  schedules and background jobs, scripted workflows, an "agent team" profile, automatic review, a worktree tool,
+  session search, a "Ralph" retry loop, and Claude Code as a subagent.
+- **Evaluation.** The web UI has a trajectory view (each turn, tool call, payload, result and timing). Headless
+  mode and the Python SDK make repeatable test runs easy. This is the "evaluating and steering agents" in the issue.
+- **Cost.** DeepSeek V4 models are cheap with a 1M-token context.
+
+What would reach our app over ACP: chat text, tool calls, approvals and plans. The trajectory view, plugin
+manager and goal screens are dsh's own web UI. They would not show up in our app. A person could still open
+`dsh web` on their computer next to the app.
+
+DeepSeek models alone are already available through OpenCode 2. The real extra is dsh's agent behaviour and
+its plugins, and that only matters to people who want to use or write dsh plugins.
+
+## Can we turn off the uploads
+
+Yes, for most of it. Sources disagree on what is on by default, so we would turn everything off ourselves and
+not rely on the defaults.
+
+What dsh can send to DeepSeek, besides the prompts themselves:
+
+| Data | Default | How to turn it off |
+|---|---|---|
+| Session log attached to each official API request (`session-log-deepseek`) | Disputed: community docs say off; a bug report (discussion #6847) and a third-party review say on | Patch row `session-log-deepseek` with `enabled: false` |
+| Plugin names and versions on each request (`plugin-package-inventory-deepseek`) | On | Patch row with `enabled: false` |
+| Telemetry (`session-telemetry-otel`) | `FEEDBACK_ONLY`: uploads a raw session copy only when the person runs `/feedback` | Env `DSH_TELEMETRY_DISABLED=1`, or patch the row with `mode: DISABLED` |
+| Anonymous user id header `x-deepseek-harness-user-id` | On | No switch found. Deleting `~/.dsh/.anonymous-user-id` only resets it |
+| Prompts, code and tool results sent to the model | Always, to whichever model provider is set | Only by using another provider (for example a local Ollama model) |
+
+How we would do it in our installer:
+
+- Write one patch file, for example `~/.config/oc/dsh-privacy.yml`:
+
+  ```yaml
+  - id: session-log-deepseek
+    config:
+      enabled: false
+  - id: plugin-package-inventory-deepseek
+    config:
+      enabled: false
+  - id: session-telemetry-otel
+    config:
+      mode: DISABLED
+  ```
+
+- Launch with `dsh --profile acp --patch <that file>` and set `DSH_TELEMETRY_DISABLED=1`. The `--patch` file is the
+  last config layer, so it wins over profile and home patches. Do not use `~/.dsh/settings.yaml`: discussion
+  #6847 reports it has no effect on these rows.
+- Note: a patch row replaces that row's whole config, it does not merge. Turning a row off is safe; changing
+  only one setting of a row needs the full row.
+- Add a test that runs `dsh --profile acp --patch <file> --dump-config` (or reads the pinned package) and fails
+  if any of these row ids is missing or renamed. Row names can change in a preview, and a renamed row would
+  quietly turn uploads back on. The community bundle `dsh-no-phone-home` does the same check for this reason.
+- Tell the person plainly in the agent row: "Your prompts and code go to the model you choose. Extra uploads to
+  DeepSeek are turned off."
+
+The session-log plugin also has an open bug (discussion #6847, no maintainer reply): with no size cap it can
+make long sessions fail for good with HTTP 413. Turning it off avoids that too.
 
 ## How it would fit our app
 
@@ -77,8 +144,8 @@ through Paseo (Gemini CLI, Qwen Code, Kilo, Cline, Goose, Antigravity, Oh My Pi,
 3. **ACP surface.** The official ACP profile is described as automation-only. Resume, model list and
    permission behaviour are not verified, so it would start as `Limited` with "Can't reopen old chats".
 4. **Sandbox.** bwrap rarely works inside proot, so the `workspace-write` limits may not hold on the phone.
-5. **Privacy.** Session logs upload to DeepSeek by default. We would have to turn that off in the install
-   config and tell the person plainly.
+5. **Privacy.** dsh can send session logs, plugin lists and an anonymous id to DeepSeek. We would turn off
+   what can be turned off (see above) and tell the person plainly. The id header cannot be turned off.
 
 ### Which modules would change (later, if we do it)
 
@@ -86,8 +153,8 @@ through Paseo (Gemini CLI, Qwen Code, Kilo, Cline, Goose, Antigravity, Oh My Pi,
   key (for example "Needs a DeepSeek API key on the host"), a sign-in hint in `HostAgentProviders`, and the
   parity and Paseo config golden tests.
 - `:engine:agents` phone scripts (`AgentPhoneScripts.kt`) — either a new artifact format for a pinned dependency
-  closure (a lockfile-checked `npm ci` or an app-built bundle we host and hash), plus a config patch in
-  `$DSH_HOME/cordis.patch.yml` that turns off log upload.
+  closure (a lockfile-checked `npm ci` or an app-built bundle we host and hash), plus a privacy patch file passed with
+  `--patch` and `DSH_TELEMETRY_DISABLED=1` (see "Can we turn off the uploads").
 - `:engine:linuxsetup` — nothing if the Node pin stays at 24.x.
 - `:ui:words` — English and Arabic copy for the row and limitation (owned by the l10n owner).
 - No chat UI change: tool approvals, live updates and streamed text already go through Paseo.
@@ -100,8 +167,8 @@ through Paseo (Gemini CLI, Qwen Code, Kilo, Cline, Goose, Antigravity, Oh My Pi,
 
 ## Risks
 
-- Terms and data: the DeepSeek API terms apply to the person's own key. Default log upload sends their code and
-  prompts to DeepSeek. Some people and companies cannot allow that.
+- Terms and data: the DeepSeek API terms apply to the person's own key. Their code and prompts go to DeepSeek as the model provider, and
+  extra uploads must be turned off by us. Some people and companies cannot allow that.
 - Plugin security: plugins are arbitrary Node code from npm or GitHub, with no review. We should never install
   plugins for the person, and we should not offer a plugin store in the app.
 - Supply chain: 90 packages per install; any of them could change between versions.
@@ -112,7 +179,7 @@ through Paseo (Gemini CLI, Qwen Code, Kilo, Cline, Goose, Antigravity, Oh My Pi,
 
 Do not add it now. Keep this note. Revisit when one of these happens: dsh ships a single bundled file or a
 binary per platform, or reaches a stable release with a verified ACP profile. Then add it as an `AcpPaseo`
-agent, `Limited`, with log upload off by default. Meanwhile, people who want DeepSeek models can use them in
+agent, `Limited`, with the extra uploads turned off. Meanwhile, people who want DeepSeek models can use them in
 OpenCode 2 today, and people who run dsh on their own computer can try it through any ACP client.
 
 ## Sources
@@ -123,6 +190,9 @@ OpenCode 2 today, and people who run dsh on their own computer can try it throug
 - Profiles, permissions, log upload, pricing: <https://www.eesel.ai/blog/deepseek-harness>
 - Plugin architecture overview: <https://www.noze.it/en/insights/deepseek-harness-plugins-and-core/>
 - Plugin topic: <https://github.com/topic/dsh-plugin>
+- Privacy rows, telemetry env vars (community docs, not deepseek-ai): <https://deepseekdocs.com/en/docs/user-guide/privacy>
+- Session-log upload bug and workaround: <https://github.com/deepseek-ai/deepseek-harness/discussions/6847>
+- Community no-phone-home bundle request: <https://github.com/dshplugin/dsh-plugin-hub/issues/69>
 - Community ACP adapters: <https://github.com/OffloopHQ/dsh-acp>, <https://github.com/AndPuQing/dsh-acp-plus>,
   <https://github.com/dangpangch/dsh-acp>
 
@@ -140,7 +210,7 @@ Some figures (star counts, dates) differ between sources; the ones above were re
 > - The app installs each agent from one checked download. dsh is installed as about 90 npm packages, so we
 >   can't verify it the same way yet.
 > - It's still a developer preview with breaking changes expected.
-> - By default it uploads session logs to DeepSeek. We'd want that off before offering it to anyone.
+> - It can send session logs and usage data to DeepSeek. We'd turn that off before offering it to anyone.
 >
 > In the meantime, DeepSeek models already work in the app through OpenCode: pick a DeepSeek model in the
 > model list after adding your DeepSeek key on the server.
