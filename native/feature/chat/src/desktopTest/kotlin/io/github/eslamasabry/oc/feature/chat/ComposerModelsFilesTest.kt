@@ -340,6 +340,29 @@ class ComposerModelsFilesTest {
         }
 
     @Test
+    fun `B-151 the Add tray opens Saved prompts where 2_1_4 kept them`() = runComposeUiTest {
+        var opened = 0
+        val withPrompts =
+            ComposerChrome(
+                { false }, { false }, {}, { null }, {}, { null }, {}, {}, { false },
+                openSavedPrompts = { opened += 1 },
+            )
+        setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), withPrompts) } } }
+        onNodeWithContentDescription("Attach").performClick()
+        onNodeWithText("Saved prompts").performClick()
+        waitForIdle()
+        assertEquals(1, opened)
+        onNodeWithTag("kit-composer-tray").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-151 no Saved prompts row where the chat offers none`() = runComposeUiTest {
+        setContent { Theme { KitSheetHost { BasicComposer(ui(), Actions(), chrome) } } }
+        onNodeWithContentDescription("Attach").performClick()
+        onNodeWithText("Saved prompts").assertDoesNotExist()
+    }
+
+    @Test
     fun `B-NAV-049 a slash field lists server commands and a tap fills the command`() =
         runComposeUiTest {
             val actions = Actions()

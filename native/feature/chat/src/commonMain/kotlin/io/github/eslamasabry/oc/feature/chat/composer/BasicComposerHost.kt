@@ -81,6 +81,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
 import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
+import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
@@ -575,6 +576,17 @@ public fun BasicComposer(
                         KitTrayAction(
                             stringResource(Res.string.composerFullCommands),
                             KitTrayKind.Commands,
+                        ) {
+                            addOpen = false
+                            open()
+                        }
+                    )
+                }
+                chrome.openSavedPrompts?.let { open ->
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.promptStashTitle),
+                            KitTrayKind.History,
                         ) {
                             addOpen = false
                             open()

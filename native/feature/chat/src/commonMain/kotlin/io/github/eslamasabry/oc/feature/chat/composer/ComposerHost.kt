@@ -73,6 +73,11 @@ public class ComposerChrome(
     public val modelPickerDone: (id: Long) -> Unit = {},
     /** The commands launcher (a Commands row in the attach tray); null = not offered. */
     public val openCommands: (() -> Unit)? = null,
+    /**
+     * Saved prompts (B-151): a row in the attach tray, where 2.1.4 kept them ("Attach and more ›
+     * Prompts › Saved prompts"); null = not offered.
+     */
+    public val openSavedPrompts: (() -> Unit)? = null,
     /** Send later or repeat for the words given (Hold Send, and its visible tray twin). */
     public val sendLater: ((words: String) -> Unit)? = null,
     /** A new id when a Send later schedule was just saved from this chat: clear the draft and say so once. */
