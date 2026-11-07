@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
+import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
@@ -37,12 +38,16 @@ class MainActivity : ComponentActivity() {
     private var shellReady = false
     private var routeWhenReady = false
 
+    /** P-110: the page the killed process was on, reopened once the shell is up. */
+    private var lastRoute: AppRoute? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Before super.onCreate: the product's activity-lifecycle owners (ResumedActivities, the
         // mic/result registries, AppVisibility) must see this activity's own created/started
         // callbacks, as they did when the product started in Application.onCreate.
         (application as OcApplication).startProduct()
         super.onCreate(savedInstanceState)
+        lastRoute = LastRoute.read(savedInstanceState)
         routeWhenReady =
             savedInstanceState == null &&
                 intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
@@ -101,6 +106,9 @@ class MainActivity : ComponentActivity() {
                                             Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
                                 )
                                     settings.whatsNewStarter.start()
+                                val navigator = graph.shell.navigator
+                                LastRoute.reopen(lastRoute, navigator.top.value)?.let(navigator::open)
+                                lastRoute = null
                                 if (routeWhenReady) {
                                     routeWhenReady = false
                                     platformHub.route(intent)
@@ -111,6 +119,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Before the shell is up the saved page is still the one to reopen, not home.
+        LastRoute.save(if (shellReady) appGraph.shell.navigator.top.value else lastRoute, outState)
     }
 
     override fun attachBaseContext(newBase: Context) {
