@@ -120,6 +120,7 @@ public object ChatsState {
             agentMark = AgentPersona.of(item.agentId).markSlug,
             agentName = agentName(item),
             server = item.sourceLabel,
+            directory = item.directory?.takeIf { it.isNotBlank() },
             status =
                 when (item.status) {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou

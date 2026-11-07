@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.routes.MonitorInboxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlin.time.Clock
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -147,6 +149,9 @@ public class ChatsViewModel(
                     pinned = pinnedKeys(snapshot),
                 )
             }
+            // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
+            .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
+            .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -186,6 +191,12 @@ public class ChatsViewModel(
 
     init {
         viewModelScope.launch { pins.changes.collect { pinTick.update { it + 1 } } }
+        // B-161: the branch port reads the folders the list shows, and only those.
+        viewModelScope.launch {
+            combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen -> HomeRows.places(build(snapshot, brief, chosen)) }
+                .distinctUntilChanged()
+                .collect { home.wantBranches(it) }
+        }
     }
 
     /** Rows the person can archive: any agent's conversation on a connection whose server offers it (E04-S05). */
@@ -402,6 +413,8 @@ public class ChatsViewModel(
     }
 
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
+
+    override fun openUsage(): Unit = nav.open(UsageRoute.Hub())
 
     override fun openSearch(): Unit = nav.open(SearchRoute.Conversations())
 

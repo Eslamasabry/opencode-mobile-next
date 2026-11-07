@@ -59,6 +59,9 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
 import io.github.eslamasabry.oc.ui.words.res.sessionOpenRelated
 import io.github.eslamasabry.oc.ui.words.res.sessionCopyHandoff
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
+import io.github.eslamasabry.oc.ui.kit.row.KitConversation
+import io.github.eslamasabry.oc.ui.kit.row.KitConversationRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLive
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -81,7 +84,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
-import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
@@ -98,12 +100,9 @@ import io.github.eslamasabry.oc.ui.words.res.p12ArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.p12Rename
 import io.github.eslamasabry.oc.ui.words.res.p12RenameFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
-import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRowWorking
-import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
-import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -374,7 +373,7 @@ public fun ChatsScreen(
                         }
                     }
                     // The other places the old ⋯ menu hid, as plain rows after the list (obvious options first).
-                    item(key = "more-places") { MorePlaces(actions) }
+                    item(key = "more-places") { MorePlaces(actions, state.usage) }
                 }
             }
 
@@ -410,33 +409,6 @@ public fun ChatsScreen(
       }
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)
-    }
-}
-
-/** All conversations, Projects and Activity: quiet rows under the list, one tap each. */
-@Composable
-private fun MorePlaces(actions: ChatsActions) {
-    Column(Modifier.padding(top = Space.S4.dp)) {
-        KitRowGroup(leadingTiles = true) {
-            KitRow(
-                title = stringResource(Res.string.chatsHomeShowAll),
-                leading = KitRowLeading.Glyph(KitIcons.chat, tile = true),
-                trailing = KitRowTrailing.Chevron,
-                onClick = actions::showAll,
-            )
-            KitRow(
-                title = stringResource(Res.string.p12ProjectsTitle),
-                leading = KitRowLeading.Glyph(KitIcons.projects, tile = true),
-                trailing = KitRowTrailing.Chevron,
-                onClick = actions::openProjects,
-            )
-            KitRow(
-                title = stringResource(Res.string.stateAttentionTitle),
-                leading = KitRowLeading.Glyph(KitIcons.activity, tile = true),
-                trailing = KitRowTrailing.Chevron,
-                onClick = actions::openAttention,
-            )
-        }
     }
 }
 
@@ -506,14 +478,16 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 /**
- * The hairline between two conversation rows, inset to the rows' text like the groups under the list
- * (KitRowGroup): past the agent tile when the rows show one, else the 16 dp page edge.
+ * The hairline between two conversation rows, on the 16 dp page edge where the row's words start (B-161 rows close
+ * with the agent's mark instead of leading with it); past the agent tile in the Signal look, whose rows still lead
+ * with one.
  */
 @Composable
 private fun RowDivider(state: ChatsUi) {
+    val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
     io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(
         inset =
-            if (state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
+            if (signal && state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
             else io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Gutter
     )
 }
@@ -543,27 +517,56 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
     val archiveWord = stringResource(Res.string.sessionMenuArchive)
     var menuOpen by remember(row.key) { mutableStateOf(false) }
     val needsAttention = row.status == RowStatus.NeedsYou || row.status == RowStatus.Running
+    val agent =
+        if (state?.showAgents == true)
+            KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName))
+        else null
+    val time =
+        row.updatedAtMs?.takeIf { state != null && state.nowMs > 0 }?.let { kitRelativeAge(it, state!!.nowMs) }
+            ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) }
+    val liveLabel = liveRunWords()
     val feedItem: @Composable () -> Unit = {
-    KitFeedItem(
-        title = title,
-        project = row.project,
-        // The agent's tile only says something when the list holds more than one agent (Flutter rows have none).
-        agent =
-            if (state?.showAgents == true)
-                KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName))
-            else null,
-        server = row.server,
-        live = needsAttention,
-        onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
-        onLongClickLabel = stringResource(Res.string.chatsRowActions),
-        state = KitRowState(status?.takeUnless { signal && row.running != null }, tone),
-        time = row.updatedAtMs?.takeIf { state != null && state.nowMs > 0 }?.let { kitRelativeAge(it, state!!.nowMs) }
-            ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) },
-        done = row.status == RowStatus.Done,
-        growKey = row.ref,
-        onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
-        pinned = state != null && row.key in state.pinned,
-    )
+        if (signal)
+            KitFeedItem(
+                title = title,
+                project = row.project,
+                // The agent's tile only says something when the list holds more than one agent (Flutter rows have none).
+                agent = agent,
+                server = row.server,
+                live = needsAttention,
+                onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
+                onLongClickLabel = stringResource(Res.string.chatsRowActions),
+                state = KitRowState(status?.takeUnless { row.running != null }, tone),
+                time = time,
+                done = row.status == RowStatus.Done,
+                growKey = row.ref,
+                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+                pinned = state != null && row.key in state.pinned,
+            )
+        else
+            // B-161: project tile and name with the time (or "Working 34m" while a run is live), the title, then the
+            // state word, branch and server; the agent's mark closes the row only when the list mixes agents.
+            KitConversationRow(
+                KitConversation(
+                    title = title,
+                    project = row.project,
+                    time = time,
+                    state = KitRowState(status, tone),
+                    branch = row.branch,
+                    server = row.server,
+                    live =
+                        if (row.status == RowStatus.Running)
+                            KitRowLive(row.running?.sinceMs, state?.nowMs?.takeIf { it > 0 } ?: row.observedAtMs, liveLabel)
+                        else null,
+                    agent = agent,
+                    done = row.status == RowStatus.Done,
+                    pinned = state != null && row.key in state.pinned,
+                    growKey = row.ref,
+                ),
+                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+                onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
+                onLongClickLabel = stringResource(Res.string.chatsRowActions),
+            )
     }
     KitMenu(
         expanded = menuOpen,
