@@ -40,6 +40,7 @@ void main() {
       final repository = Api2OperationsGateway(client: client);
       for (final variant in family.cases) {
         final body = variant['payload'] as Map;
+        _recentRelease(body['models']);
         const location = {
           'directory': '/work/shopfront',
           'project': {
@@ -110,5 +111,22 @@ void main() {
       final problems = checkCase(family, variant, screens.text);
       expect(problems, isEmpty, reason: 'screen text:\n${flat(screens.text)}');
     });
+  }
+}
+
+/// The recorded models carry the date they were released, and the picker
+/// marks a model "New" for 30 days after it. Moves every release date to two
+/// days ago so the "New" mark the ledger expects does not expire with the
+/// calendar (it did on 2026-11-07, 30 days after the recording).
+void _recentRelease(Object? models) {
+  if (models is! List) return;
+  final recent = DateTime.now()
+      .subtract(const Duration(days: 2))
+      .millisecondsSinceEpoch;
+  for (final model in models) {
+    if (model is Map && model['time'] is Map) {
+      final time = model['time'] as Map;
+      if (time.containsKey('released')) time['released'] = recent;
+    }
   }
 }
