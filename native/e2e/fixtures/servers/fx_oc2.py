@@ -390,7 +390,7 @@ def count_user_prompts(api: Upstream, text: str) -> int:
     all projects). The server's own history, so a prompt the app sent twice counts twice."""
     count = 0
     for session in list_sessions(api):
-        status, data = api.call("GET", f"/api/session/{quote(str(session.get('id')))}/message?limit=500")
+        status, data = api.call("GET", f"/api/session/{quote(str(session.get('id')))}/message?limit=200")  # 2.1.1 caps limit at 200
         rows = (data or {}).get("data") if isinstance(data, dict) else data
         if status != 200 or not isinstance(rows, list):
             continue
