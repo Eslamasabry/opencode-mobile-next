@@ -29,7 +29,13 @@ phone (B-158), Play Store.
 3. No new builder starts on a module that has an unmerged builder.
 4. Layout and look follow Flutter (the Dart file is the spec). Motion and rendering follow native practice.
 
-## Current owners (wave 4)
+## Status at merge 28 (2026-11-07 23:30)
+
+Waves 4-7 landed (merges 21-28): chat parity, translucent composer, timeline, Flutter composer layout, chat screen (700 dp pane, find, loading, error), home rows, settings, shell/servers, remaining screens, kit orders 07-10/12/13/18/20-22/25-30, ~1,700 gate cases, gate tooling, release shape, #117 native, background shaders, upgrade-gate harness. Every merge built on the PC and was installed on the owner phone.
+
+Now: G2 scoreboard rerun and G5 upgrade gate run 4 on merge 28; motion lead (G4) finishing its fenced branch; kit order 23 still out. Next: motion rollout batch, last fix orders from the scoreboard, RC1 build.
+
+## Owners during wave 4-7 (history)
 
 | Module / area | Owner (branch) |
 |---|---|
