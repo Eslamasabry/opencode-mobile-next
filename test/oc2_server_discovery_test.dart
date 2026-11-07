@@ -11,7 +11,6 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_start_screen.dart';
-import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_termux_job_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 
 import 'support/fake_setup_engine.dart';
@@ -263,11 +262,7 @@ void main() {
     await tester.pumpWidget(_app(store, conn, scale: 2));
     await tester.pumpAndSettle();
     PhoneSetup.engine = FakeSetupEngine();
-    // Termux is phone setup's second host with its own engine (P1.2); a
-    // channel engine would wait on a platform that is not there.
-    PhoneSetup.termux = FakeSetupEngine();
-    // Phone setup v2: Add server's "On this phone" opens phone setup, and
-    // Termux (where OpenCode 1 or 2 is chosen) is one of its Other ways.
+    // Phone setup v2: Add server's "On this phone" opens phone setup.
     await tester.tap(find.byKey(const ValueKey('servers-add')));
     await tester.pumpAndSettle();
     final entry = find.byKey(const ValueKey('quick-add-phone-card'));
@@ -275,22 +270,6 @@ void main() {
     await tester.tap(entry);
     await tester.pumpAndSettle();
     expect(find.byType(PhoneSetupStartScreen), findsOneWidget);
-    final otherWays = find.byKey(
-      const ValueKey('phone-setup-start-other-ways'),
-    );
-    await tester.ensureVisible(otherWays);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Other ways'));
-    await tester.pumpAndSettle();
-    final termux = find.byKey(const ValueKey('phone-setup-start-use-termux'));
-    await tester.ensureVisible(termux);
-    await tester.pumpAndSettle();
-    await tester.tap(termux);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    // Termux is a host of phone setup: installing is the v2 job with Termux
-    // as its host (P1.2, 935945d6), its progress, not a wizard.
-    expect(find.byType(PhoneSetupTermuxJobScreen), findsOneWidget);
     expect(store.saved.single.flavor, ServerFlavor.v2);
     expect(tester.takeException(), isNull);
   });

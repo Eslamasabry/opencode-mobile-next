@@ -132,11 +132,6 @@ flutter:
     - assets/branding/open-portal/mark.svg
     # Agent and provider marks (lobe-icons, MIT): THIRD_PARTY_NOTICES.md.
     - assets/marks/
-    # AI Team on this phone (TEAM-301): the pinned download manifest for the
-    # Android-built gc/bd/dolt and the opencode wrapper; a copy of
-    # tool/host/aiteam-manifest-<date>.json.
-    - assets/aiteam/manifest.json
-    - assets/aiteam/manifest-x86_64.json
     - assets/agents/paseo-package-lock.json
     # The optional quota collector the app runs in In-app Ubuntu
     # (lib/builtin/quota_collector_host.dart). One file, no npm install.

@@ -1,14 +1,11 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/server_probe.dart' show ServerFlavor;
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
-import 'package:opencode_mobile/termux/opencode_ubuntu_setup.dart';
+import 'package:opencode_mobile/builtin/setup/opencode_ubuntu_setup.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -108,7 +105,7 @@ void main() {
         'serve',
         restoreRecipe: const BuiltinServerRestoreRecipe(
           profileId: 'phone-profile',
-          runtime: TermuxRuntime.openCode2,
+          runtime: OpenCodeRuntime.openCode2,
         ),
       );
       expect(calls.single.method, 'startServer');
@@ -135,7 +132,7 @@ void main() {
             'serve',
             restoreRecipe: const BuiltinServerRestoreRecipe(
               profileId: 'phone-profile',
-              runtime: TermuxRuntime.openCode2,
+              runtime: OpenCodeRuntime.openCode2,
             ),
           ),
           throwsA(
@@ -312,14 +309,10 @@ void main() {
   });
 
   group('server address', () {
-    test('is its own port, never the Termux-managed one', () {
+    test('is its own port, never the one Termux setups used', () {
       expect(BuiltinLinux.serverUrl, 'http://127.0.0.1:4097');
       expect(BuiltinLinux.managesServerUrl(BuiltinLinux.serverUrl), isTrue);
-      expect(TermuxBridge.managesServerUrl(BuiltinLinux.serverUrl), isFalse);
-      expect(
-        BuiltinLinux.managesServerUrl(TermuxBridge.managedServerUrl),
-        isFalse,
-      );
+      expect(BuiltinLinux.managesServerUrl('http://127.0.0.1:4096'), isFalse);
       expect(BuiltinLinux.managesServerUrl('http://0.0.0.0:4097'), isFalse);
     });
   });
@@ -342,12 +335,12 @@ void main() {
 
     test('the install uses the shared setup text at the pinned version', () {
       final script = BuiltinLinux.installOpenCodeScript(
-        runtime: TermuxRuntime.openCode2,
+        runtime: OpenCodeRuntime.openCode2,
       );
       expect(
         script,
         contains(
-          "export OC_REQUESTED_VERSION='${TermuxRuntime.openCode2.pinnedVersion}'",
+          "export OC_REQUESTED_VERSION='${OpenCodeRuntime.openCode2.pinnedVersion}'",
         ),
       );
       expect(script, contains("export OC_RUNTIME='opencode2'"));
@@ -360,12 +353,12 @@ void main() {
       expect(script, isNot(contains('opencode models --refresh')));
 
       final two = BuiltinLinux.installOpenCodeScript(
-        runtime: TermuxRuntime.openCode2,
+        runtime: OpenCodeRuntime.openCode2,
       );
       expect(
         two,
         contains(
-          "export OC_REQUESTED_VERSION='${TermuxRuntime.openCode2.pinnedVersion}'",
+          "export OC_REQUESTED_VERSION='${OpenCodeRuntime.openCode2.pinnedVersion}'",
         ),
       );
       expect(two, contains("export OC_RUNTIME='opencode2'"));
@@ -378,7 +371,7 @@ void main() {
 
     test('the server binds 127.0.0.1 only and reads its password file', () {
       final script = BuiltinLinux.serverScript(
-        runtime: TermuxRuntime.openCode2,
+        runtime: OpenCodeRuntime.openCode2,
       );
       expect(
         script,
@@ -392,7 +385,7 @@ void main() {
       expect(script, contains('XDG_DATA_HOME'));
       expect(script, isNot(contains('0.0.0.0')));
 
-      final two = BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2);
+      final two = BuiltinLinux.serverScript(runtime: OpenCodeRuntime.openCode2);
       expect(
         two,
         contains('exec opencode2 serve --hostname 127.0.0.1 --port 4097\n'),
@@ -431,15 +424,19 @@ void main() {
     test('every script parses as shell', () async {
       final scripts = {
         'install1': BuiltinLinux.installOpenCodeScript(
-          runtime: TermuxRuntime.openCode2,
+          runtime: OpenCodeRuntime.openCode2,
         ),
         'install2': BuiltinLinux.installOpenCodeScript(
-          runtime: TermuxRuntime.openCode2,
+          runtime: OpenCodeRuntime.openCode2,
         ),
-        'server1': BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),
-        'server2': BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),
+        'server1': BuiltinLinux.serverScript(
+          runtime: OpenCodeRuntime.openCode2,
+        ),
+        'server2': BuiltinLinux.serverScript(
+          runtime: OpenCodeRuntime.openCode2,
+        ),
         'password': BuiltinLinux.writePasswordScript,
-        'version': BuiltinLinux.versionScript(TermuxRuntime.openCode2),
+        'version': BuiltinLinux.versionScript(OpenCodeRuntime.openCode2),
         'list': BuiltinLinux.listProjectsScript(),
         'exists': BuiltinLinux.folderExistsScript('/root/projects/a b'),
         'create': BuiltinLinux.createFolderScript("/root/projects/it's"),
@@ -511,68 +508,25 @@ void main() {
     });
 
     test('legacy identity is detection only; it cannot install or start', () {
-      expect(BuiltinLinux.runtimeFor(ServerFlavor.v2), TermuxRuntime.openCode2);
       expect(
-        () => BuiltinLinux.installOpenCodeScript(
-          runtime: TermuxRuntime.openCode1,
-        ),
-        throwsA(isA<TermuxBridgeException>()),
+        BuiltinLinux.runtimeFor(ServerFlavor.v2),
+        OpenCodeRuntime.openCode2,
       );
       expect(
-        () => BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode1),
-        throwsA(isA<TermuxBridgeException>()),
+        () => BuiltinLinux.installOpenCodeScript(
+          runtime: OpenCodeRuntime.openCode1,
+        ),
+        throwsA(isA<BuiltinLinuxException>()),
+      );
+      expect(
+        () => BuiltinLinux.serverScript(runtime: OpenCodeRuntime.openCode1),
+        throwsA(isA<BuiltinLinuxException>()),
       );
     });
   });
 
   group('shared OpenCode setup script', () {
-    // The Termux manager is now composed from the shared constant. This pins
-    // it to the reviewed text, so the
-    // refactor provably changed nothing for Termux. A deliberate edit to the
-    // manager script or the shared setup text updates this hash with it.
-    // Pinned so the manager on people's phones never changes by accident.
-    // Last deliberate change: npm is told to allow exactly the OpenCode
-    // package's own install script (`--allow-scripts`, npm 11.19;
-    // slice-builtin-opencode-pin, 2026-09-28). Then: the OpenCode 2 runner
-    // copies the OpenCode 1 chat database across before its first start
-    // (oc2-switch-keeps-chats, 2026-10-14). Then: the OpenCode 2 pin moved
-    // from 2.0.28 to 2.0.29 (AI Team on OpenCode 2, 2026-10-14). Then: a
-    // fresh setup defaults to OpenCode 2 while an existing install keeps its
-    // runtime (oc2-default phase 2, 2026-10-15). Then: refuse an unsafe
-    // two-history move and propagate fresh-copy failures (release blockers).
-    test('the Termux manager script changes only on purpose', () {
-      final script = TermuxBridge.managerScriptForTesting();
-      if (Platform.environment['WRITE_SCRIPT_HASHES'] == '1') {
-        final file = File('test/builtin_linux_test.dart');
-        file.writeAsStringSync(
-          file
-              .readAsStringSync()
-              .replaceFirst(
-                RegExp(r'const reviewedLength = \d+;'),
-                'const reviewedLength = ${script.length};',
-              )
-              .replaceFirst(
-                RegExp(r"const reviewedHash =\s*'[a-f0-9]+';"),
-                "const reviewedHash = '${sha256.convert(utf8.encode(script))}';",
-              ),
-        );
-        return;
-      }
-      const reviewedLength = 57338;
-      const reviewedHash =
-          '68028c9dc4ba2f28a27f340a2c93c138f0631ed19946198bc4a4a53bbce42eab';
-      expect(script.length, reviewedLength);
-      expect(sha256.convert(utf8.encode(script)).toString(), reviewedHash);
-    });
-
-    test('the Termux manager embeds the shared text in its heredoc', () {
-      final script = TermuxBridge.managerScriptForTesting();
-      expect(
-        script,
-        contains(
-          "bash -s <<'OC_PROOT_SETUP'\n${openCodeUbuntuSetupScript}OC_PROOT_SETUP\n",
-        ),
-      );
+    test('the shared setup text fits the heredoc it travels in', () {
       expect(openCodeUbuntuSetupScript, endsWith('"\$command" --version\n'));
       expect(openCodeUbuntuSetupScript, isNot(contains('\nOC_PROOT_SETUP\n')));
     });

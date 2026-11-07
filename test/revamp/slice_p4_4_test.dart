@@ -224,7 +224,6 @@ void main() {
           baseUrl: _laptop.baseUrl,
           error: error,
           attempts: 1,
-          supportsTermux: false,
           notAnswering: notAnswering,
           onChangeServer: () {},
           onRetry: () {},
@@ -330,7 +329,6 @@ void main() {
       l10n: l10n,
       error: 'Health check failed: connection refused',
       baseUrl: _laptop.baseUrl,
-      supportsTermux: false,
     );
     expect(find.text(failure.title), findsWidgets);
     expect(

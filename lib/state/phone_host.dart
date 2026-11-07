@@ -6,30 +6,21 @@ import '../builtin/builtin_linux.dart';
 import '../builtin/builtin_server.dart';
 import '../builtin/deliberate_stop.dart';
 import '../builtin/setup/setup_contract.dart';
-import '../builtin/setup/termux_setup_host.dart';
 import '../domain/opencode_history_copy.dart';
 import '../l10n/app_localizations.dart';
-import '../termux/bridge.dart';
-import '../termux/termux_reach.dart';
 import 'connection.dart';
-import 'local_server_controls.dart';
 import 'profiles.dart';
-import 'termux_host_setup.dart';
-
-/// Where OpenCode runs on this phone: inside the app (the bundled Linux) or
-/// in Termux. This phone is one page for both; this says which one it shows.
-enum PhoneHostKind { inApp, termux }
 
 /// What This phone's status line says, in the order a person cares about.
 enum PhoneHostState {
   checking,
   notSetUp,
 
-  /// A setup, update, switch or tool install is running.
+  /// A setup, update or tool install is running.
   settingUp,
 
-  /// Something needs the person: a start or a switch failed, or a switch
-  /// stopped half way ([PhoneHost.failure] says what).
+  /// Something needs the person: a start failed ([PhoneHost.failure] says
+  /// what).
   needsYou,
   starting,
   stopping,
@@ -53,54 +44,27 @@ enum PhoneHostProblem {
   /// An install or an update did not finish.
   install,
 
-  /// The page could not ask the host how the server is (Termux did not
-  /// answer, or the in-app Linux could not be read).
+  /// The page could not ask the host how the server is (the in-app Linux
+  /// could not be read).
   check,
 }
 
-/// Whether the manager's failure [message] (with its [failureKind]) is about
-/// the server starting or running rather than an install or update: the
-/// manager writes these while it starts, waits for or watches the server.
-@visibleForTesting
-PhoneHostProblem termuxProblemOf(String failureKind, String message) {
-  if (failureKind == 'crash' || failureKind == 'recovery') {
-    return PhoneHostProblem.start;
-  }
-  const startMessages = [
-    'OpenCode server exited',
-    'OpenCode server did not become',
-    'The local OpenCode server stopped unexpectedly',
-    'Managed server did not start',
-    'The local server port is still in use',
-    'The local server password is missing',
-    'Could not record the managed server process identity',
-    'Automatic recovery was disabled',
-  ];
-  for (final start in startMessages) {
-    if (message.startsWith(start)) return PhoneHostProblem.start;
-  }
-  return PhoneHostProblem.install;
-}
-
-/// OpenCode on this phone, whichever host runs it: the one model This phone
-/// reads, so the page is the same for the in-app Linux and for Termux.
+/// OpenCode on this phone (the built-in Linux): the one model This phone
+/// reads.
 ///
-/// It reports and does only what both hosts share (status, start, stop, the
-/// log, the saved connection). Installing, updating, switching and adding
-/// tools are jobs each host runs through phone setup, so the page hands
-/// those over by [kind].
+/// It reports and does status, start, stop, the log and the saved
+/// connection. Installing, updating and adding tools are jobs phone setup
+/// runs, so the page hands those over.
 abstract class PhoneHost extends ChangeNotifier {
-  PhoneHostKind get kind;
   PhoneHostState get state;
 
   /// OpenCode 1 or 2.
-  TermuxRuntime get runtime;
+  OpenCodeRuntime get runtime;
 
   /// The version the host reported, when it did.
   String? get version;
 
-  /// Storage the host measured, when it did (the in-app Linux measures its
-  /// own folder; Termux has its own Storage page).
+  /// Storage the host measured, when it did.
   int? get bytesUsed;
 
   /// What went wrong last, as the host said it: technical text, shown
@@ -110,24 +74,12 @@ abstract class PhoneHost extends ChangeNotifier {
   /// What [failure] was about; null when nothing failed.
   PhoneHostProblem? get problem => null;
 
-  /// Why the app cannot reach Termux now (Termux only): one typed cause
-  /// with one fix. While it is set, acts that run in Termux cannot work.
-  TermuxProblem? get termuxProblem => null;
-
   /// Whether [runtime] was read or saved, rather than assumed: a page that
   /// could not ask the host does not call it "OpenCode 1".
   bool get runtimeKnown => true;
 
   /// The saved connection for [runtime], or null when there is none yet.
   ServerProfile? get profile;
-
-  /// A switch between OpenCode 1 and 2 stopped half way (Termux only).
-  TermuxRuntime? get switchTarget => null;
-  TermuxRuntime? get switchPrevious => null;
-
-  /// Whether Termux's OpenCode 2 can go back to 1 (an OpenCode 2 installed
-  /// before switching existed cannot).
-  bool get canSwitchRuntime => true;
 
   bool get installed =>
       state != PhoneHostState.checking && state != PhoneHostState.notSetUp;
@@ -187,9 +139,6 @@ class InAppPhoneHost extends PhoneHost {
   bool _disposed = false;
 
   @override
-  PhoneHostKind get kind => PhoneHostKind.inApp;
-
-  @override
   void dispose() {
     _disposed = true;
     _poll?.cancel();
@@ -217,13 +166,13 @@ class InAppPhoneHost extends PhoneHost {
   }
 
   @override
-  TermuxRuntime get runtime {
+  OpenCodeRuntime get runtime {
     final profile = this.profile;
     if (profile != null) return BuiltinLinux.runtimeForProfile(profile);
     // A pre-selection installation is legacy; only a fresh host adopts OC2.
     return _status?.installed == true
-        ? TermuxRuntime.openCode1
-        : TermuxRuntime.defaultForNewInstall;
+        ? OpenCodeRuntime.openCode1
+        : OpenCodeRuntime.defaultForNewInstall;
   }
 
   @override
@@ -343,290 +292,11 @@ class InAppPhoneHost extends PhoneHost {
   }
 }
 
-/// OpenCode in Termux, run by the Termux manager.
-class TermuxPhoneHost extends PhoneHost {
-  TermuxPhoneHost({
-    required this.connection,
-    required this.copy,
-    this.readyTimeout = const Duration(seconds: 120),
-  });
-
-  final ConnectionController connection;
-
-  /// The person's language, for the name a restored connection is saved
-  /// under.
-  final AppLocalizations Function() copy;
-  final Duration readyTimeout;
-
-  TermuxSetupStatus? _status;
-  TermuxInstallation? _installation;
-  String _log = '';
-  bool _starting = false;
-  bool _stopping = false;
-  bool _checked = false;
-  String? _failure;
-  PhoneHostProblem? _problem;
-  TermuxProblem? _reach;
-  bool _disposed = false;
-
-  ProfileStore get _store => connection.store;
-
-  @override
-  PhoneHostKind get kind => PhoneHostKind.termux;
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
-
-  @override
-  TermuxRuntime get runtime {
-    final status = _status;
-    if (status != null &&
-        (status.runtimeSelected || status.version.isNotEmpty)) {
-      return status.runtime;
-    }
-    final installation = _installation;
-    if (installation != null &&
-        (installation.runtimeSelected || installation.ubuntuInstalled)) {
-      return installation.runtime;
-    }
-    final saved = profile;
-    return saved == null
-        ? TermuxRuntime.defaultForNewInstall
-        : ManagedRuntimeFlavor.runtimeOf(saved);
-  }
-
-  @override
-  ServerProfile? get profile {
-    ServerProfile? any;
-    for (final profile in _store.profiles) {
-      if (profile.backend != ServerBackend.openCode ||
-          !TermuxBridge.managesServerUrl(profile.baseUrl)) {
-        continue;
-      }
-      if (_status != null || _installation != null) {
-        if (ManagedRuntimeFlavor.runtimeOf(profile) == _knownRuntime) {
-          return profile;
-        }
-      }
-      any ??= profile;
-    }
-    return any;
-  }
-
-  TermuxRuntime? get _knownRuntime {
-    final status = _status;
-    if (status != null &&
-        (status.runtimeSelected || status.version.isNotEmpty)) {
-      return status.runtime;
-    }
-    return _installation?.runtime;
-  }
-
-  @override
-  String? get version {
-    final version = _status?.version.trim();
-    if (version != null && version.isNotEmpty) return version;
-    return _installation?.openCodeVersion;
-  }
-
-  @override
-  int? get bytesUsed => null;
-
-  @override
-  String? get failure => _failure;
-
-  @override
-  PhoneHostProblem? get problem => _failure == null ? null : _problem;
-
-  @override
-  TermuxProblem? get termuxProblem => _reach;
-
-  @override
-  bool get runtimeKnown => _knownRuntime != null || profile != null;
-
-  @override
-  TermuxRuntime? get switchTarget =>
-      _status?.switchPending == true ? _status!.switchTarget : null;
-
-  @override
-  TermuxRuntime? get switchPrevious =>
-      _status?.switchPending == true ? _status!.switchPrevious : null;
-
-  @override
-  bool get canSwitchRuntime =>
-      runtime == TermuxRuntime.openCode1 ||
-      _status?.switchReturnAvailable == true;
-
-  @override
-  PhoneHostState get state {
-    if (_starting) return PhoneHostState.starting;
-    if (_stopping) return PhoneHostState.stopping;
-    if (!_checked) return PhoneHostState.checking;
-    final status = _status;
-    if (status != null && status.switchPending) {
-      return PhoneHostState.needsYou;
-    }
-    if (status != null && status.isRunning) {
-      return status.phase == 'restarting' || status.phase == 'starting_server'
-          ? PhoneHostState.starting
-          : PhoneHostState.settingUp;
-    }
-    if (status != null && status.isReady) return PhoneHostState.running;
-    // Termux could not be asked or did not answer: not knowing is not
-    // "not set up".
-    if (status == null &&
-        (_reach != null || problem == PhoneHostProblem.check)) {
-      return PhoneHostState.needsYou;
-    }
-    if (version == null) return PhoneHostState.notSetUp;
-    if (status != null && status.isFailed) return PhoneHostState.needsYou;
-    return _failure != null ? PhoneHostState.needsYou : PhoneHostState.stopped;
-  }
-
-  @override
-  Future<OpenCodeHistorySwitchAdmission> checkHistorySwitch() =>
-      _checkHistorySwitch(TermuxSetupHost());
-
-  @override
-  Future<void> refresh() async {
-    if (!TermuxBridge.supported) {
-      _checked = true;
-      notifyListeners();
-      return;
-    }
-    // What Android says first: without Termux, or without access to it, no
-    // command can run, and asking would only fail slowly.
-    try {
-      final blocked = termuxProblemOfCapabilities(
-        await TermuxBridge.capabilities(),
-      );
-      if (_disposed) return;
-      if (blocked != null) {
-        _reach = blocked;
-        _status = null;
-        _checked = true;
-        notifyListeners();
-        return;
-      }
-    } catch (_) {
-      // Unknown: the status read below says what it can.
-    }
-    try {
-      final snapshot = await TermuxBridge.setupSnapshot();
-      if (_disposed) return;
-      final hadReach = _reach != null;
-      _reach = null;
-      if (hadReach) _failure = null;
-      _status = snapshot.status;
-      _log = snapshot.output;
-      if (snapshot.status.isFailed && !snapshot.status.switchPending) {
-        _failure = snapshot.status.message;
-        _problem = termuxProblemOf(
-          snapshot.status.failureKind,
-          snapshot.status.message,
-        );
-      } else if (_problem == PhoneHostProblem.check) {
-        // Termux answers again: its not answering is over.
-        _failure = null;
-        _problem = null;
-      }
-    } on TermuxBridgeException catch (error) {
-      if (_disposed) return;
-      final reach = termuxProblemOfError(error);
-      if (reach == TermuxProblem.unknown) {
-        _reach = null;
-        _failure = error.message;
-        _problem = PhoneHostProblem.check;
-      } else {
-        // A cause with its own fix: said as that, never as "try again".
-        _reach = reach;
-        _failure = error.message;
-        _problem = null;
-        _status = null;
-      }
-    }
-    try {
-      _installation = await TermuxBridge.inspectInstallation();
-    } on TermuxBridgeException {
-      // The status alone still says running or stopped.
-    }
-    if (_disposed) return;
-    _checked = true;
-    notifyListeners();
-    final installed = _installation?.openCodeVersion != null;
-    if (installed) await _restoreProfile();
-  }
-
-  Future<void> _restoreProfile() async {
-    try {
-      final restored = await restoreManagedTermuxProfile(
-        _store,
-        runtime,
-        name: copy().e7SetupThisDevice,
-      );
-      if (restored && !_disposed) notifyListeners();
-    } on TermuxBridgeException {
-      // No password to take back: Connect then asks for one.
-    }
-  }
-
-  LocalServerControls get _controls =>
-      LocalServerControls(store: _store, connection: connection);
-
-  @override
-  Future<void> start(AppLocalizations l10n) async {
-    _starting = true;
-    _failure = null;
-    notifyListeners();
-    try {
-      await _controls.restart(timeout: readyTimeout);
-    } on LocalServerControlFailure catch (error) {
-      _failure = error.message.isEmpty
-          ? l10n.e7SetupRestartFailed(l10n.phoneServerCardStopped)
-          : error.message;
-      _problem = PhoneHostProblem.start;
-    }
-    _starting = false;
-    if (_disposed) return;
-    await refresh();
-  }
-
-  @override
-  Future<void> stop(AppLocalizations l10n) async {
-    _stopping = true;
-    _failure = null;
-    notifyListeners();
-    try {
-      await _controls.stop();
-    } on LocalServerControlFailure catch (error) {
-      _failure = l10n.e7SetupStopFailed(error.message);
-      _problem = PhoneHostProblem.stop;
-    }
-    _stopping = false;
-    if (_disposed) return;
-    await refresh();
-  }
-
-  @override
-  Future<String> readLog() async {
-    try {
-      final snapshot = await TermuxBridge.setupSnapshot();
-      _log = snapshot.output;
-    } on TermuxBridgeException catch (error) {
-      return error.message;
-    }
-    return _log;
-  }
-}
-
 Future<OpenCodeHistorySwitchAdmission> _checkHistorySwitch(
   BuiltinLinux linux,
 ) async {
   try {
-    // Capture only the read-only guard's output on either host. Subshell keeps
+    // Capture only the read-only guard's output. The subshell keeps
     // its refusal exit from escaping before the transport captures stderr.
     final result = await linux.run(
       '(\n$openCode1HistorySwitchCheckScript\n) 2>&1',

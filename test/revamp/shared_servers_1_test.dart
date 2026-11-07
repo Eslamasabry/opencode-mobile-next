@@ -1,7 +1,6 @@
 // shared-servers-1 (wave 2a): the server switcher, the other-servers panel
-// and Claude Code's row on this phone, rebuilt from kit parts, with the map
-// records' missing states and actions (server-switcher-sheet,
-// embedded-local-agent-server-entry). Behaviour only: what the person sees
+// rebuilt from kit parts, with the map
+// records' missing states and actions (server-switcher-sheet). Behaviour only: what the person sees
 // and what is sent.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,10 +9,7 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/domain/profile_monitor.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
-import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/local_agent_runtime.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/widgets/local_agent_server_entry.dart';
 import 'package:opencode_mobile/ui/widgets/server_switcher_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -210,164 +206,6 @@ void main() {
       await tester.pump(const Duration(seconds: 8));
       expect(_rich('Reconnecting'), findsNothing);
       expect(_rich('Offline'), findsOneWidget);
-    });
-  });
-
-  group('Claude Code on this phone', () {
-    Future<FakeAgentRuntime> pump(
-      WidgetTester tester,
-      LocalAgentStatus status, {
-      List<ServerProfile> profiles = const [],
-      VoidCallback? onManage,
-    }) async {
-      debugPlatformCapabilities = const PlatformCapabilities.android();
-      final runtime = FakeAgentRuntime(status);
-      await tester.pumpWidget(
-        _app(
-          LocalAgentServerEntry(
-            profiles: profiles,
-            busy: false,
-            revision: 0,
-            runtime: runtime,
-            onConnect: (_) {},
-            onManage: onManage ?? () {},
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      return runtime;
-    }
-
-    Future<void> openMenu(WidgetTester tester) async {
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-menu')));
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('signed out: the line says so and the menu signs in through '
-        'Termux', (tester) async {
-      final runtime = await pump(
-        tester,
-        agentStatus(LocalAgentPhase.ready, signedIn: LocalAgentSignIn.no),
-      );
-      expect(
-        find.text(_l10n.localAgentEntrySignedOut(_l10n.phoneServerCardRunning)),
-        findsOneWidget,
-      );
-      await openMenu(tester);
-      await tester.tap(
-        find.byKey(const ValueKey('local-agent-server-sign-in')),
-      );
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['signin']);
-    });
-
-    testWidgets('signed in: no sign-in entry', (tester) async {
-      await pump(tester, agentStatus(LocalAgentPhase.ready));
-      expect(find.text(_l10n.phoneServerCardRunning), findsOneWidget);
-      await openMenu(tester);
-      expect(
-        find.byKey(const ValueKey('local-agent-server-sign-in')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('a start past 8 s says it is still starting', (tester) async {
-      final runtime = await pump(tester, agentStatus(LocalAgentPhase.installed))
-        ..holdStart();
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-start')));
-      await tester.pump();
-      expect(find.text(_l10n.phoneServerCardStarting), findsOneWidget);
-      await tester.pump(const Duration(seconds: 9));
-      expect(find.text(_l10n.localAgentEntryStillStarting), findsOneWidget);
-      runtime.releaseStart(agentStatus(LocalAgentPhase.ready));
-      await tester.pumpAndSettle();
-      expect(find.text(_l10n.phoneServerCardRunning), findsOneWidget);
-    });
-
-    testWidgets('a failed start says it did not start, with the reason, and '
-        'a tap tries again', (tester) async {
-      final runtime = await pump(tester, agentStatus(LocalAgentPhase.installed))
-        ..startFailure = const LocalAgentFailure(
-          LocalAgentFailureKind.portInUse,
-          'port busy',
-        );
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-start')));
-      await tester.pumpAndSettle();
-      expect(find.text(_l10n.localAgentEntryDidNotStart), findsOneWidget);
-      expect(
-        find.text(
-          _l10n.localAgentCardActionFailed(_l10n.localAgentFailedPortInUse),
-        ),
-        findsOneWidget,
-      );
-      runtime.startFailure = null;
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-start')));
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['start', 'start']);
-    });
-
-    testWidgets('Remove confirms first, then removes', (tester) async {
-      final runtime = await pump(
-        tester,
-        agentStatus(LocalAgentPhase.installed),
-      );
-      await openMenu(tester);
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-remove')));
-      await tester.pumpAndSettle();
-      expect(find.text(_l10n.localAgentRemoveTitle), findsOneWidget);
-      await tester.tap(find.text(_l10n.localAgentRemoveKeep));
-      await tester.pumpAndSettle();
-      expect(runtime.calls, isEmpty);
-
-      await openMenu(tester);
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-remove')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(_l10n.localAgentRemove).last);
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['remove']);
-    });
-
-    testWidgets('an older Paseo offers Update, which opens the page where '
-        'updating shows its progress', (tester) async {
-      var managed = 0;
-      await pump(
-        tester,
-        agentStatus(LocalAgentPhase.ready, paseo: '0.0.1'),
-        onManage: () => managed++,
-      );
-      await openMenu(tester);
-      await tester.tap(find.byKey(const ValueKey('local-agent-server-update')));
-      await tester.pumpAndSettle();
-      expect(managed, 1);
-    });
-
-    testWidgets('Termux not answering keeps a saved server as Not answering '
-        'with Try again', (tester) async {
-      debugPlatformCapabilities = const PlatformCapabilities.android();
-      final runtime = FakeAgentRuntime(agentStatus(LocalAgentPhase.ready))
-        ..statusFailure = const LocalAgentFailure(
-          LocalAgentFailureKind.bridge,
-          'no answer',
-        );
-      await tester.pumpWidget(
-        _app(
-          LocalAgentServerEntry(
-            profiles: [savedAgentProfile()],
-            busy: false,
-            revision: 0,
-            runtime: runtime,
-            onConnect: (_) {},
-            onManage: () {},
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text(_l10n.phoneServerRowNotAnswering), findsOneWidget);
-      await openMenu(tester);
-      expect(
-        find.byKey(const ValueKey('local-agent-server-recheck')),
-        findsOneWidget,
-      );
     });
   });
 }

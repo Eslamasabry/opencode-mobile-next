@@ -79,26 +79,13 @@ String thisPhoneSize(int bytes) {
 }
 
 extension _ThisPhoneAnswer on _ThisPhoneScreenState {
-  /// Resident memory of what runs on this phone's host, when it was read:
-  /// the in-app Linux's own scan, or the Termux report the page reads for
-  /// Running on this phone (Termux's own app left out).
-  int? get _memory {
-    if (_host.kind == PhoneHostKind.inApp) return _memoryBytes;
-    final report = _processes;
-    if (report == null) return null;
-    final kb = report.processes
-        .where((p) => !p.isHostApp)
-        .fold<int>(0, (sum, p) => sum + p.rssKb);
-    return kb > 0 ? kb * 1024 : null;
-  }
+  /// Resident memory of what runs in the in-app Linux, when it was read.
+  int? get _memory => _memoryBytes;
 
   /// Reads the in-app Linux's memory once the page's other reads are done
   /// (they share the phone's one task slot). Left out when it fails.
   Future<void> _readMemory() async {
-    if (_host.kind != PhoneHostKind.inApp ||
-        _host.state != PhoneHostState.running) {
-      return;
-    }
+    if (_host.state != PhoneHostState.running) return;
     try {
       final scan = await LinuxManager(
         ref.read(builtinLinuxProvider),
@@ -110,48 +97,20 @@ extension _ThisPhoneAnswer on _ThisPhoneScreenState {
     }
   }
 
-  /// The Termux recovery for this host's saved connection, where Termux
-  /// runs (the same object the "Restart after a crash" row shows).
-  ManagedServerRecovery? get _termuxRecovery {
-    if (_host.kind != PhoneHostKind.termux ||
-        !platformCapabilities.supportsTermux) {
-      return null;
-    }
-    final profile = _host.profile;
-    if (profile == null) return null;
-    return ManagedServerRecovery.forProfile(
-      _connection.store.prefs,
-      profile.id,
-    );
-  }
-
   (_SelfRestart, DateTime?) _selfRestart(
     ValueListenable<BuiltinRecoveryState>? inApp,
-    ManagedServerRecovery? termux,
   ) {
-    if (_host.kind == PhoneHostKind.inApp) {
-      final value = inApp?.value;
-      if (value == null || value.profileId != _host.profile?.id) {
-        return (_SelfRestart.none, null);
-      }
-      return switch (value.phase) {
-        BuiltinRecoveryPhase.restarting => (_SelfRestart.restarting, null),
-        BuiltinRecoveryPhase.waiting => (
-          _SelfRestart.scheduled,
-          value.nextAttemptAt,
-        ),
-        BuiltinRecoveryPhase.exhausted => (_SelfRestart.exhausted, null),
-        _ => (_SelfRestart.none, null),
-      };
+    final value = inApp?.value;
+    if (value == null || value.profileId != _host.profile?.id) {
+      return (_SelfRestart.none, null);
     }
-    if (termux == null || !termux.enabled) return (_SelfRestart.none, null);
-    return switch (termux.phase) {
-      ManagedRecoveryPhase.restarting => (_SelfRestart.restarting, null),
-      ManagedRecoveryPhase.waitingToRetry => (
+    return switch (value.phase) {
+      BuiltinRecoveryPhase.restarting => (_SelfRestart.restarting, null),
+      BuiltinRecoveryPhase.waiting => (
         _SelfRestart.scheduled,
-        termux.nextAttemptAt,
+        value.nextAttemptAt,
       ),
-      ManagedRecoveryPhase.exhausted => (_SelfRestart.exhausted, null),
+      BuiltinRecoveryPhase.exhausted => (_SelfRestart.exhausted, null),
       _ => (_SelfRestart.none, null),
     };
   }
@@ -171,7 +130,6 @@ extension _ThisPhoneAnswer on _ThisPhoneScreenState {
   bool get _stoppedByPerson {
     final profile = _host.profile;
     if (profile == null) return false;
-    if (_host.kind == PhoneHostKind.termux) return true;
     final server = _performance?.services[BuiltinLinux.serverServiceName];
     return DeliberateServerStop.isMarked(_connection.store.prefs, profile.id) ||
         server?.lastStopRequested == true;
@@ -213,11 +171,10 @@ extension _ThisPhoneAnswer on _ThisPhoneScreenState {
   _Answer _answerNow(
     AppLocalizations l10n, {
     required ValueListenable<BuiltinRecoveryState>? recovery,
-    required ManagedServerRecovery? termuxRecovery,
     required ThermalGuard? guard,
   }) {
     final state = _host.state;
-    final (selfRestart, restartAt) = _selfRestart(recovery, termuxRecovery);
+    final (selfRestart, restartAt) = _selfRestart(recovery);
     final runtimeName = _runtimeName(_host.runtime);
     KitAction act(String key, String label, Future<void> Function() run) =>
         KitAction(
@@ -259,28 +216,7 @@ extension _ThisPhoneAnswer on _ThisPhoneScreenState {
         break;
     }
 
-    // Termux cannot be reached: its cause and the one fix.
-    final reach = _host.termuxProblem;
-    if (reach != null) {
-      final words = termuxProblemWords(
-        l10n,
-        reach,
-        runtime: _host.runtimeKnown ? runtimeName : null,
-      );
-      return _Answer(
-        tone: KitAnswerTone.needsYou,
-        answer: l10n.thisPhoneAnswerTermux,
-        line: words.line,
-        lineIsProblem: true,
-        primary: act(
-          'this-phone-termux-fix',
-          words.action,
-          () => _fixTermux(reach),
-        ),
-      );
-    }
     final problem = _host.problem;
-    final switchTarget = _host.switchTarget;
     _Answer needs(
       String answer,
       String line,
@@ -301,7 +237,7 @@ extension _ThisPhoneAnswer on _ThisPhoneScreenState {
         act(
           'this-phone-recover-ownership',
           l10n.e7SetupOpenAppSettings,
-          TermuxBridge.openAppSettings,
+          AppInfoPlatform.openAppSettings,
         ),
       );
     }
@@ -317,21 +253,6 @@ extension _ThisPhoneAnswer on _ThisPhoneScreenState {
         tone: KitAnswerTone.off,
         answer: l10n.thisPhoneAnswerNotSetUp,
         primary: act('this-phone-set-up', l10n.thisPhoneSetUp, _setUp),
-      );
-    }
-    if (state == PhoneHostState.needsYou && switchTarget != null) {
-      return needs(
-        l10n.thisPhoneAnswerSwitchStopped,
-        l10n.thisPhoneSwitchStopped(_runtimeName(switchTarget)),
-        act(
-          'this-phone-switch-retry',
-          l10n.setupSwitchRetry(_runtimeName(switchTarget)),
-          () => openPhoneSetupTermux(
-            context,
-            job: TermuxHostJob.switchRuntime,
-            target: switchTarget,
-          ),
-        ),
       );
     }
     if (state == PhoneHostState.needsYou) {

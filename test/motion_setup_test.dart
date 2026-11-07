@@ -67,7 +67,6 @@ Widget _card({
       baseUrl: 'http://127.0.0.1:4096',
       error: error,
       attempts: 1,
-      supportsTermux: true,
       onChangeServer: () {},
       onRetry: () {},
       onStartPhoneServer: phone ? () {} : null,

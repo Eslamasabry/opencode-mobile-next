@@ -16,8 +16,6 @@ import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_progress_screen.dart';
@@ -217,13 +215,11 @@ const _sceneDevice = VoiceDeviceInfo(
   hasMicrophone: true,
 );
 
-Widget _start({TermuxRunningServer? termux, bool inApp = false}) =>
-    PhoneSetupStartScreen(
-      termuxProbe: () async => termux ?? const TermuxRunningServer.absent(),
-      inAppProbe: () async => inApp,
-      deviceProbe: () async => _sceneDevice,
-      openProgress: (_) async {},
-    );
+Widget _start({bool inApp = false}) => PhoneSetupStartScreen(
+  inAppProbe: () async => inApp,
+  deviceProbe: () async => _sceneDevice,
+  openProgress: (_) async {},
+);
 
 Widget _progress() => PhoneSetupProgressScreen(
   engine: PhoneSetup.engine,
@@ -344,25 +340,6 @@ final setupScenes = <SetupScene>[
     ),
   ),
   SetupScene('setup_start_ready', home: () => _start(inApp: true)),
-  SetupScene(
-    'setup_start_termux',
-    home: () => _start(
-      termux: TermuxRunningServer.running(
-        runtime: TermuxRuntime.openCode1,
-        version: '1.18.29',
-        observedAt: DateTime(2026, 9, 24),
-      ),
-    ),
-    before: (tester) async {
-      await tester.tap(
-        find.byKey(const ValueKey('phone-setup-start-other-ways')),
-      );
-      // Long enough for the tap's ink to fade.
-      for (var i = 0; i < 12; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-    },
-  ),
   SetupScene('setup_customize', home: _start, before: _openCustomize),
   SetupScene(
     'setup_progress_running',
@@ -459,8 +436,6 @@ Future<void> pumpSetupScene(
   final engine = FakeSetupEngine();
   if (scene.progress case final progress?) engine.emit(progress);
   PhoneSetup.engine = engine;
-  // No Termux job: the start screen also reads Termux's engine (P1.7).
-  PhoneSetup.termux = FakeSetupEngine();
   final linux = scene.linux ?? SceneLinux();
   final navigatorKey = GlobalKey<NavigatorState>();
   await tester.pumpWidget(

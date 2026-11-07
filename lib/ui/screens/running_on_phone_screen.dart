@@ -41,7 +41,7 @@ import '../kit/kit.dart';
 import '../widgets/phone_server_card.dart' show formatPhoneStorage;
 import '../widgets/product_states.dart' show productErrorDetails;
 import '../widgets/running_on_phone_text.dart';
-import 'termux_processes_screen.dart' show formatTermuxDuration;
+import '../widgets/process_format.dart';
 
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -669,11 +669,11 @@ class _Details extends StatelessWidget {
             : l10n.runningPhoneFromChat(conversation!),
       if (heavyFor != null)
         l10n.runningPhoneHeavyFor(
-          formatTermuxDuration(l10n, heavyFor.inSeconds),
+          formatProcessDuration(l10n, heavyFor.inSeconds),
         ),
       if (node.stuck && !node.leftBehind)
         l10n.runningPhoneStuckWhy(
-          formatTermuxDuration(l10n, p.elapsed.inSeconds),
+          formatProcessDuration(l10n, p.elapsed.inSeconds),
         ),
       if (node.root) l10n.runningPhoneServerRoot,
     ];

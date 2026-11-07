@@ -74,6 +74,7 @@ class _Account extends GitHubAccountController {
       isPrivate: isPrivate,
     );
   }
+
   @override
   Future<void> startSignIn() async => started++;
   @override
@@ -378,7 +379,7 @@ void main() {
     tester,
   ) async {
     final shell = FakeGitShell([_snapshot(), _snapshot()]);
-    await _open(tester, shell, host: GitHost.termux);
+    await _open(tester, shell, host: GitHost.server);
     expect(find.byKey(const Key('git-row-github')), findsNothing);
     await _openMore(tester);
     expect(
@@ -1026,7 +1027,7 @@ void main() {
             shells.add(shell);
             return GitWorkspaceResolution.available(
               GitWorkspace(
-                host: GitHost.termux,
+                host: GitHost.server,
                 directory: directory!,
                 shell: shell,
               ),
@@ -1054,7 +1055,7 @@ void main() {
         resolve: (profile, gateway, directory) =>
             GitWorkspaceResolution.available(
               GitWorkspace(
-                host: GitHost.termux,
+                host: GitHost.server,
                 directory: directory!,
                 shell: FakeGitShell([_snapshot()]),
               ),

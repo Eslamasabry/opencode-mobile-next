@@ -37,7 +37,6 @@ import 'builtin/reply_watch.dart';
 import 'builtin/setup/phone_setup.dart';
 import 'builtin/setup/setup_engine.dart' show ChannelSetupEngine;
 import 'builtin/setup/setup_finish.dart';
-import 'builtin/setup/termux_setup_finish.dart';
 import 'builtin/team/builtin_team.dart' show BuiltinTeam;
 import 'builtin/thermal_guard.dart' show ThermalNoticeKind;
 import 'builtin/thermal_guard_teams.dart';
@@ -65,8 +64,6 @@ import 'state/connection.dart';
 import 'state/in_app_auto_update.dart';
 import 'state/managed_move.dart';
 import 'state/automation_policy.dart';
-import 'state/local_server_controls.dart';
-import 'termux/bridge.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
@@ -86,6 +83,9 @@ import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/product_states.dart'
     show productErrorText, productErrorDetails, ProductErrorLocale;
 import 'ui/widgets/saved_server_connection_card.dart';
+import 'ui/widgets/termux_retired_notice.dart';
+import 'state/termux_retired.dart';
+import 'platform/app_info.dart';
 import 'ui/widgets/session_address_sheets.dart';
 import 'ui/widgets/app_connection_status.dart';
 import 'ui/widgets/managed_move_view.dart';
@@ -101,10 +101,6 @@ import 'ui/screens/team/project_destination.dart';
 import 'ui/screens/team_conversation/team_conversation.dart'
     show TeamConversation;
 import 'ui/screens/this_phone_screen.dart';
-import 'state/phone_host.dart' show PhoneHostKind;
-import 'state/termux_host_setup.dart' show TermuxHostJob;
-import 'ui/screens/phone_setup/phone_setup_termux_screen.dart'
-    show openPhoneSetupTermux;
 import 'ui/screens/linux_manager/linux_reset.dart' show linuxResetSelection;
 import 'ui/screens/phone_setup/phone_setup_routes.dart'
     show
@@ -543,15 +539,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               '/home': (_) => const HomeScreen(),
               '/guide': (_) => GuideScreen(embedded: false),
               '/about': (_) => const AboutScreen(),
-              // This phone (in the app or in Termux) exists only on
-              // Android: a desktop deep link, or any leftover push, must not
-              // land on a page with no phone behind it.
-              if (platformCapabilities.supportsTermux)
-                thisPhoneRoute: (context) => ThisPhoneScreen(
-                  kind:
-                      ModalRoute.of(context)?.settings.arguments
-                          as PhoneHostKind?,
-                ),
+              // This phone exists only on Android: a desktop deep link, or
+              // any leftover push, must not land on a page with no phone
+              // behind it.
+              if (platformCapabilities.supportsThisPhone)
+                thisPhoneRoute: (_) => const ThisPhoneScreen(),
               '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
             },
             onGenerateRoute: (settings) {

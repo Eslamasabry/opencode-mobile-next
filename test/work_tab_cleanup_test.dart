@@ -47,7 +47,6 @@ void main() {
             baseUrl: 'http://127.0.0.1:4096',
             error: null,
             attempts: 1,
-            supportsTermux: true,
             notAnswering: notAnswering,
             onChangeServer: () => changes++,
             onRetry: () => retries++,

@@ -26,11 +26,9 @@ import '../../state/external_agents.dart';
 import '../../state/offline_queue.dart';
 import '../../state/phrase_chips.dart';
 import '../../state/profile_monitor.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../domain/settings_scope.dart';
 import '../../state/profiles.dart';
 import '../../state/settings_access.dart';
-import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../early_l10n.dart';
 import '../kit/kit.dart';
@@ -58,9 +56,7 @@ import 'agents/agents_screen.dart' show AgentsScreen;
 import 'servers_screen.dart' show ServersRouteRequest;
 import 'capabilities_screen.dart' show openExternalAgents;
 import '../widgets/pickers.dart' show showModelPicker;
-import '../widgets/termux_running_server_entry.dart' show isPhoneOwnServer;
 import 'server_capabilities_screen.dart';
-import 'this_phone_screen.dart' show openThisPhone;
 import '../widgets/team_discover.dart';
 import '../search/search_index.dart';
 import '../teaching/teaching.dart' show offerMakeItYours;
@@ -222,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (servers.isEmpty) return copy.settingsHubServerNone;
     final profile = controller.profile;
     if (profile == null) return l10n.settingsV3ServersCount(servers.length);
-    final where = isPhoneOwnServer(profile)
+    final where = looksLikeInAppServer(profile)
         ? copy.settingsHubServerOnPhone
         : KitBidi.auto(serverDisplayName(profile, l10n, among: servers));
     final state = switch (controller.connectionStatus.phase) {

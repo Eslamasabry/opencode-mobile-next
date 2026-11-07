@@ -132,7 +132,6 @@ void main() {
               gateway: v2Api,
               operations: Api2OperationsGateway(client: v2Api.client),
             ),
-      localWakeLockEnsurer: () async {},
       draftAttachmentVault: StashMemoryVault(),
       stashAttachmentVault: StashMemoryVault(),
     );

@@ -482,9 +482,8 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       ...quietLines,
       // Room between the notes and the first section label.
       if (quietLines.isNotEmpty) SizedBox(height: tokens.space2),
-      // The leftover-process notice: a quiet status with its Stop, drawn
-      // only while the phone's watcher reports a helper.
-      host.leftoverNotice(context),
+      // A saved setup from Termux: the one notice about it.
+      host.termuxRetiredNotice(context),
       // Quiet lines about the agents on this phone, each with its action.
       AgentStatusNotices(host: host),
     ];

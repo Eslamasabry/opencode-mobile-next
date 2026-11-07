@@ -757,18 +757,16 @@ void main() {
         run: (progress) async {
           progress(
             const GitRepairProgress(
-              GitRepairStage.askingTermux,
+              GitRepairStage.restoring,
               done: 3,
               total: 9,
             ),
           );
-          stages.add(GitRepairStage.askingTermux);
+          stages.add(GitRepairStage.restoring);
           // The project can be read now: the next start goes through.
           host.fake.startError = null;
           return const GitRepairOutcome(GitRepairResult.repaired, restored: 9);
         },
-        allowTermux: () async => true,
-        openTermux: () async {},
       );
       host = await failOnce(tester, repair);
 
@@ -786,7 +784,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('git-repair-start')));
       await tester.pumpAndSettle();
 
-      expect(stages, [GitRepairStage.askingTermux]);
+      expect(stages, [GitRepairStage.restoring]);
       expect(host.fake.started, hasLength(2));
       expect(host.fake.started.last.prompt, 'Fix the build');
       expect(host.shown, ['ses_started']);
@@ -802,8 +800,6 @@ void main() {
           missing: ['objects/ab/cdef', 'objects/12/3456', 'objects/9a/bc'],
           details: 'Missing (3)',
         ),
-        allowTermux: () async => true,
-        openTermux: () async {},
       );
       final host = await failOnce(tester, repair);
       await tester.tap(find.byKey(const ValueKey('chats-new-git-repair')));
@@ -821,35 +817,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(host.fake.started, hasLength(1));
       expect(find.text('Fix the build'), findsOneWidget);
-    });
-
-    testWidgets('Termux not allowed yet: Allow and repair asks, then repairs', (
-      tester,
-    ) async {
-      var runs = 0;
-      var asked = 0;
-      final repair = GitRepairActions(
-        run: (progress) async => ++runs == 1
-            ? const GitRepairOutcome(
-                GitRepairResult.termux,
-                termux: GitRepairTermux.notAllowed,
-              )
-            : const GitRepairOutcome(GitRepairResult.repaired, restored: 1),
-        allowTermux: () async {
-          asked++;
-          return true;
-        },
-        openTermux: () async {},
-      );
-      await failOnce(tester, repair);
-      await tester.tap(find.byKey(const ValueKey('chats-new-git-repair')));
-      await tester.pumpAndSettle();
-      expect(find.text('Files are in Termux'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('git-repair-allow')));
-      await tester.pumpAndSettle();
-      expect(asked, 1);
-      expect(runs, 2);
-      expect(find.text('alpha is repaired'), findsOneWidget);
     });
 
     testWidgets('where nothing can repair it, the words say what to do', (

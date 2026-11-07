@@ -20,7 +20,6 @@ import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart'
     show BuiltinServerRestoreRecipe;
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_ready_screen.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_start_screen.dart';
 
@@ -87,7 +86,6 @@ void main() {
       SetupScene(
         'open',
         home: () => PhoneSetupStartScreen(
-          termuxProbe: () async => const TermuxRunningServer.absent(),
           inAppProbe: () async => true,
           openProgress: (_) async {},
         ),

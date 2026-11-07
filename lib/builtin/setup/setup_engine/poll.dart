@@ -27,14 +27,8 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     if (following || _foreground()) {
       try {
         await _refresh(timeout: readTimeout);
-        _hostAbsent = false;
       } on BuiltinLinuxException catch (error) {
-        if (_termuxAbsent(error)) {
-          // Expected on a phone without Termux: not a failure to report.
-          _hostAbsent = true;
-        } else {
-          debugPrint(KitRedact.text('setup: status poll failed: $error'));
-        }
+        debugPrint(KitRedact.text('setup: status poll failed: $error'));
       } catch (error, stack) {
         // Polling is the only way the screens see the job, and the only way
         // the app's own step gets run: one bad read must never end it.
@@ -47,7 +41,7 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     } else if (_jobRunning || _handoverUncertain) {
       _pollIdle = false;
       _poll = Timer(pollInterval, _tick);
-    } else if (_progress.watched && !_hostAbsent) {
+    } else if (_progress.watched) {
       // Nothing runs: a page merely shows the last job. A job this engine
       // starts brings the next read forward (see [_ensurePolling]).
       _pollIdle = true;
@@ -58,14 +52,6 @@ extension _SetupEnginePoll on ChannelSetupEngine {
       _poll = null;
     }
   }
-
-  /// Termux is not there to ask (not installed, or RUN_COMMAND refused).
-  bool _termuxAbsent(BuiltinLinuxException error) =>
-      host == SetupHostKind.termux &&
-      !_jobRunning &&
-      !_handoverUncertain &&
-      (error.code == 'permission_denied' ||
-          error.code == 'service_unavailable');
 
   Future<void> _refresh({Duration? timeout}) async {
     final record = await _read(timeout: timeout);
@@ -89,14 +75,6 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     if (_startingJobId != null && record.jobId != _startingJobId) return;
     _show(record);
     _followAppStep(record);
-    if (host == SetupHostKind.termux &&
-        record.state == 'running' &&
-        _cancelRequested) {
-      // A cancel during a lost start reply must survive until status recovers.
-      // Keep the flag through failures so polling retries before any finisher.
-      await _linux.cancelSetup();
-      return;
-    }
     if (record.state == 'running' &&
         record.current == SetupComponentIds.start &&
         _finishing != record.jobId) {
@@ -213,8 +191,7 @@ extension _SetupEnginePoll on ChannelSetupEngine {
           'setup.finish',
           () => finish(
             SetupFinishRequest(
-              host: host,
-              runtime: TermuxRuntime.parse(step.data['runtime']),
+              runtime: OpenCodeRuntime.parse(step.data['runtime']),
               openCodeChanged: step.data['openCodeChanged'] == 'true',
               version: version,
             ),
@@ -260,24 +237,20 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     final text = await _statusText(timeout ?? readTimeout, scope);
     final record = SetupJobRecord.parse(text);
     if (text != null && text.trim().isNotEmpty && record == null) {
-      throw BuiltinLinuxException(
-        host == SetupHostKind.termux
-            ? 'The saved Termux setup could not be read.'
-            : 'The saved phone setup could not be read.',
+      throw const BuiltinLinuxException(
+        'The saved phone setup could not be read.',
         code: 'setup_status_invalid',
       );
     }
     if (record != null) {
-      // Hostless records predate host selection and belong only to built-in.
-      final recordedHost = record.host ?? SetupHostKind.builtin.name;
-      if (recordedHost != host.name) {
+      // Hostless records predate host selection and belong to built-in. A
+      // record an older build wrote for another host is not this one's.
+      final recordedHost = record.host ?? builtinSetupHostName;
+      if (recordedHost != builtinSetupHostName) {
         throw const BuiltinLinuxException(
           'The saved setup belongs to a different host.',
           code: 'setup_host_mismatch',
         );
-      }
-      if (host == SetupHostKind.termux) {
-        TermuxSetupHost.validateParams(record.params);
       }
       _record = record;
     }

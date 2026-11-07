@@ -114,13 +114,8 @@ extension _OcAppLaunchRoute on _OcAppState {
             await _openUsageSignInForLaunch(navigator, current);
           case LaunchAction.linux:
             _consumeLaunchAction(current);
-            if (platformCapabilities.supportsTermux) {
-              unawaited(
-                navigator.pushNamed(
-                  thisPhoneRoute,
-                  arguments: PhoneHostKind.inApp,
-                ),
-              );
+            if (platformCapabilities.supportsThisPhone) {
+              unawaited(navigator.pushNamed(thisPhoneRoute));
             }
           case LaunchAction.phoneSetup:
           case LaunchAction.phoneSetupDone:

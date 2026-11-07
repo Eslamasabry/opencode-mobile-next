@@ -8,9 +8,10 @@ import '../../state/download_size.dart';
 /// particular component, so adding one (AI Team, Python, anything) never
 /// changes this file.
 
-/// Where a setup job installs and runs OpenCode: the app's own Linux, or
-/// Termux's. The components are the same; a few checks differ by host.
-enum SetupHostKind { builtin, termux }
+/// The host name a setup job record carries for the app's own Linux, the
+/// only host phone setup installs into. A record without a host predates
+/// the field and belongs to it too.
+const builtinSetupHostName = 'builtin';
 
 /// One installable piece: a check that says whether it is there, and an
 /// install that puts it there and reports progress with `::oc` lines.

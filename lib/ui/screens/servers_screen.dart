@@ -20,27 +20,19 @@ import '../../state/connection.dart';
 import '../../state/codex_connection_probe.dart';
 import '../../state/paseo_connection_probe.dart';
 import '../../state/pairing.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../state/profiles.dart';
 import '../../state/queued_prompt_removal.dart';
 import '../../state/first_run.dart';
-import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../kit/scenes/servers_link_scene.dart';
-import '../../builtin/setup/setup_contract.dart' show SetupState;
 import '../setup_commands.dart';
 import '../widgets/product_states.dart'
     show connectionErrorText, productErrorDetails, productErrorText;
 import '../widgets/team_host_form.dart';
-import '../widgets/local_agent_server_entry.dart';
 import '../widgets/phone_server_card.dart';
 import '../widgets/queued_prompt_move_sheet.dart';
-import '../widgets/termux_migration_entry.dart';
-import '../../state/termux_running_server.dart';
-import '../widgets/termux_running_server_entry.dart';
 import '../widgets/safety_confirms.dart';
-import '../../state/local_server_controls.dart';
 import 'phone_setup/phone_setup_routes.dart';
 import 'phone_setup/phone_setup_welcome_entry.dart';
 import 'demo_screen.dart';
@@ -49,7 +41,6 @@ import 'agent_account_screen.dart';
 import 'pairing_scanner_screen.dart';
 import 'tailscale_setup_screen.dart';
 import 'settings_screen.dart' show openServerPage;
-import 'this_phone_screen.dart' show openThisPhone;
 import '../../state/tailscale_address.dart';
 import 'capabilities_screen.dart' show openExternalAgents;
 
@@ -132,8 +123,7 @@ class ServersRouteRequest {
     this.detectedRunning = false,
   }) : kind = ServersRouteRequestKind.connect,
        backend = null,
-       initialUrl = null,
-       openCode2 = false;
+       initialUrl = null;
 
   /// Open a new server editor, optionally starting with the requested kind
   /// or, for a conversation link that carries one, the validated address
@@ -142,17 +132,7 @@ class ServersRouteRequest {
   const ServersRouteRequest.add({this.backend, this.initialUrl})
     : kind = ServersRouteRequestKind.add,
       profileID = null,
-      detectedRunning = false,
-      openCode2 = false;
-
-  /// Ask for the phone server's sign-in, saved as [profileID] when it exists.
-  const ServersRouteRequest.enterPhoneCredentials({
-    this.profileID,
-    required this.openCode2,
-  }) : kind = ServersRouteRequestKind.enterPhoneCredentials,
-       backend = null,
-       initialUrl = null,
-       detectedRunning = true;
+      detectedRunning = false;
 
   /// Open the editor for the saved server [profileID] (its name, address and
   /// sign-in), whichever server the app is connected to.
@@ -160,32 +140,23 @@ class ServersRouteRequest {
     : kind = ServersRouteRequestKind.edit,
       backend = null,
       initialUrl = null,
-      detectedRunning = false,
-      openCode2 = false;
+      detectedRunning = false;
 
   /// Confirm and forget the saved server [profileID].
   const ServersRouteRequest.forget(String this.profileID)
     : kind = ServersRouteRequestKind.forget,
       backend = null,
       initialUrl = null,
-      detectedRunning = false,
-      openCode2 = false;
+      detectedRunning = false;
 
   final ServersRouteRequestKind kind;
   final ServerBackend? backend;
   final String? initialUrl;
   final String? profileID;
   final bool detectedRunning;
-  final bool openCode2;
 }
 
-enum ServersRouteRequestKind {
-  connect,
-  add,
-  enterPhoneCredentials,
-  forget,
-  edit,
-}
+enum ServersRouteRequestKind { connect, add, forget, edit }
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {

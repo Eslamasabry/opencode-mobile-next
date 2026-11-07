@@ -316,15 +316,12 @@ void main() {
     tester,
   ) async {
     final previous = PhoneSetup.engine;
-    final previousTermux = PhoneSetup.termux;
     PhoneSetup.engine = FakeSetupEngine();
     // Phone setup now observes both hosts. Neither should poll a native
     // channel in this route test.
-    PhoneSetup.termux = FakeSetupEngine();
     answerVoiceDeviceProbe();
     addTearDown(() {
       PhoneSetup.engine = previous;
-      PhoneSetup.termux = previousTermux;
     });
     linux.serverDies = true;
     await mount(tester);

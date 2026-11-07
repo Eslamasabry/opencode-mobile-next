@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
@@ -57,8 +56,7 @@ void main() {
             AppearanceSettingsScreen(controller: ref.watch(connProvider)),
       ),
     ),
-    'this-phone': (s, e) =>
-        sized(s, e, const ThisPhoneScreen(kind: PhoneHostKind.termux)),
+    'this-phone': (s, e) => sized(s, e, const ThisPhoneScreen()),
   };
 
   for (final name in screens.keys) {

@@ -53,7 +53,7 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['termux-setup-installed'],
         // Always findable on a phone that can host OpenCode: set up it is
         // the place of its own, otherwise it starts the setup.
-        gate: (scope) => scope.platform.supportsTermux,
+        gate: (scope) => scope.platform.supportsThisPhone,
         open: (context, scope) => _phoneSetUp(scope)
             ? openThisPhone(context)
             : openPhoneSetupStart(context),
@@ -84,7 +84,8 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['phone-setup-start'],
         // Local Android tools belong to the phone, not the connected server's
         // capability set.
-        gate: (scope) => scope.platform.supportsTermux && !_phoneSetUp(scope),
+        gate: (scope) =>
+            scope.platform.supportsThisPhone && !_phoneSetUp(scope),
         open: (context, _) => openPhoneSetupStart(context),
       ),
       // Agent: the model, who pays for it, what it can use, the AI Team.

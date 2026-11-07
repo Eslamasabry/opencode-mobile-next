@@ -12,7 +12,6 @@ import 'package:opencode_mobile/ui/kit/kit_capability_explainer.dart';
 
 const _hostColumns = <String, KitHost>{
   'builtin': KitHost.thisPhone,
-  'termux': KitHost.termux,
   'oc2Computer': KitHost.openCode2,
   'codex': KitHost.codex,
   'paseo': KitHost.paseo,

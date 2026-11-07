@@ -108,8 +108,7 @@ mixin _ConnectionControllerConnect on ChangeNotifier {
     return owner != null &&
         (owner.requiresOpenCode2Migration || owner.openCode2HistoryPending) &&
         owner.backend == ServerBackend.openCode &&
-        (TermuxBridge.managesServerUrl(owner.baseUrl) ||
-            BuiltinLinux.managesServerUrl(owner.baseUrl));
+        BuiltinLinux.managesServerUrl(owner.baseUrl);
   }
 
   bool get managedRuntimeMismatch =>
@@ -125,13 +124,6 @@ mixin _ConnectionControllerConnect on ChangeNotifier {
     pollInterval: pollInterval,
   );
 
-  /// Prepares the app-owned local server for an explicitly confirmed runtime
-  /// switch. This checks work observed by this app, not server-wide idleness.
-  /// Recovery must be durably disabled before retiring the local transport.
-  /// Saved profiles, credentials, drafts and queued prompts remain intact.
-  Future<void> prepareManagedRuntimeSwitch() =>
-      _self._prepareManagedRuntimeSwitch();
-
   Future<void> disconnect({bool keepActive = false, bool silent = false}) =>
       _self._disconnect(keepActive: keepActive, silent: silent);
 
@@ -143,8 +135,7 @@ mixin _ConnectionControllerConnect on ChangeNotifier {
     if (candidate.backend == ServerBackend.openCode &&
         (candidate.requiresOpenCode2Migration ||
             candidate.openCode2HistoryPending) &&
-        (BuiltinLinux.managesServerUrl(candidate.baseUrl) ||
-            TermuxBridge.managesServerUrl(candidate.baseUrl))) {
+        BuiltinLinux.managesServerUrl(candidate.baseUrl)) {
       return const ServerCapabilities();
     }
     if (_connectedProfile?.id == candidate.id && _self.api != null) {
@@ -226,31 +217,6 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
           '\u0000${profile.baseUrl}',
   ].join('\u0001');
 
-  /// Asks Termux to hold its wake lock without waiting for the answer. The
-  /// request round-trips through Termux's command service and can take up to
-  /// its ten-second timeout; nothing the app does next depends on it, and
-  /// awaiting it put that delay in front of every connect and every return
-  /// to the app.
-  void _ensureLocalServerWakeLock() {
-    if (_disposed || !keepLiveInBackground) return;
-    final profile = _connectedProfile;
-    if (profile == null ||
-        profile.usesAgentSocket ||
-        !_isLoopbackUrl(profile.baseUrl) ||
-        // The built-in Linux server lives in this app's own process, not in
-        // Termux: a Termux wake lock would only launch Termux for nothing.
-        BuiltinLinux.managesServerUrl(profile.baseUrl)) {
-      return;
-    }
-    unawaited(
-      Future<void>.sync(_localWakeLockEnsurer).catchError((Object _) {
-        // The profile may point at a developer server rather than managed
-        // Termux. Transport recovery must continue even when the bridge is
-        // not installed or Android has revoked its command permission.
-      }),
-    );
-  }
-
   /// Constructs one transport and operations pair for the selected backend.
   ({ServerGateway gateway, ServerOperationsGateway operations})
   _buildTransportPair(ServerProfile profile) {
@@ -324,8 +290,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     }
     if (profile.requiresOpenCode2Migration &&
         profile.backend == ServerBackend.openCode &&
-        (TermuxBridge.managesServerUrl(profile.baseUrl) ||
-            BuiltinLinux.managesServerUrl(profile.baseUrl))) {
+        BuiltinLinux.managesServerUrl(profile.baseUrl)) {
       final generation = _beginGeneration(
         preserveConnectionAttempt: preserveConnectionAttempt,
       );
@@ -357,7 +322,6 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       // Reconnecting the same owner (including a protocol alias) does not.
       ++_paIdleLifecycleEpoch;
     }
-    _syncProfileServices();
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
@@ -441,7 +405,6 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     if (!_isCurrent(generation, currentApi)) return;
 
     try {
-      _ensureLocalServerWakeLock();
       final health = await PerfTrace.span('connect.health', currentApi.health);
       if (!_isCurrent(generation, currentApi)) return;
       if (!health.healthy) {
@@ -451,8 +414,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       // A remote owner upgrades their own server. Once OC2 health is proven,
       // retire only its legacy metadata marker, without any phone-side import.
       if (profile.requiresOpenCode2Migration &&
-          !BuiltinLinux.managesServerUrl(profile.baseUrl) &&
-          !TermuxBridge.managesServerUrl(profile.baseUrl)) {
+          !BuiltinLinux.managesServerUrl(profile.baseUrl)) {
         profile.requiresOpenCode2Migration = false;
         try {
           await store.upsert(profile);
@@ -594,8 +556,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       );
       if (result.unsupportedLegacy) {
         passwordRejected = false;
-        if (BuiltinLinux.managesServerUrl(profile.baseUrl) ||
-            TermuxBridge.managesServerUrl(profile.baseUrl)) {
+        if (BuiltinLinux.managesServerUrl(profile.baseUrl)) {
           profile.requiresOpenCode2Migration = true;
           await store.upsert(profile);
           return const ServerProbeResult.failure(
@@ -607,14 +568,6 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       final detected = result.flavor;
       if (detected == ServerFlavor.unknown || detected == profile.flavor) {
         return null;
-      }
-      // Both managed runtimes share an address, but retain separate profile
-      // identity, credentials and local history. Detecting its current owner
-      // is not permission to turn the saved profile into the other runtime.
-      if (TermuxBridge.managesServerUrl(profile.baseUrl)) {
-        return const ServerProbeResult.failure(
-          ConnectionController.managedRuntimeMismatchMessage,
-        );
       }
       profile.flavor = detected;
       if (result.version != null) profile.serverVersion = result.version;
@@ -672,94 +625,6 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       await Future<void>.delayed(pollInterval);
     }
     return false;
-  }
-
-  /// The body of [prepareManagedRuntimeSwitch].
-  Future<void> _prepareManagedRuntimeSwitch() async {
-    bool isManagedLocal(ServerProfile? value) =>
-        value != null &&
-        value.backend == ServerBackend.openCode &&
-        (TermuxBridge.managesServerUrl(value.baseUrl) ||
-            BuiltinLinux.managesServerUrl(value.baseUrl));
-
-    Set<String> managedIDs() => {
-      for (final value in store.profiles)
-        if (isManagedLocal(value)) value.id,
-    };
-
-    void checkKnownWork() {
-      final ids = managedIDs();
-      final current = _connectedProfile ?? profile;
-      if (isManagedLocal(current) &&
-          (busySessions.isNotEmpty ||
-              retryStates.isNotEmpty ||
-              permissions.isNotEmpty ||
-              questions.isNotEmpty ||
-              forms.isNotEmpty ||
-              _inboxBySession.values.any((items) => items.isNotEmpty) ||
-              _flushingOfflineQueue ||
-              _queuedPromptInFlight != null ||
-              _pendingReplies.isNotEmpty ||
-              _revertMutations.isNotEmpty)) {
-        throw StateError(
-          'Finish the running work and pending requests on this phone before '
-          'switching OpenCode versions.',
-        );
-      }
-      for (final id in ids) {
-        final observed = _profileMonitor?.snapshotFor(id);
-        if (observed?.isCurrent == true &&
-            ((observed?.runningCount ?? 0) > 0 ||
-                (observed?.pendingCount ?? 0) > 0)) {
-          throw StateError(
-            'This phone has running work or pending requests. Open its server '
-            'profile and finish them before switching OpenCode versions.',
-          );
-        }
-      }
-      final inFlight = _queuedPromptInFlight;
-      if (inFlight != null &&
-          _queueStore.load().any(
-            (entry) => entry.id == inFlight && ids.contains(entry.profileID),
-          )) {
-        throw StateError(
-          'Wait for the prompt being sent on this phone to finish before '
-          'switching OpenCode versions.',
-        );
-      }
-    }
-
-    checkKnownWork();
-    try {
-      for (final id in managedIDs()) {
-        await ManagedServerRecovery.suspendForProfile(store.prefs, id);
-      }
-    } catch (_) {
-      throw StateError(
-        'Automatic server recovery could not be disabled. Try again before '
-        'switching OpenCode versions.',
-      );
-    }
-    // Work may have arrived while recovery revocation was being persisted.
-    checkKnownWork();
-    if (isManagedLocal(_connectedProfile ?? profile)) {
-      // Clear the remembered connection before retiring its transport so
-      // lifecycle recovery cannot reconnect the old runtime at this address.
-      // Use the serialized writer directly: disconnect() absorbs storage
-      // errors, while a runtime switch must not proceed after one.
-      try {
-        await _writeActiveProfile(_generation, null);
-      } catch (_) {
-        throw StateError(
-          'The local connection could not be cleared. Try again before '
-          'switching OpenCode versions.',
-        );
-      }
-      checkKnownWork();
-      if (isManagedLocal(_connectedProfile ?? profile)) {
-        await disconnect(keepActive: true);
-      }
-    }
   }
 
   /// The body of [disconnect].

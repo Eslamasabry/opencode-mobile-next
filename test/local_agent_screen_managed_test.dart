@@ -127,7 +127,7 @@ Widget _app(ConnectionController controller) => ProviderScope(
     theme: AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: LocalAgentScreen(onConnected: () {}),
+    home: const LocalAgentScreen(),
   ),
 );
 

@@ -1,5 +1,9 @@
 # OpenCode 2 on-device (Termux) feasibility — beta-18600
 
+> **Retired (2026-11-07).** The app no longer runs anything in Termux;
+> built-in Linux (`lib/builtin/`) is its only engine on the phone. This page
+> is kept as history.
+
 Desk research, 2026-08-29. Verdict up front: **the self-contained-phone story
 survives the v2 port, essentially unchanged**, because our shipping v1 pipeline
 never depended on anything v2 removed. What changes is a package name, a binary

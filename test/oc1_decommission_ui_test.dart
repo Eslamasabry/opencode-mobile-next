@@ -70,7 +70,6 @@ void main() {
             baseUrl: 'https://work.example.test',
             error: unsupportedOpenCode1Message,
             attempts: 1,
-            supportsTermux: false,
             onChangeServer: () {},
             onRetry: () {},
           ),

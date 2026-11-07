@@ -18,7 +18,6 @@ import 'package:opencode_mobile/ui/kit/scenes/setup_unplugged_scene.dart';
 final _scenes = <String, (KitScene, double)>{
   'fresh': (const SetupPhoneScene(), 240),
   'starting': (const SetupPhoneScene(mood: SetupPhoneMood.starting), 240),
-  'termux': (const SetupPhoneScene(mood: SetupPhoneMood.termux), 240),
   'phone_ready': (const SetupPhoneScene(mood: SetupPhoneMood.ready), 240),
   'stopped': (const SetupPhoneScene(mood: SetupPhoneMood.stopped), 240),
   'ready': (const SetupReadyScene(), 240),

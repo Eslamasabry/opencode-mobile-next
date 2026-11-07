@@ -259,7 +259,6 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     if (currentApi == null) return;
     final generation = _generation;
     try {
-      _ensureLocalServerWakeLock();
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return;
       if (!health.healthy) {
@@ -361,7 +360,6 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _notifyListeners();
     enablePollingFallback();
     try {
-      _ensureLocalServerWakeLock();
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return false;
       if (!health.healthy) {

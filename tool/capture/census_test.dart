@@ -22,7 +22,6 @@ import 'census/areas/d_chat_sheets.dart';
 import 'census/areas/e_workspace.dart';
 import 'census/areas/f_files_review_terminal.dart';
 import 'census/areas/g_servers.dart';
-import 'census/areas/h_termux.dart';
 import 'census/areas/i1_team_core.dart';
 import 'census/areas/i2_team_sheets.dart';
 import 'census/areas/j1_settings_more.dart';
@@ -39,7 +38,6 @@ void main() => runCensus([
   eWorkspaceArea,
   fFilesReviewTerminalArea,
   gServersArea,
-  hTermuxArea,
   i1TeamCoreArea,
   i2TeamSheetsArea,
   j1SettingsMoreArea,

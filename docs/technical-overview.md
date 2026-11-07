@@ -107,30 +107,13 @@ on loopback: bind the server to `127.0.0.1` and bring the connection to
   password would cross it in clear text. Binding the server itself to a
   network interface is an advanced path, requires
   `OPENCODE_ALLOW_REMOTE_BIND=1`, and should only be taken behind TLS.
-- **On-device (Termux)** — tap **On-device (Termux)** on the Servers
-  screen. The app detects Termux (or opens its F-Droid page), walks you
-  through the one required unlock line, installs Ubuntu via proot-distro
-  plus Node and `@opencode/cli@2.1.1` in the chroot, launches
-  `opencode2 serve` detached, health-polls until live, and connects. A "Live
-  log in Termux" button streams install/server logs at any time. The native
-  side is
-  [`MainActivity.kt`](../android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt)
-  + [`lib/termux/bridge.dart`](../lib/termux/bridge.dart). (Why the chroot:
-  the managed installer uses the Linux binaries inside Ubuntu, whose glibc
-  environment shares the phone’s network stack. The app reaches it at
-  `127.0.0.1:4096`.) Prefer manual? Inside Termux:
-
-  ```bash
-  pkg install proot-distro
-  proot-distro install ubuntu
-  proot-distro login ubuntu     # then inside the chroot:
-    apt update && apt install -y nodejs npm
-    npm i -g @opencode/cli@2.1.1
-    opencode2 serve --hostname 127.0.0.1 --port 4096
-    exit
-  ```
-
-  Run `termux-wake-lock` to keep it alive.
+- **On this phone (built-in Linux)** — choose **On this phone** on the
+  Servers screen. Phone setup installs an Ubuntu inside the app (bundled
+  proot, no other app needed), then Node and OpenCode 2, starts
+  `opencode2 serve` on `127.0.0.1:4097` and connects
+  ([`lib/builtin/`](../lib/builtin/)). Termux is no longer supported
+  (2026-11-07): a connection saved for it by an older build stays as an
+  ordinary saved server, and the app shows one notice with the way forward.
 
 For a persistent Linux host, [docs/ubuntu-host.md](ubuntu-host.md) and
 [`scripts/host/ubuntu-opencode.sh`](../scripts/host/ubuntu-opencode.sh) install
@@ -327,7 +310,7 @@ lib/
 ├── paseo/         # Paseo agent adapter
 ├── state/         # profiles (Keystore secrets), ConnectionController,
 │                  #  offline queue, session drafts, review→prompt handoff
-├── termux/        # Dart side of the Termux RUN_COMMAND bridge
+├── builtin/       # built-in Linux: the phone's own Ubuntu, setup, agents
 ├── background/    # foreground service, live-session notifications, home widget
 ├── voice/         # sherpa-onnx Whisper: model manager, downloader, recognizer
 ├── update/        # Shorebird update ownership
@@ -342,13 +325,13 @@ tool/demo-video/         # Remotion showcase project
 
 A project under `/sdcard`, `/storage/emulated/N` or `/storage/XXXX-XXXX`
 (`lib/domain/shared_storage_path.dart`) is read by the server's host process:
-this app for OpenCode inside the app, Termux for the Termux server. Android 11+
+this app, for OpenCode inside the app. Android 11+
 shows such a folder to a process without storage access but hides other apps'
 non-media files, so it lists only dot-folders such as `.git`. Opening or
 creating one therefore goes through `SharedStorageAccessFlow` (explanation,
 then Android's "All files access" page, `oc/storage` / `StorageAccess.kt`,
-`MANAGE_EXTERNAL_STORAGE`), and `SharedStorageGate` names which host lacks
-access (app, or Termux via `ls /storage/emulated/0`). The Files tab shows
+`MANAGE_EXTERNAL_STORAGE`), and `SharedStorageGate` says when the app lacks
+access. The Files tab shows
 "Allow access to files" when such a folder lists only hidden entries. proot
 binds all of `/storage` and `/sdcard` until AI Team is on; from then on one
 confined launcher covers every built-in process, so only the exact folders the
@@ -374,8 +357,8 @@ UI talks to domain gateways, never directly to `api2/`, `codex/` or `paseo/`. Se
   [protocol notes](opencode2-protocol-notes.md) — the v2 lane
 - [docs/opencode2-ui-design.md](opencode2-ui-design.md) — locked UI
   decisions for v2 surfaces (forms, integrations, inbox)
-- [docs/opencode2-termux.md](opencode2-termux.md) — the on-device story
-  under OpenCode 2
+- [docs/opencode2-termux.md](opencode2-termux.md) — the retired Termux
+  path's research (history only)
 - [docs/design-inspiration.md](design-inspiration.md) — the researched
   pattern library behind the facelift
 - [docs/desktop-feasibility.md](desktop-feasibility.md) — historical Linux

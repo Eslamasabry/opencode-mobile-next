@@ -20,9 +20,6 @@ enum KitHost {
   /// builtin: OpenCode in the app's own Linux.
   thisPhone,
 
-  /// A Termux-managed server on this phone.
-  termux,
-
   /// oc2Computer.
   openCode2,
   codex,
@@ -54,16 +51,13 @@ class KitCapability {
   final String? enableFlow;
 }
 
-/// The 21 enable-flow ids, one per capabilities.json enableFlows entry.
+/// The 20 enable-flow ids, one per capabilities.json enableFlows entry.
 abstract final class KitEnableFlows {
   /// server.any → servers-welcome.
   static const addServer = 'add-server';
 
   /// phone.builtin → phone-setup-start (setup v2).
   static const phoneSetup = 'phone-setup';
-
-  /// phone.termux → setup v2, host Termux.
-  static const phoneSetupTermux = 'phone-setup-termux';
 
   /// server.oc2 → the This phone card's switch.
   static const serverGeneration = 'server-generation';
@@ -122,7 +116,6 @@ abstract final class KitEnableFlows {
   static const all = <String>[
     addServer,
     phoneSetup,
-    phoneSetupTermux,
     serverGeneration,
     addServerCodex,
     addServerPaseo,
@@ -188,13 +181,12 @@ typedef KitEnableFlowHandler =
 /// The registry: every matrix capability, and the enable-flow handlers the
 /// app registers at start-up (coord-main), so the kit imports no screens.
 abstract final class KitCapabilities {
-  /// Every matrix capability (35), 21 of them with an enableFlow.
+  /// Every matrix capability (33), 20 of them with an enableFlow.
   static const List<KitCapability> all = [
     KitCapability(
       id: 'server.any',
       supported: {
         KitHost.thisPhone,
-        KitHost.termux,
         KitHost.openCode2,
         KitHost.codex,
         KitHost.paseo,
@@ -204,7 +196,7 @@ abstract final class KitCapabilities {
     ),
     KitCapability(
       id: 'server.oc2',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {},
       enableFlow: KitEnableFlows.serverGeneration,
     ),
@@ -216,59 +208,45 @@ abstract final class KitCapabilities {
     ),
     KitCapability(
       id: 'server.paseo',
-      supported: {KitHost.termux, KitHost.paseo},
+      supported: {KitHost.paseo},
       partly: {KitHost.openCode2},
       enableFlow: KitEnableFlows.addServerPaseo,
     ),
     KitCapability(
       id: 'phone.builtin',
       supported: {KitHost.thisPhone},
-      partly: {KitHost.termux},
+      partly: {},
       enableFlow: KitEnableFlows.phoneSetup,
     ),
-    KitCapability(
-      id: 'phone.termux',
-      supported: {KitHost.termux},
-      partly: {KitHost.thisPhone},
-      enableFlow: KitEnableFlows.phoneSetupTermux,
-    ),
-    KitCapability(
-      id: 'phone.any',
-      supported: {KitHost.thisPhone, KitHost.termux},
-    ),
+    KitCapability(id: 'phone.any', supported: {KitHost.thisPhone}),
     KitCapability(
       id: 'model.auth',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.codex, KitHost.paseo},
       enableFlow: KitEnableFlows.modelSignIn,
     ),
     KitCapability(
       id: 'team.on',
       supported: {KitHost.thisPhone, KitHost.openCode2},
-      partly: {KitHost.termux, KitHost.codex, KitHost.paseo},
+      partly: {KitHost.codex, KitHost.paseo},
       enableFlow: KitEnableFlows.teamTurnOn,
     ),
-    KitCapability(
-      id: 'team.phone',
-      supported: {KitHost.thisPhone},
-      partly: {KitHost.termux},
-    ),
+    KitCapability(id: 'team.phone', supported: {KitHost.thisPhone}, partly: {}),
     KitCapability(
       id: 'team.control',
-      supported: {KitHost.thisPhone, KitHost.termux},
+      supported: {KitHost.thisPhone},
       partly: {KitHost.openCode2, KitHost.codex, KitHost.paseo},
       enableFlow: KitEnableFlows.teamHostGuide,
     ),
     KitCapability(
       id: 'claude.local',
-      supported: {KitHost.termux},
+      supported: {},
       enableFlow: KitEnableFlows.addToolClaude,
     ),
     KitCapability(
       id: 'voice.model',
       supported: {
         KitHost.thisPhone,
-        KitHost.termux,
         KitHost.openCode2,
         KitHost.codex,
         KitHost.paseo,
@@ -279,18 +257,18 @@ abstract final class KitCapabilities {
     KitCapability(
       id: 'mcp.any',
       supported: {},
-      partly: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      partly: {KitHost.thisPhone, KitHost.openCode2},
       enableFlow: KitEnableFlows.mcpAdd,
     ),
     KitCapability(
       id: 'project.open',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.codex, KitHost.paseo},
       enableFlow: KitEnableFlows.projectChoose,
     ),
     KitCapability(
       id: 'project.git',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {},
       enableFlow: KitEnableFlows.projectGitInit,
     ),
@@ -298,7 +276,6 @@ abstract final class KitCapabilities {
       id: 'perm.notifications',
       supported: {
         KitHost.thisPhone,
-        KitHost.termux,
         KitHost.openCode2,
         KitHost.codex,
         KitHost.paseo,
@@ -309,7 +286,6 @@ abstract final class KitCapabilities {
       id: 'perm.battery',
       supported: {
         KitHost.thisPhone,
-        KitHost.termux,
         KitHost.openCode2,
         KitHost.codex,
         KitHost.paseo,
@@ -319,14 +295,13 @@ abstract final class KitCapabilities {
     KitCapability(
       id: 'perm.camera',
       supported: {KitHost.openCode2},
-      partly: {KitHost.thisPhone, KitHost.termux},
+      partly: {KitHost.thisPhone},
       enableFlow: KitEnableFlows.allowCamera,
     ),
     KitCapability(
       id: 'perm.mic',
       supported: {
         KitHost.thisPhone,
-        KitHost.termux,
         KitHost.openCode2,
         KitHost.codex,
         KitHost.paseo,
@@ -350,7 +325,6 @@ abstract final class KitCapabilities {
       id: 'agent.a2a',
       supported: {
         KitHost.thisPhone,
-        KitHost.termux,
         KitHost.openCode2,
         KitHost.codex,
         KitHost.paseo,
@@ -360,54 +334,49 @@ abstract final class KitCapabilities {
     ),
     KitCapability(
       id: 'flag:fileBrowsing+terminal',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.demo},
     ),
     KitCapability(
       id: 'flag:terminal',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.demo},
     ),
     KitCapability(
       id: 'flag:sessionDiff',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.demo},
     ),
     KitCapability(
       id: 'flag:serverCatalog',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.demo},
     ),
     KitCapability(id: 'flag:toolInventory', supported: {}, partly: {}),
     KitCapability(
       id: 'flag:usageStatistics',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {KitHost.codex},
     ),
     KitCapability(
       id: 'flag:stagedRevert+sessionNotes',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {},
     ),
     KitCapability(
       id: 'flag:worktreeCreate+sessionShare+managedWorkspaces',
       supported: {},
-      partly: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      partly: {KitHost.thisPhone, KitHost.openCode2},
     ),
     KitCapability(
       id: 'flag:developmentServices',
-      supported: {KitHost.thisPhone, KitHost.termux, KitHost.openCode2},
+      supported: {KitHost.thisPhone, KitHost.openCode2},
       partly: {},
     ),
     KitCapability(id: 'flag:remoteUpgrade', supported: {}, partly: {}),
     KitCapability(
       id: 'flag:promptAttachments',
-      supported: {
-        KitHost.thisPhone,
-        KitHost.termux,
-        KitHost.openCode2,
-        KitHost.demo,
-      },
+      supported: {KitHost.thisPhone, KitHost.openCode2, KitHost.demo},
     ),
   ];
 
@@ -690,7 +659,6 @@ class KitCapabilityExplainer extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return switch (host) {
       KitHost.thisPhone => l10n.kitHostThisPhone,
-      KitHost.termux => l10n.kitHostTermux,
       KitHost.openCode2 => l10n.kitHostOpenCode2,
       KitHost.codex => l10n.kitHostCodex,
       KitHost.paseo => l10n.kitHostPaseo,
@@ -699,8 +667,8 @@ class KitCapabilityExplainer extends StatelessWidget {
   }
 
   /// The hosts that can (supported, then partly), as one phrase. The demo
-  /// is left out unless nothing else can; this phone covers Termux on it,
-  /// and both OpenCode generations read as one.
+  /// is left out unless nothing else can, and both OpenCode generations
+  /// read as one.
   static String _hostList(BuildContext context, KitCapability entry) {
     final l10n = AppLocalizations.of(context);
     final can = {...entry.supported, ...entry.partly};
@@ -710,7 +678,6 @@ class KitCapabilityExplainer extends StatelessWidget {
     ];
     final real = ordered.where((host) => host != KitHost.demo).toList();
     final hosts = real.isEmpty ? ordered : real;
-    if (hosts.contains(KitHost.thisPhone)) hosts.remove(KitHost.termux);
     final words = <String>[];
     for (final host in hosts) {
       words.add(hostWord(context, host));
@@ -904,12 +871,6 @@ _Words _wordsOf(AppLocalizations l, String id) => switch (id) {
     l.kitCapPhoneBuiltinWhy,
     l.kitCapPhoneBuiltinEnable,
     l.kitCapPhoneBuiltinOffer,
-  ),
-  'phone.termux' => _words(
-    l.kitCapPhoneTermuxTitle,
-    l.kitCapPhoneTermuxWhy,
-    l.kitCapPhoneTermuxEnable,
-    l.kitCapPhoneTermuxOffer,
   ),
   'phone.any' => _words(l.kitCapPhoneAnyTitle, l.kitCapPhoneAnyWhy),
   'model.auth' => _words(

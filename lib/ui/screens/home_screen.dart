@@ -14,7 +14,6 @@ import '../../domain/server_gateway.dart' show ServerCapabilities, StreamStatus;
 import '../../domain/connection_status.dart';
 import '../../state/connection.dart';
 import '../../state/first_run.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../state/profiles.dart' show ServerProfile;
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
@@ -614,7 +613,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       case ServerSwitcherOpenServers(:final ServersRouteRequest? request):
         unawaited(navigator.pushNamed('/servers', arguments: request));
       case ServerSwitcherOpenPhoneSetup():
-        unawaited(openThisPhone(context, kind: PhoneHostKind.termux));
+        unawaited(openThisPhone(context));
       case ServerSwitcherOpenChat(:final item):
         // The conversation where it waits, opened the way its list row
         // opens it (on another server's own connection when it runs there).

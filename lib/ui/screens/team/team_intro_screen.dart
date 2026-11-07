@@ -8,11 +8,9 @@
 /// primary action that hands over to that kind's own set-up. Nothing here
 /// sets anything up itself:
 ///
-/// - **This phone** (OpenCode inside the app or in Termux): "Set up AI
-///   Team on this phone" is phone setup v2's Add tools › AI Team on that
-///   host ([openTeamOnThisPhone]), then the ready page that turns it on for
-///   the project and ends with "Give the team a first task" (programme
-///   P1.7). The phone's pre-flight ([checkSetupPreflight]: CPU, memory,
+/// - **This phone** (OpenCode inside the app): "Turn on AI Team on this
+///   phone" opens the engine's one-tap setup page ([openPhoneTeamSetup]).
+///   The phone's pre-flight ([checkSetupPreflight]: CPU, memory,
 ///   free space for the team's download) is read first; a phone that
 ///   cannot run a team is told why here, with the computer route, and is
 ///   never hidden.
@@ -42,7 +40,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/team_project_demo.dart';
 import '../../../state/profiles.dart';
-import '../../../termux/team_runtime.dart';
 import '../../../voice/device.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
@@ -53,8 +50,6 @@ import '../../widgets/team_discover.dart';
 import '../../widgets/team_discovery_card.dart' show TeamDiscovery;
 import '../../widgets/team_host_form.dart';
 import '../../widgets/team_switch.dart' show editTeamAddress;
-import '../../widgets/team_phone_onboarding.dart'
-    show openTeamOnThisPhone, teamPhoneHostOf;
 import '../phone_setup/phone_setup_selection.dart'
     show setupPreflightBody, setupPreflightHeadline, setupSizeText;
 
@@ -68,7 +63,6 @@ class TeamIntroScreen extends StatefulWidget {
     super.key,
     required this.controller,
     this.probe,
-    this.runtime,
     this.deviceProbe,
   });
 
@@ -76,9 +70,6 @@ class TeamIntroScreen extends StatefulWidget {
 
   /// The Gas City probe (a computer); tests pass a fake.
   final TeamHostProbe? probe;
-
-  /// The Termux team runtime; tests pass a fake.
-  final TermuxTeamRuntime? runtime;
 
   /// The device facts the phone's pre-flight reads (CPU, memory, free
   /// space); [voiceDevicePlatform] by default, tests stand in.
@@ -115,7 +106,6 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
     final kind = _kind = teamServerKindOf(profile);
     switch (kind) {
       case TeamServerKind.inApp:
-      case TeamServerKind.termux:
         setupToolsChanged.addListener(_readInstalled);
         unawaited(_readInstalled());
         unawaited(_checkPhone());
@@ -131,9 +121,9 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
     if (_inventoryFailed) setState(() => _inventoryFailed = false);
     bool installed;
     try {
-      installed = (await PhoneSetup.of(
-        teamPhoneHostOf(profile),
-      ).installedOptional()).contains(SetupComponentIds.aiTeam);
+      installed = (await PhoneSetup.engine.installedOptional()).contains(
+        SetupComponentIds.aiTeam,
+      );
     } catch (_) {
       // A failed probe says nothing about what is installed. Keep the last
       // known inventory, or offer a retry for the initial unknown state.
@@ -212,16 +202,6 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
     }
   }
 
-  /// Add tools › AI Team on this phone's host, then its ready page. Once
-  /// the team is on, [TeamPage] shows it here, in this page's place.
-  Future<void> _setUpOnPhone() => _run(
-    () => openTeamOnThisPhone(
-      context,
-      widget.controller,
-      runtime: widget.runtime,
-    ),
-  );
-
   /// "Turn on AI Team on this phone": the engine's one-tap setup page.
   Future<void> _turnOnPhoneEngine() =>
       _run(() => openPhoneTeamSetup(context, widget.controller));
@@ -272,19 +252,6 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
             label: l10n.teamIntroTurnOnPhone,
             working: _busy,
             onPressed: _busy ? null : _turnOnPhoneEngine,
-          );
-        }
-      case TeamServerKind.termux:
-        if (_preflight?.supported ?? false) {
-          primary = KitAction(
-            key: const ValueKey('team-intro-set-up'),
-            label: switch (_teamInstalled) {
-              true => l10n.teamIntroTurnOnPhone,
-              false => l10n.teamIntroSetUpPhone,
-              null => l10n.e7SetupCheckingInstall,
-            },
-            working: _busy,
-            onPressed: _busy || _teamInstalled == null ? null : _setUpOnPhone,
           );
         }
       case TeamServerKind.computer:
@@ -445,7 +412,6 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
     );
     switch (kind) {
       case TeamServerKind.inApp:
-      case TeamServerKind.termux:
         final preflight = _preflight;
         if (preflight == null) {
           return [
@@ -516,9 +482,7 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
                 context,
                 AppIconography.batteryWarning,
                 l10n.teamDiscoverBatteryTitle,
-                kind == TeamServerKind.inApp
-                    ? l10n.teamDiscoverInAppBatteryBody
-                    : l10n.teamDiscoverTermuxBatteryBody,
+                l10n.teamDiscoverInAppBatteryBody,
               ),
               _fact(
                 context,
@@ -532,24 +496,19 @@ class _TeamIntroScreenState extends State<TeamIntroScreen> {
         final download = l10n.teamDiscoverDownloadTitle(
           setupSizeText(l10n, AiTeamPins.deviceDownloadBytes),
         );
-        final inApp = kind == TeamServerKind.inApp;
         return [
           group([
             _fact(
               context,
               AppIconography.download,
               download,
-              inApp
-                  ? l10n.teamDiscoverInAppDownloadBody
-                  : l10n.teamDiscoverTermuxDownloadBody,
+              l10n.teamDiscoverInAppDownloadBody,
             ),
             _fact(
               context,
               AppIconography.batteryWarning,
               l10n.teamDiscoverBatteryTitle,
-              inApp
-                  ? l10n.teamDiscoverInAppBatteryBody
-                  : l10n.teamDiscoverTermuxBatteryBody,
+              l10n.teamDiscoverInAppBatteryBody,
             ),
             _fact(
               context,

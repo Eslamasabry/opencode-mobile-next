@@ -2773,7 +2773,6 @@
   ],
   "whenMissing": {
    "server.any": "hidden (no profile → no door)",
-   "phone.termux": "explains (unsupported notice + 'Run it on a computer')",
    "network.tailscale": "offers-enable:team-host-sheet (Enter its address)"
   },
   "personas": [
@@ -5053,11 +5052,8 @@
   ],
   "module": "phone",
   "chrome": "none (embedded in termux-setup)",
-  "needs": [
-   "phone.termux"
-  ],
+  "needs": [],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },
@@ -5147,11 +5143,9 @@
   "module": "phone",
   "chrome": "none (sheet)",
   "needs": [
-   "phone.termux",
    "project.open"
   ],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },
@@ -5233,11 +5227,8 @@
   ],
   "module": "phone",
   "chrome": "none (embedded in termux-setup)",
-  "needs": [
-   "phone.termux"
-  ],
+  "needs": [],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },
@@ -5334,11 +5325,9 @@
   "module": "phone",
   "chrome": "none (embedded in termux-setup)",
   "needs": [
-   "phone.termux",
    "team.phone"
   ],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },
@@ -5410,11 +5399,8 @@
   ],
   "module": "phone",
   "chrome": "none (embedded in termux-setup)",
-  "needs": [
-   "phone.termux"
-  ],
+  "needs": [],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },
@@ -5493,11 +5479,9 @@
   "module": "phone",
   "chrome": "none (embedded in termux-setup)",
   "needs": [
-   "phone.termux",
    "team.phone"
   ],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },
@@ -5573,11 +5557,9 @@
   "module": "phone",
   "chrome": "none (embedded in team-plugin-sheet)",
   "needs": [
-   "phone.termux",
    "team.phone"
   ],
   "whenMissing": {
-   "phone.termux": "explains ('Not available on this server')",
    "team.phone": "offers-enable:termux-setup (Open phone setup)"
   },
   "personas": [
@@ -5957,11 +5939,8 @@
   ],
   "module": "settings",
   "chrome": "none (embedded in plugins-settings)",
-  "needs": [
-   "phone.termux"
-  ],
+  "needs": [],
   "whenMissing": {
-   "phone.termux": "hidden (block absent unless the runtime supportsAiTeam)",
    "project.open": "explains",
    "team.phone": "explains"
   },

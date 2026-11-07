@@ -1,7 +1,7 @@
 // Emulator QA F14: a server reached at 127.0.0.1 through `adb reverse` got
-// the green phone tile, the same as This phone. Only the app's own servers
-// (the in-app one, the Termux one it manages, Claude Code on this phone)
-// lead with the phone; any other loopback address is a server.
+// the green phone tile, the same as This phone. Only the app's own server
+// (the in-app one) leads with the phone; any other loopback address,
+// including the one Termux setups used, is a server.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'support/fake_server_gateway.dart';
@@ -9,10 +9,9 @@ import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/widgets/server_switcher_sheet.dart';
-import 'package:opencode_mobile/ui/widgets/termux_running_server_entry.dart';
+import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'revamp/shared_servers_1_fixtures.dart';
@@ -37,17 +36,20 @@ void main() {
 
   test('only the phone\'s own servers count as this phone', () {
     debugPlatformCapabilities = const PlatformCapabilities.android();
-    expect(isPhoneOwnServer(_at('in-app', BuiltinLinux.serverUrl)), isTrue);
+    expect(looksLikeInAppServer(_at('in-app', BuiltinLinux.serverUrl)), isTrue);
     expect(
-      isPhoneOwnServer(_at('termux', TermuxBridge.managedServerUrl)),
-      isTrue,
-    );
-    expect(
-      isPhoneOwnServer(_at('forwarded', 'http://127.0.0.1:4123')),
+      looksLikeInAppServer(_at('termux', 'http://127.0.0.1:4096')),
       isFalse,
     );
-    expect(isPhoneOwnServer(_at('local', 'http://localhost:4096')), isFalse);
-    expect(isPhoneOwnServer(_at('lan', 'https://laptop.example')), isFalse);
+    expect(
+      looksLikeInAppServer(_at('forwarded', 'http://127.0.0.1:4123')),
+      isFalse,
+    );
+    expect(
+      looksLikeInAppServer(_at('local', 'http://localhost:4096')),
+      isFalse,
+    );
+    expect(looksLikeInAppServer(_at('lan', 'https://laptop.example')), isFalse);
   });
 
   testWidgets('the switcher draws a forwarded loopback server as a server', (

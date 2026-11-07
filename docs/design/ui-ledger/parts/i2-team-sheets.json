@@ -470,7 +470,7 @@
     },
     {
       "id": "work-sheet",
-      "title": "<work item title> (Work \u00b7 bead <id>)",
+      "title": "<work item title> (Work · bead <id>)",
       "kind": "sheet",
       "file": "lib/ui/screens/team/work_sheet.dart",
       "widget": "WorkSheet",
@@ -702,7 +702,7 @@
         {
           "id": "start-run-sheet-who",
           "type": "list-tile",
-          "label": "<suggested role> \u00b7 Suggested from your words \u00b7 Change",
+          "label": "<suggested role> · Suggested from your words · Change",
           "key": "team-start-run-who",
           "line": 1,
           "action": "open-sheet",
@@ -752,7 +752,7 @@
           "line": 250,
           "action": "submit",
           "target": null,
-          "effect": "_keepInBacklog(): controller.createWork(title, details, projectId) \u2014 the task is made and given to no one; the sheet closes with StartRunResult(backlog: true) and the board selects its Backlog. Offered when opened from the board and the host creates work.",
+          "effect": "_keepInBacklog(): controller.createWork(title, details, projectId) — the task is made and given to no one; the sheet closes with StartRunResult(backlog: true) and the board selects its Backlog. Offered when opened from the board and the host creates work.",
           "gates": [
             "offerBacklog",
             "capabilities.controlCreateWork"
@@ -763,7 +763,7 @@
     },
     {
       "id": "team-phone-onboarding-success",
-      "title": "AI team is running on this phone \u00b7 {n} agents ready",
+      "title": "AI team is running on this phone · {n} agents ready",
       "kind": "onboarding-step",
       "file": "lib/ui/widgets/team_phone_onboarding.dart",
       "widget": "TeamPhoneReadyScreen",
@@ -832,253 +832,6 @@
           ],
           "destructive": false,
           "file": "lib/ui/widgets/team_phone_onboarding.dart"
-        }
-      ]
-    },
-    {
-      "id": "embedded-team-phone-section",
-      "title": "On this phone",
-      "kind": "overlay",
-      "file": "lib/ui/widgets/team_phone_section.dart",
-      "widget": "TeamPhoneSection",
-      "presentedBy": [],
-      "line": 80,
-      "purpose": "The phone Termux team's own controls (P3.4: a kit sheet from the AI Team page's menu, reachable in every state of the page): phone supervisor status, Start/Stop, keep-running tips, Remove.",
-      "reachedFrom": [
-        {
-          "page": "team-settings",
-          "element": "team-home-phone-controls"
-        }
-      ],
-      "gates": [
-        "teamPhoneProfile(profile) (host)",
-        "controls only when await runtime.supportsAiTeam; otherwise a \"not available\" text"
-      ],
-      "embeddedIn": [
-        "TeamHomeScreen (menu sheet)"
-      ],
-      "elements": [
-        {
-          "id": "embedded-team-phone-section-start-again",
-          "type": "button",
-          "label": "Start again",
-          "key": "team-phone-start-again",
-          "line": 381,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_start -> _run(runtime.start); enables the phone config on the profile when it comes up ready.",
-          "gates": [
-            "status.killedByAndroid",
-            "disabled while working"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-team-phone-section-stop",
-          "type": "button",
-          "label": "Stop",
-          "key": "team-phone-stop",
-          "line": 388,
-          "action": "open-sheet",
-          "target": "team-phone-stop-sheet",
-          "targetWidget": "showConfirmSheet",
-          "effect": "_stop: confirm sheet, then _run(runtime.stop).",
-          "gates": [
-            "status.isReady (running) && !killed",
-            "disabled while working"
-          ],
-          "destructive": true
-        },
-        {
-          "id": "embedded-team-phone-section-start",
-          "type": "button",
-          "label": "Start",
-          "key": "team-phone-start",
-          "line": 395,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_start -> _run(runtime.start).",
-          "gates": [
-            "canStart: status != null && !working && !running && status.hasCity"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-team-phone-section-open-setup",
-          "type": "button",
-          "label": "Open phone setup",
-          "key": "team-phone-open-setup",
-          "line": 440,
-          "action": "navigate",
-          "target": "termux-setup-installed",
-          "targetWidget": "openThisPhone",
-          "effect": "_openSetup: widget.onOpenSetup or openThisPhone(context, kind: termux), where the AI Team is added.",
-          "gates": [
-            "status != null && !working && not running/killed/canStart (no city yet)"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-team-phone-section-keep-running",
-          "type": "list-tile",
-          "label": "Keep it running",
-          "key": "team-phone-keep-running",
-          "line": 411,
-          "action": "open-sheet",
-          "target": "team-phone-tips-sheet",
-          "targetWidget": "showTeamPhoneTipsSheet",
-          "effect": "showTeamPhoneTipsSheet(context).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "embedded-team-phone-section-remove",
-          "type": "button",
-          "label": "Remove from this phone",
-          "key": "team-phone-remove",
-          "line": 428,
-          "action": "open-sheet",
-          "target": "team-phone-remove-sheet",
-          "targetWidget": "showConfirmSheet",
-          "effect": "_remove: destructive confirm sheet, then runtime.remove(), turns the plugin off for the profile and calls onRemoved.",
-          "gates": [
-            "status.installed",
-            "disabled while working"
-          ],
-          "destructive": true
-        }
-      ],
-      "hostPages": [
-        "team-home"
-      ]
-    },
-    {
-      "id": "team-phone-stop-sheet",
-      "title": "Stop the team on this phone?",
-      "kind": "sheet",
-      "file": "lib/ui/widgets/team_phone_section.dart",
-      "widget": "_stop",
-      "presentedBy": [],
-      "line": 191,
-      "purpose": "Confirmation before stopping the phone-hosted supervisor.",
-      "reachedFrom": [
-        {
-          "page": "embedded-team-phone-section",
-          "element": "embedded-team-phone-section-stop"
-        }
-      ],
-      "gates": [],
-      "elements": [
-        {
-          "id": "team-phone-stop-sheet-confirm",
-          "type": "button",
-          "label": "Stop team",
-          "key": "team-phone-stop-confirm",
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 82,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Pops true; _stop then runs _run(runtime.stop). Not styled destructive (destructive: false in the call).",
-          "gates": [],
-          "destructive": true
-        },
-        {
-          "id": "team-phone-stop-sheet-cancel",
-          "type": "button",
-          "label": "Keep",
-          "key": null,
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 86,
-          "action": "dismiss",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Navigator.pop(context, false); nothing is sent.",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
-      "id": "team-phone-remove-sheet",
-      "title": "Remove the AI team from this phone?",
-      "kind": "sheet",
-      "file": "lib/ui/widgets/team_phone_section.dart",
-      "widget": "_remove",
-      "presentedBy": [],
-      "line": 207,
-      "purpose": "Destructive confirmation before removing the on-device AI Team runtime.",
-      "reachedFrom": [
-        {
-          "page": "embedded-team-phone-section",
-          "element": "embedded-team-phone-section-remove"
-        }
-      ],
-      "gates": [],
-      "elements": [
-        {
-          "id": "team-phone-remove-sheet-confirm",
-          "type": "button",
-          "label": "Remove",
-          "key": "team-phone-remove-confirm",
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 82,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Pops true; _remove then runtime.remove(), controller.remove() or orchestrationStore.sweep, clears profile.orchestration, setPhoneOffer(dismissed), syncOrchestration, SnackBar, onRemoved.",
-          "gates": [],
-          "destructive": true
-        },
-        {
-          "id": "team-phone-remove-sheet-cancel",
-          "type": "button",
-          "label": "Keep",
-          "key": null,
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 86,
-          "action": "dismiss",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Navigator.pop(context, false); nothing is sent.",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
-      "id": "team-phone-tips-sheet",
-      "title": "Keep it running",
-      "kind": "sheet",
-      "file": "lib/ui/widgets/team_phone_section.dart",
-      "widget": "showTeamPhoneTipsSheet",
-      "presentedBy": [
-        "showTeamPhoneTipsSheet"
-      ],
-      "line": 450,
-      "purpose": "Tips to keep the phone supervisor alive (wake lock, battery, phantom-process ADB commands).",
-      "reachedFrom": [
-        {
-          "page": "embedded-team-phone-section",
-          "element": "embedded-team-phone-section-keep-running"
-        }
-      ],
-      "gates": [],
-      "elements": [
-        {
-          "id": "team-phone-tips-sheet-copy",
-          "type": "button",
-          "label": "Copy commands",
-          "key": "team-phone-tips-copy",
-          "line": 516,
-          "action": "copy",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Clipboard.setData(teamPhoneAdbCommands) then SnackBar.",
-          "gates": [],
-          "destructive": false
         }
       ]
     },
@@ -1169,7 +922,7 @@
         {
           "id": "team-host-sheet-submit",
           "type": "button",
-          "label": "Test and turn on (while testing: Checking the address\u2026)",
+          "label": "Test and turn on (while testing: Checking the address…)",
           "key": "team-host-submit",
           "line": 372,
           "action": "submit",

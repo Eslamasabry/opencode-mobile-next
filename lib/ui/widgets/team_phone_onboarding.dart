@@ -1,21 +1,15 @@
 /// AI Team on this phone through phone setup v2 (programme P1.7): the one
-/// way a phone's team is set up, whichever host runs OpenCode (inside the
-/// app or in Termux).
+/// way a phone's team is set up, in the app's own Linux.
 ///
 /// - [openTeamOnThisPhone] is "Set up AI Team on this phone" everywhere
-///   (the team's intro, Plugins' AI Team, the Termux "On this phone"
-///   section). It opens Add tools with AI Team switched on, on the host of
-///   the connected server, and runs it as a v2 job through that host's
-///   progress screen: its steps, success and failure are the setup's own
-///   rows (the old five-step block of the Termux wizard is gone). When AI
-///   Team is installed already it goes straight on.
+///   (the team's intro, Plugins' AI Team). It opens Add tools with AI Team
+///   switched on and runs it as a v2 job through phone setup's progress
+///   screen: its steps, success and failure are the setup's own rows. When
+///   AI Team is installed already it goes straight on.
 /// - [TeamPhoneReadyScreen] is the ready page after it: it turns the team
-///   on for the project (in-app: [BuiltinTeam.turnOn]; Termux:
-///   [TermuxTeamRuntime] `install` check, `init`, `start`), shows the
-///   stages as they pass, says what went wrong with the one retry, and ends
-///   with "Give the team a first task", which lands in its conversation.
-/// - [TeamPhoneKilledNotice] says on the team page that Android stopped the
-///   phone's Termux team, with "Start the team again".
+///   on for the project ([BuiltinTeam.turnOn]), shows the stages as they
+///   pass, says what went wrong with the one retry, and ends with "Give the
+///   team a first task", which lands in its conversation.
 ///
 /// Built from kit parts only (kit-v2 §9); the ready page uses phone setup's
 /// own hero ([PhoneSetupHero]), so it reads as the same family as
@@ -38,8 +32,6 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/orchestration.dart';
 import '../../state/profiles.dart';
-import '../../termux/bridge.dart';
-import '../../termux/team_runtime.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../kit/scenes/setup_ready_scene.dart';
@@ -47,11 +39,9 @@ import '../kit/scenes/setup_unplugged_scene.dart';
 import '../kit/scenes/team_scenes.dart';
 import '../screens/phone_setup/phone_setup_hero.dart';
 import '../screens/phone_setup/phone_setup_routes.dart';
-import '../screens/phone_setup/phone_setup_termux_job_screen.dart'
-    show openPhoneSetupTermuxJob;
 import '../screens/project_folder_actions.dart';
 import '../screens/team_conversation/team_conversation.dart';
-import 'product_states.dart' show productErrorDetails, productErrorText;
+import 'product_states.dart' show productErrorText;
 import 'builtin_team_section.dart'
     show
         builtinTeamFailureText,
@@ -62,149 +52,19 @@ import 'builtin_team_section.dart'
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
 
-TermuxTeamRuntime? _sharedRuntime;
-
-/// The Termux team runtime the phone's widgets share; one instance per app
-/// so the arm64 probe is read once.
-TermuxTeamRuntime get teamPhoneRuntime =>
-    debugTeamPhoneRuntime ?? (_sharedRuntime ??= TermuxTeamRuntime());
-
-/// Tests swap the shared runtime for a fake; reset to null in `addTearDown`.
+/// Runs the Add tools job for [ids] and shows its progress until it
+/// closes. Tests replace it; the app runs phone setup's progress screen.
 @visibleForTesting
-TermuxTeamRuntime? debugTeamPhoneRuntime;
-
-/// How often the Termux section re-reads status while a verb runs.
-const teamPhonePollInterval = Duration(seconds: 2);
-
-/// The host a phone's team is installed on: Termux for the Termux server,
-/// the app's own Linux otherwise.
-SetupHostKind teamPhoneHostOf(ServerProfile profile) =>
-    TermuxBridge.managesServerUrl(profile.baseUrl)
-    ? SetupHostKind.termux
-    : SetupHostKind.builtin;
-
-/// The honest sentence for a failed Termux team [status] (03-onboarding
-/// §5); the checksum refusal gets its own.
-String teamPhoneFailureText(AppLocalizations l10n, TeamRuntimeStatus status) {
-  final reason = status.reason ?? '';
-  if (status.phase == TeamRuntimePhase.ready && !status.isReady) {
-    return l10n.teamUiPhoneFailedHealth(status.url);
-  }
-  if (status.checksumMismatch) {
-    final parts = reason.split(RegExp(r'\s+'));
-    return l10n.teamUiPhoneFailedChecksum(parts.length > 1 ? parts[1] : 'file');
-  }
-  if (reason == 'unsupported-arch') {
-    return l10n.teamUiPhoneFailedUnsupportedArch;
-  }
-  if (reason == 'no-space') {
-    final detail = status.lastError ?? '';
-    return l10n.teamUiPhoneFailedNoSpace(
-      detail.isEmpty ? '' : '${detail.split(':').last.trim()}.',
-    );
-  }
-  final download = status.downloadFailure;
-  if (download != null) return teamPhoneDownloadFailureText(l10n, download);
-  if (reason.startsWith('manifest')) return l10n.teamUiPhoneFailedDownload;
-  if (reason == 'packages') return l10n.teamUiPhoneFailedPackages;
-  if (reason.startsWith('project')) return l10n.teamUiPhoneFailedProject;
-  if (reason.startsWith('gc-') ||
-      reason == 'not-installed' ||
-      reason == 'no-city') {
-    return l10n.teamUiPhoneFailedCity;
-  }
-  if (reason == 'supervisor-exited') {
-    return l10n.teamUiPhoneFailedSupervisorExited;
-  }
-  if (reason == 'health-timeout') {
-    return l10n.teamUiPhoneFailedHealth(status.url);
-  }
-  final error = status.lastError ?? '';
-  if (reason == 'interrupted' || error.contains('stopped unexpectedly')) {
-    return l10n.teamUiPhoneFailedInterrupted;
-  }
-  // The script's own sentence when it is one; its output said in words
-  // otherwise. A bare reason id or phase is not words: the output folded
-  // under Details says what it was.
-  if (error.isEmpty) return l10n.productErrorTermux;
-  return l10n.teamUiPhoneFailedReason(productErrorText(error, l10n: l10n));
-}
-
-/// The runtime's own words for a failed [status] (the step, the reason id
-/// and the script's last error), for Details and reports only.
-String teamPhoneFailureDetails(TeamRuntimeStatus status) =>
-    _TermuxTeamFailure(status).toString();
-
-/// Why a download failed, naming the server that was asked, so a user can
-/// tell a phone that is offline from a server that refused the file (issue
-/// #87: a download pointed at a private address failed as "did not finish").
-String teamPhoneDownloadFailureText(
-  AppLocalizations l10n,
-  TeamDownloadFailure failure,
-) {
-  final host = failure.host;
-  if (host.isEmpty) return l10n.teamUiPhoneFailedDownload;
-  final code = failure.code?.toString() ?? '?';
-  return switch (failure.kind) {
-    TeamDownloadFailureKind.dns => l10n.teamUiPhoneFailedDownloadDns(host),
-    TeamDownloadFailureKind.connect => l10n.teamUiPhoneFailedDownloadConnect(
-      host,
-    ),
-    TeamDownloadFailureKind.timeout => l10n.teamUiPhoneFailedDownloadTimeout(
-      host,
-    ),
-    TeamDownloadFailureKind.tls => l10n.teamUiPhoneFailedDownloadTls(host),
-    TeamDownloadFailureKind.http => l10n.teamUiPhoneFailedDownloadHttp(
-      host,
-      code,
-    ),
-    TeamDownloadFailureKind.interrupted =>
-      l10n.teamUiPhoneFailedDownloadInterrupted(host),
-    TeamDownloadFailureKind.write => l10n.teamUiPhoneFailedDownloadWrite,
-    TeamDownloadFailureKind.other => l10n.teamUiPhoneFailedDownloadOther(
-      host,
-      code,
-    ),
-  };
-}
-
-/// Writes the Termux team's config onto [profile] and lets the connection
-/// build its controller (03 §3). The store instance is the source of truth
-/// for the connected profile, so the same object is updated and saved.
-Future<void> teamPhoneEnable(
-  ConnectionController connection,
-  ServerProfile profile,
-  TermuxTeamRuntime runtime,
-  TeamRuntimeStatus status,
-) async {
-  final config = runtime.phoneOrchestrationConfig(status);
-  profile.orchestration = config;
-  await connection.store.upsert(profile);
-  connection.syncOrchestration();
-}
-
-/// Runs the Add tools job for [ids] on [host] and shows its progress until
-/// it closes. Tests replace it; the app runs the host's own progress screen
-/// (the in-app one, or the Termux one with its person steps).
-@visibleForTesting
-Future<void> Function(
-  BuildContext context,
-  SetupHostKind host,
-  Set<String> ids,
-)?
+Future<void> Function(BuildContext context, Set<String> ids)?
 debugTeamPhoneRunJob;
 
 Future<void> _runJob(
   BuildContext context,
-  SetupHostKind host,
   Set<String> ids,
   ServerProfile profile,
 ) async {
   final override = debugTeamPhoneRunJob;
-  if (override != null) return override(context, host, ids);
-  if (host == SetupHostKind.termux) {
-    return openPhoneSetupTermuxJob(context, adding: ids);
-  }
+  if (override != null) return override(context, ids);
   final runtime = BuiltinLinux.runtimeForProfile(profile);
   await PhoneSetup.engine.run(
     ids,
@@ -226,15 +86,14 @@ bool _installedTeam(SetupProgress progress) =>
               component.state == ComponentState.skipped),
     );
 
-/// "Set up AI Team on this phone": Add tools with AI Team switched on, on
-/// the host of the connected server, then the ready page that turns it on
-/// for the project. AI Team that is installed already skips straight to
+/// "Set up AI Team on this phone": Add tools with AI Team switched on in
+/// the app's own Linux, then the ready page that turns it on for the
+/// project. AI Team that is installed already skips straight to
 /// the ready page. Returns once the person is back where they started.
 Future<void> openTeamOnThisPhone(
   BuildContext context,
-  ConnectionController connection, {
-  TermuxTeamRuntime? runtime,
-}) async {
+  ConnectionController connection,
+) async {
   final profile = connection.profile;
   if (profile == null) return;
   if (connection.managedOpenCode2MigrationRequired) {
@@ -245,8 +104,7 @@ Future<void> openTeamOnThisPhone(
     );
     return;
   }
-  final host = teamPhoneHostOf(profile);
-  final engine = PhoneSetup.of(host);
+  final engine = PhoneSetup.engine;
   var installed = false;
   try {
     installed = (await engine.installedOptional()).contains(
@@ -261,11 +119,10 @@ Future<void> openTeamOnThisPhone(
       context,
       addMode: true,
       selected: const {SetupComponentIds.aiTeam},
-      host: host,
     );
     if (ids == null || ids.isEmpty || !context.mounted) return;
     final before = engine.progress.value.jobId;
-    await _runJob(context, host, ids, profile);
+    await _runJob(context, ids, profile);
     if (!context.mounted) return;
     final after = engine.progress.value;
     // Left before it finished, or it failed: the progress screen said so
@@ -278,87 +135,13 @@ Future<void> openTeamOnThisPhone(
   }
   await pushKitPage<void>(
     context,
-    (_) => TeamPhoneReadyScreen(
-      connection: connection,
-      host: host,
-      runtime: runtime,
-    ),
+    (_) => TeamPhoneReadyScreen(connection: connection),
     settings: const RouteSettings(name: teamPhoneReadyRouteName),
   );
 }
 
 /// The ready page's route name.
 const teamPhoneReadyRouteName = 'team-phone-ready';
-
-/// A Termux step that did not reach the phase it should have.
-class _TermuxTeamFailure implements Exception {
-  const _TermuxTeamFailure(this.status, {this.output = ''});
-
-  final TeamRuntimeStatus status;
-
-  /// The last lines `aiteam.sh` printed (its `aiteam.log`), where the
-  /// programs say what went wrong: the status alone only says "the output
-  /// above says why" (issue #112).
-  final String output;
-
-  /// What a failure report carries: the step and why, in the runtime's own
-  /// words, then the output (the report redacts it).
-  @override
-  String toString() => [
-    'aiteam.sh ${status.verb}: ${status.rawPhase}',
-    if (status.reason case final reason? when reason.isNotEmpty) reason,
-    if (status.lastError case final error? when error.isNotEmpty) error,
-    if (output.trim().isNotEmpty) ...['', 'Output:', output.trimRight()],
-  ].join('\n');
-}
-
-/// How many lines of `aiteam.log` a turn-on failure carries: the whole
-/// `init` of a store that failed three times fits, and the report keeps
-/// its last 120 lines.
-const _termuxFailureLogLines = 80;
-
-/// A [_TermuxTeamFailure] for [status] with the log's last lines; a log
-/// that cannot be read leaves just the status.
-Future<_TermuxTeamFailure> _termuxFailure(
-  TermuxTeamRuntime runtime,
-  TeamRuntimeStatus status,
-) async => _TermuxTeamFailure(
-  status,
-  output: await runtime.logTail(lines: _termuxFailureLogLines),
-);
-
-/// The turn-on of the Termux team, one at a time, kept outside the page so
-/// it goes on when the person leaves (the in-app one is
-/// [BuiltinTeamJob.shared]).
-final teamPhoneTermuxJob = BuiltinTeamJob();
-
-/// Turns the Termux team on for [project]: the programs the v2 job
-/// installed are recorded (`install` checks and downloads nothing when they
-/// are there), the store is made next to the project (`init`), the
-/// supervisor starts, and the profile gets the team's config.
-Future<void> _turnOnTermux(
-  TermuxTeamRuntime runtime,
-  ConnectionController connection,
-  ServerProfile profile,
-  String project,
-  void Function(BuiltinTeamStage stage) onStage,
-) async {
-  onStage(BuiltinTeamStage.preparing);
-  var status = await runtime.install();
-  if (status.phase != TeamRuntimePhase.installed) {
-    throw await _termuxFailure(runtime, status);
-  }
-  onStage(BuiltinTeamStage.addingProject);
-  status = await runtime.init(project);
-  if (status.phase != TeamRuntimePhase.cityReady) {
-    throw await _termuxFailure(runtime, status);
-  }
-  onStage(BuiltinTeamStage.starting);
-  status = await runtime.start();
-  if (!status.isReady) throw await _termuxFailure(runtime, status);
-  onStage(BuiltinTeamStage.waiting);
-  await teamPhoneEnable(connection, profile, runtime, status);
-}
 
 /// Gives the in-app profile the team's plugin config, as Plugins' AI Team
 /// section does after its own turn-on.
@@ -375,9 +158,6 @@ Future<void> _enableBuiltin(
 String teamPhoneTurnOnFailureText(AppLocalizations l10n, Object error) =>
     switch (error) {
       final BuiltinTeamException e => builtinTeamFailureText(l10n, e),
-      final _TermuxTeamFailure e => teamPhoneFailureText(l10n, e.status),
-      final TermuxBridgeException e =>
-        '${l10n.teamUiPhoneDispatchFailed} ${productErrorText(e, l10n: l10n)}',
       final other => l10n.aiteamComponentFailed(
         productErrorText(other, l10n: l10n),
       ),
@@ -398,20 +178,12 @@ class TeamPhoneReadyScreen extends StatefulWidget {
   const TeamPhoneReadyScreen({
     super.key,
     required this.connection,
-    required this.host,
-    this.runtime,
     this.team,
     this.chooseProject,
     this.startTask,
   });
 
   final ConnectionController connection;
-
-  /// Where the team was installed: the app's own Linux or Termux.
-  final SetupHostKind host;
-
-  /// The Termux team runtime; tests pass a fake.
-  final TermuxTeamRuntime? runtime;
 
   /// The in-app team; tests pass a fake.
   final BuiltinTeam? team;
@@ -431,12 +203,7 @@ class TeamPhoneReadyScreen extends StatefulWidget {
 }
 
 class _TeamPhoneReadyScreenState extends State<TeamPhoneReadyScreen> {
-  bool get _termux => widget.host == SetupHostKind.termux;
-
-  BuiltinTeamJob get _job =>
-      _termux ? teamPhoneTermuxJob : BuiltinTeamJob.shared;
-
-  TermuxTeamRuntime get _runtime => widget.runtime ?? teamPhoneRuntime;
+  BuiltinTeamJob get _job => BuiltinTeamJob.shared;
 
   _Ready _state = _Ready.choose;
   String? _project;
@@ -521,26 +288,16 @@ class _TeamPhoneReadyScreenState extends State<TeamPhoneReadyScreen> {
     final l10n = _copy(context);
     final connection = widget.connection;
     setState(() => _state = _Ready.turningOn);
-    if (_termux) {
-      final runtime = _runtime;
-      await _job.run(
-        stages: BuiltinTeamStage.values,
-        project: project,
-        work: (onStage) =>
-            _turnOnTermux(runtime, connection, profile, project, onStage),
-      );
-    } else {
-      final team = widget.team ?? sharedBuiltinTeam;
-      final notice = l10n.aiteamComponentNotice;
-      await _job.run(
-        stages: BuiltinTeamStage.values,
-        project: project,
-        work: (onStage) async {
-          await team.turnOn(project, notice: notice, onStage: onStage);
-          await _enableBuiltin(connection, profile);
-        },
-      );
-    }
+    final team = widget.team ?? sharedBuiltinTeam;
+    final notice = l10n.aiteamComponentNotice;
+    await _job.run(
+      stages: BuiltinTeamStage.values,
+      project: project,
+      work: (onStage) async {
+        await team.turnOn(project, notice: notice, onStage: onStage);
+        await _enableBuiltin(connection, profile);
+      },
+    );
   }
 
   Future<void> _firstTask() async {
@@ -696,146 +453,6 @@ class _TeamPhoneReadyScreenState extends State<TeamPhoneReadyScreen> {
       ),
       width: KitScreenWidth.reading,
       body: KeyedSubtree(key: const ValueKey('team-phone-ready'), child: body),
-    );
-  }
-}
-
-/// The team page's word that Android stopped the phone's Termux team while
-/// the app was away (map: team-phone-onboarding-killed, merged into the
-/// team page), with "Start the team again". Nothing when the team runs
-/// somewhere else, runs fine, or its state cannot be read.
-class TeamPhoneKilledNotice extends StatefulWidget {
-  const TeamPhoneKilledNotice({
-    super.key,
-    required this.controller,
-    this.runtime,
-    this.onKilledChanged,
-  });
-
-  final OrchestrationController controller;
-
-  /// The Termux team runtime; tests pass a fake.
-  final TermuxTeamRuntime? runtime;
-
-  /// Told whenever the notice starts or stops saying Android stopped the
-  /// team, so the page under it says nothing that contradicts it (no "not
-  /// answering, the app keeps trying" under "start the team again").
-  final ValueChanged<bool>? onKilledChanged;
-
-  /// Whether [config] is the team Termux runs on this phone (the in-app
-  /// team restarts by itself).
-  static bool appliesTo(OrchestrationConfig config) =>
-      config.hostMode == OrchestrationHostMode.phone &&
-      !BuiltinTeam.isBuiltinConfig(config) &&
-      TermuxBridge.supported;
-
-  @override
-  State<TeamPhoneKilledNotice> createState() => _TeamPhoneKilledNoticeState();
-}
-
-class _TeamPhoneKilledNoticeState extends State<TeamPhoneKilledNotice> {
-  TermuxTeamRuntime get _runtime => widget.runtime ?? teamPhoneRuntime;
-
-  bool _killed = false;
-  bool _busy = false;
-  String? _error;
-
-  /// The raw failure behind [_error], for Copy details only.
-  String? _errorDetails;
-
-  @override
-  void initState() {
-    super.initState();
-    if (TeamPhoneKilledNotice.appliesTo(widget.controller.config)) {
-      unawaited(_read());
-    }
-  }
-
-  Future<void> _read() async {
-    bool killed;
-    try {
-      killed = (await _runtime.status()).killedByAndroid;
-    } catch (_) {
-      killed = false;
-    }
-    if (mounted && killed != _killed) _setKilled(killed);
-  }
-
-  void _setKilled(bool killed) {
-    setState(() => _killed = killed);
-    widget.onKilledChanged?.call(killed);
-  }
-
-  Future<void> _start() async {
-    final l10n = _copy(context);
-    setState(() {
-      _busy = true;
-      _error = null;
-      _errorDetails = null;
-    });
-    try {
-      final status = await _runtime.start();
-      if (!mounted) return;
-      if (status.isReady) {
-        _setKilled(false);
-        await widget.controller.retry();
-      } else {
-        setState(() {
-          _error = teamPhoneFailureText(l10n, status);
-          _errorDetails = teamPhoneFailureDetails(status);
-        });
-      }
-    } on TermuxBridgeException catch (error) {
-      if (mounted) {
-        setState(() {
-          _error = l10n.teamUiPhoneActionFailed(
-            productErrorText(error, l10n: l10n),
-          );
-          _errorDetails = productErrorDetails(error);
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_killed) return const SizedBox.shrink();
-    final l10n = _copy(context);
-    final tokens = KitTokens.of(context);
-    final start = KitAction(
-      key: const ValueKey('team-phone-killed-start'),
-      label: l10n.teamPhoneStartTeamAgain,
-      icon: AppIconography.play,
-      working: _busy,
-      onPressed: _busy ? null : () => unawaited(_start()),
-    );
-    return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(
-        tokens.gutter,
-        tokens.space2,
-        tokens.gutter,
-        tokens.space2,
-      ),
-      child: _error == null
-          ? KitNotice(
-              key: const ValueKey('team-phone-killed'),
-              icon: AppIconography.warning,
-              // Neutral, as Claude Code's "Android stopped it": amber is
-              // needs-you only (LOOK-4).
-              tone: AppStatusTone.neutral,
-              message: l10n.teamUiPhoneKilled,
-              actions: [start],
-            )
-          // A start that failed: the words, Start again, and the raw
-          // output only behind Copy details.
-          : KitNotice.error(
-              key: const ValueKey('team-phone-killed'),
-              message: _error!,
-              details: _errorDetails,
-              retry: start,
-            ),
     );
   }
 }

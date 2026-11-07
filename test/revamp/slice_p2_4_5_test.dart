@@ -17,7 +17,6 @@ import 'package:opencode_mobile/domain/mcp_catalog.dart';
 import 'package:opencode_mobile/domain/setup_registry.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart' show PhoneHostKind;
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -226,15 +225,15 @@ Future<void> _openCatalog(
   WidgetTester tester,
   _Controller controller,
   _Registry registry, {
-  PhoneHostKind? phone,
-  Future<void> Function(BuildContext, PhoneHostKind)? openPhoneTools,
+  bool phone = false,
+  Future<void> Function(BuildContext)? openPhoneTools,
 }) async {
   await tester.pumpWidget(
     _app(
       McpCatalogScreen(
         controller: controller,
         client: registry,
-        phoneHostOf: (_) => phone,
+        onThisPhone: (_) => phone,
         openPhoneTools: openPhoneTools,
       ),
     ),
@@ -648,13 +647,13 @@ void main() {
     ) async {
       final controller = await _controller(prefs: _optedIn);
       addTearDown(controller.dispose);
-      final opened = <PhoneHostKind>[];
+      var opened = 0;
       await _openCatalog(
         tester,
         controller,
         _Registry(),
-        phone: PhoneHostKind.inApp,
-        openPhoneTools: (_, kind) async => opened.add(kind),
+        phone: true,
+        openPhoneTools: (_) async => opened++,
       );
       expect(find.textContaining('Needs Node on this phone'), findsOneWidget);
 
@@ -662,7 +661,7 @@ void main() {
       expect(find.text('Files runs with Node'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('mcp-catalog-add-node')));
       await tester.pumpAndSettle();
-      expect(opened, [PhoneHostKind.inApp]);
+      expect(opened, 1);
       expect(find.byType(McpSetupScreen), findsNothing);
 
       // Node already there: on to the same form.

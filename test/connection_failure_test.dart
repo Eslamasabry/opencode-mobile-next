@@ -5,31 +5,23 @@ void main() {
   ConnectionFailure d(
     String error, {
     String url = 'http://127.0.0.1:4096',
-    bool termux = true,
     bool codex = false,
     bool tokenRequired = false,
     int attempts = 1,
   }) => ConnectionFailure.diagnose(
     error: error,
     baseUrl: url,
-    supportsTermux: termux,
     usesConnectionToken: codex,
     requiresTokenReentry: tokenRequired,
     attempts: attempts,
   );
 
-  test('loopback offers retry without assuming Termux hosts the endpoint', () {
+  test('loopback offers retry without guessing what hosts the endpoint', () {
     final f = d('Health check failed: connection refused');
     expect(f.title, 'Nothing answered on this phone');
     expect(f.primary, ConnectionFailureAction.retry);
-    expect(f.checks.join(' '), contains('Termux'));
-    expect(f.checks.join(' '), contains('adb reverse'));
-  });
-
-  test('loopback without Termux support retains generic retry', () {
-    final f = d('Health check failed: connection refused', termux: false);
-    expect(f.primary, ConnectionFailureAction.retry);
     expect(f.checks.join(' '), isNot(contains('Termux')));
+    expect(f.checks.join(' '), contains('adb reverse'));
   });
 
   test(
@@ -158,25 +150,12 @@ void main() {
     expect(d(raw).rawError, raw);
   });
 
-  test('the app-managed phone server that does not answer is stopped, and '
-      'starting it is the fix', () {
-    final failure = ConnectionFailure.diagnose(
-      error: 'Connection refused',
-      baseUrl: 'http://127.0.0.1:4096',
-      supportsTermux: true,
-      managedPhoneServer: true,
-    );
-    expect(failure.primary, ConnectionFailureAction.startPhoneServer);
-    expect(failure.title, 'The server on this phone is stopped');
-    // No advice about tunnels and SSH for a server the app runs itself.
-    expect(failure.checks.join(' '), isNot(contains('adb')));
-
-    // Any other loopback server keeps the general advice.
+  test('a server at the address Termux used gets the general loopback '
+      'advice: the app no longer starts anything there', () {
     expect(
       ConnectionFailure.diagnose(
         error: 'Connection refused',
         baseUrl: 'http://127.0.0.1:4096',
-        supportsTermux: true,
       ).primary,
       ConnectionFailureAction.retry,
     );
@@ -192,7 +171,6 @@ void main() {
       final failure = ConnectionFailure.diagnose(
         error: error,
         baseUrl: 'http://127.0.0.1:4097',
-        supportsTermux: true,
         inAppServer: true,
         attempts: 4,
       );
@@ -210,7 +188,6 @@ void main() {
       ConnectionFailure.diagnose(
         error: 'Connection refused',
         baseUrl: 'http://127.0.0.1:4097',
-        supportsTermux: true,
         inAppServer: true,
       ).title,
       'OpenCode inside the app is stopped',
@@ -219,7 +196,6 @@ void main() {
       ConnectionFailure.diagnose(
         error: 'the server stopped',
         baseUrl: 'http://127.0.0.1:4097',
-        supportsTermux: true,
         inAppServer: true,
         inAppStartFailed: true,
       ).title,

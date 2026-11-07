@@ -12,13 +12,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/component_removal.dart';
 import 'package:opencode_mobile/builtin/team/builtin_team.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 import 'revamp/screen_phone_1_fixtures.dart';
-import 'support/termux_channel_fixture.dart';
 import 'support/this_phone_tools_fakes.dart';
 
 final _l10n = lookupAppLocalizations(const Locale('en'));
@@ -46,7 +43,6 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 
 void main() {
   setUp(() {
-    useNoTermuxJob();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
@@ -64,7 +60,6 @@ void main() {
     await pumpPhone(
       tester,
       home: ThisPhoneScreen(
-        kind: PhoneHostKind.inApp,
         removal: ComponentRemovalService(
           linux: phone,
           registry: toolsRegistry,
@@ -86,7 +81,6 @@ void main() {
     await pumpPhone(
       tester,
       home: ThisPhoneScreen(
-        kind: PhoneHostKind.inApp,
         removal: ComponentRemovalService(
           linux: phone,
           registry: toolsRegistry,
@@ -247,57 +241,6 @@ void main() {
     await unmountPhone(tester);
   });
 
-  testWidgets('Termux: the same Remove rows, on Termux\'s tools', (
-    tester,
-  ) async {
-    final channel = TermuxChannelFixture()
-      ..inventoryOutput =
-          'ubuntu=installed\nversion=1.18.29\nruntime=opencode1\n'
-      ..statusOutput = termuxSnapshot(phase: 'ready', version: '1.18.29');
-    channel.install();
-    final linux = ToolsLinux();
-    var teamRemoved = 0;
-    await pumpPhone(
-      tester,
-      home: ThisPhoneScreen(
-        kind: PhoneHostKind.termux,
-        removal: ComponentRemovalService(
-          linux: linux,
-          registry: toolsRegistry,
-          removeTeam: () async {
-            teamRemoved++;
-            linux.installedTools.remove('aiteam');
-          },
-        ),
-      ),
-      profiles: [
-        ServerProfile(
-          id: 'termux',
-          name: 'This phone',
-          baseUrl: TermuxBridge.managedServerUrl,
-          password: 'synthetic-test-secret',
-          serverVersion: '1.18.29',
-        ),
-      ],
-    );
-    await _settle(tester);
-    await _tap(tester, find.byKey(const ValueKey('this-phone-remove-aiteam')));
-    await tester.tap(
-      find.byKey(const ValueKey('this-phone-remove-aiteam-confirm')),
-    );
-    await _settle(tester);
-    expect(teamRemoved, 1);
-    await _scrollTo(
-      tester,
-      find.byKey(const ValueKey('this-phone-remove-python')),
-    );
-    // Termux has no Remove OpenCode of its own here.
-    expect(find.byKey(const ValueKey('this-phone-remove')), findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 2));
-    await unmountPhone(tester);
-  });
-
   testWidgets('Remove OpenCode: the default keeps projects and says so line '
       'by line; a failure keeps the question open', (tester) async {
     final linux = ToolsLinux()..uninstallFailures = 1;
@@ -335,36 +278,19 @@ void main() {
   });
 
   testWidgets('every row is laid out at once, even on a small screen at '
-      'large text (a search result lands on "Restart after a crash")', (
-    tester,
-  ) async {
-    final channel = TermuxChannelFixture()
-      ..inventoryOutput =
-          'ubuntu=installed\nversion=1.18.29\nruntime=opencode1\n'
-      ..statusOutput = termuxSnapshot(phase: 'ready', version: '1.18.29');
-    channel.install();
+      'large text (a search result lands on a row far down)', (tester) async {
     tester.platformDispatcher.textScaleFactorTestValue = 3;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await pumpPhone(
       tester,
       size: const Size(320, 200),
-      home: const ThisPhoneScreen(kind: PhoneHostKind.termux),
-      profiles: [
-        ServerProfile(
-          id: 'termux',
-          name: 'This phone',
-          baseUrl: TermuxBridge.managedServerUrl,
-          password: 'synthetic-test-secret',
-          serverVersion: '1.18.29',
-        ),
-      ],
+      home: const ThisPhoneScreen(),
+      linux: ToolsLinux(),
+      profiles: [inAppProfile],
     );
     await _settle(tester);
     expect(
-      find.byKey(
-        const ValueKey('managed-recovery-option'),
-        skipOffstage: false,
-      ),
+      find.byKey(const ValueKey('this-phone-remove'), skipOffstage: false),
       findsOneWidget,
     );
     await tester.pumpWidget(const SizedBox.shrink());
