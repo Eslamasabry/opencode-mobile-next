@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
@@ -35,6 +36,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -138,6 +142,7 @@ public fun KitRow(
     enable: KitLineAction? = null,
     menu: List<KitMenuItem> = emptyList(),
     leadingTone: TextTone? = null,
+    padding: PaddingValues? = null,
     onClick: (() -> Unit)? = null,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -151,7 +156,7 @@ public fun KitRow(
         enabled = enabled, disabledReason = disabledReason, selected = selected, growKey = growKey,
         onClickLabel = onClickLabel, onLongClick = longClick, onLongClickLabel = onLongClickLabel,
         state = state, meta = meta, onClick = if (unavailable) enable?.onClick else onClick,
-        titleMaxLines = titleMaxLines, titleAccent = titleAccent,
+        titleMaxLines = titleMaxLines, titleAccent = titleAccent, padding = padding,
         unavailable = unavailable,
         leadingTone = leadingTone,
     )
@@ -215,6 +220,7 @@ private fun RowBody(
     supportingSpan: AnnotatedString? = null,
     unavailable: Boolean = false,
     leadingTone: TextTone? = null,
+    padding: PaddingValues? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
@@ -277,14 +283,14 @@ private fun RowBody(
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             // A row's 48 dp glyph target (its ⋯ menu or a labelled glyph) ends near the edge, so its glyph lines up
             // with the chevrons of the rows around it and with the top bar's ⋯ (P-112: Files' row ⋯ sat 12 dp in).
-            // The words and the leading mark keep space2 above and below; a trailing 48 dp target reaches into that
-            // room, so a one-line row is 56 dp with or without a chevron (kit_row.dart `padded`).
-            .padding(
+            // Dart `KitRow.padding`: a row with its own padding lays out as given (no rails, no space2 around the words),
+            // e.g. a sheet's body rows `EdgeInsets.symmetric(vertical: 8)` (kit_row.dart:491-513).
+            .then(if (padding != null) Modifier.padding(padding) else Modifier.padding(
                 start = kitRowGutter(),
                 // A 48 dp target (⋯, a glyph act, a text act) reaches to space1 from the end; a chevron or a value ends its
                 // ink on the row's end rail itself (Dart `trailingRailOf`), so the row keeps the gutter for them.
                 end = if (rowTargetOnEdge(trailing) || action != null || chevronEnds) Space.S1.dp else kitRowGutter(),
-            )
+            ))
             .testTag("kit-row")
     Row(base, verticalAlignment = Alignment.CenterVertically) {
         val lead = Modifier.padding(vertical = Space.S2.dp)
@@ -338,6 +344,9 @@ private fun RowBody(
                             role = TypeRole.RowTitle,
                             tone = if (!enabled || unavailable) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
                             maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
+                            // Flutter lays a row title out in the ambient direction, so an Arabic title in an English
+                            // list starts on the reading edge (kit_sheet_default: "العربية"); never at the row's end.
+                            textAlign = if (LocalLayoutDirection.current == LayoutDirection.Ltr) TextAlign.Left else TextAlign.Right,
                         )
                         meta?.let {
                             KitText(
