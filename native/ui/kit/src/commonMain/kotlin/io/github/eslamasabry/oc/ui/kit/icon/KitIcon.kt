@@ -31,6 +31,11 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import io.github.eslamasabry.oc.ui.design.color.StatusGlyph
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
@@ -96,6 +101,24 @@ private fun KitGlyphBox(
     val dimension =
         if (!growsWithText) logical
         else (logical * minOf(kitTextScale(), LocalKitTokens.current.maxIconScale) * density).roundToInt() / density
+    KitFontGlyph(icon, color, dimension.dp, modifier, label)
+}
+
+/**
+ * [icon] at exactly [size], the way Flutter's `Icon` draws it: the Phosphor font glyph as one line of text (so its
+ * raster, weight and baseline match the Flutter goldens), the vector only for a glyph the font does not carry. The kit's
+ * own controls draw their marks through this too (`KitGlyph`).
+ */
+@Composable
+internal fun KitFontGlyph(
+    icon: ImageVector,
+    color: Color,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    decorative: Boolean = false,
+) {
+    val dimension = size.value
     val glyph = glyphTable[icon.name]
     if (glyph == null) {
         Image(
@@ -125,6 +148,23 @@ private fun KitGlyphBox(
     val highContrast = LocalKitPlatform.current.signals.collectAsState().value.highContrast // F: lib/ui/kit/kit_icon.dart:218
     val duotoneBackground = duotoneBackgrounds[glyph.codePoint].takeIf { glyph.family == PhosphorFamily.Duotone }
     val mirrored = icon.autoMirror && LocalLayoutDirection.current == LayoutDirection.Rtl // NV: Flutter Icon mirrors matchTextDirection glyphs under RTL
+    if (decorative) {
+        // A control's own mark: the same glyph through the same text pipeline, painted without a text node, so nothing
+        // reads its private-use character out and it is not counted as a KitIcon on the page.
+        val measurer = rememberTextMeasurer()
+        val faced = style.copy(fontFamily = families.getValue(glyph.family))
+        val wash = duotoneBackground?.takeIf { !highContrast }
+        Canvas(modifier.size(dimension.dp).then(if (mirrored) Modifier.graphicsLayer { scaleX = -1f } else Modifier)) {
+            val box = Constraints.fixedWidth(this.size.width.toInt().coerceAtLeast(0))
+            fun draw(code: Int, alpha: Float) {
+                val laid = measurer.measure(code.toChar().toString(), faced, softWrap = false, constraints = box)
+                drawText(laid, topLeft = Offset(0f, (this.size.height - laid.size.height) / 2f), alpha = alpha)
+            }
+            if (wash != null) draw(wash, FlutterKitTokens.DUOTONE_WASH)
+            draw(glyph.codePoint, 1f)
+        }
+        return
+    }
     Box(
         modifier.size(dimension.dp).then(if (mirrored) Modifier.graphicsLayer { scaleX = -1f } else Modifier).then(if (label != null) Modifier.semantics { contentDescription = label } else Modifier),
         contentAlignment = Alignment.Center,

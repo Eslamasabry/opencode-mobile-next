@@ -1,13 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
+import io.github.eslamasabry.oc.ui.kit.icon.KitFontGlyph
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 
 /**
@@ -32,13 +30,12 @@ internal object KitPartGlyphs {
     val Paste: ImageVector get() = KitIcons.paste
 }
 
-/** Draws [glyph] decoratively (no content description: the owning control carries the words), tinted [tint]. */
+/**
+ * Draws [glyph] decoratively (no content description: the owning control carries the words), tinted [tint]: the
+ * Phosphor font glyph, as Flutter's `Icon` and the kit's `KitIcon` draw it, so a control's mark rasters like the golden.
+ */
 @Composable
 internal fun KitGlyph(glyph: ImageVector, tint: Color, size: Dp, modifier: Modifier = Modifier) {
-    Image(
-        imageVector = glyph,
-        contentDescription = null,
-        colorFilter = ColorFilter.tint(tint),
-        modifier = modifier.size(size),
-    )
+    // Decorative: no node of its own, as the vector image it replaces had none.
+    KitFontGlyph(glyph, tint, size, modifier, decorative = true)
 }
