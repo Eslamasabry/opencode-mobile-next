@@ -1,0 +1,3 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+chats_home_sheet	gap-step	"All projects"

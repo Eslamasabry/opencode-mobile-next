@@ -1,0 +1,17 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+agent_account_code	gap-step	"Enter this one-time code on the official"
+agent_account_code	gap-step	"Open official sign-in"
+agent_account_code	start-edge	"Enter this one-time code on the official"
+agent_account_code	start-edge	"TEST-#"
+agent_account_code	start-edge	"⁦auth.openai.com⁩"
+agent_account_signed_in	start-edge	"#% used · Reset time unavailable"
+agent_account_signed_in	start-edge	"#% used · Resets in # h"
+agent_account_signed_in	start-edge	"Codex · #-day window"
+agent_account_signed_in	start-edge	"Codex · #-hour window"
+agent_account_signed_in	start-edge	"Lifetime tokens" [kit-row-title]
+agent_account_signed_in	start-edge	"Peak daily tokens" [kit-row-title]
+agent_account_signed_in	start-edge	"Plan" [kit-row-title]
+agent_account_signed_in	start-edge	"Signed in on the host" [kit-row-title]
+agent_account_signed_in	start-edge	"Signed in with" [kit-row-title]
+agent_account_signed_in	start-edge	"⁨person@example.com⁩" [kit-row-supporting]

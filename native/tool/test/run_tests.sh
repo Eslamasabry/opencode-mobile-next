@@ -405,6 +405,7 @@ SH
   expect "ladder: E02-S03 t1 runs the switch release lint" 0 bash -c 'grep -q "^step lint: .*:androidApp:lintSwitchRelease$" native/build/native-t1/*/summary.txt'
   expect "ladder: E02-S03 t1 runs detekt on the touched module" 0 bash -c 'grep -qE "^step detekt: .*detekt.sh --base native/main :core:common$" native/build/native-t1/*/summary.txt'
   expect "ladder: E02-S13 t1 runs the layout baseline ratchet" 0 bash -c 'grep -qE "^step layout-baseline: .*layout_baseline.sh --base native/main$" native/build/native-t1/*/summary.txt'
+  expect "ladder: t1 runs the align baseline ratchet" 0 bash -c 'grep -qE "^step align-baseline: .*layout_baseline.sh --kind align --base native/main$" native/build/native-t1/*/summary.txt'
   echo 'val x = 1 // DETEKT_BAD' >native/core/common/D.kt
   expect "ladder: E02-S03 t1 fails on a new detekt finding" 1 "${low[@]}" OC_DETEKT_CMD="$FAKE_DETEKT" native/tool/t1.sh --base native/main --where local
   rm native/core/common/D.kt
@@ -486,6 +487,21 @@ expect "E02-S13 layout ratchet: a new baseline for a module that had none fails"
 expect_out "E02-S13 layout ratchet: names the new baseline" 'NEW baseline .*ui-kit.tsv'
 rm native/config/layout/baseline/ui-kit.tsv
 expect "E02-S13 layout ratchet: an unknown base cannot check (2)" 2 native/tool/qa/layout_baseline.sh --base no/such/ref
+
+# ------------------------------------------------------- the alignment gate: its ratchet and the device script
+R="$(new_repo)"; cd "$R" || exit 1
+expect "align ratchet: before any baseline exists it is the adoption bootstrap" 0 native/tool/qa/layout_baseline.sh --kind align --base native/main
+expect_out "align ratchet: says bootstrap" 'align ratchet: bootstrap'
+mkdir -p native/config/align/baseline
+printf '# header\nshot_a\tstart-edge\t"Double margin"\n' >native/config/align/baseline/feature-x.tsv
+git add -A && git commit -q -m "chore(tool): adopt the alignment gate [skip ci]" -m "Base." && git branch -f native/main HEAD
+expect "align ratchet: an unchanged baseline passes" 0 native/tool/qa/layout_baseline.sh --kind align --base native/main
+printf 'shot_b\tgap-step\t"Nine under"\n' >>native/config/align/baseline/feature-x.tsv
+expect "align ratchet: a baseline that grew fails" 1 native/tool/qa/layout_baseline.sh --kind align --base native/main
+expect_out "align ratchet: names the added line" '\+ shot_b'
+expect "align ratchet: an unknown kind is a usage error" 2 native/tool/qa/layout_baseline.sh --kind nope --base native/main
+mkdir -p native/config/align && cp "$TOOL_SRC/../config/align/spec.json" native/config/align/spec.json
+expect "align_device.py: each device rule fires on its fixture" 0 python3 -I native/tool/design/align_device.py --self-test
 
 # --------------------------------------------------------------------------------------- version_code.sh (E01-S09)
 R="$(new_repo)"; cd "$R" || exit 1

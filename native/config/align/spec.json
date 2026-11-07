@@ -1,0 +1,14 @@
+{
+  "_": "The alignment gate's numbers (native/docs/kit/ALIGN-RULES.md). Read by tool/design/align_device.py; AlignSpecFileTest holds them equal to the kit tokens AlignRules.Spec uses.",
+  "gutter": 16,
+  "rail": 20,
+  "leadColumns": [40, 32],
+  "iconTile": 28,
+  "iconSizes": [20, 22, 24],
+  "grid": 4,
+  "lineGap": 2,
+  "stepMax": 48,
+  "target": 48,
+  "slack": 0.5,
+  "labelReach": 24
+}

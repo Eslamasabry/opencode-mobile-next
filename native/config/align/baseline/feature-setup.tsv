@@ -1,0 +1,4 @@
+# Alignment gate baseline of one module (native/docs/kit/ALIGN-RULES.md). Only shrinks.
+# shot	rule	subject
+setup_progress_failed	start-edge	"# of #"
+setup_progress_running	start-edge	"#%"
