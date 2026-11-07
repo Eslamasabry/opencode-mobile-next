@@ -11344,6 +11344,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'OpenCode se descargó, pero su programa no se ejecuta en este teléfono. Los detalles muestran lo que dijo.';
 
   @override
+  String get phoneSetupErrorNodeUnsupported =>
+      'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.';
+
+  @override
+  String get phoneSetupConnectComputer => 'Connect a computer';
+
+  @override
   String get phoneSetupErrorOpenCodeNoStart =>
       'OpenCode se instaló, pero no se inició. Continúa para intentarlo de nuevo; los detalles muestran lo que dijo.';
 

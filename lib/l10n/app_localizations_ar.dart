@@ -11346,6 +11346,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'نُزّل OpenCode، لكن برنامجه لا يعمل على هذا الهاتف. تعرض التفاصيل ما أبلغ عنه.';
 
   @override
+  String get phoneSetupErrorNodeUnsupported =>
+      'لا يستطيع نظام هذا الهاتف تشغيل Node.js داخل Linux المدمج. ما زال بإمكانك استخدام OpenCode Mobile بربطه بحاسوبك.';
+
+  @override
+  String get phoneSetupConnectComputer => 'ربط حاسوب';
+
+  @override
   String get phoneSetupErrorOpenCodeNoStart =>
       'ثُبّت OpenCode، لكنه لم يبدأ. تابع للمحاولة مجددًا؛ تعرض التفاصيل ما أبلغ عنه.';
 

@@ -5087,6 +5087,8 @@
   "connectionTokenUnreadableDetails": "تعذّر على مساحة التخزين الآمنة في هذا الهاتف فتح الرمز المحفوظ لهذا الخادم. قد يحدث ذلك بعد استعادة الهاتف من نسخة احتياطية أو تغيير قفل شاشته. لم يتغيّر الرمز نفسه: أدخله مجددًا للاتصال.",
   "phoneSetupErrorOpenCodeNoProgram": "نُزّل OpenCode، لكن التنزيل لم يتضمّن برنامجه. تابع لتنزيله مجددًا.",
   "phoneSetupErrorOpenCodeWontRun": "نُزّل OpenCode، لكن برنامجه لا يعمل على هذا الهاتف. تعرض التفاصيل ما أبلغ عنه.",
+  "phoneSetupErrorNodeUnsupported": "لا يستطيع نظام هذا الهاتف تشغيل Node.js داخل Linux المدمج. ما زال بإمكانك استخدام OpenCode Mobile بربطه بحاسوبك.",
+  "phoneSetupConnectComputer": "ربط حاسوب",
   "phoneSetupErrorOpenCodeNoStart": "ثُبّت OpenCode، لكنه لم يبدأ. تابع للمحاولة مجددًا؛ تعرض التفاصيل ما أبلغ عنه.",
   "phoneSetupPreflightLowMemoryHeadline": "لا تتوفّر ذاكرة كافية في هذا الهاتف",
   "phoneSetupPreflightLowMemoryBody": "يحتاج OpenCode إلى هاتف بذاكرة لا تقل عن {minimum} ميغابايت؛ تتوفّر في هذا الهاتف {actual} ميغابايت. شغّله على حاسوب ووصل هذا الهاتف به.",

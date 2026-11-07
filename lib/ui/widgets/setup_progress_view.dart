@@ -130,6 +130,7 @@ class SetupProgressView extends StatefulWidget {
     if (needsOwnershipRecovery(progress)) {
       return l10n.inAppServerOwnershipRecoveryBody;
     }
+    if (progress.phoneUnsupported) return l10n.phoneSetupErrorNodeUnsupported;
     if (_SetupProgressViewState._looksLikeNetwork(progress)) {
       return l10n.setupProgressViewNoInternet;
     }

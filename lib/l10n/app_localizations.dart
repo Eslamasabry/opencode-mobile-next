@@ -18634,6 +18634,18 @@ abstract class AppLocalizations {
   /// **'OpenCode was downloaded, but its program does not run on this phone. Details show what it said.'**
   String get phoneSetupErrorOpenCodeWontRun;
 
+  /// Setup error when Node.js crashes on this phone's system in every safe mode the app tried (issue #117); the screen then offers connecting a computer
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.'**
+  String get phoneSetupErrorNodeUnsupported;
+
+  /// Button on the failed phone setup screen when this phone cannot run Node.js: opens adding a server on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a computer'**
+  String get phoneSetupConnectComputer;
+
   /// Setup error when the new OpenCode program did not answer during its short start check
   ///
   /// In en, this message translates to:

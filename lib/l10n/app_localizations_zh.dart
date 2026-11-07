@@ -10534,6 +10534,13 @@ class AppLocalizationsZh extends AppLocalizations {
       'OpenCode 已下载，但其程序无法在此手机上运行。详情会显示它的输出。';
 
   @override
+  String get phoneSetupErrorNodeUnsupported =>
+      'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.';
+
+  @override
+  String get phoneSetupConnectComputer => 'Connect a computer';
+
+  @override
   String get phoneSetupErrorOpenCodeNoStart =>
       'OpenCode 已安装，但没有启动。继续以重试；详情会显示它的输出。';
 

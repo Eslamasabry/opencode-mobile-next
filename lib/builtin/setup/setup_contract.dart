@@ -301,6 +301,7 @@ class SetupProgress {
     this.jobId,
     this.firstSetup = false,
     this.adding = const [],
+    this.phoneUnsupported = false,
   });
 
   static const idle = SetupProgress(
@@ -339,6 +340,11 @@ class SetupProgress {
   /// AI Team" instead of "Setting up OpenCode on this phone". Kept in the
   /// job's params like [firstSetup].
   final List<String> adding;
+
+  /// The job stopped because this phone's system cannot run Node.js inside
+  /// built-in Linux, in any safe mode (issue #117). Continue cannot help;
+  /// the screens offer connecting a computer instead.
+  final bool phoneUnsupported;
 
   bool get canContinue =>
       state == SetupState.failed ||
