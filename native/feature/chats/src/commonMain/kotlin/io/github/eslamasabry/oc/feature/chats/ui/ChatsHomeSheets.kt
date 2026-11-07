@@ -278,13 +278,18 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
 internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
     // E20-S08: while the server opens, the saved titles are a list on the gutter under it; a centred page state
     // over that list read as two layouts. The words start where the rows do.
+    // E20-S09: the words speak of saved titles only when there are saved titles to show under them.
+    val saved = opening.rows.isNotEmpty()
     if (opening.phase != ChatsOpeningPhase.Failed) {
         KitNotice(
-            message = stringResource(Res.string.homeOpeningSavedTitles),
+            message = stringResource(if (saved) Res.string.homeOpeningSavedTitles else Res.string.homeOpeningWaiting),
             modifier =
                 Modifier.padding(horizontal = io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens.current.gutter.dp)
                     .testTag("home-opening-connecting"),
-            title = stringResource(Res.string.homeOpeningConnecting, opening.serverName),
+            // E05-S20: a phone server the app just started is starting, not failing.
+            title =
+                if (opening.phase == ChatsOpeningPhase.Starting) stringResource(Res.string.homeOpeningStarting)
+                else stringResource(Res.string.homeOpeningConnecting, opening.serverName),
             tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Progress,
         )
         return
@@ -299,7 +304,7 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
                 else Res.string.homeOpeningConnecting,
                 opening.serverName,
             ),
-        body = stringResource(Res.string.homeOpeningSavedTitles),
+        body = stringResource(if (saved) Res.string.homeOpeningSavedTitles else Res.string.homeOpeningFailedBody),
         failure = opening.failure,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)

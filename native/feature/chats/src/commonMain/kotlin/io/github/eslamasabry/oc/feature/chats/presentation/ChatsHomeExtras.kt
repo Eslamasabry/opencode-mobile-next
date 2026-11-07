@@ -24,6 +24,9 @@ public enum class ChatsHomeSheet {
 
 public enum class ChatsOpeningPhase {
     Connecting,
+
+    /** This phone's own server was just started by the app and has not answered yet (E05-S20). */
+    Starting,
     Failed,
 }
 

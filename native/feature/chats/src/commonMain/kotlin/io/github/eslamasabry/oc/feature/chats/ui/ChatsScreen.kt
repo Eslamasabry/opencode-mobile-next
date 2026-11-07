@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
@@ -241,7 +242,9 @@ public fun ChatsScreen(
             state.home.opening?.let { opening ->
                 item(key = "opening-status") { OpeningStatus(opening, actions) }
                 items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
-                if (opening.rows.isEmpty()) item(key = "opening") { KitSkeletonRows() }
+                // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
+                if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
+                    item(key = "opening") { KitSkeletonRows() }
                 return@LazyColumn
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
