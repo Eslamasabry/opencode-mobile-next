@@ -108,7 +108,8 @@ class DiffModelTest {
         val file = DiffModel.fromBeforeAfter("new.txt", null, "a\nb")
         assertEquals(DiffFileStatus.Added, file.status)
         assertEquals(2 to 0, file.added to file.removed)
-        assertEquals(DiffFileStatus.Added, DiffModel.fromBeforeAfter("new.txt", "", "a").status)
+        // kit_diff_model.dart:146-152: only a null before is an added file; an empty one is modified.
+        assertEquals(DiffFileStatus.Modified, DiffModel.fromBeforeAfter("new.txt", "", "a").status)
         assertEquals(DiffFileStatus.Deleted, DiffModel.fromBeforeAfter("old.txt", "a", null).status)
         assertEquals(DiffFileStatus.Modified, DiffModel.fromBeforeAfter("x.txt", "", "a", DiffFileStatus.Modified).status)
     }

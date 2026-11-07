@@ -62,6 +62,10 @@ public class DiffFile(
     public val oldPath: String? = null,
     /** A binary patch: no lines, the view only says so. */
     public val binary: Boolean = false,
+    /** The whole new text when the file was built from before/after text (Dart `KitDiffFile.fullText`). */
+    public val fullText: String? = null,
+    /** The unified patch the file was parsed from (Dart `KitDiffFile.patch`). */
+    public val patch: String? = null,
 ) {
     private val index by lazy { FileIndex(segments) }
 
@@ -79,6 +83,18 @@ public class DiffFile(
 
     /** The largest line number on either side (at least 1): sizes the number gutter. */
     public val maxLineNumber: Int get() = index.maxNumber
+
+    /** The longest line's text, folded lines included (Dart `_FileIndex.longest`): sizes a scrolling text column. */
+    public val longest: String get() = index.longest
+
+    /** Every line in file order, folded lines included and hunk headers kept (Dart `_FileIndex.allLines`). */
+    public val allLines: ImmutableList<DiffLine> get() = index.allLines
+
+    /**
+     * Whether the view colours this file's syntax (Dart `_FileHighlight.of`, kit_diff_model.dart:572-576): never a binary
+     * file, nor one with more than [DiffModel.HIGHLIGHT_LINE_LIMIT] segments.
+     */
+    public val highlightable: Boolean get() = !binary && segments.size <= DiffModel.HIGHLIGHT_LINE_LIMIT
 
     override fun toString(): String = "DiffFile($path, $status, +$added −$removed, ${segments.size} segments)"
 }
@@ -133,6 +149,27 @@ public object DiffModel {
      */
     public const val LCS_CELL_LIMIT: Int = 1_000_000
 
+    /** Files with more segments than this are never syntax-coloured (Dart `_FileHighlight.lineLimit`, :564). */
+    public const val HIGHLIGHT_LINE_LIMIT: Int = 2000 // F: lib/ui/kit/diff/kit_diff_model.dart:564
+
+    /** Lines longer than this are shown plain (Dart `_FileHighlight._lineChars`, :567). */
+    public const val HIGHLIGHT_LINE_CHARS: Int = 1000 // F: lib/ui/kit/diff/kit_diff_model.dart:567
+
+    /** The contrast every syntax colour keeps on the diff's row grounds (Dart `_DiffPalette.legible`, :652). */
+    public const val LEGIBLE_CONTRAST: Double = 4.5 // F: lib/ui/kit/diff/kit_diff_model.dart:652
+
+    /** The selection wash laid over a row ground before the contrast check (Dart `_DiffPalette`, :624). */
+    public const val SELECTION_ALPHA: Float = .2f // F: lib/ui/kit/diff/kit_diff_model.dart:624
+
+    /**
+     * The grammar one line is coloured with (Dart `_FileHighlight._lineGrammar`, :581): the `json` grammar rejects a
+     * lone line, so JSON lines use the JavaScript grammar, which reads them as literals.
+     */
+    public fun lineGrammar(grammar: String?): String? = if (grammar == "json") "javascript" else grammar
+
+    /** Whether one line of a highlightable file is coloured (Dart `_FileHighlight.spansFor`, :593): not empty, not too long. */
+    public fun highlightsLine(text: String): Boolean = text.isNotEmpty() && text.length <= HIGHLIGHT_LINE_CHARS
+
     private val hunkHeader = Regex("""^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@""")
     private val binaryFiles = Regex("^Binary files .* differ\r?$", RegexOption.MULTILINE)
 
@@ -149,7 +186,9 @@ public object DiffModel {
         oldPath: String? = null,
     ): DiffFile {
         if (isBinary(patch)) {
-            return DiffFile(path, persistentListOf(), 0, 0, status ?: DiffFileStatus.Modified, oldPath, binary = true)
+            return DiffFile(
+                path, persistentListOf(), 0, 0, status ?: DiffFileStatus.Modified, oldPath, binary = true, patch = patch,
+            )
         }
         val segments = ArrayList<DiffSegment>()
         var oldNo = 0
@@ -198,7 +237,7 @@ public object DiffModel {
                 }
             }
         }
-        return DiffFile(path, foldContext(segments), added, removed, status ?: DiffFileStatus.Modified, oldPath)
+        return DiffFile(path, foldContext(segments), added, removed, status ?: DiffFileStatus.Modified, oldPath, patch = patch)
     }
 
     /**
@@ -251,8 +290,9 @@ public object DiffModel {
     }
 
     /**
-     * Diffs a before/after pair (Dart `KitDiffFile.fromTexts`, kit_diff_model.dart:140-174). A null or empty [before]
-     * with an [after] is an added file; a null [after] with a [before] is a deleted one; [status] overrides both. Lines
+     * Diffs a before/after pair (Dart `KitDiffFile.fromTexts`, kit_diff_model.dart:140-174). A null [before] with an
+     * [after] is an added file; a null [after] with a [before] is a deleted one; anything else (an empty [before]
+     * included) is modified; [status] overrides all three (kit_diff_model.dart:146-152). Lines
      * are compared as written (a line-ending change still shows), and shown without a trailing carriage return.
      */
     public fun fromBeforeAfter(
@@ -263,7 +303,6 @@ public object DiffModel {
     ): DiffFile {
         val resolved = status ?: when {
             before == null && after != null -> DiffFileStatus.Added
-            before == "" && !after.isNullOrEmpty() -> DiffFileStatus.Added
             after == null && before != null -> DiffFileStatus.Deleted
             else -> DiffFileStatus.Modified
         }
@@ -272,7 +311,7 @@ public object DiffModel {
         val lines = lineDiff(a, b)
         val added = lines.count { it.kind == DiffLineKind.Added }
         val removed = lines.count { it.kind == DiffLineKind.Removed }
-        return DiffFile(path, foldContext(lines), added, removed, resolved)
+        return DiffFile(path, foldContext(lines), added, removed, resolved, fullText = after)
     }
 
     /**
@@ -516,9 +555,13 @@ private class FileIndex(segments: List<DiffSegment>) {
         private set
     var maxNumber: Int = 1
         private set
+    var longest: String = ""
+        private set
+    val allLines: ImmutableList<DiffLine>
 
     init {
         val changeStarts = ArrayList<Int>()
+        val all = ArrayList<DiffLine>()
         var inRun = false
         fun number(line: DiffLine) {
             line.oldNo?.let { if (it > maxNumber) maxNumber = it }
@@ -529,6 +572,8 @@ private class FileIndex(segments: List<DiffSegment>) {
                 is DiffLine -> {
                     if (segment.kind != DiffLineKind.Hunk) total++
                     number(segment)
+                    if (segment.text.length > longest.length) longest = segment.text
+                    all += segment
                     val change = segment.kind == DiffLineKind.Added || segment.kind == DiffLineKind.Removed
                     if (change && !inRun) changeStarts += i
                     inRun = change
@@ -536,11 +581,16 @@ private class FileIndex(segments: List<DiffSegment>) {
                 is DiffGap -> {
                     inRun = false
                     total += segment.count
-                    segment.lines?.forEach(::number)
+                    segment.lines?.forEach {
+                        number(it)
+                        if (it.text.length > longest.length) longest = it.text
+                        all += it
+                    }
                 }
             }
         }
         changes = changeStarts.toImmutableList()
+        allLines = all.toImmutableList()
 
         val found = ArrayList<DiffHunk>()
         var open: HunkBuilder? = null
