@@ -10,4 +10,8 @@
     <string name="p12NewBoundProject">This connection uses its saved project folder. Add a connection for another folder.</string>
     <string name="p12NewDeliveryUnconfirmed">The server did not confirm this message. Open the created conversation to check it before starting another. Your words stay saved here.</string>
     <string name="p12NewOpenCreated">Open the created conversation</string>
+    <string name="chatsNewFolderMissing">This project’s folder isn’t on the server any more. Make it again as an empty project, or choose another project.</string>
+    <string name="chatsNewFolderRemake">Make the folder again</string>
+    <string name="chatsNewFolderChooseAnother">Choose another project</string>
+    <string name="chatSendFolderMissing">This project’s folder isn’t on the server any more, so the message wasn’t sent. Start a new conversation to make the folder again or choose another project.</string>
 </resources>

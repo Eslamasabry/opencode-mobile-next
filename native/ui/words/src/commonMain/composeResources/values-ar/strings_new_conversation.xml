@@ -10,4 +10,8 @@
     <string name="p12NewBoundProject">يستخدم هذا الاتصال مجلد المشروع المحفوظ. أضف اتصالًا لمجلد آخر.</string>
     <string name="p12NewDeliveryUnconfirmed">لم يؤكد الخادم هذه الرسالة. افتح المحادثة التي أُنشئت للتحقق منها قبل بدء أخرى. تبقى كلماتك محفوظة هنا.</string>
     <string name="p12NewOpenCreated">فتح المحادثة التي أُنشئت</string>
+    <string name="chatsNewFolderMissing">لم يعد مجلد هذا المشروع موجودًا على الخادم. أنشئه من جديد كمشروع فارغ، أو اختر مشروعًا آخر.</string>
+    <string name="chatsNewFolderRemake">إنشاء المجلد من جديد</string>
+    <string name="chatsNewFolderChooseAnother">اختيار مشروع آخر</string>
+    <string name="chatSendFolderMissing">لم يعد مجلد هذا المشروع موجودًا على الخادم، لذلك لم تُرسل الرسالة. ابدأ محادثة جديدة لإنشاء المجلد من جديد أو لاختيار مشروع آخر.</string>
 </resources>
