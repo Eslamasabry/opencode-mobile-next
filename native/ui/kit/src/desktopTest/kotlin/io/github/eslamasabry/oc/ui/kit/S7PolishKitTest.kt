@@ -185,7 +185,7 @@ class S7PolishKitTest {
     }
 
     @Test
-    fun `P-014 notice and status words are never larger than the row titles beside them`() = runComposeUiTest {
+    fun `P-014 A6 a status line's words are the secondary size, an untitled notice's message the body size as Flutter`() = runComposeUiTest {
         var ink = Color.Unspecified
         setContent {
             Themed {
@@ -198,10 +198,12 @@ class S7PolishKitTest {
                 }
             }
         }
-        for (tag in listOf("kit-notice-message", "kit-status-message")) {
+        // A6 (scoreboard 2026-11-07, kit_notice_ok/warning/working): Flutter says an untitled notice at the body
+        // size (lib/ui/kit/kit_notice.dart:470-472); the status line keeps P-014's secondary size.
+        for ((tag, size, line) in listOf(Triple("kit-notice-message", 16f, 24f), Triple("kit-status-message", 13f, 18f))) {
             val style = textLayout(tag).layoutInput.style
-            assertEquals(13f, style.fontSize.value, 0.01f, "$tag uses the secondary size")
-            assertEquals(18f, style.lineHeight.value, 0.01f, "$tag keeps an 18 dp line, under a row title's 22")
+            assertEquals(size, style.fontSize.value, 0.01f, "$tag size")
+            assertEquals(line, style.lineHeight.value, 0.01f, "$tag line")
             assertEquals(ink, style.color, "$tag keeps primary ink: it is the message, not a note")
         }
     }
@@ -209,19 +211,20 @@ class S7PolishKitTest {
     // P-016 ------------------------------------------------------------------------------------------------------
 
     @Test
-    fun `P-016 a page names itself in the large title size, a switcher title stays at headline size`() {
-        assertEquals(TypeRole.LargeTitle, TopBarTitle.role(switcher = false))
+    fun `A8 a pushed page and a switcher both name themselves at the headline size, as kit_top_bar_dart 591 does`() {
+        // Owner rule 2026-11-07: layout and look follow Flutter; P-016's large bar title is withdrawn.
+        assertEquals(TypeRole.Headline, TopBarTitle.role(switcher = false))
         assertEquals(TypeRole.Headline, TopBarTitle.role(switcher = true))
     }
 
     @Test
-    fun `P-016 a sub-page bar's title is larger than a row title at 1_0 and 1_3`() = runComposeUiTest {
+    fun `A8 a sub-page bar's title is the 16 sp headline at 1_0 and grows with text at 1_3`() = runComposeUiTest {
         var scale by mutableStateOf(1f)
         setContent { Themed(fontScale = scale) { KitTopBar("Settings") } }
-        assertEquals(28f, textLayout("kit-top-bar-title").layoutInput.style.fontSize.value, 0.01f)
+        assertEquals(16f, textLayout("kit-top-bar-title").layoutInput.style.fontSize.value, 0.01f) // F: lib/ui/kit/kit_text.dart:298
         scale = 1.3f
         waitForIdle()
-        assertEquals(28f * 1.3f, textLayout("kit-top-bar-title").layoutInput.style.fontSize.value, 0.01f)
+        assertEquals(16f * 1.3f, textLayout("kit-top-bar-title").layoutInput.style.fontSize.value, 0.01f)
     }
 
     // P-017 ------------------------------------------------------------------------------------------------------
