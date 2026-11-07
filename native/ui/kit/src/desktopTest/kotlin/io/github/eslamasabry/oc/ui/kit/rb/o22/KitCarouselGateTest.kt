@@ -73,15 +73,28 @@ private fun ThemeCard(s: Swatch, selected: Boolean) {
     }
 }
 
-/** test/goldens/kit/kit_carousel_golden_test.dart: five cards (dots), opened on the second. */
-class KitCarouselGateTest {
-    @Test fun five() {
-        FlutterGoldenGate.check("kit_carousel_five") {
-            Box(Modifier.padding(vertical = 16.dp).fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                KitCarousel("Themes", 5, 168f, initialIndex = 1) { i ->
-                    ThemeCard(swatches[i % swatches.size], selected = i == 1)
-                }
-            }
+/** Flutter `_part(count)`: the carousel under a 16 dp vertical pad, at the top centre, opened on the second card. */
+@Composable
+private fun Scene(count: Int) {
+    Box(Modifier.padding(vertical = 16.dp).fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        KitCarousel("Themes", count, 168f, initialIndex = 1) { i ->
+            ThemeCard(swatches[i % swatches.size], selected = i == 1)
         }
     }
+}
+
+/**
+ * test/goldens/kit/kit_carousel_golden_test.dart: five cards (dots) and thirty cards (a bar), opened on the second,
+ * at 412x915 and 1280x800 in both modes; five at text 2.0 in dark only.
+ */
+class KitCarouselGateTest {
+    @Test fun five() { FlutterGoldenGate.check("kit_carousel_five") { Scene(5) } }
+    @Test fun kit_carousel_five_1280x800() { FlutterGoldenGate.check("kit_carousel_five_1280x800") { Scene(5) } }
+    @Test fun kit_carousel_five_text2() { FlutterGoldenGate.check("kit_carousel_five_text2", modes = listOf("dark")) { Scene(5) } }
+    @Test fun kit_carousel_five_text2_1280x800() {
+        FlutterGoldenGate.check("kit_carousel_five_text2_1280x800", modes = listOf("dark")) { Scene(5) }
+    }
+    @Test fun kit_carousel_many() { FlutterGoldenGate.check("kit_carousel_many") { Scene(30) } }
+    @Test fun kit_carousel_many_1280x800() { FlutterGoldenGate.check("kit_carousel_many_1280x800") { Scene(30) } }
+    @Test fun matrix() { FlutterGoldenGate.matrix("part-kit_carousel", caps = mapOf("KitCarousel" to "reading")) { Scene(5) } }
 }
