@@ -283,6 +283,8 @@ public fun ChatHeaderTopBar(
         exit = KitTopBarExit.Back,
         exitLabel = stringResource(Res.string.kitTopBarBack),
         onExit = onBack,
+        // E20-S13: Back, the title and "server · project" are one compact block (they were three rows).
+        backBesideTitle = true,
         onTitleTap = actions::renameRequested,
         titleTapLabel = stringResource(Res.string.chatUiRenameSession),
         actions = emptyList(),

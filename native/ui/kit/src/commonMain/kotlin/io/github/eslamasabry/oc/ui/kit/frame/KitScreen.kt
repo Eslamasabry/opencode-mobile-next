@@ -151,7 +151,8 @@ public fun KitScreen(
             val padding =
                 with(density) {
                     PaddingValues(
-                        top = topPx.toDp() + if (faded && topPart != null) HEADER_FADE_DP.dp else 0.dp,
+                        // E20-S13: the header always lies on its opaque ground with its fade, Glass included.
+                        top = topPx.toDp() + if (topPart != null) HEADER_FADE_DP.dp else 0.dp,
                         bottom = bottomPx.toDp() + if (faded && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
                     )
                 }
@@ -488,9 +489,12 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
     // A short ground fade where the transcript meets the chrome: above the composer and, so text never slides under
     // the header with a hard cut, below the header. Glass frosts what scrolls behind instead.
     val glass = kitChromeIsGlass()
+    // E20-S13: the chat header is an opaque block of the page's ground in every style (nothing in the transcript
+    // shows through any part of it, Glass included); its fade below stays so text never meets it with a hard cut.
+    val header = role == FrostRole.ChatHeader
     val fade =
         when {
-            glass -> Modifier
+            glass && !header -> Modifier
             role == FrostRole.Composer ->
                 Modifier.drawBehind {
                     val reach = COMPOSER_FADE_DP.dp.toPx()
@@ -521,5 +525,9 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
                 }
             else -> Modifier
         }
-    return then(fade).then(if (frost != null) Modifier.kitFrost(role, frost) else Modifier.background(ground))
+    return then(fade)
+        .then(
+            if (frost != null && !header) Modifier.kitFrost(role, frost)
+            else Modifier.background(ground.copy(alpha = 1f))
+        )
 }

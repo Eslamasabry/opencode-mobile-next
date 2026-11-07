@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -107,7 +106,7 @@ class E20S08ComposerCraftTest {
     }
 
     @Test
-    fun `E20-S08 the approval chip is never cut under the mic or Send, the model name gives way`() = runComposeUiTest {
+    fun `E20-S08 the approval chip is never scrolled under the mic or Send`() = runComposeUiTest {
         val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
         val withChip = chrome {
             KitComposerChip("Approve everything", onClick = {}, modifier = Modifier.testTag("approval-chip"), active = true)
@@ -125,8 +124,9 @@ class E20S08ComposerCraftTest {
         // Shown whole: its box on screen is as wide as it was laid out (a chip scrolled under the button is clipped).
         assertTrue(abs(shown.width - chip.size.width) < 1f, "chip shows ${shown.width} of ${chip.size.width} px")
         assertTrue(shown.right <= send.left + 0.5f, "chip $shown clear of Send $send")
-        val words = onNode(hasText("Approve everything"), useUnmergedTree = true).fetchSemanticsNode()
-        assertTrue(abs(words.boundsInRoot.width - words.size.width) < 1f, "the chip's words are whole")
+        // E20-S11 reversed the priority: beside a long model name the approval words may end in "…" (in the chip's own
+        // box), but the chip keeps room for its start and is never pushed under Send.
+        assertTrue(shown.width >= 96f - 0.5f, "the approval chip keeps its least room, was ${shown.width}")
         val model = onNodeWithTag("chat-model-button", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue(model.right <= shown.left + 0.5f, "the model chip $model ends before the approval chip $shown")
     }

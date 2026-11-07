@@ -32,7 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 
 /**
  * One row of the person's own common phrases above the message box. A tap sends; a long-press opens the
- * Edit / Hide menu. No phrases draws nothing. The row scrolls sideways, centred while it fits.
+ * Edit / Hide menu. No phrases draws nothing. The row scrolls sideways and starts on the message box's edge.
  */
 @Composable
 public fun KitPhraseChips(
@@ -55,7 +55,9 @@ public fun KitPhraseChips(
             .kitShadowRoom(room)
             .horizontalScroll(rememberScrollState()).semantics { contentDescription = label }
             .padding(vertical = room),
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally),
+        // E20-S11: the phrases start on the message box's own edge, like everything else in the composer (they sat
+        // centred); right to left, on its right edge.
+        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         phrases.forEach { phrase ->
