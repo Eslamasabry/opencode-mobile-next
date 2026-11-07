@@ -48,8 +48,8 @@ The front never receives a password from the app.
 
 ## Optional crash reports and setup analytics
 
-Off by default. In **Settings > Privacy and data** one switch, "Send crash
-reports and setup counts to the developer (Google Firebase)", turns on two
+Off by default. In **Settings > Privacy and data** one switch, "Send reports to
+developer", turns on two
 services run by Google, so Google receives the data under its own terms:
 **Google Firebase Crashlytics** for crash and failure reports, and **Google
 Analytics for Firebase** for the counts listed below. Nothing is collected or

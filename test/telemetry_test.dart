@@ -243,13 +243,7 @@ Authorization: Bearer TELEMBEARERtoken.abc
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(
-        find.text(
-          'Send crash reports and setup counts to the developer '
-          '(Google Firebase)',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Send reports to developer'), findsOneWidget);
       expect(service.consented, isFalse);
       await tester.tap(row);
       await tester.pumpAndSettle();

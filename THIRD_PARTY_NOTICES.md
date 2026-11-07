@@ -184,8 +184,7 @@ pairing scanner, only while that screen is on top, and no frame is stored.
 
 They are compiled into every APK, but they run only in builds that contain the
 maintainer's private Firebase configuration, and only after the person turns on
-Settings > Privacy and data > "Send crash reports and setup counts to the
-developer (Google Firebase)". Without the configuration they never start.
+Settings > Privacy and data > "Send reports to developer". Without the configuration they never start.
 Collection is off in the manifest until consent; the advertising-ID permission
 is removed; advertising ID, SSAID, ad personalisation and automatic screen
 reporting are off. What is sent is listed in PRIVACY.md.
