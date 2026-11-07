@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.feature.usage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
@@ -194,4 +197,37 @@ class UsageScreenTest {
         setContent { Screen(ready(), Actions(), "ar") }
         onNodeWithText("إنفاق آخر 30 يومًا").assertExists()
     }
+
+    @Test
+    fun `B-160 the cost segment switches between 24 hours, 7, 30 and 90 days`() = runComposeUiTest {
+        val actions = Actions()
+        setContent { Screen(ready(), actions) }
+        onNodeWithText("7d").performClick()
+        onNodeWithText("90d").performClick()
+        assertEquals(listOf("range:SevenDays", "range:NinetyDays"), actions.calls)
+    }
+
+    @Test
+    fun `B-160 the split shows each provider's share of the cost and the token details sit under a fold`() =
+        runComposeUiTest {
+            setContent { Screen(ready(), Actions()) }
+            onNodeWithText("Split by provider", ignoreCase = true).assertExists()
+            onNodeWithText("100% of cost · 12K tokens · 1 model").assertExists()
+            onNodeWithText("The server reports cost by provider and model, not by agent.").assertExists()
+            onNodeWithText("Input read from cache: 0").assertDoesNotExist()
+            onNodeWithText("Cached and uncached tokens").performClick()
+            onNodeWithText("Input not cached: 12,000").assertExists()
+        }
+
+    @Test
+    fun `B-160 a day-by-day chart is drawn for 30 days, and 24 hours says there is no hourly series`() =
+        runComposeUiTest {
+            var state by mutableStateOf(ready())
+            setContent { Screen(state, Actions()) }
+            onNodeWithTag("usage-chart").assertExists()
+            state = ready().copy(range = UsageRange.Last24Hours)
+            waitForIdle()
+            onNodeWithTag("usage-chart").assertDoesNotExist()
+            onNodeWithText("This server reports activity by day, so there is no hourly chart for 24 hours.").assertExists()
+        }
 }

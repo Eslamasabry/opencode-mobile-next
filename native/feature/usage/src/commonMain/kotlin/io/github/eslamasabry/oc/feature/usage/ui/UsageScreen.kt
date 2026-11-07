@@ -36,6 +36,9 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.content.usage.KitTrendLine
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePanel
@@ -228,6 +231,10 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
             )
         }
         item(key = "status") { Status(state, actions) }
+        // The Cost segment (B-160): 24h · 7d · 30d · 90d. Flutter's Today, Year and All time stay in the Period
+        // picker below; while one of them is chosen no segment is selected, so the segment steps aside.
+        if (state.phase != UsagePhase.Unsupported && state.range in UsageRange.segment)
+            item(key = "segment") { RangeSegment(state, actions) }
         state.report?.let { report ->
             item(key = "total") { Total(report, state.range, state.timezone, state) }
         }
@@ -441,8 +448,12 @@ private fun Total(report: UsageReport, range: UsageRange, timezone: String?, sta
                         else ->
                             when (range) {
                                 UsageRange.Today -> stringResource(Res.string.usageSpentToday)
+                                UsageRange.Last24Hours ->
+                                    stringResource(Res.string.s9CostSpent24Hours)
+                                UsageRange.SevenDays -> stringResource(Res.string.s9CostSpent7Days)
                                 UsageRange.ThirtyDays ->
                                     stringResource(Res.string.usageSpentThirtyDays)
+                                UsageRange.NinetyDays -> stringResource(Res.string.s9CostSpent90Days)
                                 UsageRange.Year -> stringResource(Res.string.usageSpentYear)
                                 UsageRange.AllTime -> stringResource(Res.string.usageSpentAllTime)
                             }
@@ -484,7 +495,10 @@ private fun Filters(state: UsageUi, actions: UsageActions) {
     val rangeChoices =
         listOf(
             KitChoice(UsageRange.Today, stringResource(Res.string.usageToday)),
+            KitChoice(UsageRange.Last24Hours, stringResource(Res.string.s9CostLast24Hours)),
+            KitChoice(UsageRange.SevenDays, stringResource(Res.string.s9CostLast7Days)),
             KitChoice(UsageRange.ThirtyDays, stringResource(Res.string.usageThirtyDays)),
+            KitChoice(UsageRange.NinetyDays, stringResource(Res.string.s9CostLast90Days)),
             KitChoice(UsageRange.Year, stringResource(Res.string.usageYear)),
             KitChoice(UsageRange.AllTime, stringResource(Res.string.usageAllTime)),
         )
@@ -640,6 +654,7 @@ private fun LazyListScope.breakdowns(
             }
         }
     }
+    item(key = "chart") { Chart(report, state) }
     if (report.activity.isNotEmpty())
         item(key = "days") {
             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
@@ -684,6 +699,23 @@ private fun LazyListScope.breakdowns(
                     )
                 )
             }
+            Spacer(Modifier.height(Space.S2.dp))
+            // Cached vs uncached input and output, as plain sentences (B-160).
+            KitDetailsFold(
+                stringResource(Res.string.s9CostTokenDetails),
+                stringResource(Res.string.kitCopyDetails),
+                notes =
+                    listOf(
+                        stringResource(Res.string.s9CostCached, UsageFigures.count(t.cacheRead)),
+                        stringResource(Res.string.s9CostUncached, UsageFigures.count(t.input)),
+                        stringResource(Res.string.s9CostCacheWrites, UsageFigures.count(t.cacheWrite)),
+                        stringResource(
+                            Res.string.s9CostOutput,
+                            UsageFigures.count(t.output + t.reasoning),
+                            UsageFigures.count(t.reasoning),
+                        ),
+                    ),
+            )
         }
     }
     val matching = state.matchingModels
@@ -721,16 +753,30 @@ private fun LazyListScope.breakdowns(
     val providers = UsageFigures.providers(matching)
     if (providers.isNotEmpty()) {
         item(key = "providers") {
-            KitRowGroup(label = stringResource(Res.string.usageProviders)) {
+            // The split (B-160): each provider's share of the cost and its tokens. The server reports cost per
+            // provider and model only, so the split is by provider and says so.
+            val total = providers.sumOf { it.cost ?: 0.0 }
+            KitRowGroup(label = stringResource(Res.string.s9CostSplit)) {
                 for (p in providers) {
+                    val share = UsageFigures.share(p.cost, total)
                     KitRow(
                         title = p.providerId,
                         supporting =
-                            pluralStringResource(
-                                Res.plurals.usageProviderModelCount,
-                                p.models,
-                                p.models,
-                            ),
+                            listOfNotNull(
+                                    share?.let {
+                                        stringResource(
+                                            Res.string.s9CostSplitRow,
+                                            UsageFigures.percent(it),
+                                            UsageFigures.compact(p.tokens),
+                                        )
+                                    },
+                                    pluralStringResource(
+                                        Res.plurals.usageProviderModelCount,
+                                        p.models,
+                                        p.models,
+                                    ),
+                                )
+                                .joinToString(" · "),
                         trailing =
                             KitRowTrailing.Value(
                                 p.cost?.let { cost(it) }
@@ -740,6 +786,12 @@ private fun LazyListScope.breakdowns(
                     )
                 }
             }
+            KitText(
+                stringResource(Res.string.s9CostSplitNote),
+                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
         }
     }
     item(key = "models") {
@@ -859,3 +911,64 @@ private fun cost(value: Double): String =
     if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost)
     else
         UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)
+
+/** 24h · 7d · 30d · 90d (B-160); the kit's segmented control, two to four parts. */
+@Composable
+private fun RangeSegment(state: UsageUi, actions: UsageActions) {
+    val words =
+        mapOf(
+            UsageRange.Last24Hours to stringResource(Res.string.s9Cost24h),
+            UsageRange.SevenDays to stringResource(Res.string.s9Cost7d),
+            UsageRange.ThirtyDays to stringResource(Res.string.s9Cost30d),
+            UsageRange.NinetyDays to stringResource(Res.string.s9Cost90d),
+        )
+    KitSegmented(
+        segments = UsageRange.segment.map { KitSegment(it, words.getValue(it)) },
+        selected = state.range,
+        semanticsLabel = stringResource(Res.string.s9CostRange),
+        modifier =
+            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp)
+                .testTag("usage-segment"),
+        onChange = actions::chooseRange,
+    )
+}
+
+/**
+ * One small chart (B-160): agent steps per calendar day, the only series the server reports by day. For Today and
+ * 24 hours it says plainly that there is no hourly series instead of drawing one from nothing.
+ */
+@Composable
+private fun Chart(report: UsageReport, state: UsageUi) {
+    val gutter = LocalKitTokens.current.gutter
+    val zone = state.timezone?.takeIf { UsageCalendar.isReadable(it) } ?: return
+    Column(Modifier.padding(horizontal = gutter.dp)) {
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        KitText(
+            stringResource(Res.string.s9CostChartDaily),
+            role = TypeRole.Label,
+            tone = TextTone.Secondary,
+        )
+        Spacer(Modifier.height(Space.S2.dp))
+        val days = if (state.range.charted) UsageFigures.dailySteps(report, zone) else emptyList()
+        if (days.size < 2) {
+            KitText(
+                stringResource(Res.string.s9CostChartHourly),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+            return@Column
+        }
+        val busiest = days.maxBy { it.steps }
+        KitTrendLine(
+            values = days.map { it.steps.toDouble() },
+            semantics =
+                stringResource(
+                    Res.string.s9CostChartSpoken,
+                    days.first().date,
+                    days.last().date,
+                    busiest.date,
+                ),
+            modifier = Modifier.testTag("usage-chart"),
+        )
+    }
+}
