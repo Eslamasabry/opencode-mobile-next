@@ -147,7 +147,10 @@ public fun KitAgentChoice(
     val look = kitSurfaceLook(
         KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, level = SurfaceLevel.Surface2, ownFill = colors.surface1, selected = selected),
     )
-    val edge = if (LocalKitStyle.current.style == Style.Solid) Modifier.border(kitHairline(), colors.hairline, look.shape) else Modifier
+    val solid = LocalKitStyle.current.style == Style.Solid
+    val edge = if (solid) Modifier.border(kitHairline(), colors.hairline, look.shape) else Modifier
+    // A drawn border takes its room inside the card, as a container's does (Dart `.add(decoration.padding)`).
+    val inset = Space.S5.dp + if (solid) kitHairline() else 0.dp
 
     @Composable
     fun Words(text: String, role: TypeRole, tone: TextTone, maxLines: Int, textModifier: Modifier = Modifier) {
@@ -217,7 +220,7 @@ public fun KitAgentChoice(
                 .heightIn(min = (tokens.minTarget * if (wide || large) 2f else 3.5f).dp) // F: lib/ui/kit/kit_agent_choice.dart:259-260
                 .then(look.modifier)
                 .then(edge)
-                .padding(Space.S5.dp)
+                .padding(inset)
                 .clearAndSetSemantics { },
         ) {
             if (wide) {

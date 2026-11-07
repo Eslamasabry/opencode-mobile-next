@@ -84,6 +84,7 @@ public fun KitStartBox(
     val edgeColor by animateColorAsState(if (focused) colors.accent else colors.hairline, specs.quick(), label = "kit.startBox.edge")
     val edgeWidth by animateDpAsState(if (focused) kitFocusRingWidth() else kitHairline(), specs.quick(), label = "kit.startBox.width")
     val edge = if (solid) Modifier.border(edgeWidth, edgeColor, look.shape) else Modifier
+    val inset = if (solid) kitHairline() else 0.dp
     val body = LocalKitTypography.current.style(TypeRole.Body)
     val words = body.copy(color = look.words ?: colors.text1)
     val changed by rememberUpdatedState(onTextChanged)
@@ -97,7 +98,8 @@ public fun KitStartBox(
             .heightIn(min = 80.dp) // F: lib/ui/kit/kit_start_box.dart:54
             .then(look.modifier)
             .then(edge)
-            .padding(horizontal = Space.S5.dp, vertical = Space.S4.dp),
+            // A drawn border takes its room inside the box, as a container's does (Dart `.add(face.padding)`).
+            .padding(horizontal = Space.S5.dp + inset, vertical = Space.S4.dp + inset),
     ) {
         BasicTextField(
             state = state,
