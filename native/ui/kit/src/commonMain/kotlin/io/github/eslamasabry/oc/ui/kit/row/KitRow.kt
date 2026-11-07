@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +48,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
@@ -101,6 +106,11 @@ public fun kitBreakableFileName(name: String): String {
  * dot, a mint ring), so a list of feed rows keeps one aligned lead column. [meta] is the row's time or count, in the
  * 12 sp meta size at the end of the title line, so times line up in one column.
  *
+ * Unavailable (Dart `KitRow.unavailable`): [unavailableReason] dims the title and glyph and wraps the reason whole;
+ * [enable] trails as the way forward, and a tap anywhere on the row runs it. [menu] opens on a long-press (Dart
+ * `KitRow.menu`); every item must also be reachable another way. [leadingTone] inks a bare leading glyph in another
+ * tone (Dart `KitRow.icon(color:)`; a destructive row's glyph in `text1`).
+ *
  * Replaces: KitRow (lib/ui/kit/kit_row.dart), KitFeedItem (lib/ui/kit/kit_feed_item.dart)
  */
 @Composable
@@ -124,16 +134,30 @@ public fun KitRow(
     meta: String? = null,
     titleMaxLines: Int = 1,
     titleAccent: Boolean = false,
+    unavailableReason: String? = null,
+    enable: KitLineAction? = null,
+    menu: List<KitMenuItem> = emptyList(),
+    leadingTone: TextTone? = null,
     onClick: (() -> Unit)? = null,
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val longClick = if (menu.isNotEmpty()) ({ menuOpen = true }) else onLongClick
+    val unavailable = unavailableReason != null
+    val body = @Composable {
     RowBody(
-        title = title, modifier = modifier, supporting = supporting, leading = leading, trailing = trailing,
+        title = title, modifier = modifier, supporting = if (unavailable) unavailableReason else supporting, leading = leading,
+        trailing = if (unavailable && enable != null) KitRowTrailing.Action(enable) else trailing,
         server = server, titleIsFileName = titleIsFileName, supportingMaxLines = supportingMaxLines,
         enabled = enabled, disabledReason = disabledReason, selected = selected, growKey = growKey,
-        onClickLabel = onClickLabel, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel,
-        state = state, meta = meta, onClick = onClick,
+        onClickLabel = onClickLabel, onLongClick = longClick, onLongClickLabel = onLongClickLabel,
+        state = state, meta = meta, onClick = if (unavailable) enable?.onClick else onClick,
         titleMaxLines = titleMaxLines, titleAccent = titleAccent,
+        unavailable = unavailable,
+        leadingTone = leadingTone,
     )
+    }
+    if (menu.isEmpty()) body()
+    else KitMenu(expanded = menuOpen, items = menu, onDismissRequest = { menuOpen = false }) { body() }
 }
 
 @Composable
@@ -189,6 +213,8 @@ private fun RowBody(
     titleMaxLines: Int = 1,
     titleAccent: Boolean = false,
     supportingSpan: AnnotatedString? = null,
+    unavailable: Boolean = false,
+    leadingTone: TextTone? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
@@ -212,6 +238,9 @@ private fun RowBody(
         if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
     }
     val actionBelow = action != null && large
+    // A caret ends its ink on the row's end rail (KitChevron in a row, kit_row_parts.dart:181-198): the row pads its
+    // end by space1 and the caret's slot leaves the rest of the rail minus the glyph's own ink inset.
+    val chevronEnds = (trailing == KitRowTrailing.Chevron || (value != null && value.chevron)) && kitRowGutter() > 0.dp
     val tappable = onClick != null || onLongClick != null
     val base =
         modifier
@@ -238,31 +267,44 @@ private fun RowBody(
                 if (selected) this.selected = true
                 if (titleIsFileName) contentDescription = title
             }
-            .then(if (selected) Modifier.kitSelectedFill(colors.surface3, onRail) else Modifier)
+            .then(
+                if (!selected) Modifier
+                // On a flat list (Solid) the chosen row is a rounded plate inset space2 from the row's ends, never a
+                // square band across the page (kit_row.dart:672-690).
+                else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.surface3)
+                else Modifier.kitSelectedFill(colors.surface3, onRail)
+            )
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             // A row's 48 dp glyph target (its ⋯ menu or a labelled glyph) ends near the edge, so its glyph lines up
             // with the chevrons of the rows around it and with the top bar's ⋯ (P-112: Files' row ⋯ sat 12 dp in).
+            // The words and the leading mark keep space2 above and below; a trailing 48 dp target reaches into that
+            // room, so a one-line row is 56 dp with or without a chevron (kit_row.dart `padded`).
             .padding(
                 start = kitRowGutter(),
-                end = if (rowTargetOnEdge(trailing)) Space.S1.dp else kitRowGutter(),
-                top = Space.S2.dp,
-                bottom = Space.S2.dp,
+                // A 48 dp target (⋯, a glyph act, a text act) reaches to space1 from the end; a chevron or a value ends its
+                // ink on the row's end rail itself (Dart `trailingRailOf`), so the row keeps the gutter for them.
+                end = if (rowTargetOnEdge(trailing) || action != null || chevronEnds) Space.S1.dp else kitRowGutter(),
             )
             .testTag("kit-row")
-    Row(base, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+    Row(base, verticalAlignment = Alignment.CenterVertically) {
+        val lead = Modifier.padding(vertical = Space.S2.dp)
         when {
             leading is KitRowLeading.Glyph && !leading.tile -> {
-                val glyph = (24f * minOf(scale, TextScalePolicy.ICON_CAP)).dp // F: lib/ui/kit/kit_row.dart:1085
-                Box(Modifier.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
-                    Image(
-                        leading.icon, null, Modifier.size(glyph),
-                        colorFilter = ColorFilter.tint(if (!enabled) colors.text3 else if (leading.current) colors.accent else colors.text2),
+                Box(lead.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    // The platform's list icon (KitRowIconBare.size, kit_row.dart:1085) drawn from the glyph font as
+                    // Flutter's Icon is, growing with the text up to the icon cap.
+                    io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                        leading.icon,
+                        size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Large,
+                        tone = if (!enabled || unavailable) TextTone.Tertiary else if (leading.current) TextTone.Accent else leadingTone ?: TextTone.Secondary,
+                        growsWithText = true,
                     )
                 }
             }
-            leading != null -> RowLeadingTile(leading, dim = !enabled, selected = selected)
-            state != null -> RowStateMark(state.tone)
+            leading != null -> Box(lead) { RowLeadingTile(leading, dim = !enabled || unavailable, selected = selected) }
+            state != null -> Box(lead) { RowStateMark(state.tone) }
         }
+        if (leading != null || state != null) Spacer(Modifier.width(Space.S3.dp))
         BoxWithConstraints(Modifier.weight(1f)) {
             val measurer = rememberTextMeasurer()
             val typography = LocalKitTypography.current
@@ -283,14 +325,18 @@ private fun RowBody(
                 val gapsAndChevron = with(density) { (Space.S3.dp + chevron).roundToPx() }
                 titleWidth.toLong() + valueWidth + gapsAndChevron > constraints.maxWidth
             })
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            // The text never runs into what trails it: space2 before the trailing part (kit_row.dart:640).
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                Column(
+                    Modifier.weight(1f).padding(vertical = Space.S2.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp), // F: lib/ui/kit/kit_tokens.dart:398
+                ) {
                     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                         KitText(
                             if (titleIsFileName) kitBreakableFileName(title) else title,
                             Modifier.weight(1f).testTag("kit-row-title"),
                             role = TypeRole.RowTitle,
-                            tone = if (!enabled) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
+                            tone = if (!enabled || unavailable) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
                             maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
                         )
                         meta?.let {
@@ -349,7 +395,7 @@ private fun RowBody(
                                 Modifier.testTag("kit-row-supporting").kitMayTruncate("row-supporting"),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
-                                maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
+                                maxLines = if (!enabled || unavailable) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
                             )
                         }
                     }
@@ -365,15 +411,31 @@ private fun RowBody(
                         enabled = KitEnabled.of(iconAction.enabled, iconAction.disabledReason),
                     )
                     trailing is KitRowTrailing.Menu -> RowMenu(trailing, enabled, disabledReason)
-                    value != null && !valueBelow -> RowValue(value)
-                    action != null && !actionBelow -> KitInlineAction(action)
+                    value != null && !valueBelow ->
+                        if (chevronEnds) Box(Modifier.padding(end = chevronEndPad(tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)))) { RowValue(value) }
+                        else RowValue(value)
+                    // One tertiary button, trailing (Dart `KitButton.fromAction(enable, role: tertiary, expand: false)`); it
+                    // keeps its own side padding beside the words.
+                    action != null && !actionBelow -> Box(Modifier.padding(horizontal = Space.S2.dp)) {
+                        io.github.eslamasabry.oc.ui.kit.KitButton(
+                            io.github.eslamasabry.oc.ui.kit.KitAction(
+                                action.label, action.onClick,
+                                enabled = io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(action.enabled, action.disabledReason),
+                                icon = action.icon, semanticsLabel = action.semanticsLabel,
+                            ),
+                            Modifier.testTag(action.testTag ?: "kit-row-action"),
+                            io.github.eslamasabry.oc.ui.kit.KitButtonRole.Tertiary,
+                        )
+                    }
                     trailing is KitRowTrailing.Locked -> RowLockedValue(trailing)
                     trailing is KitRowTrailing.Copy && enabled ->
                         io.github.eslamasabry.oc.ui.kit.action.KitIconButtonCopy(
                             text = { trailing.text },
                             label = trailing.label,
                         )
-                    trailing == KitRowTrailing.Chevron -> RowChevron()
+                    trailing == KitRowTrailing.Chevron ->
+                        if (chevronEnds) Box(Modifier.padding(end = chevronEndPad(tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)))) { RowChevron() }
+                        else RowChevron()
                     trailing == KitRowTrailing.Check -> io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
                         io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
                         Modifier.testTag("kit-row-check"),
@@ -417,6 +479,28 @@ private fun Modifier.kitSelectedFill(color: androidx.compose.ui.graphics.Color, 
                 size = androidx.compose.ui.geometry.Size(size.width + 2 * rail, size.height),
             )
         }
+
+/**
+ * The room after a caret's box so its ink ends on the row's end rail (Dart `KitOptical.endPad` with the row's
+ * `trailingRail` = space4 - space1): the caret-right glyph's ink ends .28125 of its size short of its box.
+ */
+internal fun chevronEndPad(size: Float): androidx.compose.ui.unit.Dp =
+    maxOf(0f, (Space.S4 - Space.S1) - CARET_INK_END * size).dp // F: lib/ui/kit/kit_optical.dart:53 lib/ui/kit/kit_row.dart:664
+
+private const val CARET_INK_END = .28125f // F: lib/ui/kit/kit_optical.dart:26
+
+/** The chosen row's plate on a flat list: surface3, card corners, inset space2 from both ends (kit_row.dart:676-686). */
+private fun Modifier.kitChosenPlate(color: androidx.compose.ui.graphics.Color): Modifier =
+    drawBehind {
+        val inset = Space.S2.dp.toPx()
+        val r = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.CARD_RADIUS.dp.toPx()
+        drawRoundRect(
+            color,
+            topLeft = androidx.compose.ui.geometry.Offset(inset, 0f),
+            size = androidx.compose.ui.geometry.Size(size.width - inset - inset, size.height),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r),
+        )
+    }
 
 /** True when [trailing] is a 48 dp glyph target that ends near the row's edge, on the top bar's ⋯ line (P-112). */
 internal fun rowTargetOnEdge(trailing: KitRowTrailing?): Boolean =
