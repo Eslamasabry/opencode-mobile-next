@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- B-156: التعليق على سطر في الفرق، والوكيل يصلحه. -->
+    <string name="reviewCommentTitleLine">تعليق على السطر %1$s</string>
+    <string name="reviewCommentTitleLines">تعليق على الأسطر %1$s–%2$s</string>
+    <string name="reviewCommentField">ما الذي يجب أن يغيّره الوكيل؟</string>
+    <string name="reviewCommentAdd">أضف التعليق</string>
+    <string name="reviewCommentLine">السطر %1$s</string>
+    <string name="reviewCommentLines">الأسطر %1$s–%2$s</string>
+    <string name="reviewCommentRemovedLine">السطر المحذوف %1$s</string>
+    <string name="reviewCommentRemovedLines">الأسطر المحذوفة %1$s–%2$s</string>
+    <string name="reviewCommentDraft">لم يُرسل</string>
+    <string name="reviewCommentSending">يُرسل</string>
+    <string name="reviewCommentWaiting">بانتظار الوكيل</string>
+    <string name="reviewCommentFixed">تم الإصلاح</string>
+    <string name="reviewCommentRemove">إزالة</string>
+    <string name="reviewCommentsLabel">تعليقاتك</string>
+    <string name="reviewCommentHint">اضغط رقم سطر ثم «تعليق» لتطلب من الوكيل تغييرًا هناك.</string>
+    <string name="reviewCommentNotPlaced">تعذّر تحديد هذه الأسطر. اختر الأسطر مرة أخرى.</string>
+    <string name="reviewCommentsSendFailed">تعذّر إرسال التعليقات. ما زالت محفوظة هنا.</string>
+    <plurals name="reviewSendComments">
+        <item quantity="zero">أرسل %1$d تعليق</item>
+        <item quantity="one">أرسل التعليق</item>
+        <item quantity="two">أرسل التعليقين</item>
+        <item quantity="few">أرسل %1$d تعليقات</item>
+        <item quantity="many">أرسل %1$d تعليقًا</item>
+        <item quantity="other">أرسل %1$d تعليق</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="zero">لا تعليقات بانتظار الوكيل.</item>
+        <item quantity="one">تعليق واحد بانتظار الوكيل.</item>
+        <item quantity="two">تعليقان بانتظار الوكيل.</item>
+        <item quantity="few">%1$d تعليقات بانتظار الوكيل.</item>
+        <item quantity="many">%1$d تعليقًا بانتظار الوكيل.</item>
+        <item quantity="other">%1$d تعليق بانتظار الوكيل.</item>
+    </plurals>
+    <!-- B-155: المراجعة الموجّهة. -->
+    <string name="reviewGuided">موجّهة</string>
+    <string name="reviewGuidedSupporting">يشرح لك الوكيل تغييره، الأهم أولًا</string>
+    <string name="reviewGuideMaking">نطلب من الوكيل أن يشرح لك تغييره…</string>
+    <string name="reviewGuideFallback">تعذّر إعداد الشرح هذه المرة. نعرض كل الملفات.</string>
+    <string name="reviewGuideBusy">ينتظر الشرح حتى ينتهي الوكيل. نعرض كل الملفات الآن.</string>
+    <string name="reviewGuideAlsoChanged">تغيّر أيضًا</string>
+</resources>

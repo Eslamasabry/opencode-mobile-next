@@ -10,7 +10,15 @@ kotlin {
         implementation(project(":engine:review"))
         implementation(project(":engine:connection")) // the conversation's own connection graph (ReviewHub)
         implementation(project(":engine:composer")) // Send back with a note: the conversation's draft
+        implementation(project(":engine:delivery")) // line comments and the guide question: the chat's send pipeline
         implementation(project(":ui:kit-chat")) // KitDiffView, DiffModel and the chat environment's redactor
         implementation(libs.kotlinx.collections.immutable)
     }
+}
+
+// B-155/B-156 desktop goldens (Skiko software raster):
+// `-Poc.recordGoldens=true` writes them, otherwise they are compared.
+tasks.withType<Test>().configureEach {
+    systemProperty("oc.goldens.dir", layout.projectDirectory.dir("src/desktopTest/goldens").asFile.absolutePath)
+    systemProperty("oc.goldens.record", providers.gradleProperty("oc.recordGoldens").orElse("false").get())
 }

@@ -10,6 +10,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.feature.review.ReviewAgent
 import io.github.eslamasabry.oc.feature.review.ReviewDrafts
 import io.github.eslamasabry.oc.feature.review.ReviewHub
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -34,15 +35,19 @@ public class ChangesViewModel(
     hub: ReviewHub,
     nav: AppNavigator,
     drafts: ReviewDrafts,
+    agent: ReviewAgent,
 ) : ViewModel(), ChangesActions {
     private val presenter =
-        ChangesPresenter(
-            hub.review(route.ref),
-            route.messageId,
-            RouteNavigation(nav, route.ref, route.messageId),
-            viewModelScope,
-            drafts.sendBack(route.ref),
-        )
+        hub.notes(route.ref).let { notes ->
+            ChangesPresenter(
+                hub.review(route.ref),
+                route.messageId,
+                RouteNavigation(nav, route.ref, route.messageId),
+                viewModelScope,
+                drafts.sendBack(route.ref),
+                ReviewAgentPorts(notes.comments, agent.sender(route.ref), agent.guideAsk(route.ref), notes.guides),
+            )
+        }
     public val state: StateFlow<ChangesUi> = presenter.state
 
     override fun back(): Unit = presenter.back()
@@ -67,6 +72,10 @@ public class ChangesViewModel(
 
     override fun sendBackNote(note: String?): Unit = presenter.sendBackNote(note)
 
+    override fun sendComments(): Unit = presenter.sendComments()
+
+    override fun guided(on: Boolean): Unit = presenter.guided(on)
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
@@ -77,14 +86,38 @@ public class ChangesViewModel(
 
 /** One file's diff. */
 @AssistedInject
-public class FileDiffViewModel(@Assisted route: ReviewRoute.File, hub: ReviewHub, private val nav: AppNavigator) : ViewModel() {
+public class FileDiffViewModel(
+    @Assisted route: ReviewRoute.File,
+    hub: ReviewHub,
+    private val nav: AppNavigator,
+    agent: ReviewAgent,
+) : ViewModel(), FileDiffActions {
     private val presenter =
-        FileDiffPresenter(hub.review(route.ref), route.path, route.messageId, route.staged, viewModelScope, route.workingTree)
+        FileDiffPresenter(
+            hub.review(route.ref),
+            route.path,
+            route.messageId,
+            when {
+                route.staged -> FileDiffSource.Staged
+                route.workingTree -> FileDiffSource.WorkingTree
+                else -> FileDiffSource.Changes
+            },
+            viewModelScope,
+            ReviewAgentPorts(hub.notes(route.ref).comments, agent.sender(route.ref)),
+        )
     public val state: StateFlow<FileDiffUi> = presenter.state
 
-    public fun back(): Unit = nav.back()
+    override fun back(): Unit = nav.back()
 
-    public fun retry(): Unit = presenter.retry()
+    override fun retry(): Unit = presenter.retry()
+
+    override fun comment(anchor: CommentAnchor?): Unit = presenter.comment(anchor)
+
+    override fun commentText(text: String?): Unit = presenter.commentText(text)
+
+    override fun removeComment(id: String): Unit = presenter.removeComment(id)
+
+    override fun sendComments(): Unit = presenter.sendComments()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

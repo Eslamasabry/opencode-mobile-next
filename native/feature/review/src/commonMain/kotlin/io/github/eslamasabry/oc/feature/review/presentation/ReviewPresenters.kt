@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.review.presentation
 
+import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -11,6 +12,7 @@ import io.github.eslamasabry.oc.engine.review.ConversationReview
 import io.github.eslamasabry.oc.engine.review.StagedReview
 import io.github.eslamasabry.oc.engine.review.TurnChanges
 import io.github.eslamasabry.oc.engine.review.UndoShape
+import io.github.eslamasabry.oc.core.model.FileDiff
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +55,12 @@ public interface ChangesActions {
 
     /** The note field closed with [note] (null: cancelled). */
     public fun sendBackNote(note: String?)
+
+    /** "Send N comments": every draft line comment of this conversation, in one prompt to its agent (B-156). */
+    public fun sendComments() {}
+
+    /** The "Guided" switch (B-155): the agent's own ordering of its change, or the plain file list. */
+    public fun guided(on: Boolean) {}
 }
 
 /**
@@ -66,7 +74,11 @@ public class ChangesPresenter(
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
     private val sendBack: ReviewSendBack? = null,
+    agent: ReviewAgentPorts = ReviewAgentPorts(),
 ) : ChangesActions {
+    private val runner = agent.runner(review)
+    private val guideAsk = agent.guideAsk
+    private val guides = agent.guides
     private val mutable =
         MutableStateFlow(ChangesUi(turn = messageId != null, canSendBack = sendBack != null))
     public val state: StateFlow<ChangesUi> = mutable.asStateFlow()
@@ -88,73 +100,56 @@ public class ChangesPresenter(
                 }
             }
         }
+        runner?.let { r ->
+            scope.launch {
+                r.book.comments.collect { list ->
+                    mutable.update { ui ->
+                        ui.copy(
+                            drafts = list.count { it.status == CommentStatus.Draft },
+                            waiting =
+                                list.count { it.status == CommentStatus.Pending || it.status == CommentStatus.Sending },
+                        )
+                    }
+                }
+            }
+        }
         load()
+        // The list follows the agent's edits (B-156): read again, keep the rows meanwhile, resolve comments.
+        scope.launch {
+            var first = true
+            review.edits.collect {
+                if (first) {
+                    first = false
+                } else if (!state.value.working && state.value.load != ReviewLoad.Loading) {
+                    load(quiet = true)
+                    runner?.reconcile()
+                }
+            }
+        }
     }
 
-    private fun load() {
-        mutable.update { it.copy(load = ReviewLoad.Loading) }
+    private fun load(quiet: Boolean = false) {
+        if (!quiet || state.value.load !is ReviewLoad.Ready) mutable.update { it.copy(load = ReviewLoad.Loading) }
         scope.launch {
             review.refresh() // the staged boundary decides Undo all; a failed read leaves it as it
             // was
             when (val read = review.changes(messageId)) {
                 is Outcome.Failed ->
-                    mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
+                    if (!(quiet && state.value.load == ReviewLoad.Ready))
+                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                 is Outcome.Ok -> {
                     set = read.value
                     basis = review.basis()
-                    var rows =
-                        set.files.map {
-                            ChangeRowUi(
-                                it.path,
-                                it.name,
-                                it.folder,
-                                it.added,
-                                it.removed,
-                                it.hasDiff,
-                            )
-                        }
-                    // Nothing from the tools (an agent may edit through commands): the
-                    // conversation's view gives way
-                    // to the folder's uncommitted changes, where the server has them (B-NAV-053).
-                    var working = false
-                    val picked = pickedTree
-                    if (picked == true && review.workingTreeAvailable()) {
-                        when (val tree = review.workingTree()) {
+                    val toolRows =
+                        set.files.map { ChangeRowUi(it.path, it.name, it.folder, it.added, it.removed, it.hasDiff) }
+                    val (rows, working) =
+                        when (val scoped = scopedRows(toolRows)) {
                             is Outcome.Failed -> {
-                                mutable.update { it.copy(load = ReviewLoad.Failed(tree.failure)) }
+                                mutable.update { it.copy(load = ReviewLoad.Failed(scoped.failure)) }
                                 return@launch
                             }
-                            is Outcome.Ok -> {
-                                working = true
-                                rows = tree.value.map { d ->
-                                    workingRow(
-                                        d.file,
-                                        d.additions,
-                                        d.deletions,
-                                        !d.patch.isNullOrBlank(),
-                                    )
-                                }
-                            }
+                            is Outcome.Ok -> scoped.value
                         }
-                    } else if (
-                        picked == null &&
-                            rows.isEmpty() &&
-                            messageId == null &&
-                            review.workingTreeAvailable()
-                    ) {
-                        val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
-                        if (tree.isNotEmpty()) {
-                            working = true
-                            rows = tree.map { d ->
-                                workingRow(
-                                    d.file,
-                                    d.additions,
-                                    d.deletions,
-                                    !d.patch.isNullOrBlank(),
-                                )
-                            }
-                        }
-                    }
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
@@ -165,10 +160,104 @@ public class ChangesPresenter(
                             added = rows.sumOrNull { r -> r.added },
                             removed = rows.sumOrNull { r -> r.removed },
                             undoAll = undoAll(ReviewLoad.Ready),
+                            canGuide = guideAsk != null && !working && rows.isNotEmpty(),
                         )
                     }
+                    followGuide()
                 }
             }
+        }
+    }
+
+    /**
+     * The rows in the chosen scope, and whether they are the folder's uncommitted changes. With nothing from the tools
+     * (an agent may edit through commands) the conversation's view gives way to the folder's changes, where the server
+     * has them (B-NAV-053).
+     */
+    private suspend fun scopedRows(toolRows: List<ChangeRowUi>): Outcome<Pair<List<ChangeRowUi>, Boolean>> {
+        val picked = pickedTree
+        val available = review.workingTreeAvailable()
+        val nothingFromTools = toolRows.isEmpty() && messageId == null
+        return when {
+            picked == true && available ->
+                when (val tree = review.workingTree()) {
+                    is Outcome.Failed -> tree
+                    is Outcome.Ok -> Outcome.Ok(tree.value.map(::workingRow) to true)
+                }
+            picked == null && nothingFromTools && available -> {
+                val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
+                Outcome.Ok(if (tree.isNotEmpty()) tree.map(::workingRow) to true else toolRows to false)
+            }
+            else -> Outcome.Ok(toolRows to false)
+        }
+    }
+
+    private fun workingRow(d: FileDiff): ChangeRowUi =
+        workingRow(d.file, d.additions, d.deletions, !d.patch.isNullOrBlank())
+
+    /** Guided is on: show the cached guide for these changes, or ask for one (the files changed, or none yet). */
+    private fun followGuide() {
+        val s = state.value
+        if (s.guide == GuideUi.Off || s.guide == GuideUi.Making) return
+        if (!s.canGuide) {
+            mutable.update { it.copy(guide = GuideUi.Off) }
+            return
+        }
+        val cached = guides[ReviewGuidePrompt.key(s.files)]
+        // A guide of older files is made again; one that waited for the agent's turn is asked once the turn ends.
+        val again = s.guide is GuideUi.Ready || (s.guide as? GuideUi.Fallback)?.failure is Failure.Busy
+        when {
+            cached != null -> mutable.update { it.copy(guide = GuideUi.Ready(cached)) }
+            again -> makeGuide()
+        }
+    }
+
+    override fun guided(on: Boolean) {
+        val s = state.value
+        if (!on) {
+            mutable.update { it.copy(guide = GuideUi.Off) }
+            return
+        }
+        if (!s.canGuide || s.guide != GuideUi.Off) return
+        val cached = guides[ReviewGuidePrompt.key(s.files)]
+        if (cached != null) mutable.update { it.copy(guide = GuideUi.Ready(cached)) } else makeGuide()
+    }
+
+    private fun makeGuide() {
+        val ask = guideAsk ?: return
+        if (review.state.value.running) {
+            // Never joins a running turn: the guide is asked when the agent is done (the next read follows).
+            mutable.update { it.copy(guide = GuideUi.Fallback(Failure.Busy(BusyKind.SessionBusy))) }
+            return
+        }
+        val files = state.value.files
+        val key = ReviewGuidePrompt.key(files)
+        val paths = files.map { it.path }
+        mutable.update { it.copy(guide = GuideUi.Making) }
+        scope.launch {
+            val marker = ReviewGuidePrompt.marker(key)
+            val result = ask.ask(ReviewGuidePrompt.prompt(marker, paths), marker)
+            val guide = (result as? Outcome.Ok)?.value?.let { ReviewGuidePrompt.parse(it, paths) }
+            if (guide != null) guides[key] = guide
+            mutable.update {
+                if (it.guide != GuideUi.Making) it // turned off meanwhile
+                else if (guide != null) it.copy(guide = GuideUi.Ready(guide))
+                else {
+                    val why = (result as? Outcome.Failed)?.failure ?: Failure.UnreadableReply()
+                    it.copy(guide = GuideUi.Fallback(why))
+                }
+            }
+        }
+    }
+
+    override fun sendComments() {
+        val r = runner ?: return
+        val s = state.value
+        if (s.sendingComments || s.drafts == 0) return
+        mutable.update { it.copy(sendingComments = true, commentsFailure = null) }
+        scope.launch {
+            val result = r.sendDrafts()
+            mutable.update { it.copy(sendingComments = false, commentsFailure = (result as? Outcome.Failed)?.failure) }
         }
     }
 
@@ -280,88 +369,180 @@ public class ChangesPresenter(
     }
 }
 
+/** Where one file's diff is read from. */
+public enum class FileDiffSource {
+    /** The turn's (or the conversation's) tool records. */
+    Changes,
+
+    /** The staged undo's preview. */
+    Staged,
+
+    /** The conversation folder's uncommitted changes. */
+    WorkingTree,
+}
+
+/** Intents of one file's diff page. */
+public interface FileDiffActions {
+    public fun back()
+
+    public fun retry()
+
+    /** "Comment" on the selected lines ([anchor] null: the selection could not be placed, nothing opens). */
+    public fun comment(anchor: CommentAnchor?) {}
+
+    /** The comment field closed with [text] (null: cancelled). */
+    public fun commentText(text: String?) {}
+
+    /** Removes a draft comment. */
+    public fun removeComment(id: String) {}
+
+    /** "Send N comments": every draft in this conversation, one prompt to its agent. */
+    public fun sendComments() {}
+}
+
 /**
  * One file's diff, read again from the turn's records or the staged preview (routes carry ids
- * only).
+ * only). It reads again whenever the conversation's files may have changed (B-156: the diff follows the agent's edits),
+ * keeping the last diff on screen meanwhile. Lines can be commented for the agent where a [sender] exists.
  */
 public class FileDiffPresenter(
     private val review: ConversationReview,
     private val path: String,
     private val messageId: String?,
-    private val staged: Boolean,
+    source: FileDiffSource,
     private val scope: CoroutineScope,
-    private val workingTree: Boolean = false,
-) {
-    private val mutable = MutableStateFlow(FileDiffUi(path))
+    agent: ReviewAgentPorts = ReviewAgentPorts(),
+) : FileDiffActions {
+    private val staged = source == FileDiffSource.Staged
+    private val workingTree = source == FileDiffSource.WorkingTree
+    private val runner = if (staged) null else agent.runner(review)
+    private val mutable = MutableStateFlow(FileDiffUi(path, canComment = runner != null))
     public val state: StateFlow<FileDiffUi> = mutable.asStateFlow()
 
     init {
         load()
-    }
-
-    public fun retry(): Unit = load()
-
-    private fun load() {
-        mutable.update { it.copy(load = ReviewLoad.Loading) }
-        scope.launch {
-            if (workingTree) {
-                when (val read = review.workingTree()) {
-                    is Outcome.Failed ->
-                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
-                    is Outcome.Ok -> {
-                        val file = read.value.firstOrNull { it.file == path }
-                        mutable.update {
-                            it.copy(
-                                load = ReviewLoad.Ready,
-                                diff = file,
-                                missing = file == null,
-                                noDiff = file != null && file.patch.isNullOrBlank(),
-                            )
-                        }
-                    }
-                }
-            } else if (staged) {
-                when (val read = review.refresh()) {
-                    is Outcome.Failed ->
-                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
-                    is Outcome.Ok -> {
-                        val file = review.state.value.staged?.files?.firstOrNull { it.file == path }
-                        val empty =
-                            file != null &&
-                                file.patch.isNullOrBlank() &&
-                                file.before == null &&
-                                file.after == null
-                        mutable.update {
-                            it.copy(
-                                load = ReviewLoad.Ready,
-                                diff = file,
-                                missing = file == null,
-                                noDiff = empty,
-                            )
-                        }
-                    }
-                }
-            } else {
-                when (val read = review.changes(messageId)) {
-                    is Outcome.Failed ->
-                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
-                    is Outcome.Ok -> {
-                        val file = read.value.files.firstOrNull { it.path == path }
-                        mutable.update {
-                            it.copy(
-                                load = ReviewLoad.Ready,
-                                diff =
-                                    file?.takeIf { f -> f.hasDiff }?.let(TurnChanges::asFileDiff),
-                                missing = file == null,
-                                noDiff = file != null && !file.hasDiff,
-                            )
-                        }
+        runner?.let { r ->
+            scope.launch {
+                r.book.comments.collect { list ->
+                    mutable.update { ui ->
+                        ui.copy(
+                            comments = list.filter { it.anchor.path == path }.toImmutableList(),
+                            drafts = list.count { it.status == CommentStatus.Draft },
+                        )
                     }
                 }
             }
         }
+        scope.launch {
+            var first = true
+            review.edits.collect {
+                if (first) {
+                    first = false
+                } else {
+                    load(quiet = true)
+                    runner?.reconcile()
+                }
+            }
+        }
+    }
+
+    /** The ViewModel goes back; the presenter has nowhere to go. */
+    override fun back(): Unit = Unit
+
+    override fun retry(): Unit = load()
+
+    override fun comment(anchor: CommentAnchor?) {
+        if (runner == null || anchor == null || anchor.path != path) return
+        mutable.update { it.copy(commenting = anchor, sendFailure = null) }
+    }
+
+    override fun commentText(text: String?) {
+        val anchor = state.value.commenting
+        mutable.update { it.copy(commenting = null) }
+        val r = runner ?: return
+        if (anchor == null || text.isNullOrBlank()) return
+        val raw =
+            state.value.diff
+                ?.let { CommentLines.range(CommentResolve.diffFile(it), anchor.side, anchor.start, anchor.end) }
+                .orEmpty()
+        r.book.add(anchor, text, raw)
+    }
+
+    override fun removeComment(id: String) {
+        runner?.book?.remove(id)
+    }
+
+    override fun sendComments() {
+        val r = runner ?: return
+        if (state.value.sending || state.value.drafts == 0) return
+        mutable.update { it.copy(sending = true, sendFailure = null) }
+        scope.launch {
+            val result = r.sendDrafts()
+            mutable.update { it.copy(sending = false, sendFailure = (result as? Outcome.Failed)?.failure) }
+        }
+    }
+
+    private fun load(quiet: Boolean = false) {
+        if (!quiet) mutable.update { it.copy(load = ReviewLoad.Loading) }
+        scope.launch {
+            val read = read()
+            // A quiet read that fails keeps the last diff on screen.
+            if (read is ReviewLoad.Failed && quiet && state.value.load == ReviewLoad.Ready) return@launch
+            if (read is ReviewLoad.Failed) mutable.update { it.copy(load = read) }
+        }
+    }
+
+    /** Reads the file and updates the page; returns the failure when the read failed. */
+    private suspend fun read(): ReviewLoad {
+        val read =
+            when {
+                workingTree -> readWorkingTree(review, path)
+                staged -> readStaged(review, path)
+                else -> readChanges(review, path, messageId)
+            }
+        return when (read) {
+            is Outcome.Failed -> ReviewLoad.Failed(read.failure)
+            is Outcome.Ok -> {
+                mutable.update { read.value(it).copy(load = ReviewLoad.Ready) }
+                ReviewLoad.Ready
+            }
+        }
     }
 }
+
+/** One file's diff page reads, each returning how the page changes. */
+private typealias PageChange = (FileDiffUi) -> FileDiffUi
+
+private suspend fun readWorkingTree(review: ConversationReview, path: String): Outcome<PageChange> =
+    when (val read = review.workingTree()) {
+        is Outcome.Failed -> read
+        is Outcome.Ok -> {
+            val file = read.value.firstOrNull { it.file == path }
+            val noDiff = file != null && file.patch.isNullOrBlank()
+            Outcome.Ok { ui -> ui.copy(diff = file, missing = file == null, noDiff = noDiff) }
+        }
+    }
+
+private suspend fun readStaged(review: ConversationReview, path: String): Outcome<PageChange> =
+    when (val read = review.refresh()) {
+        is Outcome.Failed -> read
+        is Outcome.Ok -> {
+            val file = review.state.value.staged?.files?.firstOrNull { it.file == path }
+            val empty = file != null && file.patch.isNullOrBlank() && file.before == null && file.after == null
+            Outcome.Ok { ui -> ui.copy(diff = file, missing = file == null, noDiff = empty) }
+        }
+    }
+
+private suspend fun readChanges(review: ConversationReview, path: String, messageId: String?): Outcome<PageChange> =
+    when (val read = review.changes(messageId)) {
+        is Outcome.Failed -> read
+        is Outcome.Ok -> {
+            val file = read.value.files.firstOrNull { it.path == path }
+            val diff = file?.takeIf { f -> f.hasDiff }?.let(TurnChanges::asFileDiff)
+            val noDiff = file != null && !file.hasDiff
+            Outcome.Ok { ui -> ui.copy(diff = diff, missing = file == null, noDiff = noDiff) }
+        }
+    }
 
 public interface UndoFromHereActions {
     public fun back()

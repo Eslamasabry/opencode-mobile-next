@@ -25,11 +25,49 @@ import io.github.eslamasabry.oc.ui.words.res.s40iCopied
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.model.FileDiff
 import io.github.eslamasabry.oc.feature.review.presentation.ChangeRowUi
 import io.github.eslamasabry.oc.feature.review.presentation.ChangesActions
 import io.github.eslamasabry.oc.feature.review.presentation.ChangesUi
+import io.github.eslamasabry.oc.feature.review.presentation.CommentLines
+import io.github.eslamasabry.oc.feature.review.presentation.CommentSide
+import io.github.eslamasabry.oc.feature.review.presentation.CommentStatus
+import io.github.eslamasabry.oc.feature.review.presentation.FileDiffActions
 import io.github.eslamasabry.oc.feature.review.presentation.FileDiffUi
+import io.github.eslamasabry.oc.feature.review.presentation.GuideUi
+import io.github.eslamasabry.oc.feature.review.presentation.LineComment
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewGuide
+import io.github.eslamasabry.oc.ui.kit.motion.KitEntrance
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowState
+import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentAdd
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentDraft
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentField
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentFixed
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentHint
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentLine
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentLines
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentNotPlaced
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentRemove
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentRemovedLine
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentRemovedLines
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentSending
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentTitleLine
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentTitleLines
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentWaiting
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentsLabel
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentsSendFailed
+import io.github.eslamasabry.oc.ui.words.res.reviewCommentsWaitingNotice
+import io.github.eslamasabry.oc.ui.words.res.reviewGuideAlsoChanged
+import io.github.eslamasabry.oc.ui.words.res.reviewGuideBusy
+import io.github.eslamasabry.oc.ui.words.res.reviewGuideFallback
+import io.github.eslamasabry.oc.ui.words.res.reviewGuideMaking
+import io.github.eslamasabry.oc.ui.words.res.reviewGuided
+import io.github.eslamasabry.oc.ui.words.res.reviewGuidedSupporting
+import io.github.eslamasabry.oc.ui.words.res.reviewSendComments
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewLoad
 import io.github.eslamasabry.oc.feature.review.presentation.StagedActions
 import io.github.eslamasabry.oc.feature.review.presentation.StagedConfirm
@@ -188,7 +226,7 @@ private fun Page(content: @Composable () -> Unit) {
 @Composable
 private fun FailedNotice(
     message: String,
-    failure: io.github.eslamasabry.oc.core.common.Failure,
+    failure: Failure,
     retry: (() -> Unit)? = null,
 ) {
     KitErrorNotice(
@@ -256,14 +294,22 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                         // Flutter: "Send back" is a note in the chat's box, offered beside Looks
                         // good / Undo all.
                         tertiary =
-                            if (state.canSendBack)
-                                listOf(
-                                    KitAction(
-                                        stringResource(Res.string.reviewSendBackWithNote),
-                                        actions::sendBack,
+                            buildList {
+                                if (state.drafts > 0)
+                                    add(
+                                        KitAction(
+                                            pluralStringResource(
+                                                Res.plurals.reviewSendComments,
+                                                state.drafts,
+                                                state.drafts,
+                                            ),
+                                            actions::sendComments,
+                                            working = state.sendingComments,
+                                        )
                                     )
-                                )
-                            else emptyList(),
+                                if (state.canSendBack)
+                                    add(KitAction(stringResource(Res.string.reviewSendBackWithNote), actions::sendBack))
+                            },
                     )
                 }
             } else null,
@@ -350,8 +396,44 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                         state.sendBackFailure?.let {
                             FailedNotice(stringResource(Res.string.reviewSendBackFailed), it)
                         }
-                        KitRowGroup(Modifier.testTag("review-files")) {
-                            state.files.forEach { row -> ChangeRow(row, actions) }
+                        state.commentsFailure?.let {
+                            FailedNotice(stringResource(Res.string.reviewCommentsSendFailed), it)
+                        }
+                        if (state.waiting > 0)
+                            KitNotice(
+                                pluralStringResource(
+                                    Res.plurals.reviewCommentsWaitingNotice,
+                                    state.waiting,
+                                    state.waiting,
+                                )
+                            )
+                        if (state.canGuide)
+                            KitSwitchRow(
+                                title = stringResource(Res.string.reviewGuided),
+                                checked = state.guide != GuideUi.Off,
+                                supporting = stringResource(Res.string.reviewGuidedSupporting),
+                                modifier = Modifier.testTag("review-guided"),
+                                onCheckedChange = actions::guided,
+                            )
+                        when (val guide = state.guide) {
+                            is GuideUi.Ready ->
+                                KitEntrance(key = guide.guide) { Guide(guide.guide, state.files, actions) }
+                            else -> {
+                                when (guide) {
+                                    GuideUi.Making -> KitNotice(stringResource(Res.string.reviewGuideMaking))
+                                    is GuideUi.Fallback ->
+                                        KitNotice(
+                                            stringResource(
+                                                if (guide.failure is Failure.Busy) Res.string.reviewGuideBusy
+                                                else Res.string.reviewGuideFallback
+                                            )
+                                        )
+                                    else -> Unit
+                                }
+                                KitRowGroup(Modifier.testTag("review-files")) {
+                                    state.files.forEach { row -> ChangeRow(row, actions) }
+                                }
+                            }
                         }
                         KitText(
                             stringResource(
@@ -398,6 +480,38 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
     )
 }
 
+/**
+ * The Guided view (B-155): the agent's sections, core first, each opening with its one line of what and why; the glue
+ * files fold under "Also changed".
+ */
+@Composable
+private fun Guide(guide: ReviewGuide, files: List<ChangeRowUi>, actions: ChangesActions) {
+    val byPath = remember(files) { files.associateBy { it.path } }
+    Column(Modifier.testTag("review-guide"), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
+        guide.sections.forEach { section ->
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                KitText(section.title, role = TypeRole.Title)
+                if (section.why.isNotEmpty()) KitText(section.why, role = TypeRole.Body, tone = TextTone.Secondary)
+                KitRowGroup {
+                    section.files.mapNotNull(byPath::get).forEach { row -> ChangeRow(row, actions) }
+                }
+            }
+        }
+        val also = guide.alsoChanged.mapNotNull(byPath::get)
+        if (also.isNotEmpty()) {
+            var open by remember(guide) { mutableStateOf(false) }
+            KitExpandRow(
+                title = stringResource(Res.string.reviewGuideAlsoChanged),
+                expanded = open,
+                supporting = also.size.toString(),
+                onExpandedChange = { open = it },
+            ) {
+                KitRowGroup { also.forEach { row -> ChangeRow(row, actions) } }
+            }
+        }
+    }
+}
+
 @Composable
 private fun ChangeRow(row: ChangeRowUi, actions: ChangesActions) {
     val counts =
@@ -419,47 +533,25 @@ private fun ChangeRow(row: ChangeRowUi, actions: ChangesActions) {
  */
 @Composable
 public fun FileDiffScreen(state: FileDiffUi, onBack: () -> Unit, onRetry: () -> Unit) {
-    val current = state.diff
-    // Copy is verbatim (a diff is the person's own content): the patch, and the updated file.
-    val copyPatch =
-        rememberKitCopyAction(
-            stringResource(Res.string.reviewCopyPatch),
-            stringResource(Res.string.s40iCopied),
-            { current?.patch.orEmpty() },
-        )
-    val copyFile =
-        rememberKitCopyAction(
-            stringResource(Res.string.reviewCopyFile),
-            stringResource(Res.string.s40iCopied),
-            { current?.after.orEmpty() },
-        )
-    // Surrounding lines can be opened only where the whole file is known (before and after).
-    val canExpand =
-        current != null && !current.patch.isNullOrBlank() && current.before != null && current.after != null
-    var fullContext by remember(state.path) { mutableStateOf(false) }
-    val expandLabel =
-        stringResource(
-            if (fullContext) Res.string.kitDiffHideUnchanged else Res.string.reviewExpandContext
-        )
-    KitScreen(
-        topBar = {
-            KitTopBar(
-                title = state.name,
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = onBack,
-                actions =
-                    buildList {
-                        if (current != null && !current.patch.isNullOrBlank())
-                            add(KitLineAction(copyPatch.label, { copyPatch.onClick?.invoke() }))
-                        if (current != null && !current.after.isNullOrEmpty())
-                            add(KitLineAction(copyFile.label, { copyFile.onClick?.invoke() }))
-                        if (canExpand)
-                            add(KitLineAction(expandLabel, { fullContext = !fullContext }))
-                    },
-            )
+    FileDiffScreen(
+        state,
+        object : FileDiffActions {
+            override fun back() = onBack()
+
+            override fun retry() = onRetry()
         },
+    )
+}
+
+/** One file's diff with line comments for the agent (B-156). */
+@Composable
+public fun FileDiffScreen(state: FileDiffUi, actions: FileDiffActions) {
+    val onRetry = actions::retry
+    var fullContext by remember(state.path) { mutableStateOf(false) }
+    KitScreen(
+        topBar = { FileTopBar(state, fullContext, { fullContext = !fullContext }, actions::back) },
         loading = state.load == ReviewLoad.Loading,
+        bottom = if (state.canComment && state.drafts > 0) ({ SendCommentsBlock(state, actions) }) else null,
     ) {
         when (val load = state.load) {
             ReviewLoad.Loading -> Unit
@@ -478,16 +570,92 @@ public fun FileDiffScreen(state: FileDiffUi, onBack: () -> Unit, onRetry: () -> 
                         KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewFileGone))
                     diff == null || state.noDiff ->
                         KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewNoDiff))
-                    else -> DiffBody(diff, fullContext)
+                    else -> DiffBody(diff, fullContext, state, actions)
                 }
             }
         }
     }
+    CommentDialog(state, actions)
 }
 
 @Composable
-private fun DiffBody(diff: FileDiff, fullContext: Boolean) {
+private fun SendCommentsBlock(state: FileDiffUi, actions: FileDiffActions) {
+    KitActionBlock(
+        modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+        primary =
+            KitAction(
+                pluralStringResource(Res.plurals.reviewSendComments, state.drafts, state.drafts),
+                actions::sendComments,
+                working = state.sending,
+            ),
+    )
+}
+
+/** The file's name with Copy patch, Copy updated file and the surrounding-lines switch, where each applies. */
+@Composable
+private fun FileTopBar(state: FileDiffUi, fullContext: Boolean, onToggleContext: () -> Unit, onBack: () -> Unit) {
+    val current = state.diff
+    // Copy is verbatim (a diff is the person's own content): the patch, and the updated file.
+    val copyPatch =
+        rememberKitCopyAction(
+            stringResource(Res.string.reviewCopyPatch),
+            stringResource(Res.string.s40iCopied),
+            { current?.patch.orEmpty() },
+        )
+    val copyFile =
+        rememberKitCopyAction(
+            stringResource(Res.string.reviewCopyFile),
+            stringResource(Res.string.s40iCopied),
+            { current?.after.orEmpty() },
+        )
+    // Surrounding lines can be opened only where the whole file is known (before and after).
+    val canExpand =
+        current != null && !current.patch.isNullOrBlank() && current.before != null && current.after != null
+    val expandLabel =
+        stringResource(
+            if (fullContext) Res.string.kitDiffHideUnchanged else Res.string.reviewExpandContext
+        )
+    KitTopBar(
+        title = state.name,
+        exit = KitTopBarExit.Back,
+        exitLabel = stringResource(Res.string.kitTopBarBack),
+        onExit = onBack,
+        actions =
+            buildList {
+                if (current != null && !current.patch.isNullOrBlank())
+                    add(KitLineAction(copyPatch.label, { copyPatch.onClick?.invoke() }))
+                if (current != null && !current.after.isNullOrEmpty())
+                    add(KitLineAction(copyFile.label, { copyFile.onClick?.invoke() }))
+                if (canExpand) add(KitLineAction(expandLabel, onToggleContext))
+            },
+    )
+}
+
+/** The short comment field, named after the lines it is about (B-156). */
+@Composable
+private fun CommentDialog(state: FileDiffUi, actions: FileDiffActions) {
+    val anchor = state.commenting
+    val emptyNote = stringResource(Res.string.reviewWorkspaceCommentEmpty)
+    KitInputDialog(
+        visible = anchor != null,
+        title =
+            if (anchor == null) ""
+            else if (anchor.start == anchor.end)
+                stringResource(Res.string.reviewCommentTitleLine, anchor.start.toString())
+            else stringResource(Res.string.reviewCommentTitleLines, anchor.start.toString(), anchor.end.toString()),
+        fieldLabel = stringResource(Res.string.reviewCommentField),
+        confirmLabel = stringResource(Res.string.reviewCommentAdd),
+        validate = { if (it.isBlank()) emptyNote else null },
+        operationKey = anchor,
+        onResult = actions::commentText,
+    )
+}
+
+@Composable
+private fun DiffBody(diff: FileDiff, fullContext: Boolean, state: FileDiffUi, actions: FileDiffActions) {
     val file = remember(diff, fullContext) { diffFile(diff, fullContext) }
+    val redactor = LocalKitRedactor.current
+    var unplaced by remember(diff) { mutableStateOf(false) }
     Column(
         Modifier.fillMaxSize()
             .verticalScroll(rememberScrollState())
@@ -507,49 +675,121 @@ private fun DiffBody(diff: FileDiff, fullContext: Boolean) {
                     KitText(stringResource(Res.string.kitDiffNoChanges))
                 }
             else -> {
-                val linesWord = stringResource(Res.string.kitDiffLines, "%1\$s", "%2\$s")
-                val rows = remember(file) { DiffModel.displayRows(file, MAX_DIFF_LINES) }
-                // The fold words for each hidden count the view will draw (its labels are asked
-                // outside composition).
-                val counts =
-                    remember(rows) {
-                        rows.rows
-                            .filterIsInstance<DiffRow.Gap>()
-                            .map { it.hidden }
-                            .distinct()
-                            .sorted()
+                val onComment: ((String) -> Unit)? =
+                    if (!state.canComment) null
+                    else { selected ->
+                        val placed = CommentLines.anchor(file, selected) { redactor.redact(it) }
+                        unplaced = placed == null
+                        actions.comment(placed)
                     }
-                val folds = counts.associateWith { n ->
-                    pluralStringResource(Res.plurals.kitDiffFoldBetween, n, n)
-                }
-                KitDiffView(
-                    file,
-                    maxLines = MAX_DIFF_LINES,
-                    hunkLabel = { oldStart, oldEnd, newStart, newEnd ->
-                        // The new side, or the old side when the hunk only removes lines
-                        // (kit_diff_rows.dart:67-76).
-                        val (from, to) =
-                            if (newEnd >= newStart) newStart to newEnd else oldStart to oldEnd
-                        linesWord.replace("%1\$s", from.toString()).replace("%2\$s", to.toString())
-                    },
-                    gapLabel = { hidden -> folds[hidden] ?: "… $hidden" },
-                    modifier = Modifier.fillMaxWidth().testTag("review-diff"),
-                )
-                if (rows.cut) {
-                    Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-                        KitText(
-                            stringResource(
-                                Res.string.kitDiffTooBig,
-                                rows.shownLines.toString(),
-                                rows.totalLines.toString(),
-                            ),
-                            tone = TextTone.Secondary,
-                        )
-                    }
+                Listing(file, onComment)
+            }
+        }
+        if (state.canComment) Comments(state, actions, unplaced)
+    }
+}
+
+/** The kit diff view of [file] (capped), with "Comment" on a selection where [onComment] is given. */
+@Composable
+private fun Listing(file: DiffFile, onComment: ((String) -> Unit)?) {
+    val linesWord = stringResource(Res.string.kitDiffLines, "%1\$s", "%2\$s")
+    val rows = remember(file) { DiffModel.displayRows(file, MAX_DIFF_LINES) }
+    // The fold words for each hidden count the view will draw (its labels are asked
+    // outside composition).
+    val counts =
+        remember(rows) {
+            rows.rows
+                .filterIsInstance<DiffRow.Gap>()
+                .map { it.hidden }
+                .distinct()
+                .sorted()
+        }
+    val folds = counts.associateWith { n ->
+        pluralStringResource(Res.plurals.kitDiffFoldBetween, n, n)
+    }
+    KitDiffView(
+        file,
+        maxLines = MAX_DIFF_LINES,
+        hunkLabel = { oldStart, oldEnd, newStart, newEnd ->
+            // The new side, or the old side when the hunk only removes lines
+            // (kit_diff_rows.dart:67-76).
+            val (from, to) =
+                if (newEnd >= newStart) newStart to newEnd else oldStart to oldEnd
+            linesWord.replace("%1\$s", from.toString()).replace("%2\$s", to.toString())
+        },
+        gapLabel = { hidden -> folds[hidden] ?: "… $hidden" },
+        modifier = Modifier.fillMaxWidth().testTag("review-diff"),
+        onComment = onComment,
+    )
+    if (rows.cut) {
+        Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+            KitText(
+                stringResource(
+                    Res.string.kitDiffTooBig,
+                    rows.shownLines.toString(),
+                    rows.totalLines.toString(),
+                ),
+                tone = TextTone.Secondary,
+            )
+        }
+    }
+}
+
+/** The file's comments under its diff: each line's note with where it stands (B-156). */
+@Composable
+private fun Comments(state: FileDiffUi, actions: FileDiffActions, unplaced: Boolean) {
+    Column(
+        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("review-comments"),
+        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    ) {
+        if (unplaced) KitNotice(stringResource(Res.string.reviewCommentNotPlaced))
+        state.sendFailure?.let { FailedNotice(stringResource(Res.string.reviewCommentsSendFailed), it) }
+        if (state.comments.isEmpty()) {
+            KitText(stringResource(Res.string.reviewCommentHint), role = TypeRole.Body, tone = TextTone.Secondary)
+        } else {
+            val removeLabel = stringResource(Res.string.reviewCommentRemove)
+            KitRowGroup(label = stringResource(Res.string.reviewCommentsLabel)) {
+                state.comments.forEach { c ->
+                    // A new comment, and each step to Fixed, arrives with the kit's entrance
+                    // (none under reduced motion).
+                    KitEntrance(key = c.status) { CommentRow(c, removeLabel) { actions.removeComment(c.id) } }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun CommentRow(comment: LineComment, removeLabel: String, onRemove: () -> Unit) {
+    val a = comment.anchor
+    val start = a.start.toString()
+    val end = a.end.toString()
+    val title =
+        when {
+            a.side == CommentSide.Old && a.start == a.end -> stringResource(Res.string.reviewCommentRemovedLine, start)
+            a.side == CommentSide.Old -> stringResource(Res.string.reviewCommentRemovedLines, start, end)
+            a.start == a.end -> stringResource(Res.string.reviewCommentLine, start)
+            else -> stringResource(Res.string.reviewCommentLines, start, end)
+        }
+    val (word, tone) =
+        when (comment.status) {
+            CommentStatus.Draft -> stringResource(Res.string.reviewCommentDraft) to KitRowStateTone.Quiet
+            CommentStatus.Sending -> stringResource(Res.string.reviewCommentSending) to KitRowStateTone.Running
+            CommentStatus.Pending -> stringResource(Res.string.reviewCommentWaiting) to KitRowStateTone.Running
+            CommentStatus.Resolved -> stringResource(Res.string.reviewCommentFixed) to KitRowStateTone.Quiet
+        }
+    val draft = comment.status == CommentStatus.Draft
+    KitRow(
+        title = title,
+        supporting = comment.text,
+        supportingMaxLines = 3,
+        state = KitRowState(word, tone),
+        trailing = if (draft) KitRowTrailing.Value(removeLabel, chevron = false) else KitRowTrailing.None,
+        onClickLabel = if (draft) removeLabel else null,
+        onClick = if (draft) onRemove else null,
+        growKey = comment.status,
+        modifier = Modifier.testTag("review-comment-${comment.id}"),
+    )
 }
 
 private const val MAX_DIFF_LINES = 4000
