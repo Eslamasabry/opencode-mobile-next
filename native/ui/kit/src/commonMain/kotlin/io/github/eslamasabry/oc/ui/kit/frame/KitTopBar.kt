@@ -58,6 +58,16 @@ public enum class KitTopBarExit {
     None,
 }
 
+/** The bar title's size (P-016), pure so it is tested without Compose. */
+public object TopBarTitle {
+    /**
+     * A page names itself in the large title size (28 sp), a clear step above the 16 sp row titles under it, as home's
+     * heading does. A switcher title (the chat header's conversation name, which renames on a tap) stays at the
+     * headline size: it shares its line with the conversation's actions and is not a page heading.
+     */
+    public fun role(switcher: Boolean): TypeRole = if (switcher) TypeRole.Headline else TypeRole.LargeTitle
+}
+
 /**
  * The page's bar (Dart `KitTopBar`): the place in the person's words, one quiet line of state, Back
  * at the start or Close at the end, and the page's actions — at most 2 on compact and 3 on medium;
@@ -231,6 +241,7 @@ public fun KitTopBar(
     // The title starts on the page gutter (E20-S08: Back, when there is one, takes the line above); the project ·
     // branch line or the subtitle starts under the title's first letter, one left edge for both.
     val back = exit == KitTopBarExit.Back && onExit != null
+    val titleRole = TopBarTitle.role(switcher = onTitleTap != null)
     val titleRow: @Composable () -> Unit = {
         Row(
             Modifier.padding(horizontal = Space.S2.dp),
@@ -243,7 +254,7 @@ public fun KitTopBar(
                     .semantics { heading() }
                     .kitContentEdge("bar-title")
                     .testTag("kit-top-bar-title"),
-                role = TypeRole.Headline,
+                role = titleRole,
                 kind = KitTextKind.Frame,
                 // Flutter's chat header: a long title takes a second line before it ends in "…" beside the chevron.
                 maxLines = 2,
@@ -261,7 +272,7 @@ public fun KitTopBar(
     ) {
         val hasLine = scope != null || subtitle != null
         val typography = LocalKitTypography.current
-        val titleLine = typography.style(TypeRole.Headline).lineHeight
+        val titleLine = typography.style(titleRole).lineHeight
         val lineLine = typography.style(TypeRole.Secondary).lineHeight
         // E20-S08: the title's words start on the page gutter, the transcript's and the rows' edge, also beside a
         // Back button (they sat 48 dp further in, past it). Back, and the actions, take the line above the title.

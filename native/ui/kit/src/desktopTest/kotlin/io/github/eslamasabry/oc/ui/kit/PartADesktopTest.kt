@@ -383,7 +383,8 @@ class PartADesktopTest {
     fun `B-KIT-052 the bar title is frame text - capped at 1_3 at 200 percent`() = runComposeUiTest {
         setContent { Themed(fontScale = 2f) { InWindow(412, 800) { KitTopBar("Hi") } } }
         val layout = textLayout("kit-top-bar-title")
-        assertEquals(16f * 1.3f, layout.layoutInput.style.fontSize.value, 0.01f)
+        // P-016: a page bar's title is the 28 sp large title; the 1.3× cap still holds.
+        assertEquals(28f * 1.3f, layout.layoutInput.style.fontSize.value, 0.01f)
     }
 
     @Test
