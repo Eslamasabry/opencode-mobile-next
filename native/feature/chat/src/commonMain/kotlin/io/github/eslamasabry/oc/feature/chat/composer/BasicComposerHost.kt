@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerViewModel
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
+import io.github.eslamasabry.oc.feature.chat.composer.presentation.SendFieldRules
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -308,15 +309,54 @@ public fun BasicComposer(
     val busy = chrome.busy()
     val scope = rememberCoroutineScope()
     val lift = LocalKitPromptLift.current
+    var followed by remember(state.targetKey) { mutableStateOf<FollowedSend?>(null) }
     val send: () -> Unit = {
         val text = field.text.toString()
         val liftId = lift?.offer(text)
+        // P-003: the words leave the box at the tap (they are on their bubble now). The draft owner
+        // keeps them until the server acknowledges the send, so this clear is not reported; its
+        // clear revision empties the field for good. A send that does not go puts them back.
+        val serial = editor.userEditSerial
+        field.edit { replace(0, length, "") }
+        editor.lastReported = ""
         scope.launch {
             if (actions.send(text)) {
                 // A local admission is not a server acknowledgement. The draft owner publishes its
                 // clear revision.
+                followed = FollowedSend(text, serial)
                 chrome.onSent()
-            } else if (liftId != null) lift?.cancel(liftId)
+            } else {
+                if (liftId != null) lift?.cancel(liftId)
+                if (SendFieldRules.restoreAfterFailedSend(field.text.toString(), serial, editor.userEditSerial)) {
+                    field.edit { replace(0, length, text) }
+                    editor.lastReported = text
+                }
+            }
+        }
+    }
+    // P-003: an admitted send is followed until the draft owner clears it; one that later fails or
+    // ends uncertain puts its words back (the uncertain one with its "may already have been sent"
+    // line).
+    LaunchedEffect(followed, state.draft) {
+        val sent = followed ?: return@LaunchedEffect
+        if (state.draft.sendInFlight) sent.seenInFlight = true
+        val decision =
+            SendFieldRules.afterSend(
+                sent.text,
+                sent.seenInFlight,
+                state.draft,
+                userEdited = editor.userEditSerial != sent.serial,
+            )
+        when (decision) {
+            SendFieldRules.AfterSend.Wait -> Unit
+            SendFieldRules.AfterSend.Done -> followed = null
+            SendFieldRules.AfterSend.Restore -> {
+                followed = null
+                if (field.text.isEmpty()) {
+                    field.edit { replace(0, length, state.draft.text) }
+                    editor.lastReported = state.draft.text
+                }
+            }
         }
     }
     // P12-VOICE: the voice slot types into this field and sends through this composer's one send
@@ -451,11 +491,11 @@ public fun BasicComposer(
                 tone = StatusTone.Attention,
             )
         }
-        if (state.draft.failure != null || state.draft.sendBlocked) {
+        if (state.draft.failure != null || SendFieldRules.showsAlreadySent(state.draft)) {
             KitErrorNotice(
                 message =
                     stringResource(
-                        if (state.draft.sendBlocked) Res.string.chatDraftAlreadySent
+                        if (SendFieldRules.showsAlreadySent(state.draft)) Res.string.chatDraftAlreadySent
                         else Res.string.draftSaveFailed
                     ),
                 retry =
@@ -465,7 +505,7 @@ public fun BasicComposer(
                                 stringResource(Res.string.chatDraftRepeatAction),
                                 { repeatRevision = state.draft.editRevision },
                             )
-                        state.draft.sendBlocked -> null
+                        SendFieldRules.showsAlreadySent(state.draft) -> null
                         else ->
                             KitLineAction(
                                 stringResource(Res.string.draftRetrySave),
@@ -1009,6 +1049,11 @@ private fun attachmentWords(failure: Failure): String =
             else -> Res.string.composerPreviewAttachmentFailed
         }
     )
+
+/** P-003: words that left the field at the tap, followed until their send settles. */
+private class FollowedSend(val text: String, val serial: Long) {
+    var seenInFlight: Boolean = false
+}
 
 /**
  * Plain bookkeeping: synchronous input reporting does not mutate Compose state or the field

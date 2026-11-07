@@ -85,12 +85,52 @@ class ComposerDraftRestoreTest {
     }
 
     @Test
-    fun `B-STATE-102 a local send receipt alone never clears the editor`() = runComposeUiTest {
-        setContent { Theme { BasicComposer(ui("kept until acknowledged"), Actions(), chrome) } }
-        onNode(hasSetTextAction()).performTextReplacement("kept until acknowledged")
+    fun `B-STATE-102 P-003 a local send receipt empties the field but never clears the stored draft`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent { Theme { BasicComposer(ui("kept until acknowledged"), actions, chrome) } }
+            onNode(hasSetTextAction()).performTextReplacement("kept until acknowledged")
+            onNodeWithTag("chat-send-button").performClick()
+            waitForIdle()
+            // The words are on their bubble now; the draft owner keeps them until the server acknowledges.
+            assertEquals("", onNode(hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.EditableText].text)
+            assertTrue(actions.changes.none { it.isEmpty() }, "the stored draft is not cleared by the tap: ${actions.changes}")
+        }
+
+    @Test
+    fun `P-003 a send that does not go puts its words back`() = runComposeUiTest {
+        val actions = Actions().apply { sendWait = CompletableDeferred() }
+        setContent { Theme { BasicComposer(ui("try this"), actions, chrome) } }
+        onNode(hasSetTextAction()).performTextReplacement("try this")
         onNodeWithTag("chat-send-button").performClick()
-        onNode(hasSetTextAction()).assertTextContains("kept until acknowledged")
+        waitForIdle()
+        assertEquals("", onNode(hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.EditableText].text)
+        runOnIdle { actions.sendWait!!.complete(false) }
+        onNode(hasSetTextAction()).assertTextContains("try this")
     }
+
+    @Test
+    fun `P-003 a normal send in progress shows no already-sent error, an uncertain one does with its words back`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val state = mutableStateOf(ui("hello"))
+            setContent { Theme { BasicComposer(state.value, actions, chrome) } }
+            onNode(hasSetTextAction()).performTextReplacement("hello")
+            onNodeWithTag("chat-send-button").performClick()
+            runOnIdle {
+                state.value = state.value.copy(draft = state.value.draft.copy(sendBlocked = true, sendInFlight = true))
+            }
+            waitForIdle()
+            onNodeWithText("This text may already have been sent", substring = true).assertDoesNotExist()
+            assertEquals("", onNode(hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.EditableText].text)
+            // The server never confirmed it: the words come back with the one line that says why Send is off.
+            runOnIdle {
+                state.value = state.value.copy(draft = state.value.draft.copy(sendBlocked = true, sendInFlight = false))
+            }
+            waitForIdle()
+            onNodeWithText("This text may already have been sent", substring = true).assertIsDisplayed()
+            onNode(hasSetTextAction()).assertTextContains("hello")
+        }
 
     @Test
     fun `B-STATE-102 same text edited during pending send survives and target switch restores independently`() =

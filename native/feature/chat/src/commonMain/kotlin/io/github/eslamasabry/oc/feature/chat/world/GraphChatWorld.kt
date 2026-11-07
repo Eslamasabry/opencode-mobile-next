@@ -540,26 +540,35 @@ internal class GraphChatWorld(
         // unconfirmed, a second Send would dispatch the same message again. (A not-sent twin is
         // retired when the box
         // sends it again, so a Failed bubble never blocks.)
-        val pendingTwin =
-            (current.text.isNotBlank() || current.attachments.isNotEmpty()) &&
-                mutablePending.value.any {
-                    it.state != PendingState.Failed &&
-                        it.text.trim() == current.text.trim() &&
-                        sentFiles(it.localId) == current.attachments
-                }
-        val blocked =
-            pendingTwin ||
-                protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
-                    protectedFiles.let { it == null || it == current.attachments }
+        val twins = pendingTwins(current)
+        val pendingTwin = twins.isNotEmpty()
+        val protectedMatch =
+            protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
+                protectedFiles.let { it == null || it == current.attachments }
+        val blocked = pendingTwin || protectedMatch
+        // P-003: every twin is still Sending and nothing else protects the words: a normal send in
+        // progress, not an uncertain one.
+        val inFlight =
+            pendingTwin && !protectedMatch && twins.all { it.state == PendingState.Sending }
         val repeat =
             blocked &&
                 protectedByHistory &&
                 current.ready &&
                 current.failure == null &&
                 mutablePending.value.none { it.state == PendingState.Unconfirmed }
-        if (current.sendBlocked != blocked || current.repeatAllowed != repeat)
-            mutableDraft.value = current.copy(sendBlocked = blocked, repeatAllowed = repeat)
+        val next = current.copy(sendBlocked = blocked, repeatAllowed = repeat, sendInFlight = inFlight)
+        if (next != current) mutableDraft.value = next
     }
+
+    /** Bubbles on their way or unconfirmed with exactly the draft's words and files (none for an empty draft). */
+    private fun pendingTwins(current: DraftFacts): List<PendingSend> =
+        if (current.text.isBlank() && current.attachments.isEmpty()) emptyList()
+        else
+            mutablePending.value.filter {
+                it.state != PendingState.Failed &&
+                    it.text.trim() == current.text.trim() &&
+                    sentFiles(it.localId) == current.attachments
+            }
 
     /** A blank-text unconfirmed bubble with exactly [files] (every byte, not only names). */
     private fun unconfirmedFileOnly(files: List<PromptAttachment>): Boolean =

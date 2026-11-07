@@ -329,6 +329,12 @@ public data class DraftFacts(
     val failure: Failure? = null,
     val restoreRevision: Long = 0,
     val sendBlocked: Boolean = false,
+    /**
+     * P-003: [sendBlocked] only because the same words are still on their way (a normal send in
+     * progress). Send stays off, but nothing is uncertain yet, so no "may already have been sent"
+     * error.
+     */
+    val sendInFlight: Boolean = false,
     val editRevision: Long = 0,
     val repeatAllowed: Boolean = false,
     val attachments: List<PromptAttachment> = emptyList(),
