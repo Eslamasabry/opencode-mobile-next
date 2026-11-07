@@ -19,7 +19,7 @@ class Oc2SavedPermissionsRowsTest {
     private val here = ServerLocation(directory = "/root/shop")
 
     @Test
-    fun `B-164 OpenCode 2 advertises the always allowed list`() {
+    fun `B-164 OpenCode 2 advertises the always allowed list`() = runTest {
         assertTrue(Oc2Gateway.Capabilities.savedPermissionList)
         val server = RowServer { error("reading capabilities sends nothing") }
         assertTrue(server.gateway.capabilities.value.savedPermissionList)
