@@ -99,6 +99,39 @@ class ParserTest(unittest.TestCase):
         self.assertEqual({"SCHEDULE_EXACT_ALARM": "allow", "RUN_IN_BACKGROUND": "ignore", "RECORD_AUDIO": "allow"},
                          ds.parse_appops(out))
 
+    # Recorded on emulator-5584 (API 35) after the native app used All-files access over the 2.1.4 grant:
+    # `appops get <pkg>` then `appops get <uid>`. The grant is the uid's "allow"; the package lines are use records.
+    APPOPS_PKG_AFTER_USE = (
+        "Uid mode: COARSE_LOCATION: ignore\n"
+        "CAMERA: foreground\n"
+        "MANAGE_EXTERNAL_STORAGE: allow\n"
+        "MANAGE_EXTERNAL_STORAGE: default; time=+74ms ago; duration=+19ms\n"
+        "NO_ISOLATED_STORAGE: deny; rejectTime=+37ms ago\n"
+        "ACCESS_RESTRICTED_SETTINGS: default\n"
+    )
+    APPOPS_UID = "Uid mode: COARSE_LOCATION: ignore\nCAMERA: foreground\nMANAGE_EXTERNAL_STORAGE: allow\n"
+
+    def test_B_145_a_used_all_files_grant_is_still_allow(self):
+        ops = ds.parse_appops(self.APPOPS_PKG_AFTER_USE, self.APPOPS_UID)
+        self.assertEqual("allow", ops["MANAGE_EXTERNAL_STORAGE"])
+        self.assertEqual("ignore", ops["COARSE_LOCATION"])  # the "Uid mode: " prefixed first line is read too
+
+    def test_B_145_the_grants_verdict_passes_when_the_app_only_used_the_grant(self):
+        before = ds.parse_appops("Uid mode: CAMERA: foreground\nMANAGE_EXTERNAL_STORAGE: allow\n",
+                                 "Uid mode: CAMERA: foreground\nMANAGE_EXTERNAL_STORAGE: allow\n")
+        after = ds.parse_appops(self.APPOPS_PKG_AFTER_USE, self.APPOPS_UID)
+        self.assertTrue(CompareTest.verdicts(self, state(appops=before), state(appops=after))["grants"].ok)
+
+    def test_B_145_a_reset_grant_still_fails(self):
+        before = ds.parse_appops("MANAGE_EXTERNAL_STORAGE: allow\n", "MANAGE_EXTERNAL_STORAGE: allow\n")
+        after = ds.parse_appops("MANAGE_EXTERNAL_STORAGE: default; time=+1s ago\n", "CAMERA: foreground\n")
+        self.assertFalse(CompareTest.verdicts(self, state(appops=before), state(appops=after))["grants"].ok)
+
+    def test_B_145_the_app_uid_is_read_from_dumpsys_package(self):
+        dump = "  Permission [x.P] (1):\n    uid=10999 gids=[]\n  Package [p] (2):\n    appId=10210\n"
+        self.assertEqual(10210, ds.parse_app_uid(dump))
+        self.assertEqual(10200, ds.parse_app_uid("    userId=10200\n"))
+
     def test_B_MIGR_009_voice_files_are_listed_with_sizes(self):
         self.assertEqual({"files/voice_models/a.onnx": 1024, "files/voice_models/tokens.txt": 7},
                          ds.parse_file_sizes("1024 files/voice_models/a.onnx\n7 files/voice_models/tokens.txt\n"))

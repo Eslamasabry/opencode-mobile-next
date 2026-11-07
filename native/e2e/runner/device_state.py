@@ -1,7 +1,7 @@
 """OS-held app state the upgrade must keep (E00-S09, plan 05 §10.4 step 6 and §10.5 J1).
 
 capture(adb, app_id) reads, on the verified emulator only and as root:
-  - runtime permission grants (dumpsys package) and special app-ops (appops get)
+  - runtime permission grants (dumpsys package) and special app-ops (appops get, the uid's modes over the package's)
   - notification channels with their importance (dumpsys notification --noredact)
   - launcher shortcuts, pinned and dynamic (dumpsys shortcut)
   - placed home-screen widgets by provider (dumpsys appwidget)
@@ -74,14 +74,33 @@ def parse_version_code(dumpsys_package: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
-def parse_appops(appops_get: str) -> dict[str, str]:
-    """`appops get <pkg>` -> {op: mode}. Times and durations are dropped: only the choice matters."""
-    ops: dict[str, str] = {}
-    for line in appops_get.splitlines():
-        m = re.match(r"^\s*([A-Z_][A-Z0-9_]+)(?: \(\w+\))?: ([a-z_]+)", line)
-        if m:
-            ops[m.group(1)] = m.group(2)
-    return ops
+def parse_app_uid(dumpsys_package: str) -> int | None:
+    """`dumpsys package <pkg>` -> the app's uid for user 0 (appId=, userId= on older Android)."""
+    m = re.search(r"^\s*(?:appId|userId)=(\d+)", dumpsys_package, re.M)
+    return int(m.group(1)) if m else None
+
+
+def parse_appops(appops_get: str, uid_appops_get: str = "") -> dict[str, str]:
+    """`appops get <pkg>` (and `appops get <uid>`) -> {op: the mode Android decides with}. Times are dropped.
+
+    B-145: `appops get <pkg>` prints the uid's modes first (the first line prefixed "Uid mode: "), then the
+    package's own entries with no header between them. An op can be in both: as soon as the app (or MediaProvider on
+    its behalf) uses MANAGE_EXTERNAL_STORAGE, a package entry "MANAGE_EXTERNAL_STORAGE: default; time=..." appears
+    next to the uid's "MANAGE_EXTERNAL_STORAGE: allow" (and NO_ISOLATED_STORAGE shows up at its default, deny).
+    Taking the last line read that as "allow -> default" although the grant was untouched. AppOpsService decides with
+    the uid mode whenever one is set (AppOpsService.checkOperationUnchecked: a uid mode other than the op's default
+    wins over the package mode), so the uid's modes, read on their own with `appops get <uid>`, are laid over the
+    package's.
+    """
+    def lines(text: str) -> dict[str, str]:
+        ops: dict[str, str] = {}
+        for line in text.splitlines():
+            m = re.match(r"^\s*(?:Uid mode: )?([A-Z_][A-Z0-9_]+)(?: \(\w+\))?: ([a-z_]+)", line)
+            if m:
+                ops[m.group(1)] = m.group(2)
+        return ops
+
+    return {**lines(appops_get), **lines(uid_appops_get)}
 
 
 def _package_block(text: str, start: re.Pattern, next_start: re.Pattern) -> list[str]:
@@ -189,6 +208,7 @@ def capture(adb, app_id: str) -> dict:
     if not re.match(r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$", app_id):
         raise ValueError("app id not allowed")
     pkg = adb(["shell", "dumpsys", "package", app_id])
+    uid = parse_app_uid(pkg)
     data = f"/data/data/{app_id}"
     voice = adb(["shell", f"cd {data} && [ -d {VOICE_DIR} ] && find {VOICE_DIR} -type f -exec stat -c '%s %n' {{}} + "
                           f"|| true"], check=False)
@@ -198,7 +218,8 @@ def capture(adb, app_id: str) -> dict:
         "versionCode": parse_version_code(pkg),
         "runtimeGrants": parse_runtime_grants(pkg),
         "installGrants": parse_install_grants(pkg),
-        "appops": parse_appops(adb(["shell", "appops", "get", app_id], check=False)),
+        "appops": parse_appops(adb(["shell", "appops", "get", app_id], check=False),
+                               adb(["shell", "appops", "get", str(uid)], check=False) if uid is not None else ""),
         "channels": parse_channels(adb(["shell", "dumpsys", "notification", "--noredact"]), app_id),
         "shortcuts": parse_shortcuts(adb(["shell", "dumpsys", "shortcut"]), app_id),
         "widgets": parse_widgets(adb(["shell", "dumpsys", "appwidget"]), app_id),
