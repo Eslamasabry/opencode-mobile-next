@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -59,23 +58,12 @@ public fun KitFilterChips(
     val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
     // The line clips sideways for its scroll and fade; the chips' style shadows keep their room above and below.
     val room = kitShadowReach()
-    // [bleed]: the line sits in a block that already keeps the gutter (a screen's bottom block); it reaches out over
-    // that gutter to the screen's edges, so the chips still start on the gutter and scroll out of sight at the edge.
-    val reach =
-        if (!bleed) Modifier
-        else
-            Modifier.layout { measurable, constraints ->
-                val extra = tokens.gutter.dp.roundToPx() * 2
-                val wide =
-                    if (constraints.hasBoundedWidth)
-                        constraints.copy(minWidth = constraints.minWidth + extra, maxWidth = constraints.maxWidth + extra)
-                    else constraints
-                val placeable = measurable.measure(wide)
-                val shown = if (constraints.hasBoundedWidth) placeable.width - extra else placeable.width
-                layout(shown, placeable.height) { placeable.place(if (constraints.hasBoundedWidth) -extra / 2 else 0, 0) }
-            }
+    // [bleed]: the line sits in a block that already keeps the gutter (a screen's bottom block). E20-S08: it scrolls
+    // inside that gutter, its chips starting on it and fading out at the block's end, never cut at the screen's edge
+    // (it used to reach out over the gutter, so the last chip ran off the screen).
+    val inset = if (bleed) 0.dp else tokens.gutter.dp
     Box(
-        modifier.then(reach).kitMaxWidth(CapRole.Reading)
+        modifier.kitMaxWidth(CapRole.Reading)
             .kitShadowRoom(room)
             .clipToBounds()
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -94,7 +82,7 @@ public fun KitFilterChips(
             .testTag("kit-filter-chips"),
     ) {
         Row(
-            Modifier.horizontalScroll(scroll).padding(horizontal = tokens.gutter.dp, vertical = room),
+            Modifier.horizontalScroll(scroll).padding(horizontal = inset, vertical = room),
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             content = chips,
