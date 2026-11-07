@@ -260,6 +260,9 @@ internal fun applySystemBars(window: Window, darkContent: Boolean, ground: Int) 
     // Ignored from API 35 (edge-to-edge): KitScreen paints the ground under the navigation bar
     // there.
     window.navigationBarColor = ground
+    // Dart kit_system_bars.dart:24: no divider line between the page and the navigation bar.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+        window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
         window.isNavigationBarContrastEnforced = false
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

@@ -111,6 +111,37 @@ public interface KitPlatform {
         get() = null
 }
 
+/**
+ * The phone's own bars for one theme (Dart `KitSystemBars.of`, `lib/ui/kit/kit_system_bars.dart`):
+ * a clear status bar over the page, the navigation bar in the page's [navigationBarColor] ground
+ * with no divider, and icons light on a dark theme and dark on a light one. [statusBarDark] is the
+ * bar's own brightness, as iOS names it.
+ */
+public data class KitSystemBarsLook(
+    val statusBarColor: Color,
+    val statusBarDarkIcons: Boolean,
+    val statusBarDark: Boolean,
+    val navigationBarColor: Color,
+    val navigationBarDividerColor: Color,
+    val navigationBarDarkIcons: Boolean,
+)
+
+/** Dart `KitSystemBars` (kit-v2 §7.1): every page announces the look for its theme. */
+public object KitSystemBars {
+    /** Dart `KitSystemBars.of`: [dark] is `ThemeRoles.isDark`, [ground] is `roles.ground`. */
+    public fun of(dark: Boolean, ground: Color): KitSystemBarsLook {
+        val darkIcons = !dark // F: lib/ui/kit/kit_system_bars.dart:17
+        return KitSystemBarsLook(
+            statusBarColor = Color.Transparent,
+            statusBarDarkIcons = darkIcons,
+            statusBarDark = dark,
+            navigationBarColor = ground,
+            navigationBarDividerColor = Color.Transparent,
+            navigationBarDarkIcons = darkIcons,
+        )
+    }
+}
+
 public val LocalKitPlatform: ProvidableCompositionLocal<KitPlatform> = staticCompositionLocalOf {
     error("KitPlatform is provided once at the app root")
 }

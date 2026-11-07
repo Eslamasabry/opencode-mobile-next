@@ -73,4 +73,14 @@ class AndroidKitPlatformTest {
         val background = activity.window.decorView.background as android.graphics.drawable.ColorDrawable
         assertEquals(ground, background.color)
     }
+
+    @Test
+    fun `kit_system_bars dart 24 leaves no divider over the navigation bar`() {
+        val activity = org.robolectric.Robolectric.buildActivity(androidx.activity.ComponentActivity::class.java).setup().get()
+        activity.window.navigationBarDividerColor = android.graphics.Color.RED
+        io.github.eslamasabry.oc.ui.kit.platform.applySystemBars(activity.window, darkContent = true, ground = android.graphics.Color.WHITE)
+        assertEquals(android.graphics.Color.TRANSPARENT, activity.window.navigationBarDividerColor)
+        @Suppress("DEPRECATION")
+        assertEquals(android.graphics.Color.WHITE, activity.window.navigationBarColor)
+    }
 }

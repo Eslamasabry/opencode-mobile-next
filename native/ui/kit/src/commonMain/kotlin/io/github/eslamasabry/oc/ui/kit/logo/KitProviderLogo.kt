@@ -35,6 +35,25 @@ public val LocalKitLogoLoader: ProvidableCompositionLocal<KitLogoLoader?> =
         null
     }
 
+/** The rules of Dart `_KitVectorLogo` (`lib/ui/kit/kit_vector_logo.dart`) that do not draw. */
+public object KitProviderLogoRules {
+    /**
+     * The mark to draw, or null (Dart `_start`: a load that fails is no logo, never an error
+     * state). A picture that is not a plain static SVG (`isStaticKitSvg`) is no logo either.
+     */
+    public suspend fun load(source: KitLogoLoader?, id: String, agent: Boolean): String? {
+        val svg =
+            try {
+                source?.svg(id, agent)
+            } catch (cancel: kotlin.coroutines.cancellation.CancellationException) {
+                throw cancel
+            } catch (_: Exception) {
+                null // F: lib/ui/kit/kit_vector_logo.dart:54-56
+            }
+        return svg?.takeIf(::isStaticKitSvg)
+    }
+}
+
 /**
  * Decorative monochrome provider or agent mark. While it loads, or when there is none, the slot stays empty at the same
  * size: no stand-in letter (owner 2026-11-06), so rows keep one edge and never show a stray glyph.
@@ -50,7 +69,7 @@ public fun KitProviderLogo(
 ) {
     val source = LocalKitLogoLoader.current
     var svg by remember(id, agent, source) { mutableStateOf<String?>(null) }
-    LaunchedEffect(id, agent, source) { svg = source?.svg(id, agent) }
+    LaunchedEffect(id, agent, source) { svg = KitProviderLogoRules.load(source, id, agent) }
     val context = LocalPlatformContext.current
     val request =
         remember(svg, context) {
