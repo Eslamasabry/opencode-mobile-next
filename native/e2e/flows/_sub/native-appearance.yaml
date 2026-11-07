@@ -12,5 +12,12 @@ appId: ${APP_ID}
     text: ${output.s.textSizeSmallest + '(, .*)?'}
     below: ${output.s.appearanceGroupComfort}
 - assertVisible:
-    text: ${output.s.appearanceSurfaceSoft}
+    text: ${output.s.appearanceSurfaceSoft + '(, .*)?'}
     below: ${output.s.appearanceChipStyle}
+# B-166 (4c012f945): the Style group asks Shape after Style; the 2.1.4 Sharp corners tweak shows there.
+- tapOn: ${output.s.appearanceChipStyle}
+- scrollUntilVisible:
+    element: ${output.s.appearanceChipShape + '(\n(?s).*)?'}
+    direction: DOWN
+    timeout: 10000
+- assertVisible: ${'(?s).*' + output.s.appearanceFineTuneCornersSharp + '.*'}  # literal-ok: built from strings

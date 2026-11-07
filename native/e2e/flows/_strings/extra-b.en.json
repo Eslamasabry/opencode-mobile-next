@@ -83,5 +83,13 @@
  "x_native_terminal_send_to": {
   "text": "Send to terminal",
   "source": "native :ui:words remoteTerminalInput (the native terminal's command field; Flutter has no such field)"
+ },
+ "x_android_anr_title": {
+  "text": "OpenCode Mobile isn't responding",
+  "source": "Android system ANR dialog title (aerr_application, English); the app label from android/app/build.gradle.kts appLabel"
+ },
+ "x_android_anr_wait": {
+  "text": "Wait",
+  "source": "Android system ANR dialog button (aerr_wait, English)"
  }
 }

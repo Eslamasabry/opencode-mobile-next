@@ -1,8 +1,15 @@
 # Close a background-service notice ("Background connection stopped…", "OpenCode Mobile was closed…") when one shows.
 # Flutter 2.1.4 shows it above Conversations and chats after the app was stopped; while it shows, the accessibility
 # tree of a chat opened under it keeps stale positions and Maestro misses the composer (walked 2026-11-07).
+# Also answer Android's "isn't responding" dialog with Wait: on a loaded host 2.1.4 can stall for a few seconds right
+# after Part A (run 4), and the dialog then covers every later section.
 appId: ${APP_ID}
 ---
+- runFlow:
+    when:
+      visible: ${output.s.x_android_anr_title}
+    commands:
+      - tapOn: ${output.s.x_android_anr_wait}
 - runFlow:
     when:
       visible: ${output.s.notifyDismiss}

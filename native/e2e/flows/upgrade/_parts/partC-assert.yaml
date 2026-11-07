@@ -180,8 +180,11 @@ appId: ${APP_ID}
           when:
             true: ${output.phase == 'native'}
           commands:
-            - tapOn: ${output.s.kitTopBarMore}
-            - tapOn: ${output.s.sessionMenuGoTo}
+            - runFlow: ../../_sub/native-go-to.yaml
+            - scrollUntilVisible:
+                element: ${output.s.promptStashTitle}
+                direction: DOWN
+                timeout: 5000
             - tapOn: ${output.s.promptStashTitle}
       - extendedWaitUntil:
           visible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
@@ -201,10 +204,34 @@ appId: ${APP_ID}
           file: ../../_sub/settings-search.yaml
           env:
             QUERY: ${output.t.e7SettingsUi74}
-      - tapOn:
-          text: ${output.s.e7SettingsUi74 + '(\n(?s).*)?'}
-          index: 1
-      - assertVisible: "(?s).*\\bls\\b.*"  # literal-ok: the always-allowed shell command from Part A
+      # 2.1.4 lists a row "Always allowed actions"; native (B-164/B-165, 4c012f945) finds the Permissions and
+      # automation row for those words, whose page holds Always allowed actions.
+      - runFlow:
+          when:
+            true: ${output.phase != 'native'}
+          commands:
+            - tapOn:
+                text: ${output.s.e7SettingsUi74 + '(\n(?s).*)?'}
+                index: 1
+      - runFlow:
+          when:
+            true: ${output.phase == 'native'}
+          commands:
+            - tapOn: ${output.s.settingsV3Permissions + '(\n(?s).*)?'}
+            # With several saved servers the page first asks which one (run 4): FX-OC2, where Part A allowed ls.
+            - runFlow:
+                when:
+                  visible: ${'.*' + output.fx.serverAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+                commands:
+                  - tapOn: ${'.*' + output.fx.serverAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+            - scrollUntilVisible:
+                element: ${output.s.e7LibraryAlwaysAllowedActions + '(\n(?s).*)?'}
+                direction: DOWN
+                timeout: 10000
+            - tapOn: ${output.s.e7LibraryAlwaysAllowedActions + '(\n(?s).*)?'}
+      - extendedWaitUntil:
+          visible: "(?s).*\\bls\\b.*"  # literal-ok: the always-allowed shell command from Part A
+          timeout: 15000
       - runFlow: ../../_sub/back-to-conversations.yaml
       - evalScript: ${output.pc.rule = true}
 
@@ -390,22 +417,20 @@ appId: ${APP_ID}
                 env:
                   TITLE: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
             - tapOn: ${output.s.scheduleTitle}
-      # Native (B-152): the list (SchedulesRoute.List) opens only from a schedule's notification at 5ff3ac113; no
-      # screen links it (ServersUi.openSchedules has no caller). Its natural place is the conversation's More
-      # actions > Go to, beside Saved prompts: tried there, so the step fails until a link exists.
+      # Native (B-163, 4c012f945): the conversation's More actions > Go to > Schedule a prompt opens this server's
+      # scheduled prompts (the project page has a Scheduled prompts row too).
       - runFlow:
           when:
             true: ${output.phase == 'native'}
           commands:
             - tapOn: "Upgrade pin one(, .*)?"  # literal-ok: title seeded in Part A
             - runFlow: ../../_sub/settle-chat.yaml
-            - tapOn: ${output.s.kitTopBarMore}
-            - tapOn: ${output.s.sessionMenuGoTo}
+            - runFlow: ../../_sub/native-go-to.yaml
             - scrollUntilVisible:
-                element: ${output.s.scheduleTitle}
+                element: ${output.s.scheduleCreate}
                 direction: DOWN
                 timeout: 5000
-            - tapOn: ${output.s.scheduleTitle}
+            - tapOn: ${output.s.scheduleCreate}
       - extendedWaitUntil:
           visible: ".*e2e:echo daily upgrade.*"  # literal-ok: the schedule Part A made
           timeout: 15000
@@ -441,6 +466,9 @@ appId: ${APP_ID}
       - evalScript: ${output.pc.S11 = true}
 
 # The schedule still fires; the pinned shortcuts are published (and the widget redraws when one was placed).
+# Two days, not one: Part B already fired the daily schedule on a clock moved a day ahead, so its next run is set a
+# day after that; once the clock is back to real time a one-day move falls short of it on either app (run 3: after
+# a snapshot restore 2.1.4 did not fire either).
 # adb: clock-advance
 - runFlow:
     label: "PC S12 schedule fires"
@@ -451,7 +479,7 @@ appId: ${APP_ID}
           file: ../../_hooks/adb.js
           env:
             HOOK: clock-advance
-            ARGS: '{"advance_minutes": 1440}'
+            ARGS: '{"advance_minutes": 2880}'
       - runFlow: ../../_sub/open-shade.yaml
       - extendedWaitUntil:
           visible: ${'(' + output.s.x_native_schedule_title + '|.*ECHO daily upgrade.*)'}  # literal-ok: the schedule's notification (title or the stub reply)
