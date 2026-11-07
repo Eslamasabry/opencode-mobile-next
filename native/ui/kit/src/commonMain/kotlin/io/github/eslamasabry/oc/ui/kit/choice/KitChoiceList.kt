@@ -1,5 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPresence
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -219,7 +225,14 @@ public fun KitChoiceRow(
 ) {
     val tokens = LocalKitTokens.current
     val on = enabled.isEnabled
-    val band = mark == KitChoiceMark.Tick && selected
+    // The chosen row fills with the accent (owner reference 2026-11-07), on the effects spring: it washes in and out
+    // instead of switching. Off: at once.
+    val accent = LocalKitColors.current.accent
+    val fill by animateColorAsState(
+        if (selected && on) accent.copy(alpha = SELECTED_FILL_ALPHA) else accent.copy(alpha = 0f),
+        KitMotion.specs.effects(),
+        label = "kit.choice.fill",
+    )
     // P-008: on a sheet's rail the row's box reaches past the rail to the sheet's edges (its band and tap area run edge
     // to edge, as a page row's do on the window), and its words start back on the rail, the sheet title's edge.
     val bleed = ChoiceRowGeometry.bleed(LocalKitOnRail.current).dp
@@ -227,7 +240,7 @@ public fun KitChoiceRow(
         modifier
             .fillMaxWidth()
             .bleedSideways(bleed)
-            .then(if (band) Modifier.background(LocalKitColors.current.surface3.copy(alpha = 0.6f)) else Modifier)
+            .background(fill)
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)
             .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
@@ -268,7 +281,8 @@ public fun KitChoiceRow(
                 maxLines = 1,
             )
         }
-        if (mark == KitChoiceMark.Tick && selected) ChoiceMarkGlyph(mark, true, on)
+        // The tick takes no room on unchosen rows; on the chosen one it opens in (KitPresence) rather than popping.
+        if (mark == KitChoiceMark.Tick) KitPresence(selected) { ChoiceMarkGlyph(mark, true, on) }
         // A trailing control (the model sheet's star) is a 48 dp target: it takes the row's 8 dp steps above and below
         // instead of stretching a one-line row past 56 dp, and on a rail its glyph lines up with the sheet's Close.
         trailing?.let {
@@ -329,10 +343,17 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
     val colors = LocalKitColors.current
     val size = 22.dp
     val edge = if (!on) colors.text3 else if (selected) colors.accent else colors.text2
+    // The mark springs in from nothing's centre (SpatialFast, no overshoot) and shrinks away when unchosen.
+    val pop by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.spatialFast(), label = "kit.choice.mark")
+    val popped = Modifier.graphicsLayer {
+        scaleX = pop
+        scaleY = pop
+        alpha = pop.coerceIn(0f, 1f)
+    }
     if (mark == KitChoiceMark.Tick) {
         Box(Modifier.size(size), contentAlignment = Alignment.Center) {
-            if (selected) {
-                Box(Modifier.size(size).clip(KitShapeId.Circle.shape()).background(colors.accent), contentAlignment = Alignment.Center) {
+            if (pop > 0f) {
+                Box(popped.size(size).clip(KitShapeId.Circle.shape()).background(colors.accent), contentAlignment = Alignment.Center) {
                     KitGlyph(KitPartGlyphs.Check, colors.onAccent, 14.dp)
                 }
             }
@@ -340,16 +361,20 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
         return
     }
     val shape = if (mark == KitChoiceMark.Radio) KitShapeId.Circle.shape() else KitShapeId.Square.shape()
-    if (mark == KitChoiceMark.Check && selected) {
-        Box(Modifier.size(size).clip(KitShapeId.Code.shape()).background(edge), contentAlignment = Alignment.Center) {
-            KitGlyph(KitPartGlyphs.Check, colors.onAccent, 16.dp)
-        }
-        return
-    }
+    val boxShape = if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape
     Box(
-        Modifier.size(size).clip(if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape).border(2.dp, edge, if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape),
+        Modifier.size(size).clip(boxShape).border(2.dp, edge, boxShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (selected) Box(Modifier.size(10.dp).clip(KitShapeId.Circle.shape()).background(edge))
+        if (pop > 0f) {
+            if (mark == KitChoiceMark.Check)
+                Box(popped.size(size).clip(boxShape).background(edge), contentAlignment = Alignment.Center) {
+                    KitGlyph(KitPartGlyphs.Check, colors.onAccent, 16.dp)
+                }
+            else Box(popped.size(10.dp).clip(KitShapeId.Circle.shape()).background(edge))
+        }
     }
 }
+
+/** How strongly a chosen row's fill shows the accent. */
+internal const val SELECTED_FILL_ALPHA: Float = 0.16f

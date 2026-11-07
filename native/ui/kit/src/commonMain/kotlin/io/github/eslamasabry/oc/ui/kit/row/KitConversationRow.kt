@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
+import io.github.eslamasabry.oc.ui.kit.motion.kitGrowTitle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -194,7 +195,7 @@ private fun ConversationBody(row: KitConversation, liveText: String?) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             TopLine(row, liveText, large)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                KitText(row.title, Modifier.weight(1f, fill = false), role = TypeRole.RowTitle, maxLines = if (large) 2 else 1)
+                KitText(row.title, Modifier.weight(1f, fill = false).kitGrowTitle(row.growKey), role = TypeRole.RowTitle, maxLines = if (large) 2 else 1)
                 if (row.pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
             }
             MetaLine(row, large)

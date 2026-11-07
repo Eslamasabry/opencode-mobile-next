@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.motion.kitGrowPageTitle
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
@@ -251,7 +252,7 @@ public fun KitTopBar(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     KitText(
                         title,
-                        Modifier.semantics { heading() }.kitContentEdge("bar-title").testTag("kit-top-bar-title"),
+                        Modifier.semantics { heading() }.kitContentEdge("bar-title").kitGrowPageTitle().testTag("kit-top-bar-title"),
                         role = TypeRole.LargeTitle,
                         kind = KitTextKind.Frame,
                         maxLines = 2,
@@ -285,7 +286,7 @@ public fun KitTopBar(
                 title,
                 Modifier.weight(1f, fill = false)
                     .semantics { heading() }
-                    .kitContentEdge("bar-title")
+                    .kitContentEdge("bar-title").kitGrowPageTitle()
                     .testTag("kit-top-bar-title"),
                 role = if (branded) TypeRole.Headline else titleRole,
                 kind = KitTextKind.Frame,

@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitToastHost
 import io.github.eslamasabry.oc.ui.kit.modal.KitToastState
@@ -131,6 +132,21 @@ class OwnerReferenceMotionTest {
     @Test fun `REF-2 old content blurs out as new content sharpens in`() = dissolve(MotionLevel.Full)
 
     @Test fun `REF-2 Off swaps at once`() = dissolve(MotionLevel.Off)
+
+    // 3. Choice rows fill; the button turns solid
+    private var picked by mutableStateOf(false)
+
+    private fun choice(level: MotionLevel) =
+        motion("choice-fill", level, { picked = true }) {
+            Column {
+                KitChoiceRow("Work & Projects", selected = picked, onClick = {})
+                KitButton("Continue", onClick = {}, enabled = picked, disabledReason = "Pick one")
+            }
+        }
+
+    @Test fun `REF-3 the chosen row fills and its dot springs in, the button turns solid`() = choice(MotionLevel.Full)
+
+    @Test fun `REF-3 Off fills at once`() = choice(MotionLevel.Off)
 
     // 4. Step bars
     private var step by mutableStateOf(2)
