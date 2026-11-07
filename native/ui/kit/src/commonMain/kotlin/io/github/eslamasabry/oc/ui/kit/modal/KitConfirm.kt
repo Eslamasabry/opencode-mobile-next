@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -22,6 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -29,7 +31,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -247,6 +248,8 @@ public fun KitConfirm(
                     state = typed,
                     label = stringResource(Res.string.kitConfirmTypeName, name),
                     kind = KitFieldKind.Mono,
+                    // InputDecoration.labelText (kit_confirm_sheet.dart:556-560): the words sit inside the empty field.
+                    labelShown = false,
                     enabled =
                         KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
                     imeAction =
@@ -349,10 +352,11 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
         }
         alternatives.forEach {
             Spacer(Modifier.height(Space.S2.dp))
-            // KitInset (kit_buttons.dart:1270-1290): start-aligned, pulled back by the tertiary button's side padding
-            // (space 2) so its words line up with the text above; offset mirrors in RTL.
+            // KitInset (kit_buttons.dart:1270-1290): start-aligned at its own width. Flutter also pulls it back by the
+            // tertiary padding (space 2), which would put its box inside the 16 dp page gutter the layout guard holds
+            // (edge-text); the box stays on the rail (evidence/12.md).
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                KitButton(it, Modifier.offset(x = -Space.S2.dp), role = KitButtonRole.Tertiary)
+                KitButton(it, role = KitButtonRole.Tertiary)
             }
         }
         Spacer(Modifier.height(Space.S3.dp))
@@ -406,20 +410,22 @@ public fun KitMarkedConsequences(items: List<KitConsequence>, modifier: Modifier
     ) {
         Column(Modifier.fillMaxWidth()) {
             items.forEachIndexed { index, item ->
-                if (index > 0) {
-                    // The hairline starts under the words: space 4 + the mark + space 3 (kit_consequences.dart:114).
-                    Box(
-                        Modifier.fillMaxWidth()
-                            .padding(start = Space.S4.dp + small + Space.S3.dp)
-                            .height(hairline)
-                            .background(colors.hairline)
-                    )
-                }
+                // Between two facts a hairline that takes no room (Divider height 0), starting under the words: space 4 +
+                // the mark + space 3 (kit_consequences.dart:110-116); it mirrors in RTL.
+                val rule =
+                    if (index == 0) Modifier
+                    else
+                        Modifier.drawBehind {
+                            val inset = (Space.S4.dp + small + Space.S3.dp).toPx()
+                            val x0 = if (layoutDirection == LayoutDirection.Rtl) 0f else inset
+                            val x1 = if (layoutDirection == LayoutDirection.Rtl) size.width - inset else size.width
+                            drawLine(colors.hairline, Offset(x0, 0f), Offset(x1, 0f), hairline.toPx())
+                        }
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),
+                    Modifier.fillMaxWidth().then(rule).padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),
                     verticalAlignment = Alignment.Top,
                 ) {
-                    Box(Modifier.clearAndSetSemantics {}) { ConsequenceMark(item) }
+                    ConsequenceMark(item) // decoration: no semantics node of its own
                     Spacer(Modifier.width(Space.S3.dp))
                     KitText(item.text, Modifier.weight(1f), role = TypeRole.RowTitle)
                 }
@@ -434,9 +440,9 @@ private fun ConsequenceMark(item: KitConsequence) {
     val colors = LocalKitColors.current
     val small = LocalKitTokens.current.smallIcon.dp
     if (item.icon == null && item.mark == KitConsequenceMark.Neutral) {
-        Box(Modifier.size(small).testTag("kit-consequence-dot"), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(Space.S2.dp).clip(KitShapeId.Circle.shape()).background(colors.text2))
-        }
+        // A space 2 dot (radius space 1) centred on the mark's box (kit_consequences.dart:74-85).
+        val dot = colors.text2
+        Spacer(Modifier.size(small).drawBehind { drawCircle(dot, radius = Space.S1.dp.toPx()) })
         return
     }
     val glyph =

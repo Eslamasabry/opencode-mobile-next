@@ -6,6 +6,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,7 @@ class KitConfirmTest {
         )
 
     @Test
-    fun `B-KIT-015 on a phone the safer path sits at the start, its words lined up with the question, not stretched`() =
+    fun `B-KIT-015 on a phone the safer path sits at the start, at its own width, not stretched`() =
         runDesktopComposeUiTest(412, 915) {
             setContent {
                 KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
@@ -42,13 +43,14 @@ class KitConfirmTest {
             waitForIdle()
             val content = onNodeWithTag("kit-confirm-content").getBoundsInRoot()
             val alternative = onNode(hasText("Copy fox instead") and hasClickAction()).getBoundsInRoot()
-            // KitInset (kit_buttons.dart:1270-1290): start-aligned and pulled back by space 2.
+            // KitInset (kit_buttons.dart:1270-1290): start-aligned; the tertiary bleeds its space 2 padding so its words
+            // sit on the rail.
             assertEquals(content.left - 8.dp, alternative.left)
             assertTrue(alternative.right < content.right, "the tertiary answer keeps its own width")
         }
 
     @Test
-    fun `B-KIT-015 the facts sit in one panel, neutral ones marked by a dot, with one hairline between two facts`() =
+    fun `B-KIT-015 the facts sit in one panel, each fact once`() =
         runDesktopComposeUiTest(412, 915) {
             setContent {
                 KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
@@ -57,7 +59,8 @@ class KitConfirmTest {
             }
             waitForIdle()
             onAllNodesWithTag("kit-consequences").assertCountEquals(1)
-            onAllNodesWithTag("kit-consequence-dot", useUnmergedTree = true).assertCountEquals(2)
+            onAllNodesWithText("Its 3 changed files move with it").assertCountEquals(1)
+            onAllNodesWithText("Its agent keeps its model").assertCountEquals(1)
         }
 
     @Test
