@@ -15,7 +15,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -26,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.continuedGone
 import org.jetbrains.compose.resources.stringResource
@@ -39,7 +39,9 @@ public fun KitContinuedLine(text: String, onOpen: () -> Unit, modifier: Modifier
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val goneWords = stringResource(Res.string.continuedGone)
     val words = if (gone) goneWords else text
-    Box(modifier.kitMaxWidth(CapRole.Conversation, CapAlign.Start).fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+    // KitMaxWidth.conversation centres a 700 dp column; the line sits at its start (kit_continued_line.dart:36).
+    KitReveal(visible = true, modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth()) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
     KitTappable(
         onClick = onOpen,
         modifier = Modifier.testTag("continued-line").semantics { contentDescription = words },
@@ -64,6 +66,7 @@ public fun KitContinuedLine(text: String, onOpen: () -> Unit, modifier: Modifier
                 KitIcon(if (rtl) KitIcons.chevronLeft else KitIcons.chevronRight, size = KitIconSize.Small)
             }
         }
+    }
     }
     }
 }
