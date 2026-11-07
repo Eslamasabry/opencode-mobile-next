@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -38,7 +40,12 @@ class KitSearchFieldGateTest {
                 filters = if (stateName in listOf("typing", "empty", "filtered")) listOf(KitMenuItem("Symbols", {}), KitMenuItem("Files", {})) else emptyList()) }
             Spacer(Modifier.height(LocalKitTokens.current.loadingBar.dp))
             if (stateName == "nomatch") {
-                KitSearchNoMatch("opus", {}, Modifier.padding(horizontal = 16.dp), what = "models", action = KitAction("Search all projects", onClick = {}))
+                // The Dart scene's body is a ListView, so the state is a scroller's child, not a sibling of the header.
+                // That list also pads by the gutter, which puts the state's words at 32 dp; the state keeps the gutter
+                // itself, so here it sits on the page edge as on a real screen (ALIGN-RULES start-edge).
+                Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    KitSearchNoMatch("opus", {}, what = "models", action = KitAction("Search all projects", onClick = {}))
+                }
             } else {
                 Column(Modifier.padding(horizontal = 16.dp)) {
                     for (name in listOf("Appearance", "Notifications", "Voice", "Servers")) KitText(name, Modifier.padding(vertical = 12.dp), role = TypeRole.RowTitle)
