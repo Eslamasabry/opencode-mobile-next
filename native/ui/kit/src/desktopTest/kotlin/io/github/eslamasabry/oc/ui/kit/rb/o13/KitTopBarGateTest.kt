@@ -109,11 +109,11 @@ class KitTopBarGateTest {
     @Test fun kit_top_bar_switcher() {
         shot(
             "kit_top_bar_switcher",
-            screen { KitTopBar("shopfront", onTitleTap = {}, titleTapLabel = "Switch project", more = more) },
+            screen { KitTopBar("shopfront", onTitleTap = {}, titleTapLabel = "Switch project", more = more, needsYou = 2) },
         )
     }
 
-    @Test fun kit_top_bar_brand() { shot("kit_top_bar_brand", screen { KitTopBar("Open Portal") }) }
+    @Test fun kit_top_bar_brand() { shot("kit_top_bar_brand", screen { KitTopBar("Open Portal", brand = true) }) }
 
     @Test fun kit_top_bar_close() {
         shot("kit_top_bar_close", screen { KitTopBar("New server", exit = KitTopBarExit.Close, exitLabel = "Close", onExit = {}) })
