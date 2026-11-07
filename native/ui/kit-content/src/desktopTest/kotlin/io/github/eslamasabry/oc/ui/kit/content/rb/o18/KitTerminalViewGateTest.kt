@@ -7,7 +7,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Dp
@@ -133,8 +138,14 @@ class KitTerminalViewGateTest {
         }
     }
 
-    private fun shot(name: String, modes: List<String> = listOf("light", "dark"), act: (androidx.compose.ui.test.ComposeUiTest.() -> Unit)? = null, content: @Composable () -> Unit) {
-        FlutterGoldenGate.check(name, Frame.Screen, modes = modes, wrap = capture, act = act, content = content)
+    private fun shot(
+        name: String,
+        modes: List<String> = listOf("light", "dark"),
+        act: (androidx.compose.ui.test.ComposeUiTest.() -> Unit)? = null,
+        dpr3: Boolean = true,
+        content: @Composable () -> Unit,
+    ) {
+        FlutterGoldenGate.check(name, Frame.Screen, modes = modes, wrap = if (dpr3) capture else ({ it() }), act = act, content = content)
     }
 
     private val showEarlier: androidx.compose.ui.test.ComposeUiTest.() -> Unit = {
@@ -164,7 +175,14 @@ class KitTerminalViewGateTest {
                 showEarlier()
                 waitForIdle()
                 onNodeWithTag(KitTerminalViewTags.OPEN_FULL).performScrollTo()
+                waitForIdle()
+                // Flutter's ensureVisible puts the target at the top, which the end of the scroll range clamps: the
+                // sheet ends up scrolled all the way down.
+                onNode(hasScrollAction() and hasAnyDescendant(hasTestTag(KitTerminalViewTags.OPEN_FULL)))
+                    .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, Float.MAX_VALUE / 2) }
             },
+            // Two thousand lines in one DPR-3 layer take minutes a frame on this machine; drawn at 1x instead.
+            dpr3 = false,
         ) { Output(command = "apt-get install -y build-essential", output = aptRun, title = "Install packages") }
 
     @Test fun kit_terminal_view_empty() =

@@ -544,8 +544,11 @@ public fun KitTerminalGrid(
     val measurer = rememberTextMeasurer()
     val cell =
         remember(face, scaled) {
-            val probe = measurer.measure(CELL_PROBE, face, softWrap = false, density = scaled)
-            Size(probe.multiParagraph.intrinsics.maxIntrinsicWidth / CELL_PROBE.length, probe.multiParagraph.height)
+            // Compose rounds a paragraph's width up to a whole pixel; the probe repeated a hundredfold keeps that
+            // rounding out of the cell (xterm divides the exact width).
+            val letters = CELL_PROBE.repeat(CELL_PROBE.length * CELL_PROBE.length)
+            val probe = measurer.measure(letters, face, softWrap = false, density = scaled)
+            Size(probe.multiParagraph.intrinsics.maxIntrinsicWidth / letters.length, probe.multiParagraph.height)
         }
     val glyphs = remember(face, scaled, theme) { HashMap<Pair<String, GlyphKey>, TextLayoutResult>() }
     val focus = remember { FocusRequester() }
