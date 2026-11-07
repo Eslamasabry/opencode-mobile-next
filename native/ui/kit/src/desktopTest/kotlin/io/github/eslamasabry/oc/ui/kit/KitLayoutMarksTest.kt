@@ -105,6 +105,28 @@ class KitLayoutMarksTest {
     }
 
     @Test
+    fun `E20-S08 a top bar with Back starts its title and subtitle on the 16 dp gutter`() = runComposeUiTest {
+        setContent {
+            Themed {
+                KitTopBar(
+                    "Fix the login bug",
+                    subtitle = "shopfront",
+                    exit = io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit.Back,
+                    exitLabel = "Back",
+                    onExit = {},
+                )
+            }
+        }
+        // The page's words (the transcript, the rows) start on the gutter; the title sat past Back at 64 dp.
+        val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val subtitle = onNodeWithText("shopfront", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val back = onNodeWithTag("kit-top-bar-exit", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(16f, title.left)
+        assertEquals(16f, subtitle.left)
+        assertTrue(title.top >= back.bottom, "title $title under Back $back")
+    }
+
+    @Test
     fun `E02-S13 a button holds the 400 dp control cap when its caller asks for the full width`() = runComposeUiTest {
         setContent { Themed(1280, 800) { KitButton("Save", onClick = {}, modifier = Modifier.fillMaxWidth()) } }
         val button = onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick)).fetchSemanticsNode()

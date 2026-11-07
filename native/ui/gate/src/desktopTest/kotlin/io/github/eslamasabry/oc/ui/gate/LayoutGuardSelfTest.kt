@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
+import io.github.eslamasabry.oc.ui.kit.foundation.kitContentEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitList
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
@@ -171,6 +172,16 @@ class LayoutGuardSelfTest {
         assertEquals(listOf("Three"), edges.map { it.subject })
         val aligned = rules { Column(Modifier.kitList("test")) { row(16, "One"); row(16, "Two"); row(16, "Three") } }
         assertTrue("title-edge" !in aligned)
+    }
+
+    @Test
+    fun `E20-S08 a bar title off the page's content edge is reported on a phone`() {
+        val off = rules { BasicText("Title", Modifier.padding(start = 64.dp).kitContentEdge("bar-title")) }
+        assertTrue("content-edge" in off, off.toString())
+        val on = rules { BasicText("Title", Modifier.padding(start = 16.dp).kitContentEdge("bar-title")) }
+        assertTrue("content-edge" !in on, on.toString())
+        val unmarked = rules { BasicText("Words", Modifier.padding(start = 64.dp)) }
+        assertTrue("content-edge" !in unmarked, unmarked.toString())
     }
 
     @Test

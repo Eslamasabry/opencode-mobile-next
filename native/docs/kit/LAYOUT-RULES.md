@@ -31,8 +31,11 @@ A short window (height < 480 dp) keeps the compact layout for parts that stack v
   - Dividers, sheet frames and backgrounds carry no words and no tap, so the edge rule never reads them.
   - Content inside a sideways scroller (a chip row, a carousel) scrolls past the edge by design and is not checked.
 
-The top bar follows the same rule: with no Back or Close, its title's words start on the 16 dp gutter (Flutter
-`kit_top_bar.dart`: "No exit: the title starts on the gutter").
+The top bar follows the same rule: its title's words start on the 16 dp gutter, the edge the transcript and the
+rows start on (Flutter `kit_top_bar.dart`: "No exit: the title starts on the gutter"). With Back, Back and the actions
+take the line above the title (E20-S08: a title beside Back started 48 dp further in than the page's words). The kit
+marks the title and the line under it with `Modifier.kitContentEdge(...)`; on a phone the guard reports marked words
+off the gutter (`content-edge`).
 
 ## 3. One start edge per list
 

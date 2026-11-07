@@ -64,6 +64,7 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
             truncation(n)
             if (window == Window.Tablet && !n.chrome) caps(n)
             if (screen && n.pageRules) edges(n)
+            if (screen && window == Window.Phone && !n.chrome) contentEdge(n)
         }
         spacing()
         if (screen) titleEdges()
@@ -114,6 +115,18 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
         when {
             n.text && textOut -> add(n, "edge-text", "$at, gutter ${fmt(gutter)}..${fmt(w - gutter)}")
             box && boxOut -> add(n, "edge-tap", "$at, needs ${fmt(controlEdge)} dp from the edge")
+        }
+    }
+
+    /**
+     * Words the kit puts on the page's content edge (a bar's title, the line under it) start on the gutter, the edge
+     * the transcript and the rows start on (E20-S08: a title past Back sat 48 dp further in). Phone only: a wider
+     * window may centre its content.
+     */
+    private fun contentEdge(n: Item) {
+        val slot = n.config.getOrNull(KitLayoutMarks.ContentEdge) ?: return
+        if (abs(n.bounds.left - gutter) > TITLE_EDGE) {
+            add(n, "content-edge", "$slot starts at x ${fmt(n.bounds.left)}, the page's words at ${fmt(gutter)}")
         }
     }
 
