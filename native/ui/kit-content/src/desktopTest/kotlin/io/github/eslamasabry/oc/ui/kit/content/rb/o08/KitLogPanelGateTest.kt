@@ -14,6 +14,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
@@ -23,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.content.log.KitLogEnd
 import io.github.eslamasabry.oc.ui.kit.content.log.KitLogLevel
 import io.github.eslamasabry.oc.ui.kit.content.log.KitLogLine
 import io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel
+import io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanelFold
 import io.github.eslamasabry.oc.ui.kit.content.log.KitLogSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.test.Test
@@ -114,6 +116,19 @@ class KitLogPanelGateTest {
     @Test fun kit_log_panel_live_text2() = shot("kit_log_panel_live_text2", panel = live)
 
     @Test fun kit_log_panel_live_text2_1280x800() = shot("kit_log_panel_live_text2_1280x800", panel = live)
+
+    /** The panel folded under "Show output" in a scrolling page, opened by a tap (Dart scene `fold_open`). */
+    @Test fun kit_log_panel_fold_open() = shot(
+        "kit_log_panel_fold_open",
+        act = {
+            // A semantics tap: a pointer click would leave the desktop hover fill on the row, which a phone tap never shows.
+            onNodeWithText("Show output").performSemanticsAction(SemanticsActions.OnClick)
+            waitForIdle()
+        },
+    ) {
+        // The part frame already scrolls (Dart SingleChildScrollView).
+        KitLogPanelFold(remember { setupLines() }, live = true)
+    }
 
     @Test fun matrix() {
         FlutterGoldenGate.matrix("part-kit_log_panel", caps = mapOf("KitLogPanel" to "list"), content = live)

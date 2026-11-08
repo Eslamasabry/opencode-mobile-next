@@ -45,6 +45,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopyAll
+import io.github.eslamasabry.oc.ui.words.res.kitLogShowOutput
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.words.res.kitLogEmpty
 import io.github.eslamasabry.oc.ui.words.res.kitLogFollow
 import io.github.eslamasabry.oc.ui.words.res.kitLogNextMatch
@@ -774,4 +776,34 @@ private fun LogBody(
             }
         }
     }
+}
+
+/**
+ * The folded panel inside the one details fold (Dart `KitLogPanel.fold`, lib/ui/kit/kit_log_panel.dart:296-319; K2 §4.4:
+ * folded under Details unless the page exists to show the log): a [KitDetailsFold] labelled [label] ("Show output")
+ * whose child is a folded [KitLogPanel]. A page that already has a details fold passes a [KitLogPanel] as that fold's
+ * child instead (one fold per page, KIT-33).
+ *
+ * States: collapsed, open (and the panel's own)
+ * Text: the fold's and the panel's
+ * Cap: Reading (the fold's)
+ * Motion: the fold's reveal
+ * Hidden: none
+ * Replaces: KitLogPanel.fold (lib/ui/kit/kit_log_panel.dart)
+ */
+@Composable
+public fun KitLogPanelFold(
+    lines: KitLogBuffer,
+    modifier: Modifier = Modifier,
+    live: Boolean = false,
+    ended: KitLogEnd? = null,
+    onRefresh: (suspend () -> Boolean)? = null,
+    label: String? = null,
+) {
+    KitDetailsFold(
+        label = label ?: stringResource(Res.string.kitLogShowOutput),
+        copyLabel = stringResource(Res.string.kitCopyAll),
+        modifier = modifier,
+        child = { KitLogPanel(lines, live = live, ended = ended, onRefresh = onRefresh) },
+    )
 }
