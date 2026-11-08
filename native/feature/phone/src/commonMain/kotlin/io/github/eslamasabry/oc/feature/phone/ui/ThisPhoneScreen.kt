@@ -567,6 +567,7 @@ private fun PhoneConfirmation(
                             confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
                             // A restart ends a running reply: then it is a stop, with Keep running as the way back.
                             kind = if (asked.replyRunning) KitConfirmKind.Stop else KitConfirmKind.Neutral,
+                            icon = KitIcons.restart,
                             body =
                                 if (asked.replyRunning)
                                     stringResource(Res.string.thisPhoneRestartBusy)

@@ -1148,6 +1148,7 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 title = stringResource(Res.string.workServerRestartTitle),
                 confirmLabel = stringResource(Res.string.workServerRestart),
                 kind = KitConfirmKind.Stop,
+                icon = KitIcons.restart,
                 body = stringResource(Res.string.workServerRestartBody),
             )
         ChatConfirm.Compact ->
