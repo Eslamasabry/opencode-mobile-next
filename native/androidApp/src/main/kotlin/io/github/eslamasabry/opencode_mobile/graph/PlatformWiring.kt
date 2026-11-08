@@ -177,7 +177,8 @@ object PlatformBindings {
             AndroidUpdatePlatform(application, dispatchers.io),
             PrefsUpdateStore(application, dispatchers.io),
             clock,
-            supported = true,
+            // Release builds only (Flutter #126): a debuggable build cannot take a release APK.
+            supported = AppUpdates.supportedOn(build.debuggable),
         )
 }
 
@@ -455,7 +456,8 @@ class PlatformHub(
         // an attempt).
         appScope.launch { appPreferences.storedLocaleTag.collect { channels.relocalize() } }
         application.registerActivityLifecycleCallbacks(Visibility())
-        appScope.launch { updates.start() }
+        // Start-up check after a short, cancellable wait (Flutter #126); the Activity's resume replaces it.
+        updates.opened(appScope)
         appScope.launch { watchFeed() }
         appScope.launch { watchRunEvents() }
         appScope.launch { watchProfiles() }
@@ -486,7 +488,7 @@ class PlatformHub(
      * Every resume: continue an install that waited for permission, check for an update when due.
      */
     fun onResumed(activity: Activity) {
-        appScope.launch { updates.onResumed() }
+        updates.opened(appScope)
     }
 
     /**
