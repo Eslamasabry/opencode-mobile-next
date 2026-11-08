@@ -113,6 +113,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: "Gate self-test (planted logs: a test-compile or drift failure must be FAIL)"
+        run: python3 -I tool/ci/test_gate.py
       - name: Pick the lane and the modules
         id: p
         env:
@@ -165,13 +167,15 @@ jobs:
           ./gradlew :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/compile.log"
       - name: Compile report
         if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
           python3 -I - <<'PY'
           import json, os
           log = open(os.environ['RUNNER_TEMP'] + '/compile.log', errors='replace').read().splitlines() if os.path.exists(os.environ['RUNNER_TEMP'] + '/compile.log') else []
-          errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or l.startswith('> ') and 'went wrong' in l]
+          errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or 'Execution failed for task' in l]
           os.makedirs('reports', exist_ok=True)
-          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15]}, open('reports/compile.json', 'w'))
+          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure'}, open('reports/compile.json', 'w'))
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -232,13 +236,16 @@ jobs:
         id: gradle
         continue-on-error: true
         if: ${{ steps.pick.outputs.tasks != '' }}
+        shell: bash
         run: |
           flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
-          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
+          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/gradle.log"
       - name: Summarise results
         if: always()
         env:
           GRADLE_OUTCOME: ${{ steps.gradle.outcome }}
+          GRADLE_LOG: ${{ runner.temp }}/gradle.log
+          TASKS: ${{ steps.pick.outputs.tasks }}
         run: python3 -I tool/ci/test_report.py "${LANE}-${{ matrix.shard }}" reports >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -365,12 +372,15 @@ jobs:
           if-no-files-found: error
       - name: APK report
         if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
           mkdir -p reports
+          failed=false; [ "$JOB_STATUS" = failure ] && failed=true
           apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk 2>/dev/null | head -1 || true)
           if [ -n "$apk" ]; then
-            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" > reports/apk.json
-          else echo '{}' > reports/apk.json; fi
+            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s,"failed":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" > reports/apk.json
+          else echo "{\"failed\":$failed}" > reports/apk.json; fi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -394,6 +404,21 @@ jobs:
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
+      - name: Custom report
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          mkdir -p reports
+          failed=false; [ "$JOB_STATUS" = failure ] && failed=true
+          echo "{\"failed\":$failed}" > reports/custom.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-custom
+          path: native/reports/custom.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   summary:
     name: summary
