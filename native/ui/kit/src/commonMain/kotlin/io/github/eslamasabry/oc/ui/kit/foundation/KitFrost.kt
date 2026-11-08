@@ -65,6 +65,9 @@ public class KitFrostState internal constructor(internal val layer: GraphicsLaye
 
     /** Counts the recordings (not state: read by liquid panes' samplers, never by a draw). */
     internal var version: Int = 0
+
+    /** Each liquid role's ink flip over this content, shared by the pane's face and the words beside it (a bar). */
+    internal val liquidFlips: MutableMap<Any, io.github.eslamasabry.oc.ui.kit.effects.LiquidFlip> = HashMap()
 }
 
 @Composable

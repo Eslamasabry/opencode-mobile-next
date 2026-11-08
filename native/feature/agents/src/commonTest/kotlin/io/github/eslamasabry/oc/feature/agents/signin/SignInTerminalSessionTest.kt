@@ -89,6 +89,38 @@ class SignInTerminalSessionTest {
         }
 
     @Test
+    fun `a failed start keeps the step it stopped at and the redacted failure, never CLI text`() =
+        loop.run {
+            host.failAt =
+                SignInStartStep.Server to
+                    io.github.eslamasabry.oc.core.common.Failure.Runtime(
+                        io.github.eslamasabry.oc.core.common.RuntimeProblem.ServerStartUnavailable,
+                        io.github.eslamasabry.oc.core.common.Redacted.shape(IllegalStateException("private CLI text")),
+                    )
+            val lease = FakeLease()
+            val session = session(lease)
+            session.start(FakeAgents.CLAUDE)
+            loop.pump()
+            val problem = assertIs<SignInProblem.Start>(session.state.failure)
+            assertEquals(SignInStartStep.Server, problem.step)
+            assertEquals("sign-in-start", problem.code)
+            assertEquals(
+                "sign-in-start · server\nRuntime (ServerStartUnavailable) · IllegalStateException",
+                SignInDetails.of(problem),
+            )
+            assertFalse("private" in problem.toString())
+            assertFalse("private" in session.state.value.toString())
+            assertEquals(1, lease.releases)
+        }
+
+    @Test
+    fun `a paste becomes terminal input with line breaks as carriage returns and no control keys`() {
+        assertEquals("ABCD-1234", pasteInput("ABCD-1234"))
+        assertEquals("one\rtwo\rthree", pasteInput("one\r\ntwo\nthree"))
+        assertEquals("codeX", pasteInput("code\u0003\u001b\u007fX"))
+    }
+
+    @Test
     fun `B-AGENT-129 the terminal runs exactly the sign-in command and nothing else`() =
         loop.run {
             val session = session(FakeLease())

@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.asStateFlow
  * Crash and error reporting through the same vendor-neutral layer as usage analytics (owner decision 2026-11-07:
  * "anything custom built goes through the analytics sdk so tomorrow it can be switched to any other vendor").
  *
- * The app calls [Reporting]. [ErrorReporter] checks consent, redacts everything with [ReportRedactor] and only then
- * hands a [SafeReport] to ONE [ReportSink]. A vendor adapter (Crashlytics today, in the Android layer) implements
- * [ReportSink] and sees nothing but a [SafeReport], so swapping the vendor changes one class.
+ * The app calls [Reporting]; the one implementation is
+ * [TelemetryService][io.github.eslamasabry.oc.engine.analytics.health.TelemetryService], which checks consent, redacts
+ * everything with [ReportRedactor] and only then hands it to ONE vendor adapter (Firebase in the Android layer), so
+ * swapping the vendor changes one class.
  */
 
 /** What the app reports. Never throws, never blocks. Nothing leaves the phone while [reportingConsent] is false. */
@@ -29,7 +30,7 @@ public interface Reporting {
     /** A non-fatal failure: [name] is a registered snake_case id and [keys] are short enum-like facts, never content. */
     public fun reportFailure(name: String, keys: Map<String, String> = emptyMap())
 
-    /** A short redacted trail of what happened before a report. */
+    /** One step before a report: only a listed `area.action` word (BreadcrumbWords) is kept. */
     public fun breadcrumb(text: String)
 }
 
@@ -44,92 +45,6 @@ public object NoReporting : Reporting {
     override fun reportFailure(name: String, keys: Map<String, String>): Unit = Unit
 
     override fun breadcrumb(text: String): Unit = Unit
-}
-
-/** A report that has been through [ReportRedactor]. Every string is safe to leave the phone. */
-public data class SafeReport(
-    val kind: ReportKind,
-    val name: String,
-    val keys: Map<String, String> = emptyMap(),
-    val stack: List<String> = emptyList(),
-)
-
-public enum class ReportKind { Crash, Failure }
-
-/**
- * Where reports go: one per build. Vendor adapters implement this; they never see raw input. A sink never throws for an
- * expected failure.
- */
-public interface ReportSink {
-    public val id: SinkId
-
-    /** The vendor's own collection switch: false means it keeps and sends nothing. */
-    public fun setCollectionEnabled(enabled: Boolean)
-
-    public fun breadcrumb(text: String)
-
-    public fun record(report: SafeReport)
-}
-
-/** The build without a vendor config: drops everything. */
-public object NoOpReportSink : ReportSink {
-    override val id: SinkId get() = SinkId.None
-
-    override fun setCollectionEnabled(enabled: Boolean): Unit = Unit
-
-    override fun breadcrumb(text: String): Unit = Unit
-
-    override fun record(report: SafeReport): Unit = Unit
-}
-
-/**
- * The one [Reporting]. [initialConsent] is the stored answer (or the flavor default); [persist] stores a change.
- */
-public class ErrorReporter(
-    private val sink: ReportSink,
-    initialConsent: Boolean,
-    private val persist: (Boolean) -> Unit = {},
-) : Reporting {
-    private val consent = MutableStateFlow(initialConsent)
-    override val reportingConsent: StateFlow<Boolean> = consent.asStateFlow()
-
-    init {
-        safely { sink.setCollectionEnabled(initialConsent) }
-    }
-
-    override fun setReportingConsent(granted: Boolean) {
-        consent.value = granted
-        safely { sink.setCollectionEnabled(granted) }
-        safely { persist(granted) }
-    }
-
-    override fun reportCrash(category: String, safeStack: List<String>) {
-        if (!consent.value) return
-        val report =
-            SafeReport(ReportKind.Crash, ReportRedactor.category(category), stack = ReportRedactor.stack(safeStack))
-        safely { sink.record(report) }
-    }
-
-    override fun reportFailure(name: String, keys: Map<String, String>) {
-        if (!consent.value) return
-        val report = SafeReport(ReportKind.Failure, ReportRedactor.name(name), ReportRedactor.keys(keys))
-        safely { sink.record(report) }
-    }
-
-    override fun breadcrumb(text: String) {
-        if (!consent.value) return
-        val safe = ReportRedactor.breadcrumb(text)
-        safely { sink.breadcrumb(safe) }
-    }
-
-    @Suppress("TooGenericExceptionCaught")
-    private inline fun safely(block: () -> Unit) {
-        try {
-            block()
-        } catch (_: Throwable) {
-            // Reporting must never be the reason the app fails.
-        }
-    }
 }
 
 /**

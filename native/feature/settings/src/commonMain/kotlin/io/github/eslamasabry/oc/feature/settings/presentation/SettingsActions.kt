@@ -144,6 +144,9 @@ public interface SettingsActions {
     /** Report a problem: copy the previewed report as it is shown. */
     public fun onCopyReport() {}
 
+    /** B-190: Send a problem report's Send: sends exactly the previewed text, once. */
+    public fun onSendProblemReport() {}
+
     public fun onRefreshExitHistory() {}
 
     public fun onCrashCapture(on: Boolean) {}
