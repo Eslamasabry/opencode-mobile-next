@@ -91,7 +91,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
  * its liquid face and gets a modifier, or null, and then keeps exactly the face it draws today. Null whenever:
  * - FrostPolicy holds the edges (Saver, reduced motion, high contrast, a style other than Glass, frost Off, "Glass
  *   edges: Frosted", or no runtime shaders: Android below 13, desktop for now);
- * - the window's budget gives the part no room ([LiquidEdge.grant]; the lowest drop to frost first);
+ * (beyond the window's budget, [LiquidEdge.grant], a part keeps its liquid face's shape and rim as frost, never solid);
  * - the part's shape is not a rounded kit shape (the lens bends rounded rectangles only).
  *
  * The face: the content behind (a source's recording) pressed together in contrast, blurred a little, bent only inside a
@@ -263,17 +263,24 @@ private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdr
     val shaped = liquidShapeOk(shape)
     // Only rounded kit shapes reach the lens; a square one falls back quietly, anything else is a kit bug.
     kitAssert(!on || shaped || shape === RectangleShape) { "kitLiquidFace: $role's shape is not a rounded kit shape ($shape)" }
-    val granted = kitLiquidClaim(role, source, on && shaped)
+    val asking = on && shaped
+    val granted = kitLiquidClaim(role, source, asking)
     val users = source as? KitLiquidSource
     if (users != null) {
-        DisposableEffect(users, granted) {
-            if (granted) users.users++
-            onDispose { if (granted) users.users-- }
+        DisposableEffect(users, asking) {
+            if (asking) users.users++
+            onDispose { if (asking) users.users-- }
         }
     }
-    if (!granted || backdrop == null) return null
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, transform, liquidFlipFor(source, role), chosen)
+    if (!asking || backdrop == null) return null
+    // Beyond the window's budget a part is frost of the same shape through the same glass (the lens let go, the rim
+    // kept), never its solid face: nothing changes shape or flickers as a menu or sheet opens (owner 2026-11-08).
+    val face = if (granted) transform else HeldFrost
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted)
 }
+
+/** A claim beyond the budget: all frost, no lens. */
+private val HeldFrost: () -> Float = { 1f }
 
 /**
  * The ink flip [role]'s pane over [source] shares with the words beside it (a bar's words lie beside its capsule): one
@@ -294,6 +301,7 @@ private fun Modifier.liquidPane(
     transform: () -> Float,
     shared: LiquidFlip?,
     chosen: Boolean,
+    keepRim: Boolean = false,
 ): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
@@ -302,7 +310,7 @@ private fun Modifier.liquidPane(
     val appearance = LocalKitAppearance.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
@@ -333,6 +341,7 @@ private fun Modifier.liquidPane(
                 flipFillStart = (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipSheen = Color(otherFace.sheen.v),
                 flip = flip,
+                keepRim = keepRim,
             )
         }
     val words = kitLiquidWords(backdrop, flip)

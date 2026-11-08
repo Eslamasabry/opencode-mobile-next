@@ -168,22 +168,36 @@ class LiquidEdgeTest {
             LiquidClaim("bar", LiquidRole.Bar, page),
             LiquidClaim("pill", LiquidRole.Pill, list),
         )
-        // bar 1 + page 1, fab 1 + list 1: the budget of 4 is spent; the pill and the status pill drop to frost.
+        // bar 1 + page 1, fab 1 + list 1: a budget of 4 is spent; the pill and the status pill drop to frost.
         assertEquals(setOf("bar", "fab"), LiquidEdge.grant(claims, budget = 4))
         assertEquals(setOf("bar", "fab", "pill"), LiquidEdge.grant(claims, budget = 5))
     }
 
     @Test
-    fun `B-KIT-018 a sheet over a chat records the page once and the chrome under it drops to frost`() {
+    fun `B-KIT-018 opening a menu or a sheet keeps the chat's header, composer and jump pill liquid`() {
+        // Owner 2026-11-08: "opening a glass overlay in a sub menu kills all other glass surfaces".
         val page = Any()
-        val claims = listOf(
+        val chrome = listOf(
             LiquidClaim("composer", LiquidRole.Composer, null),
             LiquidClaim("bar", LiquidRole.Bar, null),
-            LiquidClaim("sheet", LiquidRole.Sheet, page),
+            LiquidClaim("pill", LiquidRole.Pill, null),
         )
-        assertEquals(setOf("sheet"), LiquidEdge.grant(claims))
-        val menu = LiquidClaim("menu", LiquidRole.Menu, page)
-        assertEquals(setOf("menu", "sheet"), LiquidEdge.grant(claims + menu))
+        for (modal in listOf(LiquidClaim("menu", LiquidRole.Menu, page), LiquidClaim("sheet", LiquidRole.Sheet, page))) {
+            val kinds = LiquidEdge.faceOf(chrome + modal)
+            assertEquals(LiquidFaceKind.Liquid, kinds.getValue(modal.key))
+            for (c in chrome) assertEquals(LiquidFaceKind.Liquid, kinds.getValue(c.key), "${modal.key} open: ${c.key}")
+        }
+        val both = LiquidEdge.faceOf(chrome + LiquidClaim("sheet", LiquidRole.Sheet, page) + LiquidClaim("menu", LiquidRole.Menu, page))
+        assertEquals(chrome.size + 2, both.size, "every part keeps a glass face")
+    }
+
+    @Test
+    fun `B-KIT-018 beyond the budget a part is frost of the same shape, never solid`() {
+        val claims = (0 until 9).map { LiquidClaim("chip$it", LiquidRole.Pill, null, order = it) }
+        val kinds = LiquidEdge.faceOf(claims)
+        assertEquals(claims.size, kinds.size, "every claim has a face")
+        assertEquals(LiquidEdge.BUDGET, kinds.values.count { it == LiquidFaceKind.Liquid })
+        assertTrue(kinds.values.all { it == LiquidFaceKind.Liquid || it == LiquidFaceKind.Frost })
     }
 
     // ---- adaptive ink

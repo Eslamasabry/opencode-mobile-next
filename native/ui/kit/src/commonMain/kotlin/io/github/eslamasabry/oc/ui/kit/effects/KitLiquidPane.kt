@@ -64,6 +64,8 @@ public data class KitLiquidPaneSpec(
     val flipFillStart: Color = fillStart,
     val flipSheen: Color = sheen,
     val flip: LiquidFlip? = null,
+    /** Frost beyond the window's budget: the rim light stays while the transform holds the lens at frost. */
+    val keepRim: Boolean = false,
 )
 
 /** How far a liquid pane has flipped to the other theme's ink and face (0: its own; 1: the other). Snapshot state. */

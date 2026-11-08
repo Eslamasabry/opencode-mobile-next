@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
  * Glass style the floating parts are glass over the content behind them: the content, pressed together in contrast and
  * blurred a little, is bent only in a rim at the pane's edge (no depth effect, no dispersion), under today's Glass tint
  * (thickened until text1/2/3 read over the content their ink lies over; no plate behind words, owner 2026-11-08), with a
- * soft rim light tinted from the accent. When it is drawn is FrostPolicy's (`edgesHeldBy`). This file holds the numbers; the kit paints them.
+ * soft white rim light. When it is drawn is FrostPolicy's (`edgesHeldBy`). This file holds the numbers; the kit paints them.
  */
 
 /**
@@ -38,7 +38,7 @@ public enum class LiquidRole(public val rank: Int) {
     Status(1),
     ;
 
-    /** A sheet or a menu: it covers the page, so the page's own glass under it drops to frost while it shows. */
+    /** A sheet or a menu: it records the page under it (the page's own glass included) and bends that. */
     public val modal: Boolean get() = this == Menu || this == Sheet
 }
 
@@ -73,9 +73,10 @@ public object LiquidEdge {
     /**
      * The liquid surfaces one window may hold at once. A pane costs 1; a page the kit records for panes over it costs 1,
      * once however many panes share it (a feature's list or transcript recording costs nothing here: it records in
-     * every style). See [grant].
+     * every style). See [grant]. Five: a chat's header, composer and jump pill stay liquid while a menu or a sheet,
+     * with the page it records, opens over them (owner 2026-11-08: "opening a glass overlay kills all other glass").
      */
-    public const val BUDGET: Int = 4
+    public const val BUDGET: Int = 5
 
     /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
     public const val SATURATION: Float = 1.45f
@@ -305,32 +306,38 @@ public object LiquidEdge {
     }
 
     /**
-     * Which of the window's liquid [claims] are drawn as liquid glass (the rest drop to frost), within [budget]:
-     * highest [LiquidRole.rank] first; a claim fits when its pane (1) and its source (1, if no granted claim already
-     * pays for that source; null = a feature recording, free) fit what is left. While a modal claim (a sheet, a menu)
-     * is granted, every non-modal claim below it drops: the page under the modal is covered by its scrim, and the page
-     * is then recorded once, for the modal, rather than again for its own glass.
+     * Which of the window's liquid [claims] are drawn as liquid glass, within [budget]: highest [LiquidRole.rank]
+     * first; a claim fits when its pane (1) and its source (1, if no granted claim already pays for that source; null =
+     * a feature recording, free) fit what is left. A sheet or a menu no longer drops the glass under it: the page it
+     * bends is recorded as it is, the chrome's own glass included, so the chrome stays liquid (owner 2026-11-08). A
+     * claim left out is not solid: it is drawn as frost of the same shape ([faceOf]).
      */
     public fun <K> grant(claims: List<LiquidClaim<K>>, budget: Int = BUDGET): Set<K> {
         val granted = LinkedHashSet<K>()
         val paid = HashSet<Any>()
         var left = budget
-        var modal = false
         for (c in claims.sortedWith(compareByDescending<LiquidClaim<K>> { it.role.rank }.thenBy { it.order })) {
-            if (modal && !c.role.modal) continue
             val sourceCost = if (c.source == null || c.source in paid) 0 else 1
             val cost = 1 + sourceCost
             if (cost > left) continue
             left -= cost
             c.source?.let { paid += it }
             granted += c.key
-            if (c.role.modal) modal = true
         }
         return granted
     }
 
+    /** How each of [claims] is drawn: liquid where [grant] grants it, else frost of the same shape. Never solid. */
+    public fun <K> faceOf(claims: List<LiquidClaim<K>>, budget: Int = BUDGET): Map<K, LiquidFaceKind> {
+        val granted = grant(claims, budget)
+        return claims.associate { it.key to if (it.key in granted) LiquidFaceKind.Liquid else LiquidFaceKind.Frost }
+    }
+
     private fun Argb.opaqueArgb(): Argb = Argb(v or (0xFF shl 24))
 }
+
+/** How a floating part asking for liquid glass is drawn: bent glass, or frost of the same shape through the same glass. */
+public enum class LiquidFaceKind { Liquid, Frost }
 
 /** One floating part asking to be liquid glass: [order] breaks ties between equal roles (earlier first). */
 public data class LiquidClaim<K>(val key: K, val role: LiquidRole, val source: Any?, val order: Int = 0)

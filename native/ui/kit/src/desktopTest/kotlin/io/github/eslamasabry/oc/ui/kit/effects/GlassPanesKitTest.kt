@@ -139,4 +139,37 @@ class GlassPanesKitTest {
             assertNotEquals(inside, image[0, 0], "dark=$dark: the face is inset, its corner rounded off")
         }
     }
+
+    @Test
+    fun `B-KIT-018 every liquid part keeps a glass face beyond the window's budget, never its solid one`() {
+        val faces = mutableMapOf<Int, Boolean>()
+        runComposeUiTest {
+            setContent {
+                KitTheme(
+                    KitAppearance(style = Style.Glass, motion = MotionLevel.Full),
+                    FakeKitPlatform(liquidGlass = true),
+                    "en",
+                    stillFrame = true,
+                ) {
+                    androidx.compose.runtime.CompositionLocalProvider(LocalKitLiquidBudget provides androidx.compose.runtime.remember { KitLiquidBudget() }) {
+                        val source = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState()
+                        Column {
+                            repeat(LIQUID_PARTS) { i ->
+                                val face = kitLiquidFace(io.github.eslamasabry.oc.ui.design.effects.LiquidRole.Pill, source, androidx.compose.foundation.shape.CircleShape)
+                                faces[i] = face != null
+                                Box(Modifier.width(40.dp).then(face ?: Modifier))
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+        }
+        assertEquals(LIQUID_PARTS, faces.size)
+        assertTrue(faces.values.all { it }, "a part beyond the budget drew its own face: $faces")
+    }
+
+    private companion object {
+        const val LIQUID_PARTS = 8
+    }
 }

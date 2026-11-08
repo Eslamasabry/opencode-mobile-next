@@ -53,7 +53,7 @@ internal object AndroidLiquidGlass {
                 Highlight(
                     width = spec.rimDp.dp,
                     blurRadius = spec.rimDp.dp,
-                    alpha = 1f - transform().coerceIn(0f, 1f),
+                    alpha = if (spec.keepRim) 1f else 1f - transform().coerceIn(0f, 1f),
                     style = HighlightStyle.Default(color = spec.rim, blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver),
                 )
             },
