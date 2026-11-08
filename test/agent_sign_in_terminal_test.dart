@@ -220,6 +220,32 @@ void main() {
     expect(run.opened, [url]);
   });
 
+  testWidgets('Claude: the page it handed to the browser is the one offered '
+      'again, not the one that asks for a code', (tester) async {
+    final run = await _pump(tester, 'claude');
+    const handed =
+        'https://claude.com/cai/oauth/authorize?code=true&client_id=9d1c'
+        '&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A45369'
+        '%2Fcallback&scope=user%3Ainference&code_challenge=AbC'
+        '&code_challenge_method=S256&state=XyZ';
+    const printed =
+        'https://claude.com/cai/oauth/authorize?code=true&client_id=9d1c'
+        '&response_type=code&redirect_uri=https%3A%2F%2Fplatform.claude.com'
+        '%2Foauth%2Fcode%2Fcallback&scope=user%3Ainference&code_challenge=AbC'
+        '&code_challenge_method=S256&state=XyZ';
+    run.backend.openUrl(1, handed);
+    await tester.pump();
+    expect(run.opened, [handed]);
+    await _print(
+      tester,
+      run,
+      'If the browser did not open, visit: $printed\r\n',
+    );
+    await tester.tap(find.byKey(_open));
+    await tester.pump();
+    expect(run.opened, [handed, handed]);
+  });
+
   testWidgets('the newest page wins', (tester) async {
     final run = await _pump(tester, 'fx');
     await _print(
