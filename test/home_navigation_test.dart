@@ -1064,37 +1064,38 @@ void main() {
     expect(find.text('Switch server'), findsOneWidget);
   });
 
-  testWidgets('phone header puts the Conversations title above the server pill', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(411, 891);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final controller = await _controller(profileName: 'This device (Termux)');
-    addTearDown(controller.dispose);
+  testWidgets(
+    'phone header puts the Conversations title above the server pill',
+    (tester) async {
+      tester.view.physicalSize = const Size(411, 891);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final controller = await _controller(profileName: 'This device (Termux)');
+      addTearDown(controller.dispose);
 
-    await _pumpShell(tester, controller);
+      await _pumpShell(tester, controller);
 
-    final profile = find.byKey(const ValueKey('server-switcher-button'));
-    final title = find.text('Conversations');
-    expect(profile, findsOneWidget);
-    expect(find.byKey(const ValueKey('home-shell-tab-chats')), findsNothing);
-    expect(
-      tester.getRect(title).bottom,
-      lessThanOrEqualTo(tester.getRect(profile).top + 1),
-    );
-    expect(
-      tester.getSemantics(profile).label,
-      contains('This device (Termux)'),
-    );
-    expect(
-      tester.getSemantics(profile).label,
-      contains('Connected, Switch server'),
-    );
-    expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      final profile = find.byKey(const ValueKey('server-switcher-button'));
+      final title = find.text('Conversations');
+      expect(profile, findsOneWidget);
+      expect(find.byKey(const ValueKey('home-shell-tab-chats')), findsNothing);
+      expect(
+        tester.getRect(title).bottom,
+        lessThanOrEqualTo(tester.getRect(profile).top + 1),
+      );
+      expect(
+        tester.getSemantics(profile).label,
+        contains('This device (Termux)'),
+      );
+      expect(
+        tester.getSemantics(profile).label,
+        contains('Connected, Switch server'),
+      );
+      expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'expanded tablet shell puts navigation and server controls in the sidebar',
