@@ -116,6 +116,18 @@ public interface KitPlatform {
      */
     public val liquidGlass: Boolean
         get() = false
+
+    /**
+     * Draws one liquid glass pane over [backdrop], shaped [shape], as [spec] says; [transform] (0 at rest, 1 fully) is
+     * how far a transform the lens cannot follow has run, so the lens eases into frost meanwhile. Android draws it with
+     * the lens; elsewhere the pane's tint alone ([io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn]).
+     */
+    public fun liquidPane(
+        spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
+        backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
+        shape: androidx.compose.foundation.shape.CornerBasedShape,
+        transform: () -> Float,
+    ): androidx.compose.ui.Modifier = io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape)
 }
 
 /**

@@ -123,6 +123,15 @@ public class AndroidKitPlatform(
 
     override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
+    override fun liquidPane(
+        spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
+        backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
+        shape: androidx.compose.foundation.shape.CornerBasedShape,
+        transform: () -> Float,
+    ): androidx.compose.ui.Modifier =
+        if (liquidGlass) AndroidLiquidGlass.pane(spec, backdrop, shape, transform)
+        else io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape)
+
     override val liveShaders: LiveShaderCompiler? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             LiveShaderCompiler(AndroidLiveShader::compile)

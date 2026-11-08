@@ -80,17 +80,21 @@ public object LiquidEdge {
     public const val SATURATION: Float = 1.3f
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it). */
-    public const val PRESS: Float = .36f
+    public const val PRESS: Float = .28f
 
-    /** How far the pressed backdrop moves towards the theme: lighter in a light theme, darker in a dark one. */
-    public const val PRESS_LIFT: Float = .33f
+    /**
+     * How far the pressed backdrop moves towards the theme: darker in a dark theme, lighter in a light one. Dark goes
+     * further: text3 must keep 4.5:1 over a white page behind a dark pane, and a darker backdrop needs less tint.
+     */
+    public const val PRESS_LIFT_DARK: Float = .48f
+    public const val PRESS_LIFT_LIGHT: Float = .40f
 
     /** The rim width the lens bends in, for a pane whose shorter side is [shortSidePx], at [density] px per dp. */
     public fun rimPx(shortSidePx: Float, density: Float): Float = minOf(RIM_MAX_DP * density, RIM_SHARE * shortSidePx)
 
     /** The recipe for [role] in a [dark] or light theme: thin bars bend gently; sheets and menus blur more (more words). */
     public fun recipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
-        val lift = if (dark) -PRESS_LIFT else PRESS_LIFT
+        val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
         return when (role) {
             LiquidRole.Bar -> LiquidRecipe(SATURATION, PRESS, lift, 4f, 14f, .10f)
             LiquidRole.Composer -> LiquidRecipe(SATURATION, PRESS, lift, 4f, 14f, .12f)

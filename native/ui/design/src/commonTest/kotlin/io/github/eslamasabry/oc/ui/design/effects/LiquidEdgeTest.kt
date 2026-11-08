@@ -125,7 +125,8 @@ class LiquidEdgeTest {
             assertTrue(sheet.fill!!.alpha / 255f >= LiquidEdge.tintFloor(LiquidRole.Sheet, dark) - .01f, "dark=$dark sheet")
             for (role in listOf(LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Pill)) {
                 val a = LiquidEdge.face(roles, role).fill!!.alpha / 255f
-                assertTrue(a < .9f, "dark=$dark $role tint $a: still glass, not a solid face")
+                // Dark: text3 at 4.5:1 over a white page behind the pane needs about 0.8; light keeps Glass's 0.62.
+                assertTrue(a < (if (dark) .85f else .70f), "dark=$dark $role tint $a: still glass, not a solid face")
             }
         }
     }

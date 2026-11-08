@@ -23,7 +23,6 @@ kotlin {
             project(":ui:design")
         ) // tokens appear in kit signatures (KitHaptic, TypeRole, TextTone, KitShapeId)
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
-        implementation(libs.kyant.backdrop) // liquid glass under the Glass style (effects/KitLiquidGlass.kt)
         implementation(
             libs.navigationevent.compose
         ) // S1-KITA2: the topmost sheet or dialog owns Back (plan 06 §7.4)
@@ -31,6 +30,9 @@ kotlin {
     sourceSets.androidMain.dependencies {
         // Official static Android renderer; only the kit's no-external-resource SVG seam uses it.
         implementation("com.caverock:androidsvg-aar:1.4")
+        // Liquid glass under the Glass style (platform/AndroidLiquidGlass.kt). Android only: its desktop build targets
+        // Java 21, and the desktop app and its tests run on 17.
+        implementation(libs.kyant.backdrop)
     }
     // The golden-diff gate is the test-only :ui:gate module (E02-S01: no borrowed source folders).
     sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }
