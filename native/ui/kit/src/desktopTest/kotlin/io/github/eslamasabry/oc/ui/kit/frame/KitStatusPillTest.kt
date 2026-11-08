@@ -61,7 +61,7 @@ class KitStatusPillTest {
                 }
             }
         }
-        val map = onNodeWithTag("kit-status-pill").captureToImage().toPixelMap()
+        val map = onNodeWithTag("kit-status-pill", useUnmergedTree = true).captureToImage().toPixelMap()
         // Inside the pill's start padding: background only, no dot, no words.
         val got = map[(3 * 3), map.height / 2]
         assertTrue(abs(got.red - expected.red) < .02f && abs(got.green - expected.green) < .02f && abs(got.blue - expected.blue) < .02f, "tint $got vs $expected")
@@ -74,13 +74,13 @@ class KitStatusPillTest {
                 KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Offline")
             }
         }
-        onNodeWithTag("kit-status-pill-word").fetchSemanticsNode()
+        onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNode()
     }
 
     @Test
     fun connected_has_no_word() = runComposeUiTest {
         setContent { Themed(rtl = false, fontScale = 1f) { KitStatusPill("This phone", KitConnectionTone.Ok, "x", {}) } }
-        assertTrue(onAllNodesWithTag("kit-status-pill-word").fetchSemanticsNodes().isEmpty())
+        assertTrue(onAllNodesWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
     }
 
     private fun wordLeftAndWidth(rtl: Boolean): Pair<Float, Float> {
@@ -91,8 +91,8 @@ class KitStatusPillTest {
                     KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Offline")
                 }
             }
-            val word = onNodeWithTag("kit-status-pill-word").getUnclippedBoundsInRoot()
-            val pill = onNodeWithTag("kit-status-pill").getUnclippedBoundsInRoot()
+            val word = onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).getUnclippedBoundsInRoot()
+            val pill = onNodeWithTag("kit-status-pill", useUnmergedTree = true).getUnclippedBoundsInRoot()
             out = word.left.value to (pill.right - pill.left).value
         }
         return out
@@ -113,8 +113,8 @@ class KitStatusPillTest {
                 KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Offline")
             }
         }
-        val pill = onNodeWithTag("kit-status-pill").getUnclippedBoundsInRoot()
+        val pill = onNodeWithTag("kit-status-pill", useUnmergedTree = true).getUnclippedBoundsInRoot()
         assertEquals(48f, (pill.bottom - pill.top).value, 1f)
-        onNodeWithTag("kit-status-pill-word").fetchSemanticsNode()
+        onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNode()
     }
 }
