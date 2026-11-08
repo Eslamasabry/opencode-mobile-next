@@ -2,13 +2,13 @@
 /// Phone agents register these same payload pins through AgentPhoneScripts,
 /// installing as oc. Device qualification is the explicit four-step self-test.
 abstract final class ClaudeScripts {
-  static const version = '2.1.316';
+  static const version = '2.1.319';
   static const arm64Sha256 =
-      '55cdb8e162d190432696ea54010e0fca2e18d06fa7a7127fd563b9ffd4f22624';
+      'a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f';
   static const x64Sha256 =
-      'fd13c70000fec3f2116dfbcbb6121210b4a29328bf0e46210a59dd594a67d824';
+      'dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed';
 
-  // Official release manifest, 2.1.316 (published 2026-10-31). Do not use the remote install.sh or
+  // Official release manifest, 2.1.319 (fetched 2026-11-08). Do not use the remote install.sh or
   // npm's optional dependency selection: neither is our pinned payload.
   static const install =
       '''

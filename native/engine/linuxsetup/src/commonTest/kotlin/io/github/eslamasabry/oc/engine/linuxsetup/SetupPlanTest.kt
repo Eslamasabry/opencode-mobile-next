@@ -88,7 +88,7 @@ class SetupPlanTest {
         val check = assertNotNull(SetupScripts.openCodeNativeCheck())
         assertTrue(check.contains("[ \"\$(readlink -f \"\$oc_bin\")\" = '/opt/opencode2/bin/opencode2' ]"))
         assertTrue(check.contains("oc_update_recover()"))
-        assertTrue(SetupScripts.NODE_INSTALL.contains("node_version=v24.21.0"))
-        assertTrue(SetupScripts.NODE_CHECK.contains("= 'v24.21.0' ]"))
+        assertTrue(SetupScripts.NODE_INSTALL.contains("node_version=v24.22.2"))
+        assertTrue(SetupScripts.NODE_CHECK.contains("= 'v24.22.2' ]"))
     }
 }

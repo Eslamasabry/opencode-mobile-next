@@ -125,7 +125,7 @@ class AgentCatalogTest {
         assertEquals(AgentSignInMethod.ApiKeyHost, catalog.byId(AgentId("qwen"))!!.signInMethod)
         assertEquals(listOf("--acp"), catalog.byId(AgentId("gemini"))!!.recipe!!.launchArgs)
         assertEquals(AgentArtifactFormat.NpmTarGz, catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format)
-        assertEquals("2.1.316", catalog.byId(AgentId("claude"))!!.recipe!!.version)
+        assertEquals("2.1.319", catalog.byId(AgentId("claude"))!!.recipe!!.version)
         assertEquals(listOf("auth", "login", "--claudeai"), catalog.byId(AgentId("claude"))!!.recipe!!.signInArgs)
         assertEquals(AgentLimitation.NeedsPhoneCheck, catalog.byId(AgentId("claude"))!!.limitation)
         assertEquals(AgentLimitation.GooseProvider, catalog.byId(AgentId("goose"))!!.limitation)
@@ -167,9 +167,9 @@ class AgentCatalogTest {
         assertEquals("0.11.2", pins.paseo.version)
         assertEquals("b0bcc4f6191bd5c2daeda8ae398d636f3575173e699fa3868ab9e24f2e1fcdaa", pins.paseo.packageLockSha256)
         assertEquals("/home/oc/.local/share/oc-paseo/0.11.2-b0bcc4f6191b", pins.paseo.installDirectory)
-        assertEquals("v24.21.0", pins.node.version)
-        assertEquals("724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5", pins.node.sha256[AgentArchitecture.Arm64])
-        assertEquals("6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff", pins.node.sha256[AgentArchitecture.X64])
-        assertTrue("2.1.316" in pins.claudeCodeTestedVersions)
+        assertEquals("v24.22.2", pins.node.version)
+        assertEquals("95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2", pins.node.sha256[AgentArchitecture.Arm64])
+        assertEquals("361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9", pins.node.sha256[AgentArchitecture.X64])
+        assertTrue("2.1.319" in pins.claudeCodeTestedVersions)
     }
 }

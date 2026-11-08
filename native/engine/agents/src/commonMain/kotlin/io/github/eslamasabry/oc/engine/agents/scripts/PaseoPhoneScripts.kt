@@ -28,9 +28,9 @@ public class PaseoPinUnavailable : IllegalArgumentException("The agent host inst
  */
 public object PaseoPhoneScripts {
     public const val VERSION: String = "0.11.2"
-    public const val NODE_VERSION: String = "v24.21.0"
-    public const val NODE_ARM64_SHA256: String = "724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5"
-    public const val NODE_X64_SHA256: String = "6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff"
+    public const val NODE_VERSION: String = "v24.22.2"
+    public const val NODE_ARM64_SHA256: String = "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2"
+    public const val NODE_X64_SHA256: String = "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9"
     public const val PACKAGE_LOCK_ASSET: String = "assets/agents/paseo-package-lock.json"
     public const val PACKAGE_LOCK_SHA256: String = "b0bcc4f6191bd5c2daeda8ae398d636f3575173e699fa3868ab9e24f2e1fcdaa"
     public const val INSTALL_DIRECTORY: String = "/home/oc/.local/share/oc-paseo/$VERSION-b0bcc4f6191b"

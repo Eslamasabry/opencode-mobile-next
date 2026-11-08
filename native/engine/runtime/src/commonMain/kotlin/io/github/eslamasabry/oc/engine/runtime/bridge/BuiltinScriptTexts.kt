@@ -203,11 +203,11 @@ public object BuiltinScriptTexts {
         "fi\n" +
         "if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then\n" +
         "  case \"\$(uname -m)\" in\n" +
-        "    aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;\n" +
-        "    x86_64|amd64) node_arch=x64; node_sha=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff ;;\n" +
+        "    aarch64|arm64) node_arch=arm64; node_sha=95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2 ;;\n" +
+        "    x86_64|amd64) node_arch=x64; node_sha=361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9 ;;\n" +
         "    *) echo \"[oc] Unsupported CPU: \$(uname -m)\" >&2; exit 64 ;;\n" +
         "  esac\n" +
-        "  node_version=v24.21.0\n" +
+        "  node_version=v24.22.2\n" +
         "  echo \"[oc] Installing Node.js \$node_version\"\n" +
         "  curl -fsSL --retry 5 -o /tmp/node.tar.gz \\\n" +
         "    \"https://nodejs.org/dist/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz\"\n" +

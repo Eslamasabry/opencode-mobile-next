@@ -72,28 +72,28 @@ class AgentPinsParityTest {
         assertEquals("antigravity", agent.providerId)
         assertEquals(AgentSignInMethod.BrowserOAuthHost, agent.signInMethod)
         assertEquals(AgentLimitation.AntigravityGoogleSignIn, agent.limitation)
-        assertEquals("1.5.0", recipe.version)
+        assertEquals("1.5.3", recipe.version)
         assertEquals("agy", recipe.executable)
         assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
         assertEquals(listOf("acp", "--login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz",
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz",
             arm.url,
         )
-        assertEquals("87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4", arm.sha256)
-        assertEquals(66011999L, arm.downloadBytes)
-        assertEquals(227627384L, arm.installedBytes)
+        assertEquals("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", arm.sha256)
+        assertEquals(69843447L, arm.downloadBytes)
+        assertEquals(235622776L, arm.installedBytes)
         assertEquals("antigravity", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz",
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz",
             x64.url,
         )
-        assertEquals("f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01", x64.sha256)
-        assertEquals(69781910L, x64.downloadBytes)
-        assertEquals(238604688L, x64.installedBytes)
+        assertEquals("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", x64.sha256)
+        assertEquals(73694700L, x64.downloadBytes)
+        assertEquals(246837648L, x64.installedBytes)
         // Gemini stays: the catalog only gains Antigravity.
         assertNotNull(AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("gemini")))
     }

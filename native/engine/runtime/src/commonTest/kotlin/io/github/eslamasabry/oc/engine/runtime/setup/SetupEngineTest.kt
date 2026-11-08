@@ -438,7 +438,7 @@ class SetupEngineTest {
             "linux" to (true to "24.04.5"),
             "essentials" to (true to "2.43.0"),
             "python" to (true to "3.12.3"),
-            "node" to (true to "24.21.0"),
+            "node" to (true to "24.22.2"),
         )
         val engine = engine()
         engine.resume()
@@ -469,7 +469,7 @@ class SetupEngineTest {
                 )
                 host.checks += mapOf(
                     "essentials" to (true to "2.43.0"),
-                    "node" to (true to "24.21.0"),
+                    "node" to (true to "24.22.2"),
                     "opencode" to (true to "2.2.5"),
                 )
                 val params = SetupJobParams.adding(listOf("python", "aiteam")) +
