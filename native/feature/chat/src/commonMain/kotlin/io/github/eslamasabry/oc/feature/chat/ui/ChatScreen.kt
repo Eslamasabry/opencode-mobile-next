@@ -164,7 +164,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgai
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptNotAnswered
 import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
 import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
-import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
+import io.github.eslamasabry.oc.ui.words.res.commandDestination
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveQuestion
@@ -599,7 +599,7 @@ public fun ChatScreen(
                                 KitTopBar(
                                     title =
                                         state.title
-                                            ?: stringResource(Res.string.commandUntitledChat),
+                                            ?: stringResource(Res.string.commandDestination),
                                     exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,
                                     exitLabel = stringResource(Res.string.kitTopBarBack),
                                     onExit = actions::leaveRequested,
@@ -789,6 +789,7 @@ public fun ChatScreen(
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
                                         onAllFiles = actions::openFiles,
+                                        onSendAgain = actions::retryLastPrompt,
                                         reasoningExpanded = state.reasoningExpanded,
                                         onCompactAgain =
                                             if (state.capabilities.compact) actions::compactAgain

@@ -290,6 +290,8 @@ internal fun ChatTranscriptList(
     onCompactAgain: (() -> Unit)? = null,
     /** A finished turn's "All files" (the project's Files); null hides the link. */
     onAllFiles: (() -> Unit)? = null,
+    /** "Send again" under the newest prompt that got no reply (Flutter no_reply_reason.dart:198); null hides it. */
+    onSendAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
     onReviewPending: (() -> Unit)? = null,
@@ -321,6 +323,7 @@ internal fun ChatTranscriptList(
                 .filter { it.text.isNotBlank() }
                 .mapTo(hashSetOf()) { it.turnId }
         }
+    val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
     val newestCompleted =
         unique
             .filterIsInstance<FooterRow>()
@@ -469,6 +472,7 @@ internal fun ChatTranscriptList(
                         onCopyReply.takeIf { row.turnId in copyableTurns },
                         teachDetails = row.key == newestCompleted,
                         onAllFiles = onAllFiles,
+                        onSendAgain = onSendAgain.takeIf { row.key == newestPrompt },
                     )
                 }
                 if (display.timestampsVisible) {
@@ -612,6 +616,8 @@ private fun ChatRow(
     onCopyReply: ((FooterRow) -> Unit)? = null,
     teachDetails: Boolean = false,
     onAllFiles: (() -> Unit)? = null,
+    /** The newest prompt that got no reply: its notice's "Send again"; null elsewhere. */
+    onSendAgain: (() -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow -> {
@@ -656,7 +662,11 @@ private fun ChatRow(
                 }
                 // A turn with no assistant row still has an explicit end next to its prompt.
                 if (facts.reading.metadata[row.turnId] == null)
-                    facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                    facts.reading.endNotes[row.turnId]?.let { note ->
+                        if (note == io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent)
+                            NoReplyNotice(onSendAgain)
+                        else TurnEndNote(note)
+                    }
             }
         is ThoughtRow -> {
             val detail = facts.reading.details[row.key]
