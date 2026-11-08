@@ -183,7 +183,7 @@ public fun KitScreen(
     val latestBody = rememberUpdatedState(body)
     val movableTop = remember { movableContentOf { latestTop.value?.invoke() } }
     val movableBottom = remember { movableContentOf { latestBottom.value?.invoke() } }
-    val movableBody = remember { movableContentOf { latestBody.value() } }
+    val movableBody = remember { movableContentOf { io.github.eslamasabry.oc.ui.kit.row.KitStackScope { latestBody.value() } } }
     // Both layouts must invoke the same movable content. Switching from a raw slot to a
     // movable slot disposes it: the first optimistic chat bubble used to cancel its own send.
     val topPart: (@Composable () -> Unit)? = topBar?.let { movableTop }
