@@ -193,6 +193,7 @@
     <string name="workRunawaySeeRunning">See what's running</string>
     <string name="chatsHomeTitle">Conversations</string>
     <string name="chatsHomeRunning">Running</string>
+    <string name="chatsHomeRunningCount">Running · %1$d</string>
     <string name="chatsHomeStopped">Stopped</string>
     <string name="chatsHomeDone">Done</string>
     <string name="chatsHomeFailed">Failed</string>

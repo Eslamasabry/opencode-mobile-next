@@ -148,6 +148,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunningCount
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
@@ -363,7 +364,8 @@ public fun ChatsScreen(
                                 // section gap above its label. In a lazy item the label cannot see what is above it
                                 // (it is first in its own box), so the gap is asked for here.
                                 Box(kitItemMotion()) {
-                                    KitSectionLabel(
+                                    // Alone, "Earlier" divides nothing: no label (Flutter conv-header).
+                                    if (today.isNotEmpty()) KitSectionLabel(
                                         stringResource(Res.string.chatsHomeEarlier),
                                         gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
                                     )
@@ -530,8 +532,10 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
 private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = false) {
     KitFilterChips(bleed = bleed) {
         HomeFilterChips(state, actions)
+        val runningNow = (state.today + state.earlier).count { it.status == RowStatus.Running }
         KitChip(
-            label = stringResource(Res.string.chatsHomeRunning), kind = KitChipKind.Action,
+            label = if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, runningNow) else stringResource(Res.string.chatsHomeRunning),
+            kind = KitChipKind.Action,
             selected = state.filters.running, onClick = actions::toggleRunning,
         )
     }
