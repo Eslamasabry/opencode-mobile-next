@@ -198,6 +198,16 @@ class S10HomeScreenTest {
         val b = (blue * 255).toInt()
         return (a shl 24) or (r shl 16) or (g shl 8) or b
     }
+
+    @Test
+    fun `B-FB-050 a section another feature places shows under the notes, above Today`() =
+        runDesktopComposeUiTest(360, 900) {
+            home(mixed(), sections = listOf({ io.github.eslamasabry.oc.ui.kit.KitText("Memory section") }))
+            val memory = onNodeWithText("Memory section").getBoundsInRoot()
+            val today = onNodeWithText("Today").getBoundsInRoot()
+            assertTrue(memory.bottom <= today.top, "the section sits above Today")
+        }
+
 }
 
 internal const val S10_NOW: Long = 1_800_000_000_000L
@@ -240,12 +250,4 @@ internal fun mixed(extra: Int = 0, claude: Boolean = false): ChatsUi {
         )
         .copy(archivable = items.map { it.identity }.toImmutableSet(), pinned = persistentSetOf())
 
-    @Test
-    fun `B-FB-050 a section another feature places shows under the notes, above Today`() =
-        runDesktopComposeUiTest(360, 900) {
-            home(mixed(), sections = listOf({ io.github.eslamasabry.oc.ui.kit.KitText("Memory section") }))
-            val memory = onNodeWithText("Memory section").getBoundsInRoot()
-            val today = onNodeWithText("Today").getBoundsInRoot()
-            assertTrue(memory.bottom <= today.top, "the section sits above Today")
-        }
-}
+
