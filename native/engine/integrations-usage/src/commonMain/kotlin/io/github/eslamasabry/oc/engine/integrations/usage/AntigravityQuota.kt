@@ -38,15 +38,9 @@ public class AntigravityQuotaClient(
      */
     public suspend fun fetchAllUsage(profileId: String? = null, now: Instant? = null): List<ProviderUsageReading> {
         val run = runner ?: return emptyList()
-        val at = now ?: clock()
-        val result =
-            when (val r = attempt({ Failure.Device() }) { run.run(cliScript(profileId), TIMEOUT_MS) }) {
-                is Outcome.Failed -> return emptyList()
-                is Outcome.Ok -> r.value
-            }
-        if (result.exitCode != 0) return emptyList()
-        val body = jsonObjectIn(result.output) ?: return emptyList()
-        val readings = parseCliJson(body, at)
+        val result = attempt({ Failure.Device() }) { run.run(cliScript(profileId), TIMEOUT_MS) }
+        val output = (result as? Outcome.Ok)?.value?.takeIf { it.exitCode == 0 }?.output
+        val readings = output?.let(::jsonObjectIn)?.let { parseCliJson(it, now ?: clock()) }.orEmpty()
         if (readings.isNotEmpty()) cachedReadings = readings
         return readings
     }
@@ -56,12 +50,20 @@ public class AntigravityQuotaClient(
         private val SAFE_ID = Regex("^[A-Za-z0-9_-]{1,64}$")
         private const val FIVE_HOURS = 18_000L
         private const val WEEK = 604_800L
+        private const val PERCENT = 100.0
+        private const val MAX_TIME_TEXT = 64
+        private const val GROUP_NAME_LENGTH = 48
+        private const val LABEL_LENGTH = 24
+        private const val PROVIDER_ID_LENGTH = 32
+        private const val SHARED_CLI = "/home/oc/.local/bin/agy"
 
         /** Where the CLI can live: the profile's own home first (agents installed per profile), then the shared one. */
         public fun candidateCliPaths(profileId: String? = null): List<String> =
             buildList {
-                if (profileId != null && SAFE_ID.matches(profileId)) add("/home/oc/.oc-profiles/$profileId/.local/bin/agy")
-                add("/home/oc/.local/bin/agy")
+                if (profileId != null && SAFE_ID.matches(profileId)) {
+                    add("/home/oc/.oc-profiles/$profileId/.local/bin/agy")
+                }
+                add(SHARED_CLI)
             }
 
         /**
@@ -70,9 +72,8 @@ public class AntigravityQuotaClient(
          */
         public fun cliScript(profileId: String? = null): String {
             val candidates = candidateCliPaths(profileId).joinToString(" ")
-            return "for b in $candidates; do " +
-                "if [ -x \"\$b\" ]; then HOME=\"\${b%/.local/bin/agy}\" exec \"\$b\" -p /usage --output-format json; fi; " +
-                "done; exit 127"
+            val runOne = "HOME=\"\${b%/.local/bin/agy}\" exec \"\$b\" -p /usage --output-format json"
+            return "for b in $candidates; do if [ -x \"\$b\" ]; then $runOne; fi; done; exit 127"
         }
 
         /** The JSON object in the CLI's output (it may print a banner first). */
@@ -83,14 +84,8 @@ public class AntigravityQuotaClient(
             return DartJson.decodeOrNull(output.substring(start, end + 1)) as? Map<*, *>
         }
 
-        private fun time(value: Any?): Instant? {
-            if (value !is String || value.length > 64) return null
-            return try {
-                Instant.parse(value)
-            } catch (e: IllegalArgumentException) {
-                null
-            }
-        }
+        private fun time(value: Any?): Instant? =
+            (value as? String)?.takeIf { it.length <= MAX_TIME_TEXT }?.let(Instant::parseOrNull)
 
         private fun priority(w: ProviderUsageWindowReading): Int =
             when (w.durationSeconds) {
@@ -99,56 +94,57 @@ public class AntigravityQuotaClient(
                 else -> 2
             }
 
+        /** Provider id and display name for one CLI group (Flutter's Gemini / Claude and GPT / other split). */
+        private fun identity(groupName: String, manyGroups: Boolean): Pair<String, String> {
+            val lower = groupName.lowercase()
+            return when {
+                "gemini" in lower -> "antigravity" to if (manyGroups) "Antigravity (Gemini Models)" else "Antigravity"
+                "claude" in lower || "gpt" in lower || "3p" in lower ->
+                    "antigravity_claude" to "Antigravity (Claude and GPT models)"
+                else ->
+                    ("antigravity_" + lower.replace(Regex("[^a-z0-9]"), "_")).take(PROVIDER_ID_LENGTH) to
+                        "Antigravity ($groupName)"
+            }
+        }
+
+        /**
+         * One bucket, or null without a finite fraction. A disabled bucket (for example the 5-hour limit while the
+         * weekly one is used up) has nothing left: 0%, never its stale fraction.
+         */
+        private fun window(bucket: Any?): ProviderUsageWindowReading? {
+            val b = bucket as? Map<*, *>
+            val fraction =
+                ((b?.get("remaining_fraction") ?: b?.get("remainingFraction")) as? Number)?.toDouble()?.takeIf {
+                    it.isFinite()
+                }
+            if (b == null || fraction == null) return null
+            val remaining = if (b["disabled"] == true) 0 else (fraction * PERCENT).coerceIn(0.0, PERCENT).roundToInt()
+            val (seconds, label) =
+                when (b["window"]) {
+                    "5h" -> FIVE_HOURS to "5-hour"
+                    "weekly" -> WEEK to "Weekly"
+                    else -> null to (cleanUsageText(b["name"], LABEL_LENGTH) ?: "Quota")
+                }
+            return ProviderUsageWindowReading(seconds, label, remaining, time(b["reset_time"] ?: b["resetTime"]))
+        }
+
         /**
          * The CLI's `command.data.groups`: Gemini models read as `antigravity`, Claude and GPT models as
-         * `antigravity_claude`, any other group by its own name. A disabled bucket (for example the 5-hour limit while
-         * the weekly one is used up) has nothing left: 0%, never its stale fraction.
+         * `antigravity_claude`, any other group by its own name; a group without a readable bucket is left out.
          */
         public fun parseCliJson(data: Map<*, *>, now: Instant): List<ProviderUsageReading> {
-            val groups = ((data["command"] as? Map<*, *>)?.get("data") as? Map<*, *>)?.get("groups") as? List<*>
-                ?: return emptyList()
-            val readings = ArrayList<ProviderUsageReading>()
-            for (group in groups) {
-                if (group !is Map<*, *>) continue
-                val groupName = cleanUsageText(group["name"], 48) ?: ""
-                val lower = groupName.lowercase()
-                val providerId: String
-                val displayName: String
-                when {
-                    "gemini" in lower -> {
-                        providerId = "antigravity"
-                        displayName = if (groups.size > 1) "Antigravity (Gemini Models)" else "Antigravity"
-                    }
-                    "claude" in lower || "gpt" in lower || "3p" in lower -> {
-                        providerId = "antigravity_claude"
-                        displayName = "Antigravity (Claude and GPT models)"
-                    }
-                    else -> {
-                        providerId = ("antigravity_" + lower.replace(Regex("[^a-z0-9]"), "_")).take(32)
-                        displayName = "Antigravity ($groupName)"
-                    }
+            val command = data["command"] as? Map<*, *>
+            val groups = (command?.get("data") as? Map<*, *>)?.get("groups") as? List<*> ?: return emptyList()
+            return groups
+                .filterIsInstance<Map<*, *>>()
+                .mapNotNull { group ->
+                    val windows = (group["buckets"] as? List<*>).orEmpty().mapNotNull(::window).sortedBy(::priority)
+                    if (windows.isEmpty()) return@mapNotNull null
+                    val name = cleanUsageText(group["name"], GROUP_NAME_LENGTH).orEmpty()
+                    val (providerId, displayName) = identity(name, groups.size > 1)
+                    ProviderUsageReading(providerId, displayName, now, windows)
                 }
-                val windows = ArrayList<ProviderUsageWindowReading>()
-                for (b in group["buckets"] as? List<*> ?: emptyList<Any?>()) {
-                    if (b !is Map<*, *>) continue
-                    val fraction = (b["remaining_fraction"] ?: b["remainingFraction"]) as? Number ?: continue
-                    val value = fraction.toDouble()
-                    if (!value.isFinite()) continue
-                    val remaining = if (b["disabled"] == true) 0 else (value * 100).coerceIn(0.0, 100.0).roundToInt()
-                    val (seconds, label) =
-                        when (b["window"]) {
-                            "5h" -> FIVE_HOURS to "5-hour"
-                            "weekly" -> WEEK to "Weekly"
-                            else -> null to (cleanUsageText(b["name"], 24) ?: "Quota")
-                        }
-                    windows += ProviderUsageWindowReading(seconds, label, remaining, time(b["reset_time"] ?: b["resetTime"]))
-                }
-                if (windows.isEmpty()) continue
-                windows.sortBy(::priority)
-                readings += ProviderUsageReading(providerId, displayName, now, windows)
-            }
-            readings.sortBy { if (it.providerId == "antigravity") 0 else 1 }
-            return readings
+                .sortedBy { if (it.providerId == "antigravity") 0 else 1 }
         }
     }
 }

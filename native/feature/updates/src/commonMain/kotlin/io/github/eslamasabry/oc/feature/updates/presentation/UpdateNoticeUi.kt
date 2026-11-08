@@ -72,12 +72,13 @@ public fun hasUpdateBadge(state: AppUpdateState): Boolean = state.hasPendingRele
  * first plain sentence of its notes, then Update now or Not now. Null when it is closed, put off for the session, the
  * Updates page is open or the release is already being fetched. Pure.
  */
-public fun promptUi(state: AppUpdateState): OfferUi? {
-    if (!state.supported || !state.promptOpen || state.pageOpen || state.notNow) return null
-    if (state.phase != UpdatePhase.Available) return null
-    val release = state.release ?: return null
-    return OfferUi(release.version, release.summary)
-}
+public fun promptUi(state: AppUpdateState): OfferUi? =
+    state.release
+        ?.takeIf { state.promptWanted }
+        ?.let { OfferUi(it.version, it.summary) }
+
+private val AppUpdateState.promptWanted: Boolean
+    get() = supported && promptOpen && phase == UpdatePhase.Available && !(pageOpen || notNow)
 
 /** What the prompt's choices reach. */
 public interface UpdatePromptActions {

@@ -229,9 +229,8 @@ public class AppUpdates(
      * downloads (fail closed, Flutter #126): one without published checksums is never offered.
      */
     private fun offerable(release: AppRelease): Boolean {
-        val asset = release.apkFor(abis) ?: return false
-        val sums = release.checksums ?: return false
-        return isTrustedReleaseFileUrl(asset.url, feedOverride) && isTrustedReleaseFileUrl(sums.url, feedOverride)
+        val files = listOfNotNull(release.apkFor(abis), release.checksums)
+        return files.size == 2 && files.all { isTrustedReleaseFileUrl(it.url, feedOverride) }
     }
 
     private suspend fun stamp(at: Instant) {
@@ -267,9 +266,7 @@ public class AppUpdates(
             scope.launch {
                 delay(OPEN_DELAY)
                 if (started) onResumed() else start()
-                if (s.phase == UpdatePhase.Available && s.release != null && !s.notNow && !s.pageOpen) {
-                    set { it.copy(promptOpen = true) }
-                }
+                if (s.offerWaiting) set { it.copy(promptOpen = true) }
             }
     }
 
@@ -408,6 +405,10 @@ public class AppUpdates(
         }
         return checkIfDue()
     }
+
+    /** A newer release waits, nothing is running, and the person neither put it off nor has the Updates page open. */
+    private val AppUpdateState.offerWaiting: Boolean
+        get() = phase == UpdatePhase.Available && release != null && !(notNow || pageOpen)
 
     private fun fail(why: UpdateFailure, detail: String?): Outcome<Unit> {
         log.i { "update stopped: $why" }

@@ -78,7 +78,9 @@ class AntigravityQuotaTest {
 
     @Test
     fun `B-AGENT-431 no CLI, not signed in or unreadable output reads as no readings`() = runTest {
-        for (res in listOf(LinuxRunResult(127, ""), LinuxRunResult(1, "Please sign in"), LinuxRunResult(0, "not json"))) {
+        val answers =
+            listOf(LinuxRunResult(127, ""), LinuxRunResult(1, "Please sign in"), LinuxRunResult(0, "not json"))
+        for (res in answers) {
             val client = AntigravityQuotaClient({ _, _ -> res }, { AGY_NOW })
             assertEquals(emptyList(), client.fetchAllUsage())
         }
@@ -98,9 +100,11 @@ class AntigravityQuotaTest {
     }
 
     @Test
-    fun `B-AGENT-432 usage adds Antigravity only from its CLI, says needs sign-in when signed out and never invents numbers`() =
+    fun `B-AGENT-432 Antigravity comes only from its CLI, needs sign-in when signed out, never invented`() =
         runTest {
-            val claude = ProviderUsageReading("claude", "Claude", AGY_NOW, listOf(ProviderUsageWindowReading(18_000, "", 50, null)))
+            val window = ProviderUsageWindowReading(18_000, "", 50, null)
+            val claude = ProviderUsageReading("claude", "Claude", AGY_NOW, listOf(window))
+            val ready = AntigravityAgentState.Ready
             val agy = AntigravityQuotaClient.parseCliJson(DartJson.decode(ONE_GROUP) as Map<*, *>, AGY_NOW)
             var asked = 0
             val cli: suspend () -> List<ProviderUsageReading>? = {
@@ -108,10 +112,10 @@ class AntigravityQuotaTest {
                 agy
             }
 
-            assertEquals(listOf(claude) + agy, withAntigravityUsage(listOf(claude), AntigravityAgentState.Ready, AGY_NOW, cli))
+            assertEquals(listOf(claude) + agy, withAntigravityUsage(listOf(claude), ready, AGY_NOW, cli))
             // A CLI that reports nothing adds nothing.
-            assertEquals(listOf(claude), withAntigravityUsage(listOf(claude), AntigravityAgentState.Ready, AGY_NOW) { emptyList() })
-            assertEquals(listOf(claude), withAntigravityUsage(listOf(claude), AntigravityAgentState.Ready, AGY_NOW) { null })
+            assertEquals(listOf(claude), withAntigravityUsage(listOf(claude), ready, AGY_NOW) { emptyList() })
+            assertEquals(listOf(claude), withAntigravityUsage(listOf(claude), ready, AGY_NOW) { null })
 
             asked = 0
             val signedOut = withAntigravityUsage(listOf(claude), AntigravityAgentState.SignedOut, AGY_NOW, cli)
@@ -120,7 +124,8 @@ class AntigravityQuotaTest {
             assertTrue(needs.needsSignIn)
             assertTrue(needs.windows.isEmpty())
 
-            assertEquals(listOf(claude), withAntigravityUsage(listOf(claude), AntigravityAgentState.Other, AGY_NOW, cli))
+            val other = AntigravityAgentState.Other
+            assertEquals(listOf(claude), withAntigravityUsage(listOf(claude), other, AGY_NOW, cli))
             assertEquals(0, asked)
 
             val noRow = withAntigravityUsage(emptyList(), AntigravityAgentState.Absent, AGY_NOW) {

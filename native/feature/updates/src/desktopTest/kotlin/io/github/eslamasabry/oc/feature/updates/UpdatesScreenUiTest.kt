@@ -231,7 +231,8 @@ class UpdatesScreenUiTest {
 
                 override fun onPromptClose() { calls += "close" }
             }
-        setContent { Themed { KitSheetHost { UpdatePromptSheet(OfferUi("2.2.0", "This release is faster."), actions) } } }
+        val prompt = OfferUi("2.2.0", "This release is faster.")
+        setContent { Themed { KitSheetHost { UpdatePromptSheet(prompt, actions) } } }
         waitForIdle()
         onNodeWithText("Version 2.2.0 is ready").assertExists()
         onNodeWithText("This release is faster.").assertExists()

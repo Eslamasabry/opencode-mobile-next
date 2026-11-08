@@ -101,7 +101,8 @@ class UpdatesViewModelTest {
         assertEquals(UpdateFailure.Checksum, ui.failure)
         assertEquals(UpdatesLine.NotInstalled, ui.line)
         assertEquals(UpdatesAction.TryAgain, ui.action)
-        assertEquals(listOf("/cache/app-update/update-58.apk"), rig.platform.deleted, "a fixed name, never the server's")
+        // A fixed name, never the server's.
+        assertEquals(listOf("/cache/app-update/update-58.apk"), rig.platform.deleted)
         assertTrue(rig.platform.installs.isEmpty())
         vm.onTryAgain()
         assertEquals(2, rig.feed.downloads, "Try again downloads again")

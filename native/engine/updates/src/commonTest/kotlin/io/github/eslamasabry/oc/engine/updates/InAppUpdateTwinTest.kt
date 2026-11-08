@@ -16,7 +16,10 @@ import kotlin.test.assertTrue
 
 private const val REPO = "https://github.com/Eslamasabry/opencode-mobile-next"
 
-private fun release(apkUrl: String, sumsUrl: String? = "$REPO/releases/download/v2.2.0%2B58/SHA256SUMS", apkName: String = "app.apk") =
+private const val FILES = "$REPO/releases/download/v2.2.0%2B58"
+private const val OTHER = "Eslamasabry/opencode-mobile-next/releases/download"
+
+private fun release(apkUrl: String, sumsUrl: String? = "$FILES/SHA256SUMS", apkName: String = "app.apk") =
     """
     {"tag_name":"v2.2.0+58","draft":false,"prerelease":false,"body":"New.","html_url":"$REPO/releases/tag/v2.2.0+58",
      "assets":[{"name":"$apkName","browser_download_url":"$apkUrl","size":10}
@@ -39,9 +42,9 @@ class InAppUpdateTwinTest {
         assertFalse(isTrustedReleaseFileUrl("$REPO/releases/tag/v2.2.0+58"))
         assertFalse(isTrustedReleaseFileUrl("$REPO/releases/latest/app.apk"))
         assertFalse(isTrustedReleaseFileUrl("https://github.com/Eslamasabry/other/releases/download/v1/app.apk"))
-        assertFalse(isTrustedReleaseFileUrl("http://github.com/Eslamasabry/opencode-mobile-next/releases/download/v1/a.apk"))
-        assertFalse(isTrustedReleaseFileUrl("https://objects.githubusercontent.com/Eslamasabry/opencode-mobile-next/releases/download/a"))
-        assertFalse(isTrustedReleaseFileUrl("https://github.com:8443/Eslamasabry/opencode-mobile-next/releases/download/v1/a.apk"))
+        assertFalse(isTrustedReleaseFileUrl("http://github.com/$OTHER/v1/a.apk"))
+        assertFalse(isTrustedReleaseFileUrl("https://objects.githubusercontent.com/$OTHER/a"))
+        assertFalse(isTrustedReleaseFileUrl("https://github.com:8443/$OTHER/v1/a.apk"))
         assertFalse(isTrustedReleaseFileUrl("$REPO/releases/download/../../../evil/releases/download/a.apk"))
     }
 
@@ -56,7 +59,7 @@ class InAppUpdateTwinTest {
         c.checkNow()
         assertFalse(c.state.value.hasPendingRelease)
 
-        feed.latestBody = release("$REPO/releases/download/v2.2.0%2B58/app.apk", sumsUrl = "$REPO/releases/tag/SHA256SUMS").ok()
+        feed.latestBody = release("$FILES/app.apk", sumsUrl = "$REPO/releases/tag/SHA256SUMS").ok()
         c.checkNow()
         assertFalse(c.state.value.hasPendingRelease)
 
