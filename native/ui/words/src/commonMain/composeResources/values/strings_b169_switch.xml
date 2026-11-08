@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b169SwitchModel">Switch model</string>
+    <string name="b169UsedUp">%1$s is used up for now</string>
+    <string name="b169UsedUpNoName">This model is used up for now</string>
+    <string name="b169ConnectProvider">Connect a provider…</string>
+    <string name="b169AskTitle">The stopped reply already ran %1$d steps. Send again with %2$s?</string>
+    <string name="b169AskSend">Send</string>
+    <string name="b169AttachAgain">Attach %1$s again to send</string>
+    <string name="b169Free">Free · may use your prompts</string>
+    <string name="b169TooLong">Too long for this model</string>
+    <string name="b169Suggested">Suggested</string>
+    <string name="b169Offline">Switch model works again once the server is back.</string>
+</resources>

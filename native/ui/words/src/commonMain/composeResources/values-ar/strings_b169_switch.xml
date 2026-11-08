@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="b169SwitchModel">بدّل النموذج</string>
+    <string name="b169UsedUp">نفد %1$s مؤقتًا</string>
+    <string name="b169UsedUpNoName">نفد هذا النموذج مؤقتًا</string>
+    <string name="b169ConnectProvider">اربط مزوّدًا…</string>
+    <string name="b169AskTitle">نفّذ الرد المتوقف %1$d خطوات بالفعل. أتُرسله مرة أخرى باستخدام %2$s؟</string>
+    <string name="b169AskSend">أرسل</string>
+    <string name="b169AttachAgain">أرفق %1$s مرة أخرى لترسل</string>
+    <string name="b169Free">مجاني · قد يستخدم رسائلك</string>
+    <string name="b169TooLong">المحادثة أطول مما يتسع له هذا النموذج</string>
+    <string name="b169Suggested">مقترح</string>
+    <string name="b169Offline">يعود تبديل النموذج للعمل حين يعود الخادم.</string>
+</resources>
