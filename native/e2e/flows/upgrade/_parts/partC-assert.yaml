@@ -157,7 +157,7 @@ appId: ${APP_ID}
 
 # The saved prompt, the always-allow rule and the queued prompt, each its own section so one gap does not hide the
 # others (S7 needs all three and the draft). Saved prompts: 2.1.4 Attach and more > More > Prompts > Saved prompts;
-# native (B-152, walked 2026-11-07) the conversation's More actions > Go to > Saved prompts.
+# native 4c012f945 the same path (its Go to group did not open on run 4b).
 - runFlow:
     label: "PC S7 saved prompt"
     optional: true
@@ -165,27 +165,14 @@ appId: ${APP_ID}
       - runFlow: ../../_sub/to-conversations.yaml
       - tapOn: "Upgrade draft(, .*)?"  # literal-ok: title seeded in Part A
       - runFlow: ../../_sub/settle-chat.yaml
+      # Native 4c012f945 has 2.1.4's path too (Attach and more > More > Prompts > Saved prompts).
+      - runFlow: ../../_sub/composer-more-tools.yaml
       - runFlow:
           when:
-            true: ${output.phase != 'native'}
+            notVisible: ${output.s.promptStashTitle + '(?s).*'}
           commands:
-            - runFlow: ../../_sub/composer-more-tools.yaml
-            - runFlow:
-                when:
-                  notVisible: ${output.s.promptStashTitle + '(?s).*'}
-                commands:
-                  - tapOn: ${output.s.usagePrompts}
-            - tapOn: ${output.s.promptStashTitle + '(?s).*'}
-      - runFlow:
-          when:
-            true: ${output.phase == 'native'}
-          commands:
-            - runFlow: ../../_sub/native-go-to.yaml
-            - scrollUntilVisible:
-                element: ${output.s.promptStashTitle}
-                direction: DOWN
-                timeout: 5000
-            - tapOn: ${output.s.promptStashTitle}
+            - tapOn: ${output.s.usagePrompts}
+      - tapOn: ${output.s.promptStashTitle + '(?s).*'}
       - extendedWaitUntil:
           visible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
           timeout: 15000
@@ -390,9 +377,10 @@ appId: ${APP_ID}
                 file: ../../_sub/settings-search.yaml
                 env:
                   QUERY: ${output.t.settingsHubVoice}
+            # The result row, below the search field (whose text is not always exposed as the query).
             - tapOn:
                 text: ${output.s.settingsHubVoice + '(\n(?s).*)?'}
-                index: 1
+                below: ${output.s.settingsHubSearch}
             - tapOn: ${output.s.voiceComponentTitle + '(\n(?s).*)?'}
             - extendedWaitUntil:
                 visible: ${output.s.e7VoiceUiAccurate}
@@ -466,9 +454,9 @@ appId: ${APP_ID}
       - evalScript: ${output.pc.S11 = true}
 
 # The schedule still fires; the pinned shortcuts are published (and the widget redraws when one was placed).
-# Two days, not one: Part B already fired the daily schedule on a clock moved a day ahead, so its next run is set a
-# day after that; once the clock is back to real time a one-day move falls short of it on either app (run 3: after
-# a snapshot restore 2.1.4 did not fire either).
+# Three days: Part B already caught up the daily schedule on its own clock jump, and the native app must not send that
+# occurrence again; the next one it owes falls due after Part B's jump, so the native jump has to pass it (run 4b:
+# with two days native correctly owed nothing yet; with three it owes one catch-up, which B-148 dropped).
 # adb: clock-advance
 - runFlow:
     label: "PC S12 schedule fires"
@@ -479,7 +467,7 @@ appId: ${APP_ID}
           file: ../../_hooks/adb.js
           env:
             HOOK: clock-advance
-            ARGS: '{"advance_minutes": 2880}'
+            ARGS: '{"advance_minutes": 4320}'
       - runFlow: ../../_sub/open-shade.yaml
       - extendedWaitUntil:
           visible: ${'(' + output.s.x_native_schedule_title + '|.*ECHO daily upgrade.*)'}  # literal-ok: the schedule's notification (title or the stub reply)

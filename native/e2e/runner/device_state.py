@@ -179,9 +179,11 @@ def parse_tiles(sysui_qs_tiles: str, app_id: str) -> list[str]:
 
 
 def parse_alarm_count(dumpsys_alarm: str, app_id: str) -> int:
-    """`dumpsys alarm` -> how many pending alarms the app holds (one line per alarm record)."""
+    """`dumpsys alarm` -> how many pending alarms the app holds (one line per alarm record). API 35 adds
+    `whenElapsed` to the record (run 4b: 2.1.4's armed RTC_WAKEUP alarm was counted as none)."""
     return sum(1 for line in dumpsys_alarm.splitlines()
-               if re.search(r"Alarm\{[0-9a-f]+ type -?\d+ (?:origWhen -?\d+ )?" + re.escape(app_id) + r"\}", line))
+               if re.search(r"Alarm\{[0-9a-f]+ type -?\d+ (?:origWhen -?\d+ )?(?:whenElapsed -?\d+ )?"
+                            + re.escape(app_id) + r"\}", line))
 
 
 def parse_file_sizes(stat_out: str) -> dict[str, int]:
