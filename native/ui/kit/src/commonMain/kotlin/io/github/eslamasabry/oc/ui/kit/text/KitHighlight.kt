@@ -16,19 +16,14 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 public object KitHighlight {
     private val WORDS = Regex("\\s+")
 
-    /** Where each word of [query] occurs in [text], case ignored: sorted, overlaps merged. Blank query = none. */
+    /**
+     * Where each word of [query] is found in [text], case ignored: once per word, at the start of a word of the text
+     * when it occurs there, else its first place. Sorted, overlaps merged; a blank query marks nothing. One mark per
+     * word keeps a one-letter query from lighting up every letter.
+     */
     public fun ranges(text: String, query: String?): List<IntRange> {
         val words = query.orEmpty().trim().split(WORDS).filter { it.isNotEmpty() }.distinct()
-        val found = mutableListOf<IntRange>()
-        for (word in words) {
-            var from = 0
-            while (from <= text.length - word.length) {
-                val at = text.indexOf(word, from, ignoreCase = true)
-                if (at < 0) break
-                found += at until at + word.length
-                from = at + word.length
-            }
-        }
+        val found = words.mapNotNull { word -> place(text, word)?.let { it until it + word.length } }
         val merged = mutableListOf<IntRange>()
         for (r in found.sortedBy { it.first }) {
             val last = merged.lastOrNull()
@@ -36,6 +31,19 @@ public object KitHighlight {
             else merged += r
         }
         return merged
+    }
+
+    private fun place(text: String, word: String): Int? {
+        var first: Int? = null
+        var from = 0
+        while (from <= text.length - word.length) {
+            val at = text.indexOf(word, from, ignoreCase = true)
+            if (at < 0) break
+            if (at == 0 || !text[at - 1].isLetterOrDigit()) return at
+            if (first == null) first = at
+            from = at + 1
+        }
+        return first
     }
 }
 

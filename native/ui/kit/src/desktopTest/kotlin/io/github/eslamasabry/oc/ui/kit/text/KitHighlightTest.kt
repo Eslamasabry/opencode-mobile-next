@@ -23,9 +23,10 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class KitHighlightTest {
     @Test
-    fun `SCREENS-NAV-34 B1 every typed word is found wherever it occurs, case ignored, overlaps merged`() {
+    fun `SCREENS-NAV-34 B1 each typed word is marked once, at a word start when it has one, case ignored`() {
         assertEquals(listOf(0..2), KitHighlight.ranges("Debug log", "deb"))
-        assertEquals(listOf(13..15, 27..29), KitHighlight.ranges("…install the Debian image, deb", "DEB"))
+        assertEquals(listOf(13..15), KitHighlight.ranges("…install the Debian image, deb", "DEB"))
+        assertEquals(listOf(9..9), KitHighlight.ranges("Keyboard shortcuts", "s"))
         assertEquals(listOf(0..2, 6..8, 10..12), KitHighlight.ranges("Fix login flow", "fix gin flo"))
         assertEquals(listOf(0..5), KitHighlight.ranges("debian", "deb bian"))
         assertEquals(emptyList(), KitHighlight.ranges("Settings", "  "))
