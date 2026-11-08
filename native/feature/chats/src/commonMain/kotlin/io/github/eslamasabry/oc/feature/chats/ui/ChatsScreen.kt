@@ -26,11 +26,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
-import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionPill
+import io.github.eslamasabry.oc.ui.kit.frame.KitStatusPill
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
 import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
-import io.github.eslamasabry.oc.ui.kit.frame.KitShellBar
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionUi
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
@@ -145,6 +148,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunningCount
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
@@ -217,34 +221,9 @@ public fun ChatsScreen(
         if (state.needsYou == 0) null
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
-        topBar = if (!shellBar) null else ({
-            KitShellBar(
-                actions = barActions,
-                connection = state.connection?.let { connection ->
-                    { modifier ->
-                        KitConnectionPill(
-                            server = connection.server,
-                            status = stringResource(
-                                when (connection.state) {
-                                    HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
-                                    HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
-                                    HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
-                                }
-                            ),
-                            tone = when (connection.state) {
-                                HomeConnectionState.Connected -> KitConnectionTone.Ok
-                                HomeConnectionState.Connecting -> KitConnectionTone.Working
-                                HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
-                            },
-                            switchLabel = stringResource(Res.string.serverSwitcherOpen),
-                            // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
-                            onClick = actions::openServerSwitcher,
-                            modifier = modifier,
-                        )
-                    }
-                },
-            )
-        }),
+        // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
+        // the connection pill beside the filters. No separate bar.
+        topBar = null,
         // E20-S27: framed without the bar too, so the page lies on one continuous ground behind heading and list.
         page = true,
         header = {
@@ -258,8 +237,14 @@ public fun ChatsScreen(
                     Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
                     line = needsLine,
                     onLine = actions::showInbox,
+                    actions = if (!shellBar) null else ({
+                        barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
+                    }),
                 )
-                if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) Filters(state, actions)
+                val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
+                val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
+                if (pill != null) HeaderRow(pill, showFilters) { Filters(state, actions, bleed = true) }
+                else if (showFilters) Filters(state, actions)
             }
         },
         status = backExit ?: appStatus,
@@ -383,7 +368,8 @@ public fun ChatsScreen(
                             // section gap above its label. In a lazy item the label cannot see what is above it
                             // (it is first in its own box), so the gap is asked for here.
                             Box(kitItemMotion()) {
-                                KitSectionLabel(
+                                // Alone, "Earlier" divides nothing: no label (Flutter conv-header).
+                                if (today.isNotEmpty()) KitSectionLabel(
                                     stringResource(Res.string.chatsHomeEarlier),
                                     gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
                                 )
@@ -504,12 +490,55 @@ private fun CalmPage(title: String, body: String, primary: KitAction, tertiary: 
 /** How far above the middle of its room a calm page sets its words, as a share of the room's height. */
 private const val CALM_LIFT = .1f // F: lib/ui/kit/kit_state_view.dart:438
 
+/** The pill fixed at the start, a short divider, then the filters (which alone scroll) beside it. */
 @Composable
-private fun Filters(state: ChatsUi, actions: ChatsActions) {
-    KitFilterChips {
+private fun HeaderRow(pill: @Composable () -> Unit, showFilters: Boolean, filters: @Composable () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(start = LocalKitTokens.current.gutter.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.widthIn(max = 220.dp)) { pill() }
+        if (showFilters) {
+            Spacer(Modifier.width(Space.S2.dp))
+            Box(Modifier.height(24.dp)) { io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(vertical = true) }
+            Spacer(Modifier.width(Space.S2.dp))
+            Box(Modifier.weight(1f)) { filters() }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsActions) {
+    val state = connection.state
+    val status = stringResource(
+        when (state) {
+            HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
+            HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
+            HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
+        }
+    )
+    val switchLabel = stringResource(Res.string.serverSwitcherOpen)
+    KitStatusPill(
+        label = connection.server,
+        tone = when (state) {
+            HomeConnectionState.Connected -> KitConnectionTone.Ok
+            HomeConnectionState.Connecting -> KitConnectionTone.Working
+            HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
+        },
+        // The dot says connected; a word only when it is not.
+        word = status.takeUnless { state == HomeConnectionState.Connected },
+        spoken = "${connection.server}, $status, $switchLabel",
+        onClickLabel = switchLabel,
+        // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
+        onClick = actions::openServerSwitcher,
+    )
+}
+
+@Composable
+private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = false) {
+    KitFilterChips(bleed = bleed) {
         HomeFilterChips(state, actions)
+        val runningNow = (state.today + state.earlier).count { it.status == RowStatus.Running }
         KitChip(
-            label = stringResource(Res.string.chatsHomeRunning), kind = KitChipKind.Action,
+            label = if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, runningNow) else stringResource(Res.string.chatsHomeRunning),
+            kind = KitChipKind.Action,
             selected = state.filters.running, onClick = actions::toggleRunning,
         )
     }

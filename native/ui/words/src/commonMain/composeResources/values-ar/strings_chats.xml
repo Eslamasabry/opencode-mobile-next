@@ -193,6 +193,7 @@
     <string name="workRunawaySeeRunning">عرض العمليات الجارية</string>
     <string name="chatsHomeTitle">المحادثات</string>
     <string name="chatsHomeRunning">قيد العمل</string>
+    <string name="chatsHomeRunningCount">قيد العمل · %1$d</string>
     <string name="chatsHomeStopped">أُوقف</string>
     <string name="chatsHomeDone">تم</string>
     <string name="chatsHomeFailed">فشلت</string>

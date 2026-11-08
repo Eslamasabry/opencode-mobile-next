@@ -259,7 +259,7 @@ class ChatsScreenTest {
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
             onAllNodes(hasSetTextAction()).assertCountEquals(0)
             onNodeWithContentDescription("Search").performClick()
-            onNodeWithContentDescription("Running").performClick()
+            onNodeWithContentDescription("Running", substring = true).performClick()
             onNodeWithText("Needs you").performClick()
             onNodeWithContentDescription("All projects").performClick()
             assertEquals(listOf("openSearch", "running", "inbox", "projectChoices"), actions.calls)
