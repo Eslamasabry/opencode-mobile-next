@@ -101,6 +101,8 @@ jobs:
     name: compile
     needs: plan
     if: ${{ needs.plan.result == 'success' }}
+    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -135,6 +137,8 @@ jobs:
     name: desktop tests ${{ matrix.shard }}
     needs: plan
     if: ${{ needs.plan.result == 'success' }}
+    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -206,6 +210,8 @@ jobs:
   record:
     name: record goldens
     if: ${{ inputs.lane == 'goldens' && inputs.tasks == '' && !inputs.apk_only }}
+    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -245,6 +251,8 @@ jobs:
   apk:
     name: apk
     if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' }}
+    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -286,6 +294,16 @@ jobs:
           path: native/androidApp/build/outputs/apk/**/*.apk
           retention-days: 7
           if-no-files-found: error
+      - name: Upload APK for the phone sync (native/next only)
+        # The PC's phone-sync timer (/home/eslam/Storage2/tools/phone-sync.sh) polls for this artifact name. Dispatch with
+        # apk_only=true after each merge into native/next: the commits carry [skip ci], so a push does not trigger.
+        if: ${{ github.ref == 'refs/heads/native/next' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-next-apk
+          path: native/androidApp/build/outputs/apk/**/*.apk
+          retention-days: 7
+          if-no-files-found: error
       - name: APK report
         if: always()
         run: |
@@ -305,6 +323,8 @@ jobs:
   custom:
     name: custom tasks
     if: ${{ inputs.tasks != '' }}
+    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -316,6 +336,8 @@ jobs:
     name: summary
     needs: [plan, compile, test, apk, record, custom]
     if: ${{ always() }}
+    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

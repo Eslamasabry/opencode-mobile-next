@@ -320,6 +320,12 @@
     <string name="agentsInstallHint">Install</string>
     <string name="agentsActionFailed">That didn't work on this phone. Open Details to see why.</string>
     <string name="agentsSignInPaste">Paste</string>
+    <string name="agentsSignInStartPrepare">The app couldn't prepare the agent's folder on this phone.</string>
+    <string name="agentsSignInStartServer">OpenCode on this phone didn't start.</string>
+    <string name="agentsSignInStartConnect">The app couldn't connect to OpenCode on this phone.</string>
+    <string name="agentsSignInStartCheck">OpenCode on this phone isn't ready to open a terminal.</string>
+    <string name="agentsSignInStartTerminal">OpenCode on this phone couldn't open the sign-in terminal.</string>
+    <string name="agentsSignInStartAttach">The sign-in terminal opened, but the app couldn't connect to it.</string>
     <string name="agentCardAsks">%1$s asks</string>
     <string name="agentCardReports">%1$s reports</string>
     <string name="agentCardAsksAnnouncement">%1$s asks: %2$s</string>
