@@ -176,11 +176,15 @@ class NativeCrashStoreTest {
         Thread.setDefaultUncaughtExceptionHandler { _, e -> forwarded = e }
         try {
             val handler = store.install()
-            handler.uncaughtException(Thread.currentThread(), IOException("Bearer fake-token"))
+            val crash = IOException("Bearer fake-token", IllegalStateException("chat text the user typed"))
+            handler.uncaughtException(Thread.currentThread(), crash)
             val seen = forwarded!!
-            assertEquals("Native application error", seen.message)
-            assertEquals(0, seen.stackTrace.size)
-            assertNull(seen.cause)
+            // B-180, Flutter 2.1.5: the class names and checked frames reach Crashlytics, never a message.
+            assertEquals("java.io.IOException", seen.message)
+            assertEquals("java.lang.IllegalStateException", seen.cause?.message)
+            assertNull(seen.cause?.cause)
+            assertTrue(seen.stackTrace.isNotEmpty())
+            assertFalse(generateSequence(seen) { it.cause }.any { "fake-token" in it.toString() || "chat text" in it.toString() })
             assertEquals(CrashKind.InputOutput, records.latest()!!.kind)
             assertFalse("fake-token" in record.readText())
         } finally {
@@ -197,5 +201,36 @@ class NativeCrashStoreTest {
         assertFalse(record.exists())
         assertFalse(File(dir, "native-last-crash.properties.tmp").exists())
         assertNull(records.latest())
+    }
+}
+
+class CrashSanitizerTest {
+    @Test
+    fun `B-180-020 a frame whose class or method is not a plain identifier is left out, a path file name too`() {
+        val error = IllegalStateException("secret sk-1234567890")
+        error.stackTrace =
+            arrayOf(
+                StackTraceElement("io.github.App", "send", "App.kt", 42),
+                StackTraceElement("io.github.App", "name with a token sk-123", "App.kt", 7),
+                StackTraceElement("io.github.App", "open", "/data/user/0/secret.kt", 9),
+            )
+        val safe = CrashSanitizer.sanitize(error)
+        assertEquals("java.lang.IllegalStateException", safe.message)
+        assertEquals(2, safe.stackTrace.size)
+        assertEquals(StackTraceElement("io.github.App", "send", "App.kt", 42), safe.stackTrace[0])
+        assertEquals(StackTraceElement("io.github.App", "open", null, -1), safe.stackTrace[1])
+        assertFalse("sk-" in safe.toString())
+    }
+
+    @Test
+    fun `B-180-021 a cause loop ends and at most four exceptions are kept`() {
+        val a = RuntimeException("a")
+        val b = IllegalArgumentException("b", a)
+        a.initCause(b)
+        val depth = generateSequence(CrashSanitizer.sanitize(a)) { it.cause }.count()
+        assertEquals(2, depth)
+        var deep: Throwable = Exception("0")
+        repeat(6) { deep = Exception("$it", deep) }
+        assertEquals(4, generateSequence(CrashSanitizer.sanitize(deep)) { it.cause }.count())
     }
 }

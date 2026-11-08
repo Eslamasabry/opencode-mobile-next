@@ -49,7 +49,8 @@ class NativeCrashStore(private val directory: File) {
     /**
      * [onCrash] (optional) sees the category and safe frames of a fatal crash before it is handed on: the
      * whitelisted exception class and `Class.method:line` frames only, never a message, cause or thread. The
-     * original exception is still not passed down the handler chain.
+     * original exception is still not passed down the handler chain: [CrashSanitizer] hands on its class names and
+     * checked frames only.
      */
     fun install(onCrash: ((category: String, frames: List<String>) -> Unit)? = null): Thread.UncaughtExceptionHandler {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
@@ -59,12 +60,11 @@ class NativeCrashStore(private val directory: File) {
             }
             try { write(error) } catch (_: Throwable) { }
             finally {
-                // Preserve Android's fatal handling, but never hand its logger (or any later
-                // handler) an exception message/cause/stack carrying credential values (B-SEC-043,
-                // Flutter NativeCrashStore.kt). The category is already recorded above.
-                val safe = RuntimeException("Native application error")
-                safe.stackTrace = emptyArray()
-                if (previous != null) previous.uncaughtException(thread, safe)
+                // Preserve Android's fatal handling and the opt-in crash reporter after it
+                // (Crashlytics installs itself first), but hand them only the exception classes and
+                // checked code locations: never a message, which can carry chat text, paths, host
+                // names or tokens (B-SEC-043, B-180, Flutter 2.1.5 CrashSanitizer, PRIVACY.md).
+                if (previous != null) previous.uncaughtException(thread, CrashSanitizer.sanitize(error))
             }
         }
         Thread.setDefaultUncaughtExceptionHandler(handler)
