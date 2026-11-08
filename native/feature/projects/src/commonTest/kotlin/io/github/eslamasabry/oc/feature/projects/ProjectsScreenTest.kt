@@ -191,7 +191,7 @@ class ProjectsScreenTest {
     }
 
     @Test
-    fun `B-NAV-026 the project page has Files, Project health and Copy folder path rows, like Flutter's project hub`() = runComposeUiTest {
+    fun `B-NAV-044 the project page has Files, Project health and Copy folder path rows, like Flutter's project hub`() = runComposeUiTest {
         val actions = Page()
         val page =
             ProjectPageUi(
@@ -209,7 +209,7 @@ class ProjectsScreenTest {
     }
 
     @Test
-    fun `B-NAV-026 the project page hides Files and Project health where the server offers neither`() = runComposeUiTest {
+    fun `B-NAV-044 the project page hides Files and Project health where the server offers neither`() = runComposeUiTest {
         val page = ProjectPageUi(directory = "/work/app", name = "app", phase = ProjectPagePhase.Ready)
         setContent { Themed { ProjectPageScreen(page, Page()) } }
         onNodeWithText("Files").assertDoesNotExist()

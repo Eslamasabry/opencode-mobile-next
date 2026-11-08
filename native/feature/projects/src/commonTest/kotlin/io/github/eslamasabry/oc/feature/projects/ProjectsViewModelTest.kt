@@ -192,7 +192,7 @@ class ProjectsViewModelTest {
     }
 
     @Test
-    fun `B-NAV-026 the project page opens this project's Files with no conversation, where the server lists files`() {
+    fun `B-NAV-044 the project page opens this project's Files with no conversation, where the server lists files`() {
         val nav = Nav()
         val gateway = FakeServerGateway(listOf(session("old", "/work/app", 5)))
         gateway.capabilities.value = ServerCapabilities(fileBrowsing = true)
@@ -211,7 +211,7 @@ class ProjectsViewModelTest {
     }
 
     @Test
-    fun `B-NAV-027 the project page offers Project health where the server reports language services or formatters`() {
+    fun `B-NAV-044 the project page offers Project health where the server reports language services or formatters`() {
         val nav = Nav()
         val gateway = FakeServerGateway(listOf(session("old", "/work/app", 5)))
         gateway.capabilities.value = ServerCapabilities(formatterStatus = true)
