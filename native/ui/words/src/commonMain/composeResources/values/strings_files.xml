@@ -13,4 +13,15 @@
     <string name="filesUp">Up one folder</string>
     <string name="filesShareStarting">Starting the share…</string>
     <string name="filesSaveFailed">Couldn't save the file. Try again.</string>
+    <!-- B-184: why a file will not open, in the file's own terms. Technical text stays under Details. -->
+    <string name="filesReasonTooBig">This file is too big to show here.</string>
+    <string name="filesReasonTooBigBody">The limit is 2 MB. Open it on the computer where it lives, or ask the agent for a smaller piece.</string>
+    <string name="filesReasonTooBigPhoneBody">The limit is 2 MB. It is on this phone, so another app can open it: choose Open with.</string>
+    <string name="filesReasonMissing">That file isn't there any more.</string>
+    <string name="filesReasonMissingBody">It may have been moved or deleted.</string>
+    <string name="filesReasonDenied">This app isn't allowed to read that file.</string>
+    <string name="filesReasonDeniedBody">Check who can read the folder, then try again.</string>
+    <string name="filesReasonNotShowable">This kind of file can't be shown here.</string>
+    <string name="filesReasonNotShowableBody">It isn't text or a picture. Open it on the computer where it lives.</string>
+    <string name="filesReasonNotShowablePhoneBody">It isn't text or a picture. It is on this phone, so another app can open it: choose Open with.</string>
 </resources>

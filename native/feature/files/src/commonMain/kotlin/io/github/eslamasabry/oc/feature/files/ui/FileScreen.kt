@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.engine.media.preview.StaticSvg
 import io.github.eslamasabry.oc.feature.files.presentation.FileActions
 import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.files.presentation.FilePhase
+import io.github.eslamasabry.oc.feature.files.presentation.FileReadReason
 import io.github.eslamasabry.oc.feature.files.presentation.FileUi
 import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -370,14 +371,28 @@ private fun Body(state: FileUi, actions: FileActions) {
                 kind = KitStateKind.Calm,
                 title = stringResource(Res.string.filesUnavailable),
             )
-        FilePhase.Failed ->
-            KitStateView(
-                kind = KitStateKind.Error,
-                title = stringResource(Res.string.filesOpenFailed),
-                failure = state.failure,
-                onRetry = actions::retry,
-                retryLabel = stringResource(Res.string.kitTryAgain),
-            )
+        FilePhase.Failed -> {
+            // B-184: a file that will not open says why, in the file's own terms; a connection problem keeps Try again.
+            val reason = FileReadReason.of(state.failure)
+            if (reason == null) {
+                KitStateView(
+                    kind = KitStateKind.Error,
+                    title = stringResource(Res.string.filesOpenFailed),
+                    failure = state.failure,
+                    onRetry = actions::retry,
+                    retryLabel = stringResource(Res.string.kitTryAgain),
+                )
+            } else {
+                KitStateView(
+                    kind = KitStateKind.Error,
+                    title = stringResource(reasonTitle(reason)),
+                    body = stringResource(reasonBody(reason, onPhone = state.canOpenLocal)),
+                    failure = state.failure,
+                    onRetry = if (reason.retryHelps) actions::retry else null,
+                    retryLabel = if (reason.retryHelps) stringResource(Res.string.kitTryAgain) else null,
+                )
+            }
+        }
         FilePhase.Ready ->
             when (val body = state.body) {
                 null -> KitSkeletonRows()
@@ -535,6 +550,25 @@ private fun Pdf(state: FileUi, actions: FileActions) {
         }
     }
 }
+
+private fun reasonTitle(reason: FileReadReason) =
+    when (reason) {
+        FileReadReason.TooBig -> Res.string.filesReasonTooBig
+        FileReadReason.Missing -> Res.string.filesReasonMissing
+        FileReadReason.Denied -> Res.string.filesReasonDenied
+        FileReadReason.NotShowable -> Res.string.filesReasonNotShowable
+    }
+
+/** On this phone the same file can go to another app, so the words point at Open with. */
+private fun reasonBody(reason: FileReadReason, onPhone: Boolean) =
+    when (reason) {
+        FileReadReason.TooBig ->
+            if (onPhone) Res.string.filesReasonTooBigPhoneBody else Res.string.filesReasonTooBigBody
+        FileReadReason.Missing -> Res.string.filesReasonMissingBody
+        FileReadReason.Denied -> Res.string.filesReasonDeniedBody
+        FileReadReason.NotShowable ->
+            if (onPhone) Res.string.filesReasonNotShowablePhoneBody else Res.string.filesReasonNotShowableBody
+    }
 
 @Composable
 private fun pdfWords(failure: Failure): String =

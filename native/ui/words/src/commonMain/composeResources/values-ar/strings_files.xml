@@ -12,4 +12,15 @@
     <string name="filesUp">مجلد واحد للأعلى</string>
     <string name="filesShareStarting">جارٍ بدء المشاركة…</string>
     <string name="filesSaveFailed">تعذّر حفظ الملف. حاول مرة أخرى.</string>
+    <!-- B-184: why a file will not open, in the file's own terms. -->
+    <string name="filesReasonTooBig">هذا الملف أكبر من أن يُعرض هنا.</string>
+    <string name="filesReasonTooBigBody">الحد الأقصى 2 ميغابايت. افتحه على الحاسوب الذي يوجد عليه، أو اطلب من الوكيل جزءًا أصغر.</string>
+    <string name="filesReasonTooBigPhoneBody">الحد الأقصى 2 ميغابايت. الملف على هذا الهاتف، لذا يمكن لتطبيق آخر فتحه: اختر «فتح باستخدام».</string>
+    <string name="filesReasonMissing">هذا الملف لم يعد موجودًا.</string>
+    <string name="filesReasonMissingBody">ربما نُقل أو حُذف.</string>
+    <string name="filesReasonDenied">لا يُسمح لهذا التطبيق بقراءة ذلك الملف.</string>
+    <string name="filesReasonDeniedBody">تحقق ممن يستطيع قراءة المجلد، ثم حاول مرة أخرى.</string>
+    <string name="filesReasonNotShowable">لا يمكن عرض هذا النوع من الملفات هنا.</string>
+    <string name="filesReasonNotShowableBody">ليس نصًا ولا صورة. افتحه على الحاسوب الذي يوجد عليه.</string>
+    <string name="filesReasonNotShowablePhoneBody">ليس نصًا ولا صورة. الملف على هذا الهاتف، لذا يمكن لتطبيق آخر فتحه: اختر «فتح باستخدام».</string>
 </resources>
