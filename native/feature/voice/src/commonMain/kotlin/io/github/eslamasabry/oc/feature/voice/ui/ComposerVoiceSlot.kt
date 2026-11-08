@@ -116,6 +116,8 @@ public class ComposerVoiceSlot : KitComposerVoice {
         }
         VoicePanel(state, { level.value }, presenter, modifier, fieldText = field.text)
         VoiceConversationControls(state, presenter, modifier)
+        // The mic found no speech model: Flutter's first-mic "Voice typing" sheet offers it right here.
+        VoiceSetupSheet(state.setup, presenter)
     }
 
     @Composable

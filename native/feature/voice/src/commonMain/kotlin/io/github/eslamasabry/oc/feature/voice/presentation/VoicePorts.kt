@@ -14,6 +14,9 @@ import io.github.eslamasabry.oc.engine.voice.models.ModelPackSpec
 import io.github.eslamasabry.oc.engine.voice.models.ModelPacks
 import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.engine.voice.readaloud.ReadAloud
+import io.github.eslamasabry.oc.engine.voice.setup.VoiceSetup
+import io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupHost
+import io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupStage
 import io.github.eslamasabry.oc.engine.voice.readaloud.ReadRequest
 import io.github.eslamasabry.oc.engine.voice.state.ModelPacksState
 import io.github.eslamasabry.oc.engine.voice.state.PackId
@@ -255,7 +258,50 @@ public class VoiceParts(
      * reason).
      */
     public val naturalVoiceAvailable: Boolean,
+    /**
+     * The first-mic automatic setup (Flutter `showVoiceAutomaticSetupSheet`): picks the speech model for this phone
+     * and downloads it right there when the composer's mic finds none. Null where typing needs no model.
+     */
+    public val setup: MicSetup? = null,
 )
+
+/** One first-mic setup attempt, as the composer's sheet drives it (the slice of the engine's `VoiceSetupRun`). */
+public interface MicSetupRun {
+    public val stage: StateFlow<VoiceSetupStage>
+
+    public suspend fun start()
+
+    public suspend fun consent(attemptId: Long, allowMetered: Boolean)
+
+    public suspend fun listen()
+
+    public fun handOff()
+
+    public suspend fun close()
+}
+
+/** Starts first-mic setup attempts; each sheet gets its own run. */
+public fun interface MicSetup {
+    public fun begin(host: VoiceSetupHost): MicSetupRun
+}
+
+public fun VoiceSetup.asMicSetup(): MicSetup = MicSetup { host ->
+    val run = this@asMicSetup.begin(host)
+    object : MicSetupRun {
+        override val stage: StateFlow<VoiceSetupStage>
+            get() = run.stage
+
+        override suspend fun start() = run.start()
+
+        override suspend fun consent(attemptId: Long, allowMetered: Boolean) = run.consent(attemptId, allowMetered)
+
+        override suspend fun listen() = run.listen()
+
+        override fun handOff() = run.handOff()
+
+        override suspend fun close() = run.close()
+    }
+}
 
 /**
  * The app graph's voice: [parts] waits for the stores; a failure keeps voice visibly unavailable.

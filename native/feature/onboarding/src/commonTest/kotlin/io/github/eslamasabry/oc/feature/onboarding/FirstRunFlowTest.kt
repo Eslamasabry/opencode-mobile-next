@@ -93,7 +93,8 @@ class FirstRunFlowTest {
         val flow = FirstRunFlow(FirstRun(prefs), nav)
         flow.start(active = null, saved = emptySet())
         WelcomeViewModel(nav).connect()
-        assertEquals(ServersRoute.Home, nav.top.value)
+        // S31: the welcome already asked where the agent runs, so the editor opens, not the Servers home.
+        assertEquals(ServersRoute.Edit(null), nav.top.value)
 
         flow.onConnected(nav.top.value)
         assertEquals(listOf<AppRoute>(ChatsRoute.Home), nav.stack)
