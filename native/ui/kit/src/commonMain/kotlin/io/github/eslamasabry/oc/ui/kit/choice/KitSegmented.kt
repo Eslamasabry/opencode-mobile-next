@@ -302,7 +302,12 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
 }
 
 @Composable
-private fun <T> StackedSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, onChange: (T) -> Unit) {
+internal fun <T> StackedSegments(
+    segments: List<KitSegment<T>>,
+    selected: T,
+    enabled: KitEnabled,
+    onChange: (T) -> Unit,
+) {
     val haptics = rememberKitHaptics()
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
