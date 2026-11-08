@@ -55,6 +55,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwapGrow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.PressInteraction
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 
 /**
  * An icon-only button (Dart `KitIconButton`; plan 06 §7.5). [label] is required and is what a screen reader says (and
@@ -94,6 +98,18 @@ public fun KitIconButton(
     val ink = if (!on) colors.text3 else if (selected == true) colors.accent else colors.tone(tone) // F: lib/ui/kit/kit_icon_button.dart:glyphColor
     val interactions = remember { MutableInteractionSource() }
     val hovered by interactions.collectIsHoveredAsState()
+    val focused by interactions.collectIsFocusedAsState()
+    // The press in progress, so a long-press that opens the tooltip can cancel it: Flutter's long-press ends the tap
+    // (InkWell onTapCancel), so the held button shows the tooltip without the pressed fill.
+    val press = remember { mutableStateOf<PressInteraction.Press?>(null) }
+    LaunchedEffect(interactions) {
+        interactions.interactions.collect {
+            when (it) {
+                is PressInteraction.Press -> press.value = it
+                is PressInteraction.Release, is PressInteraction.Cancel -> press.value = null
+            }
+        }
+    }
     var held by remember { mutableStateOf(false) }
     LaunchedEffect(held) {
         if (held) {
@@ -117,14 +133,21 @@ public fun KitIconButton(
             .then(if (round) kitRoundFace(on) else Modifier)
             .kitTappable(
                 interactionSource = interactions,
-                onLongClick = { held = true },
+                onLongClick = {
+                    held = true
+                    press.value?.let { interactions.tryEmit(PressInteraction.Cancel(it)) }
+                },
                 onClick = { if (!working) onClick() },
                 enabled = on,
                 disabledReason = enabled.reason,
                 haptic = if (working) null else haptic,
                 shape = KitShapeId.Circle,
                 ink = tone,
+                // Flutter: focus draws no fill (focusColor transparent), only the accent ring below.
+                focusFill = false,
             )
+            // The focus ring: two physical pixels in the accent, over the circle (kit_icon_button.dart:366-375).
+            .then(if (focused) Modifier.border(kitFocusRingWidth(), colors.accent, KitShapeId.Circle.shape()) else Modifier)
             .semantics {
                 contentDescription = label
                 if (stateLabel != null) stateDescription = stateLabel
