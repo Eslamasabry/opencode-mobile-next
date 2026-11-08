@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
 import io.github.eslamasabry.oc.feature.chat.presentation.LimitSwitchOffer
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SwitchModelRules
+import io.github.eslamasabry.oc.feature.chat.presentation.SwitchUi
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
@@ -44,7 +45,8 @@ class B169LimitSwitchTest {
         "AI_APICallError: Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model " +
             "requests per day. (429)"
 
-    private val failedOn = ComposerModel("openrouter", "qwen3-coder:free", "Qwen3 Coder", true, inputCost = 0.0, outputCost = 0.0)
+    private val failedOn =
+        ComposerModel("openrouter", "qwen3-coder:free", "Qwen3 Coder", true, inputCost = 0.0, outputCost = 0.0)
     private val other = ComposerModel("anthropic", "sonnet", "Sonnet", true, contextLimit = 200_000)
     private val small = ComposerModel("openai", "mini", "Mini", true, contextLimit = 8_000)
 
@@ -104,7 +106,7 @@ class B169LimitSwitchTest {
         assertNull(presenter.current().limitSwitch["u1"]?.offer)
         assertEquals(
             listOf(ErrorFix.ChooseModel),
-            ErrorRecovery.fixes(null, ReplyFailureKind.Busy, perMinute, false, false, LimitSwitchOffer.None),
+            ErrorRecovery.fixes(null, ReplyFailureKind.Busy, perMinute, false, false),
         )
     }
 
@@ -113,7 +115,7 @@ class B169LimitSwitchTest {
         show(failedTurn(1, daily))
         val offer = presenter.current().limitSwitch["u1"]?.offer
         assertEquals(LimitSwitchOffer.Switch, offer)
-        val fixes = ErrorRecovery.fixes(null, ReplyFailureKind.Busy, daily, true, true, offer!!)
+        val fixes = ErrorRecovery.limitFixes(offer!!, ReplyFailureKind.Busy, daily, canCompact = true)
         assertEquals(listOf(ErrorFix.SwitchModel), fixes)
         assertTrue(ErrorFix.ChooseModel !in fixes && ErrorFix.UseModel !in fixes)
     }
@@ -201,7 +203,7 @@ class B169LimitSwitchTest {
         assertEquals(LimitSwitchOffer.Spent, presenter.current().limitSwitch["u4"]?.offer)
         assertEquals(
             listOf(ErrorFix.ConnectProvider),
-            ErrorRecovery.fixes(null, ReplyFailureKind.Busy, daily, false, false, LimitSwitchOffer.Spent),
+            ErrorRecovery.limitFixes(LimitSwitchOffer.Spent, ReplyFailureKind.Busy, daily, canCompact = false),
         )
         world.prompts["u4"] = stopped("u4")
         presenter.switchModel("u4")
@@ -244,14 +246,12 @@ class B169LimitSwitchTest {
     }
 
     @Test
-    fun `B-169-021 the sheet leaves out the stopped and used-up models, marks Free only at exactly 0, guards the context`() {
+    fun `B-169-021 the sheet drops stopped and used-up models, says Free only at 0, guards the context`() {
         val unknownPrice = ComposerModel("x", "unpriced", "Unpriced", true)
         val sheet =
             SwitchModelRules.sheet(
-                choices = listOf(failedOn, other, small, unknownPrice),
-                failed = ModelKey.of(failedOn),
-                usedUp = setOf(ModelKey.of(unknownPrice)),
-                contextTokens = 12_000,
+                listOf(failedOn, other, small, unknownPrice),
+                SwitchUi("u1", ModelKey.of(failedOn), setOf(ModelKey.of(unknownPrice)), contextTokens = 12_000),
             )
         assertEquals(listOf("sonnet", "mini"), sheet.rows.map { it.model.modelId })
         assertTrue(sheet.rows.none { it.free })
@@ -266,11 +266,13 @@ class B169LimitSwitchTest {
     fun `B-169-022 the suggestion is another provider under 80 percent, else a recent model, else picker order`() {
         val gpt = ComposerModel("openai", "gpt", "GPT", true)
         val choices = listOf(failedOn, gpt, other)
-        val roomy = SwitchModelRules.sheet(choices, ModelKey.of(failedOn), emptySet(), recent = listOf(gpt), readings = mapOf("claude" to 40.0, "codex" to 95.0))
+        fun open(recent: List<ComposerModel>) =
+            SwitchUi("u1", ModelKey.of(failedOn), emptySet(), null, recent.map(ModelKey::of))
+        val roomy = SwitchModelRules.sheet(choices, open(listOf(gpt)), mapOf("claude" to 40.0, "codex" to 95.0))
         assertEquals(ModelKey.of(other), roomy.suggestion)
-        val recent = SwitchModelRules.sheet(choices, ModelKey.of(failedOn), emptySet(), recent = listOf(other, gpt))
+        val recent = SwitchModelRules.sheet(choices, open(listOf(other, gpt)))
         assertEquals(ModelKey.of(other), recent.suggestion)
-        val plain = SwitchModelRules.sheet(choices, ModelKey.of(failedOn), emptySet())
+        val plain = SwitchModelRules.sheet(choices, open(emptyList()))
         assertEquals(ModelKey.of(gpt), plain.suggestion)
     }
 }

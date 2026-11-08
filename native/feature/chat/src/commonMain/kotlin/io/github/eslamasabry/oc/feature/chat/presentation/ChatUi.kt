@@ -340,6 +340,8 @@ public data class SwitchUi(
     val failed: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
     val usedUp: Set<io.github.eslamasabry.oc.feature.chat.world.ModelKey>,
     val contextTokens: Long?,
+    /** The person's recent models on this server, newest first (the suggestion's second choice). */
+    val recent: List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = emptyList(),
 )
 
 /**

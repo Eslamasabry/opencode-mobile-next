@@ -5,7 +5,7 @@ import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.SwitchModelRules
 import io.github.eslamasabry.oc.feature.chat.presentation.SwitchUi
-import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
+import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelOption
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelSheet
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -24,25 +24,14 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun SwitchModelSheet(
     switching: SwitchUi?,
-    models: ComposerModels,
+    models: List<ComposerModel>,
     actions: ChatActions,
     readings: Map<String, Double> = emptyMap(),
 ) {
     val free = stringResource(Res.string.b169Free)
     val tooLong = stringResource(Res.string.b169TooLong)
     val sheet =
-        remember(switching, models.choices, models.recent, readings) {
-            switching?.let {
-                SwitchModelRules.sheet(
-                    choices = models.choices,
-                    failed = it.failed,
-                    usedUp = it.usedUp,
-                    recent = models.recent,
-                    readings = readings,
-                    contextTokens = it.contextTokens,
-                )
-            }
-        }
+        remember(switching, models, readings) { switching?.let { SwitchModelRules.sheet(models, it, readings) } }
     val options =
         remember(sheet, free, tooLong) {
             sheet?.rows.orEmpty().map { row ->

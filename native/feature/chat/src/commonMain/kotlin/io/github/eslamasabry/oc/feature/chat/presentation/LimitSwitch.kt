@@ -18,7 +18,7 @@ public enum class LimitSwitchOffer {
     /** "Switch model". */
     Switch,
 
-    /** This stopped prompt was switched [LimitSwitchRules.MAX_SWITCHES] times: only the reset and Connect a provider. */
+    /** This prompt was switched [LimitSwitchRules.MAX_SWITCHES] times: only the reset and Connect a provider. */
     Spent,
 }
 
@@ -55,9 +55,12 @@ public class UsedUpModels {
     }
 
     public fun isUsedUp(model: ModelKey, nowMs: Long?): Boolean {
-        if (model !in marks) return false
-        val until = marks[model] ?: return true
-        return nowMs == null || nowMs < until
+        val until = marks[model]
+        return when {
+            model !in marks -> false
+            until == null || nowMs == null -> true
+            else -> nowMs < until
+        }
     }
 
     public fun all(nowMs: Long?): Set<ModelKey> = marks.keys.filterTo(LinkedHashSet()) { isUsedUp(it, nowMs) }
@@ -88,21 +91,20 @@ public object SwitchModelRules {
         model.contextLimit > 0 && contextTokens != null && contextTokens > model.contextLimit
 
     /**
-     * The sheet for a reply [failed] on. [choices] is the catalog in picker order; [usedUp] the models marked in this
-     * conversation; [recent] the person's recent models, newest first; [readings] the plan readings by Usage's
-     * provider id ([composerLimitProvider]); [contextTokens] the conversation's current size.
+     * The sheet for [switching] (the stopped model, the models used up here, the person's recent models and the
+     * conversation's size). [choices] is the catalog in picker order; [readings] the plan readings (percent used) by
+     * Usage's provider id ([composerLimitProvider]).
      */
     public fun sheet(
         choices: List<ComposerModel>,
-        failed: ModelKey?,
-        usedUp: Set<ModelKey>,
-        recent: List<ComposerModel> = emptyList(),
+        switching: SwitchUi,
         readings: Map<String, Double> = emptyMap(),
-        contextTokens: Long? = null,
     ): SwitchSheet {
+        val failed = switching.failed
+        val contextTokens = switching.contextTokens
         fun excluded(m: ComposerModel): Boolean {
             val key = ModelKey.of(m)
-            return !m.enabled || key == failed || key in usedUp
+            return !m.enabled || key == failed || key in switching.usedUp
         }
         val rows =
             choices
@@ -127,7 +129,7 @@ public object SwitchModelRules {
             }
         // 2. The person's recent models, in their order.
         val usableKeys = usable.mapTo(HashSet()) { ModelKey.of(it.model) }
-        val recentPick = recent.map(ModelKey::of).firstOrNull { it in usableKeys }
+        val recentPick = switching.recent.firstOrNull { it in usableKeys }
         // 3. Unranked: picker order.
         val suggestion = roomy?.model?.let(ModelKey::of) ?: recentPick ?: usable.firstOrNull()?.model?.let(ModelKey::of)
         return SwitchSheet(suggestion, rows)

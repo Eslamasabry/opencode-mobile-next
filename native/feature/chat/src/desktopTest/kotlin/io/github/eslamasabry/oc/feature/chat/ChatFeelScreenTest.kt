@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -220,6 +224,64 @@ class ChatFeelScreenTest {
             }
             onNodeWithText("f20").assertExists()
             assertEquals(0, onAllNodesWithText("|", substring = true).fetchSemanticsNodes().size, "no row reads as pipes")
+        }
+
+    private fun limited(reason: String, link: io.github.eslamasabry.oc.feature.chat.world.ChatLink): ChatPresenter {
+        val world =
+            object : FakeChatWorld() {
+                override fun stoppedPrompt(turnId: String) =
+                    io.github.eslamasabry.oc.feature.chat.world.StoppedPrompt(
+                        turnId,
+                        "go",
+                        model = io.github.eslamasabry.oc.feature.chat.world.ModelKey("openrouter", "qwen3-coder"),
+                    )
+            }
+        world.capabilities.value =
+            io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(promptModelChoice = true)
+        world.link.value = link
+        world.transcript.value =
+            stateOf(
+                prompt("u1", "go"),
+                block("u1", "a1", "p", 0, "Half an answer"),
+                io.github.eslamasabry.oc.engine.transcript.state.FooterRow("footer:u1", "u1", failed = true, reason = reason),
+            )
+        return ChatPresenter(world, RecordingNavigator(), Immediate, outside = Outside())
+    }
+
+    @Test
+    fun `B-169-040 a daily limit reads plainly and offers Switch model, a per-minute one does not`() =
+        runComposeUiTest {
+            val live = io.github.eslamasabry.oc.feature.chat.world.ChatLink.Live
+            val p = limited("Rate limit exceeded: free-models-per-day (429)", live)
+            val states = p.states(CoroutineScope(SupervisorJob() + Dispatchers.Unconfined), Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("Qwen3 Coder is used up for now").assertExists()
+            onNodeWithTag("error-action-switch-model").assertIsEnabled()
+            assertEquals(0, onAllNodesWithTag("error-action-choose-model").fetchSemanticsNodes().size, "one switch control")
+        }
+
+    @Test
+    fun `B-169-041 a per-minute limit keeps today's fixes, and offline Switch model is disabled`() =
+        runComposeUiTest {
+            val minute = limited("Rate limit exceeded: free-models-per-min (429)", io.github.eslamasabry.oc.feature.chat.world.ChatLink.Live)
+            val day = limited("Daily limit reached", io.github.eslamasabry.oc.feature.chat.world.ChatLink.Offline)
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val a = minute.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            val b = day.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            var showDay by androidx.compose.runtime.mutableStateOf(false)
+            setContent {
+                val first by a.collectAsState()
+                val second by b.collectAsState()
+                Root { if (showDay) ChatScreen(second, day, composer) else ChatScreen(first, minute, composer) }
+            }
+            assertEquals(0, onAllNodesWithTag("error-action-switch-model").fetchSemanticsNodes().size)
+            onNodeWithTag("error-action-choose-model").assertExists()
+            showDay = true
+            waitForIdle()
+            onNodeWithTag("error-action-switch-model").assertIsNotEnabled()
         }
 
     @Test
