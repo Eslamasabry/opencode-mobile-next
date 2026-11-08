@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev loop copy of main/res/xml/shortcuts.xml: the same two shortcuts, aimed at the dev package (static
+     shortcut XML cannot use placeholders). Without it a dev shortcut would open the real app. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="connect"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_connect"
+        android:shortcutShortLabel="@string/shortcut_connect_short"
+        android:shortcutLongLabel="@string/shortcut_connect_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="io.github.eslamasabry.opencode_mobile.native.dev"
+            android:targetClass="io.github.eslamasabry.opencode_mobile.MainActivity">
+            <extra android:name="oc.shortcut" android:value="connect" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_new_task"
+        android:shortcutShortLabel="@string/shortcut_new_task_short"
+        android:shortcutLongLabel="@string/shortcut_new_task_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="io.github.eslamasabry.opencode_mobile.native.dev"
+            android:targetClass="io.github.eslamasabry.opencode_mobile.MainActivity">
+            <extra android:name="oc.shortcut" android:value="new_task" />
+        </intent>
+    </shortcut>
+</shortcuts>

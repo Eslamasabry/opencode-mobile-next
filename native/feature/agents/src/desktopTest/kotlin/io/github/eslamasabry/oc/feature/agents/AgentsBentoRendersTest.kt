@@ -12,7 +12,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -48,7 +49,7 @@ import kotlinx.collections.immutable.persistentListOf
  * CI goldens lane records (so the runner's fonts draw them), and skipped otherwise.
  */
 @OptIn(ExperimentalTestApi::class)
-class AgentsBentoRenders {
+class AgentsBentoRendersTest {
     /**
      * Not a check: the review renders. Runs only when `AGENTS_BENTO_RENDER_DIR` names a folder, and writes one phone
      * screen per image (412 x 915 dp at 2.625) of the page with one agent in each state, in Solid and Glass, light and
@@ -79,10 +80,10 @@ class AgentsBentoRenders {
             AppearanceMode.Light,
             EVERY_STATE.copy(helperConnected = false, helperConnectFailed = true, helperConnectFailure = Failure.TimedOut()),
         )
+        shoot(File(out, "phone-tablet-solid-dark.png"), Style.Solid, AppearanceMode.Dark, EVERY_STATE, widthDp = 900, heightDp = 1200)
         shoot(File(out, "menu-solid-dark.png"), Style.Solid, AppearanceMode.Dark, EVERY_STATE) {
             onNode(hasContentDescription("More actions") and hasClickAction()).performClick()
         }
-        shoot(File(out, "phone-tablet-solid-dark.png"), Style.Solid, AppearanceMode.Dark, EVERY_STATE, widthDp = 900, heightDp = 1200)
     }
 
     private fun shoot(
@@ -119,7 +120,8 @@ class AgentsBentoRenders {
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
-            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
+            // The page is the first root; an open menu is a popup root of its own (captured when it draws in the scene).
+            ImageIO.write(onAllNodes(isRoot()).onFirst().captureToImage().toAwtImage(), "png", file)
         }
     }
 

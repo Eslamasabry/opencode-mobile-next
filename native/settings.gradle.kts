@@ -13,6 +13,18 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
+// Dev loop (tool/dev/README.md): `oc.buildRoot` in local.properties moves every project's build/ directory under that
+// folder, for a worktree whose own drive is short of space. Unset (CI, the VPS, other worktrees): nothing changes.
+java.util.Properties()
+    .apply { settingsDir.resolve("local.properties").takeIf { it.isFile }?.inputStream()?.use(::load) }
+    .getProperty("oc.buildRoot")
+    ?.takeIf { it.isNotBlank() }
+    ?.let { root ->
+        gradle.beforeProject {
+            layout.buildDirectory.set(File(root, if (path == ":") "root" else path.drop(1).replace(':', '/')))
+        }
+    }
+
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
