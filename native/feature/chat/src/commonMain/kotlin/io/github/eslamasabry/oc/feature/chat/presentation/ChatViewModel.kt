@@ -165,6 +165,8 @@ public class ChatViewModel(
 
     override fun undoLastPrompt(): Unit = presenter.undoLastPrompt()
 
+    override fun putBack(): Unit = presenter.putBack()
+
     override fun openNewConversation(): Unit = presenter.openNewConversation()
 
     override fun openConversations(): Unit = presenter.openConversations()

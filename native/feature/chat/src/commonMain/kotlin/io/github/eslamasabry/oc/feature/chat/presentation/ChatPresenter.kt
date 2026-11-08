@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
+import io.github.eslamasabry.oc.feature.chat.world.ChatUndone
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
@@ -186,7 +187,9 @@ public class ChatPresenter(
                 settleStop()
             }
             .launchIn(scope)
-        return combine(inputs, local, hits, world.hasOlder, feed) { i, l, h, _, _ ->
+        // S28 story 3: the undone line follows the session as well.
+        val extra = feed.combine(world.undone) { f, u -> f to u }
+        return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
                 present(i, l, h)
             }
             .stateIn(scope, started, ChatUi.loading(world.ref))
@@ -211,6 +214,29 @@ public class ChatPresenter(
             world.draft.value,
             retryNow(world.linkRetryAtMs.value),
         )
+
+    /**
+     * S28 story 3 (Flutter `_stagedRevertStatus`, `_undoneStatus`): the quietest line, below every real one.
+     */
+    private fun undoneLine(undone: ChatUndone): ChatStatusUi? =
+        when (undone) {
+            ChatUndone.None -> null
+            ChatUndone.Staged -> ChatStatusUi(STAGED_UNDO_STATUS, ChatStatusKind.StagedUndo)
+            ChatUndone.Applied -> ChatStatusUi(UNDONE_STATUS, ChatStatusKind.Undone)
+        }
+
+    /** S28 story 3 (Flutter `_restore`, Put back and `/redo`): a staged undo opens its review page instead. */
+    override fun putBack() {
+        when (world.undone.value) {
+            ChatUndone.None -> Unit
+            ChatUndone.Staged -> nav.open(ReviewRoute.Staged(world.ref))
+            ChatUndone.Applied ->
+                launcher.launch {
+                    val r = world.putBack()
+                    if (r is Outcome.Failed) local.update { it.copy(actionFailure = r.failure) }
+                }
+        }
+    }
 
     /** The retry schedule at the clock's present (no countdown without a clock). */
     private fun retryNow(at: Long?): LinkRetryFacts =
@@ -277,7 +303,8 @@ public class ChatPresenter(
                             ChatStatusKind.ReceiptChecked,
                             receiptResult = it,
                         )
-                    },
+                    }
+                    ?: undoneLine(world.undone.value),
             phase =
                 when (val load = i.load) {
                     ChatLoad.Loading -> ChatPhase.Loading
@@ -287,6 +314,7 @@ public class ChatPresenter(
                 },
             rows = t.rows,
             newestRowKey = t.newestKey,
+            canPutBack = world.undone.value != ChatUndone.None,
             live =
                 if (t.run.busy)
                     LiveTurnUi(
@@ -872,10 +900,12 @@ public class ChatPresenter(
                     textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 local.update { it.copy(insert = ClipUi(nextId++, text)) }
             }
-            MessageAction.ReadAloud -> {
+            MessageAction.ReadAloud,
+            MessageAction.ReadAloudOtherVoice -> {
                 val text =
                     textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
-                local.update { it.copy(readAloud = ReadAloudUi(nextId++, target.rowKey, text)) }
+                val choose = action == MessageAction.ReadAloudOtherVoice
+                local.update { it.copy(readAloud = ReadAloudUi(nextId++, target.rowKey, text, choose)) }
             }
             MessageAction.SendAgain -> {
                 val text =
@@ -1142,4 +1172,6 @@ private const val MAX_PATH_CHECKS = 256
 private val PICTURE_NAME = Regex("\\.(png|jpe?g|gif|webp|bmp)$", RegexOption.IGNORE_CASE)
 
 private const val RECEIPT_STATUS: String = "chat-receipt-check"
+private const val STAGED_UNDO_STATUS: String = "staged-revert"
+private const val UNDONE_STATUS: String = "undone"
 private const val KEPT_OFFLINE_STATUS: String = "chat-kept-offline"

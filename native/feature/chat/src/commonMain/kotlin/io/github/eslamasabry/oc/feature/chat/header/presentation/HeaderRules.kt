@@ -128,6 +128,11 @@ public data class TranscriptWords(
     val file: String = "file",
     val tool: String = "Tool",
     val error: String = "Error",
+    /**
+     * S28 story 13 (Flutter `transcriptToolHeading`): a tool call named as its step row names it; null falls back to
+     * the call's own title or its name.
+     */
+    val toolTitle: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts) -> String)? = null,
 )
 
 /**
@@ -236,7 +241,10 @@ public object TranscriptCopy {
                         put("- ${words.attachment}: ${part.filename ?: part.url ?: words.file}\n")
                     PartType.Tool -> {
                         val name =
-                            part.tool?.title?.takeIf { it.isNotBlank() } ?: part.toolName.orEmpty()
+                            words.toolTitle?.invoke(io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts(part))
+                                ?.takeIf { it.isNotBlank() }
+                                ?: part.tool?.title?.takeIf { it.isNotBlank() }
+                                ?: part.toolName.orEmpty()
                         put("### ${words.tool}: $name\n\n")
                         val output = part.tool?.output?.trim()
                         if (!output.isNullOrEmpty()) put("```text\n$output\n```\n\n")

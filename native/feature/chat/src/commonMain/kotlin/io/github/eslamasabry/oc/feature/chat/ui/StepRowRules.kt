@@ -86,3 +86,15 @@ private fun fileName(path: String): String {
     val parts = path.replace('\\', '/').split('/').filter { it.isNotEmpty() }
     return if (parts.isEmpty()) path else parts.last()
 }
+
+/**
+ * S28 story 6 (Flutter `tool_card_body.dart` `_shellRerun`): the command a finished shell step offers to run again
+ * ("Run this command again" opens the Run shell command dialog with it, to read or change first). Null while the
+ * step is pending or running, for a step that never ran, and for anything but a shell step.
+ */
+internal fun rerunCommand(kind: ToolKind, state: StepState, input: JsonObject, subject: String?): String? {
+    if (kind != ToolKind.Shell) return null
+    if (state != StepState.Done && state != StepState.Failed) return null
+    val command = (input["command"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: subject
+    return command?.takeIf { it.isNotBlank() }
+}

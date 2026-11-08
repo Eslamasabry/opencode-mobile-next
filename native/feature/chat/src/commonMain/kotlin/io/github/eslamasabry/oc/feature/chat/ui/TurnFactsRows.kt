@@ -44,6 +44,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
+import io.github.eslamasabry.oc.ui.words.res.toolCardRunCommandAgain
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWaitingForYou
@@ -328,6 +330,16 @@ private fun StepRow(
                             moreLabel = more,
                             onMore = { folds.full[key] = true },
                             exitLabel = null,
+                        )
+                    val rerun = reply?.onRerunCommand
+                    val again = if (rerun == null) null else rerunCommand(f.kind, step.state, out.input, f.subject)
+                    if (shell && rerun != null && again != null)
+                        KitButton(
+                            stringResource(Res.string.toolCardRunCommandAgain),
+                            { rerun(again) },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.retry,
+                            modifier = Modifier.testTag("chat-step-rerun"),
                         )
                     else ToolStepBody(step, reply)
                 }

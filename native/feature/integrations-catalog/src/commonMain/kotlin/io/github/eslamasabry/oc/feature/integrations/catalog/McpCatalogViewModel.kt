@@ -10,11 +10,14 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.engine.integrations.catalog.McpCatalogControllers
-import io.github.eslamasabry.oc.engine.integrations.catalog.McpCatalogState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.McpCatalogRoute
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 public interface McpCatalogActions {
@@ -31,6 +34,9 @@ public interface McpCatalogActions {
     public fun add(name: String, headers: Map<String, String>, environment: Map<String, String>)
 
     public fun check()
+
+    /** Flutter "Stop using the registry": the list is no longer loaded or searched. */
+    public fun forget()
 }
 
 @AssistedInject
@@ -40,7 +46,14 @@ public class McpCatalogViewModel(
     controllers: McpCatalogControllers,
 ) : ViewModel(), McpCatalogActions {
     private val model = controllers.open(route.profile.raw, route.directory, route.workspace)
-    public val state: StateFlow<McpCatalogState> = model.state
+    private val forgetting = MutableStateFlow(false)
+    public val state: StateFlow<McpCatalogUi> =
+        combine(model.state, forgetting, ::mcpCatalogUi)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                mcpCatalogUi(model.state.value, forgetting.value),
+            )
     private var read: Job? = null
 
     init {
@@ -48,10 +61,11 @@ public class McpCatalogViewModel(
     }
 
     override fun back() {
-        if (state.value.selected != null) model.select(null) else navigator.back()
+        if (model.state.value.selected != null) model.select(null) else navigator.back()
     }
 
     override fun consent(enabled: Boolean) {
+        forgetting.value = false
         read?.cancel()
         read = viewModelScope.launch { model.setOptIn(enabled) }
     }
@@ -74,6 +88,12 @@ public class McpCatalogViewModel(
 
     override fun check() {
         viewModelScope.launch { model.check() }
+    }
+
+    override fun forget() {
+        forgetting.value = true
+        read?.cancel()
+        read = viewModelScope.launch { model.setOptIn(false) }
     }
 
     override fun onCleared() {

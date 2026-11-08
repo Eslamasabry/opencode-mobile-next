@@ -957,7 +957,8 @@ private fun transcriptWords(): TranscriptWords {
     val file = stringResource(Res.string.chatUiFile)
     val tool = stringResource(Res.string.chatUiTool)
     val error = stringResource(Res.string.chatUiError)
-    return remember(untitled, user, assistant, reasoning, partial, attachment, file, tool, error) {
+    val titles = io.github.eslamasabry.oc.feature.chat.ui.rememberStepTitles()
+    return remember(untitled, user, assistant, reasoning, partial, attachment, file, tool, error, titles) {
         TranscriptWords(
             untitled,
             user,
@@ -968,6 +969,7 @@ private fun transcriptWords(): TranscriptWords {
             file,
             tool,
             error,
+            titles,
         )
     }
 }

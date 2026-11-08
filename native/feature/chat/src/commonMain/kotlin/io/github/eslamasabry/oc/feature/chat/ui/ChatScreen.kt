@@ -110,6 +110,10 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.revertReview
+import io.github.eslamasabry.oc.ui.words.res.revertStaged
+import io.github.eslamasabry.oc.ui.words.res.undoneStatus
+import io.github.eslamasabry.oc.ui.words.res.undonePutBack
 import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
@@ -294,6 +298,8 @@ public fun ChatScreen(
      * window's root, whose title starts on the gutter.
      */
     canGoBack: Boolean = true,
+    /** S28 story 8: the conversation's handoff line, drawn at the top of the transcript; null = none. */
+    handoffLine: (@Composable () -> Unit)? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
@@ -317,6 +323,7 @@ public fun ChatScreen(
     val requestState by rememberUpdatedState(requests)
     val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
+    val factsState by rememberUpdatedState(facts)
     val words = rememberChatWords()
     val stopNote = stringResource(Res.string.chatStopAfterStepPrompt)
     val listWords =
@@ -399,6 +406,8 @@ public fun ChatScreen(
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
+                // S28 story 14: the live line's stuck-command notice also turns Send into "Stop and send".
+                stuck = { factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.StuckCommand },
                 stopAfterStep = {
                     if (latest.live?.canStopAfterStep == true) { { actions.stopAfterStep(stopNote) } }
                     else null
@@ -716,7 +725,7 @@ public fun ChatScreen(
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
                             replyReader?.Reader(
-                                state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
+                                state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text, chooseVoice = it.chooseVoice) },
                                 actions::readAloudDone,
                                 Modifier,
                             )
@@ -822,6 +831,10 @@ public fun ChatScreen(
                                                     modelPicker = (modelPicker ?: 0L) + 1L
                                                 },
                                                 onOpenCode = { codeReader = it },
+                                                onRerunCommand =
+                                                    if (workModel != null && state.capabilities.shell && !demoMode)
+                                                        workModel::openShellDialog
+                                                    else null,
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
                                         onAllFiles = actions::openFiles,
@@ -830,6 +843,7 @@ public fun ChatScreen(
                                         onCompactAgain =
                                             if (state.capabilities.compact) actions::compactAgain
                                             else null,
+                                        topLine = handoffLine,
                                     )
                                 EarlierMessagesPill(
                                     state,
@@ -1269,6 +1283,35 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 onDismiss = { actions.dismissStatus(StatusPick.LINK) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
+        // S28 story 3 (Flutter `_stagedRevertStatus`, `_undoneStatus`): the way back sits on the line.
+        ChatStatusKind.StagedUndo ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.revertStaged),
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.revertReview),
+                        actions::putBack,
+                        testTag = "chat-status-revert-review",
+                        icon = KitIcons.history,
+                    ),
+            )
+        ChatStatusKind.Undone ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.undoneStatus),
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.undonePutBack),
+                        actions::putBack,
+                        testTag = "chat-status-undo-put-back",
+                        icon = KitIcons.restore,
+                    ),
+            )
     }
 
 /**
@@ -1284,6 +1327,7 @@ internal fun rememberReplyActions(
     canCompact: Boolean = false,
     onChooseModel: () -> Unit = {},
     onOpenCode: (KitMdBlock.Code) -> Unit = {},
+    onRerunCommand: ((String) -> Unit)? = null,
 ): ReplyActions {
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
@@ -1319,6 +1363,7 @@ internal fun rememberReplyActions(
         compactLabel,
         openFullCode,
         onOpenCode,
+        onRerunCommand,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -1369,6 +1414,7 @@ internal fun rememberReplyActions(
             openAccountLabel = openAccount,
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
+            onRerunCommand = onRerunCommand,
         )
     }
 }

@@ -22,7 +22,7 @@ import io.github.eslamasabry.oc.ui.words.res.tipMessageDetails
 import org.jetbrains.compose.resources.stringResource
 
 /** The same controller as Help › Tips; one visit and one app-wide teaching slot. */
-internal data class MessageTeaching(val controller: TipController)
+internal data class MessageTeaching(val controller: TipController, val visit: TipVisit = TipVisit())
 
 internal val LocalMessageTeaching = compositionLocalOf<MessageTeaching?> { null }
 
@@ -54,7 +54,7 @@ internal fun MessageTeachingScope(
         onDispose { controller?.dismiss(TeachingIds.MessageDetails) }
     }
     CompositionLocalProvider(
-        LocalMessageTeaching provides controller?.let { MessageTeaching(it) },
+        LocalMessageTeaching provides controller?.let { MessageTeaching(it, visit) },
         content = content,
     )
 }
@@ -74,4 +74,68 @@ internal fun MessageDetailsTip(eligible: Boolean, content: @Composable () -> Uni
         onDismissed = { teaching.controller.dismiss(TeachingIds.MessageDetails) },
         anchor = content,
     )
+}
+
+/**
+ * S28 story 15 (Flutter `chat_schedule_send.dart` `_offerSendTip`, `chat_stop_after_step.dart` `_queueStopTip`): when
+ * the hidden holds on Send and Stop are worth teaching. Send: words wait in the box, no reply runs (Send is Stop
+ * then) and Send offers "Send later or repeat". Stop: a reply has run for [STOP_TIP_AFTER_MS] while Stop offers
+ * "Stop after this step". The visible ways stay: Send later in the tools list, Stop after this step in Stop's menu.
+ */
+internal object ComposerTipRules {
+    const val STOP_TIP_AFTER_MS: Long = 10_000
+
+    fun sendTipDue(typed: Boolean, busy: Boolean, canSendLater: Boolean): Boolean = typed && !busy && canSendLater
+
+    /** The wait itself runs in [OfferComposerTip] (`afterMs`): the moment holds only if this stays true for it. */
+    fun stopTipDue(busy: Boolean, canStopAfterStep: Boolean): Boolean = busy && canStopAfterStep
+}
+
+/** Offers [id] while [due] holds (after [afterMs]), on the chat's one visit; it leaves when [due] stops holding. */
+@Composable
+internal fun OfferComposerTip(id: io.github.eslamasabry.oc.engine.settings.teaching.TipId, due: Boolean, blocked: Boolean, afterMs: Long = 0) {
+    val teaching = LocalMessageTeaching.current ?: return
+    LaunchedEffect(teaching, id, due, blocked) {
+        if (!due || blocked) {
+            if (teaching.controller.isActive(id)) teaching.controller.dismiss(id)
+            return@LaunchedEffect
+        }
+        if (afterMs > 0) kotlinx.coroutines.delay(afterMs)
+        val entry = io.github.eslamasabry.oc.engine.settings.teaching.TeachingRegistry.defaults.entry(id)
+        teaching.controller.offer(
+            id,
+            visit = teaching.visit,
+            maxCount = entry?.maxCount ?: TipController.DEFAULT_MAX_COUNT,
+            priority = entry?.priority ?: 0,
+            moment = TipMoment(questionWaiting = blocked),
+        )
+    }
+}
+
+/** The tip [message] over [content] while [id] is the tip on screen; used marks it learnt. */
+@Composable
+internal fun ComposerTip(
+    id: io.github.eslamasabry.oc.engine.settings.teaching.TipId,
+    message: String,
+    content: @Composable () -> Unit,
+) {
+    val teaching = LocalMessageTeaching.current
+    if (teaching == null) {
+        content()
+        return
+    }
+    val active by teaching.controller.active.collectAsStateWithLifecycle()
+    KitTip(
+        message = message,
+        visible = active?.id == id,
+        onDismissed = { teaching.controller.dismiss(id) },
+        anchor = content,
+    )
+}
+
+/** The person used what [id] teaches: it never shows again. */
+@Composable
+internal fun rememberTipUsed(id: io.github.eslamasabry.oc.engine.settings.teaching.TipId): () -> Unit {
+    val teaching = LocalMessageTeaching.current
+    return remember(teaching, id) { { teaching?.controller?.markUsed(id) } }
 }

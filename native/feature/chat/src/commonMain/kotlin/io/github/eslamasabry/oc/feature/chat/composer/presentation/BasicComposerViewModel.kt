@@ -130,6 +130,10 @@ public interface BasicComposerActions {
     /** Stages the project file picked from the `@` list (the field inserts its `@path`). */
     public fun mentionFile(path: String) {}
 
+    /** S28 story 12: the "File from the project" sheet's search (the conversation's project files). */
+    public suspend fun searchProjectFiles(query: String): Outcome<List<String>> =
+        Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("fileBrowsing")))
+
     /** Photos, camera or clipboard picture, where the platform offers them. */
     public fun attach(kind: AttachKind) {}
 
@@ -496,6 +500,10 @@ public class BasicComposerViewModel(
             null -> fileMatches.value = emptyList()
         }
     }
+
+    override suspend fun searchProjectFiles(query: String): Outcome<List<String>> =
+        world?.findFiles(query)
+            ?: Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("fileBrowsing")))
 
     override fun mentionFile(path: String) {
         val w = world ?: return

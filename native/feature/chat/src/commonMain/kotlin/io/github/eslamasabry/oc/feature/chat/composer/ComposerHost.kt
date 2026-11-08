@@ -65,6 +65,8 @@ public class ComposerChrome(
     public val focusDone: (id: Long) -> Unit,
     public val onStop: () -> Unit,
     public val stopping: () -> Boolean,
+    /** S28 story 14: the running reply looks hung (a foreground command past the limit). */
+    public val stuck: () -> Boolean = { false },
     /**
      * S24-CHAT story 6: what holding Stop does now ("Stop after this step"), or null when the hold
      * offers nothing (no steering, a note already went).

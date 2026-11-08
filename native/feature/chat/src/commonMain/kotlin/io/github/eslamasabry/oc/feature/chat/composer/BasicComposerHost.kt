@@ -1,5 +1,15 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopAndSendPill
+import io.github.eslamasabry.oc.ui.words.res.kitComposerStopAndSend
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.snapshotFlow
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
+import io.github.eslamasabry.oc.feature.chat.ui.ComposerTip
+import io.github.eslamasabry.oc.feature.chat.ui.ComposerTipRules
+import io.github.eslamasabry.oc.feature.chat.ui.OfferComposerTip
+import io.github.eslamasabry.oc.feature.chat.ui.rememberTipUsed
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -80,6 +90,8 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitInsertedPicture
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitPictureReceiver
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStep
+import io.github.eslamasabry.oc.ui.words.res.tipSendLater
+import io.github.eslamasabry.oc.ui.words.res.tipStopAfterStep
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
@@ -452,6 +464,8 @@ public fun BasicComposer(
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var toolsOpen by remember(state.targetKey) { mutableStateOf(false) }
+    // S28 story 12: the "File from the project" sheet.
+    var projectFilesOpen by remember(state.targetKey) { mutableStateOf(false) }
     val trayItems =
         ComposerTrayRules.items(
             state.attachmentsSupported,
@@ -706,22 +720,33 @@ public fun BasicComposer(
                         modelsOpen = true
                     },
                     settings = chrome.promptSettings,
-                    // F: composer_tools.dart:150-157: "File from the project" points the agent at a file; native
-                    // starts the field's "@" file search, whose matches attach the file.
+                    // F: composer_tools.dart:150-157 and chat_mentions.dart `_openProjectFiles`: "File from the
+                    // project" opens the project's files; the picked one is written `@path ` and staged.
                     projectFile =
                         if (state.filesAvailable) {
                             {
-                                val text = field.text.toString()
-                                val at = if (text.isEmpty() || text.endsWith(' ') || text.endsWith('\n')) "@" else " @"
-                                field.edit { append(at) }
-                                editor.userEditSerial += 1
-                                val typed = field.text.toString()
-                                editor.lastReported = typed
-                                actions.draftChanged(typed)
-                                focus.requestFocus()
+                                focusManager.clearFocus()
+                                projectFilesOpen = true
                             }
                         } else null,
                 ),
+        )
+        ComposerProjectFileSheet(
+            visible = projectFilesOpen,
+            search = actions::searchProjectFiles,
+            onPick = { path ->
+                projectFilesOpen = false
+                val text = field.text.toString()
+                val lead = if (text.isEmpty() || text.endsWith(' ') || text.endsWith('\n')) "" else " "
+                field.edit { append("$lead@$path ") }
+                editor.userEditSerial += 1
+                val typed = field.text.toString()
+                editor.lastReported = typed
+                actions.draftChanged(typed)
+                actions.mentionFile(path)
+                focus.requestFocus()
+            },
+            onDismiss = { projectFilesOpen = false },
         )
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
@@ -812,6 +837,19 @@ public fun BasicComposer(
         val inlineAtStart = remember(voiceActive) { typed || stopShown }
         val inlineMic = if (voiceActive) inlineAtStart else typed || stopShown
         val primaryIsStop = inlineMic && stopShown && !(typed && !waitingRequest)
+        // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
+        // the words go once it has stopped, and nothing goes if it does not stop.
+        val stopsFirst = SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
+        val stopAndSend: () -> Unit = {
+            scope.launch {
+                chrome.onStop()
+                val stopped =
+                    withTimeoutOrNull(SendFieldRules.STOP_AND_SEND_WAIT_MS) {
+                        snapshotFlow { chrome.busy() }.first { !it }
+                    }
+                if (stopped != null) send()
+            }
+        }
         val sendLabel =
             stringResource(
                 when {
@@ -830,6 +868,14 @@ public fun BasicComposer(
         // server steers the running turn; a tap still stops at once.
         val afterStep = chrome.stopAfterStep()
         val afterStepLabel = stringResource(Res.string.chatStopAfterStep)
+        // S28 story 15: hold Stop is taught once a reply has run for a while and the hold offers something.
+        val stopTipUsed = rememberTipUsed(TeachingIds.StopAfterStep)
+        OfferComposerTip(
+            TeachingIds.StopAfterStep,
+            due = ComposerTipRules.stopTipDue(busy, afterStep != null),
+            blocked = chrome.requestWaiting(),
+            afterMs = ComposerTipRules.STOP_TIP_AFTER_MS,
+        )
         var stopMenu by remember { mutableStateOf(false) }
         if (afterStep == null && stopMenu) stopMenu = false
         val stopPart: @Composable () -> Unit = {
@@ -838,19 +884,21 @@ public fun BasicComposer(
                 items =
                     listOfNotNull(
                         afterStep?.let { run ->
-                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; run() })
+                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; stopTipUsed(); run() })
                         }
                     ),
                 onDismissRequest = { stopMenu = false },
             ) {
-                KitComposerStopRing(
-                    label = stopLabel,
-                    onClick = chrome.onStop,
-                    stopping = chrome.stopping(),
-                    onLongClick = afterStep?.let { { stopMenu = true } },
-                    onLongClickLabel = afterStepLabel,
-                    modifier = Modifier.testTag("chat-stop-button"),
-                )
+                ComposerTip(TeachingIds.StopAfterStep, stringResource(Res.string.tipStopAfterStep)) {
+                    KitComposerStopRing(
+                        label = stopLabel,
+                        onClick = chrome.onStop,
+                        stopping = chrome.stopping(),
+                        onLongClick = afterStep?.let { { stopMenu = true } },
+                        onLongClickLabel = afterStepLabel,
+                        modifier = Modifier.testTag("chat-stop-button"),
+                    )
+                }
             }
         }
         // F1 (scoreboard 2026-11-07), Flutter's layout (chat_composer_region.dart:44-77, kit_composer.dart:796-808):
@@ -858,6 +906,13 @@ public fun BasicComposer(
         // the end), and the box is one row (plus, the words, mic or Send) until the words outgrow it. Stop keeps
         // the native Send/Stop morph on the round target.
         val stopLeads = stopShown && typed && !waitingRequest
+        // S28 story 15: hold Send is taught while words wait, no reply runs and Send offers Send later.
+        val sendTipUsed = rememberTipUsed(TeachingIds.SendLater)
+        OfferComposerTip(
+            TeachingIds.SendLater,
+            due = ComposerTipRules.sendTipDue(typed, busy, chrome.sendLater != null && sendReady),
+            blocked = waitingRequest,
+        )
         KitComposerStatusStrip(
             hasChips = true,
             modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
@@ -1049,6 +1104,14 @@ public fun BasicComposer(
                             hasMessage = inlineMic || voice == null,
                             mic = { voice?.Mic(voiceField, Modifier) },
                             send = {
+                                if (stopsFirst && typed && sendReady)
+                                    KitStopAndSendPill(
+                                        label = stringResource(Res.string.kitComposerStopAndSend),
+                                        onClick = stopAndSend,
+                                        modifier = Modifier.testTag("chat-stop-and-send"),
+                                    )
+                                else
+                                ComposerTip(TeachingIds.SendLater, stringResource(Res.string.tipSendLater)) {
                                 KitComposerSend(
                                     label = sendLabel,
                                     onClick = send,
@@ -1068,12 +1131,14 @@ public fun BasicComposer(
                                                 {
                                                     // N-44: the keyboard goes first (the wheel stays in sight).
                                                     focusManager.clearFocus()
+                                                    sendTipUsed()
                                                     later(field.text.toString())
                                                 }
                                             },
                                     onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
                                     modifier = Modifier.testTag("chat-send-button"),
                                 )
+                                }
                             },
                         )
                 },

@@ -92,6 +92,27 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
 import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionDetails
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionFact
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
+import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailAsks
+import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailHelper
+import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailPatterns
+import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailRange
+import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailRunsIn
+import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailTool
+import io.github.eslamasabry.oc.ui.words.res.chatRequestReadFrom
+import io.github.eslamasabry.oc.ui.words.res.chatRequestReadLines
+import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllowWouldAlsoCover
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -121,6 +142,8 @@ public fun ChatRequestSlot(
     val cards = held.cards(state.cards)
     // P-103: the first waiting card in full, the others one line each until the person opens one.
     var opened by remember { mutableStateOf(emptySet<RequestId>()) }
+    // S28 story 4: the card whose Details sheet is open (screen state, never a route).
+    var details by remember { mutableStateOf<RequestId?>(null) }
     val open = RequestStackRules.stillOpened(opened, cards)
     val folded = RequestStackRules.folded(cards, open, state.focused)
     KitReveal(visible = state.cards.isNotEmpty(), modifier = modifier) {
@@ -140,11 +163,15 @@ public fun ChatRequestSlot(
             // The row and the card cross-fade (QUICK; instant under reduced motion); the size never animates.
             KitSwap(card.id in folded, alignment = Alignment.TopStart) { isFolded ->
                 if (isFolded) FoldedRequestRow(card) { opened = open + card.id }
-                else key(card.id, card.captured) { RequestCard(card, actions, nowMs) }
+                else key(card.id, card.captured) { RequestCard(card, actions, nowMs) { details = card.id } }
             }
         }
     }
     state.sheet?.let { ChatQuestionSheet(it, actions) }
+    // The sheet closes itself when its request leaves the slot (answered here or elsewhere).
+    val detailed = details?.let { id -> state.cardFor(id) as? RequestCardUi.Permission }
+        ?.takeIf { it.state == CardState.Waiting && it.captured != null }
+    PermissionDetailsSheet(detailed, actions) { details = null }
     val confirm = state.confirmAlways
     KitConfirm(
         spec =
@@ -174,7 +201,12 @@ public fun ChatRequestSlot(
  * asks about ("Request 2 of 4: Run npm test"), so cards are never confused with one another.
  */
 @Composable
-private fun RequestCard(card: RequestCardUi, actions: ChatRequestActions, nowMs: Long?) {
+private fun RequestCard(
+    card: RequestCardUi,
+    actions: ChatRequestActions,
+    nowMs: Long?,
+    onDetails: () -> Unit,
+) {
     LaunchedEffect(card.id) { actions.shown(card.id) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         when (val phase = card.state) {
@@ -186,7 +218,7 @@ private fun RequestCard(card: RequestCardUi, actions: ChatRequestActions, nowMs:
                 )
                 when (card) {
                     is RequestCardUi.Permission -> {
-                        PermissionWaiting(card, actions)
+                        PermissionWaiting(card, actions, onDetails.takeIf { card.captured != null })
                         card.invitationFailure?.let {
                             KitErrorNotice(
                                 stringResource(Res.string.consentAlwaysAllowFailed),
@@ -289,6 +321,7 @@ private fun receiptWords(card: RequestCardUi, words: AnswerWords): String =
 private fun PermissionWaiting(
     card: RequestCardUi.Permission,
     actions: ChatRequestActions,
+    onDetails: (() -> Unit)?,
 ) {
     val mask = rememberKitMask()
     val always = card.canAlwaysAllow && !card.invitation
@@ -338,8 +371,100 @@ private fun PermissionWaiting(
                 ({ actions.performReviewed(card, ReviewedRequestAction.AskAlways) })
             else null,
         onDeny = { actions.performReviewed(card, ReviewedRequestAction.Reject) },
+        onDetails = onDetails,
     )
 }
+
+/**
+ * S28 story 4 (Flutter `showPermissionDetails`): the whole command, file or pattern list, the change an edit asks to
+ * make, and the tool's technical names under Details (Tool, Requested patterns, Part of the file, Runs in). Allow
+ * once and Reject answer here as on the card, then the sheet closes. Server text is masked before it is drawn.
+ */
+@Composable
+private fun PermissionDetailsSheet(
+    card: RequestCardUi.Permission?,
+    actions: ChatRequestActions,
+    onClose: () -> Unit,
+) {
+    val request = card?.captured?.request
+    val mask = rememberKitMask()
+    val redactor = LocalKitRedactor.current
+    val shown = remember(request) { request?.let(PermissionDetails::of) }
+    KitSheet(
+        visible = card != null && shown != null,
+        onDismissRequest = onClose,
+        title = card?.let { askQuestion(it.ask) } ?: stringResource(Res.string.kitDetails),
+        closeLabel = stringResource(Res.string.kitConfirmCancel),
+        height = KitSheetHeight.Half,
+        primary = card?.let {
+            KitAction(stringResource(Res.string.approvalAllow), {
+                onClose()
+                actions.performReviewed(it, ReviewedRequestAction.AllowOnce)
+            })
+        },
+        secondary = card?.let {
+            KitAction(stringResource(Res.string.approvalDeny), {
+                onClose()
+                actions.performReviewed(it, ReviewedRequestAction.Reject)
+            })
+        },
+    ) {
+        val details = shown ?: return@KitSheet
+        Column(
+            Modifier.fillMaxWidth().testTag("chat-permission-details"),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
+            val full = details.fullText ?: stringResource(Res.string.chatUiAllMatchingRequests)
+            KitCodeBlock(
+                mask(full),
+                if (details.command) KitCodeKind.Command else KitCodeKind.Output,
+                wrap = true,
+                showWrapToggle = false,
+            )
+            details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
+            val values = details.facts.map { fact -> permissionFactValue(fact, redactor) }
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.approvalCopyAsk),
+                values = values,
+                initiallyExpanded = true,
+            )
+        }
+    }
+}
+
+/** One fact, in Flutter's words ("Tool", "Runs in", "Part of the file: from line 20, 80 lines"). */
+@Composable
+private fun permissionFactValue(fact: PermissionFact, redactor: Redactor): KitTechnicalValue =
+    when (fact) {
+        is PermissionFact.RunsIn ->
+            KitTechnicalValue(stringResource(Res.string.chatRequestDetailRunsIn), redactor.details(fact.folder))
+        is PermissionFact.Asks ->
+            KitTechnicalValue(stringResource(Res.string.chatRequestDetailAsks), redactor.details(fact.words))
+        is PermissionFact.Range -> {
+            val parts = listOfNotNull(
+                fact.from?.let { stringResource(Res.string.chatRequestReadFrom, Numbers.format(it)) },
+                fact.lines?.let {
+                    pluralStringResource(Res.plurals.chatRequestReadLines, it.toInt(), Numbers.format(it))
+                },
+            )
+            KitTechnicalValue(stringResource(Res.string.chatRequestDetailRange), redactor.details(parts.joinToString(", ")))
+        }
+        is PermissionFact.Helper ->
+            KitTechnicalValue(stringResource(Res.string.chatRequestDetailHelper), redactor.details(fact.type))
+        is PermissionFact.Tool ->
+            KitTechnicalValue(stringResource(Res.string.chatRequestDetailTool), redactor.details(fact.name))
+        is PermissionFact.Patterns ->
+            KitTechnicalValue(
+                stringResource(Res.string.chatRequestDetailPatterns),
+                redactor.details(fact.lines.joinToString("\n")),
+            )
+        is PermissionFact.AlsoCovers ->
+            KitTechnicalValue(
+                stringResource(Res.string.chatUiAlwaysAllowWouldAlsoCover),
+                redactor.details(fact.lines.joinToString("\n")),
+            )
+    }
 
 @Composable
 private fun QuestionWaiting(
