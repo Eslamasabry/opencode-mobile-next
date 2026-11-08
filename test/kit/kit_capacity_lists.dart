@@ -102,7 +102,7 @@ final kitListStress = <KitListStress>[
         for (var i = 1; i <= n; i++)
           KitIconButton(
             icon: Icons.search,
-            tooltip: c.t('Action $i', 'إجراء $i'),
+            tooltip: 'Action',
             onPressed: _noop,
           ),
       ],
