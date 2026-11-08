@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -76,5 +77,49 @@ class TopBarTitleLineTest {
         }
         val gap = gap("shopfront")
         assertTrue(gap in 1f..3f, "the subtitle starts the kit's 2 dp step under the title's words, was $gap")
+    }
+
+    @Test
+    fun `C13 a text action with room beside a short title is never cut to an ellipsis`() = runComposeUiTest {
+        setContent {
+            CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
+                KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
+                    InWindow(360, 760) {
+                        KitTopBar(
+                            "a.kt",
+                            exit = KitTopBarExit.Back,
+                            exitLabel = "Back",
+                            onExit = {},
+                            actions = listOf(io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction("Copy updated file", {})),
+                        )
+                    }
+                }
+            }
+        }
+        val node = onNodeWithText("Copy updated file", useUnmergedTree = true).fetchSemanticsNode()
+        val results = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        node.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
+        assertTrue(results.isNotEmpty() && !results.first().hasVisualOverflow, "the action's words fit on their line")
+    }
+
+    @Test
+    fun `C13 a long action still leaves the title room`() = runComposeUiTest {
+        setContent {
+            CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
+                KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
+                    InWindow(360, 760) {
+                        KitTopBar(
+                            "Terminal",
+                            exit = KitTopBarExit.Back,
+                            exitLabel = "Back",
+                            onExit = {},
+                            actions = listOf(io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction("All terminals and servers on this computer", {})),
+                        )
+                    }
+                }
+            }
+        }
+        val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).fetchSemanticsNode().size.width
+        assertTrue(title >= 90, "title is $title wide")
     }
 }
