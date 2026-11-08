@@ -1077,14 +1077,52 @@ internal class Oc2Gateway(
      */
     override suspend fun makeProjectFolder(parent: String, name: String): Outcome<String> {
         val folder = name.trim()
+        if (!safeFolder(parent, folder)) return Failure.Rejected(null).failed()
+        val quoted = shellWord(folder)
+        val command = "mkdir -p -- $quoted && cd -- $quoted && { [ -d .git ] || git init -q; }"
+        return when (val exit = shellIn(parent, command, timeoutMs = 30_000)) {
+            // A shell that outlives its 30 s says Denied, as before.
+            is Outcome.Failed -> if (exit.failure is Failure.TimedOut) Failure.Folder(FolderProblem.Denied).failed() else exit
+            is Outcome.Ok ->
+                if (exit.value == 0) Outcome.Ok(parent.trimEnd('/') + "/" + folder)
+                else Failure.Folder(FolderProblem.Denied).failed()
+        }
+    }
+
+    /**
+     * B-182: `git clone -- <url> <name>` in [parent], through the same located shell as [makeProjectFolder]; answers
+     * the new folder's path. The address and the name are single shell words; an address starting with `-` or holding
+     * a control character never runs. A clone that fails is [Failure.Rejected] without Git's text (it can echo the
+     * address).
+     */
+    override suspend fun cloneRepository(parent: String, url: String, name: String): Outcome<String> {
+        val folder = name.trim()
+        val address = url.trim()
         if (
-            parent.isBlank() || !parent.startsWith("/") || folder.isEmpty() || folder == "." || folder == ".." ||
-                folder.any { it == '/' || it == '\\' || it == '\u0000' || it == '\n' }
+            !safeFolder(parent, folder) || address.isEmpty() || address.startsWith("-") ||
+                address.any { it.isWhitespace() || it.code < 0x20 || it.code == 0x7f }
         )
             return Failure.Rejected(null).failed()
-        val quoted = "'" + folder.replace("'", "'\\''") + "'"
+        val command = "git clone -q -- ${shellWord(address)} ${shellWord(folder)}"
+        return when (val exit = shellIn(parent, command, timeoutMs = CLONE_TIMEOUT_MS)) {
+            is Outcome.Failed -> exit
+            is Outcome.Ok ->
+                if (exit.value == 0) Outcome.Ok(parent.trimEnd('/') + "/" + folder) else Failure.Rejected(null).failed()
+        }
+    }
+
+    private fun safeFolder(parent: String, folder: String): Boolean =
+        parent.isNotBlank() && parent.startsWith("/") && folder.isNotEmpty() && folder != "." && folder != ".." &&
+            folder.none { it == '/' || it == '\\' || it == '\u0000' || it == '\n' }
+
+    private fun shellWord(value: String): String = "'" + value.replace("'", "'\\''") + "'"
+
+    /**
+     * One short shell in [parent] (`POST /api/shell`, located there), then its own status every 500 ms until it exits,
+     * at most [timeoutMs]; answers the exit code, -1 when it gave none. Its copy is dropped once it exits.
+     */
+    private suspend fun shellIn(parent: String, command: String, timeoutMs: Int): Outcome<Int> {
         val query = mapOf("location[directory]" to parent)
-        val command = "mkdir -p -- $quoted && cd -- $quoted && { [ -d .git ] || git init -q; }"
         val started =
             json(
                 "/shell",
@@ -1092,7 +1130,7 @@ internal class Oc2Gateway(
                 buildJsonObject {
                     put("command", command)
                     put("cwd", parent)
-                    put("timeout", 30_000)
+                    put("timeout", timeoutMs)
                 },
                 query,
             )
@@ -1101,19 +1139,17 @@ internal class Oc2Gateway(
                 is Outcome.Failed -> return started
                 is Outcome.Ok -> (data(started.value) as? JsonObject)?.str("id") ?: return Failure.UnreadableReply().failed()
             }
-        val path = parent.trimEnd('/') + "/" + folder
-        repeat(60) {
+        repeat(timeoutMs / 500) {
             kotlinx.coroutines.delay(500)
             val read = json("/shell/${id.encodeURLPathPart()}", query = query)
             if (read is Outcome.Failed) return read
             val shell = data((read as Outcome.Ok).value) as? JsonObject ?: return Failure.UnreadableReply().failed()
             if (shell.str("status") != "running") {
                 json("/shell/${id.encodeURLPathPart()}", HttpMethod.Delete, query = query)
-                val exit = (shell["exit"] as? JsonPrimitive)?.intOrNull
-                return if (exit == 0) Outcome.Ok(path) else Failure.Folder(FolderProblem.Denied).failed()
+                return Outcome.Ok((shell["exit"] as? JsonPrimitive)?.intOrNull ?: -1)
             }
         }
-        return Failure.Folder(FolderProblem.Denied).failed()
+        return Failure.TimedOut().failed()
     }
 
     /** N-30: the stable line archives through the session's own update (`archived: true`). */
@@ -2417,6 +2453,9 @@ internal class Oc2Gateway(
             )
     }
 }
+
+/** B-182: a clone may fetch a large repository; the shell is stopped after this. */
+private const val CLONE_TIMEOUT_MS = 300_000
 
 private const val AGENT_BOOT_RETRY_MS = 500L
 private const val AGENT_BOOT_MAX_STEP_MS = 4_000L

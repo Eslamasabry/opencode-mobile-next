@@ -126,6 +126,14 @@ public interface HostGateway {
     public suspend fun makeProjectFolder(parent: String, name: String): Outcome<String> =
         unavailable("projectFolderCreation")
 
+    /**
+     * B-182: clones the Git repository at [url] into the new folder [name] inside [parent] on the server's machine
+     * (the same shell as [makeProjectFolder], so the same `projectFolderCreation` flag); answers the folder's path.
+     * [name] is one safe folder name, never a path; the address never carries a password or token.
+     */
+    public suspend fun cloneRepository(parent: String, url: String, name: String): Outcome<String> =
+        unavailable("projectFolderCreation")
+
     public suspend fun renameProject(
         projectId: String,
         projectDirectory: String,
