@@ -65,6 +65,12 @@ jobs:
       - uses: ./.github/actions/native-setup
         with:
           goldens: "true"
+      - name: Output directory the LooksCapture tests hard-code
+        # Several LooksCapture helpers mkdirs() /home/eslam/wt/lane-looks/looks-out/screens; the runner user cannot create /home/eslam.
+        working-directory: ${{ github.workspace }}
+        run: |
+          sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
+          sudo chown -R "$USER" /home/eslam
       - name: Pick this shard's modules
         id: pick
         run: |
