@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.EventViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleEditorViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.PhoneNodeViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.RemindersViewModel
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.feature.factsbook.ui.StatusScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.EventScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.RuleEditorScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.TriggersScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.PhoneNodeScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.ThingScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
@@ -117,6 +119,11 @@ public class FactsBookEntries : EntryInstaller {
             val vm = assistedMetroViewModel<RuleEditorViewModel, RuleEditorViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             RuleEditorScreen(state, vm)
+        }
+        entry<FactsBookRoute.PhoneNode> {
+            val vm = metroViewModel<PhoneNodeViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            PhoneNodeScreen(state, vm)
         }
         entry<FactsBookRoute.Event> { route ->
             val vm = assistedMetroViewModel<EventViewModel, EventViewModel.Factory> { create(route) }

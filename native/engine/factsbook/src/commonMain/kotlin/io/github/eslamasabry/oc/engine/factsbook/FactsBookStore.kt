@@ -135,9 +135,18 @@ public class FactsBookStore(
 
     public suspend fun setFlag(on: Boolean): Boolean = prefs.commit(appLane) { putBool(FLAG_KEY, on) } is Outcome.Ok
 
+    /** The person stopped the memory on this phone and has not started it since (app-wide, F: `personStoppedKey`). */
+    public fun nodeStopped(): Boolean = prefs.bool(NODE_STOPPED_KEY) == true
+
+    public suspend fun setNodeStopped(stopped: Boolean): Boolean =
+        prefs.commit(appLane) { if (stopped) putBool(NODE_STOPPED_KEY, true) else remove(NODE_STOPPED_KEY) } is Outcome.Ok
+
     public companion object {
         /** F: factsbook_flag.dart `FactsBookFlag.preferenceKey`. */
         public const val FLAG_KEY: String = "oc.dev.factsbook"
+
+        /** F: factsbook_phone_node.dart `personStoppedKey`. */
+        public const val NODE_STOPPED_KEY: String = "oc.factsbook-node.stopped"
 
         public fun linkKey(profileId: String): String = "oc.factsbookNode.$profileId"
 

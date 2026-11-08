@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.factsbook.presentation
 
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookPhoneNode
 import io.github.eslamasabry.oc.engine.factsbook.HttpFactsBookGateway
 import kotlinx.coroutines.flow.StateFlow
 
@@ -22,4 +23,10 @@ public interface FactsBookAccess {
 
     /** The client for a private [baseUrl] before there is a token. */
     public fun pairingGateway(baseUrl: String): HttpFactsBookGateway
+
+    /** Memory on this phone: FactsBook inside the built-in Linux ([FactsBookPhoneNode.supported] false elsewhere). */
+    public val phoneNode: FactsBookPhoneNode
+
+    /** Runs [work] past the page that asked for it (an install keeps going when the person leaves the page). */
+    public fun background(work: suspend () -> Unit)
 }

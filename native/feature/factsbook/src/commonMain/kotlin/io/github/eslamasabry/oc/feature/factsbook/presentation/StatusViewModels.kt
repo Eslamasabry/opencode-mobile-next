@@ -39,6 +39,8 @@ public data class StatusUi(
     val capabilities: FactsBookCapabilities = FactsBookCapabilities.B5,
     val confirmDisconnect: Boolean = false,
     val nowMs: Long = 0,
+    /** Memory on this phone can be reached from here. */
+    val phoneNode: Boolean = false,
 )
 
 public interface StatusActions {
@@ -53,6 +55,8 @@ public interface StatusActions {
     public fun disconnect()
 
     public fun cancelDisconnect()
+
+    public fun openPhoneNode()
 }
 
 /**
@@ -88,6 +92,7 @@ public class StatusViewModel(private val access: FactsBookAccess, private val na
                     link = s.link,
                     capabilities = s.capabilities,
                     nowMs = clock.now().toEpochMilliseconds(),
+                    phoneNode = access.phoneNode.supported,
                 )
             }
             val control = if (r is FbResult.Ok) (engine.verifyControl() as? FbResult.Ok)?.value else null
@@ -100,6 +105,8 @@ public class StatusViewModel(private val access: FactsBookAccess, private val na
     override fun askDisconnect(): Unit = mutable.update { it.copy(confirmDisconnect = true) }
 
     override fun cancelDisconnect(): Unit = mutable.update { it.copy(confirmDisconnect = false) }
+
+    override fun openPhoneNode(): Unit = nav.open(FactsBookRoute.PhoneNode)
 
     override fun disconnect() {
         mutable.update { it.copy(confirmDisconnect = false) }

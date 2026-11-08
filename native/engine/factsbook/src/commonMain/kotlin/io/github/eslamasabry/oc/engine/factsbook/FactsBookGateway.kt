@@ -509,6 +509,9 @@ public class HttpFactsBookGateway(
             idempotencyKey = key(),
         ).reading(MutationResult::read)
 
+    /** `GET /v1/info`, unauthorized: whether a node answers at this address at all (the phone node's probe). */
+    public suspend fun info(): FbResult<Unit> = send("GET", "/v1/info", authorized = false).map { }
+
     /** `GET /v1/info` then `POST /v1/pair`: a one-time code to a bearer token. Unauthorized calls. */
     public suspend fun pair(code: String, clientName: String, scopes: List<String>): FbResult<PairResult> =
         send(

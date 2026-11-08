@@ -241,6 +241,9 @@ private fun StatusBody(state: StatusUi, status: NodeStatus, actions: StatusActio
                     trailing = if (state.canApprove) KitRowTrailing.None else KitRowTrailing.Chevron,
                     onClick = if (state.canApprove) null else actions::setUpApproval,
                 )
+                if (state.phoneNode) {
+                    KitRow(title = stringResource(Res.string.fbNodeTitle), trailing = KitRowTrailing.Chevron, onClick = actions::openPhoneNode)
+                }
             }
         }
         item("details") {

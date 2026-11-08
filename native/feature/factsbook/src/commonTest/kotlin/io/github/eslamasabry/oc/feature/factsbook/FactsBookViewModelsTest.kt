@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderEditViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
+import io.github.eslamasabry.oc.feature.factsbook.presentation.PhoneNodeViewModel
 import io.github.eslamasabry.oc.engine.factsbook.ProposalDecision
 import io.github.eslamasabry.oc.engine.factsbook.RuleProblem
 import io.github.eslamasabry.oc.engine.factsbook.TriggerSourceKind
@@ -64,13 +66,15 @@ class FactsBookViewModelsTest {
     }
 
     @Test
-    fun `B-FB-021 unpaired the section offers Set up FactsBook and it opens Connect`() = runTest {
+    fun `B-FB-021 unpaired the section offers Set up FactsBook, memory on this phone where Linux exists and Connect elsewhere`() = runTest {
         val vm = MemorySectionViewModel(FakeAccess(paired = false), nav, FixedClock())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.loaded }
         assertFalse(state.paired)
         vm.setUp()
-        assertEquals(listOf<Any>(FactsBookRoute.Connect), nav.opened)
+        val noLinux = MemorySectionViewModel(FakeAccess(paired = false).apply { nodeHost.supportedHere = false }, nav, FixedClock())
+        noLinux.setUp()
+        assertEquals(listOf<Any>(FactsBookRoute.PhoneNode, FactsBookRoute.Connect), nav.opened)
     }
 
     @Test
@@ -343,5 +347,45 @@ class FactsBookViewModelsTest {
         vm.notNow(state.offers.single())
         vm.state.first { it.working.isEmpty() && access.node.asked.contains("POST /v1/offers/off_1/cancel") }
         assertEquals(1, access.node.asked.count { it == "POST /v1/reminder-proposals/rpr_1/decision" })
+    }
+
+    private val pairAnswer =
+        """{"token":"t2","client_id":"cli_9","scopes":["read","write","admin","owner"],"vault":"v9","root_fingerprint":"fp9","node":"n9"}"""
+
+    @Test
+    fun `B-FB-073 setting up memory on this phone installs, starts, pairs with this phone's key and lands in Add something`() = runTest {
+        val access = FakeAccess(paired = false)
+        access.backgroundScope = backgroundScope
+        access.pairNode.on("GET /v1/info", "{}")
+        access.pairNode.on("POST /v1/pair", pairAnswer)
+        val vm = PhoneNodeViewModel(access, nav)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.state.first { it.node.state == PhoneNodeState.NotInstalled }
+        vm.runHere()
+        vm.state.first { it.node.state == PhoneNodeState.Running && !it.node.busy }
+        assertEquals(listOf("install", "vault", "start", "pair 64"), access.nodeHost.steps)
+        val link = access.engine.state.value.link!!
+        assertEquals("http://127.0.0.1:8787", link.baseUrl)
+        assertEquals("dev_9", link.ownerDeviceId)
+        assertTrue(access.engine.state.value.canApprove)
+        assertEquals(FactsBookRoute.Capture, nav.opened.last())
+    }
+
+    @Test
+    fun `B-FB-074 a memory the person stopped is not started again when the app opens, and one they did not stop is`() = runTest {
+        val access = FakeAccess(paired = false)
+        access.pairNode.on("GET /v1/info", "{}")
+        access.pairNode.on("POST /v1/pair", pairAnswer)
+        access.engine.open("p1")
+        access.phoneNode.runHere()
+        access.phoneNode.stop()
+        assertEquals(PhoneNodeState.Stopped, access.phoneNode.status.value.state)
+        access.nodeHost.steps.clear()
+        access.phoneNode.ensureRunning()
+        assertFalse("start" in access.nodeHost.steps)
+        access.store.setNodeStopped(false)
+        access.phoneNode.ensureRunning()
+        assertTrue("start" in access.nodeHost.steps)
+        assertEquals(PhoneNodeState.Running, access.phoneNode.status.value.state)
     }
 }

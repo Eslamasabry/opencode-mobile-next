@@ -56,4 +56,7 @@ public sealed interface FactsBookRoute : AppRoute {
 
     /** "What happened to this message" for one event. */
     @Serializable public data class Event(val id: String) : FactsBookRoute
+
+    /** Memory on this phone: FactsBook inside the built-in Linux. */
+    @Serializable public data object PhoneNode : FactsBookRoute
 }

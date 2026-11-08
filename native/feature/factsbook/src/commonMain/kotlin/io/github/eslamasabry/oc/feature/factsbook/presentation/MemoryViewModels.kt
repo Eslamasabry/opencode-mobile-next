@@ -105,7 +105,8 @@ public class MemorySectionViewModel(
             nowMs = clock.now().toEpochMilliseconds(),
         )
 
-    override fun setUp(): Unit = nav.open(FactsBookRoute.Connect)
+    /** On a phone with the built-in Linux the first-run path is memory on this phone (F: memory_section.dart). */
+    override fun setUp(): Unit = nav.open(if (access.phoneNode.supported) FactsBookRoute.PhoneNode else FactsBookRoute.Connect)
 
     override fun openAboutYou(): Unit = nav.open(FactsBookRoute.AboutYou)
 

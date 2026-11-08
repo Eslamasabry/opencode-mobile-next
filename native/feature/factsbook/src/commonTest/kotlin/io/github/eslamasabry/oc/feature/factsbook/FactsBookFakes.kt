@@ -11,7 +11,13 @@ import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookHttp
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookOutboxStore
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookSigning
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookNodeHost
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookPhoneNode
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookStore
+import io.github.eslamasabry.oc.engine.factsbook.NodeHostFacts
+import io.github.eslamasabry.oc.engine.factsbook.NodePairing
+import io.github.eslamasabry.oc.engine.factsbook.NodeStep
+import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.engine.factsbook.FbHttpResult
 import io.github.eslamasabry.oc.engine.factsbook.HttpFactsBookGateway
 import io.github.eslamasabry.oc.feature.factsbook.presentation.FactsBookAccess
@@ -183,7 +189,7 @@ internal class FakeAccess(
     val secrets: MemorySecrets = MemorySecrets(if (paired) mapOf("oc.factsbook.p1" to "t") else emptyMap()),
 ) : FactsBookAccess {
     val kv = MemoryKv(if (paired) mapOf("oc.factsbookNode.p1" to PrefValue.Str(if (owner) OWNER_LINK else LINK)) else emptyMap())
-    private val store = FactsBookStore(kv, secrets, WriterLane("app"))
+    val store = FactsBookStore(kv, secrets, WriterLane("app"))
     val pairNode = FakeNode()
 
     override val engine: FactsBookEngine =
@@ -209,4 +215,65 @@ internal class FakeAccess(
     }
 
     override fun pairingGateway(baseUrl: String): HttpFactsBookGateway = HttpFactsBookGateway(pairNode, null)
+
+    val nodeHost = FakeNodeHost()
+
+    override val phoneNode: FactsBookPhoneNode =
+        FactsBookPhoneNode(engine, nodeHost, store, ::pairingGateway, { "Europe/London" }, probeDelay = kotlin.time.Duration.ZERO, linuxWaitDelay = kotlin.time.Duration.ZERO)
+
+    /** Tests run the work where they can wait for it. */
+    var backgroundScope: kotlinx.coroutines.CoroutineScope? = null
+
+    override fun background(work: suspend () -> Unit) {
+        backgroundScope?.launch { work() }
+    }
+}
+
+/** The built-in Linux as a script: each step answers what [facts] says; [steps] records what was asked. */
+internal class FakeNodeHost : FactsBookNodeHost {
+    var facts = NodeHostFacts(linuxReady = true, binaryAvailable = true)
+    val steps = mutableListOf<String>()
+    var pairing: NodeStep<NodePairing> = NodeStep.Done(NodePairing("123456", "dev_9"))
+    var supportedHere = true
+    override val supported: Boolean get() = supportedHere
+    override val address: String = "127.0.0.1:8787"
+
+    override suspend fun inspect(): NodeStep<NodeHostFacts> = NodeStep.Done(facts)
+
+    override suspend fun installBinary(): NodeStep<Unit> {
+        steps += "install"
+        facts = facts.copy(binaryInstalled = true)
+        return NodeStep.Done(Unit)
+    }
+
+    override suspend fun createVault(): NodeStep<Unit> {
+        steps += "vault"
+        facts = facts.copy(dataExists = true)
+        return NodeStep.Done(Unit)
+    }
+
+    override suspend fun startNode(): NodeStep<Unit> {
+        steps += "start"
+        facts = facts.copy(serviceRunning = true)
+        return NodeStep.Done(Unit)
+    }
+
+    override suspend fun stopNode(): NodeStep<Unit> {
+        steps += "stop"
+        facts = facts.copy(serviceRunning = false)
+        return NodeStep.Done(Unit)
+    }
+
+    override suspend fun pairingCode(ownerKeyHex: String): NodeStep<NodePairing> {
+        steps += "pair ${ownerKeyHex.length}"
+        return pairing
+    }
+
+    override suspend fun log(): String = "node log"
+
+    override suspend fun removeData(): NodeStep<Unit> {
+        steps += "remove"
+        facts = facts.copy(dataExists = false, serviceRunning = false)
+        return NodeStep.Done(Unit)
+    }
 }

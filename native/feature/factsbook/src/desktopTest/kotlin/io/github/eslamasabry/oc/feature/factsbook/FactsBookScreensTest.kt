@@ -95,6 +95,15 @@ import io.github.eslamasabry.oc.feature.factsbook.ui.EventScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.RuleEditorScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.TriggersScreen
 import kotlinx.collections.immutable.persistentMapOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.engine.factsbook.NodeHostFacts
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeStatus
+import io.github.eslamasabry.oc.feature.factsbook.presentation.PhoneNodeActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.PhoneNodeUi
+import io.github.eslamasabry.oc.feature.factsbook.ui.PhoneNodeScreen
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
@@ -353,6 +362,7 @@ class FactsBookScreensTest {
         override fun openAreas() { calls += "areas" }
         override fun openTriggers() { calls += "triggers" }
         override fun dismiss() { calls += "dismiss" }
+        override fun openPhoneNode() { calls += "phoneNode" }
     }
 
     @Test
@@ -523,5 +533,53 @@ class FactsBookScreensTest {
         onNodeWithText("No rule matched this message.").assertExists()
         onNodeWithText("Sender (a claim)").assertExists()
         onNodeWithText("Unverified sender", substring = true).assertExists()
+    }
+
+    private class Node : PhoneNodeActions {
+        val calls = mutableListOf<String>()
+        override fun back() { calls += "back" }
+        override fun runHere() { calls += "run" }
+        override fun start() { calls += "start" }
+        override fun stop() { calls += "stop" }
+        override fun restart() { calls += "restart" }
+        override fun askRemove() { calls += "askRemove" }
+        override fun remove() { calls += "remove" }
+        override fun cancelRemove() { calls += "cancelRemove" }
+        override fun showLog() { calls += "log" }
+        override fun openCapture() { calls += "capture" }
+        override fun setUpPhone() { calls += "setUpPhone" }
+        override fun ownServer() { calls += "ownServer" }
+        override fun dismiss() { calls += "dismiss" }
+    }
+
+    @Test
+    fun `B-FB-075 memory on this phone offers one button to set it up and says plainly when Linux comes first`() = runComposeUiTest {
+        val actions = Node()
+        var ui by mutableStateOf(PhoneNodeUi(PhoneNodeStatus(PhoneNodeState.NotInstalled)))
+        setContent { Themed { PhoneNodeScreen(ui, actions) } }
+        onNodeWithText("Memory not installed yet").assertExists()
+        onNodeWithText("Set up memory on this phone").performClick()
+        ui = PhoneNodeUi(PhoneNodeStatus(PhoneNodeState.LinuxNotSetUp))
+        onNodeWithText("Set up phone first").assertExists()
+        onNodeWithText("Set up this phone").performClick()
+        assertEquals(listOf("run", "setUpPhone"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-076 a running memory offers Stop and Restart and removing it asks first with what is lost`() = runComposeUiTest {
+        val actions = Node()
+        setContent {
+            Themed {
+                PhoneNodeScreen(
+                    PhoneNodeUi(PhoneNodeStatus(PhoneNodeState.Running, facts = NodeHostFacts(linuxReady = true, dataExists = true)), confirmRemove = true),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Memory is running here", useUnmergedTree = true).assertExists()
+        onNodeWithText("Remove memory from phone?").assertExists()
+        onNodeWithText("Every note, fact and reminder Memory holds here", substring = true).assertExists()
+        onNodeWithText("Remove memory from this phone").performClick()
+        assertEquals(listOf("remove"), actions.calls)
     }
 }
