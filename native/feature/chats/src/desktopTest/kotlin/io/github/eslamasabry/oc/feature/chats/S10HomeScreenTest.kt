@@ -114,9 +114,10 @@ class S10HomeScreenTest {
         }
 
     @Test
-    fun `A1-HOME-07 the rows lie on a grouped panel in every look, Solid included`() =
+    fun `A1-HOME-07 the rows lie on a grouped panel in Solid too, whose lists used to run flat`() {
+        // Soft's panels share the page's colour (only their shadows lift them), so the fill is told apart in Solid.
+        val style = Style.Solid
         runDesktopComposeUiTest(360, 1200) {
-            for (style in listOf(Style.Solid, Style.Soft)) {
                 home(mixed(), style = style)
                 val image = onRoot().captureToImage().toAwtImage()
                 val last = onNode(hasContentDescriptionContaining("Write the notes")).getBoundsInRoot()
@@ -127,14 +128,15 @@ class S10HomeScreenTest {
                 // Outside the panel, in the page gutter: the page.
                 assertEquals(ground, image.getRGB(4, y), "$style: the panel reaches into the page gutter")
             }
-        }
+    }
 
     @Test
     fun `E20-S24 P-107 the last row scrolls clear of the New conversation button with 16 dp to spare`() =
         runDesktopComposeUiTest(360, 640) {
             home(mixed(extra = 12))
             val list = SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo)
-            val lastTitle = "Older conversation 11"
+            // A1: the list ends with All conversations under the five Recent rows.
+            val lastTitle = "All conversations"
             onNode(list).performScrollToNode(hasContentDescriptionContaining(lastTitle))
             onNode(list).performTouchInput { swipeUp() }
             waitForIdle()
