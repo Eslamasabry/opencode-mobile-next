@@ -165,97 +165,107 @@ internal fun kitGlassSheet(shape: io.github.eslamasabry.oc.ui.design.tokens.KitS
 }
 
 /** The Glass pane's face (Dart `_KitSurfacePainter.paint`): shadows outside it, then the tint, the glow and the rim. */
-internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier =
-    drawBehind {
-        // A pane laid out at zero size (a fold or grow animation's first frame) draws nothing.
-        if (size.width <= 0f || size.height <= 0f) return@drawBehind
-        val shape = d.shape()
-        val outline = shape.createOutline(size, layoutDirection, this)
-        val rtl = layoutDirection == LayoutDirection.Rtl
-        val sign = if (rtl) -1f else 1f
-        // Shadows fall only outside the surface, so a clear pane is never darkened by its own shadow
-        // (kit_surface_paint.dart:32-43).
-        val raisedPaired = d.paired?.let { it.inset <= 0f && (it.distanceDp > 0f || it.blurDp > 0f) } == true
-        val hard = d.hardShadow?.let { it.alpha > 0 } == true && d.hardOffsetDp > 0f
-        if (d.shadows.any { it.color.alpha > 0 } || raisedPaired || hard) {
-            val face = Path().apply { addOutline(outline) }
-            clipPath(face, ClipOp.Difference) {
-                d.hardShadow?.let { hs ->
-                    if (d.hardOffsetDp > 0f) {
-                        val o = d.hardOffsetDp.dp.toPx()
-                        translate(o * sign, o) { drawOutline(outline, Color(hs.v)) }
-                    }
-                }
-                d.shadows.forEach { s -> if (s.color.alpha > 0) drawSurfaceShadow(s, shape, sign) }
-                d.paired?.let { p ->
-                    if (raisedPaired) {
-                        drawSurfaceShadow(io.github.eslamasabry.oc.ui.design.style.Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light), shape, sign)
-                        drawSurfaceShadow(io.github.eslamasabry.oc.ui.design.style.Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark), shape, sign)
-                    }
+internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier = drawBehind { drawGlassFace(d) }
+
+/** [kitGlassFace]'s painting, for a face drawn inside another box (a chosen row's inset face). */
+internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
+    // A pane laid out at zero size (a fold or grow animation's first frame) draws nothing.
+    if (size.width <= 0f || size.height <= 0f) return
+    val shape = d.shape()
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val rtl = layoutDirection == LayoutDirection.Rtl
+    val sign = if (rtl) -1f else 1f
+    // Shadows fall only outside the surface, so a clear pane is never darkened by its own shadow
+    // (kit_surface_paint.dart:32-43).
+    val raisedPaired = d.paired?.let { it.inset <= 0f && (it.distanceDp > 0f || it.blurDp > 0f) } == true
+    val hard = d.hardShadow?.let { it.alpha > 0 } == true && d.hardOffsetDp > 0f
+    if (d.shadows.any { it.color.alpha > 0 } || raisedPaired || hard) {
+        val face = Path().apply { addOutline(outline) }
+        clipPath(face, ClipOp.Difference) {
+            d.hardShadow?.let { hs ->
+                if (d.hardOffsetDp > 0f) {
+                    val o = d.hardOffsetDp.dp.toPx()
+                    translate(o * sign, o) { drawOutline(outline, Color(hs.v)) }
                 }
             }
-        }
-        val topStart = Offset(if (rtl) size.width else 0f, 0f)
-        val bottomEnd = Offset(if (rtl) 0f else size.width, size.height)
-        // The tint, lit at its top start and plain from 70 % of the way across (kit_surface_paint.dart:75-90).
-        val fill = d.fill
-        if (fill != null) {
-            val start = d.fillStart ?: fill
-            if (start == fill) {
-                if (fill.alpha > 0) drawOutline(outline, Color(fill.v))
-            } else if (fill.alpha > 0 || start.alpha > 0) {
-                drawOutline(
-                    outline,
-                    Brush.linearGradient(
-                        0f to Color(start.v),
-                        .7f to Color(fill.v), // FG: lib/ui/kit/kit_surface_paint.dart:86
-                        start = topStart,
-                        end = bottomEnd,
-                    ),
-                )
-            }
-        }
-        // The glow inside the face along its top edge, fading out innerGlowDepth down (kit_surface_paint.dart:92-106).
-        if (d.innerGlow.alpha > 0) {
-            val depth = SurfaceDecoration.INNER_GLOW_DEPTH_DP.dp.toPx().coerceIn(0f, size.height / 2f)
-            if (depth > 0f) {
-                val glow = Color(d.innerGlow.v)
-                drawOutline(outline, Brush.verticalGradient(listOf(glow, glow.copy(alpha = 0f)), startY = 0f, endY = depth))
-            }
-        }
-        // Pressed in (a fade from Soft): as kitDecorated draws it.
-        d.paired?.let { p ->
-            if (p.inset > 0f) {
-                val w = (p.distanceDp.coerceAtLeast(1.5f)).dp.toPx()
-                drawOutline(outline, Brush.linearGradient(listOf(Color(p.dark.v), Color.Transparent, Color(p.light.v))), style = Stroke(w))
-            }
-        }
-        // The rim, fading from the top start to the bottom end, inside the face (kit_surface_paint.dart:132-144).
-        if (d.edgeWidthDp > 0f) {
-            val s = d.edgeStart ?: d.edgeEnd
-            val e = d.edgeEnd ?: d.edgeStart
-            if (s != null && e != null && (s.alpha > 0 || e.alpha > 0)) {
-                val w = d.edgeWidthDp.dp.toPx()
-                // The rim is inset by half its width: a pane narrower than the rim has no inside to draw it in.
-                if (size.width > w && size.height > w) inset(w / 2f) {
-                    val rim = shape.createOutline(size, layoutDirection, this)
-                    if (s == e) {
-                        drawOutline(rim, Color(s.v), style = Stroke(w))
-                    } else {
-                        drawOutline(
-                            rim,
-                            Brush.linearGradient(
-                                listOf(Color(s.v), Color(e.v)),
-                                start = Offset(if (rtl) size.width else 0f, 0f),
-                                end = Offset(if (rtl) 0f else size.width, size.height),
-                            ),
-                            style = Stroke(w),
-                        )
-                    }
+            d.shadows.forEach { s -> if (s.color.alpha > 0) drawSurfaceShadow(s, shape, sign) }
+            d.paired?.let { p ->
+                if (raisedPaired) {
+                    drawSurfaceShadow(io.github.eslamasabry.oc.ui.design.style.Shadow(-p.distanceDp, -p.distanceDp, p.blurDp, p.light), shape, sign)
+                    drawSurfaceShadow(io.github.eslamasabry.oc.ui.design.style.Shadow(p.distanceDp, p.distanceDp, p.blurDp, p.dark), shape, sign)
                 }
             }
         }
     }
+    val topStart = Offset(if (rtl) size.width else 0f, 0f)
+    val bottomEnd = Offset(if (rtl) 0f else size.width, size.height)
+    // The tint, lit at its top start and plain from 70 % of the way across (kit_surface_paint.dart:75-90).
+    val fill = d.fill
+    if (fill != null) {
+        val start = d.fillStart ?: fill
+        if (start == fill) {
+            if (fill.alpha > 0) drawOutline(outline, Color(fill.v))
+        } else if (fill.alpha > 0 || start.alpha > 0) {
+            drawOutline(
+                outline,
+                Brush.linearGradient(
+                    0f to Color(start.v),
+                    .7f to Color(fill.v), // FG: lib/ui/kit/kit_surface_paint.dart:86
+                    start = topStart,
+                    end = bottomEnd,
+                ),
+            )
+        }
+    }
+    // A clear pane's top sheen (owner 2026-11-08, "more glossy"): lighter at the top, gone 30 % of the way down.
+    if (d.sheen.alpha > 0) {
+        val sheen = Color(d.sheen.v)
+        drawOutline(
+            outline,
+            Brush.verticalGradient(listOf(sheen, sheen.copy(alpha = 0f)), startY = 0f, endY = size.height * SurfaceDecoration.SHEEN_SHARE),
+        )
+    }
+    // The glow inside the face along its top edge, fading out innerGlowDepth down (kit_surface_paint.dart:92-106).
+    if (d.innerGlow.alpha > 0) {
+        val depth = SurfaceDecoration.INNER_GLOW_DEPTH_DP.dp.toPx().coerceIn(0f, size.height / 2f)
+        if (depth > 0f) {
+            val glow = Color(d.innerGlow.v)
+            drawOutline(outline, Brush.verticalGradient(listOf(glow, glow.copy(alpha = 0f)), startY = 0f, endY = depth))
+        }
+    }
+    // Pressed in (a fade from Soft): as kitDecorated draws it.
+    d.paired?.let { p ->
+        if (p.inset > 0f) {
+            val w = (p.distanceDp.coerceAtLeast(1.5f)).dp.toPx()
+            drawOutline(outline, Brush.linearGradient(listOf(Color(p.dark.v), Color.Transparent, Color(p.light.v))), style = Stroke(w))
+        }
+    }
+    // The rim, fading from the top start to the bottom end, inside the face (kit_surface_paint.dart:132-144).
+    if (d.edgeWidthDp > 0f) {
+        val s = d.edgeStart ?: d.edgeEnd
+        val e = d.edgeEnd ?: d.edgeStart
+        if (s != null && e != null && (s.alpha > 0 || e.alpha > 0)) {
+            val w = d.edgeWidthDp.dp.toPx()
+            // The rim is inset by half its width: a pane narrower than the rim has no inside to draw it in.
+            if (size.width > w && size.height > w) inset(w / 2f) {
+                val rim = shape.createOutline(size, layoutDirection, this)
+                if (s == e) {
+                    drawOutline(rim, Color(s.v), style = Stroke(w))
+                } else {
+                    drawOutline(
+                        rim,
+                        Brush.linearGradient(
+                            listOf(Color(s.v), Color(e.v)),
+                            start = Offset(if (rtl) size.width else 0f, 0f),
+                            end = Offset(if (rtl) 0f else size.width, size.height),
+                        ),
+                        style = Stroke(w),
+                    )
+                }
+            }
+        }
+    }
+}
 
 /**
  * Records [block] into [layer] in the layer's own draw scope, with a snapshot of this scope's density, direction and

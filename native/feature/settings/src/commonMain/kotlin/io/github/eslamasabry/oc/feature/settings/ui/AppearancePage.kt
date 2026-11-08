@@ -39,7 +39,6 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegmented
-import io.github.eslamasabry.oc.ui.kit.icon.KitPixelIcons
 import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
 import io.github.eslamasabry.oc.ui.kit.choice.KitStepSlider
 import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
@@ -202,7 +201,7 @@ private fun ColumnScope.AppearanceControls(
         Box(gutter) {
             // s33 theme-switch-premium plan step 3: the mode control slides, rims and morphs its pixel icons.
             KitModeSegmented(
-                segments = AppearanceMode.entries.map { KitModeSegment(it, modeWords(it), KitPixelIcons.of(it)) },
+                segments = AppearanceMode.entries.map { KitModeSegment(it, modeWords(it), icon = modeIcon(it)) },
                 selected = ui.mode,
                 semanticsLabel = stringResource(Res.string.appearanceAskMode),
                 modifier = Modifier.testTag("appearance-mode"),
@@ -651,3 +650,10 @@ internal fun strengthWords(strength: LiveStrength): String =
             LiveStrength.Bold -> Res.string.liveIntensityBold
         }
     )
+
+private fun modeIcon(mode: AppearanceMode) = when (mode) {
+    AppearanceMode.System -> KitIcons.systemTheme
+    AppearanceMode.Light -> KitIcons.lightMode
+    AppearanceMode.Dark -> KitIcons.darkMode
+    AppearanceMode.Saver -> KitIcons.leaf
+}

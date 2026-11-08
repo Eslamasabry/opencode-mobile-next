@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -47,7 +48,6 @@ import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Paint
@@ -85,8 +85,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
-import io.github.eslamasabry.oc.ui.kit.theme.KitHct
-import io.github.eslamasabry.oc.ui.kit.theme.ThemeSwitchColorRules
 
 /*
  * Glass's liquid edges (docs/designs/liquid-glass.md; owner 2026-11-08 "go full blown glass"), drawn by
@@ -94,12 +92,12 @@ import io.github.eslamasabry.oc.ui.kit.theme.ThemeSwitchColorRules
  * its liquid face and gets a modifier, or null, and then keeps exactly the face it draws today. Null whenever:
  * - FrostPolicy holds the edges (Saver, reduced motion, high contrast, a style other than Glass, frost Off, "Glass
  *   edges: Frosted", or no runtime shaders: Android below 13, desktop for now);
- * - the window's budget gives the part no room ([LiquidEdge.grant]; the lowest drop to frost first);
+ * (beyond the window's budget, [LiquidEdge.grant], a part keeps its liquid face's shape and rim as frost, never solid);
  * - the part's shape is not a rounded kit shape (the lens bends rounded rectangles only).
  *
  * The face: the content behind (a source's recording) pressed together in contrast, blurred a little, bent only inside a
  * rim of min(12 dp, 20 % of the shorter side) with no depth effect and no dispersion, under today's Glass tint and words
- * plate thickened by GlassFinish ([LiquidEdge.face]), with a soft rim light tinted from the accent ([LiquidRim]).
+ * tint thickened until its words read ([LiquidEdge.face]), with a soft white rim light ([LiquidRim]).
  *
  * Sources: a feature's [KitFrostState] (the transcript behind the chat's chrome, a list under its +), or a kit-owned
  * [KitLiquidSource] (the page under a sheet or a menu, a page body under its bar) that records only while a granted pane
@@ -134,6 +132,9 @@ public fun kitLiquidGlassOn(): Boolean = kitLiquidOn()
 @Stable
 public class KitLiquidSource internal constructor(internal val layer: GraphicsLayer) {
     internal var coordinates: LayoutCoordinates? = null
+
+    /** Each liquid role's ink flip over this content (see `KitFrostState.liquidFlips`). */
+    internal val liquidFlips: MutableMap<Any, LiquidFlip> = HashMap()
     internal var users: Int by mutableIntStateOf(0)
     internal var version: Int = 0
 }
@@ -205,11 +206,18 @@ private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boo
  * grow-in; 0 at rest, 1 fully): the lens and its rim light fade into plain frost as it rises, so nothing misaligns.
  */
 @Composable
-public fun kitLiquidFace(role: LiquidRole, source: KitFrostState?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
+public fun kitLiquidFace(
+    role: LiquidRole,
+    source: KitFrostState?,
+    shape: Shape,
+    transform: () -> Float = NoTransform,
+    /** A chosen or "on" part (an active chip): its glass leans to the accent, as Glass's chosen panes do. */
+    chosen: Boolean = false,
+): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
-    return liquidFace(role, source, backdrop, shape, transform)
+    return liquidFace(role, source, backdrop, shape, transform, chosen)
 }
 
 /** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
@@ -251,84 +259,132 @@ internal object LiquidMotion {
 }
 
 @Composable
-private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdrop?, shape: Shape, transform: () -> Float): Modifier? {
+private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdrop?, shape: Shape, transform: () -> Float, chosen: Boolean = false): Modifier? {
     val on = kitLiquidOn() && backdrop != null
     val shaped = liquidShapeOk(shape)
     // Only rounded kit shapes reach the lens; a square one falls back quietly, anything else is a kit bug.
     kitAssert(!on || shaped || shape === RectangleShape) { "kitLiquidFace: $role's shape is not a rounded kit shape ($shape)" }
-    val granted = kitLiquidClaim(role, source, on && shaped)
+    val asking = on && shaped
+    val granted = kitLiquidClaim(role, source, asking)
     val users = source as? KitLiquidSource
     if (users != null) {
-        DisposableEffect(users, granted) {
-            if (granted) users.users++
-            onDispose { if (granted) users.users-- }
+        DisposableEffect(users, asking) {
+            if (asking) users.users++
+            onDispose { if (asking) users.users-- }
         }
     }
-    if (!granted || backdrop == null) return null
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, transform)
+    if (!asking || backdrop == null) return null
+    // Beyond the window's budget a part is frost of the same shape through the same glass (the lens let go, the rim
+    // kept), never its solid face: nothing changes shape or flickers as a menu or sheet opens (owner 2026-11-08).
+    val face = if (granted) transform else HeldFrost
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted)
 }
 
+/** A claim beyond the budget: all frost, no lens. */
+private val HeldFrost: () -> Float = { 1f }
+
+/**
+ * The ink flip [role]'s pane over [source] shares with the words beside it (a bar's words lie beside its capsule): one
+ * per source and role, so the face and the words always flip together.
+ */
+internal fun liquidFlipFor(source: Any?, role: LiquidRole): LiquidFlip? =
+    when (source) {
+        is KitFrostState -> source.liquidFlips.getOrPut(role) { LiquidFlip() }
+        is KitLiquidSource -> source.liquidFlips.getOrPut(role) { LiquidFlip() }
+        else -> null
+    }
+
 @Composable
-private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float): Modifier {
+private fun Modifier.liquidPane(
+    role: LiquidRole,
+    backdrop: KitLiquidBackdrop,
+    shape: CornerBasedShape,
+    transform: () -> Float,
+    shared: LiquidFlip?,
+    chosen: Boolean,
+    keepRim: Boolean = false,
+): Modifier {
+    val own = remember { LiquidFlip() }
+    val flip = shared ?: own
     val roles = LocalKitRoles.current
     val platform = LocalKitPlatform.current
+    val appearance = LocalKitAppearance.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val spec =
-        remember(roles, role, rtl) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim) {
+            // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
+            // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
+            // face to the other theme's face, which carries that ink there.
+            val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
             val face = LiquidEdge.face(roles, role)
-            val fill = face.fill?.let { Color(it.v) } ?: Color.Transparent
+            val otherFace = LiquidEdge.face(other, role)
+            // A chosen part's glass leans to the accent and holds a little more (GlassSpec's chosen tint and lift).
+            fun lean(c: Color, dark: Boolean): Color {
+                if (!chosen) return c
+                val theme = if (dark == roles.dark) roles else other
+                val opaque = io.github.eslamasabry.oc.ui.design.color.Argb(c.copy(alpha = 1f).toArgb())
+                return Color(GlassSpec.chosenTintOf(theme, opaque).v).copy(alpha = minOf(1f, c.alpha + GlassSpec.CHOSEN_LIFT))
+            }
+            val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, roles.dark)
             val recipe = LiquidEdge.recipe(role, roles.dark)
+            val rim = LiquidRim.Light
             KitLiquidPaneSpec(
                 recipe = recipe,
                 fill = fill,
-                fillStart = face.fillStart?.let { Color(it.v) } ?: fill,
+                fillStart = face.fillStart?.let { lean(Color(it.v), roles.dark) } ?: fill,
                 rtl = rtl,
-                rim = LiquidRim.of(Color(roles.accent.v).copy(alpha = 1f), roles.dark)
-                    .copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT),
+                rim = rim.copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT),
                 rimAdds = roles.dark,
                 rimDp = RIM_LIGHT_DP,
                 shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
                 frostBlurDp = GlassSpec.FLOAT_FROST,
+                sheen = Color(face.sheen.v),
+                specular = rim.copy(alpha = if (roles.dark) SPECULAR_ALPHA_DARK else SPECULAR_ALPHA_LIGHT),
+                flipFill = otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                flipFillStart = (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                flipSheen = Color(otherFace.sheen.v),
+                flip = flip,
+                keepRim = keepRim,
             )
         }
-    val words = kitLiquidWords(role, backdrop)
+    val words = kitLiquidWords(backdrop, flip)
     val latest by rememberUpdatedState(transform)
     return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
 }
 
 /**
- * What the words on a [role] pane over [backdrop] are drawn with: the theme's own plate and ink, and the opposite
- * theme's plate and ink the pane flips to over content of the other brightness ([LiquidInkRule]).
+ * What the words on a liquid pane over [backdrop] are drawn with: the theme's own ink, and the opposite theme's ink the
+ * pane flips to over content of the other brightness ([LiquidInkRule]). No plate behind them (owner 2026-11-08: "get
+ * rid of the stupid haze behind the text"): the face's tint and blur carry them ([LiquidEdge.face]).
  */
 @Composable
-internal fun kitLiquidWords(role: LiquidRole, backdrop: KitLiquidBackdrop?): KitLiquidWords {
+internal fun kitLiquidWords(backdrop: KitLiquidBackdrop?, flip: LiquidFlip?): KitLiquidWords {
     val roles = LocalKitRoles.current
     val appearance = LocalKitAppearance.current
-    return remember(roles, role, backdrop, appearance.pack, appearance.accent) {
+    return remember(roles, backdrop, appearance.pack, appearance.accent, flip) {
         val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
         KitLiquidWords(
-            plate = Color(LiquidEdge.wordsPlate(roles, role).v),
-            flipPlate = Color(LiquidEdge.wordsPlate(other, role).v),
             flipInk = Color(other.text1.v),
             themeInk = LiquidInkRule.of(roles.dark),
             backdrop = backdrop,
+            flip = flip ?: LiquidFlip(),
         )
     }
 }
 
-/** The words' plates and inks on one liquid pane (see [kitLiquidWords]). */
+/** The words' inks on one liquid pane (see [kitLiquidWords]). */
 @Immutable
 internal data class KitLiquidWords(
-    val plate: Color,
-    val flipPlate: Color,
     val flipInk: Color,
     val themeInk: LiquidInk,
     val backdrop: KitLiquidBackdrop?,
+    /** Shared with the pane's face, which flips with the words. */
+    val flip: LiquidFlip,
 )
 
 /**
- * Marks a liquid pane for the words on it: each KitText inside lies on its plate ([kitWordsPlate]); with a backdrop,
- * the pane samples the content under it and flips its words' ink over content of the other brightness.
+ * Marks a liquid pane for the words on it ([kitWordsPlate] on each KitText finds it): with a backdrop, the pane samples
+ * the content under it and flips its words' ink over content of the other brightness.
  */
 internal fun Modifier.kitLiquidPlateHost(words: KitLiquidWords): Modifier = this then PlateHostElement(words)
 
@@ -350,11 +406,8 @@ private class PlateHostNode(var words: KitLiquidWords) :
     Modifier.Node(), TraversableNode, GlobalPositionAwareModifierNode, androidx.compose.ui.node.CompositionLocalConsumerModifierNode {
     override val traverseKey: Any get() = LiquidPlateKey
 
-    /** 0: the theme's own ink and plate; 1: the flipped ones. */
-    val flip = Animatable(0f)
-
-    /** The plate's alpha multiplier: above 1 over busy content. */
-    var boost by mutableFloatStateOf(1f)
+    /** 0: the theme's own ink; 1: the flipped one (shared with the pane's face). */
+    val flip: Animatable<Float, androidx.compose.animation.core.AnimationVector1D> get() = words.flip.progress
 
     private var coordinates: LayoutCoordinates? = null
     private var ink: LiquidInk = words.themeInk
@@ -387,13 +440,12 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 // A sample the platform could not read back (empty or clear) says nothing about the content.
                 if (!platform.readPixels(layer.toImageBitmap(), pixels, w, h)) continue
                 if (pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
-                val (mean, variance) = LiquidInkRule.measure(pixels)
+                val (mean, _) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
                     ink = next
                     launch { flip.animateTo(if (next == words.themeInk) 0f else 1f, tween(LiquidInkRule.FLIP_MS)) }
                 }
-                boost = if (variance > LiquidInkRule.BUSY) LiquidInkRule.BUSY_PLATE else 1f
             }
         }
     }
@@ -409,9 +461,9 @@ private class PlateHostNode(var words: KitLiquidWords) :
 private const val SAMPLE_SCALE: Int = 8
 
 /**
- * The words plate (GlassSpec.plateFor, hook H10) behind a text on a liquid pane: a soft rounded plate just round the
- * words, at the alpha that keeps text1/2/3 at their contrast over any content behind the clear pane
- * (`LiquidEdge.wordsPlate`). Outside a liquid pane, and under every other style, it draws nothing.
+ * A text on a liquid pane: its ink cross-fades to the other theme's while the pane flips (adaptive glass). It draws no
+ * plate behind the words (owner 2026-11-08: no haze behind text anywhere). Outside a liquid pane, and under every other
+ * style, it draws the words alone.
  */
 public fun Modifier.kitWordsPlate(): Modifier = this then WordsPlateElement
 
@@ -449,23 +501,6 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
         val h = hostNow()
         val f = h?.flip?.value ?: 0f
         val words = h?.words
-        val plate =
-            if (h == null || words == null) null
-            else androidx.compose.ui.graphics.lerp(words.plate, words.flipPlate, f).let { p -> p.copy(alpha = (p.alpha * h.boost).coerceAtMost(1f)) }
-        if (plate != null && plate.alpha > 0f && size.width > 0f && size.height > 0f) {
-            val padX = WORDS_PLATE_PAD_X.dp.toPx()
-            val padY = WORDS_PLATE_PAD_Y.dp.toPx()
-            val feather = WORDS_PLATE_FEATHER.dp.toPx()
-            val r = WORDS_PLATE_RADIUS.dp.toPx()
-            // A soft edge round the plate, then the plate itself at its full alpha behind the words.
-            drawRoundRect(
-                plate.copy(alpha = plate.alpha * .4f),
-                Offset(-padX - feather, -padY - feather),
-                Size(size.width + 2 * (padX + feather), size.height + 2 * (padY + feather)),
-                androidx.compose.ui.geometry.CornerRadius(r + feather),
-            )
-            drawRoundRect(plate, Offset(-padX, -padY), Size(size.width + 2 * padX, size.height + 2 * padY), androidx.compose.ui.geometry.CornerRadius(r))
-        }
         if (words == null || f <= 0f) {
             drawContent()
             return
@@ -485,39 +520,27 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
     }
 }
 
-internal const val WORDS_PLATE_PAD_X: Float = 6f
-internal const val WORDS_PLATE_PAD_Y: Float = 2f
-internal const val WORDS_PLATE_FEATHER: Float = 3f
-internal const val WORDS_PLATE_RADIUS: Float = 10f
-
 /** The rim light's width (and its soft blur), in dp: a soft line, never a hairline. */
 internal const val RIM_LIGHT_DP: Float = 1.5f
 
-/** The rim light's strength over a dark theme (added light) and a light one (laid over). */
-internal const val RIM_ALPHA_DARK: Float = .45f
-internal const val RIM_ALPHA_LIGHT: Float = .60f
+/**
+ * The rim light's strength over a dark theme (added light) and a light one (laid over): soft white light (owner
+ * 2026-11-08: glass edges are a neutral white light, not accent-tinted; an HCT-pulled yellow accent read as blue-teal),
+ * low in a light theme where white on milk needs little.
+ */
+internal const val RIM_ALPHA_DARK: Float = .42f
+internal const val RIM_ALPHA_LIGHT: Float = .40f
+
+/** The specular highlight along a pane's top-start edge (the rim light's colour), strongest at the corner. */
+internal const val SPECULAR_ALPHA_DARK: Float = .55f
+internal const val SPECULAR_ALPHA_LIGHT: Float = .45f
 
 /**
- * The rim light's colour: the theme accent with its HCT hue pulled toward the s33 theme switch's night anchor in a dark
- * theme and its day anchor in a light one ([ThemeSwitchColorRules], one shared anchor for every rim light), at the liquid
- * rim's own fixed tone and a clamped, gentle chroma: a tint, never a neon line, never plain white. Before s33 landed
- * this was an OKLCH stand-in in :ui:design (RimLight, L .88 / .72, C .05-.12); the tones are those lightnesses as L*.
+ * The rim light's colour on every glass edge, liquid and frosted (panes, sheets, menus): neutral white light (owner
+ * 2026-11-08). The accent marks chosen states only (a chosen row's frost, the check, the chosen ring).
  */
 internal object LiquidRim {
-    const val DARK_TONE: Double = 86.0
-    const val LIGHT_TONE: Double = 68.0
-    const val MIN_CHROMA: Double = 16.0
-    const val MAX_CHROMA: Double = 36.0
-
-    /** Below this HCT chroma the accent is grey and has no hue of its own: the rim takes the anchor's. */
-    private const val GREY_CHROMA: Double = 1.0
-
-    fun of(accent: Color, dark: Boolean): Color {
-        val hct = KitHct.of(accent)
-        val anchor = if (dark) ThemeSwitchColorRules.NIGHT_HUE else ThemeSwitchColorRules.DAY_HUE
-        val hue = if (hct.chroma < GREY_CHROMA) anchor else ThemeSwitchColorRules.pullHue(hct.hue, anchor, ThemeSwitchColorRules.PULL)
-        return KitHct(hue, hct.chroma.coerceIn(MIN_CHROMA, MAX_CHROMA), if (dark) DARK_TONE else LIGHT_TONE).toColor()
-    }
+    val Light: Color = Color.White
 }
 
 /**
@@ -583,7 +606,7 @@ internal fun kitLiquidWordsHost(role: LiquidRole, source: KitFrostState?): Modif
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
-    return Modifier.kitLiquidPlateHost(kitLiquidWords(role, backdrop))
+    return Modifier.kitLiquidPlateHost(kitLiquidWords(backdrop, liquidFlipFor(source, role)))
 }
 
 /** The words of [role]'s liquid pane over a kit [source] (a page body under its bar). */
@@ -592,7 +615,7 @@ internal fun kitLiquidWordsHost(role: LiquidRole, source: KitLiquidSource?): Mod
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { liquidSourceBackdrop(it, ground, picture) } }
-    return Modifier.kitLiquidPlateHost(kitLiquidWords(role, backdrop))
+    return Modifier.kitLiquidPlateHost(kitLiquidWords(backdrop, liquidFlipFor(source, role)))
 }
 
 /** How much of the ground the edge fade reaches at the screen's edge. */

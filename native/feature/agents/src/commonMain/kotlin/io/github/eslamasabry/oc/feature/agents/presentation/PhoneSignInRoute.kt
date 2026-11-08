@@ -63,6 +63,8 @@ public class UnavailablePhoneSignIn : PhoneSignInFactory {
 
             override fun copyCode() = Unit
 
+            override fun paste(text: String) = Unit
+
             override fun send(line: String) = Unit
 
             override fun setAccessibleMode(on: Boolean) = Unit
@@ -94,6 +96,8 @@ public class PhoneSignInRouteViewModel(
     override fun openSignInPage(): Unit = controller.openSignInPage()
 
     override fun copyCode(): Unit = controller.copyCode()
+
+    override fun paste(text: String): Unit = controller.paste(text)
 
     override fun send(line: String): Unit = controller.send(line)
 

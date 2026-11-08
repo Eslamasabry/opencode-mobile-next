@@ -138,6 +138,16 @@ class FakeTerminalHost : TerminalHost {
     val closeGate = MutableStateFlow<Boolean?>(true)
     var closeFails = false
 
+    /** Set to make the start fail at this step (a host that tracks steps, like the phone's). */
+    var failAt: Pair<SignInStartStep, Failure>? = null
+
+    override suspend fun openSignIn(target: TerminalTarget): SignInOpen {
+        val (step, failure) = failAt ?: return super.openSignIn(target)
+        targets += target
+        calls += "sign-in ${(target as TerminalTarget.SignIn).command.program}"
+        return SignInOpen.Failed(step, failure)
+    }
+
     override suspend fun open(target: TerminalTarget): Outcome<TerminalModel> {
         targets += target
         calls += "sign-in ${(target as TerminalTarget.SignIn).command.program}"
