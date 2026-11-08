@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -231,5 +232,102 @@ class ThisPhoneModelTest {
             advanceTimeBy(30.seconds)
             runCurrent()
             assertEquals(AnswerLine.RestartsIn(AboutWait.Seconds(25)), rig.model.state.value.answer.line)
+        }
+
+    private class Details(initial: io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi) :
+        io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsSource {
+        override val state = kotlinx.coroutines.flow.MutableStateFlow(initial)
+        var historyReads = 0
+
+        override fun shown(visible: Boolean) = Unit
+
+        override suspend fun refresh() = Unit
+
+        override suspend fun refreshHistory(): Boolean {
+            historyReads++
+            return true
+        }
+
+        override suspend fun refreshLog() = Unit
+
+        override suspend fun connect(): io.github.eslamasabry.oc.core.common.Outcome<Unit> =
+            io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
+    }
+
+    private class Free(var uses: Boolean) : io.github.eslamasabry.oc.feature.phone.presentation.PhoneFreeModel {
+        var asked = 0
+        var opened = 0
+
+        override suspend fun inUse(): Boolean {
+            asked++
+            return uses
+        }
+
+        override fun addApiKey() {
+            opened++
+        }
+    }
+
+    @Test
+    fun `B-AGENT-110 a running server on the free model says so here with Add an API key`() =
+        runTest {
+            val free = Free(uses = true)
+            val details = Details(io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi(canConnect = false))
+            val server = FakeServer(runningFacts)
+            val model =
+                ThisPhoneModel(server, FakeSettings(), RecordingNav(), backgroundScope, testClock(), foregroundPacer(), phoneDetails = details, freeModel = free)
+            runCurrent()
+            assertFalse(model.state.value.freeModel) // not asked before the page shows
+            model.shown(true)
+            runCurrent()
+            assertTrue(model.state.value.freeModel)
+            model.addApiKey()
+            assertEquals(1, free.opened)
+            // Connected to another server: no notice (Flutter `_connectedHere`).
+            details.state.value = details.state.value.copy(canConnect = true)
+            runCurrent()
+            assertFalse(model.state.value.freeModel)
+            // A stopped server says nothing about its model.
+            details.state.value = details.state.value.copy(canConnect = false)
+            server.facts.value = PhoneServerFacts(status = installed, stoppedByPerson = true)
+            runCurrent()
+            assertFalse(model.state.value.freeModel)
+        }
+
+    @Test
+    fun `B-AGENT-110 a signed-in provider or another model shows no notice`() =
+        runTest {
+            val model =
+                ThisPhoneModel(
+                    FakeServer(runningFacts), FakeSettings(), RecordingNav(), backgroundScope, testClock(), foregroundPacer(),
+                    phoneDetails = Details(io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi()),
+                    freeModel = Free(uses = false),
+                )
+            model.shown(true)
+            runCurrent()
+            assertFalse(model.state.value.freeModel)
+        }
+
+    @Test
+    fun `AUDIT-445 a running server that is moving the chat history says so on the answer line`() =
+        runTest {
+            val moving =
+                io.github.eslamasabry.oc.feature.phone.presentation.PhoneHistoryInfo(
+                    io.github.eslamasabry.oc.feature.phone.presentation.PhoneHistoryPhase.Moving, done = 3, total = 10,
+                )
+            val details = Details(io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi(history = moving, memoryBytes = 1L shl 20))
+            val model =
+                ThisPhoneModel(FakeServer(runningFacts), FakeSettings(), RecordingNav(), backgroundScope, testClock(), foregroundPacer(), phoneDetails = details)
+            model.shown(true)
+            runCurrent()
+            // The import line wins over the memory line while it runs, and the page keeps reading it.
+            assertEquals(io.github.eslamasabry.oc.feature.phone.presentation.AnswerLine.History(moving), model.state.value.answer.line)
+            // The import is read again on the page's timer while it runs.
+            testScheduler.advanceTimeBy(10_000)
+            runCurrent()
+            assertTrue(details.historyReads > 0)
+            details.state.value = details.state.value.copy(history = null)
+            runCurrent()
+            assertEquals(io.github.eslamasabry.oc.feature.phone.presentation.AnswerLine.Memory(1L shl 20), model.state.value.answer.line)
         }
 }

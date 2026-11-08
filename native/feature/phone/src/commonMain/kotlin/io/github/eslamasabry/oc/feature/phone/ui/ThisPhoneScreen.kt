@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.phone.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.phone.presentation.AnswerTone
 import io.github.eslamasabry.oc.feature.phone.presentation.AnswerHeadline
@@ -282,6 +283,18 @@ public fun ThisPhoneScreen(
                         }
                     }
                 }
+            }
+            // Flutter this-phone-free-model: replies from OpenCode's free model are the slow ones, said where this
+            // server is looked after, with the way out.
+            if (state.freeModel) {
+                Spacer(Modifier.height(Space.S3.dp))
+                KitNotice(
+                    modifier = noticeEdge.testTag("this-phone-free-model"),
+                    message = stringResource(Res.string.freeModelNotice),
+                    icon = KitIcons.speed,
+                    liveRegion = false,
+                    actions = listOf(KitLineAction(stringResource(Res.string.freeModelSignIn), actions::addApiKey)),
+                )
             }
             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                 state.leftover?.let { notice ->

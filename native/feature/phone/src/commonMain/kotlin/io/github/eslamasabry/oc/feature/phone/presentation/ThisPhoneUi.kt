@@ -88,6 +88,8 @@ public data class ThisPhoneUi(
     val details: PhoneDetailsUi = PhoneDetailsUi(),
     val detailsOpen: Boolean = false,
     val installedOpen: Boolean = false,
+    /** Replies come from OpenCode's free model here: the notice with "Add an API key" (B-AGENT-110). */
+    val freeModel: Boolean = false,
 ) {
     /**
      * The recovery notice to show, or null. P-115: after Android stops the app, the exit notice
@@ -149,5 +151,8 @@ public interface ThisPhoneActions {
     public fun back()
 
     /** The page became the top entry (re-read the status, tick the countdown) or left it. */
+    /** The free-model notice's "Add an API key": this phone's server's providers. */
+    public fun addApiKey() {}
+
     public fun shown(visible: Boolean)
 }

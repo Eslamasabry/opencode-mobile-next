@@ -27,7 +27,7 @@ class LocalTerminalScreenTest {
                 "hashCode" -> System.identityHashCode(proxy)
                 "toString" -> "LocalTerminalActions"
                 else -> {
-                    if (method.name != "linkTipMoment")
+                    if (method.name != "linkTipMoment" && method.name != "resumed")
                         calls += method.name to args?.toList().orEmpty()
                     null
                 }
@@ -133,5 +133,29 @@ class LocalTerminalScreenTest {
         onNodeWithContentDescription("More").performClick()
         onNodeWithText("Close this shell").assertExists()
         onNodeWithText("Paste into Shell 1").assertDoesNotExist()
+    }
+
+    @Test
+    fun `AUDIT-462 Linux not set up offers Set up Linux, which opens the phone setup`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                LocalTerminalScreen(LocalTerminalUi(failed = true, notInstalled = true), actions)
+            }
+        }
+        onNodeWithText("Try again").assertDoesNotExist()
+        onNodeWithText("Set up Linux on this phone").performClick()
+        assertEquals(listOf("setUpLinux"), calls.map { it.first }.filter { it != "resumed" })
+    }
+
+    @Test
+    fun `AUDIT-462 a terminal that failed for another reason still offers Try again`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                LocalTerminalScreen(LocalTerminalUi(failed = true), actions)
+            }
+        }
+        onNodeWithText("Set up Linux on this phone").assertDoesNotExist()
+        onNodeWithText("Try again").performClick()
+        assertEquals(listOf("create"), calls.map { it.first }.filter { it != "resumed" })
     }
 }

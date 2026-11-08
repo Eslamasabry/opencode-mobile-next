@@ -44,7 +44,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneServerStartFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneServerStopFailed
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneConnectFailed
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryCount
-import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryFailed
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneHistoryFailed
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryMoving
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneMemory
 import io.github.eslamasabry.oc.ui.words.res.setupRuntimeTwo
@@ -144,7 +144,7 @@ internal fun AnswerLine.words(): String =
         is AnswerLine.History ->
             when {
                 info.phase == PhoneHistoryPhase.Failed ->
-                    stringResource(Res.string.r40PhoneHistoryFailed)
+                    stringResource(Res.string.thisPhoneHistoryFailed) // Flutter historyLine: its own words
                 info.done != null && info.total != null && info.total > 0 ->
                     stringResource(
                         Res.string.r40PhoneHistoryCount,

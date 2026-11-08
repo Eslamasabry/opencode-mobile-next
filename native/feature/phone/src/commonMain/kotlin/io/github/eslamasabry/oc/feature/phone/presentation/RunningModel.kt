@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.phone.presentation
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
+import io.github.eslamasabry.oc.engine.runtime.procs.RunningGroupKind
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -38,9 +39,85 @@ public data class ProcessRowUi(
     val memberCount: Int = 1,
     val identity: String? = null,
     val orphanReason: ProcessOrphanReason? = null,
+    val group: RunningGroupKind = RunningGroupKind.Other,
+    val session: String? = null,
+    val conversationTitle: String? = null,
+    val depth: Int = 0,
+    val owner: String? = null,
+    val heavyForSeconds: Long? = null,
+    val parentPid: Int? = null,
 ) {
     val stoppable: Boolean
         get() = protectedAs == null
+}
+
+/**
+ * One heading of Running on this phone (Flutter `PhoneProcessGroup`): what started these processes, a Claude Code
+ * conversation by its title, and the group's load and memory so heat shows on the heading.
+ */
+public data class RunningGroupUi(
+    val kind: RunningGroupKind,
+    /** The conversation's agent session, for [RunningGroupKind.ClaudeCode]. */
+    val session: String?,
+    /** That conversation's title, when known. */
+    val title: String?,
+    val rows: ImmutableList<ProcessRowUi>,
+) {
+    val id: String
+        get() = if (session == null) kind.key else "${kind.key}:$session"
+
+    /** Summed load; null when no row was measured. */
+    val cpuPercent: Int?
+        get() = rows.mapNotNull { it.cpuPercent }.takeIf { it.isNotEmpty() }?.sum()
+
+    val memoryBytes: Long?
+        get() = rows.mapNotNull { it.memoryBytes }.takeIf { it.isNotEmpty() }?.sum()
+
+    /** The group's load in words: Very busy is said here, on the heading (Flutter running_on_phone_text.dart). */
+    val cpuWords: io.github.eslamasabry.oc.engine.runtime.procs.CpuWords?
+        get() = cpuPercent?.let { io.github.eslamasabry.oc.engine.runtime.procs.runningCpuWords(it.toDouble()) }
+
+    /** A heavy process inside: the heading carries the heat mark. */
+    val hot: Boolean
+        get() = rows.any { it.heavy }
+}
+
+/** Flutter `groupPhoneProcesses`'s order and split: by kind in page order, a conversation per session. */
+internal object RunningGroups {
+    fun of(rows: List<ProcessRowUi>): ImmutableList<RunningGroupUi> {
+        val members = LinkedHashMap<String, MutableList<ProcessRowUi>>()
+        for (row in rows) {
+            val id = if (row.group == RunningGroupKind.ClaudeCode && row.session != null) "${row.group.key}:${row.session}" else row.group.key
+            members.getOrPut(id) { mutableListOf() } += row
+        }
+        return members.values
+            .map { list ->
+                val first = list.first()
+                val session = first.session.takeIf { first.group == RunningGroupKind.ClaudeCode }
+                RunningGroupUi(first.group, session, list.firstNotNullOfOrNull { it.conversationTitle }?.takeIf { session != null }, list.toImmutableList())
+            }
+            .sortedWith(compareBy<RunningGroupUi> { it.kind.ordinal }.thenBy { it.rows.first().pid })
+            .toImmutableList()
+    }
+
+    /** The group a row without the runtime's word belongs to, from what the reading did say. */
+    fun derive(p: PhoneProcess): RunningGroupKind =
+        p.group
+            ?: when {
+                // Busy with no owner stays where it is, marked; only what an ended Linux left is "Left behind".
+                p.leftBehind && p.orphanReason != ProcessOrphanReason.CpuWithoutOwner -> RunningGroupKind.LeftBehind
+                p.role == ProcessRole.App -> RunningGroupKind.App
+                else ->
+                    when (p.kind) {
+                        ProcessKind.OpenCode -> RunningGroupKind.OpenCode
+                        ProcessKind.ClaudeCode -> RunningGroupKind.ClaudeCode
+                        ProcessKind.AiTeam -> RunningGroupKind.AiTeam
+                        ProcessKind.Terminal -> RunningGroupKind.Terminal
+                        ProcessKind.Helper -> RunningGroupKind.Helpers
+                        ProcessKind.DevService,
+                        ProcessKind.Other -> RunningGroupKind.Other
+                    }
+            }
 }
 
 /** PhoneRoute.Running's state (plan 07 F08, merged Linux processes + Running on this phone). */
@@ -67,6 +144,14 @@ public data class RunningUi(
     /** Every stoppable process left behind: the targets of "Stop all left behind" (Flutter's group). */
     val leftBehind: ImmutableList<ProcessRowUi>
         get() = rows.filter { it.leftBehind && it.stoppable }.toImmutableList()
+
+    /** The rows under what started them, in Flutter's page order. */
+    val groups: ImmutableList<RunningGroupUi>
+        get() = RunningGroups.of(rows)
+
+    /** All memory the app's processes use, for the summary line; null when none was measured. */
+    val memoryBytes: Long?
+        get() = rows.mapNotNull { it.memoryBytes }.takeIf { it.isNotEmpty() }?.sum()
 }
 
 public interface RunningActions {
@@ -187,6 +272,13 @@ public class RunningModel(
             memberCount = p.memberCount,
             identity = p.identity,
             orphanReason = p.orphanReason,
+            group = RunningGroups.derive(p),
+            session = p.session,
+            conversationTitle = p.conversationTitle,
+            depth = p.depth.coerceIn(0, 3),
+            owner = p.owner,
+            heavyForSeconds = p.heavyForSeconds,
+            parentPid = p.parentPid,
         )
 
     override fun details(pid: Int) {

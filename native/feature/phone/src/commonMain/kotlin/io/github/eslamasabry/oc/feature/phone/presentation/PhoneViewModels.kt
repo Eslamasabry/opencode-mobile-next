@@ -31,6 +31,7 @@ public class ThisPhoneViewModel(
     exits: PhoneExitNotices,
     processes: PhoneProcessSource,
     phoneDetails: PhoneDetailsSource,
+    freeModel: PhoneFreeModel = NoPhoneFreeModel(),
 ) : ViewModel(), ThisPhoneActions {
     private val model =
         ThisPhoneModel(
@@ -45,8 +46,11 @@ public class ThisPhoneViewModel(
             exits = exits,
             processes = processes,
             phoneDetails = phoneDetails,
+            freeModel = freeModel,
         )
     public val state: StateFlow<ThisPhoneUi> = model.state
+
+    override fun addApiKey(): Unit = model.addApiKey()
 
     override fun act(act: PhoneAct): Unit = model.act(act)
 

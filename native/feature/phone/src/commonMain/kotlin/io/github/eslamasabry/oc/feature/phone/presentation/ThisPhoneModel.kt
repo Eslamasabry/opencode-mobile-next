@@ -42,6 +42,7 @@ public class ThisPhoneModel(
     private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
     private val processes: PhoneProcessSource? = null,
     private val phoneDetails: PhoneDetailsSource? = null,
+    private val freeModel: PhoneFreeModel = NoPhoneFreeModel(),
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
@@ -59,6 +60,8 @@ public class ThisPhoneModel(
         val measuringStorage: Boolean = false,
         val detailsOpen: Boolean = false,
         val installedOpen: Boolean = false,
+        /** The connection to this phone's server uses OpenCode's free model (read while shown and running). */
+        val freeModel: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
@@ -146,6 +149,7 @@ public class ThisPhoneModel(
                 reading.copy(canConnect = reading.canConnect && server == PhoneServerState.Running),
             detailsOpen = l.detailsOpen,
             installedOpen = l.installedOpen,
+            freeModel = l.freeModel && server == PhoneServerState.Running,
         )
     }
 
@@ -329,6 +333,18 @@ public class ThisPhoneModel(
     }
 
     init {
+        // The free-model notice: asked when the page shows a running server, and again when the connection changes.
+        scope.launch {
+            combine(visible, source.facts, phoneDetails?.state ?: flowOf(PhoneDetailsUi())) { shown, facts, reading ->
+                    if (shown && PhoneServerState.of(facts) == PhoneServerState.Running) reading.canConnect else null
+                }
+                .distinctUntilChanged()
+                .collectLatest { canConnect ->
+                    // canConnect true means the app is not connected here: no notice (Flutter `_connectedHere`).
+                    val inUse = canConnect == false && freeModel.inUse()
+                    local.update { it.copy(freeModel = inUse) }
+                }
+        }
         scope.launch {
             combine(visible, phoneDetails?.state ?: flowOf(PhoneDetailsUi())) { shown, reading ->
                     shown && reading.history?.phase == PhoneHistoryPhase.Moving
@@ -371,6 +387,8 @@ public class ThisPhoneModel(
             else -> Unit
         }
     }
+
+    override fun addApiKey(): Unit = freeModel.addApiKey()
 
     override fun shown(visible: Boolean) {
         if (!visible) details.singleOrNull()?.invalidate()

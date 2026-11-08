@@ -218,6 +218,21 @@ public data class PhoneProcess(
     val memberCount: Int = 1,
     val identity: String? = null,
     val orphanReason: ProcessOrphanReason? = null,
+    /**
+     * What started it (Flutter `PhoneProcessGroupKind`), from the runtime's grouped reading; null: the page derives
+     * the group from [kind], [role] and [leftBehind].
+     */
+    val group: io.github.eslamasabry.oc.engine.runtime.procs.RunningGroupKind? = null,
+    /** The Claude Code conversation's agent session above it, if any: each conversation is its own group. */
+    val session: String? = null,
+    /** That conversation's title, when the app knows it. */
+    val conversationTitle: String? = null,
+    /** Steps under the first process of its group (0 at the top). */
+    val depth: Int = 0,
+    /** Who it belongs to, in the runtime's word (`opencode`, `paseo`, ...): a technical value in Details. */
+    val owner: String? = null,
+    /** How long it has been heavy, when [heavy]. */
+    val heavyForSeconds: Long? = null,
 )
 
 /**
