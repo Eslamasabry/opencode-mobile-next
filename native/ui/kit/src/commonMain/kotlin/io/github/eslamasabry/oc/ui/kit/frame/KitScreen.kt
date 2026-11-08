@@ -8,6 +8,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -107,6 +110,15 @@ public enum class KitScreenWidth(internal val cap: CapRole) {
     List(CapRole.List),
 }
 
+/** A screen's pull to refresh, set on [KitScreen] so it wraps the scrolling header as well as the body. */
+@OptIn(ExperimentalMaterial3Api::class)
+public class KitScreenRefresh(
+    public val refreshing: Boolean,
+    public val onRefresh: () -> Unit,
+    public val enabled: Boolean = true,
+    public val state: PullToRefreshState? = null,
+)
+
 /**
  * The one screen frame (Dart `KitScreen` v2). With [topBar] (or [page]) it is a page: the ground,
  * the bar in the top safe area, and the bottom block lifted above the keyboard; without, it is a
@@ -141,6 +153,8 @@ public fun KitScreen(
      * behind instead.
      */
     frost: KitFrostState? = null,
+    /** Pull to refresh for the whole scrolling part (header and body); see [KitScreenRefresh]. */
+    refresh: KitScreenRefresh? = null,
     body: @Composable () -> Unit,
 ) {
     val framed = topBar != null || page
@@ -254,15 +268,35 @@ public fun KitScreen(
                     }
                     // P-006: the header (a page heading, its chips) is the body's first part and scrolls away with it;
                     // the loading line and the body follow it. Without one, the body starts here.
-                    if (header != null) {
-                        KitScrollingHeaderFrame(header, Modifier.fillMaxWidth().weight(1f)) {
-                            KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                            Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                    // Refresh is the outermost scroll node, around the header frame: list, then header, then refresh.
+                    // The header returns before a pull starts, and an upward drag retracts the pull before the header
+                    // hides (Flutter's RefreshIndicator wraps the whole CustomScrollView, header sliver included).
+                    val scrolling: @Composable (Modifier) -> Unit = { m ->
+                        if (header != null) {
+                            KitScrollingHeaderFrame(header, m) {
+                                KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
+                                Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                            }
+                        } else {
+                            // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
+                            Column(m) {
+                                KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
+                                Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                            }
+                        }
+                    }
+                    if (refresh != null) {
+                        KitRefresh(
+                            refreshing = refresh.refreshing,
+                            onRefresh = refresh.onRefresh,
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            enabled = refresh.enabled,
+                            hostState = refresh.state,
+                        ) {
+                            scrolling(Modifier.fillMaxSize())
                         }
                     } else {
-                        // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
-                        KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                        Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                        scrolling(Modifier.fillMaxWidth().weight(1f))
                     }
                     bottomPart?.let {
                         Box(

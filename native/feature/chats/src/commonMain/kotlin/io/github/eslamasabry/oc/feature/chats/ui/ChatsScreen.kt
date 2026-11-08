@@ -77,10 +77,10 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
-import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
@@ -263,133 +263,136 @@ public fun ChatsScreen(
             }
         },
         status = backExit ?: appStatus,
+        // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
+        // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
+        // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
+        refresh =
+            KitScreenRefresh(
+                refreshing = state.refreshing,
+                onRefresh = actions::refreshList,
+                enabled = state.home.opening == null && state.phase != ChatsPhase.Opening,
+            ),
         width = KitScreenWidth.Reading,
     ) {
       Box(Modifier.fillMaxSize()) {
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again (KitRefresh); not
         // while the server is still opening. The kit part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
-        KitRefresh(
-            refreshing = state.refreshing,
-            onRefresh = actions::refreshList,
-            enabled = state.home.opening == null && state.phase != ChatsPhase.Opening,
+        // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
+        // between list items put every row 4 px lower than the one before it.
+        LazyColumn(
+            // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
+                        else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                ),
         ) {
-            // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
-            // between list items put every row 4 px lower than the one before it.
-            LazyColumn(
-                // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
-                contentPadding =
-                    PaddingValues(
-                        bottom =
-                            if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
-                            else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
-                    ),
-            ) {
-                state.home.opening?.let { opening ->
-                    item(key = "opening-status") { OpeningStatus(opening, actions) }
-                    items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
-                    // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
-                    if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
-                        item(key = "opening") { KitSkeletonRows() }
-                    return@LazyColumn
-                }
-                replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
-                state.brief?.let { brief -> item(key = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
-                if (state.archiveFailure != null)
-                    item(key = "archive-failure") {
-                        // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
-                        KitNotice(
-                            message =
-                                stringResource(
-                                    when (state.archiveFailureAct) {
-                                        RowActFailure.Archive -> Res.string.p12ArchiveFailed
-                                        RowActFailure.Delete -> Res.string.p12DeleteFailed
-                                        RowActFailure.Pin -> Res.string.statePinFailed
-                                    }
-                                ),
-                            tone = StatusTone.Failure,
-                            dismiss =
-                                KitLineAction(
-                                    stringResource(Res.string.workspaceDismissNotice),
-                                    actions::dismissArchiveFailure,
-                                ),
-                        )
-                    }
-                if (state.renameFailure != null)
-                    item(key = "rename-failure") {
-                        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
-                            message = stringResource(Res.string.p12RenameFailed),
-                            failure = state.renameFailure,
-                        )
-                    }
-                if (state.answerFailure != null)
-                    item(key = "answer-failure") {
-                        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
-                            message = stringResource(Res.string.chatHomeAnswerFailed),
-                            failure = state.answerFailure,
-                        )
-                    }
-                if (state.incomplete.isNotEmpty()) {
-                    item(key = "incomplete") {
-                        KitNotice(
+            state.home.opening?.let { opening ->
+                item(key = "opening-status") { OpeningStatus(opening, actions) }
+                items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
+                // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
+                if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
+                    item(key = "opening") { KitSkeletonRows() }
+                return@LazyColumn
+            }
+            replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
+            state.brief?.let { brief -> item(key = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
+            if (state.archiveFailure != null)
+                item(key = "archive-failure") {
+                    // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
+                    KitNotice(
+                        message =
                             stringResource(
-                                Res.string.chatsHomeIncompleteNamed,
-                                state.incomplete.joinToString(", "),
-                            )
+                                when (state.archiveFailureAct) {
+                                    RowActFailure.Archive -> Res.string.p12ArchiveFailed
+                                    RowActFailure.Delete -> Res.string.p12DeleteFailed
+                                    RowActFailure.Pin -> Res.string.statePinFailed
+                                }
+                            ),
+                        tone = StatusTone.Failure,
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismissArchiveFailure,
+                            ),
+                    )
+                }
+            if (state.renameFailure != null)
+                item(key = "rename-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.p12RenameFailed),
+                        failure = state.renameFailure,
+                    )
+                }
+            if (state.answerFailure != null)
+                item(key = "answer-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.chatHomeAnswerFailed),
+                        failure = state.answerFailure,
+                    )
+                }
+            if (state.incomplete.isNotEmpty()) {
+                item(key = "incomplete") {
+                    KitNotice(
+                        stringResource(
+                            Res.string.chatsHomeIncompleteNamed,
+                            state.incomplete.joinToString(", "),
+                        )
+                    )
+                }
+            }
+            if (state.phase != ChatsPhase.Opening)
+                sections.forEachIndexed { index, section -> item(key = "home-section-$index") { section() } }
+            when (state.phase) {
+                ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
+                ChatsPhase.Empty ->
+                    item(key = "empty") {
+                        // A person with no computer saved may have come for one: the quiet second way in, only then.
+                        CalmPage(
+                            title = stringResource(Res.string.chatsHomeEmptyTitle),
+                            body = stringResource(Res.string.chatsHomeEmptyCalmBody),
+                            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+                            tertiary =
+                                if (state.hasComputer) null
+                                else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
+                            modifier = Modifier.fillParentMaxSize(),
                         )
                     }
-                }
-                if (state.phase != ChatsPhase.Opening)
-                    sections.forEachIndexed { index, section -> item(key = "home-section-$index") { section() } }
-                when (state.phase) {
-                    ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
-                    ChatsPhase.Empty ->
-                        item(key = "empty") {
-                            // A person with no computer saved may have come for one: the quiet second way in, only then.
-                            CalmPage(
-                                title = stringResource(Res.string.chatsHomeEmptyTitle),
-                                body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                                primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
-                                tertiary =
-                                    if (state.hasComputer) null
-                                    else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
-                                modifier = Modifier.fillParentMaxSize(),
-                            )
+                ChatsPhase.NoMatch ->
+                    item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
+                ChatsPhase.List -> {
+                    val today = state.today.filterNot { it.key in briefKeys }
+                    val earlier = state.earlier.filterNot { it.key in briefKeys }
+                    // Lists breathe (motion lead 2026-11-07): a row that arrives fades in, one that leaves fades out
+                    // where it was, and the rest glide to their new places (a chat jumping to the top, Mark all seen).
+                    if (today.isNotEmpty()) {
+                        item(key = "today") {
+                            Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
                         }
-                    ChatsPhase.NoMatch ->
-                        item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
-                    ChatsPhase.List -> {
-                        val today = state.today.filterNot { it.key in briefKeys }
-                        val earlier = state.earlier.filterNot { it.key in briefKeys }
-                        // Lists breathe (motion lead 2026-11-07): a row that arrives fades in, one that leaves fades out
-                        // where it was, and the rest glide to their new places (a chat jumping to the top, Mark all seen).
-                        if (today.isNotEmpty()) {
-                            item(key = "today") {
-                                Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
-                            }
-                            items(today, key = { it.key }) { row ->
-                                Column(kitItemMotion()) {
-                                    ConversationRow(row, actions, state)
-                                    if (row != today.last()) RowDivider(state)
-                                }
+                        items(today, key = { it.key }) { row ->
+                            Column(kitItemMotion()) {
+                                ConversationRow(row, actions, state)
+                                if (row != today.last()) RowDivider(state)
                             }
                         }
-                        if (earlier.isNotEmpty()) {
-                            item(key = "earlier") {
-                                // F: lib/ui/kit/kit_section_label.dart:28-31: a section after another one keeps the
-                                // section gap above its label. In a lazy item the label cannot see what is above it
-                                // (it is first in its own box), so the gap is asked for here.
-                                Box(kitItemMotion()) {
-                                    KitSectionLabel(
-                                        stringResource(Res.string.chatsHomeEarlier),
-                                        gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
-                                    )
-                                }
+                    }
+                    if (earlier.isNotEmpty()) {
+                        item(key = "earlier") {
+                            // F: lib/ui/kit/kit_section_label.dart:28-31: a section after another one keeps the
+                            // section gap above its label. In a lazy item the label cannot see what is above it
+                            // (it is first in its own box), so the gap is asked for here.
+                            Box(kitItemMotion()) {
+                                KitSectionLabel(
+                                    stringResource(Res.string.chatsHomeEarlier),
+                                    gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
+                                )
                             }
-                            items(earlier, key = { it.key }) {
-                                Column(kitItemMotion()) {
-                                    ConversationRow(it, actions, state)
-                                    if (it != earlier.last()) RowDivider(state)
-                                }
+                        }
+                        items(earlier, key = { it.key }) {
+                            Column(kitItemMotion()) {
+                                ConversationRow(it, actions, state)
+                                if (it != earlier.last()) RowDivider(state)
                             }
                         }
                     }

@@ -103,10 +103,12 @@ public fun KitRefresh(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** The pull's state, when a host wants to read it; by default the part keeps its own. */
+    hostState: PullToRefreshState? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val label = stringResource(Res.string.workRefresh)
-    val state = rememberPullToRefreshState()
+    val state = hostState ?: rememberPullToRefreshState()
     val run = { if (enabled && !refreshing) onRefresh() }
     PullToRefreshBox(
         isRefreshing = refreshing,
