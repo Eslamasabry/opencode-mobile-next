@@ -396,18 +396,37 @@ internal fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
     return drawBehind {
         // The content fades out over the block's inner quarter, so the parts that lie on the block itself (the chips
         // above the message box, the bar's own words) sit on the page's ground, never on the words scrolling past.
-        val stops =
-            if (top) arrayOf(0f to ground.copy(alpha = EDGE_FADE_ALPHA), .55f to ground.copy(alpha = EDGE_FADE_ALPHA * .8f), 1f to ground.copy(alpha = 0f))
-            else arrayOf(0f to ground.copy(alpha = 0f), EDGE_FADE_REACH to ground.copy(alpha = EDGE_FADE_ALPHA * .92f), 1f to ground.copy(alpha = EDGE_FADE_ALPHA))
-        drawRect(Brush.verticalGradient(*stops, startY = 0f, endY = size.height))
+        if (top) {
+            val stops = arrayOf(0f to ground.copy(alpha = EDGE_FADE_ALPHA), .55f to ground.copy(alpha = EDGE_FADE_ALPHA * .8f), 1f to ground.copy(alpha = 0f))
+            drawRect(Brush.verticalGradient(*stops, startY = 0f, endY = size.height))
+        } else {
+            // The scroll edge: the content fades out over EDGE_FADE_DP above the block, and the block itself (the chips
+            // row, the gaps round the message box) lies on the ground. The message box stays glass over the content.
+            val reach = EDGE_FADE_DP.dp.toPx()
+            drawRect(
+                Brush.verticalGradient(0f to ground.copy(alpha = 0f), 1f to ground.copy(alpha = EDGE_FADE_ALPHA), startY = -reach, endY = 0f),
+                topLeft = Offset(0f, -reach),
+                size = Size(size.width, reach),
+            )
+            drawRect(ground.copy(alpha = EDGE_FADE_ALPHA))
+        }
     }
+}
+
+/** How far above a page's bottom block its content fades out (Apple's scroll edge effect: 16-24 dp). */
+internal const val EDGE_FADE_DP: Int = 20
+
+/** The words plate of [role]'s liquid pane, for a part whose words lie beside its pane rather than inside it (a bar). */
+@Composable
+internal fun kitLiquidWordsHost(role: LiquidRole): Modifier {
+    val roles = LocalKitRoles.current
+    val plate = remember(roles, role) { Color(LiquidEdge.wordsPlate(roles, role).v) }
+    return Modifier.kitLiquidPlateHost(plate)
 }
 
 /** How much of the ground the edge fade reaches at the screen's edge. */
 internal const val EDGE_FADE_ALPHA: Float = .96f
 
-/** Where (a share of the bottom block's height, from its top) the content has faded under the block's ground. */
-internal const val EDGE_FADE_REACH: Float = .22f
 
 /**
  * A page's body run up under its bar by [barPx] (the bar floats over it): measured that much taller and placed that

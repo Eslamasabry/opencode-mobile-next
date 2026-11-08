@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidEdgeFade
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidGlassOn
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidWordsHost
 import io.github.eslamasabry.oc.ui.kit.effects.kitRunUnderBar
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -196,7 +197,8 @@ public fun KitScreen(
                     PaddingValues(
                         // E20-S13: the header always lies on its opaque ground with its fade, Glass included.
                         top = topPx.toDp() + if (topPart != null) HEADER_FADE_DP.dp else 0.dp,
-                        bottom = bottomPx.toDp() + if (faded && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
+                        // Liquid: the newest line rests above the scroll edge fade, never inside it.
+                        bottom = bottomPx.toDp() + if ((faded || liquid) && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
                     )
                 }
             Box(
@@ -212,7 +214,7 @@ public fun KitScreen(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .onSizeChanged { topPx = it.height }
-                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
+                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar)) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
                     ) {
                         if (barFace != null) KitLiquidBarPane(barFace)
                         it()
@@ -275,7 +277,8 @@ public fun KitScreen(
                         ).then(
                             when {
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
-                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar)) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                barFace != null -> kitLiquidWordsHost(LiquidRole.Bar)
                                 else -> Modifier
                             }
                         )
