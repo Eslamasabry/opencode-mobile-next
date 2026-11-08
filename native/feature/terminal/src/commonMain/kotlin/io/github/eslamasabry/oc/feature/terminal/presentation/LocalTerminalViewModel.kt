@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.TipMoment
 import io.github.eslamasabry.oc.engine.settings.teaching.TipVisit
 import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.RemoteTerminalRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -87,6 +88,12 @@ public interface LocalTerminalActions {
     public fun back()
 
     public fun openDevPreview() {}
+
+    /** "Set up Linux on this phone": opens the phone setup; the terminal opens again on the way back (Flutter). */
+    public fun setUpLinux() {}
+
+    /** The page is on screen again (after the setup it opened). */
+    public fun resumed() {}
 }
 
 @Inject
@@ -324,6 +331,21 @@ public class LocalTerminalViewModel(
         dismissLinkTip()
         discardInput()
         nav.back()
+    }
+
+    /** The setup was opened from here: coming back tries the terminal again, once. */
+    private var awaitingSetup = false
+
+    override fun setUpLinux() {
+        if (!local.value.notInstalled) return
+        awaitingSetup = true
+        nav.open(PhoneSetupRoute.Setup)
+    }
+
+    override fun resumed() {
+        if (!awaitingSetup) return
+        awaitingSetup = false
+        if (local.value.failed) create()
     }
 
 

@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.terminal.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
@@ -30,6 +31,11 @@ private val LOCAL_TERMINAL_COMPACT = 420.dp // F: lib/ui/screens/local_terminal_
 @Composable
 public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalActions) {
     val nativeActions = actions as? LocalTerminalNativeActions
+    // Back from the phone setup it opened, the terminal tries again (Flutter `_open()` after the flow).
+    androidx.lifecycle.compose.LifecycleResumeEffect(actions) {
+        actions.resumed()
+        onPauseOrDispose {}
+    }
     val selected = state.shells.firstOrNull { it.id == state.selected }
     val keyboard = WindowInsets.ime.getBottom(LocalDensity.current)
     val keyboardVisible = keyboard > 0
@@ -180,18 +186,21 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
             loadingLabel = stringResource(Res.string.localTerminalStarting),
         ) {
             Column(Modifier.fillMaxSize()) {
-                if (state.failed) {
+                if (state.failed && state.notInstalled) {
+                    // Flutter local-terminal-not-set-up: the gate explains itself and offers the flow that opens it.
+                    KitStateView(
+                        KitStateKind.Calm,
+                        stringResource(Res.string.localTerminalNotSetUpTitle),
+                        modifier = Modifier.testTag("local-terminal-not-set-up"),
+                        body = stringResource(Res.string.localTerminalNotSetUpBody),
+                        icon = KitIcons.terminal,
+                        primary = KitAction(stringResource(Res.string.localTerminalSetUpLinux), actions::setUpLinux),
+                    )
+                } else if (state.failed) {
                     KitStateView(
                         KitStateKind.Error,
-                        stringResource(
-                            if (state.notInstalled) Res.string.localTerminalNotSetUpTitle
-                            else Res.string.localTerminalFailedTitle
-                        ),
-                        body =
-                            stringResource(
-                                if (state.notInstalled) Res.string.localTerminalNotSetUpBody
-                                else Res.string.localTerminalFailedBody
-                            ),
+                        stringResource(Res.string.localTerminalFailedTitle),
+                        body = stringResource(Res.string.localTerminalFailedBody),
                         primary =
                             KitAction(
                                 stringResource(Res.string.localTerminalTryAgain),
