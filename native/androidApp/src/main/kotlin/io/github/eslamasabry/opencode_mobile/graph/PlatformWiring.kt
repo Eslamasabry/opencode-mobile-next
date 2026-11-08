@@ -104,6 +104,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFailure as S
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateSettings
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState as SettingsUpdateState
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
+import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
@@ -513,9 +514,9 @@ class PlatformHub(
             intent.data = null
             when (val link = raw?.let(EntryLinkParser::parse)) {
                 is ParsedLink.Session -> openSessionLink(link)
-                // AI Team links: the team target is deferred under D6, so they land on the list.
-                is ParsedLink.TeamGate,
-                is ParsedLink.TeamRun -> navigator.land()
+                // AI Team links open that server's team page (Flutter openTeamPage).
+                is ParsedLink.TeamGate -> navigator.open(TeamRoute.Home(link.profileId))
+                is ParsedLink.TeamRun -> navigator.open(TeamRoute.Home(link.profileId))
                 null -> Unit
             }
             return

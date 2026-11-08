@@ -330,6 +330,8 @@ dependencies {
             ":android:terminal",
             ":engine:integrations-quota",
             ":engine:setupassist",
+            ":engine:team", // s23-team: AI Team
+            ":feature:team",
         )
         .forEach { implementation(project(it)) }
     implementation(platform(libs.firebase.bom))
