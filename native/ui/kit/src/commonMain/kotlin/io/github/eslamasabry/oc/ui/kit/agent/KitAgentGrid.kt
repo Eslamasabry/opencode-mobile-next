@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -107,39 +106,18 @@ public fun KitAgentTiles(children: List<@Composable () -> Unit>, modifier: Modif
                 } else if (columns == 1) {
                     children[row[0]]()
                 } else {
-                    EqualRow(row.map { children[it] }, columns)
+                    Row(
+                        Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                    ) {
+                        for (i in row) {
+                            androidx.compose.foundation.layout.Box(Modifier.weight(1f).fillMaxHeight()) { children[i]() }
+                        }
+                        // A short last row keeps the column width: the empty cells hold their place.
+                        repeat(columns - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
-        }
-    }
-}
-
-/**
- * One row of tiles, each [columns]-th of the width (less the gap) and all as tall as the tallest. Not
- * `IntrinsicSize.Min`: a tile's chip measures itself with BoxWithConstraints, which has no intrinsic size. Each tile is
- * measured once at its width, then placed at the row's height; a short last row keeps the column width.
- */
-@Composable
-private fun EqualRow(cells: List<@Composable () -> Unit>, columns: Int) {
-    androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
-        val gap = Space.S3.dp.roundToPx()
-        val width = ((constraints.maxWidth - gap * (columns - 1)) / columns).coerceAtLeast(0)
-        val cell = androidx.compose.ui.unit.Constraints(minWidth = width, maxWidth = width)
-        val height =
-            cells.indices.maxOfOrNull { k -> subcompose("probe-$k") {
-                    // Measured only, never placed: no semantics of its own, so the page reads each tile once.
-                    androidx.compose.foundation.layout.Box(
-                        Modifier.clearAndSetSemantics {}
-                    ) { cells[k]() }
-                }.maxOfOrNull { it.measure(cell).height } ?: 0 }
-                ?: 0
-        val placed =
-            cells.indices.map { k ->
-                subcompose("tile-$k") { androidx.compose.foundation.layout.Box(Modifier.fillMaxHeight()) { cells[k]() } }
-                    .map { it.measure(androidx.compose.ui.unit.Constraints.fixed(width, height)) }
-            }
-        layout(constraints.maxWidth, height) {
-            placed.forEachIndexed { k, parts -> parts.forEach { it.placeRelative(k * (width + gap), 0) } }
         }
     }
 }

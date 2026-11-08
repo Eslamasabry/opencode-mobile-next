@@ -49,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /** How a tile's state line reads: calm, a thing that needs the person, or out of reach (dimmed mark and words). */
 public enum class KitAgentTileTone { Calm, NeedsYou, Dimmed }
@@ -134,8 +135,9 @@ public fun KitAgentTile(
             }
         }
     }
+    val chipHeight = (LocalKitTokens.current.minTarget * kitTextScale().coerceAtLeast(1f)).dp
     val chip: @Composable () -> Unit = {
-        if (action != null)
+        if (action != null) ChipSlot(chipHeight) {
             KitChip(
                 action.label,
                 kind = KitChipKind.Action,
@@ -144,6 +146,7 @@ public fun KitAgentTile(
                 onClick = action.onClick,
                 spoken = action.spoken,
             )
+        }
     }
     KitTappable(
         onClick,
@@ -203,4 +206,48 @@ private fun ReadyCheck() {
     ) {
         KitIcon(KitIcons.check, size = KitIconSize.Small, tone = TextTone.OnAccent)
     }
+}
+
+/**
+ * The chip's place in a tile. The tile grid sizes each row to its tallest tile (IntrinsicSize.Min), and a chip measures
+ * itself with BoxWithConstraints, which has no intrinsic size: this slot answers for it with the chip's [height] (one
+ * tap target, grown with the text) and lays the chip out as usual.
+ */
+@Composable
+private fun ChipSlot(height: androidx.compose.ui.unit.Dp, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(
+        content,
+        measurePolicy =
+            object : androidx.compose.ui.layout.MeasurePolicy {
+                override fun androidx.compose.ui.layout.MeasureScope.measure(
+                    measurables: List<androidx.compose.ui.layout.Measurable>,
+                    constraints: androidx.compose.ui.unit.Constraints,
+                ): androidx.compose.ui.layout.MeasureResult {
+                    val parts = measurables.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
+                    val w = (parts.maxOfOrNull { it.width } ?: 0).coerceIn(constraints.minWidth, constraints.maxWidth)
+                    val h = (parts.maxOfOrNull { it.height } ?: 0).coerceIn(constraints.minHeight, constraints.maxHeight)
+                    return layout(w, h) { parts.forEach { it.placeRelative(0, 0) } }
+                }
+
+                override fun androidx.compose.ui.layout.IntrinsicMeasureScope.minIntrinsicHeight(
+                    measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>,
+                    width: Int,
+                ): Int = height.roundToPx()
+
+                override fun androidx.compose.ui.layout.IntrinsicMeasureScope.maxIntrinsicHeight(
+                    measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>,
+                    width: Int,
+                ): Int = height.roundToPx()
+
+                override fun androidx.compose.ui.layout.IntrinsicMeasureScope.minIntrinsicWidth(
+                    measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>,
+                    height: Int,
+                ): Int = 0
+
+                override fun androidx.compose.ui.layout.IntrinsicMeasureScope.maxIntrinsicWidth(
+                    measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>,
+                    height: Int,
+                ): Int = 0
+            },
+    )
 }
