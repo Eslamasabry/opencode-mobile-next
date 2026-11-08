@@ -1,0 +1,53 @@
+name: Native toolchain
+description: JDK 17 + 21, Android SDK 37.1, Gradle cache and the vendored sherpa-onnx AAR for native/
+inputs:
+  goldens:
+    description: Extract the pinned Flutter reference goldens (needs full git history)
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK 17 and 21 (build 17, host-test launcher 21)
+      uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+      with:
+        distribution: temurin
+        java-version: |
+          17
+          21
+    - name: Android SDK platform 37.1
+      shell: bash
+      run: |
+        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "platform-tools" >/dev/null
+    - name: Gradle memory for a 4 CPU / 16 GB runner
+      shell: bash
+      run: |
+        mkdir -p ~/.gradle
+        cat >> ~/.gradle/gradle.properties <<'EOP'
+        org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8
+        org.gradle.workers.max=4
+        oc.test.forks=2
+        EOP
+    - name: Gradle (cached)
+      uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      with:
+        cache-read-only: false
+    - name: Cache vendored sherpa-onnx AAR
+      id: vendor-cache
+      uses: actions/cache@v4
+      with:
+        path: native/third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar
+        key: sherpa-onnx-${{ hashFiles('native/third_party/SHA256SUMS') }}
+    - name: Fetch vendored artifacts (hash-pinned, never committed)
+      shell: bash
+      run: native/tools/vendor/fetch.sh
+    - name: Extract Flutter reference goldens from git history
+      if: ${{ inputs.goldens == 'true' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        FLUTTER_REPO: ${{ github.workspace }}
+        GLASS_REPO: ${{ github.workspace }}
+      run: |
+        # Non-fatal: refs that are not on this repo's history leave their goldens missing, and the gate tests report that.
+        native/tool/design/fetch_all_goldens.sh || true
