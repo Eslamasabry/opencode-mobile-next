@@ -86,7 +86,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `B-NAV-037 the server pill names the server and its state and opens the servers`() =
+    fun `B-NAV-037 the server pill names the server and its state and opens the one-tap switcher`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             val phone =
@@ -95,7 +95,9 @@ class ChatsScreenTest {
                 Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }
             }
             onNodeWithContentDescription("On this phone, Connected, Switch server").performClick()
-            assertTrue("servers" in actions.calls)
+            // F: lib/ui/screens/home_screen.dart:434-470: the switcher sheet, never the full Servers page.
+            assertTrue("switcher" in actions.calls)
+            assertTrue("servers" !in actions.calls)
             // No overflow, and (owner order 2026-11-08, as Flutter's home) no place rows after the list either: All
             // conversations is reached from Search.
             onAllNodesWithContentDescription("More").assertCountEquals(0)

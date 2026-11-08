@@ -95,6 +95,14 @@ public class ChatsViewModel(
 
     private val renaming = MutableStateFlow(Renaming())
 
+    /** The switcher's switch in flight, and why the last one did not happen. */
+    private data class Switching(
+        val to: ProfileId? = null,
+        val failure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    )
+
+    private val switching = MutableStateFlow(Switching())
+
     public val state: StateFlow<ChatsUi> =
         combine(
                 combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
@@ -155,6 +163,17 @@ public class ChatsViewModel(
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
             // G4: the project sheet's kind glyphs and "Git" pills.
             .combine(home.projectFacts) { base, facts -> base.copy(projectFacts = facts.toImmutableMap()) }
+            // The pill's switcher: every saved server, what it is doing now, and the switch in flight.
+            .combine(switching) { base, now ->
+                base.copy(
+                    switcher =
+                        ServerSwitcherUi(
+                            ServerSwitcherRules.rows(base.home, feed.snapshot.value.items),
+                            now.to,
+                            now.failure,
+                        )
+                )
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -478,6 +497,44 @@ public class ChatsViewModel(
     override fun openServers() {
         sheet.value = null
         nav.open(ServersRoute.Home)
+    }
+
+    // F: lib/ui/screens/home_screen.dart:434-470: the bar's server pill opens the switcher sheet, not the Servers page.
+    override fun openServerSwitcher() {
+        switching.update { it.copy(failure = null) }
+        sheet.value = ChatsHomeSheet.Servers
+    }
+
+    override fun switchServer(profile: ProfileId) {
+        val rows = state.value.switcher.servers
+        val row = rows.firstOrNull { it.profile == profile } ?: return
+        // Tapping the server already in use has nowhere to go but back to it (Flutter: reconnecting drops live state).
+        if (row.current) {
+            sheet.value = null
+            return
+        }
+        if (switching.value.to != null) return
+        switching.value = Switching(to = profile)
+        viewModelScope.launch {
+            when (val done = home.switchTo(profile)) {
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> {
+                    switching.value = Switching()
+                    if (sheet.value == ChatsHomeSheet.Servers) sheet.value = null
+                }
+                // The sheet stays open and says why; the rows are as they were.
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed -> switching.value = Switching(failure = done.failure)
+            }
+        }
+    }
+
+    override fun addServer() {
+        sheet.value = null
+        nav.open(ServersRoute.Edit())
+    }
+
+    override fun serverSettings(profile: ProfileId) {
+        sheet.value = null
+        nav.open(ServersRoute.Edit(profile))
     }
 
     override fun connectComputer() {

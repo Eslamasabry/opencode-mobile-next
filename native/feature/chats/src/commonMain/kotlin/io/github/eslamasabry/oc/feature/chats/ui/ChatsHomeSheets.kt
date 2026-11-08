@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsWatchedKind
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
+import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherServerState
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
@@ -92,6 +93,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
                 ChatsHomeSheet.Projects -> stringResource(Res.string.chatsFilterSheetTitle)
                 ChatsHomeSheet.Sources -> stringResource(Res.string.chatsSourcesSheetTitle)
                 ChatsHomeSheet.Monitoring -> stringResource(Res.string.homeWatchedServers)
+                ChatsHomeSheet.Servers -> stringResource(Res.string.serverSwitcherTitle)
                 ChatsHomeSheet.Inbox,
                 ChatsHomeSheet.OpenProject,
                 null -> stringResource(Res.string.inboxTitle)
@@ -105,6 +107,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
                 ChatsHomeSheet.Sources -> SourceChoices(state, actions)
                 ChatsHomeSheet.Inbox -> Unit
                 ChatsHomeSheet.Monitoring -> MonitoringSettings(state, actions)
+                ChatsHomeSheet.Servers -> ServerSwitcher(state, actions)
                 ChatsHomeSheet.OpenProject,
                 null -> Unit
             }
@@ -201,6 +204,97 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             leading = KitRowLeading.Glyph(KitIcons.folderOpen),
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openFilterProject,
+        )
+    }
+}
+
+/**
+ * F: lib/ui/widgets/server_switcher_sheet.dart:73-95,353-410: every saved server on one panel, the one in use first,
+ * each row its name and one line of state in plain words; a tap switches to it. "Add a server" sits on its own quiet
+ * panel under them. The in-use row's own menu leads to its settings and the full Servers page.
+ */
+@Composable
+private fun ServerSwitcher(state: ChatsUi, actions: ChatsActions) {
+    val switcher = state.switcher
+    switcher.failure?.let { problem ->
+        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+            message = stringResource(Res.string.productErrorComputer),
+            failure = problem,
+        )
+        Spacer(Modifier.height(Space.S3.dp))
+    }
+    val busy = switcher.switching != null
+    KitRowGroup(leadingTiles = true) {
+        switcher.servers.forEach { server ->
+            val words = buildList {
+                add(
+                    when (server.state) {
+                        SwitcherServerState.Connected -> stringResource(Res.string.serverRowConnected)
+                        SwitcherServerState.Connecting -> stringResource(Res.string.e7WorkspaceConnecting)
+                        SwitcherServerState.NotAnswering -> stringResource(Res.string.serverSwitcherNotAnswering)
+                        SwitcherServerState.Saved ->
+                            stringResource(if (server.onThisPhone) Res.string.chatsSourcesOnPhone else Res.string.chatsSourcesElsewhere)
+                    }
+                )
+                if (server.needsYou > 0)
+                    add(
+                        pluralStringResource(Res.plurals.kitNeedsYouSpan, server.needsYou, Numbers.format(server.needsYou))
+                            .trimEnd().removeSuffix("·").trimEnd()
+                    )
+                if (server.working > 0)
+                    add(pluralStringResource(Res.plurals.otherServerWorking, server.working, Numbers.format(server.working)))
+            }
+            val opening = switcher.switching == server.profile
+            KitRow(
+                title = server.name,
+                leading = KitRowLeading.Glyph(if (server.onThisPhone) KitIcons.phone else KitIcons.server, current = server.current),
+                supporting = if (opening) stringResource(Res.string.e7WorkspaceConnecting) else words.joinToString(" · "),
+                selected = server.current,
+                state =
+                    if (server.needsYou > 0 && !opening)
+                        io.github.eslamasabry.oc.ui.kit.row.KitRowState(null, io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone.NeedsYou)
+                    else null,
+                trailing =
+                    when {
+                        server.current ->
+                            KitRowTrailing.Menu(
+                                label = stringResource(Res.string.serverSwitcherCurrentMenu),
+                                title = server.name,
+                                items =
+                                    listOf(
+                                        io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem(
+                                            stringResource(Res.string.serverSettingsTitle),
+                                            { actions.serverSettings(server.profile) },
+                                            icon = KitIcons.settingsGear,
+                                        ),
+                                        io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem(
+                                            stringResource(Res.string.serversTitle),
+                                            actions::openServers,
+                                            icon = KitIcons.server,
+                                        ),
+                                    ),
+                            )
+                        server.state == SwitcherServerState.NotAnswering && !busy ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.kitTryAgain),
+                                    { actions.retrySource(server.profile) },
+                                )
+                            )
+                        else -> KitRowTrailing.None
+                    },
+                enabled = server.current || !busy,
+                disabledReason = if (!server.current && busy) stringResource(Res.string.serversWorking) else null,
+                onClick = { actions.switchServer(server.profile) },
+            )
+        }
+    }
+    Spacer(Modifier.height(Space.S4.dp))
+    KitRowGroup(leadingTiles = true) {
+        KitRow(
+            title = stringResource(Res.string.serverSwitcherAddServer),
+            leading = KitRowLeading.Glyph(KitIcons.add),
+            onClick = actions::addServer,
         )
     }
 }

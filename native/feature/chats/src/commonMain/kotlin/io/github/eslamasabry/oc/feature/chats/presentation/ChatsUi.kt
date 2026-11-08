@@ -206,6 +206,8 @@ public data class ChatsUi(
     val renameFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
     /** B-162: today's tightest usage limit for the Usage row's line; null = the row says only "Usage". */
     val usage: HomeUsageLimit? = null,
+    /** The server switcher's rows, and the switch in flight (F: lib/ui/widgets/server_switcher_sheet.dart). */
+    val switcher: ServerSwitcherUi = ServerSwitcherUi(),
 ) {
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
@@ -341,6 +343,18 @@ public interface ChatsActions {
     public fun retryOpening() {}
 
     public fun openServers() {}
+
+    /** The server pill: the one-tap switcher sheet. */
+    public fun openServerSwitcher() {}
+
+    /** A switcher row: switch to [profile] (the one in use only closes the sheet). */
+    public fun switchServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
+
+    /** The switcher's "Add a server". */
+    public fun addServer() {}
+
+    /** The in-use row's menu: that server's own settings. */
+    public fun serverSettings(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
 
     /** Edit the sign-in (password or token) of the server that is failing to open, inline in its form. */
     public fun editOpeningServer() {}

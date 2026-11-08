@@ -222,7 +222,8 @@ public fun ChatsScreen(
                                 HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
                             },
                             switchLabel = stringResource(Res.string.serverSwitcherOpen),
-                            onClick = actions::openServers,
+                            // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
+                            onClick = actions::openServerSwitcher,
                             modifier = modifier,
                         )
                     }
