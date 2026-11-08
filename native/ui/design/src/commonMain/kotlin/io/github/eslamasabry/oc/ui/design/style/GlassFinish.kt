@@ -179,6 +179,13 @@ public object GlassFinish {
         listOf(roles.text1, roles.text2, roles.accent.opaque(), styleBoundary(roles))
             .map { it to minOf(NON_TEXT_FLOOR, wcagContrast(it, solid.opaque())) }
 
+    /**
+     * What a clear in-flow pane is thickened for: its words ([textInks]) and its icons and track edges ([glyphInks]).
+     * Over the shader looks' wider spots (owner 2026-11-09: panes now blur them) a switch track's edge can ask more of
+     * the tint than the words do, so a clear pane measures both.
+     */
+    public fun paneInks(roles: Roles, solid: Argb): List<Pair<Argb, Double>> = textInks(roles, solid) + glyphInks(roles, solid)
+
     /** How much extra tint a clear pane's gloss (its lit corner and sheen) may cost before it goes. */
     public const val GLOSS_ALLOWANCE: Float = .06f
 

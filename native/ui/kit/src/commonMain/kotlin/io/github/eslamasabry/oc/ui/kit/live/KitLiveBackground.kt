@@ -84,7 +84,7 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
             when {
                 plate != null -> AuroraImage.clearSpotsOf(roles.ground, accent, roles.dark)
                 // Every look stays within liveOut's cap of the ground: its brightest and darkest ends, unblurred.
-                shaderPicture != null -> LiveSpots.of(roles.ground, roles.dark)
+                shaderPicture != null -> LiveSpots.of(roles)
                 else -> emptyList<Argb>()
             }
     }
