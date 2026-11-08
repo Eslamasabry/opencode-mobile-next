@@ -30,14 +30,14 @@
     <string name="p12PlansWeekly">هذا الأسبوع</string>
     <string name="p12PlansMonthly">هذا الشهر</string>
     <string name="p12PlansLimit">الحد</string>
-    <string name="p12PlansLeft">متبقٍّ %1$s%%</string>
+    <string name="p12PlansLeft">متبقٍّ %1$s%</string>
     <string name="p12PlansResetsNow">يُعاد الآن</string>
     <string name="p12PlansResetsMinutes">يُعاد بعد %1$s دقيقة</string>
     <string name="p12PlansResetsHours">يُعاد بعد %1$s ساعة</string>
     <string name="p12PlansResetsDays">يُعاد بعد %1$s يوم</string>
     <string name="p12PlansResetSince">أُعيد ضبطه منذ قراءة هذه الأرقام.</string>
     <string name="p12PlansPlan">الخطة: %1$s</string>
-    <string name="p12PlansAlertAt">تنبيه عند استخدام %1$s%%</string>
+    <string name="p12PlansAlertAt">تنبيه عند استخدام %1$s%</string>
     <string name="p12PlansOffline">غير متصل</string>
     <string name="p12PlansExpired">انتهى تسجيل الدخول</string>
     <string name="p12PlansSignedOut">غير مسجّل</string>

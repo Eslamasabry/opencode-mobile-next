@@ -230,10 +230,13 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 KitAction(stringResource(Res.string.p12NewOpenCreated), actions::openCreatedConversation)
                             }
                         val discard = KitAction(stringResource(Res.string.nativePendingDiscard), actions::discardUnconfirmed)
+                        // B-096: with nothing to open (the server is not answering, or the record cannot be read),
+                        // "Check again" reads it once more; Discard is not the only way out.
+                        val again = KitAction(stringResource(Res.string.chatReceiptCheckAgain), actions::recheckUnconfirmed)
                         KitActionBlock(
                             inset,
-                            secondary = open ?: discard,
-                            tertiary = if (open != null) listOf(discard) else emptyList(),
+                            secondary = open ?: again,
+                            tertiary = listOf(discard),
                         )
                     }
                     // B-063: the server still lists a project whose folder is gone; a message sent there is
@@ -705,6 +708,10 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         onEdit = if (notSent) actions::editPrompt else null,
         reviewLabel = stringResource(Res.string.p12NewOpenCreated),
         onReview = if (state.reviewConversation != null) actions::openCreatedConversation else null,
+        recheckLabel = stringResource(Res.string.chatReceiptCheckAgain),
+        onRecheck = if (phase == KitStartingPhase.Unconfirmed && state.deliveryUnconfirmed && state.reviewConversation == null) actions::recheckUnconfirmed else null,
+        discardLabel = stringResource(Res.string.nativePendingDiscard),
+        onDiscard = if (phase == KitStartingPhase.Unconfirmed) actions::discardUnconfirmed else null,
     )
 }
 

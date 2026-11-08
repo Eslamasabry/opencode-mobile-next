@@ -45,7 +45,7 @@
     <string name="statePlansCopy43">مسجّل</string>
     <string name="statePlansCopy44">لا يمكن قراءة حدود خطة Claude عبر OpenCode</string>
     <string name="statePlansAlerts">تنبيهات الاستخدام</string>
-    <string name="statePlansThreshold">تنبيه عند استخدام %1$d%%</string>
+    <string name="statePlansThreshold">تنبيه عند استخدام %1$d%</string>
     <string name="statePlansResetOn">إشعار إعادة الضبط مفعّل</string>
     <string name="statePlansResetOff">إشعار إعادة الضبط متوقف</string>
     <string name="statePlansPercent">النسبة المستخدمة (١–١٠٠)</string>
