@@ -66,17 +66,17 @@ public object ChatsState {
         // newest first); then the five latest of the rest.
         val (live, rest) = listed.partition { it.status == ChatStatus.NeedsYou || it.status == ChatStatus.Running }
         val rightNow = live.sortedWith(ChatFeedRules.order).map { row(it, nowMs) }
-        val recent =
+        val latest =
             rest.sortedWith(compareByDescending<ChatFeedItem> { it.lastActivityMs }.thenBy { it.identity })
                 .take(RECENT_ROWS)
                 .map { row(it, nowMs) }
         return ChatsUi(
             phase = phase,
             rightNow = rightNow.toImmutableList(),
-            recent = recent.toImmutableList(),
+            recent = latest.toImmutableList(),
             showProjects = filters.projectDirectory == null && visible.distinctBy { it.projectName }.size > 1,
             runningShown = visible.count { it.status == ChatStatus.Running },
-            showAgents = agentsDiffer(rightNow + recent + briefUi?.rows.orEmpty()),
+            showAgents = agentsDiffer(rightNow + latest + briefUi?.rows.orEmpty()),
             needsYou = roots.count { it.status == ChatStatus.NeedsYou },
             running = roots.count { it.status == ChatStatus.Running },
             projects = chips.toImmutableList(),

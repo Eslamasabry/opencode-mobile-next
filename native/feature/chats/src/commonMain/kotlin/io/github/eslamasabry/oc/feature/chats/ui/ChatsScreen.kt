@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.frame.KitStatusPill
@@ -204,6 +206,7 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    val sectionGap = LocalKitTokens.current.sectionGap.dp
     val needsLine =
         if (state.needsYou == 0) null
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
@@ -338,7 +341,6 @@ public fun ChatsScreen(
                     // A1 (owner, 2026-11-08): "Right now" holds everything working or waiting on the person, never
                     // capped; "Recent" the five latest of the rest; then the way to the whole list. Each section is
                     // one grouped panel in the Style in force; the panel eases its height as rows come and go.
-                    val sectionGap = LocalKitTokens.current.sectionGap.dp
                     val above = state.brief?.rows.orEmpty().isNotEmpty()
                     // A conversation the return brief shows is said once, there.
                     val rightNow = state.rightNow.filterNot { it.key in briefKeys }
