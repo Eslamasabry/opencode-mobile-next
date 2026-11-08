@@ -818,7 +818,7 @@ void main() {
     }
   });
   for (final sample in [
-    (id: 'codex', expectedBytes: 472874130),
+    (id: 'codex', expectedBytes: 510271868),
     (id: 'goose', expectedBytes: 468715890),
     (id: 'omp-acp', expectedBytes: 628181952),
     (id: 'fx', expectedBytes: 300000000),

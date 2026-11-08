@@ -518,7 +518,7 @@ with tarfile.open(sys.argv[1], 'w:bz2') as t:
       final node = File('${guest.home}/.local/node/bin/node');
       await node.parent.create(recursive: true);
       await node.writeAsString(r'''#!/bin/sh
-if [ "$1" = --version ]; then echo v24.21.0; else exec /bin/sh "$@"; fi
+if [ "$1" = --version ]; then echo v24.22.2; else exec /bin/sh "$@"; fi
 ''');
       await Process.run('chmod', ['700', node.path]);
       await archive(r'''import io, sys, tarfile
