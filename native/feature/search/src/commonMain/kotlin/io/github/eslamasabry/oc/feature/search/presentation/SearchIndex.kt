@@ -105,12 +105,14 @@ public object SearchIndex {
                 add("inside-linux-services", SearchPlace.Services, LinuxRoute.KeptServices)
             if (caps.terminal)
                 add("project-terminal", SearchPlace.ProjectTerminal, RemoteTerminalRoute(profile))
-            if (ref != null) {
-                if (facts.hasShell && caps.fileBrowsing)
-                    add("project-files", SearchPlace.ProjectFiles, FilesRoute.Folder(ref))
-                if (caps.sessionDiff)
-                    add("project-changes", SearchPlace.ProjectChanges, GitRoute(ref))
-            }
+            // The open conversation's files, else the project's own files with no conversation.
+            val files =
+                ref?.let { FilesRoute.Folder(it) }
+                    ?: directory?.let { FilesRoute.ProjectFolder(profile, it) }
+            if (files != null && facts.hasShell && caps.fileBrowsing)
+                add("project-files", SearchPlace.ProjectFiles, files)
+            if (ref != null && caps.sessionDiff)
+                add("project-changes", SearchPlace.ProjectChanges, GitRoute(ref))
             if (directory != null) {
                 val workspace = ProjectsRoute.Project(profile, directory, initialWorkspace = true)
                 if (caps.languageServiceStatus || caps.formatterStatus)
@@ -121,8 +123,8 @@ public object SearchIndex {
                     )
                 if (caps.worktreeBrowsing)
                     add("project-worktrees", SearchPlace.ProjectWorktrees, workspace)
-                if (facts.hasShell && caps.fileBrowsing && caps.textSearch && ref != null)
-                    add("project-search", SearchPlace.ProjectSearch, FilesRoute.Folder(ref))
+                if (facts.hasShell && caps.fileBrowsing && caps.textSearch && files != null)
+                    add("project-search", SearchPlace.ProjectSearch, files)
             }
         }
 
