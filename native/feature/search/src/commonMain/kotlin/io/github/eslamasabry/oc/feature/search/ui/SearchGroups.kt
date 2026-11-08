@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchProject
 import io.github.eslamasabry.oc.feature.search.presentation.SearchResults
 import io.github.eslamasabry.oc.feature.search.presentation.SearchRowStatus
 import io.github.eslamasabry.oc.feature.search.presentation.SearchUi
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -87,10 +88,11 @@ internal fun LazyListScope.conversationGroup(
         val n = Numbers.format(rows.size)
         val label = stringResource(Res.string.searchB1SeeAll, n)
         val spoken = stringResource(Res.string.searchB1SeeAllSpoken, n)
-        val more: (@Composable () -> Unit)? =
-            if (!folded) null
-            else ({ KitButton(label = label, onClick = seeAll, role = KitButtonRole.Tertiary, semanticsLabel = spoken) })
-        KitSectionLabel(stringResource(Res.string.searchB1Conversations), trailing = more)
+        KitSectionLabel(
+            stringResource(Res.string.searchB1Conversations),
+            gapBefore = Space.S2.dp,
+            action = if (folded) KitLineAction(label, seeAll, semanticsLabel = spoken) else null,
+        )
     }
     val shown = if (folded) rows.take(SearchResults.COLLAPSED) else rows
     items(shown, key = { "c/" + it.hit.key }) { ConversationRow(it, state, actions) }
@@ -157,9 +159,16 @@ internal fun LazyListScope.inside(state: SearchUi) {
     }
 }
 
-internal fun LazyListScope.projectGroup(state: SearchUi, projects: List<SearchProject>, actions: SearchActions) {
+internal fun LazyListScope.projectGroup(
+    state: SearchUi,
+    projects: List<SearchProject>,
+    actions: SearchActions,
+    first: Boolean,
+) {
     if (projects.isEmpty()) return
-    item(key = "projects-label") { KitSectionLabel(stringResource(Res.string.e7ProjectProjectsTitle)) }
+    item(key = "projects-label") {
+        KitSectionLabel(stringResource(Res.string.e7ProjectProjectsTitle), gapBefore = if (first) Space.S2.dp else null)
+    }
     items(projects, key = { "p/" + it.directory }) { project ->
         val count = pluralStringResource(Res.plurals.searchB1ProjectConversations, project.conversations, Numbers.format(project.conversations))
         KitRow(
@@ -178,9 +187,12 @@ internal fun LazyListScope.placeGroup(
     destinations: List<io.github.eslamasabry.oc.feature.search.presentation.SearchIndexEntry>,
     words: Map<SearchPlace, Pair<String, String>>,
     actions: SearchActions,
+    first: Boolean,
 ) {
     if (destinations.isEmpty()) return
-    item(key = "places-label") { KitSectionLabel(stringResource(Res.string.searchB1Places)) }
+    item(key = "places-label") {
+        KitSectionLabel(stringResource(Res.string.searchB1Places), gapBefore = if (first) Space.S2.dp else null)
+    }
     items(destinations, key = { "d/" + it.id }) { entry ->
         KitRow(
             title = words.getValue(entry.place).first,

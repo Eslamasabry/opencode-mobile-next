@@ -196,6 +196,9 @@ class SearchB1Renders {
                 shoot("search-empty-$look", empty, style, dark)
                 shoot("search-typing-$look", typing, style, dark)
             }
+            val places =
+                typing.copy(query = "s", phase = SearchPhase.NoMatch, titleHits = persistentListOf(), contentHits = persistentListOf())
+            shoot("search-places-glass-dark", places, Style.Glass, dark = true)
             shoot("search-empty-glass-dark-ar", empty, Style.Glass, dark = true, arabic = true)
             shoot("search-typing-glass-dark-ar", typing.copy(query = "deb"), Style.Glass, dark = true, arabic = true)
         } finally {

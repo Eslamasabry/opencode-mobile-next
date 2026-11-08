@@ -16,8 +16,7 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchResults
 import io.github.eslamasabry.oc.feature.search.presentation.SearchUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
@@ -77,14 +76,12 @@ internal fun LazyListScope.idle(state: SearchUi, actions: SearchActions, field: 
         item(key = "recent-label") {
             KitSectionLabel(
                 stringResource(Res.string.p12SearchRecent),
-                trailing = {
-                    KitButton(
-                        label = stringResource(Res.string.searchB1Clear),
-                        onClick = actions::clearRecent,
-                        role = KitButtonRole.Tertiary,
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.searchB1Clear),
+                        actions::clearRecent,
                         semanticsLabel = stringResource(Res.string.p12SearchRecentClear),
-                    )
-                },
+                    ),
             )
         }
         item(key = "recent-chips") {

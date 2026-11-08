@@ -94,7 +94,7 @@ public fun SearchScreen(
         width = KitScreenWidth.Reading,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-            item(key = "web-search") { webSearch() }
+            if (web?.open == true) item(key = "web-search") { webSearch() }
             if (state.recentFailed) {
                 item(key = "recent-failed") { KitNotice(stringResource(Res.string.p12SearchRecentFailed)) }
             }
@@ -109,8 +109,8 @@ public fun SearchScreen(
                     conversationGroup(state, conversations, allConversations, actions) { allConversations = true }
                     more(state, actions)
                     inside(state)
-                    projectGroup(state, projects, actions)
-                    placeGroup(state, destinations, destinationWords, actions)
+                    projectGroup(state, projects, actions, first = conversations.isEmpty())
+                    placeGroup(state, destinations, destinationWords, actions, first = conversations.isEmpty() && projects.isEmpty())
                     val found = conversations.isNotEmpty() || projects.isNotEmpty() || destinations.isNotEmpty()
                     if (state.phase == SearchPhase.NoMatch && !found) noMatch(state.query, field)
                 }
@@ -141,13 +141,6 @@ private fun SearchBar(state: SearchUi, actions: SearchActions, field: TextFieldS
         modifier = Modifier.padding(top = Space.S2.dp),
         state = field,
         onSubmit = actions::submit,
-        resultCount =
-            if (state.phase == SearchPhase.Results || state.phase == SearchPhase.NoMatch) {
-                state.titleHits.size + state.contentHits.size
-            } else {
-                null
-            },
-        partial = state.content == ContentPhase.Searching,
         prominent = true,
         onBack = actions::back,
         backLabel = stringResource(Res.string.kitTopBarBack),

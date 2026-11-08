@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
@@ -40,6 +41,11 @@ public fun KitSectionLabel(
     explanation: String? = null,
     margin: Dp? = null,
     gapBefore: Dp? = null,
+    /**
+     * The section's one act at its end ("Clear", "See all 4"): label-size words in a 48 dp target that reaches past
+     * the caption's line instead of pushing the section down. TalkBack says its semanticsLabel when given.
+     */
+    action: KitLineAction? = null,
 ) {
     val tokens = LocalKitTokens.current
     val style = LocalKitStyle.current
@@ -57,7 +63,8 @@ public fun KitSectionLabel(
     var hasAbove by remember { mutableStateOf(false) }
     var explaining by remember { mutableStateOf(false) }
     val line = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Label).lineHeight.toDp() }
-    val reach = if (explanation == null) 0.dp else ((tokens.minTarget.dp - line) / 2).coerceAtLeast(0.dp) // F: lib/ui/kit/kit_section_label.dart:132
+    val reaches = explanation != null || action != null
+    val reach = if (!reaches) 0.dp else ((tokens.minTarget.dp - line) / 2).coerceAtLeast(0.dp) // F: lib/ui/kit/kit_section_label.dart:132
     val gap = ((gapBefore ?: if (hasAbove) tokens.sectionGap.dp else 0.dp) - reach).coerceAtLeast(0.dp)
     val words: @Composable () -> Unit = {
         KitText(shown, Modifier.semantics { heading(); contentDescription = text }, role = TypeRole.Label, tone = TextTone.Secondary)
@@ -74,6 +81,24 @@ public fun KitSectionLabel(
                 })
             }
             if (trailing != null) trailing()
+            if (action != null) SectionAction(action)
+        }
+    }
+}
+
+/** A section's end act: its words at the caption's size in text1, semibold, in a 48 dp target; never the accent. */
+@Composable
+private fun SectionAction(action: KitLineAction) {
+    val tokens = LocalKitTokens.current
+    KitTappable(
+        onClick = action.onClick,
+        enabled = action.enabled,
+        disabledReason = action.disabledReason,
+        modifier = Modifier.heightIn(min = tokens.minTarget.dp).offset(x = Space.S2.dp).testTag("kit-section-action")
+            .semantics { action.semanticsLabel?.let { contentDescription = it } },
+    ) {
+        Box(Modifier.heightIn(min = tokens.minTarget.dp).padding(horizontal = Space.S2.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            KitText(action.label, role = TypeRole.Label, tone = if (action.enabled) TextTone.Primary else TextTone.Tertiary, maxLines = 1)
         }
     }
 }
