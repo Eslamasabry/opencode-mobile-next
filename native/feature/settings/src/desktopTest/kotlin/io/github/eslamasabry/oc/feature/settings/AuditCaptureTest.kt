@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 /** Audit capture only: every Settings page through the real presenter on the phone-shaped fakes. */
 @OptIn(ExperimentalTestApi::class)
 class AuditCaptureTest {
-    private fun page(name: String, page: SettingsPage?) = Audit.guard("settings__$name__build") {
+    private fun page(name: String, page: SettingsPage?) = Audit.guard("settings__${name}__build") {
         var presenter: SettingsPresenter? = null
         Audit.shoot(
             "settings", name, "default",
