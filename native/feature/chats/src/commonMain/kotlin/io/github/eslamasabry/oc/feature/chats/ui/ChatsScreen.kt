@@ -358,6 +358,7 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRightNow),
                                     // A step of air under the chips, as above Recent, so the first label is not pressed up.
                                     gapBefore = if (above) sectionGap else Space.S4.dp,
+                                    prominentDividers = true,
                                 ) {
                                     rightNow.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
                                 }
@@ -369,6 +370,7 @@ public fun ChatsScreen(
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
+                                    prominentDividers = true,
                                 ) {
                                     recent.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
                                 }

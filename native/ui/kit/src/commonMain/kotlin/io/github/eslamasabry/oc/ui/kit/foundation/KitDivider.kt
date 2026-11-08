@@ -74,6 +74,27 @@ public fun KitDivider(
     }
 }
 
+/** A prominent line between rows that a panel draws itself: its ink and thickness in dp. */
+internal class KitProminentRule(val color: Color, val thicknessDp: Float)
+
+/**
+ * The prominent rule between a panel's rows, resolved the way [KitDivider] resolves it (B-173): at least 1 dp in the
+ * theme's tertiary ink at 30 %, unless the style draws its own rule (Brutal keeps its ink) or none (Soft: null).
+ */
+@Composable
+internal fun kitProminentRule(): KitProminentRule? {
+    val style = LocalKitStyle.current
+    val roles = LocalKitRoles.current
+    val hairline = kitHairline().value
+    val look = style.spec.resolve(SurfaceRequest(roles, SurfaceRole.Divider, style.knobs, withinGroup = true))
+    val raw = look?.fill ?: roles.hairline
+    val ruleColor = Color(raw.v)
+    if (ruleColor.alpha <= 0f) return null
+    val ruled = style.spec.tokens.dividerWidthDp ?: hairline
+    val color = if (raw != roles.hairline) ruleColor else Color(roles.text3.v).copy(alpha = PROMINENT_ALPHA)
+    return KitProminentRule(color, maxOf(ruled, PROMINENT_RULE_DP))
+}
+
 /** Flutter `KitLayout.prominentRule`. */
 private const val PROMINENT_RULE_DP = 1f
 
