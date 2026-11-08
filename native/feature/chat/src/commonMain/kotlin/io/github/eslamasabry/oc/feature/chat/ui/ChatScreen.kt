@@ -110,6 +110,10 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.revertReview
+import io.github.eslamasabry.oc.ui.words.res.revertStaged
+import io.github.eslamasabry.oc.ui.words.res.undoneStatus
+import io.github.eslamasabry.oc.ui.words.res.undonePutBack
 import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
@@ -1272,6 +1276,35 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 tone = StatusTone.Failure,
                 onDismiss = { actions.dismissStatus(StatusPick.LINK) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
+            )
+        // S28 story 3 (Flutter `_stagedRevertStatus`, `_undoneStatus`): the way back sits on the line.
+        ChatStatusKind.StagedUndo ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.revertStaged),
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.revertReview),
+                        actions::putBack,
+                        testTag = "chat-status-revert-review",
+                        icon = KitIcons.history,
+                    ),
+            )
+        ChatStatusKind.Undone ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.undoneStatus),
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.undonePutBack),
+                        actions::putBack,
+                        testTag = "chat-status-undo-put-back",
+                        icon = KitIcons.restore,
+                    ),
             )
     }
 

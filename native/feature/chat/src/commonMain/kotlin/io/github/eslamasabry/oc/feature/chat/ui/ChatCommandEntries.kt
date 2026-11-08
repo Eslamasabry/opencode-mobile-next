@@ -11,6 +11,8 @@ import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatUiRestoreRevertedPrompt
+import io.github.eslamasabry.oc.ui.words.res.chatUiRestoreTheCurrentlyRevertedSessionState
 import io.github.eslamasabry.oc.ui.words.res.chatUiBrowsePreviewDownloadAndAttachProjectFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiChangeTheTitleShownInTheSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAServerModelByProviderAnd
@@ -144,6 +146,8 @@ internal fun rememberChatCommandEntries(
     val thinkingBody = stringResource(Res.string.chatUiToggleLongReasoningDetailsAcrossTheTranscript)
     val undoTitle = stringResource(Res.string.chatUiRevertLastPrompt)
     val undoBody = stringResource(Res.string.revertUndoDescription)
+    val redoTitle = stringResource(Res.string.chatUiRestoreRevertedPrompt)
+    val redoBody = stringResource(Res.string.chatUiRestoreTheCurrentlyRevertedSessionState)
     val shellTitle = stringResource(Res.string.chatUiRunShellCommand)
     val shellBody = stringResource(Res.string.commandSheetShellDescription)
     val retryTitle = stringResource(Res.string.chatUiRetryLastPrompt)
@@ -245,6 +249,9 @@ internal fun rememberChatCommandEntries(
         add(ChatCommandEntry("thinking", "thinking", thinkingTitle, thinkingBody, display, KitIcons.idea, listOf("toggle-thinking"), actions::toggleReasoning))
         if (caps.undo && hasPrompt && idle)
             add(ChatCommandEntry("undo", "undo", undoTitle, undoBody, current, KitIcons.undo, listOf("revert"), actions::undoLastPrompt))
+        // S28 story 3 (Flutter `/redo`): undone turns come back (a staged undo opens its review page).
+        if (caps.undo && state.canPutBack)
+            add(ChatCommandEntry("redo", "redo", redoTitle, redoBody, current, KitIcons.restore, listOf("restore"), actions::putBack))
         if (work != null && caps.shell)
             add(ChatCommandEntry("shell", "shell", shellTitle, shellBody, current, KitIcons.terminal, emptyList()) { work.openShellDialog() })
         if (hasPrompt && idle)

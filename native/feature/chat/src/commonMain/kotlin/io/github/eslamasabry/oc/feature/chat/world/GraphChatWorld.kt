@@ -263,6 +263,8 @@ internal class GraphChatWorld(
     override val load: StateFlow<ChatLoad> = mutableLoad.asStateFlow()
     override val readOnly: StateFlow<ReadOnlyChat?> = mutableReadOnly.asStateFlow()
     override val title: StateFlow<String?> = mutableTitle.asStateFlow()
+    private val mutableUndone = MutableStateFlow(ChatUndone.None)
+    override val undone: StateFlow<ChatUndone> = mutableUndone.asStateFlow()
     override val capabilities: StateFlow<ServerCapabilities> = mutableCaps.asStateFlow()
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
     override val linkRetryAtMs: StateFlow<Long?> = mutableRetryAt.asStateFlow()
@@ -885,8 +887,12 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
-                        if (event is CoreEvent.SessionUpserted && event.session.id == sid)
+                        if (event is CoreEvent.SessionUpserted && event.session.id == sid) {
                             refreshReadOnly(gateway, event.session)
+                            adoptUndone(gateway, event.session)
+                        }
+                        if (event is CoreEvent.RevertChanged && event.sessionId == sid)
+                            (gateway.session(sid) as? Outcome.Ok)?.value?.let { adoptUndone(gateway, it) }
                         if (event is CoreEvent.SessionChanged && event.sessionId == sid)
                             refreshReadOnly(gateway)
                         if (
@@ -1089,6 +1095,7 @@ internal class GraphChatWorld(
                     return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
                 }
                 val details = (session as Outcome.Ok).value
+                if (details.id == sid) adoptUndone(gateway, details)
                 if (details.id != sid) {
                     val failure = Failure.UnreadableReply()
                     if (mutableLoad.value !is ChatLoad.Live)
@@ -2328,6 +2335,29 @@ internal class GraphChatWorld(
             currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val r = (graph as ChatGraphAccessors).chatOperations.deleteMessage(sid, id)
         if (r is Outcome.Ok && registry.graphFor(ref) === graph) bind(graph)
+        return r
+    }
+
+    /** S28 story 3: the session's undone turns, as the line and `/redo` show them. */
+    private fun adoptUndone(gateway: ServerGateway, session: Session) {
+        if (currentAttached()?.gateway !== gateway) return
+        mutableUndone.value =
+            ChatUndone.of(
+                gateway.capabilities.value.sessionRevert,
+                gateway.facet<StagedRevertGateway>() != null,
+                session,
+            )
+    }
+
+    override suspend fun putBack(): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
+        val graph =
+            currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val r = (graph as ChatGraphAccessors).chatOperations.restoreSession(sid)
+        if (r is Outcome.Ok && registry.graphFor(ref) === graph) {
+            mutableUndone.value = ChatUndone.None
+            bind(graph)
+        }
         return r
     }
 

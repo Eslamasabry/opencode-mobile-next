@@ -275,6 +275,20 @@ public interface ChatWorld {
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
 
     /**
+     * S28 story 3 (Flutter `_stagedRevertStatus` / `_undoneStatus`): whether turns of this conversation are undone
+     * now, and how they come back (Review the staged undo, or Put back).
+     */
+    public val undone: StateFlow<ChatUndone>
+        get() = NoUndone
+
+    /**
+     * S28 story 3 (Flutter `_restore`, `/redo`): brings the undone turns back on a server that undoes at once, then
+     * reads the conversation again. A staged undo is reviewed on its own page instead.
+     */
+    public suspend fun putBack(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
+
+    /**
      * P12-CHAT-FEEL: the bytes of a picture a reply names by its server path (B-CHAT-059), for the
      * in-chat viewer. Read through the conversation's own file transport; never a web fetch.
      */
@@ -414,3 +428,33 @@ public data class ReadOnlyChat(val parent: ConversationRef? = null)
 private val NoRetry: StateFlow<Long?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)
+
+/** S28 story 3: undone turns of a conversation and how they come back. */
+public enum class ChatUndone {
+    /** Nothing is undone. */
+    None,
+
+    /** A staged undo waits for review (OpenCode 2): its page restores or applies it. */
+    Staged,
+
+    /** The server undid the turns at once; Put back restores them. */
+    Applied;
+
+    public companion object {
+        /** Flutter `chat_status_line.dart:89-98`: staged where the server stages, applied elsewhere. */
+        public fun of(
+            sessionRevert: Boolean,
+            stages: Boolean,
+            session: io.github.eslamasabry.oc.core.model.Session,
+        ): ChatUndone {
+            val undone = session.reverted || session.stagedRevert != null
+            return when {
+                !undone || !sessionRevert -> None
+                stages -> Staged
+                else -> Applied
+            }
+        }
+    }
+}
+
+private val NoUndone: StateFlow<ChatUndone> = kotlinx.coroutines.flow.MutableStateFlow(ChatUndone.None)

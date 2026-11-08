@@ -67,6 +67,8 @@ public data class ChatUi(
     val reasoningExpanded: Boolean = false,
     /** Lookup-only receipt checks, kept for this visit; never authorizes another send. */
     val receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
+    /** S28 story 3: undone turns can come back (the launcher's `/redo`). */
+    val canPutBack: Boolean = false,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -161,6 +163,12 @@ public enum class ChatStatusKind {
 
     /** The result of the person's lookup; dismissing it never changes the receipt. */
     ReceiptChecked,
+
+    /** S28 story 3: a staged undo waits for review ("Review"). */
+    StagedUndo,
+
+    /** S28 story 3: turns were undone at once; "Put back" restores them. */
+    Undone,
 }
 
 /**
@@ -546,6 +554,12 @@ public interface ChatActions {
 
     /** Commands launcher: Revert last prompt (opens the Undo from here page for the newest prompt). */
     public fun undoLastPrompt() {}
+
+    /**
+     * S28 story 3 (Flutter `_restore`, `/redo`): undone turns come back: a staged undo opens its review page, an
+     * undo the server applied at once is put back.
+     */
+    public fun putBack() {}
 
     /** Commands launcher: /new and /sessions, the app's own commands. */
     public fun openNewConversation() {}
