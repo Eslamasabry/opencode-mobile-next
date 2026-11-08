@@ -16263,6 +16263,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get desktopReleaseOpenPage => 'Abrir la página del lanzamiento';
 
   @override
+  String get appUpdatePromptTitle => 'Actualización disponible';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'Descargar y actualizar';
+
+  @override
+  String get appUpdateLater => 'Más tarde';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'Tamaño: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'Novedades';
+
+  @override
+  String get appUpdateInstall => 'Instalar';
+
+  @override
+  String get appUpdateDownloading => 'Descargando actualización…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'Listo para instalar. Toca Instalar para finalizar la actualización.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'Error al descargar la actualización. Comprueba la conexión y vuelve a intentarlo.';
+
+  @override
+  String get appUpdateRetry => 'Reintentar';
+
+  @override
   String get runningWorkTitle => 'Trabajo en esta conversación';
 
   @override
@@ -19568,49 +19602,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get integrationsPageLoadFailed => 'No se pudo cargar esta página';
-
-  @override
-  String get integrationsProvidersLoadFailed =>
-      'No se pudieron cargar los proveedores';
-
-  @override
-  String get integrationsMcpServersLoadFailed =>
-      'No se pudieron cargar los servidores MCP';
-
-  @override
-  String get integrationsResourcesLoadFailed =>
-      'No se pudieron cargar los recursos MCP';
-
-  @override
-  String get integrationsListFailedBody =>
-      'El servidor no envió esta lista. Inténtalo de nuevo.';
-
-  @override
-  String get integrationsFolderMissing =>
-      'La carpeta de este proyecto ya no está en el servidor. Abre otro proyecto.';
-
-  @override
-  String get integrationsProvidersUnsupported =>
-      'Este servidor no muestra proveedores';
-
-  @override
-  String get integrationsMcpServersUnsupported =>
-      'Este servidor no muestra servidores MCP';
-
-  @override
-  String get integrationsResourcesUnsupported =>
-      'Este servidor no muestra recursos MCP';
-
-  @override
-  String get integrationsListUnsupportedBody =>
-      'Su versión no ofrece esta lista.';
-
-  @override
-  String get integrationsWaitingTitle => 'Esperando al servidor';
-
-  @override
-  String get integrationsWaitingBody =>
-      'Esta página se carga sola cuando el servidor esté conectado.';
 
   @override
   String kitLastKnownRefreshing(String updated) {
@@ -34336,6 +34327,65 @@ class AppLocalizationsEs extends AppLocalizations {
   String get phoneSetupStageCompat => 'Reintentando en modo de compatibilidad';
 
   @override
+  String get teamRefusalServerRestarted =>
+      'OpenCode restarted while this step was running, so it was cut off.';
+
+  @override
+  String get teamRefusalServerRestartedNext =>
+      'Resume to send that step again. It picks up from the work already done.';
+
+  @override
+  String get teamRefusalRestartResend =>
+      'OpenCode restarted while this step was running. The team is sending it again.';
+
+  @override
+  String get teamRefusalRestartResendNext =>
+      'Nothing to do. Work already done is kept.';
+
+  @override
+  String get integrationsProvidersLoadFailed =>
+      'No se pudieron cargar los proveedores';
+
+  @override
+  String get integrationsMcpServersLoadFailed =>
+      'No se pudieron cargar los servidores MCP';
+
+  @override
+  String get integrationsResourcesLoadFailed =>
+      'No se pudieron cargar los recursos MCP';
+
+  @override
+  String get integrationsListFailedBody =>
+      'El servidor no envió esta lista. Inténtalo de nuevo.';
+
+  @override
+  String get integrationsFolderMissing =>
+      'La carpeta de este proyecto ya no está en el servidor. Abre otro proyecto.';
+
+  @override
+  String get integrationsProvidersUnsupported =>
+      'Este servidor no muestra proveedores';
+
+  @override
+  String get integrationsMcpServersUnsupported =>
+      'Este servidor no muestra servidores MCP';
+
+  @override
+  String get integrationsResourcesUnsupported =>
+      'Este servidor no muestra recursos MCP';
+
+  @override
+  String get integrationsListUnsupportedBody =>
+      'Su versión no ofrece esta lista.';
+
+  @override
+  String get integrationsWaitingTitle => 'Esperando al servidor';
+
+  @override
+  String get integrationsWaitingBody =>
+      'Esta página se carga sola cuando el servidor esté conectado.';
+
+  @override
   String get crashOfferMessage =>
       'OpenCode Mobile se cerró inesperadamente la última vez. ¿Enviar un informe de fallo?';
 
@@ -34396,40 +34446,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get telemetryConsentNotNow => 'Ahora no';
-
-  @override
-  String get appUpdatePromptTitle => 'Actualización disponible';
-
-  @override
-  String get appUpdateDownloadAndUpdate => 'Descargar y actualizar';
-
-  @override
-  String get appUpdateLater => 'Más tarde';
-
-  @override
-  String appUpdateSize(String size) {
-    return 'Tamaño: $size';
-  }
-
-  @override
-  String get appUpdateChangelog => 'Novedades';
-
-  @override
-  String get appUpdateInstall => 'Instalar';
-
-  @override
-  String get appUpdateDownloading => 'Descargando actualización…';
-
-  @override
-  String get appUpdateReadyToInstall =>
-      'Listo para instalar. Toca Instalar para finalizar la actualización.';
-
-  @override
-  String get appUpdateDownloadFailed =>
-      'Error al descargar la actualización. Comprueba la conexión y vuelve a intentarlo.';
-
-  @override
-  String get appUpdateRetry => 'Reintentar';
 
   @override
   String get telemetryUsageTitle => 'Usage and app health';

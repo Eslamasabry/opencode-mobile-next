@@ -221,6 +221,11 @@ impl OpenCode2Client {
         });
         Ok(version)
     }
+    /// The pid of the server this client last proved, if any. A turn sent to
+    /// one pid and found dead under another was cut off by a restart.
+    pub async fn server_pid(&self) -> Option<u64> {
+        self.identity.lock().await.as_ref().map(|known| known.pid)
+    }
     async fn validate_schema(&self) -> Result<(), ProtocolError> {
         validate_openapi(
             &self

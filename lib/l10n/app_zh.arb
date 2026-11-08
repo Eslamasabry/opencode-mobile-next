@@ -8135,6 +8135,10 @@
   "productErrorProjectGit": "无法读取此项目的 Git 历史，因此对话无法开始。请从备份恢复项目，或重新克隆。",
   "projectsOneFolderTitle": "服务器只使用一个文件夹",
   "uncertainAuthCloseHint": "若要重新开始，请关闭此页面，并从该提供商所在行清除未确认的登录。",
+  "teamRefusalServerRestarted": "此步骤运行时 OpenCode 重启了，因此被中断。",
+  "teamRefusalServerRestartedNext": "请继续以重新发送此步骤。它会从已完成的工作接着做。",
+  "teamRefusalRestartResend": "此步骤运行时 OpenCode 重启了。团队正在重新发送它。",
+  "teamRefusalRestartResendNext": "无需操作。已完成的工作会保留。",
   "termuxRetiredNotice": "Termux 已不再受支持。请在此手机上设置内置 Linux，或连接你的电脑。你在 Termux 中的项目仍然在那里；把它们复制到手机的共享存储，或用 Git 推送，即可迁移过来。",
   "termuxRetiredSetUpLinux": "设置内置 Linux"
 }

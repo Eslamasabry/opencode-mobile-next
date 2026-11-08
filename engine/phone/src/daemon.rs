@@ -1096,6 +1096,38 @@ async fn admitted_prompt(
     checkpoint_role: &str,
     read_only: bool,
 ) -> Result<(), &'static str> {
+    admitted_prompt_on(
+        e,
+        "promptDispatch",
+        job,
+        directory,
+        session,
+        role,
+        model,
+        instructions,
+        prompt,
+        checkpoint_role,
+        read_only,
+    )
+    .await
+}
+/// [admitted_prompt] on a chosen dispatch ledger: `promptDispatch` for a
+/// step's first prompt, `restartDispatch` for its one resend after OpenCode
+/// restarted under it.
+#[allow(clippy::too_many_arguments)]
+async fn admitted_prompt_on(
+    e: &Engine,
+    ledger_key: &str,
+    job: &Value,
+    directory: &str,
+    session: &str,
+    role: &str,
+    model: &str,
+    instructions: &str,
+    prompt: &str,
+    checkpoint_role: &str,
+    read_only: bool,
+) -> Result<(), &'static str> {
     if model.is_empty() {
         return Err("modelNotConfigured");
     }
@@ -1117,7 +1149,7 @@ async fn admitted_prompt(
             Ok(()) => {
                 record_admission_reason(e, job, "")?;
                 let id = job["id"].as_str().ok_or("jobInvalid")?;
-                record_dispatch(e, id, checkpoint_role, "dispatching")?;
+                record_dispatch_on(e, ledger_key, id, checkpoint_role, "dispatching").await?;
                 let dispatch = tokio::time::timeout(
                     Duration::from_secs(5),
                     e.server.prompt(
@@ -1138,7 +1170,10 @@ async fn admitted_prompt(
                 }
                 match dispatch {
                     Ok(Ok(_)) => {
-                        if record_dispatch(e, id, checkpoint_role, "dispatched").is_err() {
+                        if record_dispatch_on(e, ledger_key, id, checkpoint_role, "dispatched")
+                            .await
+                            .is_err()
+                        {
                             let _ = e.server.abort(directory, session).await;
                             return Err("jobNotActive");
                         }
@@ -1172,9 +1207,24 @@ fn active_stage(e: &Engine, id: &str) -> Result<String, &'static str> {
     }
     Ok(stage.to_owned())
 }
-fn record_dispatch(e: &Engine, id: &str, role: &str, state: &str) -> Result<(), &'static str> {
+async fn record_dispatch_on(
+    e: &Engine,
+    ledger_key: &str,
+    id: &str,
+    role: &str,
+    state: &str,
+) -> Result<(), &'static str> {
     let stage = active_stage(e, id)?;
-    patch(e, id, &stage, json!({"promptDispatch":{role:state}})).map(|_| ())
+    let mut value = json!({ledger_key:{role:state}});
+    if state == "dispatched" {
+        // The process that accepted the turn. If the turn later dies under
+        // another proven pid, OpenCode restarted under it (see await_completion).
+        // Read after the prompt, so it is never older than the accepting pid.
+        if let Some(pid) = e.server.server_pid().await {
+            value["dispatchServerPid"] = json!({role:pid});
+        }
+    }
+    patch(e, id, &stage, value).map(|_| ())
 }
 fn utc_day() -> String {
     #[cfg(unix)]
@@ -1630,6 +1680,10 @@ async fn resume_job(e: &Engine, job: &Value) -> Result<(), &'static str> {
     let session = job["sessionIds"][role]
         .as_str()
         .ok_or("recoveryNeedsReview")?;
+    let current = current_job(e, id)?;
+    if restart_resend_due(&current, role) {
+        resend_after_restart(e, &current, role, directory, session).await?;
+    }
     let observed = await_completion(e, id, role, directory, session).await?;
     if !boundary_verified(e) {
         return Err("boundaryUnavailable");
@@ -1674,6 +1728,117 @@ async fn resume_job(e: &Engine, job: &Value) -> Result<(), &'static str> {
     patch(e, id, "mergeReady", json!({"stage":"merging"}))?;
     merge_and_publish(e, job, commit).await
 }
+fn current_job(e: &Engine, id: &str) -> Result<Value, &'static str> {
+    e.store
+        .lock()
+        .map_err(|_| "storeUnavailable")?
+        .jobs()
+        .map_err(|_| "jobChanged")?
+        .into_iter()
+        .find(|job| job["id"] == id)
+        .ok_or("jobChanged")
+}
+/// A restart round was opened for [role] (by Resume, or by the engine itself
+/// within its limit) and nothing of it was sent yet. A round whose send is
+/// "dispatching" or "dispatched" is only observed, never sent twice.
+fn restart_resend_due(job: &Value, role: &str) -> bool {
+    job["restartResend"] == role && job["restartDispatch"][role].is_null()
+}
+const RESTART_NOTE: &str = "OpenCode restarted while you were on this step, so \
+     your last turn was cut off before it finished. First look at what is already \
+     done (files, commits, your earlier messages here) and continue from there. \
+     Do not redo or duplicate work that is already finished. The original request \
+     follows.";
+/// Sends the step's own request again into the same session, once, after the
+/// turn died under a restarted OpenCode. The request is rebuilt from the job's
+/// approved inputs (never from model output), on the restart dispatch ledger.
+async fn resend_after_restart(
+    e: &Engine,
+    job: &Value,
+    role: &str,
+    directory: &str,
+    session: &str,
+) -> Result<(), &'static str> {
+    let model = selected_job_model(e, job, directory, role).await?;
+    let task = job["taskId"]
+        .as_str()
+        .filter(|s| !s.is_empty())
+        .or(job["id"].as_str())
+        .ok_or("jobInvalid")?;
+    let (agent, instructions, request, read_only) = match role {
+        "planner" => {
+            // The planner saw the job as it was queued; never runtime state.
+            let mut input = job.clone();
+            if let Some(fields) = input.as_object_mut() {
+                for key in [
+                    "reason",
+                    "resumeStage",
+                    "freshSessionIds",
+                    "promptDispatch",
+                    "restartDispatch",
+                    "dispatchServerPid",
+                    "restartResend",
+                    "restartResends",
+                    "sessionDispatchDays",
+                    "resolvedModels",
+                    "usageRevision",
+                ] {
+                    fields.remove(key);
+                }
+            }
+            input["stage"] = json!("queued");
+            input["directory"] = Value::Null;
+            input["sessionIds"] = json!({});
+            input["sessionUsage"] = json!({});
+            (
+                "planner",
+                job["instructions"].as_str().unwrap_or(""),
+                planner_request(&input),
+                true,
+            )
+        }
+        "worker" => (
+            job["roleId"].as_str().unwrap_or("worker"),
+            job["instructions"].as_str().unwrap_or(""),
+            worker_request(job, &crate::repository::task_branch(task)),
+            job["readOnly"] == true,
+        ),
+        _ => (
+            "checker",
+            job["checkerRole"]["instructions"]
+                .as_str()
+                .ok_or("checkerRoleMissing")?,
+            checker_request(job),
+            true,
+        ),
+    };
+    admitted_prompt_on(
+        e,
+        "restartDispatch",
+        job,
+        directory,
+        session,
+        agent,
+        &model,
+        instructions,
+        &format!("{RESTART_NOTE}\n\n{request}"),
+        role,
+        read_only,
+    )
+    .await
+}
+/// `serverRestarted` when the turn for [role] was accepted by one OpenCode
+/// process and is now dead under another the client proved to be the same
+/// server (an app restart or a crash relaunch); otherwise [fallback].
+async fn restart_or(e: &Engine, job_id: &str, role: &str, fallback: &'static str) -> &'static str {
+    let dispatched = current_job(e, job_id)
+        .ok()
+        .and_then(|job| job["dispatchServerPid"][role].as_u64());
+    match (dispatched, e.server.server_pid().await) {
+        (Some(before), Some(now)) if before != now => "serverRestarted",
+        _ => fallback,
+    }
+}
 async fn await_completion(
     e: &Engine,
     job_id: &str,
@@ -1692,7 +1857,9 @@ async fn await_completion(
                 errors = 0;
                 value
             }
-            Err(_) if errors < 3 => {
+            // A restart from Settings or a crash relaunch takes seconds; wait
+            // it out so the turn's fate is read from the server that came back.
+            Err(_) if errors < 15 => {
                 errors += 1;
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
@@ -1724,12 +1891,19 @@ async fn await_completion(
                 tokio::time::sleep(Duration::from_secs(2)).await
             }
             Some("blocked") => return Err("needsAnswer"),
-            Some("failed") => return Err(observed_failure_reason(&observed)),
+            Some("failed") => {
+                let reason = observed_failure_reason(&observed);
+                if reason != "sessionFailed" {
+                    return Err(reason);
+                }
+                return Err(restart_or(e, job_id, role, reason).await);
+            }
             Some("unknown") if !seen_running && accepted_at.elapsed() < Duration::from_secs(30) => {
                 // A 204 may precede both status and turn persistence. Missing
                 // evidence stays pending briefly, never completed or resent.
                 tokio::time::sleep(Duration::from_secs(2)).await;
             }
+            Some("unknown") => return Err(restart_or(e, job_id, role, "sessionUnknown").await),
             _ => return Err("sessionUnknown"),
         }
     }
@@ -2697,6 +2871,169 @@ mod tests {
             Some(0.0),
             "second undispatched lane is zero; first lane remains unknown"
         );
+    }
+
+    /// An OC2 server whose `ses_test` turn died: the latest assistant message
+    /// ended in an error and the session is idle and not running. It reports
+    /// [pid]; every non-GET request is counted.
+    async fn dead_turn_server(
+        pid: u64,
+    ) -> (
+        String,
+        Arc<std::sync::atomic::AtomicUsize>,
+        tokio::task::JoinHandle<()>,
+    ) {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let posts = Arc::new(AtomicUsize::new(0));
+        let writes = posts.clone();
+        let app = Router::new().fallback(move |request: Request| {
+            let writes = writes.clone();
+            async move {
+                if request.method() != axum::http::Method::GET { writes.fetch_add(1, Ordering::SeqCst); }
+                let body = match request.uri().path() {
+                    "/api/info" => json!({"version":"2.0.29","pid":pid,"urls":[],"paths":{"tmp":"/tmp"}}),
+                    "/openapi.json" => serde_json::from_str(include_str!("../tests/fixtures/oc2-2.0.29-driver-openapi.json")).unwrap(),
+                    "/api/session/ses_test" => json!({"data":{"id":"ses_test","location":{"directory":"/root/projects/poll"},"outcome":"failed","time":{"idle":3}}}),
+                    "/api/session/active" => json!({"data":{}}),
+                    "/api/session/ses_test/message" => json!({"data":[
+                        {"id":"msg_1","sessionID":"ses_test","type":"user"},
+                        {"id":"msg_2","sessionID":"ses_test","type":"assistant","finish":"error","error":{"type":"unknown"},"content":[{"type":"text","text":"half"}]},
+                        {"id":"msg_3","sessionID":"ses_test","type":"idle","outcome":"failed","time":{"created":3}}
+                    ],"cursor":{}}),
+                    "/api/session/ses_test/permission" | "/api/session/ses_test/inbox" => json!({"data":[]}),
+                    "/api/form" => json!({"location":{"directory":"/root/projects/poll"},"data":[]}),
+                    _ => json!({}),
+                };
+                Json(body).into_response()
+            }
+        });
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = format!("http://{}", listener.local_addr().unwrap());
+        let server = tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (address, posts, server)
+    }
+
+    #[tokio::test]
+    async fn a_turn_killed_by_an_opencode_restart_is_named_and_a_plain_failure_is_not() {
+        // The planner's turn was accepted by OpenCode pid 1. Found dead under
+        // pid 2, the same server came back after a restart: serverRestarted.
+        // Found dead under the pid that accepted it: an ordinary failure.
+        for (now, expected) in [(2, "serverRestarted"), (1, "sessionFailed")] {
+            let root = tempfile::tempdir().unwrap();
+            let mut e = fixture(root.path());
+            let (url, posts, server) = dead_turn_server(now).await;
+            Arc::get_mut(&mut e).unwrap().server =
+                OpenCodeClient::new(&url, "opencode", "fixture-only").unwrap();
+            let (_, job) = running_planner(&e);
+            e.store
+                .lock()
+                .unwrap()
+                .update_job(&job, "running", &json!({"dispatchServerPid":{"planner":1}}))
+                .unwrap();
+            let result =
+                await_completion(&e, &job, "planner", "/root/projects/poll", "ses_test").await;
+            server.abort();
+            assert_eq!(result.unwrap_err(), expected);
+            // Reading a dead turn never sends anything.
+            assert_eq!(posts.load(std::sync::atomic::Ordering::SeqCst), 0);
+        }
+    }
+
+    #[test]
+    fn a_restart_cut_step_is_sent_again_once_per_round_and_then_left_to_the_person() {
+        let root = tempfile::tempdir().unwrap();
+        let e = fixture(root.path());
+        let (project, job) = running_planner(&e);
+        let store = e.store.lock().unwrap();
+        let cut = |store: &Store| {
+            let stage = store.jobs().unwrap()[0]["stage"].as_str().unwrap().to_owned();
+            store
+                .update_job(&job, &stage, &json!({"stage":"interrupted","reason":"serverRestarted"}))
+                .unwrap();
+        };
+        let resent = |store: &Store| {
+            // The daemon's send of the round: dispatching, then dispatched.
+            for state in ["dispatching", "dispatched"] {
+                store
+                    .update_job(&job, "resuming", &json!({"restartDispatch":{"planner":state}}))
+                    .unwrap();
+            }
+        };
+        // A restart-cut step is not resent behind the person's back unless
+        // the round is opened, and the original prompt is never redispatched.
+        assert_eq!(
+            store
+                .update_job(&job, "running", &json!({"restartDispatch":{"planner":"dispatching"}}))
+                .unwrap_err()
+                .code(),
+            "invalidJobPatch"
+        );
+        for round in 1..=crate::store::AUTO_RESTART_RESENDS {
+            cut(&store);
+            let timeline = store.workspace().unwrap()["projects"][0]["timeline"].clone();
+            assert!(timeline.as_array().unwrap().last().unwrap()["text"]
+                .as_str()
+                .unwrap()
+                .contains("cut off when OpenCode restarted"));
+            store.reconcile_restart_jobs().unwrap();
+            let resumed = store.jobs().unwrap()[0].clone();
+            assert_eq!(resumed["stage"], "resuming", "round {round}");
+            assert_eq!(resumed["reason"], "restartResend");
+            assert_eq!(resumed["restartResend"], "planner");
+            assert_eq!(resumed["restartResends"]["planner"], round);
+            assert_eq!(resumed["promptDispatch"]["planner"], "dispatched");
+            assert!(restart_resend_due(&resumed, "planner"));
+            resent(&store);
+            let sent = store.jobs().unwrap()[0].clone();
+            assert!(!restart_resend_due(&sent, "planner"));
+            // Within a round the step is never sent twice.
+            assert_eq!(
+                store
+                    .update_job(&job, "resuming", &json!({"restartDispatch":{"planner":"dispatching"}}))
+                    .unwrap_err()
+                    .code(),
+                "promptAlreadyDispatched"
+            );
+            // Another engine pass does not open a second round by itself.
+            store.reconcile_restart_jobs().unwrap();
+            assert!(!restart_resend_due(&store.jobs().unwrap()[0], "planner"));
+        }
+        // Past the limit the engine stops and leaves the choice to the person.
+        cut(&store);
+        store.reconcile_restart_jobs().unwrap();
+        let held = store.jobs().unwrap()[0].clone();
+        assert_eq!(held["stage"], "interrupted");
+        assert_eq!(held["reason"], "serverRestarted");
+        // Resume still opens a round.
+        let revision = store.workspace().unwrap()["projects"][0]["revision"].clone();
+        assert_eq!(store.execute(&json!({"requestId":"resume-cut","action":"resumeProject","projectId":project,"expectedRevision":revision})).unwrap()["accepted"], true);
+        let resumed = store.jobs().unwrap()[0].clone();
+        assert_eq!(resumed["stage"], "resuming");
+        assert!(restart_resend_due(&resumed, "planner"));
+    }
+
+    #[test]
+    fn an_engine_death_mid_resend_observes_instead_of_sending_again() {
+        let root = tempfile::tempdir().unwrap();
+        let e = fixture(root.path());
+        let (_, job) = running_planner(&e);
+        let store = e.store.lock().unwrap();
+        store
+            .update_job(&job, "running", &json!({"stage":"interrupted","reason":"serverRestarted"}))
+            .unwrap();
+        store.reconcile_restart_jobs().unwrap();
+        store
+            .update_job(&job, "resuming", &json!({"restartDispatch":{"planner":"dispatching"}}))
+            .unwrap();
+        // The engine dies with the resend's acknowledgment unknown.
+        store.recover().unwrap();
+        store.reconcile_restart_jobs().unwrap();
+        let after = store.jobs().unwrap()[0].clone();
+        assert_eq!(after["stage"], "resuming");
+        assert_eq!(after["restartResends"]["planner"], 1);
+        assert!(!restart_resend_due(&after, "planner"));
     }
 
     #[tokio::test]
