@@ -100,7 +100,7 @@ class KitScreenGutterTest {
                 KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
                     KitScreen(topBar = { KitTopBar("Saved prompts") }) {
                         Column {
-                            KitScreen {
+                            KitScreen(Modifier.height(120.dp)) {
                                 inner = kitPageGutter()
                                 Box(Modifier.fillMaxWidth().height(40.dp).testTag("nested-part"))
                             }

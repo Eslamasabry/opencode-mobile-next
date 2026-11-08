@@ -146,7 +146,7 @@ class PromptsScreensTest {
         onNodeWithText("2 attachments").assertExists()
         onNodeWithText("Explain the failing test").performClick()
         // C05: Delete waits in the prompt's own menu (Flutter's row ⋯), never as loose words under it.
-        onAllNodesWithTag("kit-row-menu")[0].performClick()
+        onAllNodesWithTag("kit-row-menu", useUnmergedTree = true)[0].performClick()
         onNodeWithText("Delete saved prompt").performClick()
         onNodeWithText("Save prompt for later").performClick()
         onNodeWithText("Slash commands and agents").performClick()
