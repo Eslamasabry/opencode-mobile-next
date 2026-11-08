@@ -78,9 +78,9 @@ public fun KitRowGroup(
     val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
     val panelModifier =
         if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()).padding(paneInset) else Modifier
-    Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
+    Column(modifier.kitContainer().fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
         label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
-        val seam = kitRowGroupSeam(labelled = label != null, gapBefore = 0, frames = panel, afterGroup = afterGroup, gap = Space.S3)
+        val seam = kitRowGroupSeam(labelled = label != null, gapBefore = 0, frames = panel, afterGroup = afterGroup && LocalKitStack.current == null, gap = Space.S3)
         if (seam > 0) androidx.compose.foundation.layout.Spacer(Modifier.height(seam.dp).testTag("kit-row-group-seam"))
         Column(panelModifier) {
             // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).

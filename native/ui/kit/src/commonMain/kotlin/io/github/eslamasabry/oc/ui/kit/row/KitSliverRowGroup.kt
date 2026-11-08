@@ -94,10 +94,10 @@ public fun LazyListScope.kitSliverRowGroup(
 
 /** The list's cap and the side margin; [content] gets how far a bare panel's rows reach back into it. */
 @Composable
-private fun Edge(margin: Dp?, bare: Boolean, content: @Composable (reach: Dp) -> Unit) {
+private fun Edge(margin: Dp?, bare: Boolean, modifier: Modifier = Modifier, content: @Composable (reach: Dp) -> Unit) {
     val side = margin ?: LocalKitTokens.current.gutter.dp
     val reach = KitSliverRowGroupRules.reach(bare, side.value).dp
-    Box(Modifier.fillMaxWidth().kitMaxWidth(CapRole.List).padding(horizontal = side - reach)) { content(reach) }
+    Box(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).padding(horizontal = side - reach)) { content(reach) }
 }
 
 /** One row of the panel: the rule above it (not on the first), the panel's fill, and its corners at the two ends. */
@@ -106,7 +106,7 @@ private fun Cell(index: Int, total: Int, leads: Boolean, margin: Dp?, row: @Comp
     // Flat lists (Solid, Signal): the rows sit on the page itself, with square ends.
     val flat = LocalKitStyle.current.spec.tokens.flatLists
     val colors = LocalKitColors.current
-    Edge(margin, bare = flat) { reach ->
+    Edge(margin, bare = flat, modifier = Modifier.kitContainer(spaced = index == 0)) { reach ->
         val first = index == 0
         val last = index == total - 1
         val radius = FlutterKitTokens.PANEL_CORNER_RADIUS.dp
