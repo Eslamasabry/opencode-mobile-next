@@ -22,7 +22,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxFolder
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxRemovalSize
-import io.github.eslamasabry.oc.engine.runtime.vitals.LinuxHeat
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHeat
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxCleanupId
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobKind
@@ -79,6 +79,11 @@ import kotlin.time.Instant
 
 /** Audit capture only: the Linux manager pages (home, ports, storage, packages, services, backups). */
 class AuditCaptureTest {
+    /** Extra states run only when OC_AUDIT_FULL is set, to bound the default CI time. */
+    private fun more(block: () -> Unit) {
+        if (System.getenv("OC_AUDIT_FULL") != null) block()
+    }
+
     private object HomeA : LinuxHomeActions {
         override fun askStopJob() {}
 
@@ -298,12 +303,12 @@ class AuditCaptureTest {
                 idle = LinuxIdleUi(supported = true, enabled = true, minutes = 10),
             ),
         )
-        home("ready-too-hot", ready.copy(vitals = LinuxVitalsUi(heat = LinuxHeat.TooHot, phoneFreeBytes = 900_000_000)))
-        home("ready-idle-stopped", ready.copy(idle = LinuxIdleUi(supported = true, enabled = true, minutes = 5, stopped = true)))
-        home("ready-idle-failed", ready.copy(idle = LinuxIdleUi(supported = true, enabled = false, minutes = 5, failed = true)))
-        home("ready-working", ready.copy(working = true))
+        more { home("ready-too-hot", ready.copy(vitals = LinuxVitalsUi(heat = LinuxHeat.TooHot, phoneFreeBytes = 900_000_000))) }
+        more { home("ready-idle-stopped", ready.copy(idle = LinuxIdleUi(supported = true, enabled = true, minutes = 5, stopped = true))) }
+        more { home("ready-idle-failed", ready.copy(idle = LinuxIdleUi(supported = true, enabled = false, minutes = 5, failed = true))) }
+        more { home("ready-working", ready.copy(working = true)) }
         home("not-installed", LinuxHomeUi(presence = LinuxPresence.NotInstalled))
-        home("not-on-this-build", LinuxHomeUi(presence = LinuxPresence.NotOnThisBuild))
+        more { home("not-on-this-build", LinuxHomeUi(presence = LinuxPresence.NotOnThisBuild)) }
         home(
             "ready-job-running",
             ready.copy(job = LinuxJobState(kind = LinuxJobKind.Install, names = listOf("htop"), status = LinuxJobStatus.Running, percent = 42, stage = "Unpacking")),
@@ -312,16 +317,16 @@ class AuditCaptureTest {
             "ready-job-failed",
             ready.copy(job = LinuxJobState(kind = LinuxJobKind.Update, status = LinuxJobStatus.Failed, exitCode = 100)),
         )
-        home("ready-setup-running", ready.copy(setup = SetupProgress(SetupState.Running, emptyList(), 0.4)))
+        more { home("ready-setup-running", ready.copy(setup = SetupProgress(SetupState.Running, emptyList(), 0.4))) }
         home("confirm-repair", ready.copy(confirm = LinuxConfirm.Repair))
-        home("confirm-reset", ready.copy(confirm = LinuxConfirm.Reset))
-        home("confirm-remove-projects", ready.copy(confirm = LinuxConfirm.Remove(projects = true, bytes = 1_500_000_000)))
-        home("confirm-stop-setup", ready.copy(confirm = LinuxConfirm.StopSetup))
-        home("confirm-stop-job", ready.copy(confirm = LinuxConfirm.StopJob(LinuxJobKind.Install, listOf("htop"))))
-        home("notice-busy", ready.copy(notice = LinuxHomeNotice.Problem(LinuxProblem.Busy)))
-        home("notice-reset-not-erased", ready.copy(notice = LinuxHomeNotice.ResetNotErased))
-        home("notice-storage-failed", ready.copy(notice = LinuxHomeNotice.StorageFailed))
-        home("notice-removed", ready.copy(notice = LinuxHomeNotice.Removed))
+        more { home("confirm-reset", ready.copy(confirm = LinuxConfirm.Reset)) }
+        more { home("confirm-remove-projects", ready.copy(confirm = LinuxConfirm.Remove(projects = true, bytes = 1_500_000_000))) }
+        more { home("confirm-stop-setup", ready.copy(confirm = LinuxConfirm.StopSetup)) }
+        more { home("confirm-stop-job", ready.copy(confirm = LinuxConfirm.StopJob(LinuxJobKind.Install, listOf("htop")))) }
+        more { home("notice-busy", ready.copy(notice = LinuxHomeNotice.Problem(LinuxProblem.Busy))) }
+        more { home("notice-reset-not-erased", ready.copy(notice = LinuxHomeNotice.ResetNotErased)) }
+        more { home("notice-storage-failed", ready.copy(notice = LinuxHomeNotice.StorageFailed)) }
+        more { home("notice-removed", ready.copy(notice = LinuxHomeNotice.Removed)) }
         home(
             "ready-removal-size",
             ready.copy(removalSize = LinuxRemovalSize(runtimeBytes = 1_200_000_000, projectsBytes = 300_000_000, measuredAtMilliseconds = 1L)),
@@ -336,10 +341,10 @@ class AuditCaptureTest {
                 ),
             ),
         )
-        home("ready-folders-loading", ready.copy(folderPath = "/root/projects", folderLoading = true))
-        home("ready-folders-failed", ready.copy(folderPath = "/root/projects", folderFailed = true))
-        home("ready-ask-idle-minutes", ready.copy(idle = LinuxIdleUi(supported = true, enabled = true, minutes = 10), askingIdleMinutes = true))
-        home("ready-ask-create-project", ready.copy(askingCreateProject = true))
+        more { home("ready-folders-loading", ready.copy(folderPath = "/root/projects", folderLoading = true)) }
+        more { home("ready-folders-failed", ready.copy(folderPath = "/root/projects", folderFailed = true)) }
+        more { home("ready-ask-idle-minutes", ready.copy(idle = LinuxIdleUi(supported = true, enabled = true, minutes = 10), askingIdleMinutes = true)) }
+        more { home("ready-ask-create-project", ready.copy(askingCreateProject = true)) }
     }
 
     // ---- Ports
@@ -355,24 +360,24 @@ class AuditCaptureTest {
             LinuxPort(5173, PortOwner(92, "node /project/vite.js --port 5173"), allInterfaces = false),
             LinuxPort(8080, null, null),
         )
-        ports("loading", LinuxPortsUi(loading = true))
+        more { ports("loading", LinuxPortsUi(loading = true)) }
         ports("empty", LinuxPortsUi(loading = false))
         ports("list", LinuxPortsUi(loading = false, ports = list))
         ports("failed-first-read", LinuxPortsUi(loading = false, problem = LinuxProblem.Failed))
-        ports("failed-with-list", LinuxPortsUi(loading = false, problem = LinuxProblem.Failed, ports = list))
-        ports("busy", LinuxPortsUi(loading = false, problem = LinuxProblem.Busy))
-        ports("preview-failed", LinuxPortsUi(loading = false, ports = list, previewFailed = true))
+        more { ports("failed-with-list", LinuxPortsUi(loading = false, problem = LinuxProblem.Failed, ports = list)) }
+        more { ports("busy", LinuxPortsUi(loading = false, problem = LinuxProblem.Busy)) }
+        more { ports("preview-failed", LinuxPortsUi(loading = false, ports = list, previewFailed = true)) }
         ports("port-menu", LinuxPortsUi(loading = false, ports = list, selectedPort = 5173))
-        ports("stop-owner-ask", LinuxPortsUi(loading = false, ports = list, selectedPort = 5173, ownerStopAsk = PortOwnerStop("vite", listOf("92:1"))))
-        ports("stopping", LinuxPortsUi(loading = false, ports = list, ownerStopping = true))
-        ports("stop-result", LinuxPortsUi(loading = false, ports = list, ownerStopResult = LinuxStopResult(mapOf("92:1" to LinuxStopOutcome.Stopped))))
+        more { ports("stop-owner-ask", LinuxPortsUi(loading = false, ports = list, selectedPort = 5173, ownerStopAsk = PortOwnerStop("vite", listOf("92:1")))) }
+        more { ports("stopping", LinuxPortsUi(loading = false, ports = list, ownerStopping = true)) }
+        more { ports("stop-result", LinuxPortsUi(loading = false, ports = list, ownerStopResult = LinuxStopResult(mapOf("92:1" to LinuxStopOutcome.Stopped)))) }
         val program = LocalServerProcess(pid = 120, command = "python3 -m http.server 8000", ports = listOf(8000), cwd = "/root/projects/site", logPath = "/root/site.log")
-        ports("programs", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true))
-        ports("programs-scanning", LinuxPortsUi(loading = false, ports = list, scanningPrograms = true))
-        ports("programs-failed", LinuxPortsUi(loading = false, ports = list, programsFailed = true))
-        ports("program-stop-ask", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true, stopAsk = program))
-        ports("program-log", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true, logPid = 120, logText = "Serving HTTP on 0.0.0.0 port 8000\nGET / 200"))
-        ports("program-log-failed", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true, logPid = 120, logFailed = true))
+        more { ports("programs", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true)) }
+        more { ports("programs-scanning", LinuxPortsUi(loading = false, ports = list, scanningPrograms = true)) }
+        more { ports("programs-failed", LinuxPortsUi(loading = false, ports = list, programsFailed = true)) }
+        more { ports("program-stop-ask", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true, stopAsk = program)) }
+        more { ports("program-log", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true, logPid = 120, logText = "Serving HTTP on 0.0.0.0 port 8000\nGET / 200")) }
+        more { ports("program-log-failed", LinuxPortsUi(loading = false, ports = list, programs = persistentListOf(program), programsScanned = true, logPid = 120, logFailed = true)) }
     }
 
     // ---- Storage
@@ -399,17 +404,17 @@ class AuditCaptureTest {
             LinuxCleanupId.TempFiles to 50_000_000L,
             LinuxCleanupId.OldAgentVersions to 0L,
         )
-        storage("loading", LinuxStorageUi(loading = true))
+        more { storage("loading", LinuxStorageUi(loading = true)) }
         storage("scanning", LinuxStorageUi(loading = true, scan = LinuxStorageScan(LinuxStorageScanState.Running, listOf(LinuxStorageCategory.Base, LinuxStorageCategory.Packages))))
         storage("report", LinuxStorageUi(loading = false, report = report, cleanable = cleanable))
-        storage("nothing-to-clean", LinuxStorageUi(loading = false, report = report))
+        more { storage("nothing-to-clean", LinuxStorageUi(loading = false, report = report)) }
         storage("failed", LinuxStorageUi(loading = false, problem = LinuxProblem.Failed))
-        storage("busy", LinuxStorageUi(loading = false, problem = LinuxProblem.Busy, report = report, cleanable = cleanable))
+        more { storage("busy", LinuxStorageUi(loading = false, problem = LinuxProblem.Busy, report = report, cleanable = cleanable)) }
         storage("confirm-clean", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, confirm = CleanupAsk(LinuxCleanupId.AptCache, 200_000_000)))
-        storage("cleaning", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, cleaning = LinuxCleanupId.AptCache))
-        storage("cleaned", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, result = CleanupResult.Freed(200_000_000)))
-        storage("cleaned-nothing", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, result = CleanupResult.Nothing))
-        storage("clean-failed", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, actProblem = LinuxProblem.Failed))
+        more { storage("cleaning", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, cleaning = LinuxCleanupId.AptCache)) }
+        more { storage("cleaned", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, result = CleanupResult.Freed(200_000_000))) }
+        more { storage("cleaned-nothing", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, result = CleanupResult.Nothing)) }
+        more { storage("clean-failed", LinuxStorageUi(loading = false, report = report, cleanable = cleanable, actProblem = LinuxProblem.Failed)) }
     }
 
     // ---- Packages
@@ -427,25 +432,25 @@ class AuditCaptureTest {
             LinuxPackage("nodejs", "24.21.0", 190_000, required = true),
             LinuxPackage("a-package-with-a-really-long-name-that-keeps-going-and-going", "0.0.1~rc1+really.long.version.string", 12),
         )
-        packages("loading", LinuxPackagesUi(loading = true))
+        more { packages("loading", LinuxPackagesUi(loading = true)) }
         packages("empty", LinuxPackagesUi(loading = false))
         packages("list", LinuxPackagesUi(loading = false, packages = list))
-        packages("search-no-match", LinuxPackagesUi(loading = false, packages = list, query = "zzzz"))
+        more { packages("search-no-match", LinuxPackagesUi(loading = false, packages = list, query = "zzzz")) }
         packages("failed", LinuxPackagesUi(loading = false, problem = LinuxProblem.Failed))
-        packages("busy-with-list", LinuxPackagesUi(loading = false, problem = LinuxProblem.Busy, packages = list))
+        more { packages("busy-with-list", LinuxPackagesUi(loading = false, problem = LinuxProblem.Busy, packages = list)) }
         packages("checking", LinuxPackagesUi(loading = false, packages = list, checking = true))
         packages("job-running", LinuxPackagesUi(loading = false, packages = list, job = LinuxJobState(kind = LinuxJobKind.Install, names = listOf("htop"), status = LinuxJobStatus.Running, percent = 60, stage = "Unpacking")))
-        packages("job-done", LinuxPackagesUi(loading = false, packages = list, job = LinuxJobState(kind = LinuxJobKind.Install, names = listOf("htop"), status = LinuxJobStatus.Done, exitCode = 0)))
-        packages("job-failed", LinuxPackagesUi(loading = false, packages = list, job = LinuxJobState(kind = LinuxJobKind.Remove, names = listOf("htop"), status = LinuxJobStatus.Failed, exitCode = 100)))
-        packages("confirm-install", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Install(listOf("htop", "tmux"))))
-        packages("confirm-remove", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Remove("htop", emptyList())))
+        more { packages("job-done", LinuxPackagesUi(loading = false, packages = list, job = LinuxJobState(kind = LinuxJobKind.Install, names = listOf("htop"), status = LinuxJobStatus.Done, exitCode = 0))) }
+        more { packages("job-failed", LinuxPackagesUi(loading = false, packages = list, job = LinuxJobState(kind = LinuxJobKind.Remove, names = listOf("htop"), status = LinuxJobStatus.Failed, exitCode = 100))) }
+        more { packages("confirm-install", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Install(listOf("htop", "tmux")))) }
+        more { packages("confirm-remove", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Remove("htop", emptyList()))) }
         packages("confirm-remove-also", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Remove("git", listOf("git-man", "liberror-perl"))))
-        packages("confirm-update", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Update))
-        packages("confirm-stop-job", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.StopJob(LinuxJobKind.Install, listOf("htop"))))
-        packages("notice-already-installed", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.AlreadyInstalled("git")))
+        more { packages("confirm-update", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.Update)) }
+        more { packages("confirm-stop-job", LinuxPackagesUi(loading = false, packages = list, confirm = PackagesConfirm.StopJob(LinuxJobKind.Install, listOf("htop")))) }
+        more { packages("notice-already-installed", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.AlreadyInstalled("git"))) }
         packages("notice-unknown", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.Unknown("htopp")))
-        packages("notice-blocked-plan", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.BlockedPlan("nodejs")))
-        packages("notice-problem", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.Problem(LinuxProblem.Failed)))
+        more { packages("notice-blocked-plan", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.BlockedPlan("nodejs"))) }
+        more { packages("notice-problem", LinuxPackagesUi(loading = false, packages = list, notice = PackagesNotice.Problem(LinuxProblem.Failed))) }
     }
 
     // ---- Services (project commands)
@@ -473,19 +478,19 @@ class AuditCaptureTest {
             row("4", "Unknown state", "sleep 1000", DevelopmentServiceStatus.Unknown),
             row("5", "A service with a very long name that should wrap or truncate", "npm run a-very-long-command-line --with --many --arguments --that --go --on", DevelopmentServiceStatus.Running),
         )
-        services("loading", LinuxServicesUi(directory = dir, loading = true))
-        services("unsupported", LinuxServicesUi(directory = dir, loading = false, supported = false))
+        more { services("loading", LinuxServicesUi(directory = dir, loading = true)) }
+        more { services("unsupported", LinuxServicesUi(directory = dir, loading = false, supported = false)) }
         services("empty", LinuxServicesUi(directory = dir, loading = false, supported = true))
         services("list", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows))
-        services("working", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, working = true))
-        services("corrupt", LinuxServicesUi(directory = dir, loading = false, supported = true, readable = false))
-        services("failure", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, failure = Failure.Unknown()))
-        services("refusal", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, refusal = ServiceRefusal.OwnershipNotConfirmed))
+        more { services("working", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, working = true)) }
+        more { services("corrupt", LinuxServicesUi(directory = dir, loading = false, supported = true, readable = false)) }
+        more { services("failure", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, failure = Failure.Unknown())) }
+        more { services("refusal", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, refusal = ServiceRefusal.OwnershipNotConfirmed)) }
         services("selected-running", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "1"))
-        services("selected-stopped", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "2"))
-        services("selected-log", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "1", log = "VITE ready in 312 ms\nLocal: http://127.0.0.1:5173/"))
-        services("ask-stop", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "1", ask = LinuxServiceAsk(ServiceAskKind.Stop, "1")))
-        services("ask-remove", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "2", ask = LinuxServiceAsk(ServiceAskKind.Remove, "2")))
+        more { services("selected-stopped", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "2")) }
+        more { services("selected-log", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "1", log = "VITE ready in 312 ms\nLocal: http://127.0.0.1:5173/")) }
+        more { services("ask-stop", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "1", ask = LinuxServiceAsk(ServiceAskKind.Stop, "1"))) }
+        more { services("ask-remove", LinuxServicesUi(directory = dir, loading = false, supported = true, services = rows, selected = "2", ask = LinuxServiceAsk(ServiceAskKind.Remove, "2"))) }
     }
 
     // ---- Kept services
@@ -514,20 +519,20 @@ class AuditCaptureTest {
             keptService("starting", KeptPhase.Starting),
             keptService("stopping", KeptPhase.Stopping),
         )
-        kept("loading", KeptServicesUi(loading = true))
+        more { kept("loading", KeptServicesUi(loading = true)) }
         kept("empty", KeptServicesUi(loading = false))
         kept("list", KeptServicesUi(loading = false, services = all, nowMs = 200_000))
-        kept("working", KeptServicesUi(loading = false, services = all, nowMs = 200_000, working = true))
-        kept("failure", KeptServicesUi(loading = false, services = all, nowMs = 200_000, failure = Failure.Device()))
+        more { kept("working", KeptServicesUi(loading = false, services = all, nowMs = 200_000, working = true)) }
+        more { kept("failure", KeptServicesUi(loading = false, services = all, nowMs = 200_000, failure = Failure.Device())) }
         kept("selected-running", KeptServicesUi(loading = false, services = all, selected = "web", nowMs = 200_000, log = "VITE ready in 312 ms\nLocal: http://127.0.0.1:5173/"))
         kept("selected-failed", KeptServicesUi(loading = false, services = all, selected = "worker", nowMs = 200_000, log = "::svc exit 2\nError: cannot find module"))
-        kept("selected-exited", KeptServicesUi(loading = false, services = all, selected = "cron", nowMs = 200_000, log = "::svc exit 0"))
-        kept("log-search", KeptServicesUi(loading = false, services = all, selected = "web", nowMs = 200_000, log = "VITE ready\nLocal: http://127.0.0.1:5173/\nGET / 200", logQuery = "GET"))
-        kept("ask-stop", KeptServicesUi(loading = false, services = all, selected = "web", nowMs = 200_000, ask = KeptAsk("web", KeptAct.Stop)))
-        kept("ask-remove", KeptServicesUi(loading = false, services = all, selected = "docs", nowMs = 200_000, ask = KeptAsk("docs", KeptAct.Remove)))
-        kept("adding", KeptServicesUi(loading = false, services = all, nowMs = 200_000, adding = true))
-        kept("adding-invalid-name", KeptServicesUi(loading = false, services = all, nowMs = 200_000, adding = true, invalid = KeptField.Name))
-        kept("adding-limit", KeptServicesUi(loading = false, services = all, nowMs = 200_000, adding = true, invalid = KeptField.Limit))
+        more { kept("selected-exited", KeptServicesUi(loading = false, services = all, selected = "cron", nowMs = 200_000, log = "::svc exit 0")) }
+        more { kept("log-search", KeptServicesUi(loading = false, services = all, selected = "web", nowMs = 200_000, log = "VITE ready\nLocal: http://127.0.0.1:5173/\nGET / 200", logQuery = "GET")) }
+        more { kept("ask-stop", KeptServicesUi(loading = false, services = all, selected = "web", nowMs = 200_000, ask = KeptAsk("web", KeptAct.Stop))) }
+        more { kept("ask-remove", KeptServicesUi(loading = false, services = all, selected = "docs", nowMs = 200_000, ask = KeptAsk("docs", KeptAct.Remove))) }
+        more { kept("adding", KeptServicesUi(loading = false, services = all, nowMs = 200_000, adding = true)) }
+        more { kept("adding-invalid-name", KeptServicesUi(loading = false, services = all, nowMs = 200_000, adding = true, invalid = KeptField.Name)) }
+        more { kept("adding-limit", KeptServicesUi(loading = false, services = all, nowMs = 200_000, adding = true, invalid = KeptField.Limit)) }
     }
 
     // ---- Backups
@@ -538,21 +543,21 @@ class AuditCaptureTest {
 
     @Test
     fun backupsStates() = Audit.guard("linux__backups__build") {
-        backups("idle", LinuxBackupsUi())
-        backups("choice-setup", LinuxBackupsUi(choice = LinuxBackupChoice.Setup))
-        backups("choice-projects", LinuxBackupsUi(choice = LinuxBackupChoice.ProjectsOnly))
-        backups("preparing", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Preparing)))
+        more { backups("idle", LinuxBackupsUi()) }
+        more { backups("choice-setup", LinuxBackupsUi(choice = LinuxBackupChoice.Setup)) }
+        more { backups("choice-projects", LinuxBackupsUi(choice = LinuxBackupChoice.ProjectsOnly)) }
+        more { backups("preparing", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Preparing))) }
         backups("saving", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Saving, bytes = 300_000_000, total = 900_000_000, percent = 33)))
-        backups("saving-ask-stop", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Saving, bytes = 300_000_000, total = 900_000_000, percent = 33), askingStop = true))
+        more { backups("saving-ask-stop", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Saving, bytes = 300_000_000, total = 900_000_000, percent = 33), askingStop = true)) }
         backups("checking", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Checking)))
         backups("ready-to-restore", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Ready, manifest = LinuxBackupManifest("checked-backup", "Nov 6, 2026", true))))
-        backups("restoring", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Restoring, percent = 50)))
-        backups("saved", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Saved, name = "oc-backup-2026-11-06.tar.gz")))
-        backups("restored", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Restored)))
+        more { backups("restoring", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Restoring, percent = 50))) }
+        more { backups("saved", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Saved, name = "oc-backup-2026-11-06.tar.gz"))) }
+        more { backups("restored", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Restored))) }
         backups("failed-save", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Save)))
-        backups("failed-not-backup", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.NotBackup)))
-        backups("failed-newer", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Newer)))
-        backups("failed-busy", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Busy)))
-        backups("failed-restore", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Restore, failure = Failure.Unknown())))
+        more { backups("failed-not-backup", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.NotBackup))) }
+        more { backups("failed-newer", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Newer))) }
+        more { backups("failed-busy", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Busy))) }
+        more { backups("failed-restore", LinuxBackupsUi(backup = LinuxBackupState(phase = LinuxBackupPhase.Failed, problem = LinuxBackupProblem.Restore, failure = Failure.Unknown()))) }
     }
 }

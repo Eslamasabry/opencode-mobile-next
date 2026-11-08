@@ -12,7 +12,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.performTextInput
 import io.github.eslamasabry.oc.feature.widgetpanels.presentation.WidgetComposePhase
 import io.github.eslamasabry.oc.feature.widgetpanels.presentation.WidgetPanelActions

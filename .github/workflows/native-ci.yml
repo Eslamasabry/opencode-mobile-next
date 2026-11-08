@@ -40,7 +40,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}
+  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}-${{ inputs.tasks != '' && github.run_id || '' }}
   cancel-in-progress: true
 
 env:

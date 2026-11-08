@@ -551,11 +551,11 @@ class AuditCaptureTest {
 
     @Test
     fun pairingScanner() = Audit.guard("${m}__pairing-scanner__build") {
-        shot("pairing-scanner", "scanning") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Scanning)) { false } } }
-        shot("pairing-scanner", "starting") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Starting)) { false } } }
-        shot("pairing-scanner", "denied") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Denied)) { false } } }
-        shot("pairing-scanner", "blocked") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Blocked)) { false } } }
-        shot("pairing-scanner", "not-a-code") { Secrets { PairingScannerScreen(PairingScannerUi(rejected = true), ScanActions(), Camera(ScanStage.Scanning)) { false } } }
-        shot("pairing-scanner", "bad-code") { Secrets { PairingScannerScreen(PairingScannerUi(problem = PairingProblem.PasswordMissing), ScanActions(), Camera(ScanStage.Scanning)) { false } } }
+        shot("pairing-scanner", "scanning") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Scanning), { false }) } }
+        shot("pairing-scanner", "starting") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Starting), { false }) } }
+        shot("pairing-scanner", "denied") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Denied), { false }) } }
+        shot("pairing-scanner", "blocked") { Secrets { PairingScannerScreen(PairingScannerUi(), ScanActions(), Camera(ScanStage.Blocked), { false }) } }
+        shot("pairing-scanner", "not-a-code") { Secrets { PairingScannerScreen(PairingScannerUi(rejected = true), ScanActions(), Camera(ScanStage.Scanning), { false }) } }
+        shot("pairing-scanner", "bad-code") { Secrets { PairingScannerScreen(PairingScannerUi(problem = PairingProblem.PasswordMissing), ScanActions(), Camera(ScanStage.Scanning), { false }) } }
     }
 }

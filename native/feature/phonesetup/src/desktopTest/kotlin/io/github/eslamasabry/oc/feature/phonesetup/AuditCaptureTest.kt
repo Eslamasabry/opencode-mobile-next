@@ -35,6 +35,11 @@ import io.github.eslamasabry.oc.engine.linuxsetup.SetupState as LSetupState
 
 /** Audit capture only: the live phone setup journey and the older Set up page in their states. */
 class AuditCaptureTest {
+    /** Extra states run only when OC_AUDIT_FULL is set, to bound the default CI time. */
+    private fun more(block: () -> Unit) {
+        if (System.getenv("OC_AUDIT_FULL") != null) block()
+    }
+
     private object JA : SetupJourneyActions {
         override fun back() {}
 
@@ -159,27 +164,27 @@ class AuditCaptureTest {
         journey("checking", base.copy(checking = true))
         journey("start", base)
         journey("start-working", base.copy(working = true))
-        journey("start-check-failed", base.copy(failure = Failure.TimedOut()))
-        journey("start-storage-unopened", base.copy(storageUnopened = true))
+        more { journey("start-check-failed", base.copy(failure = Failure.TimedOut())) }
+        more { journey("start-storage-unopened", base.copy(storageUnopened = true)) }
         journey("start-other-ways", base, setup = clickText("Other ways"))
         journey("unsupported-abi", base.copy(options = base.options!!.copy(device = SetupDeviceInfo(listOf("armeabi-v7a"), 4096, 10000000000))))
         journey("low-memory", base.copy(options = base.options!!.copy(device = SetupDeviceInfo(listOf("arm64-v8a"), 1024, 10000000000))))
         journey("low-space", base.copy(options = base.options!!.copy(device = SetupDeviceInfo(listOf("arm64-v8a"), 8192, 100000000))))
         journey("customize", base.copy(customizing = true))
-        journey("customize-all-installed", base.copy(customizing = true, adding = true, options = base.options!!.copy(installed = setOf("python"))))
+        more { journey("customize-all-installed", base.copy(customizing = true, adding = true, options = base.options!!.copy(installed = setOf("python")))) }
         journey("running", base.copy(progress = running(), transport = SetupTransport.Wifi, canNotify = true))
         journey("running-mobile-data", base.copy(progress = running(), transport = SetupTransport.Mobile))
-        journey("running-details", base.copy(progress = running()), setup = clickText("Details"))
+        more { journey("running-details", base.copy(progress = running()), setup = clickText("Details")) }
         journey("running-confirm-stop", base.copy(progress = running(), confirmStop = "running"))
         journey("paused", base.copy(progress = SetupProgress(SetupState.Cancelled, listOf(ComponentProgress("linux", ComponentState.Done), ComponentProgress("essentials", ComponentState.Pending)), .2, jobId = "stopped")))
-        journey("interrupted", base.copy(progress = SetupProgress(SetupState.Interrupted, listOf(ComponentProgress("linux", ComponentState.Done), ComponentProgress("essentials", ComponentState.Pending)), .2, jobId = "stopped")))
-        journey("adding-paused", base.copy(progress = SetupProgress(SetupState.Cancelled, listOf(ComponentProgress("python", ComponentState.Pending)), 0.0, adding = listOf("node", "python"))))
+        more { journey("interrupted", base.copy(progress = SetupProgress(SetupState.Interrupted, listOf(ComponentProgress("linux", ComponentState.Done), ComponentProgress("essentials", ComponentState.Pending)), .2, jobId = "stopped"))) }
+        more { journey("adding-paused", base.copy(progress = SetupProgress(SetupState.Cancelled, listOf(ComponentProgress("python", ComponentState.Pending)), 0.0, adding = listOf("node", "python")))) }
         journey("failed-offline", base.copy(progress = failedOffline()))
         journey("failed-offline-details", base.copy(progress = failedOffline()), setup = clickText("Details"))
-        journey("failed-continue-error", base.copy(progress = failedOffline(), failure = Failure.TimedOut()))
-        journey("failed-unexpected", base.copy(progress = SetupProgress(SetupState.Failed, listOf(ComponentProgress("node", ComponentState.Failed, stage = "Installing Node.js", error = SetupError.Unexpected)), .5)))
-        journey("failed-current-only", base.copy(progress = SetupProgress(SetupState.Failed, emptyList(), .5, current = "python")))
-        journey("failed-no-space", base.copy(progress = SetupProgress(SetupState.Failed, listOf(ComponentProgress("node", ComponentState.Failed, error = SetupError.NoSpace("Node.js"))), .5)))
+        more { journey("failed-continue-error", base.copy(progress = failedOffline(), failure = Failure.TimedOut())) }
+        more { journey("failed-unexpected", base.copy(progress = SetupProgress(SetupState.Failed, listOf(ComponentProgress("node", ComponentState.Failed, stage = "Installing Node.js", error = SetupError.Unexpected)), .5))) }
+        more { journey("failed-current-only", base.copy(progress = SetupProgress(SetupState.Failed, emptyList(), .5, current = "python"))) }
+        more { journey("failed-no-space", base.copy(progress = SetupProgress(SetupState.Failed, listOf(ComponentProgress("node", ComponentState.Failed, error = SetupError.NoSpace("Node.js"))), .5))) }
         journey("failed-ownership", base.copy(progress = SetupProgress(SetupState.Failed, emptyList(), .5, error = SetupError.OwnershipUnknown)))
         journey(
             "failed-node-cannot-run",
@@ -202,11 +207,11 @@ class AuditCaptureTest {
         val done = SetupProgress(SetupState.Done, emptyList(), 1.0, jobId = "done")
         journey("done-open", base.copy(progress = done), screen = "journey-ready")
         journey("done-project", base.copy(progress = done, canMakeProject = true), screen = "journey-ready")
-        journey("done-project-name-empty", base.copy(progress = done, canMakeProject = true, projectName = "", nameProblem = FirstProjectNameProblem.Empty), screen = "journey-ready")
+        more { journey("done-project-name-empty", base.copy(progress = done, canMakeProject = true, projectName = "", nameProblem = FirstProjectNameProblem.Empty), screen = "journey-ready") }
         journey("done-project-name-invalid", base.copy(progress = done, canMakeProject = true, projectName = "my/app", nameProblem = FirstProjectNameProblem.OneFolder), screen = "journey-ready")
-        journey("done-project-creating", base.copy(progress = done, canMakeProject = true, creatingProject = true), screen = "journey-ready")
+        more { journey("done-project-creating", base.copy(progress = done, canMakeProject = true, creatingProject = true), screen = "journey-ready") }
         journey("done-project-create-failed", base.copy(progress = done, canMakeProject = true, projectFailure = FirstProjectStep.Create to Failure.Unknown()), screen = "journey-ready")
-        journey("done-project-open-failed", base.copy(progress = done, canMakeProject = true, projectFailure = FirstProjectStep.Open to Failure.Unknown()), screen = "journey-ready")
+        more { journey("done-project-open-failed", base.copy(progress = done, canMakeProject = true, projectFailure = FirstProjectStep.Open to Failure.Unknown()), screen = "journey-ready") }
     }
 
     private val items = persistentListOf(SetupItemUi("linux", "Linux base"), SetupItemUi("node", "Node.js"), SetupItemUi("opencode", "OpenCode"))
@@ -219,12 +224,12 @@ class AuditCaptureTest {
     fun setupPageStates() = Audit.guard("phonesetup__setup-page__build") {
         page("checking", PhoneSetupUi(checking = true))
         page("start", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.Ok, items = items, downloadBytes = 350_000_000))
-        page("starting", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.Ok, items = items, downloadBytes = 350_000_000, starting = true))
+        more { page("starting", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.Ok, items = items, downloadBytes = 350_000_000, starting = true)) }
         page("unsupported-abi", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.UnsupportedAbi("armeabi-v7a"), items = items))
         page("low-memory", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.LowMemory(1024), items = items))
-        page("may-be-slow", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.MayBeSlow(2048), items = items, downloadBytes = 350_000_000))
+        more { page("may-be-slow", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.MayBeSlow(2048), items = items, downloadBytes = 350_000_000)) }
         page("low-space", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.LowSpace(1_200_000_000), items = items))
-        page("low-space-storage-unopened", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.LowSpace(1_200_000_000), items = items, storageUnopened = true))
+        more { page("low-space-storage-unopened", PhoneSetupUi(checking = false, preflight = SetupPreflightResult.LowSpace(1_200_000_000), items = items, storageUnopened = true)) }
         val running =
             LSetupProgress(
                 state = LSetupState.Running,

@@ -46,6 +46,11 @@ import kotlin.test.Test
 
 /** Audit capture only: voice typing settings, the first-mic setup sheet, the composer's voice parts and the tips page. */
 class AuditCaptureTest {
+    /** Extra states run only when OC_AUDIT_FULL is set, to bound the default CI time. */
+    private fun more(block: () -> Unit) {
+        if (System.getenv("OC_AUDIT_FULL") != null) block()
+    }
+
     private val scope = TestScope()
     private val hub = FakeHub()
     private val settings = VoiceSettingsPresenter(hub, scope) {}
@@ -98,23 +103,23 @@ class AuditCaptureTest {
         voiceSettings("loading", VoiceSettingsUi(loading = true))
         voiceSettings("model-missing", loaded)
         voiceSettings("model-installed", installed(loaded))
-        voiceSettings("model-installed-auto-send", installed(loaded).copy(autoSend = true, language = VoiceLanguage.Arabic))
+        more { voiceSettings("model-installed-auto-send", installed(loaded).copy(autoSend = true, language = VoiceLanguage.Arabic)) }
         voiceSettings("downloading", loaded.copy(job = PackJobUi(PackId("base"), 64_000_000, 161_000_000, false)))
-        voiceSettings("starting-download", loaded.copy(job = PackJobUi(PackId("base"), 0, 161_000_000, false)))
+        more { voiceSettings("starting-download", loaded.copy(job = PackJobUi(PackId("base"), 0, 161_000_000, false))) }
         voiceSettings("verifying", loaded.copy(job = PackJobUi(PackId("base"), 161_000_000, 161_000_000, true)))
         voiceSettings("problem-timed-out", loaded.copy(problem = MediaProblem.DownloadTimedOut, retryPack = PackId("base")))
         voiceSettings("problem-offline", loaded.copy(problem = MediaProblem.DownloadOffline, retryPack = PackId("base")))
-        voiceSettings("problem-no-space", loaded.copy(problem = MediaProblem.DownloadNoSpace, retryPack = PackId("base")))
+        more { voiceSettings("problem-no-space", loaded.copy(problem = MediaProblem.DownloadNoSpace, retryPack = PackId("base"))) }
         voiceSettings("model-unsupported", loaded.copy(packs = packs.map { if (it.id == PackId("small")) it.copy(status = PackStatus.Unsupported(MediaProblem.PackMemoryTooSmall)) else it }, selected = PackId("small")))
-        voiceSettings("model-partial", loaded.copy(packs = packs.map { if (it.id == PackId("base")) it.copy(status = PackStatus.Partial(40_000_000, 161_000_000)) else it }))
+        more { voiceSettings("model-partial", loaded.copy(packs = packs.map { if (it.id == PackId("base")) it.copy(status = PackStatus.Partial(40_000_000, 161_000_000)) else it })) }
         voiceSettings("phone-recognizer", loaded.copy(engine = SpeechEngineKind.PhoneRecognizer))
-        voiceSettings("no-microphone", loaded.copy(hasMicrophone = false))
+        more { voiceSettings("no-microphone", loaded.copy(hasMicrophone = false)) }
         voiceSettings("unavailable", VoiceSettingsUi(loading = false, available = false))
         voiceSettings("language-picking", loaded.copy(languagePicking = true))
         voiceSettings("confirm-download-metered", loaded.copy(confirm = VoiceConfirm.Download(PackId("base"), 161_000_000, false, SetupNetwork.Metered)))
-        voiceSettings("confirm-download-natural", loaded.copy(confirm = VoiceConfirm.Download(PackId("kokoro-en"), 148_000_000, false, SetupNetwork.Unknown)))
+        more { voiceSettings("confirm-download-natural", loaded.copy(confirm = VoiceConfirm.Download(PackId("kokoro-en"), 148_000_000, false, SetupNetwork.Unknown))) }
         voiceSettings("confirm-delete-pack", installed(loaded).copy(confirm = VoiceConfirm.DeletePack(PackId("base"), 161_000_000)))
-        voiceSettings("confirm-remove-natural", installed(loaded).copy(confirm = VoiceConfirm.RemoveNatural))
+        more { voiceSettings("confirm-remove-natural", installed(loaded).copy(confirm = VoiceConfirm.RemoveNatural)) }
         voiceSettings("natural-downloading", loaded.copy(natural = NaturalVoiceUi(bytes = 148_000_000, installed = false, chosen = true, downloading = true, available = true)))
     }
 
@@ -128,14 +133,14 @@ class AuditCaptureTest {
     fun setupSheetStates() = Audit.guard("voice__voice-setup-sheet__build") {
         sheet("offer", VoiceSetupStage.NeedsConsent(1, PackId("base"), SetupNetwork.Unmetered, 161_000_000, false))
         sheet("offer-mobile-data", VoiceSetupStage.NeedsConsent(1, PackId("base"), SetupNetwork.Metered, 161_000_000, false))
-        sheet("offer-unknown-network", VoiceSetupStage.NeedsConsent(1, PackId("base"), SetupNetwork.Unknown, 161_000_000, true))
-        sheet("checking", VoiceSetupStage.Checking)
+        more { sheet("offer-unknown-network", VoiceSetupStage.NeedsConsent(1, PackId("base"), SetupNetwork.Unknown, 161_000_000, true)) }
+        more { sheet("checking", VoiceSetupStage.Checking) }
         sheet("downloading", VoiceSetupStage.Downloading(64_000_000, 161_000_000))
         sheet("verifying", VoiceSetupStage.Verifying)
         sheet("ready", VoiceSetupStage.Ready(PackId("base")))
         sheet("problem-offline", VoiceSetupStage.Problem(MediaProblem.DownloadOffline))
-        sheet("problem-no-space", VoiceSetupStage.Problem(MediaProblem.DownloadNoSpace, requiredBytes = 400_000_000))
-        sheet("problem-no-microphone", VoiceSetupStage.Problem(MediaProblem.NoMicrophone))
+        more { sheet("problem-no-space", VoiceSetupStage.Problem(MediaProblem.DownloadNoSpace, requiredBytes = 400_000_000)) }
+        more { sheet("problem-no-microphone", VoiceSetupStage.Problem(MediaProblem.NoMicrophone)) }
     }
 
     // ---- Composer voice parts
@@ -156,27 +161,27 @@ class AuditCaptureTest {
     fun composerVoiceStates() = Audit.guard("voice__composer-voice__build") {
         val base = ComposerVoiceUi(available = true)
         composerPanel("idle", base)
-        composerPanel("starting", base.copy(phase = MicPhase.Starting, mode = VoiceMode.Tap))
-        composerPanel("listening-tap", base.copy(phase = MicPhase.Listening, mode = VoiceMode.Tap, elapsedSeconds = 7))
+        more { composerPanel("starting", base.copy(phase = MicPhase.Starting, mode = VoiceMode.Tap)) }
+        more { composerPanel("listening-tap", base.copy(phase = MicPhase.Listening, mode = VoiceMode.Tap, elapsedSeconds = 7)) }
         composerPanel("listening-hold", base.copy(phase = MicPhase.Listening, mode = VoiceMode.Hold, holding = true, elapsedSeconds = 3))
-        composerPanel("listening-hold-cancel-armed", base.copy(phase = MicPhase.Listening, mode = VoiceMode.Hold, holding = true, cancelArmed = true, elapsedSeconds = 3))
+        more { composerPanel("listening-hold-cancel-armed", base.copy(phase = MicPhase.Listening, mode = VoiceMode.Hold, holding = true, cancelArmed = true, elapsedSeconds = 3)) }
         composerPanel(
             "listening-conversation",
             base.copy(phase = MicPhase.Listening, mode = VoiceMode.Conversation, conversationAvailable = true, conversation = true, canListen = true, words = "Can you add a test for the parser and run it", elapsedSeconds = 12),
         )
-        composerPanel("writing", base.copy(phase = MicPhase.Writing, mode = VoiceMode.Tap))
+        more { composerPanel("writing", base.copy(phase = MicPhase.Writing, mode = VoiceMode.Tap)) }
         composerPanel("countdown", base.copy(phase = MicPhase.Countdown, mode = VoiceMode.Tap, secondsLeft = 2))
-        composerPanel("note-nothing-heard", base.copy(note = VoiceNote.NothingHeard))
-        composerPanel("note-stopped-after-pause", base.copy(note = VoiceNote.StoppedAfterPause))
+        more { composerPanel("note-nothing-heard", base.copy(note = VoiceNote.NothingHeard)) }
+        more { composerPanel("note-stopped-after-pause", base.copy(note = VoiceNote.StoppedAfterPause)) }
         composerPanel("note-mic-needed", base.copy(note = VoiceNote.MicNeeded(blocked = false)))
-        composerPanel("note-mic-blocked", base.copy(note = VoiceNote.MicNeeded(blocked = true)))
-        composerPanel("note-needs-model", base.copy(note = VoiceNote.NeedsModel))
-        composerPanel("note-failed", base.copy(note = VoiceNote.Failed(MediaProblem.MicBusy)))
-        composerPanel("note-unavailable", base.copy(note = VoiceNote.Unavailable))
-        composerPanel("conversation-paused", base.copy(conversationAvailable = true, conversation = true, canListen = true, replyNote = ConversationReplyNote.Paused))
-        composerPanel("conversation-review", base.copy(conversationAvailable = true, replyNote = ConversationReplyNote.Review))
-        composerPanel("conversation-waiting-reply", base.copy(conversationAvailable = true, conversation = true, waitingReply = true))
-        composerPanel("conversation-speaking-reply", base.copy(conversationAvailable = true, conversation = true, speakingReply = true, canReadReply = true))
+        more { composerPanel("note-mic-blocked", base.copy(note = VoiceNote.MicNeeded(blocked = true))) }
+        more { composerPanel("note-needs-model", base.copy(note = VoiceNote.NeedsModel)) }
+        more { composerPanel("note-failed", base.copy(note = VoiceNote.Failed(MediaProblem.MicBusy))) }
+        more { composerPanel("note-unavailable", base.copy(note = VoiceNote.Unavailable)) }
+        more { composerPanel("conversation-paused", base.copy(conversationAvailable = true, conversation = true, canListen = true, replyNote = ConversationReplyNote.Paused)) }
+        more { composerPanel("conversation-review", base.copy(conversationAvailable = true, replyNote = ConversationReplyNote.Review)) }
+        more { composerPanel("conversation-waiting-reply", base.copy(conversationAvailable = true, conversation = true, waitingReply = true)) }
+        more { composerPanel("conversation-speaking-reply", base.copy(conversationAvailable = true, conversation = true, speakingReply = true, canReadReply = true)) }
     }
 
     private fun readAloud(state: String, ui: ReplyReaderUi) {
@@ -190,10 +195,10 @@ class AuditCaptureTest {
     @Test
     fun readAloudStates() = Audit.guard("voice__read-aloud__build") {
         readAloud("speaking", ReplyReaderUi(available = true, reading = "m1"))
-        readAloud("consent", ReplyReaderUi(available = true, asking = true))
-        readAloud("note-no-prose", ReplyReaderUi(available = true, note = ReadNote.NoProse))
-        readAloud("note-natural-fallback", ReplyReaderUi(available = true, note = ReadNote.NaturalFallback))
-        readAloud("note-failed", ReplyReaderUi(available = true, note = ReadNote.Failed(MediaProblem.NoOfflineVoice)))
+        more { readAloud("consent", ReplyReaderUi(available = true, asking = true)) }
+        more { readAloud("note-no-prose", ReplyReaderUi(available = true, note = ReadNote.NoProse)) }
+        more { readAloud("note-natural-fallback", ReplyReaderUi(available = true, note = ReadNote.NaturalFallback)) }
+        more { readAloud("note-failed", ReplyReaderUi(available = true, note = ReadNote.Failed(MediaProblem.NoOfflineVoice))) }
     }
 
     // ---- Tips
@@ -206,7 +211,7 @@ class AuditCaptureTest {
     fun tipsStates() = Audit.guard("voice__tips__build") {
         tips("loading", TeachingUi())
         tips("ready", TeachingUi(ready = true))
-        tips("failed", TeachingUi(failed = true))
-        tips("reset-failed", TeachingUi(ready = true, resetFailed = true))
+        more { tips("failed", TeachingUi(failed = true)) }
+        more { tips("reset-failed", TeachingUi(ready = true, resetFailed = true)) }
     }
 }

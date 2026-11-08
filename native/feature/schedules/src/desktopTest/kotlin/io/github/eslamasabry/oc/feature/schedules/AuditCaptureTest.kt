@@ -29,6 +29,11 @@ import kotlin.test.Test
 
 /** Audit capture only: the scheduled prompts list and the schedule editor in their states. */
 class AuditCaptureTest {
+    /** Extra states run only when OC_AUDIT_FULL is set, to bound the default CI time. */
+    private fun more(block: () -> Unit) {
+        if (System.getenv("OC_AUDIT_FULL") != null) block()
+    }
+
     private val t0 = 1_793_606_400_000L
 
     private object ListA : SchedulesActions {
@@ -101,15 +106,15 @@ class AuditCaptureTest {
         list("loading", SchedulesUi(phase = SchedulesPhase.Loading))
         list("unavailable-server", SchedulesUi(phase = SchedulesPhase.Unavailable, unavailable = Unavailable.Server, nowMs = t0))
         list("unavailable-phone", SchedulesUi(phase = SchedulesPhase.Unavailable, unavailable = Unavailable.Phone, nowMs = t0))
-        list("unavailable-storage", SchedulesUi(phase = SchedulesPhase.Unavailable, unavailable = Unavailable.Storage, nowMs = t0))
+        more { list("unavailable-storage", SchedulesUi(phase = SchedulesPhase.Unavailable, unavailable = Unavailable.Storage, nowMs = t0)) }
         list("empty", SchedulesUi(phase = SchedulesPhase.Empty, serverName = "Home server", nowMs = t0))
         list("populated", full)
         list("populated-digest-on", full.copy(digestOn = true))
-        list("populated-highlight", full.copy(highlight = "a2"))
+        more { list("populated-highlight", full.copy(highlight = "a2")) }
         list("populated-busy", full.copy(busy = true))
-        list("populated-started", full.copy(started = "a1"))
+        more { list("populated-started", full.copy(started = "a1")) }
         list("populated-error", full.copy(error = ScheduleCode.StorageBusy))
-        list("populated-error-limit", full.copy(error = ScheduleCode.ScheduleLimit))
+        more { list("populated-error-limit", full.copy(error = ScheduleCode.ScheduleLimit)) }
         list("confirm-delete", full.copy(confirmDelete = "a1"))
         list("row-menu", full, setup = openMenu("Check the nightly build"))
         list("long-server-name", full.copy(serverName = "A server with a really long name that keeps going past the edge of the screen"))
@@ -128,28 +133,28 @@ class AuditCaptureTest {
         edit("new-empty", ScheduleEditUi(phase = EditPhase.Ready, fields = EditorFields(), seed = 1, nowMs = t0))
         edit("new-once", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Once, date = "2026-11-10", time = "09:00")))
         edit("new-daily", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Daily)))
-        edit("new-weekdays", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Weekdays)))
+        more { edit("new-weekdays", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Weekdays))) }
         edit("new-interval", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Interval, hours = "6")))
         edit("with-models", ready.copy(models = models, fields = ready.fields.copy(model = models.first())))
-        edit("skip-missed", ready.copy(fields = ready.fields.copy(missed = MissedRunPolicy.Skip, kind = RecurrenceKind.Daily)))
+        more { edit("skip-missed", ready.copy(fields = ready.fields.copy(missed = MissedRunPolicy.Skip, kind = RecurrenceKind.Daily))) }
         edit(
             "conversation",
             ready.copy(continuesConversation = true, conversationTitle = "Fix the login redirect", canChooseConversation = true, fields = ready.fields.copy(thisConversation = true)),
         )
         edit("issue-prompt-required", ready.copy(fields = EditorFields(project = "/work/app"), issue = EditIssue.PromptRequired))
-        edit("issue-project-required", ready.copy(fields = EditorFields(prompt = "Summarize"), issue = EditIssue.ProjectRequired))
+        more { edit("issue-project-required", ready.copy(fields = EditorFields(prompt = "Summarize"), issue = EditIssue.ProjectRequired)) }
         edit("issue-time-invalid", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Daily, time = "25:99"), issue = EditIssue.TimeInvalid))
-        edit("issue-date-invalid", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Once, date = "soon"), issue = EditIssue.DateInvalid))
-        edit("issue-hours-invalid", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Interval, hours = "0"), issue = EditIssue.HoursInvalid))
-        edit("issue-future-required", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Once, date = "2020-01-01"), issue = EditIssue.FutureRequired))
+        more { edit("issue-date-invalid", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Once, date = "soon"), issue = EditIssue.DateInvalid)) }
+        more { edit("issue-hours-invalid", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Interval, hours = "0"), issue = EditIssue.HoursInvalid)) }
+        more { edit("issue-future-required", ready.copy(fields = ready.fields.copy(kind = RecurrenceKind.Once, date = "2020-01-01"), issue = EditIssue.FutureRequired)) }
         edit("saving", ready.copy(saving = true))
         edit("save-error", ready.copy(error = ScheduleCode.StorageBusy))
-        edit("save-error-limit", ready.copy(error = ScheduleCode.ScheduleLimit))
+        more { edit("save-error-limit", ready.copy(error = ScheduleCode.ScheduleLimit)) }
         edit("editing-failed-run", ready.copy(editing = true, lastRun = failedRun))
-        edit("editing-ran", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Ran, null, t0 - 60_000L, "ses_1", late = false)))
+        more { edit("editing-ran", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Ran, null, t0 - 60_000L, "ses_1", late = false))) }
         edit("editing-running", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Running, null, t0 - 30_000L, "ses_1", late = false)))
-        edit("editing-skipped", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Skipped, null, t0 - 60_000L, null, late = false)))
-        edit("editing-late-run", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Ran, null, t0 - 60_000L, "ses_1", late = true)))
+        more { edit("editing-skipped", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Skipped, null, t0 - 60_000L, null, late = false))) }
+        more { edit("editing-late-run", ready.copy(editing = true, lastRun = LastRunUi(RunStatus.Ran, null, t0 - 60_000L, "ses_1", late = true))) }
         edit(
             "long-prompt-and-project",
             ready.copy(
