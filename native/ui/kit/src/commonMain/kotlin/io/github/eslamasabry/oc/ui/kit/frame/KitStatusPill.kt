@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
@@ -77,8 +78,10 @@ public fun KitStatusPill(
         modifier
             .heightIn(min = tokens.minTarget.dp)
             .kitTappable(onClick = onClick, shape = KitShapeId.Pill, onClickLabel = onClickLabel)
-            .clearAndSetSemantics { contentDescription = spoken }
-            .testTag("kit-status-pill"),
+            .clearAndSetSemantics {
+                contentDescription = spoken
+                testTag = "kit-status-pill"
+            },
         contentAlignment = Alignment.CenterStart,
     ) {
         Row(
