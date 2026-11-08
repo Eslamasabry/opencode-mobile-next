@@ -16,6 +16,9 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.row.KitLeadingSwitchRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -27,6 +30,9 @@ import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingBody
 import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeEverythingTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeMenuLabel
+import io.github.eslamasabry.oc.ui.words.res.approvalModeSettings
+import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprove
+import io.github.eslamasabry.oc.ui.words.res.composerSettingApprovalDetail
 import io.github.eslamasabry.oc.ui.words.res.chatChipAutoApproveOn
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderApprovalSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
@@ -102,5 +108,35 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
         },
+    )
+}
+
+/**
+ * The approval rows of the composer's "+" sheet (Flutter `_composerSettings`, chat_composer_region.dart:134-160):
+ * "Auto-approve" with its switch (on for either automatic mode; off asks first), then "Approval settings…", which
+ * opens the three modes. Nothing where the server never asks. [close] closes the sheet before the modes open.
+ */
+@Composable
+public fun ApprovalSettingsRows(slot: ApprovalChipSlot, close: () -> Unit) {
+    val state = slot.state
+    val actions = slot.actions
+    if (!state.offered) return
+    KitLeadingSwitchRow(
+        title = stringResource(Res.string.chatStripAutoApprove),
+        leading = KitRowLeading.Glyph(KitIcons.shield),
+        checked = state.choice != ApprovalChoice.Ask,
+        onCheckedChange = { on -> actions.chooseApproval(if (on) ApprovalChoice.Auto else ApprovalChoice.Ask) },
+        supporting = stringResource(Res.string.composerSettingApprovalDetail),
+        supportingMaxLines = 2, // F: lib/ui/screens/chat/composer_tools.dart:142
+        modifier = Modifier.testTag("composer-setting-approval"),
+    )
+    KitRow(
+        title = stringResource(Res.string.approvalModeSettings),
+        leading = KitRowLeading.Glyph(KitIcons.permissions),
+        onClick = {
+            close()
+            actions.openApprovalMenu()
+        },
+        modifier = Modifier.testTag("composer-setting-approval-settings"),
     )
 }

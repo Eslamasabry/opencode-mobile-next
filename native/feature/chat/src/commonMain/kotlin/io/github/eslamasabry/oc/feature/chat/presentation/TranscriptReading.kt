@@ -25,6 +25,11 @@ public data class TurnMetadataUi(
     val tokens: Long,
     val cost: Double,
     val latest: Boolean,
+    /**
+     * The footer's model words (Flutter transcript_turns.dart `_messageMeta`): named only when the turn ran on another
+     * model than the turn before it, or changed model part-way ("Sonnet 4", "Sonnet 4 → Opus 4.1"); null otherwise.
+     */
+    val footerModel: String? = null,
 )
 
 public enum class TurnEndNote {
@@ -63,6 +68,7 @@ internal fun transcriptReading(
         snapshot.messages.asReversed().firstNotNullOfOrNull { m ->
             m.parts.asReversed().firstOrNull { it.type == PartType.Compaction }
         }
+    var previousModel: String? = null
     for ((turnIndex, turn) in snapshot.turns.withIndex()) {
         val live = busy && turnIndex == snapshot.turns.lastIndex
         val assistants = turn.messages.filter { it.info.role == Role.Assistant }
@@ -113,6 +119,8 @@ internal fun transcriptReading(
                     if (out.lastOrNull() != label) out.add(label)
                     out
                 }
+        // F: transcript_turns.dart `_messageMeta`: the model is named when it differs from the one before the turn.
+        val changed = models.isNotEmpty() && (models.size > 1 || models.first() != previousModel)
         if (!live && assistants.isNotEmpty())
             metadata[turn.turnId] =
                 TurnMetadataUi(
@@ -120,7 +128,10 @@ internal fun transcriptReading(
                     assistants.sumOf { it.info.tokens.total },
                     assistants.sumOf { it.info.cost },
                     turnIndex == snapshot.turns.lastIndex,
+                    footerModel =
+                        if (changed) models.joinToString(" → ") { ReplyModelNames.fromId(it) } else null,
                 )
+        if (models.isNotEmpty()) previousModel = models.last()
         val parts =
             turn.messages.flatMap { m ->
                 m.parts.filter { p ->

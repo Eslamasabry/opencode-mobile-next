@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalSettingsRows
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
@@ -163,7 +164,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgai
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptNotAnswered
 import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
 import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
-import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
+import io.github.eslamasabry.oc.ui.words.res.commandDestination
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveQuestion
@@ -377,6 +378,8 @@ public fun ChatScreen(
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
+                // Read when the sheet draws, like rowChips: the approval state may change after the chrome is made.
+                promptSettings = { close -> headerState?.approval?.let { ApprovalSettingsRows(it, close) } },
                 freeModel = { headerState?.state?.freeModel == true },
                 agentName = { headerState?.state?.agentName ?: "OpenCode" },
                 openCommands =
@@ -596,7 +599,7 @@ public fun ChatScreen(
                                 KitTopBar(
                                     title =
                                         state.title
-                                            ?: stringResource(Res.string.commandUntitledChat),
+                                            ?: stringResource(Res.string.commandDestination),
                                     exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,
                                     exitLabel = stringResource(Res.string.kitTopBarBack),
                                     onExit = actions::leaveRequested,
@@ -785,6 +788,8 @@ public fun ChatScreen(
                                                 onOpenCode = { codeReader = it },
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
+                                        onAllFiles = actions::openFiles,
+                                        onSendAgain = actions::retryLastPrompt,
                                         reasoningExpanded = state.reasoningExpanded,
                                         onCompactAgain =
                                             if (state.capabilities.compact) actions::compactAgain

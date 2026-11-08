@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -29,6 +31,8 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFold
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepSentence
 import io.github.eslamasabry.oc.ui.kitchat.tool.kitOnStepRail
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -319,3 +323,23 @@ internal fun TurnEndNote(note: io.github.eslamasabry.oc.feature.chat.presentatio
         )
     )
 }
+
+/**
+ * "No reply came back" under a prompt whose turn ended with nothing (Flutter no_reply_reason.dart:198-215): a
+ * neutral notice on the reply's rails, with "Send again" where the newest prompt can be sent once more.
+ */
+@Composable
+internal fun NoReplyNotice(onSendAgain: (() -> Unit)?) {
+    val again = stringResource(Res.string.chatUiSendPromptAgain)
+    KitNotice(
+        message = stringResource(Res.string.chatNoReplyCameBack),
+        modifier =
+            Modifier.fillMaxWidth()
+                .widthIn(max = REPLY_CAP_DP.dp) // F: lib/ui/kit/kit_layout.dart:48
+                .padding(horizontal = Space.S4.dp)
+                .testTag("chat-no-reply"),
+        actions = listOfNotNull(onSendAgain?.let { KitLineAction(again, it, testTag = "chat-no-reply-send-again") }),
+    )
+}
+
+private const val REPLY_CAP_DP = 700 // F: lib/ui/kit/kit_layout.dart:48

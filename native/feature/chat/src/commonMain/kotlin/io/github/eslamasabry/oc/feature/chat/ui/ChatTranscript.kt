@@ -3,9 +3,13 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -90,6 +94,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -283,6 +288,10 @@ internal fun ChatTranscriptList(
         null,
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
+    /** A finished turn's "All files" (the project's Files); null hides the link. */
+    onAllFiles: (() -> Unit)? = null,
+    /** "Send again" under the newest prompt that got no reply (Flutter no_reply_reason.dart:198); null hides it. */
+    onSendAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
     onReviewPending: (() -> Unit)? = null,
@@ -314,6 +323,7 @@ internal fun ChatTranscriptList(
                 .filter { it.text.isNotBlank() }
                 .mapTo(hashSetOf()) { it.turnId }
         }
+    val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
     val newestCompleted =
         unique
             .filterIsInstance<FooterRow>()
@@ -335,6 +345,9 @@ internal fun ChatTranscriptList(
         jumpLabel = words.jumpToLatest,
         motion = motion,
         modifier = modifier,
+        // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
+        // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
+        contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
     ) {
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
@@ -396,13 +409,16 @@ internal fun ChatTranscriptList(
               }
             }
         }
-        items(unique, key = { it.key }, contentType = { it.kind }) { row ->
+        itemsIndexed(unique, key = { _, it -> it.key }, contentType = { _, it -> it.kind }) { index, row ->
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
             Column(
                 kitItemMotion(fadeIn = row !is PromptRow, placement = glide)
                     .foldAnchor(row.key, anchor, list.lazy)
             ) {
+                // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
+                val gap = turnGap(row, unique.getOrNull(index + 1))
+                if (gap > 0) Spacer(Modifier.height(gap.dp))
                 // Keep the engine's item indices: a folded source has an empty item, not a removed
                 // list
                 // position.
@@ -413,7 +429,7 @@ internal fun ChatTranscriptList(
                         is NoticeRow -> row.key.removePrefix("notice:")
                         else -> null
                     }
-                if (source in facts.reading.hiddenPartKeys) return@items
+                if (source in facts.reading.hiddenPartKeys) return@itemsIndexed
                 // A table longer than one chunk is drawn whole by its first chunk; its later chunks
                 // draw nothing.
                 if (reply != null && row is BlockRow && row.key in tables) {
@@ -455,6 +471,8 @@ internal fun ChatTranscriptList(
                         onCompactAgain,
                         onCopyReply.takeIf { row.turnId in copyableTurns },
                         teachDetails = row.key == newestCompleted,
+                        onAllFiles = onAllFiles,
+                        onSendAgain = onSendAgain.takeIf { row.key == newestPrompt },
                     )
                 }
                 if (display.timestampsVisible) {
@@ -597,6 +615,9 @@ private fun ChatRow(
     onCompactAgain: (() -> Unit)? = null,
     onCopyReply: ((FooterRow) -> Unit)? = null,
     teachDetails: Boolean = false,
+    onAllFiles: (() -> Unit)? = null,
+    /** The newest prompt that got no reply: its notice's "Send again"; null elsewhere. */
+    onSendAgain: (() -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow -> {
@@ -641,7 +662,11 @@ private fun ChatRow(
                 }
                 // A turn with no assistant row still has an explicit end next to its prompt.
                 if (facts.reading.metadata[row.turnId] == null)
-                    facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                    facts.reading.endNotes[row.turnId]?.let { note ->
+                        if (note == io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent)
+                            NoReplyNotice(onSendAgain)
+                        else TurnEndNote(note)
+                    }
             }
         is ThoughtRow -> {
             val detail = facts.reading.details[row.key]
@@ -865,6 +890,10 @@ private fun ChatRow(
                         }
                     }
                 } else {
+                    // F: message_view.dart:611-621: a finished turn names the files it changed, each one tap from
+                    // its contents, and the project's Files under them, between the reply and its footer.
+                    if (!row.stopped)
+                        TurnChangedFiles(facts.results[row.turnId]?.files.orEmpty(), onOpenFile, onAllFiles)
                     MessageDetailsTip(eligible = teachDetails) {
                         KitReplyFooter(
                             copyLabel = stringResource(Res.string.kitCopy),
@@ -875,11 +904,19 @@ private fun ChatRow(
                                 if (onCopyReply != null || row.failed || row.stopped)
                                     onOpenMenu?.let { menu -> { menu(row.key) } }
                                 else null,
-                            modifier = Modifier.testTag("chat-turn-footer"),
+                            // NV: Flutter's More reaches the window edge (kit_turn.dart:680-690 translate); the 48 dp
+                            // target keeps 4 dp from it (LAYOUT-RULES edge-tap), a shift a person does not see.
+                            modifier = Modifier.padding(end = FOOTER_EDGE_INSET_DP.dp).testTag("chat-turn-footer"),
                         ) {
                             if (row.failed) KitQuietLine(words.footer(true))
                             else if (row.stopped) KitQuietLine(words.stoppedFooter())
                             facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                            // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
+                            // (message_view.dart:423-427: the model, when it changed).
+                            facts.reading.metadata[row.turnId]
+                                ?.takeIf { it.latest }
+                                ?.footerModel
+                                ?.let { KitReplyMeta(it) }
                         }
                     }
                 }
@@ -891,6 +928,28 @@ private fun ChatRow(
             }
     }
 }
+
+/**
+ * The extra gap above [row] that makes its turn read as Flutter's `KitTurn` column (kit_turn.dart:484-516): 16 dp
+ * from the prompt to the turn's body (`add(blocks, tokens.space4)`), and its blocks 12 dp apart (`space3`, C-025).
+ * Each row already brings its own inset (a reply block 4 dp above and below, the work line's own line box), so this
+ * adds only the rest. [older] is the row just above it in reading order; another turn adds nothing.
+ */
+internal fun turnGap(row: TranscriptRow, older: TranscriptRow?): Int {
+    if (older == null || older.turnId != row.turnId) return 0
+    return when {
+        // F: kit_turn.dart:516 space4 between the prompt and the body; the rows' own insets give space1.
+        older is PromptRow && (row is WorkLineRow || row is BlockRow) -> Space.S3
+        // F: kit_turn.dart:498 space3 between blocks; the work line and the reply block bring space1.
+        older is WorkLineRow && row is BlockRow && !row.continued -> Space.S2
+        // F: kit_markdown.dart kitMdGap 12 between paragraphs (C-025); the two reply blocks bring space2.
+        older is BlockRow && row is BlockRow && !row.continued -> Space.S1
+        else -> 0
+    }
+}
+
+/** NV: LAYOUT-RULES.md edge-tap: a target keeps 4 dp from the window edge. */
+private const val FOOTER_EDGE_INSET_DP = 4 // NV: LAYOUT-RULES.md edge-tap minimum
 
 /**
  * Plan 09 R13 column (as the kit's reply block): 700 dp cap, the row gap only where the block does
