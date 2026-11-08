@@ -96,6 +96,10 @@ class ProjectsScreenTest {
         override fun retry() { calls += "retry" }
 
         override fun openServers() { calls += "servers" }
+
+        override fun openFiles() { calls += "files" }
+
+        override fun openHealth() { calls += "health" }
     }
 
     private val ready =
@@ -184,6 +188,33 @@ class ProjectsScreenTest {
         onNodeWithText("Theme packs").performClick()
         onNodeWithText("Load more conversations").performClick()
         assertEquals(listOf("new", "open a", "open b", "more"), actions.calls)
+    }
+
+    @Test
+    fun `B-NAV-026 the project page has Files, Project health and Copy folder path rows, like Flutter's project hub`() = runComposeUiTest {
+        val actions = Page()
+        val page =
+            ProjectPageUi(
+                directory = "/work/app",
+                name = "app",
+                phase = ProjectPagePhase.Ready,
+                canBrowseFiles = true,
+                canHealth = true,
+            )
+        setContent { Themed { ProjectPageScreen(page, actions) } }
+        onNodeWithText("Copy folder path").assertExists()
+        onNodeWithText("Files").performClick()
+        onNodeWithText("Project health").performClick()
+        assertEquals(listOf("files", "health"), actions.calls)
+    }
+
+    @Test
+    fun `B-NAV-026 the project page hides Files and Project health where the server offers neither`() = runComposeUiTest {
+        val page = ProjectPageUi(directory = "/work/app", name = "app", phase = ProjectPagePhase.Ready)
+        setContent { Themed { ProjectPageScreen(page, Page()) } }
+        onNodeWithText("Files").assertDoesNotExist()
+        onNodeWithText("Project health").assertDoesNotExist()
+        onNodeWithText("Copy folder path").assertExists()
     }
 
     @Test

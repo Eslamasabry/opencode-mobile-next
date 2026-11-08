@@ -193,9 +193,19 @@ public data class ProjectPageUi(
     val devServerPort: Int? = null,
     val storageBlock: SharedStorageBlock = SharedStorageBlock.None,
     val requestingStorage: Boolean = false,
+    /** The server can list this project's files: the page offers Files (Flutter's project hub). */
+    val canBrowseFiles: Boolean = false,
+    /** The server reports language services or formatters: the page offers Project health. */
+    val canHealth: Boolean = false,
 )
 
 public interface ProjectPageActions : ProjectWorkspaceActions {
+    /** This project's files, with no conversation needed (Flutter's project hub Files). */
+    public fun openFiles() {}
+
+    /** Language services, formatters and branch for this project. */
+    public fun openHealth() {}
+
     public fun refreshCopies() {}
 
     public fun openCopy(directory: String) {}
