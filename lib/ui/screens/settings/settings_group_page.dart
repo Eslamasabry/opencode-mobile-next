@@ -31,6 +31,7 @@ const settingsGroupRowIds = <SettingsGroup, List<String>>{
     'settings-setup-guide',
     'settings-tips',
     'library-report-bug',
+    'settings-send-problem-report',
     'settings-about-notices',
   ],
 };
@@ -338,6 +339,7 @@ class _SettingsGroupBodyState extends State<_SettingsGroupBody> {
             onTap: () => _openEntry(entries['library-report-bug']!, scope),
           ),
         ),
+        row('settings-send-problem-report'),
         row('settings-about-notices'),
       ],
     };

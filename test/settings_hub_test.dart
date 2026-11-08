@@ -28,6 +28,9 @@ import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/settings_doors.dart';
+import 'support/telemetry_recorder.dart';
+import 'package:opencode_mobile/telemetry/telemetry_provider.dart'
+    show AppTelemetry;
 
 class _Api extends FakeServerGateway {
   _Api(this._capabilities) : super(baseUrl: 'http://localhost');
@@ -446,6 +449,30 @@ void main() {
     expect(nudges.wasShown(NudgeId.compact), isFalse);
     expect(nudges.offer(NudgeId.compact, scope: 'ses_1'), isTrue);
   });
+
+  for (final canSend in [false, true]) {
+    testWidgets(
+      'Help ${canSend ? 'lists' : 'omits'} Send a problem report when this '
+      'build ${canSend ? 'can' : 'cannot'} send it',
+      (tester) async {
+        final before = AppTelemetry.current;
+        addTearDown(() => AppTelemetry.install(before));
+        AppTelemetry.install(
+          await startedService(RecordingAdapter(present: canSend)),
+        );
+        final controller = await _controller();
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(_app(controller));
+        await tester.pumpAndSettle();
+        await openSettingsGroup(tester, SettingsGroup.help);
+        final row = find.descendant(
+          of: _row('settings-group-help'),
+          matching: _row('settings-send-problem-report'),
+        );
+        expect(row, canSend ? findsOneWidget : findsNothing);
+      },
+    );
+  }
 
   testWidgets('the last panel is the guide, Report a problem and About', (
     tester,
