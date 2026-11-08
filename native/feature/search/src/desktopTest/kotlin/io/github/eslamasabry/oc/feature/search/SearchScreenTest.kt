@@ -132,13 +132,20 @@ class SearchScreenTest {
     }
 
     @Composable
-    private fun Screen(state: SearchUi, actions: SearchActions, locale: String = "en", web: SearchWebOption? = null) {
+    private fun Screen(
+        state: SearchUi,
+        actions: SearchActions,
+        locale: String = "en",
+        web: SearchWebOption? = null,
+        probe: @Composable () -> Unit = {},
+    ) {
         KitTheme(
             platform = DesktopKitPlatform(),
             appearance = KitAppearance(motion = MotionLevel.Off),
             localeTag = locale,
             stillFrame = true,
         ) {
+            probe()
             Box(Modifier.width(412.dp)) { SearchScreen(state, actions, web = web) }
         }
     }
@@ -241,7 +248,6 @@ class SearchScreenTest {
             val hit =
                 SearchHitUi(ConversationRef(home, SessionId("s1")), "Debug build", "app", snippet = "install the Debian image first", messageId = "m1")
             setContent {
-                accent = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.accent
                 Screen(
                     SearchUi(
                         query = "deb",
@@ -252,6 +258,7 @@ class SearchScreenTest {
                         content = ContentPhase.Done,
                     ),
                     Actions(),
+                    probe = { accent = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.accent },
                 )
             }
             val title = onAllNodesWithTag("kit-row-title", useUnmergedTree = true).fetchSemanticsNodes()
