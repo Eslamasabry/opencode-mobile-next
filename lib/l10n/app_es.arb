@@ -8877,8 +8877,6 @@
   "crashOfferSection": "Informes de fallos",
   "crashOfferSettingTitle": "Ofrecer informes de fallos",
   "crashOfferSettingDetail": "Cuando la aplicación se cierre inesperadamente, ofrece un informe que puedes revisar antes. Nunca se envía nada por sí solo.",
-  "telemetrySettingTitle": "Enviar informes al desarrollador",
-  "telemetrySettingDetail": "Envía informes de fallos a Google Firebase Crashlytics, y recuentos anónimos a Google Analytics for Firebase: qué tipos de páginas y funciones usas, hasta dónde llega la configuración, cuánto tardaron la configuración y la primera respuesta, y las ofertas de actualización. Solo palabras y rangos fijos, con un ID de instalación aleatorio, el modelo de tu teléfono y la versión de Android. Ni código, ni conversaciones, ni archivos, ni direcciones, ni claves, ni ID de publicidad.",
   "voiceAutoSetupUnknownNetwork": "Este teléfono no puede saber si esta conexión gasta datos.",
   "phoneSetupErrorNodeUnsupported": "El sistema de este teléfono no puede ejecutar Node.js dentro de Linux integrado. Aún puedes usar OpenCode Mobile conectándote a tu ordenador.",
   "phoneSetupConnectComputer": "Conectar un ordenador",

@@ -53462,18 +53462,6 @@ abstract class AppLocalizations {
   /// **'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.'**
   String get crashOfferSettingDetail;
 
-  /// Privacy and data: switch that turns on sending crash reports (Google Firebase Crashlytics) and setup analytics counts (Google Analytics for Firebase) to the developer.
-  ///
-  /// In en, this message translates to:
-  /// **'Send reports to developer'**
-  String get telemetrySettingTitle;
-
-  /// Privacy and data: what the crash-report and setup-counts switch sends. Must match PRIVACY.md.
-  ///
-  /// In en, this message translates to:
-  /// **'Sends crash reports to Google Firebase Crashlytics, and anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, how far setup gets, how long setup and the first reply took, and update offers. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.'**
-  String get telemetrySettingDetail;
-
   /// First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows
   ///
   /// In en, this message translates to:
@@ -53513,13 +53501,13 @@ abstract class AppLocalizations {
   /// One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.'**
+  /// **'If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.'**
   String get telemetryConsentBody;
 
   /// One-time analytics question: what is sent.
   ///
   /// In en, this message translates to:
-  /// **'Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.'**
+  /// **'Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.'**
   String get telemetryConsentSends;
 
   /// One-time analytics question: what is never sent.
@@ -53531,7 +53519,7 @@ abstract class AppLocalizations {
   /// One-time analytics question: the button that turns sharing on.
   ///
   /// In en, this message translates to:
-  /// **'Share anonymous usage'**
+  /// **'Share both'**
   String get telemetryConsentShare;
 
   /// One-time analytics question: the button that leaves sharing off and never asks again.
@@ -53599,6 +53587,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get appUpdateRetry;
+
+  /// Privacy and data: switch for anonymous usage counts, performance and device ranges (Google Analytics for Firebase).
+  ///
+  /// In en, this message translates to:
+  /// **'Usage and app health'**
+  String get telemetryUsageTitle;
+
+  /// Privacy and data: what the usage switch sends. Must match PRIVACY.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.'**
+  String get telemetryUsageDetail;
+
+  /// Privacy and data: switch for sending crash reports (Google Firebase Crashlytics).
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports'**
+  String get telemetryCrashesTitle;
+
+  /// Privacy and data: what the crash reports switch sends. Must match PRIVACY.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app\'s code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.'**
+  String get telemetryCrashesDetail;
+
+  /// One-time analytics question: the link that opens the two separate switches.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get telemetryConsentChoose;
+
+  /// One-time analytics question: the button that applies the two switches as set.
+  ///
+  /// In en, this message translates to:
+  /// **'Save my choices'**
+  String get telemetryConsentSave;
+
+  /// Settings > Help: row and sheet title for sending a redacted log to the developer.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a problem report'**
+  String get sendReportTitle;
+
+  /// Settings > Help: row detail under Send a problem report.
+  ///
+  /// In en, this message translates to:
+  /// **'Review a redacted log, then send it'**
+  String get sendReportRowDetail;
+
+  /// Send a problem report: sheet subtitle above the preview.
+  ///
+  /// In en, this message translates to:
+  /// **'This is everything the report holds. Nothing is sent until you tap Send.'**
+  String get sendReportSubtitle;
+
+  /// Send a problem report: the button that sends the previewed text.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sendReportSend;
+
+  /// Send a problem report: shown while the preview is built.
+  ///
+  /// In en, this message translates to:
+  /// **'Collecting the report…'**
+  String get sendReportCollecting;
+
+  /// Send a problem report: heading after the report was sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent'**
+  String get sendReportSentTitle;
+
+  /// Send a problem report: what the report code is for.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote this report code if you open an issue on GitHub, so the developer can find your report.'**
+  String get sendReportSentBody;
+
+  /// Send a problem report: plain words when sending failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The report could not be sent. Check your connection and try again.'**
+  String get sendReportFailed;
+
+  /// Send a problem report: closes the sheet after sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get sendReportDone;
+
+  /// Report code row label (Settings > About and the sent report).
+  ///
+  /// In en, this message translates to:
+  /// **'Report code'**
+  String get reportCodeLabel;
+
+  /// Tooltip of the copy button next to the report code.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy report code'**
+  String get reportCodeCopy;
 }
 
 class _AppLocalizationsDelegate

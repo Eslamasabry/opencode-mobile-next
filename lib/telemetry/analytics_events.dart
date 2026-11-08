@@ -9,6 +9,8 @@
 /// PRIVACY.md and the README list exactly these events; change them together.
 library;
 
+import 'health_schema.dart';
+
 /// The events. [wire] is the name the vendor receives.
 enum AnalyticsEvent {
   /// The app came to the front: `kind` cold (a new process) or warm.
@@ -43,7 +45,46 @@ enum AnalyticsEvent {
   featureUsed('feature_used'),
 
   /// The app went to the background: `minutes` it was in front, a range.
-  sessionLength('session_length');
+  sessionLength('session_length'),
+
+  // ---- Health and diagnostics (docs/telemetry/health-and-diagnostics.md) ----
+
+  /// A connection attempt: `server_kind`, `result`, `fail_kind`, `ms_range`.
+  connAttempt('conn_attempt'),
+
+  /// A live connection ended: `server_kind`, `reason`, `recovered`.
+  connDrop('conn_drop'),
+
+  /// A message was sent: `result`, `fail_kind`, `first_reply_range`.
+  sendResult('send_result'),
+
+  /// A turn stopped moving: `stage`, `minutes_range`.
+  turnStall('turn_stall'),
+
+  /// Queued messages were flushed: `sent`, `failed` (count ranges).
+  queueFlush('queue_flush'),
+
+  /// A step of the built-in Linux setup finished.
+  linuxSetupStep('linux_setup_step'),
+
+  /// An agent (Paseo) was started: `agent`, `result`, `fail_kind`.
+  agentStart('agent_start'),
+
+  /// The background service ended: `reason`, `battery_exempt`.
+  bgServiceEnd('bg_service_end'),
+
+  /// An update finished: `kind`, `result`, `fail_kind`.
+  updateResult('update_result'),
+
+  /// Time to the first frame: `kind`, `ms_range`.
+  appStart('app_start'),
+
+  /// Slow frames on one kind of page, once per session: `screen`,
+  /// `janky_pct_range`, `refresh_hz`.
+  jank('jank'),
+
+  /// Android asked the app to free memory: `level`.
+  memoryPressure('memory_pressure');
 
   const AnalyticsEvent(this.wire);
   final String wire;
@@ -261,18 +302,80 @@ final Map<String, Map<String, Set<String>>> analyticsSchema = {
   AnalyticsEvent.connectComputerChosen.wire: const {},
   AnalyticsEvent.updateOffered.wire: const {},
   AnalyticsEvent.updateInstalled.wire: const {},
+  ..._healthSchema,
 };
 
-/// A last check on any value, whatever the schema says: no path separators,
-/// no `@`, nothing shaped like a host or address (`a.b`), at most 40
-/// characters, and plain lower-case words, digits and `_` only.
+final Map<String, Map<String, Set<String>>> _healthSchema = {
+  AnalyticsEvent.connAttempt.wire: {
+    'server_kind': HealthWords.serverKinds,
+    'result': HealthWords.okFail,
+    'fail_kind': HealthWords.failKinds,
+    'ms_range': {...HealthRanges.connMs},
+  },
+  AnalyticsEvent.connDrop.wire: {
+    'server_kind': HealthWords.serverKinds,
+    'reason': HealthWords.dropReasons,
+    'recovered': HealthWords.yesNo,
+  },
+  AnalyticsEvent.sendResult.wire: {
+    'result': {'ok', 'fail', 'queued'},
+    'fail_kind': {...HealthWords.failKinds, ...HealthWords.sendOnlyFailKinds},
+    'first_reply_range': {...HealthRanges.firstReply},
+  },
+  AnalyticsEvent.turnStall.wire: {
+    'stage': HealthWords.stallStages,
+    'minutes_range': {...HealthRanges.stallMinutes},
+  },
+  AnalyticsEvent.queueFlush.wire: {
+    'sent': {...HealthRanges.counts},
+    'failed': {...HealthRanges.counts},
+  },
+  AnalyticsEvent.linuxSetupStep.wire: {
+    'step': HealthWords.linuxSteps,
+    'result': HealthWords.okFail,
+    'ms_range': {...HealthRanges.setupMs},
+    'exit_kind': HealthWords.exitKinds,
+    'signal': HealthWords.signals,
+    'compat_mode': HealthWords.compatModes,
+    'free_space_range': {...HealthRanges.storage},
+  },
+  AnalyticsEvent.agentStart.wire: {
+    'agent': HealthWords.agents,
+    'result': HealthWords.okFail,
+    'fail_kind': HealthWords.agentFailKinds,
+  },
+  AnalyticsEvent.bgServiceEnd.wire: {
+    'reason': HealthWords.bgReasons,
+    'battery_exempt': HealthWords.yesNo,
+  },
+  AnalyticsEvent.updateResult.wire: {
+    'kind': HealthWords.updateKinds,
+    'result': HealthWords.updateResults,
+    'fail_kind': HealthWords.updateFailKinds,
+  },
+  AnalyticsEvent.appStart.wire: {
+    'kind': HealthWords.startKinds,
+    'ms_range': {...HealthRanges.appStartMs},
+  },
+  AnalyticsEvent.jank.wire: {
+    'screen': {for (final s in AnalyticsScreen.values) s.wire},
+    'janky_pct_range': {...HealthRanges.jankPct},
+    'refresh_hz': {...HealthRanges.refreshHz},
+  },
+  AnalyticsEvent.memoryPressure.wire: {'level': HealthWords.memoryLevels},
+};
+
+/// A last check on any listed word, whatever the schema says: no path
+/// separators, no `@`, nothing shaped like a host or address (`a.b`), at
+/// most 40 characters, and only letters, digits and `_ < > + -` (the range
+/// words such as `<500`, `2-10s`, `4+`, and signal names such as `SIGILL`).
 bool analyticsValueIsSafe(String value) =>
     value.isNotEmpty &&
     value.length <= 40 &&
     !value.contains('/') &&
     !value.contains('@') &&
     !RegExp(r'\w\.\w').hasMatch(value) &&
-    RegExp(r'^[a-z0-9_]+$').hasMatch(value);
+    RegExp(r'^[A-Za-z0-9_<>+\-]+$').hasMatch(value);
 
 /// Classifies a failed step from its exit code and error text into one of
 /// [AnalyticsFailureKind]. Only the resulting word leaves the phone.

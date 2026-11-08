@@ -415,6 +415,15 @@ extension _SetupEnginePoll on ChannelSetupEngine {
           }
         }
       }
+      if (counted) {
+        unawaited(
+          _trackLinuxStep(
+            record,
+            component,
+            Duration(milliseconds: ended - started),
+          ),
+        );
+      }
       PerfTrace.recordDuration(
         'setup.component',
         Duration(milliseconds: ended - started),
@@ -433,6 +442,12 @@ extension _SetupEnginePoll on ChannelSetupEngine {
         error: record.state == 'done' ? null : record.state,
       );
       if (counted && record.state == 'done') {
+        HealthFlow.linuxSetupStep(
+          step: 'done',
+          ok: true,
+          elapsed: Duration(milliseconds: record.updatedAt - record.startedAt),
+          freeGigabytes: AppTelemetry.health?.freeGigabytes,
+        );
         AppTelemetry.track(AnalyticsEvent.setupDone, {
           'minutes': AnalyticsBuckets.minutesOf(
             Duration(milliseconds: record.updatedAt - record.startedAt),
@@ -440,6 +455,60 @@ extension _SetupEnginePoll on ChannelSetupEngine {
         });
       }
     }
+  }
+
+  /// The `linux_setup_step` word for [component], or null for a component
+  /// that is not a built-in Linux step (voice, the final start).
+  static String? _linuxStepWord(SetupJobComponent component, bool failed) =>
+      switch (component.id) {
+        SetupComponentIds.linux =>
+          failed &&
+                  analyticsFailureKind(
+                        exit: _exitCodeOf(component),
+                        error: component.error,
+                      ) ==
+                      AnalyticsFailureKind.network
+              ? 'download'
+              : 'unpack',
+        SetupComponentIds.essentials ||
+        SetupComponentIds.python => 'essentials',
+        SetupComponentIds.node => 'node',
+        SetupComponentIds.openCode => 'opencode',
+        SetupComponentIds.aiTeam => 'agents',
+        _ => null,
+      };
+
+  /// One finished step as `linux_setup_step`: result, time, exit and
+  /// signal kind, the Node safe mode that ran, and free space. Words and
+  /// ranges only; the step's error text is never sent.
+  Future<void> _trackLinuxStep(
+    SetupJobRecord record,
+    SetupJobComponent component,
+    Duration elapsed,
+  ) async {
+    final failed = component.state == 'failed';
+    final step = _linuxStepWord(component, failed);
+    if (step == null) return;
+    var compat = 'none';
+    if (component.id == SetupComponentIds.node) {
+      try {
+        final variant = await _nodeVariantForAnalytics(record, component);
+        compat = switch (variant) {
+          AnalyticsNodeVariant.armcap => 'armcap',
+          AnalyticsNodeVariant.threads => 'threads',
+          AnalyticsNodeVariant.both => 'both',
+          _ => 'none',
+        };
+      } catch (_) {}
+    }
+    HealthFlow.linuxSetupStep(
+      step: step,
+      ok: !failed,
+      elapsed: elapsed,
+      exit: failed ? _exitCodeOf(component) : null,
+      compatMode: compat,
+      freeGigabytes: AppTelemetry.health?.freeGigabytes,
+    );
   }
 
   /// Whether [record] belongs in setup analytics: a job this app run saw

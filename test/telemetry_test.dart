@@ -23,7 +23,17 @@ class _Recorder implements TelemetryAdapter {
   @override
   Future<bool> probe() async => present;
   @override
-  Future<void> setCollectionEnabled(bool enabled) async => collecting = enabled;
+  Future<void> setCollection({
+    required bool usage,
+    required bool crashes,
+  }) async {
+    usageOn = usage;
+    crashesOn = crashes;
+    collecting = usage || crashes;
+  }
+
+  bool? usageOn;
+  bool? crashesOn;
   @override
   Future<void> crash(
     String category,
@@ -42,6 +52,21 @@ class _Recorder implements TelemetryAdapter {
   @override
   Future<void> event(String name, Map<String, String> props) async =>
       calls.add('event|$name');
+  @override
+  Future<void> setKeys(Map<String, String> keys) async => calls.add(
+    'keys|${keys.entries.map((e) => '${e.key}=${e.value}').join(',')}',
+  );
+  @override
+  Future<void> setUserProperties(
+    Map<String, String> properties,
+  ) async => calls.add(
+    'props|${properties.entries.map((e) => '${e.key}=${e.value}').join(',')}',
+  );
+  @override
+  Future<void> problemReport(String text, {required bool collecting}) async =>
+      calls.add('report|$collecting|${text.length}');
+  @override
+  Future<String?> appInstanceId() async => 'abcdef0123456789';
 }
 
 const _anthropic = 'sk-ant-api03-TELEMKEYONEabcdefghijklmnop';
@@ -227,32 +252,45 @@ Authorization: Bearer TELEMBEARERtoken.abc
 
     testWidgets('hidden when the build has no vendor', (tester) async {
       await pump(tester, await _service(_Recorder(present: false)));
-      expect(
-        find.byKey(const ValueKey('privacy-send-telemetry')),
-        findsNothing,
-      );
+      expect(find.byKey(const ValueKey('privacy-send-usage')), findsNothing);
+      expect(find.byKey(const ValueKey('privacy-send-crashes')), findsNothing);
     });
 
-    testWidgets('off by default; the switch drives consent', (tester) async {
+    testWidgets('both off by default; each switch drives its own consent', (
+      tester,
+    ) async {
       final adapter = _Recorder();
       final service = await _service(adapter);
       await pump(tester, service);
-      final row = find.byKey(const ValueKey('privacy-send-telemetry'));
+      final usage = find.byKey(const ValueKey('privacy-send-usage'));
+      final crashes = find.byKey(const ValueKey('privacy-send-crashes'));
       await tester.scrollUntilVisible(
-        row,
+        usage,
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Send reports to developer'), findsOneWidget);
-      expect(service.consented, isFalse);
-      await tester.tap(row);
+      expect(find.text('Usage and app health'), findsOneWidget);
+      expect(find.text('Crash reports'), findsWidgets);
+      expect(service.usageConsented, isFalse);
+      expect(service.crashesConsented, isFalse);
+
+      await tester.tap(usage);
       await tester.pumpAndSettle();
-      expect(service.consented, isTrue);
-      expect(adapter.collecting, isTrue);
-      await tester.tap(row);
+      expect(service.usageConsented, isTrue);
+      expect(service.crashesConsented, isFalse);
+      expect(adapter.usageOn, isTrue);
+      expect(adapter.crashesOn, isFalse);
+
+      await tester.tap(crashes);
       await tester.pumpAndSettle();
-      expect(service.consented, isFalse);
-      expect(adapter.collecting, isFalse);
+      expect(service.crashesConsented, isTrue);
+      expect(adapter.crashesOn, isTrue);
+
+      await tester.tap(usage);
+      await tester.pumpAndSettle();
+      expect(service.usageConsented, isFalse);
+      expect(service.crashesConsented, isTrue);
+      expect(adapter.usageOn, isFalse);
     });
   });
 }

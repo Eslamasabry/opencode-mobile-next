@@ -34359,13 +34359,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cuando la aplicación se cierre inesperadamente, ofrece un informe que puedes revisar antes. Nunca se envía nada por sí solo.';
 
   @override
-  String get telemetrySettingTitle => 'Enviar informes al desarrollador';
-
-  @override
-  String get telemetrySettingDetail =>
-      'Envía informes de fallos a Google Firebase Crashlytics, y recuentos anónimos a Google Analytics for Firebase: qué tipos de páginas y funciones usas, hasta dónde llega la configuración, cuánto tardaron la configuración y la primera respuesta, y las ofertas de actualización. Solo palabras y rangos fijos, con un ID de instalación aleatorio, el modelo de tu teléfono y la versión de Android. Ni código, ni conversaciones, ni archivos, ni direcciones, ni claves, ni ID de publicidad.';
-
-  @override
   String get voiceAutoSetupUnknownNetwork =>
       'Este teléfono no puede saber si esta conexión gasta datos.';
 
@@ -34437,4 +34430,60 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appUpdateRetry => 'Reintentar';
+
+  @override
+  String get telemetryUsageTitle => 'Usage and app health';
+
+  @override
+  String get telemetryUsageDetail =>
+      'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.';
+
+  @override
+  String get telemetryCrashesTitle => 'Crash reports';
+
+  @override
+  String get telemetryCrashesDetail =>
+      'Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app\'s code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.';
+
+  @override
+  String get telemetryConsentChoose => 'Choose';
+
+  @override
+  String get telemetryConsentSave => 'Save my choices';
+
+  @override
+  String get sendReportTitle => 'Send a problem report';
+
+  @override
+  String get sendReportRowDetail => 'Review a redacted log, then send it';
+
+  @override
+  String get sendReportSubtitle =>
+      'This is everything the report holds. Nothing is sent until you tap Send.';
+
+  @override
+  String get sendReportSend => 'Send';
+
+  @override
+  String get sendReportCollecting => 'Collecting the report…';
+
+  @override
+  String get sendReportSentTitle => 'Report sent';
+
+  @override
+  String get sendReportSentBody =>
+      'Quote this report code if you open an issue on GitHub, so the developer can find your report.';
+
+  @override
+  String get sendReportFailed =>
+      'The report could not be sent. Check your connection and try again.';
+
+  @override
+  String get sendReportDone => 'Done';
+
+  @override
+  String get reportCodeLabel => 'Report code';
+
+  @override
+  String get reportCodeCopy => 'Copy report code';
 }

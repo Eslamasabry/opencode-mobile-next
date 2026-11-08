@@ -34046,13 +34046,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.';
 
   @override
-  String get telemetrySettingTitle => 'Send reports to developer';
-
-  @override
-  String get telemetrySettingDetail =>
-      'Sends crash reports to Google Firebase Crashlytics, and anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, how far setup gets, how long setup and the first reply took, and update offers. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.';
-
-  @override
   String get voiceAutoSetupUnknownNetwork =>
       'This phone can\'t tell whether this connection costs data.';
 
@@ -34075,18 +34068,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get telemetryConsentBody =>
-      'If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.';
+      'If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.';
 
   @override
   String get telemetryConsentSends =>
-      'Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.';
+      'Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.';
 
   @override
   String get telemetryConsentNever =>
       'Never sent: your code, conversations, files, server addresses or keys. No advertising ID.';
 
   @override
-  String get telemetryConsentShare => 'Share anonymous usage';
+  String get telemetryConsentShare => 'Share both';
 
   @override
   String get telemetryConsentNotNow => 'Not now';
@@ -34124,4 +34117,60 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appUpdateRetry => 'Try again';
+
+  @override
+  String get telemetryUsageTitle => 'Usage and app health';
+
+  @override
+  String get telemetryUsageDetail =>
+      'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.';
+
+  @override
+  String get telemetryCrashesTitle => 'Crash reports';
+
+  @override
+  String get telemetryCrashesDetail =>
+      'Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app\'s code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.';
+
+  @override
+  String get telemetryConsentChoose => 'Choose';
+
+  @override
+  String get telemetryConsentSave => 'Save my choices';
+
+  @override
+  String get sendReportTitle => 'Send a problem report';
+
+  @override
+  String get sendReportRowDetail => 'Review a redacted log, then send it';
+
+  @override
+  String get sendReportSubtitle =>
+      'This is everything the report holds. Nothing is sent until you tap Send.';
+
+  @override
+  String get sendReportSend => 'Send';
+
+  @override
+  String get sendReportCollecting => 'Collecting the report…';
+
+  @override
+  String get sendReportSentTitle => 'Report sent';
+
+  @override
+  String get sendReportSentBody =>
+      'Quote this report code if you open an issue on GitHub, so the developer can find your report.';
+
+  @override
+  String get sendReportFailed =>
+      'The report could not be sent. Check your connection and try again.';
+
+  @override
+  String get sendReportDone => 'Done';
+
+  @override
+  String get reportCodeLabel => 'Report code';
+
+  @override
+  String get reportCodeCopy => 'Copy report code';
 }

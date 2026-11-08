@@ -26,11 +26,14 @@ class FirebaseCrashlyticsAdapter implements TelemetryAdapter {
   }
 
   @override
-  Future<void> setCollectionEnabled(bool enabled) async {
+  Future<void> setCollection({
+    required bool usage,
+    required bool crashes,
+  }) async {
     final crashlytics = _crashlytics;
     if (crashlytics == null) return;
-    await crashlytics.setCrashlyticsCollectionEnabled(enabled);
-    if (!enabled) await crashlytics.deleteUnsentReports();
+    await crashlytics.setCrashlyticsCollectionEnabled(crashes);
+    if (!crashes) await crashlytics.deleteUnsentReports();
   }
 
   @override
@@ -63,9 +66,57 @@ class FirebaseCrashlyticsAdapter implements TelemetryAdapter {
   @override
   Future<void> breadcrumb(String name) async => _crashlytics?.log(name);
 
-  /// Analytics events are not crash reports.
+  @override
+  Future<void> setKeys(Map<String, String> keys) async {
+    final crashlytics = _crashlytics;
+    if (crashlytics == null) return;
+    for (final entry in keys.entries) {
+      await crashlytics.setCustomKey(entry.key, entry.value);
+    }
+  }
+
+  /// The person's reviewed problem report, as one non-fatal with the text
+  /// attached as Crashlytics logs. Crashlytics keeps the newest 64 KB of
+  /// logs, so the text is cut from its start to fit. With crash reports off,
+  /// anything unsent is deleted first and only this report is sent.
+  @override
+  Future<void> problemReport(String text, {required bool collecting}) async {
+    final crashlytics = _crashlytics;
+    if (crashlytics == null) return;
+    if (!collecting) await crashlytics.deleteUnsentReports();
+    for (final chunk in logChunks(text)) {
+      crashlytics.log(chunk);
+    }
+    await crashlytics.recordError(
+      _Named('problem_report'),
+      StackTrace.fromString(''),
+      reason: 'problem_report',
+    );
+    if (!collecting) await crashlytics.sendUnsentReports();
+  }
+
+  /// [text] as log lines of at most 1 KB each, newest kept, within 60 KB.
+  static List<String> logChunks(String text, {int budget = 60 * 1024}) {
+    final lines = text.split('\n');
+    final kept = <String>[];
+    var used = 0;
+    for (final line in lines.reversed) {
+      var piece = line;
+      if (piece.length > 1000) piece = piece.substring(0, 1000);
+      used += piece.length + 1;
+      if (used > budget) break;
+      kept.add(piece);
+    }
+    return kept.reversed.toList();
+  }
+
+  /// Analytics is not this vendor's.
   @override
   Future<void> event(String name, Map<String, String> props) async {}
+  @override
+  Future<void> setUserProperties(Map<String, String> properties) async {}
+  @override
+  Future<String?> appInstanceId() async => null;
 }
 
 /// An error whose entire text is a fixed identifier.

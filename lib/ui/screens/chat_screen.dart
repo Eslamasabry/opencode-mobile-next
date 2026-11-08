@@ -746,7 +746,7 @@ class _ChatScreenState extends State<ChatScreen>
     // Leaving the chat sends any answer still inside its undo window.
     unawaited(_conn.delayedAnswers.flush());
     _saveOpeningExcerpt();
-    _stopTipTimer?.cancel();
+    _stopTimers();
     _voiceEpoch.value++;
     _voiceEpoch.dispose();
     _conn.profileDataChanges.removeListener(_readAloudScopeChanged);

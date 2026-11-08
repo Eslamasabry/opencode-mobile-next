@@ -19,10 +19,35 @@ class _Recorder implements TelemetryAdapter {
   @override
   Future<bool> probe() async => present;
   @override
-  Future<void> setCollectionEnabled(bool enabled) async => collecting = enabled;
+  Future<void> setCollection({
+    required bool usage,
+    required bool crashes,
+  }) async {
+    usageOn = usage;
+    crashesOn = crashes;
+    collecting = usage || crashes;
+  }
+
+  bool? usageOn;
+  bool? crashesOn;
   @override
   Future<void> event(String name, Map<String, String> props) async =>
       events.add((name, props));
+  @override
+  Future<void> setKeys(Map<String, String> keys) async => other.add(
+    'keys|${keys.entries.map((e) => '${e.key}=${e.value}').join(',')}',
+  );
+  @override
+  Future<void> setUserProperties(
+    Map<String, String> properties,
+  ) async => other.add(
+    'props|${properties.entries.map((e) => '${e.key}=${e.value}').join(',')}',
+  );
+  @override
+  Future<void> problemReport(String text, {required bool collecting}) async =>
+      other.add('report|$collecting|${text.length}');
+  @override
+  Future<String?> appInstanceId() async => 'abcdef0123456789';
   @override
   Future<void> crash(
     String category,
@@ -73,6 +98,51 @@ final _everyEvent = <AnalyticsEvent, Map<String, Object?>>{
   AnalyticsEvent.sessionLength: {
     'minutes': AnalyticsBuckets.sessionMinutesOf(const Duration(minutes: 9)),
   },
+  AnalyticsEvent.connAttempt: {
+    'server_kind': 'phone',
+    'result': 'fail',
+    'fail_kind': 'dns',
+    'ms_range': '500-2000',
+  },
+  AnalyticsEvent.connDrop: {
+    'server_kind': 'computer',
+    'reason': 'background',
+    'recovered': 'yes',
+  },
+  AnalyticsEvent.sendResult: {
+    'result': 'fail',
+    'fail_kind': 'too_large',
+    'first_reply_range': 'none',
+  },
+  AnalyticsEvent.turnStall: {'stage': 'waiting_tool', 'minutes_range': '5-15'},
+  AnalyticsEvent.queueFlush: {'sent': '2-5', 'failed': '0'},
+  AnalyticsEvent.linuxSetupStep: {
+    'step': 'node',
+    'result': 'fail',
+    'ms_range': '10000-60000',
+    'exit_kind': 'signal',
+    'signal': 'SIGILL',
+    'compat_mode': 'both',
+    'free_space_range': '2-8',
+  },
+  AnalyticsEvent.agentStart: {
+    'agent': 'claude_code',
+    'result': 'fail',
+    'fail_kind': 'needs_sign_in',
+  },
+  AnalyticsEvent.bgServiceEnd: {'reason': 'os_limit', 'battery_exempt': 'yes'},
+  AnalyticsEvent.updateResult: {
+    'kind': 'in_app',
+    'result': 'failed',
+    'fail_kind': 'checksum',
+  },
+  AnalyticsEvent.appStart: {'kind': 'cold', 'ms_range': '1000-2000'},
+  AnalyticsEvent.jank: {
+    'screen': AnalyticsScreen.chat,
+    'janky_pct_range': '5-15',
+    'refresh_hz': '120',
+  },
+  AnalyticsEvent.memoryPressure: {'level': 'critical'},
 };
 
 Future<void> _settle() => Future<void>.delayed(Duration.zero);
@@ -376,6 +446,7 @@ void main() {
           'app_open',
           'app_open',
           'update_installed',
+          'update_result',
         ]);
         expect(prefs.getString(analyticsLastVersionKey), '2.1.5+63');
       },

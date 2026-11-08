@@ -10,6 +10,8 @@ import 'package:opencode_mobile/builtin/setup/setup_engine.dart';
 import 'package:opencode_mobile/builtin/setup/setup_scripts.dart';
 import 'package:opencode_mobile/diagnostics/perf_trace.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/telemetry/telemetry_provider.dart';
+import 'support/telemetry_recorder.dart';
 
 /// The native side, scripted: a status, the check output, and a job the
 /// test moves along by setting [job].
@@ -819,6 +821,62 @@ void main() {
       expect(linux.started, isEmpty);
       expect(engine.progress.value.jobId, 'live');
       expect(engine.progress.value.components.single.bytesDone, 5);
+    });
+
+    test('a finished step is reported as linux_setup_step with words and '
+        'ranges only, never its error text', () async {
+      final adapter = RecordingAdapter();
+      AppTelemetry.install(
+        await startedService(adapter, usage: true, crashes: true),
+      );
+      addTearDown(AppTelemetry.reset);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      linux.job = {
+        'jobId': 'telemetry',
+        'state': 'running',
+        'current': 'node',
+        'order': ['essentials', 'node'],
+        'startedAt': now - 90000,
+        'updatedAt': now,
+        'components': {
+          'essentials': {
+            'state': 'done',
+            'startedAt': now - 80000,
+            'endedAt': now - 50000,
+          },
+          'node': {
+            'state': 'failed',
+            'startedAt': now - 50000,
+            'endedAt': now - 20000,
+            'error': 'node crashed at /data/user/0/app/files/home/x',
+            'data': {'exit': '132'},
+          },
+        },
+      };
+      await engine.run(const {});
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      final steps = adapter.events
+          .where((e) => e.$1 == 'linux_setup_step')
+          .map((e) => e.$2)
+          .toList();
+      expect(steps, hasLength(2));
+      expect(steps.first, {
+        'step': 'essentials',
+        'result': 'ok',
+        'ms_range': '10000-60000',
+        'exit_kind': '0',
+        'signal': 'none',
+        'compat_mode': 'none',
+      });
+      expect(steps.last['step'], 'node');
+      expect(steps.last['result'], 'fail');
+      expect(steps.last['exit_kind'], 'signal');
+      expect(steps.last['signal'], 'SIGILL');
+      expect(steps.last['ms_range'], '10000-60000');
+      expect(
+        adapter.events.map((e) => '${e.$2}').join(),
+        isNot(contains('/data')),
+      );
     });
   });
 

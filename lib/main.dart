@@ -26,12 +26,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'telemetry/app_log_ring.dart';
 import 'telemetry/firebase_analytics_adapter.dart';
 import 'telemetry/firebase_crashlytics_adapter.dart';
+import 'telemetry/health_probe.dart' show AppStartClock;
 import 'telemetry/telemetry.dart';
 import 'telemetry/telemetry_provider.dart';
 import 'ui/widgets/telemetry_consent.dart';
 import 'builtin/app_exit_recovery.dart';
+import 'builtin/builtin_linux.dart' show BuiltinLinux;
 import 'builtin/builtin_server.dart';
 import 'builtin/linux_manager/linux_reset_flow.dart';
 import 'builtin/phone_server_healing.dart';
@@ -136,6 +139,8 @@ Future<void> main() async {
   // First thing: starts the trace clock, so every later OCTRACE `at=` reads
   // as time since launch.
   PerfTrace.markOnce('app.main');
+  AppStartClock.begin();
+  AppLogRing.captureDebugPrint();
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     // Restores the remembered size, position and maximized state, clamped to
@@ -159,6 +164,7 @@ Future<void> main() async {
     diagnostics,
     crashCapture: (error, stack, source) {
       CrashDiagnosticsStartup.capture(diagnostics, error, stack, source);
+      AppLogRing.instance.add('error ${appErrorCategory(error)} ($source)');
       // Opt-in vendor reporting: inert unless the person turned it on; only
       // the error's category and code locations are passed on.
       AppTelemetry.current.recordCrash(
@@ -171,6 +177,7 @@ Future<void> main() async {
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PerfTrace.markOnce('app.first_frame');
+    AppStartClock.firstFrameDone();
     // Crash storage cannot delay the opening frame. Launch waits at most the
     // launch budget; a slow store keeps opening in the background and capture
     // starts when it arrives (a hung channel leaves it off this run).

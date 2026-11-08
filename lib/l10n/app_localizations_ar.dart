@@ -34092,13 +34092,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'بعد أن يُغلق التطبيق بشكل غير متوقع، يعرض عليك تقريرًا تراجعه أولًا. لا يُرسَل أي شيء تلقائيًا أبدًا.';
 
   @override
-  String get telemetrySettingTitle => 'إرسال التقارير إلى المطوّر';
-
-  @override
-  String get telemetrySettingDetail =>
-      'يرسل تقارير الأعطال إلى Google Firebase Crashlytics، وإحصاءات مجهولة إلى Google Analytics for Firebase: أنواع الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، والمدة التي استغرقها الإعداد وأول رد، وعروض التحديث. كلمات ونطاقات ثابتة فقط، مع معرّف تثبيت عشوائي وطراز هاتفك وإصدار أندرويد. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلاني.';
-
-  @override
   String get voiceAutoSetupUnknownNetwork =>
       'لا يستطيع هذا الهاتف معرفة ما إذا كان هذا الاتصال يستهلك من بياناتك.';
 
@@ -34121,18 +34114,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get telemetryConsentBody =>
-      'إن وافقت، يرسل التطبيق إحصاءات استخدام مجهولة وتقارير الأعطال إلى المطوّر عبر Google Firebase. يمكنك إيقاف ذلك في أي وقت من الإعدادات › الخصوصية والبيانات.';
+      'إن وافقت يرسل التطبيق أعداد استخدام وصحة مجهولة وتقارير أعطال عبر Google Firebase. يمكنك تغيير كل منها من الإعدادات › الخصوصية والبيانات.';
 
   @override
   String get telemetryConsentSends =>
-      'يُرسل: الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، وتقارير الأعطال، مع معرّف تثبيت عشوائي.';
+      'يُرسل: الصفحات والميزات المستخدمة، وهل ينجح الاتصال والإرسال والإعداد، وسرعة التطبيق، ونطاقات الذاكرة والمساحة، وتقارير الأعطال. مع معرّف تثبيت عشوائي.';
 
   @override
   String get telemetryConsentNever =>
       'لا يُرسل أبدًا: شيفرتك ومحادثاتك وملفاتك وعناوين خوادمك ومفاتيحك. ولا معرّف إعلاني.';
 
   @override
-  String get telemetryConsentShare => 'مشاركة الاستخدام المجهول';
+  String get telemetryConsentShare => 'مشاركة الاثنين';
 
   @override
   String get telemetryConsentNotNow => 'ليس الآن';
@@ -34170,4 +34163,60 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appUpdateRetry => 'إعادة المحاولة';
+
+  @override
+  String get telemetryUsageTitle => 'الاستخدام وصحة التطبيق';
+
+  @override
+  String get telemetryUsageDetail =>
+      'يرسل أعداداً مجهولة إلى Google Analytics for Firebase: أنواع الصفحات والميزات التي تستخدمها، وهل ينجح الاتصال والإرسال والإعداد والوكلاء والخدمة الخلفية والتحديثات، وسرعة بدء التطبيق وسلاسة الصفحات، وتنبيهات الذاكرة، ونطاقات لذاكرة هاتفك والمساحة الحرة والمعالج وإصدار WebView. كلمات ونطاقات ثابتة فقط، مع معرّف تثبيت عشوائي وطراز هاتفك وإصدار أندرويد. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلانات.';
+
+  @override
+  String get telemetryCrashesTitle => 'تقارير الأعطال';
+
+  @override
+  String get telemetryCrashesDetail =>
+      'يرسل تقارير الأعطال إلى Google Firebase Crashlytics: نوع الخطأ ومكانه في شيفرة التطبيق دون نصّ رسالته، وآخر خطواتك ككلمات قصيرة، وسبب إنهاء أندرويد للتطبيق آخر مرة. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلانات.';
+
+  @override
+  String get telemetryConsentChoose => 'اختيار';
+
+  @override
+  String get telemetryConsentSave => 'حفظ اختياري';
+
+  @override
+  String get sendReportTitle => 'إرسال تقرير مشكلة';
+
+  @override
+  String get sendReportRowDetail => 'راجع سجلاً منقّحاً ثم أرسله';
+
+  @override
+  String get sendReportSubtitle =>
+      'هذا كل ما يحتويه التقرير. لا يُرسل شيء حتى تضغط إرسال.';
+
+  @override
+  String get sendReportSend => 'إرسال';
+
+  @override
+  String get sendReportCollecting => 'جارٍ تجهيز التقرير…';
+
+  @override
+  String get sendReportSentTitle => 'أُرسل التقرير';
+
+  @override
+  String get sendReportSentBody =>
+      'اذكر رمز التقرير هذا إن فتحت بلاغاً على GitHub ليجد المطوّر تقريرك.';
+
+  @override
+  String get sendReportFailed =>
+      'تعذّر إرسال التقرير. تحقق من الاتصال وحاول مجدداً.';
+
+  @override
+  String get sendReportDone => 'تم';
+
+  @override
+  String get reportCodeLabel => 'رمز التقرير';
+
+  @override
+  String get reportCodeCopy => 'نسخ رمز التقرير';
 }

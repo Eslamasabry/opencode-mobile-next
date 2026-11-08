@@ -360,6 +360,10 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       preserveConnectionAttempt: preserveConnectionAttempt,
     );
     _retireTransport();
+    // A corrected retry after a wrong-flavor guess is the same attempt.
+    if (!preserveConnectionAttempt || _connAttemptStart == null) {
+      _connAttemptStart = DateTime.now();
+    }
     // A new connection asks the server which dialect it speaks again.
     _v2Reset();
     // The folder edited in a Codex connection is authoritative on connect.
@@ -411,6 +415,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
         throw ApiException('Server health check reported unhealthy');
       }
       _acceptRunningServerVersion(health.version);
+      _reportConnAttempt(ok: true);
       // A remote owner upgrades their own server. Once OC2 health is proven,
       // retire only its legacy metadata marker, without any phone-side import.
       if (profile.requiresOpenCode2Migration &&

@@ -418,6 +418,21 @@ extension _IndexHubRows on _IndexBuild {
         target: diagnostics.target,
         open: _arrive(diagnostics.target),
       ),
+      // Send a problem report (health telemetry section E): a redacted log
+      // the person previews and sends to the developer. Only in a build that
+      // can send it.
+      SearchEntry(
+        id: 'settings-send-problem-report',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.help,
+        icon: AppIconography.upload,
+        title: l10n.sendReportTitle,
+        keywords:
+            '${l10n.settingsHubSearchBugAliases} ${l10n.sendReportRowDetail}',
+        pages: const ['app-diagnostics'],
+        gate: (scope) => AppTelemetry.current.available,
+        open: (context, _) => openSendProblemReport(context),
+      ),
       // The explanation for every row the connected server hides; each
       // group's "Why" opens it too.
       SearchEntry(

@@ -262,6 +262,11 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
       // Never claims readiness after a failed download; the next resume
       // after the throttle tries again.
       debugPrint('App update could not be completed.');
+      HealthFlow.updateResult(
+        kind: 'patch',
+        result: 'failed',
+        failKind: 'download',
+      );
     } finally {
       _checking = false;
     }
@@ -270,6 +275,7 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
   void _showReady() {
     if (!mounted || _ready) return;
     AppTelemetry.track(AnalyticsEvent.updateOffered);
+    HealthFlow.updateResult(kind: 'patch', result: 'installed');
     setState(() => _ready = true);
   }
 

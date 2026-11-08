@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../telemetry/flow_events.dart';
 import '../platform/app_installer.dart';
 import '../ui/app_iconography.dart';
 import '../ui/kit/kit_buttons.dart';
@@ -38,6 +39,7 @@ Future<void> showInAppUpdateSheet(
     secondary: KitAction(
       label: l10n.appUpdateLater,
       onPressed: () {
+        HealthFlow.updateResult(kind: 'in_app', result: 'declined');
         updateService.dismissForSession(release.tag);
         Navigator.of(context).pop();
       },

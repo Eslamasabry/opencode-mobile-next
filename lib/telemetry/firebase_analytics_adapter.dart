@@ -26,17 +26,36 @@ class FirebaseAnalyticsAdapter implements TelemetryAdapter {
   }
 
   @override
-  Future<void> setCollectionEnabled(bool enabled) async {
+  Future<void> setCollection({
+    required bool usage,
+    required bool crashes,
+  }) async {
     final analytics = _analytics;
     if (analytics == null) return;
     await analytics.setConsent(
-      analyticsStorageConsentGranted: enabled,
+      analyticsStorageConsentGranted: usage,
       adStorageConsentGranted: false,
       adUserDataConsentGranted: false,
       adPersonalizationSignalsConsentGranted: false,
     );
-    await analytics.setAnalyticsCollectionEnabled(enabled);
-    if (!enabled) await analytics.resetAnalyticsData();
+    await analytics.setAnalyticsCollectionEnabled(usage);
+    if (!usage) await analytics.resetAnalyticsData();
+  }
+
+  @override
+  Future<void> setUserProperties(Map<String, String> properties) async {
+    final analytics = _analytics;
+    if (analytics == null) return;
+    for (final entry in properties.entries) {
+      await analytics.setUserProperty(name: entry.key, value: entry.value);
+    }
+  }
+
+  /// Null while analytics collection is off, as Firebase answers.
+  @override
+  Future<String?> appInstanceId() async {
+    final analytics = _analytics;
+    return analytics == null ? null : await analytics.appInstanceId;
   }
 
   /// `screen_view` goes through Analytics' own screen call, so its reports
@@ -63,4 +82,8 @@ class FirebaseAnalyticsAdapter implements TelemetryAdapter {
   Future<void> failure(String name, Map<String, String> keys) async {}
   @override
   Future<void> breadcrumb(String name) async {}
+  @override
+  Future<void> setKeys(Map<String, String> keys) async {}
+  @override
+  Future<void> problemReport(String text, {required bool collecting}) async {}
 }

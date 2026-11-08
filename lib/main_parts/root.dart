@@ -216,7 +216,40 @@ class _RootState extends ConsumerState<_Root> {
     // A successful connect resets the streak, so the next failure after a
     // long healthy session starts its count from one again.
     if (_controller.hasConnectedServer) _attempts = 0;
+    _feedHealthContext();
     setState(() {});
+  }
+
+  /// Tells the health telemetry which kind of server is in use and how many
+  /// there are; it passes on only what changed, and only with consent.
+  void _feedHealthContext() {
+    final health = AppTelemetry.health;
+    if (health == null) return;
+    final profiles = _controller.store.profiles;
+    final phone = profiles.any((p) => BuiltinLinux.managesServerUrl(p.baseUrl));
+    final computer = profiles.any(
+      (p) => !BuiltinLinux.managesServerUrl(p.baseUrl),
+    );
+    final current = _controller.profile;
+    final onPhone =
+        current != null && BuiltinLinux.managesServerUrl(current.baseUrl);
+    health.updateConnection(
+      serverKind: current == null ? 'none' : (onPhone ? 'phone' : 'computer'),
+      engineState: _builtin.starting
+          ? 'starting'
+          : _builtin.failureFor(current) != null
+          ? 'failing'
+          : (onPhone && _controller.hasConnectedServer ? 'ready' : 'stopped'),
+      connections: profiles.length,
+      userServerKind: phone && computer
+          ? 'both'
+          : phone
+          ? 'phone'
+          : computer
+          ? 'computer'
+          : null,
+      serverVersion: _controller.version,
+    );
   }
 
   String? _migrationAttemptedFor;

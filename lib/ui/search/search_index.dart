@@ -17,6 +17,8 @@ import '../app_iconography.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../screens/about_screen.dart';
+import '../screens/send_problem_report.dart';
+import '../../telemetry/telemetry_provider.dart' show AppTelemetry;
 import '../screens/agent_account_screen.dart';
 import '../screens/app_diagnostics_screen.dart';
 import '../screens/automation_settings_screen.dart';

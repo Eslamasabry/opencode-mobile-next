@@ -54,6 +54,7 @@ class MainActivity : FlutterFragmentActivity() {
         scheduledPrompts = ScheduledPromptChannel(this).also { it.register(messenger) }
         ScheduledPromptScheduler(applicationContext).restore()
         AppInfoChannel.register(this, messenger)
+        HealthChannel.register(this, messenger)
         MethodChannel(messenger, BUILTIN_LINUX_CHANNEL_NAME).setMethodCallHandler { call, rawResult ->
             val result = replies.wrap(rawResult)
             result.guarded("builtin_linux") { handleBuiltinLinux(call, result) }
@@ -66,6 +67,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        HealthChannel.dispose()
         scheduledPrompts?.close()
         scheduledPrompts = null
         background.cancelBackgroundRequests()

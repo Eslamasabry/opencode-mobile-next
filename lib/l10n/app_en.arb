@@ -41474,14 +41474,6 @@
   "@crashOfferSettingDetail": {
     "description": "Privacy and data: what the crash report offer switch does."
   },
-  "telemetrySettingTitle": "Send reports to developer",
-  "@telemetrySettingTitle": {
-    "description": "Privacy and data: switch that turns on sending crash reports (Google Firebase Crashlytics) and setup analytics counts (Google Analytics for Firebase) to the developer."
-  },
-  "telemetrySettingDetail": "Sends crash reports to Google Firebase Crashlytics, and anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, how far setup gets, how long setup and the first reply took, and update offers. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.",
-  "@telemetrySettingDetail": {
-    "description": "Privacy and data: what the crash-report and setup-counts switch sends. Must match PRIVACY.md."
-  },
   "voiceAutoSetupUnknownNetwork": "This phone can't tell whether this connection costs data.",
   "@voiceAutoSetupUnknownNetwork": {
     "description": "First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows"
@@ -41506,11 +41498,11 @@
   "@telemetryConsentTitle": {
     "description": "One-time question on the first start of a build that can send analytics: title."
   },
-  "telemetryConsentBody": "If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.",
+  "telemetryConsentBody": "If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.",
   "@telemetryConsentBody": {
     "description": "One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md."
   },
-  "telemetryConsentSends": "Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.",
+  "telemetryConsentSends": "Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.",
   "@telemetryConsentSends": {
     "description": "One-time analytics question: what is sent."
   },
@@ -41518,7 +41510,7 @@
   "@telemetryConsentNever": {
     "description": "One-time analytics question: what is never sent."
   },
-  "telemetryConsentShare": "Share anonymous usage",
+  "telemetryConsentShare": "Share both",
   "@telemetryConsentShare": {
     "description": "One-time analytics question: the button that turns sharing on."
   },
@@ -41571,5 +41563,73 @@
   "appUpdateRetry": "Try again",
   "@appUpdateRetry": {
     "description": "Button to retry a failed update download."
+  },
+  "telemetryUsageTitle": "Usage and app health",
+  "@telemetryUsageTitle": {
+    "description": "Privacy and data: switch for anonymous usage counts, performance and device ranges (Google Analytics for Firebase)."
+  },
+  "telemetryUsageDetail": "Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone's memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.",
+  "@telemetryUsageDetail": {
+    "description": "Privacy and data: what the usage switch sends. Must match PRIVACY.md."
+  },
+  "telemetryCrashesTitle": "Crash reports",
+  "@telemetryCrashesTitle": {
+    "description": "Privacy and data: switch for sending crash reports (Google Firebase Crashlytics)."
+  },
+  "telemetryCrashesDetail": "Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app's code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.",
+  "@telemetryCrashesDetail": {
+    "description": "Privacy and data: what the crash reports switch sends. Must match PRIVACY.md."
+  },
+  "telemetryConsentChoose": "Choose",
+  "@telemetryConsentChoose": {
+    "description": "One-time analytics question: the link that opens the two separate switches."
+  },
+  "telemetryConsentSave": "Save my choices",
+  "@telemetryConsentSave": {
+    "description": "One-time analytics question: the button that applies the two switches as set."
+  },
+  "sendReportTitle": "Send a problem report",
+  "@sendReportTitle": {
+    "description": "Settings > Help: row and sheet title for sending a redacted log to the developer."
+  },
+  "sendReportRowDetail": "Review a redacted log, then send it",
+  "@sendReportRowDetail": {
+    "description": "Settings > Help: row detail under Send a problem report."
+  },
+  "sendReportSubtitle": "This is everything the report holds. Nothing is sent until you tap Send.",
+  "@sendReportSubtitle": {
+    "description": "Send a problem report: sheet subtitle above the preview."
+  },
+  "sendReportSend": "Send",
+  "@sendReportSend": {
+    "description": "Send a problem report: the button that sends the previewed text."
+  },
+  "sendReportCollecting": "Collecting the report…",
+  "@sendReportCollecting": {
+    "description": "Send a problem report: shown while the preview is built."
+  },
+  "sendReportSentTitle": "Report sent",
+  "@sendReportSentTitle": {
+    "description": "Send a problem report: heading after the report was sent."
+  },
+  "sendReportSentBody": "Quote this report code if you open an issue on GitHub, so the developer can find your report.",
+  "@sendReportSentBody": {
+    "description": "Send a problem report: what the report code is for."
+  },
+  "sendReportFailed": "The report could not be sent. Check your connection and try again.",
+  "@sendReportFailed": {
+    "description": "Send a problem report: plain words when sending failed."
+  },
+  "sendReportDone": "Done",
+  "@sendReportDone": {
+    "description": "Send a problem report: closes the sheet after sending."
+  },
+  "reportCodeLabel": "Report code",
+  "@reportCodeLabel": {
+    "description": "Report code row label (Settings > About and the sent report)."
+  },
+  "reportCodeCopy": "Copy report code",
+  "@reportCodeCopy": {
+    "description": "Tooltip of the copy button next to the report code."
   }
 }

@@ -14,19 +14,92 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../diagnostics/perf_trace.dart' show PerfTraceNavigatorObserver;
+import '../feedback/crash_offer.dart' show CrashReportOffer;
 import 'analytics_events.dart';
+export 'flow_events.dart' show HealthFlow, failKindOf;
+import 'flow_events.dart';
+import 'health_probe.dart';
+import 'health_schema.dart' show BreadcrumbWords;
 import 'telemetry.dart';
 
-/// Consent is stored once for the app, not per server profile.
+/// The single switch of 2.1.5 before the split into [telemetryUsageKey] and
+/// [telemetryCrashesKey]. Read once to carry an old answer over; kept, never
+/// written again. Consent is stored once for the app, not per server profile.
 const telemetryConsentKey = 'oc.telemetry.crashReports';
+
+/// `usage`: events, performance and device context (section B, C, D).
+const telemetryUsageKey = 'oc.telemetry.usage';
+
+/// `crashes`: crash reports (section A).
+const telemetryCrashesKey = 'oc.telemetry.crashes';
+
+/// The report counter and the install code kept on this phone for the
+/// problem report's code.
+const telemetryReportCounterKey = 'oc.telemetry.reportCounter';
+const telemetryInstallCodeKey = 'oc.telemetry.installCode';
 
 class PreferencesTelemetryConsentStore implements TelemetryConsentStore {
   PreferencesTelemetryConsentStore(this._prefs);
   final SharedPreferences _prefs;
+
+  /// The two answers: the saved ones, or, when neither was ever saved, those
+  /// carried over from 2.1.5's single answer so nobody is asked twice.
+  ///
+  /// - The old single "send reports" yes meant crash reports and usage, so it
+  ///   turns `usage` on, and `crashes` on too unless the person explicitly
+  ///   turned the crash offer off (the old crash-offer answer).
+  /// - No old yes leaves both off.
+  static TelemetryConsent carriedOver(SharedPreferences prefs) {
+    final usage = prefs.getBool(telemetryUsageKey);
+    final crashes = prefs.getBool(telemetryCrashesKey);
+    if (usage != null || crashes != null) {
+      return (usage: usage ?? false, crashes: crashes ?? false);
+    }
+    final oldYes = prefs.getBool(telemetryConsentKey) ?? false;
+    final offerRefused = prefs.getBool(CrashReportOffer.enabledKey) == false;
+    return (usage: oldYes, crashes: oldYes && !offerRefused);
+  }
+
+  /// Saves the carried-over answers under the new keys, and marks the
+  /// one-time question as asked when an old answer exists. Once.
+  static Future<void> migrate(SharedPreferences prefs) async {
+    if (prefs.containsKey(telemetryUsageKey) ||
+        prefs.containsKey(telemetryCrashesKey)) {
+      return;
+    }
+    final answer = carriedOver(prefs);
+    final answered =
+        prefs.containsKey(telemetryConsentKey) ||
+        prefs.containsKey(CrashReportOffer.enabledKey);
+    if (!answered) return;
+    await prefs.setBool(telemetryUsageKey, answer.usage);
+    await prefs.setBool(telemetryCrashesKey, answer.crashes);
+    await prefs.setBool(telemetryConsentAskedKey, true);
+  }
+
   @override
-  bool read() => _prefs.getBool(telemetryConsentKey) ?? false;
+  TelemetryConsent read() => carriedOver(_prefs);
+
   @override
-  Future<void> write(bool value) => _prefs.setBool(telemetryConsentKey, value);
+  Future<void> write({required bool usage, required bool crashes}) async {
+    await _prefs.setBool(telemetryUsageKey, usage);
+    await _prefs.setBool(telemetryCrashesKey, crashes);
+  }
+}
+
+class PreferencesTelemetryReportStore implements TelemetryReportStore {
+  PreferencesTelemetryReportStore(this._prefs);
+  final SharedPreferences _prefs;
+  @override
+  int readCounter() => _prefs.getInt(telemetryReportCounterKey) ?? 0;
+  @override
+  Future<void> writeCounter(int value) =>
+      _prefs.setInt(telemetryReportCounterKey, value);
+  @override
+  String? readLocalId() => _prefs.getString(telemetryInstallCodeKey);
+  @override
+  Future<void> writeLocalId(String value) =>
+      _prefs.setString(telemetryInstallCodeKey, value);
 }
 
 /// The process-wide reporter for code that has no `ref` (start-up error
@@ -57,6 +130,13 @@ abstract final class AppTelemetry {
   /// `feature_used` for one use of [feature].
   static void feature(AnalyticsFeature feature) =>
       _current.track(AnalyticsEvent.featureUsed, {'feature': feature});
+
+  /// A breadcrumb (`area.action`, optionally `:word`); dropped unless it is
+  /// listed in [BreadcrumbWords].
+  static void crumb(String name) => _current.breadcrumb(name);
+
+  /// The health and diagnostics wiring, once [TelemetryStartup] made it.
+  static HealthTelemetry? health;
 }
 
 /// Code with a `ref` depends only on this. Tests override it with a fake; a
@@ -105,12 +185,17 @@ abstract final class TelemetryStartup {
   static Future<void> _start(TelemetryAdapter adapter) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      await PreferencesTelemetryConsentStore.migrate(prefs);
       final service = TelemetryService(
         adapter: adapter,
         store: PreferencesTelemetryConsentStore(prefs),
+        reports: PreferencesTelemetryReportStore(prefs),
       );
       await service.start();
       AppTelemetry.install(service);
+      AppTelemetry.crumb('app.start');
+      AppTelemetry.health = HealthTelemetry(telemetry: service, prefs: prefs)
+        ..start();
       await AnalyticsLifecycle.start(prefs);
     } catch (_) {}
   }
@@ -141,6 +226,7 @@ class AnalyticsLifecycle with WidgetsBindingObserver {
       if (previous != current) {
         if (previous != null) {
           AppTelemetry.track(AnalyticsEvent.updateInstalled);
+          HealthFlow.updateResult(kind: 'in_app', result: 'installed');
         }
         await prefs.setString(analyticsLastVersionKey, current);
       }
@@ -161,6 +247,8 @@ class AnalyticsLifecycle with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.paused || AppLifecycleState.hidden when !_wasAway:
         _wasAway = true;
+        AppTelemetry.crumb('app.background');
+        AppTelemetry.health?.jank.endSession();
         AppTelemetry.track(AnalyticsEvent.sessionLength, {
           'minutes': AnalyticsBuckets.sessionMinutesOf(
             DateTime.now().difference(_since),
@@ -169,6 +257,8 @@ class AnalyticsLifecycle with WidgetsBindingObserver {
       case AppLifecycleState.resumed when _wasAway:
         _wasAway = false;
         _since = DateTime.now();
+        AppTelemetry.crumb('app.foreground');
+        AppTelemetry.health?.warmStart();
         AppTelemetry.track(AnalyticsEvent.appOpen, {'kind': 'warm'});
       default:
         break;
@@ -184,11 +274,12 @@ class AnalyticsNavigatorObserver extends NavigatorObserver {
     try {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!route.isCurrent) return;
-        AppTelemetry.track(AnalyticsEvent.screenView, {
-          'screen': AnalyticsScreen.of(
-            PerfTraceNavigatorObserver.routeName(route),
-          ),
-        });
+        final screen = AnalyticsScreen.of(
+          PerfTraceNavigatorObserver.routeName(route),
+        );
+        AppTelemetry.crumb('nav.open:${screen.wire}');
+        AppTelemetry.health?.jank.screen(screen);
+        AppTelemetry.track(AnalyticsEvent.screenView, {'screen': screen});
       });
     } catch (_) {}
   }
