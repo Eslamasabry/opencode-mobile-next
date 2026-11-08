@@ -69,6 +69,10 @@ public interface ChatWorld {
     /** Flutter "Try now": cancel the wait and try the link at once. Never resends anything. */
     public fun tryLinkNow() {}
 
+    /** The project folder the server reports for this conversation; null until known. */
+    public val directory: String?
+        get() = null
+
     /** True when this conversation's server is the one this phone runs (Restart is offered). */
     public val serverOnThisPhone: Boolean
         get() = false

@@ -332,7 +332,31 @@ public data class ChatCapabilitiesUi(
     val shell: Boolean = false,
     val files: Boolean = false,
     val slashCommands: Boolean = false,
+    /** S24-CHAT launcher gates (Flutter `_builtinChatCommands`). */
+    val terminal: Boolean = false,
+    val serverCatalog: Boolean = false,
+    val agents: Boolean = false,
+    val approvals: Boolean = false,
+    /** Language services or formatters report a status (Project health has something to show). */
+    val health: Boolean = false,
 )
+
+/**
+ * S24-CHAT story 2: the places the commands launcher opens, named as Flutter's commands name them.
+ * The presenter turns each into this conversation's route (same server, same project).
+ */
+public enum class ChatPlace {
+    Workspaces,
+    Health,
+    Terminal,
+    McpServers,
+    Providers,
+    Skills,
+    References,
+    ServerStatus,
+    Diagnostics,
+    Appearance,
+}
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
@@ -350,6 +374,9 @@ public interface ChatActions {
 
     /** "Report a problem" from the could-not-load page (Flutter chat_states.dart:85, `product-error-report-bug`). */
     public fun reportProblem() {}
+
+    /** S24-CHAT: a commands-launcher place for this conversation (Flutter `_ChatCommandAction`). */
+    public fun openPlace(place: ChatPlace) {}
 
     /** Opens Project Files for this conversation (P12-FILES). */
     public fun openFiles() {}

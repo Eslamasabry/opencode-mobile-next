@@ -434,6 +434,8 @@ public fun ChatScreen(
                         replace = true,
                     )
             },
+            header = header,
+            onContext = facts.context?.let { { contextOpen = true } },
         )
 
     // The frame, its sibling menu and its confirmation share one modal layer. KitScreen

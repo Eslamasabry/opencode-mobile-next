@@ -271,6 +271,9 @@ internal class GraphChatWorld(
         currentAttached()?.gateway?.events?.retryNow()
     }
 
+    override val directory: String?
+        get() = currentAttached()?.gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
+
     override val serverOnThisPhone: Boolean
         get() = phoneServer?.runsHere(ref.profileId) == true
 

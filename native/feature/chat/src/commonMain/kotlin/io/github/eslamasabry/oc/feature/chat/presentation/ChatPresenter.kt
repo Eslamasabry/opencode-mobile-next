@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
+import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
@@ -598,7 +599,47 @@ public class ChatPresenter(
             shell = c.conversationShellOn,
             files = c.fileBrowsing,
             slashCommands = c.slashCommands,
+            terminal = c.terminal,
+            serverCatalog = c.serverCatalog,
+            agents = c.agentSelection,
+            approvals = c.permissionRequests,
+            health = c.languageServiceStatus || c.formatterStatus,
         )
+
+    override fun openPlace(place: ChatPlace) {
+        val ref = world.ref
+        val profile = ref.profileId
+        val directory = world.directory
+        val route: io.github.eslamasabry.oc.ui.routes.AppRoute =
+            when (place) {
+                ChatPlace.Workspaces ->
+                    directory?.let {
+                        io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Project(
+                            profile,
+                            it,
+                            initialWorkspace = true,
+                        )
+                    } ?: io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Picker(profile)
+                ChatPlace.Health ->
+                    io.github.eslamasabry.oc.ui.routes.SearchRoute.ProjectHealth(
+                        profile,
+                        directory ?: return,
+                    )
+                ChatPlace.Terminal -> io.github.eslamasabry.oc.ui.routes.TerminalRoute.Conversation(ref)
+                ChatPlace.McpServers -> integration(ServerIntegrationPage.Mcp)
+                ChatPlace.Providers -> integration(ServerIntegrationPage.Providers)
+                ChatPlace.Skills -> integration(ServerIntegrationPage.Skills)
+                ChatPlace.References -> integration(ServerIntegrationPage.References)
+                ChatPlace.ServerStatus -> io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(profile)
+                ChatPlace.Diagnostics -> io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem
+                ChatPlace.Appearance ->
+                    io.github.eslamasabry.oc.ui.routes.SettingsRoute.Target("settings-appearance")
+            }
+        nav.open(route)
+    }
+
+    private fun integration(page: ServerIntegrationPage) =
+        io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(world.ref.profileId, page)
 
     // ---- Find (plan 09 §6.6) ----
 
