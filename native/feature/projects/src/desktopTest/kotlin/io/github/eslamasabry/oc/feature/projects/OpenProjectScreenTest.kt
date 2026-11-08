@@ -150,7 +150,8 @@ class OpenProjectScreenTest {
             onNodeWithText("Connecting").assertExists()
             onNodeWithText("Not connected").assertExists()
             onNodeWithTag("open-server-pc").performClick()
-            assertEquals(listOf<Pair<String, List<Any?>>>("chooseServer" to listOf(pc)), calls)
+            // ProfileId is a value class: the proxy sees the mangled method and the raw id.
+            assertEquals(listOf("chooseServer" to listOf<Any?>("pc")), calls.map { (m, a) -> m.substringBefore('-') to a })
         }
 
     @Test
