@@ -207,7 +207,6 @@ class S10HomeScreenTest {
             val today = onNodeWithText("Today").getBoundsInRoot()
             assertTrue(memory.bottom <= today.top, "the section sits above Today")
         }
-
 }
 
 internal const val S10_NOW: Long = 1_800_000_000_000L
@@ -249,6 +248,4 @@ internal fun mixed(extra: Int = 0, claude: Boolean = false): ChatsUi {
             ),
         )
         .copy(archivable = items.map { it.identity }.toImmutableSet(), pinned = persistentSetOf())
-
-
 }
