@@ -298,6 +298,8 @@ public fun ChatScreen(
      * window's root, whose title starts on the gutter.
      */
     canGoBack: Boolean = true,
+    /** S28 story 8: the conversation's handoff line, drawn at the top of the transcript; null = none. */
+    handoffLine: (@Composable () -> Unit)? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
@@ -841,6 +843,7 @@ public fun ChatScreen(
                                         onCompactAgain =
                                             if (state.capabilities.compact) actions::compactAgain
                                             else null,
+                                        topLine = handoffLine,
                                     )
                                 EarlierMessagesPill(
                                     state,

@@ -227,6 +227,9 @@ internal object ListKeys {
     /** CHAT-TRANSCRIPT: background work still running (B-CHAT-007), just above the live line. */
     const val BACKGROUND: String = "background"
 
+    /** S28 story 8: the continued line (Continued in / from …), above the oldest message. */
+    const val CONTINUED: String = "continued"
+
     fun pending(localId: Long): String = "pending:$localId"
 }
 
@@ -303,6 +306,8 @@ internal fun ChatTranscriptList(
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
     onCopyReply: ((FooterRow) -> Unit)? = null,
     folds: TranscriptFolds = rememberTranscriptFolds(),
+    /** S28 story 8: the handoff line ("Continued from …"), drawn above the oldest message; null = none. */
+    topLine: (@Composable () -> Unit)? = null,
 ) {
     val currentRows by rememberUpdatedState(rows)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
@@ -492,6 +497,9 @@ internal fun ChatTranscriptList(
                 }
             }
         }
+        // S28 story 8 (Flutter chat_handoff_link.dart): where this work came from or went sits above the
+        // conversation's oldest loaded message (the list is newest first, so this item is drawn on top).
+        if (topLine != null) item(key = ListKeys.CONTINUED, contentType = "continued") { topLine() }
     }
 }
 

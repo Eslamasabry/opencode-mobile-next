@@ -75,6 +75,8 @@ import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
+import io.github.eslamasabry.oc.ui.words.res.continuedFrom
+import io.github.eslamasabry.oc.ui.words.res.continuedIn
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
@@ -325,6 +327,27 @@ public class ChatEntries(
                     create(route)
                 }
             val handoff by handoffVm.state.collectAsStateWithLifecycle()
+            val handoffLineState by handoffVm.line.collectAsStateWithLifecycle()
+            val handoffLine: (@androidx.compose.runtime.Composable () -> Unit)? =
+                handoffLineState?.let { line ->
+                    {
+                        io.github.eslamasabry.oc.ui.kitchat.transcript.KitContinuedLine(
+                            text =
+                                if (line.outgoing)
+                                    stringResource(
+                                        Res.string.continuedIn,
+                                        io.github.eslamasabry.oc.ui.kit.text.KitBidi.auto(line.words),
+                                    )
+                                else
+                                    stringResource(
+                                        Res.string.continuedFrom,
+                                        io.github.eslamasabry.oc.ui.kit.text.KitBidi.auto(line.words),
+                                    ),
+                            onOpen = handoffVm::openLine,
+                            gone = line.gone,
+                        )
+                    }
+                }
             val approval by headerVm.approval.collectAsStateWithLifecycle()
             // PREVIEW-QR: the dev servers this conversation mentioned (rows are newest first; the
             // scan wants oldest first).
@@ -541,6 +564,7 @@ public class ChatEntries(
                                     start = start,
                                     startActions = startVm,
                                     appStatus = appStatus,
+                                    handoffLine = handoffLine,
                                     replyOffer = {
                                         nudgeSlot()
                                         offerContent?.invoke()

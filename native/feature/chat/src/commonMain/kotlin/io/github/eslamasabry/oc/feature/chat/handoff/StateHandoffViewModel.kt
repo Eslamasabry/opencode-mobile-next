@@ -25,6 +25,22 @@ public data class StateHandoffUi(
     val retryLink: Boolean = false,
 )
 
+/**
+ * S28 story 8 (Flutter `chat_handoff_link.dart`): the quiet line that says where this work went or came from.
+ * [outgoing]: this conversation was continued elsewhere ([words] is the agent); otherwise it came from another
+ * ([words] is that conversation's title). [gone]: the other conversation no longer opens.
+ */
+public data class HandoffLineUi(val link: HandoffLink, val outgoing: Boolean, val words: String, val gone: Boolean = false)
+
+public object HandoffLineRules {
+    /** The first link of [links] that names [sessionId], as its line; null when none does. */
+    public fun of(links: List<HandoffLink>, sessionId: String): HandoffLineUi? {
+        val link = links.firstOrNull { it.sourceSessionId == sessionId || it.targetSessionId == sessionId } ?: return null
+        val outgoing = link.sourceSessionId == sessionId
+        return HandoffLineUi(link, outgoing, if (outgoing) link.targetAgent else link.sourceTitle)
+    }
+}
+
 public interface StateHandoffActions {
     public fun open()
 
@@ -50,6 +66,36 @@ public class StateHandoffViewModel(
     public val state: StateFlow<StateHandoffUi> = mutable.asStateFlow()
     private var epoch = 0L
     private var engine: HandoffEngine? = null
+    private val mutableLine = MutableStateFlow<HandoffLineUi?>(null)
+
+    /** S28 story 8: this conversation's continued line, read on open and again after the sheet closes. */
+    public val line: StateFlow<HandoffLineUi?> = mutableLine.asStateFlow()
+
+    init {
+        loadLine()
+    }
+
+    private fun loadLine() {
+        val owner = source ?: return
+        viewModelScope.launch {
+            val links = owner.links(route.ref).getOrNull() ?: return@launch
+            val next = HandoffLineRules.of(links, route.ref.sessionId.raw)
+            // A line found gone this visit stays gone.
+            mutableLine.value = next?.copy(gone = mutableLine.value?.takeIf { it.link.id == next.link.id }?.gone == true)
+        }
+    }
+
+    /** Opens the other conversation of the line; one that no longer opens turns the line off. */
+    public fun openLine() {
+        val shown = mutableLine.value ?: return
+        val owner = source ?: return
+        if (shown.gone) return
+        viewModelScope.launch {
+            val ref = owner.counterpart(route.ref, shown.link).getOrNull()
+            if (ref != null) navigator.openChat(ref)
+            else mutableLine.value = mutableLine.value?.copy(gone = true)
+        }
+    }
 
     override fun open() {
         if (mutable.value.loading) return
@@ -82,6 +128,7 @@ public class StateHandoffViewModel(
         epoch++
         engine = null
         mutable.value = StateHandoffUi()
+        loadLine()
     }
 
     override fun prepare(destination: HandoffDestination) {
