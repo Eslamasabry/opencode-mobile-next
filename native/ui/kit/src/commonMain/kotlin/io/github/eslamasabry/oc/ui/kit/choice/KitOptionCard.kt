@@ -136,11 +136,13 @@ private fun optionFrame(selected: Boolean): Modifier {
         )
     val look = if (asked.paints) asked else raised
     val solid = LocalKitStyle.current.style == Style.Solid
+    val glass = LocalKitStyle.current.style == Style.Glass
     val edge = if (selected) kitFocusRingWidth() else kitHairline()
     val ring =
         when {
             solid -> Modifier.exactEdge(edge, if (selected) colors.accent else colors.hairline, look.shape)
-            selected -> Modifier.exactEdge(edge, colors.accent, look.shape)
+            // Glass's chosen face draws its own accent rim on its own outline: a second ring over it never matched.
+            selected && !glass -> Modifier.exactEdge(edge, colors.accent, look.shape)
             else -> Modifier
         }
     // Flutter insets the content by the edge's width (a Container pads its child by its border). The native card
@@ -655,8 +657,7 @@ private fun StyleSample(style: Style) {
             val stripShape = radius((FlutterKitTokens.CARD_RADIUS - Space.S1).toFloat())
             val cardShape =
                 radius(FlutterKitTokens.CARD_RADIUS / 2f) // F: lib/ui/kit/kit_option_card.dart:668
-            val card =
-                spec.resolve(
+            val cardRequest =
                     SurfaceRequest(
                         roles,
                         SurfaceRole.Content,
@@ -672,7 +673,7 @@ private fun StyleSample(style: Style) {
                                 )
                             ),
                     )
-                )
+            val card = spec.resolve(cardRequest)
             // Glass: two spots of the theme's colours on the strip, partly under the card, and the card frosting them
             // (GLASS_REF kit_option_card.dart:660-707), so a frosted pane reads apart from an opaque one. The other
             // samples keep their plain strip.
@@ -690,10 +691,17 @@ private fun StyleSample(style: Style) {
                         val rtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
                         fun x(fromStart: Float) = if (rtl) size.width - fromStart else fromStart
                         drawRect(ground)
-                        // Accent at .7, unit * 8 across, top -unit, end unit * 2 (kit_option_card.dart:697-701).
-                        drawCircle(accent.copy(alpha = .7f), radius = unit * 4f, center = androidx.compose.ui.geometry.Offset(x(size.width - unit * 6f), unit * 3f))
-                        // Partner at .5, unit * 6 across, bottom -unit * 2, start unit * 3 (kit_option_card.dart:702-706).
-                        drawCircle(partner.copy(alpha = .5f), radius = unit * 3f, center = androidx.compose.ui.geometry.Offset(x(unit * 6f), size.height - unit))
+                        // A little colour for the pane to frost (owner 2026-11-08: the two blobs read as smudges): a soft
+                        // wash from the accent at the top end to the partner at the bottom start.
+                        drawRect(
+                            androidx.compose.ui.graphics.Brush.linearGradient(
+                                0f to accent.copy(alpha = .55f),
+                                .55f to partner.copy(alpha = .30f),
+                                1f to partner.copy(alpha = .12f),
+                                start = androidx.compose.ui.geometry.Offset(x(size.width), 0f),
+                                end = androidx.compose.ui.geometry.Offset(x(unit * 4f), size.height),
+                            )
+                        )
                     }
                 }
             if (glass) {
@@ -720,8 +728,9 @@ private fun StyleSample(style: Style) {
                                 Modifier.background(colors.surface1, cardShape)
                                     .exactEdge(kitHairline(), colors.hairline, cardShape)
                             else if (glass)
-                                // A light frost of its own, sigma 3 (kit_option_card.dart:669).
-                                Modifier.kitSurfaceGlass(card.copy(frost = 3f)).kitGlassFace(card)
+                                // A clear pane, as Glass's in-flow panes are now: its light frost, its sheen and its
+                                // white rim light over the wash (owner 2026-11-08).
+                                glassSampleCard(cardRequest).let { face -> Modifier.kitSurfaceGlass(face.copy(frost = 3f)).kitGlassFace(face) }
                             else Modifier.kitDecorated(card, androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl)
                         )
                         .padding(Space.S2.dp),
@@ -786,3 +795,11 @@ private fun StyleSample(style: Style) {
         }
     }
 }
+
+/** The Glass sample's pane: a clear in-flow pane ([GlassSpec.resolveClear]) with its rims lit as the kit lights them. */
+private fun glassSampleCard(r: SurfaceRequest): io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration =
+    io.github.eslamasabry.oc.ui.kit.effects.glassRims(
+        io.github.eslamasabry.oc.ui.design.style.GlassSpec.resolveClear(r)!!,
+        r.roles,
+        clear = true,
+    )

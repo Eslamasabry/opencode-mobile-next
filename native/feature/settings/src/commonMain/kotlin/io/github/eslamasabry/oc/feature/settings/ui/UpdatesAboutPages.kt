@@ -168,6 +168,7 @@ internal fun ColumnScope.AboutBody(
     voiceLicenses: Boolean = false,
     updates: UpdateFacts? = null,
     memory: MemoryPreviewUi? = null,
+    reportCode: String? = null,
 ) {
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     val knownBuild = about.version.isNotBlank() && about.build.isNotBlank()
@@ -185,6 +186,16 @@ internal fun ColumnScope.AboutBody(
                     else KitRowTrailing.None,
                 modifier = Modifier.testTag("about-version"),
             )
+            // B-190 (F: about_screen.dart:402): the code to quote in a GitHub issue, with Copy.
+            reportCode?.let { code ->
+                KitRow(
+                    title = stringResource(Res.string.reportCodeLabel),
+                    leading = KitRowLeading.Glyph(KitIcons.bug),
+                    supporting = code,
+                    trailing = KitRowTrailing.Copy(code, stringResource(Res.string.reportCodeCopy)),
+                    modifier = Modifier.testTag("about-report-code"),
+                )
+            }
             updates?.let { update ->
                 val checking =
                     update.state == UpdateState.Checking ||

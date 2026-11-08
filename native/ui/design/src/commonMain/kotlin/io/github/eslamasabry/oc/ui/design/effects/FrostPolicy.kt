@@ -113,6 +113,16 @@ public object FrostPolicy {
     public fun liquidEdges(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): Boolean =
         edgesHeldBy(c, strength, edges) == null
 
+    /**
+     * Whether Glass's in-flow panes (cards, row groups, chips, fields) are clear frosted glass (owner 2026-11-08: much
+     * lighter, the background's colour showing through) rather than today's thick panes. They need only the blur, not
+     * the lens, so the platform's missing lens does not hold them; every other hold keeps today's panes (Saver, reduced
+     * motion, high contrast, another style, frost Off and "Glass edges: Frosted"). The kit also needs the pane to blur a
+     * picture there.
+     */
+    public fun clearPanes(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): Boolean =
+        edgesHeldBy(c, strength, edges).let { it == null || it == EdgeHold.Platform }
+
     /** The spec to draw at full strength, or null for a solid surface (Dart `strengthFor` + `_backdrop` at t = 1). */
     public fun spec(role: FrostRole, strength: FrostStrength, dark: Boolean, c: FrostConditions): FrostSpec? {
         if (heldBy(c) != null || strength == FrostStrength.Off) return null

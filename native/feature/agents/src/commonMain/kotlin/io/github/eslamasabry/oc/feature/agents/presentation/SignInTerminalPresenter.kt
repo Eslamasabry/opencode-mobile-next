@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.feature.agents.signin.AgentRef
 import io.github.eslamasabry.oc.feature.agents.signin.SignInAgents
 import io.github.eslamasabry.oc.feature.agents.signin.SignInClipboard
 import io.github.eslamasabry.oc.feature.agents.signin.SignInCommand
+import io.github.eslamasabry.oc.feature.agents.signin.SignInDetails
 import io.github.eslamasabry.oc.feature.agents.signin.SignInForeground
 import io.github.eslamasabry.oc.feature.agents.signin.SignInFound
 import io.github.eslamasabry.oc.feature.agents.signin.SignInLinkCheck
@@ -69,8 +70,13 @@ public class SignInTerminalPresenter(
                     it.copy(
                         agentName = plan.agentName,
                         usesClaudeAccount = plan.usesClaudeAccount,
-                        pastesBrowserCode = agent.id == "antigravity",
+                        pastesBrowserCode = agent.id == ANTIGRAVITY,
                         offersAntigravityNote = agent.id == "gemini",
+                        // Antigravity's sign-in ends with a code to paste. The readable view has a
+                        // real text field (long-press paste, the keyboard, Send); the live grid did
+                        // not take keyboard input on the phone (owner report, merge41), so the
+                        // field is where the code goes. The person can still switch to the grid.
+                        accessibleMode = if (agent.id == ANTIGRAVITY) true else it.accessibleMode,
                     )
                 }
                 when (val built = agents.command(owner, agent)) {
@@ -101,7 +107,14 @@ public class SignInTerminalPresenter(
         val next = SignInTerminalSession(scope, host, foreground)
         session = next
         ui.update {
-            cleared(it).copy(step = SignInStep.Starting, failureCode = null, stopFailed = false)
+            cleared(it)
+                .copy(
+                    step = SignInStep.Starting,
+                    failureCode = null,
+                    startStep = null,
+                    failureDetails = null,
+                    stopFailed = false,
+                )
         }
         val states = scope.launch { next.state.collect { onSession(next, it) } }
         val urls = scope.launch {
@@ -147,7 +160,15 @@ public class SignInTerminalPresenter(
                         SignInProblem.Unavailable -> SignInStep.Unavailable
                         else -> SignInStep.Failed
                     }
-                ui.update { cleared(it).copy(step = step, failureCode = now.problem.code) }
+                ui.update {
+                    cleared(it)
+                        .copy(
+                            step = step,
+                            failureCode = now.problem.code,
+                            startStep = (now.problem as? SignInProblem.Start)?.step,
+                            failureDetails = SignInDetails.of(now.problem),
+                        )
+                }
             }
             SignInSessionState.Ended -> {
                 stop(terminalWatchers)
@@ -248,6 +269,13 @@ public class SignInTerminalPresenter(
         scope.launch { running.terminal.write(line.encodeToByteArray()) }
     }
 
+    override fun paste(text: String) {
+        val running = session?.state?.value as? SignInSessionState.Running ?: return
+        if (running.exitCode != null) return
+        val clean = pasteText(text) ?: return
+        scope.launch { running.terminal.paste(clean) }
+    }
+
     override fun setAccessibleMode(on: Boolean) {
         ui.update { it.copy(accessibleMode = on) }
     }
@@ -310,7 +338,14 @@ public class SignInTerminalPresenter(
         watchers.clear()
     }
 
-    private companion object {
+    internal companion object {
         const val CLAUDE = "claude"
+        const val ANTIGRAVITY = "antigravity"
+
+        /** A pasted code stays far below this; anything longer is not a sign-in code. */
+        const val PASTE_MAX = 4096
+
+        /** The clipboard text a paste writes: trimmed, and nothing when empty or too long. */
+        fun pasteText(text: String): String? = text.trim().takeIf { it.isNotEmpty() && it.length <= PASTE_MAX }
     }
 }
