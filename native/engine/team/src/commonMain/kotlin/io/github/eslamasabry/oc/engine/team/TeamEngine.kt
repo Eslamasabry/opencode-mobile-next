@@ -86,9 +86,12 @@ public data class TeamState(
     /** The engine's health from the last good read; null before one. */
     val health: TeamHealth? = null,
 ) {
-    /** What the engine can run now; everything for the simulated demo, which is never gated. */
+    /**
+     * What the engine can run now; everything for the simulated demo, which is never gated, and before any health is
+     * known (Dart `TeamExecutionGate.allows` is true for an unbound controller; the engine still refuses what it cannot).
+     */
     public val capabilities: TeamCapabilities
-        get() = if (workspace?.simulated == true) TeamCapabilities.ALL else health?.capabilities ?: TeamCapabilities()
+        get() = if (workspace?.simulated == true) TeamCapabilities.ALL else health?.capabilities ?: TeamCapabilities.ALL
 }
 
 /** One serial lane for every profile's reads; each profile has its own state. */
@@ -202,13 +205,14 @@ public class TeamEngine(
 
     /**
      * Dart `saveEditorDraft` / `clearEditorDraft`: one serial writer, so two editors never lose each other's text.
-     * [text] null removes [target]; an empty map removes the key.
+     * [text] null removes [target] and its per-field drafts; an empty map removes the key.
      */
     public suspend fun saveDraft(profileId: String, target: String, text: String?): Outcome<Unit> =
         drafts.withLock {
             val current = (host.readDrafts(profileId)?.let(DartJson::decodeOrNull) as? Map<*, *>).orEmpty()
             val next = LinkedHashMap<String, Any?>()
-            current.forEach { (k, v) -> if (k is String && k != target) next[k] = v }
+            // Clearing also drops the per-field drafts Flutter's KitDraft kept under "<target>.<field>".
+            current.forEach { (k, v) -> if (k is String && k != target && !(text == null && k.startsWith("$target."))) next[k] = v }
             if (text != null) next[target] = text
             host.writeDrafts(profileId, if (next.isEmpty()) null else DartJson.encode(next))
         }

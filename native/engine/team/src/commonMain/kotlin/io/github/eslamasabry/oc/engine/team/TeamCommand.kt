@@ -90,13 +90,13 @@ public data class TeamCommand(
             "expectedDevCommit" to expectedDevCommit,
             "expectedMainCommit" to expectedMainCommit,
             "confirmed" to confirmed,
-            "settings" to settings?.let(TeamEncode::settings),
-            "spec" to spec?.let(TeamEncode::spec),
-            "repos" to repos.map(TeamEncode::repo),
-            "tasks" to tasks?.map(TeamEncode::task),
-            "phases" to phases?.map(TeamEncode::phase),
-            "role" to role?.let(TeamEncode::role),
-            "server" to server?.let(TeamEncode::server),
+            "settings" to settings?.let(TeamJson::settings),
+            "spec" to spec?.let(TeamJson::spec),
+            "repos" to repos.map(TeamJson::repo),
+            "tasks" to tasks?.map(TeamJson::task),
+            "phases" to phases?.map(TeamJson::phase),
+            "role" to role?.let(TeamJson::role),
+            "server" to server?.let(TeamJson::server),
         )
 
     /** Dart `PhoneEngineGateway._executionActions`: these run work and need a verified, executing engine. */

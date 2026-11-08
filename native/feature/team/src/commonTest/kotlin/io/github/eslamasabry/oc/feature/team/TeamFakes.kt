@@ -67,3 +67,30 @@ internal class FakeHost(
         return Outcome.Ok(Unit)
     }
 }
+
+/** Records what a page opened and whether it went back. */
+internal class FakeNav : io.github.eslamasabry.oc.ui.routes.AppNavigator {
+    val opened = mutableListOf<io.github.eslamasabry.oc.ui.routes.AppRoute>()
+    var backs = 0
+    override val top: kotlinx.coroutines.flow.StateFlow<io.github.eslamasabry.oc.ui.routes.AppRoute?> =
+        kotlinx.coroutines.flow.MutableStateFlow(null)
+
+    override fun open(route: io.github.eslamasabry.oc.ui.routes.AppRoute) {
+        opened += route
+    }
+
+    override fun openChat(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef, focusComposer: Boolean) = Unit
+
+    override fun land() = Unit
+
+    override fun replaceRoot(root: io.github.eslamasabry.oc.ui.routes.AppRoute) = Unit
+
+    override fun back() {
+        backs++
+    }
+}
+
+internal val FIXED_CLOCK: kotlin.time.Clock =
+    object : kotlin.time.Clock {
+        override fun now(): kotlin.time.Instant = kotlin.time.Instant.fromEpochMilliseconds(NOW)
+    }

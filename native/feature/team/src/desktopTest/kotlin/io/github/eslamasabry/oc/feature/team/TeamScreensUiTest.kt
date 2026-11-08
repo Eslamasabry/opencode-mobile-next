@@ -8,7 +8,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -59,6 +62,10 @@ class TeamScreensUiTest {
 
         override fun retry() {
             calls += "retry"
+        }
+
+        override fun dismissRefusal() {
+            calls += "dismissRefusal"
         }
 
         override fun openTask(taskId: String) {
@@ -129,9 +136,11 @@ class TeamScreensUiTest {
         onNodeWithText("AI Team").assertIsDisplayed()
         onNodeWithText("Milestone 2 of 2 · 1 working").assertIsDisplayed()
         onNodeWithText("$1.50 of $5 today").assertIsDisplayed()
-        onNodeWithText("Which card provider?").performClick()
         onNodeWithText("Milestone 2 of 2 · 1 working").performClick()
-        assertEquals(listOf("request shop q1", "project shop"), actions.calls)
+        // A question answers from the list (Dart `_answer`): the answer dialog opens over the page.
+        onNodeWithText("Which card provider?").performClick()
+        onNodeWithText("Your answer").assertExists()
+        assertEquals(listOf("project shop"), actions.calls)
     }
 
     @Test
@@ -156,11 +165,12 @@ class TeamScreensUiTest {
         setContent { Themed { TeamProjectScreen(TeamPresent.project(ready, "shop", NOW), actions) } }
         onNodeWithText("Sell shoes").assertIsDisplayed()
         onNodeWithText("Needs your decision · Frontend on This phone").assertExists()
+        onNodeWithText("2 Pay").performClick()
+        assertEquals(listOf("board m2"), actions.calls)
+        onNode(hasScrollAction()).performScrollToNode(hasText("Desk · Not reachable · last known tasks"))
         onNodeWithText("Lanes 1/2 busy").assertExists()
         onNodeWithText("Frontend · Pay form").assertExists()
         onNodeWithText("Desk · Not reachable · last known tasks").assertExists()
-        onNodeWithText("2 Pay").performClick()
-        assertEquals(listOf("board m2"), actions.calls)
     }
 
     @Test

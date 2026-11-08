@@ -21,7 +21,8 @@ import io.github.eslamasabry.oc.feature.team.presentation.BoardColumn
 import io.github.eslamasabry.oc.feature.team.presentation.Headline
 import io.github.eslamasabry.oc.feature.team.presentation.HomeRow
 import io.github.eslamasabry.oc.feature.team.presentation.MilestoneStatus
-import io.github.eslamasabry.oc.feature.team.presentation.NeedsYouAnswer
+import io.github.eslamasabry.oc.feature.team.presentation.AskAnswer
+import io.github.eslamasabry.oc.feature.team.presentation.EditorKind
 import io.github.eslamasabry.oc.feature.team.presentation.StatusWord
 import io.github.eslamasabry.oc.feature.team.presentation.TaskSpeaker
 import io.github.eslamasabry.oc.feature.team.presentation.TaskMark
@@ -188,7 +189,7 @@ class TeamPresentTest {
         assertEquals(true, view.menu.resume)
         assertEquals(false, view.menu.pause)
         assertEquals(
-            listOf(NeedsYouAnswer.AcceptMilestone, null, NeedsYouAnswer.Resume),
+            listOf(AskAnswer.AcceptMilestone("shop", "m2", view.needsYou[0].milestoneText), AskAnswer.Editor(EditorKind.Spec), AskAnswer.Resume("t2")),
             view.needsYou.map { it.answer },
         )
         assertEquals("Pay", view.needsYou[0].milestoneText)

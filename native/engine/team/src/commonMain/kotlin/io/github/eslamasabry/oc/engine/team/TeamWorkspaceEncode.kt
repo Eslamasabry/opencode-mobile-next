@@ -4,8 +4,20 @@ package io.github.eslamasabry.oc.engine.team
  * The typed values a command carries, written as Dart's `toJson` writes them (lib/domain/team_project.dart), so the
  * phone engine reads a native edit exactly as one Flutter sent: every field, in Dart's order, nulls kept.
  */
-internal object TeamEncode {
-    fun settings(s: TeamProjectSettings): Map<String, Any?> =
+public object TeamJson {
+    public fun readSettings(j: Map<*, *>): TeamProjectSettings = TeamWorkspaceJson.settings(j)
+
+    public fun readRepo(j: Map<*, *>): TeamRepo = TeamWorkspaceJson.repo(j)
+
+    public fun readMilestone(j: Map<*, *>): TeamMilestone = TeamWorkspaceJson.milestone(j)
+
+    public fun readTask(j: Map<*, *>): TeamTask = TeamWorkspaceJson.task(j)
+
+    public fun readPhase(j: Map<*, *>): TeamProjectPhase = TeamWorkspaceJson.phase(j)
+
+    public fun readRole(j: Map<*, *>): TeamRole = TeamWorkspaceJson.role(j)
+
+    public fun settings(s: TeamProjectSettings): Map<String, Any?> =
         linkedMapOf(
             "keepWorkingScreenOff" to s.keepWorkingScreenOff,
             "mode" to s.mode,
@@ -24,10 +36,10 @@ internal object TeamEncode {
                 ),
         )
 
-    fun milestone(m: TeamMilestone): Map<String, Any?> =
+    public fun milestone(m: TeamMilestone): Map<String, Any?> =
         linkedMapOf("id" to m.id, "title" to m.title, "criteria" to m.criteria, "accepted" to m.accepted)
 
-    fun spec(s: TeamSpec): Map<String, Any?> =
+    public fun spec(s: TeamSpec): Map<String, Any?> =
         linkedMapOf(
             "contextFiles" to s.contextFiles,
             "version" to s.version,
@@ -40,7 +52,7 @@ internal object TeamEncode {
             "approvedAt" to s.approvedAt,
         )
 
-    fun repo(r: TeamRepo): Map<String, Any?> =
+    public fun repo(r: TeamRepo): Map<String, Any?> =
         linkedMapOf(
             "id" to r.id,
             "name" to r.name,
@@ -52,10 +64,10 @@ internal object TeamEncode {
             "sharedRemote" to r.sharedRemote,
         )
 
-    fun phase(p: TeamProjectPhase): Map<String, Any?> =
+    public fun phase(p: TeamProjectPhase): Map<String, Any?> =
         linkedMapOf("id" to p.id, "milestoneId" to p.milestoneId, "title" to p.title, "risky" to p.risky, "accepted" to p.accepted)
 
-    fun task(t: TeamTask): Map<String, Any?> =
+    public fun task(t: TeamTask): Map<String, Any?> =
         linkedMapOf(
             "criterionResults" to t.criterionResults.map { linkedMapOf("criterion" to it.criterion, "status" to it.status) },
             "id" to t.id,
@@ -89,7 +101,7 @@ internal object TeamEncode {
             "diff" to t.diff,
         )
 
-    fun role(r: TeamRole): Map<String, Any?> =
+    public fun role(r: TeamRole): Map<String, Any?> =
         linkedMapOf(
             "id" to r.id,
             "name" to r.name,
@@ -99,7 +111,7 @@ internal object TeamEncode {
             "readOnly" to r.readOnly,
         )
 
-    fun server(s: TeamServer): Map<String, Any?> =
+    public fun server(s: TeamServer): Map<String, Any?> =
         linkedMapOf(
             "id" to s.id,
             "name" to s.name,
