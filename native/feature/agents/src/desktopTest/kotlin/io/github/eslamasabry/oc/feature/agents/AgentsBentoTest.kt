@@ -147,7 +147,7 @@ class AgentsBentoTest {
             onNodeWithText("Connect phone agents").assertDoesNotExist()
             // One status line replaces "Check this phone", and no Refresh row is left.
             onNode(hasContentDescription("This phone is ready · arm64 · Android 15")).assertExists()
-            onNode(hasText("Check again") or hasContentDescription("Check again")).assertExists()
+            onNode(hasText("Refresh") or hasContentDescription("Refresh")).assertExists()
             onNodeWithText("Check this phone").assertDoesNotExist()
             onNodeWithText("Refresh", substring = true).assertDoesNotExist()
             // The install note lives on the tile and in the sheet, not as a notice over the page.

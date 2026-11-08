@@ -142,7 +142,7 @@ class AgentsScreenTest {
         }
         onNodeWithText("Desk").assertExists()
         onNodeWithText("Use Claude Code or Pi", substring = true).assertDoesNotExist()
-        onNode(hasContentDescription("New chat with Claude Code") and hasClickAction()).performClick()
+        onNode(hasContentDescription("New conversation with Claude Code") and hasClickAction()).performClick()
         assertEquals(listOf("new:p1"), actions.calls)
     }
 

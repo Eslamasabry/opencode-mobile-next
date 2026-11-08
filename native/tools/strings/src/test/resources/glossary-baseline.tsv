@@ -67,3 +67,9 @@ technical	teamUiTermRun
 technical	teamUiTermTeam
 technical	teamUiTermWork
 technical	whatsNew220Agents
+# Reviewed 2026-11-09: each states a real version, command, platform or legal fact the person needs verbatim.
+technical	account40UnsupportedDetail
+technical	codexNativeVersion
+technical	hostSecTrustHelp
+technical	hostSecStepAccount
+technical	nativeBundledPrivacy

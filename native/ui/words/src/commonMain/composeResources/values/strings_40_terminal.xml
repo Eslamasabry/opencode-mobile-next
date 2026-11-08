@@ -9,7 +9,7 @@
     <string name="terminal40Failed">The terminal could not finish that action. Try again.</string>
     <string name="terminal40ClipboardFailed">The clipboard is unavailable.</string>
     <string name="terminal40EndedTab">%1$s · Ended</string>
-    <string name="terminal40Sessions">Terminal sessions</string>
+    <string name="terminal40Sessions">Terminals</string>
     <string name="terminal40New">New terminal</string>
     <string name="terminal40Copy">Copy selected text or output</string>
     <string name="terminal40Paste">Paste into terminal</string>
