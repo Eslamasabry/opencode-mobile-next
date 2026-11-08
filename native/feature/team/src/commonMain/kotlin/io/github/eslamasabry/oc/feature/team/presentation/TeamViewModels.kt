@@ -9,11 +9,14 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.team.TeamAction
 import io.github.eslamasabry.oc.engine.team.TeamCommand
 import io.github.eslamasabry.oc.engine.team.TeamEngine
+import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProject
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,15 +36,57 @@ public class TeamHomeViewModel(
     private val engine: TeamEngine,
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
+    private val facts: TeamServerFacts = TeamServerFacts { null },
 ) : ViewModel(), TeamHomeActions {
     private val profile = route.profileId.raw
     private val accepting = MutableStateFlow<AskAnswer.AcceptMilestone?>(null)
+    private val intro = MutableStateFlow(TeamIntroUi())
 
     public val state: StateFlow<TeamHomeUi> =
-        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, accepting) { (state, now), accept ->
-                TeamPresent.home(state, now).copy(accepting = accept)
+        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, accepting, intro) {
+                (state, now),
+                accept,
+                off ->
+                val home = TeamPresent.home(state, now).copy(accepting = accept)
+                // The server is read again while the page is off, so a server that connects meanwhile is named.
+                if (home.phase != TeamPhase.Off) home
+                else home.copy(intro = off.copy(server = off.server ?: facts.server(route.profileId)))
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), TeamHomeUi())
+
+    init {
+        viewModelScope.launch {
+            val can = engine.canTurnOn(profile)
+            intro.update { it.copy(canTurnOn = can) }
+        }
+    }
+
+    /** The off page's primary on this phone: one turn-on at a time; the page becomes the team once it is on. */
+    override fun turnOn() {
+        var admitted = false
+        intro.update {
+            admitted = !it.turningOn && it.canTurnOn
+            if (admitted) it.copy(turningOn = true, failure = null) else it
+        }
+        if (!admitted) return
+        viewModelScope.launch {
+            val done = engine.turnOn(profile)
+            intro.update { it.copy(turningOn = false, failure = (done as? Outcome.Failed)?.failure) }
+        }
+    }
+
+    /** Flutter's Termux path, and this phone where the app cannot turn it on itself: Add tools › AI Team. */
+    override fun setUpOnPhone() {
+        nav.open(PhoneSetupRoute.Customize(adding = true))
+    }
+
+    override fun openGuide() {
+        intro.update { it.copy(guide = true) }
+    }
+
+    override fun closeGuide() {
+        intro.update { it.copy(guide = false) }
+    }
 
     private fun send(projectId: String, build: (TeamProject) -> TeamCommand) {
         val project = engine.state(profile).value.workspace?.project(projectId) ?: return
