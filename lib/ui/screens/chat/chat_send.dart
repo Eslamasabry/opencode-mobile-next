@@ -682,7 +682,7 @@ extension _ChatSend on _ChatScreenState {
       if (!answered && mounted && waited < const Duration(minutes: 1)) return;
       timer.cancel();
       _sendResultTimer = null;
-      HealthFlow.sendResult(result: 'ok', firstReply: answered ? waited : null);
+      HealthFlow.sendOk(answered ? waited : null, _conn.profile?.baseUrl);
     });
   }
 

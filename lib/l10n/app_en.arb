@@ -18674,6 +18674,52 @@
   "@desktopReleaseOpenPage": {
     "description": "Desktop release status line action: opens the release page in the browser after the external-link confirmation."
   },
+  "appUpdatePromptTitle": "Update available",
+  "@appUpdatePromptTitle": {
+    "description": "Title of the in-app update prompt sheet."
+  },
+  "appUpdateDownloadAndUpdate": "Download and update",
+  "@appUpdateDownloadAndUpdate": {
+    "description": "Primary button in the in-app update prompt sheet to download and install."
+  },
+  "appUpdateLater": "Later",
+  "@appUpdateLater": {
+    "description": "Secondary button to dismiss the in-app update prompt for now."
+  },
+  "appUpdateSize": "Size: {size}",
+  "@appUpdateSize": {
+    "description": "Download size label in the update prompt.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "40.2 MB"
+      }
+    }
+  },
+  "appUpdateChangelog": "What's new",
+  "@appUpdateChangelog": {
+    "description": "Section header for release notes and changes in the update sheet."
+  },
+  "appUpdateInstall": "Install",
+  "@appUpdateInstall": {
+    "description": "Button to trigger installation after the update package is downloaded."
+  },
+  "appUpdateDownloading": "Downloading update…",
+  "@appUpdateDownloading": {
+    "description": "Status text while update is downloading."
+  },
+  "appUpdateReadyToInstall": "Ready to install. Tap Install to finish updating.",
+  "@appUpdateReadyToInstall": {
+    "description": "Status text once APK download is finished."
+  },
+  "appUpdateDownloadFailed": "Failed to download update. Check connection and retry.",
+  "@appUpdateDownloadFailed": {
+    "description": "Status text when update download encounters an error."
+  },
+  "appUpdateRetry": "Try again",
+  "@appUpdateRetry": {
+    "description": "Button to retry a failed update download."
+  },
   "runningWorkTitle": "Work in this conversation",
   "@runningWorkTitle": {
     "description": "Title of the sheet listing the agents and commands a conversation started (was 'Tasks', which also meant to-dos and team tasks)."
@@ -23083,50 +23129,6 @@
   "integrationsPageLoadFailed": "Could not load this page",
   "@integrationsPageLoadFailed": {
     "description": "Providers and MCP page: headline when more than one of its sections (providers, MCP servers, resources) failed to load; one Try again reloads them all"
-  },
-  "integrationsProvidersLoadFailed": "Could not load providers",
-  "@integrationsProvidersLoadFailed": {
-    "description": "Providers page: headline when the list of providers did not load (issue #124); the body says why"
-  },
-  "integrationsMcpServersLoadFailed": "Could not load MCP servers",
-  "@integrationsMcpServersLoadFailed": {
-    "description": "Providers and MCP page: headline when the list of MCP servers did not load; the body says why"
-  },
-  "integrationsResourcesLoadFailed": "Could not load MCP resources",
-  "@integrationsResourcesLoadFailed": {
-    "description": "Providers and MCP page: headline when the list of MCP resources did not load; the body says why"
-  },
-  "integrationsListFailedBody": "The server didn't send this list. Try again.",
-  "@integrationsListFailedBody": {
-    "description": "Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text"
-  },
-  "integrationsFolderMissing": "This project's folder isn't on the server any more. Open another project.",
-  "@integrationsFolderMissing": {
-    "description": "Providers and MCP page: body when the server says the open project's folder does not exist on it"
-  },
-  "integrationsProvidersUnsupported": "This server doesn't list providers",
-  "@integrationsProvidersUnsupported": {
-    "description": "Providers page: calm state when the server has no provider list (an older or newer server version); not an error"
-  },
-  "integrationsMcpServersUnsupported": "This server doesn't list MCP servers",
-  "@integrationsMcpServersUnsupported": {
-    "description": "MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error"
-  },
-  "integrationsResourcesUnsupported": "This server doesn't list MCP resources",
-  "@integrationsResourcesUnsupported": {
-    "description": "MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error"
-  },
-  "integrationsListUnsupportedBody": "Its version doesn't offer this list.",
-  "@integrationsListUnsupportedBody": {
-    "description": "Providers and MCP page: body under the 'This server doesn't list …' states"
-  },
-  "integrationsWaitingTitle": "Waiting for the server",
-  "@integrationsWaitingTitle": {
-    "description": "Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error"
-  },
-  "integrationsWaitingBody": "This page loads by itself once the server is connected.",
-  "@integrationsWaitingBody": {
-    "description": "Providers and MCP page: body under 'Waiting for the server'"
   },
   "kitLastKnownRefreshing": "{updated} · Refreshing",
   "@kitLastKnownRefreshing": {
@@ -41446,6 +41448,66 @@
   "@phoneSetupStageCompat": {
     "description": "Setup stage when a program crashed and the app runs the step again more carefully"
   },
+  "teamRefusalServerRestarted": "OpenCode restarted while this step was running, so it was cut off.",
+  "@teamRefusalServerRestarted": {
+    "description": "Plain reason for engine code serverRestarted: the phone's OpenCode restarted or crashed during a team step"
+  },
+  "teamRefusalServerRestartedNext": "Resume to send that step again. It picks up from the work already done.",
+  "@teamRefusalServerRestartedNext": {
+    "description": "Way forward for engine code serverRestarted"
+  },
+  "teamRefusalRestartResend": "OpenCode restarted while this step was running. The team is sending it again.",
+  "@teamRefusalRestartResend": {
+    "description": "Plain line for engine code restartResend: the engine resends the cut-off step by itself"
+  },
+  "teamRefusalRestartResendNext": "Nothing to do. Work already done is kept.",
+  "@teamRefusalRestartResendNext": {
+    "description": "Way forward for engine code restartResend"
+  },
+  "integrationsProvidersLoadFailed": "Could not load providers",
+  "@integrationsProvidersLoadFailed": {
+    "description": "Providers page: headline when the list of providers did not load (issue #124); the body says why"
+  },
+  "integrationsMcpServersLoadFailed": "Could not load MCP servers",
+  "@integrationsMcpServersLoadFailed": {
+    "description": "Providers and MCP page: headline when the list of MCP servers did not load; the body says why"
+  },
+  "integrationsResourcesLoadFailed": "Could not load MCP resources",
+  "@integrationsResourcesLoadFailed": {
+    "description": "Providers and MCP page: headline when the list of MCP resources did not load; the body says why"
+  },
+  "integrationsListFailedBody": "The server didn't send this list. Try again.",
+  "@integrationsListFailedBody": {
+    "description": "Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text"
+  },
+  "integrationsFolderMissing": "This project's folder isn't on the server any more. Open another project.",
+  "@integrationsFolderMissing": {
+    "description": "Providers and MCP page: body when the server says the open project's folder does not exist on it"
+  },
+  "integrationsProvidersUnsupported": "This server doesn't list providers",
+  "@integrationsProvidersUnsupported": {
+    "description": "Providers page: calm state when the server has no provider list (an older or newer server version); not an error"
+  },
+  "integrationsMcpServersUnsupported": "This server doesn't list MCP servers",
+  "@integrationsMcpServersUnsupported": {
+    "description": "MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error"
+  },
+  "integrationsResourcesUnsupported": "This server doesn't list MCP resources",
+  "@integrationsResourcesUnsupported": {
+    "description": "MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error"
+  },
+  "integrationsListUnsupportedBody": "Its version doesn't offer this list.",
+  "@integrationsListUnsupportedBody": {
+    "description": "Providers and MCP page: body under the 'This server doesn't list …' states"
+  },
+  "integrationsWaitingTitle": "Waiting for the server",
+  "@integrationsWaitingTitle": {
+    "description": "Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error"
+  },
+  "integrationsWaitingBody": "This page loads by itself once the server is connected.",
+  "@integrationsWaitingBody": {
+    "description": "Providers and MCP page: body under 'Waiting for the server'"
+  },
   "crashOfferMessage": "OpenCode Mobile closed unexpectedly last time. Send a crash report?",
   "@crashOfferMessage": {
     "description": "Crash report offer: the one calm notice shown once after the app crashed. Nothing is sent by itself."
@@ -41517,52 +41579,6 @@
   "telemetryConsentNotNow": "Not now",
   "@telemetryConsentNotNow": {
     "description": "One-time analytics question: the button that leaves sharing off and never asks again."
-  },
-  "appUpdatePromptTitle": "Update available",
-  "@appUpdatePromptTitle": {
-    "description": "Title of the in-app update prompt sheet."
-  },
-  "appUpdateDownloadAndUpdate": "Download and update",
-  "@appUpdateDownloadAndUpdate": {
-    "description": "Primary button in the in-app update prompt sheet to download and install."
-  },
-  "appUpdateLater": "Later",
-  "@appUpdateLater": {
-    "description": "Secondary button to dismiss the in-app update prompt for now."
-  },
-  "appUpdateSize": "Size: {size}",
-  "@appUpdateSize": {
-    "description": "Download size label in the update prompt.",
-    "placeholders": {
-      "size": {
-        "type": "String",
-        "example": "40.2 MB"
-      }
-    }
-  },
-  "appUpdateChangelog": "What's new",
-  "@appUpdateChangelog": {
-    "description": "Section header for release notes and changes in the update sheet."
-  },
-  "appUpdateInstall": "Install",
-  "@appUpdateInstall": {
-    "description": "Button to trigger installation after the update package is downloaded."
-  },
-  "appUpdateDownloading": "Downloading update…",
-  "@appUpdateDownloading": {
-    "description": "Status text while update is downloading."
-  },
-  "appUpdateReadyToInstall": "Ready to install. Tap Install to finish updating.",
-  "@appUpdateReadyToInstall": {
-    "description": "Status text once APK download is finished."
-  },
-  "appUpdateDownloadFailed": "Failed to download update. Check connection and retry.",
-  "@appUpdateDownloadFailed": {
-    "description": "Status text when update download encounters an error."
-  },
-  "appUpdateRetry": "Try again",
-  "@appUpdateRetry": {
-    "description": "Button to retry a failed update download."
   },
   "telemetryUsageTitle": "Usage and app health",
   "@telemetryUsageTitle": {

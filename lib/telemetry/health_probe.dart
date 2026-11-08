@@ -11,6 +11,7 @@ import '../platform/app_exit.dart' show AndroidExitReason, AppLifecycleBridge;
 import '../platform/platform_capabilities.dart';
 import 'analytics_events.dart';
 import 'health_schema.dart';
+import 'perf_traces.dart';
 import 'telemetry.dart';
 
 /// What the phone says about itself for the device context (section D of
@@ -361,6 +362,7 @@ class HealthTelemetry {
           'kind': 'cold',
           'ms_range': HealthRanges.appStartMsOf(cold),
         });
+        telemetry.performanceTrace(PerfSchema.appColdStart, cold);
       }
     }
   }

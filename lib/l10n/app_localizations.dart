@@ -25670,6 +25670,66 @@ abstract class AppLocalizations {
   /// **'Open release page'**
   String get desktopReleaseOpenPage;
 
+  /// Title of the in-app update prompt sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get appUpdatePromptTitle;
+
+  /// Primary button in the in-app update prompt sheet to download and install.
+  ///
+  /// In en, this message translates to:
+  /// **'Download and update'**
+  String get appUpdateDownloadAndUpdate;
+
+  /// Secondary button to dismiss the in-app update prompt for now.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get appUpdateLater;
+
+  /// Download size label in the update prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {size}'**
+  String appUpdateSize(String size);
+
+  /// Section header for release notes and changes in the update sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get appUpdateChangelog;
+
+  /// Button to trigger installation after the update package is downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get appUpdateInstall;
+
+  /// Status text while update is downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get appUpdateDownloading;
+
+  /// Status text once APK download is finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to install. Tap Install to finish updating.'**
+  String get appUpdateReadyToInstall;
+
+  /// Status text when update download encounters an error.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download update. Check connection and retry.'**
+  String get appUpdateDownloadFailed;
+
+  /// Button to retry a failed update download.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get appUpdateRetry;
+
   /// Title of the sheet listing the agents and commands a conversation started (was 'Tasks', which also meant to-dos and team tasks).
   ///
   /// In en, this message translates to:
@@ -30691,72 +30751,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load this page'**
   String get integrationsPageLoadFailed;
-
-  /// Providers page: headline when the list of providers did not load (issue #124); the body says why
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load providers'**
-  String get integrationsProvidersLoadFailed;
-
-  /// Providers and MCP page: headline when the list of MCP servers did not load; the body says why
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load MCP servers'**
-  String get integrationsMcpServersLoadFailed;
-
-  /// Providers and MCP page: headline when the list of MCP resources did not load; the body says why
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load MCP resources'**
-  String get integrationsResourcesLoadFailed;
-
-  /// Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text
-  ///
-  /// In en, this message translates to:
-  /// **'The server didn\'t send this list. Try again.'**
-  String get integrationsListFailedBody;
-
-  /// Providers and MCP page: body when the server says the open project's folder does not exist on it
-  ///
-  /// In en, this message translates to:
-  /// **'This project\'s folder isn\'t on the server any more. Open another project.'**
-  String get integrationsFolderMissing;
-
-  /// Providers page: calm state when the server has no provider list (an older or newer server version); not an error
-  ///
-  /// In en, this message translates to:
-  /// **'This server doesn\'t list providers'**
-  String get integrationsProvidersUnsupported;
-
-  /// MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error
-  ///
-  /// In en, this message translates to:
-  /// **'This server doesn\'t list MCP servers'**
-  String get integrationsMcpServersUnsupported;
-
-  /// MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error
-  ///
-  /// In en, this message translates to:
-  /// **'This server doesn\'t list MCP resources'**
-  String get integrationsResourcesUnsupported;
-
-  /// Providers and MCP page: body under the 'This server doesn't list …' states
-  ///
-  /// In en, this message translates to:
-  /// **'Its version doesn\'t offer this list.'**
-  String get integrationsListUnsupportedBody;
-
-  /// Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for the server'**
-  String get integrationsWaitingTitle;
-
-  /// Providers and MCP page: body under 'Waiting for the server'
-  ///
-  /// In en, this message translates to:
-  /// **'This page loads by itself once the server is connected.'**
-  String get integrationsWaitingBody;
 
   /// KitLastKnown (slice-speed-ui): the label over remembered rows while a fresh read is under way; updated is how old the rows are ("Updated 5m ago").
   ///
@@ -53420,6 +53414,96 @@ abstract class AppLocalizations {
   /// **'Trying again in compatibility mode'**
   String get phoneSetupStageCompat;
 
+  /// Plain reason for engine code serverRestarted: the phone's OpenCode restarted or crashed during a team step
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode restarted while this step was running, so it was cut off.'**
+  String get teamRefusalServerRestarted;
+
+  /// Way forward for engine code serverRestarted
+  ///
+  /// In en, this message translates to:
+  /// **'Resume to send that step again. It picks up from the work already done.'**
+  String get teamRefusalServerRestartedNext;
+
+  /// Plain line for engine code restartResend: the engine resends the cut-off step by itself
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode restarted while this step was running. The team is sending it again.'**
+  String get teamRefusalRestartResend;
+
+  /// Way forward for engine code restartResend
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to do. Work already done is kept.'**
+  String get teamRefusalRestartResendNext;
+
+  /// Providers page: headline when the list of providers did not load (issue #124); the body says why
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load providers'**
+  String get integrationsProvidersLoadFailed;
+
+  /// Providers and MCP page: headline when the list of MCP servers did not load; the body says why
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load MCP servers'**
+  String get integrationsMcpServersLoadFailed;
+
+  /// Providers and MCP page: headline when the list of MCP resources did not load; the body says why
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load MCP resources'**
+  String get integrationsResourcesLoadFailed;
+
+  /// Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t send this list. Try again.'**
+  String get integrationsListFailedBody;
+
+  /// Providers and MCP page: body when the server says the open project's folder does not exist on it
+  ///
+  /// In en, this message translates to:
+  /// **'This project\'s folder isn\'t on the server any more. Open another project.'**
+  String get integrationsFolderMissing;
+
+  /// Providers page: calm state when the server has no provider list (an older or newer server version); not an error
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t list providers'**
+  String get integrationsProvidersUnsupported;
+
+  /// MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t list MCP servers'**
+  String get integrationsMcpServersUnsupported;
+
+  /// MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error
+  ///
+  /// In en, this message translates to:
+  /// **'This server doesn\'t list MCP resources'**
+  String get integrationsResourcesUnsupported;
+
+  /// Providers and MCP page: body under the 'This server doesn't list …' states
+  ///
+  /// In en, this message translates to:
+  /// **'Its version doesn\'t offer this list.'**
+  String get integrationsListUnsupportedBody;
+
+  /// Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the server'**
+  String get integrationsWaitingTitle;
+
+  /// Providers and MCP page: body under 'Waiting for the server'
+  ///
+  /// In en, this message translates to:
+  /// **'This page loads by itself once the server is connected.'**
+  String get integrationsWaitingBody;
+
   /// Crash report offer: the one calm notice shown once after the app crashed. Nothing is sent by itself.
   ///
   /// In en, this message translates to:
@@ -53527,66 +53611,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get telemetryConsentNotNow;
-
-  /// Title of the in-app update prompt sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Update available'**
-  String get appUpdatePromptTitle;
-
-  /// Primary button in the in-app update prompt sheet to download and install.
-  ///
-  /// In en, this message translates to:
-  /// **'Download and update'**
-  String get appUpdateDownloadAndUpdate;
-
-  /// Secondary button to dismiss the in-app update prompt for now.
-  ///
-  /// In en, this message translates to:
-  /// **'Later'**
-  String get appUpdateLater;
-
-  /// Download size label in the update prompt.
-  ///
-  /// In en, this message translates to:
-  /// **'Size: {size}'**
-  String appUpdateSize(String size);
-
-  /// Section header for release notes and changes in the update sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s new'**
-  String get appUpdateChangelog;
-
-  /// Button to trigger installation after the update package is downloaded.
-  ///
-  /// In en, this message translates to:
-  /// **'Install'**
-  String get appUpdateInstall;
-
-  /// Status text while update is downloading.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading update…'**
-  String get appUpdateDownloading;
-
-  /// Status text once APK download is finished.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to install. Tap Install to finish updating.'**
-  String get appUpdateReadyToInstall;
-
-  /// Status text when update download encounters an error.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to download update. Check connection and retry.'**
-  String get appUpdateDownloadFailed;
-
-  /// Button to retry a failed update download.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get appUpdateRetry;
 
   /// Privacy and data: switch for anonymous usage counts, performance and device ranges (Google Analytics for Firebase).
   ///

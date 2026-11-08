@@ -365,6 +365,8 @@ impl Store {
             "repoReceipt",
             "sessionUsage",
             "promptDispatch",
+            "restartDispatch",
+            "dispatchServerPid",
             "freshSessionIds",
             "resolvedModels",
         ];
@@ -520,6 +522,36 @@ impl Store {
                         j["sessionDispatchDays"][role] = json!(&now()[..10]);
                     }
                     j["promptDispatch"][role] = state.clone();
+                }
+            } else if key == "restartDispatch" {
+                // The one resend after an OpenCode restart has its own ledger:
+                // the original prompt stays "dispatched" forever, and a round
+                // that reached "dispatched" never goes back to "dispatching".
+                for (role, state) in value.as_object().ok_or(StoreError("invalidJobPatch"))? {
+                    if !["planner", "worker", "checker"].contains(&role.as_str())
+                        || j["sessionIds"][role].as_str().is_none()
+                        || j["restartResend"] != role.as_str()
+                        || !matches!(state.as_str(), Some("dispatching" | "dispatched"))
+                    {
+                        return Err(StoreError("invalidJobPatch"));
+                    }
+                    if j["restartDispatch"][role] == "dispatched" && state != "dispatched" {
+                        return Err(StoreError("promptAlreadyDispatched"));
+                    }
+                    if !j["restartDispatch"].is_object() {
+                        j["restartDispatch"] = json!({});
+                    }
+                    j["restartDispatch"][role] = state.clone();
+                }
+            } else if key == "dispatchServerPid" {
+                for (role, pid) in value.as_object().ok_or(StoreError("invalidJobPatch"))? {
+                    if !["planner", "worker", "checker"].contains(&role.as_str()) || !pid.is_u64() {
+                        return Err(StoreError("invalidJobPatch"));
+                    }
+                    if !j["dispatchServerPid"].is_object() {
+                        j["dispatchServerPid"] = json!({});
+                    }
+                    j["dispatchServerPid"][role] = pid.clone();
                 }
             } else if key == "sessionIds" {
                 let sessions = value.as_object().ok_or(StoreError("invalidJobPatch"))?;
@@ -902,7 +934,10 @@ impl Store {
         let mut jobs = load_jobs(&tx)?;
         let mut changed = HashSet::new();
         for j in &mut jobs {
-            if j["stage"] != "interrupted" || j["reason"] != "restartNeedsReconciliation" {
+            let restart_cut = restart_cut_resumable(j);
+            if j["stage"] != "interrupted"
+                || (j["reason"] != "restartNeedsReconciliation" && !restart_cut)
+            {
                 continue;
             }
             let id = j["projectId"].as_str().unwrap_or("").to_owned();
@@ -919,8 +954,14 @@ impl Store {
                 continue;
             }
             if resume_job_checkpoint(j).is_err() {
+                if restart_cut {
+                    // Leave it for the person: Resume is still offered.
+                    continue;
+                }
                 j["reason"] = json!("recoveryNeedsReview");
                 j["updatedAt"] = json!(now());
+            } else if restart_cut {
+                j["reason"] = json!("restartResend");
             }
             append_job_timeline(p, j)?;
             changed.insert(id);
@@ -1351,7 +1392,7 @@ fn append_job_timeline(project: &mut Value, job: &Value) -> Result<(), StoreErro
     } else if stage == "interrupted"
         && !matches!(
             reason,
-            "restartNeedsReconciliation" | "pauseNeedsReconciliation"
+            "restartNeedsReconciliation" | "pauseNeedsReconciliation" | "serverRestarted"
         )
     {
         "was interrupted and needs review before resuming."
@@ -1374,6 +1415,12 @@ fn append_job_timeline(project: &mut Value, job: &Value) -> Result<(), StoreErro
                 "was interrupted when the app stopped. Resume to check its existing session."
             }
             "pauseNeedsReconciliation" => "is paused. Resume to check its existing session.",
+            "serverRestarted" => {
+                "was cut off when OpenCode restarted. Resume to send that step again."
+            }
+            "restartResend" => {
+                "was cut off when OpenCode restarted. The team is sending that step again."
+            }
             "" => match stage {
                 "queued" => "is queued.",
                 "starting" | "preparing" | "submitting" => "is starting.",
@@ -2110,13 +2157,55 @@ fn resume_job_checkpoint(j: &mut Value) -> Result<(), StoreError> {
         {
             return Err(StoreError("needsReconciliation"));
         }
+        if j["reason"] == "serverRestarted" {
+            // The engine saw this turn die under a newly proven OpenCode
+            // process (a restart or crash relaunch), after its prompt was
+            // accepted. The session is not running and did not finish, so
+            // one new round may send the step again into the same session.
+            // The round is consumed here, durably, before anything is sent.
+            if dispatches.and_then(|d| d.get(role)) != Some(&json!("dispatched"))
+                || j["restartDispatch"][role] == "dispatching"
+            {
+                return Err(StoreError("needsReconciliation"));
+            }
+            let rounds = j["restartResends"][role].as_u64().unwrap_or(0);
+            if !j["restartResends"].is_object() {
+                j["restartResends"] = json!({});
+            }
+            j["restartResends"][role] = json!(rounds + 1);
+            if let Some(ledger) = j["restartDispatch"].as_object_mut() {
+                ledger.remove(role);
+            }
+            j["restartResend"] = json!(role);
+        }
         // The daemon observes this exact session; resuming never calls prompt
-        // again, including when its acknowledgment was lost.
+        // again, including when its acknowledgment was lost. The only resend
+        // is the restart round above, on its own dispatch ledger.
         j["stage"] = json!("resuming");
     }
     j["reason"] = json!("");
     j["updatedAt"] = json!(now());
     Ok(())
+}
+/// How many times the engine sends a step again by itself after OpenCode
+/// restarted under it. Past that, the person decides (Resume stays offered).
+pub(crate) const AUTO_RESTART_RESENDS: u64 = 2;
+/// The role whose turn a resume observes, as [resume_job_checkpoint] picks it.
+fn checkpoint_role(j: &Value) -> &'static str {
+    if j["sessionIds"].get("checker").is_some() {
+        "checker"
+    } else if j["kind"] == "planner" {
+        "planner"
+    } else {
+        "worker"
+    }
+}
+fn restart_cut_resumable(j: &Value) -> bool {
+    j["reason"] == "serverRestarted"
+        && j["restartResends"][checkpoint_role(j)]
+            .as_u64()
+            .unwrap_or(0)
+            < AUTO_RESTART_RESENDS
 }
 fn sync_task_stages(p: &mut Value, jobs: &[Value]) {
     let id = p["id"].clone();

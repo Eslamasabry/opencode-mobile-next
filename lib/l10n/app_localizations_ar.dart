@@ -16165,6 +16165,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get desktopReleaseOpenPage => 'فتح صفحة الإصدار';
 
   @override
+  String get appUpdatePromptTitle => 'تحديث متاح';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'تنزيل وتحديث';
+
+  @override
+  String get appUpdateLater => 'لاحقاً';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'الحجم: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'ما الجديد';
+
+  @override
+  String get appUpdateInstall => 'تثبيت';
+
+  @override
+  String get appUpdateDownloading => 'جارٍ تنزيل التحديث…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'جاهز للتثبيت. اضغط تثبيت لإكمال التحديث.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'فشل تنزيل التحديث. تحقق من الاتصال وحاول مجدداً.';
+
+  @override
+  String get appUpdateRetry => 'إعادة المحاولة';
+
+  @override
   String get runningWorkTitle => 'العمل في هذه المحادثة';
 
   @override
@@ -19411,43 +19445,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get integrationsPageLoadFailed => 'تعذّر تحميل هذه الصفحة';
-
-  @override
-  String get integrationsProvidersLoadFailed => 'تعذّر تحميل المزوّدين';
-
-  @override
-  String get integrationsMcpServersLoadFailed => 'تعذّر تحميل خوادم MCP';
-
-  @override
-  String get integrationsResourcesLoadFailed => 'تعذّر تحميل موارد MCP';
-
-  @override
-  String get integrationsListFailedBody =>
-      'لم يرسل الخادم هذه القائمة. حاول مرة أخرى.';
-
-  @override
-  String get integrationsFolderMissing =>
-      'مجلد هذا المشروع لم يعد موجودًا على الخادم. افتح مشروعًا آخر.';
-
-  @override
-  String get integrationsProvidersUnsupported => 'هذا الخادم لا يعرض المزوّدين';
-
-  @override
-  String get integrationsMcpServersUnsupported =>
-      'هذا الخادم لا يعرض خوادم MCP';
-
-  @override
-  String get integrationsResourcesUnsupported => 'هذا الخادم لا يعرض موارد MCP';
-
-  @override
-  String get integrationsListUnsupportedBody => 'إصداره لا يوفّر هذه القائمة.';
-
-  @override
-  String get integrationsWaitingTitle => 'في انتظار الخادم';
-
-  @override
-  String get integrationsWaitingBody =>
-      'تُحمَّل هذه الصفحة تلقائيًا عند اتصال الخادم.';
 
   @override
   String kitLastKnownRefreshing(String updated) {
@@ -34069,6 +34066,59 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phoneSetupStageCompat => 'جارٍ المحاولة مجددًا في وضع التوافق';
 
   @override
+  String get teamRefusalServerRestarted =>
+      'أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة، فانقطعت.';
+
+  @override
+  String get teamRefusalServerRestartedNext =>
+      'استأنف لإرسال هذه الخطوة مرة أخرى. ستكمل من العمل المنجز.';
+
+  @override
+  String get teamRefusalRestartResend =>
+      'أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة. يرسلها الفريق مرة أخرى.';
+
+  @override
+  String get teamRefusalRestartResendNext =>
+      'لا شيء مطلوب منك. العمل المنجز محفوظ.';
+
+  @override
+  String get integrationsProvidersLoadFailed => 'تعذّر تحميل المزوّدين';
+
+  @override
+  String get integrationsMcpServersLoadFailed => 'تعذّر تحميل خوادم MCP';
+
+  @override
+  String get integrationsResourcesLoadFailed => 'تعذّر تحميل موارد MCP';
+
+  @override
+  String get integrationsListFailedBody =>
+      'لم يرسل الخادم هذه القائمة. حاول مرة أخرى.';
+
+  @override
+  String get integrationsFolderMissing =>
+      'مجلد هذا المشروع لم يعد موجودًا على الخادم. افتح مشروعًا آخر.';
+
+  @override
+  String get integrationsProvidersUnsupported => 'هذا الخادم لا يعرض المزوّدين';
+
+  @override
+  String get integrationsMcpServersUnsupported =>
+      'هذا الخادم لا يعرض خوادم MCP';
+
+  @override
+  String get integrationsResourcesUnsupported => 'هذا الخادم لا يعرض موارد MCP';
+
+  @override
+  String get integrationsListUnsupportedBody => 'إصداره لا يوفّر هذه القائمة.';
+
+  @override
+  String get integrationsWaitingTitle => 'في انتظار الخادم';
+
+  @override
+  String get integrationsWaitingBody =>
+      'تُحمَّل هذه الصفحة تلقائيًا عند اتصال الخادم.';
+
+  @override
   String get crashOfferMessage =>
       'أُغلق OpenCode Mobile بشكل غير متوقع في المرة الماضية. هل تريد إرسال تقرير عن العطل؟';
 
@@ -34129,40 +34179,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get telemetryConsentNotNow => 'ليس الآن';
-
-  @override
-  String get appUpdatePromptTitle => 'تحديث متاح';
-
-  @override
-  String get appUpdateDownloadAndUpdate => 'تنزيل وتحديث';
-
-  @override
-  String get appUpdateLater => 'لاحقاً';
-
-  @override
-  String appUpdateSize(String size) {
-    return 'الحجم: $size';
-  }
-
-  @override
-  String get appUpdateChangelog => 'ما الجديد';
-
-  @override
-  String get appUpdateInstall => 'تثبيت';
-
-  @override
-  String get appUpdateDownloading => 'جارٍ تنزيل التحديث…';
-
-  @override
-  String get appUpdateReadyToInstall =>
-      'جاهز للتثبيت. اضغط تثبيت لإكمال التحديث.';
-
-  @override
-  String get appUpdateDownloadFailed =>
-      'فشل تنزيل التحديث. تحقق من الاتصال وحاول مجدداً.';
-
-  @override
-  String get appUpdateRetry => 'إعادة المحاولة';
 
   @override
   String get telemetryUsageTitle => 'الاستخدام وصحة التطبيق';

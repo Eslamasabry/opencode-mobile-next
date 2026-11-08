@@ -31,7 +31,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.microphone" android:required="false"/>
     <!-- required="false" so a device with no camera can still install and
-         pair by pasting. mobile_scanner's own manifest declares both of these
+         pair by pasting. the camera plugin's own manifest declares both of these
          identically; they are repeated here because a permission the app
          requests should be readable in the app's own manifest rather than
          inherited invisibly from a plugin. -->
@@ -43,7 +43,7 @@
          Androids use the classic storage permissions. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" tools:replace="android:maxSdkVersion"/>
     <!-- In-app APK updates -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- Package visibility (Android 11+) for the apps this one hands off to -->
@@ -77,6 +77,10 @@
              allows ad personalisation and reports no screens by itself. -->
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
         <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <!-- Performance Monitoring stays off until the person turns on usage and
+             app health; the Performance Gradle plugin (which would trace HTTP and
+             record request URLs) is never applied. -->
+        <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />

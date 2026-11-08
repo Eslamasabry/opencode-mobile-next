@@ -165,6 +165,7 @@ extension _PaseoPrompts on PaseoGateway {
     final Map<String, dynamic> result;
     _creating++;
     final sentAt = DateTime.now().millisecondsSinceEpoch;
+    final startWatch = Stopwatch()..start();
     try {
       result = await transport.request(
         'create_agent_request',
@@ -203,6 +204,7 @@ extension _PaseoPrompts on PaseoGateway {
       HealthFlow.agentStart(
         agent: _healthAgentWord(provider),
         ok: false,
+        elapsed: startWatch.elapsed,
         failKind: switch (error.kind) {
           PaseoFailureKind.authentication => 'needs_sign_in',
           PaseoFailureKind.disconnected ||
@@ -225,7 +227,11 @@ extension _PaseoPrompts on PaseoGateway {
       _creating--;
       if (_creating == 0 && _closed) _heldEvents.clear();
     }
-    HealthFlow.agentStart(agent: _healthAgentWord(provider), ok: true);
+    HealthFlow.agentStart(
+      agent: _healthAgentWord(provider),
+      ok: true,
+      elapsed: startWatch.elapsed,
+    );
     final agent = paseoObject(result['agent']);
     _checkLocation(scope, locationEpoch);
     if (agent['provider'] != provider) {

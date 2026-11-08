@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io' show HandshakeException, SocketException, TlsException;
 
+import '../builtin/builtin_linux.dart' show BuiltinLinux;
 import '../domain/models.dart' show ApiException;
 import '../domain/phone_agents.dart' show PhoneAgentStatus;
 import 'analytics_events.dart';
 import 'health_schema.dart';
+import 'perf_traces.dart';
 import 'telemetry_provider.dart';
 
 /// What kind of failure [error] is, in the contract's fixed words
@@ -77,6 +79,10 @@ abstract final class HealthFlow {
       if (!ok) 'fail_kind': failKindOf(failure),
       'ms_range': HealthRanges.connMsOf(elapsed),
     });
+    AppTelemetry.current.performanceTrace(PerfSchema.connConnect, elapsed, {
+      'server_kind': serverKind,
+      'result': ok ? 'ok' : 'fail',
+    });
   }
 
   static void connDrop({
@@ -97,6 +103,7 @@ abstract final class HealthFlow {
     required String result,
     Object? failure,
     Duration? firstReply,
+    String? serverUrl,
   }) {
     AppTelemetry.crumb('chat.send');
     AppTelemetry.track(AnalyticsEvent.sendResult, {
@@ -104,7 +111,20 @@ abstract final class HealthFlow {
       if (result == 'fail') 'fail_kind': failKindOf(failure, forSend: true),
       'first_reply_range': HealthRanges.firstReplyOf(firstReply),
     });
+    if (firstReply != null) {
+      AppTelemetry.current
+          .performanceTrace(PerfSchema.sendFirstReply, firstReply, {
+            'server_kind': BuiltinLinux.managesServerUrl(serverUrl)
+                ? 'phone'
+                : 'computer',
+          });
+    }
   }
+
+  /// An accepted send whose first reply took [firstReply] (null for none);
+  /// [serverUrl] only tells phone from computer and is never sent.
+  static void sendOk(Duration? firstReply, String? serverUrl) =>
+      sendResult(result: 'ok', firstReply: firstReply, serverUrl: serverUrl);
 
   static void turnStall({required String stage, required Duration waited}) {
     AppTelemetry.crumb('chat.tool_wait');
@@ -143,6 +163,11 @@ abstract final class HealthFlow {
       if (freeGigabytes != null)
         'free_space_range': HealthRanges.storageOf(freeGigabytes),
     });
+    AppTelemetry.current.performanceTrace(
+      PerfSchema.linuxSetup(step),
+      elapsed,
+      {'step': step, 'result': ok ? 'ok' : 'fail'},
+    );
   }
 
   static String exitKindOf(int? exit, {required bool ok}) {
@@ -175,6 +200,7 @@ abstract final class HealthFlow {
     required String agent,
     required bool ok,
     String failKind = 'other',
+    Duration? elapsed,
   }) {
     AppTelemetry.crumb('agent.start:${_agentWord(agent)}');
     if (!ok) AppTelemetry.crumb('agent.fail');
@@ -183,6 +209,12 @@ abstract final class HealthFlow {
       'result': ok ? 'ok' : 'fail',
       if (!ok) 'fail_kind': failKind,
     });
+    if (elapsed != null) {
+      AppTelemetry.current.performanceTrace(PerfSchema.agentStart, elapsed, {
+        'agent': _agentWord(agent),
+        'result': ok ? 'ok' : 'fail',
+      });
+    }
   }
 
   /// An agent that could not start before reaching its host: [status] is its

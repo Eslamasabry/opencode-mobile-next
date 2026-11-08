@@ -1,0 +1,86 @@
+# DRAFT for gitlab.com/fdroid/fdroiddata: metadata/io.github.eslamasabry.opencode_mobile.yml
+# Not submitted. Submitting is the owner's call (docs/release/fdroid-2026-10-31.md §8).
+# Shape follows fdroiddata's Flutter recipes (srclibs flutter + `$$flutter$$`) and
+# AndCode's open merge request (gitlab.com/fdroid/fdroiddata/-/merge_requests/48005).
+# Comments are lost when `fdroid rewritemeta` runs; they live here only.
+#
+# Open before this can build on F-Droid's server (the doc's blockers B1-B3):
+#   B1 jniLibs prebuilts (proot, aiteam engine) are built from source in `prebuild`,
+#      or removed with `rm:`. The `prebuild` lines below are the REMOVE variant,
+#      which is the only one that works today.
+#   B2 (open) sherpa_onnx's prebuilt libraries (pub package) need F-Droid's blessing.
+
+AntiFeatures:
+  NonFreeNet:
+    en-US: connects to and works with hosted AI model providers and servers the
+      person chooses (OpenCode Zen, Anthropic, OpenAI, GitHub); the app does not
+      work without a server running one of them
+  NonFreeAdd:
+    en-US: the optional built-in Ubuntu can install and run proprietary coding
+      agents the person picks (Anthropic Claude Code, OpenAI Codex), never
+      required for core use
+
+Categories:
+  - Development
+  - Connectivity
+License: MIT
+AuthorName: Eslam Sabry
+WebSite: https://github.com/Eslamasabry/opencode-mobile-next
+SourceCode: https://github.com/Eslamasabry/opencode-mobile-next
+IssueTracker: https://github.com/Eslamasabry/opencode-mobile-next/issues
+Changelog: https://github.com/Eslamasabry/opencode-mobile-next/releases
+
+AutoName: OpenCode Mobile
+
+RepoType: git
+Repo: https://github.com/Eslamasabry/opencode-mobile-next.git
+
+Builds:
+  - versionName: 2.1.0
+    versionCode: 57
+    commit: v2.1.0+57
+    # One APK per ABI is not needed: the app ships arm64-v8a and x86_64 only.
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@3.47.1
+    rm:
+      - ios
+      - linux
+      - windows
+      - widgetbook
+      - packages/opencode_sdk/test
+      # B1, remove variant: prebuilt native binaries cannot be in the source tree.
+      - android/app/src/main/jniLibs
+      - android/app/src/main/assets/aiteam-engine-manifest.json
+    sudo:
+      - apt-get update
+      - apt-get install -y python3
+    ndk: r28c
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/dart tool/fdroid/prebuild.dart
+      - $$flutter$$/bin/flutter pub get
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter build apk --release
+        --dart-define=OC_FDROID=true --android-project-arg=ocFdroid=true
+    scanignore:
+      - $$flutter$$/packages/flutter_tools/gradle
+    scandelete:
+      - .pub-cache
+
+# Choice 1: F-Droid signs (default; the APK carries F-Droid's key). Users on the
+# GitHub/Shorebird build must uninstall first, and lose local data (AGENTS.md).
+# Choice 2: reproducible build. Add `Binaries:` (our signed GitHub APK, built
+# with the same flags) and AllowedAPKSigningKeys; F-Droid then publishes OUR
+# signature after proving its build matches byte for byte (see doc §8).
+# AllowedAPKSigningKeys: 2d010c2103cb2f78abaaca690ead4d45f8003a6c0a02082cd2a2ae62fd18d0ec
+# Binaries: https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v%v+%c/opencode-fdroid-v%v.apk
+
+# Tags are `v<versionName>+<versionCode>` (v2.1.0+57); Tags mode reads both from
+# pubspec.yaml at the tag (fdroidserver understands Flutter's `version: x.y.z+n`).
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v\d+\.\d+\.\d+\+\d+$
+CurrentVersion: 2.1.0
+CurrentVersionCode: 57

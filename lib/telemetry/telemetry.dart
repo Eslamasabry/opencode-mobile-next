@@ -7,6 +7,7 @@ import '../ui/kit/kit_redact.dart';
 import 'analytics_events.dart';
 import 'app_log_ring.dart';
 import 'health_schema.dart';
+import 'perf_traces.dart';
 
 /// The app's own crash and error reporting layer. Vendor-neutral: app code
 /// depends only on [Telemetry]; a vendor is one swappable [TelemetryAdapter]
@@ -77,6 +78,15 @@ abstract interface class Telemetry {
   /// Needs `usage`. Only events and values listed in [analyticsSchema] are
   /// sent; anything else is dropped.
   void track(AnalyticsEvent event, [Map<String, Object?> props = const {}]);
+
+  /// A finished custom Performance trace (`conn_connect`, ...). Needs
+  /// `usage`. Only traces and attribute values listed in [PerfSchema] are
+  /// sent; anything else is dropped.
+  void performanceTrace(
+    String name,
+    Duration elapsed, [
+    Map<String, Object?> attributes = const {},
+  ]);
 
   /// Sends the person's problem report: [redactedText] is exactly what they
   /// saw in the preview and agreed to send. Needs no switch (it is asked
@@ -164,7 +174,7 @@ class NoOpTelemetryAdapter implements TelemetryAdapter {
 
 /// Several vendors as one adapter (crash reports and analytics). Available
 /// when any of them is; each call reaches only the ones that are.
-class CombinedTelemetryAdapter implements TelemetryAdapter {
+class CombinedTelemetryAdapter implements TelemetryAdapter, PerformanceAdapter {
   CombinedTelemetryAdapter(this.adapters);
   final List<TelemetryAdapter> adapters;
   final _present = <TelemetryAdapter>[];
@@ -211,6 +221,22 @@ class CombinedTelemetryAdapter implements TelemetryAdapter {
   @override
   Future<void> problemReport(String text, {required bool collecting}) =>
       _each((a) => a.problemReport(text, collecting: collecting));
+  @override
+  Future<void> setPerformanceCollection(bool enabled) => _each(
+    (a) => a is PerformanceAdapter
+        ? (a as PerformanceAdapter).setPerformanceCollection(enabled)
+        : Future<void>.value(),
+  );
+  @override
+  Future<void> perfTrace(
+    String name,
+    Map<String, String> attributes,
+    int durationMs,
+  ) => _each(
+    (a) => a is PerformanceAdapter
+        ? (a as PerformanceAdapter).perfTrace(name, attributes, durationMs)
+        : Future<void>.value(),
+  );
 
   @override
   Future<String?> appInstanceId() async {
@@ -420,6 +446,30 @@ class TelemetryService extends ChangeNotifier implements Telemetry {
       '${safe.entries.map((e) => ' ${e.key}=${e.value}').join()}',
     );
     _send(() => _adapter.event(event.wire, safe));
+  }
+
+  @override
+  void performanceTrace(
+    String name,
+    Duration elapsed, [
+    Map<String, Object?> attributes = const {},
+  ]) {
+    final adapter = _adapter;
+    if (!_usageLive || adapter is! PerformanceAdapter) return;
+    final clean = PerfSchema.clean(name, attributes);
+    if (clean == null) return;
+    final ms = elapsed.inMilliseconds < 0 ? 0 : elapsed.inMilliseconds;
+    _ring.add(
+      'trace ${clean.name}'
+      '${clean.attributes.entries.map((e) => ' ${e.key}=${e.value}').join()}',
+    );
+    _send(
+      () => (adapter as PerformanceAdapter).perfTrace(
+        clean.name,
+        clean.attributes,
+        ms,
+      ),
+    );
   }
 
   @override
