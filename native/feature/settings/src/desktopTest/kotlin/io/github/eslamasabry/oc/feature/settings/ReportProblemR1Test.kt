@@ -52,8 +52,9 @@ import kotlinx.collections.immutable.persistentListOf
 
 /**
  * R1 Report a problem, drawn from canned state: the three states of the owner's mockups (the form, "What's included",
- * the sent code), the build that cannot send, and the nine removed controls. With `R1_RENDER_DIR` set it also writes
- * the QA renders (form, sheet and sent × Solid and Glass × light and dark, plus the no-config form) there.
+ * the sent code), the build that cannot send, and the nine removed controls. With `-Poc.r1Renders=true` (or
+ * `R1_RENDER_DIR`) it also writes the QA renders: form, sheet and sent × Solid and Glass × light and dark, plus the
+ * no-config form and an Arabic form.
  */
 @OptIn(ExperimentalTestApi::class)
 class ReportProblemR1Test {
@@ -155,12 +156,12 @@ class ReportProblemR1Test {
         onNodeWithText("This version can't send reports. Copy the text, or post it on GitHub.").assertExists()
     }
 
-    // ---- QA renders: R1_RENDER_DIR=<dir> ----
+    // ---- QA renders: -Poc.r1Renders=true (build/reports/r1-renders), or R1_RENDER_DIR=<dir> ----
 
-    private val outDir: File? = System.getenv("R1_RENDER_DIR")?.let(::File)
+    private val outDir: File? = (System.getProperty("oc.r1.renders") ?: System.getenv("R1_RENDER_DIR"))?.let(::File)
 
     @Test
-    fun `R1 renders for QA (only with R1_RENDER_DIR)`() {
+    fun `R1 renders for QA (only when asked)`() {
         val dir = outDir ?: return
         dir.mkdirs()
         val shots = listOf("form" to form, "sheet" to sheet, "sent" to sent)
