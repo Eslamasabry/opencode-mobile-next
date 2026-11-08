@@ -218,22 +218,13 @@ class _UpdateSheetBodyState extends State<_UpdateSheetBody> {
             ),
             if (_errorMessage != null) ...[
               SizedBox(height: tokens.space2),
-              KitText(
-                _errorMessage!,
-                role: KitTextRole.secondary,
-              ),
+              KitText(_errorMessage!, role: KitTextRole.secondary),
             ],
           ] else ...[
-            KitText(
-              widget.l10n.appUpdateChangelog,
-              role: KitTextRole.headline,
-            ),
+            KitText(widget.l10n.appUpdateChangelog, role: KitTextRole.headline),
             SizedBox(height: tokens.space2),
             if (widget.release.changelog.isNotEmpty)
-              KitText(
-                widget.release.changelog,
-                role: KitTextRole.body,
-              )
+              KitText(widget.release.changelog, role: KitTextRole.body)
             else
               KitText(
                 widget.l10n.desktopReleaseWhatChanged,
