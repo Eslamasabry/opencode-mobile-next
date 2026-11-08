@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show HandshakeException, SocketException, TlsException;
 
+import '../builtin/builtin_linux.dart' show BuiltinLinux;
 import '../domain/models.dart' show ApiException;
 import '../domain/phone_agents.dart' show PhoneAgentStatus;
 import 'analytics_events.dart';
@@ -102,7 +103,7 @@ abstract final class HealthFlow {
     required String result,
     Object? failure,
     Duration? firstReply,
-    String? serverKind,
+    String? serverUrl,
   }) {
     AppTelemetry.crumb('chat.send');
     AppTelemetry.track(AnalyticsEvent.sendResult, {
@@ -110,14 +111,20 @@ abstract final class HealthFlow {
       if (result == 'fail') 'fail_kind': failKindOf(failure, forSend: true),
       'first_reply_range': HealthRanges.firstReplyOf(firstReply),
     });
-    if (firstReply != null && serverKind != null) {
-      AppTelemetry.current.performanceTrace(
-        PerfSchema.sendFirstReply,
-        firstReply,
-        {'server_kind': serverKind},
-      );
+    if (firstReply != null) {
+      AppTelemetry.current
+          .performanceTrace(PerfSchema.sendFirstReply, firstReply, {
+            'server_kind': BuiltinLinux.managesServerUrl(serverUrl)
+                ? 'phone'
+                : 'computer',
+          });
     }
   }
+
+  /// An accepted send whose first reply took [firstReply] (null for none);
+  /// [serverUrl] only tells phone from computer and is never sent.
+  static void sendOk(Duration? firstReply, String? serverUrl) =>
+      sendResult(result: 'ok', firstReply: firstReply, serverUrl: serverUrl);
 
   static void turnStall({required String stage, required Duration waited}) {
     AppTelemetry.crumb('chat.tool_wait');

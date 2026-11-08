@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/telemetry/perf_traces.dart';
 import 'package:opencode_mobile/telemetry/telemetry.dart';
 import 'package:opencode_mobile/telemetry/telemetry_provider.dart';
@@ -190,9 +191,9 @@ void main() {
       HealthFlow.sendResult(
         result: 'ok',
         firstReply: const Duration(seconds: 3),
-        serverKind: 'phone',
+        serverUrl: 'http://127.0.0.1:${BuiltinLinux.serverPort}',
       );
-      HealthFlow.sendResult(result: 'ok', serverKind: 'phone');
+      HealthFlow.sendResult(result: 'ok');
       HealthFlow.linuxSetupStep(
         step: 'node',
         ok: true,

@@ -674,9 +674,6 @@ extension _ChatSend on _ChatScreenState {
       return;
     }
     final sentAt = clock.now();
-    final serverKind = BuiltinLinux.managesServerUrl(_conn.profile?.baseUrl)
-        ? 'phone'
-        : 'computer';
     int replies() => _messages.where((m) => m.info.role == 'assistant').length;
     final before = replies();
     _sendResultTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -685,11 +682,7 @@ extension _ChatSend on _ChatScreenState {
       if (!answered && mounted && waited < const Duration(minutes: 1)) return;
       timer.cancel();
       _sendResultTimer = null;
-      HealthFlow.sendResult(
-        result: 'ok',
-        firstReply: answered ? waited : null,
-        serverKind: serverKind,
-      );
+      HealthFlow.sendOk(answered ? waited : null, _conn.profile?.baseUrl);
     });
   }
 
