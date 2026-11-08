@@ -647,8 +647,10 @@ private fun TerminalKeyCap(
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = { onTap?.invoke() }), // F: lib/ui/kit/terminal_key_bar.dart:828-838
         contentAlignment = Alignment.Center,
     ) {
+        // The cap fills its slot (the Dart slot's tight SizedBox), less the calm inset: never only the face's size.
         Box(
             Modifier
+                .fillMaxSize()
                 .then(if (calm) Modifier.padding(horizontal = half, vertical = Space.S1.dp) else Modifier) // F: lib/ui/kit/terminal_key_bar.dart:733-736,840-845
                 .then(capLook.modifier)
                 .then(edge),
