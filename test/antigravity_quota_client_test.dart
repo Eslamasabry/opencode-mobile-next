@@ -223,25 +223,33 @@ void main() {
       expect(script, contains('id_token_email'));
       expect(script, contains('ACCOUNT_EMAIL'));
       expect(script, contains('export HOME='));
-      // Never touches or leaks access/refresh tokens
+      // Emits only a validated email, never the token file itself.
+      expect(script, isNot(contains('cat ')));
       expect(script, isNot(contains('access_token')));
       expect(script, isNot(contains('refresh_token')));
     });
 
-    test('readLocalAccount reads only email without credentials', () {
-      final email = AntigravityQuotaClient.readLocalAccount();
-      if (email != null) {
-        expect(email, contains('@'));
-        expect(email, isNot(contains('access_token')));
-        expect(AntigravityQuotaClient.lastKnownAccountEmail, email);
-      }
-    });
-
-    test('readLocalAccountAsync resolves email safely', () async {
-      final email = await AntigravityQuotaClient.readLocalAccountAsync();
-      if (email != null) {
-        expect(email, contains('@'));
-        expect(email, isNot(contains('access_token')));
+    test('probe output parser accepts only an email-shaped value', () {
+      expect(
+        AntigravityQuotaClient.parseProbeAccount(
+          'noise\nACCOUNT_EMAIL:user@example.com\n{}',
+        ),
+        'user@example.com',
+      );
+      for (final bad in [
+        'ACCOUNT_EMAIL:not-an-email',
+        'ACCOUNT_EMAIL:user@example.com extra',
+        'ACCOUNT_EMAIL:{"k":"v"}',
+        'ACCOUNT_EMAIL:${'a' * 70}@example.com',
+        'ACCOUNT_EMAIL:',
+        'user@example.com',
+        'no marker at all',
+      ]) {
+        expect(
+          AntigravityQuotaClient.parseProbeAccount(bad),
+          isNull,
+          reason: bad,
+        );
       }
     });
   });

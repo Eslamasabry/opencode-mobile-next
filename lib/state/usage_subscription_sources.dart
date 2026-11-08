@@ -8,7 +8,6 @@ import '../domain/agent_account.dart';
 import '../domain/provider_quota.dart';
 import '../domain/provider_usage.dart';
 import '../domain/usage_subscriptions.dart';
-import '../quota/antigravity_quota_client.dart';
 import 'notification_preferences.dart';
 import 'paseo_usage_monitor.dart';
 import 'profiles.dart';
@@ -331,11 +330,7 @@ class PaseoUsageSource implements UsageSource {
       }
       for (final reading in list) {
         final provider = reading.providerId;
-        final accountRef = reading.accountRef ??
-            (provider.startsWith('antigravity')
-                ? AntigravityQuotaClient.readLocalAccount(profileId: id) ??
-                    AntigravityQuotaClient.lastKnownAccountEmail
-                : null);
+        final accountRef = reading.accountRef;
         if (reading.needsSignIn && reading.windows.isEmpty) {
           readings.add(
             UsageReading(

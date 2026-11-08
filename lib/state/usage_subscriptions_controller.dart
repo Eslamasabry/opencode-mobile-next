@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/usage_widget_snapshot.dart';
 import '../domain/usage_subscriptions.dart';
-import '../quota/antigravity_quota_client.dart';
 import 'notification_preferences.dart';
 import 'usage_subscription_alerts.dart';
 
@@ -282,14 +281,7 @@ class UsageSubscriptionsController extends ChangeNotifier {
         if (!known.contains(reading.connectionId)) continue;
         final slot = _cache.putIfAbsent(reading.connectionId, () => {});
         final old = slot[reading.providerId];
-        final resolvedAccount = reading.accountRef ??
-            old?.accountRef ??
-            (reading.providerId.startsWith('antigravity')
-                ? AntigravityQuotaClient.readLocalAccount(
-                        profileId: reading.connectionId,
-                      ) ??
-                    AntigravityQuotaClient.lastKnownAccountEmail
-                : null);
+        final resolvedAccount = reading.accountRef ?? old?.accountRef;
         // The older of two numbers never replaces the newer.
         if (old != null &&
             old.hasNumbers &&
@@ -395,20 +387,7 @@ class UsageSubscriptionsController extends ChangeNotifier {
         if (data is List) {
           for (final item in data.take(32)) {
             final reading = UsageReading.fromJson(item, id);
-            if (reading != null) {
-              if (reading.accountRef == null &&
-                  reading.providerId.startsWith('antigravity')) {
-                final localAccount = AntigravityQuotaClient.readLocalAccount(
-                      profileId: id,
-                    ) ??
-                    AntigravityQuotaClient.lastKnownAccountEmail;
-                slot[reading.providerId] = reading.copyWith(
-                  accountRef: localAccount,
-                );
-              } else {
-                slot[reading.providerId] = reading;
-              }
-            }
+            if (reading != null) slot[reading.providerId] = reading;
           }
         }
       }

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/usage_subscriptions.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/quota/antigravity_quota_client.dart';
 import 'package:opencode_mobile/state/usage_signin_destination.dart';
 import 'package:opencode_mobile/state/usage_subscriptions_controller.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -272,31 +271,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(_en.usageDetailAccount), findsOneWidget);
       expect(find.text('altaf.alu@gmail.com'), findsOneWidget);
-    },
-  );
-
-  usageTestWidgets(
-    'account email falls back to AntigravityQuotaClient when reading accountRef was null',
-    (tester) async {
-      AntigravityQuotaClient.lastKnownAccountEmail = 'fallback@example.com';
-      final h = await usageHarness(
-        connections: const [usageInApp, usagePc],
-        result: UsageSourceResult(
-          readings: [
-            usageReading(
-              'antigravity',
-              'inapp',
-            ),
-          ],
-        ),
-      );
-      await _open(tester, h, key: 'antigravity|conn:inapp');
-      await tester.ensureVisible(usageKey('usage-sub-details'));
-      await tester.tap(find.text(_en.usageDetails));
-      await tester.pumpAndSettle();
-      expect(find.text(_en.usageDetailAccount), findsOneWidget);
-      expect(find.text('fallback@example.com'), findsOneWidget);
-      AntigravityQuotaClient.lastKnownAccountEmail = null;
     },
   );
 

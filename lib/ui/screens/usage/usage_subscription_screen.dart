@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../domain/provider_usage.dart' show cleanUsageText;
 import '../../../domain/usage_subscriptions.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../quota/antigravity_quota_client.dart';
 import '../../../state/connection.dart';
 import '../../../state/usage_subscriptions_controller.dart';
 import '../../app_iconography.dart';
@@ -47,16 +47,6 @@ class UsageSubscriptionScreen extends StatefulWidget {
 class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
   String? _notice;
   bool _saveFailed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.subscriptionKey.startsWith('antigravity')) {
-      AntigravityQuotaClient.readLocalAccountAsync().then((email) {
-        if (email != null && mounted) setState(() {});
-      });
-    }
-  }
 
   UsageSignInLauncher get _launcher =>
       widget.launcher ?? ConnectionSignInLauncher(widget.controller);
@@ -172,15 +162,9 @@ class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
               c,
         ];
         final levels = {..._levels, s.alertThreshold.round()}.toList()..sort();
-        final accountText = (_isDisplayableAccount(s.accountRef)
-                ? s.accountRef
-                : null) ??
-            (s.providerId.startsWith('antigravity')
-                ? AntigravityQuotaClient.readLocalAccount(
-                      profileId: s.readFrom?.id,
-                    ) ??
-                    AntigravityQuotaClient.lastKnownAccountEmail
-                : null);
+        final accountText = _isDisplayableAccount(s.accountRef)
+            ? cleanUsageText(s.accountRef, 64)
+            : null;
         final others = <UsageConnection>[
           if (several)
             for (final c in usageAddChoices(
