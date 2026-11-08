@@ -18,7 +18,17 @@ public object GlassSpec : StyleSpec {
             blursBehind = true,
             type = StyleType(weightBoost = WEIGHT_BOOST),
             live = LivePolicy(fillsMiddle = true, lookWhenChosen = "auroraImage"),
+            // Owner 2026-11-09, "good inside padding to let glass effects show": the content sits clear of the rim, the
+            // sheen and the lens, with corners grown to stay concentric.
+            paneInsetDp = PANE_INSET,
+            paneCornerBoostDp = PANE_CORNER_BOOST,
         )
+
+    /** The extra inner inset of a Glass pane beyond its own padding, in dp ([StyleTokens.paneInsetDp]). */
+    public const val PANE_INSET: Float = 6f
+
+    /** How much a Glass pane's corners grow with [PANE_INSET] ([StyleTokens.paneCornerBoostDp]). */
+    public const val PANE_CORNER_BOOST: Float = 4f
 
     /** The accent ring around a chosen pane, in dp. */
     public const val CHOSEN_RING: Float = 2f // FG: lib/ui/kit/style/kit_style_glass.dart:46
@@ -40,7 +50,13 @@ public object GlassSpec : StyleSpec {
      * much lighter frosted glass"): the background blur behind a card or a row group when the panes are clear. A big
      * pane carries a little more frost than a chip or a field ([PANE_FROST]).
      */
-    public const val CLEAR_CONTENT_FROST: Float = 24f
+    public const val CLEAR_CONTENT_FROST: Float = 12f
+
+    /**
+     * The blur behind a clear chip, control or field (owner 2026-11-09, "crisper": moderate blur, so colour and shapes
+     * behind stay visible; the frost's saturation carries the vibrancy).
+     */
+    public const val CLEAR_PANE_FROST: Float = 10f
 
     /**
      * The accent a chosen pane's tint takes (dark, light): accent-tinted frost, never a solid slab. A dark chosen pane
@@ -101,10 +117,27 @@ public object GlassSpec : StyleSpec {
         }
 
     /** The blur behind a clear [role] pane. */
-    public fun clearFrostSigma(role: SurfaceRole): Float = if (role == SurfaceRole.Content) CLEAR_CONTENT_FROST else frostSigma(role)
+    public fun clearFrostSigma(role: SurfaceRole): Float =
+        when (role) {
+            SurfaceRole.Content -> CLEAR_CONTENT_FROST
+            SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Field -> CLEAR_PANE_FROST
+            else -> frostSigma(role)
+        }
 
-    /** A clear pane's top sheen: the theme's near-white, fading out over the first 30 % of the pane. */
-    public fun sheenOf(roles: Roles): Argb = styleLight(roles).withAlpha(if (roles.dark) .07f else .28f)
+    /**
+     * A clear pane's top sheen (owner 2026-11-09, "glossy"): the theme's near-white, fading out over the first 30 % of
+     * the pane and at most [SurfaceDecoration.SHEEN_MAX_DP].
+     */
+    public fun sheenOf(roles: Roles): Argb = styleLight(roles).withAlpha(if (roles.dark) .10f else .34f)
+
+    /**
+     * A clear pane's specular light ([SurfaceDecoration.specular]): white, a bright segment of the 1 dp rim at the top
+     * start and a thin line just inside the top edge. Restrained: strong enough to catch the eye, never a white frame.
+     */
+    public fun specularOf(roles: Roles): Argb = styleLight(roles).withAlpha(if (roles.dark) SPECULAR_DARK else SPECULAR_LIGHT)
+
+    public const val SPECULAR_DARK: Float = .55f
+    public const val SPECULAR_LIGHT: Float = .90f
 
     /**
      * Whether [r] is a chosen pane drawn as accent-tinted glass: a chosen content or control surface with no fill of its
@@ -226,6 +259,9 @@ public object GlassSpec : StyleSpec {
                     )
                 else -> emptyList()
             }
+        // A clear pane is crisp (owner 2026-11-09): no soft shadow halo round it, no soft glow inside its top; the sheen
+        // and the specular carry its gloss.
+        val crisp = clear && own == null
         val rimless = r.knobs.edges == Edges.None && (role == SurfaceRole.Content || role == SurfaceRole.Control)
         val (top, bottom) = rims(roles)
         val none = Argb(0)
@@ -238,11 +274,12 @@ public object GlassSpec : StyleSpec {
             edgeStart = if (chosen) roles.accent else if (rimless) none else top,
             edgeEnd = if (chosen) roles.accent else if (rimless) none else bottom,
             edgeWidthDp = if (chosen) CHOSEN_RIM else r.edgeWidthDp,
-            shadows = shadows,
+            shadows = if (clear) emptyList() else shadows,
             wordsPlate = if (plain) plateFor(roles, role) else none,
             frost = if (own == null || own.withAlpha(1f) != own) (if (clear) clearFrostSigma(role) else frostSigma(role)) else 0f,
-            innerGlow = if (plain) innerGlowOf(roles) else none,
+            innerGlow = if (plain && !crisp) innerGlowOf(roles) else none,
             sheen = if (clear && plain) sheenOf(roles) else none,
+            specular = if (crisp) specularOf(roles) else none,
         )
     }
 

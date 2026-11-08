@@ -84,12 +84,27 @@ public data class SurfaceDecoration(
      * [SHEEN_SHARE] of its height. Transparent draws none.
      */
     val sheen: Argb = Argb(0),
+    /**
+     * Glass's specular light (owner 2026-11-09, "crisper glossy glass"): this colour on a bright segment of the rim at the
+     * top-start corner, fading along the edge, and, at [GLINT_SHARE] of it, a thin line just inside the top edge, fading
+     * at both ends. Crisp (no blur). Transparent draws none.
+     */
+    val specular: Argb = Argb(0),
 ) {
     public companion object {
+        /** The most the [sheen] reaches down a face, in dp: a tall pane keeps its gloss at its top, not over its rows. */
+        public const val SHEEN_MAX_DP: Float = 40f
+
+        /** The [specular] line's strength next to the rim's bright segment. */
+        public const val GLINT_SHARE: Float = .60f
+
+        /** How far down from the top edge the specular line lies, in dp (inside the rim). */
+        public const val GLINT_DROP_DP: Float = 2.5f
+
         /** How far down the face [innerGlow] reaches, in dp (at most half the face). */
         public const val INNER_GLOW_DEPTH_DP: Float = 22f // FG: lib/ui/kit/kit_surface_look.dart:608
 
-        /** The share of the face's height [sheen] fades over. */
+        /** The share of the face's height [sheen] fades over (at most [SHEEN_MAX_DP]). */
         public const val SHEEN_SHARE: Float = .30f
     }
 }

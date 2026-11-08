@@ -38,7 +38,7 @@
     <string name="account40OpenSignIn">فتح تسجيل الدخول الرسمي</string>
     <string name="account40Cancel">إلغاء تسجيل الدخول</string>
     <string name="account40Allowance">رصيد الاستخدام المبلّغ عنه</string>
-    <string name="account40PercentUsed">تم استخدام %1$d%%</string>
+    <string name="account40PercentUsed">تم استخدام %1$d%</string>
     <string name="account40WindowUnknown">مدة الفترة غير متاحة</string>
     <string name="account40WindowMinutes">مدة الفترة بالدقائق: %1$d</string>
     <string name="account40WindowHours">مدة الفترة بالساعات: %1$d</string>

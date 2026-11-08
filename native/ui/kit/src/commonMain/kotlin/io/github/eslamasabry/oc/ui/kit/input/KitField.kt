@@ -525,7 +525,9 @@ private fun FieldBox(
                     placeholder,
                     role = if (technical && !placeholderIsLabel) TypeRole.Mono else TypeRole.Body,
                     tone = TextTone.Tertiary,
-                    maxLines = if (composer) multilineLines.last.coerceAtLeast(1) else 1,
+                    // A multiline box has room for its whole hint; only one-line fields cut it.
+                    maxLines =
+                        if (composer || kind == KitFieldKind.Multiline) multilineLines.last.coerceAtLeast(1) else 1,
                 )
             }
             inner()

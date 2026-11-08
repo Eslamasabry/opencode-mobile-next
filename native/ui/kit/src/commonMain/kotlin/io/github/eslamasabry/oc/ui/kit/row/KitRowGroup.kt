@@ -73,8 +73,10 @@ public fun KitRowGroup(
     // A sheet's body already sits on the sheet's rail: the panel lines up with the sheet's title instead of stepping in
     // a second gutter (the owner's project sheet, 2026-11-06).
     val onRail = LocalKitOnRail.current
+    // Glass keeps its pane inset inside the panel (owner 2026-11-09): the rows sit clear of its rim and sheen.
+    val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
     val panelModifier =
-        if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()) else Modifier
+        if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()).padding(paneInset) else Modifier
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
         label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
         val seam = kitRowGroupSeam(labelled = label != null, gapBefore = 0, frames = panel, afterGroup = afterGroup, gap = Space.S3)

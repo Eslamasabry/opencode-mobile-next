@@ -50,17 +50,22 @@ internal object AndroidLiquidGlass {
                 }
             },
             highlight = {
+                // A crisp rim (owner 2026-11-09): 1 dp, no blur; the library's directional light makes its top-start
+                // (and bottom-end) arc the brightest.
                 Highlight(
                     width = spec.rimDp.dp,
-                    blurRadius = spec.rimDp.dp,
+                    blurRadius = 0.dp,
                     alpha = if (spec.keepRim) 1f else 1f - transform().coerceIn(0f, 1f),
-                    style = HighlightStyle.Default(color = spec.rim, blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver),
+                    style = HighlightStyle.Default(color = spec.rim, blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver, falloff = RIM_FALLOFF),
                 )
             },
             shadow = if (spec.shadow.alpha > 0f) ({ Shadow(radius = 24.dp, color = spec.shadow) }) else null,
             onDrawSurface = { drawLiquidTint(spec, shape) },
         )
     }
+
+    /** How tightly the rim light gathers at its lit arcs (the library's default is 1): a brighter top-start segment. */
+    private const val RIM_FALLOFF: Float = 1.6f
 
     private class LibraryBackdrop(val kit: KitLiquidBackdrop) : Backdrop {
         override val isCoordinatesDependent: Boolean = true

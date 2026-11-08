@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
@@ -329,7 +330,8 @@ public fun KitMenuPanel(
             .clip(shape)
             .then(menuFace)
             .verticalScroll(rememberScrollState())
-            .padding(vertical = Space.S1.dp)
+            // Glass keeps its pane inset inside the menu (owner 2026-11-09): rows clear of the rim, sheen and lens.
+            .padding(horizontal = kitPaneInset(), vertical = Space.S1.dp + kitPaneInset())
             .semantics { if (title != null) paneTitle = title }
             .kitFloating("menu")
             .testTag("kit-menu")

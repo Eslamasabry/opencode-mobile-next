@@ -46,6 +46,16 @@ public object StyleResolver {
         }
     }
 
+    /**
+     * A pane's corner (row groups, cards, dialogs, sheets, the message box, menus) under [corners] and the style's
+     * [tokens]: [corner] of the token radius grown by [StyleTokens.paneCornerBoostDp], so the corner stays concentric with
+     * the style's extra inner inset. Sharp corners and stadiums are not grown.
+     */
+    public fun paneCorner(radiusDp: Float, corners: Corners, tokens: StyleTokens): Float {
+        val grown = if (corners == Corners.Sharp || radiusDp <= 0f || radiusDp >= 999f) radiusDp else radiusDp + tokens.paneCornerBoostDp
+        return corner(grown, corners, tokens.sharpRadius)
+    }
+
     /** The theme's roles under [style] (hook H6); the accent moves only as far as it must to read on the new ground. */
     public fun adjust(roles: Roles, style: Style): Roles {
         val spec = spec(style)

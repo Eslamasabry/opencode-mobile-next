@@ -111,7 +111,8 @@ public fun KitComposerBox(
     val style = LocalKitStyle.current
     val radius = (if (wide) tokens.composerRadiusWide else tokens.composerRadius).dp
     val corner =
-        StyleResolver.corner(radius.value, style.knobs.corners, style.spec.tokens.sharpRadius).dp
+        // The box's corner grows with the style's pane inset (Glass), as its face's does (kitSurfaceLook).
+        StyleResolver.paneCorner(radius.value, style.knobs.corners, style.spec.tokens).dp
     val shadowRoom = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
     KitComposerGlow(
         active = running,
@@ -167,7 +168,8 @@ public fun KitComposerBox(
                     if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier
                 )
                 .clip(look.shape)
-                .padding(Space.S1.dp)
+                // Glass keeps its pane inset inside the box (owner 2026-11-09): room for the rim, sheen and lens.
+                .padding(Space.S1.dp + io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset())
                 .testTag("kit-composer-box")
         ) {
             above()
