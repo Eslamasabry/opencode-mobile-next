@@ -5,5 +5,7 @@ plugins { id("oc.kmp.library") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        // B-180: Flutter 2.1.5's consent and crash-offer answers are read in place from the adopted prefs store.
+        api(project(":core:data"))
     }
 }
