@@ -15,7 +15,7 @@ class LocalFileGateTest {
 
     @AfterTest fun clean() { base.deleteRecursively() }
 
-    private fun file(dir: File, name: String) = File(dir, name).apply { parentFile.mkdirs(); writeText("x") }
+    private fun file(dir: File, name: String) = File(dir, name).apply { parentFile?.mkdirs(); writeText("x") }
 
     @Test fun `a file in a shared folder is allowed`() {
         val f = file(shared, "Download/a.apk")
@@ -29,7 +29,7 @@ class LocalFileGateTest {
 
     @Test fun `a link out of shared storage is judged by where it lands`() {
         val secret = file(private, "server-password")
-        val link = File(shared, "Download/looks-fine.txt").also { it.parentFile.mkdirs() }
+        val link = File(shared, "Download/looks-fine.txt").also { it.parentFile?.mkdirs() }
         Files.createSymbolicLink(link.toPath(), secret.toPath())
         assertNull(LocalFileGate.allowed(shared, link.path))
     }
