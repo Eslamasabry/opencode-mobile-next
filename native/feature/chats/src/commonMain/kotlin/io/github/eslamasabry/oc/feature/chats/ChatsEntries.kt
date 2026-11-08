@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 public class ChatsEntries(
     private val appNotices: AppNotices,
     private val navigator: AppNavigator,
+    private val sections: Set<ChatsHomeSection> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatsRoute.New> { route ->
@@ -83,6 +84,7 @@ public class ChatsEntries(
                 appStatus = appStatus,
                 replyOffer = offerContent,
                 root = top == ChatsRoute.Home,
+                sections = sections.sortedBy { it.order }.map { section -> { section.Content() } },
             )
         }
         entry<ChatsRoute.Attention> {
@@ -102,4 +104,21 @@ public class ChatsEntries(
             ChatsAllScreen(state, vm)
         }
     }
+}
+
+/**
+ * A section another feature places on the home under its notes (features may not depend on each other, so the app
+ * binds them). s23-factsbook: FactsBook's Memory section.
+ */
+public interface ChatsHomeSection {
+    /** Lower first. */
+    public val order: Int
+        get() = 0
+
+    @androidx.compose.runtime.Composable public fun Content()
+}
+
+@dev.zacsweers.metro.ContributesTo(AppScope::class)
+public interface ChatsHomeSectionBindings {
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true) public val chatsHomeSections: Set<ChatsHomeSection>
 }

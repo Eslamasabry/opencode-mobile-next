@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -46,8 +47,14 @@ class OpenCode1LineTest {
         Locale.setDefault(previousLocale)
     }
 
+    private val guides = mutableListOf<ProfileId>()
+
     private val actions =
         object : ServersActions {
+            override fun openUpdateGuide(id: ProfileId) {
+                guides += id
+            }
+
             override fun back() {}
 
             override fun allowCleartext(allowed: Boolean, address: String) {}
@@ -62,7 +69,7 @@ class OpenCode1LineTest {
         }
 
     @Composable
-    private fun Screen(failure: Failure, locale: String) {
+    private fun Screen(failure: Failure, locale: String, openCode1: ProfileId? = null) {
         CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) {
             KitTheme(
                 platform = DesktopKitPlatform(),
@@ -71,7 +78,7 @@ class OpenCode1LineTest {
                 stillFrame = true,
             ) {
                 Box(Modifier.width(412.dp)) {
-                    ServersScreen(ServersUi(issue = ServerIssue.ConnectFailed, failure = failure), actions)
+                    ServersScreen(ServersUi(issue = ServerIssue.ConnectFailed, failure = failure, openCode1 = openCode1), actions)
                 }
             }
         }
@@ -104,4 +111,13 @@ class OpenCode1LineTest {
         setContent { Screen(Failure.Incompatible(IncompatibleKind.UnsupportedServerVersion), "en") }
         onNodeWithText("This server runs a version this app cannot work with.").assertExists()
     }
+
+    @Test
+    fun `B-PROTO-095 the OpenCode 1 line offers Update this server, which opens the guide for that server`() =
+        runComposeUiTest {
+            val laptop = ProfileId("laptop")
+            setContent { Screen(Failure.Incompatible(IncompatibleKind.LegacyOpenCode1), "en", openCode1 = laptop) }
+            onNodeWithText("Update this server").performClick()
+            kotlin.test.assertEquals(listOf(laptop), guides)
+        }
 }

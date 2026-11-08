@@ -148,4 +148,21 @@ class InAppUpdateTwinTest {
         assertEquals(0, feed.latestCalls)
         assertFalse(c.state.value.promptOpen)
     }
+
+    @Test
+    fun `B-BUILD-046 Check for updates opens the prompt when a newer release waits, even after Later`() = runTest {
+        val c = make()
+        feed.latestBody = release("$FILES/app.apk").ok()
+        c.start()
+        c.later()
+        assertFalse(c.state.value.promptOpen)
+        c.checkManually()
+        assertTrue(c.state.value.promptOpen, "the person asked: the sheet opens")
+        assertFalse(c.state.value.notNow)
+        // Nothing newer (this phone already runs build 58): nothing opens.
+        platform.build = 58
+        val current = make()
+        current.checkManually()
+        assertFalse(current.state.value.promptOpen)
+    }
 }

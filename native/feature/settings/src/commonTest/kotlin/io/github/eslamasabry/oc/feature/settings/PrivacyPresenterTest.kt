@@ -88,4 +88,48 @@ class PrivacyPresenterTest {
             assertEquals(5, collect.detailedEvents.size)
             assertTrue(collect.never.isNotEmpty())
         }
+
+    private class FakeCrashOffer(var on: Boolean = true, var saves: Boolean = true) :
+        io.github.eslamasabry.oc.feature.settings.presentation.CrashOfferSetting {
+        val written = mutableListOf<Boolean>()
+
+        override fun enabled(): Boolean = on
+
+        override suspend fun setEnabled(on: Boolean): Boolean {
+            written += on
+            if (saves) this.on = on
+            return saves
+        }
+    }
+
+    @Test
+    fun `B-180-015 Offer crash reports is on by default and the switch saves the answer`() = runTest {
+        val offer = FakeCrashOffer()
+        val p =
+            SettingsPresenter(
+                scope = backgroundScope,
+                facts = MutableStateFlow(phoneFacts()),
+                choices = FakeChoices(),
+                openers = RecordingOpeners(),
+                analytics = FakeAnalytics(),
+                crashOffer = offer,
+            ).also { runCurrent() }
+        p.onRow(SettingsRowId.Privacy); runCurrent()
+        assertEquals(true, p.state.value.privacy!!.offerCrashReports)
+        p.onOfferCrashReports(false); runCurrent()
+        assertEquals(listOf(false), offer.written)
+        assertEquals(false, p.state.value.privacy!!.offerCrashReports)
+        // An answer that cannot be saved goes back and says so.
+        offer.saves = false
+        p.onOfferCrashReports(true); runCurrent()
+        assertEquals(false, p.state.value.privacy!!.offerCrashReports)
+        assertEquals(SettingsNote.ChoiceNotSaved, p.state.value.note)
+    }
+
+    @Test
+    fun `B-180-016 without a crash offer the Privacy page has no Offer crash reports switch`() = runTest {
+        val p = presenter(FakeAnalytics())
+        p.onRow(SettingsRowId.Privacy); runCurrent()
+        assertEquals(null, p.state.value.privacy!!.offerCrashReports)
+    }
 }

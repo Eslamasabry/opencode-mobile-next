@@ -34,4 +34,8 @@
     <string name="andr_termuxRetiredNotice">Termux is no longer supported. Set up built-in Linux on this phone, or connect to your computer. Your projects in Termux are still there; copy them to the phone\u0027s shared storage or push them with Git to bring them over.</string>
     <string name="andr_termuxRetiredSetUpBuiltin">Set up built-in Linux</string>
     <string name="andr_termuxRetiredConnectComputer">Connect a computer</string>
+    <!-- Flutter 2.1.5 crash offer (E02-S91): never sends anything by itself. -->
+    <string name="andr_crashOfferMessage">OpenCode Mobile closed unexpectedly last time. Send a crash report?</string>
+    <string name="andr_crashOfferReview">Review and send</string>
+    <string name="andr_crashOfferNotNow">Not now</string>
 </resources>

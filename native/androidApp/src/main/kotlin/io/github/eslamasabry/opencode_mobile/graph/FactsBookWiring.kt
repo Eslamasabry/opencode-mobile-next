@@ -88,3 +88,14 @@ private class AppFactsBookAccess(
 
     override fun pairingGateway(baseUrl: String): HttpFactsBookGateway = HttpFactsBookGateway(httpFor(baseUrl), null)
 }
+
+/** s23-factsbook: the home's Memory section under its notes (F: chats_home_screen.dart:682, 856). */
+@dev.zacsweers.metro.ContributesIntoSet(
+    AppScope::class,
+    binding = dev.zacsweers.metro.binding<io.github.eslamasabry.oc.feature.chats.ChatsHomeSection>(),
+)
+@dev.zacsweers.metro.Inject
+class FactsBookHomeSection : io.github.eslamasabry.oc.feature.chats.ChatsHomeSection {
+    @androidx.compose.runtime.Composable
+    override fun Content() = io.github.eslamasabry.oc.feature.factsbook.ui.FactsBookMemorySection()
+}

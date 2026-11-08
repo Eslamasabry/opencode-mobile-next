@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats
 
 import kotlin.math.abs
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.onRoot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue

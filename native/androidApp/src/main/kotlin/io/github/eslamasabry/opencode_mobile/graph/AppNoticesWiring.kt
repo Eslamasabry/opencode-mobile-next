@@ -58,6 +58,7 @@ class AndroidAppNotices(
     private val clock: Clock,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
+    private val continuity: AppTelemetryContinuity,
 ) : AppNotices {
     private val scope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private val words = NotifyWords(application) { preferences.localeTag.value }
@@ -240,6 +241,12 @@ class AndroidAppNotices(
                         else -> null
                     }
                 }
+                // s23-continuity: the one-time crash offer waits behind the live conditions (the exit notice first).
+                .let { conditions ->
+                    combine(conditions, continuity.runtime.offer.pending) { condition, crash ->
+                        condition ?: crash?.let { crashOfferNotice() }
+                    }
+                }
                 // The Termux notice ranks last; it waits behind any live condition.
                 .let { conditions ->
                     combine(conditions, termuxRetiredShown) { condition, termux ->
@@ -384,6 +391,11 @@ class AndroidAppNotices(
                 closeTermuxRetired()
                 navigator.open(ServersRoute.Edit())
             }
+            // Either answer ends the offer for this crash; Report a problem sends nothing until the person does.
+            AppNoticeAction.ReviewCrash -> {
+                continuity.runtime.takeCrash()
+                navigator.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem)
+            }
         }
     }
 
@@ -393,8 +405,18 @@ class AndroidAppNotices(
             "thermal" -> thermal.dismiss()
             "background-pause" -> background.launchOnMain { background.notice().dismiss() }
             TermuxRetiredNotice.ID -> closeTermuxRetired()
+            CRASH_OFFER_ID -> continuity.runtime.takeCrash()
         }
     }
+
+    private fun crashOfferNotice(): AppNotice =
+        AppNotice(
+            CRASH_OFFER_ID,
+            words.text(R.string.andr_crashOfferMessage),
+            action = AppNoticeAction.ReviewCrash,
+            actionLabel = words.text(R.string.andr_crashOfferReview),
+            dismissLabel = words.text(R.string.andr_crashOfferNotNow),
+        )
 
     private fun closeTermuxRetired() {
         termuxRetired?.let { scope.launch { it.close() } }
@@ -408,6 +430,9 @@ class AndroidAppNotices(
         }
     }
 }
+
+/** The status line id of the crash offer. */
+internal const val CRASH_OFFER_ID: String = "crash-offer"
 
 @dev.zacsweers.metro.ContributesTo(AppScope::class)
 interface AppNoticesAccessors {

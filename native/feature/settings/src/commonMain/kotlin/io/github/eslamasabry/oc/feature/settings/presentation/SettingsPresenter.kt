@@ -61,6 +61,7 @@ public class SettingsPresenter(
     private val serverPage: SettingsServerDoor? = null,
     private val localData: LocalDataSettings? = null,
     private val reporting: Reporting? = null,
+    private val crashOffer: CrashOfferSetting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -70,6 +71,7 @@ public class SettingsPresenter(
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
         val crashReports: Boolean? = null,
+        val offerCrashReports: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
         val crash: CrashUi? = null,
@@ -331,7 +333,7 @@ public class SettingsPresenter(
             updates = e.updates,
             about = about,
             whatsNew = whatsNew(l, f),
-            privacy = e.collect?.let { PrivacyUi(it, l.consentSaving, l.crashReports ?: reporting?.reportingConsent?.value) },
+            privacy = e.collect?.let { PrivacyUi(it, l.consentSaving, l.crashReports ?: reporting?.reportingConsent?.value, l.offerCrashReports ?: crashOffer?.enabled()) },
             localData =
                 localData?.let {
                     LocalDataUi(
@@ -833,6 +835,14 @@ public class SettingsPresenter(
         val port = reporting ?: return
         port.setReportingConsent(on)
         local.update { it.copy(crashReports = port.reportingConsent.value) }
+    }
+
+    override fun onOfferCrashReports(on: Boolean) {
+        val port = crashOffer ?: return
+        local.update { it.copy(offerCrashReports = on) }
+        scope.launch {
+            if (!port.setEnabled(on)) local.update { it.copy(offerCrashReports = !on, note = SettingsNote.ChoiceNotSaved) }
+        }
     }
 
     override fun onDetailedUsage(on: Boolean) {

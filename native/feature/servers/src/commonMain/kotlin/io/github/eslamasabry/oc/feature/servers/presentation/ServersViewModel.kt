@@ -265,6 +265,9 @@ public class ServersViewModel(
 
     override fun openSetup(id: ProfileId): Unit = nav.open(ServersRoute.SetupAssist(id))
 
+    override fun openUpdateGuide(id: ProfileId): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.SetupRoute.UpdateComputer(id))
+
     override fun openConnectorCatalog(id: ProfileId) {
         val location = connections.currentLocation(id)
         nav.open(McpCatalogRoute(id, location?.directory, location?.workspace))
@@ -331,7 +334,7 @@ public class ServersViewModel(
                         it.copy(savedGeneration = it.savedGeneration + 1, cleartextAllowed = false)
                     }
                     when (val connected = connections.connect(saved.value)) {
-                        is Outcome.Failed -> failed(ServerIssue.ConnectFailed, connected.failure)
+                        is Outcome.Failed -> connectFailed(saved.value, connected.failure)
                         is Outcome.Ok ->
                             if (route != null) createNow(saved.value)
                             else local.update { it.copy(issue = ServerIssue.Connected) }
@@ -458,7 +461,7 @@ public class ServersViewModel(
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy || connections.busy.value) return
-        local.update { it.copy(busy = true, issue = null, failure = null, addressProblem = null) }
+        local.update { it.copy(busy = true, issue = null, failure = null, openCode1 = null, addressProblem = null) }
         viewModelScope.launch {
             try {
                 block()
@@ -484,7 +487,10 @@ public class ServersViewModel(
                 needsHttps(address)
         )
             local.update { it.copy(issue = ServerIssue.HttpsRequired, failure = null) }
-        else failed(ServerIssue.ConnectFailed, failure)
+        else {
+            failed(ServerIssue.ConnectFailed, failure)
+            if (serverRunsOpenCode1(failure)) local.update { it.copy(openCode1 = id) }
+        }
     }
 
     private fun needsHttps(address: String): Boolean =

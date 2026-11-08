@@ -31,6 +31,10 @@ public interface SettingsHost {
     public val serverPage: SettingsServerDoor?
         get() = null
 
+    /** s23-continuity: Privacy's "Offer crash reports"; null where the build has no crash offer. */
+    public val crashOffer: CrashOfferSetting?
+        get() = null
+
     public val facts: StateFlow<SettingsFacts>
     public val choices: PersonalChoices
     public val openers: SettingsOpeners
@@ -97,6 +101,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             serverPage = host.serverPage,
             localData = host.localData,
             reporting = host.reporting,
+            crashOffer = host.crashOffer,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

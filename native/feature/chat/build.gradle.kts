@@ -30,6 +30,8 @@ kotlin {
         implementation(libs.kotlinx.collections.immutable)
         implementation(libs.kotlinx.datetime)
         implementation(project(":engine:integrations-catalog"))
+        implementation(project(":engine:integrations-usage")) // B-181: the composer limit strip
+
         implementation(project(":engine:cards")) // P12-CHAT-CARDS: the agent card slot
         implementation(
             project(":engine:agents")

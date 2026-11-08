@@ -25,6 +25,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.privacyPagesSummary
+import io.github.eslamasabry.oc.ui.words.res.crashOfferSection
+import io.github.eslamasabry.oc.ui.words.res.crashOfferSettingDetail
+import io.github.eslamasabry.oc.ui.words.res.crashOfferSettingTitle
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Off
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashReportsBody
@@ -62,15 +65,30 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
             onClick = { actions.onOutside(SettingsOutside.PrivacyPolicy) },
         )
     }
-    privacy?.crashReports?.let { on ->
-        KitRowGroup {
-            KitSwitchRow(
-                title = stringResource(Res.string.telemetryCrashReportsTitle),
-                checked = on,
-                modifier = Modifier.testTag("privacy-crash-reports"),
-                supporting = stringResource(Res.string.telemetryCrashReportsBody),
-                onCheckedChange = actions::onCrashReports,
-            )
+    // Flutter 2.1.5 (personal_settings_screens.dart:278-301): one "Crash reports" group, Offer crash reports first.
+    val offer = privacy?.offerCrashReports
+    val send = privacy?.crashReports
+    if (offer != null || send != null) {
+        KitRowGroup(label = if (offer != null) stringResource(Res.string.crashOfferSection) else null) {
+            offer?.let { on ->
+                KitSwitchRow(
+                    title = stringResource(Res.string.crashOfferSettingTitle),
+                    checked = on,
+                    leading = KitRowLeading.Glyph(KitIcons.bug),
+                    supporting = stringResource(Res.string.crashOfferSettingDetail),
+                    supportingMaxLines = 3,
+                    onCheckedChange = actions::onOfferCrashReports,
+                )
+            }
+            send?.let { on ->
+                KitSwitchRow(
+                    title = stringResource(Res.string.telemetryCrashReportsTitle),
+                    checked = on,
+                    modifier = Modifier.testTag("privacy-crash-reports"),
+                    supporting = stringResource(Res.string.telemetryCrashReportsBody),
+                    onCheckedChange = actions::onCrashReports,
+                )
+            }
         }
     }
 }

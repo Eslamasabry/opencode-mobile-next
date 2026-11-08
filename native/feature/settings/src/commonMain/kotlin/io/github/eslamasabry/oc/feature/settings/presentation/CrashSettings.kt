@@ -36,3 +36,14 @@ public data class DeviceExitHistory(
     val helpers: List<DeviceExit> = emptyList(),
     val unavailable: Boolean = false,
 )
+
+/**
+ * "Offer crash reports" (Flutter 2.1.5 `CrashReportOffer.enabled`, `oc.crashReports.offer`): whether the app offers a
+ * report after it closed unexpectedly. It never sends anything by itself. On unless turned off.
+ */
+public interface CrashOfferSetting {
+    public fun enabled(): Boolean
+
+    /** False when the answer could not be saved. */
+    public suspend fun setEnabled(on: Boolean): Boolean
+}

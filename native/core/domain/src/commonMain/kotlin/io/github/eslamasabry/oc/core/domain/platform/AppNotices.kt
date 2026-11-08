@@ -24,6 +24,9 @@ public enum class AppNoticeAction {
 
     /** The Termux notice's "Connect a computer" (opens the new-server form). */
     ConnectComputer,
+
+    /** The crash offer's "Review and send" (Flutter 2.1.5 `CrashReportOffer`): opens Report a problem; sends nothing. */
+    ReviewCrash,
 }
 
 /** The one-time question, offered only after a real reply has completed. */
