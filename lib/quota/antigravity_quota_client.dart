@@ -44,9 +44,50 @@ class AntigravityQuotaClient {
   /// installed. Paths are fixed strings (the profile id is checked above).
   static String cliScript({String? profileId}) {
     final candidates = candidateCliPaths(profileId: profileId).join(' ');
+    final pId = (profileId != null && _safeId.hasMatch(profileId))
+        ? profileId
+        : '';
     return 'for b in $candidates; do '
-        'if [ -x "\$b" ]; then HOME="\${b%/.local/bin/agy}" exec "\$b" -p /usage --output-format json; fi; '
+        'if [ -x "\$b" ]; then '
+        'h="\${b%/.local/bin/agy}"; '
+        'if [ -n "$pId" ] && [ -d "/home/oc/.oc-profiles/$pId" ]; then h="/home/oc/.oc-profiles/$pId"; '
+        'elif [ ! -f "\$h/.gemini/antigravity-cli/antigravity-oauth-token" ]; then '
+        'for o in /home/oc/.oc-profiles/*/.gemini/antigravity-cli/antigravity-oauth-token; do '
+        'if [ -f "\$o" ]; then h="\${o%/.gemini/antigravity-cli/antigravity-oauth-token}"; break; fi; '
+        'done; fi; '
+        'export HOME="\$h"; '
+        'f="\$HOME/.gemini/antigravity-cli/antigravity-oauth-token"; '
+        'e=\$(grep -o \'"id_token_email"[[:space:]]*:[[:space:]]*"[^"]*"\' "\$f" 2>/dev/null | head -n 1 | cut -d\'"\' -f4); '
+        'if [ -z "\$e" ]; then e=\$(grep -o \'"email"[[:space:]]*:[[:space:]]*"[^"]*"\' "\$f" 2>/dev/null | head -n 1 | cut -d\'"\' -f4); fi; '
+        'case "\$e" in *[!A-Za-z0-9.@_+-]*) e="";; esac; '
+        'if [ "\${#e}" -gt $maxAccountLength ]; then e=""; fi; '
+        'if [ -n "\$e" ]; then echo "ACCOUNT_EMAIL:\$e"; fi; '
+        'exec "\$b" -p /usage --output-format json; '
+        'fi; '
         'done; exit 127';
+  }
+
+  static const int maxAccountLength = 64;
+
+  static final RegExp _accountLine = RegExp(
+    r'^ACCOUNT_EMAIL:(.*)$',
+    multiLine: true,
+  );
+  static final RegExp _emailShape = RegExp(
+    r'^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$',
+  );
+
+  /// The account email printed by the probe script as `ACCOUNT_EMAIL:<email>`,
+  /// or null. Only a plain email-shaped value of at most 64 characters is
+  /// accepted; anything else in the output is ignored.
+  static String? parseProbeAccount(String output) {
+    for (final match in _accountLine.allMatches(output)) {
+      final value = (match.group(1) ?? '').trim();
+      if (value.length <= maxAccountLength && _emailShape.hasMatch(value)) {
+        return value;
+      }
+    }
+    return null;
   }
 
   /// The CLI's quota readings, or an empty list when the CLI is missing, not
@@ -67,7 +108,12 @@ class AntigravityQuotaClient {
       if (res.exitCode != 0) return const [];
       final body = _jsonObjectIn(res.output);
       if (body == null) return const [];
-      final readings = parseCliJson(body, currentNow: currentNow);
+      final accountEmail = parseProbeAccount(res.output);
+      final readings = parseCliJson(
+        body,
+        currentNow: currentNow,
+        accountEmail: accountEmail,
+      );
       if (readings.isNotEmpty) _cachedReadings = readings;
       return readings;
     } catch (_) {
@@ -92,6 +138,7 @@ class AntigravityQuotaClient {
     Map<String, dynamic> data, {
     DateTime? currentNow,
     String? planLabel,
+    String? accountEmail,
   }) {
     final now = currentNow ?? DateTime.now().toUtc();
     final readings = <ProviderUsageReading>[];
@@ -101,6 +148,19 @@ class AntigravityQuotaClient {
     if (cmdData is! Map) return readings;
     final groups = cmdData['groups'];
     if (groups is! List) return readings;
+
+    final resolvedEmail =
+        accountEmail ??
+        cleanUsageText(
+          cmdData['account'] ??
+              cmdData['email'] ??
+              cmdData['user'] ??
+              command['account'] ??
+              command['email'] ??
+              data['account'] ??
+              data['email'],
+          64,
+        );
 
     for (final group in groups) {
       if (group is! Map) continue;
@@ -199,6 +259,7 @@ class AntigravityQuotaClient {
             fetchedAt: now,
             windows: windows,
             planLabel: planLabel ?? 'Google AI Pro',
+            accountRef: resolvedEmail,
             needsSignIn: false,
           ),
         );

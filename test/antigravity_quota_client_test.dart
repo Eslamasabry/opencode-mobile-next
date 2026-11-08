@@ -177,5 +177,80 @@ void main() {
       expect(script, isNot(contains('rm -rf')));
       expect(script, contains('/home/oc/.local/bin/agy'));
     });
+
+    test(
+      'ACCOUNT_EMAIL line in CLI output populates accountRef on readings',
+      () async {
+        final cliData = {
+          'command': {
+            'name': 'usage',
+            'data': {
+              'groups': [
+                {
+                  'name': 'Gemini Models',
+                  'buckets': [
+                    {
+                      'id': 'gemini-5h',
+                      'window': '5h',
+                      'remaining_fraction': 0.85,
+                      'reset_time': '2026-11-07T21:48:21Z',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        };
+
+        final client = AntigravityQuotaClient(
+          runner: (script, {timeout = const Duration(seconds: 20)}) async => (
+            exitCode: 0,
+            output: 'ACCOUNT_EMAIL:altaf.alu@gmail.com\n${jsonEncode(cliData)}',
+          ),
+          clock: () => testNow,
+        );
+
+        final readings = await client.fetchAllUsage(profileId: 'p1');
+        expect(readings.length, 1);
+        expect(readings[0].providerId, 'antigravity');
+        expect(readings[0].accountRef, 'altaf.alu@gmail.com');
+      },
+    );
+
+    test('cliScript checks candidate token files for id_token_email', () {
+      final script = AntigravityQuotaClient.cliScript(profileId: 'p1');
+      expect(script, contains('antigravity-oauth-token'));
+      expect(script, contains('id_token_email'));
+      expect(script, contains('ACCOUNT_EMAIL'));
+      expect(script, contains('export HOME='));
+      // Emits only a validated email, never the token file itself.
+      expect(script, isNot(contains('cat ')));
+      expect(script, isNot(contains('access_token')));
+      expect(script, isNot(contains('refresh_token')));
+    });
+
+    test('probe output parser accepts only an email-shaped value', () {
+      expect(
+        AntigravityQuotaClient.parseProbeAccount(
+          'noise\nACCOUNT_EMAIL:user@example.com\n{}',
+        ),
+        'user@example.com',
+      );
+      for (final bad in [
+        'ACCOUNT_EMAIL:not-an-email',
+        'ACCOUNT_EMAIL:user@example.com extra',
+        'ACCOUNT_EMAIL:{"k":"v"}',
+        'ACCOUNT_EMAIL:${'a' * 70}@example.com',
+        'ACCOUNT_EMAIL:',
+        'user@example.com',
+        'no marker at all',
+      ]) {
+        expect(
+          AntigravityQuotaClient.parseProbeAccount(bad),
+          isNull,
+          reason: bad,
+        );
+      }
+    });
   });
 }

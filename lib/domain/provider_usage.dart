@@ -51,6 +51,7 @@ class ProviderUsageReading {
   /// way in (the widget offers "Sign in").
   final bool needsSignIn;
   final String? planLabel;
+  final String? accountRef;
   const ProviderUsageReading({
     required this.providerId,
     required this.displayName,
@@ -58,6 +59,7 @@ class ProviderUsageReading {
     required this.windows,
     this.needsSignIn = false,
     this.planLabel,
+    this.accountRef,
   });
 }
 
@@ -146,6 +148,10 @@ List<ProviderUsageReading> parseProviderUsageList(
           fetchedAt: _time(raw['fetchedAt']) ?? listFetched ?? now,
           windows: const [],
           needsSignIn: true,
+          accountRef: cleanUsageText(
+            raw['account'] ?? raw['email'] ?? raw['accountRef'],
+            64,
+          ),
         ),
       );
       continue;
@@ -190,6 +196,10 @@ List<ProviderUsageReading> parseProviderUsageList(
         fetchedAt: fetched,
         windows: windows.take(maxWindows).toList(growable: false),
         planLabel: cleanUsageText(raw['planLabel'], 32),
+        accountRef: cleanUsageText(
+          raw['account'] ?? raw['email'] ?? raw['accountRef'],
+          64,
+        ),
       ),
     );
     if (readings.length >= maxProviders) break;
