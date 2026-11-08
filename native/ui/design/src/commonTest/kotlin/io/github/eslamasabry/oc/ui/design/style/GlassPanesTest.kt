@@ -48,7 +48,7 @@ class GlassPanesTest {
         val ground = roles.ground.withAlpha(1f)
         return listOf(
             listOf(ground) + AuroraImage.clearSpotsOf(roles.ground, roles.accent, roles.dark),
-            LiveSpots.of(roles.ground, roles.dark),
+            LiveSpots.of(roles),
         )
     }
 
@@ -58,7 +58,7 @@ class GlassPanesTest {
     private fun finished(roles: Roles, role: SurfaceRole, level: SurfaceLevel, spots: List<Argb>, selected: Boolean = false): Pair<SurfaceDecoration, Argb> {
         val request = SurfaceRequest(roles, role, Knobs(), level, selected = selected)
         val solid = request.levelFill.over(roles.ground.withAlpha(1f))
-        return GlassFinish.thickened(GlassSpec.resolveClear(request)!!, roles, solid, spots, wordsDp = wordsDp(role)) to solid
+        return GlassFinish.thickened(GlassSpec.resolveClear(request)!!, roles, solid, spots, GlassFinish.paneInks(roles, solid), wordsDp = wordsDp(role)) to solid
     }
 
     @Test
@@ -241,8 +241,9 @@ class GlassPanesTest {
     fun `B-KIT-003 over a shader look a pane measures the farthest any look moves from the ground`() {
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val roles = roles(pack, dark)
-            val spots = LiveSpots.of(roles.ground, dark)
+            val spots = LiveSpots.of(roles)
             assertEquals(roles.ground.withAlpha(1f), spots.first())
+            assertTrue(spots.size >= 5, "$pack dark=$dark: the ground and a spot per look colour")
             val cap = if (dark) LiveSpots.CAP_DARK else LiveSpots.CAP_LIGHT
             for (s in spots) {
                 val d = kotlin.math.sqrt(
@@ -251,8 +252,9 @@ class GlassPanesTest {
                 )
                 assertTrue(d <= cap + .01, "$pack dark=$dark: $s lies within the look's cap ($d)")
             }
-            // Both ways: something brighter and something darker than the ground (unless the ground is at an end).
-            assertTrue(spots.any { it.green > roles.ground.green } || roles.ground.green == 255)
+            // A dark page's looks add light; a light page's dye it darker.
+            val lum = spots.map { io.github.eslamasabry.oc.ui.design.color.relativeLuminance(it) }
+            if (dark) assertTrue(lum.drop(1).any { it > lum.first() }) else assertTrue(lum.drop(1).any { it < lum.first() })
         }
     }
 

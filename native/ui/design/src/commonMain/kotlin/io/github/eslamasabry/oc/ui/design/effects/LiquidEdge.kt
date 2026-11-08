@@ -251,7 +251,7 @@ public object LiquidEdge {
             listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)) +
                 AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
                 // A shader look behind the content (owner 2026-11-09: the glass now shows it).
-                LiveSpots.of(ground, roles.dark) +
+                LiveSpots.of(roles) +
                 listOf(lerp(ground, roles.text1.opaqueArgb(), BLURRED_INK), lerp(ground, roles.accent.opaqueArgb(), ACCENT_WASH))
         return content.map { filtered(it, recipe) }
     }
