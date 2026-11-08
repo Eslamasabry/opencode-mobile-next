@@ -300,6 +300,46 @@ class LinuxPagesModelsTest {
         assertEquals(CleanupResult.Freed(2048L * 1024), model.state.value.result)
     }
 
+    @Test
+    fun `B-LINUX-089 the four clean-ups are measured, asked and answered each on its own`() = runTest {
+        // Parity audit 2026-11-08 row 454 (Flutter linux_storage_page.dart:108): agents, apt, temp and tools are four
+        // separate asks, each with its own size, never one folded "Free up".
+        val host =
+            FakeLinuxHost(
+                answer = { script ->
+                    when {
+                        script.contains("printf '::freed ") -> out("::freed 64\n")
+                        script.contains("printf '::cleanup ") && script.contains("collect /var/cache/apt/archives") ->
+                            out("::cleanup storage-cleanup.Apt0000001 1024\n")
+                        script.contains("printf '::cleanup ") && script.contains("collect /root/.npm/_cacache") ->
+                            out("::cleanup storage-cleanup.Tool000001 2048\n")
+                        script.contains("printf '::cleanup ") && script.contains("collect /tmp -mtime +1") ->
+                            out("::cleanup storage-cleanup.Temp000001 3072\n")
+                        script.contains("printf '::cleanup ") && script.contains("oc-paseo") ->
+                            out("::cleanup storage-cleanup.Agen000001 4096\n")
+                        else -> out("::du 10 /usr\n")
+                    }
+                },
+            )
+        val model = LinuxStorageModel(LinuxManager(host, VirtualRetryWait), Nav(), backgroundScope)
+        model.shown(true)
+        settle()
+        assertEquals(
+            mapOf(
+                LinuxCleanupId.AptCache to 1024L * 1024,
+                LinuxCleanupId.ToolCaches to 2048L * 1024,
+                LinuxCleanupId.TempFiles to 3072L * 1024,
+                LinuxCleanupId.OldAgentVersions to 4096L * 1024,
+            ),
+            model.state.value.cleanable.toMap(),
+        )
+        for ((id, kb) in listOf(LinuxCleanupId.TempFiles to 3072L, LinuxCleanupId.OldAgentVersions to 4096L)) {
+            model.askCleanup(id)
+            assertEquals(CleanupAsk(id, kb * 1024), model.state.value.confirm)
+            model.dismiss()
+        }
+    }
+
     private fun TestScope.packages(host: FakeLinuxHost): LinuxPackagesModel {
         val manager = LinuxManager(host, VirtualRetryWait)
         return LinuxPackagesModel(manager, LinuxJobWatch(manager, notices), Nav(), backgroundScope, Quiet)
