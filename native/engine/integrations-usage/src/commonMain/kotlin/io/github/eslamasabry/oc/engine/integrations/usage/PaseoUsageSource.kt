@@ -31,6 +31,8 @@ public class PaseoUsageSource(
                         else -> UsageReadingStatus.Ok
                     },
                     fetchedAt = reading.fetchedAt,
+                    accountRef = reading.accountRef,
+                    plan = reading.planLabel,
                     method = SignInMethod.Plan,
                     windows = reading.windows.map { window ->
                         UsageWindow(

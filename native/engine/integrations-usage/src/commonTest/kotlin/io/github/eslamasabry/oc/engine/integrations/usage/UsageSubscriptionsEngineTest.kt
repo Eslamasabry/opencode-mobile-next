@@ -137,6 +137,24 @@ class UsageSubscriptionsEngineTest {
             assertEquals(10.0, c.snapshot.value.subscriptions.single().fiveHour!!.usedPercent)
         }
 
+    @Test
+    fun `B-183 an older reading that names the account fills it in and keeps the newer numbers`() =
+        runTest {
+            val source =
+                ScriptedSource(
+                    listOf(
+                        ok(r("codex", "inapp", five = 10.0)),
+                        ok(r("codex", "inapp", account = "me@corp.io", five = 90.0, age = 2.hours)),
+                    ),
+                )
+            val c = make(listOf(source))
+            c.refresh()
+            c.refresh()
+            val sub = c.snapshot.value.subscriptions.single()
+            assertEquals(10.0, sub.fiveHour!!.usedPercent)
+            assertEquals("me@corp.io", sub.accountRef)
+        }
+
     // ---- B-STATE-150
 
     @Test

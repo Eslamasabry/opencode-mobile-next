@@ -8,7 +8,8 @@ import kotlin.math.roundToInt
 import kotlin.time.Instant
 
 // Native twin of Flutter lib/quota/antigravity_quota_client.dart (PR #125) and its call site in
-// lib/state/connection/phone_agents_usage.dart (_paReadUsage, _readAntigravityUsage).
+// lib/state/connection/phone_agents_usage.dart (_paReadUsage, _readAntigravityUsage); the signed-in account from
+// PR #136 (`ACCOUNT_EMAIL:` line, parseProbeAccount).
 
 /** One shell run inside the phone's built-in Linux: exit code and output. */
 public data class LinuxRunResult(val exitCode: Int, val output: String)
@@ -20,8 +21,10 @@ public fun interface AntigravityLinuxRunner {
 
 /**
  * Reads Google Antigravity plan usage by asking the Antigravity CLI itself (`agy -p /usage --output-format json`)
- * inside the built-in Linux, the same command a person runs in a terminal. The app never reads the CLI's credential
- * file and never calls Google on the CLI's behalf: the CLI stays the only client that uses its sign-in.
+ * inside the built-in Linux, the same command a person runs in a terminal. The app never opens the CLI's credential
+ * file and never calls Google on the CLI's behalf: the CLI stays the only client that uses its sign-in. The probe run
+ * inside the Linux prints at most one `ACCOUNT_EMAIL:` line (an email-shaped value, never the file), which
+ * [parseProbeAccount] checks again before it names the plan's account.
  */
 public class AntigravityQuotaClient(
     /** Null when the built-in Linux is not available: then there is nothing to read. */
@@ -40,7 +43,11 @@ public class AntigravityQuotaClient(
         val run = runner ?: return emptyList()
         val result = attempt({ Failure.Device() }) { run.run(cliScript(profileId), TIMEOUT_MS) }
         val output = (result as? Outcome.Ok)?.value?.takeIf { it.exitCode == 0 }?.output
-        val readings = output?.let(::jsonObjectIn)?.let { parseCliJson(it, now ?: clock()) }.orEmpty()
+        val readings =
+            output
+                ?.let(::jsonObjectIn)
+                ?.let { parseCliJson(it, now ?: clock(), accountEmail = parseProbeAccount(output)) }
+                .orEmpty()
         if (readings.isNotEmpty()) cachedReadings = readings
         return readings
     }
@@ -56,6 +63,23 @@ public class AntigravityQuotaClient(
         private const val LABEL_LENGTH = 24
         private const val PROVIDER_ID_LENGTH = 32
         private const val SHARED_CLI = "/home/oc/.local/bin/agy"
+        private const val PROFILES = "/home/oc/.oc-profiles"
+        private const val TOKEN = ".gemini/antigravity-cli/antigravity-oauth-token"
+        private const val DEFAULT_PLAN = "Google AI Pro"
+
+        /** The longest account email the app accepts from the probe. */
+        public const val MAX_ACCOUNT_LENGTH: Int = 64
+        private val ACCOUNT_LINE = Regex("^ACCOUNT_EMAIL:(.*)$", RegexOption.MULTILINE)
+        private val EMAIL_SHAPE = Regex("^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$")
+
+        /**
+         * The account email the probe printed as `ACCOUNT_EMAIL:<email>`, or null. Only a plain email-shaped value of
+         * at most [MAX_ACCOUNT_LENGTH] characters is accepted; anything else in the output is ignored.
+         */
+        public fun parseProbeAccount(output: String): String? =
+            ACCOUNT_LINE.findAll(output)
+                .map { it.groupValues[1].trim() }
+                .firstOrNull { it.length <= MAX_ACCOUNT_LENGTH && EMAIL_SHAPE.matches(it) }
 
         /** Where the CLI can live: the profile's own home first (agents installed per profile), then the shared one. */
         public fun candidateCliPaths(profileId: String? = null): List<String> =
@@ -67,13 +91,37 @@ public class AntigravityQuotaClient(
             }
 
         /**
-         * The script run inside the built-in Linux: the first CLI that exists runs with its own HOME, so it finds its
-         * own sign-in; 127 when none is installed. Paths are fixed strings (the profile id is checked above).
+         * The script run inside the built-in Linux (Flutter `cliScript`, PR #136): the first CLI that exists runs with
+         * the profile's home (or the home that holds a sign-in), so it finds its own sign-in; 127 when none is
+         * installed. Before the CLI runs, the account email is picked out inside the Linux and printed as one
+         * `ACCOUNT_EMAIL:` line only when it is made of plain email characters and at most [MAX_ACCOUNT_LENGTH] long;
+         * nothing else from the sign-in leaves the Linux. Paths are fixed strings (the profile id is checked above).
          */
         public fun cliScript(profileId: String? = null): String {
             val candidates = candidateCliPaths(profileId).joinToString(" ")
-            val runOne = "HOME=\"\${b%/.local/bin/agy}\" exec \"\$b\" -p /usage --output-format json"
-            return "for b in $candidates; do if [ -x \"\$b\" ]; then $runOne; fi; done; exit 127"
+            val id = profileId?.takeIf { SAFE_ID.matches(it) }.orEmpty()
+            val pick = { field: String ->
+                "\$(grep -o '\"$field\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' \"\$f\" 2>/dev/null | head -n 1 | cut -d'\"' -f4)"
+            }
+            return "for b in $candidates; do " +
+                "if [ -x \"\$b\" ]; then " +
+                "h=\"\${b%/.local/bin/agy}\"; " +
+                // Flutter writes `[ -n "<id>" ] && …` even without an id; with none the branch is left out.
+                (if (id.isEmpty()) "" else "if [ -d \"$PROFILES/$id\" ]; then h=\"$PROFILES/$id\"; el") +
+                "if [ ! -f \"\$h/$TOKEN\" ]; then " +
+                "for o in $PROFILES/*/$TOKEN; do " +
+                "if [ -f \"\$o\" ]; then h=\"\${o%/$TOKEN}\"; break; fi; " +
+                "done; fi; " +
+                "export HOME=\"\$h\"; " +
+                "f=\"\$HOME/$TOKEN\"; " +
+                "e=${pick("id_token_email")}; " +
+                "if [ -z \"\$e\" ]; then e=${pick("email")}; fi; " +
+                "case \"\$e\" in *[!A-Za-z0-9.@_+-]*) e=\"\";; esac; " +
+                "if [ \"\${#e}\" -gt $MAX_ACCOUNT_LENGTH ]; then e=\"\"; fi; " +
+                "if [ -n \"\$e\" ]; then echo \"ACCOUNT_EMAIL:\$e\"; fi; " +
+                "exec \"\$b\" -p /usage --output-format json; " +
+                "fi; " +
+                "done; exit 127"
         }
 
         /** The JSON object in the CLI's output (it may print a banner first). */
@@ -130,11 +178,31 @@ public class AntigravityQuotaClient(
 
         /**
          * The CLI's `command.data.groups`: Gemini models read as `antigravity`, Claude and GPT models as
-         * `antigravity_claude`, any other group by its own name; a group without a readable bucket is left out.
+         * `antigravity_claude`, any other group by its own name; a group without a readable bucket is left out. Every
+         * reading carries [planLabel] (Google AI Pro unless named) and the account: [accountEmail] from the probe, or an
+         * account field the CLI's own JSON names.
          */
-        public fun parseCliJson(data: Map<*, *>, now: Instant): List<ProviderUsageReading> {
+        public fun parseCliJson(
+            data: Map<*, *>,
+            now: Instant,
+            planLabel: String? = null,
+            accountEmail: String? = null,
+        ): List<ProviderUsageReading> {
             val command = data["command"] as? Map<*, *>
-            val groups = (command?.get("data") as? Map<*, *>)?.get("groups") as? List<*> ?: return emptyList()
+            val cmdData = command?.get("data") as? Map<*, *>
+            val groups = cmdData?.get("groups") as? List<*> ?: return emptyList()
+            val account =
+                accountEmail
+                    ?: cleanUsageText(
+                        cmdData["account"]
+                            ?: cmdData["email"]
+                            ?: cmdData["user"]
+                            ?: command["account"]
+                            ?: command["email"]
+                            ?: data["account"]
+                            ?: data["email"],
+                        MAX_ACCOUNT_LENGTH,
+                    )
             return groups
                 .filterIsInstance<Map<*, *>>()
                 .mapNotNull { group ->
@@ -142,7 +210,14 @@ public class AntigravityQuotaClient(
                     if (windows.isEmpty()) return@mapNotNull null
                     val name = cleanUsageText(group["name"], GROUP_NAME_LENGTH).orEmpty()
                     val (providerId, displayName) = identity(name, groups.size > 1)
-                    ProviderUsageReading(providerId, displayName, now, windows)
+                    ProviderUsageReading(
+                        providerId,
+                        displayName,
+                        now,
+                        windows,
+                        planLabel = planLabel ?: DEFAULT_PLAN,
+                        accountRef = account,
+                    )
                 }
                 .sortedBy { if (it.providerId == "antigravity") 0 else 1 }
         }

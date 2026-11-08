@@ -5,10 +5,12 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
-// Ported from Flutter test/antigravity_quota_client_test.dart (PR #125), plus the _paReadUsage branches.
+// Ported from Flutter test/antigravity_quota_client_test.dart (PR #125 and the account lines of PR #136), plus the
+// _paReadUsage branches.
 
 private val AGY_NOW = Instant.parse("2026-11-07T20:00:00Z")
 
@@ -93,9 +95,10 @@ class AntigravityQuotaTest {
     fun `B-SEC-230 a profile id that is not a plain id never reaches the script`() {
         val script = AntigravityQuotaClient.cliScript(profileId = "x; rm -rf /")
         assertFalse("rm -rf" in script)
-        assertFalse(".oc-profiles" in script)
+        // Only the fixed sign-in search (`.oc-profiles/*/`) remains; no profile's own path is named (PR #136).
+        assertFalse(Regex("\\.oc-profiles/[^*]").containsMatchIn(script))
         assertTrue("/home/oc/.local/bin/agy" in script)
-        assertFalse(".oc-profiles" in AntigravityQuotaClient.cliScript("a".repeat(65)))
+        assertFalse(Regex("\\.oc-profiles/[^*]").containsMatchIn(AntigravityQuotaClient.cliScript("a".repeat(65))))
         assertTrue("/home/oc/.oc-profiles/a_B-9/" in AntigravityQuotaClient.cliScript("a_B-9"))
     }
 
@@ -138,4 +141,71 @@ class AntigravityQuotaTest {
             assertEquals(listOf(own), withAntigravityUsage(listOf(own), AntigravityAgentState.Ready, AGY_NOW, cli))
             assertEquals(0, asked)
         }
+
+    @Test
+    fun `B-183 an ACCOUNT_EMAIL line in the CLI output names the account on every reading`() = runTest {
+        val client = AntigravityQuotaClient({ _, _ -> LinuxRunResult(0, "ACCOUNT_EMAIL:altaf.alu@gmail.com\n$ONE_GROUP") }, { AGY_NOW })
+        val readings = client.fetchAllUsage(profileId = "p1")
+        assertEquals("antigravity", readings.single().providerId)
+        assertEquals("altaf.alu@gmail.com", readings.single().accountRef)
+        assertEquals("Google AI Pro", readings.single().planLabel)
+
+        val both = AntigravityQuotaClient({ _, _ -> LinuxRunResult(0, "ACCOUNT_EMAIL:a@b.co\n$BOTH_GROUPS") }, { AGY_NOW })
+        assertEquals(listOf("a@b.co", "a@b.co"), both.fetchAllUsage().map { it.accountRef })
+
+        // Without the line, no account is guessed.
+        val none = AntigravityQuotaClient({ _, _ -> LinuxRunResult(0, ONE_GROUP) }, { AGY_NOW })
+        assertNull(none.fetchAllUsage().single().accountRef)
+    }
+
+    @Test
+    fun `B-183 the probe picks only the email field and prints only a checked value`() {
+        val script = AntigravityQuotaClient.cliScript(profileId = "p1")
+        assertTrue("antigravity-oauth-token" in script)
+        assertTrue("id_token_email" in script)
+        assertTrue("ACCOUNT_EMAIL" in script)
+        assertTrue("export HOME=" in script)
+        assertTrue("-gt ${AntigravityQuotaClient.MAX_ACCOUNT_LENGTH}" in script)
+        assertTrue("*[!A-Za-z0-9.@_+-]*" in script)
+        // Emits only a validated email, never the token file itself.
+        assertFalse("cat " in script)
+        assertFalse("access_token" in script)
+        assertFalse("refresh_token" in script)
+        assertTrue(script.endsWith("done; exit 127"))
+    }
+
+    @Test
+    fun `B-183 the probe output parser accepts only an email-shaped value`() {
+        assertEquals(
+            "user@example.com",
+            AntigravityQuotaClient.parseProbeAccount("noise\nACCOUNT_EMAIL:user@example.com\n{}"),
+        )
+        assertEquals("user@example.com", AntigravityQuotaClient.parseProbeAccount("ACCOUNT_EMAIL: user@example.com \r\n{}"))
+        val bad =
+            listOf(
+                "ACCOUNT_EMAIL:not-an-email",
+                "ACCOUNT_EMAIL:user@example.com extra",
+                "ACCOUNT_EMAIL:{\"k\":\"v\"}",
+                "ACCOUNT_EMAIL:${"a".repeat(70)}@example.com",
+                "ACCOUNT_EMAIL:${"a".repeat(50)}@${"b".repeat(10)}.com",
+                "ACCOUNT_EMAIL:",
+                "ACCOUNT_EMAIL:user@localhost",
+                "ACCOUNT_EMAIL:user@exa mple.com",
+                "ACCOUNT_EMAIL:ya29.a0AfH6SMBx-token-like-value",
+                "ACCOUNT_EMAIL:eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxIn0.sig",
+                "ACCOUNT_EMAIL:<script>@x.com",
+                "say ACCOUNT_EMAIL:user@example.com",
+                "user@example.com",
+                "no marker at all",
+            )
+        for (value in bad) assertNull(AntigravityQuotaClient.parseProbeAccount(value), value)
+    }
+
+    @Test
+    fun `B-183 an account field in the CLI's own JSON is used when the probe printed none`() {
+        val json = DartJson.decode(ONE_GROUP.replace("\"data\":{", "\"data\":{\"email\":\"me@corp.io\",")) as Map<*, *>
+        assertEquals("me@corp.io", AntigravityQuotaClient.parseCliJson(json, AGY_NOW).single().accountRef)
+        val probe = AntigravityQuotaClient.parseCliJson(json, AGY_NOW, accountEmail = "probe@corp.io")
+        assertEquals("probe@corp.io", probe.single().accountRef, "the probe's checked email wins")
+    }
 }
