@@ -241,7 +241,10 @@ public class FolderViewModel(
         nav.open(target(route.place.profileId, directory))
     }
 
-    override fun projectHealth(): Unit = openTool({ it.health }) { profile, dir -> SearchRoute.ProjectHealth(profile, dir) }
+    override fun projectHealth(): Unit = openTool({ it.health }) { profile, dir -> SearchRoute.ProjectHealth(
+        profile,
+        dir,
+    ) }
 
     // Native worktrees live in the project page's workspace sheet (the search index opens it the same way).
     override fun worktrees(): Unit =

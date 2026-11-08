@@ -107,7 +107,10 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                     // Flutter's start page: the projects opened before come first, a tap opens one.
                     if (state.recent.isNotEmpty())
                         item(key = "recent") {
-                            KitRowGroup(label = stringResource(Res.string.folderBrowserOpenedBefore), leadingTiles = true) {
+                            KitRowGroup(
+                                label = stringResource(Res.string.folderBrowserOpenedBefore),
+                                leadingTiles = true,
+                            ) {
                                 state.recent.forEach { recent ->
                                     KitRow(
                                         title = recent.name,

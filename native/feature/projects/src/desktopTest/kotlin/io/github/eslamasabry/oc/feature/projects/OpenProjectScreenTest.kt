@@ -174,7 +174,10 @@ class OpenProjectScreenTest {
             val serverTop = onNodeWithText("studio-pc").fetchSemanticsNode().boundsInRoot.top
             kotlin.test.assertTrue(recentTop < serverTop, "recent projects come first")
             onNodeWithTag("open-recent-pc-/srv/app").performClick()
-            assertEquals(listOf("openRecent" to listOf<Any?>("pc", "/srv/app")), calls.map { (m, a) -> m.substringBefore('-') to a })
+            assertEquals(
+                listOf("openRecent" to listOf<Any?>("pc", "/srv/app")),
+                calls.map { (m, a) -> m.substringBefore('-') to a },
+            )
         }
 
     @Test

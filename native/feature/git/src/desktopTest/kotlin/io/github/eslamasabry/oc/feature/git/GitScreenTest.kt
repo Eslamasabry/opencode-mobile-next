@@ -132,7 +132,8 @@ class GitScreenTest {
         )
 
     @Test
-    fun `WALK-1108-G1 Write it for me fills the message with the agent's summary and Save uses it`() = runComposeUiTest {
+    fun `WALK-1108-G1 Write it for me fills the message with the agent's summary and Save uses it`() =
+        runComposeUiTest {
         setContent {
             Screen(
                 GitUi(
@@ -150,7 +151,11 @@ class GitScreenTest {
 
     @Test
     fun `WALK-1108-G1 without a summary there is no Write it for me`() = runComposeUiTest {
-        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), selected = persistentSetOf("src/app.kt"), signIn = GitHubSignIn.SignedOut())) }
+        setContent { Screen(GitUi(
+            view = GitPageView.Ready(snapshot),
+            selected = persistentSetOf("src/app.kt"),
+            signIn = GitHubSignIn.SignedOut(),
+        )) }
         onNodeWithText("Write it for me").assertDoesNotExist()
     }
 

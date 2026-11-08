@@ -46,28 +46,42 @@ public fun terminalLine(state: RemoteTerminalState): TerminalLine {
  * which the bar latches instead of sending.
  */
 public fun terminalKeyText(key: KitTerminalBarKey, ctrl: Boolean, alt: Boolean): String? {
-    if (key.isModifier) return null
-    val modifier = 1 + (if (alt) 2 else 0) + (if (ctrl) 4 else 0)
-    val esc = "\u001b"
-    fun csi(final: Char): String = if (modifier == 1) "$esc[$final" else "$esc[1;$modifier$final"
-    fun tilde(code: Int): String = if (modifier == 1) "$esc[$code~" else "$esc[$code;$modifier~"
-    val altPrefix = if (alt) esc else ""
+    val modifier = XTERM_PLAIN + (if (alt) XTERM_ALT else 0) + (if (ctrl) XTERM_CTRL else 0)
+    val plain = modifier == XTERM_PLAIN
+    val final = CSI_FINAL[key]
+    val code = TILDE_CODE[key]
+    val altPrefix = if (alt) ESC else ""
     // Arrows first: the kit's text path writes a plain arrow as ESC [ [ A, which no shell reads as an arrow.
-    when (key) {
-        KitTerminalBarKey.Up -> return csi('A')
-        KitTerminalBarKey.Down -> return csi('B')
-        KitTerminalBarKey.Right -> return csi('C')
-        KitTerminalBarKey.Left -> return csi('D')
-        else -> Unit
-    }
-    terminalBarKeyInput(key, ctrl = ctrl, alt = alt)?.let { return it }
-    return when (key) {
-        KitTerminalBarKey.Esc -> altPrefix + esc
-        KitTerminalBarKey.Tab -> altPrefix + "\t"
-        KitTerminalBarKey.Home -> csi('H')
-        KitTerminalBarKey.End -> csi('F')
-        KitTerminalBarKey.PageUp -> tilde(5)
-        KitTerminalBarKey.PageDown -> tilde(6)
-        else -> null
+    return when {
+        key.isModifier -> null
+        final != null -> if (plain) "$ESC[$final" else "$ESC[1;$modifier$final"
+        code != null -> if (plain) "$ESC[$code~" else "$ESC[$code;$modifier~"
+        key == KitTerminalBarKey.Esc -> altPrefix + ESC
+        key == KitTerminalBarKey.Tab -> altPrefix + "\t"
+        else -> terminalBarKeyInput(key, ctrl = ctrl, alt = alt)
     }
 }
+
+private const val ESC = "\u001b"
+
+/** xterm's modifier parameter: 1, plus 2 for Alt and 4 for Ctrl. */
+private const val XTERM_PLAIN = 1
+private const val XTERM_ALT = 2
+private const val XTERM_CTRL = 4
+
+/** The CSI keys and the letter that ends each (ESC [ A, or ESC [ 1 ; m A with a modifier). */
+private val CSI_FINAL =
+    mapOf(
+        KitTerminalBarKey.Up to 'A',
+        KitTerminalBarKey.Down to 'B',
+        KitTerminalBarKey.Right to 'C',
+        KitTerminalBarKey.Left to 'D',
+        KitTerminalBarKey.Home to 'H',
+        KitTerminalBarKey.End to 'F',
+    )
+
+/** The keys xterm sends as ESC [ n ~ (Page Up 5, Page Down 6). */
+private val TILDE_CODE = mapOf(KitTerminalBarKey.PageUp to XTERM_PAGE_UP, KitTerminalBarKey.PageDown to XTERM_PAGE_DOWN)
+
+private const val XTERM_PAGE_UP = 5
+private const val XTERM_PAGE_DOWN = 6

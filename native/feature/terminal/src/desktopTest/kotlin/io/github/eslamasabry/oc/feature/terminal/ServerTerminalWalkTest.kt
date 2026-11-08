@@ -29,7 +29,16 @@ import kotlinx.collections.immutable.persistentListOf
  */
 @OptIn(ExperimentalTestApi::class)
 class ServerTerminalWalkTest {
-    private val shell = TerminalProcess("t1", "Shell", "bash", persistentListOf(), "/work", running = true, pid = 7, exitCode = null)
+    private val shell = TerminalProcess(
+        "t1",
+        "Shell",
+        "bash",
+        persistentListOf(),
+        "/work",
+        running = true,
+        pid = 7,
+        exitCode = null,
+    )
 
     private class Sent : TerminalActions {
         val texts = mutableListOf<String>()
@@ -49,13 +58,22 @@ class ServerTerminalWalkTest {
         override fun remove(id: String) = Unit
     }
 
-    private fun live() = RemoteTerminalState(loading = false, terminals = persistentListOf(shell), selected = shell, connected = true)
+    private fun live() = RemoteTerminalState(
+        loading = false,
+        terminals = persistentListOf(shell),
+        selected = shell,
+        connected = true,
+    )
 
     @Test
     fun `WALK-1108-T1 a connected shell has no status line and never says disconnected`() = runComposeUiTest {
         assertEquals(TerminalLine.None, terminalLine(live()))
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) { TerminalScreen(live(), Sent()) }
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) { TerminalScreen(live(), Sent()) }
         }
         onAllNodesWithText("disconnected", substring = true, ignoreCase = true).assertCountEquals0()
         onAllNodesWithText("Connection closed").assertCountEquals0()
@@ -72,7 +90,11 @@ class ServerTerminalWalkTest {
         )
         val actions = Sent()
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) { TerminalScreen(closed, actions) }
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) { TerminalScreen(closed, actions) }
         }
         onNodeWithText("Connection closed").assertExists()
         onAllNodesWithText("Reconnect").fetchSemanticsNodes().let { kotlin.test.assertTrue(it.isNotEmpty()) }
@@ -83,13 +105,26 @@ class ServerTerminalWalkTest {
     @Test
     fun `WALK-1108-T2 the bar holds Copy and one menu, the rest is in the menu`() = runComposeUiTest {
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) { TerminalScreen(live(), Sent()) }
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) { TerminalScreen(live(), Sent()) }
         }
         onNodeWithTag(TerminalTags.COPY, useUnmergedTree = true).assertExists()
         // The old bar's words are not on the bar any more.
         onAllNodesWithText("Terminal size").assertCountEquals0()
         onNodeWithContentDescription("Actions for Shell").performClick()
-        for (label in listOf("New terminal", "All terminals", "Paste into Shell", "Reconnect", "Rename Shell", "Terminal size", "Terminal details", "Stop Shell"))
+        for (label in listOf(
+            "New terminal",
+            "All terminals",
+            "Paste into Shell",
+            "Reconnect",
+            "Rename Shell",
+            "Terminal size",
+            "Terminal details",
+            "Stop Shell",
+        ))
             onNodeWithText(label).assertExists()
     }
 
@@ -97,10 +132,21 @@ class ServerTerminalWalkTest {
     fun `B-LINUX-224 the key bar sends arrows, Esc, Tab and a latched Ctrl to the shell`() = runComposeUiTest {
         val actions = Sent()
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) { TerminalScreen(live(), actions) }
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) { TerminalScreen(live(), actions) }
         }
         onNodeWithTag(TerminalTags.KEYS, useUnmergedTree = true).assertExists()
-        for (key in listOf("Up arrow key", "Escape key", "Tab key", "Control", "Left arrow key", "Interrupt, Control C"))
+        for (key in listOf(
+            "Up arrow key",
+            "Escape key",
+            "Tab key",
+            "Control",
+            "Left arrow key",
+            "Interrupt, Control C",
+        ))
             onNodeWithContentDescription(key).performClick()
         assertEquals(listOf("\u001b[A", "\u001b", "\t", "\u001b[1;5D", "\u0003"), actions.texts)
     }

@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.setupscripts.HostScripts
 import io.github.eslamasabry.oc.feature.team.presentation.TeamIntroActions
 import io.github.eslamasabry.oc.feature.team.presentation.TeamIntroPrimary
 import io.github.eslamasabry.oc.feature.team.presentation.TeamIntroUi
+import io.github.eslamasabry.oc.feature.team.presentation.TeamServer
 import io.github.eslamasabry.oc.feature.team.presentation.TeamServerKind
 import io.github.eslamasabry.oc.feature.team.presentation.primary
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -35,13 +36,54 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
-import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitCodeCopyCommand
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.phoneTeamFailEngineBody
+import io.github.eslamasabry.oc.ui.words.res.phoneTeamFailEngineTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverBatteryTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverComputerBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverComputerTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverEntryTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverHowHeading
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverInAppBatteryBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverIntroBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverNeedsPhone
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverNeedsServer
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverProjectBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverProjectTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverSpeedBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverSpeedTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepCheckBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepCheckTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepMergeBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepMergeTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepPlanBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepPlanTitle
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepWorkBody
+import io.github.eslamasabry.oc.ui.words.res.teamDiscoverStepWorkTitle
+import io.github.eslamasabry.oc.ui.words.res.teamIntroCostMemory
+import io.github.eslamasabry.oc.ui.words.res.teamIntroCostTime
+import io.github.eslamasabry.oc.ui.words.res.teamIntroCostTitle
+import io.github.eslamasabry.oc.ui.words.res.teamIntroInstalledBody
+import io.github.eslamasabry.oc.ui.words.res.teamIntroInstalledTitle
+import io.github.eslamasabry.oc.ui.words.res.teamIntroSetUpOn
+import io.github.eslamasabry.oc.ui.words.res.teamIntroSetUpPhone
+import io.github.eslamasabry.oc.ui.words.res.teamIntroTurnOnPhone
+import io.github.eslamasabry.oc.ui.words.res.teamStartAgain
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideIntro
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep1
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep2
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep3
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep4
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * The team page while the team is off (Flutter team_intro_screen.dart, merged into the team page): what the team does
- * in four plain steps, what it needs on this kind of server, the cost before the set-up (KIT-37), and the one primary in
- * [TeamIntroBottom]. The moment the team is on, the same page shows the team.
+ * in four plain steps, what it needs on this kind of server, the cost before the set-up (KIT-37), and the one
+ * primary in [TeamIntroBottom]. The moment the team is on, the same page shows the team.
  */
 @Composable
 internal fun TeamIntro(intro: TeamIntroUi, actions: TeamIntroActions) {
@@ -60,61 +102,29 @@ internal fun TeamIntro(intro: TeamIntroUi, actions: TeamIntroActions) {
         }
         item(key = "how") {
             KitRowGroup(label = stringResource(Res.string.teamDiscoverHowHeading), leadingTiles = true) {
-                Fact(KitIcons.checklist, stringResource(Res.string.teamDiscoverStepPlanTitle), stringResource(Res.string.teamDiscoverStepPlanBody))
-                Fact(KitIcons.agent, stringResource(Res.string.teamDiscoverStepWorkTitle), stringResource(Res.string.teamDiscoverStepWorkBody))
-                Fact(KitIcons.review, stringResource(Res.string.teamDiscoverStepCheckTitle), stringResource(Res.string.teamDiscoverStepCheckBody))
-                Fact(KitIcons.branch, stringResource(Res.string.teamDiscoverStepMergeTitle), stringResource(Res.string.teamDiscoverStepMergeBody))
+                Fact(
+                    KitIcons.checklist,
+                    stringResource(Res.string.teamDiscoverStepPlanTitle),
+                    stringResource(Res.string.teamDiscoverStepPlanBody),
+                )
+                Fact(
+                    KitIcons.agent,
+                    stringResource(Res.string.teamDiscoverStepWorkTitle),
+                    stringResource(Res.string.teamDiscoverStepWorkBody),
+                )
+                Fact(
+                    KitIcons.review,
+                    stringResource(Res.string.teamDiscoverStepCheckTitle),
+                    stringResource(Res.string.teamDiscoverStepCheckBody),
+                )
+                Fact(
+                    KitIcons.branch,
+                    stringResource(Res.string.teamDiscoverStepMergeTitle),
+                    stringResource(Res.string.teamDiscoverStepMergeBody),
+                )
             }
         }
-        if (server != null)
-            item(key = "needs") {
-                val label =
-                    if (server.kind == TeamServerKind.Computer) stringResource(Res.string.teamDiscoverNeedsServer, server.name)
-                    else stringResource(Res.string.teamDiscoverNeedsPhone)
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                    KitRowGroup(Modifier.testTag("team-intro-needs"), label = label, leadingTiles = true) {
-                        when (server.kind) {
-                            TeamServerKind.ThisPhone -> {
-                                // The engine is bundled with the app: nothing to download, said once.
-                                if (intro.canTurnOn)
-                                    Fact(
-                                        KitIcons.checkCircle,
-                                        stringResource(Res.string.teamIntroInstalledTitle),
-                                        stringResource(Res.string.teamIntroInstalledBody),
-                                    )
-                                Fact(
-                                    KitIcons.batteryWarning,
-                                    stringResource(Res.string.teamDiscoverBatteryTitle),
-                                    stringResource(Res.string.teamDiscoverInAppBatteryBody),
-                                )
-                                Fact(
-                                    KitIcons.projects,
-                                    stringResource(Res.string.teamDiscoverProjectTitle),
-                                    stringResource(Res.string.teamDiscoverProjectBody),
-                                )
-                            }
-                            TeamServerKind.Computer -> {
-                                Fact(
-                                    KitIcons.computer,
-                                    stringResource(Res.string.teamDiscoverComputerTitle, server.name),
-                                    stringResource(Res.string.teamDiscoverComputerBody),
-                                )
-                                Fact(
-                                    KitIcons.speed,
-                                    stringResource(Res.string.teamDiscoverSpeedTitle),
-                                    stringResource(Res.string.teamDiscoverSpeedBody),
-                                )
-                            }
-                        }
-                    }
-                    if (server.kind == TeamServerKind.ThisPhone)
-                        KitCostNotice(
-                            listOf(stringResource(Res.string.teamIntroCostTime), stringResource(Res.string.teamIntroCostMemory)),
-                            inset.testTag("team-intro-cost"),
-                            title = stringResource(Res.string.teamIntroCostTitle),
-                        )
-                }
-            }
+        if (server != null) item(key = "needs") { Needs(server, intro.canTurnOn, inset) }
         intro.failure?.let { failure ->
             item(key = "failed") {
                 KitErrorNotice(
@@ -131,6 +141,63 @@ internal fun TeamIntro(intro: TeamIntroUi, actions: TeamIntroActions) {
     HostGuide(intro.guide, actions::closeGuide)
 }
 
+/** What the team needs on this kind of server, then its cost before the primary (KIT-37). */
+@Composable
+private fun Needs(server: TeamServer, installed: Boolean, inset: Modifier) {
+    val label =
+        if (server.kind == TeamServerKind.Computer) stringResource(
+            Res.string.teamDiscoverNeedsServer,
+            server.name,
+        )
+        else stringResource(Res.string.teamDiscoverNeedsPhone)
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        KitRowGroup(Modifier.testTag("team-intro-needs"), label = label, leadingTiles = true) {
+            when (server.kind) {
+                TeamServerKind.ThisPhone -> {
+                    // The engine is bundled with the app: nothing to download, said once.
+                    if (installed)
+                        Fact(
+                            KitIcons.checkCircle,
+                            stringResource(Res.string.teamIntroInstalledTitle),
+                            stringResource(Res.string.teamIntroInstalledBody),
+                        )
+                    Fact(
+                        KitIcons.batteryWarning,
+                        stringResource(Res.string.teamDiscoverBatteryTitle),
+                        stringResource(Res.string.teamDiscoverInAppBatteryBody),
+                    )
+                    Fact(
+                        KitIcons.projects,
+                        stringResource(Res.string.teamDiscoverProjectTitle),
+                        stringResource(Res.string.teamDiscoverProjectBody),
+                    )
+                }
+                TeamServerKind.Computer -> {
+                    Fact(
+                        KitIcons.computer,
+                        stringResource(Res.string.teamDiscoverComputerTitle, server.name),
+                        stringResource(Res.string.teamDiscoverComputerBody),
+                    )
+                    Fact(
+                        KitIcons.speed,
+                        stringResource(Res.string.teamDiscoverSpeedTitle),
+                        stringResource(Res.string.teamDiscoverSpeedBody),
+                    )
+                }
+            }
+        }
+        if (server.kind == TeamServerKind.ThisPhone)
+            KitCostNotice(
+                listOf(
+                    stringResource(Res.string.teamIntroCostTime),
+                    stringResource(Res.string.teamIntroCostMemory),
+                ),
+                inset.testTag("team-intro-cost"),
+                title = stringResource(Res.string.teamIntroCostTitle),
+            )
+    }
+}
+
 /** The off page's one primary, named after what it sets up (Flutter `_TeamIntroScreenState.build`). */
 @Composable
 internal fun TeamIntroBottom(intro: TeamIntroUi, actions: TeamIntroActions) {
@@ -139,17 +206,24 @@ internal fun TeamIntroBottom(intro: TeamIntroUi, actions: TeamIntroActions) {
             null -> null
             TeamIntroPrimary.TurnOnPhone ->
                 KitAction(
-                    stringResource(if (intro.failure != null) Res.string.teamStartAgain else Res.string.teamIntroTurnOnPhone),
+                    stringResource(
+                        if (intro.failure != null) Res.string.teamStartAgain else Res.string.teamIntroTurnOnPhone
+                    ),
                     actions::turnOn,
                     icon = KitIcons.play,
                     working = intro.turningOn,
                 )
-            TeamIntroPrimary.SetUpPhone -> KitAction(stringResource(Res.string.teamIntroSetUpPhone), actions::setUpOnPhone)
+            TeamIntroPrimary.SetUpPhone -> KitAction(
+                stringResource(Res.string.teamIntroSetUpPhone),
+                actions::setUpOnPhone,
+            )
             TeamIntroPrimary.SetUpComputer ->
                 KitAction(stringResource(Res.string.teamIntroSetUpOn, intro.server?.name.orEmpty()), actions::openGuide)
         }
     KitActionBlock(
-        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp).testTag("team-intro-actions"),
+        Modifier
+            .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp)
+            .testTag("team-intro-actions"),
         primary = primary,
     )
 }
@@ -175,7 +249,11 @@ private fun HostGuide(visible: Boolean, onDismiss: () -> Unit) {
         )
     KitSheet(visible = visible, onDismissRequest = onDismiss, title = stringResource(Res.string.teamUiHostGuideTitle)) {
         Column(Modifier.testTag("team-host-guide"), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
-            KitText(stringResource(Res.string.teamUiHostGuideIntro), role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText(
+                stringResource(Res.string.teamUiHostGuideIntro),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
             steps.forEachIndexed { i, (step, command) ->
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                     KitText("${i + 1}. $step")

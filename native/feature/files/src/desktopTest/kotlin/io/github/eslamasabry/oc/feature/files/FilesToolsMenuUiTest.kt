@@ -19,12 +19,12 @@ import kotlin.test.assertEquals
 class FilesToolsMenuUiTest {
     private class Recorder : FolderActions {
         val calls = mutableListOf<String>()
-        override fun back() {}
-        override fun retry() {}
-        override fun open(node: FileNode) {}
-        override fun toggleSourceFirst() {}
-        override fun toggleHidden() {}
-        override fun search(query: String) {}
+        override fun back() = Unit
+        override fun retry() = Unit
+        override fun open(node: FileNode) = Unit
+        override fun toggleSourceFirst() = Unit
+        override fun toggleHidden() = Unit
+        override fun search(query: String) = Unit
         override fun projectHealth() { calls += "health" }
         override fun worktrees() { calls += "worktrees" }
         override fun devServices() { calls += "services" }
@@ -32,7 +32,8 @@ class FilesToolsMenuUiTest {
     }
 
     @Test
-    fun `WALK-1108-F1 the menu lists Project health, Worktrees, Development services and Switch project`() = runComposeUiTest {
+    fun `WALK-1108-F1 the menu lists Project health, Worktrees, Development services and Switch project`() =
+        runComposeUiTest {
         val actions = Recorder()
         var closed = 0
         var items: List<KitMenuItem> = emptyList()
@@ -41,14 +42,21 @@ class FilesToolsMenuUiTest {
             KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
                 items =
                     folderToolItems(
-                        FolderUi(path = "", phase = FolderPhase.Ready, tools = FilesProjectTools(true, true, true, true)),
+                        FolderUi(
+                            path = "",
+                            phase = FolderPhase.Ready,
+                            tools = FilesProjectTools(true, true, true, true),
+                        ),
                         actions,
                     ) { closed++ }
                 none = folderToolItems(FolderUi(path = "", phase = FolderPhase.Ready), actions) {}
             }
         }
         waitForIdle()
-        assertEquals(listOf("Project health", "Worktrees", "Development services", "Switch project"), items.map { it.label })
+        assertEquals(
+            listOf("Project health", "Worktrees", "Development services", "Switch project"),
+            items.map { it.label },
+        )
         assertEquals(emptyList(), none)
         items.forEach { it.onSelect() }
         assertEquals(listOf("health", "worktrees", "services", "switch"), actions.calls)

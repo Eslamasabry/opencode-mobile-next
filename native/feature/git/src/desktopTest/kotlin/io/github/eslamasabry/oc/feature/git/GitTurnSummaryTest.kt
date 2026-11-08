@@ -42,7 +42,10 @@ class GitTurnSummaryTest {
     fun `WALK-1108-G1 a reply with no words is skipped, and none at all gives nothing`() {
         assertEquals(
             "Fixed it.",
-            turnSummary(listOf(message(Role.Assistant, PartType.Text to "Fixed it."), message(Role.Assistant, PartType.Tool to ""))),
+            turnSummary(listOf(
+                message(Role.Assistant, PartType.Text to "Fixed it."),
+                message(Role.Assistant, PartType.Tool to ""),
+            )),
         )
         assertNull(turnSummary(listOf(message(Role.User, PartType.Text to "hello"))))
     }

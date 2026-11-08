@@ -427,7 +427,8 @@ class OpenProjectViewModelTest {
     }
 
     @Test
-    fun `WALK-1108-P1 with two servers each recent project names its server, and a gone server opens nothing`() = runTest {
+    fun `WALK-1108-P1 with two servers each recent project names its server, and a gone server opens nothing`() =
+        runTest {
         val opened = SessionOpenedFolders()
         opened.remember(pcId, "/srv/app")
         opened.remember(phoneId, "/root/projects/notes")

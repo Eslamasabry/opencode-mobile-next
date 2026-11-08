@@ -746,10 +746,18 @@ internal fun folderToolItems(state: FolderUi, actions: FolderActions, close: () 
                 )
             )
         val tools = state.tools
-        if (tools.health) item(stringResource(Res.string.e7LibraryProjectHealth), KitIcons.diagnostics, actions::projectHealth)
+        if (tools.health) item(
+            stringResource(Res.string.e7LibraryProjectHealth),
+            KitIcons.diagnostics,
+            actions::projectHealth,
+        )
         if (tools.worktrees) item(stringResource(Res.string.e7LibraryWorktrees), KitIcons.branch, actions::worktrees)
         if (tools.services) item(stringResource(Res.string.servicesTitle), KitIcons.processor, actions::devServices)
-        if (tools.switchProject) item(stringResource(Res.string.e7LibrarySwitchProject), KitIcons.swap, actions::switchProject)
+        if (tools.switchProject) item(
+            stringResource(Res.string.e7LibrarySwitchProject),
+            KitIcons.swap,
+            actions::switchProject,
+        )
     }
 
 /**

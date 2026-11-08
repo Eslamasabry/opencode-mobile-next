@@ -104,11 +104,18 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
     val menu = buildList {
         if (canCreate) add(KitMenuItem(newLabel, close(actions::create), icon = KitIcons.add))
         if (terminal != null) {
-            add(KitMenuItem(stringResource(Res.string.remoteTerminalList), close(actions::showList), icon = KitIcons.terminal))
+            add(KitMenuItem(
+                stringResource(Res.string.remoteTerminalList),
+                close(actions::showList),
+                icon = KitIcons.terminal,
+            ))
             add(
                 KitMenuItem(
                     stringResource(Res.string.terminalScreenPaste, title),
-                    close { clipboard.getText()?.text?.takeIf { it.isNotEmpty() }?.let { actions.send(terminal.id, it) } },
+                    close {
+                        val pasted = clipboard.getText()?.text.orEmpty()
+                        if (pasted.isNotEmpty()) actions.send(terminal.id, pasted)
+                    },
                     icon = KitIcons.paste,
                     enabled =
                         if (canWrite) KitEnabled.Enabled
@@ -125,9 +132,17 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                         else KitEnabled.Enabled,
                 )
             )
-            add(KitMenuItem(stringResource(Res.string.terminalScreenRename, title), close { rename = true }, icon = KitIcons.edit))
+            add(KitMenuItem(
+                stringResource(Res.string.terminalScreenRename, title),
+                close { rename = true },
+                icon = KitIcons.edit,
+            ))
             add(KitMenuItem(stringResource(Res.string.remoteTerminalSize), close { resize = true }))
-            add(KitMenuItem(stringResource(Res.string.terminalScreenDetails), close { details = actions.details() }, icon = KitIcons.info))
+            add(KitMenuItem(
+                stringResource(Res.string.terminalScreenDetails),
+                close { details = actions.details() },
+                icon = KitIcons.info,
+            ))
             add(
                 KitMenuItem(
                     stringResource(
@@ -152,7 +167,12 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                 onExit = actions::back,
                 actions =
                     if (terminal == null) emptyList()
-                    else listOf(KitLineAction(copy.label, { copy.onClick?.invoke() }, icon = copy.icon, testTag = TerminalTags.COPY)),
+                    else listOf(KitLineAction(
+                        copy.label,
+                        { copy.onClick?.invoke() },
+                        icon = copy.icon,
+                        testTag = TerminalTags.COPY,
+                    )),
                 more = { _ ->
                     if (menu.isNotEmpty()) {
                         val moreLabel =
@@ -260,7 +280,9 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                     enabled = canWrite,
                     disabledReason = inputOff,
                     interruptKeys = true,
-                    onKey = { key, ctrl, alt -> terminalKeyText(key, ctrl, alt)?.let { actions.send(terminal.id, it) } },
+                    onKey = { key, ctrl, alt ->
+                        terminalKeyText(key, ctrl, alt)?.let { actions.send(terminal.id, it) }
+                    },
                     modifier = Modifier.testTag(TerminalTags.KEYS),
                 )
             }

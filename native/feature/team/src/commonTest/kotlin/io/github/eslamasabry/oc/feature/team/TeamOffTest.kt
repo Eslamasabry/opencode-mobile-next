@@ -133,7 +133,13 @@ class TeamOffTest {
     @Test
     fun `B-AGENT-294 a computer gets the host guide, and an unknown server waits`() =
         runTest(dispatcher) {
-            val vm = TeamHomeViewModel(TeamRoute.Home(pid), TeamEngine(OffHost(can = false)), FakeNav(), FIXED_CLOCK, computer)
+            val vm = TeamHomeViewModel(
+                TeamRoute.Home(pid),
+                TeamEngine(OffHost(can = false)),
+                FakeNav(),
+                FIXED_CLOCK,
+                computer,
+            )
             watch(vm.state)
             runCurrent()
             assertEquals(TeamIntroPrimary.SetUpComputer, vm.state.value.intro.primary())
@@ -143,7 +149,12 @@ class TeamOffTest {
             vm.closeGuide()
             runCurrent()
             assertFalse(vm.state.value.intro.guide)
-            val unknown = TeamHomeViewModel(TeamRoute.Home(pid), TeamEngine(OffHost(can = true)), FakeNav(), FIXED_CLOCK)
+            val unknown = TeamHomeViewModel(
+                TeamRoute.Home(pid),
+                TeamEngine(OffHost(can = true)),
+                FakeNav(),
+                FIXED_CLOCK,
+            )
             watch(unknown.state)
             runCurrent()
             assertNull(unknown.state.value.intro.primary())

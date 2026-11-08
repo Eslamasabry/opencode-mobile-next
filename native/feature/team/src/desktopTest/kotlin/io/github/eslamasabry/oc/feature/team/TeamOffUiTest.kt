@@ -29,11 +29,11 @@ import kotlin.test.assertEquals
 class TeamOffUiTest {
     private class Recorder : TeamHomeActions {
         val calls = mutableListOf<String>()
-        override fun back() {}
-        override fun openProject(id: String) {}
-        override fun openRequest(projectId: String, requestId: String) {}
-        override fun resumeProject(projectId: String) {}
-        override fun retry() {}
+        override fun back() = Unit
+        override fun openProject(id: String) = Unit
+        override fun openRequest(projectId: String, requestId: String) = Unit
+        override fun resumeProject(projectId: String) = Unit
+        override fun retry() = Unit
         override fun turnOn() { calls += "turnOn" }
         override fun setUpOnPhone() { calls += "setUpOnPhone" }
         override fun openGuide() { calls += "openGuide" }
@@ -41,7 +41,12 @@ class TeamOffUiTest {
 
     @Composable
     private fun Themed(content: @Composable () -> Unit) {
-        KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "en", stillFrame = true) {
+        KitTheme(
+            platform = DesktopKitPlatform(),
+            appearance = KitAppearance(motion = MotionLevel.Off),
+            localeTag = "en",
+            stillFrame = true,
+        ) {
             KitChatEnvironment(Redactor()).Provide { content() }
         }
     }
@@ -53,7 +58,10 @@ class TeamOffUiTest {
         val actions = Recorder()
         setContent {
             Themed {
-                TeamHomeScreen(off(TeamIntroUi(TeamServer(TeamServerKind.ThisPhone, "This phone"), canTurnOn = true)), actions)
+                TeamHomeScreen(
+                    off(TeamIntroUi(TeamServer(TeamServerKind.ThisPhone, "This phone"), canTurnOn = true)),
+                    actions,
+                )
             }
         }
         onNodeWithText("Off").assertExists()
@@ -83,7 +91,10 @@ class TeamOffUiTest {
     fun `B-AGENT-294 the host guide shows the four steps with their commands`() = runComposeUiTest {
         setContent {
             Themed {
-                TeamHomeScreen(off(TeamIntroUi(TeamServer(TeamServerKind.Computer, "studio-pc"), guide = true)), Recorder())
+                TeamHomeScreen(
+                    off(TeamIntroUi(TeamServer(TeamServerKind.Computer, "studio-pc"), guide = true)),
+                    Recorder(),
+                )
             }
         }
         onNodeWithText("Run an AI team on your computer").assertExists()
