@@ -1179,7 +1179,7 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
         }
         is ChatConfirm.SendAgainAfterSteps ->
             KitConfirmSpec(
-                title = stringResource(Res.string.b169AskTitle, confirm.steps, confirm.modelLabel),
+                title = pluralStringResource(Res.plurals.b169AskTitle, confirm.steps, confirm.steps, confirm.modelLabel),
                 confirmLabel = stringResource(Res.string.b169AskSend),
             )
         is ChatConfirm.PhoneFileAccess ->
