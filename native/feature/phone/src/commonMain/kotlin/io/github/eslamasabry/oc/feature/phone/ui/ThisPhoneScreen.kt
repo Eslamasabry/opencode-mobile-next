@@ -184,7 +184,7 @@ public fun ThisPhoneScreen(
                     message =
                         stringResource(
                             when {
-                                exit.restored -> Res.string.linuxExitRestored
+                                state.exitSaysRunning -> Res.string.linuxExitRestored
                                 !exit.recoveryAllowed -> Res.string.linuxExitPolicyOff
                                 else -> Res.string.linuxExitCheckStatus
                             }
