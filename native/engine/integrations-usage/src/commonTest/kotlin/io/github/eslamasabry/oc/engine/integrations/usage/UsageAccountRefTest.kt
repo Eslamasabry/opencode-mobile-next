@@ -9,7 +9,7 @@ import kotlin.test.assertNull
 // Flutter PR #136: the account a plan belongs to travels from the reader (the provider list or the Antigravity CLI)
 // through the phone's usage source into the subscription, and an older reading never drops it.
 
-private val PHONE = UsageConnection(UsageConnection.PHONE_ID, "This phone", UsageConnectionKind.PhoneAgents)
+private val AGY_PHONE = UsageConnection(UsageConnection.PHONE_ID, "This phone", UsageConnectionKind.PhoneAgents)
 
 private class PhoneOnly(val reply: List<ProviderUsageReading>) : PaseoUsagePorts {
     override fun paseoProfiles(): List<PaseoUsageProfile> = emptyList()
@@ -78,12 +78,12 @@ class UsageAccountRefTest {
             val monitor = PaseoUsageMonitor(kv, LANE, PhoneOnly(listOf(agy)), widget = null, clock = { NOW })
             monitor.setEnabled(PaseoUsageMonitor.PHONE_ID, true)
             val source = PaseoUsageSource(monitor) { emptyList() }
-            val result = (source.read(UsageReadContext(listOf(PHONE), NOW, force = true)) as Outcome.Ok).value
+            val result = (source.read(UsageReadContext(listOf(AGY_PHONE), NOW, force = true)) as Outcome.Ok).value
             val reading = result.readings.single()
             assertEquals("altaf.alu@gmail.com", reading.accountRef)
             assertEquals("Google AI Pro", reading.plan)
 
-            val sub = mergeUsageSubscriptions(NOW, listOf(PHONE), result.readings).subscriptions.single()
+            val sub = mergeUsageSubscriptions(NOW, listOf(AGY_PHONE), result.readings).subscriptions.single()
             assertEquals("altaf.alu@gmail.com", sub.accountRef)
             assertEquals("antigravity|altaf.alu@gmail.com", sub.key)
         }
