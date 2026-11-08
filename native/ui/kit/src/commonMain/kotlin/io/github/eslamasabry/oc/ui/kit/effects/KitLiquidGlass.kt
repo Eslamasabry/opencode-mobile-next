@@ -275,7 +275,7 @@ private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, s
 internal const val RIM_LIGHT_DP: Float = 1.5f
 
 /** The rim light's strength over a dark theme (added light) and a light one (laid over). */
-internal const val RIM_ALPHA_DARK: Float = .55f
+internal const val RIM_ALPHA_DARK: Float = .45f
 internal const val RIM_ALPHA_LIGHT: Float = .60f
 
 /**
@@ -313,15 +313,20 @@ public const val LIQUID_BAR_RADIUS: Int = 26
 internal fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     return drawBehind {
+        // The content fades out over the block's inner quarter, so the parts that lie on the block itself (the chips
+        // above the message box, the bar's own words) sit on the page's ground, never on the words scrolling past.
         val stops =
-            if (top) arrayOf(0f to ground.copy(alpha = EDGE_FADE_ALPHA), 1f to ground.copy(alpha = 0f))
-            else arrayOf(0f to ground.copy(alpha = 0f), 1f to ground.copy(alpha = EDGE_FADE_ALPHA))
+            if (top) arrayOf(0f to ground.copy(alpha = EDGE_FADE_ALPHA), .55f to ground.copy(alpha = EDGE_FADE_ALPHA * .8f), 1f to ground.copy(alpha = 0f))
+            else arrayOf(0f to ground.copy(alpha = 0f), EDGE_FADE_REACH to ground.copy(alpha = EDGE_FADE_ALPHA * .92f), 1f to ground.copy(alpha = EDGE_FADE_ALPHA))
         drawRect(Brush.verticalGradient(*stops, startY = 0f, endY = size.height))
     }
 }
 
 /** How much of the ground the edge fade reaches at the screen's edge. */
-internal const val EDGE_FADE_ALPHA: Float = .82f
+internal const val EDGE_FADE_ALPHA: Float = .96f
+
+/** Where (a share of the bottom block's height, from its top) the content has faded under the block's ground. */
+internal const val EDGE_FADE_REACH: Float = .22f
 
 /**
  * A page's body run up under its bar by [barPx] (the bar floats over it): measured that much taller and placed that
