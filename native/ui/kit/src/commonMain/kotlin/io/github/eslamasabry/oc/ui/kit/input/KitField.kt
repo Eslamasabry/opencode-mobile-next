@@ -268,6 +268,9 @@ public fun KitField(
                 multilineLines,
                 framed,
                 composer,
+                // Flutter `InputDecoration.labelText`: a label standing in the empty box keeps the body face, even
+                // over a monospaced value (kit_confirm_sheet.dart:556-560); only a given placeholder follows the kind.
+                placeholderIsLabel = placeholder == null && !labelShown,
             )
         }
         val disabledNote = error == null && !enabled.isEnabled
@@ -335,6 +338,7 @@ private fun FieldBox(
     multilineLines: IntRange,
     framed: Boolean = true,
     composer: Boolean = false,
+    placeholderIsLabel: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -460,7 +464,7 @@ private fun FieldBox(
             if (state.text.isEmpty() && placeholder != null) {
                 KitText(
                     placeholder,
-                    role = if (technical) TypeRole.Mono else TypeRole.Body,
+                    role = if (technical && !placeholderIsLabel) TypeRole.Mono else TypeRole.Body,
                     tone = TextTone.Tertiary,
                     maxLines = if (composer) multilineLines.last.coerceAtLeast(1) else 1,
                 )
