@@ -452,6 +452,8 @@ public fun BasicComposer(
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var toolsOpen by remember(state.targetKey) { mutableStateOf(false) }
+    // S28 story 12: the "File from the project" sheet.
+    var projectFilesOpen by remember(state.targetKey) { mutableStateOf(false) }
     val trayItems =
         ComposerTrayRules.items(
             state.attachmentsSupported,
@@ -706,22 +708,33 @@ public fun BasicComposer(
                         modelsOpen = true
                     },
                     settings = chrome.promptSettings,
-                    // F: composer_tools.dart:150-157: "File from the project" points the agent at a file; native
-                    // starts the field's "@" file search, whose matches attach the file.
+                    // F: composer_tools.dart:150-157 and chat_mentions.dart `_openProjectFiles`: "File from the
+                    // project" opens the project's files; the picked one is written `@path ` and staged.
                     projectFile =
                         if (state.filesAvailable) {
                             {
-                                val text = field.text.toString()
-                                val at = if (text.isEmpty() || text.endsWith(' ') || text.endsWith('\n')) "@" else " @"
-                                field.edit { append(at) }
-                                editor.userEditSerial += 1
-                                val typed = field.text.toString()
-                                editor.lastReported = typed
-                                actions.draftChanged(typed)
-                                focus.requestFocus()
+                                focusManager.clearFocus()
+                                projectFilesOpen = true
                             }
                         } else null,
                 ),
+        )
+        ComposerProjectFileSheet(
+            visible = projectFilesOpen,
+            search = actions::searchProjectFiles,
+            onPick = { path ->
+                projectFilesOpen = false
+                val text = field.text.toString()
+                val lead = if (text.isEmpty() || text.endsWith(' ') || text.endsWith('\n')) "" else " "
+                field.edit { append("$lead@$path ") }
+                editor.userEditSerial += 1
+                val typed = field.text.toString()
+                editor.lastReported = typed
+                actions.draftChanged(typed)
+                actions.mentionFile(path)
+                focus.requestFocus()
+            },
+            onDismiss = { projectFilesOpen = false },
         )
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
