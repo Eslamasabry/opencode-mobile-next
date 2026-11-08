@@ -322,6 +322,7 @@ object LinuxWiring {
                         PhonePage.Terminal -> io.github.eslamasabry.oc.ui.routes.LocalTerminalRoute
                         PhonePage.ExportProjects -> PhoneRoute.ExportProjects
                         PhonePage.SharedFolders -> PhoneRoute.SharedFolders
+                        PhonePage.MoveToOpenCode2 -> io.github.eslamasabry.oc.ui.routes.OnboardingRoute.ManagedMove
                         // P12-BUILD-RUNTIME-C: the real setup journey (PhoneSetupWiring). BUILD-RUNTIME-B's
                         // SetupRoute.Phone (SetupWiring) stays registered; only one page can own these two entries.
                         PhonePage.SetupStart,

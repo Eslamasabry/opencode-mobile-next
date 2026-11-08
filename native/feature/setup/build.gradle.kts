@@ -7,6 +7,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:runtime")) // SetupProgress, SetupComponent, SetupProgressRules (public API)
+        implementation(project(":ui:kit-chat")) // KitCodeBlock + KitClipboardEffect for the computer update command
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests

@@ -13,4 +13,7 @@ public sealed interface SetupRoute : AppRoute {
 
     /** STATE: the setup assistant for one saved server. */
     @Serializable public data class Home(val profile: ProfileId) : SetupRoute
+
+    /** s23-oc1move: the guided update of a computer server that still runs OpenCode 1, with Check again. */
+    @Serializable public data class UpdateComputer(val profile: ProfileId) : SetupRoute
 }

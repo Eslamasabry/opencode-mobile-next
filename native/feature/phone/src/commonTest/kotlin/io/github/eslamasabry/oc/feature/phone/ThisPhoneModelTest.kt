@@ -195,6 +195,27 @@ class ThisPhoneModelTest {
         }
 
     @Test
+    fun `B-NAV-029 an OpenCode 1 phone server offers the move to OpenCode 2 and the act opens it`() =
+        runTest {
+            val rig = rig(PhoneServerFacts(status = installed, needsOpenCode2Move = true))
+            val answer = rig.model.state.value.answer
+            assertEquals(AnswerHeadline.NeedsOpenCode2, answer.headline)
+            assertEquals(AnswerLine.OpenCode2Offer, answer.line)
+            assertEquals(PhoneAct.SwitchToOpenCode2, answer.primary)
+            rig.model.act(PhoneAct.SwitchToOpenCode2)
+            assertEquals(listOf("open MoveToOpenCode2"), rig.nav.calls)
+        }
+
+    @Test
+    fun `B-NAV-029 without Linux the setup offer stays, and a moved server shows no offer`() =
+        runTest {
+            val notInstalled = rig(PhoneServerFacts(status = RuntimeStatus(installed = false), needsOpenCode2Move = true))
+            assertEquals(PhoneAct.SetUp, notInstalled.model.state.value.answer.primary)
+            val moved = rig(runningFacts)
+            assertEquals(AnswerHeadline.Running, moved.model.state.value.answer.headline)
+        }
+
+    @Test
     fun `plan 11 6-1 the restart countdown moves each second while the page is shown`() =
         runTest {
             val at = Instant.fromEpochMilliseconds(testScheduler.currentTime) + 42.seconds

@@ -819,6 +819,15 @@ internal constructor(
                 status = status,
                 stoppedByPerson = stopped,
                 replyRunning = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true,
+                // This phone offers the OpenCode 2 move while its saved server still needs it.
+                needsOpenCode2Move =
+                    profiles.profiles.value.any {
+                        val row = it.profile
+                        !row.usesAgentSocket &&
+                            io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
+                                .isBuiltin(row.baseUrl) &&
+                            (row.requiresOpenCode2Migration || row.openCode2HistoryPending)
+                    },
             )
         }
     }

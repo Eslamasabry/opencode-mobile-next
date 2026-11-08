@@ -9,7 +9,6 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
@@ -17,17 +16,24 @@ import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveReason
 import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveResult
 import io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveSource
+import io.github.eslamasabry.oc.engine.runtime.history.HistoryShellPort
+import io.github.eslamasabry.oc.engine.runtime.history.LinuxRunResult
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneImportStatus
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneMovePorts
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneMoveProfile
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneMoveResult
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneMoveStop
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.PhoneOpenCode2Move
 import io.github.eslamasabry.oc.protocol.oc2.live.HistoryMigrationPhase
 import io.github.eslamasabry.oc.protocol.oc2.live.readHistoryMigrationStatus
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The first-launch page uses the same admitted migration and setup finisher as Linux's visible
- * Update action.
+ * The move page (first launch, and This phone's "Switch" offer) runs :feature:phonesetup's
+ * PhoneOpenCode2Move: the read-only history check first, then the same setup job as Linux's visible
+ * Update action, then OpenCode 2's confirmation. This class only binds its ports.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<ManagedMoveSource>())
@@ -36,11 +42,15 @@ class AndroidManagedMove(
     private val stores: PreviewStores,
     private val setup: NativePhoneSetup,
     private val registry: ConnectionRegistry,
+    private val runtime: BuiltinRuntime,
     dispatchers: AppDispatchers,
 ) : ManagedMoveSource {
     private val serial = dispatchers.serial("managed-move")
     private val lane = Mutex()
-    private var target: ProfileId? = null
+
+    /** The connection the import status was first read on; a confirmation from another one counts for nothing. */
+    private var confirming: Pair<ProfileId, Any>? = null
+    private var confirmingRow: StoredProfile? = null
 
     private fun managed(profile: StoredProfile): Boolean =
         !profile.usesAgentSocket && ManagedLocalServer.isBuiltin(profile.baseUrl)
@@ -48,131 +58,109 @@ class AndroidManagedMove(
     private fun pending(profile: StoredProfile): Boolean =
         managed(profile) && (profile.requiresOpenCode2Migration || profile.openCode2HistoryPending)
 
-    override suspend fun needed(): Boolean =
-        withContext(serial) {
-            lane.withLock {
-                if (stores.warm() is Outcome.Failed) return@withLock false
-                val active = stores.profiles.activeId.value ?: return@withLock false
-                val profile = stores.profiles.profile(active)?.profile ?: return@withLock false
-                pending(profile).also { if (it) target = active }
+    private fun StoredProfile.forMove(): PhoneMoveProfile =
+        PhoneMoveProfile(id.raw, requiresOpenCode2Migration, openCode2HistoryPending)
+
+    private val ports =
+        object : PhoneMovePorts {
+            override suspend fun pending(activeOnly: Boolean): Outcome<PhoneMoveProfile?> {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> return warm
+                    is Outcome.Ok -> Unit
+                }
+                val active = stores.profiles.activeId.value?.let { stores.profiles.profile(it)?.profile }
+                if (active != null && pending(active)) return Outcome.Ok(active.forMove())
+                if (activeOnly) return Outcome.Ok(null)
+                return Outcome.Ok(
+                    stores.profiles.profiles.value.map { it.profile }.firstOrNull(::pending)?.forMove()
+                )
+            }
+
+            override suspend fun reread(id: String): Outcome<PhoneMoveProfile?> =
+                Outcome.Ok(
+                    stores.profiles.profile(ProfileId(id))?.profile?.takeIf(::managed)?.forMove()
+                )
+
+            override suspend fun installOpenCode2(): Outcome<Unit> = setup.update()
+
+            override suspend fun importStatus(id: String): Outcome<PhoneImportStatus> {
+                val key = ProfileId(id)
+                val graph = registry.live.value[key] ?: return Outcome.Ok(PhoneImportStatus.NotConnected)
+                val row = stores.profiles.profile(key)?.profile
+                val first = confirming
+                if (first == null || first.first != key) {
+                    confirming = key to graph
+                    confirmingRow = row
+                } else if (first.second !== graph || confirmingRow != row) {
+                    return Outcome.Ok(PhoneImportStatus.Failed)
+                }
+                return when (val read = graph.session.server.readHistoryMigrationStatus()) {
+                    is Outcome.Failed -> read
+                    is Outcome.Ok ->
+                        Outcome.Ok(
+                            when (read.value?.phase) {
+                                HistoryMigrationPhase.Completed -> PhoneImportStatus.Done
+                                HistoryMigrationPhase.Required,
+                                HistoryMigrationPhase.Running -> PhoneImportStatus.Waiting
+                                HistoryMigrationPhase.Error,
+                                null -> PhoneImportStatus.Failed
+                            }
+                        )
+                }
+            }
+
+            override suspend fun confirmed(id: String): Outcome<Unit> {
+                val key = ProfileId(id)
+                val first = confirming
+                val row = confirmingRow
+                // Only a reply from the still-current transport clears the durable pending marker.
+                if (
+                    first == null ||
+                        first.first != key ||
+                        registry.live.value[key] !== first.second ||
+                        row == null ||
+                        stores.profiles.profile(key)?.profile != row
+                )
+                    return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                return when (val saved = stores.profiles.upsert(row.copy(openCode2HistoryPending = false))) {
+                    is Outcome.Failed -> saved
+                    is Outcome.Ok ->
+                        if (saved.value.profile.openCode2HistoryPending)
+                            Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                        else Outcome.Ok(Unit)
+                }
             }
         }
+
+    private val shell = HistoryShellPort { script, timeout ->
+        when (val ran = runtime.host.run(script, timeout.inWholeSeconds)) {
+            is Outcome.Failed -> ran
+            is Outcome.Ok -> Outcome.Ok(LinuxRunResult(ran.value.exitCode, ran.value.output))
+        }
+    }
+
+    private val phoneMove = PhoneOpenCode2Move(ports, shell)
+
+    override suspend fun needed(): Boolean = withContext(serial) { lane.withLock { phoneMove.needed() } }
 
     override suspend fun move(): ManagedMoveResult =
         withContext(serial) {
             lane.withLock {
-                when (val warm = stores.warm()) {
-                    is Outcome.Failed ->
-                        return@withLock failed(ManagedMoveReason.MoveStopped, warm.failure)
-                    is Outcome.Ok -> Unit
-                }
-                val id =
-                    target
-                        ?: stores.profiles.activeId.value
-                        ?: return@withLock failed(ManagedMoveReason.PhoneNotReady)
-                target = id
-                val original =
-                    stores.profiles.profile(id)?.profile
-                        ?: return@withLock failed(
-                            ManagedMoveReason.MoveStopped,
-                            Failure.Refused(RefusalReason.ProfileDeleted),
+                confirming = null
+                confirmingRow = null
+                when (val result = phoneMove.move()) {
+                    PhoneMoveResult.Done -> ManagedMoveResult.Done
+                    is PhoneMoveResult.Stopped ->
+                        ManagedMoveResult.Failed(
+                            when (result.reason) {
+                                PhoneMoveStop.PhoneNotReady -> ManagedMoveReason.PhoneNotReady
+                                PhoneMoveStop.SeparateHistory -> ManagedMoveReason.SeparateHistory
+                                PhoneMoveStop.MoveStopped -> ManagedMoveReason.MoveStopped
+                                PhoneMoveStop.NotConfirmed -> ManagedMoveReason.NotConfirmed
+                            },
+                            result.failure,
                         )
-                if (!managed(original))
-                    return@withLock failed(
-                        ManagedMoveReason.MoveStopped,
-                        Failure.Refused(RefusalReason.StaleScope),
-                    )
-                if (!pending(original)) return@withLock ManagedMoveResult.Done
-                if (original.requiresOpenCode2Migration) {
-                    // NativePhoneSetup calls NativeRuntimeSwitch admission before any
-                    // install/start;
-                    // its finisher preserves the legacy profile id and starts through the history
-                    // copy guard.
-                    when (val updated = setup.update()) {
-                        is Outcome.Failed -> {
-                            val reason =
-                                when (val failure = updated.failure) {
-                                    is Failure.Refused ->
-                                        if (failure.reason == RefusalReason.MigrationPending)
-                                            ManagedMoveReason.SeparateHistory
-                                        else ManagedMoveReason.MoveStopped
-                                    is Failure.Network,
-                                    is Failure.TimedOut -> ManagedMoveReason.PhoneNotReady
-                                    is Failure.Runtime ->
-                                        if (
-                                            failure.problem == RuntimeProblem.SlotBusy ||
-                                                failure.problem ==
-                                                    RuntimeProblem.RecoveryUnavailable
-                                        )
-                                            ManagedMoveReason.PhoneNotReady
-                                        else ManagedMoveReason.MoveStopped
-                                    else -> ManagedMoveReason.MoveStopped
-                                }
-                            return@withLock failed(reason, updated.failure)
-                        }
-                        is Outcome.Ok -> Unit
-                    }
-                }
-                val current =
-                    stores.profiles.profile(id)?.profile
-                        ?: return@withLock failed(
-                            ManagedMoveReason.MoveStopped,
-                            Failure.Refused(RefusalReason.ProfileDeleted),
-                        )
-                if (
-                    current.baseUrl != original.baseUrl ||
-                        current.usesAgentSocket ||
-                        current.requiresOpenCode2Migration
-                )
-                    return@withLock failed(ManagedMoveReason.NotConfirmed)
-                if (!current.openCode2HistoryPending) return@withLock ManagedMoveResult.Done
-                val graph =
-                    registry.live.value[id]
-                        ?: return@withLock failed(ManagedMoveReason.PhoneNotReady)
-                val gateway = graph.session.server
-                val confirmed =
-                    withTimeoutOrNull(180_000L) {
-                        while (true) {
-                            if (
-                                registry.live.value[id] !== graph ||
-                                    stores.profiles.profile(id)?.profile != current
-                            )
-                                return@withTimeoutOrNull false
-                            val result =
-                                withTimeoutOrNull(15_000L) { gateway.readHistoryMigrationStatus() }
-                            val status =
-                                (result as? Outcome.Ok)?.value ?: return@withTimeoutOrNull false
-                            when (status.phase) {
-                                HistoryMigrationPhase.Completed -> return@withTimeoutOrNull true
-                                HistoryMigrationPhase.Error -> return@withTimeoutOrNull false
-                                HistoryMigrationPhase.Required,
-                                HistoryMigrationPhase.Running -> delay(1_000L)
-                            }
-                        }
-                        @Suppress("UNREACHABLE_CODE") false
-                    } == true
-                if (
-                    !confirmed ||
-                        registry.live.value[id] !== graph ||
-                        stores.profiles.profile(id)?.profile != current
-                )
-                    return@withLock failed(ManagedMoveReason.NotConfirmed)
-                // Only a reply from the still-current transport clears the durable pending marker.
-                when (
-                    val saved =
-                        stores.profiles.upsert(current.copy(openCode2HistoryPending = false))
-                ) {
-                    is Outcome.Failed -> failed(ManagedMoveReason.NotConfirmed, saved.failure)
-                    is Outcome.Ok ->
-                        if (saved.value.profile.openCode2HistoryPending)
-                            failed(ManagedMoveReason.NotConfirmed)
-                        else ManagedMoveResult.Done
                 }
             }
         }
-
-    private fun failed(
-        reason: ManagedMoveReason,
-        failure: Failure? = null,
-    ): ManagedMoveResult.Failed = ManagedMoveResult.Failed(reason, failure)
 }

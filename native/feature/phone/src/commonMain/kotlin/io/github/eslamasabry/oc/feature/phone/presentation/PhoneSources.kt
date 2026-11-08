@@ -58,6 +58,11 @@ public data class PhoneServerFacts(
     val processCount: Int? = null,
     /** The person turned Android's child-process limit off (the ceiling is then 48). */
     val limitLifted: Boolean = false,
+    /**
+     * This phone's saved server still runs OpenCode 1, or its conversations were copied and OpenCode
+     * 2 has not confirmed them yet (the profile's two migration marks). The page offers the move.
+     */
+    val needsOpenCode2Move: Boolean = false,
 )
 
 /** Where the native crash recovery stands (plan 11 §6.3: attempt N of 3, 1 s doubling to 60 s). */
@@ -309,6 +314,9 @@ public enum class PhonePage {
     ExportProjects,
     SharedFolders,
     Terminal,
+
+    /** The OpenCode 1 → OpenCode 2 move page (the same page the app opens at launch). */
+    MoveToOpenCode2,
 }
 
 public interface PhoneNavigator {
