@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.design.effects
 
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.Roles
+import io.github.eslamasabry.oc.ui.design.color.lerp
 import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.color.wcagContrast
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
@@ -18,8 +19,8 @@ import kotlin.math.roundToInt
  * Glass's liquid edges (docs/designs/liquid-glass.md v2 + owner decision 2026-11-08: "go full blown glass"). Under the
  * Glass style the floating parts are glass over the content behind them: the content, pressed together in contrast and
  * blurred a little, is bent only in a rim at the pane's edge (no depth effect, no dispersion), under today's Glass tint
- * and words plate (thickened by GlassFinish until text1/2/3 read over any content), with a soft rim light tinted from the
- * accent. When it is drawn is FrostPolicy's (`edgesHeldBy`). This file holds the numbers; the kit paints them.
+ * (thickened until text1/2/3 read over the content their ink lies over; no plate behind words, owner 2026-11-08), with a
+ * soft rim light tinted from the accent. When it is drawn is FrostPolicy's (`edgesHeldBy`). This file holds the numbers; the kit paints them.
  */
 
 /**
@@ -58,7 +59,7 @@ public data class LiquidRecipe(
     val rimShare: Float = LiquidEdge.RIM_SHARE,
     /** A drop of glass (the +, a pill): the middle reads thicker too. */
     val depth: Boolean = false,
-    /** How much of the pane's Glass tint lies over the backdrop (the words get their own plate). */
+    /** How much of the pane's Glass tint lies over the backdrop at least ([LiquidEdge.faceTint] may thicken it). */
     val tint: Float = .2f,
 )
 
@@ -93,7 +94,7 @@ public object LiquidEdge {
     /**
      * The recipe for [role] in a [dark] or light theme. The panes are clear glass (a thin tint: 0.18–0.34), bent hard in
      * a wide rim so the content visibly curves at the edges; the + and the pills are drops (depth, lens to the middle).
-     * The words on a pane lie on their own plate ([wordsPlate]), so the pane itself never has to be thick.
+     * The words read on the face itself: [face] thickens the tint only as far as they need ([faceTint]).
      */
     public fun recipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
@@ -111,7 +112,7 @@ public object LiquidEdge {
         }
     }
 
-    /** The Glass surface role and level whose tint and words plate a liquid [role] pane keeps (hook H10). */
+    /** The Glass surface role and level whose tint a liquid [role] pane keeps. */
     public fun glassRole(role: LiquidRole): Pair<SurfaceRole, SurfaceLevel> =
         when (role) {
             LiquidRole.Sheet, LiquidRole.Menu -> SurfaceRole.Sheet to SurfaceLevel.Surface2
@@ -160,9 +161,11 @@ public object LiquidEdge {
     }
 
     /**
-     * The face a liquid [role] pane lays over its backdrop: today's Glass tint for the role ([GlassSpec], hook H10's
-     * words plate kept) at the recipe's thin [LiquidRecipe.tint], lit a little at its top start; no rims and no top glow
-     * (the accent rim light replaces them). The + is its accent at the recipe's tint.
+     * The face a liquid [role] pane lays over its backdrop: today's Glass tint for the role ([GlassSpec]) at the
+     * recipe's thin [LiquidRecipe.tint], thickened only as far as its words need ([faceTint]: there is no plate behind
+     * words, owner 2026-11-08 "get rid of the haze behind the text"), lit a little at its top start, with a soft top
+     * [SurfaceDecoration.sheen]; no rims and no top glow (the rim light replaces them). The + is its accent at the
+     * recipe's tint. A pane whose words flip to the other theme's ink draws the other theme's face with them.
      */
     public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero): SurfaceDecoration {
         val recipe = recipe(role, roles.dark)
@@ -176,16 +179,100 @@ public object LiquidEdge {
             while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
             return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
         }
+        val t = faceTint(roles, role)
+        return SurfaceDecoration(radii = radii, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen)
+    }
+
+    /** A liquid face's tint, its lit top-start corner and its sheen. */
+    public data class FaceTint(val fill: Argb, val fillStart: Argb, val sheen: Argb)
+
+    /** How much more the lit top-start corner of a liquid face holds than the rest. */
+    private const val LIT: Float = .06f
+
+    /** The share of a clear in-flow pane's sheen a liquid face takes: the lens and rim light already carry the gloss. */
+    private const val SHEEN_SHARE: Float = .85f
+
+    /** A liquid face's top sheen (owner 2026-11-08, "more glossy"): the theme's near-white, fading over the top 30 %. */
+    public fun sheenOf(roles: Roles): Argb = GlassSpec.sheenOf(roles).let { it.withAlpha(it.alpha / 255f * SHEEN_SHARE) }
+
+    /**
+     * A liquid [role] face's tint: the least alpha, from the recipe's thin tint up, at which text1, text2 and text3 reach
+     * their targets ([inks]) on the face over what it floats over ([themeSpots]), with and without the sheen. As GlassFinish does for a pane: where Glass's own tint cannot carry them its lit corner goes, then the Solid
+     * surface the pane stands for takes its place ([solidOf]), and last the sheen goes. Quieter, never less legible.
+     */
+    public fun faceTint(roles: Roles, role: LiquidRole): FaceTint {
+        val recipe = recipe(role, roles.dark)
+        val (base, lit) = tintOf(roles, role)
+        val sheen = sheenOf(roles)
+        val inks = inks(roles, role)
+        val spots = themeSpots(roles, recipe)
+        fun reads(fill: Argb, start: Argb, sh: Argb, a: Float): Boolean =
+            listOf(fill.withAlpha(a), start.withAlpha(minOf(1f, a + if (start == fill) 0f else LIT))).all { f ->
+                spots.all { e ->
+                    val bare = f.over(e)
+                    listOf(bare, sh.over(bare)).all { seen -> inks.all { (ink, t) -> wcagContrast(ink, seen) >= t - 1e-6 } }
+                }
+            }
+        fun at(t: Float) = recipe.tint + (1f - recipe.tint) * t
+        val solid = solidOf(roles, role)
+        val none = Argb(0)
+        for ((fill, start, sh) in listOf(Triple(base, lit, sheen), Triple(base, base, sheen), Triple(solid, solid, sheen), Triple(solid, solid, none))) {
+            val t = GlassFinish.leastAlpha { reads(fill, start, sh, at(it)) } ?: continue
+            val a = at(t)
+            return FaceTint(fill.withAlpha(a), start.withAlpha(minOf(1f, a + if (start == fill) 0f else LIT)), sh)
+        }
+        return FaceTint(solid, solid, none)
+    }
+
+    /** Today's Glass tint for [role]'s pane and its lit top-start corner, opaque. */
+    private fun tintOf(roles: Roles, role: LiquidRole): Pair<Argb, Argb> {
         val (glass, level) = glassRole(role)
-        val request = SurfaceRequest(roles = roles, role = glass, knobs = Knobs(), level = level, radii = radii)
-        val resolved = GlassSpec.resolve(request) ?: SurfaceDecoration(radii = radii, fill = solidOf(roles, role))
+        val request = SurfaceRequest(roles = roles, role = glass, knobs = Knobs(), level = level)
+        val resolved = GlassSpec.resolve(request) ?: SurfaceDecoration(fill = solidOf(roles, role))
         val base = resolved.fill?.opaqueArgb() ?: solidOf(roles, role)
-        val lit = resolved.fillStart?.opaqueArgb() ?: base
-        return resolved.copy(
-            fill = base.withAlpha(recipe.tint),
-            fillStart = lit.withAlpha(minOf(1f, recipe.tint + .06f)),
-            edgeWidthDp = 0f, edgeStart = null, edgeEnd = null, innerGlow = Argb(0), shadows = emptyList(), frost = 0f,
-        )
+        return base to (resolved.fillStart?.opaqueArgb() ?: base)
+    }
+
+    /**
+     * What a liquid pane floats over in this app, as the lens presses it: the page's ground and its surface steps, the
+     * frosted aurora's darkest and brightest spots, words blurred into the ground ([BLURRED_INK] of text1: the bar's and
+     * the composer's blur leaves no readable text behind words) and an accent wash. A picture of the other brightness
+     * (a photo, a white page in a screenshot) flips the words and the face to the other theme's ([LiquidInkRule]), whose
+     * face is measured the same way. Not every colour a picture can hold: that would need a plate, and the owner removed
+     * the plate (2026-11-08); the strictly worst case is reported by [bandContrast].
+     */
+    public fun themeSpots(roles: Roles, recipe: LiquidRecipe): List<Argb> {
+        val ground = roles.ground.opaqueArgb()
+        val content =
+            listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)) +
+                AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
+                listOf(lerp(ground, roles.text1.opaqueArgb(), BLURRED_INK), lerp(ground, roles.accent.opaqueArgb(), ACCENT_WASH))
+        return content.map { filtered(it, recipe) }
+    }
+
+    /** How much of the ink a line of words keeps once the glass has blurred it (7 dp over 14 sp words). */
+    public const val BLURRED_INK: Float = .30f
+
+    /** An accent-filled part (a send button, a chip) behind the glass, blurred into the ground. */
+    public const val ACCENT_WASH: Float = .50f
+
+    /**
+     * The lowest text contrast on [role]'s face over content of any colour whose luminance stays on the theme's side
+     * of the ink flip (black to [LiquidInkRule.TO_DARK] in a dark theme, [LiquidInkRule.TO_LIGHT] to white in a light
+     * one). For the QA note: what the removed plate used to guard.
+     */
+    public fun bandContrast(roles: Roles, role: LiquidRole): Double {
+        val recipe = recipe(role, roles.dark)
+        val face = face(roles, role)
+        val band = if (roles.dark) listOf(grey(0f), grey(LiquidInkRule.TO_DARK)) else listOf(grey(LiquidInkRule.TO_LIGHT), grey(1f))
+        return listOfNotNull(face.fill, face.fillStart).minOf { f ->
+            band.minOf { e -> inks(roles, role).minOf { (ink, _) -> wcagContrast(ink, f.over(filtered(e, recipe))) } }
+        }
+    }
+
+    private fun grey(l: Float): Argb {
+        val v = (l.coerceIn(0f, 1f) * 255f).roundToInt()
+        return Argb((0xFF shl 24) or (v shl 16) or (v shl 8) or v)
     }
 
     /** What must read on a [role] pane: text1, text2 and text3 (the +: its glyph), each with its target contrast. */
@@ -199,48 +286,18 @@ public object LiquidEdge {
     public const val GLYPH_FLOOR: Double = 3.0 + .04
 
     /**
-     * The plate behind the words on a [role] pane (GlassSpec.plateFor, hook H10), at the least alpha at which text1,
-     * text2 and text3 reach their targets over the pane's face over either end of any backdrop ([backdropEnds]); the
-     * pane stays clear around the words. Transparent for the + (its glyph reads on its accent).
-     */
-    public fun wordsPlate(roles: Roles, role: LiquidRole): Argb {
-        if (role == LiquidRole.Action) return Argb(0)
-        val (glass, _) = glassRole(role)
-        val glassPlate = GlassSpec.plateFor(roles, glass).opaqueArgb()
-        val face = face(roles, role)
-        val (darkEnd, brightEnd) = backdropEnds(recipe(role, roles.dark))
-        val unders = listOfNotNull(face.fill, face.fillStart).flatMap { f -> listOf(f.over(darkEnd), f.over(brightEnd)) }
-        val inks = inks(roles, role)
-        fun reads(plate: Argb, a: Float): Boolean = unders.all { u ->
-            val seen = plate.withAlpha(a).over(u)
-            inks.all { (ink, target) -> wcagContrast(ink, seen) >= target - 1e-6 }
-        }
-        // Glass's own plate where it can carry the words; else the Solid surface itself, which by the targets' own
-        // definition always can.
-        val plate = if (reads(glassPlate, 1f)) glassPlate else solidOf(roles, role)
-        fun reads(a: Float): Boolean = reads(plate, a)
-        if (reads(0f)) return plate.withAlpha(0f)
-        var lo = 0f
-        var hi = 1f
-        repeat(14) {
-            val mid = (lo + hi) / 2f
-            if (reads(mid)) hi = mid else lo = mid
-        }
-        return plate.withAlpha(hi)
-    }
-
-    /**
-     * The lowest contrast any ink of [role] has where it sits: on its words plate over the pane over either backdrop
-     * end (the +: its glyph on the accent face). For tests and the QA note.
+     * The lowest contrast any ink of [role] has where it sits: on the face (with and without its sheen) over what it
+     * floats over ([themeSpots]; the +: its glyph on the accent face over either end of any backdrop). No
+     * plate. For tests and the QA note.
      */
     public fun worstContrast(roles: Roles, role: LiquidRole): Double {
         val face = face(roles, role)
-        val plate = wordsPlate(roles, role)
-        val (darkEnd, brightEnd) = backdropEnds(recipe(role, roles.dark))
+        val recipe = recipe(role, roles.dark)
+        val spots = if (role == LiquidRole.Action) backdropEnds(recipe).toList() else themeSpots(roles, recipe)
         return listOfNotNull(face.fill, face.fillStart).minOf { f ->
-            listOf(darkEnd, brightEnd).minOf { e ->
-                val seen = plate.over(f.over(e))
-                inks(roles, role).minOf { (ink, _) -> wcagContrast(ink, seen) }
+            spots.minOf { e ->
+                val bare = f.over(e)
+                listOf(bare, face.sheen.over(bare)).minOf { seen -> inks(roles, role).minOf { (ink, _) -> wcagContrast(ink, seen) } }
             }
         }
     }
@@ -282,15 +339,14 @@ public enum class LiquidInk { Light, Dark }
 /**
  * When a liquid pane flips its ink (per pane, whatever the app's own light or dark mode): it samples the mean luminance
  * of the content under it, flips to dark ink above [TO_DARK] and back to light ink below [TO_LIGHT] (the gap is the
- * hysteresis, so a pane over mid-grey content never flickers), cross-fading over [FLIP_MS]. Busy content (luminance
- * variance above [BUSY]) thickens the words plate by [BUSY_PLATE]; calm content lets it back.
+ * hysteresis, so a pane over mid-grey content never flickers), cross-fading over [FLIP_MS]. [BUSY] is the luminance
+ * variance above which content counts as busy (measured, no longer acted on: there is no plate to thicken).
  */
 public object LiquidInkRule {
     public const val TO_DARK: Float = .62f
     public const val TO_LIGHT: Float = .42f
     public const val FLIP_MS: Int = 180
     public const val BUSY: Float = .035f
-    public const val BUSY_PLATE: Float = 1.35f
 
     /** How often a pane samples at most while its content moves (10 Hz). */
     public const val SAMPLE_MS: Long = 100

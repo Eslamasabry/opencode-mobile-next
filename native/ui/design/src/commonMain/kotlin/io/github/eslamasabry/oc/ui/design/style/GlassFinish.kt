@@ -37,13 +37,20 @@ public object GlassFinish {
      * surface the pane stands for. A decoration with no plate (a part's own fill) is returned as it is
      * (`kit_surface_look.dart:824`).
      */
-    public fun thickened(d: SurfaceDecoration, roles: Roles, solid: Argb, spots: List<Argb>): SurfaceDecoration {
+    public fun thickened(
+        d: SurfaceDecoration,
+        roles: Roles,
+        solid: Argb,
+        spots: List<Argb>,
+        inks: List<Pair<Argb, Double>>? = null,
+    ): SurfaceDecoration {
         val fill = d.fill ?: return d
         if (d.wordsPlate.alpha == 0 || spots.isEmpty()) return d
         val fillStart = d.fillStart ?: fill
-        val texts = listOf(roles.text1, roles.text2, roles.text3) // FG: lib/ui/kit/kit_surface_look.dart:825
         val solidFace = solid.opaque()
-        val targets = texts.map { minOf(FLOOR, wcagContrast(it, solidFace)) }
+        val measured = inks ?: textInks(roles, solidFace)
+        val texts = measured.map { it.first } // FG: lib/ui/kit/kit_surface_look.dart:825
+        val targets = measured.map { it.second }
         val smoke = roles.ground.opaque() // FG: lib/ui/kit/kit_surface_look.dart:830
 
         fun at(face: Argb, a: Float): Argb {
@@ -57,28 +64,22 @@ public object GlassFinish {
             return Argb((alpha shl 24) or (ch(face.red, smoke.red) shl 16) or (ch(face.green, smoke.green) shl 8) or ch(face.blue, smoke.blue))
         }
 
-        fun reads(faces: List<Argb>, a: Float): Boolean {
+        // A clear pane's top sheen lies over the first line of words (it lightens: it can cost light words in a dark
+        // theme), so the words must read both under it and below it.
+        fun reads(faces: List<Argb>, a: Float, sheen: Argb): Boolean {
             for (face in faces) {
                 for (under in spots) {
-                    val seen = at(face, a).over(under.opaque())
-                    for (i in texts.indices) if (wcagContrast(texts[i], seen) < targets[i] - 1e-6) return false
+                    val bare = at(face, a).over(under.opaque())
+                    for (seen in if (sheen.alpha == 0) listOf(bare) else listOf(bare, sheen.over(bare))) {
+                        for (i in texts.indices) if (wcagContrast(texts[i], seen) < targets[i] - 1e-6) return false
+                    }
                 }
             }
             return true
         }
 
         // The thinnest tint at which [faces] read, or null when even the thickest does not.
-        fun thinnest(faces: List<Argb>): Float? {
-            if (reads(faces, 0f)) return 0f
-            if (!reads(faces, 1f)) return null
-            var lo = 0f
-            var hi = 1f
-            repeat(STEPS) {
-                val mid = (lo + hi) / 2f
-                if (reads(faces, mid)) hi = mid else lo = mid
-            }
-            return hi
-        }
+        fun thinnest(faces: List<Argb>, sheen: Argb = d.sheen): Float? = leastAlpha { reads(faces, it, sheen) }
 
         val faced =
             thinnest(listOf(fill, fillStart))?.let { a ->
@@ -88,8 +89,10 @@ public object GlassFinish {
                 // cannot darken it over the plain ground, so where the lit top-start corner (the sheen) still reads
                 // below the target the corner goes, and the pane is its plain tint.
                 ?: thinnest(listOf(fill))?.let { a -> d.copy(fill = at(fill, a), fillStart = at(fill, a)) }
+                // Then a clear pane's sheen goes (it lightens the first line).
+                ?: thinnest(listOf(fill), Argb(0))?.let { a -> d.copy(fill = at(fill, a), fillStart = at(fill, a), sheen = Argb(0)) }
                 // Last: the Solid surface itself, opaque, which the target never asks more of.
-                ?: d.copy(fill = solidFace, fillStart = solidFace)
+                ?: d.copy(fill = solidFace, fillStart = solidFace, sheen = Argb(0))
         return withoutCostlyGlow(faced, texts, targets, spots)
     }
 
@@ -113,6 +116,39 @@ public object GlassFinish {
         }
         return d
     }
+
+    /**
+     * The least alpha in 0..1 at which [reads] holds, by [STEPS] halvings (finer than 8 bits); null when even 1 does not.
+     * The one bisection every Glass legibility measure uses: an in-flow pane's tint ([thickened]) and a liquid pane's
+     * ([io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.face]).
+     */
+    public fun leastAlpha(reads: (Float) -> Boolean): Float? {
+        if (reads(0f)) return 0f
+        if (!reads(1f)) return null
+        var lo = 0f
+        var hi = 1f
+        repeat(STEPS) {
+            val mid = (lo + hi) / 2f
+            if (reads(mid)) hi = mid else lo = mid
+        }
+        return hi
+    }
+
+    /** text1, text2 and text3 with their targets: AA ([FLOOR]), or what the Solid surface [solid] reaches if less. */
+    public fun textInks(roles: Roles, solid: Argb): List<Pair<Argb, Double>> =
+        listOf(roles.text1, roles.text2, roles.text3).map { it to minOf(FLOOR, wcagContrast(it, solid.opaque())) }
+
+    /** Non-text contrast (WCAG 1.4.11, 3:1) with this file's small margin: icons, a switch's track, a field's edge. */
+    public const val NON_TEXT_FLOOR: Double = 3.0 + .04
+
+    /**
+     * What else must read on a clear in-flow pane: its icons (text1, text2 and the accent) and the edge of a switch's
+     * track or a field ([styleBoundary]), each at [NON_TEXT_FLOOR] or what Solid reaches if less. The words ([textInks],
+     * 4.5:1) ask more of the tint than these, so a pane [thickened] for its words carries them too (tested).
+     */
+    public fun glyphInks(roles: Roles, solid: Argb): List<Pair<Argb, Double>> =
+        listOf(roles.text1, roles.text2, roles.accent.opaque(), styleBoundary(roles))
+            .map { it to minOf(NON_TEXT_FLOOR, wcagContrast(it, solid.opaque())) }
 
     /** Where a pane's first line of words sits: the kit's compact surface padding (Space 3). */
     private const val FIRST_LINE_DP: Float = 12f // FG: lib/ui/kit/kit_surface.dart:187 lib/ui/kit/kit_tokens.dart:40-44

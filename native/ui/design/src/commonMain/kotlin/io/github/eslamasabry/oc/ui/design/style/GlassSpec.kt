@@ -35,6 +35,61 @@ public object GlassSpec : StyleSpec {
     /** The blur behind a floating piece or a sheet. */
     public const val FLOAT_FROST: Float = 26f // FG: lib/ui/kit/style/kit_style_glass.dart:100
 
+    /**
+     * Clear panes (owner 2026-11-08, option 1: "keep liquid for floating pieces only, and make the in-flow Glass panes
+     * much lighter frosted glass"): the background blur behind a card or a row group when the panes are clear. A big
+     * pane carries a little more frost than a chip or a field ([PANE_FROST]).
+     */
+    public const val CLEAR_CONTENT_FROST: Float = 24f
+
+    /** The accent a chosen pane's tint leans to (dark, light): accent-tinted frost, never a solid slab. */
+    public const val CHOSEN_TINT_DARK: Float = .30f
+    public const val CHOSEN_TINT_LIGHT: Float = .24f
+
+    /** How much thicker a chosen pane's tint is than its resting one. */
+    public const val CHOSEN_LIFT: Float = .10f
+
+    /** The accent rim light round a chosen pane, in dp (the kit lights it from the accent): soft, never a thick border. */
+    public const val CHOSEN_RIM: Float = 1.5f
+
+    /** The in-flow roles that become clear panes; floating parts and sheets are liquid glass or keep their frost. */
+    public fun clears(role: SurfaceRole): Boolean =
+        role == SurfaceRole.Content || role == SurfaceRole.Control || role == SurfaceRole.Track || role == SurfaceRole.Field
+
+    /**
+     * How opaque a clear in-flow pane's tint is (owner 2026-11-08: much lighter, so the background's colour clearly
+     * shows through, as in Apple's materials). These are where the tint starts: the kit thickens it only as far as
+     * text1/2/3 need to read over the ground and the frosted picture ([GlassFinish.thickened]); no plate behind words
+     * (owner 2026-11-08: "get rid of the haze behind the text").
+     */
+    public fun clearOpacity(role: SurfaceRole, dark: Boolean): Float =
+        when (role) {
+            SurfaceRole.Content -> if (dark) .16f else .22f
+            SurfaceRole.Control -> if (dark) .20f else .24f
+            SurfaceRole.Track -> if (dark) .14f else .20f
+            SurfaceRole.Field -> if (dark) .18f else .24f
+            else -> opacity(role, dark)
+        }
+
+    /** The blur behind a clear [role] pane. */
+    public fun clearFrostSigma(role: SurfaceRole): Float = if (role == SurfaceRole.Content) CLEAR_CONTENT_FROST else frostSigma(role)
+
+    /** A clear pane's top sheen: the theme's near-white, fading out over the first 30 % of the pane. */
+    public fun sheenOf(roles: Roles): Argb = styleLight(roles).withAlpha(if (roles.dark) .07f else .28f)
+
+    /**
+     * Whether [r] is a chosen pane drawn as accent-tinted glass: a chosen content or control surface with no fill of its
+     * own, or with a surface step as its own (Solid's way to show chosen: a raised step; under Glass that step was an
+     * opaque slab). An accent or other fill of a part's own stays as it is.
+     */
+    public fun chosen(r: SurfaceRequest): Boolean {
+        if (!r.selected || (r.role != SurfaceRole.Content && r.role != SurfaceRole.Control)) return false
+        val own = r.color ?: return true
+        if (own.alpha != 255) return false
+        val roles = r.roles
+        return listOf(roles.ground, roles.surface1, roles.surface2, roles.surface3).any { it.opaque() == own }
+    }
+
     /** How opaque a glass pane's tint is, per role and brightness. */
     public fun opacity(role: SurfaceRole, dark: Boolean): Float =
         when (role) {
@@ -92,8 +147,17 @@ public object GlassSpec : StyleSpec {
         return lerp(pane, towards, plateShadeOf(role))
     }
 
-    override fun resolve(r: SurfaceRequest): SurfaceDecoration? {
-        part(r)?.let { return it }
+    override fun resolve(r: SurfaceRequest): SurfaceDecoration? = build(r, clear = false)
+
+    /**
+     * [r] as a clear in-flow pane (owner 2026-11-08): [clearOpacity]'s thin tint, [clearFrostSigma]'s blur and a top
+     * [sheenOf]; the kit lights its rim from the accent and thickens the tint until the words read
+     * ([GlassFinish.thickened]). Floating parts, sheets and every role that is not a pane resolve as [resolve] does.
+     */
+    public fun resolveClear(r: SurfaceRequest): SurfaceDecoration? = build(r, clear = clears(r.role))
+
+    private fun build(r: SurfaceRequest, clear: Boolean): SurfaceDecoration? {
+        part(r, clear)?.let { return it }
         val roles = r.roles
         val role = r.role
         val dark = roles.dark
@@ -101,14 +165,18 @@ public object GlassSpec : StyleSpec {
         val shade = styleShade(roles)
         val fill: Argb
         val fillStart: Argb
-        val own = r.color
+        val chosen = chosen(r)
+        val own = if (chosen) null else r.color
         if (own != null) {
             fill = own
             fillStart = own
         } else {
-            val lift = (if (r.selected) .12f else 0f) + (if (r.pressed) .08f else 0f) // FG: lib/ui/kit/style/kit_style_glass.dart:180
-            val alpha = minOf(1f, opacity(role, dark) + lift)
-            val base = tintOf(roles, role, r.level)
+            // A chosen pane is accent-tinted frost a little thicker than its neighbours (owner 2026-11-08), not Flutter's
+            // .12 lift of the plain tint inside a thick accent ring.
+            val lift = (if (chosen) CHOSEN_LIFT else if (r.selected) .12f else 0f) + (if (r.pressed) .08f else 0f) // FG: lib/ui/kit/style/kit_style_glass.dart:180
+            val alpha = minOf(1f, (if (clear) clearOpacity(role, dark) else opacity(role, dark)) + lift)
+            val plain = tintOf(roles, role, r.level)
+            val base = if (chosen) lerp(plain, roles.accent.opaque(), if (dark) CHOSEN_TINT_DARK else CHOSEN_TINT_LIGHT) else plain
             fill = base.withAlpha(alpha)
             fillStart = lerp(base, white, if (dark) SHEEN else SHEEN * 2).withAlpha(minOf(1f, alpha + (if (dark) .04f else .12f))) // FG: lib/ui/kit/style/kit_style_glass.dart:188,189
         }
@@ -130,25 +198,26 @@ public object GlassSpec : StyleSpec {
                 else -> emptyList()
             }
         val rimless = r.knobs.edges == Edges.None && (role == SurfaceRole.Content || role == SurfaceRole.Control)
-        val ringed = r.selected && r.color == null && (role == SurfaceRole.Content || role == SurfaceRole.Control)
         val (top, bottom) = rims(roles)
-        val clear = Argb(0)
+        val none = Argb(0)
+        val plain = own == null
         return SurfaceDecoration(
             radii = r.radii,
             circle = r.circle,
             fill = fill,
             fillStart = fillStart,
-            edgeStart = if (ringed) roles.accent else if (rimless) clear else top,
-            edgeEnd = if (ringed) roles.accent else if (rimless) clear else bottom,
-            edgeWidthDp = if (ringed) CHOSEN_RING else r.edgeWidthDp,
+            edgeStart = if (chosen) roles.accent else if (rimless) none else top,
+            edgeEnd = if (chosen) roles.accent else if (rimless) none else bottom,
+            edgeWidthDp = if (chosen) CHOSEN_RIM else r.edgeWidthDp,
             shadows = shadows,
-            wordsPlate = if (r.color == null) plateFor(roles, role) else clear,
-            frost = if (own == null || own.withAlpha(1f) != own) frostSigma(role) else 0f,
-            innerGlow = if (r.color == null) innerGlowOf(roles) else clear,
+            wordsPlate = if (plain) plateFor(roles, role) else none,
+            frost = if (own == null || own.withAlpha(1f) != own) (if (clear) clearFrostSigma(role) else frostSigma(role)) else 0f,
+            innerGlow = if (plain) innerGlowOf(roles) else none,
+            sheen = if (clear && plain) sheenOf(roles) else none,
         )
     }
 
-    private fun part(r: SurfaceRequest): SurfaceDecoration? {
+    private fun part(r: SurfaceRequest, clearPane: Boolean): SurfaceDecoration? {
         val roles = r.roles
         val dark = roles.dark
         val clear = Argb(0)
@@ -175,15 +244,16 @@ public object GlassSpec : StyleSpec {
                 val on = r.selected && r.role == SurfaceRole.Toggle
                 val own = if (on) r.color else null
                 val edge = if (r.selected) roles.accent else styleBoundary(roles)
+                val thin = clearPane && r.role == SurfaceRole.Field
                 SurfaceDecoration(
                     radii = r.radii,
                     circle = r.circle,
-                    fill = own ?: tintOf(roles, r.role, r.level).withAlpha(opacity(r.role, dark)),
+                    fill = own ?: tintOf(roles, r.role, r.level).withAlpha(if (thin) clearOpacity(r.role, dark) else opacity(r.role, dark)),
                     edgeStart = own ?: edge,
                     edgeEnd = own ?: edge,
                     edgeWidthDp = r.edgeWidthDp,
                     wordsPlate = if (own == null) plateFor(roles, r.role) else clear,
-                    frost = frostSigma(r.role),
+                    frost = if (thin) clearFrostSigma(r.role) else frostSigma(r.role),
                 )
             }
             SurfaceRole.Content, SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Floating, SurfaceRole.Sheet -> null

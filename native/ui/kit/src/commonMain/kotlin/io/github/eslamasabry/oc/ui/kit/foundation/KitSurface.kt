@@ -67,6 +67,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
 import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
+import io.github.eslamasabry.oc.ui.design.style.GlassSpec
+import io.github.eslamasabry.oc.ui.kit.effects.glassRims
+import io.github.eslamasabry.oc.ui.kit.effects.kitClearPanesOn
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceFade
 import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
@@ -156,13 +159,19 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             withinGroup = input.withinGroup,
             action = input.action,
         )
-    val resolved = remember(request, style) { style.spec.resolve(request) }
-    val words = remember(request, style) { style.spec.onColor(request)?.toColor() }
-    val glass = style.style == Style.Glass && resolved != null
-    // Glass: the pane thickens until its words read as on the Solid surface it stands for, over the ground and, while
-    // it blurs a picture, over the picture's spots (GlassFinish; Dart thickenedOver, kit_surface_look.dart:814-889).
+    val isGlass = style.style == Style.Glass
     val backdrop = LocalKitGlassBackdrop.current
-    val blurs = kitGlassBlurs(if (glass) backdrop else null)
+    val blurs = kitGlassBlurs(if (isGlass) backdrop else null)
+    // Glass's in-flow panes are clear frosted glass where they blur a picture and nothing holds them (owner 2026-11-08);
+    // floating parts and sheets resolve as before.
+    val clear = isGlass && blurs && kitClearPanesOn()
+    val resolved = remember(request, style, clear) { if (clear) GlassSpec.resolveClear(request) else style.spec.resolve(request) }
+    val words = remember(request, style) { style.spec.onColor(request)?.toColor() }
+    val glass = isGlass && resolved != null
+    // Glass: the pane thickens until its words read as on the Solid surface it stands for, over the ground and, while
+    // it blurs a picture, over the picture's spots (GlassFinish; Dart thickenedOver, kit_surface_look.dart:814-889). A
+    // clear pane starts from its thin tint, so it thickens only as far as its words need; no plate behind them. Its
+    // rims, and a chosen pane's, are lit (glassRims).
     val decoration =
         if (!glass) {
             resolved?.faded(input.faceAlpha)
@@ -170,7 +179,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             val ground = roles.ground.withAlpha(1f)
             val spots = if (blurs && backdrop != null) listOf(ground) + backdrop.frostedSpots else listOf(ground)
             val solid = (input.ownFill?.toArgb() ?: request.levelFill).over(ground)
-            remember(resolved, spots, solid, roles) { GlassFinish.thickened(resolved!!, roles, solid, spots) }
+            remember(resolved, spots, solid, roles, clear) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots), roles, clear) }
         }
     // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree
     // holds through a fade (kit_surface_look.dart:1257-1266).
@@ -257,8 +266,12 @@ private fun rememberSurfaceFade(target: SurfaceDecoration?, plain: SurfaceDecora
             fade.from = null
         }
     }
+    // The progress is read on every pass, also the one that starts a fade: a pass that skipped the read would not be
+    // run again as the fade advances, and the surface would stay on its old look (the owner's Corners knob drew the
+    // last corners' face under the new clip and ring, 2026-11-08).
+    val progress = fade.progress.value
     val from = fade.from ?: return null
-    val t = if (fade.pending) 0f else fade.progress.value
+    val t = if (fade.pending) 0f else progress
     if (t >= 1f) return null
     return SurfaceFade.between(from, target ?: plain, t) to (fade.fromGlass || style == Style.Glass)
 }

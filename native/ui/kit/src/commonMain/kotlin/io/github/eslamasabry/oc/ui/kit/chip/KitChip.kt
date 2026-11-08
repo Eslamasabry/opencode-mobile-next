@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
@@ -105,16 +106,19 @@ public fun KitChip(
     val hovered by bodySource.face.collectIsHoveredAsState()
     val removePressed by removeSource.face.collectIsPressedAsState()
     val removeHovered by removeSource.face.collectIsHoveredAsState()
-    val tint = if (tone == KitChipTone.Active) c.accent.copy(alpha = .22f).compositeOver(c.surface3) else null // F: lib/ui/kit/kit_chip.dart:232
+    // Glass draws an active chip as it draws a chosen one: accent-tinted frost with the accent rim (owner 2026-11-08: the
+    // olive fill read heavy), its words the pane's own.
+    val glassActive = tone == KitChipTone.Active && LocalKitStyle.current.style == Style.Glass
+    val tint = if (tone == KitChipTone.Active && !glassActive) c.accent.copy(alpha = .22f).compositeOver(c.surface3) else null // F: lib/ui/kit/kit_chip.dart:232
     val fill = tint ?: if (pressed || hovered || removePressed || removeHovered) c.surface2 else c.surface3
-    val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = if (fill == c.surface2) SurfaceLevel.Surface2 else SurfaceLevel.Surface3, ownFill = fill, color = tint, selected = selected == true, pressed = pressed || removePressed))
+    val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = if (fill == c.surface2) SurfaceLevel.Surface2 else SurfaceLevel.Surface3, ownFill = fill, color = tint, selected = selected == true || glassActive, pressed = pressed || removePressed))
     val semanticInk = when (tone) {
         KitChipTone.Attention -> c.attention
         KitChipTone.Active -> c.accent
         KitChipTone.Neutral -> if (kind == KitChipKind.Plain || kind == KitChipKind.Count) c.text2 else c.text1
     }
     val ink = if (tone == KitChipTone.Neutral) semanticInk else Color(RoleDerivation.readableOn(Argb(semanticInk.toArgb()), (if (tint != null) listOf(tint) else listOf(c.surface2, c.surface3)).map { Argb(it.toArgb()) }, 4.7, Argb(c.text1.toArgb())).v) // F: lib/ui/kit/kit_chip.dart:239
-    val words = if (selected == true) look.words ?: ink else ink
+    val words = if (selected == true || glassActive) look.words ?: ink else ink
     val baseStyle = LocalKitTypography.current.style(TypeRole.Secondary)
     val style = baseStyle.copy(color = words, fontWeight = if (!adaptiveModel && (kind == KitChipKind.Plain || track)) FontWeight.SemiBold else baseStyle.fontWeight)
     val formatted = count?.let { Numbers.format(it) }

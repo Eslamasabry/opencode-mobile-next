@@ -85,15 +85,31 @@ class LiquidEdgeTest {
     }
 
     @Test
-    fun `B-KIT-003 text1, text2 and text3 read on their words plate over any content, in every pack, light and dark`() {
+    fun `B-KIT-003 text1, text2 and text3 read on the bare face over the content their ink lies over, in every pack, light and dark`() {
+        // Owner 2026-11-08: no plate behind words; the face's tint (and blur) carries them. A pane whose words flip to
+        // the other theme's ink flips its face to the other theme's too, so both themes' faces cover every content.
+        val tints = mutableListOf<String>()
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val roles = ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null)
             for (role in LiquidRole.entries) {
+                val face = LiquidEdge.face(roles, role)
+                assertEquals(0, face.wordsPlate.alpha, "$pack dark=$dark $role: no plate")
                 val target = LiquidEdge.inks(roles, role).minOf { it.second }
                 val worst = LiquidEdge.worstContrast(roles, role)
                 assertTrue(worst >= target - 1e-3, "$pack dark=$dark $role: worst $worst < $target")
+                val band = if (role == LiquidRole.Action) worst else LiquidEdge.bandContrast(roles, role)
+                tints += "$pack ${if (dark) "dark" else "light"} $role ${face.fill!!.alpha * 100 / 255}% worst ${"%.2f".format(worst)} band ${"%.2f".format(band)}"
             }
         }
+        println(tints.joinToString("\n"))
+    }
+
+    @Test
+    fun `B-KIT-003 a face is measured over the ground, its surfaces, the frosted aurora, blurred words and an accent wash`() {
+        val roles = ThemeResolver.roles(PackId.Opencode, null, true, saver = false, dynamic = null)
+        val spots = LiquidEdge.themeSpots(roles, LiquidEdge.recipe(LiquidRole.Bar, true))
+        assertTrue(spots.size >= 8)
+        assertTrue(LiquidEdge.BLURRED_INK in .2f..0.5f)
     }
 
     @Test
@@ -108,24 +124,25 @@ class LiquidEdgeTest {
     }
 
     @Test
-    fun `B-KIT-003 the panes are clear glass and the words get the plate`() {
-        for (dark in listOf(true, false)) {
-            val roles = ThemeResolver.roles(PackId.Opencode, null, dark, saver = false, dynamic = null)
+    fun `B-KIT-003 the panes start as clear glass and thicken only as far as their words need`() {
+        for (pack in PackId.entries) for (dark in listOf(true, false)) {
+            val roles = ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null)
             for (role in LiquidRole.entries.filter { it != LiquidRole.Action }) {
-                val a = LiquidEdge.face(roles, role).fill!!.alpha / 255f
-                assertTrue(a in .1f..0.42f, "dark=$dark $role tint $a: clear glass")
+                val a = LiquidEdge.faceTint(roles, role).fill.alpha / 255f
+                val thin = LiquidEdge.recipe(role, dark).tint
+                assertTrue(a >= thin - 1e-2f, "$pack dark=$dark $role tint $a below the recipe's $thin")
             }
-            assertTrue(LiquidEdge.wordsPlate(roles, LiquidRole.Bar).alpha > 0, "dark=$dark: the bar's words need their plate")
         }
     }
 
     @Test
-    fun `B-KIT-003 a liquid face keeps today's words plate but draws no white rim or top glow`() {
+    fun `B-KIT-003 a liquid face has no words plate, no white rim and no top glow, and a soft sheen`() {
         val roles = ThemeResolver.roles(PackId.Opencode, null, dark = true, saver = false, dynamic = null)
         val face = LiquidEdge.face(roles, LiquidRole.Composer)
-        assertNotEquals(0, face.wordsPlate.alpha, "hook H10: the words plate stays")
+        assertEquals(0, face.wordsPlate.alpha, "owner 2026-11-08: no haze behind the text")
         assertEquals(0f, face.edgeWidthDp)
         assertEquals(0, face.innerGlow.alpha)
+        assertTrue(face.sheen.alpha in 1..40, "a soft sheen: ${face.sheen.alpha}")
         assertTrue(GlassFinish.FLOOR > 4.5)
     }
 

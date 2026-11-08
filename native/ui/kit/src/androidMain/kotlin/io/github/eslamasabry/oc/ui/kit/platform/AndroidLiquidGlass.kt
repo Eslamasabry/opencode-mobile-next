@@ -58,7 +58,7 @@ internal object AndroidLiquidGlass {
                 )
             },
             shadow = if (spec.shadow.alpha > 0f) ({ Shadow(radius = 24.dp, color = spec.shadow) }) else null,
-            onDrawSurface = { drawLiquidTint(spec) },
+            onDrawSurface = { drawLiquidTint(spec, shape) },
         )
     }
 
