@@ -1,3 +1,6 @@
+// The CAM16 and sRGB constants are the published model's (material-color-utilities); naming each would hide them.
+@file:Suppress("MagicNumber")
+
 package io.github.eslamasabry.oc.ui.kit.theme
 
 import androidx.compose.runtime.Immutable
@@ -175,14 +178,13 @@ internal object KitHctMath {
         return (lo + hi) / 2.0
     }
 
-    private fun inGamut(rgb: DoubleArray): Boolean = rgb.all { it >= -0.01 && it <= 100.01 }
-
     /** The sRGB colour of ([hue], [chroma], [tone]); chroma drops to the most the gamut holds at that hue and tone. */
     fun solve(hue: Double, chroma: Double, tone: Double): Color {
         val t = tone.coerceIn(0.0, 100.0)
         val y = yFromLstar(t)
         if (t <= 0.0001 || t >= 99.9999 || chroma < 0.0001) return grey(t)
         val h = ((hue % 360.0) + 360.0) % 360.0
+        fun inGamut(rgb: DoubleArray): Boolean = rgb.all { it >= -0.01 && it <= 100.01 }
         fun at(cc: Double): DoubleArray = linearRgb(jFor(y, cc, h), cc, h)
         val wanted = at(chroma)
         val rgb =

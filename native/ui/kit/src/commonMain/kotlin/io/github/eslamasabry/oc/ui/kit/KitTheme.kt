@@ -137,15 +137,13 @@ public fun KitTheme(
     val motion = remember(level, stillFrame) { KitMotionState(level, stillFrame) }
     val direction = if (isRtl(localeTag)) LayoutDirection.Rtl else LayoutDirection.Ltr
     val ripple = remember { kitRippleConfiguration() }
-    val indication = remember(platform) { platform.pressIndication(Color.Unspecified) }
     val selection =
         remember(colors) { TextSelectionColors(colors.accent, colors.accent.copy(alpha = 0.30f)) }
     // P-116: Material keeps its colours in a static local holding an identity-compared ColorScheme, so swapping it
     // recomposes everything under the theme. The kit's own colours (dynamic locals) change at once; Material's scheme
     // settles after a theme switch's motion has finished ([rememberSettledScheme]), so its one full recomposition
     // never lands on a frame that moves.
-    val scheme = rememberSettledScheme(remember(roles) { MaterialBridge.scheme(roles) }, defers = level != MotionLevel.Off && !stillFrame)
-    val materialTypography = remember(typography) { MaterialBridge.typography(typography) }
+    val scheme = rememberSettledScheme(roles, defers = level != MotionLevel.Off && !stillFrame)
     val appDensity = rememberAppTextDensity(appearance.textSize)
     val container = LocalWindowInfo.current.containerSize
     val window =
@@ -175,7 +173,7 @@ public fun KitTheme(
         LocalKitAppDensity provides appDensity,
         // Material's theme provides its own ripple under this one; a value that changed with the colours only cost
         // a full recomposition (static local), so it is made once per platform.
-        LocalIndication provides indication,
+        LocalIndication provides remember(platform) { platform.pressIndication(Color.Unspecified) },
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
@@ -185,7 +183,7 @@ public fun KitTheme(
             colorScheme = scheme,
             motionScheme = motionScheme,
             shapes = MaterialBridge.shapes,
-            typography = materialTypography,
+            typography = remember(typography) { MaterialBridge.typography(typography) },
         ) {
             Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) { content() }
         }

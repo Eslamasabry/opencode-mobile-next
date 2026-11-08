@@ -54,13 +54,15 @@ class ThemeSwitchRulesTest {
     }
 
     @Test
-    fun `TSW-002 the rim leans cool at night and warm by day, keeping the accent's family`() {
+    fun `TSW-002 the rim leans cool at night and warm by day, in the accent's family`() {
         val green = Color(0xFF3DDC8A)
         val g = KitHct.of(green)
         val night = KitHct.of(ThemeSwitchColorRules.rim(green, dark = true, grounds = listOf(Color(0xFF101114))))
         val day = KitHct.of(ThemeSwitchColorRules.rim(green, dark = false, grounds = listOf(Color.White)))
-        assertTrue(hueGap(night.hue, ThemeSwitchColorRules.NIGHT_HUE) < hueGap(g.hue, ThemeSwitchColorRules.NIGHT_HUE), "night pulls cool")
-        assertTrue(hueGap(day.hue, ThemeSwitchColorRules.DAY_HUE) < hueGap(g.hue, ThemeSwitchColorRules.DAY_HUE), "day pulls warm")
+        val nightAnchor = ThemeSwitchColorRules.NIGHT_HUE
+        val dayAnchor = ThemeSwitchColorRules.DAY_HUE
+        assertTrue(hueGap(night.hue, nightAnchor) < hueGap(g.hue, nightAnchor), "night pulls cool")
+        assertTrue(hueGap(day.hue, dayAnchor) < hueGap(g.hue, dayAnchor), "day pulls warm")
         assertTrue(hueGap(night.hue, g.hue) < 90.0 && hueGap(day.hue, g.hue) < 90.0, "still the accent's family")
         assertTrue(night.tone > day.tone, "bright on dark, deeper on light")
     }
@@ -77,15 +79,19 @@ class ThemeSwitchRulesTest {
             val rimTrack = ThemeSwitchColorRules.contrast(sw.rim, track)
             val rimGround = ThemeSwitchColorRules.contrast(sw.rim, ground)
             val ink = ThemeSwitchColorRules.contrast(sw.selectedInk, stepOn)
-            if (rimTrack < 3.0 || rimGround < 3.0) failures += "$name rim ${"%.2f".format(rimTrack)}/${"%.2f".format(rimGround)}"
+            if (rimTrack < 3.0 || rimGround < 3.0) {
+                failures += "$name rim ${"%.2f".format(rimTrack)}/${"%.2f".format(rimGround)}"
+            }
             if (ink < 3.0) failures += "$name chosen icon ${"%.2f".format(ink)}"
         }
         for (pack in PackId.entries) for (dark in listOf(false, true)) for (style in Style.entries) {
-            val roles = StyleResolver.adjust(ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null), style)
+            val base = ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null)
+            val roles = StyleResolver.adjust(base, style)
             check("$pack/${if (dark) "dark" else "light"}/$style", roles.toKitColors())
         }
         for (pack in PackId.entries) {
-            check("$pack/saver", ThemeResolver.roles(pack, null, dark = true, saver = true, dynamic = null).toKitColors())
+            val saver = ThemeResolver.roles(pack, null, dark = true, saver = true, dynamic = null)
+            check("$pack/saver", saver.toKitColors())
         }
         assertTrue(failures.isEmpty(), "below 3:1:\n" + failures.joinToString("\n"))
     }
@@ -182,7 +188,8 @@ class ThemeSwitchRulesTest {
         assertTrue(landed.all { d -> to.any { abs(it.x - d.x) < 0.01f && abs(it.y - d.y) < 0.01f } })
         assertTrue(end.filter { it.alpha <= 0.99f }.all { it.alpha < 0.01f }, "the extra dots have faded out")
         val mid = morph.sample(KitDotMorph.MORPH_MS / 2f)
-        assertTrue(mid.any { d -> to.none { abs(it.x - d.x) < 0.5f && abs(it.y - d.y) < 0.5f } }, "mid-way the dots are in flight")
+        val inFlight = mid.any { d -> to.none { abs(it.x - d.x) < 0.5f && abs(it.y - d.y) < 0.5f } }
+        assertTrue(inFlight, "mid-way the dots are in flight")
         assertEquals(mid, morph.sample(KitDotMorph.MORPH_MS / 2f), "the jitter is fixed, not random per frame")
     }
 

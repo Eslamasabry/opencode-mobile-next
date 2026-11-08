@@ -165,8 +165,7 @@ public fun KitGrowPage(growKey: Any?, content: @Composable () -> Unit) {
     }
     val config = remember(host) { GateConfig(host) }
     val specs = KitMotion.specs
-    // The kit's own colours (a dynamic local): the Material scheme settles later after a theme change (P-116).
-    val ground = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.ground
+    val ground = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.ground // P-116: not Material's
     val transition = host.animatedVisibilityScope.transition
     val enabled = host.transformEnabled
     val wordsAlpha by transition.animateFloat(

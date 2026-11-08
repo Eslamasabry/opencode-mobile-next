@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.material3.ColorScheme
+import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.kit.motion.ThemeSwitchTimings
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -125,7 +126,7 @@ internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFa
         // seen as motion. The gap to the next frame is that frame's cost, kept for KitThemeMetrics.
         val first = withFrameNanos { it }
         coroutineScope {
-            launch { KitThemeMetrics.record((withFrameNanos { it } - first) / 1_000_000f) }
+            launch { KitThemeMetrics.record((withFrameNanos { it } - first) / NANOS_PER_MS) }
             cover.alpha.animateTo(0f, tween(ThemeFade.MS, easing = LinearEasing))
         }
         cover.shot = null
@@ -175,7 +176,8 @@ public object KitThemeMetrics {
  * wins). At once when [defers] is false (motion Off, still frames) and on the first frame.
  */
 @Composable
-internal fun rememberSettledScheme(scheme: ColorScheme, defers: Boolean): ColorScheme {
+internal fun rememberSettledScheme(roles: Roles, defers: Boolean): ColorScheme {
+    val scheme = remember(roles) { MaterialBridge.scheme(roles) }
     val held = remember { mutableStateOf(scheme) }
     LaunchedEffect(scheme, defers) {
         if (defers && held.value !== scheme) delay(SCHEME_SETTLE_MS)
@@ -183,6 +185,8 @@ internal fun rememberSettledScheme(scheme: ColorScheme, defers: Boolean): ColorS
     }
     return if (defers) held.value else scheme
 }
+
+private const val NANOS_PER_MS = 1_000_000f
 
 /** How long Material's scheme is held back after a theme change. */
 internal const val SCHEME_SETTLE_MS: Long = ThemeSwitchTimings.IDLE_MS - ThemeSwitchTimings.COMMIT_MS

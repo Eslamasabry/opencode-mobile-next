@@ -39,20 +39,29 @@ public object ThemeSwitchColorRules {
     private const val LIGHT_TONE_MIN = 30.0
     private const val LIGHT_TONE_MAX = 58.0
     private const val TONE_STEP = 2.0
+    private const val MAX_TONE = 100.0
+    private const val TURN = 360.0
+    private const val HALF_TURN = 180.0
+
+    /** WCAG's 0.05 flare term in the contrast ratio. */
+    private const val FLARE = 0.05
+
+    /** Below this luminance a ground is dark (the luminance whose contrast to black and white is equal). */
+    private const val MID_LUMINANCE = 0.18
 
     /** [from] moved [t] of the way to [to] along the shorter way round the hue circle. */
     public fun pullHue(from: Double, to: Double, t: Double): Double {
-        var d = (to - from) % 360.0
-        if (d > 180.0) d -= 360.0
-        if (d < -180.0) d += 360.0
-        return ((from + d * t) % 360.0 + 360.0) % 360.0
+        var d = (to - from) % TURN
+        if (d > HALF_TURN) d -= TURN
+        if (d < -HALF_TURN) d += TURN
+        return ((from + d * t) % TURN + TURN) % TURN
     }
 
     /** WCAG contrast of two opaque colours. */
     public fun contrast(a: Color, b: Color): Double {
         val la = a.luminance().toDouble()
         val lb = b.luminance().toDouble()
-        return (maxOf(la, lb) + 0.05) / (minOf(la, lb) + 0.05)
+        return (maxOf(la, lb) + FLARE) / (minOf(la, lb) + FLARE)
     }
 
     /**
@@ -74,7 +83,8 @@ public object ThemeSwitchColorRules {
         val hct = KitHct.of(accent)
         val hue = pullHue(hct.hue, if (dark) NIGHT_HUE else DAY_HUE, PULL)
         val chroma = hct.chroma.coerceIn(MIN_CHROMA, MAX_CHROMA)
-        val tone = if (dark) hct.tone.coerceIn(DARK_TONE_MIN, DARK_TONE_MAX) else hct.tone.coerceIn(LIGHT_TONE_MIN, LIGHT_TONE_MAX)
+        val band = if (dark) DARK_TONE_MIN..DARK_TONE_MAX else LIGHT_TONE_MIN..LIGHT_TONE_MAX
+        val tone = hct.tone.coerceIn(band)
         return toneUntilReadable(hue, chroma, tone, dark, grounds)
     }
 
@@ -83,14 +93,20 @@ public object ThemeSwitchColorRules {
         if (grounds.all { contrast(ink, it) >= MIN_CONTRAST }) return ink
         val hct = KitHct.of(ink)
         // Which way gives more room: away from the grounds' mean luminance.
-        val lighter = grounds.map { it.luminance() }.average() < 0.18 || (dark && grounds.isEmpty())
+        val lighter = if (grounds.isEmpty()) dark else grounds.map { it.luminance() }.average() < MID_LUMINANCE
         return toneUntilReadable(hct.hue, hct.chroma, hct.tone, lighter, grounds)
     }
 
-    private fun toneUntilReadable(hue: Double, chroma: Double, start: Double, lighter: Boolean, grounds: List<Color>): Color {
+    private fun toneUntilReadable(
+        hue: Double,
+        chroma: Double,
+        start: Double,
+        lighter: Boolean,
+        grounds: List<Color>,
+    ): Color {
         var tone = start
         var best = KitHct(hue, chroma, tone).toColor()
-        while (tone in 0.0..100.0) {
+        while (tone in 0.0..MAX_TONE) {
             val c = KitHct(hue, chroma, tone).toColor()
             best = c
             if (grounds.all { contrast(c, it) >= MIN_CONTRAST }) return c

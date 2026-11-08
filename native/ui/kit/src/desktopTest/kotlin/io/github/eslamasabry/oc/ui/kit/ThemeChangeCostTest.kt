@@ -87,10 +87,13 @@ class ThemeChangeCostTest {
     fun `P-116 the theme-change frame time is recorded for the coordinator's device run`() = runComposeUiTest {
         var mode by mutableStateOf(AppearanceMode.Dark)
         val seen = mutableListOf<Float>()
+        val platform = FakeKitPlatform()
         KitThemeMetrics.listener = { seen += it }
         try {
             setContent {
-                KitTheme(KitAppearance(mode = mode, motion = MotionLevel.Full), FakeKitPlatform(), "en") { Box(Modifier.size(64.dp)) }
+                KitTheme(KitAppearance(mode = mode, motion = MotionLevel.Full), platform, "en") {
+                    Box(Modifier.size(64.dp))
+                }
             }
             waitForIdle()
             mode = AppearanceMode.Light

@@ -6,7 +6,7 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 
 /** The beat table of a theme switch (theme-switch-premium, Choreography), in ms after the tap. */
 public object ThemeSwitchTimings {
-    /** The theme commits once the motion is visibly under way, so the recomposition frame does not land on its start. */
+    /** The theme commits once the motion is visibly under way, so its recomposition does not land on the start. */
     public const val COMMIT_MS: Long = 120
 
     /** The rim's run round the edge, then its glow settling. */
@@ -63,8 +63,10 @@ public object ThemeSwitchRules {
      */
     public fun plan(level: MotionLevel): ThemeSwitchPlan =
         when (level) {
-            MotionLevel.Full -> ThemeSwitchPlan(slide = true, rim = true, dust = true, crossfade = false, ThemeSwitchTimings.COMMIT_MS)
-            MotionLevel.Calm -> ThemeSwitchPlan(slide = true, rim = false, dust = false, crossfade = true, ThemeSwitchTimings.COMMIT_MS)
+            MotionLevel.Full ->
+                ThemeSwitchPlan(slide = true, rim = true, dust = true, crossfade = false, ThemeSwitchTimings.COMMIT_MS)
+            MotionLevel.Calm ->
+                ThemeSwitchPlan(slide = true, rim = false, dust = false, crossfade = true, ThemeSwitchTimings.COMMIT_MS)
             MotionLevel.Off -> ThemeSwitchPlan(slide = false, rim = false, dust = false, crossfade = false, 0)
         }
 
