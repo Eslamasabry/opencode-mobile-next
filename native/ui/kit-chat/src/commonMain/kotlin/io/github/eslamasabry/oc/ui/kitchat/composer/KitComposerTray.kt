@@ -122,6 +122,21 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val enabled = action.disabledReason == null
+    // Glass: a bare glyph straight on the message box's glass, no disc and no word under it (owner 2026-11-08: "remove
+    // the titles, it's self explanatory"). The word stays its name for the screen reader and its long-press tooltip;
+    // the target stays 48 dp.
+    if (LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass) {
+        io.github.eslamasabry.oc.ui.kit.action.KitIconButton(
+            action.icon,
+            action.label,
+            action.onPick,
+            modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
+            enabled = action.disabledReason?.let { io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(it) }
+                ?: io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled,
+            size = GLASS_TRAY_GLYPH_DP,
+        )
+        return
+    }
     KitTappable(
         onClick = action.onPick,
         modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
@@ -134,16 +149,14 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            // A round matte disc (Solid's control face), the glyph at the card-mark size. Glass: a bare, larger glyph
-            // straight on the message box's glass, no disc (owner 2026-11-08).
-            val glass = LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass
+            // A round matte disc (Solid's control face), the glyph at the card-mark size.
             Box(
-                Modifier.size(tokens.minTarget.dp).then(if (glass) Modifier else Modifier.background(colors.surface3, CircleShape)),
+                Modifier.size(tokens.minTarget.dp).background(colors.surface3, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 KitIcon(
                     action.icon,
-                    size = if (glass) KitIconSize.Fab else KitIconSize.Medium,
+                    size = KitIconSize.Medium,
                     tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
                 )
             }
@@ -163,3 +176,6 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
         }
     }
 }
+
+/** The tray's glyph under Glass, in dp (owner 2026-11-08: bare icons, about 26-28 dp). */
+internal const val GLASS_TRAY_GLYPH_DP: Int = 28
