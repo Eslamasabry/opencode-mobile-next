@@ -64,6 +64,22 @@ public fun MemorySectionContent(state: MemorySectionUi, actions: MemorySectionAc
             }
             return@Column
         }
+        // Stopped or starting on this phone: said in words, with Start, instead of "did not answer".
+        val unanswered = state.load == FactsBookLoad.Failed || state.error != null
+        if ((unanswered || state.nodeStarting) && (state.nodeStopped || state.nodeStarting)) {
+            KitRowGroup(label = title) {
+                KitRow(
+                    title = stringResource(if (state.nodeStarting) Res.string.fbMemoryStarting else Res.string.fbMemoryStopped),
+                    supporting = stringResource(if (state.nodeStarting) Res.string.fbNodeStepStarting else Res.string.fbMemoryStoppedDetail),
+                    supportingMaxLines = 2,
+                    leading = KitRowLeading.Glyph(KitIcons.pause),
+                    trailing =
+                        if (state.nodeStarting) KitRowTrailing.None
+                        else KitRowTrailing.Action(KitLineAction(stringResource(Res.string.fbMemoryStart), actions::startNode, semanticsLabel = stringResource(Res.string.fbNodeStart))),
+                )
+            }
+            return@Column
+        }
         if (state.load == FactsBookLoad.Loading) {
             KitText(
                 title,

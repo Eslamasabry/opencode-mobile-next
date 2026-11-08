@@ -127,6 +127,10 @@ internal fun failureWords(failure: FactsBookError?): String {
             "bad_request" -> Res.string.fbErrorBadRequest
             "outbox_full" -> Res.string.fbErrorNodeFull
             "index_rebuilding" -> Res.string.fbErrorIndexRebuilding
+            "device_auth_unavailable" -> Res.string.fbErrorAuthUnavailable
+            "device_auth_cancelled" -> Res.string.fbErrorAuthCancelled
+            "device_auth_locked" -> Res.string.fbErrorAuthLocked
+            "device_auth_failed" -> Res.string.fbErrorAuthFailed
             else -> Res.string.fbErrorGeneric
         }
     )
@@ -191,3 +195,15 @@ internal fun provenanceLine(provenance: KitProvenance, observed: String, source:
         }
     return if (waitingForOk) stringResource(Res.string.kitFactWaitingLine, base) else base
 }
+
+/** A proposal's risk in plain words (F: `riskWords`). */
+@Composable
+internal fun riskWords(risk: String): String =
+    when (risk) {
+        "money" -> stringResource(Res.string.fbCareRiskMoney)
+        "health" -> stringResource(Res.string.fbCareRiskHealth)
+        "id" -> stringResource(Res.string.fbCareRiskId)
+        "contradiction" -> stringResource(Res.string.fbCareRiskContradiction)
+        "low_confidence" -> stringResource(Res.string.fbCareRiskLowConfidence)
+        else -> risk
+    }

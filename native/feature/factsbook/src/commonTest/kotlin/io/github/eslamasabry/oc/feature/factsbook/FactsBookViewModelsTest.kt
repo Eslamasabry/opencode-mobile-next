@@ -13,6 +13,20 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingNotice
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderEditViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
+import io.github.eslamasabry.oc.feature.factsbook.presentation.PhoneNodeViewModel
+import io.github.eslamasabry.oc.engine.factsbook.ProposalDecision
+import io.github.eslamasabry.oc.engine.factsbook.RuleProblem
+import io.github.eslamasabry.oc.engine.factsbook.TriggerSourceKind
+import io.github.eslamasabry.oc.engine.factsbook.TriggersLoad
+import io.github.eslamasabry.oc.feature.factsbook.presentation.EventViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleEditorViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusViewModel
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -52,13 +66,15 @@ class FactsBookViewModelsTest {
     }
 
     @Test
-    fun `B-FB-021 unpaired the section offers Set up FactsBook and it opens Connect`() = runTest {
+    fun `B-FB-021 unpaired the section offers Set up FactsBook, memory on this phone where Linux exists and Connect elsewhere`() = runTest {
         val vm = MemorySectionViewModel(FakeAccess(paired = false), nav, FixedClock())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.loaded }
         assertFalse(state.paired)
         vm.setUp()
-        assertEquals(listOf<Any>(FactsBookRoute.Connect), nav.opened)
+        val noLinux = MemorySectionViewModel(FakeAccess(paired = false).apply { nodeHost.supportedHere = false }, nav, FixedClock())
+        noLinux.setUp()
+        assertEquals(listOf<Any>(FactsBookRoute.PhoneNode, FactsBookRoute.Connect), nav.opened)
     }
 
     @Test
@@ -186,13 +202,209 @@ class FactsBookViewModelsTest {
     }
 
     @Test
-    fun `B-FB-031 Needs you lists the changes waiting and cannot approve without the owner signer`() = runTest {
+    fun `B-FB-031 Needs you lists the changes waiting and cannot approve without an owner device`() = runTest {
         val access = FakeAccess().apply { node.healthy() }
-        val vm = NeedsYouViewModel(access, nav)
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.review.isNotEmpty() }
         assertEquals("rvw_1", state.review.single().id)
         assertFalse(state.canApprove)
         assertFalse(access.node.asked.any { it.contains("/decision") })
+    }
+
+    @Test
+    fun `B-FB-035 an approval on Needs you is signed, sent once and says it was approved`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy() }
+        access.node.on("POST /v1/review/rvw_1/decision", """{"status":"ok","id":"rvw_1"}""")
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.review.isNotEmpty() && it.canApprove }
+        vm.approve(state.review.single())
+        vm.state.first { it.notice == CareNotice.Approved }
+        assertEquals(1, access.node.asked.count { it == "POST /v1/review/rvw_1/decision" })
+    }
+
+    @Test
+    fun `B-FB-036 a change approved elsewhere first says it changed and nothing else`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy() }
+        access.node.on("POST /v1/review/rvw_1/decision", """{"error":{"code":"stale_approval"}}""", status = 409)
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val item = vm.state.first { it.review.isNotEmpty() && it.canApprove }.review.single()
+        vm.approveEdited(item, "  Likes green tea ")
+        val after = vm.state.first { it.notice != null || it.failure != null }
+        assertEquals(CareNotice.Stale, after.notice)
+        assertNull(after.failure)
+    }
+
+    @Test
+    fun `B-FB-037 Status reads the node, says the history is not checked without one, and Disconnect lands home`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy() }
+        val vm = StatusViewModel(access, nav, FixedClock())
+        val state = vm.state.first { !it.loading }
+        assertTrue(state.status != null)
+        assertNull(state.control) // the fake node will not show /v1/control: "not checked", never "verified"
+        assertTrue(state.canApprove)
+        vm.askDisconnect()
+        assertTrue(vm.state.value.confirmDisconnect)
+        vm.disconnect()
+        vm.state.first { !it.confirmDisconnect }
+        assertFalse(access.engine.state.value.paired)
+        assertFalse(access.secrets.values.containsKey("oc.factsbook.p1"))
+        assertEquals(1, nav.lands)
+    }
+
+    @Test
+    fun `B-FB-038 Settings changes the brief cap and the home zone only with approval, against the revision seen`() = runTest {
+        val access = FakeAccess(owner = true)
+        access.node.on(
+            "GET /v1/config",
+            """{"rev":7,"vault_zone":"Africa/Cairo","lock_timeout_minutes":15,"brief":{"cap_per_day":5,"time":"08:00","quiet_hours":"22:00-07:00"}}""",
+        )
+        access.node.on("PATCH /v1/config", """{"status":"ok","id":"config","rev":8}""")
+        val vm = SettingsViewModel(access, nav)
+        vm.state.first { it.settings != null }
+        vm.setBriefCap(3)
+        vm.state.first { !it.saving }
+        assertEquals(1, access.node.asked.count { it == "PATCH /v1/config" })
+
+        val unowned = FakeAccess(owner = false)
+        unowned.node.answers.putAll(access.node.answers)
+        val off = SettingsViewModel(unowned, nav)
+        off.state.first { it.settings != null }
+        off.setBriefCap(3)
+        assertFalse(unowned.node.asked.any { it == "PATCH /v1/config" })
+    }
+
+    @Test
+    fun `B-FB-065 Triggers groups rules by source and pauses one, signed, saying it was paused`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("PUT /v1/rules/rul_1", RULE.replace("\"rev\":4", "\"rev\":5").replace("\"enabled\":true", "\"enabled\":false"))
+        val vm = TriggersViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.load == TriggersLoad.Ready && it.canApprove }
+        assertEquals(TriggerSourceKind.Share, state.groups.single().kind)
+        assertEquals(1, state.activity.getValue("rul_1").proposed)
+        vm.togglePause(state.groups.single().rules.single())
+        vm.state.first { it.notice == TriggersNotice.Paused }
+        assertEquals(1, access.node.asked.count { it == "PUT /v1/rules/rul_1" })
+
+        val unowned = FakeAccess(owner = false).apply { node.healthy(); node.triggers() }
+        val off = TriggersViewModel(unowned, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { off.state.collect {} }
+        val ready = off.state.first { it.load == TriggersLoad.Ready }
+        off.togglePause(ready.groups.single().rules.single())
+        assertFalse(unowned.node.asked.any { it.startsWith("PUT") })
+    }
+
+    @Test
+    fun `B-FB-066 a new rule is checked before it is sent, tried on a sample without saving, then saved signed`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/rules/test", """{"matched":true,"reason":"matched","summary":"Library visit","when":"2026-11-12T09:00"}""")
+        access.node.on("POST /v1/rules", RULE.replace("rul_1", "rul_9"))
+        val vm = RuleEditorViewModel(FactsBookRoute.Rule(null), access, nav, FixedClock())
+        vm.state.first { it.canApprove }
+        vm.save()
+        assertEquals(RuleProblem.NameEmpty, vm.state.value.problem)
+        assertFalse(access.node.asked.contains("POST /v1/rules"))
+        vm.edit { it.copy(name = "Library", words = "library, visit") }
+        vm.useExample()
+        assertTrue(vm.state.value.sample.startsWith("Appointment: Library visit | 2026-11-12T09:00"))
+        vm.test()
+        assertTrue(vm.state.first { it.result != null }.result!!.matched)
+        assertFalse(access.node.asked.contains("POST /v1/rules"))
+        vm.save()
+        val saved = vm.state.first { it.notice == RuleNotice.Saved }
+        assertEquals("rul_9", saved.saved?.id)
+    }
+
+    @Test
+    fun `B-FB-067 what happened to a message shows its rule and what it proposed, and a gone one says so`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        val vm = EventViewModel(FactsBookRoute.Event("evt_1"), access, nav)
+        val state = vm.state.first { !it.loading }
+        assertEquals("Clinic", state.event?.claims?.sender)
+        assertEquals("Clinic", state.ruleNames["trg_1"])
+        assertEquals(listOf("rpr_1"), state.proposals.map { it.id })
+        val gone = EventViewModel(FactsBookRoute.Event("evt_x"), access, nav).state.first { !it.loading }
+        assertEquals("not_found", gone.error?.code)
+    }
+
+    @Test
+    fun `B-FB-068 Needs you counts a rule's proposal and offer once, confirms it signed and dismisses the offer`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/reminder-proposals/rpr_1/decision", """{"status":"ok","id":"rpr_1"}""")
+        access.node.on("POST /v1/offers/off_1/cancel", """{"id":"off_1","rev":2,"digest":"od","state":"cancelled","expires_at":"2026-11-09T10:00:00Z"}""")
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.proposals.isNotEmpty() && it.offers.isNotEmpty() }
+        assertEquals(3, state.waiting) // one change, one proposal, one offer
+        assertEquals(3, access.engine.state.value.needsYouCount)
+        assertEquals("evt_1", state.fromEvent["rpr_1"]?.id)
+        assertEquals("Clinic", state.offerRule["off_1"])
+        vm.decideProposal(state.proposals.single(), ProposalDecision.Confirm)
+        vm.state.first { it.notice == CareNotice.Approved }
+        vm.notNow(state.offers.single())
+        vm.state.first { it.working.isEmpty() && access.node.asked.contains("POST /v1/offers/off_1/cancel") }
+        assertEquals(1, access.node.asked.count { it == "POST /v1/reminder-proposals/rpr_1/decision" })
+    }
+
+    private val pairAnswer =
+        """{"token":"t2","client_id":"cli_9","scopes":["read","write","admin","owner"],"vault":"v9","root_fingerprint":"fp9","node":"n9"}"""
+
+    @Test
+    fun `B-FB-073 setting up memory on this phone installs, starts, pairs with this phone's key and lands in Add something`() = runTest {
+        val access = FakeAccess(paired = false)
+        access.backgroundScope = backgroundScope
+        access.pairNode.on("GET /v1/info", "{}")
+        access.pairNode.on("POST /v1/pair", pairAnswer)
+        val vm = PhoneNodeViewModel(access, nav)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.state.first { it.node.state == PhoneNodeState.NotInstalled }
+        vm.runHere()
+        vm.state.first { it.node.state == PhoneNodeState.Running && !it.node.busy }
+        assertEquals(listOf("install", "vault", "start", "pair 64"), access.nodeHost.steps)
+        val link = access.engine.state.value.link!!
+        assertEquals("http://127.0.0.1:8787", link.baseUrl)
+        assertEquals("dev_9", link.ownerDeviceId)
+        assertTrue(access.engine.state.value.canApprove)
+        assertEquals(FactsBookRoute.Capture, nav.opened.last())
+    }
+
+    @Test
+    fun `B-FB-074 a memory the person stopped is not started again when the app opens, and one they did not stop is`() = runTest {
+        val access = FakeAccess(paired = false)
+        access.pairNode.on("GET /v1/info", "{}")
+        access.pairNode.on("POST /v1/pair", pairAnswer)
+        access.engine.open("p1")
+        access.phoneNode.runHere()
+        access.phoneNode.stop()
+        assertEquals(PhoneNodeState.Stopped, access.phoneNode.status.value.state)
+        access.nodeHost.steps.clear()
+        access.phoneNode.ensureRunning()
+        assertFalse("start" in access.nodeHost.steps)
+        access.store.setNodeStopped(false)
+        access.phoneNode.ensureRunning()
+        assertTrue("start" in access.nodeHost.steps)
+        assertEquals(PhoneNodeState.Running, access.phoneNode.status.value.state)
+    }
+
+    @Test
+    fun `B-FB-078 with a rule on, Add something lets the rules read the note unless the person turns it off`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/events", """{"event":{"id":"evt_9","source":{"kind":"note"},"captured_at":"2026-11-08T10:00:00Z","evidence_ref":"itm_9"}}""")
+        access.node.on("POST /v1/inbox", """{"status":"saved","item_id":"itm_10"}""")
+        val vm = CaptureViewModel(access, nav)
+        val ready = vm.state.first { it.rulesSupported }
+        assertEquals(1, ready.rulesOn)
+        assertTrue(ready.rulesLook)
+        vm.save("Appointment: Clinic | 2026-11-12T09:00")
+        vm.state.first { it.notice == CaptureNotice.Saved }
+        assertTrue(access.node.asked.contains("POST /v1/events"))
+        assertFalse(access.node.asked.contains("POST /v1/inbox"))
+        vm.rules(false)
+        vm.save("Buy milk")
+        vm.state.first { it.clearSeed == 2 }
+        assertTrue(access.node.asked.contains("POST /v1/inbox"))
     }
 }

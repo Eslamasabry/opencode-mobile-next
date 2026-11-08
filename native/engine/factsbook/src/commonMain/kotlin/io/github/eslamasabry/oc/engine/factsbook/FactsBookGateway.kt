@@ -93,8 +93,8 @@ public fun interface FactsBookHttp {
 }
 
 /**
- * The protocol-neutral door to a FactsBook node (App API v1). Owner-signed calls (review decisions, area sharing,
- * settings, rules) are not here yet: the native app has no owner signer, so they stay unavailable (report).
+ * The protocol-neutral door to a FactsBook node (App API v1). Owner-only calls (review decisions, area sharing,
+ * settings) carry the [OwnerSigner]'s proof; without a signer they fail with `owner_required` and nothing is sent.
  */
 public interface FactsBookGateway {
     public suspend fun status(): FbResult<NodeStatus>
@@ -124,6 +124,27 @@ public interface FactsBookGateway {
     public suspend fun areas(): FbResult<List<Area>>
 
     public suspend fun capabilities(): FbResult<FactsBookCapabilities>
+
+    /** `POST /v1/review/{id}/decision`, signed, bound to the exact digest and revisions the person saw. */
+    public suspend fun decideReview(item: ReviewItem, decision: ReviewDecision, edited: JsonObject? = null): FbResult<MutationResult>
+
+    /** `PATCH /v1/areas/{slug}`: who else may read the area, signed against the current policy revision. */
+    public suspend fun setAreaShare(area: Area, share: AreaShare): FbResult<MutationResult>
+
+    /** `GET /v1/config` (admin). */
+    public suspend fun settings(): FbResult<FactsBookSettings>
+
+    /** `PATCH /v1/config` with a new daily brief cap, signed against the revision the person saw. */
+    public suspend fun setBriefCap(current: FactsBookSettings, cap: Long): FbResult<MutationResult>
+
+    /** `PATCH /v1/config` with a new home time zone (an IANA name), signed against the revision the person saw. */
+    public suspend fun setHomeZone(current: FactsBookSettings, zone: String): FbResult<MutationResult>
+
+    /** `GET /v1/inbox/{id}/export`: an unsaved capture as an encrypted object. */
+    public suspend fun exportCapture(id: String): FbResult<CaptureExport>
+
+    /** `GET /v1/control?since=0` (admin): the signed control chain. */
+    public suspend fun control(): FbResult<ControlChain>
 }
 
 /**
@@ -137,7 +158,9 @@ public class HttpFactsBookGateway(
     private val token: String?,
     private val random: Random = Random.Default,
     private val retryDelayMs: Long = 250,
-) : FactsBookGateway, FactsBookReminders {
+    /** Signs owner-only changes; null while this phone has no owner device id. */
+    private val owner: OwnerSigner? = null,
+) : FactsBookGateway, FactsBookReminders, FactsBookTriggerCalls {
     private val lane = Mutex()
 
     override fun toString(): String = "HttpFactsBookGateway"
@@ -311,6 +334,123 @@ public class HttpFactsBookGateway(
     override suspend fun capabilities(): FbResult<FactsBookCapabilities> =
         send("GET", "/v1/capabilities").reading(FactsBookCapabilities::read)
 
+    /** [body] with the owner's `proof`; the screen lock is asked here, before anything is sent. */
+    private suspend fun signed(method: String, path: String, body: JsonObject): FbResult<JsonObject> {
+        val signer = owner ?: return FbResult.Err(FactsBookError(FactsBookError.OWNER_REQUIRED))
+        return signer.proof(method, path, body).map { JsonObject(body + ("proof" to it)) }
+    }
+
+    private suspend fun signedSend(method: String, path: String, body: JsonObject): FbResult<MutationResult> =
+        when (val proved = signed(method, path, body)) {
+            is FbResult.Err -> proved
+            is FbResult.Ok -> send(method, path, body = proved.value, idempotencyKey = key()).reading(MutationResult::read)
+        }
+
+    override suspend fun decideReview(item: ReviewItem, decision: ReviewDecision, edited: JsonObject?): FbResult<MutationResult> =
+        signedSend(
+            "POST",
+            "/v1/review/${seg(item.id)}/decision",
+            JsonObject(
+                buildMap {
+                    put("decision", JsonPrimitive(decision.wire))
+                    put("digest", JsonPrimitive(item.digest))
+                    put("preconditions", JsonObject(item.preconditions.mapValues { JsonPrimitive(it.value) }))
+                    if (edited != null) put("edited", edited)
+                }
+            ),
+        )
+
+    override suspend fun setAreaShare(area: Area, share: AreaShare): FbResult<MutationResult> {
+        if (owner == null) return FbResult.Err(FactsBookError(FactsBookError.OWNER_REQUIRED))
+        val policy = when (val r = send("GET", "/v1/policy").reading { it }) { is FbResult.Err -> return r; is FbResult.Ok -> r.value }
+        return signedSend(
+            "PATCH",
+            "/v1/areas/${seg(area.slug)}",
+            obj("base_rev" to JsonPrimitive(policy.long("policy_version") ?: 0), "area" to area.copy(share = share).toJson()),
+        )
+    }
+
+    override suspend fun settings(): FbResult<FactsBookSettings> = send("GET", "/v1/config").reading(FactsBookSettings::read)
+
+    override suspend fun setBriefCap(current: FactsBookSettings, cap: Long): FbResult<MutationResult> =
+        signedSend("PATCH", "/v1/config", obj("base_rev" to JsonPrimitive(current.revision), "settings" to current.withBriefCap(cap)))
+
+    override suspend fun setHomeZone(current: FactsBookSettings, zone: String): FbResult<MutationResult> =
+        signedSend("PATCH", "/v1/config", obj("base_rev" to JsonPrimitive(current.revision), "settings" to current.withHomeZone(zone)))
+
+    override suspend fun exportCapture(id: String): FbResult<CaptureExport> =
+        send("GET", "/v1/inbox/${seg(id)}/export").reading { CaptureExport(pretty.encodeToString(JsonObject.serializer(), it), it.str("item").orEmpty()) }
+
+    override suspend fun control(): FbResult<ControlChain> = send("GET", "/v1/control", mapOf("since" to "0")).reading(ControlChain::read)
+
+    // ---- Event triggers (spec 44): asked only where the capability matrix lists them -------------------------------
+
+    override suspend fun rules(): FbResult<List<Rule>> = all("/v1/rules", Rule::read).map { list -> list.filter { !it.deleted } }
+
+    private suspend fun <T> signedRead(method: String, path: String, body: JsonObject, read: (JsonObject) -> T): FbResult<T> =
+        when (val proved = signed(method, path, body)) {
+            is FbResult.Err -> proved
+            is FbResult.Ok -> send(method, path, body = proved.value, idempotencyKey = key()).reading(read)
+        }
+
+    override suspend fun saveRule(definition: RuleDefinition, replacing: Rule?): FbResult<Rule> =
+        signedRead(
+            if (replacing == null) "POST" else "PUT",
+            if (replacing == null) "/v1/rules" else "/v1/rules/${seg(replacing.id)}",
+            obj("base_rev" to JsonPrimitive(replacing?.revision ?: 0), "rule" to definition.toJson()),
+            Rule::read,
+        )
+
+    override suspend fun deleteRule(rule: Rule): FbResult<Rule> =
+        signedRead("DELETE", "/v1/rules/${seg(rule.id)}", obj("base_rev" to JsonPrimitive(rule.revision)), Rule::read)
+
+    override suspend fun testDraft(draft: RuleDefinition, sample: TriggerSample): FbResult<RuleTestResult> =
+        send("POST", "/v1/rules/test", body = obj("rule" to draft.toJson(), "sample" to sample.toJson())).reading(RuleTestResult::read)
+
+    override suspend fun events(): FbResult<List<TriggerEvent>> = all("/v1/events", TriggerEvent::read)
+
+    override suspend fun firings(): FbResult<List<TriggerFiring>> = all("/v1/trigger-firings", TriggerFiring::read)
+
+    override suspend fun reminderProposals(): FbResult<List<ReminderProposal>> =
+        all("/v1/reminder-proposals", ReminderProposal::read).map { list -> list.filter { it.proposed } }
+
+    override suspend fun decideReminderProposal(proposal: ReminderProposal, decision: ProposalDecision): FbResult<MutationResult> =
+        signedSend(
+            "POST",
+            "/v1/reminder-proposals/${seg(proposal.id)}/decision",
+            obj("decision" to JsonPrimitive(decision.wire), "rev" to JsonPrimitive(proposal.revision), "digest" to JsonPrimitive(proposal.digest)),
+        )
+
+    override suspend fun editReminderProposal(proposal: ReminderProposal, preview: ReminderPreview): FbResult<MutationResult> =
+        signedSend(
+            "POST",
+            "/v1/reminder-proposals/${seg(proposal.id)}/decision",
+            obj(
+                "decision" to JsonPrimitive("edit"),
+                "rev" to JsonPrimitive(proposal.revision),
+                "digest" to JsonPrimitive(proposal.digest),
+                "preview" to preview.raw,
+                "preview_digest" to JsonPrimitive(preview.digest),
+            ),
+        )
+
+    override suspend fun postEvent(sample: TriggerSample, idempotencyKey: String, classifyNormal: Boolean): FbResult<TriggerEvent> {
+        val base = if (classifyNormal) JsonObject(sample.toJson() + ("classify_normal" to JsonPrimitive(true))) else sample.toJson()
+        val body = if (classifyNormal) when (val proved = signed("POST", "/v1/events", base)) { is FbResult.Err -> return proved; is FbResult.Ok -> proved.value } else base
+        return send("POST", "/v1/events", body = body, idempotencyKey = idempotencyKey)
+            .reading { json -> TriggerEvent.read(json.obj("event") ?: throw FactsBookShapeError("event")) }
+    }
+
+    override suspend fun offers(): FbResult<List<ConversationOffer>> = all("/v1/offers", ConversationOffer::read)
+
+    override suspend fun cancelOffer(offer: ConversationOffer): FbResult<ConversationOffer> =
+        send(
+            "POST",
+            "/v1/offers/${seg(offer.id)}/cancel",
+            body = obj("rev" to JsonPrimitive(offer.revision), "digest" to JsonPrimitive(offer.digest)),
+            idempotencyKey = key(),
+        ).reading(ConversationOffer::read)
+
     override suspend fun previewReminder(
         what: String,
         timing: ReminderTiming,
@@ -376,6 +516,9 @@ public class HttpFactsBookGateway(
             idempotencyKey = key(),
         ).reading(MutationResult::read)
 
+    /** `GET /v1/info`, unauthorized: whether a node answers at this address at all (the phone node's probe). */
+    public suspend fun info(): FbResult<Unit> = send("GET", "/v1/info", authorized = false).map { }
+
     /** `GET /v1/info` then `POST /v1/pair`: a one-time code to a bearer token. Unauthorized calls. */
     public suspend fun pair(code: String, clientName: String, scopes: List<String>): FbResult<PairResult> =
         send(
@@ -397,6 +540,12 @@ public class HttpFactsBookGateway(
         private val CATEGORIES = setOf("preference", "habit", "fact", "note", "task", "relationship", "event")
 
         private fun obj(vararg pairs: Pair<String, JsonElement>): JsonObject = JsonObject(mapOf(*pairs))
+
+        @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+        private val pretty = Json {
+            prettyPrint = true
+            prettyPrintIndent = "  "
+        }
 
         /** Dart `Uri.encodeComponent`: everything but unreserved characters is percent-encoded (UTF-8). */
         internal fun encodeSegment(value: String): String =

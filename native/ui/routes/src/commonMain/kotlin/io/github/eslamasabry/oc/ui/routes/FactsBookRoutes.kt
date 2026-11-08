@@ -41,4 +41,22 @@ public sealed interface FactsBookRoute : AppRoute {
 
     /** Set up FactsBook: pair with a node by address and one-time code. */
     @Serializable public data object Connect : FactsBookRoute
+
+    /** Status: each part of the node in words, the signed history check, Disconnect. */
+    @Serializable public data object Status : FactsBookRoute
+
+    /** Memory settings: the brief, the locked folder, the home time zone. */
+    @Serializable public data object Settings : FactsBookRoute
+
+    /** Triggers: rules that look at what arrives, what they did, and what waits for the person. */
+    @Serializable public data object Triggers : FactsBookRoute
+
+    /** The rule editor: [id] null makes a new rule. */
+    @Serializable public data class Rule(val id: String? = null) : FactsBookRoute
+
+    /** "What happened to this message" for one event. */
+    @Serializable public data class Event(val id: String) : FactsBookRoute
+
+    /** Memory on this phone: FactsBook inside the built-in Linux. */
+    @Serializable public data object PhoneNode : FactsBookRoute
 }

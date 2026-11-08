@@ -35,7 +35,7 @@ class FactsBookEngineTest {
         val engine =
             FactsBookEngine(
                 store,
-                gatewayFor = { _, token -> HttpFactsBookGateway(http, token, Random(1), retryDelayMs = 1) },
+                gatewayFor = { _, token, signer -> HttpFactsBookGateway(http, token, Random(1), retryDelayMs = 1, owner = signer) },
                 outboxFor = { id ->
                     object : FactsBookOutboxStore {
                         override suspend fun read(): String? = store.readOutbox(id)
@@ -45,6 +45,7 @@ class FactsBookEngineTest {
                 },
                 clock = clock,
                 random = Random(2),
+                signing = FactsBookSigning({ n -> ByteArray(n) { (it + 7).toByte() } }),
             )
         return Rig(engine, http, vault, store)
     }
@@ -247,5 +248,110 @@ class FactsBookEngineTest {
         assertEquals("4", body["base_rev"]!!.jsonPrimitive.content)
         assertEquals("true", body["paused"]!!.jsonPrimitive.content)
         assertTrue(r.http.sent.last().headers["Idempotency-Key"]!!.startsWith("app-"))
+    }
+
+    private val ownerLink = FLUTTER_LINK.dropLast(1) + ""","owner_device":"dev_1"}"""
+
+    @Test
+    fun `B-FB-019 an approval is signed by this phone's owner key and bound to the digest and revisions shown`() = runTest {
+        val r = rig(prefs = mapOf("flutter.oc.factsbookNode.p1" to RawPref.Str(ownerLink)))
+        r.engine.open(profile)
+        assertTrue(r.engine.state.value.canApprove)
+        // The seed was made on first use and kept under Flutter's name.
+        assertEquals(64, r.secrets.values.getValue("oc.factsbookOwner.p1").length)
+        r.http.healthyNode()
+        r.http.on("POST /v1/review/rvw_1/decision", 200, """{"status":"ok","id":"rvw_1"}""")
+        val item =
+            ReviewItem.read(
+                Json.parseToJsonElement("""{"rvw":"rvw_1","class":"fact_add","state":"proposed","digest":"dg","preconditions":{"per_01":3},"proposal":{"text":"x"}}""")
+                    .jsonObject
+            )
+        assertIs<FbResult.Ok<MutationResult>>(r.engine.decide(item, ReviewDecision.Approve))
+        val sent = r.http.sent.first { it.path == "/v1/review/rvw_1/decision" }
+        val body = Json.parseToJsonElement(sent.body!!).jsonObject
+        assertEquals("approve", body["decision"]!!.jsonPrimitive.content)
+        assertEquals("dg", body["digest"]!!.jsonPrimitive.content)
+        assertEquals("3", body["preconditions"]!!.jsonObject["per_01"]!!.jsonPrimitive.content)
+        val proof = body["proof"]!!.jsonObject
+        assertEquals("dev_1", proof["signer"]!!.jsonPrimitive.content)
+        // The node's check: the canonical envelope of the body without the proof, under this phone's public key.
+        val envelope =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "vault" to kotlinx.serialization.json.JsonPrimitive("v_main"),
+                    "client" to kotlinx.serialization.json.JsonPrimitive("cli_01"),
+                    "method" to kotlinx.serialization.json.JsonPrimitive("POST"),
+                    "path" to kotlinx.serialization.json.JsonPrimitive("/v1/review/rvw_1/decision"),
+                    "body" to kotlinx.serialization.json.JsonObject(body - "proof"),
+                    "nonce" to proof["nonce"]!!,
+                    "authenticated_at" to proof["authenticated_at"]!!,
+                )
+            )
+        val key = bytesOfHex(r.engine.ownerPublicKeyHex()!!)!!
+        assertTrue(Ed25519.verify(key, Jcs.bytes(envelope), bytesOfHex(proof["sig"]!!.jsonPrimitive.content)!!))
+        // The list was read again after the decision.
+        assertTrue(r.http.sent.last().path != "/v1/review/rvw_1/decision")
+    }
+
+    @Test
+    fun `B-FB-032 without an owner device nothing owner-only is sent, and a stale decision reads the list again`() = runTest {
+        val r = rig()
+        r.engine.open(profile)
+        assertFalse(r.engine.state.value.canApprove)
+        val item = ReviewItem("rvw_1", "fact_add", ReviewState.Proposed, "dg", "x")
+        assertEquals(FactsBookError.OWNER_REQUIRED, assertIs<FbResult.Err>(r.engine.decide(item, ReviewDecision.Reject)).error.code)
+        assertTrue(r.http.sent.isEmpty())
+        assertEquals(FactsBookError.OWNER_REQUIRED, assertIs<FbResult.Err>(r.engine.node!!.setAreaShare(sampleArea, AreaShare(readByDefault = true))).error.code)
+        assertTrue(r.http.sent.isEmpty())
+
+        val owner = rig(prefs = mapOf("flutter.oc.factsbookNode.p1" to RawPref.Str(ownerLink)))
+        owner.engine.open(profile)
+        owner.http.healthyNode()
+        owner.http.on("POST /v1/review/rvw_1/decision", 409, """{"error":{"code":"stale_approval","request_id":"req_9"}}""")
+        val stale = assertIs<FbResult.Err>(owner.engine.decide(item, ReviewDecision.Approve)).error
+        assertTrue(stale.stale)
+        assertEquals("/v1/capabilities", owner.http.sent.last().path) // the refresh ran to its end
+    }
+
+    private val sampleArea = Area("money", sensitiveStorage = false, reviewFirst = true, share = AreaShare(), brief = true, export = false, notify = "generic")
+
+    @Test
+    fun `B-FB-033 sharing an area sends the whole area against the current policy revision, signed`() = runTest {
+        val r = rig(prefs = mapOf("flutter.oc.factsbookNode.p1" to RawPref.Str(ownerLink)))
+        r.engine.open(profile)
+        r.http.on("GET /v1/policy", 200, """{"policy_version":12}""")
+        r.http.on("PATCH /v1/areas/money", 200, """{"status":"ok","id":"money","rev":13}""")
+        assertIs<FbResult.Ok<MutationResult>>(r.engine.node!!.setAreaShare(sampleArea, AreaShare(readByDefault = true)))
+        val body = Json.parseToJsonElement(r.http.sent.last().body!!).jsonObject
+        assertEquals("12", body["base_rev"]!!.jsonPrimitive.content)
+        val area = body["area"]!!.jsonObject
+        assertEquals("read", area["share"]!!.jsonObject["default"]!!.jsonPrimitive.content)
+        assertEquals("first", area["review"]!!.jsonPrimitive.content)
+        assertTrue(body.containsKey("proof"))
+    }
+
+    @Test
+    fun `B-FB-034 a settings change sends back everything else untouched against the revision seen`() = runTest {
+        val r = rig(prefs = mapOf("flutter.oc.factsbookNode.p1" to RawPref.Str(ownerLink)))
+        r.engine.open(profile)
+        r.http.on(
+            "GET /v1/config",
+            200,
+            """{"rev":7,"vault_zone":"Africa/Cairo","lock_timeout_minutes":15,"budget":{"daily":3},"brief":{"cap_per_day":5,"time":"08:00","quiet_hours":"22:00-07:00"}}""",
+        )
+        r.http.on("PATCH /v1/config", 200, """{"status":"ok","id":"config","rev":8}""")
+        val node = r.engine.node!!
+        val settings = node.settings().valueOrNull()!!
+        assertEquals(5, settings.brief.capPerDay)
+        node.setBriefCap(settings, 2)
+        val body = Json.parseToJsonElement(r.http.sent.last().body!!).jsonObject
+        assertEquals("7", body["base_rev"]!!.jsonPrimitive.content)
+        val sent = body["settings"]!!.jsonObject
+        assertEquals("2", sent["brief"]!!.jsonObject["cap_per_day"]!!.jsonPrimitive.content)
+        assertEquals("22:00-07:00", sent["brief"]!!.jsonObject["quiet_hours"]!!.jsonPrimitive.content)
+        assertEquals("3", sent["budget"]!!.jsonObject["daily"]!!.jsonPrimitive.content)
+        node.setHomeZone(settings, "Europe/London")
+        val zone = Json.parseToJsonElement(r.http.sent.last().body!!).jsonObject["settings"]!!.jsonObject
+        assertEquals("Europe/London", zone["vault_zone"]!!.jsonPrimitive.content)
     }
 }

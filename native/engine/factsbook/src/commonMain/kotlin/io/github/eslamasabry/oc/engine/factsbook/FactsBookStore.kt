@@ -97,6 +97,16 @@ public class FactsBookStore(
 
     public suspend fun hasOwnerSeed(profileId: String): Boolean = secrets.read(ownerKey(profileId)).orNull() != null
 
+    /**
+     * The owner key's seed, made on first use from [secureBytes] (F: FactsBookStore.ownerSeed). A damaged seed is
+     * replaced and the console enrols the new key. Null when the secret store cannot keep it.
+     */
+    public suspend fun ownerSeed(profileId: String, secureBytes: (Int) -> ByteArray): ByteArray? {
+        secrets.read(ownerKey(profileId)).orNull()?.let(::bytesOfHex)?.takeIf { it.size == 32 }?.let { return it }
+        val seed = secureBytes(32)
+        return if (secrets.write(ownerKey(profileId), hexOf(seed)) is Outcome.Ok) seed else null
+    }
+
     public suspend fun readOutbox(profileId: String): String? = secrets.read(outboxKey(profileId)).orNull()
 
     public suspend fun writeOutbox(profileId: String, value: String?): Boolean =
@@ -125,9 +135,18 @@ public class FactsBookStore(
 
     public suspend fun setFlag(on: Boolean): Boolean = prefs.commit(appLane) { putBool(FLAG_KEY, on) } is Outcome.Ok
 
+    /** The person stopped the memory on this phone and has not started it since (app-wide, F: `personStoppedKey`). */
+    public fun nodeStopped(): Boolean = prefs.bool(NODE_STOPPED_KEY) == true
+
+    public suspend fun setNodeStopped(stopped: Boolean): Boolean =
+        prefs.commit(appLane) { if (stopped) putBool(NODE_STOPPED_KEY, true) else remove(NODE_STOPPED_KEY) } is Outcome.Ok
+
     public companion object {
         /** F: factsbook_flag.dart `FactsBookFlag.preferenceKey`. */
         public const val FLAG_KEY: String = "oc.dev.factsbook"
+
+        /** F: factsbook_phone_node.dart `personStoppedKey`. */
+        public const val NODE_STOPPED_KEY: String = "oc.factsbook-node.stopped"
 
         public fun linkKey(profileId: String): String = "oc.factsbookNode.$profileId"
 

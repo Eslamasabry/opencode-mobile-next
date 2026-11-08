@@ -13,6 +13,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.engine.factsbook.Area
+import io.github.eslamasabry.oc.engine.factsbook.CaptureExport
 import io.github.eslamasabry.oc.engine.factsbook.CaptureKind
 import io.github.eslamasabry.oc.engine.factsbook.CaptureOutcome
 import io.github.eslamasabry.oc.engine.factsbook.CaptureRequest
@@ -24,12 +25,16 @@ import io.github.eslamasabry.oc.engine.factsbook.FactsBookGateway
 import io.github.eslamasabry.oc.engine.factsbook.FbResult
 import io.github.eslamasabry.oc.engine.factsbook.SearchResult
 import io.github.eslamasabry.oc.engine.factsbook.Thing
+import io.github.eslamasabry.oc.engine.factsbook.TriggersLoad
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
 import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -208,11 +213,14 @@ public data class AreasUi(
     val areas: ImmutableList<Area>? = null,
     val error: FactsBookError? = null,
     val loading: Boolean = true,
-    /**
-     * Sharing is signed by this phone's owner key. The native app has no owner signer yet, so the switches say why
-     * they are off (Flutter shows the same while `canApprove` is false) and nothing is faked.
-     */
+    /** Sharing is signed by this phone's owner key; off with the reason until approval is set up. */
     val canApprove: Boolean = false,
+    /** The areas whose change is on its way. */
+    val working: ImmutableSet<String> = persistentSetOf(),
+    /** Opening the locked folder to others asks first. */
+    val confirmShare: Area? = null,
+    /** A change that did not go through. */
+    val failure: FactsBookError? = null,
 )
 
 public interface AreasActions {
@@ -221,9 +229,18 @@ public interface AreasActions {
     public fun reload()
 
     public fun setUpApproval()
+
+    /** Whether others may read [area]. Turning it on for the locked folder asks first. */
+    public fun share(area: Area, on: Boolean)
+
+    public fun confirmShare()
+
+    public fun cancelShare()
+
+    public fun dismiss()
 }
 
-/** Areas and sharing (spec 60 screen 17): each built-in area and whether others may read it. */
+/** Areas and sharing (spec 60 screen 17): each built-in area and whether others may read it (F: areas_screen.dart). */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
@@ -241,16 +258,46 @@ public class AreasViewModel(private val access: FactsBookAccess, private val nav
         mutable.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val r = access.node()?.areas() ?: unreachable
+            val canApprove = access.engine.state.value.canApprove
             mutable.update {
                 when (r) {
-                    is FbResult.Ok -> it.copy(areas = r.value.toImmutableList(), loading = false)
-                    is FbResult.Err -> it.copy(error = r.error, loading = false)
+                    is FbResult.Ok -> it.copy(areas = r.value.toImmutableList(), loading = false, canApprove = canApprove)
+                    is FbResult.Err -> it.copy(error = r.error, loading = false, canApprove = canApprove)
                 }
             }
         }
     }
 
     override fun setUpApproval(): Unit = nav.open(FactsBookRoute.Connect)
+
+    override fun share(area: Area, on: Boolean) {
+        val now = mutable.value
+        if (!now.canApprove || area.slug in now.working) return
+        if (on && area.sensitiveStorage) {
+            mutable.update { it.copy(confirmShare = area) }
+            return
+        }
+        write(area, on)
+    }
+
+    override fun confirmShare() {
+        val area = mutable.value.confirmShare ?: return
+        mutable.update { it.copy(confirmShare = null) }
+        write(area, true)
+    }
+
+    override fun cancelShare(): Unit = mutable.update { it.copy(confirmShare = null) }
+
+    private fun write(area: Area, on: Boolean) {
+        mutable.update { it.copy(working = (it.working + area.slug).toImmutableSet(), failure = null) }
+        viewModelScope.launch {
+            val r = access.node()?.setAreaShare(area, area.share.copy(readByDefault = on)) ?: unreachable
+            mutable.update { it.copy(working = (it.working - area.slug).toImmutableSet(), failure = (r as? FbResult.Err)?.error) }
+            if (r is FbResult.Ok) reload()
+        }
+    }
+
+    override fun dismiss(): Unit = mutable.update { it.copy(failure = null) }
 }
 
 // ---- Capture ------------------------------------------------------------------------------------------------------
@@ -272,7 +319,16 @@ public data class CaptureUi(
     /** Bumped when the field must be cleared (a save that reached somewhere other than the phone's editor). */
     val clearSeed: Int = 0,
     val needsText: Boolean = false,
-)
+    /** The node offers rules: "Let my rules read this" shows. */
+    val rulesSupported: Boolean = false,
+    /** How many rules are on. */
+    val rulesOn: Int = 0,
+    /** The person's choice; null follows whether any rule is on. */
+    val rules: Boolean? = null,
+) {
+    /** Whether this capture goes to the rules (F: `_rulesLook`). */
+    val rulesLook: Boolean get() = rulesSupported && (rules ?: (rulesOn > 0))
+}
 
 public interface CaptureActions {
     public fun back()
@@ -288,6 +344,10 @@ public interface CaptureActions {
     public fun seeNotSaved()
 
     public fun dismiss()
+
+    public fun rules(on: Boolean)
+
+    public fun seeRules()
 }
 
 /** Add something: a note or pasted text. Never a loss: saved, held by the node, kept on the phone, or kept on screen. */
@@ -303,8 +363,18 @@ public class CaptureViewModel(private val access: FactsBookAccess, private val n
             val node = access.node() ?: return@launch
             (node.things() as? FbResult.Ok)?.value?.let { t -> mutable.update { it.copy(things = t.toImmutableList()) } }
             (node.areas() as? FbResult.Ok)?.value?.let { a -> mutable.update { it.copy(areas = a.map(Area::slug).toImmutableList()) } }
+            val triggers = access.engine.triggers
+            if (triggers.supported) {
+                triggers.refresh(quiet = true)
+                val t = triggers.state.value
+                mutable.update { it.copy(rulesSupported = t.load == TriggersLoad.Ready, rulesOn = t.rules.count { r -> r.definition.enabled }) }
+            }
         }
     }
+
+    override fun rules(on: Boolean): Unit = mutable.update { it.copy(rules = on) }
+
+    override fun seeRules(): Unit = nav.open(FactsBookRoute.Triggers)
 
     override fun back(): Unit = nav.back()
 
@@ -340,7 +410,7 @@ public class CaptureViewModel(private val access: FactsBookAccess, private val n
                 return@launch
             }
             access.engine.open(access.activeProfileId.value)
-            val outcome = access.engine.capture(CaptureRequest(now.kind, text, now.area))
+            val outcome = access.engine.capture(CaptureRequest(now.kind, text, now.area), rulesLook = now.rulesLook)
             mutable.update {
                 when (outcome) {
                     is CaptureOutcome.SavedAtNode -> it.copy(working = false, notice = CaptureNotice.Saved, clearSeed = it.clearSeed + 1)
@@ -370,6 +440,10 @@ public data class NotSavedUi(
     val nowMs: Long = 0,
     /** False while the node cannot open the locked folder yet: "unlock it" is no way out then. */
     val canUnlock: Boolean = false,
+    /** The node hands back a note it holds as an encrypted object. */
+    val canExport: Boolean = false,
+    /** The export being shown, for the person to copy. */
+    val export: CaptureExport? = null,
 )
 
 public interface NotSavedActions {
@@ -384,6 +458,11 @@ public interface NotSavedActions {
     public fun cancelDiscard()
 
     public fun dismiss()
+
+    /** Export a note the node holds as the encrypted object it hands back. */
+    public fun export(entry: CouldNotSaveEntry)
+
+    public fun closeExport()
 }
 
 /** Notes not saved yet: kept until the person discards them (F105, D32); at 30 days the page asks. */
@@ -392,7 +471,12 @@ public interface NotSavedActions {
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 public class NotSavedViewModel(private val access: FactsBookAccess, private val nav: AppNavigator, private val clock: Clock) :
     ViewModel(), NotSavedActions {
-    private data class Local(val confirm: CouldNotSaveEntry? = null, val working: Boolean = false, val error: FactsBookError? = null)
+    private data class Local(
+        val confirm: CouldNotSaveEntry? = null,
+        val working: Boolean = false,
+        val error: FactsBookError? = null,
+        val export: CaptureExport? = null,
+    )
 
     private val local = MutableStateFlow(Local())
 
@@ -405,6 +489,8 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
                     error = own.error,
                     nowMs = clock.now().toEpochMilliseconds(),
                     canUnlock = !s.capabilities.isDisabled(io.github.eslamasabry.oc.engine.factsbook.FactsBookCapabilities.SENSITIVE_UNLOCK),
+                    canExport = s.capabilities.supports(EXPORT),
+                    export = own.export,
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotSavedUi())
@@ -441,11 +527,37 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
     override fun cancelDiscard(): Unit = local.update { it.copy(confirm = null) }
 
     override fun dismiss(): Unit = local.update { it.copy(error = null) }
+
+    override fun export(entry: CouldNotSaveEntry) {
+        if (entry.onPhone || local.value.working) return
+        local.update { it.copy(working = true, error = null) }
+        viewModelScope.launch {
+            val r = access.engine.node?.exportCapture(entry.id) ?: unreachable
+            local.update {
+                when (r) {
+                    is FbResult.Ok -> it.copy(working = false, export = r.value)
+                    is FbResult.Err -> it.copy(working = false, error = r.error)
+                }
+            }
+        }
+    }
+
+    override fun closeExport(): Unit = local.update { it.copy(export = null) }
+
+    private companion object {
+        const val EXPORT = "encrypted_unsaved_export"
+    }
 }
 
 // ---- Connect ------------------------------------------------------------------------------------------------------
 
-public data class ConnectUi(val working: Boolean = false, val error: FactsBookError? = null, val paired: Boolean = false)
+public data class ConnectUi(
+    val working: Boolean = false,
+    val error: FactsBookError? = null,
+    val paired: Boolean = false,
+    /** This phone's public owner key as hex, for the console's `--owner-key`. */
+    val ownerKey: String? = null,
+)
 
 public interface ConnectActions {
     public fun back()
@@ -460,6 +572,14 @@ public interface ConnectActions {
 public class ConnectViewModel(private val access: FactsBookAccess, private val nav: AppNavigator) : ViewModel(), ConnectActions {
     private val mutable = MutableStateFlow(ConnectUi())
     public val state: StateFlow<ConnectUi> = mutable.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            access.engine.open(access.activeProfileId.value)
+            val key = access.engine.ownerPublicKeyHex()
+            mutable.update { it.copy(ownerKey = key) }
+        }
+    }
 
     override fun back(): Unit = nav.back()
 

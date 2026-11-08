@@ -87,6 +87,7 @@ public fun AboutYouScreen(state: AboutYouUi, actions: AboutYouActions) {
                 )
             }
             item("list") { ThingList(state, actions) }
+            item("footer") { Footer(actions) }
         }
     }
 }
@@ -123,12 +124,29 @@ private fun Places(state: AboutYouUi, actions: AboutYouActions) {
                 onClick = actions::openReminders,
             )
         }
+        if (state.showTriggers) {
+            KitRow(
+                title = stringResource(Res.string.fbTriggersTitle),
+                leading = KitRowLeading.Glyph(KitIcons.sparkle),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::openTriggers,
+            )
+        }
         KitRow(
             title = stringResource(Res.string.fbAreasTitle),
             leading = KitRowLeading.Glyph(KitIcons.privacy),
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openAreas,
         )
+    }
+}
+
+/** Status and Settings, after the list (F: about_you_screen.dart `_footer`). */
+@Composable
+private fun Footer(actions: AboutYouActions) {
+    KitRowGroup {
+        KitRow(title = stringResource(Res.string.fbStatusTitle), trailing = KitRowTrailing.Chevron, onClick = actions::openStatus)
+        KitRow(title = stringResource(Res.string.fbSettingsTitle), trailing = KitRowTrailing.Chevron, onClick = actions::openSettings)
     }
 }
 

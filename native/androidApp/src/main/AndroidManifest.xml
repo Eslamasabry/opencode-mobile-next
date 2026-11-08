@@ -88,6 +88,9 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
         </activity>
         <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
+        <!-- FactsBook: the screen lock before an owner signature; shows nothing of its own. -->
+        <activity android:name=".graph.FactsBookConfirmActivity" android:exported="false" android:excludeFromRecents="true"
+            android:noHistory="false" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
             android:name="io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity"
             android:theme="@style/NativeTrampolineTheme"
