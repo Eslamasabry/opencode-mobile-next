@@ -38,7 +38,7 @@ W = 3 * w + 4 * gap
 canvas = Image.new('RGB', (W, h + strip + gap), (24, 24, 28))
 dr = ImageDraw.Draw(canvas)
 dr.text((gap, 6), label, fill=(255, 255, 255), font=font)
-for i, (t, im) in enumerate((('Flutter golden (FLUTTER_REF 8302de537)', fp), ('Native render (89ec49e55)', np_),
+for i, (t, im) in enumerate((('Flutter golden (FLUTTER_REF 8302de537)', fp), ('Native render (342103266)', np_),
                              ('Diff heat map (yellow small, red large)', heat))):
     x = gap + i * (w + gap)
     dr.text((x, 32), t, fill=(200, 200, 210), font=small)

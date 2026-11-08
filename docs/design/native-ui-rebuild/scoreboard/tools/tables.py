@@ -83,3 +83,20 @@ for i, r in enumerate(kept[:70], 1):
     ink = '' if r['ink'] is None else (f"{r['ink']:.2f}" if r['ink'] < 100 else 'n/a²')
     print(f"| {i} | {SURFACE.get(r['order'], 'other')} | {r['order']} | `{r['shot']}` | {r['tier']} | {(r['box'] or 0):.2f} | "
           f"{int(r['blob']) if r['blob'] is not None else ''} | {ink} | {r['moved'] if r['moved'] is not None else ''} |")
+
+# RC1 gate G2: daily path >= 90 % of goldens rendered and passing, everything >= 75 %.
+print('\n## RC1 gate G2 (daily path ≥ 90 % rendered and passing; all ≥ 75 %)\n')
+print('| surface | goldens | rendered | pass | pass / total | G2 |\n|---|---:|---:|---:|---:|---|')
+DP = [('home (41)', lambda r: r['order'] == '41'), ('chat (42)', lambda r: r['order'] == '42'),
+      ('composer (43)', lambda r: r['order'] == '43'), ('sheets (11, 12)', lambda r: r['order'] in ('11', '12')),
+      ('settings hub (44 `settings_hub_*`)', lambda r: r['order'] == '44' and r['shot'].startswith('settings_hub'))]
+allday = []
+for name, f in DP:
+    rs = [r for r in strict if f(r)]
+    allday += rs
+    p = sum(r['status'] == 'PASS' for r in rs); rd = sum(not r['unrendered'] for r in rs)
+    print(f"| {name} | {len(rs)} | {rd} | {p} | {100 * p / len(rs):.1f}% | {'pass' if p >= .9 * len(rs) else 'FAIL'} |")
+p = sum(r['status'] == 'PASS' for r in allday); rd = sum(not r['unrendered'] for r in allday)
+print(f"| **daily path** | {len(allday)} | {rd} | {p} | {100 * p / len(allday):.1f}% | {'pass' if p >= .9 * len(allday) else 'FAIL'} (≥ 90 %) |")
+p = sum(r['status'] == 'PASS' for r in strict); rd = sum(not r['unrendered'] for r in strict)
+print(f"| **all goldens** | {len(strict)} | {rd} | {p} | {100 * p / len(strict):.1f}% | {'pass' if p >= .75 * len(strict) else 'FAIL'} (≥ 75 %) |")
