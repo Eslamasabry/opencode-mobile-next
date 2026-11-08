@@ -33,6 +33,43 @@ flutter." Reference: `mobile-next/master` lib/ (Flutter).
 
 Deviation from Flutter, on purpose: the step glyph has no `surface3` tile (owner: no icons in boxes).
 
-## Renders (desktop, 412 × 915 dp at 2.625, dark)
+Also fixed while here: the work line's words counted a step that simply runs as "waiting to run 1 command" (the
+owner's screenshot); like Flutter's `_workCounts` it now reads "Ran 5 commands · fetched 2 pages". "Waiting to …" stays for
+steps not started yet and, while a request waits for the person, the step that asks.
 
-See the table at the end (filled in from `ChatRunningRenders`, run with `CHAT_RUNNING_OUT=<this folder>`).
+## Renders (desktop, the real chat screen and composer, 412 × 915 dp at 2.625, dark)
+
+Made by `native/feature/chat/src/desktopTest/.../ChatRunningRenders.kt` (`CHAT_RUNNING_OUT=<folder>`; it writes nothing
+without it) on the VPS at `e50c1a4c6`+`6de258744` (the fonts are the VPS's; Glass falls back to its frost on desktop, so
+the liquid pane of `native/glass-panes` is not in these). Still frames: the light and the sweep are drawn at rest (the whole
+outline lit), as the kit's still-frame rule does.
+
+| State | Glass | Solid | Next to Flutter's golden |
+|---|---|---|---|
+| Just started ("Thinking…", Stop chip, glow) | 1-just-started-glass-dark | 1-just-started-solid-dark | compare-1-just-started-{glass,solid} ↔ `kit_turn_starting_dark` |
+| Mid-commands: the live line names the step, work hidden | 2-mid-commands-glass-dark | 2-mid-commands-solid-dark | compare-2-mid-commands-* ↔ `kit_turn_running_live_dark` |
+| Mid-commands, steps shown (tap on the live line): newest three, "Show 4 earlier steps" | 3-mid-commands-steps-shown-glass-dark | 3-…-solid-dark | compare-3-* ↔ `kit_step_timeline_running_open_dark` |
+| Waiting for approval ("Waiting for you…" in amber; no clock, no sweep) | 4-waiting-for-approval-glass-dark | 4-…-solid-dark | compare-4-* ↔ `kit_turn_waiting_for_you_dark` |
+| Failed step, the agent thinking on: ⊗ on the rail, the thought said once in grey | 5-failed-step-glass-dark | 5-…-solid-dark | compare-5-* ↔ `kit_work_line_ended_failed_dark` |
+
+Flutter references in `flutter/` (from `mobile-next/master` test/goldens/kit): the turn's live line, the opened running
+timeline, the lone running row, the Stop chip strip (`kit_composerstatusstrip_stop_text2_360x800_dark`) and the classic glow.
+The request card of state 4 is not in the native render (the scene has no request slot).
+
+## Motion record
+
+`running-steps-solid-dark.mp4`: 60 frames at 30 fps (one 2 s step-light lap, looped three times), steps shown, Solid dark,
+Full motion: the light filling round the running step's node, the accent sweeping the command, the live line's light
+sweeping its words, the clock ticking. Desktop frame capture (no emulator: the PC was in quiet hours and the VPS has no
+KVM). The grey band behind the live line in 3-* and the video is the desktop pointer's hover after the tap, not a fill.
+
+## Proof
+
+- `ChatRunningTurnTest` (4): the live line names the step with the time and the work waits behind it until tapped; an
+  opened thought says its first line once; `thoughtBody`; Stop is the strip's chip, never in the box.
+- `S8ChatPolishRulesTest`: a running step counts with the rest.
+- VPS desktopTest: ChatRunningTurnTest 4/4, QaWave1ComposerTest 6/6, S8ChatPolishRulesTest 11/11, P102StoppedStepsTest
+  5/5, TurnFactsTest 22/22, S28ComposerTipsTest 3/3, F1ComposerOneRowTest 2/2, StopGuardTest 5/5, KitStepTimelineTest
+  7/7, S10MotionTest 15/15, KitStepLightTest 4/4. The kit gate tests (`KitTurnGateTest`, `KitComposerStatusStripGateTest`,
+  `Chat3ComposerGateTest`) need the Flutter goldens the VPS does not have; CI's fast lane runs them (desktop tests 0–2 green
+  on run 42519936665).

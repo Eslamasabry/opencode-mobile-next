@@ -34,9 +34,11 @@ class AgentErrorTextTest {
             "You exceeded your current quota, please check your plan" to AgentErrorCause.OutOfCredit,
             "ENOSPC: no space left on device, write" to AgentErrorCause.ServerDiskFull,
             "Free usage limit reached. Subscribe to OpenCode Go to keep going: https://opencode.ai/go" to
-                AgentErrorCause.FreeTierLimit,
-            "FreeUsageLimitError" to AgentErrorCause.FreeTierLimit,
-            "APIError 429: Free usage limit reached" to AgentErrorCause.FreeTierLimit,
+                AgentErrorCause.UsageLimit,
+            "FreeUsageLimitError" to AgentErrorCause.UsageLimit,
+            "FreeUsageLimitError: Free usage exceeded, subscribe to Go" to AgentErrorCause.UsageLimit,
+            "APIError 429: Free usage limit reached" to AgentErrorCause.UsageLimit,
+            "free tier limit" to AgentErrorCause.FreeTierLimit,
             "Go usage limit exceeded" to AgentErrorCause.UsageLimit,
         )
         for ((raw, cause) in cases) assertEquals(cause, classify(raw), raw)
@@ -61,12 +63,17 @@ class AgentErrorTextTest {
     }
 
     @Test
-    fun `B-AGENT-012 the free-tier limit is said plainly, with the way on`() {
-        val words = AgentErrorWords.forText("Free usage limit reached", En)
-        assertEquals("OpenCode's free models stopped this reply.", words.headline)
-        assertTrue("even when you" in words.hint!!)
-        assertTrue(words.humanized)
-        assertNotEquals(words.headline, AgentErrorWords.forText("Free usage limit reached", Ar).headline)
+    fun `B-100 a used-up free allowance is a usage limit, not the long-conversation refusal`() {
+        for (raw in listOf("Free usage limit reached", "FreeUsageLimitError: Free usage exceeded")) {
+            val words = AgentErrorWords.forText(raw, En)
+            assertEquals("This model's usage limit is reached for now.", words.headline, raw)
+            assertFalse("Long conversations" in words.hint!!, raw)
+            assertTrue(words.humanized)
+        }
+        assertNotEquals(
+            AgentErrorWords.forText("Free usage limit reached", En).headline,
+            AgentErrorWords.forText("Free usage limit reached", Ar).headline,
+        )
     }
 
     @Test

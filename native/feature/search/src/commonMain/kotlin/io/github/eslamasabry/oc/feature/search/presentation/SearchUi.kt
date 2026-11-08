@@ -35,6 +35,8 @@ public data class SearchHitUi(
     val snippetFromYou: Boolean = false,
     /** The matching message, for inside-text hits only. */
     val messageId: String? = null,
+    /** When the conversation last changed, epoch ms; null = unknown. */
+    val updatedMs: Long? = null,
 ) {
     val key: String
         get() = ref.profileId.raw + "/" + ref.sessionId.raw + "/" + (messageId ?: "")
@@ -64,6 +66,10 @@ public data class SearchUi(
      */
     val goTo: ImmutableList<GoToRow> = persistentListOf(),
     val destinations: ImmutableList<SearchIndexEntry> = persistentListOf(),
+    /** The chosen server's newest conversations, projects and waiting count (B1). */
+    val activity: SearchActivity = SearchActivity(),
+    /** The clock when the state was last built, for "5 min ago". 0 = unknown (no ages shown). */
+    val nowMs: Long = 0,
 ) {
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
@@ -98,4 +104,10 @@ public interface SearchActions {
     public fun goTo(row: GoToRow)
 
     public fun openDestination(entry: SearchIndexEntry) {}
+
+    /** Open a project found by its name (B1 "Projects"). */
+    public fun openProject(project: SearchProject) {}
+
+    /** Open one of the recent conversations listed under an empty field. */
+    public fun openRecent(conversation: SearchRecentConversation) {}
 }

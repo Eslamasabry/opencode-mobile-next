@@ -99,8 +99,11 @@ public object LiquidEdge {
      */
     public fun recipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
+        // Crisp edges (owner 2026-11-09, "crisper glossy glass"): no soft shadow halo under any pane; the 1 dp rim light
+        // and the specular set it off what lies behind it.
+        @Suppress("UNUSED_PARAMETER")
         fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false) =
-            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, shadow, rimMax, share, depth, if (dark) tintDark else tintLight)
+            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, NO_SHADOW, rimMax, share, depth, if (dark) tintDark else tintLight)
         return when (role) {
             // Bars and the message box carry words over moving text: their glass frosts it to colour and shape
             // (never readable text behind words), while the rim still bends it.
@@ -114,6 +117,9 @@ public object LiquidEdge {
             LiquidRole.Action -> r(1f, 26f, .22f, .55f, .62f, rimMax = 40f, share = .5f, depth = true)
         }
     }
+
+    /** No liquid pane casts a shadow (owner 2026-11-09: crisp edges, no halo). */
+    private const val NO_SHADOW: Float = 0f
 
     /** The Glass surface role and level whose tint a liquid [role] pane keeps. */
     public fun glassRole(role: LiquidRole): Pair<SurfaceRole, SurfaceLevel> =
@@ -244,6 +250,8 @@ public object LiquidEdge {
         val content =
             listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)) +
                 AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
+                // A shader look behind the content (owner 2026-11-09: the glass now shows it).
+                LiveSpots.of(ground, roles.dark) +
                 listOf(lerp(ground, roles.text1.opaqueArgb(), BLURRED_INK), lerp(ground, roles.accent.opaqueArgb(), ACCENT_WASH))
         return content.map { filtered(it, recipe) }
     }

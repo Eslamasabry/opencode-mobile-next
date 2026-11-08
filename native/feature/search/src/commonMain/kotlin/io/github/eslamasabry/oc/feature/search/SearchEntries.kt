@@ -16,9 +16,11 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchViewModel
 import io.github.eslamasabry.oc.feature.search.presentation.ShortcutsViewModel
 import io.github.eslamasabry.oc.feature.search.ui.ProjectHealthScreen
 import io.github.eslamasabry.oc.feature.search.ui.SearchScreen
+import io.github.eslamasabry.oc.feature.search.ui.SearchWebOption
 import io.github.eslamasabry.oc.feature.search.ui.ShortcutsScreen
 import io.github.eslamasabry.oc.feature.search.web.WebSearchPanel
 import io.github.eslamasabry.oc.feature.search.web.WebSearchViewModel
+import io.github.eslamasabry.oc.feature.search.web.webOption
 import io.github.eslamasabry.oc.feature.search.web.WebSourcesScreen
 import io.github.eslamasabry.oc.feature.search.web.WebSourcesViewModel
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -64,7 +66,12 @@ public class SearchEntries : EntryInstaller {
                 }
             val webState by web.state.collectAsStateWithLifecycle()
             LaunchedEffect(state.server) { web.chooseServer(state.server) }
-            SearchScreen(state, vm, webSearch = { WebSearchPanel(webState, web) })
+            SearchScreen(
+                state,
+                vm,
+                web = if (webOption(webState)) SearchWebOption(webState.open, web::toggle) else null,
+                webSearch = { WebSearchPanel(webState, web) },
+            )
         }
     }
 }

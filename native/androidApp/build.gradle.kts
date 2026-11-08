@@ -211,6 +211,63 @@ android {
         create("switch") {
             dimension = "channel"
         }
+        // Dev loop (tool/dev/README.md): `installDevDebug` puts "OpenCode Dev" beside the real and preview apps. Own
+        // package (own data, starts clean), its own keystore (devSigning below), debug build type only. src/dev
+        // retargets the launcher shortcuts, tints the icon and turns off what registers outside the app (widgets,
+        // Quick Settings tiles, the opencode-mobile:// link filter, the test-report broadcast name).
+        create("dev") {
+            dimension = "channel"
+            applicationIdSuffix = ".native.dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("int", "PHONE_SERVER_PORT", "4102")
+        }
+    }
+}
+
+// Dev loop signing: a properties file (storeFile, storePassword, keyAlias, keyPassword) named by `oc.devSigning` in
+// local.properties, the Gradle property oc.devSigning or OC_DEV_SIGNING. Never the machine's debug key: on the PC
+// that key is a real lineage, so without the file the dev build stops instead of falling back to it.
+val devSigning: Properties? = run {
+    val local = Properties()
+    rootDir.resolve("local.properties").takeIf { it.isFile }?.inputStream()?.use(local::load)
+    val named =
+        providers.gradleProperty("oc.devSigning").orNull
+            ?: providers.environmentVariable("OC_DEV_SIGNING").orNull
+            ?: local.getProperty("oc.devSigning")
+    named?.takeIf { it.isNotBlank() }?.let(::File)?.takeIf { it.isFile }?.let { f ->
+        Properties().apply { f.inputStream().use(::load) }
+    }
+}
+devSigning?.let { p ->
+    android.signingConfigs.create("dev") {
+        storeFile = File(p.getProperty("storeFile"))
+        storePassword = p.getProperty("storePassword")
+        keyAlias = p.getProperty("keyAlias")
+        keyPassword = p.getProperty("keyPassword")
+        enableV4Signing = true // the .idsig `adb install --incremental` streams from
+    }
+}
+androidComponents.beforeVariants(androidComponents.selector().withFlavor("channel" to "dev")) { variant ->
+    variant.enable = variant.buildType == "debug" // the loop needs devDebug only
+    // Its sources are the preview's; tests and lint run on preview/switch, so `test*`/`connected*` do no extra work.
+    variant.hostTests.values.forEach { it.enable = false }
+    variant.deviceTests.values.forEach { it.enable = false }
+}
+androidComponents.onVariants(androidComponents.selector().withFlavor("channel" to "dev")) { variant ->
+    val dev = android.signingConfigs.findByName("dev")
+    if (dev != null) {
+        variant.signingConfig.setConfig(dev)
+    } else {
+        val refuse =
+            tasks.register("refuseDevWithoutDevKey") {
+                doLast {
+                    throw GradleException(
+                        "No dev keystore: set oc.devSigning in native/local.properties (tool/dev/README.md). The dev " +
+                            "build never falls back to this machine's debug key."
+                    )
+                }
+            }
+        tasks.matching { it.name == "preDevDebugBuild" }.configureEach { dependsOn(refuse) }
     }
 }
 

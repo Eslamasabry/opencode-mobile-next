@@ -660,7 +660,6 @@ internal fun androidSettingsFacts(platform: PlatformCapabilities, dynamicColour:
         opens = SETTINGS_OPENS,
         surfaceStyles = true,
         phraseChips = true,
-        problemReport = Telemetry.vendorAvailable,
         transcriptDisplay = true,
     )
 

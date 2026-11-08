@@ -33,7 +33,7 @@ public enum class KitStartingPhase {
     /** Definitely not sent. The words and choices are kept; Try again or Edit. */
     NotSent,
 
-    /** Maybe sent. Never resent from here; only the made conversation can be opened. */
+    /** Maybe sent. Never resent from here; open the made conversation, check again, or discard. */
     Unconfirmed,
 }
 
@@ -41,8 +41,8 @@ public enum class KitStartingPhase {
  * The first chat frame, shown the moment Start is tapped and before the server answers: the exact
  * prompt as the first message bubble, the chosen agent and model under it, and one status line that
  * says what is happening (Sending…, not sent, not sure). A definite failure offers Try again (the
- * same attempt) and Edit (back to the words and choices, nothing lost); an unsure one offers only
- * opening the made conversation. The words remain owned by the screen's ViewModel and draft.
+ * same attempt) and Edit (back to the words and choices, nothing lost); an unsure one offers opening the made
+ * conversation (or checking again when there is none) and Discard, never a resend. The words remain owned by the screen's ViewModel and draft.
  *
  * States: sending, not sent, unconfirmed Text: reading (bubble), frame (status) Cap: Conversation
  * Motion: status and actions cross-fade QUICK; Off = instant
@@ -67,6 +67,10 @@ public fun KitStartingConversation(
     onEdit: (() -> Unit)? = null,
     reviewLabel: String? = null,
     onReview: (() -> Unit)? = null,
+    recheckLabel: String? = null,
+    onRecheck: (() -> Unit)? = null,
+    discardLabel: String? = null,
+    onDiscard: (() -> Unit)? = null,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { keyboard?.hide() }
@@ -158,6 +162,29 @@ public fun KitStartingConversation(
                                 onReview,
                                 role = KitButtonRole.Secondary,
                                 modifier = Modifier.testTag("starting-review"),
+                            )
+                        // B-103: an unsure first message is never a dead end: read the record again, or let it go.
+                        if (
+                            shown == KitStartingPhase.Unconfirmed &&
+                                onRecheck != null &&
+                                recheckLabel != null
+                        )
+                            KitButton(
+                                recheckLabel,
+                                onRecheck,
+                                role = KitButtonRole.Secondary,
+                                modifier = Modifier.testTag("starting-recheck"),
+                            )
+                        if (
+                            shown == KitStartingPhase.Unconfirmed &&
+                                onDiscard != null &&
+                                discardLabel != null
+                        )
+                            KitButton(
+                                discardLabel,
+                                onDiscard,
+                                role = KitButtonRole.Tertiary,
+                                modifier = Modifier.testTag("starting-discard"),
                             )
                     }
                 }
