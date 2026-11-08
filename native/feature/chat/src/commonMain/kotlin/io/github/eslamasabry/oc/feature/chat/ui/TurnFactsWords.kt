@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
@@ -110,8 +111,46 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun stepTitle(f: ToolFacts): String {
     val a = f.titleArgs
-    fun arg(i: Int): String = a.getOrNull(i) ?: ""
-    return when (f.phrase) {
+    val words = phraseWords(f.phrase, a.getOrNull(0) ?: "", a.getOrNull(1) ?: "")
+    return if (f.phrase in serverWordPhrases) words.ifBlank { f.idWords.replaceFirstChar { it.uppercase() } }
+    else words
+}
+
+/** Phrases whose title is server words (a sub-agent type, an LSP operation, a call's own title): shown as they are. */
+private val serverWordPhrases =
+    setOf(
+        ToolPhrase.AgentType,
+        ToolPhrase.LspOperation,
+        ToolPhrase.MessageSummary,
+        ToolPhrase.ServerTitle,
+        ToolPhrase.Generic,
+    )
+
+private const val ARG0 = "\u0000"
+private const val ARG1 = "\u0001"
+
+/**
+ * S28 story 13 (Flutter `transcriptToolHeading`): every step title as words resolved once, for work that runs outside
+ * composition (Copy transcript names each tool as its step row does, never by its raw id).
+ */
+@Composable
+internal fun rememberStepTitles(): (ToolFacts) -> String {
+    val templates = ToolPhrase.entries.associateWith { phraseWords(it, ARG0, ARG1) }
+    return remember(templates) {
+        { f ->
+            val a = f.titleArgs
+            val arg0 = a.getOrNull(0) ?: ""
+            if (f.phrase in serverWordPhrases) arg0.ifBlank { f.idWords.replaceFirstChar { it.uppercase() } }
+            else templates.getValue(f.phrase).replace(ARG0, arg0).replace(ARG1, a.getOrNull(1) ?: "")
+        }
+    }
+}
+
+/** One phrase's words with its arguments [arg0] and [arg1] (server-word phrases give [arg0] itself). */
+@Composable
+private fun phraseWords(phrase: ToolPhrase, arg0: String, arg1: String): String {
+    fun arg(i: Int): String = if (i == 0) arg0 else arg1
+    return when (phrase) {
         ToolPhrase.Read -> stringResource(Res.string.chatUiRead)
         ToolPhrase.List -> stringResource(Res.string.chatUiList)
         ToolPhrase.FindFiles -> stringResource(Res.string.chatUiFindFiles)
@@ -155,7 +194,7 @@ internal fun stepTitle(f: ToolFacts): String {
         ToolPhrase.LspOperation,
         ToolPhrase.MessageSummary,
         ToolPhrase.ServerTitle,
-        ToolPhrase.Generic -> arg(0).ifBlank { f.idWords.replaceFirstChar { it.uppercase() } }
+        ToolPhrase.Generic -> arg(0)
     }
 }
 
