@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.ui.kitchat.tool
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -46,6 +49,24 @@ class KitToolRowTest {
         id = "call-1", kind = kind, title = title, subject = subject, detail = detail, status = status,
         durationLabel = durationLabel, added = added, removed = removed, statusLabel = statusLabel,
     )
+
+    @Test
+    fun `C19 at large text a long file name is cut in the middle, never broken mid-word`() = runComposeUiTest {
+        val name = "WriteTargetWithAVeryLongFileNameThatDoesNotFit.kt"
+        setContent {
+            ChatTestTheme(fontScale = 1.3f) {
+                androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.width(260.dp)) {
+                    KitToolRow(view(title = "Write", subject = name), opened = false, onToggle = {})
+                }
+            }
+        }
+        val shown =
+            onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty().map { t -> t.text } }
+                .filter { it.startsWith("WriteTarget") }
+        assertTrue(shown.isNotEmpty() && shown.all { '…' in it && it.endsWith("Name.kt".takeLast(3)) && '\n' !in it }, "name was $shown")
+    }
 
     @Test
     fun `B-CHAT-062 a step row draws its title, subject, detail, status and duration as given`() = runComposeUiTest {

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
+import io.github.eslamasabry.oc.ui.kit.KitMonoCut
+import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -211,7 +213,13 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
                     StepTitle(view.title, lines)
                 }
                 if (subject != null) {
-                    KitFrameText { KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Secondary, maxLines = lines) }
+                    KitFrameText {
+                        // C19: a name or path has no space to wrap at, so two lines broke it mid-word at 1.3x text. It
+                        // keeps its head and its file name on one line instead; words and commands still wrap.
+                        if (subject.none { it.isWhitespace() })
+                            KitMonoText(redacted(subject), Modifier.fillMaxWidth(), TextTone.Secondary, cut = KitMonoCut.Middle, maxLines = 1)
+                        else KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Secondary, maxLines = lines)
+                    }
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
