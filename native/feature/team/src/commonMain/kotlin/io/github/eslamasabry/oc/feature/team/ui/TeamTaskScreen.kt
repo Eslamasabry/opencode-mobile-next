@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -426,10 +427,30 @@ private fun askAction(
     answer: (TaskAskUi) -> Unit,
 ): KitAction =
     when (a) {
-        TaskAskAction.Answer -> KitAction(stringResource(Res.string.teamProjectTaskAnswer), { answer(ask) }, enabled)
-        TaskAskAction.Resume -> KitAction(stringResource(Res.string.teamProjectInterruptedResume), actions::resume, enabled)
-        TaskAskAction.Restart -> KitAction(stringResource(Res.string.teamProjectTaskRestart), actions::restart, enabled)
-        TaskAskAction.ReviewFindings -> KitAction(stringResource(Res.string.teamProjectTaskReviewFindings), actions::selectOpenFindings, enabled)
+        TaskAskAction.Answer -> KitAction(
+            stringResource(Res.string.teamProjectTaskAnswer),
+            { answer(ask) },
+            enabled,
+            icon = KitIcons.send,
+        )
+        TaskAskAction.Resume -> KitAction(
+            stringResource(Res.string.teamProjectInterruptedResume),
+            actions::resume,
+            enabled,
+            icon = KitIcons.play,
+        )
+        TaskAskAction.Restart -> KitAction(
+            stringResource(Res.string.teamProjectTaskRestart),
+            actions::restart,
+            enabled,
+            icon = KitIcons.restart,
+        )
+        TaskAskAction.ReviewFindings -> KitAction(
+            stringResource(Res.string.teamProjectTaskReviewFindings),
+            actions::selectOpenFindings,
+            enabled,
+            icon = KitIcons.checks,
+        )
         is TaskAskAction.Resolve ->
             KitAction(
                 stringResource(
@@ -534,7 +555,12 @@ private fun Findings(t: TaskView, state: TeamTaskUi, actions: TeamTaskActions, e
             else null,
         actions =
             listOfNotNull(
-                KitAction(stringResource(Res.string.teamProjectTaskRecheck), actions::recheck, enabled).takeIf { t.canVerify },
+                KitAction(
+                    stringResource(Res.string.teamProjectTaskRecheck),
+                    actions::recheck,
+                    enabled,
+                    icon = KitIcons.retry,
+                ).takeIf { t.canVerify },
                 KitAction(stringResource(Res.string.teamProjectTaskIgnore), ignore, enabled).takeIf { state.selected.size == 1 },
             ),
     )
@@ -589,14 +615,40 @@ private fun Controls(t: TaskView, actions: TeamTaskActions, enabled: KitEnabled)
             KitMonoText(t.diff, Modifier.testTag("team-task-diff"))
         }
     }
+    // C05: the task's acts carry their glyphs, so "Stop task" and the rest read as actions, not loose words.
     val tertiary =
         listOfNotNull(
-            KitAction(stringResource(Res.string.teamProjectTaskPause), actions::pause, enabled).takeIf { c.pause },
-            KitAction(stringResource(Res.string.teamProjectTaskResume), actions::resume, enabled).takeIf { c.resume },
-            KitAction(stringResource(Res.string.teamProjectTaskRestart), actions::restart, enabled).takeIf { c.restart },
-            KitAction(stringResource(Res.string.teamProjectTaskVerify), actions::verify, enabled).takeIf { c.verify },
-            KitAction(stringResource(Res.string.teamProjectTaskStop), { actions.ask(TaskConfirm.Stop) }, enabled, destructive = true)
-                .takeIf { c.stop },
+            KitAction(
+                stringResource(Res.string.teamProjectTaskPause),
+                actions::pause,
+                enabled,
+                icon = KitIcons.pause,
+            ).takeIf { c.pause },
+            KitAction(
+                stringResource(Res.string.teamProjectTaskResume),
+                actions::resume,
+                enabled,
+                icon = KitIcons.play,
+            ).takeIf { c.resume },
+            KitAction(
+                stringResource(Res.string.teamProjectTaskRestart),
+                actions::restart,
+                enabled,
+                icon = KitIcons.restart,
+            ).takeIf { c.restart },
+            KitAction(
+                stringResource(Res.string.teamProjectTaskVerify),
+                actions::verify,
+                enabled,
+                icon = KitIcons.checks,
+            ).takeIf { c.verify },
+            KitAction(
+                stringResource(Res.string.teamProjectTaskStop),
+                { actions.ask(TaskConfirm.Stop) },
+                enabled,
+                icon = KitIcons.stopCircle,
+                destructive = true,
+            ).takeIf { c.stop },
         )
     KitActionBlock(Modifier.padding(horizontal = kitPageGutter()), tertiary = tertiary)
 }
