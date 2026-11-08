@@ -95,27 +95,44 @@ private val RESET_AT = ci("rate.?limit.?reset\"?\\s*[:=]\\s*\"?(\\d{10,13})")
 /** Two minutes: a wait longer than this is a limit to switch away from, not a pause (design §1). */
 public const val LIMIT_OUT_AFTER_MS: Long = 2 * 60 * 1000L
 
-private fun waitMs(text: String, nowMs: Long?): Long? {
-    RESET_AT.find(text)?.let { m ->
-        // An absolute time means nothing without the phone's clock.
-        val raw = m.groupValues[1].toLongOrNull() ?: return null
-        nowMs ?: return null
-        val atMs = if (m.groupValues[1].length <= 10) raw * 1000 else raw
-        return (atMs - nowMs).coerceAtLeast(0)
+private const val SECOND_MS = 1_000.0
+private const val MINUTE_MS = 60 * SECOND_MS
+private const val HOUR_MS = 60 * MINUTE_MS
+private const val DAY_MS = 24 * HOUR_MS
+
+/** Epoch seconds have ten digits until 2286; longer reset values are milliseconds. */
+private const val EPOCH_SECONDS_DIGITS = 10
+
+/** Milliseconds per [unit] of a wait ("ms", "s", "min", "h", "d"; none means seconds); null when unknown. */
+private fun unitMs(unit: String): Double? =
+    when {
+        unit.startsWith("ms") || unit.startsWith("milli") -> 1.0
+        unit.isEmpty() || unit.startsWith("s") -> SECOND_MS
+        unit.startsWith("m") -> MINUTE_MS
+        unit.startsWith("h") -> HOUR_MS
+        unit.startsWith("d") -> DAY_MS
+        else -> null
     }
-    val m = WAIT.find(text) ?: return null
-    val n = m.groupValues[1].toDoubleOrNull() ?: return null
-    val unit = m.groupValues[2].lowercase()
-    val factor =
-        when {
-            unit.startsWith("ms") || unit.startsWith("milli") -> 1.0
-            unit.isEmpty() || unit.startsWith("s") -> 1000.0
-            unit.startsWith("m") -> 60_000.0
-            unit.startsWith("h") -> 3_600_000.0
-            unit.startsWith("d") -> 86_400_000.0
-            else -> return null
-        }
-    return (n * factor).toLong()
+
+/** The wait until an absolute reset; null without the phone's clock (an absolute time means nothing then). */
+private fun resetWaitMs(digits: String, nowMs: Long?): Long? {
+    val raw = digits.toLongOrNull()
+    if (raw == null || nowMs == null) return null
+    val atMs = if (digits.length <= EPOCH_SECONDS_DIGITS) raw * SECOND_MS.toLong() else raw
+    return (atMs - nowMs).coerceAtLeast(0)
+}
+
+/** How long the error says to wait, or null when it names no wait. */
+private fun waitMs(text: String, nowMs: Long?): Long? {
+    val reset = RESET_AT.find(text)
+    val wait = if (reset == null) WAIT.find(text) else null
+    val n = wait?.groupValues?.get(1)?.toDoubleOrNull()
+    val factor = wait?.groupValues?.get(2)?.lowercase()?.let(::unitMs)
+    return when {
+        reset != null -> resetWaitMs(reset.groupValues[1], nowMs)
+        n == null || factor == null -> null
+        else -> (n * factor).toLong()
+    }
 }
 
 /** Whether a rate limit in [text] lasts: a day-or-longer window, a wait over two minutes, or retries given up. */
@@ -130,23 +147,29 @@ private fun rateLimitLasts(text: String, nowMs: Long?): Boolean =
  */
 public fun agentRunFailure(reason: String?, nowMs: Long? = null): AgentRunFailure {
     val text = reason?.trim().orEmpty()
-    if (text.isEmpty()) return AgentRunFailure(AgentRunFailureKind.Unknown)
     val noCredit = NO_CREDIT.containsMatchIn(text)
-    if (SIGN_IN.containsMatchIn(text) && !noCredit) return AgentRunFailure(AgentRunFailureKind.SignIn)
-    // Waiting cannot add credit.
-    if (noCredit) return AgentRunFailure(AgentRunFailureKind.NoCredit, out = true)
-    if (MODEL_UNAVAILABLE.containsMatchIn(text)) return AgentRunFailure(AgentRunFailureKind.ModelUnavailable)
-    val cause = causeOf(text)
-    val out =
-        when (cause) {
-            Cause.UsageLimit,
-            Cause.FreeTierLimit,
-            Cause.OutOfCredit -> true
-            Cause.RateLimited -> rateLimitLasts(text, nowMs)
-            else -> false
+    return when {
+        text.isEmpty() -> AgentRunFailure(AgentRunFailureKind.Unknown)
+        SIGN_IN.containsMatchIn(text) && !noCredit -> AgentRunFailure(AgentRunFailureKind.SignIn)
+        // Waiting cannot add credit.
+        noCredit -> AgentRunFailure(AgentRunFailureKind.NoCredit, out = true)
+        MODEL_UNAVAILABLE.containsMatchIn(text) -> AgentRunFailure(AgentRunFailureKind.ModelUnavailable)
+        else -> {
+            val cause = causeOf(text)
+            AgentRunFailure(kindOf(cause, text), out = causeLasts(cause, text, nowMs))
         }
-    return AgentRunFailure(kindOf(cause, text), out)
+    }
 }
+
+/** A plan's usage, the free tier and credit do not come back in a minute; a rate limit only when [rateLimitLasts]. */
+private fun causeLasts(cause: Cause?, text: String, nowMs: Long?): Boolean =
+    when (cause) {
+        Cause.UsageLimit,
+        Cause.FreeTierLimit,
+        Cause.OutOfCredit -> true
+        Cause.RateLimited -> rateLimitLasts(text, nowMs)
+        else -> false
+    }
 
 private fun kindOf(cause: Cause?, text: String): AgentRunFailureKind =
     when (cause) {
