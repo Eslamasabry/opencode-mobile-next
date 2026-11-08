@@ -31,6 +31,7 @@ class QueuedServerWatchTest {
         var watching = true
         val opens = ArrayList<ProfileId>()
         val released = ArrayList<ProfileId>()
+        val nudges = ArrayList<ProfileId>()
 
         override fun queue(): QueueRead = QueueRead.Readable(QueuedPromptCodec.decodeQueue(raw))
 
@@ -44,6 +45,10 @@ class QueuedServerWatchTest {
                 live += profile
                 Outcome.Ok(Unit)
             } else Outcome.Failed(Failure.Network())
+        }
+
+        override fun nudge(profile: ProfileId) {
+            nudges += profile
         }
 
         override suspend fun release(profile: ProfileId) {
@@ -79,6 +84,40 @@ class QueuedServerWatchTest {
         advanceTimeBy(QueuedServerWatch.ROUND.inWholeMilliseconds)
         runCurrent()
         assertEquals(listOf(b), ports.released)
+    }
+
+    @Test
+    fun `B-146 a server the watch opens is asked to send at once, and a live one again every round`() = runTest {
+        val ports = Ports().apply { raw = "[" + entry("q1", b.raw) + "]"; reachable += b }
+        val watch = QueuedServerWatch(ports, backgroundScope) { currentTime }
+        watch.start()
+        runCurrent()
+        assertEquals(listOf(b), ports.opens)
+        assertEquals(listOf(b), ports.nudges, "opening alone sends nothing: its delivery must be asked")
+        advanceTimeBy(QueuedServerWatch.ROUND.inWholeMilliseconds)
+        runCurrent()
+        assertEquals(listOf(b), ports.opens, "never opened twice")
+        assertEquals(listOf(b, b), ports.nudges, "a live server with a waiting prompt is asked again")
+    }
+
+    @Test
+    fun `B-146 a connection opened elsewhere still sends what waits for it`() = runTest {
+        val ports = Ports().apply { raw = "[" + entry("q1", b.raw) + "]"; live += b }
+        val watch = QueuedServerWatch(ports, backgroundScope) { currentTime }
+        watch.start()
+        runCurrent()
+        assertTrue(ports.opens.isEmpty())
+        assertEquals(listOf(b), ports.nudges)
+        // Sent (the entry is gone) or not allowed to watch: no more nudges.
+        ports.raw = "[]"
+        advanceTimeBy(QueuedServerWatch.ROUND.inWholeMilliseconds)
+        runCurrent()
+        assertEquals(listOf(b), ports.nudges)
+        ports.raw = "[" + entry("q2", b.raw) + "]"
+        ports.watching = false
+        advanceTimeBy(QueuedServerWatch.ROUND.inWholeMilliseconds)
+        runCurrent()
+        assertEquals(listOf(b), ports.nudges)
     }
 
     @Test

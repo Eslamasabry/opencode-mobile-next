@@ -15,8 +15,15 @@ public interface QueuedServerPorts {
     /** The shared `oc.offlineQueue`, as stored. */
     public fun queue(): QueueRead
 
-    /** True when this saved server already has a live connection (its own delivery sends the queue). */
+    /** True when this saved server already has a live connection. */
     public fun live(profile: ProfileId): Boolean
+
+    /**
+     * Makes sure that live server's delivery exists and asks it to send what waits once its stream is connected
+     * (B-146: a connection nobody reads the delivery of never sends its queue). Local and cheap; never a second
+     * send, because the queue's dispatch marker decides.
+     */
+    public fun nudge(profile: ProfileId)
 
     /** True while watching may cost a request: the app is in use, there is a network, no battery saver. */
     public fun mayWatch(): Boolean
@@ -40,7 +47,9 @@ public interface QueuedServerPorts {
  * - only while [QueuedServerPorts.mayWatch] (in use, online, no battery saver);
  * - per server a backoff from [FIRST_WAIT] doubling to [LONGEST_WAIT] after each refused open;
  * - no new send path: opening the connection hands the prompt to that server's own offline queue,
- *   whose dispatch marker makes the send happen exactly once.
+ *   whose dispatch marker makes the send happen exactly once;
+ * - every round, each live server with a waiting prompt is nudged ([QueuedServerPorts.nudge]): a connection
+ *   opened elsewhere, or one whose last send pass stopped early, still sends once it can.
  *
  * A connection this watch opened is released when that server has nothing left waiting.
  */
@@ -98,6 +107,7 @@ public class QueuedServerWatch(
         }
         backoff.keys.retainAll(waiting)
         if (!ports.mayWatch()) return
+        for (profile in waiting) if (ports.live(profile)) ports.nudge(profile)
         val at = now()
         val due =
             waiting
@@ -108,6 +118,7 @@ public class QueuedServerWatch(
                 is Outcome.Ok -> {
                     opened += profile
                     backoff -= profile
+                    ports.nudge(profile)
                 }
                 is Outcome.Failed -> {
                     val wait =

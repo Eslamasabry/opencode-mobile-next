@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.model.NetworkState
 import io.github.eslamasabry.oc.core.model.NetworkStatus
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.delivery.DeliveryAccessors
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRead
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedServerPorts
@@ -56,6 +57,13 @@ class AppQueuedServerWatch(
         else OfflineQueueStore(stores.prefs, stores.lanes.app).load()
 
     override fun live(profile: ProfileId): Boolean = registry.live.value[profile] != null
+
+    // B-146: reading the delivery creates it (a background connection has no chat screen to do that), and it sends
+    // the queue once its stream is connected.
+    override fun nudge(profile: ProfileId) {
+        val graph = registry.live.value[profile] ?: return
+        (graph as DeliveryAccessors).connectionDelivery.sendWaiting()
+    }
 
     override fun mayWatch(): Boolean {
         if (!warm) {

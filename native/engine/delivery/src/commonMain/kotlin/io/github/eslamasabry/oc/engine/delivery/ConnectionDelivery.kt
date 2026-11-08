@@ -81,11 +81,21 @@ public fun interface InteractiveSendCheck {
     public suspend fun check(profile: ServerProfile): Outcome<Unit>
 }
 
+/**
+ * B-146: the connection's delivery for app-level owners that are not a chat screen. The binding is created on first
+ * read, and only a created delivery sends that server's queued prompts when its stream connects, so whoever opens a
+ * connection to send what waits reads it ([ConnectionDelivery.sendWaiting]).
+ */
+@ContributesTo(ConnectionScope::class)
+public interface DeliveryAccessors {
+    public val connectionDelivery: ConnectionDelivery
+}
+
 /** Connection-owned pipeline, shared by every entry and kept after an entry is destroyed. */
 @SingleIn(ConnectionScope::class)
 @Inject
 public class ConnectionDelivery(
-    gateway: ServerGateway,
+    private val gateway: ServerGateway,
     profile: ServerProfile,
     private val scope: ConnectionCoroutineScope,
     clock: Clock,
@@ -96,6 +106,7 @@ public class ConnectionDelivery(
     private val reporting: Reporting = NoReporting,
 ) {
     private val tracing: PromptTracing? = tracers.firstOrNull()
+    private val reconcileLane = dispatchers.serial("delivery-reconcile")
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stopped = MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
@@ -194,7 +205,7 @@ public class ConnectionDelivery(
         tracing?.let { trace ->
             scope.launch { gateway.events.project.collect { feed(trace, it.event) } }
         }
-        val lane = dispatchers.serial("delivery-reconcile")
+        val lane = reconcileLane
         // A message the server already shows for this send scope proves the prompt arrived, so a
         // retried send with the same id is not posted twice.
         scope.launch {
@@ -251,6 +262,17 @@ public class ConnectionDelivery(
                     }
                 }
         }
+    }
+
+    /**
+     * B-146: sends this server's queued prompts now when its stream is connected; otherwise the next connect does.
+     * Safe to call often: a flush already running takes it as one more pass, and an entry whose dispatch marker is
+     * set is never sent again, so a prompt goes out once.
+     */
+    public fun sendWaiting() {
+        val queue = queue ?: return
+        if (gateway.events.status.value != StreamStatus.Connected) return
+        scope.launch(reconcileLane) { queue.flush() }
     }
 
     public fun running(ref: ConversationRef, busy: Boolean) {
