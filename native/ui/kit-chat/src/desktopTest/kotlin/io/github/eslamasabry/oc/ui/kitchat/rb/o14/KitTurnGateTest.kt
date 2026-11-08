@@ -23,8 +23,6 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.kitchat.rb.o06.FlutterCapture
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
-import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestLook
-import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
@@ -38,7 +36,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTurn
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTurnNext
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTurnSegment
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalKitTurn
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveSweep
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import kotlin.test.Test
@@ -59,11 +57,10 @@ import kotlin.test.Test
  *   the phase line, footer and live line are composed by hand per Flutter's `_TurnFrame.build` rules.
  * Mismatch: starting — Flutter's KitSince line ("Starting the model…", "Still waiting for the model · 9 s" after
  *   the fake clock's 9 s) has no native counterpart; the words are typed as a KitText (secondary).
- * Mismatch: running_live — Flutter's `_KitTurnLiveLine` (accent live dot, "Writing · 6 s", the sweep) has no native
- *   part; stands in as KitLiveSweep over a KitText in the accent tone, with no dot.
+ * running_live — Flutter's `_KitTurnLiveLine` is native [KitTurnLiveLine] (live dot, words, sweep).
  * Mismatch: highlighted — the find band (surface1, panel radius, 8 dp outset) has no native part; not drawn.
- * Mismatch: waiting_for_you — Flutter's KitRequestCard.ask (who "fox", server "shopfront", ifIgnored line,
- *   decision reason) stands in as KitPermissionCard in the Question look; the 1 min wait is the typed "1 min".
+ * waiting_for_you — Flutter's KitRequestCard.ask is KitPermissionCard's standard look with the needs-you header and
+ *   Details (who, server and ifIgnored are spoken only, in Flutter too).
  * Mismatch: the prompt's turn menu (Edit and resend; footer Fork from here, Revert) is not drawn by either side but
  *   has no native long-press menu.
  */
@@ -173,21 +170,23 @@ class KitTurnGateTest {
 
     private val permission = Part(KitTurnNext.Block) {
         Gutter {
-            KitPermissionCard(
-                title = "Run this command?",
-                summary = "To check the fix",
-                subject = null,
-                targets = listOf(KitRequestTarget("flutter test test/checkout_test.dart")),
-                allowOnceLabel = "Run once",
-                alwaysLabel = null,
-                denyLabel = "Don't run",
-                onAllowOnce = {},
-                onAlways = null,
-                onDeny = {},
-                look = KitRequestLook.Question,
-                waitingAge = "1 min",
-                onDetails = {},
-            )
+            // kitRequestPlacement (lib/ui/kit/kit_request_shape.dart:13-35): the card's host places it the gutter less
+            // the 4 dp ring in (12 dp) and space1 above and below; native KitPermissionCard leaves placement to its host.
+            Box(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+                KitPermissionCard(
+                    title = "Run this command?",
+                    summary = "To check the fix",
+                    subject = "flutter test test/checkout_test.dart",
+                    allowOnceLabel = "Run once",
+                    alwaysLabel = null,
+                    denyLabel = "Don't run",
+                    onAllowOnce = {},
+                    onAlways = null,
+                    onDeny = {},
+                    onDetails = {},
+                    needsYou = true,
+                )
+            }
         }
     }
 
@@ -210,9 +209,7 @@ class KitTurnGateTest {
     @Composable private fun RunningLive() = Scene {
         val live = Part(KitTurnNext.Line) {
             Gutter {
-                KitLiveSweep(working = true) {
-                    KitText("Writing · 6 s", role = TypeRole.Secondary, tone = TextTone.Accent)
-                }
+                KitTurnLiveLine("Writing · 6 s", spoken = "Writing")
             }
         }
         Turn(latest = true, parts = listOf(prompt, first, line(KitWorkState.Running, "Working", now = "Editing test/checkout_test.dart"), live))
@@ -256,28 +253,20 @@ class KitTurnGateTest {
         Turn(latest = false, parts = listOf(prompt, line(KitWorkState.Done, null), reply, footer(latest = false)))
     }
 
-    @Test fun kit_turn_default() {
-        FlutterGoldenGate.check("kit_turn_default_1280x800", wrap = wrap) { Default() }
-        FlutterGoldenGate.check("kit_turn_default_text2", wrap = wrap) { Default() }
-        FlutterGoldenGate.check("kit_turn_default_text2_1280x800", wrap = wrap) { Default() }
-        FlutterGoldenGate.check("kit_turn_finished_latest", wrap = wrap) { FinishedLatest() }
-    }
-
-    @Test fun kit_turn_working() {
-        FlutterGoldenGate.check("kit_turn_starting", wrap = wrap) { Starting() }
-        FlutterGoldenGate.check("kit_turn_starting_slow", wrap = wrap) { StartingSlow() }
-        FlutterGoldenGate.check("kit_turn_running", wrap = wrap) { Running() }
-        FlutterGoldenGate.check("kit_turn_running_live", wrap = wrap) { RunningLive() }
-        FlutterGoldenGate.check("kit_turn_waiting_for_you", wrap = wrap) { WaitingForYou() }
-    }
-
-    @Test fun kit_turn_ended() {
-        FlutterGoldenGate.check("kit_turn_finished", wrap = wrap) { Finished() }
-        FlutterGoldenGate.check("kit_turn_stopped", wrap = wrap) { Stopped() }
-        FlutterGoldenGate.check("kit_turn_interrupted", wrap = wrap) { Interrupted() }
-        FlutterGoldenGate.check("kit_turn_failed", wrap = wrap) { Failed() }
-        FlutterGoldenGate.check("kit_turn_highlighted", wrap = wrap) { Highlighted() }
-    }
+    @Test fun kit_turn_default_1280x800() { FlutterGoldenGate.check("kit_turn_default_1280x800", wrap = wrap) { Default() } }
+    @Test fun kit_turn_default_text2() { FlutterGoldenGate.check("kit_turn_default_text2", wrap = wrap) { Default() } }
+    @Test fun kit_turn_default_text2_1280x800() { FlutterGoldenGate.check("kit_turn_default_text2_1280x800", wrap = wrap) { Default() } }
+    @Test fun kit_turn_finished_latest() { FlutterGoldenGate.check("kit_turn_finished_latest", wrap = wrap) { FinishedLatest() } }
+    @Test fun kit_turn_starting() { FlutterGoldenGate.check("kit_turn_starting", wrap = wrap) { Starting() } }
+    @Test fun kit_turn_starting_slow() { FlutterGoldenGate.check("kit_turn_starting_slow", wrap = wrap) { StartingSlow() } }
+    @Test fun kit_turn_running() { FlutterGoldenGate.check("kit_turn_running", wrap = wrap) { Running() } }
+    @Test fun kit_turn_running_live() { FlutterGoldenGate.check("kit_turn_running_live", wrap = wrap) { RunningLive() } }
+    @Test fun kit_turn_waiting_for_you() { FlutterGoldenGate.check("kit_turn_waiting_for_you", wrap = wrap) { WaitingForYou() } }
+    @Test fun kit_turn_finished() { FlutterGoldenGate.check("kit_turn_finished", wrap = wrap) { Finished() } }
+    @Test fun kit_turn_stopped() { FlutterGoldenGate.check("kit_turn_stopped", wrap = wrap) { Stopped() } }
+    @Test fun kit_turn_interrupted() { FlutterGoldenGate.check("kit_turn_interrupted", wrap = wrap) { Interrupted() } }
+    @Test fun kit_turn_failed() { FlutterGoldenGate.check("kit_turn_failed", wrap = wrap) { Failed() } }
+    @Test fun kit_turn_highlighted() { FlutterGoldenGate.check("kit_turn_highlighted", wrap = wrap) { Highlighted() } }
 
     @Test fun matrix() {
         FlutterGoldenGate.matrix("part-kit_turn", caps = mapOf("KitTurn" to "conversation"), wrap = wrap) { Default() }

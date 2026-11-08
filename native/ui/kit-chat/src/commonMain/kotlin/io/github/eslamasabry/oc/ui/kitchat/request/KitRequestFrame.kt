@@ -33,6 +33,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.Shapes
+import io.github.eslamasabry.oc.ui.design.tokens.Corner
+import androidx.compose.foundation.shape.RoundedCornerShape
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -90,14 +93,23 @@ public fun KitRequestFrame(
             Modifier.clip(shape)
                 .background(colors.surface1)
                 .background(colors.attentionSurface)
-                .border(1.dp, colors.attentionLine, shape)
+                .border(kitHairline(), colors.attentionLine, shape)
                 .padding(Space.S4.dp)
+    // kit_request_shape.dart:217-238: the waiting card wears a 4 dp ring of the attention colour at 6 % around it (the
+    // question look and Signal keep its place without drawing it).
+    val ringWidth = FlutterKitTokens.NEEDS_YOU_RING_WIDTH.dp
+    val cardRadius = (Shapes.of(KitShapeId.Card) as? Corner.Radius)?.dp ?: 0
+    val ring =
+        if (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier.padding(horizontal = ringWidth)
+        else
+            Modifier.background(colors.attention.copy(alpha = FlutterKitTokens.NEEDS_YOU_RING_ALPHA), RoundedCornerShape((cardRadius + FlutterKitTokens.NEEDS_YOU_RING_WIDTH).dp))
+                .padding(ringWidth)
     KitSignalSlip(
         modifier.widthIn(max = 700.dp).fillMaxWidth().heightIn(max = maxCardHeight()),
         endsWithTap = true,
     ) {
         Column(
-            Modifier.fillMaxWidth().then(face),
+            Modifier.fillMaxWidth().then(ring).then(face),
             // Question look: the answers sit space4 under the words (kit_request_question.dart:183-186).
             verticalArrangement = Arrangement.spacedBy(if (question) Space.S4.dp else Space.S3.dp),
         ) {
