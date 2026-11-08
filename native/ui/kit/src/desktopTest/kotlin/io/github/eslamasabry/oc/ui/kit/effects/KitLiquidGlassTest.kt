@@ -5,7 +5,6 @@ package io.github.eslamasabry.oc.ui.kit.effects
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -139,20 +138,24 @@ class KitLiquidGlassTest {
         assertTrue(liquid, "stacked layout: no flip to frost")
     }
 
-    @Test
-    fun `B-KIT-037 every other style, and Glass wherever liquid is held, draws pixel for pixel as before`() = runComposeUiTest {
-        // The same scene twice in one frame, on a platform without the lens and on one with it: every pixel must match.
-        var appearance by mutableStateOf(KitAppearance())
-        setContent {
-            Row {
-                Box(Modifier.testTag("without")) {
-                    KitTheme(appearance = appearance, platform = FakeKitPlatform(liquidGlass = false), localeTag = "en", stillFrame = true) { Scene(loading = false) }
-                }
-                Box(Modifier.testTag("with")) {
-                    KitTheme(appearance = appearance, platform = FakeKitPlatform(liquidGlass = true), localeTag = "en", stillFrame = true) { Scene(loading = false) }
+    /** [Scene] alone in a fresh composition, captured once it is idle. */
+    private fun render(appearance: KitAppearance, platform: FakeKitPlatform): androidx.compose.ui.graphics.PixelMap {
+        lateinit var image: androidx.compose.ui.graphics.PixelMap
+        runComposeUiTest {
+            setContent {
+                KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
+                    Box(Modifier.testTag("scene")) { Scene(loading = false) }
                 }
             }
+            waitForIdle()
+            image = onNodeWithTag("scene").captureToImage().toPixelMap()
         }
+        return image
+    }
+
+    @Test
+    fun `B-KIT-037 every other style, and Glass wherever liquid is held, draws pixel for pixel as before`() {
+        // The same scene on a platform without the lens and on one with it: every pixel must match.
         val cases =
             Style.entries.filter { it != Style.Glass }.flatMap { s ->
                 listOf(KitAppearance(style = s, mode = AppearanceMode.Dark), KitAppearance(style = s, mode = AppearanceMode.Light))
@@ -162,14 +165,21 @@ class KitLiquidGlassTest {
                 glass.copy(frost = FrostStrength.Off),
             )
         for (case in cases) {
-            appearance = case
-            waitForIdle()
-            val without = onNodeWithTag("without").captureToImage().toPixelMap()
-            val with = onNodeWithTag("with").captureToImage().toPixelMap()
-            assertEquals(without.width, with.width)
+            val without = render(case, FakeKitPlatform(liquidGlass = false))
+            val with = render(case, FakeKitPlatform(liquidGlass = true))
+            assertEquals(without.width to without.height, with.width to with.height, "${case.style} size")
             var differ = 0
             for (y in 0 until without.height) for (x in 0 until without.width) if (without[x, y] != with[x, y]) differ++
             assertEquals(0, differ, "${case.style} ${case.mode} motion=${case.motion} edges=${case.glassEdges}: $differ pixels changed")
         }
+    }
+
+    @Test
+    fun `B-KIT-037 the same scene renders the same twice (the comparison is sound)`() {
+        val a = render(KitAppearance(), FakeKitPlatform(liquidGlass = false))
+        val b = render(KitAppearance(), FakeKitPlatform(liquidGlass = false))
+        var differ = 0
+        for (y in 0 until a.height) for (x in 0 until a.width) if (a[x, y] != b[x, y]) differ++
+        assertEquals(0, differ, "two renders of one scene differ by $differ pixels")
     }
 }
