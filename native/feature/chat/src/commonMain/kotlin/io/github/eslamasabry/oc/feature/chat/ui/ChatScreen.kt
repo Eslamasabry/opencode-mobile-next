@@ -110,6 +110,8 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
+import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.revertStaged
 import io.github.eslamasabry.oc.ui.words.res.undoneStatus
@@ -418,7 +420,23 @@ public fun ChatScreen(
                 },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
                 // Read when the sheet draws, like rowChips: the approval state may change after the chrome is made.
-                promptSettings = { close -> headerState?.approval?.let { ApprovalSettingsRows(it, close) } },
+                promptSettings = { close ->
+                    headerState?.approval?.let { ApprovalSettingsRows(it, close) }
+                    // S30 story 3 (Flutter `_composerSettings` 'background'): while a reply runs work the server can
+                    // background, Background moves it there and the conversation stays usable.
+                    if (latest.canBackground)
+                        io.github.eslamasabry.oc.ui.kit.row.KitRow(
+                            title = stringResource(Res.string.chatStripBackground),
+                            supporting = stringResource(Res.string.backgroundWorkShortcut),
+                            supportingMaxLines = 2,
+                            leading = io.github.eslamasabry.oc.ui.kit.row.KitRowLeading.Glyph(KitIcons.lowPriority),
+                            onClick = {
+                                close()
+                                actions.backgroundWork()
+                            },
+                            modifier = Modifier.testTag("composer-setting-background"),
+                        )
+                },
                 freeModel = { headerState?.state?.freeModel == true },
                 agentName = { headerState?.state?.agentName ?: "OpenCode" },
                 openCommands =

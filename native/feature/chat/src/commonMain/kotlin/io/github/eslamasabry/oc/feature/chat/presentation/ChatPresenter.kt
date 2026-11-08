@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -85,6 +86,12 @@ internal data class ChatLocal(
     val confirmedPaths: PersistentSet<String> = persistentSetOf(),
     val receiptChecks: PersistentMap<Long, ReceiptCheckUi> = persistentMapOf(),
     val receiptResult: ReceiptCheckResult? = null,
+    /** S30 story 3: what the server can background, read once the conversation is shown. */
+    val backgroundSupport: io.github.eslamasabry.oc.core.model.BackgroundWorkSupport =
+        io.github.eslamasabry.oc.core.model.BackgroundWorkSupport.Unavailable,
+    /** Parts already sent to the background (Flutter `_backgroundRequestedParts`); never offered twice. */
+    val backgroundRequested: PersistentSet<String> = persistentSetOf(),
+    val backgrounding: Boolean = false,
 )
 
 internal data class PendingArrival(
@@ -186,6 +193,13 @@ public class ChatPresenter(
                 syncRead()
                 settleStop()
             }
+            .launchIn(scope)
+        // S30 story 3: what this server can background, read each time the chat goes live (Flutter reads it on
+        // attach), so a reconnect to another server version is read again.
+        world.load
+            .map { it == ChatLoad.Live }
+            .distinctUntilChanged()
+            .onEach { live -> if (live) loadBackgroundSupport() }
             .launchIn(scope)
         // S28 story 3: the undone line follows the session as well.
         val extra = feed.combine(world.undone) { f, u -> f to u }
@@ -315,6 +329,7 @@ public class ChatPresenter(
             rows = t.rows,
             newestRowKey = t.newestKey,
             canPutBack = world.undone.value != ChatUndone.None,
+            canBackground = canBackground(t.run.busy, l),
             live =
                 if (t.run.busy)
                     LiveTurnUi(
@@ -777,6 +792,41 @@ public class ChatPresenter(
         launcher.launch {
             val result = world.compact()
             if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
+        }
+    }
+
+    /** S30 story 3: reads what the server can move to the background; a failure leaves Background unoffered. */
+    public suspend fun loadBackgroundSupport() {
+        val support = world.backgroundWorkSupport()
+        if (support is Outcome.Ok) local.update { it.copy(backgroundSupport = support.value) }
+    }
+
+    /** Flutter `_canBackgroundWork`: a reply runs and has work the server can background, not yet sent there. */
+    private fun canBackground(busy: Boolean, l: ChatLocal): Boolean =
+        busy &&
+            !l.backgrounding &&
+            world.readOnly.value == null &&
+            BackgroundWork.parts(feed.value.ledger.messages, l.backgroundSupport).any {
+                BackgroundWork.key(it) !in l.backgroundRequested
+            }
+
+    override fun backgroundWork() {
+        val l = local.value
+        if (!canBackground(world.transcript.value.run.busy, l)) return
+        val keys = BackgroundWork.parts(feed.value.ledger.messages, l.backgroundSupport).map(BackgroundWork::key)
+        local.update { it.copy(backgrounding = true) }
+        launcher.launch {
+            val result = world.backgroundWork()
+            local.update {
+                when {
+                    result is Outcome.Failed -> it.copy(backgrounding = false, actionFailure = result.failure)
+                    (result as Outcome.Ok).value == io.github.eslamasabry.oc.core.model.BackgroundWorkResult.Unchanged ->
+                        it.copy(backgrounding = false)
+                    else -> it.copy(backgrounding = false, backgroundRequested = it.backgroundRequested.addAll(keys))
+                }
+            }
+            // Acknowledgement is not a job record: read the conversation again (Flutter reconciles the same way).
+            if (result is Outcome.Ok) world.reload()
         }
     }
 

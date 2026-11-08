@@ -2279,6 +2279,17 @@ internal class GraphChatWorld(
             .compactSession(sid, ModelRef(choice.providerId, choice.modelId))
     }
 
+    override suspend fun backgroundWorkSupport(): Outcome<io.github.eslamasabry.oc.core.model.BackgroundWorkSupport> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        return (a.graph as ChatGraphAccessors).chatOperations.backgroundWorkSupport()
+    }
+
+    override suspend fun backgroundWork(): Outcome<io.github.eslamasabry.oc.core.model.BackgroundWorkResult> {
+        if (readOnlyNow()) return readOnlyFailure()
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        return (a.graph as ChatGraphAccessors).chatOperations.backgroundSession(sid)
+    }
+
     override suspend fun runShell(command: String): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
         if (command.isBlank())
