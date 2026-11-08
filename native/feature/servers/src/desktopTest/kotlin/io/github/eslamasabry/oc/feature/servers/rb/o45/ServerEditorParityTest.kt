@@ -146,6 +146,33 @@ class ServerEditorParityTest {
         }
 
     @Test
+    fun `B-177 public HTTP is never offered and says why, even with a confirmation from an older build`() =
+        runComposeUiTest {
+            val public = "http://203.0.113.9:4096"
+            val actions = Actions(draft(public).copy(cleartextOrigin = public))
+            setContent {
+                ServersTestTheme {
+                    ServerEditorScreen(
+                        ServerEditorUi(step = ServerEditorStep.Connect, newServer = false, connectOnSave = false),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("Use it anyway").assertDoesNotExist()
+            kotlin.test.assertTrue(
+                onAllNodesWithText("so it needs HTTPS", substring = true).fetchSemanticsNodes().isNotEmpty()
+            )
+            onNodeWithText("Save changes").assertIsNotEnabled()
+            // The same screen still lets a private address be confirmed.
+            onNode(hasSetTextAction() and hasText(public))
+                .performScrollTo()
+                .performTextReplacement("http://$LAN_8:4096")
+            waitForIdle()
+            onNodeWithText("Use it anyway").assertExists()
+            onAllNodesWithText("so it needs HTTPS", substring = true).assertCountEquals(0)
+        }
+
+    @Test
     fun `HTTPS and loopback do not offer an HTTP trust decision`() = runComposeUiTest {
         val actions = Actions(draft("https://computer.example"))
         setContent {

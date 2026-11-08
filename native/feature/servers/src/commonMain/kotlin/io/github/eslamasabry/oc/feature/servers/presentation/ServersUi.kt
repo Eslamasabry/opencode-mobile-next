@@ -41,6 +41,8 @@ public enum class ServerIssue {
     CreateFailed,
     RemoveFailed,
     Connected,
+    /** B-177: plain HTTP to a public address; the person must use HTTPS. */
+    HttpsRequired,
 }
 
 public interface ServersActions {

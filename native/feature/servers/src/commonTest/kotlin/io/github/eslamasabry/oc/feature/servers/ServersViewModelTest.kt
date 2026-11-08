@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.servers
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -152,10 +153,10 @@ class ServersViewModelTest {
             val nav = Navigator()
             val vm = ServersViewModel(null, connections, nav, NoServerRows)
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
-            vm.save("Server", "http://example.test:4096", "opencode", "private")
+            vm.save("Server", "http://studio.local:4096", "opencode", "private")
             assertEquals(false, connections.consent)
-            vm.allowCleartext(true, "http://example.test:4096")
-            vm.save("Server", "http://example.test:4096", "opencode", "private")
+            vm.allowCleartext(true, "http://studio.local:4096")
+            vm.save("Server", "http://studio.local:4096", "opencode", "private")
             assertEquals(true, connections.consent)
             assertFalse(vm.state.value.cleartextAllowed)
             assertEquals(2, vm.state.value.savedGeneration)
@@ -166,9 +167,35 @@ class ServersViewModelTest {
     fun `B-SEC-153 consent for a previous address never follows an edited address`() = runTest {
         val connections = Connections()
         val vm = ServersViewModel(null, connections, Navigator(), NoServerRows)
-        vm.allowCleartext(true, "http://first.test:4096")
-        vm.save("Server", "http://second.test:4096", "opencode", "private")
+        vm.allowCleartext(true, "http://first.local:4096")
+        vm.save("Server", "http://second.local:4096", "opencode", "private")
         assertEquals(false, connections.consent)
+    }
+
+    @Test
+    fun `B-177 public http is refused with the HTTPS reason and never saved, even with the switch on`() = runTest {
+        val connections = Connections()
+        val vm = ServersViewModel(null, connections, Navigator(), NoServerRows)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.allowCleartext(true, "http://203.0.113.9:4096")
+        vm.save("Server", "http://203.0.113.9:4096", "opencode", "private")
+        assertEquals(0, connections.saves)
+        assertEquals(ServerIssue.HttpsRequired, vm.state.value.issue)
+    }
+
+    @Test
+    fun `B-177 a saved public http server that is refused as unconfirmed explains HTTPS`() = runTest {
+        val connections = Connections()
+        connections.servers.value = persistentListOf(SavedServer(id, "Office", "http://203.0.113.9:4096", connected = false))
+        connections.connectResult = Outcome.Failed(Failure.Refused(RefusalReason.CleartextNotConfirmed))
+        val vm = ServersViewModel(null, connections, Navigator(), NoServerRows)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.connect(id)
+        assertEquals(ServerIssue.HttpsRequired, vm.state.value.issue)
+        // A private address that is not confirmed yet is still asked to confirm.
+        connections.servers.value = persistentListOf(SavedServer(id, "Desk", "http://studio.local:4096", connected = false))
+        vm.connect(id)
+        assertEquals(ServerIssue.ConnectFailed, vm.state.value.issue)
     }
 
     @Test
