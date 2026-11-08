@@ -1,12 +1,19 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -15,6 +22,7 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkCounts
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ChangedFile
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutcome
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
@@ -22,10 +30,22 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -38,6 +58,8 @@ import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatTurnAllFiles
+import io.github.eslamasabry.oc.ui.words.res.chatTurnAllFilesMore
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
@@ -419,3 +441,70 @@ private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
         kind != ToolKind.Shell &&
         kind != ToolKind.Lsp &&
         kind != ToolKind.ConnectorSearch
+
+/** F: chat_files.dart:465 `_maxTurnFileRows`: a turn lists at most this many changed files. */
+private const val TURN_FILE_ROWS = 5
+
+/**
+ * The files a finished turn changed, as rows under the reply, and the project's Files under them (Flutter
+ * `_turnChangedFiles`, chat_files.dart:329-460, concept 9). Each row opens its file; "All files" (or "All files · N
+ * more changed") opens Project Files, when the server has them ([onAllFiles] null otherwise).
+ */
+@Composable
+internal fun TurnChangedFiles(
+    files: List<ChangedFile>,
+    onOpenFile: ((ToolArtifact) -> Unit)?,
+    onAllFiles: (() -> Unit)?,
+) {
+    if (files.isEmpty()) return
+    val shown = files.take(TURN_FILE_ROWS)
+    val tokens = LocalKitTokens.current
+    val mask = rememberKitMask()
+    val allFiles =
+        if (files.size > shown.size)
+            pluralStringResource(Res.plurals.chatTurnAllFilesMore, files.size - shown.size, files.size - shown.size)
+        else stringResource(Res.string.chatTurnAllFiles)
+    Column(Modifier.fillMaxWidth().testTag("chat-turn-files")) {
+        // F: chat_files.dart:360 `margin: EdgeInsetsDirectional.only(top: tokens.space2)`.
+        KitRowGroup(Modifier.padding(top = Space.S2.dp)) {
+            for (file in shown) {
+                val path = mask(file.path)
+                val name = path.substringAfterLast('/')
+                val counts =
+                    listOfNotNull(
+                            file.added?.takeIf { it > 0 }?.let { "+$it" },
+                            file.removed?.takeIf { it > 0 }?.let { "−$it" },
+                        )
+                        .joinToString(" ")
+                KitRow(
+                    title = name,
+                    modifier = Modifier.testTag("chat-turn-file-${file.path}"),
+                    leading = KitRowLeading.Glyph(KitIcons.fileText),
+                    titleIsFileName = true,
+                    // F: chat_files.dart:372-401: "+added −removed", then the chevron.
+                    trailing = if (counts.isEmpty()) KitRowTrailing.Chevron else KitRowTrailing.Value(counts),
+                    onClick = onOpenFile?.let { open -> { open(ToolArtifact(file.path, null, null, name)) } },
+                )
+            }
+        }
+        if (onAllFiles != null)
+            // F: chat_files.dart:412-455: a quiet link under the rows, the folder glyph and the words in the secondary
+            // tone, one 48 dp target whose glyph starts on the rows' own edge.
+            Box(Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp)) {
+                KitTappable(
+                    onClick = onAllFiles,
+                    onClickLabel = allFiles,
+                    modifier = Modifier.testTag("chat-turn-all-files"),
+                ) {
+                    Row(
+                        Modifier.heightIn(min = tokens.minTarget.dp).padding(end = Space.S2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        KitIcon(KitIcons.folderOpen, size = KitIconSize.Small, tone = TextTone.Secondary)
+                        Spacer(Modifier.width(Space.S2.dp))
+                        KitText(allFiles, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
+                    }
+                }
+            }
+    }
+}

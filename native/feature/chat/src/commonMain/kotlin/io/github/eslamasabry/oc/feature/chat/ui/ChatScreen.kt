@@ -783,6 +783,7 @@ public fun ChatScreen(
                                                     modelPicker = (modelPicker ?: 0L) + 1L
                                                 },
                                                 onOpenCode = { codeReader = it },
+                                                canBrowseFiles = state.capabilities.files,
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
                                         reasoningExpanded = state.reasoningExpanded,
@@ -1170,6 +1171,8 @@ internal fun rememberReplyActions(
     canCompact: Boolean = false,
     onChooseModel: () -> Unit = {},
     onOpenCode: (KitMdBlock.Code) -> Unit = {},
+    /** F: chat_files.dart:356 `ProjectHub.isAvailable`: the server has Project Files. */
+    canBrowseFiles: Boolean = false,
 ): ReplyActions {
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
@@ -1205,6 +1208,7 @@ internal fun rememberReplyActions(
         compactLabel,
         openFullCode,
         onOpenCode,
+        canBrowseFiles,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -1255,6 +1259,7 @@ internal fun rememberReplyActions(
             openAccountLabel = openAccount,
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
+            onAllFiles = if (canBrowseFiles) actions::openFiles else null,
         )
     }
 }

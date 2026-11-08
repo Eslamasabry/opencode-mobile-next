@@ -193,6 +193,8 @@ internal class ReplyActions(
     val openAccountLabel: String? = null,
     val compactLabel: String? = null,
     val onOpenProviders: () -> Unit = {},
+    /** F: chat_files.dart:356-358: a finished turn's "All files" opens Project Files; null where there are none. */
+    val onAllFiles: (() -> Unit)? = null,
 )
 
 /**
@@ -865,6 +867,12 @@ private fun ChatRow(
                         }
                     }
                 } else {
+                    // F: message_view.dart:611-621: a finished turn names the files it changed, each one tap from its
+                    // contents, and the project's Files under them, between the reply and its footer.
+                    if (!row.stopped && reply != null)
+                        facts.results[row.turnId]?.files?.let { files ->
+                            TurnChangedFiles(files, onOpenFile, reply.onAllFiles)
+                        }
                     MessageDetailsTip(eligible = teachDetails) {
                         KitReplyFooter(
                             copyLabel = stringResource(Res.string.kitCopy),
