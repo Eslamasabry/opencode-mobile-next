@@ -20,6 +20,11 @@ import io.github.eslamasabry.oc.engine.files.FolderListing
 import io.github.eslamasabry.oc.engine.files.ProjectFiles
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesPlace
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.DevServicesRoute
+import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
@@ -88,6 +93,8 @@ public data class FolderUi(
     val storageResult: FilesStorageResult? = null,
     val actionFailure: Failure? = null,
     val canTerminal: Boolean = false,
+    /** The project's other pages for the ⋯ menu; none until the project's folder is known. */
+    val tools: FilesProjectTools = FilesProjectTools.None,
     /** The project folder's own name ("my-app"), once the server says where the project is; null until then. */
     val projectName: String? = null,
     /**
@@ -108,6 +115,15 @@ public data class FolderUi(
 
 public interface FolderActions {
     public fun terminal() {}
+
+    /** The ⋯ menu's project tools (Flutter project_hub_screen.dart `_toolsMenu`). */
+    public fun projectHealth() {}
+
+    public fun worktrees() {}
+
+    public fun devServices() {}
+
+    public fun switchProject() {}
 
     public fun back()
 
@@ -204,9 +220,37 @@ public class FolderViewModel(
         load()
         // The root is titled with the project's own name, not the word "Project" (P-025).
         viewModelScope.launch {
-            val name = projectFolderName(files.directory())
-            if (name != null) local.update { it.copy(projectName = name) }
+            val directory = files.directory()
+            projectDirectory = directory?.takeIf { it.isNotBlank() }
+            val name = projectFolderName(directory)
+            local.update {
+                it.copy(
+                    projectName = name ?: it.projectName,
+                    tools = if (projectDirectory != null) files.tools() else FilesProjectTools.None,
+                )
+            }
         }
+    }
+
+    /** The project's folder on its server, once known; the tools open for exactly this folder. */
+    private var projectDirectory: String? = null
+
+    private fun openTool(allowed: (FilesProjectTools) -> Boolean, target: (ProfileId, String) -> AppRoute) {
+        val directory = projectDirectory ?: return
+        if (!allowed(files.tools())) return
+        nav.open(target(route.place.profileId, directory))
+    }
+
+    override fun projectHealth(): Unit = openTool({ it.health }) { profile, dir -> SearchRoute.ProjectHealth(profile, dir) }
+
+    // Native worktrees live in the project page's workspace sheet (the search index opens it the same way).
+    override fun worktrees(): Unit =
+        openTool({ it.worktrees }) { profile, dir -> ProjectsRoute.Project(profile, dir, initialWorkspace = true) }
+
+    override fun devServices(): Unit = openTool({ it.services }) { profile, dir -> DevServicesRoute.Home(profile, dir) }
+
+    override fun switchProject() {
+        if (files.tools().switchProject) nav.open(ProjectsRoute.Open)
     }
 
     override fun terminal() {
