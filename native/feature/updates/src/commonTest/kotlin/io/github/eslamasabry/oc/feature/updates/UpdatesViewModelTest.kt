@@ -101,7 +101,7 @@ class UpdatesViewModelTest {
         assertEquals(UpdateFailure.Checksum, ui.failure)
         assertEquals(UpdatesLine.NotInstalled, ui.line)
         assertEquals(UpdatesAction.TryAgain, ui.action)
-        assertEquals(listOf("/cache/app-update/app-release.apk"), rig.platform.deleted)
+        assertEquals(listOf("/cache/app-update/update-58.apk"), rig.platform.deleted, "a fixed name, never the server's")
         assertTrue(rig.platform.installs.isEmpty())
         vm.onTryAgain()
         assertEquals(2, rig.feed.downloads, "Try again downloads again")
@@ -127,7 +127,7 @@ class UpdatesViewModelTest {
         val rig = UpdateRig(clock)
         val vm = started(rig)
         vm.onUpdate()
-        assertEquals(listOf("/cache/app-update/app-release.apk"), rig.platform.installs)
+        assertEquals(listOf("/cache/app-update/update-58.apk"), rig.platform.installs)
         assertEquals(UpdatePhase.Installing, rig.updates.state.value.phase)
         assertEquals(UpdatesLine.Installing, vm.state.value.line)
     }

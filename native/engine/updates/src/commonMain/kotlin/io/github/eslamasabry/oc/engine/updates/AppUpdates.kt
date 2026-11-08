@@ -4,8 +4,10 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
@@ -43,6 +46,12 @@ public data class AppUpdateState(
     val installed: InstalledApp? = null,
     val notNow: Boolean = false,
     val pageOpen: Boolean = false,
+    /**
+     * The prompt sheet a start-up or resume check opens when it finds a newer release (Flutter
+     * `InAppUpdateCoordinator.checkOnStartup`, #126): Update now or Later. Later ([AppUpdates.later]) silences this
+     * release for the session; closing the sheet any other way only closes it.
+     */
+    val promptOpen: Boolean = false,
 ) {
     /** A newer release is known and not installed: drives the gear badge and stays on after Not now. */
     public val hasPendingRelease: Boolean get() = supported && release != null
@@ -94,6 +103,7 @@ public class AppUpdates(
     private var abis: List<String> = emptyList()
     private var verifiedPath: String? = null
     private var download: Job? = null
+    private var pendingCheck: Job? = null
 
     private val s: AppUpdateState get() = mutable.value
     private val log = AppLog.tagged("Updates")
@@ -192,7 +202,7 @@ public class AppUpdates(
         }
         stamp(clock.now())
         abis = platform.supportedAbis()
-        val found = AppRelease.parse((body as Outcome.Ok).value)
+        val found = AppRelease.parse((body as Outcome.Ok).value)?.takeIf { offerable(it) }
         if (found != null && found.build > app.build) {
             val sameTag = s.release?.tag == found.tag
             if (!sameTag) verifiedPath = null
@@ -214,6 +224,16 @@ public class AppUpdates(
         return Unit.ok()
     }
 
+    /**
+     * A release is offered only with a file for this phone and its SHA256SUMS, both from this project's release
+     * downloads (fail closed, Flutter #126): one without published checksums is never offered.
+     */
+    private fun offerable(release: AppRelease): Boolean {
+        val asset = release.apkFor(abis) ?: return false
+        val sums = release.checksums ?: return false
+        return isTrustedReleaseFileUrl(asset.url, feedOverride) && isTrustedReleaseFileUrl(sums.url, feedOverride)
+    }
+
     private suspend fun stamp(at: Instant) {
         record = record.copy(lastCheckMs = at.toEpochMilliseconds())
         set { it.copy(checkedAt = at) }
@@ -222,7 +242,35 @@ public class AppUpdates(
 
     /** Not now: hides the offer for this version until the next app start. The gear badge stays. */
     public fun notNow() {
-        set { it.copy(notNow = true) }
+        set { it.copy(notNow = true, promptOpen = false) }
+    }
+
+    /** Later on the prompt sheet: this release is not offered again this session (Flutter `dismissForSession`). */
+    public fun later() {
+        notNow()
+    }
+
+    /** The prompt sheet closed without a choice (Back, Close, the scrim): it may open again on the next resume. */
+    public fun closePrompt() {
+        set { it.copy(promptOpen = false) }
+    }
+
+    /**
+     * Start-up and every resume of a release build (Flutter `InAppUpdateNotice._triggerCheck`): waits [OPEN_DELAY] so
+     * launching and routing finish first, then starts or resumes and, when a newer release is waiting and was not put
+     * off this session, opens the prompt. A newer call cancels a wait still pending, so quick resumes check once.
+     */
+    public fun opened(scope: CoroutineScope) {
+        if (!s.supported) return
+        pendingCheck?.cancel()
+        pendingCheck =
+            scope.launch {
+                delay(OPEN_DELAY)
+                if (started) onResumed() else start()
+                if (s.phase == UpdatePhase.Available && s.release != null && !s.notNow && !s.pageOpen) {
+                    set { it.copy(promptOpen = true) }
+                }
+            }
     }
 
     /** The Updates page is open: the app-wide notice steps aside. */
@@ -240,6 +288,7 @@ public class AppUpdates(
      * deleted and never installed. A file already checked is reused (Try again after the dialog was dismissed).
      */
     public suspend fun updateNow(): Outcome<Unit> {
+        set { it.copy(promptOpen = false) }
         val release = s.release
         if (!s.supported || release == null || s.busy) return Unit.ok()
         val kept = verifiedPath
@@ -277,7 +326,8 @@ public class AppUpdates(
                 is Outcome.Ok -> text.value
             }
         val expected = parseSha256Sums(sumsText)[asset.name] ?: return fail(UpdateFailure.Checksum, "no checksum for ${asset.name}")
-        val file = platform.updateDir().trimEnd('/') + "/" + asset.name
+        // A fixed name per build: the asset name from the server never becomes a path.
+        val file = platform.updateDir().trimEnd('/') + "/update-${release.build}.apk"
         val got =
             feed.download(asset.url, file) { received, total ->
                 val size = if (total > 0) total else asset.size
@@ -371,5 +421,11 @@ public class AppUpdates(
     public companion object {
         public val CHECK_INTERVAL: Duration = 6.hours
         public val RETRY_AFTER_FAILURE: Duration = 30.minutes
+
+        /** The wait after start-up or resume before the check (Flutter: 1200 ms). */
+        public val OPEN_DELAY: Duration = 1200.milliseconds
+
+        /** Release builds only: a debuggable build cannot take a release APK (Flutter `kReleaseMode`). */
+        public fun supportedOn(debuggable: Boolean): Boolean = !debuggable
     }
 }
