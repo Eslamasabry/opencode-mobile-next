@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -38,15 +39,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -71,21 +72,22 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.icon.KitDotMorph
-import io.github.eslamasabry.oc.ui.kit.icon.KitPixelIcon
-import io.github.eslamasabry.oc.ui.kit.icon.KitPixelIcons
-import io.github.eslamasabry.oc.ui.kit.icon.MorphDot
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.ThemeRimKind
 import io.github.eslamasabry.oc.ui.kit.motion.ThemeSwitchPlan
 import io.github.eslamasabry.oc.ui.kit.motion.ThemeSwitchRules
 import io.github.eslamasabry.oc.ui.kit.motion.ThemeSwitchTimings
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.KitThemeCoverHole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitThemeCover
+import io.github.eslamasabry.oc.ui.kit.theme.ThemeFade
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -98,28 +100,31 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
-/** One segment of [KitModeSegmented]: a value, its word, its pixel icon, and its own disabled reason. */
+/** One segment of [KitModeSegmented]: a value, its word, its [KitIcons] glyph, and its own disabled reason. */
 @Immutable
 public data class KitModeSegment<T>(
     val value: T,
     val label: String,
-    val icon: KitPixelIcon,
+    val icon: ImageVector,
     val enabled: KitEnabled = KitEnabled.Enabled,
 )
 
 /**
  * The theme mode control (Light / Dark / Auto / Saver; theme-switch-premium, owner-approved 2026-11-08): the tall
  * [KitSegmented] with premium motion. A tap slides the chosen block to the new segment, a rim of light runs round its
- * edge and settles, and the old icon's dots travel and re-form into the new pixel icon; the theme itself commits
+ * edge and settles, and the old icon breaks into fine particles that drift and re-form into the new one (the icons
+ * at rest are the regular [KitIcons] glyphs, as everywhere else; particles show only during a person's tap, sampled
+ * from those glyphs' own shapes). The theme itself commits
  * [ThemeSwitchTimings.COMMIT_MS] later, once the motion is under way, and at most three times a second however fast
  * the taps come. A second tap mid-move retargets the slide and the dots from where they are and restarts the rim.
  * Changes that are not a tap (Auto following the system, rotation, the first frame, a restored process) show the end
- * state at once, with no rim, dots or haptic.
+ * state at once, with no rim, particles or haptic. While its own switch runs, the control is kept out of the theme
+ * cover's fade ([KitThemeCoverHole]), so it never shows the old and new themes blended grey.
  *
  * States: default, selected, disabled, stacked, switching
  * Text: frame
  * Cap: Reading
- * Motion: Full = slide (release spring) + rim + dot morph; Calm = slide + icon cross-fade; Off = instant
+ * Motion: Full = slide (release spring) + rim + particle morph; Calm = slide + icon cross-fade; Off = instant
  * Replaces: KitSegmented(tall) on Appearance › Mode
  */
 @Composable
@@ -159,7 +164,7 @@ public fun <T> KitModeSegmented(
             val stacked = fontScale >= SegmentedRules.STACK_AT_SCALE || widths.any { it > room / segments.size }
             if (stacked) {
                 StackedSegments(
-                    segments.map { KitSegment(it.value, it.label, it.icon.vector, it.enabled) },
+                    segments.map { KitSegment(it.value, it.label, it.icon, it.enabled) },
                     selected,
                     KitEnabled.Enabled,
                     onChange,
@@ -179,16 +184,16 @@ public fun <T> KitModeSegmented(
 }
 
 /**
- * The motion state of one mode control. Only a tap ([tap]) starts motion; [settle] puts every part at its end for a
- * change that came from elsewhere. The clocks are read in the layout and draw phases only, so a running switch never
- * recomposes the control.
+ * The motion state of one mode control. Only a tap ([begin], [play]) starts motion; [settle] puts every part at its end
+ * for a change that came from elsewhere. The clocks are read in the layout and draw phases only, so a running switch
+ * never recomposes the control.
  */
 @Stable
 internal class ModeSwitchMotion(initial: Int) {
     /** The segment the control shows as chosen: the tapped one at once, before the theme commits. */
     var shown by mutableIntStateOf(initial)
 
-    /** The segment the block and dots are leaving (its ink icon fades back in). */
+    /** The segment the block and particles are leaving (its resting icon fades back in). */
     var from by mutableIntStateOf(initial)
 
     /** The chosen block's place, in segments (0 = the first). */
@@ -197,23 +202,40 @@ internal class ModeSwitchMotion(initial: Int) {
     /** ms into the rim's run; at [ThemeSwitchTimings.RIM_MS] it is gone. */
     val rim = Animatable(ThemeSwitchTimings.RIM_MS.toFloat())
 
-    /** ms into the dot morph or cross-fade; at [KitDotMorph.MORPH_MS] the icons are at rest. */
-    val morphMs = Animatable(KitDotMorph.MORPH_MS)
+    /** ms into the particle morph or cross-fade; at [ParticleMorph.MORPH_MS] the icons are at rest. */
+    val morphMs = Animatable(ParticleMorph.MORPH_MS)
 
-    /** The dots in flight (Full), null at rest or in Calm. */
-    var morph: KitDotMorph? by mutableStateOf(null)
+    /** The particles in flight (Full), null at rest or in Calm. */
+    var morph: ParticleMorph? by mutableStateOf(null)
+
+    /** Where the block was when the particles set off, in segments (the cloud rides along with it). */
+    private var carriedFrom = initial.toFloat()
+
+    /** How far the block has slid from [carriedFrom] towards the chosen segment (0 … 1). */
+    fun carried(): Float {
+        val span = shown - carriedFrom
+        return if (abs(span) < MIN_SPAN) 0f else ((pos.value - carriedFrom) / span).coerceIn(0f, 1f)
+    }
 
     /** Which way the block travels on screen (+1 rightwards), for the rim's start and Brutal's shift. */
     var travel by mutableStateOf(1f)
 
     var plan: ThemeSwitchPlan by mutableStateOf(ThemeSwitchRules.plan(MotionLevel.Off))
 
-    /** Each icon slot's top-left in root pixels, and the control's own; the dots are drawn relative to it. */
+    /** Each icon slot's top-left in root pixels, and the control's own; the particles are drawn relative to it. */
     val slots = mutableStateListOf<Offset>()
     var origin by mutableStateOf(Offset.Zero)
 
+    /** Keeps the control out of the theme cover's fade while its own switch runs (no grey wash over it). */
+    val coverHole = KitThemeCoverHole()
+
+    /** Each segment's resting-ink and chosen-ink icon opacity when the current change began. */
+    private var restingStart = FloatArray(0)
+    private var chosenStart = FloatArray(0)
+
     internal var lastCommitMs: Long? = null
     internal var commitJob: Job? = null
+    private var holeJob: Job? = null
 
     /** Test hook: how many times motion was started (taps that moved the choice). */
     var started: Int = 0
@@ -229,24 +251,65 @@ internal class ModeSwitchMotion(initial: Int) {
         morph = null
         pos.snapTo(index.toFloat())
         rim.snapTo(ThemeSwitchTimings.RIM_MS.toFloat())
-        morphMs.snapTo(KitDotMorph.MORPH_MS)
+        morphMs.snapTo(ParticleMorph.MORPH_MS)
     }
 
-    fun begin(target: Int, plan: ThemeSwitchPlan, icons: List<KitPixelIcon>, iconPx: Float) {
+    /** How far the icons' hand-over is (0 … 1), or null at rest. */
+    private fun handOver(): Float? {
+        val p = (morphMs.value / ParticleMorph.MORPH_MS).coerceIn(0f, 1f)
+        return p.takeIf { it < 1f && (plan.dust || plan.crossfade) && shown != from }
+    }
+
+    /**
+     * Segment [i]'s regular icon in its resting ink: full on every segment but the chosen one. On a change the chosen
+     * one's gives way fast and the left one's returns once the particles have gone.
+     */
+    fun restingAlpha(i: Int): Float {
+        val end = if (i == shown) 0f else 1f
+        val p = handOver() ?: return end
+        val start = restingStart.getOrElse(i) { end }
+        val k =
+            when {
+                i == shown -> (p * ModeLook.TARGET_GIVE_WAY).coerceAtMost(1f)
+                morph != null -> ParticleMorph.smooth(p, ModeLook.RETURN_START, 1f)
+                else -> p
+            }
+        return start + (end - start) * k
+    }
+
+    /**
+     * Segment [i]'s regular icon in the chosen ink: only on the chosen segment at rest. With particles the old one
+     * dissolves at once into them and the new one fades in over their last part; in Calm the two cross-fade.
+     */
+    fun chosenAlpha(i: Int): Float {
+        val end = if (i == shown) 1f else 0f
+        val p = handOver() ?: return end
+        val start = chosenStart.getOrElse(i) { end }
+        val k =
+            when {
+                morph == null -> p
+                i == shown -> ParticleMorph.smooth(p, ModeLook.FORM_START, 1f)
+                else -> ParticleMorph.smooth(p, 0f, ModeLook.BREAK_END)
+            }
+        return start + (end - start) * k
+    }
+
+    fun begin(target: Int, plan: ThemeSwitchPlan, icons: List<ImageVector>, iconPx: Float) {
         started++
-        this.plan = plan
         val old = shown
+        // Every icon layer continues from where it is now (an interruption included).
+        restingStart = FloatArray(icons.size) { restingAlpha(it) }
+        chosenStart = FloatArray(icons.size) { chosenAlpha(it) }
         val fromX = slot(old).x
         val toX = slot(target).x
         if (toX != fromX) travel = if (toX > fromX) 1f else -1f
-        // An interruption starts from where the dots are now; otherwise from the old icon at rest.
-        val cell = iconPx / KitPixelIcons.GRID
-        val inFlight =
-            morph?.takeIf { morphMs.isRunning }?.sample(morphMs.value)?.filter { it.alpha > ModeLook.IN_FLIGHT_ALPHA }
-        val source =
-            inFlight ?: icons[old].dots.map { d -> MorphDot(slot(old).x + d.x * cell, slot(old).y + d.y * cell) }
-        val dest = icons[target].dots.map { d -> Offset(slot(target).x + d.x * cell, slot(target).y + d.y * cell) }
-        morph = if (plan.dust) KitDotMorph(source, dest, cell) else null
+        // An interruption starts from where the particles are now; otherwise from the old icon at rest.
+        val inFlight = morph?.takeIf { morphMs.isRunning }?.sample(morphMs.value)
+        val source = inFlight ?: place(IconParticles.of(icons[old]), slot(old), iconPx, withAlpha = true)
+        val dest = place(IconParticles.of(icons[target]), slot(target), iconPx, withAlpha = false)
+        this.plan = plan
+        carriedFrom = pos.value
+        morph = if (plan.dust) ParticleMorph(source, dest, iconPx) else null
         // The segment being left gets its resting icon back; on an interruption that is the target given up.
         from = old
         shown = target
@@ -258,9 +321,18 @@ internal class ModeSwitchMotion(initial: Int) {
         scope.launch { if (plan.slide) pos.animateTo(target.toFloat(), release) else pos.snapTo(target.toFloat()) }
         scope.launch { run(rim, plan.rim, ThemeSwitchTimings.RIM_MS.toFloat(), scale) }
         scope.launch {
-            run(morphMs, plan.dust || plan.crossfade, KitDotMorph.MORPH_MS, scale)
+            run(morphMs, plan.dust || plan.crossfade, ParticleMorph.MORPH_MS, scale)
             morph = null
         }
+        // The theme cover fades for ThemeFade.MS after the commit, which comes at most IDLE_MS after the tap.
+        holeJob?.cancel()
+        holeJob =
+            scope.launch {
+                coverHole.open = true
+                val due = withFrameMillis { it } + ((ThemeSwitchTimings.IDLE_MS + ThemeFade.MS) * scale).toLong()
+                while (withFrameMillis { it } < due) Unit
+                coverHole.open = false
+            }
     }
 
     private suspend fun run(clock: Animatable<Float, AnimationVector1D>, plays: Boolean, end: Float, scale: Float) {
@@ -291,22 +363,56 @@ internal class ModeSwitchMotion(initial: Int) {
     }
 }
 
+/** Unit-square particle points placed on an icon slot at [at], [iconPx] wide (x, y and, [withAlpha], 1). */
+private fun place(unit: FloatArray, at: Offset, iconPx: Float, withAlpha: Boolean): FloatArray {
+    val n = unit.size / 2
+    val stride = if (withAlpha) ParticleMorph.FROM_FLOATS else 2
+    return FloatArray(n * stride) { k ->
+        val p = k / stride
+        when (k % stride) {
+            0 -> at.x + unit[2 * p] * iconPx
+            1 -> at.y + unit[2 * p + 1] * iconPx
+            else -> 1f
+        }
+    }
+}
+
+/**
+ * Keeps [motion]'s control out of the theme cover's fade while its own switch runs ([KitThemeCoverHole]): the returned
+ * modifier goes on the track, whose outline is [shape].
+ */
+@Composable
+private fun keepOutOfCover(motion: ModeSwitchMotion, shape: androidx.compose.ui.graphics.Shape): Modifier {
+    motion.coverHole.shape = shape
+    val cover = LocalKitThemeCover.current
+    DisposableEffect(cover, motion) {
+        cover?.holes?.add(motion.coverHole)
+        onDispose { cover?.holes?.remove(motion.coverHole) }
+    }
+    return Modifier.onPlaced { motion.coverHole.coords = it }
+}
+
 /** The look of the switch's moving parts: tuned by eye against the owner's reference (s33). */
 internal object ModeLook {
     const val CAPTION_LINE = 1.3f // F: lib/ui/kit/kit_segmented.dart:781
     const val ICON_SCALE = 1.2f // F: lib/ui/kit/kit_segmented.dart:851
-    const val IN_FLIGHT_ALPHA = 0.02f
-    const val MIN_ALPHA = 0.001f
-
-    /** A dot fills this much of its cell, with corners this round (of the dot). */
-    const val DOT_FILL = 0.82f
-    const val DOT_CORNER = 0.28f
+    const val MIN_ALPHA = 0.004f
 
     /** The target's resting icon gives way this many times faster than the morph. */
     const val TARGET_GIVE_WAY = 3f
 
-    /** Floats per dot in a morph frame (x, y, alpha, scale). */
-    const val DOT_FLOATS = 4
+    /** The old icon has broken into particles by this point of the morph (0 … 1). */
+    const val BREAK_END = 0.1f
+
+    /** The new crisp icon starts to show through the particles here, and the left segment's resting icon here. */
+    const val FORM_START = 0.72f
+    const val RETURN_START = 0.35f
+
+    /** A particle's radius as a share of the icon, and its halo's (the slight blur) as a multiple of that. */
+    const val PARTICLE_RADIUS = 0.026f
+    const val PARTICLE_HALO_SCALE = 2.4f
+    const val PARTICLE_HALO_ALPHA = 0.2f
+    const val PARTICLE_HALO_REST = 0.15f
 
     const val RIM_STROKE_DP = 1.5f
     const val RIM_START_SAMPLES = 64
@@ -367,15 +473,20 @@ private fun modeInk(on: List<Boolean>, shownOn: Boolean, faceWords: Color?): Mod
     )
 }
 
-/** A segment's place in the row and the size of its icon. */
-private class ModeSlot(val index: Int, val count: Int, val iconDp: androidx.compose.ui.unit.Dp, val faceWords: Color?)
+/** A segment's place in the row, its icon and the icon's size and inks. */
+private class ModeSlot(
+    val index: Int,
+    val count: Int,
+    val icon: ImageVector,
+    val iconDp: androidx.compose.ui.unit.Dp,
+    val faceWords: Color?,
+    val ink: ModeInk,
+)
 
 private const val HALF = 0.5f
 
-/** One grid cell and one dot of a pixel icon, in pixels. */
-private class DotSize(val cell: Float, val dot: Float)
-
-private class IconLook(val ink: ModeInk, val size: DotSize)
+/** Less than this between the block's start and its segment counts as no slide (the cloud then keeps its own clock). */
+private const val MIN_SPAN = 0.01f
 
 /** The colours of one control's icons and rim, for the draw passes. */
 @Immutable
@@ -411,14 +522,13 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
     val thumb = chosenBlockLook(!shownOn)
     val ink = modeInk(segments.map { it.enabled.isEnabled }, shownOn, thumb.words)
     val rimKind = ThemeSwitchRules.rimFor(style)
-    val icons = segments.map { it.icon }
     val iconPx = with(density) { iconDp.toPx() }
 
     fun tap(i: Int) {
         if (!currentSegments[i].enabled.isEnabled || i == motion.shown) return
         haptics(KitHaptic.Select)
         val plan = ThemeSwitchRules.plan(if (motionState.stillFrame) MotionLevel.Off else motionState.level)
-        motion.begin(i, plan, icons, iconPx)
+        motion.begin(i, plan, currentSegments.map { it.icon }, iconPx)
         motion.play(scope, i, specs.release(), motionState.debugTimeScale)
         motion.scheduleCommit(scope, motionState.debugTimeScale) { shown ->
             val target = currentSegments[shown].value
@@ -428,6 +538,7 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
 
     Box(
         Modifier.fillMaxWidth()
+            .then(keepOutOfCover(motion, track.shape))
             .then(track.modifier)
             .then(
                 if (style == Style.Solid) {
@@ -449,15 +560,19 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
         )
         Row(Modifier.fillMaxWidth().selectableGroup()) {
             segments.forEachIndexed { i, s ->
-                ModeSegment(motion, ModeSlot(i, segments.size, iconDp, thumb.words), s.label, s.enabled) { tap(i) }
+                val slot = ModeSlot(i, segments.size, s.icon, iconDp, thumb.words, ink)
+                ModeSegment(motion, slot, s.label, s.enabled) { tap(i) }
             }
         }
-        // One Canvas pass for every icon: the resting ones and the dots in flight.
-        Spacer(Modifier.matchParentSize().modeIcons(motion, icons, ink, iconPx))
+        // One Canvas pass for the particles in flight (a tap in Full only); the icons themselves are the glyphs.
+        Spacer(Modifier.matchParentSize().modeParticles(motion, ink.chosen, iconPx))
     }
 }
 
-/** One segment: its tap target, its seam, an empty slot where the icon pass draws its icon, and its word. */
+/**
+ * One segment: its tap target, its seam, its regular icon (in the resting and the chosen ink, the two layers' opacity
+ * read in the draw phase from the motion) and its word.
+ */
 @Composable
 private fun RowScope.ModeSegment(
     motion: ModeSwitchMotion,
@@ -502,13 +617,17 @@ private fun RowScope.ModeSegment(
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(
-                Modifier.size(iconDp).onGloballyPositioned { c ->
+            Box(
+                Modifier.size(iconDp).testTag("kit-mode-icon").onGloballyPositioned { c ->
                     val p = c.positionInRoot()
                     while (motion.slots.size <= i) motion.slots += Offset.Zero
                     if (motion.slots[i] != p) motion.slots[i] = p
                 },
-            )
+            ) {
+                val ink = slot.ink
+                KitGlyph(slot.icon, ink.resting[i], iconDp, Modifier.graphicsLayer { alpha = motion.restingAlpha(i) })
+                KitGlyph(slot.icon, ink.chosen, iconDp, Modifier.graphicsLayer { alpha = motion.chosenAlpha(i) })
+            }
             Spacer(Modifier.height(Space.S1.dp))
             // Hook H3, as KitChoiceCard: under a face the style paints itself the word takes the face's ink, as long as
             // the block is over this segment (it changes once as the block crosses the middle, not every frame).
@@ -552,72 +671,35 @@ private fun Modifier.modeBlock(
         }
     }
 
-/** Draws every segment's pixel icon at its slot, and the dots in flight; reads the clocks in the draw phase only. */
-private fun Modifier.modeIcons(
-    motion: ModeSwitchMotion,
-    icons: List<KitPixelIcon>,
-    ink: ModeInk,
-    iconPx: Float,
-): Modifier =
+/**
+ * Draws the particles in flight ([ModeSwitchMotion.morph]); reads the clock in the draw phase only. Each particle is a
+ * small round core with a faint halo that grows mid-flight (the slight blur), so the cloud reads as soft dust.
+ */
+private fun Modifier.modeParticles(motion: ModeSwitchMotion, color: Color, iconPx: Float): Modifier =
     drawWithCache {
-        val cell = iconPx / KitPixelIcons.GRID
-        val dot = cell * ModeLook.DOT_FILL
+        val radius = iconPx * ModeLook.PARTICLE_RADIUS
         var buffer = FloatArray(0)
         onDrawBehind {
+            val morph = motion.morph ?: return@onDrawBehind
             val ms = motion.morphMs.value
-            val p = (ms / KitDotMorph.MORPH_MS).coerceIn(0f, 1f)
-            val moving = p < 1f && (motion.plan.dust || motion.plan.crossfade)
-            val look = IconLook(ink, DotSize(cell, dot))
-            for (i in icons.indices) drawResting(motion, i, icons[i], look, if (moving) p else 1f)
-            val morph = motion.morph
-            if (moving && morph != null) {
-                if (buffer.size < morph.floats) buffer = FloatArray(morph.floats)
-                drawDots(buffer, morph.frame(ms, buffer), dot, ink.chosen)
-            }
+            if (ms >= ParticleMorph.MORPH_MS) return@onDrawBehind
+            if (buffer.size < morph.floats) buffer = FloatArray(morph.floats)
+            drawParticles(buffer, morph.frame(ms, buffer, motion.carried()), radius, color)
         }
     }
 
-/** One segment's icon at rest, or, while the icons change ([p] < 1), its share of the hand-over. */
-private fun DrawScope.drawResting(motion: ModeSwitchMotion, i: Int, icon: KitPixelIcon, look: IconLook, p: Float) {
-    val ink = look.ink
-    val cell = look.size.cell
-    val dot = look.size.dot
-    fun draw(color: Color, alpha: Float) {
-        if (alpha <= ModeLook.MIN_ALPHA) return
-        val o = motion.slot(i)
-        val c = color.copy(alpha = color.alpha * alpha.coerceIn(0f, 1f))
-        val corner = CornerRadius(dot * ModeLook.DOT_CORNER)
-        for (d in icon.dots) {
-            drawRoundRect(c, Offset(o.x + d.x * cell - dot / 2f, o.y + d.y * cell - dot / 2f), Size(dot, dot), corner)
-        }
-    }
-    val shown = motion.shown
-    val from = motion.from
-    // In Calm (no dots) the chosen look cross-fades between the two segments; with dots it travels instead.
-    val fades = motion.plan.crossfade || motion.morph == null
-    when {
-        p >= 1f || (i != shown && i != from) || shown == from ->
-            draw(if (i == shown) ink.chosen else ink.resting[i], 1f)
-        i == shown -> {
-            draw(ink.resting[i], 1f - (p * ModeLook.TARGET_GIVE_WAY).coerceAtMost(1f))
-            if (fades) draw(ink.chosen, p)
-        }
-        else -> {
-            draw(ink.resting[i], p)
-            if (fades) draw(ink.chosen, 1f - p)
-        }
-    }
-}
-
-/** The dots in flight, from a [KitDotMorph.frame] of [n] dots. */
-private fun DrawScope.drawDots(frame: FloatArray, n: Int, dot: Float, color: Color) {
-    val f = ModeLook.DOT_FLOATS
+/** The particles of a [ParticleMorph.frame] of [n] particles. */
+private fun DrawScope.drawParticles(frame: FloatArray, n: Int, radius: Float, color: Color) {
+    val f = ParticleMorph.FLOATS
     for (k in 0 until n) {
-        val a = frame[k * f + 2].coerceIn(0f, 1f)
+        val a = frame[k * f + ParticleMorph.ALPHA_AT].coerceIn(0f, 1f)
         if (a <= ModeLook.MIN_ALPHA) continue
-        val s = dot * frame[k * f + f - 1]
-        val at = Offset(frame[k * f] - s / 2f, frame[k * f + 1] - s / 2f)
-        drawRoundRect(color.copy(alpha = color.alpha * a), at, Size(s, s), CornerRadius(s * ModeLook.DOT_CORNER))
+        val at = Offset(frame[k * f], frame[k * f + 1])
+        val r = radius * frame[k * f + ParticleMorph.SIZE_AT]
+        val blur = frame[k * f + ParticleMorph.HALO_AT]
+        val halo = a * ModeLook.PARTICLE_HALO_ALPHA * (ModeLook.PARTICLE_HALO_REST + blur)
+        if (halo > ModeLook.MIN_ALPHA) drawCircle(color, r * ModeLook.PARTICLE_HALO_SCALE, at, alpha = halo)
+        drawCircle(color, r, at, alpha = a)
     }
 }
 

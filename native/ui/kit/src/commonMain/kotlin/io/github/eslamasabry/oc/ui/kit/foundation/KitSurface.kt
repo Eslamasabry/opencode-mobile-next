@@ -26,6 +26,8 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.design.color.Roles
+import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.runtime.Immutable
@@ -206,7 +208,7 @@ private fun SurfaceDecoration.paints(): Boolean =
         paired?.let { it.distanceDp > 0f && (it.light.v ushr 24 != 0 || it.dark.v ushr 24 != 0) } == true
 
 /** One surface's cross-fade (Dart `_KitSurfaceBoxState.didUpdateWidget`, kit_surface_look.dart:1207-1229). */
-private class SurfaceFadeState(var to: SurfaceDecoration?, var style: Style) {
+private class SurfaceFadeState(var to: SurfaceDecoration?, var style: Style, var theme: Pair<Roles, KitColors>) {
     var from: SurfaceDecoration? = null
     var fromGlass: Boolean = false
     var ms: Int = 0
@@ -220,17 +222,22 @@ private class SurfaceFadeState(var to: SurfaceDecoration?, var style: Style) {
  * itself). A change of Style fades over 200 ms ([SurfaceFade.STYLE_FADE_MS]); a state change (pressed, chosen) fades
  * over 120 ms under Glass only ([SurfaceFade.STATE_FADE_MS]; the other styles keep their instant state changes);
  * reduced motion and motion Off change at once (`Duration.zero`). The curve is Flutter's pulse
- * (kit_surface_look.dart:1238).
+ * (kit_surface_look.dart:1238). A theme change (new colours) changes at once too: the theme cover already fades the
+ * screen, and a part kept out of that fade (the mode control, s33) would otherwise show a grey mid-fade face.
  */
 @Composable
 private fun rememberSurfaceFade(target: SurfaceDecoration?, plain: SurfaceDecoration, style: Style): Pair<SurfaceDecoration, Boolean>? {
     val reduced = LocalKitMotion.current.reduced
-    val fade = remember { SurfaceFadeState(target, style) }
+    // The roles change on the commit, the kit's colours a frame later (after the theme cover's capture): either is a
+    // theme change.
+    val theme = LocalKitRoles.current to LocalKitColors.current
+    val fade = remember { SurfaceFadeState(target, style, theme) }
     if (fade.to != target || fade.style != style) {
         val styleChanged = fade.style != style
+        val themeChanged = fade.theme.first != theme.first || fade.theme.second != theme.second
         val ms =
             when {
-                reduced -> 0
+                reduced || themeChanged -> 0
                 styleChanged -> SurfaceFade.STYLE_FADE_MS
                 style == Style.Glass -> SurfaceFade.STATE_FADE_MS
                 else -> 0
@@ -244,6 +251,7 @@ private fun rememberSurfaceFade(target: SurfaceDecoration?, plain: SurfaceDecora
         fade.pending = ms > 0
         fade.token++
     }
+    fade.theme = theme
     // A surface that never changes look launches nothing.
     if (fade.token > 0) {
         LaunchedEffect(fade.token) {
