@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../telemetry/analytics_events.dart';
 import '../../telemetry/telemetry.dart';
 import '../../telemetry/telemetry_provider.dart';
 import '../app_iconography.dart';
@@ -43,6 +44,10 @@ Future<bool> askTelemetryConsentOnce(
     sheetKey: const ValueKey('telemetry-consent'),
     confirmKey: const ValueKey('telemetry-consent-share'),
   );
-  if (share) await reporter.setConsent(true);
+  if (share) {
+    await reporter.setConsent(true);
+    // This start's cold open happened before the answer and was dropped.
+    reporter.track(AnalyticsEvent.appOpen, {'kind': 'cold'});
+  }
   return true;
 }

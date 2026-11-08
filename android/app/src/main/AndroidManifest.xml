@@ -4,6 +4,10 @@
     <!-- Opt-in analytics (lib/telemetry) never reads the advertising ID:
          the permission Firebase Analytics would merge in is removed. -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+    <!-- Nor Android's ad services (Privacy Sandbox ad ID and attribution),
+         which the Analytics SDK would also merge in. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -79,6 +83,7 @@
         <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
         <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
         <meta-data android:name="google_analytics_automatic_screen_reporting_enabled" android:value="false" />
+        <uses-library android:name="android.ext.adservices" android:required="false" tools:node="remove" />
         <receiver android:name=".ScheduledPromptReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

@@ -131,7 +131,8 @@ enum AnalyticsScreen {
     if (r.contains('privacy')) return privacy;
     if (r.contains('appearance')) return appearance;
     if (r.contains('integration')) return integrations;
-    if (r.contains('server')) return servers;
+    // "Profile" holds "file": a server's profile page is a servers page.
+    if (r.contains('server') || r.contains('profile')) return servers;
     if (r.contains('setting')) return settings;
     if (r.contains('file')) return files;
     if (r.contains('git')) return git;

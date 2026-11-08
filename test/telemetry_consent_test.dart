@@ -13,6 +13,7 @@ class _Vendor implements TelemetryAdapter {
   _Vendor({this.present = true});
   final bool present;
   bool? collecting;
+  final events = <String>[];
   @override
   Future<bool> probe() async => present;
   @override
@@ -24,11 +25,17 @@ class _Vendor implements TelemetryAdapter {
   @override
   Future<void> breadcrumb(String n) async {}
   @override
-  Future<void> event(String n, Map<String, String> p) async {}
+  Future<void> event(String n, Map<String, String> p) async =>
+      events.add('$n ${p.entries.map((e) => '${e.key}=${e.value}').join(',')}');
 }
 
-Future<TelemetryService> _service({bool present = true}) async {
-  final service = TelemetryService(adapter: _Vendor(present: present));
+Future<TelemetryService> _service({
+  bool present = true,
+  _Vendor? vendor,
+}) async {
+  final service = TelemetryService(
+    adapter: vendor ?? _Vendor(present: present),
+  );
   await service.start();
   return service;
 }
@@ -84,6 +91,32 @@ void main() {
     await tester.tap(ask);
     await tester.pumpAndSettle();
     expect(find.text('Help improve OpenCode Mobile?'), findsNothing);
+  });
+
+  testWidgets('saying yes counts this start as a cold open; not now sends '
+      'nothing', (tester) async {
+    // Found on the emulator: the cold open is counted before the answer and
+    // dropped, so a first run that says yes had no app_open.
+    final vendor = _Vendor();
+    final telemetry = await _service(vendor: vendor);
+    final ask = await pump(tester, telemetry);
+    await tester.tap(ask);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('telemetry-consent-share')));
+    await tester.pumpAndSettle();
+    await tester.pump();
+    expect(vendor.events, ['app_open kind=cold']);
+
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+    final quiet = _Vendor();
+    final declined = await _service(vendor: quiet);
+    final again = await pump(tester, declined);
+    await tester.tap(again);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+    expect(quiet.events, isEmpty);
   });
 
   testWidgets('Not now leaves consent off and never asks again', (

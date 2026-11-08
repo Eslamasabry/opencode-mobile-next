@@ -266,6 +266,12 @@ void main() {
       );
       expect(AnalyticsScreen.of('ReviewWorkspace'), AnalyticsScreen.review);
       expect(AnalyticsScreen.of('ManageSpaceScreen'), AnalyticsScreen.other);
+      // Found on the emulator: "Profile" holds "file".
+      expect(
+        AnalyticsScreen.of('_ProfileEditorScreen'),
+        AnalyticsScreen.servers,
+      );
+      expect(AnalyticsScreen.of('FilesScreen'), AnalyticsScreen.files);
       expect(AnalyticsScreen.thisPhone.wire, 'this_phone');
       expect(AnalyticsFeature.fileAttach.wire, 'file_attach');
       expect(
