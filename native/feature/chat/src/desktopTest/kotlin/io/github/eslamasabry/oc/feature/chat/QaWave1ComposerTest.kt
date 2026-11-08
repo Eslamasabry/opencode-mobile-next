@@ -94,11 +94,11 @@ class QaWave1ComposerTest {
         // Flutter's composer (owner, 30 Oct 2026; 2026-11-09): Stop is the chip at the end of the strip above the
         // box for the whole running turn, so the box keeps its one row; with words typed during a run Send joins the
         // turn ("Add to this turn"). Neither ever squeezes the words.
-        onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithTag("chat-stop-button", useUnmergedTree = true).assertIsDisplayed()
         onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("chat-composer-field")), useUnmergedTree = true)
             .performTextInput("Also check the docs")
         waitForIdle()
-        onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithTag("chat-stop-button", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithContentDescription("Add to this turn", useUnmergedTree = true).assertIsDisplayed()
         val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().size.width
         val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().size.width
