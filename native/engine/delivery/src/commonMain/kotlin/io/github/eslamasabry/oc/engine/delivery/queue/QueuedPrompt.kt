@@ -63,6 +63,16 @@ public class QueuedPrompt(
     public val dispatched: Boolean
         get() = dispatchedAt != null
 
+    /**
+     * The same queued send as [other]: the same id with every field the send carries unchanged. A re-read of the
+     * shared queue gives new objects for unchanged entries; an edit made meanwhile changes one of these fields.
+     */
+    internal fun sameSend(other: QueuedPrompt): Boolean =
+        id == other.id && profileId == other.profileId && sessionId == other.sessionId && text == other.text &&
+            attachments == other.attachments && mentions == other.mentions &&
+            modelProviderId == other.modelProviderId && modelId == other.modelId && agent == other.agent &&
+            variant == other.variant && createdAt == other.createdAt && dispatchedAt == other.dispatchedAt
+
     public val model: ModelRef?
         get() =
             if (modelProviderId != null && modelId != null) ModelRef(modelProviderId, modelId)
