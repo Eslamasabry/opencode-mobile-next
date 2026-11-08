@@ -34,6 +34,7 @@ public object TeamWorkspaceJson {
             servers = servers.maps().map(::server),
             roles = roles.maps().map(::role),
             simulated = map.bool("simulated", true),
+            defaultSettings = (map["defaultSettings"] as? Map<*, *>)?.let(::settings),
         )
     }
 
@@ -46,13 +47,10 @@ public object TeamWorkspaceJson {
             status = j.str("status", "spec"),
             revision = j.long("revision"),
             settings = settings(j["settings"] as? Map<*, *> ?: emptyMap<String, Any?>()),
-            repos = j.list("repos").maps().map { TeamRepo(it.str("id"), it.str("name"), it.str("serverId"), it.str("path")) },
+            repos = j.list("repos").maps().map(::repo),
             specDraft = spec(j["specDraft"] as? Map<*, *> ?: emptyMap<String, Any?>()),
             specVersions = j.list("specVersions").maps().map(::spec),
-            phases =
-                j.list("phases").maps().map {
-                    TeamProjectPhase(it.str("id"), it.str("milestoneId"), it.str("title"), it.bool("risky"), it.bool("accepted"))
-                },
+            phases = j.list("phases").maps().map(::phase),
             tasks = j.list("tasks").maps().map(::task),
             requests =
                 j.list("requests").maps().map {
@@ -64,6 +62,7 @@ public object TeamWorkspaceJson {
                         phaseId = it.str("phaseId"),
                         createdAt = it.str("createdAt"),
                         answered = it.bool("answered"),
+                        answer = it.str("answer"),
                     )
                 },
             mergeQueue =
@@ -77,6 +76,20 @@ public object TeamWorkspaceJson {
                         checksPassed = it.bool("checksPassed"),
                     )
                 },
+            receipts =
+                j.list("receipts").maps().map {
+                    TeamReceipt(
+                        id = it.str("id"),
+                        kind = it.str("kind"),
+                        repoId = it.str("repoId"),
+                        before = it.str("before"),
+                        after = it.str("after"),
+                        at = it.str("at"),
+                        actor = it.str("actor", "person"),
+                    )
+                },
+            timelineTruncated = j.bool("timelineTruncated"),
+            spendDay = j.str("spendDay"),
             timeline =
                 j.list("timeline").maps().map {
                     TeamTimelineEvent(
@@ -104,7 +117,7 @@ public object TeamWorkspaceJson {
         )
     }
 
-    private fun settings(j: Map<*, *>): TeamProjectSettings {
+    internal fun settings(j: Map<*, *>): TeamProjectSettings {
         val budget = j["budget"] as? Map<*, *> ?: emptyMap<String, Any?>()
         return TeamProjectSettings(
             keepWorkingScreenOff = j.bool("keepWorkingScreenOff"),
@@ -125,18 +138,38 @@ public object TeamWorkspaceJson {
         )
     }
 
-    private fun spec(j: Map<*, *>): TeamSpec =
+    internal fun repo(j: Map<*, *>): TeamRepo =
+        TeamRepo(
+            id = j.str("id"),
+            name = j.str("name"),
+            serverId = j.str("serverId"),
+            path = j.str("path"),
+            devCommit = j.str("devCommit", "fixture-base"),
+            mainCommit = j.str("mainCommit", "fixture-base"),
+            checkCommand = j.str("checkCommand", "flutter test"),
+            sharedRemote = j.bool("sharedRemote"),
+        )
+
+    internal fun phase(j: Map<*, *>): TeamProjectPhase =
+        TeamProjectPhase(j.str("id"), j.str("milestoneId"), j.str("title"), j.bool("risky"), j.bool("accepted"))
+
+    internal fun milestone(j: Map<*, *>): TeamMilestone =
+        TeamMilestone(j.str("id"), j.str("title"), j.list("criteria").filterIsInstance<String>(), j.bool("accepted"))
+
+    internal fun spec(j: Map<*, *>): TeamSpec =
         TeamSpec(
             version = j.int("version", 1),
             goal = j.str("goal"),
-            milestones =
-                j.list("milestones").maps().map {
-                    TeamMilestone(it.str("id"), it.str("title"), it.list("criteria").filterIsInstance<String>(), it.bool("accepted"))
-                },
+            milestones = j.list("milestones").maps().map(::milestone),
             approvedAt = j.str("approvedAt"),
+            contextFiles = j.list("contextFiles").filterIsInstance<String>(),
+            constraints = j.str("constraints"),
+            decisions = j.str("decisions"),
+            outOfScope = j.str("outOfScope"),
+            approvedBy = j.str("approvedBy"),
         )
 
-    private fun task(j: Map<*, *>): TeamTask =
+    internal fun task(j: Map<*, *>): TeamTask =
         TeamTask(
             id = j.str("id"),
             title = j.str("title"),
@@ -168,9 +201,11 @@ public object TeamWorkspaceJson {
                 },
             criterionResults =
                 j.list("criterionResults").maps().map { TeamCriterionResult(it.str("criterion"), it.str("status", "unmet")) },
+            affected = j.bool("affected"),
+            diff = j.str("diff"),
         )
 
-    private fun server(j: Map<*, *>): TeamServer =
+    internal fun server(j: Map<*, *>): TeamServer =
         TeamServer(
             id = j.str("id"),
             name = j.str("name"),
@@ -179,10 +214,11 @@ public object TeamWorkspaceJson {
             laneCap = j.int("laneCap", 8),
             chatWaiting = j.bool("chatWaiting"),
             reason = j.str("reason"),
+            memoryMb = j.double("memoryMb"),
         )
 
-    private fun role(j: Map<*, *>): TeamRole =
-        TeamRole(j.str("id"), j.str("name"), j.str("model"), j.str("fallbackModel"), j.bool("readOnly"))
+    internal fun role(j: Map<*, *>): TeamRole =
+        TeamRole(j.str("id"), j.str("name"), j.str("model"), j.str("fallbackModel"), j.bool("readOnly"), j.str("instructions"))
 
     private fun Map<*, *>.str(key: String, default: String = ""): String = this[key] as? String ?: default
 

@@ -10,13 +10,19 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.TeamEditorViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamProjectViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.TeamServersViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamTaskViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.TeamTimelineViewModel
 import io.github.eslamasabry.oc.feature.team.ui.TeamBoardScreen
+import io.github.eslamasabry.oc.feature.team.ui.TeamEditorScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamHomeScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamProjectScreen
+import io.github.eslamasabry.oc.feature.team.ui.TeamServersScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamTaskScreen
+import io.github.eslamasabry.oc.feature.team.ui.TeamTimelineScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 
@@ -39,6 +45,21 @@ public class TeamEntries : EntryInstaller {
             val vm = assistedMetroViewModel<TeamBoardViewModel, TeamBoardViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             TeamBoardScreen(state, vm)
+        }
+        entry<TeamRoute.Editor> { route ->
+            val vm = assistedMetroViewModel<TeamEditorViewModel, TeamEditorViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            TeamEditorScreen(state, vm)
+        }
+        entry<TeamRoute.Servers> { route ->
+            val vm = assistedMetroViewModel<TeamServersViewModel, TeamServersViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            TeamServersScreen(state, vm)
+        }
+        entry<TeamRoute.Timeline> { route ->
+            val vm = assistedMetroViewModel<TeamTimelineViewModel, TeamTimelineViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            TeamTimelineScreen(state, vm)
         }
         entry<TeamRoute.Task> { route ->
             val vm = assistedMetroViewModel<TeamTaskViewModel, TeamTaskViewModel.Factory> { create(route) }

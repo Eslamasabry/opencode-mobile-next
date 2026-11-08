@@ -7,6 +7,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:team"))
         implementation(project(":ui:kit-chat")) // the person's notes in a task's conversation (KitPromptBubble)
+        implementation(libs.kotlinx.datetime) // the editor's late-night charging default (Dart DateTime.now().hour)
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests

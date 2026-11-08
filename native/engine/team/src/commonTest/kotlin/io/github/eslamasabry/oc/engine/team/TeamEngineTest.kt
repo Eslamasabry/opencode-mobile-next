@@ -20,9 +20,22 @@ internal class FakeTeamHost(
 
     override suspend fun config(profileId: String): TeamConfig? = config
 
-    override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamWorkspace> {
+    var health: TeamHealth = READY
+    var drafts: String? = null
+
+    override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamRead> {
         readCount++
-        return reads.removeFirstOrNull() ?: Outcome.Failed(Failure.Unexpected())
+        return when (val read = reads.removeFirstOrNull() ?: Outcome.Failed(Failure.Unexpected())) {
+            is Outcome.Ok -> Outcome.Ok(TeamRead(health, read.value))
+            is Outcome.Failed -> read
+        }
+    }
+
+    override suspend fun readDrafts(profileId: String): String? = drafts
+
+    override suspend fun writeDrafts(profileId: String, json: String?): Outcome<Unit> {
+        drafts = json
+        return Outcome.Ok(Unit)
     }
 
     override suspend fun command(
@@ -37,6 +50,17 @@ internal class FakeTeamHost(
     }
 
     companion object {
+        /** An engine that lists every command and may run work. */
+        val READY =
+            TeamHealth(
+                engineVersion = "1.0.0",
+                execution = true,
+                boundary = true,
+                oc2 = true,
+                oc2Verified = true,
+                commandActions = TeamCommand.EXECUTION_ACTIONS + TeamAction.all(),
+                boundaryTier = "landlock",
+            )
         val PHONE = TeamConfig(TeamProvider.PhoneEngine, "http://127.0.0.1:4098", hostMode = TeamHostMode.Phone)
     }
 }

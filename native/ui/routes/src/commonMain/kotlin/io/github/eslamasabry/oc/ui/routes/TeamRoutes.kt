@@ -21,4 +21,19 @@ public sealed interface TeamRoute : AppRoute {
     /** One task's conversation (Dart `TeamProjectConversation`): watching a worker, answering it, messaging it. */
     @Serializable
     public data class Task(val profileId: ProfileId, val projectId: String, val taskId: String) : TeamRoute
+
+    /**
+     * One project editor (Dart `openTeamNewProject`, `openTeamSpecEditor`, ...): [kind] is Dart's editor name
+     * (`create`, `quick`, `spec`, `plan`, `settings`, `roles`, `defaults`); [projectId] is empty for the team-wide ones.
+     */
+    @Serializable
+    public data class Editor(val profileId: ProfileId, val kind: String, val projectId: String = "") : TeamRoute
+
+    /** One project's servers and lanes (Dart `TeamProjectServers`): what runs where, moving a task. */
+    @Serializable
+    public data class Servers(val profileId: ProfileId, val projectId: String) : TeamRoute
+
+    /** One project's timeline (Dart `TeamProjectTimeline`): what the team did, newest first. */
+    @Serializable
+    public data class Timeline(val profileId: ProfileId, val projectId: String) : TeamRoute
 }

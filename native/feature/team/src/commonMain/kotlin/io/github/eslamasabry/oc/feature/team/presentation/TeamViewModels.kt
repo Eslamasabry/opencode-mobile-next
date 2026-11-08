@@ -9,6 +9,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.engine.team.TeamAction
 import io.github.eslamasabry.oc.engine.team.TeamCommand
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamProject
@@ -18,7 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,12 +35,53 @@ public class TeamHomeViewModel(
     private val clock: kotlin.time.Clock,
 ) : ViewModel(), TeamHomeActions {
     private val profile = route.profileId.raw
+    private val accepting = MutableStateFlow<AskAnswer.AcceptMilestone?>(null)
 
     public val state: StateFlow<TeamHomeUi> =
-        engine
-            .polled(profile) { clock.now().toEpochMilliseconds() }
-            .map { (state, now) -> TeamPresent.home(state, now) }
+        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, accepting) { (state, now), accept ->
+                TeamPresent.home(state, now).copy(accepting = accept)
+            }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), TeamHomeUi())
+
+    private fun send(projectId: String, build: (TeamProject) -> TeamCommand) {
+        val project = engine.state(profile).value.workspace?.project(projectId) ?: return
+        viewModelScope.launch { engine.execute(profile, build(project)) }
+    }
+
+    override fun openEditor(kind: EditorKind, projectId: String) {
+        nav.open(TeamRoute.Editor(route.profileId, kind.wire, projectId))
+    }
+
+    override fun answer(projectId: String, requestId: String, text: String) {
+        if (text.isBlank()) return
+        send(projectId) { TeamCommand.answer(it, requestId, text.trim()) }
+    }
+
+    override fun askAccept(projectId: String, answer: AskAnswer.AcceptMilestone) {
+        accepting.value = answer
+    }
+
+    override fun cancelAccept() {
+        accepting.value = null
+    }
+
+    override fun confirmAccept() {
+        val a = accepting.value ?: return
+        accepting.value = null
+        send(a.projectId) { TeamCommand.acceptMilestone(it, a.milestoneId) }
+    }
+
+    override fun resumeTask(projectId: String, taskId: String) {
+        send(projectId) { TeamCommand.resumeTask(it, taskId) }
+    }
+
+    override fun openTask(projectId: String, taskId: String) {
+        nav.open(TeamRoute.Task(route.profileId, projectId, taskId))
+    }
+
+    override fun dismissRefusal() {
+        engine.clearRefusal(profile)
+    }
 
     override fun back(): Unit = nav.back()
 
@@ -54,7 +95,7 @@ public class TeamHomeViewModel(
 
     override fun resumeProject(projectId: String) {
         val project = engine.state(profile).value.workspace?.project(projectId) ?: return
-        viewModelScope.launch { engine.execute(profile, TeamCommand.project(project, "resumeProject")) }
+        viewModelScope.launch { engine.execute(profile, TeamCommand.project(project, TeamAction.RESUME_PROJECT)) }
     }
 
     override fun retry() {
@@ -80,10 +121,11 @@ public class TeamProjectViewModel(
     private val profile = route.profileId.raw
 
     private val confirmingStop = MutableStateFlow(false)
+    private val confirming = MutableStateFlow<ProjectConfirm?>(null)
 
     public val state: StateFlow<TeamProjectUi> =
-        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, confirmingStop) { (state, now), stop ->
-                TeamPresent.project(state, route.projectId, now).copy(confirmStop = stop)
+        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, confirmingStop, confirming) { (state, now), stop, ask ->
+                TeamPresent.project(state, route.projectId, now).copy(confirmStop = stop, confirming = ask)
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), TeamProjectUi())
 
@@ -107,11 +149,11 @@ public class TeamProjectViewModel(
     }
 
     override fun pause() {
-        send { TeamCommand.project(it, "pauseProject") }
+        send { TeamCommand.project(it, TeamAction.PAUSE_PROJECT) }
     }
 
     override fun resume() {
-        send { TeamCommand.project(it, "resumeProject") }
+        send { TeamCommand.project(it, TeamAction.RESUME_PROJECT) }
     }
 
     override fun askStop() {
@@ -124,7 +166,7 @@ public class TeamProjectViewModel(
 
     override fun confirmStop() {
         confirmingStop.value = false
-        send { TeamCommand.project(it, "stopProject") }
+        send { TeamCommand.project(it, TeamAction.STOP_PROJECT) }
     }
 
     override fun dismissRefusal() {
@@ -133,6 +175,54 @@ public class TeamProjectViewModel(
 
     override fun openTask(taskId: String) {
         nav.open(TeamRoute.Task(route.profileId, route.projectId, taskId))
+    }
+
+    override fun openEditor(kind: EditorKind) {
+        val team = kind == EditorKind.Defaults || kind == EditorKind.Roles
+        nav.open(TeamRoute.Editor(route.profileId, kind.wire, if (team) "" else route.projectId))
+    }
+
+    override fun retryPlan() {
+        send { TeamCommand.project(it, TeamAction.RETRY_PLAN) }
+    }
+
+    override fun markDigestRead() {
+        send { TeamCommand.project(it, TeamAction.ACKNOWLEDGE_DIGEST) }
+    }
+
+    override fun openTimeline() {
+        nav.open(TeamRoute.Timeline(route.profileId, route.projectId))
+    }
+
+    override fun openServers() {
+        nav.open(TeamRoute.Servers(route.profileId, route.projectId))
+    }
+
+    override fun ask(confirm: ProjectConfirm) {
+        confirming.value = confirm
+    }
+
+    override fun cancelConfirm() {
+        confirming.value = null
+    }
+
+    /** Delete, merge into dev or promote, once the person said yes; a deleted project's page closes. */
+    override fun confirm() {
+        val ask = confirming.value ?: return
+        confirming.value = null
+        val project = engine.state(profile).value.workspace?.project(route.projectId) ?: return
+        viewModelScope.launch {
+            when (ask) {
+                ProjectConfirm.Delete -> {
+                    val result = engine.execute(profile, TeamCommand.delete(project))
+                    if ((result as? io.github.eslamasabry.oc.core.common.Outcome.Ok)?.value?.accepted == true) nav.back()
+                }
+                is ProjectConfirm.Merge ->
+                    project.repos.firstOrNull { it.id == ask.repoId }?.let { engine.execute(profile, TeamCommand.mergeToDev(project, it)) }
+                is ProjectConfirm.Promote ->
+                    project.repos.firstOrNull { it.id == ask.repoId }?.let { engine.execute(profile, TeamCommand.promote(project, it)) }
+            }
+        }
     }
 
     override fun back(): Unit = nav.back()
@@ -215,11 +305,95 @@ public class TeamTaskViewModel(
 ) : ViewModel(), TeamTaskActions {
     private val profile = route.profileId.raw
 
+    private val selected = MutableStateFlow<Set<String>>(emptySet())
+    private val confirming = MutableStateFlow<TaskConfirm?>(null)
+
     public val state: StateFlow<TeamTaskUi> =
-        engine
-            .polled(profile) { clock.now().toEpochMilliseconds() }
-            .map { (state, now) -> TeamPresent.task(state, route.projectId, route.taskId, now) }
+        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, selected, confirming) { (state, now), picked, ask ->
+                TeamPresent.task(state, route.projectId, route.taskId, now, picked).copy(confirming = ask)
+            }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), TeamTaskUi())
+
+    private fun task(action: String, confirmed: Boolean = false) {
+        send { TeamCommand.task(it, action, route.taskId, confirmed) }
+    }
+
+    override fun restart(): Unit = task(TeamAction.RESTART_TASK)
+
+    override fun pause(): Unit = task(TeamAction.PAUSE_TASK)
+
+    override fun verify(): Unit = task(TeamAction.VERIFY_TASK)
+
+    override fun recheck(): Unit = task(TeamAction.RECHECK_TASK)
+
+    override fun acceptPhase(phaseId: String) {
+        send { TeamCommand.task(it, TeamAction.ACCEPT_PHASE, phaseId) }
+    }
+
+    override fun resolve(mergeItemId: String, how: String) {
+        send { TeamCommand.resolveConflict(it, mergeItemId, how) }
+    }
+
+    override fun toggleFinding(id: String, on: Boolean) {
+        selected.update { if (on) it + id else it - id }
+    }
+
+    override fun selectOpenFindings() {
+        val t = engine.state(profile).value.workspace?.project(route.projectId)?.tasks?.firstOrNull { it.id == route.taskId } ?: return
+        selected.update { it + t.findings.filter { f -> f.status == "open" }.map { f -> f.id } }
+    }
+
+    /** The ticked findings that are still open (Dart `_selected.intersection(open)`). */
+    private fun picked(): List<String> {
+        val t = engine.state(profile).value.workspace?.project(route.projectId)?.tasks?.firstOrNull { it.id == route.taskId }
+        val open = t?.findings?.filter { it.status == "open" }?.map { it.id }.orEmpty()
+        return open.filter { it in selected.value }
+    }
+
+    override fun fixSelected() {
+        val ids = picked()
+        if (ids.isEmpty()) return
+        send { TeamCommand.fixFindings(it, route.taskId, ids) }
+    }
+
+    override fun ignoreSelected(reason: String) {
+        val id = picked().singleOrNull() ?: return
+        if (reason.isBlank()) return
+        send { TeamCommand.ignoreFinding(it, route.taskId, id, reason.trim()) }
+    }
+
+    override fun approvePlan() {
+        send { TeamCommand.project(it, TeamAction.APPROVE_PLAN) }
+    }
+
+    override fun editPlan() {
+        nav.open(TeamRoute.Editor(route.profileId, EditorKind.Plan.wire, route.projectId))
+    }
+
+    override fun move(taskId: String, serverId: String) {
+        send { TeamCommand.move(it, taskId, serverId) }
+    }
+
+    override fun ask(confirm: TaskConfirm) {
+        confirming.value = confirm
+    }
+
+    override fun cancelConfirm() {
+        confirming.value = null
+    }
+
+    /** Stop (Dart `_stop`, confirmed), merge into dev, promote. */
+    override fun confirm() {
+        val ask = confirming.value ?: return
+        confirming.value = null
+        val project = engine.state(profile).value.workspace?.project(route.projectId) ?: return
+        val repo = project.repos.firstOrNull { r -> project.tasks.any { it.id == route.taskId && it.repoId == r.id } }
+        when (ask) {
+            TaskConfirm.Stop -> task(TeamAction.STOP_TASK, confirmed = true)
+            TaskConfirm.Merge -> if (repo != null) send { TeamCommand.mergeToDev(it, repo) }
+            TaskConfirm.Promote -> if (repo != null) send { TeamCommand.promote(it, repo) }
+        }
+    }
 
     private fun send(build: (TeamProject) -> TeamCommand) {
         val project = engine.state(profile).value.workspace?.project(route.projectId) ?: return
