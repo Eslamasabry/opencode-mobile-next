@@ -1,4 +1,3 @@
-// (CI lane check)
 plugins { id("oc.kmp.feature") }
 
 // P12-VOICE: voice typing in the composer (tap / hold / slide to cancel, live words, the auto-send

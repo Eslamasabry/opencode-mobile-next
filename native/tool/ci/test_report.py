@@ -24,7 +24,8 @@ for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
             failures.append({'id': f'{mod} :: {tc.get("classname")} > {tc.get("name")}', 'module': mod,
                              'message': (msg[0] if msg else '')[:200]})
 tests = sum(v[0] for v in mods.values())
-report = {'name': name, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods}
+report = {'name': name, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods,
+          'build_failed': os.environ.get('GRADLE_OUTCOME') == 'failure'}
 os.makedirs(out, exist_ok=True)
 json.dump(report, open(os.path.join(out, f'report-{name}.json'), 'w'))
 print(f'**{name}**: {tests} tests, {len(failures)} failed, {skipped} skipped\n')

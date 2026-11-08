@@ -173,12 +173,17 @@ jobs:
           echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
           echo "$tasks" | tr ' ' '\n' | sed 's/^/  /'
       - name: Run desktop tests
+        # Never fails the job: the summary job is the gate and reds the run only for new-vs-base failures.
+        id: gradle
+        continue-on-error: true
         if: ${{ steps.pick.outputs.tasks != '' }}
         run: |
           flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
           ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
       - name: Summarise results
         if: always()
+        env:
+          GRADLE_OUTCOME: ${{ steps.gradle.outcome }}
         run: python3 -I tool/ci/test_report.py "${LANE}-${{ matrix.shard }}" reports >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -188,7 +193,7 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
       - name: Upload test reports
-        if: failure()
+        if: ${{ steps.gradle.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-reports-${{ matrix.shard }}
