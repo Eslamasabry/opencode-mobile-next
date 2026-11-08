@@ -19,9 +19,15 @@ public val LocalKitLocaleTag: ProvidableCompositionLocal<String> = staticComposi
 
 private fun missing(what: String): Nothing = error("$what is provided by KitTheme")
 
-/** Plan 06 §5.1. Static: theme values change rarely and cost no read tracking. Kit parts only. */
-public val LocalKitAppearance: ProvidableCompositionLocal<KitAppearance> = staticCompositionLocalOf { missing("KitAppearance") }
-public val LocalKitColors: ProvidableCompositionLocal<KitColors> = staticCompositionLocalOf { missing("KitColors") }
+/**
+ * Plan 06 §5.1. Kit parts only. The appearance and the colours are dynamic locals (P-116, theme-switch-premium Step 0):
+ * a static local's change recomposes everything under the theme, readers or not, which made the first frame in new
+ * colours take ~95 ms. Dynamic, a theme change recomposes only the parts that read them.
+ */
+public val LocalKitAppearance: ProvidableCompositionLocal<KitAppearance> = compositionLocalOf { missing("KitAppearance") }
+public val LocalKitColors: ProvidableCompositionLocal<KitColors> = compositionLocalOf { missing("KitColors") }
+
+/** Static: these change with the text size, the pack's fonts or the motion setting, not with a theme switch. */
 public val LocalKitTypography: ProvidableCompositionLocal<KitTypography> = staticCompositionLocalOf { missing("KitTypography") }
 public val LocalKitTokens: ProvidableCompositionLocal<Tokens> = staticCompositionLocalOf { missing("Tokens") }
 public val LocalKitMotion: ProvidableCompositionLocal<KitMotionState> = staticCompositionLocalOf { missing("KitMotionState") }
@@ -69,5 +75,8 @@ public data class KitStyleState(val style: Style, val spec: StyleSpec, val knobs
 
 public val LocalKitStyle: ProvidableCompositionLocal<KitStyleState> = staticCompositionLocalOf { KitStyleState.Solid }
 
-/** The resolved roles (after the style's `adjustRoles`), for the style resolver; parts read [LocalKitColors]. */
-public val LocalKitRoles: ProvidableCompositionLocal<Roles> = staticCompositionLocalOf { missing("Roles") }
+/**
+ * The resolved roles (after the style's `adjustRoles`), for the style resolver; parts read [LocalKitColors]. Dynamic
+ * for the same reason as [LocalKitColors].
+ */
+public val LocalKitRoles: ProvidableCompositionLocal<Roles> = compositionLocalOf { missing("Roles") }

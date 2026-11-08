@@ -359,11 +359,11 @@
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" &amp;&amp; { [ ! -f \"\$oc1_dir/opencode.db-shm\" ] || cp \"\$oc1_dir/opencode.db-shm\" \"\$stage/opencode.db-shm\"; }; }; then\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" &amp;&amp; { [ ! -f \"\$oc1_dir/opencode.db-wal\" ] || cp \"\$oc1_dir/opencode.db-wal\" \"\$stage/opencode.db-wal\"; } \\\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" &amp;&amp; { [ ! -f \"\$stage/opencode.db-shm\" ] || mv \"\$stage/opencode.db-shm\" \"\$oc2_dir/opencode.db-shm\"; } \\\n"</ID>
-    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" aarch64|arm64) node_arch=arm64; node_sha=95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2 ;;\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" awk -v b='&lt;!-- opencode-mobile:phone-context:begin --&gt;' -v e='&lt;!-- opencode-mobile:phone-context:end --&gt;' '\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" echo '[oc-history-copy-failed] Your earlier conversations could not be copied. The original data is still safe on this phone. Free some space and try again.' &gt;&amp;2\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" if ! { { [ ! -f \"\$stage/opencode.db-wal\" ] || mv \"\$stage/opencode.db-wal\" \"\$oc2_dir/opencode.db-wal\"; } \\\n"</ID>
-    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" x86_64|amd64) node_arch=x64; node_sha=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff ;;\n"</ID>
+    <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$" x86_64|amd64) node_arch=x64; node_sha=361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9 ;;\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- A server you start on 127.0.0.1:PORT opens in the phone's own browser at http://127.0.0.1:PORT; give the person that link to try a web app. Bind servers to 127.0.0.1 only, never to every network interface, unless the person asks for more.\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- Long builds (Gradle, the Android SDK, large installs) are slow here and may be stopped by Android: say so before starting one.\n"</ID>
     <ID>MaxLineLength:BuiltinScriptTexts.kt$BuiltinScriptTexts$"- The phone's memory and CPU are limited and shared with the person's apps. Android stops background processes when an app runs more than about 32 of them, and can close this whole environment when memory runs low. Avoid many parallel processes, file watchers and leftover servers; stop what you start once it is not needed.\n"</ID>
@@ -533,8 +533,8 @@
     <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertEquals(listOf(30_000_000L, 45_000_000L, 25_000_000L, 58_000_000L, 50_000_000L, null), all.map { it.downloadBytes })</ID>
     <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertEquals(setOf("linux", "essentials", "node", "opencode", "start"), all.filter { it.required }.map { it.id }.toSet())</ID>
     <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertFalse(opencode.installScript.contains("npm install -g") || opencode.installScript.contains("OC_PROOT_SETUP"), "never npm in the app's own Ubuntu")</ID>
-    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;"))</ID>
-    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertTrue(node.installScript.contains("x86_64|amd64) node_arch=x64; node_sha=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff ;;"))</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2 ;;"))</ID>
+    <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$assertTrue(node.installScript.contains("x86_64|amd64) node_arch=x64; node_sha=361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9 ;;"))</ID>
     <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$engine.run(PhoneSetupRegistry.defaultSelection(registry.components(SetupJobParams.firstSetup)), SetupJobParams.firstSetup)</ID>
     <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$fun</ID>
     <ID>MaxLineLength:PhoneSetupRegistryTest.kt$PhoneSetupRegistryTest$val bad = registry.components(mapOf("opencode" to mapOf("version" to "1; rm -rf /"))).single { it.id == "opencode" }</ID>

@@ -102,11 +102,11 @@ class BuiltinScriptsShellTest {
         assertEquals("b14970782f0daaaeccb46365605ca14abdced821b839ba33da960a58163cd1c1", sha256(BuiltinScriptTexts.HISTORY_COPY))
         assertEquals("8e06d46d604a993e196664dae531f06af56050e08d2de2a1c2beeebad2888352", sha256(BuiltinScriptTexts.PHONE_CONTEXT))
         assertEquals(
-            "8af3079f6a4bafea5697bdc3bb54f7416a976f506d7940273792b8949a99cfd1",
+            "fad8df7c51078b08a12187889227cd83184c15afea9905f1d761b44740114f15",
             sha256(BuiltinScriptTexts.FAST_PREREQUISITES),
         )
         assertEquals(
-            "59638cb254ca73432b54cbb5fb8d559c05a681760bb4e7f0a042269fa850aeba",
+            "188c2dd4dc867bc329ae3092fc2cffcd5429459c3d8f4b828bf338c7ea321263",
             sha256(BuiltinScripts.installOpenCodeScript().getOrNull()!!),
         )
         // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the script stays the Flutter script byte for

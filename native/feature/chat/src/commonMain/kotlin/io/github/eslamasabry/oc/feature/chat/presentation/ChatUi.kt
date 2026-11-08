@@ -71,6 +71,17 @@ public data class ChatUi(
     val canPutBack: Boolean = false,
     /** S30 story 3: Prompt tools offers Background (Flutter `_canBackgroundWork`). */
     val canBackground: Boolean = false,
+    /** B-169: what each failed turn (by turn id) offers for a limit; a turn missing here offers today's fixes. */
+    val limitSwitch: ImmutableMap<String, LimitSwitchUi> = persistentMapOf(),
+    /** B-169 §6: Switch model works only while the server is reachable (the reconnect banner comes first). */
+    val switchOnline: Boolean = true,
+    /** B-169 §3: the switch sheet; null = closed. */
+    val switching: SwitchUi? = null,
+    /**
+     * B-169 §4.3: the stopped prompt went to the composer because a file it carried can no longer be read; its failed
+     * turn says "Attach {file} again to send".
+     */
+    val attachAgain: AttachAgainUi? = null,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -307,7 +318,31 @@ public sealed interface ChatConfirm {
      * conversations are kept).
      */
     public data object RestartPhoneServer : ChatConfirm
+
+    /**
+     * B-169 §4.4: "The stopped reply already ran {steps} steps. Send again with {modelLabel}?" before a stopped
+     * prompt whose reply edited files or ran commands is sent again.
+     */
+    public data class SendAgainAfterSteps(val steps: Int, val modelLabel: String) : ChatConfirm
 }
+
+/**
+ * B-169 §3: the switch sheet for the failed turn [turnId]. [failed] is the model it stopped on; [usedUp] the models a
+ * limit stopped in this conversation; [contextTokens] the conversation's size (the context guard).
+ */
+/** B-169 §2: a failed turn stopped by a lasting limit: what it offers and the name of the model that stopped. */
+public data class LimitSwitchUi(val offer: LimitSwitchOffer, val modelName: String?)
+
+public data class AttachAgainUi(val turnId: String, val file: String)
+
+public data class SwitchUi(
+    val turnId: String,
+    val failed: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
+    val usedUp: Set<io.github.eslamasabry.oc.feature.chat.world.ModelKey>,
+    val contextTokens: Long?,
+    /** The person's recent models on this server, newest first (the suggestion's second choice). */
+    val recent: List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = emptyList(),
+)
 
 /**
  * A reply's server picture in the viewer. [bytes] null while loading; [failed] when it could not be
@@ -590,4 +625,19 @@ public interface ChatActions {
      * the failed turn's prompt again as it was ([turnId] names the turn).
      */
     public fun useModelAndResend(turnId: String, providerId: String, modelId: String) {}
+
+    /**
+     * B-169: "Switch model" on the failed turn [turnId]: its model is marked used up (until [resetsAtMs] when a plan
+     * reading knows it) and the switch sheet opens.
+     */
+    public fun switchModel(turnId: String, resetsAtMs: Long? = null) {}
+
+    /** B-169 §4: the switch sheet's choice: that model for the conversation, then the stopped prompt again. */
+    public fun switchTo(providerId: String, modelId: String) {}
+
+    /** B-169: the switch sheet closed without a choice. */
+    public fun dismissSwitch() {}
+
+    /** B-169 §4.4: Send on "The stopped reply already ran {N} steps…". */
+    public fun confirmSwitch() {}
 }

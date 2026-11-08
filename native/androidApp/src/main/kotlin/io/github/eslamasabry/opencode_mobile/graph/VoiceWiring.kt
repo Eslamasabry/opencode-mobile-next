@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.feature.voice.presentation.VoiceHub
 import io.github.eslamasabry.oc.feature.voice.presentation.VoiceParts
 import io.github.eslamasabry.oc.feature.voice.presentation.asDictation
 import io.github.eslamasabry.oc.feature.voice.presentation.asReader
+import io.github.eslamasabry.oc.feature.voice.presentation.asMicSetup
 import io.github.eslamasabry.oc.feature.voice.presentation.asVoiceModels
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.voiceNativePhoneRecognizer
@@ -136,15 +137,12 @@ class AndroidVoiceHub(
                 readAloudAvailable = true,
                 fetcher = OkHttpModelFetcher(dispatchers.io),
             )
-        val models =
-            NotifyingVoiceModels(
-                components.packs.asVoiceModels(),
-                io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupNotices(
-                    VoiceDownloadNoticeSink(application, activities, dispatchers, preferences),
-                    supportsVoice = hasMic,
-                ),
-                components.network,
+        val notices =
+            io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupNotices(
+                VoiceDownloadNoticeSink(application, activities, dispatchers, preferences),
+                supportsVoice = hasMic,
             )
+        val models = NotifyingVoiceModels(components.packs.asVoiceModels(), notices, components.network)
         val dictation =
             if (offline) {
                 components.voice.asDictation()
@@ -162,8 +160,28 @@ class AndroidVoiceHub(
                 // fallback).
                 micAvailable = hasMic && (offline || onDeviceRecognizer(application)),
                 naturalVoiceAvailable = offline,
+                // S31: the composer's mic offers the speech model right there (Flutter's first-mic setup sheet).
+                // Only the offline engine needs one; the phone's recognizer types without it.
+                setup = if (offline) firstMicSetup(components, notices) else null,
             )
             .ok()
+    }
+
+    /** The engine's first-mic setup; its notification question is the download notices' own. */
+    private fun firstMicSetup(
+        components: AndroidVoiceComponents,
+        notices: io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupNotices,
+    ): io.github.eslamasabry.oc.feature.voice.presentation.MicSetup {
+        val setup = components.setup.asMicSetup()
+        return io.github.eslamasabry.oc.feature.voice.presentation.MicSetup { host ->
+            setup.begin(
+                object : io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupHost by host {
+                    override suspend fun askNotifications() {
+                        notices.requestPermission()
+                    }
+                }
+            )
+        }
     }
 
     private fun phoneDictation(

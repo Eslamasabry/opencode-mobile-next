@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.voice.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -23,6 +26,8 @@ import io.github.eslamasabry.oc.engine.voice.state.VoiceEnd
 import io.github.eslamasabry.oc.engine.voice.state.VoiceHost
 import io.github.eslamasabry.oc.engine.voice.state.VoiceMode
 import io.github.eslamasabry.oc.engine.voice.state.VoiceState
+import io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupHost
+import io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupStage
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -124,6 +129,11 @@ public data class ComposerVoiceUi(
     val replyNote: ConversationReplyNote? = null,
     val tutorialStep: Int? = null,
     val micTip: Boolean = false,
+    /**
+     * The first-mic "Voice typing" sheet (Flutter `showVoiceAutomaticSetupSheet`): the mic found no speech model, so
+     * the model picked for this phone is offered for download right here. Null: no sheet.
+     */
+    val setup: VoiceSetupStage? = null,
 ) {
     val active: Boolean
         get() = phase != MicPhase.Idle
@@ -193,6 +203,12 @@ public class ComposerVoicePresenter(
      * change, and cancelling puts it back. Null when nothing is being dictated into the field.
      */
     private var previewBase: Triple<String, Int, Int>? = null
+
+    private var setupRun: MicSetupRun? = null
+    private var setupWatch: Job? = null
+
+    /** What the box held when the current note appeared; other words dismiss the note (Flutter `_composerNoteTyped`). */
+    private var noteTyped: String? = null
     private val visit = TipVisit()
     private val tourVisit = TipVisit()
     private var teachingAttached = false
@@ -710,6 +726,13 @@ public class ComposerVoicePresenter(
      * send.
      */
     public fun fieldChanged(text: String) {
+        // Flutter `_composerNoteFollowsEdits`: the note stays beside the box until the next words; typing them
+        // (anything other than what the box held when the note appeared) dismisses it.
+        val typed = noteTyped
+        if (typed != null && text != typed && mutable.value.note != null) {
+            noteTyped = null
+            mutable.update { it.copy(note = null) }
+        }
         val counted = countdown ?: return
         if (text != counted.text) clearCountdown()
     }
@@ -717,6 +740,7 @@ public class ComposerVoicePresenter(
     // ---- notes and places ----
 
     public fun dismissNote() {
+        noteTyped = null
         mutable.update { it.copy(note = null) }
     }
 
@@ -760,6 +784,11 @@ public class ComposerVoicePresenter(
         conversationHandle?.release?.invoke()
         conversationHandle = null
         exitConversation(cleanup)
+        setupRun?.let { run ->
+            setupRun = null
+            setupWatch?.cancel()
+            cleanup.launch { run.close() }
+        }
         if (owner) {
             val p = parts
             owner = false
@@ -771,7 +800,24 @@ public class ComposerVoicePresenter(
 
     private fun start(mode: VoiceMode) {
         val p = parts ?: return
-        if (field == null || !mutable.value.available) return
+        val request = beginStart(mode) ?: return
+        scope.launch {
+            when (val started = p.dictation.start(request)) {
+                is Outcome.Ok -> Unit
+                is Outcome.Failed -> {
+                    if (!owner) return@launch
+                    owner = false
+                    val note = noteFor(started.failure)
+                    if (note == VoiceNote.NeedsModel && p.setup != null) openSetup(mode) else endUi(note)
+                }
+            }
+        }
+    }
+
+    /** The pill shows Starting and this presenter owns the recording; null when voice cannot start here. */
+    private fun beginStart(mode: VoiceMode): VoiceStart? {
+        val p = parts ?: return null
+        if (field == null || !mutable.value.available) return null
         clearCountdown()
         previewBase =
             field?.takeIf { mode != VoiceMode.Conversation }?.let {
@@ -793,17 +839,109 @@ public class ComposerVoicePresenter(
                 note = null,
             )
         }
-        val request = VoiceStart(mode, stopsOnSilence(mode, p.models.state.value.autoSend))
-        scope.launch {
-            when (val started = p.dictation.start(request)) {
-                is Outcome.Ok -> Unit
-                is Outcome.Failed -> {
-                    if (!owner) return@launch
-                    owner = false
-                    endUi(noteFor(started.failure))
+        return VoiceStart(mode, stopsOnSilence(mode, p.models.state.value.autoSend))
+    }
+
+    // ---- first-mic setup (Flutter `showVoiceAutomaticSetupSheet`) ----
+
+    /**
+     * The mic found no speech model: instead of only saying "A local model is required", the sheet offers the model
+     * picked for this phone's memory and downloads it here. When it is ready, listening starts in this composer (a
+     * held mic was let go long ago, so it listens as a tap; a voice conversation keeps its mode).
+     */
+    private fun openSetup(mode: VoiceMode) {
+        val setup = parts?.setup
+        endUi(null)
+        if (setup == null || setupRun != null) return
+        val after = if (mode == VoiceMode.Conversation) VoiceMode.Conversation else VoiceMode.Tap
+        val run =
+            setup.begin(
+                object : VoiceSetupHost {
+                    override suspend fun startListening(): Outcome<Unit> {
+                        val p = parts ?: return Failure.Unavailable(FeatureId("voice")).failed()
+                        val request = beginStart(after) ?: return Failure.Unavailable(FeatureId("voice")).failed()
+                        val started = p.dictation.start(request)
+                        // The sheet says why; the composer goes back to rest.
+                        if (started is Outcome.Failed && owner) {
+                            owner = false
+                            endUi(null)
+                        }
+                        return started
+                    }
+
+                    override suspend fun cancelListening() {
+                        parts?.dictation?.cancel(keepWords = false)
+                    }
+
+                    override suspend fun askNotifications() {}
+
+                    override val inForeground: Boolean
+                        get() = foreground
+                }
+            )
+        setupRun = run
+        mutable.update { it.copy(setup = VoiceSetupStage.Checking) }
+        setupWatch?.cancel()
+        setupWatch =
+            scope.launch {
+                run.stage.collect { stage ->
+                    if (setupRun !== run) return@collect
+                    if (stage == VoiceSetupStage.Listening) {
+                        // The recording belongs to the composer's own voice surface from here on.
+                        run.handOff()
+                        endSetup(run)
+                    } else {
+                        mutable.update { it.copy(setup = if (stage == VoiceSetupStage.Idle) VoiceSetupStage.Checking else stage) }
+                    }
                 }
             }
+        scope.launch { run.start() }
+    }
+
+    private fun endSetup(run: MicSetupRun) {
+        if (setupRun !== run) return
+        setupRun = null
+        setupWatch?.cancel()
+        setupWatch = null
+        mutable.update { it.copy(setup = null) }
+        scope.launch { run.close() }
+    }
+
+    /** "Download 153 MB" (or "… on mobile data", which is the consent to use it). */
+    public fun setupDownload() {
+        val run = setupRun ?: return
+        val asked = mutable.value.setup as? VoiceSetupStage.NeedsConsent ?: return
+        scope.launch {
+            run.consent(asked.attemptId, allowMetered = asked.network != SetupNetwork.Unmetered)
         }
+    }
+
+    /** "Start listening" once the model is on the phone. */
+    public fun setupListen() {
+        val run = setupRun ?: return
+        scope.launch { run.listen() }
+    }
+
+    /** "Try again": checks again; an installed model never downloads twice. */
+    public fun setupRetry() {
+        val run = setupRun ?: return
+        scope.launch { run.start() }
+    }
+
+    /** "Not now", "Cancel download" or closing the sheet: a download this sheet started stops (its parts stay). */
+    public fun closeSetup() {
+        setupRun?.let(::endSetup)
+    }
+
+    /** "Choose another speech model" / "Show the download": Settings › Voice typing makes that choice. */
+    public fun setupOpenSettings() {
+        closeSetup()
+        openVoiceSettings()
+    }
+
+    /** "Allow microphone in Android settings" after a permanent denial. */
+    public fun setupAllowMic() {
+        hub.openAppSettings()
     }
 
     private fun finish() {
@@ -867,7 +1005,9 @@ public class ComposerVoicePresenter(
             }
             VoiceState.NeedsModel -> {
                 owner = false
-                endUi(VoiceNote.NeedsModel)
+                val mode = mutable.value.mode ?: VoiceMode.Tap
+                if (parts?.setup != null && setupRun == null) openSetup(mode)
+                else endUi(if (setupRun != null) null else VoiceNote.NeedsModel)
             }
             VoiceState.Idle -> {
                 if (!sawActive) return
@@ -940,6 +1080,7 @@ public class ComposerVoicePresenter(
                 note = note,
             )
         }
+        noteTyped = if (note != null) field?.text() else null
     }
 
     private fun startTicking() {

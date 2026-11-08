@@ -141,7 +141,7 @@ public data class AgentRow(
     val checkRequiredReason: CheckRequiredReason? = null,
     val hasPartialPayload: Boolean = false,
     val autoUpdate: AgentAutoUpdate? = null,
-    /** The pinned version being installed ("2.1.316"); null when only the shared helper changed. */
+    /** The pinned version being installed ("2.1.319"); null when only the shared helper changed. */
     val autoUpdateVersion: String? = null,
     /** Runs on an older tested version until the automatic update finishes. */
     val behindPin: Boolean = false,

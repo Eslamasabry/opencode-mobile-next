@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -61,7 +62,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -198,6 +198,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         header = if (state.phase == AllPhase.NoServer || state.selecting) null else ({ Filters(state, actions) }),
         loading = state.phase == AllPhase.Opening || state.loadingMore,
         loadingLabel = stringResource(Res.string.globalSessionsRefresh),
+        refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::retry, enabled = listed && !state.selecting),
         width = KitScreenWidth.List,
     ) {
         val list = rememberLazyListState()
@@ -215,105 +216,103 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
             }
                 .collect { near -> if (near) actions.loadMore() }
         }
-        KitRefresh(refreshing = false, onRefresh = actions::retry, enabled = listed && !state.selecting) {
-            LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                if (state.incomplete.isNotEmpty()) {
-                    item(key = "incomplete") {
-                        KitNotice(
+        LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            if (state.incomplete.isNotEmpty()) {
+                item(key = "incomplete") {
+                    KitNotice(
+                        stringResource(
+                            Res.string.chatsHomeIncompleteNamed,
+                            state.incomplete.joinToString(", "),
+                        )
+                    )
+                }
+            }
+            state.problem?.let { problem ->
+                item(key = "problem") {
+                    KitErrorNotice(
+                        message =
                             stringResource(
-                                Res.string.chatsHomeIncompleteNamed,
-                                state.incomplete.joinToString(", "),
-                            )
-                        )
-                    }
+                                when (problem.kind) {
+                                    AllProblemKind.Rename -> Res.string.p12RenameFailed
+                                    AllProblemKind.Delete -> Res.string.p12DeleteFailed
+                                    AllProblemKind.Archive -> Res.string.p12ArchiveFailed
+                                    AllProblemKind.Pin -> Res.string.statePinFailed
+                                }
+                            ),
+                        failure = problem.failure,
+                        detailsLabel = stringResource(Res.string.kitDetails),
+                        copyLabel = stringResource(Res.string.kitCopyDetails),
+                    )
                 }
-                state.problem?.let { problem ->
-                    item(key = "problem") {
-                        KitErrorNotice(
-                            message =
-                                stringResource(
-                                    when (problem.kind) {
-                                        AllProblemKind.Rename -> Res.string.p12RenameFailed
-                                        AllProblemKind.Delete -> Res.string.p12DeleteFailed
-                                        AllProblemKind.Archive -> Res.string.p12ArchiveFailed
-                                        AllProblemKind.Pin -> Res.string.statePinFailed
-                                    }
+            }
+            when (state.phase) {
+                AllPhase.Opening -> item(key = "opening") { KitSkeletonRows(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:814
+                AllPhase.NoServer ->
+                    item(key = "no-server") {
+                        KitStateView(
+                            kind = KitStateKind.Calm,
+                            title = stringResource(Res.string.p12NoServerTitle),
+                            body = stringResource(Res.string.p12NoServerBody),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.serversTitle),
+                                    actions::openServers,
                                 ),
-                            failure = problem.failure,
-                            detailsLabel = stringResource(Res.string.kitDetails),
-                            copyLabel = stringResource(Res.string.kitCopyDetails),
                         )
                     }
-                }
-                when (state.phase) {
-                    AllPhase.Opening -> item(key = "opening") { KitSkeletonRows(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:814
-                    AllPhase.NoServer ->
-                        item(key = "no-server") {
-                            KitStateView(
-                                kind = KitStateKind.Calm,
-                                title = stringResource(Res.string.p12NoServerTitle),
-                                body = stringResource(Res.string.p12NoServerBody),
-                                primary =
-                                    KitAction(
-                                        stringResource(Res.string.serversTitle),
-                                        actions::openServers,
-                                    ),
-                            )
-                        }
-                    AllPhase.Failed ->
-                        item(key = "failed") {
-                            KitStateView(
-                                kind = KitStateKind.Error,
-                                title = stringResource(Res.string.globalSessionsLoadFailedTitle),
-                                failure = state.failure,
-                                onRetry = actions::retry,
-                                retryLabel = stringResource(Res.string.kitTryAgain),
-                            )
-                        }
-                    AllPhase.Empty ->
-                        item(key = "empty") {
-                            KitStateView(
-                                kind = KitStateKind.Empty,
-                                title = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyTitle else Res.string.globalSessionsEmptyTitle),
-                                body = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyMessage else Res.string.globalSessionsEmptyMessage),
-                                icon = if (state.archived) KitIcons.archive else KitIcons.searchList,
-                                secondary = if (state.archived) KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived) else null,
-                                tertiary = if (state.archived) emptyList() else listOf(KitAction(stringResource(Res.string.globalSessionsRefresh), actions::retry)),
-                            )
-                        }
-                    AllPhase.NoMatch ->
-                        item(key = "no-match") {
-                            if (state.query.isNotBlank()) KitStateView(
-                                kind = KitStateKind.Empty,
-                                title = stringResource(Res.string.globalSessionsNoMatchTitle),
-                                body = stringResource(if (state.archived) Res.string.globalSessionsArchivedNoMatchMessage else Res.string.globalSessionsNoMatchMessage),
-                                icon = KitIcons.searchList,
-                                secondary = KitAction(stringResource(Res.string.commonClearSearch), { actions.search("") }),
-                            )
-                            else if (state.archived && project == null && !state.running) KitStateView(
-                                kind = KitStateKind.Empty,
-                                title = stringResource(Res.string.globalSessionsArchivedEmptyTitle),
-                                body = stringResource(Res.string.globalSessionsArchivedEmptyMessage),
-                                icon = KitIcons.archive,
-                                secondary = KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived),
-                            )
-                            else KitStateView(
-                                kind = KitStateKind.Empty,
-                                title = stringResource(Res.string.globalSessionsNoMatchTitle),
-                                primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
-                            )
-                        }
-                    AllPhase.List ->
-                        items(state.rows, key = { it.key }) { row ->
-                            AllRow(row, state.selecting, actions)
-                        }
-                }
-                // Under a filter with no loaded match, older pages may still hold one: Load more and
-                // its Try again stay.
-                if (listed && (state.canLoadMore || state.loadMoreFailure != null)) {
-                    item(key = "more") {
-                        AllConversationsPagingTail(state, actions::loadMore)
+                AllPhase.Failed ->
+                    item(key = "failed") {
+                        KitStateView(
+                            kind = KitStateKind.Error,
+                            title = stringResource(Res.string.globalSessionsLoadFailedTitle),
+                            failure = state.failure,
+                            onRetry = actions::retry,
+                            retryLabel = stringResource(Res.string.kitTryAgain),
+                        )
                     }
+                AllPhase.Empty ->
+                    item(key = "empty") {
+                        KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyTitle else Res.string.globalSessionsEmptyTitle),
+                            body = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyMessage else Res.string.globalSessionsEmptyMessage),
+                            icon = if (state.archived) KitIcons.archive else KitIcons.searchList,
+                            secondary = if (state.archived) KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived) else null,
+                            tertiary = if (state.archived) emptyList() else listOf(KitAction(stringResource(Res.string.globalSessionsRefresh), actions::retry)),
+                        )
+                    }
+                AllPhase.NoMatch ->
+                    item(key = "no-match") {
+                        if (state.query.isNotBlank()) KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.globalSessionsNoMatchTitle),
+                            body = stringResource(if (state.archived) Res.string.globalSessionsArchivedNoMatchMessage else Res.string.globalSessionsNoMatchMessage),
+                            icon = KitIcons.searchList,
+                            secondary = KitAction(stringResource(Res.string.commonClearSearch), { actions.search("") }),
+                        )
+                        else if (state.archived && project == null && !state.running) KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.globalSessionsArchivedEmptyTitle),
+                            body = stringResource(Res.string.globalSessionsArchivedEmptyMessage),
+                            icon = KitIcons.archive,
+                            secondary = KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived),
+                        )
+                        else KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.globalSessionsNoMatchTitle),
+                            primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
+                        )
+                    }
+                AllPhase.List ->
+                    items(state.rows, key = { it.key }) { row ->
+                        AllRow(row, state.selecting, actions)
+                    }
+            }
+            // Under a filter with no loaded match, older pages may still hold one: Load more and
+            // its Try again stay.
+            if (listed && (state.canLoadMore || state.loadMoreFailure != null)) {
+                item(key = "more") {
+                    AllConversationsPagingTail(state, actions::loadMore)
                 }
             }
         }

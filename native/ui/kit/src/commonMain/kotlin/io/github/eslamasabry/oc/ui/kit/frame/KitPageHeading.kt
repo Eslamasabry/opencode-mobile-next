@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.frame
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -61,6 +62,8 @@ public fun KitPageHeading(
     onLine: (() -> Unit)? = null,
     lineTapLabel: String? = null,
     lineNeedsYou: Boolean = onLine != null && lineTapLabel == null,
+    /** Plain icon buttons (48 dp, no ring) at the end of the title's line: search and Settings on the Conversations home. */
+    actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val tokens = LocalKitTokens.current
     Column(
@@ -68,10 +71,17 @@ public fun KitPageHeading(
             .kitMaxWidth(CapRole.Reading, CapAlign.Start)
             .fillMaxWidth()
             // A step of air under the bar: gutter at both sides, space2 on top.
-            .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = Space.S2.dp)
+            .padding(start = tokens.gutter.dp, end = if (actions == null) tokens.gutter.dp else (tokens.gutter - 12).dp, top = Space.S2.dp)
             .testTag("kit-page-heading"),
     ) {
-        KitText(title, Modifier.semantics { heading() }, role = TypeRole.LargeTitle, maxLines = 2) // F: lib/ui/kit/kit_page_heading.dart:133
+        val titleText: @Composable (Modifier) -> Unit = { m ->
+            KitText(title, m.semantics { heading() }, role = TypeRole.LargeTitle, maxLines = 2) // F: lib/ui/kit/kit_page_heading.dart:133
+        }
+        if (actions == null) titleText(Modifier)
+        else Row(verticalAlignment = Alignment.CenterVertically) {
+            titleText(Modifier.weight(1f))
+            actions()
+        }
         if (line != null) {
             val look = kitPageHeadingLineLook(lineNeedsYou)
             val words: @Composable () -> Unit = { KitText(line, role = look.role, tone = look.tone, maxLines = 1) } // F: lib/ui/kit/kit_page_heading.dart:76

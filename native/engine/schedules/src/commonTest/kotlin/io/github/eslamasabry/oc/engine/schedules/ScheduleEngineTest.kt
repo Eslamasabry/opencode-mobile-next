@@ -355,6 +355,30 @@ class ScheduleEngineTest {
     }
 
     @Test
+    fun `B-MIGR-013 a restore after the update arms the next time of an occurrence Flutter already ran late`() = runTest {
+        // Flutter 2.1.4 ran the 09:00 occurrence late (at 21:00 the same day), settled its claim and left nextRunAt
+        // on it. The native app's first start (or boot, or the package-replaced broadcast) is an hour later.
+        val due = T0 + HOUR
+        val legacy = prompt(next = due).copy(profileFingerprint = "ab".repeat(32))
+        h.backend.values["oc.scheduledPrompts.p1"] = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope(listOf(legacy)))
+        h.backend.values["oc.scheduleClaims.p1"] =
+            io.github.eslamasabry.oc.core.common.dart.DartJson.encode(
+                mapOf("a1:1:$due" to linkedMapOf("at" to due + 12 * HOUR, "finished" to true)),
+            )
+        h.clock.now = due + 13 * HOUR
+        h.engine.restoreAll()
+        // Armed for tomorrow's 09:00 straight away (an exact alarm), not the settled run that only re-arms once a
+        // worker has woken for it.
+        assertEquals(listOf(ArmedEntry(P, "a1", 1, due + 24 * HOUR)), h.armed())
+        assertTrue(h.profiles.gateway.prompts.isEmpty())
+        // An occurrence still owed (no settled claim) stays armed due: it is the catch-up run.
+        h.backend.values.remove("oc.scheduleClaims.p1")
+        h.backend.values["oc.scheduledPrompts.p1"] = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope(listOf(legacy)))
+        h.engine.restoreAll()
+        assertEquals(listOf(ArmedEntry(P, "a1", 1, due)), h.armed())
+    }
+
+    @Test
     fun `B-AGENT-218 a Flutter schedule made for another server is not migrated onto the edited profile`() = runTest {
         // Made for server A ("ab"…); the profile now names server B, whose Flutter fingerprint is "cd"….
         val legacy = prompt(next = T0 + HOUR).copy(profileFingerprint = "ab".repeat(32))

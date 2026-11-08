@@ -20,6 +20,8 @@ internal object ExternalRules {
             "io.github.zxing-cpp" to { p -> p == ":ui:kit-content" || p == ":android:media" || p == ":android:camera" },
             "com.k2fsa.sherpa.onnx" to { p -> p == ":android:media" },
             "org.jetbrains:markdown" to { p -> p == ":core:markdown" },
+            // Liquid glass (Kyant0/AndroidLiquidGlass) is drawn by the kit only; features use the kit's glass parts.
+            "io.github.kyant0" to { p -> p == ":ui:kit" },
         )
 
     /** null = allowed. */

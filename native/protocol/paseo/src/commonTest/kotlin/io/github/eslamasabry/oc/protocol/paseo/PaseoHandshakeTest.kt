@@ -117,7 +117,7 @@ class PaseoHandshakeTest {
     fun `B-PROTO-071 the old and new daemons and the previous and current Claude Code pins are accepted`() {
         for (v in listOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0")) assertTrue(PaseoTestedVersions.paseoSupports(v), v)
         for (v in listOf("0.13.0", "0.13.1", "0.14.1", "0.11.3", "0.9.3", null)) assertFalse(PaseoTestedVersions.paseoSupports(v), "$v")
-        for (v in listOf("2.1.283", "2.1.294", "2.1.316")) assertTrue(PaseoTestedVersions.claudeCodeSupports(v), v)
+        for (v in listOf("2.1.283", "2.1.294", "2.1.316", "2.1.319")) assertTrue(PaseoTestedVersions.claudeCodeSupports(v), v)
         for (v in listOf("2.1.317", "2.1.282", null)) assertFalse(PaseoTestedVersions.claudeCodeSupports(v), "$v")
         assertTrue(PaseoTestedVersions.paseoSupports(PaseoTestedVersions.PHONE_PIN))
     }

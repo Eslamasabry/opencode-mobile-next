@@ -37,6 +37,9 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveLooks
 import io.github.eslamasabry.oc.ui.kit.choice.KitPlainOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegmented
+import io.github.eslamasabry.oc.ui.kit.icon.KitPixelIcons
 import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
 import io.github.eslamasabry.oc.ui.kit.choice.KitStepSlider
 import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
@@ -61,6 +64,12 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAskShape
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskStyle
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskTheme
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCorners
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdges
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesMotionOff
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesNeedsAndroid13
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesNote
+import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
+import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneReset
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAutoNote
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverHoldsStyle
@@ -191,22 +200,9 @@ private fun ColumnScope.AppearanceControls(
             top,
         )
         Box(gutter) {
-            KitSegmented(
-                segments =
-                    AppearanceMode.entries.map {
-                        KitSegment(
-                            it,
-                            modeWords(it),
-                            icon =
-                                when (it) {
-                                    AppearanceMode.System -> KitIcons.systemTheme
-                                    AppearanceMode.Light -> KitIcons.lightMode
-                                    AppearanceMode.Dark -> KitIcons.darkMode
-                                    AppearanceMode.Saver -> KitIcons.leaf
-                                },
-                        )
-                    },
-                tall = true,
+            // s33 theme-switch-premium plan step 3: the mode control slides, rims and morphs its pixel icons.
+            KitModeSegmented(
+                segments = AppearanceMode.entries.map { KitModeSegment(it, modeWords(it), KitPixelIcons.of(it)) },
                 selected = ui.mode,
                 semanticsLabel = stringResource(Res.string.appearanceAskMode),
                 modifier = Modifier.testTag("appearance-mode"),
@@ -357,6 +353,29 @@ private fun ColumnScope.AppearanceControls(
                 modifier = Modifier.testTag("appearance-spacing"),
                 enabled = held,
                 onChange = actions::onSpacing,
+            )
+        }
+        // Glass only: its floating parts bend what lies behind them (liquid) or blur it (frosted).
+        if (ui.style == SurfaceStyle.Glass) {
+            AppearanceKnobLabel(stringResource(Res.string.appearanceGlassEdges))
+            Box(gutter) {
+                KitSegmented(
+                    segments = GlassEdges.entries.map { KitSegment(it, glassEdgesWords(it)) },
+                    selected = ui.glassEdges,
+                    semanticsLabel = stringResource(Res.string.appearanceGlassEdges),
+                    modifier = Modifier.testTag("appearance-glass-edges"),
+                    enabled = held,
+                    onChange = actions::onGlassEdges,
+                )
+            }
+            KitGroupNote(
+                stringResource(
+                    when (ui.glassEdgesHold) {
+                        EdgeHold.Platform -> Res.string.appearanceGlassEdgesNeedsAndroid13
+                        EdgeHold.Motion -> Res.string.appearanceGlassEdgesMotionOff
+                        else -> Res.string.appearanceGlassEdgesNote
+                    }
+                )
             )
         }
         val defaults = StyleResolver.spec(Style.valueOf(ui.style.name)).tokens.defaults

@@ -261,8 +261,7 @@ class AndroidSettingsHost(
                 val live =
                     servers.firstOrNull { it.id == active && it.connected }
                         ?: servers.firstOrNull { it.connected }
-                SettingsFacts(
-                    platform = shipped,
+                androidSettingsFacts(shipped, Build.VERSION.SDK_INT >= Build.VERSION_CODES.S).copy(
                     server = live?.let { ServerLine(it.name, onPhone = onPhone(it.id)) },
                     savedServers =
                         servers
@@ -278,32 +277,15 @@ class AndroidSettingsHost(
                             .toImmutableList(),
                     serverCapabilities = capabilities,
                     usageStatistics = live != null,
-                    dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
-                    diagnostics = true,
+                    liquidGlass = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
                     configurationInspection = configAvailable,
-                    localModelStorage = true,
-                    opens = SETTINGS_OPENS,
-                    surfaceStyles = true,
-                    phraseChips = true,
-                    problemReport = Telemetry.vendorAvailable,
-                    transcriptDisplay = false,
                 )
             }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
-                SettingsFacts(
-                    platform = shipped,
-                    dynamicColour = Build.VERSION.SDK_INT >= 31,
-                    diagnostics = true,
-                    localModelStorage = true,
-                    opens = SETTINGS_OPENS,
-                    surfaceStyles = true,
-                    phraseChips = true,
-                    problemReport = Telemetry.vendorAvailable,
-                    transcriptDisplay = false,
-                ),
+                androidSettingsFacts(shipped, Build.VERSION.SDK_INT >= Build.VERSION_CODES.S),
             )
 
     /** The phone's own server: the built-in owner marker plus the in-app address (screens-3). */
@@ -703,6 +685,25 @@ internal fun settingsShippedPlatform(
 /** This phone once OpenCode is set up here, else the setup that installs it (Flutter's hub row). */
 internal fun thisPhoneRoute(setUp: Boolean): io.github.eslamasabry.oc.ui.routes.AppRoute =
     if (setUp) PhoneRoute.ThisPhone else PhoneSetupRoute.Setup
+
+/**
+ * What Android Settings can always serve, before any server is known. Conversations shows Flutter's two switches,
+ * "Show reasoning" and "Show time, tokens and cost" (`settings_group_page.dart` SettingsGroup.chat): the chat reads
+ * the same stored values through [AndroidTranscriptPreferences] (S31 story 6; they were hidden by
+ * `transcriptDisplay = false`).
+ */
+internal fun androidSettingsFacts(platform: PlatformCapabilities, dynamicColour: Boolean): SettingsFacts =
+    SettingsFacts(
+        platform = platform,
+        dynamicColour = dynamicColour,
+        diagnostics = true,
+        localModelStorage = true,
+        opens = SETTINGS_OPENS,
+        surfaceStyles = true,
+        phraseChips = true,
+        problemReport = Telemetry.vendorAvailable,
+        transcriptDisplay = true,
+    )
 
 /**
  * The places [AndroidSettingsHost.openers] (or the Settings presenter itself) opens on Android.

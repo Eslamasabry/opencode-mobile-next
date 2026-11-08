@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
+import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
+import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
+import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
+import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
@@ -432,9 +437,24 @@ public class SettingsPresenter(
             styles = f.surfaceStyles,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
+            glassEdges = p.glassEdges,
+            glassEdgesHold = glassEdgesHold(p, f),
             questions = appearanceQuestions(f),
         )
     }
+
+    /** Why Glass's edges are frosted whatever the choice says: the platform, or motion (Saver has its own note). */
+    private fun glassEdgesHold(p: PersonalPrefs, f: SettingsFacts): EdgeHold? =
+        FrostPolicy.edgesHeldBy(
+            FrostConditions(
+                saver = p.saver,
+                reducedMotion = p.motion == io.github.eslamasabry.oc.ui.design.motion.MotionLevel.Off || f.systemMotionOff,
+                styleAllows = p.style == SurfaceStyle.Glass,
+                lensSupported = f.liquidGlass,
+            ),
+            FrostStrength.Balanced,
+            GlassEdges.Liquid,
+        ).takeIf { it == EdgeHold.Platform || it == EdgeHold.Motion }
 
     private fun appearanceQuestions(f: SettingsFacts): List<AppearanceQuestion> = buildList {
         add(AppearanceQuestion.Mode)
@@ -795,6 +815,12 @@ public class SettingsPresenter(
         val p = prefs.value
         if (p.saver || (p.corners ?: ownKnobs(p).corners) == corners) return
         write(PersonalChange.Corner(corners), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onGlassEdges(edges: GlassEdges) {
+        val p = prefs.value
+        if (p.saver || p.glassEdges == edges) return
+        write(PersonalChange.Edges(edges), SettingsNote.AppearanceNotSaved)
     }
 
     override fun onSpacing(spacing: Density) {

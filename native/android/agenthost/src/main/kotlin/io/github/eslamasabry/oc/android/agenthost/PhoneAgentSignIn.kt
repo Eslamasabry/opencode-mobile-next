@@ -18,7 +18,7 @@ class PhoneAgentSignIn(private val linux: AgentLinux) {
          */
         // S3-AGENTHOST: 2.1.316 joined claudeCodeTestedVersions at the freeze tip (580803d4) without this list; the
         // Flutter twin needs the same line (docs/native/units/S3-AGENTHOST.md, D5).
-        val TESTED_CLAUDE_VERSIONS = setOf("2.1.283 (Claude Code)", "2.1.294 (Claude Code)", "2.1.316 (Claude Code)")
+        val TESTED_CLAUDE_VERSIONS = setOf("2.1.283 (Claude Code)", "2.1.294 (Claude Code)", "2.1.316 (Claude Code)", "2.1.319 (Claude Code)")
     }
 
     private val lock = Any()

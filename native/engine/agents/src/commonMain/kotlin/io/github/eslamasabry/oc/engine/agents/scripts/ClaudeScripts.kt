@@ -7,9 +7,9 @@ package io.github.eslamasabry.oc.engine.agents.scripts
  * restores the previous good generation.
  */
 public object ClaudeScripts {
-    public const val VERSION: String = "2.1.316"
-    public const val ARM64_SHA256: String = "55cdb8e162d190432696ea54010e0fca2e18d06fa7a7127fd563b9ffd4f22624"
-    public const val X64_SHA256: String = "fd13c70000fec3f2116dfbcbb6121210b4a29328bf0e46210a59dd594a67d824"
+    public const val VERSION: String = "2.1.319"
+    public const val ARM64_SHA256: String = "a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f"
+    public const val X64_SHA256: String = "dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed"
 
     // Official release manifest. Do not use the remote install.sh or npm's optional dependency selection.
     public val install: String =

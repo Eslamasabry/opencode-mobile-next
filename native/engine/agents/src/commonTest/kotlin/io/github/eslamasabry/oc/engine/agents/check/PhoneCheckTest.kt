@@ -67,7 +67,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-134 an ARM64 pass needs install, version, daemon and the exact Paseo hello, then writes the gate`() = runTest {
         val rig = Rig(Abi.Arm64V8a)
-        rig.installed(codex, "0.166.0")
+        rig.installed(codex, "0.167.0")
         val r = rig.check.run(owner, codex)
         assertTrue(r.passed, r.toString())
         assertTrue(r.arm64Qualified)
@@ -82,7 +82,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-134 an x64 pass can never qualify ARM64`() = runTest {
         val rig = Rig(Abi.X86_64)
-        rig.installed(codex, "0.166.0")
+        rig.installed(codex, "0.167.0")
         val r = rig.check.run(owner, codex)
         assertTrue(r.passed)
         assertFalse(r.arm64Qualified)
@@ -105,7 +105,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-131 an old Paseo hello is a helper update, not agent silence, and writes no proof`() = runTest {
         val rig = Rig(Abi.Arm64V8a)
-        rig.installed(codex, "0.166.0")
+        rig.installed(codex, "0.167.0")
         rig.ports.hello = "0.9.2".ok()
         val r = rig.check.run(owner, codex)
         assertEquals(PhoneCheckFailure.HelperVersion, r.failure)
@@ -120,7 +120,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-132 a busy helper or unknown work blocks the check, and a live helper at the pin is not restarted`() = runTest {
         val rig = Rig(Abi.Arm64V8a, running = true)
-        rig.installed(codex, "0.166.0")
+        rig.installed(codex, "0.167.0")
         rig.ports.busy = null
         assertEquals(PhoneCheckFailure.Busy, rig.check.run(owner, codex).failure)
         assertTrue(rig.ports.calls.isEmpty())
@@ -134,7 +134,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-130 Claude's check ends with a sign-in read and signed-out becomes needs sign-in`() = runTest {
         val rig = Rig(Abi.Arm64V8a)
-        rig.installed(AgentId.CLAUDE, "2.1.316")
+        rig.installed(AgentId.CLAUDE, "2.1.319")
         rig.host.authResult = { _, _, _ -> AuthProjection(AuthState.SignedOut).ok() }
         val r = rig.check.run(owner, AgentId.CLAUDE)
         assertEquals(PhoneCheckFailure.NeedsSignIn, r.failure)
@@ -172,7 +172,7 @@ class PhoneCheckTest {
         val claude = catalog.byId(AgentId.CLAUDE)!!
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
         val oldFp = io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(
-            listOf("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.21.0"),
+            listOf("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.22.2"),
         )
         rig.prefs.values["oc.agentPhoneGate.owner"] =
             "{\"claude\":{\"fingerprint\":${io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(listOf(oldFp)).removeSurrounding("[", "]")},\"architecture\":\"arm64\",\"activeVersion\":\"2.1.294\"}}"
@@ -192,7 +192,7 @@ class PhoneCheckTest {
     @Test
     fun `B-LINUX-140 a passed check plus a signed-in read makes a ready row, and a stopped helper offers Resume`() = runTest {
         val rig = Rig(Abi.Arm64V8a)
-        rig.installed(codex, "0.166.0")
+        rig.installed(codex, "0.167.0")
         assertTrue(rig.check.run(owner, codex).passed)
         val server = io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities()
         val descriptor = catalog.byId(codex)!!

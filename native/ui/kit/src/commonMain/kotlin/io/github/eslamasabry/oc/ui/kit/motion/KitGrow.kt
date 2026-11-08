@@ -18,7 +18,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -166,7 +165,7 @@ public fun KitGrowPage(growKey: Any?, content: @Composable () -> Unit) {
     }
     val config = remember(host) { GateConfig(host) }
     val specs = KitMotion.specs
-    val ground = MaterialTheme.colorScheme.background
+    val ground = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.ground // P-116: not Material's
     val transition = host.animatedVisibilityScope.transition
     val enabled = host.transformEnabled
     val wordsAlpha by transition.animateFloat(

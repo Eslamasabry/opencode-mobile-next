@@ -69,7 +69,7 @@ String _genUiManagedScript({
         'qualifiedPins':
             claudeCodeSupports(claudeVersion) &&
             paseoSupports(PaseoPhoneScripts.version) &&
-            PaseoPhoneScripts.nodeVersion == 'v24.21.0',
+            PaseoPhoneScripts.nodeVersion == 'v24.22.2',
         'home': home,
         'directory': directory,
         'config': config,

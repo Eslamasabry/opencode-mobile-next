@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -55,6 +56,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
 import io.github.eslamasabry.oc.ui.kit.theme.kitThemeCover
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitThemeFade
+import io.github.eslamasabry.oc.ui.kit.theme.rememberSettledScheme
 import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
 
 /**
@@ -137,7 +139,11 @@ public fun KitTheme(
     val ripple = remember { kitRippleConfiguration() }
     val selection =
         remember(colors) { TextSelectionColors(colors.accent, colors.accent.copy(alpha = 0.30f)) }
-    val scheme = remember(roles) { MaterialBridge.scheme(roles) }
+    // P-116: Material keeps its colours in a static local holding an identity-compared ColorScheme, so swapping it
+    // recomposes everything under the theme. The kit's own colours (dynamic locals) change at once; Material's scheme
+    // settles after a theme switch's motion has finished ([rememberSettledScheme]), so its one full recomposition
+    // never lands on a frame that moves.
+    val scheme = rememberSettledScheme(roles, defers = level != MotionLevel.Off && !stillFrame)
     val appDensity = rememberAppTextDensity(appearance.textSize)
     val container = LocalWindowInfo.current.containerSize
     val window =
@@ -165,7 +171,9 @@ public fun KitTheme(
         LocalLayoutDirection provides direction,
         LocalDensity provides appDensity,
         LocalKitAppDensity provides appDensity,
-        LocalIndication provides platform.pressIndication(colors.text1),
+        // Material's theme provides its own ripple under this one; a value that changed with the colours only cost
+        // a full recomposition (static local), so it is made once per platform.
+        LocalIndication provides remember(platform) { platform.pressIndication(Color.Unspecified) },
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
@@ -175,7 +183,7 @@ public fun KitTheme(
             colorScheme = scheme,
             motionScheme = motionScheme,
             shapes = MaterialBridge.shapes,
-            typography = MaterialBridge.typography(typography),
+            typography = remember(typography) { MaterialBridge.typography(typography) },
         ) {
             Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) { content() }
         }

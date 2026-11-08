@@ -205,6 +205,7 @@ class FakeHub(
     val reader: FakeReader = FakeReader(),
     private val unavailable: Boolean = false,
     private val naturalVoiceAvailable: Boolean = false,
+    val setup: FakeMicSetup? = null,
 ) : VoiceHub {
     var settingsOpened = 0
 
@@ -218,6 +219,7 @@ class FakeHub(
                 engine = SpeechEngineKind.PhoneRecognizer,
                 micAvailable = true,
                 naturalVoiceAvailable = naturalVoiceAvailable,
+                setup = setup,
             ).ok()
 
     override fun openAppSettings() {
@@ -256,3 +258,47 @@ class FakeField(var value: String = "", var sel: IntRange? = null, var sendable:
 /** Mic problems as the engine reports them. */
 fun mediaFailure(problem: MediaProblem): Outcome<Unit> = Failure.Media(problem).failed()
 
+/** The first-mic setup as the composer drives it: the test moves [stage] and reads what was asked. */
+class FakeMicSetup : io.github.eslamasabry.oc.feature.voice.presentation.MicSetup {
+    var host: io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupHost? = null
+    val run = FakeMicSetupRun()
+
+    override fun begin(
+        host: io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupHost
+    ): io.github.eslamasabry.oc.feature.voice.presentation.MicSetupRun {
+        this.host = host
+        return run
+    }
+}
+
+class FakeMicSetupRun : io.github.eslamasabry.oc.feature.voice.presentation.MicSetupRun {
+    override val stage =
+        MutableStateFlow<io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupStage>(
+            io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupStage.Idle
+        )
+    var starts = 0
+    val consents = mutableListOf<Pair<Long, Boolean>>()
+    var listens = 0
+    var handedOff = false
+    var closed = false
+
+    override suspend fun start() {
+        starts++
+    }
+
+    override suspend fun consent(attemptId: Long, allowMetered: Boolean) {
+        consents += attemptId to allowMetered
+    }
+
+    override suspend fun listen() {
+        listens++
+    }
+
+    override fun handOff() {
+        handedOff = true
+    }
+
+    override suspend fun close() {
+        closed = true
+    }
+}

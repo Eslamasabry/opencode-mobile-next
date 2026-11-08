@@ -128,6 +128,13 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape())
 }
 
+/**
+ * Marks a liquid glass pane (`KitLiquidGlass`) as the frosted pane of its stack: Glass panes inside it sit on it and draw
+ * no frost of their own (Dart `_KitSurfaceScope.frosted`), as they do inside a frosted pane. It draws nothing itself.
+ */
+internal fun Modifier.kitGlassStackRoot(): Modifier =
+    this then GlassFrostElement(null, null, Color.Transparent, androidx.compose.ui.graphics.RectangleShape)
+
 /** Whether a Glass pane over [backdrop] blurs the picture behind it here (for the legibility measure). */
 @Composable
 internal fun kitGlassBlurs(backdrop: KitGlassBackdrop?): Boolean {

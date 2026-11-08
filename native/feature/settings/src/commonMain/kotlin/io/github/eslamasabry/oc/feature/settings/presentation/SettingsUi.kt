@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.engine.settings.walkthrough.WhatsNewChange
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
+import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
@@ -110,6 +112,10 @@ public data class AppearanceUi(
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
+    /** Fine-tune under Glass: liquid or frosted floating edges (shown only while Glass is the style). */
+    val glassEdges: GlassEdges = GlassEdges.Liquid,
+    /** Why the edges are frosted whatever the choice says (the platform, motion), or null. */
+    val glassEdgesHold: EdgeHold? = null,
     val guide: AppearanceGuideRecord? = null,
     val question: AppearanceQuestion? = null,
     val questions: List<AppearanceQuestion> = emptyList(),

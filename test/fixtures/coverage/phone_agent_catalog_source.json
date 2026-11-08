@@ -60,7 +60,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "2.1.316",
+        "version": "2.1.319",
         "executable": "claude",
         "launchArgs": [],
         "signInArgs": [
@@ -70,18 +70,18 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.316/linux-arm64/claude",
-            "sha256": "55cdb8e162d190432696ea54010e0fca2e18d06fa7a7127fd563b9ffd4f22624",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude",
+            "sha256": "a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f",
             "format": "executable",
-            "downloadBytes": 328459544,
-            "installedBytes": 328459544
+            "downloadBytes": 339797432,
+            "installedBytes": 339797432
           },
           "x64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.316/linux-x64/claude",
-            "sha256": "fd13c70000fec3f2116dfbcbb6121210b4a29328bf0e46210a59dd594a67d824",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude",
+            "sha256": "dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed",
             "format": "executable",
-            "downloadBytes": 328262000,
-            "installedBytes": 328262000
+            "downloadBytes": 340226576,
+            "installedBytes": 340226576
           }
         }
       }
@@ -104,7 +104,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.166.0",
+        "version": "0.167.0",
         "executable": "codex",
         "launchArgs": [
           "app-server"
@@ -115,20 +115,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-aarch64-unknown-linux-musl.tar.gz",
-            "sha256": "94eb707605ec2646b2e05b7edf7c4e7b3ccf02b16237c34ae9beb8cfb7f810a9",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281",
             "format": "tarGz",
             "archiveMember": "codex-aarch64-unknown-linux-musl",
-            "downloadBytes": 113382496,
-            "installedBytes": 277549176
+            "downloadBytes": 114300898,
+            "installedBytes": 278794648
           },
           "x64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-x86_64-unknown-linux-musl.tar.gz",
-            "sha256": "a0bf572d2f93f056c6712a6da348e96078dc84f3885fd7be67807ef389cb3978",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a",
             "format": "tarGz",
             "archiveMember": "codex-x86_64-unknown-linux-musl",
-            "downloadBytes": 121764138,
-            "installedBytes": 319346888
+            "downloadBytes": 122587028,
+            "installedBytes": 320575976
           }
         }
       }
@@ -151,7 +151,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "1.5.0",
+        "version": "1.5.3",
         "executable": "agy",
         "launchArgs": [
           "acp",
@@ -163,20 +163,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz",
-            "sha256": "87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675",
             "format": "tarGz",
             "archiveMember": "antigravity",
-            "downloadBytes": 66011999,
-            "installedBytes": 227627384
+            "downloadBytes": 69843447,
+            "installedBytes": 235622776
           },
           "x64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz",
-            "sha256": "f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807",
             "format": "tarGz",
             "archiveMember": "antigravity",
-            "downloadBytes": 69781910,
-            "installedBytes": 238604688
+            "downloadBytes": 73694700,
+            "installedBytes": 246837648
           }
         }
       }

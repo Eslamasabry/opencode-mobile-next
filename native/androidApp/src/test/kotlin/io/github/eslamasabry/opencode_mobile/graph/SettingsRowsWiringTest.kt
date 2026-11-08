@@ -103,4 +103,27 @@ class SettingsRowsWiringTest {
         buildSet {
             if (SettingsOutside.Guide in SETTINGS_NOT_NATIVE_YET) add(SettingsRowId.Guide)
         }
+
+    /**
+     * S31 story 6: Settings › Conversations lacked Flutter's "Show reasoning" and "Show time, tokens and cost"
+     * switches because the host built its facts with `transcriptDisplay = false`.
+     */
+    @Test
+    fun `B-SET-270 Conversations shows Flutter's Show reasoning and cost switches on Android`() {
+        val facts =
+            androidSettingsFacts(
+                settingsShippedPlatform(PlatformCapabilities.android(), voiceOffered = true),
+                dynamicColour = true,
+            )
+        val conversations =
+            SettingsStructure.rows(SettingsGroupId.Conversations, facts, reasoning = true, timestamps = false)
+        val ids = conversations.map { it.id }
+        assertEquals(
+            listOf(SettingsRowId.ShowReasoning, SettingsRowId.ShowTimestamps),
+            ids.take(2),
+            "Flutter's order: Show reasoning, then Show time, tokens and cost",
+        )
+        assertEquals(SettingsDoor.Switch(true), conversations[0].door)
+        assertEquals(SettingsDoor.Switch(false), conversations[1].door)
+    }
 }

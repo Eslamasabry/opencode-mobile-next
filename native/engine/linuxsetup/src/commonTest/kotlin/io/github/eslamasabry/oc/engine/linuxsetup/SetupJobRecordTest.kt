@@ -16,11 +16,11 @@ internal const val RECORDED_INTERRUPTED: String = """
 "linux":{"state":"done","weight":25,"stage":"Unpacking Linux base","done":29564928,"total":30028293,"percent":null,"version":"24.04.5","error":null,"startedAt":1790196784379,"endedAt":1790196792830},
 "essentials":{"state":"done","weight":60,"stage":"Installing packages","done":null,"total":null,"percent":99,"version":"2.43.0","error":null,"startedAt":1790196792830,"endedAt":1790196821793},
 "python":{"state":"done","weight":60,"stage":"Installing packages","done":null,"total":null,"percent":98,"version":"3.12.3","error":null,"startedAt":1790196821793,"endedAt":1790196838476},
-"node":{"state":"pending","weight":30,"stage":"Downloading Node.js 24.21.0","done":23134208,"total":58088022,"percent":null,"version":null,"error":null,"startedAt":1790196838476,"endedAt":null},
+"node":{"state":"pending","weight":30,"stage":"Downloading Node.js 24.22.2","done":23134208,"total":58088022,"percent":null,"version":null,"error":null,"startedAt":1790196838476,"endedAt":null},
 "opencode":{"state":"pending","weight":240,"stage":null,"done":null,"total":null,"percent":null,"version":null,"error":null,"startedAt":null,"endedAt":null},
 "start":{"state":"pending","weight":20,"stage":null,"done":null,"total":null,"percent":null,"version":null,"error":null,"startedAt":null,"endedAt":null,"data":{"openCodeChanged":"true","runtime":"opencode1"}}},
 "overall":0.33,"startedAt":1790196784379,"updatedAt":1790196840162,"error":null,
-"logTail":"Setting up python3-pip (24.0+dfsg-1ubuntu1.3) ...\nProcessing triggers for libc-bin (2.39-0ubuntu8.8) ...\n==> Downloading Node.js 24.21.0\n",
+"logTail":"Setting up python3-pip (24.0+dfsg-1ubuntu1.3) ...\nProcessing triggers for libc-bin (2.39-0ubuntu8.8) ...\n==> Downloading Node.js 24.22.2\n",
 "params":{}}
 """
 

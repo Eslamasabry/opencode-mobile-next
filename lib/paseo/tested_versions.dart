@@ -27,7 +27,7 @@ const Set<String> paseoTestedVersions = {
 /// gateway; see docs/qa/pins-2026-10-31/README.md). 2.1.294 (the pin for
 /// Paseo 0.11.2: Sonnet 5.5 needs 2.1.284+, Haiku 5.5 needs 2.1.293+) and
 /// 2.1.283 stay accepted for phones that still run an earlier pin.
-const Set<String> claudeCodeTestedVersions = {'2.1.283', '2.1.294', '2.1.316'};
+const Set<String> claudeCodeTestedVersions = {'2.1.283', '2.1.294', '2.1.316', '2.1.319'};
 
 /// Whether [version] (the number the daemon reported) is a tested release.
 bool paseoSupports(String? version) =>

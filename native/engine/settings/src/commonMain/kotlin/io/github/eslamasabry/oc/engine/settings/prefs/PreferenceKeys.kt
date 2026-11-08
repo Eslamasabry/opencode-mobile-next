@@ -18,6 +18,9 @@ public object DevicePreferenceKeys {
     public const val TEXT_SIZE: String = "oc.textSize"
     public const val ACCENT: String = "oc.appearanceAccent"
     public const val FROST: String = "oc.glass"
+
+    /** Glass's floating edges (Fine-tune under Glass, 2026-11-08): `liquid` (default) or `frosted`. */
+    public const val GLASS_EDGES: String = "oc.glassEdges"
     public const val REASONING: String = "oc.transcript.reasoningExpanded"
     public const val TIMESTAMPS: String = "oc.transcript.timestampsVisible"
     public const val MOTION: String = "oc.effectsMotion"
@@ -46,6 +49,7 @@ public object DevicePreferenceKeys {
     public val READ: Set<String> = linkedSetOf(
         APPEARANCE, THEME_PACK, LOCALE, TEXT_SIZE, ACCENT, FROST, REASONING, TIMESTAMPS, MOTION, CELEBRATIONS, GLOW,
         GLOW_STYLE, LIVE_BACKGROUND, LIVE_HELD_BY_STYLE, LIVE_STYLE, LIVE_INTENSITY, SURFACE_STYLE, CORNERS, DENSITY,
+        GLASS_EDGES,
     )
 
     /** The keys that make up the facade's `effects` value (provenance: any of them stored = explicit). */
@@ -58,7 +62,7 @@ public object DevicePreferenceKeys {
         fun app(key: String, type: PrefType) = add(KeyShape(key, KeyScope.App, type, OWNER, "device preference"))
         listOf(
             APPEARANCE, THEME_PACK, LOCALE, TEXT_SIZE, ACCENT, FROST, MOTION, GLOW_STYLE, LIVE_STYLE, LIVE_INTENSITY,
-            SURFACE_STYLE, CORNERS, DENSITY, DEPTH, EDGES, GLOW_COLOURS, GLOW_SPEED,
+            SURFACE_STYLE, CORNERS, DENSITY, DEPTH, EDGES, GLOW_COLOURS, GLOW_SPEED, GLASS_EDGES,
         ).forEach { app(it, PrefType.Str) }
         listOf(REASONING, TIMESTAMPS, CELEBRATIONS, GLOW, LIVE_BACKGROUND, LIVE_HELD_BY_STYLE)
             .forEach { app(it, PrefType.Bool) }

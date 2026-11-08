@@ -35,6 +35,8 @@ tracing = "2.0.5"
 # Content
 markdown = "0.7.18"
 coil = "3.6.3"
+# Liquid glass for the Glass style (Kyant0/AndroidLiquidGlass, Apache-2.0; 2.0.1 of 2026-08-26, Compose 1.12)
+backdrop = "2.0.1"
 # Android platform
 androidx-core = "1.19.1"
 work = "2.12.0"
@@ -96,6 +98,8 @@ lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:l
 lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 savedstate = { module = "org.jetbrains.androidx.savedstate:savedstate", version.ref = "savedstate" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+# --- Liquid glass (Glass style only; :ui:kit only, ExternalRules)
+kyant-backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 # --- Logging and tracing
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 androidx-tracing = { module = "androidx.tracing:tracing", version.ref = "tracing" }

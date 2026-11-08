@@ -8,6 +8,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -58,6 +61,21 @@ import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidBarShape
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidEdgeFade
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidGlassOn
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidWordsHost
+import io.github.eslamasabry.oc.ui.kit.effects.kitRunUnderBar
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.zIndex
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
@@ -107,6 +125,15 @@ public enum class KitScreenWidth(internal val cap: CapRole) {
     List(CapRole.List),
 }
 
+/** A screen's pull to refresh, set on [KitScreen] so it wraps the scrolling header as well as the body. */
+@OptIn(ExperimentalMaterial3Api::class)
+public class KitScreenRefresh(
+    public val refreshing: Boolean,
+    public val onRefresh: () -> Unit,
+    public val enabled: Boolean = true,
+    public val state: PullToRefreshState? = null,
+)
+
 /**
  * The one screen frame (Dart `KitScreen` v2). With [topBar] (or [page]) it is a page: the ground,
  * the bar in the top safe area, and the bottom block lifted above the keyboard; without, it is a
@@ -141,6 +168,8 @@ public fun KitScreen(
      * behind instead.
      */
     frost: KitFrostState? = null,
+    /** Pull to refresh for the whole scrolling part (header and body); see [KitScreenRefresh]. */
+    refresh: KitScreenRefresh? = null,
     body: @Composable () -> Unit,
 ) {
     val framed = topBar != null || page
@@ -173,12 +202,17 @@ public fun KitScreen(
             // under it as Glass does, so it adds no fade room either: the newest line rests on the list's own padding.
             val veil = if (frost != null && !kitChromeIsGlass()) rememberKitChromeVeil() else null
             val faded = !kitChromeIsGlass() && veil == null
+            // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
+            // over what scrolls behind them; a null face keeps today's ground, veil or frost.
+            val liquid = frost != null && kitLiquidGlassOn()
+            val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape) else null
             val padding =
                 with(density) {
                     PaddingValues(
                         // E20-S13: the header always lies on its opaque ground with its fade, Glass included.
                         top = topPx.toDp() + if (topPart != null) HEADER_FADE_DP.dp else 0.dp,
-                        bottom = bottomPx.toDp() + if (faded && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
+                        // Liquid: the newest line rests above the scroll edge fade, never inside it.
+                        bottom = bottomPx.toDp() + if ((faded || liquid) && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
                     )
                 }
             Box(
@@ -194,8 +228,9 @@ public fun KitScreen(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .onSizeChanged { topPx = it.height }
-                            .kitChromeGround(FrostRole.ChatHeader, frost)
+                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar, frost)) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
                     ) {
+                        if (barFace != null) KitLiquidBarPane(barFace)
                         it()
                     }
                 }
@@ -205,8 +240,11 @@ public fun KitScreen(
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
                             .then(
-                                if (veil != null && frost != null) Modifier.kitChromeVeil(veil, frost)
-                                else Modifier.kitChromeGround(FrostRole.Composer, frost)
+                                when {
+                                    liquid -> Modifier.kitLiquidEdgeFade(top = false)
+                                    veil != null && frost != null -> Modifier.kitChromeVeil(veil, frost)
+                                    else -> Modifier.kitChromeGround(FrostRole.Composer, frost)
+                                }
                             )
                             .padding(
                                 horizontal = LocalKitTokens.current.gutter.dp,
@@ -214,11 +252,31 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitChromeVeil provides veil) { it() }
+                        CompositionLocalProvider(LocalKitChromeVeil provides veil, LocalKitLiquidChrome provides frost) { it() }
                     }
                 }
             }
-        } else
+        } else {
+            // Liquid glass. A chat (it records its transcript) keeps its liquid bar and composer here too, so a status
+            // line, the loading line or Find never flips them to frost. A page with a scrolling header runs its body up
+            // under the bar (the header keeps its place below it) and the bar floats as glass over what scrolls there;
+            // while a status line or Find sits between them the body eases back below the bar, never jumping.
+            val under = rememberKitLiquidSource()
+            val runs = frost == null && topPart != null && header != null && kitLiquidGlassOn()
+            val barFace =
+                when {
+                    topPart == null -> null
+                    frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
+                    runs -> kitLiquidFace(LiquidRole.Bar, under, LiquidBarShape)
+                    else -> null
+                }
+            var barPx by remember { mutableIntStateOf(0) }
+            val runTarget = if (runs && line == null && search == null) barPx else 0
+            val runPx by androidx.compose.animation.core.animateIntAsState(
+                runTarget,
+                if (KitMotion.state.reduced) androidx.compose.animation.core.snap<Int>() else KitMotion.specs.enter<Int>(),
+                label = "kit.screen.under-bar",
+            )
             Column(
                 Modifier.fillMaxSize()
                     .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
@@ -230,8 +288,16 @@ public fun KitScreen(
                             WindowInsets.safeDrawing.only(
                                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                             )
+                        ).then(
+                            when {
+                                runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
+                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar, under)) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
+                                else -> Modifier
+                            }
                         )
                     ) {
+                        if (barFace != null) KitLiquidBarPane(barFace)
                         topPart()
                     }
                 }
@@ -243,7 +309,11 @@ public fun KitScreen(
                         line,
                         Modifier.kitStatusRoom().verticalScroll(rememberScrollState()).testTag("kit-screen-status"),
                     )
-                Column(Modifier.fillMaxWidth().weight(1f).kitMaxWidth(cap).fillMaxWidth()) {
+                Column(
+                    Modifier.fillMaxWidth().weight(1f)
+                        .then(if (runs) Modifier.kitRunUnderBar { runPx }.kitLiquidSource(under) else Modifier)
+                        .kitMaxWidth(cap).fillMaxWidth()
+                ) {
                     search?.let {
                         // E20-S08: a step under the field, so the page's first part (an empty state's heading)
                         // never sits against it.
@@ -254,15 +324,40 @@ public fun KitScreen(
                     }
                     // P-006: the header (a page heading, its chips) is the body's first part and scrolls away with it;
                     // the loading line and the body follow it. Without one, the body starts here.
-                    if (header != null) {
-                        KitScrollingHeaderFrame(header, Modifier.fillMaxWidth().weight(1f)) {
-                            KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                            Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                    // Refresh is the outermost scroll node, around the header frame: list, then header, then refresh.
+                    // The header returns before a pull starts, and an upward drag retracts the pull before the header
+                    // hides (Flutter's RefreshIndicator wraps the whole CustomScrollView, header sliver included).
+                    // Liquid glass: a body that runs up under the bar keeps its header below the bar with a spacer
+                    // that eases with the run; refresh still wraps the whole header frame.
+                    val scrolling: @Composable (Modifier) -> Unit = { m ->
+                        if (header != null) {
+                            val runDp = with(LocalDensity.current) { runPx.toDp() }
+                            val shownHeader: @Composable ColumnScope.() -> Unit =
+                                if (!runs) header else ({ Spacer(Modifier.height(runDp)); header() })
+                            KitScrollingHeaderFrame(shownHeader, m) {
+                                KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
+                                Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                            }
+                        } else {
+                            // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
+                            Column(m) {
+                                KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
+                                Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                            }
+                        }
+                    }
+                    if (refresh != null) {
+                        KitRefresh(
+                            refreshing = refresh.refreshing,
+                            onRefresh = refresh.onRefresh,
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            enabled = refresh.enabled,
+                            hostState = refresh.state,
+                        ) {
+                            scrolling(Modifier.fillMaxSize())
                         }
                     } else {
-                        // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
-                        KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                        Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                        scrolling(Modifier.fillMaxWidth().weight(1f))
                     }
                     bottomPart?.let {
                         Box(
@@ -281,11 +376,12 @@ public fun KitScreen(
                             // width between the gutters (the page's primary is full width).
                             propagateMinConstraints = true,
                         ) {
-                            it()
+                            CompositionLocalProvider(LocalKitLiquidChrome provides frost) { it() }
                         }
                     }
                 }
             }
+        }
     }
     val content: @Composable () -> Unit = {
         if (kitStatusSlotAbove()) {

@@ -27,3 +27,9 @@ tasks.register("compileAllTests") {
     description = "Compiles every module's unit-test source sets without running them."
     subprojects.forEach { p -> dependsOn(p.tasks.matching { unitTestCompileTask.matches(it.name) }) }
 }
+
+// CI quarantine (tool/ci/QUARANTINE.md): excludes the listed tests on CI only; -PrunQuarantined runs them.
+apply(from = "tool/ci/quarantine.gradle.kts")
+
+// CI lanes (tool/ci/LANES.md): -PskipGoldens=true drops the picture tests, -PonlyGoldens=true runs only them.
+apply(from = "tool/ci/goldens.gradle.kts")

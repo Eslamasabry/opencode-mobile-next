@@ -29,6 +29,8 @@ import io.github.eslamasabry.oc.core.model.ChatDefaults
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -1718,7 +1720,62 @@ internal class GraphChatWorld(
 
     override suspend fun sendAgain(text: String): Outcome<Unit> = send(text, draftFiles = false)
 
-    private suspend fun send(text: String, draftFiles: Boolean): Outcome<Unit> {
+    override fun stoppedPrompt(turnId: String): StoppedPrompt? {
+        val row =
+            mutableTranscript.value.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow
+        val ledger = turnFeed.value.ledger
+        val messages = ledger.turns.firstOrNull { it.turnId == turnId }?.messages.orEmpty()
+        val user = messages.firstOrNull { it.info.role == Role.User }
+        if (row == null && user == null) return null
+        val text =
+            row?.text
+                ?: user?.parts.orEmpty()
+                    .filter { it.type == PartType.Text && !it.synthetic }
+                    .joinToString("\n") { it.text }
+        val files =
+            user?.parts.orEmpty()
+                .filter { it.type == PartType.File }
+                .map { PromptAttachment(it.mime.orEmpty(), it.filename.orEmpty(), it.url.orEmpty()) }
+        val replies = messages.filter { it.info.role == Role.Assistant }
+        val ranOn =
+            (replies.lastOrNull { it.info.modelId != null } ?: user)?.info?.let { info ->
+                val provider = info.providerId
+                val model = info.modelId
+                if (provider != null && model != null) ModelKey(provider, model) else null
+            }
+        val steps = replies.sumOf { m -> m.parts.count { it.type == PartType.Tool && it.tool?.ran == true } }
+        val size =
+            ledger.messages
+                .lastOrNull { it.info.role == Role.Assistant && it.info.tokens.total > 0 }
+                ?.info
+                ?.tokens
+                ?.total
+        return StoppedPrompt(
+            turnId = turnId,
+            text = text,
+            attachments = files,
+            agent = user?.info?.agent?.takeIf { it.isNotBlank() },
+            model = ranOn,
+            toolSteps = steps,
+            contextTokens = size,
+        )
+    }
+
+    override suspend fun sendAgainWith(prompt: StoppedPrompt): Outcome<Unit> {
+        val agent = prompt.agent
+        if (agent != null && models.value.agent != null && models.value.agent != agent) {
+            val picked = selectAgent(agent)
+            if (picked is Outcome.Failed) return picked
+        }
+        return send(prompt.text, draftFiles = false, again = prompt.attachments)
+    }
+
+    private suspend fun send(
+        text: String,
+        draftFiles: Boolean,
+        /** B-169: the files a stopped prompt carried, sent again instead of the draft's. */
+        again: List<PromptAttachment> = emptyList(),
+    ): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
         val id = nextLocalId++
         if (mutableLoad.value !is ChatLoad.Live)
@@ -1735,7 +1792,7 @@ internal class GraphChatWorld(
         if (captured != null && submission == null) submissionOwner?.releaseSubmission(captured)
         if (draftFiles && submission == null)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-        val files = if (!draftFiles) emptyList() else submission!!.attachments
+        val files = if (!draftFiles) again else submission!!.attachments
         if (text.isBlank() && files.isEmpty()) {
             if (submission != null) submissionOwner?.releaseSubmission(submission)
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))

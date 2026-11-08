@@ -1,0 +1,2 @@
+# CI quarantine list. One test per line: <fully.qualified.Class>[#method] | <pixel|env|real> | <reason>
+# Excluded on CI only (see quarantine.gradle.kts). `real` entries also appear in QUARANTINE.md under "Needs a fix".

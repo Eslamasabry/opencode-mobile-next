@@ -1,13 +1,28 @@
-# Fast CI for the native Kotlin/Compose app under native/: compile, desktop tests (sharded) and an
-# unsigned-by-us APK (the benchmark build type is debug-signed, no secrets). Commits carry [skip ci],
-# so the usual path is workflow_dispatch (only works once this file is on the default branch) or a push
-# to native/screens-merge* / native/ci-* branches. Phone APKs stay signed locally.
+# CI for the native Kotlin/Compose app under native/: compile, desktop tests (sharded) and an APK (the benchmark
+# build type, preview-signed, no other secrets). Commits carry [skip ci], so the usual path is workflow_dispatch or a
+# push to native/screens-merge* / native/ci-* branches. Phone APKs stay signed locally.
+#
+# Lanes (native/tool/ci/LANES.md):
+#   fast    default for a manual dispatch. Compile + desktop tests of the modules changed against `base` (and their
+#           direct dependents; everything if too much changed) without picture tests + the APK, all in parallel.
+#   full    every module, picture tests included, compared with the CI-recorded goldens. Push runs use this.
+#   goldens re-records the desktop goldens on the runner and uploads them as the `ci-goldens` artifact.
+# `tasks` (custom Gradle tasks) and `apk_only` work as before and ignore the lane.
 name: Native CI
 run-name: Native CI · ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
     inputs:
+      lane:
+        description: "fast: changed modules, no picture tests (default). full: all modules + goldens. goldens: re-record the goldens"
+        type: choice
+        options: [fast, full, goldens]
+        default: fast
+      base:
+        description: Branch the fast lane diffs against to pick the changed modules
+        type: string
+        default: native/screens-merge41
       tasks:
         description: Optional Gradle tasks (e.g. ":ui:kit:desktopTest"); when set, only these run instead of the shards
         type: string
@@ -25,7 +40,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-ci-${{ github.ref }}
+  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}
   cancel-in-progress: true
 
 env:
@@ -38,60 +53,147 @@ defaults:
     working-directory: native
 
 jobs:
+  plan:
+    name: plan
+    if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      lane: ${{ steps.p.outputs.lane }}
+      shards: ${{ steps.p.outputs.shards }}
+      count: ${{ steps.p.outputs.count }}
+      mode: ${{ steps.p.outputs.mode }}
+      tasks: ${{ steps.p.outputs.tasks }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Pick the lane and the modules
+        id: p
+        env:
+          LANE: ${{ inputs.lane || 'full' }}
+          BASE: ${{ inputs.base || 'native/screens-merge41' }}
+        run: |
+          mode=all; tasks=""; count=4
+          if [ "$LANE" = fast ]; then
+            if ! git rev-parse --verify -q "origin/$BASE^{commit}" >/dev/null; then
+              git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+            fi
+            out="$(tool/ci/fast_tasks.sh "origin/$BASE" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
+            cat "$RUNNER_TEMP/why.txt"
+            if [ "$out" != ALL ]; then
+              mode=list; tasks="$(printf '%s\n' "$out" | tr '\n' ' ')"; n=$(printf '%s\n' "$out" | grep -c . || true)
+              count=$(( n > 18 ? 3 : (n > 6 ? 2 : 1) ))
+            fi
+          fi
+          # When :quality is selected on the fast lane it runs alone in the last shard (Konsist, the slowest single task).
+          total=$count; [ "$LANE" = fast ] && printf '%s\n' $tasks | grep -qx ':quality:test' && total=$(( count + 1 ))
+          shards="$(python3 -c "import json,sys; print(json.dumps(list(range(int(sys.argv[1])))))" "$total")"
+          { echo "lane=$LANE"; echo "mode=$mode"; echo "count=$count"; echo "shards=$shards"; echo "tasks=$tasks"; } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Plan: lane \`$LANE\`, base \`$BASE\`"
+            echo; echo "- test selection: $mode, $count shard(s)"
+            if [ "$mode" = list ]; then echo "- tasks:"; printf '%s\n' $tasks | sed 's/^/  - `/; s/$/`/'; fi
+            echo; echo '```'; cat "$RUNNER_TEMP/why.txt" 2>/dev/null || true; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   compile:
     name: compile
-    if: ${{ inputs.tasks == '' && !inputs.apk_only }}
+    needs: plan
+    if: ${{ needs.plan.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/native-setup
-      - name: Compile app (previewBenchmark) and every module's tests
-        run: ./gradlew :androidApp:compilePreviewBenchmarkKotlin compileAllTests $GRADLE_FLAGS
+      - name: Compile the app (previewBenchmark), and every module's tests on the full lane
+        env:
+          LANE: ${{ needs.plan.outputs.lane }}
+        run: |
+          set -o pipefail
+          extra=""; [ "$LANE" = full ] && extra="compileAllTests"
+          ./gradlew :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/compile.log"
+      - name: Compile report
+        if: always()
+        run: |
+          python3 -I - <<'PY'
+          import json, os
+          log = open(os.environ['RUNNER_TEMP'] + '/compile.log', errors='replace').read().splitlines() if os.path.exists(os.environ['RUNNER_TEMP'] + '/compile.log') else []
+          errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or l.startswith('> ') and 'went wrong' in l]
+          os.makedirs('reports', exist_ok=True)
+          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15]}, open('reports/compile.json', 'w'))
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-compile
+          path: native/reports/compile.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   test:
-    name: desktop tests ${{ matrix.shard }}/4
-    if: ${{ inputs.tasks == '' && !inputs.apk_only }}
+    name: desktop tests ${{ matrix.shard }}
+    needs: plan
+    if: ${{ needs.plan.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    env:
+      LANE: ${{ needs.plan.outputs.lane }}
+      MODE: ${{ needs.plan.outputs.mode }}
+      COUNT: ${{ needs.plan.outputs.count }}
+      LIST: ${{ needs.plan.outputs.tasks }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          # The full lane extracts Flutter reference goldens from git history; the fast lane has no picture tests.
+          fetch-depth: ${{ needs.plan.outputs.lane != 'full' && '1' || '0' }}
       - uses: ./.github/actions/native-setup
         with:
-          goldens: "true"
+          goldens: ${{ needs.plan.outputs.lane == 'full' && 'true' || 'false' }}
+      - name: Output directory the LooksCapture tests hard-code
+        # Several LooksCapture helpers mkdirs() /home/eslam/wt/lane-looks/looks-out/screens; the runner user cannot create /home/eslam.
+        if: ${{ needs.plan.outputs.lane == 'full' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
+          sudo chown -R "$USER" /home/eslam
       - name: Pick this shard's modules
         id: pick
         run: |
-          tasks="$(tool/ci/shard_tasks.sh ${{ matrix.shard }} 4 | tr '\n' ' ')"
+          if [ "$MODE" = list ]; then all="$(printf '%s\n' $LIST)"; else all="$(tool/ci/shard_tasks.sh 0 1)"; fi
+          if [ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ] && [ "$MODE" = list ]; then
+            tasks=":quality:test"
+          else
+            tasks="$(printf '%s\n' "$all" | grep -v '^:quality:test$' | awk -v i=${{ matrix.shard }} -v n="$COUNT" 'NF && (c++ % n) == i' | tr '\n' ' ')"
+          fi
           echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
           echo "$tasks" | tr ' ' '\n' | sed 's/^/  /'
       - name: Run desktop tests
-        run: ./gradlew ${{ steps.pick.outputs.tasks }} $GRADLE_FLAGS
+        # Never fails the job: the summary job is the gate and reds the run only for new-vs-base failures.
+        id: gradle
+        continue-on-error: true
+        if: ${{ steps.pick.outputs.tasks != '' }}
+        run: |
+          flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
+          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
       - name: Summarise results
         if: always()
-        run: |
-          python3 -I - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import glob, xml.etree.ElementTree as ET
-          mods = {}
-          for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
-              mod = p.split('/build/')[0]
-              t = f = 0
-              for tc in ET.parse(p).getroot().iter('testcase'):
-                  t += 1
-                  if tc.find('failure') is not None or tc.find('error') is not None:
-                      f += 1; print(f'FAILED {mod} :: {tc.get("classname")} > {tc.get("name")}', file=__import__('sys').stderr)
-              a = mods.setdefault(mod, [0, 0]); a[0] += t; a[1] += f
-          print('| module | tests | failed |\n|---|---|---|')
-          for m, (t, f) in sorted(mods.items()): print(f'| {m} | {t} | {f} |')
-          PY
+        env:
+          GRADLE_OUTCOME: ${{ steps.gradle.outcome }}
+        run: python3 -I tool/ci/test_report.py "${LANE}-${{ matrix.shard }}" reports >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-test-${{ matrix.shard }}
+          path: native/reports/report-*.json
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Upload test reports
-        if: failure()
+        if: ${{ steps.gradle.outcome == 'failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-reports-${{ matrix.shard }}
@@ -101,9 +203,48 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  record:
+    name: record goldens
+    if: ${{ inputs.lane == 'goldens' && inputs.tasks == '' && !inputs.apk_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/native-setup
+      - name: Re-record the desktop goldens on this runner
+        # Every module that wires oc.goldens.record. -PrunQuarantined records quarantined pictures too.
+        run: |
+          tasks="$(grep -l recordGoldens */*/build.gradle.kts | sed 's|/build.gradle.kts||; s|^|:|; s|/|:|g; s|$|:desktopTest|' | tr '\n' ' ')"
+          echo "recording: $tasks"
+          ./gradlew $tasks -Poc.recordGoldens=true -PonlyGoldens=true -PrunQuarantined=true $GRADLE_FLAGS
+      - name: Pack the recorded images
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          find native -path '*/src/desktopTest/goldens/*' -type f | sort > "$RUNNER_TEMP/files.txt"
+          tar czf "$RUNNER_TEMP/ci-goldens.tgz" -T "$RUNNER_TEMP/files.txt"
+          mkdir -p native/reports
+          python3 -I -c "import json,sys; json.dump({'files': len(open(sys.argv[1]).read().split())}, open('native/reports/record.json','w'))" "$RUNNER_TEMP/files.txt"
+          cp "$RUNNER_TEMP/ci-goldens.tgz" native/reports/
+          { echo "### Recorded goldens"; echo; echo "$(wc -l < "$RUNNER_TEMP/files.txt") images. Download artifact \`ci-goldens\`, then from the repo root: \`tar xzf ci-goldens.tgz\`."; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ci-goldens
+          path: native/reports/ci-goldens.tgz
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-record
+          path: native/reports/record.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   apk:
     name: apk
-    if: ${{ inputs.tasks == '' }}
+    if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -145,6 +286,21 @@ jobs:
           path: native/androidApp/build/outputs/apk/**/*.apk
           retention-days: 7
           if-no-files-found: error
+      - name: APK report
+        if: always()
+        run: |
+          mkdir -p reports
+          apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk 2>/dev/null | head -1 || true)
+          if [ -n "$apk" ]; then
+            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" > reports/apk.json
+          else echo '{}' > reports/apk.json; fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-apk
+          path: native/reports/apk.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   custom:
     name: custom tasks
@@ -155,3 +311,43 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/native-setup
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
+
+  summary:
+    name: summary
+    needs: [plan, compile, test, apk, record, custom]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RESULT_COMPILE: ${{ needs.compile.result }}
+      RESULT_TEST: ${{ needs.test.result }}
+      RESULT_APK: ${{ needs.apk.result }}
+      RESULT_RECORD: ${{ needs.record.result }}
+      RESULT_CUSTOM: ${{ needs.custom.result }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: native/tool/ci
+      - name: Collect this run's reports and the base branch's last ones
+        env:
+          BASE: ${{ inputs.base || 'native/screens-merge41' }}
+        run: |
+          mkdir -p reports base
+          gh run download "${{ github.run_id }}" -p 'report-*' -D reports || true
+          for id in $(gh run list --workflow native-ci.yml --branch "$BASE" --status completed --limit 10 --json databaseId -q '.[].databaseId'); do
+            [ "$id" = "${{ github.run_id }}" ] && continue
+            if gh run download "$id" -p 'report-test-*' -D base 2>/dev/null && [ -n "$(find base -name 'report-*.json' | head -1)" ]; then
+              echo "base reports from run $id" ; break
+            fi
+          done
+      - name: Summary table
+        run: |
+          lane="${{ inputs.lane || 'full (push)' }}"; [ -n "${{ inputs.tasks }}" ] && lane="custom tasks"; [ "${{ inputs.apk_only }}" = true ] && lane="apk only"
+          python3 -I native/tool/ci/summary.py reports base "$lane" >> "$GITHUB_STEP_SUMMARY"

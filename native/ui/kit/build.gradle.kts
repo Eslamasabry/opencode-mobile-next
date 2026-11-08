@@ -30,6 +30,9 @@ kotlin {
     sourceSets.androidMain.dependencies {
         // Official static Android renderer; only the kit's no-external-resource SVG seam uses it.
         implementation("com.caverock:androidsvg-aar:1.4")
+        // Liquid glass under the Glass style (platform/AndroidLiquidGlass.kt). Android only: its desktop build targets
+        // Java 21, and the desktop app and its tests run on 17.
+        implementation(libs.kyant.backdrop)
     }
     // The golden-diff gate is the test-only :ui:gate module (E02-S01: no borrowed source folders).
     sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }

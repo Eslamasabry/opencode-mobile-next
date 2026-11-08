@@ -51,6 +51,13 @@ public class SignInTerminalPresenter(
     private var found = SignInFound()
     private var checking = false
     private var pendingPage: String? = null
+
+    /**
+     * The page Claude asked the system to open (its `BROWSER` hand-off), in memory only and never logged. Claude gives
+     * that page a redirect to a port on this phone, so signing in there finishes without a code; the page it prints
+     * for people to copy asks for one. "Open sign-in page" reopens the handed-over one (Flutter #137).
+     */
+    private var handedOver: String? = null
     private val sessionWatchers = mutableListOf<() -> Unit>()
     private val terminalWatchers = mutableListOf<() -> Unit>()
 
@@ -89,6 +96,7 @@ public class SignInTerminalPresenter(
         stop(terminalWatchers)
         watched = null
         found = SignInFound()
+        handedOver = null
         checking = false
         val next = SignInTerminalSession(scope, host, foreground)
         session = next
@@ -96,7 +104,15 @@ public class SignInTerminalPresenter(
             cleared(it).copy(step = SignInStep.Starting, failureCode = null, stopFailed = false)
         }
         val states = scope.launch { next.state.collect { onSession(next, it) } }
-        val urls = scope.launch { next.openUrls.collect { requestPage(it, next) } }
+        val urls = scope.launch {
+            next.openUrls.collect { url ->
+                if (agent.id == CLAUDE && next === session) {
+                    handedOver = url
+                    ui.update { it.copy(canOpenPage = true) }
+                }
+                requestPage(url, next)
+            }
+        }
         sessionWatchers += { states.cancel() }
         sessionWatchers += { urls.cancel() }
         next.start(run)
@@ -149,7 +165,7 @@ public class SignInTerminalPresenter(
                 ui.update {
                     it.copy(
                         transcript = transcript,
-                        canOpenPage = found.page != null,
+                        canOpenPage = page() != null,
                         code = found.code,
                     )
                 }
@@ -183,8 +199,11 @@ public class SignInTerminalPresenter(
         }
     }
 
+    /** The page "Open sign-in page" opens: Claude's handed-over one when there is one, else the printed one. */
+    private fun page(): String? = handedOver ?: found.page
+
     override fun openSignInPage() {
-        val page = found.page ?: return
+        val page = page() ?: return
         if (ui.value.terminal == null || session?.canOpenLinks != true) return
         val owned = session ?: return
         scope.launch { requestPage(page, owned) }
@@ -276,6 +295,7 @@ public class SignInTerminalPresenter(
 
     private fun cleared(now: SignInTerminalUi): SignInTerminalUi {
         pendingPage = null
+        handedOver = null
         return now.copy(
             terminal = null,
             inputEnabled = false,
@@ -288,5 +308,9 @@ public class SignInTerminalPresenter(
     private fun stop(watchers: MutableList<() -> Unit>) {
         watchers.forEach { it() }
         watchers.clear()
+    }
+
+    private companion object {
+        const val CLAUDE = "claude"
     }
 }

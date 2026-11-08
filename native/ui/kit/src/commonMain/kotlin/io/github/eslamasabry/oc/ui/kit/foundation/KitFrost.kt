@@ -62,6 +62,9 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 @Stable
 public class KitFrostState internal constructor(internal val layer: GraphicsLayer) {
     internal var sourceOrigin: Offset = Offset.Zero
+
+    /** Counts the recordings (not state: read by liquid panes' samplers, never by a draw). */
+    internal var version: Int = 0
 }
 
 @Composable
@@ -77,6 +80,7 @@ public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
     this.onGloballyPositioned { state.sourceOrigin = it.positionInRoot() }
         .drawWithContent {
             state.layer.record { this@drawWithContent.drawContent() }
+            state.version++
             drawLayer(state.layer)
         }
 

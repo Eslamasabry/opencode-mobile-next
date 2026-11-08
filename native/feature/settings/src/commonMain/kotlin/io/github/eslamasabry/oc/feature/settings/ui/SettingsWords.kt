@@ -38,6 +38,8 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAccentSilver
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentTeal
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesFrosted
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesLiquid
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceGroupBackground
@@ -206,8 +208,9 @@ internal fun rowKey(row: SettingsRowId): StringResource =
         SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
         SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
         SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
-        SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
-        SettingsRowId.Voice -> Res.string.settingsHubVoice
+        // Flutter's row titles (`default_shell_row.dart`, `settings-voice`): "Shell for commands", "Voice typing".
+        SettingsRowId.DefaultShell -> Res.string.settingsV3Shell
+        SettingsRowId.Voice -> Res.string.settingsV3VoiceTyping
         SettingsRowId.Permissions -> Res.string.settingsV3Permissions
         SettingsRowId.Notifications -> Res.string.settingsV3Notifications
         SettingsRowId.Background -> Res.string.settingsV3Background
@@ -280,9 +283,9 @@ internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
         SettingsRowId.PhraseChips ->
             listOf(Res.string.nativePhraseChipsAliases, Res.string.settingsPhraseChipsSupporting)
         SettingsRowId.DefaultShell ->
-            listOf(Res.string.settingsV3Shell, Res.string.settingsHubSearchShellAliases)
+            listOf(Res.string.e7SettingsUi35, Res.string.settingsHubSearchShellAliases)
         SettingsRowId.Voice ->
-            listOf(Res.string.settingsV3VoiceTyping, Res.string.settingsHubSearchVoiceAliases)
+            listOf(Res.string.settingsHubVoice, Res.string.settingsHubSearchVoiceAliases)
         SettingsRowId.Permissions ->
             listOf(
                 Res.string.automationTitle,
@@ -465,6 +468,15 @@ internal fun cornersWords(corners: Corners): String =
             Corners.Round -> Res.string.appearanceFineTuneCornersRound
             Corners.Soft -> Res.string.appearanceFineTuneCornersSoft
             Corners.Sharp -> Res.string.appearanceFineTuneCornersSharp
+        }
+    )
+
+@Composable
+internal fun glassEdgesWords(edges: io.github.eslamasabry.oc.ui.design.effects.GlassEdges): String =
+    stringResource(
+        when (edges) {
+            io.github.eslamasabry.oc.ui.design.effects.GlassEdges.Liquid -> Res.string.appearanceGlassEdgesLiquid
+            io.github.eslamasabry.oc.ui.design.effects.GlassEdges.Frosted -> Res.string.appearanceGlassEdgesFrosted
         }
     )
 

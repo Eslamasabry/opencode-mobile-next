@@ -26,11 +26,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
-import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionPill
+import io.github.eslamasabry.oc.ui.kit.frame.KitStatusPill
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
+import io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
-import io.github.eslamasabry.oc.ui.kit.frame.KitShellBar
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionUi
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
@@ -77,10 +82,10 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
-import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
@@ -145,6 +150,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunningCount
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
@@ -207,6 +213,8 @@ public fun ChatsScreen(
     // KitStateView.calm), so the floating + only rides over a list.
     val listed = state.phase == ChatsPhase.List
     val showFab = listed && state.home.opening == null
+    // Under Glass the floating + is liquid glass over the list (the kit records it only then).
+    val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
@@ -217,34 +225,9 @@ public fun ChatsScreen(
         if (state.needsYou == 0) null
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
-        topBar = if (!shellBar) null else ({
-            KitShellBar(
-                actions = barActions,
-                connection = state.connection?.let { connection ->
-                    { modifier ->
-                        KitConnectionPill(
-                            server = connection.server,
-                            status = stringResource(
-                                when (connection.state) {
-                                    HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
-                                    HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
-                                    HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
-                                }
-                            ),
-                            tone = when (connection.state) {
-                                HomeConnectionState.Connected -> KitConnectionTone.Ok
-                                HomeConnectionState.Connecting -> KitConnectionTone.Working
-                                HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
-                            },
-                            switchLabel = stringResource(Res.string.serverSwitcherOpen),
-                            // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
-                            onClick = actions::openServerSwitcher,
-                            modifier = modifier,
-                        )
-                    }
-                },
-            )
-        }),
+        // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
+        // the connection pill beside the filters. No separate bar.
+        topBar = null,
         // E20-S27: framed without the bar too, so the page lies on one continuous ground behind heading and list.
         page = true,
         header = {
@@ -258,138 +241,149 @@ public fun ChatsScreen(
                     Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
                     line = needsLine,
                     onLine = actions::showInbox,
+                    actions = if (!shellBar) null else ({
+                        barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
+                    }),
                 )
-                if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) Filters(state, actions)
+                val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
+                val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
+                if (pill != null) HeaderRow(pill, showFilters) { Filters(state, actions, bleed = true) }
+                else if (showFilters) Filters(state, actions)
             }
         },
         status = backExit ?: appStatus,
+        // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
+        // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
+        // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
+        refresh =
+            KitScreenRefresh(
+                refreshing = state.refreshing,
+                onRefresh = actions::refreshList,
+                enabled = state.home.opening == null && state.phase != ChatsPhase.Opening,
+            ),
         width = KitScreenWidth.Reading,
     ) {
       Box(Modifier.fillMaxSize()) {
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again (KitRefresh); not
         // while the server is still opening. The kit part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
-        KitRefresh(
-            refreshing = state.refreshing,
-            onRefresh = actions::refreshList,
-            enabled = state.home.opening == null && state.phase != ChatsPhase.Opening,
+        // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
+        // between list items put every row 4 px lower than the one before it.
+        LazyColumn(
+            modifier = Modifier.kitGlassSource(listGlass),
+            // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
+                        else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                ),
         ) {
-            // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
-            // between list items put every row 4 px lower than the one before it.
-            LazyColumn(
-                // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
-                contentPadding =
-                    PaddingValues(
-                        bottom =
-                            if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
-                            else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
-                    ),
-            ) {
-                state.home.opening?.let { opening ->
-                    item(key = "opening-status") { OpeningStatus(opening, actions) }
-                    items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
-                    // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
-                    if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
-                        item(key = "opening") { KitSkeletonRows() }
-                    return@LazyColumn
-                }
-                replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
-                state.brief?.let { brief -> item(key = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
-                if (state.archiveFailure != null)
-                    item(key = "archive-failure") {
-                        // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
-                        KitNotice(
-                            message =
-                                stringResource(
-                                    when (state.archiveFailureAct) {
-                                        RowActFailure.Archive -> Res.string.p12ArchiveFailed
-                                        RowActFailure.Delete -> Res.string.p12DeleteFailed
-                                        RowActFailure.Pin -> Res.string.statePinFailed
-                                    }
-                                ),
-                            tone = StatusTone.Failure,
-                            dismiss =
-                                KitLineAction(
-                                    stringResource(Res.string.workspaceDismissNotice),
-                                    actions::dismissArchiveFailure,
-                                ),
-                        )
-                    }
-                if (state.renameFailure != null)
-                    item(key = "rename-failure") {
-                        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
-                            message = stringResource(Res.string.p12RenameFailed),
-                            failure = state.renameFailure,
-                        )
-                    }
-                if (state.answerFailure != null)
-                    item(key = "answer-failure") {
-                        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
-                            message = stringResource(Res.string.chatHomeAnswerFailed),
-                            failure = state.answerFailure,
-                        )
-                    }
-                if (state.incomplete.isNotEmpty()) {
-                    item(key = "incomplete") {
-                        KitNotice(
+            state.home.opening?.let { opening ->
+                item(key = "opening-status") { OpeningStatus(opening, actions) }
+                items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
+                // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
+                if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
+                    item(key = "opening") { KitSkeletonRows() }
+                return@LazyColumn
+            }
+            replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
+            state.brief?.let { brief -> item(key = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
+            if (state.archiveFailure != null)
+                item(key = "archive-failure") {
+                    // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
+                    KitNotice(
+                        message =
                             stringResource(
-                                Res.string.chatsHomeIncompleteNamed,
-                                state.incomplete.joinToString(", "),
-                            )
+                                when (state.archiveFailureAct) {
+                                    RowActFailure.Archive -> Res.string.p12ArchiveFailed
+                                    RowActFailure.Delete -> Res.string.p12DeleteFailed
+                                    RowActFailure.Pin -> Res.string.statePinFailed
+                                }
+                            ),
+                        tone = StatusTone.Failure,
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismissArchiveFailure,
+                            ),
+                    )
+                }
+            if (state.renameFailure != null)
+                item(key = "rename-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.p12RenameFailed),
+                        failure = state.renameFailure,
+                    )
+                }
+            if (state.answerFailure != null)
+                item(key = "answer-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.chatHomeAnswerFailed),
+                        failure = state.answerFailure,
+                    )
+                }
+            if (state.incomplete.isNotEmpty()) {
+                item(key = "incomplete") {
+                    KitNotice(
+                        stringResource(
+                            Res.string.chatsHomeIncompleteNamed,
+                            state.incomplete.joinToString(", "),
+                        )
+                    )
+                }
+            }
+            if (state.phase != ChatsPhase.Opening)
+                sections.forEachIndexed { index, section -> item(key = "home-section-$index") { section() } }
+            when (state.phase) {
+                ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
+                ChatsPhase.Empty ->
+                    item(key = "empty") {
+                        // A person with no computer saved may have come for one: the quiet second way in, only then.
+                        CalmPage(
+                            title = stringResource(Res.string.chatsHomeEmptyTitle),
+                            body = stringResource(Res.string.chatsHomeEmptyCalmBody),
+                            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+                            tertiary =
+                                if (state.hasComputer) null
+                                else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
+                            modifier = Modifier.fillParentMaxSize(),
                         )
                     }
-                }
-                if (state.phase != ChatsPhase.Opening)
-                    sections.forEachIndexed { index, section -> item(key = "home-section-$index") { section() } }
-                when (state.phase) {
-                    ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
-                    ChatsPhase.Empty ->
-                        item(key = "empty") {
-                            // A person with no computer saved may have come for one: the quiet second way in, only then.
-                            CalmPage(
-                                title = stringResource(Res.string.chatsHomeEmptyTitle),
-                                body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                                primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
-                                tertiary =
-                                    if (state.hasComputer) null
-                                    else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
-                                modifier = Modifier.fillParentMaxSize(),
-                            )
+                ChatsPhase.NoMatch ->
+                    item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
+                ChatsPhase.List -> {
+                    val today = state.today.filterNot { it.key in briefKeys }
+                    val earlier = state.earlier.filterNot { it.key in briefKeys }
+                    // Lists breathe (motion lead 2026-11-07): a row that arrives fades in, one that leaves fades out
+                    // where it was, and the rest glide to their new places (a chat jumping to the top, Mark all seen).
+                    if (today.isNotEmpty()) {
+                        item(key = "today") {
+                            Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
                         }
-                    ChatsPhase.NoMatch ->
-                        item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
-                    ChatsPhase.List -> {
-                        val today = state.today.filterNot { it.key in briefKeys }
-                        val earlier = state.earlier.filterNot { it.key in briefKeys }
-                        // Lists breathe (motion lead 2026-11-07): a row that arrives fades in, one that leaves fades out
-                        // where it was, and the rest glide to their new places (a chat jumping to the top, Mark all seen).
-                        if (today.isNotEmpty()) {
-                            item(key = "today") {
-                                Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
-                            }
-                            items(today, key = { it.key }) { row ->
-                                Column(kitItemMotion()) {
-                                    ConversationRow(row, actions, state)
-                                    if (row != today.last()) RowDivider(state)
-                                }
+                        items(today, key = { it.key }) { row ->
+                            Column(kitItemMotion()) {
+                                ConversationRow(row, actions, state)
+                                if (row != today.last()) RowDivider(state)
                             }
                         }
-                        if (earlier.isNotEmpty()) {
-                            item(key = "earlier") {
-                                // F: lib/ui/kit/kit_section_label.dart:28-31: a section after another one keeps the
-                                // section gap above its label. In a lazy item the label cannot see what is above it
-                                // (it is first in its own box), so the gap is asked for here.
-                                Box(kitItemMotion()) {
-                                    KitSectionLabel(
-                                        stringResource(Res.string.chatsHomeEarlier),
-                                        gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
-                                    )
-                                }
+                    }
+                    if (earlier.isNotEmpty()) {
+                        item(key = "earlier") {
+                            // F: lib/ui/kit/kit_section_label.dart:28-31: a section after another one keeps the
+                            // section gap above its label. In a lazy item the label cannot see what is above it
+                            // (it is first in its own box), so the gap is asked for here.
+                            Box(kitItemMotion()) {
+                                // Alone, "Earlier" divides nothing: no label (Flutter conv-header).
+                                if (today.isNotEmpty()) KitSectionLabel(
+                                    stringResource(Res.string.chatsHomeEarlier),
+                                    gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
+                                )
                             }
-                            items(earlier, key = { it.key }) {
-                                Column(kitItemMotion()) {
-                                    ConversationRow(it, actions, state)
-                                    if (it != earlier.last()) RowDivider(state)
-                                }
+                        }
+                        items(earlier, key = { it.key }) {
+                            Column(kitItemMotion()) {
+                                ConversationRow(it, actions, state)
+                                if (it != earlier.last()) RowDivider(state)
                             }
                         }
                     }
@@ -407,6 +401,7 @@ public fun ChatsScreen(
                     onClick = actions::newConversation,
                     modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
                     visible = showFab,
+                    backdrop = listGlass,
                 )
             }
             val undo = state.archiveUndo
@@ -501,12 +496,55 @@ private fun CalmPage(title: String, body: String, primary: KitAction, tertiary: 
 /** How far above the middle of its room a calm page sets its words, as a share of the room's height. */
 private const val CALM_LIFT = .1f // F: lib/ui/kit/kit_state_view.dart:438
 
+/** The pill fixed at the start, a short divider, then the filters (which alone scroll) beside it. */
 @Composable
-private fun Filters(state: ChatsUi, actions: ChatsActions) {
-    KitFilterChips {
+private fun HeaderRow(pill: @Composable () -> Unit, showFilters: Boolean, filters: @Composable () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(start = LocalKitTokens.current.gutter.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.widthIn(max = 220.dp)) { pill() }
+        if (showFilters) {
+            Spacer(Modifier.width(Space.S2.dp))
+            Box(Modifier.height(24.dp)) { io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(vertical = true) }
+            Spacer(Modifier.width(Space.S2.dp))
+            Box(Modifier.weight(1f)) { filters() }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsActions) {
+    val state = connection.state
+    val status = stringResource(
+        when (state) {
+            HomeConnectionState.Connected -> Res.string.e7WorkspaceConnected
+            HomeConnectionState.Connecting -> Res.string.e7WorkspaceConnecting
+            HomeConnectionState.NotAnswering -> Res.string.phoneServerRowNotAnswering
+        }
+    )
+    val switchLabel = stringResource(Res.string.serverSwitcherOpen)
+    KitStatusPill(
+        label = connection.server,
+        tone = when (state) {
+            HomeConnectionState.Connected -> KitConnectionTone.Ok
+            HomeConnectionState.Connecting -> KitConnectionTone.Working
+            HomeConnectionState.NotAnswering -> KitConnectionTone.Problem
+        },
+        // The dot says connected; a word only when it is not.
+        word = status.takeUnless { state == HomeConnectionState.Connected },
+        spoken = "${connection.server}, $status, $switchLabel",
+        onClickLabel = switchLabel,
+        // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
+        onClick = actions::openServerSwitcher,
+    )
+}
+
+@Composable
+private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = false) {
+    KitFilterChips(bleed = bleed) {
         HomeFilterChips(state, actions)
+        val runningNow = (state.today + state.earlier).count { it.status == RowStatus.Running }
         KitChip(
-            label = stringResource(Res.string.chatsHomeRunning), kind = KitChipKind.Action,
+            label = if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, runningNow) else stringResource(Res.string.chatsHomeRunning),
+            kind = KitChipKind.Action,
             selected = state.filters.running, onClick = actions::toggleRunning,
         )
     }
