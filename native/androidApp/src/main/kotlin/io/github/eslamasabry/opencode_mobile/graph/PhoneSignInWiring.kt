@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
+import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.feature.agents.presentation.*
 import io.github.eslamasabry.oc.feature.agents.signin.*
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
@@ -42,6 +43,16 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+
+/** Pure rules of the phone sign-in (unit-tested on the JVM). */
+internal object PhoneSignInRules {
+    /**
+     * Only a stopped (or unreadable) phone server is started for a sign-in. A running one is used
+     * as it is: the manual start's recovery confirmation refuses a server that was already running.
+     */
+    fun startsServer(status: Outcome<RuntimeStatus>): Boolean =
+        (status as? Outcome.Ok)?.value?.serverRunning != true
+}
 
 /**
  * Phone sign-in is a separate, explicitly created PTY on the real app-owned loopback server. It
@@ -254,10 +265,15 @@ class NativePhoneSignIn(
             }
         if (prepared is Outcome.Failed) return stop(SignInStartStep.Prepare, prepared.failure)
         if (!owns(owner)) return stop(SignInStartStep.Check, stale)
-        when (val started = server.value.start()) {
-            is Outcome.Failed -> return stop(SignInStartStep.Server, started.failure)
-            is Outcome.Ok -> Unit
-        }
+        // Start OpenCode only when it is not running. The one start path confirms a manual start
+        // to the recovery budget, and that confirmation refuses when the server was already
+        // running (startService returns early and never marks a manual start), so calling it on
+        // a running server failed every sign-in after the first: "The shell didn't start".
+        if (PhoneSignInRules.startsServer(runtime.runtimeStatus()))
+            when (val started = server.value.start()) {
+                is Outcome.Failed -> return stop(SignInStartStep.Server, started.failure)
+                is Outcome.Ok -> Unit
+            }
         if (!owns(owner)) return stop(SignInStartStep.Check, stale)
         when (val connected = connections.value.connect(owner)) {
             is Outcome.Failed -> return stop(SignInStartStep.Connect, connected.failure)
