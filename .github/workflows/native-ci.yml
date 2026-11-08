@@ -31,6 +31,11 @@ on:
         description: Build only the preview APK (signed with the preview key), skip compile and test shards
         type: boolean
         default: false
+      runner:
+        description: "self: the always-warm oc-native runner (falls back to GitHub-hosted when it is offline). github: force GitHub-hosted runners"
+        type: choice
+        options: [self, github]
+        default: self
   push:
     branches:
       - "native/screens-merge*"
@@ -47,14 +52,54 @@ env:
   # Runners have 4 CPUs and 16 GB. Gradle daemon 6g + Kotlin in-process (gradle.properties) + test forks.
   GRADLE_FLAGS: --continue --stacktrace
   OC_GOLDEN_HOST: "0"
+  # The self-hosted runner kills every process that carries its tracking id when a job ends, which would stop the warm
+  # Gradle daemon. An empty id keeps the daemon alive between jobs.
+  RUNNER_TRACKING_ID: ""
 
 defaults:
   run:
     working-directory: native
 
 jobs:
+  where:
+    # Chooses the runners for every other job. Self-hosted (the always-warm oc-native machine, native/tool/ci/LANES.md) is
+    # used ONLY for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
+    # `github`. Everything else, and every offline moment, runs on GitHub-hosted ubuntu-latest.
+    name: runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      runs_on: ${{ steps.pick.outputs.runs_on }}
+    steps:
+      - name: Pick the runner
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          CHOICE: ${{ inputs.runner || 'self' }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN || github.token }}
+        run: |
+          hosted='["ubuntu-latest"]'; self='["self-hosted","linux","x64","oc-native"]'; runs_on="$hosted"; why=""
+          if [ "$EVENT" != workflow_dispatch ] && [ "$EVENT" != push ]; then why="event $EVENT is never allowed on the self-hosted runner"
+          elif [ "$REPO" != Eslamasabry/opencode-mobile-next ]; then why="not the main repository"
+          elif [ "$CHOICE" = github ]; then why="runner=github requested"
+          else
+            # Listing runners needs repository administration read, which only RUNNER_STATUS_TOKEN has; the workflow token
+            # gets a 403 and then we trust the runner (the dispatcher checks it locally with tool/ci/dispatch.sh).
+            if json="$(gh api "repos/$REPO/actions/runners" --jq '[.runners[] | select(.status=="online" and ([.labels[].name] | index("oc-native")))] | length' 2>/dev/null)"; then
+              if [ "$json" -ge 1 ]; then runs_on="$self"; why="$json oc-native runner(s) online"
+              else why="no oc-native runner online"; fi
+            else runs_on="$self"; why="runner status not readable with this token; assuming online"; fi
+          fi
+          echo "runs_on=$runs_on" >> "$GITHUB_OUTPUT"
+          echo "### Runner: \`$runs_on\` ($why)" >> "$GITHUB_STEP_SUMMARY"
+
   plan:
     name: plan
+    needs: where
     if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -101,14 +146,17 @@ jobs:
 
   compile:
     name: compile
-    needs: plan
+    needs: [where, plan]
     if: ${{ needs.plan.result == 'success' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Compile the app (previewBenchmark), and every module's tests on the full lane
         env:
@@ -139,11 +187,11 @@ jobs:
 
   test:
     name: desktop tests ${{ matrix.shard }}
-    needs: plan
+    needs: [where, plan]
     if: ${{ needs.plan.result == 'success' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -159,6 +207,7 @@ jobs:
         with:
           # The full lane extracts Flutter reference goldens from git history; the fast lane has no picture tests.
           fetch-depth: ${{ needs.plan.outputs.lane != 'full' && '1' || '0' }}
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
         with:
           goldens: ${{ needs.plan.outputs.lane == 'full' && 'true' || 'false' }}
@@ -167,8 +216,10 @@ jobs:
         if: ${{ needs.plan.outputs.lane == 'full' }}
         working-directory: ${{ github.workspace }}
         run: |
-          sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
-          sudo chown -R "$USER" /home/eslam
+          mkdir -p /home/eslam/wt/lane-looks/looks-out/screens 2>/dev/null || {
+            sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
+            sudo chown -R "$USER" /home/eslam
+          }
       - name: Pick this shard's modules
         id: pick
         run: |
@@ -216,13 +267,17 @@ jobs:
 
   record:
     name: record goldens
+    needs: where
     if: ${{ inputs.lane == 'goldens' && inputs.tasks == '' && !inputs.apk_only }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Re-record the desktop goldens on this runner
         # Every module that wires oc.goldens.record. -PrunQuarantined records quarantined pictures too.
@@ -257,13 +312,17 @@ jobs:
 
   apk:
     name: apk
+    needs: where
     if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Preview signing key (pre-release builds only; owner-approved 2026-11-08)
         env:
@@ -322,13 +381,17 @@ jobs:
 
   custom:
     name: custom tasks
+    needs: where
     if: ${{ inputs.tasks != '' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
       - name: Custom report
@@ -349,7 +412,7 @@ jobs:
 
   summary:
     name: summary
-    needs: [plan, compile, test, apk, record, custom]
+    needs: [where, plan, compile, test, apk, record, custom]
     if: ${{ always() }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}

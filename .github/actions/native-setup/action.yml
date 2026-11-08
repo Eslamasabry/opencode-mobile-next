@@ -7,7 +7,9 @@ inputs:
 runs:
   using: composite
   steps:
+    # The self-hosted oc-native runner already has the JDK, the SDK and a persistent GRADLE_USER_HOME (runner .env).
     - name: Set up JDK 17 and 21 (build 17, host-test launcher 21)
+      if: runner.environment != 'self-hosted'
       uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
       with:
         distribution: temurin
@@ -15,11 +17,13 @@ runs:
           17
           21
     - name: Android SDK platform 37.1
+      if: runner.environment != 'self-hosted'
       shell: bash
       run: |
         yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "platform-tools" >/dev/null
     - name: Gradle memory for a 4 CPU / 16 GB runner
+      if: runner.environment != 'self-hosted'
       shell: bash
       run: |
         mkdir -p ~/.gradle
@@ -29,10 +33,12 @@ runs:
         oc.test.forks=2
         EOP
     - name: Gradle (cached)
+      if: runner.environment != 'self-hosted'
       uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       with:
         cache-read-only: false
     - name: Cache vendored sherpa-onnx AAR
+      if: runner.environment != 'self-hosted'
       id: vendor-cache
       uses: actions/cache@v4
       with:
