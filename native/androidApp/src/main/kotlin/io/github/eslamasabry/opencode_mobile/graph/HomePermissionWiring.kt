@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -14,6 +15,7 @@ import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.RequestAnswer
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionAnswers
+import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 
 /** The home slip answers the captured conversation's current request, never the active server. */
 @Inject
@@ -23,6 +25,12 @@ class HomePermissionAnswerWiring(private val registry: ConnectionRegistry) : Hom
         ref: ConversationRef,
         requestId: String,
         allow: Boolean,
+    ): Outcome<Unit> = answer(ref, requestId, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+
+    override suspend fun answer(
+        ref: ConversationRef,
+        requestId: String,
+        reply: HomePermissionReply,
     ): Outcome<Unit> {
         val graph =
             registry.graphFor(ref)
@@ -36,9 +44,21 @@ class HomePermissionAnswerWiring(private val registry: ConnectionRegistry) : Hom
             } ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         if (registry.graphFor(ref) !== graph)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        // Always only where the server keeps the grant and this request can be granted for good (as the chat's card).
+        if (
+            reply == HomePermissionReply.Always &&
+                !(graph.session.server.capabilities.value.persistentPermissionGrants && request.request.canAlwaysAllow)
+        )
+            return Outcome.Failed(Failure.Unavailable(FeatureId("persistentPermissionGrants")))
         return engine.answerNow(
             request.request.id,
-            RequestAnswer.Permission(if (allow) PermissionReply.Once else PermissionReply.Reject),
+            RequestAnswer.Permission(
+                when (reply) {
+                    HomePermissionReply.Once -> PermissionReply.Once
+                    HomePermissionReply.Always -> PermissionReply.Always
+                    HomePermissionReply.Reject -> PermissionReply.Reject
+                }
+            ),
         )
     }
 }

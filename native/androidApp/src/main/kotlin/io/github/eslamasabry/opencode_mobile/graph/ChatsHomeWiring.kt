@@ -205,6 +205,9 @@ class AppChatsHome(
         key: String
     ): Outcome<io.github.eslamasabry.oc.core.common.ids.ConversationRef> = monitor.open(key)
 
+    // The home pill's switcher: the same connect-and-make-active the Servers page runs on a tap.
+    override suspend fun switchTo(profile: ProfileId): Outcome<Unit> = runtime.connect(profile)
+
     private suspend fun record(result: Outcome<Unit>): Outcome<Unit> =
         withContext(lane) {
             actionFailure = (result as? Outcome.Failed)?.failure

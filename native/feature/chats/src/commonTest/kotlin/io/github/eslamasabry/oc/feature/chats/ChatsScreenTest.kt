@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.chats
 
 import kotlin.math.abs
 import androidx.compose.ui.test.onRoot
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasSetTextAction
@@ -86,7 +88,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `B-NAV-037 the server pill names the server and its state and opens the servers`() =
+    fun `B-NAV-037 the server pill names the server and its state and opens the one-tap switcher`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             val phone =
@@ -95,11 +97,49 @@ class ChatsScreenTest {
                 Themed { ChatsScreen(ui(*rows).copy(home = ChatsHomeExtraState(sources = persistentListOf(phone))), actions) }
             }
             onNodeWithContentDescription("On this phone, Connected, Switch server").performClick()
-            assertTrue("servers" in actions.calls)
+            // F: lib/ui/screens/home_screen.dart:434-470: the switcher sheet, never the full Servers page.
+            assertTrue("switcher" in actions.calls)
+            assertTrue("servers" !in actions.calls)
             // No overflow, and (owner order 2026-11-08, as Flutter's home) no place rows after the list either: All
             // conversations is reached from Search.
             onAllNodesWithContentDescription("More").assertCountEquals(0)
             onAllNodesWithText("Show all conversations").assertCountEquals(0)
+        }
+
+    private fun refreshAction(test: androidx.compose.ui.test.ComposeUiTest) =
+        test.onAllNodes(
+            androidx.compose.ui.test.SemanticsMatcher("offers Refresh") { node ->
+                node.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.CustomActions).orEmpty().any {
+                    it.label == "Refresh"
+                }
+            }
+        )
+
+    @Test
+    fun `PARITY-B-217 the home list reads itself again on a pull, and not while its server still opens`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            var state by androidx.compose.runtime.mutableStateOf(ui(*rows))
+            setContent { Themed { ChatsScreen(state, actions) } }
+            val refresh =
+                refreshAction(this).fetchSemanticsNodes().single().config[
+                    androidx.compose.ui.semantics.SemanticsActions.CustomActions
+                ].first { it.label == "Refresh" }
+            runOnIdle { refresh.action() }
+            assertEquals(listOf("refresh"), actions.calls.filter { it == "refresh" })
+            state =
+                ui(*rows).copy(
+                    home =
+                        ChatsHomeExtraState(
+                            opening =
+                                io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
+                                    io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Connecting,
+                                    "Home PC",
+                                )
+                        )
+                )
+            waitForIdle()
+            refreshAction(this).assertCountEquals(0)
         }
 
     @Test

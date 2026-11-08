@@ -128,6 +128,30 @@ internal class RecordingChatsActions : ChatsActions {
         calls += "servers"
     }
 
+    override fun refreshList() {
+        calls += "refresh"
+    }
+
+    override fun openServerSwitcher() {
+        calls += "switcher"
+    }
+
+    override fun switchServer(profile: ProfileId) {
+        calls += "switch ${profile.raw}"
+    }
+
+    override fun addServer() {
+        calls += "addServer"
+    }
+
+    override fun serverSettings(profile: ProfileId) {
+        calls += "serverSettings ${profile.raw}"
+    }
+
+    override fun retrySource(profile: ProfileId) {
+        calls += "retry ${profile.raw}"
+    }
+
     override fun connectComputer() {
         calls += "computer"
     }

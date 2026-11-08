@@ -95,6 +95,20 @@ public class ChatsViewModel(
 
     private val renaming = MutableStateFlow(Renaming())
 
+    /** The switcher's switch in flight, and why the last one did not happen. */
+    private data class Switching(
+        val to: ProfileId? = null,
+        val failure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    )
+
+    private val switching = MutableStateFlow(Switching())
+
+    /** A pull to refresh in flight (one at a time). */
+    private val refreshing = MutableStateFlow(false)
+
+    /** The row whose Always allow waits on its confirm. */
+    private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
+
     public val state: StateFlow<ChatsUi> =
         combine(
                 combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
@@ -148,13 +162,27 @@ public class ChatsViewModel(
                     deletable = deletable(snapshot),
                     pinnable = if (pins.supported) editable(snapshot) else kotlinx.collections.immutable.persistentSetOf(),
                     pinned = pinnedKeys(snapshot),
+                    alwaysAllowable = alwaysAllowable(snapshot),
                 )
             }
+            .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
             // G4: the project sheet's kind glyphs and "Git" pills.
             .combine(home.projectFacts) { base, facts -> base.copy(projectFacts = facts.toImmutableMap()) }
+            // The pill's switcher: every saved server, what it is doing now, and the switch in flight.
+            .combine(refreshing) { base, now -> base.copy(refreshing = now) }
+            .combine(switching) { base, now ->
+                base.copy(
+                    switcher =
+                        ServerSwitcherUi(
+                            ServerSwitcherRules.rows(base.home, feed.snapshot.value.items),
+                            now.to,
+                            now.failure,
+                        )
+                )
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -179,6 +207,22 @@ public class ChatsViewModel(
                 .mapTo(hashSetOf()) { it.profile }
         return snapshot.items
             .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in capable }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
+
+    /**
+     * F: lib/ui/screens/chats/chats_host.dart:262-270: Always allow is offered only where the server keeps the grant
+     * (`capabilities.persistentPermissionGrants`), and only with an answer port to send it through.
+     */
+    private fun alwaysAllowable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        if (permissionAnswers.size != 1) return kotlinx.collections.immutable.persistentSetOf()
+        val capable =
+            connections.servers.value
+                .filter { it.gateway.capabilities.value.persistentPermissionGrants }
+                .mapTo(hashSetOf()) { it.profile }
+        return snapshot.items
+            .filter { it.permission != null && it.profileId in capable }
             .mapTo(hashSetOf()) { it.identity }
             .toImmutableSet()
     }
@@ -222,16 +266,53 @@ public class ChatsViewModel(
         )
 
     override fun answerPermission(row: ConversationRowUi, allow: Boolean) {
+        sendAnswer(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+    }
+
+    override fun askAlwaysAllow(row: ConversationRowUi) {
+        if (row.permission == null || row.key !in state.value.alwaysAllowable) return
+        confirmingAlways.value = row
+    }
+
+    override fun confirmAlwaysAllow() {
+        val row = confirmingAlways.value ?: return
+        confirmingAlways.value = null
+        // The request it was asked for: a newer one on the same row is not what the person confirmed.
+        val now = (state.value.today + state.value.earlier + state.value.brief?.rows.orEmpty()).firstOrNull { it.key == row.key }
+        if (now?.permission?.requestId != row.permission?.requestId) return
+        sendAnswer(row, HomePermissionReply.Always)
+    }
+
+    override fun cancelAlwaysAllow() {
+        confirmingAlways.value = null
+    }
+
+    private fun sendAnswer(row: ConversationRowUi, reply: HomePermissionReply) {
         val permission = row.permission ?: return
         val port = permissionAnswers.singleOrNull() ?: return
         if (permission.requestId in answers.value.first) return
         answers.value = (answers.value.first + permission.requestId) to null
         viewModelScope.launch {
-            val result = port.answer(row.ref, permission.requestId, allow)
+            val result = port.answer(row.ref, permission.requestId, reply)
             answers.value =
                 (answers.value.first - permission.requestId) to
                     (result as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
             feed.refresh()
+        }
+    }
+
+    // F: lib/ui/screens/chats/chats_home_screen.dart:536: the list's pull reads every source again; not while the
+    // server is still opening (the saved titles there are refreshed by the server answering).
+    override fun refreshList() {
+        if (refreshing.value || state.value.home.opening != null) return
+        refreshing.value = true
+        viewModelScope.launch {
+            try {
+                // A source that fails says so in its own line, as after any read.
+                feed.refresh()
+            } finally {
+                refreshing.value = false
+            }
         }
     }
 
@@ -480,6 +561,44 @@ public class ChatsViewModel(
         nav.open(ServersRoute.Home)
     }
 
+    // F: lib/ui/screens/home_screen.dart:434-470: the bar's server pill opens the switcher sheet, not the Servers page.
+    override fun openServerSwitcher() {
+        switching.update { it.copy(failure = null) }
+        sheet.value = ChatsHomeSheet.Servers
+    }
+
+    override fun switchServer(profile: ProfileId) {
+        val rows = state.value.switcher.servers
+        val row = rows.firstOrNull { it.profile == profile } ?: return
+        // Tapping the server already in use has nowhere to go but back to it (Flutter: reconnecting drops live state).
+        if (row.current) {
+            sheet.value = null
+            return
+        }
+        if (switching.value.to != null) return
+        switching.value = Switching(to = profile)
+        viewModelScope.launch {
+            when (val done = home.switchTo(profile)) {
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> {
+                    switching.value = Switching()
+                    if (sheet.value == ChatsHomeSheet.Servers) sheet.value = null
+                }
+                // The sheet stays open and says why; the rows are as they were.
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed -> switching.value = Switching(failure = done.failure)
+            }
+        }
+    }
+
+    override fun addServer() {
+        sheet.value = null
+        nav.open(ServersRoute.Edit())
+    }
+
+    override fun serverSettings(profile: ProfileId) {
+        sheet.value = null
+        nav.open(ServersRoute.Edit(profile))
+    }
+
     override fun connectComputer() {
         sheet.value = null
         nav.open(ServersRoute.Edit())
@@ -552,7 +671,30 @@ public fun interface HomePermissionAnswers {
         requestId: String,
         allow: Boolean,
     ): io.github.eslamasabry.oc.core.common.Outcome<Unit>
+
+    /**
+     * The row's answer, Always allow included (F: lib/ui/screens/chats/chats_host.dart:258-270). A port that cannot
+     * keep a grant refuses Always, so nothing is allowed for longer than the person chose.
+     */
+    public suspend fun answer(
+        ref: ConversationRef,
+        requestId: String,
+        reply: HomePermissionReply,
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit> =
+        when (reply) {
+            HomePermissionReply.Once -> answer(ref, requestId, true)
+            HomePermissionReply.Reject -> answer(ref, requestId, false)
+            HomePermissionReply.Always ->
+                io.github.eslamasabry.oc.core.common.Outcome.Failed(
+                    io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                        io.github.eslamasabry.oc.core.common.FeatureId("persistentPermissionGrants")
+                    )
+                )
+        }
 }
+
+/** What a list row answers a waiting permission. */
+public enum class HomePermissionReply { Once, Always, Reject }
 
 @dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
 public interface HomePermissionBindings {

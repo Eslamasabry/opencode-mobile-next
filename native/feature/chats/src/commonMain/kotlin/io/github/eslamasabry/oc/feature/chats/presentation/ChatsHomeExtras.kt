@@ -20,6 +20,9 @@ public enum class ChatsHomeSheet {
     Inbox,
     OpenProject,
     Monitoring,
+
+    /** The one-tap server switcher the home's server pill opens (F: lib/ui/widgets/server_switcher_sheet.dart:73). */
+    Servers,
 }
 
 public enum class ChatsOpeningPhase {
@@ -113,6 +116,13 @@ public interface ChatsHomeExtras {
     public suspend fun refreshWatched(): Outcome<Unit>
 
     public suspend fun openWatched(key: String): Outcome<ConversationRef>
+
+    /**
+     * The switcher's tap: connect [profile] and make it the server new conversations start on. By default there is
+     * no connection owner to ask, so nothing switches and the sheet says why.
+     */
+    public suspend fun switchTo(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("serverSwitch")))
 
     /**
      * B-161: the git branch of each folder the home lists; a folder without git is absent. The connection owner

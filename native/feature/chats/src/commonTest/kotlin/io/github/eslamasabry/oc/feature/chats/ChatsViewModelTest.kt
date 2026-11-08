@@ -6,7 +6,16 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtras
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
+import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationsFeed
 import io.github.eslamasabry.oc.feature.chats.presentation.ReturnBriefFeed
@@ -299,5 +308,181 @@ class ChatsViewModelTest {
             (vm.state.value.today + vm.state.value.earlier).map { it.ref.sessionId.raw },
         )
         assertTrue(briefs.dismissed.isEmpty())
+    }
+    /** The home's connection owner as the switcher sees it: saved sources, and every switch it was asked for. */
+    private class Home(sources: List<ChatsListSourceUi>) : ChatsHomeExtras {
+        val switched = mutableListOf<String>()
+        var answer: Outcome<Unit> = Unit.ok()
+        override val snapshot = MutableStateFlow(ChatsHomeExtraState(sources = sources.toImmutableList()))
+
+        override suspend fun switchTo(profile: ProfileId): Outcome<Unit> {
+            switched += profile.raw
+            return answer
+        }
+
+        override suspend fun showSource(profile: ProfileId, shown: Boolean): Outcome<Unit> = Unit.ok()
+
+        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> = Unit.ok()
+
+        override suspend fun retryOpening(): Outcome<Unit> = Unit.ok()
+
+        override suspend fun setWatched(profile: ProfileId, enabled: Boolean): Outcome<Unit> = Unit.ok()
+
+        override suspend fun refreshWatched(): Outcome<Unit> = Unit.ok()
+
+        override suspend fun openWatched(key: String): Outcome<ConversationRef> =
+            Outcome.Failed(Failure.Unavailable(FeatureId("test")))
+    }
+
+    private fun source(id: String, main: Boolean = false) =
+        ChatsListSourceUi(ProfileId(id), id, shown = true, main = main, onThisPhone = false, unreachable = false)
+
+    @Test
+    fun `PARITY-B-235 the pill opens the switcher sheet and a tap there switches servers and closes it`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true), source("work")))
+        val vm =
+            ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.openServerSwitcher()
+        assertEquals(ChatsHomeSheet.Servers, vm.state.value.sheet)
+        assertEquals(emptyList(), nav.routes, "the pill no longer leaves for the Servers page")
+        assertEquals(listOf("main", "work"), vm.state.value.switcher.servers.map { it.profile.raw })
+        // The server already in use only closes the sheet: reconnecting would drop live state.
+        vm.switchServer(ProfileId("main"))
+        assertEquals(emptyList(), home.switched)
+        assertEquals(null, vm.state.value.sheet)
+        vm.openServerSwitcher()
+        vm.switchServer(ProfileId("work"))
+        assertEquals(listOf("work"), home.switched)
+        assertEquals(null, vm.state.value.sheet)
+        assertEquals(null, vm.state.value.switcher.switching)
+    }
+
+    @Test
+    fun `PARITY-B-235 a switch that fails keeps the sheet open and says why, and Add a server opens the form`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true), source("work")))
+        val refused = Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope)
+        home.answer = Outcome.Failed(refused)
+        val vm =
+            ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.openServerSwitcher()
+        vm.switchServer(ProfileId("work"))
+        assertEquals(ChatsHomeSheet.Servers, vm.state.value.sheet)
+        assertEquals(refused, vm.state.value.switcher.failure)
+        // Opening the sheet again starts clean.
+        vm.openServerSwitcher()
+        assertEquals(null, vm.state.value.switcher.failure)
+        vm.addServer()
+        assertEquals(listOf<AppRoute>(ServersRoute.Edit()), nav.routes)
+        assertEquals(null, vm.state.value.sheet)
+    }
+
+    @Test
+    fun `PARITY-B-217 a pull reads the list again once, and says so until the read is back`() = runTest {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        var reads = 0
+        val feed =
+            object : ConversationsFeed {
+                override val snapshot = MutableStateFlow(ChatFeedSnapshot(persistentListOf(item("s1"))))
+
+                override suspend fun refresh(): Outcome<Unit> {
+                    reads++
+                    gate.await()
+                    return Unit.ok()
+                }
+            }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.refreshList()
+        assertTrue(vm.state.value.refreshing)
+        // A second pull while the first reads is the same read.
+        vm.refreshList()
+        assertEquals(1, reads)
+        gate.complete(Unit)
+        assertFalse(vm.state.value.refreshing)
+        vm.refreshList()
+        assertEquals(2, reads)
+    }
+
+    private class Answers : io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionAnswers {
+        val sent = mutableListOf<String>()
+
+        override suspend fun answer(ref: ConversationRef, requestId: String, allow: Boolean): Outcome<Unit> =
+            answer(ref, requestId, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+
+        override suspend fun answer(ref: ConversationRef, requestId: String, reply: HomePermissionReply): Outcome<Unit> {
+            sent += "$requestId $reply"
+            return Unit.ok()
+        }
+    }
+
+    private fun asking(grants: Boolean): Pair<ChatsViewModel, Answers> {
+        val feed = Feed()
+        feed.snapshot.value =
+            ChatFeedSnapshot(
+                persistentListOf(
+                    item("ask", status = ChatStatus.NeedsYou)
+                        .copy(permission = io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req1", "npm test"))
+                )
+            )
+        val gateway = io.github.eslamasabry.oc.core.testing.FakeServerGateway()
+        gateway.capabilities.value =
+            io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(persistentPermissionGrants = grants)
+        val servers =
+            object : io.github.eslamasabry.oc.feature.chats.presentation.ConversationServers {
+                override val servers =
+                    MutableStateFlow(
+                        persistentListOf(io.github.eslamasabry.oc.feature.chats.presentation.ConversationServer(P1, "p1", gateway, null))
+                    )
+            }
+        val answers = Answers()
+        val vm =
+            ChatsViewModel(
+                feed,
+                Briefs(),
+                Door(false),
+                { Instant.fromEpochMilliseconds(0) },
+                clock,
+                RecordingNavigator(),
+                permissionAnswers = setOf(answers),
+                connections = servers,
+            )
+        return vm to answers
+    }
+
+    @Test
+    fun `PARITY-B-224 a row's waiting permission offers Always allow, which asks first and then answers Always`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.today.single()
+        assertTrue(row.key in vm.state.value.alwaysAllowable)
+        vm.askAlwaysAllow(row)
+        assertEquals(row, vm.state.value.confirmAlways)
+        assertEquals(emptyList(), answers.sent, "nothing is granted before the confirm")
+        vm.cancelAlwaysAllow()
+        assertEquals(null, vm.state.value.confirmAlways)
+        assertEquals(emptyList(), answers.sent)
+        vm.askAlwaysAllow(row)
+        vm.confirmAlwaysAllow()
+        assertEquals(listOf("req1 Always"), answers.sent)
+        assertEquals(null, vm.state.value.confirmAlways)
+        // Allow once and Reject still answer as they did.
+        vm.answerPermission(row, false)
+        assertEquals(listOf("req1 Always", "req1 Reject"), answers.sent)
+    }
+
+    @Test
+    fun `PARITY-B-224 a server that keeps no grants offers no Always allow`() = runTest {
+        val (vm, answers) = asking(grants = false)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.today.single()
+        assertFalse(row.key in vm.state.value.alwaysAllowable)
+        vm.askAlwaysAllow(row)
+        vm.confirmAlwaysAllow()
+        assertEquals(null, vm.state.value.confirmAlways)
+        assertEquals(emptyList(), answers.sent)
     }
 }
