@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidChipsFade
 import androidx.compose.foundation.layout.padding
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import androidx.compose.foundation.horizontalScroll
@@ -43,7 +44,12 @@ public fun KitComposerStatusStrip(
     chips: @Composable RowScope.() -> Unit,
 ) {
     if (!hasChips && model == null && stop == null) return
-    Row(modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    // Glass: a soft fade of the ground under this strip only (owner 2026-11-09), so the transcript never reads behind
+    // the glass chips; the message box below stays glass over it.
+    Row(
+        modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth().kitLiquidChipsFade(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         BoxWithConstraints(Modifier.weight(1f)) {
             val availableWidth = maxWidth
             val scroll = rememberScrollState()

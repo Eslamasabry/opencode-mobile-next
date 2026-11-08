@@ -13,6 +13,7 @@ import android.content.Intent
 import android.os.Environment
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
+import io.github.eslamasabry.oc.android.platform.LocalFileGate
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -39,7 +40,6 @@ import io.github.eslamasabry.oc.ui.kitchat.KitCopy
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
-import java.io.File
 import java.io.IOException
 import java.net.URI
 import kotlinx.coroutines.CancellationException
@@ -119,11 +119,9 @@ class AndroidChatOutside(
             }
             if (requested) return Outcome.Ok(PhoneFileOpen.AccessRequested)
             val uri = withContext(dispatchers.io) {
-                val file = File(path).canonicalFile
-                val root = Environment.getExternalStorageDirectory().canonicalFile
-                if (!file.path.startsWith(root.path + File.separator) || !file.isFile || !file.canRead()) {
-                    throw IOException("unavailable")
-                }
+                // Shared storage only, after symlinks and `..` resolve; never Android/ folders or private files.
+                val file = LocalFileGate.allowed(Environment.getExternalStorageDirectory(), path)?.takeIf { it.canRead() }
+                    ?: throw IOException("unavailable")
                 FileProvider.getUriForFile(application, "${application.packageName}.files", file)
             }
             withContext(dispatchers.main) {

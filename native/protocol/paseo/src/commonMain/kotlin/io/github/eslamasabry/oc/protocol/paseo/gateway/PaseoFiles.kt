@@ -7,7 +7,9 @@ import io.github.eslamasabry.oc.core.model.FileContent
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.core.model.FindMatch
 import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.protocol.paseo.PaseoException
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
+import io.github.eslamasabry.oc.protocol.paseo.paseoFileReason
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.objectOrNull
 import io.github.eslamasabry.oc.protocol.paseo.paseoAttempt
@@ -48,12 +50,19 @@ internal class PaseoFiles(private val gateway: PaseoGateway, private val locatio
         return root to relative.ifEmpty { "." }
     }
 
-    private suspend fun request(type: String, body: JsonObject): JsonObject {
+    private suspend fun request(type: String, body: JsonObject, fileRead: Boolean = false): JsonObject {
         val scope = gateway.scopeDir
         val epoch = gateway.locationEpoch
         if (gateway.closed) paseoFail(PaseoFailureKind.Disconnected)
-        val result = gateway.transport.request(type, body)
+        val result =
+            try {
+                gateway.transport.request(type, body)
+            } catch (e: PaseoException) {
+                if (!fileRead) throw e
+                throw PaseoException(paseoFileReason(e.reason) ?: e.kind, e.reason)
+            }
         gateway.checkLocation(scope, epoch)
+        if (fileRead) rejectFileError(result)
         if (result["error"] != null && result["error"] != JsonNull) paseoFail(PaseoFailureKind.Unavailable)
         return result
     }
@@ -70,7 +79,7 @@ internal class PaseoFiles(private val gateway: PaseoGateway, private val locatio
 
     override suspend fun fileContent(path: String): Outcome<FileContent> = call {
         val (cwd, relative) = readTarget(path)
-        val reply = request("file_explorer_request", jsonOf("cwd" to cwd, "path" to relative, "mode" to "file", "maxBytes" to 2 * 1024 * 1024))
+        val reply = request("file_explorer_request", jsonOf("cwd" to cwd, "path" to relative, "mode" to "file", "maxBytes" to 2 * 1024 * 1024), fileRead = true)
         val file = paseoObject(reply["file"])
         val kind = file.str("kind")
         val content = file["content"].stringOrNull().orEmpty()

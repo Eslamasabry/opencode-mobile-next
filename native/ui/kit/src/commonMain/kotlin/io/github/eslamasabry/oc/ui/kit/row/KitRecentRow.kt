@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitProminentRule
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
@@ -301,6 +302,8 @@ public fun KitRowPanel(
     label: String? = null,
     leadingMarks: Boolean = true,
     gapBefore: Dp? = null,
+    /** A line of at least 1 dp between rows (B-173, Flutter #129): the home list on dark screens. */
+    prominentDividers: Boolean = false,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -321,7 +324,7 @@ public fun KitRowPanel(
             // A panel is a surface of its own: its rows keep their gutter inside it.
             CompositionLocalProvider(LocalKitOnRail provides false) {
                 val inset = if (leadingMarks) KitRecentRowRules.textStartDp(tokens.gutter) else tokens.gutter
-                KitHairlineColumn(inset.dp, 0.dp, colors.hairline, rows)
+                KitHairlineColumn(inset.dp, 0.dp, colors.hairline, if (prominentDividers) kitProminentRule() else null, rows)
             }
         }
     }

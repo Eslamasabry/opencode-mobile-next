@@ -43,6 +43,9 @@ class ChatFeelPresenterTest {
 
         override fun checkLink(url: String): LinkCheck = check.also { calls += "check $url" }
 
+        /** Stands for the Android wiring: a `file:` link names a path; anything else is not one. */
+        override fun fileLinkPath(url: String): String? = url.removePrefix("file://").takeIf { url.startsWith("file:///") }
+
         override fun openLink(url: String): Boolean = opens.also { calls += "open $url" }
     }
 
@@ -211,6 +214,19 @@ class ChatFeelPresenterTest {
         p.confirmOpenLink()
         assertEquals("open https://example.com/docs", outside.calls.last())
         assertNull(p.current().confirm)
+    }
+
+    @Test
+    fun `B-184 a file link opens as a file in the viewer and never reaches the link gate`() {
+        val p = presenter()
+        p.openLink("file:///sdcard/Download/notes.txt")
+        assertEquals(
+            listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/sdcard/Download/notes.txt", null)),
+            nav.opened,
+        )
+        assertTrue(outside.calls.isEmpty(), "no link check, no browser: ${outside.calls}")
+        assertNull(p.current().confirm)
+        assertNull(p.current().status)
     }
 
     @Test
