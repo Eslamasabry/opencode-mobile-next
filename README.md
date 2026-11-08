@@ -121,12 +121,14 @@ The app connects only to the servers you choose. Passwords stay in Android's key
 
 ### What is sent
 
-Nothing goes to the developer unless you turn on **Settings > Privacy and data > Send reports to developer**. It is off by default, and turning it off stops it. When on:
+Nothing goes to the developer unless you turn it on. There are two switches in **Settings > Privacy and data**, both off by default, and turning one off stops it:
 
-- **Crash and error reports** go to Google Firebase Crashlytics: the kind of error, code locations, the setup step that failed with its exit code, phone model, Android version and app version.
-- **Usage counts** go to Google Analytics for Firebase, exactly these events with fixed values only: `app_open` (cold or warm), `setup_step_reached` (step), `setup_step_failed` (step; crash, timeout, network, space or other; compatibility mode; Node.js safe mode), `setup_done` (minutes, as a range), `first_reply` (phone or computer; seconds, as a range), `connect_computer_chosen`, `update_offered`, `update_installed`, `screen_view` (the kind of page, from a fixed list), `feature_used` (voice, camera, file_attach, agent_switch, model_switch, server_add, git_action or review_open), `session_length` (minutes, as a range).
+- **Usage and app health** goes to Google Analytics for Firebase, exactly these events with fixed words and ranges only: `app_open` (cold or warm), `setup_step_reached`, `setup_step_failed`, `setup_done`, `first_reply`, `connect_computer_chosen`, `update_offered`, `update_installed`, `screen_view` (the kind of page), `feature_used`, `session_length`; and for flows `conn_attempt`, `conn_drop`, `send_result`, `turn_stall`, `queue_flush`, `linux_setup_step`, `agent_start`, `bg_service_end`, `update_result`; and for performance `app_start`, `jank` (slow frames per kind of page) and `memory_pressure`. It also sets device ranges once: memory, free storage, CPU family, WebView version, whether notifications are allowed, and the kind and version of server.
+- **Crash reports** go to Google Firebase Crashlytics: the kind of error and its code locations (never its message), why Android ended the app last time, the last steps you took as short words such as `conn.connect`, and a few keys (app version, build kind, server kind, engine state, number of connections, OpenCode major.minor).
 
-On the first start after installing or updating, the app asks once, "Help improve OpenCode Mobile?"; "Not now" leaves everything off and it never asks again.
+Asked every time, whatever the switches say: **Settings > Help > Send a problem report** shows you the whole report (the app's last 500 log lines, the keys above, recent process ends and device ranges, with keys, URLs, host names, addresses and paths already blanked) and sends it only when you tap **Send**. You get a report code to quote in an issue; it is also in **Settings > About**.
+
+On the first start after installing or updating, the app asks once, "Help improve OpenCode Mobile?": "Share both", "Not now" (everything stays off and it never asks again) or "Choose". Every value sent is one of a fixed list of words, ranges or numbers; the exact lists are in [PRIVACY.md](PRIVACY.md) and [docs/telemetry/health-and-diagnostics.md](docs/telemetry/health-and-diagnostics.md).
 
 Never sent: messages, prompts, files, paths, server addresses, usernames, passwords, keys, tokens or the advertising ID.
 

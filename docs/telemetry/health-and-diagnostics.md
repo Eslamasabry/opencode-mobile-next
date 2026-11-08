@@ -89,3 +89,24 @@ The format is `area.action`:
 | `agent` | start:<agent word>, fail |
 | `update` | offer, install, fail |
 | `settings` | change:<setting group word> |
+
+## G. Values fixed in Flutter 2.1.5 where the tables name a parameter only
+
+Native 3.0 uses the same words.
+
+| Parameter | Values |
+|---|---|
+| `turn_stall.minutes_range` | <1, 1-5, 5-15, 15-60, >60 |
+| `queue_flush.sent`, `.failed` | 0, 1, 2-5, 6-20, >20 |
+| `linux_setup_step.ms_range` | <10000, 10000-60000, 60000-300000, >300000 (milliseconds) |
+| `linux_setup_step.free_space_range` | as `free_storage_range`: <2, 2-8, 8-32, >32 (GB) |
+| `linux_setup_step.step` | `linux` is `unpack`, or `download` when it failed on the network; `essentials` and `python` are `essentials`; `aiteam` is `agents`; `done` is the finished job. `paseo` is not produced by Flutter |
+| `conn_drop.reason` | Flutter sends background, idle_timeout and other; the other two are reserved |
+| `bg_service_end.reason` | Flutter sends os_limit, user_stopped and other |
+| `update_result.fail_kind` | Flutter sends download, checksum and installer; signer and version are reserved |
+| `jank` | Frames over one refresh period; a page kind needs at least 30 frames |
+| `turn_stall` | A tool or approval wait is reported once after 5 minutes; `streaming` is a silent turn the stall check diagnosed |
+| Exit reasons | Normal ends (the app quit itself, or was updated) are not reported |
+| Breadcrumbs | The Crashlytics log keeps its own newest 64 KB; the app's own log ring keeps 500 lines for the problem report |
+| Report code | When Firebase gives no install ID (analytics off), 8 random hex characters kept on the phone take its place |
+| `settings.change:` words | connections, ai, chat, this_app, help, privacy, appearance, notifications, other |
