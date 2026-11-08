@@ -322,6 +322,9 @@ internal fun SettingsFrame(
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = onBack,
                 large = large,
+                // Flutter's pushed pages: Back and the title share one row, the title on the 56 dp
+                // text rail beside it (lib/ui/kit/kit_top_bar.dart:439).
+                backBesideTitle = true,
             )
         },
         search = search,

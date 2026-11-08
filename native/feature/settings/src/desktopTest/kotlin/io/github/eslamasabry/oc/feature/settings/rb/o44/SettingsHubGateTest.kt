@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -58,6 +59,20 @@ class SettingsHubGateTest {
         onNodeWithTag("settings-group-Agent").assertHeightIsEqualTo(64.dp)
         onNodeWithTag("settings-group-Help").assertHeightIsEqualTo(64.dp)
         onNodeWithTag("settings-group-Server").assertHeightIsEqualTo(64.dp)
+    }
+
+    @Test
+    fun `B-NAV-068 a pushed page shows Back and its title on one row`() = runComposeUiTest {
+        val state =
+            hub().copy(stack = persistentListOf(SettingsPage.Hub, SettingsPage.Group(SettingsGroupId.Help)))
+        setContent { SettingsThemed { SettingsScreen(state, RecordingActions()) } }
+        // F: lib/ui/kit/kit_top_bar.dart:414-445: the back arrow and the title's first line share one row, the
+        // title on the 56 dp text rail beside it (no line of its own above the title).
+        onNodeWithTag("kit-top-bar-compact").assertExists()
+        val back = onNodeWithContentDescription("Back").fetchSemanticsNode().boundsInRoot
+        val title = onNodeWithTag("kit-top-bar-title").fetchSemanticsNode().boundsInRoot
+        assertTrue(back.center.y in title.top..title.bottom, "Back $back sits beside the title $title")
+        assertTrue(title.left > back.right - 1f, "the title starts after Back")
     }
 
     @Test
