@@ -168,9 +168,14 @@ public fun KitAgentTile(
         ) {
             if (wide) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Box { mark(); if (ready) Box(Modifier.align(Alignment.TopEnd)) { ReadyCheck() } }
+                    mark()
                     Spacer(Modifier.width(Space.S4.dp))
                     Box(Modifier.weight(1f)) { words() }
+                    // Lying sideways the check sits after the words, never over the mark.
+                    if (ready) {
+                        Spacer(Modifier.width(Space.S2.dp))
+                        ReadyCheck()
+                    }
                     if (action != null) {
                         Spacer(Modifier.width(Space.S2.dp))
                         chip()

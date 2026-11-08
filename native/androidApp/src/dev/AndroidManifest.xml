@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev loop build (tool/dev/README.md): io.github.eslamasabry.opencode_mobile.native.dev beside the real and preview
+     apps. Its own package keeps its data, providers (${applicationId}.files) and services apart; this file turns off
+     what would still show outside the app: home-screen widgets, Quick Settings tiles and the opencode-mobile:// link
+     filter (links keep opening the real app, never a chooser with the dev copy in it). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <activity android:name=".MainActivity">
+            <intent-filter tools:node="remove">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="opencode-mobile" android:host="session" />
+                <data android:scheme="opencode-mobile" android:host="team" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".WidgetConfigureActivity" android:enabled="false" />
+        <service android:name="io.github.eslamasabry.opencode_mobile.AttentionTileService" android:enabled="false" />
+        <service android:name="io.github.eslamasabry.opencode_mobile.PauseTileService" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsWidgetProvider" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsWideWidgetProvider" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsListWidgetProvider" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsStripWidgetProvider" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.UsageWidgetProvider" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.UsageWideWidgetProvider" android:enabled="false" />
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.StatusWidgetProvider" android:enabled="false" />
+    </application>
+</manifest>

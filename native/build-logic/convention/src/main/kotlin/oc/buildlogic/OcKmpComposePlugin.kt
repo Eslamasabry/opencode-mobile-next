@@ -18,6 +18,10 @@ class OcKmpComposePlugin : Plugin<Project> {
             pluginManager.apply("oc.kmp.library")
             pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
             pluginManager.apply("org.jetbrains.compose")
+            // Dev loop (tool/dev/README.md): Compose Hot Reload only when asked, so CI and APK builds are unchanged.
+            if (providers.gradleProperty("oc.hotReload").orNull == "true") {
+                pluginManager.apply("org.jetbrains.compose.hot-reload")
+            }
 
             extensions.configure<ComposeCompilerGradlePluginExtension> {
                 stabilityConfigurationFiles.add(
