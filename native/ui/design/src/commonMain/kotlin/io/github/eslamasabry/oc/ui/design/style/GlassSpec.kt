@@ -50,10 +50,14 @@ public object GlassSpec : StyleSpec {
     public const val CHOSEN_TINT_DARK: Float = .20f
     public const val CHOSEN_TINT_LIGHT: Float = .12f
 
-    /** A chosen pane's opaque tint: the accent in the ground's smoke (dark) or in the pane's milk (light). */
-    public fun chosenTintOf(roles: Roles, plain: Argb): Argb =
+    /**
+     * A chosen pane's opaque tint: the accent in the ground's smoke (dark) or in the theme's milk (light; never a grey
+     * surface step, under which dark words fell back to an opaque face). [plain] is the pane's own tint, kept for the
+     * callers that lean a tint they already have.
+     */
+    public fun chosenTintOf(roles: Roles, @Suppress("UNUSED_PARAMETER") plain: Argb): Argb =
         if (roles.dark) lerp(roles.ground.opaque(), roles.accent.opaque(), CHOSEN_TINT_DARK).opaque()
-        else lerp(plain, roles.accent.opaque(), CHOSEN_TINT_LIGHT).opaque()
+        else lerp(styleLight(roles), roles.accent.opaque(), CHOSEN_TINT_LIGHT).opaque()
 
     /** How much thicker a chosen pane's tint is than its resting one. */
     public const val CHOSEN_LIFT: Float = .10f

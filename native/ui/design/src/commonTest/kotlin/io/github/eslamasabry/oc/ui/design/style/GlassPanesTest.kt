@@ -79,6 +79,8 @@ class GlassPanesTest {
                     }
                 }
                 report += "$pack ${if (dark) "dark" else "light"} $role/$level${if (chosen) " chosen" else ""}: tint ${d.fill!!.alpha * 100 / 255}%, margin ${"%.2f".format(worst)}"
+                // Still glass: no pane, chosen or not, falls back to an opaque face.
+                assertTrue(d.fill!!.alpha < 255, "$pack dark=$dark $role/$level chosen=$chosen: opaque")
             }
         }
         println(report.joinToString("\n"))
