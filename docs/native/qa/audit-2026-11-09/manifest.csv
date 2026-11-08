@@ -1,0 +1,366 @@
+kind,module,surface,populated,empty,loading,error,offline,long,rtl,text13,sources
+route,androidApp,ServerProviderAuthRoute,,,,,,,,,
+route,androidApp,UsageRoute.Hub,x,x,x,x,x,x,x,x,DW G R
+route,feature/agents,AgentsRoute.Home,x,x,x,x,x,,x,x,DW R
+route,feature/agents,AgentsRoute.SignInTerminal,x,,,x,,,x,x,R
+route,feature/agents,CapabilityAddComputerRoute,,,,,,,,,
+route,feature/agents,CapabilityAgentAccountRoute,,,,,,,,,
+route,feature/agents,ProvidersRoute,x,,x,x,,,x,x,R
+route,feature/agents,RemoteTerminalRoute,x,,,x,,,x,x,R
+route,feature/agents,ToolsRoute,x,x,x,x,,,x,x,R
+route,feature/agenttools,AgentToolsRoute,,,,,,,,,
+route,feature/background,BackgroundRoute.Home,x,,x,x,x,,x,x,R
+route,feature/capabilities,CapabilitiesRoute,,,,,,,,,
+route,feature/chat,CardsSettingsRoute,,,,,,,,,
+route,feature/chat,ChatRoute,x,x,x,x,x,x,x,x,DW G L LG R
+route,feature/chat,ConnectionFormRoute,x,,,x,,,,,DW
+route,feature/chat,DemoRoute,,,,,,,,,
+route,feature/chats,ChatsRoute.All,,,,,,,,,
+route,feature/chats,ChatsRoute.Attention,,,,,,,,,
+route,feature/chats,ChatsRoute.Home,x,x,x,x,x,x,x,x,DW G L LG R
+route,feature/chats,ChatsRoute.New,x,,,,,,,,DW
+route,feature/chat,SessionRelationsRoute,,,,,,,,,
+route,feature/chats,MonitorInboxRoute,,,,,,,,,
+route,feature/codexprobe,CodexProbeRoute,,,,,,,,,
+route,feature/computer,ComputerRoute,x,x,x,x,x,x,x,x,R
+route,feature/devservices,DevServicesRoute.Home,x,x,x,x,x,,x,x,R
+route,feature/diagnostics,DiagnosticsRoute.Kept,x,x,x,x,,,x,x,R
+route,feature/factsbook,FactsBookRoute.AboutYou,x,x,x,x,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Areas,x,,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Capture,x,,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Connect,,,,,,,,,
+route,feature/factsbook,FactsBookRoute.Event,,x,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.NeedsYou,x,,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.NotSaved,x,x,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.PhoneNode,x,,,x,,,x,x,R
+route,feature/factsbook,FactsBookRoute.ReminderEdit,,,,,,,,,
+route,feature/factsbook,FactsBookRoute.Reminders,x,,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Rule,x,,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Search,,,,,,,,,
+route,feature/factsbook,FactsBookRoute.Settings,,,x,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Status,x,,,,,,x,x,R
+route,feature/factsbook,FactsBookRoute.Thing,,,,,,,,,
+route,feature/factsbook,FactsBookRoute.Triggers,x,,,x,,,x,x,R
+route,feature/files,FilesRoute.File,x,,x,x,,x,x,x,DW L R
+route,feature/files,FilesRoute.Folder,x,x,x,x,,x,x,x,DW L R
+route,feature/files,FilesRoute.ProjectFile,,,,,,,,,
+route,feature/files,FilesRoute.ProjectFolder,,,,,,,,,
+route,feature/git,GitRoute,x,x,x,x,,x,x,x,DW R
+route,feature/handoff,AgentHandoffRoute,,,,,,,,,
+route,feature/integrations-catalog,McpCatalogRoute,x,x,x,x,,x,x,x,R
+route,feature/integrations,IntegrationsRoute,,,,,,,,,
+route,feature/linux,LinuxRoute.Backups,x,,x,x,,,x,x,R
+route,feature/linux,LinuxRoute.Home,x,,x,x,,,x,x,R
+route,feature/linux,LinuxRoute.KeptServices,x,x,,x,,,x,x,R
+route,feature/linux,LinuxRoute.Packages,x,x,x,x,,,x,x,R
+route,feature/linux,LinuxRoute.Ports,x,x,,x,,,x,x,R
+route,feature/linux,LinuxRoute.Services,x,x,,,,,x,x,R
+route,feature/linux,LinuxRoute.Storage,x,,x,x,,,x,x,R
+route,feature/manage-space,ManageSpaceRoute.Home,x,x,x,x,x,x,x,x,R
+route,feature/monitor,MonitorRoute,,,,,,,,,
+route,feature/onboarding,OnboardingRoute.ManagedMove,x,,x,x,x,,x,x,R
+route,feature/onboarding,OnboardingRoute.Welcome,x,x,x,x,x,,x,x,DW L R
+route,feature/phone,PhoneRoute.ExportProjects,x,x,,x,,,x,x,R
+route,feature/phone,PhoneRoute.KeepRunning,x,x,x,x,,,x,x,L R
+route,feature/phone,PhoneRoute.ManageSpace,x,x,,x,,,x,x,R
+route,feature/phone,PhoneRoute.Running,x,x,x,x,x,,x,x,R
+route,feature/phone,PhoneRoute.SharedFolders,x,,x,x,,,x,x,R
+route,feature/phone,PhoneRoute.ThisPhone,x,,x,x,x,,x,x,DW L R
+route,feature/phonesetup,PhoneSetupRoute.Customize,x,,x,x,x,,x,x,R
+route,feature/phonesetup,PhoneSetupRoute.Setup,x,,x,x,x,,x,x,R
+route,feature/plans,PlansAlertsRoute,x,x,x,x,,,x,x,R
+route,feature/plans,PlansRoute,x,x,x,x,,x,x,x,R
+route,feature/preview,PreviewRoute.Page,x,x,x,x,,,x,x,R
+route,feature/preview,PreviewRoute.Ports,x,x,,,,,x,x,R
+route,feature/projects,ProjectsRoute.Open,x,x,x,x,,x,x,x,R S27
+route,feature/projects,ProjectsRoute.Picker,x,x,x,x,,,x,x,DW R
+route,feature/projects,ProjectsRoute.Project,x,x,x,x,,x,x,x,R
+route,feature/projects,TerminalRoute.Home,x,x,x,x,,,x,x,DW R
+route,feature/prompts,KeptPromptsRoute,,,,,,,,,
+route,feature/prompts,PromptsRoute.Commands,x,x,x,,x,,x,x,R
+route,feature/prompts,PromptsRoute.Saved,x,x,x,x,,x,x,x,R
+route,feature/prompts,PromptsRoute.Tasks,x,x,x,,x,,x,x,R
+route,feature/review,ReviewRoute.Changes,x,x,x,x,,,x,x,DW G R
+route,feature/review,ReviewRoute.File,x,x,x,x,,x,x,x,DW G R
+route,feature/review,ReviewRoute.Staged,x,x,x,x,,,x,x,R
+route,feature/review,ReviewRoute.UndoFromHere,x,,x,x,,x,x,x,R
+route,feature/schedules,SchedulesRoute.Edit,x,x,x,x,,x,x,x,R
+route,feature/schedules,SchedulesRoute.List,x,x,x,x,,x,x,x,R
+route,feature/search,SearchRoute.Conversations,x,x,x,x,x,,x,x,DW R
+route,feature/search,SearchRoute.ProjectHealth,x,x,x,x,,,x,x,R
+route,feature/search,SearchRoute.Shortcuts,x,,,,,,x,x,R
+route,feature/search,WebSourcesRoute,x,,x,x,,,x,x,R
+route,feature/servers,AgentAccountRoute,,,,,,,,,
+route,feature/servers,CapabilityServerSetupRoute,,,,,,,,,
+route,feature/servers,PairingRoute.Scanner,,,x,x,,,x,x,R
+route,feature/servers,ServersRoute.Edit,x,,x,x,x,x,x,x,R
+route,feature/servers,ServersRoute.Home,x,x,,x,x,x,x,x,L R
+route,feature/servers,ServersRoute.MoveQueued,x,x,,,,,x,x,R
+route,feature/servers,ServersRoute.Permissions,x,x,,,,,x,x,R
+route,feature/servers,ServersRoute.Remove,x,,,,,,x,x,R
+route,feature/servers,ServersRoute.Setup,x,,,,,,x,x,R
+route,feature/servers,ServersRoute.SetupAssist,,,,,,,,,
+route,feature/settings,LibraryRoute,,,,,,,,,
+route,feature/settings,ServerIntegrationRoute,,,,,,,,,
+route,feature/settings,ServerSettingsRoute,,,,,,,,,
+route,feature/settings,SettingsRoute.Home,x,,,,,,x,x,DW G R
+route,feature/settings,SettingsRoute.KeyboardShortcuts,x,,,,,,x,x,R
+route,feature/settings,SettingsRoute.ModelDefaults,,,,,,,,,
+route,feature/settings,SettingsRoute.Notifications,x,,,,,,x,x,G R
+route,feature/settings,SettingsRoute.Permissions,,,,,,,,,
+route,feature/settings,SettingsRoute.ReportProblem,x,,,,,,x,x,G R
+route,feature/settings,SettingsRoute.Target,x,,,,,,x,x,G
+route,feature/settings,SettingsRoute.WhatsNew,x,,,,,,x,x,R
+route,feature/setupassistant,SetupRoute.Home,,,,,,,,,
+route,feature/setupreview,SetupReviewRoute,,,,,,,,,
+route,feature/setup,SetupRoute.Phone,x,,x,x,x,,x,x,R
+route,feature/setup,SetupRoute.UpdateComputer,x,x,x,x,,,x,x,R
+route,feature/team,TeamRoute.Board,x,,x,,,,x,x,R
+route,feature/team,TeamRoute.Editor,x,,,x,,,x,x,R
+route,feature/team,TeamRoute.Home,x,x,,x,x,x,x,x,DW R
+route,feature/team,TeamRoute.Project,x,,,,x,x,x,x,R
+route,feature/team,TeamRoute.Servers,x,,,,,,x,x,R
+route,feature/team,TeamRoute.Task,x,,,x,,,x,x,R
+route,feature/team,TeamRoute.Timeline,x,,,,,,x,x,R
+route,feature/terminal,LocalTerminalRoute,x,,x,x,,,x,x,R
+route,feature/terminal,TerminalRoute.Conversation,x,x,x,x,x,,x,x,DW R
+route,feature/updates,UpdatesRoute.Home,x,x,x,x,,,x,x,R
+route,feature/voice,TeachingRoute.Tips,x,,x,,,,x,x,R
+route,feature/voice,VoiceRoute.Settings,x,,x,x,x,,x,x,G R
+route,feature/widget-panels,WidgetPanel.Project,x,x,x,x,,x,x,x,R
+route,feature/widget-panels,WidgetPanel.Steer,x,x,x,x,,x,x,x,R
+route,feature/widget-panels,WidgetPanel.Style,x,x,x,x,,x,x,x,R
+settings-page,feature/settings,SettingsPage.Hub,x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.Group(Server),x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.Group(Agent),x,,,,,,x,x,DW R
+settings-page,feature/settings,SettingsPage.Group(Conversations),x,,,,,,x,x,DW R
+settings-page,feature/settings,SettingsPage.Group(ThisApp),x,,,,,,x,x,DW R
+settings-page,feature/settings,SettingsPage.Group(Help),x,,,,,,x,x,DW R
+settings-page,feature/settings,SettingsPage.ByServer(ThisPhone),x,,,,,,x,x,G
+settings-page,feature/settings,SettingsPage.ServerConfiguration,,,,,,,,,
+settings-page,feature/settings,SettingsPage.ServerCapabilities,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.Appearance,x,,,,,,x,x,G LG R
+settings-page,feature/settings,SettingsPage.Voice,x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.Notifications,x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.Updates,x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.About,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.Notices,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.PhraseChips,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.WhatsNew,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.VoiceLicense,,,,,,,,,
+settings-page,feature/settings,SettingsPage.Privacy,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.PrivacyPolicy,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.WhatWeCollect,x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.Language,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.ReportProblem,x,,,,,,x,x,G R
+settings-page,feature/settings,SettingsPage.Storage,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.QuietTime,,,,,,,,,
+settings-page,feature/settings,SettingsPage.Guide,x,,,,,,x,x,R
+settings-page,feature/settings,SettingsPage.KeyboardShortcuts,x,,,,,,x,x,R
+overlay:sheet,feature/plans,PlansManagementScreen x1,,,,,,,,,
+overlay:sheet,feature/plans,PlansScreen x1,,,,,,,,,
+overlay:sheet,feature/terminal,TerminalScreen x3,,,,,,,,,
+overlay:sheet,feature/chats,ChatsHomeSheets x1,x,,,,,,,,DW
+overlay:sheet,feature/schedules,ScheduleEditScreen x1,,,,,,,,,
+overlay:sheet,feature/chats,NewConversationScreen x3,x,,,,,,,,DW
+overlay:sheet,feature/linux,LinuxPortsScreen x1,,,,,,,,,
+overlay:sheet,feature/linux,LinuxPackagesScreen x1,,,,,,,,,
+overlay:sheet,feature/linux,KeptServicesScreen x2,,,,,,,,,
+overlay:sheet,feature/phonesetup,SetupJourneyScreen x4,,,,,,,,,
+overlay:sheet,feature/linux,LinuxServicesScreen x2,,,,,,,,,
+overlay:sheet,feature/prompts,KeptPromptsScreen x1,,,,,,,,,
+overlay:sheet,feature/git,GitServerToolsPanel x1,,,,,,,,,
+overlay:sheet,feature/git,GitScreen x6,x,x,x,,,,x,x,R
+overlay:sheet,feature/files,FileShareSheet x1,x,,x,x,,,x,x,R
+overlay:sheet,feature/files,FileScreen x1,,,,,,,,,
+overlay:sheet,feature/files,FolderScreen x1,,,,,,,,,
+overlay:sheet,feature/chat,MessageMenu x1,x,,,,,,,,DW
+overlay:sheet,feature/chat,ChatContextSheet x3,,,,,,,,,
+overlay:sheet,feature/chat,ChatEntries x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatWorkSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatCommandsSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatTimelineSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,SessionTransferSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,QueueMoveSheet x1,x,x,,,,,x,x,R
+overlay:sheet,feature/chat,ChatScreen x3,,,,,,,,,
+overlay:sheet,feature/chat,ChatTasksSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,StateHandoffSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatInboxSlot x1,,,,,,,,,
+overlay:sheet,feature/chat,ComposerProjectFileSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ComposerTools x1,x,,,,,,,,DW
+overlay:sheet,feature/chat,SwitchModelSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ComposerHistorySheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatHeaderBar x7,x,,,,,,,,DW
+overlay:sheet,feature/chat,SessionRelationsScreen x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatQuestionSheet x1,,,,,,,,,
+overlay:sheet,feature/chat,ChatFormSlot x1,,,,,,,,,
+overlay:sheet,feature/chat,ModelSheet x1,x,,,,,,,,L LG
+overlay:sheet,feature/chat,ChatRequestSlot x1,x,x,,,,x,x,x,DW G R
+overlay:sheet,feature/chat,AgentFeaturesScreen x1,,,,,,,,,
+overlay:sheet,feature/agents,AgentInstallPanel x1,,,,,,,,,
+overlay:sheet,feature/agents,AgentsScreen x2,,,,,,,,,
+overlay:sheet,feature/agents,ToolsScreen x1,,,,,,,,,
+overlay:sheet,feature/agents,RemoteTerminalScreen x1,,,,,,,,,
+overlay:sheet,feature/phone,RunningScreen x1,,,,,,,,,
+overlay:sheet,feature/usage,UsageScreen x1,,,,,,,,,
+overlay:sheet,feature/factsbook,PageScreens x1,,,,,,,,,
+overlay:sheet,feature/factsbook,NeedsYouScreen x2,,,,,,,,,
+overlay:sheet,feature/team,TeamTaskScreen x1,,,,,,,,,
+overlay:sheet,feature/team,TeamIntroScreen x1,,,,,,,,,
+overlay:sheet,feature/projects,IsolatedTaskSheet x1,,,,,,,,,
+overlay:sheet,feature/projects,OpenProjectScreen x3,x,x,x,x,,x,x,x,R S27
+overlay:sheet,feature/projects,ProjectsPickerScreen x2,x,,,x,,,,,DW
+overlay:sheet,feature/projects,ProjectWorkspaceSheet x1,x,x,x,x,,,x,x,R
+overlay:sheet,feature/setup,SetupScreen x1,,,,,,,,,
+overlay:sheet,feature/servers,LinkNoticeHost x1,,,,,,,,,
+overlay:sheet,feature/servers,ServerQueueScreen x1,,,,,,,,,
+overlay:sheet,feature/servers,ServerSavedRows x1,,,,,,,,,
+overlay:sheet,feature/servers,ServersScreen x1,,,,,,,,,
+overlay:sheet,feature/servers,TailscaleSetupSheet x1,,,,,,,,,
+overlay:sheet,feature/servers,ConnectionCheckSheet x1,,,,,,,,,
+overlay:sheet,feature/servers,ServerEditorScreen x2,,,,,,,,,
+overlay:sheet,feature/servers,HostSetupSheet x1,,,,,,,,,
+overlay:sheet,feature/settings,HubPage x1,,,,,,,,,
+overlay:sheet,feature/settings,LibraryRegistrySheet x1,,,,,,,,,
+overlay:sheet,feature/settings,ThemePreviewSheet x1,,,,,,,,,
+overlay:sheet,feature/settings,VoiceNotificationsPages x1,,,,,,,,,
+overlay:sheet,feature/settings,LibraryScreen x13,,,,,,,,,
+overlay:sheet,feature/settings,ServerIntegrationScreen x3,,,,,,,,,
+overlay:sheet,feature/preview,DevPreviewScreen x2,,,,,,,,,
+overlay:sheet,feature/devservices,DevServicesScreen x3,,,,,,,,,
+overlay:sheet,feature/voice,VoiceSetupSheet x1,x,,x,,x,,x,x,R S31
+overlay:sheet,feature/voice,VoiceConversationControls x1,,,,,,,,,
+overlay:sheet,feature/voice,VoiceSettingsScreen x1,,,,,,,,,
+overlay:sheet,feature/updates,UpdatePrompts x2,,,,,,,,,
+overlay:sheet,feature/diagnostics,KeptScreen x2,,,,,,,,,
+overlay:sheet,feature/gate,GateScreen x2,,,,,,,,,
+overlay:sheet,ui/kit-chat,KitContextSheet x1,,,,,,,,,
+overlay:sheet,ui/kit-chat,KitProjectFileSheet x2,,,,,,,,,
+overlay:confirm,feature/desktopupdates,DesktopUpdatesScreen x1,,,,,,,,,
+overlay:confirm,feature/plans,PlansScreen x2,,,,,,,,,
+overlay:confirm,feature/terminal,TerminalScreen x1,,,,,,,,,
+overlay:confirm,feature/terminal,LocalTerminalScreen x1,,,,,,,,,
+overlay:confirm,feature/integrations,HostPanel x1,,,,,,,,,
+overlay:confirm,feature/integrations,IntegrationsScreen x1,,,,,,,,,
+overlay:confirm,feature/agenttools,AgentToolsScreen x1,,,,,,,,,
+overlay:confirm,feature/agenttools,AgentTerminalUi x1,,,,,,,,,
+overlay:confirm,feature/chat-composer,PromptEditorScreen x1,,,,,,,,,
+overlay:confirm,feature/chats,ChatsHomeSheets x1,x,,,,,,,,DW
+overlay:confirm,feature/chats,ChatsAllScreen x1,,,,,,,,,
+overlay:confirm,feature/chats,ChatsScreen x1,x,,,,,,,,DW
+overlay:confirm,feature/chats,MonitorInboxScreen x1,,,,,,,,,
+overlay:confirm,feature/schedules,SchedulesScreen x1,,,,,,,,,
+overlay:confirm,feature/linux,LinuxToolsPanel x1,,,,,,,,,
+overlay:confirm,feature/linux,LinuxServicesScreen x1,,,,,,,,,
+overlay:confirm,feature/linux,LinuxBackupsScreen x1,,,,,,,,,
+overlay:confirm,feature/linux,KeptServicesScreen x1,,,,,,,,,
+overlay:confirm,feature/linux,LinuxPortsScreen x2,,,,,,,,,
+overlay:confirm,feature/linux,LinuxStorageScreen x1,,,,,,,,,
+overlay:confirm,feature/linux,LinuxHomeScreen x1,,,,,,,,,
+overlay:confirm,feature/linux,LinuxPackagesScreen x1,,,,,,,,,
+overlay:confirm,feature/computer,ComputerScreen x1,,,,,,,,,
+overlay:confirm,feature/phonesetup,PhoneSetupScreen x1,,,,,,,,,
+overlay:confirm,feature/git,GitScreen x1,x,,,,,,x,x,R
+overlay:confirm,feature/files,FolderScreen x1,,,,,,,,,
+overlay:confirm,feature/files,FileScreen x2,,,,,,,,,
+overlay:confirm,feature/chat,ChatWorkSheet x1,,,,,,,,,
+overlay:confirm,feature/chat,ChatScreen x1,,,,,,,,,
+overlay:confirm,feature/chat,SessionNoteScreen x1,,,,,,,,,
+overlay:confirm,feature/chat,ApprovalChip x1,,,,,,,,,
+overlay:confirm,feature/chat,ChatCardSlot x1,,,,,,,,,
+overlay:confirm,feature/chat,ChatInboxSlot x1,,,,,,,,,
+overlay:confirm,feature/chat,ChatHeaderBar x1,x,,,,,,,,DW LG
+overlay:confirm,feature/chat,SessionRelationsScreen x1,,,,,,,,,
+overlay:confirm,feature/chat,ConnectionFormScreen x1,,,,,,,,,
+overlay:confirm,feature/chat,ChatRequestSlot x1,x,x,,,,x,x,x,DW G R
+overlay:confirm,feature/chat,BasicComposerHost x1,x,x,x,x,x,x,x,x,G R
+overlay:confirm,feature/chat,ChatFormSlot x1,,,,,,,,,
+overlay:confirm,feature/agents,SignInTerminalScreen x1,,,,,,,,,
+overlay:confirm,feature/agents,AgentsScreen x2,,,,,,,,,
+overlay:confirm,feature/agents,PhoneSignInScreen x1,,,,,,,,,
+overlay:confirm,feature/agents,ProvidersScreen x1,,,,,,,,,
+overlay:confirm,feature/phone,PhoneFirstStartConsent x1,,,,,,,,,
+overlay:confirm,feature/phone,ThisPhoneScreen x1,,,,,,,,,
+overlay:confirm,feature/phone,RunningScreen x2,,,,,,,,,
+overlay:confirm,feature/phone,ProjectStorageScreen x1,,,,,,,,,
+overlay:confirm,feature/usage,UsageScreen x1,,,,,,,,,
+overlay:confirm,feature/factsbook,PhoneNodeScreen x1,,,,,,,,,
+overlay:confirm,feature/factsbook,StatusScreens x1,,,,,,,,,
+overlay:confirm,feature/factsbook,PageScreens x2,,,,,,,,,
+overlay:confirm,feature/factsbook,TriggersScreens x1,,,,,,,,,
+overlay:confirm,feature/team,TeamHomeScreen x1,,,,,,,,,
+overlay:confirm,feature/team,TeamProjectPagesScreens x1,,,,,,,,,
+overlay:confirm,feature/team,TeamTaskScreen x1,,,,,,,,,
+overlay:confirm,feature/team,TeamProjectScreen x3,,,,,,,,,
+overlay:confirm,feature/team,TeamEditorScreen x1,,,,,,,,,
+overlay:confirm,feature/projects,TerminalScreen x1,,,,,,,,,
+overlay:confirm,feature/projects,IsolatedTaskSheet x1,,,,,,,,,
+overlay:confirm,feature/projects,OpenProjectScreen x1,,,,,,,,,
+overlay:confirm,feature/projects,ProjectWorkspaceSheet x2,,,,,,,,,
+overlay:confirm,feature/projects,ProjectsPickerScreen x1,,,,,,,,,
+overlay:confirm,feature/servers,LinkNoticeHost x1,,,,,,,,,
+overlay:confirm,feature/servers,ServerRemovalScreen x1,,,,,,,,,
+overlay:confirm,feature/servers,ServerEditorScreen x1,,,,,,,,,
+overlay:confirm,feature/servers,SavedPermissionsScreen x1,,,,,,,,,
+overlay:confirm,feature/servers,AgentAccountScreen x1,,,,,,,,,
+overlay:confirm,feature/settings,LocalModelsPage x1,,,,,,,,,
+overlay:confirm,feature/settings,ServerSettingsScreen x1,,,,,,,,,
+overlay:confirm,feature/settings,LibraryScreen x6,,,,,,,,,
+overlay:confirm,feature/settings,ServerIntegrationScreen x2,,,,,,,,,
+overlay:confirm,feature/settings,LocalDataPage x1,,,,,,,,,
+overlay:confirm,feature/settings,PermissionSettingsScreen x1,,,,,,,,,
+overlay:confirm,feature/manage-space,ManageSpaceScreen x1,,,,,,,,,
+overlay:confirm,feature/preview,DevPreviewScreen x1,,,,,,,,,
+overlay:confirm,feature/devservices,DevServicesScreen x1,,,,,,,,,
+overlay:confirm,feature/search,WebSearchPanel x1,,,,,,,,,
+overlay:confirm,feature/voice,ReplyReaderSlot x1,,,,,,,,,
+overlay:confirm,feature/voice,VoiceConversationControls x1,,,,,,,,,
+overlay:confirm,feature/voice,VoiceSettingsScreen x1,,,,,,,,,
+overlay:confirm,feature/onboarding,OpeningGateScreen x1,,,,,,,,,
+overlay:confirm,feature/diagnostics,StaleFailurePrompt x1,,,,,,,,,
+overlay:confirm,feature/diagnostics,KeptScreen x1,,,,,,,,,
+overlay:confirm,feature/review,ReviewScreens x2,,,,,,,,,
+overlay:confirm,ui/kit-chat,KitAgentCard x1,,,,,,,,,
+overlay:dialog,feature/agenttools,AgentTerminalUi x2,,,,,,,,,
+overlay:dialog,feature/chats,NewConversationScreen x1,,,,,,,,,
+overlay:dialog,feature/chats,ConversationRenameDialog x1,,,,,,,,,
+overlay:dialog,feature/linux,LinuxPackagesScreen x1,,,,,,,,,
+overlay:dialog,feature/linux,LinuxServicesScreen x2,,,,,,,,,
+overlay:dialog,feature/linux,LinuxLocalStoragePanel x1,,,,,,,,,
+overlay:dialog,feature/linux,LinuxIdlePanel x1,,,,,,,,,
+overlay:dialog,feature/chat,ChatWorkSheet x1,,,,,,,,,
+overlay:dialog,feature/chat,ChatHeaderBar x1,x,,,,,,,,DW LG
+overlay:dialog,feature/usage,UsageScreen x1,,,,,,,,,
+overlay:dialog,feature/factsbook,PageScreens x2,,,,,,,,,
+overlay:dialog,feature/factsbook,NeedsYouScreen x1,,,,,,,,,
+overlay:dialog,feature/team,TeamHomeScreen x1,,,,,,,,,
+overlay:dialog,feature/team,TeamProjectPagesScreens x2,,,,,,,,,
+overlay:dialog,feature/team,TeamProjectScreen x1,,,,,,,,,
+overlay:dialog,feature/team,TeamTaskScreen x3,,,,,,,,,
+overlay:dialog,feature/projects,TerminalScreen x1,,,,,,,,,
+overlay:dialog,feature/projects,ProjectsPickerScreen x2,x,,,x,,,,,DW
+overlay:dialog,feature/projects,ProjectWorkspaceSheet x1,x,x,x,x,,,x,x,R
+overlay:dialog,feature/review,ReviewScreens x2,,,,,,,,,
+overlay:menu,feature/terminal,LocalTerminalScreen x1,,,,,,,,,
+overlay:menu,feature/terminal,TerminalScreen x1,,,,,,,,,
+overlay:menu,feature/agenttools,AgentTerminalUi x1,,,,,,,,,
+overlay:menu,feature/chats,ChatsAllScreen x1,,,,,,,,,
+overlay:menu,feature/chats,ChatsScreen x1,x,,,,,,,,DW
+overlay:menu,feature/schedules,SchedulesScreen x1,,,,,,,,,
+overlay:menu,feature/files,FolderScreen x2,x,,,,,,,,DW
+overlay:menu,feature/chat,MessageMenu x1,x,,,,,,,,DW
+overlay:menu,feature/chat,ChatScreen x1,,,,,,,,,
+overlay:menu,feature/chat,ChatHeaderBar x1,x,,,,,,,,DW LG
+overlay:menu,feature/chat,ApprovalChip x1,,,,,,,,,
+overlay:menu,feature/chat,BasicComposerHost x1,x,x,x,x,x,x,x,x,G R
+overlay:menu,feature/chat,SessionRelationsScreen x1,,,,,,,,,
+overlay:menu,feature/team,TeamBoardScreen x1,,,,,,,,,
+overlay:menu,feature/team,TeamProjectScreen x1,,,,,,,,,
+overlay:menu,feature/projects,TerminalScreen x2,,,,,,,,,
+overlay:menu,feature/projects,ProjectWorkspaceSheet x1,x,x,x,x,,,x,x,R
+overlay:menu,feature/servers,ServersBrandBar x1,,,,,,,,,
+overlay:menu,feature/integrations-catalog,McpCatalogScreen x1,,,,,,,,,
+overlay:menu,feature/preview,DevPreviewScreen x1,,,,,,,,,
+overlay:menu,feature/devservices,DevServicesScreen x3,,,,,,,,,
+overlay:menu,ui/kit-chat,KitChatHeaderParts x2,,,,,,,,,
+overlay:menu,ui/kit-chat,KitComposerStop x1,,,,,,,,,
