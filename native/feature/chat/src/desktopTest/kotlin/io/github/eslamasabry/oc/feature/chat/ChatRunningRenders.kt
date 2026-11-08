@@ -17,7 +17,6 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -292,8 +291,6 @@ class ChatRunningRenders {
             shoot(Scene.Commands, style, "2-mid-commands")
             shoot(Scene.CommandsSteps, style, "3-mid-commands-steps-shown") {
                 onNodeWithTag("chat-live-line").performClick()
-                // The pointer leaves, as a finger lifts: no hover highlight left on the line.
-                onRoot().performMouseInput { exit() }
             }
             shoot(Scene.Waiting, style, "4-waiting-for-approval")
             shoot(Scene.Failed, style, "5-failed-step")
@@ -311,7 +308,6 @@ class ChatRunningRenders {
             setContent { Screen(Scene.CommandsSteps, Style.Solid, facts, still = false) }
             mainClock.advanceTimeBy(500)
             onNodeWithTag("chat-live-line").performClick()
-            onRoot().performMouseInput { exit() }
             mainClock.advanceTimeBy(600)
             for (frame in 0 until FRAMES) {
                 if (frame % 30 == 0) facts = facts(Scene.CommandsSteps, NOW + frame / 30 * 1_000L)

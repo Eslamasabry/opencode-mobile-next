@@ -102,7 +102,11 @@ class QaWave1ComposerTest {
         onNodeWithContentDescription("Add to this turn", useUnmergedTree = true).assertIsDisplayed()
         val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().size.width
         val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().size.width
-        assertTrue(field >= box * 8 / 10, "the field is $field px of $box px: Stop and steer never squeeze it")
+        // The box holds what it holds with words typed when nothing runs ("+", the words, the small mic, Send): Stop
+        // takes none of its room.
+        assertTrue(field >= box * 6 / 10, "the field is $field px of $box px: Stop and steer never squeeze it")
+        onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true)
+            .assertDoesNotExist()
     }
 
     @Test
