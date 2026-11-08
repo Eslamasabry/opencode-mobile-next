@@ -7,22 +7,15 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.stringResource
-
-@Composable
-internal fun agentInstallLabel(name: String): String =
-    stringResource(Res.string.linuxAgentInstall, name)
 
 /** A durable install is never shown as runtime qualification or sign-in. */
 @Composable
@@ -97,19 +90,9 @@ internal fun AgentInstallPanel(
     val installation = state.phone.installation ?: return
     val name = state.phone.agents.firstOrNull { it.id == installation.id }?.name ?: installation.id
     when (installation.phase) {
-        PhoneAgentInstallPhase.Installing -> {
-            KitLoadingBar(true, stringResource(Res.string.linuxAgentInstalling, name), modifier)
-            KitNotice(stringResource(Res.string.linuxAgentInstallBackground), modifier)
-            KitButton(
-                stringResource(Res.string.linuxAgentInstallCancel),
-                actions::cancelPhoneInstall,
-                modifier,
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-            )
-        }
-        PhoneAgentInstallPhase.Done ->
-            KitNotice(stringResource(Res.string.linuxAgentInstallDone, name), modifier)
+        // Installing and installed read on the agent's tile and in its sheet (with Cancel), not as notices here.
+        PhoneAgentInstallPhase.Installing,
+        PhoneAgentInstallPhase.Done -> Unit
         PhoneAgentInstallPhase.Failed ->
             KitErrorNotice(stringResource(Res.string.linuxAgentInstallFailed, name), modifier)
         PhoneAgentInstallPhase.Interrupted ->

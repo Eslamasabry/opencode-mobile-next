@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -30,12 +29,22 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.feature.agents.hub.AgentsTab
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
+import io.github.eslamasabry.oc.ui.kit.state.KitActionCard
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusLine
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePanel
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -63,8 +72,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentComputerCodex
 import io.github.eslamasabry.oc.ui.words.res.agentComputerCodexNote
 import io.github.eslamasabry.oc.ui.words.res.agentComputerPaseo
 import io.github.eslamasabry.oc.ui.words.res.agentDraftTitle
-import io.github.eslamasabry.oc.ui.words.res.agentsConnectPhoneHelper
-import io.github.eslamasabry.oc.ui.words.res.agentsConnectPhoneHelperFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperMayHaveStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddComputer
@@ -86,7 +93,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHubOnPhone
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSignInFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubStartFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSwitchFailed
-import io.github.eslamasabry.oc.ui.words.res.agentsPhoneHelperConnected
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersion
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionBody
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionFailed
@@ -97,14 +103,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignInsFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartAfterReset
 import io.github.eslamasabry.oc.ui.words.res.agentsRunOnBuiltIn
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
-import io.github.eslamasabry.oc.ui.words.res.agentsStateChecking
-import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
-import io.github.eslamasabry.oc.ui.words.res.agentsStateNotInstalledNoSize
-import io.github.eslamasabry.oc.ui.words.res.agentsStatePhoneCheck
-import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
-import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
-import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
-import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsSupporting
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
@@ -138,11 +136,11 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Agents (Flutter `AgentsScreen` + the Paseo pairing editor). Kit parts only. The phone
- * catalog stays visible before phone setup and while a computer is selected. Payload sizes and
- * actions come from the runtime owner; installation never implies readiness or sign-in.
- * Every computer row has its visible actions (Start conversation, Check agents); adding one is a
- * visible button, never a hidden gesture.
+ * Settings › Agents (owner's pick C2, 2026-11-08): two tabs, "On this phone" and "On computers". The phone tab is
+ * a bento grid of agent tiles (a large mark, the name, one state line, at most one small act; a tap opens the agent's
+ * sheet) with one status line under it. The computers tab leads with "Add a computer" while none is connected, then
+ * each computer's agents as tiles. Settings live in the top bar's ⋯; there is no Refresh row (the page reads on its
+ * own, and a pull reads again) and no "Connect phone agents" button (they connect on their own). Kit parts only.
  */
 @Composable
 public fun AgentsScreen(
@@ -183,6 +181,9 @@ public fun AgentsScreen(
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
+    val fields = ComputerFields(name, address, folder, password)
+    var menuOpen by remember { mutableStateOf(false) }
+    val menu = agentsMenu(state, actions, hub, hubActions) { menuOpen = false }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -190,346 +191,52 @@ public fun AgentsScreen(
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
+                more =
+                    if (menu.isEmpty()) null
+                    else { _ ->
+                        val moreLabel = stringResource(Res.string.kitTopBarMore)
+                        KitMenu(
+                            expanded = menuOpen,
+                            items = menu,
+                            onDismissRequest = { menuOpen = false },
+                            title = moreLabel,
+                        ) {
+                            KitIconButton(KitIcons.more, moreLabel, { menuOpen = true })
+                        }
+                    },
             )
         },
         width = KitScreenWidth.Reading,
+        // No Refresh button: the page reads on its own, and a pull reads again.
+        refresh = KitScreenRefresh(state.refreshing, actions::pullRefresh),
     ) {
         Column(
             Modifier.fillMaxSize()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
             state.issue?.let { IssueNotice(it, gutter) }
-
             KitTip(stringResource(Res.string.whatsNewShowAgents), showArrival, dismissArrival) {
-                KitSectionLabel(stringResource(Res.string.agentsHubOnPhone))
-            }
-            if (state.phone.needsRestart) {
-                KitNotice(stringResource(Res.string.agentsRestartAfterReset), gutter)
-            }
-            if (state.phone.helperStoppedUnexpectedly) {
-                KitNotice(
-                    stringResource(
-                        if (state.phone.helperMayHaveBeenStoppedByAndroid)
-                            Res.string.agentsHelperMayHaveStopped
-                        else Res.string.agentsHelperStopped
+                KitSegmented(
+                    listOf(
+                        KitSegment(AgentsTab.Phone, stringResource(Res.string.agentsHubOnPhone), KitIcons.phone),
+                        KitSegment(AgentsTab.Computers, stringResource(Res.string.agentsTabComputers), KitIcons.computer),
                     ),
+                    state.tab,
+                    stringResource(Res.string.agentsTabsLabel),
                     gutter,
+                    onChange = actions::selectTab,
                 )
             }
-            if (state.resetFailed) {
-                KitErrorNotice(stringResource(Res.string.agentsResetSavedSignInsFailed), gutter)
-            }
-            state.removal?.let { removal ->
-                when (removal) {
-                    is PhoneAgentRemoval.Removed ->
-                        KitNotice(
-                            pluralStringResource(
-                                Res.plurals.linuxAgentPayloadRemoved,
-                                removal.freedBytes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-                                removal.freedBytes,
-                            ),
-                            gutter,
-                        )
-                    is PhoneAgentRemoval.Refused ->
-                        KitErrorNotice(
-                            stringResource(
-                                when (removal.issue) {
-                                    PhoneAgentRemovalIssue.Busy -> Res.string.linuxAgentPayloadBusy
-                                    PhoneAgentRemovalIssue.Unsafe ->
-                                        Res.string.linuxAgentPayloadUnsafe
-                                    PhoneAgentRemovalIssue.Unconfirmed ->
-                                        Res.string.linuxAgentPayloadUnconfirmed
-                                    PhoneAgentRemovalIssue.Unavailable ->
-                                        Res.string.linuxAgentPayloadUnavailable
-                                }
-                            ),
-                            gutter,
-                        )
-                }
-            }
-            hub?.failure?.let { failure ->
-                KitErrorNotice(
-                    stringResource(Res.string.agentsHubSwitchFailed),
-                    gutter,
-                    failure = failure,
-                    detailsLabel = stringResource(Res.string.kitDetails),
-                    copyLabel = stringResource(Res.string.kitCopyDetails),
-                )
-            }
-            state.signOutFailed?.let { name ->
-                KitErrorNotice(stringResource(Res.string.agentsSignOutFailed, name), gutter)
-            }
-            if (state.previousVersionFailed)
-                KitErrorNotice(stringResource(Res.string.agentsPreviousVersionFailed), gutter)
-            if (state.previousVersionRestored)
-                KitNotice(stringResource(Res.string.agentsPreviousVersionRestored), gutter)
-            if (state.helperConnectFailed) {
-                KitErrorNotice(stringResource(Res.string.agentsConnectPhoneHelperFailed), gutter)
-            }
-            if (state.helperConnected) {
-                KitNotice(stringResource(Res.string.agentsPhoneHelperConnected), gutter)
-            }
-            if (state.helperOffered && state.phone.available && !state.phone.needsRestart) {
-                KitButton(
-                    stringResource(Res.string.agentsConnectPhoneHelper),
-                    actions::connectPhoneHelper,
-                    gutter,
-                    enabled = enabled,
-                )
-            }
-            // Phone payloads belong to the runtime owner, even while a computer is selected.
-            val phoneAvailable = state.phone.available
-            AgentInstallPanel(state, actions, gutter, enabled)
-            if (
-                !phoneAvailable && hub?.connection?.builtInAvailable == true && hubActions != null
-            ) {
-                KitButton(
-                    stringResource(Res.string.agentsSwitchToBuiltIn),
-                    hubActions::switchToBuiltIn,
-                    gutter,
-                    enabled =
-                        if (hub.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
-                        else enabled,
-                    working = hub.working,
-                )
-            }
-            if (!phoneAvailable) {
-                KitRow(
-                    title = stringResource(Res.string.agentsHubOnPhone),
-                    supporting = stringResource(Res.string.agentsRunOnBuiltIn),
-                    supportingMaxLines = 3,
-                    leading = KitRowLeading.Glyph(KitIcons.phone),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = actions::openPhone,
-                )
-            }
-            if (state.phone.agents.isNotEmpty()) PhoneAgentRows(state, actions, enabled)
-
-            KitButton(
-                stringResource(Res.string.linuxAgentPayloadRefresh),
-                actions::refreshPhone,
-                gutter,
-                role = KitButtonRole.Tertiary,
-                enabled = enabled,
-            )
-
-            if (phoneAvailable && hub?.connection?.usingBuiltIn != false && hubActions != null) {
-                KitRow(
-                    title = stringResource(Res.string.cardsFromAgentsTitle),
-                    supporting = stringResource(Res.string.cardsFromAgentsSupporting),
-                    supportingMaxLines = 3,
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = hubActions::openCardsSettings,
-                )
-            }
-
-            var morePhoneOptions by remember { mutableStateOf(false) }
-            if (phoneAvailable)
-                KitExpandRow(
-                    stringResource(Res.string.editor40More),
-                    morePhoneOptions,
-                    onExpandedChange = { morePhoneOptions = it },
-                ) {
-                    KitButton(
-                        stringResource(Res.string.agentsResetSavedSignIns),
-                        actions::requestSignInReset,
-                        role = KitButtonRole.Tertiary,
-                        enabled = enabled,
-                    )
-                }
-
-            if (state.draftSources.isNotEmpty()) {
-                KitSectionLabel(stringResource(Res.string.agentDraftTitle))
-                for (source in state.draftSources) {
-                    KitRow(title = source.name, onClick = { actions.openDrafts(source.id) })
-                }
-            }
-
-            if (state.accounts.isNotEmpty()) {
-                KitSectionLabel(stringResource(Res.string.agentAccountsTitle))
-                for (account in state.accounts) {
-                    KitRow(title = account.name, onClick = { actions.openAccount(account.id) })
-                }
-            }
-
-            KitSectionLabel(stringResource(Res.string.agentsHubOnComputers))
-            if (state.computers.isEmpty() && !state.adding) {
-                KitText(stringResource(Res.string.agentsHubComputersEmpty), gutter)
-            }
-            for (computer in state.computers) {
-                val ready = state.ready[computer.id]
-                val readyLine =
-                    when {
-                        ready == null -> null
-                        ready.isEmpty() -> stringResource(Res.string.paseoCheckNoneReady)
-                        else -> stringResource(Res.string.paseoCheckReady, ready.joinToString(", "))
-                    }
-                val link =
-                    if (computer.connected) stringResource(Res.string.serversConnected)
-                    else stringResource(Res.string.agentsHubNotConnected)
-                KitRow(
-                    title = computer.name,
-                    server = computer.folder.ifEmpty { computer.address },
-                    supporting = readyLine ?: link,
-                    supportingMaxLines = 3,
-                )
-                FlowRow(gutter, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    KitButton(
-                        stringResource(Res.string.serversCreate),
-                        { actions.newConversation(computer.id) },
-                        enabled = enabled,
-                    )
-                    KitButton(
-                        stringResource(Res.string.agentsHubCheckAgents),
-                        { actions.readAgents(computer.id) },
-                        role = KitButtonRole.Secondary,
-                        enabled = enabled,
-                    )
-                    KitButton(
-                        stringResource(Res.string.computerToolsOpen),
-                        { actions.openComputer(computer.id) },
-                        role = KitButtonRole.Secondary,
-                    )
-                }
-            }
-
-            if (!state.adding) {
-                KitButton(
-                    stringResource(Res.string.agentsHubAddComputer),
-                    actions::startAdding,
-                    gutter,
-                    role = KitButtonRole.Secondary,
-                    enabled = enabled,
-                )
-            } else {
-                Column(gutter, verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                        for (kind in AgentComputerKind.entries) {
-                            KitButton(
-                                stringResource(
-                                    if (kind == AgentComputerKind.Paseo)
-                                        Res.string.agentComputerPaseo
-                                    else Res.string.agentComputerCodex
-                                ),
-                                { actions.selectComputerKind(kind) },
-                                role =
-                                    if (kind == state.computerKind) KitButtonRole.Primary
-                                    else KitButtonRole.Secondary,
-                                enabled = enabled,
-                            )
-                        }
-                    }
-                    KitNotice(
-                        stringResource(
-                            if (state.computerKind == AgentComputerKind.Paseo)
-                                Res.string.paseoSetupNotice
-                            else Res.string.agentComputerCodexNote
-                        )
-                    )
-                    val invalid = state.check as? ComputerCheck.Invalid
-                    KitField(
-                        address,
-                        stringResource(Res.string.serversAddress),
-                        kind = KitFieldKind.Url,
-                        placeholder =
-                            stringResource(
-                                if (state.computerKind == AgentComputerKind.Codex)
-                                    Res.string.codexAddressHint
-                                else Res.string.paseoAddressHint
-                            ),
-                        error =
-                            if (invalid?.address == true)
-                                stringResource(Res.string.agentsHubInvalidAddress)
-                            else null,
-                        enabled = enabled,
-                    )
-                    KitField(
-                        folder,
-                        stringResource(Res.string.codexProjectFolder),
-                        kind = KitFieldKind.Path,
-                        placeholder = stringResource(Res.string.agentsHubFolderHint),
-                        error =
-                            if (invalid?.folder == true)
-                                stringResource(Res.string.agentsHubInvalidFolder)
-                            else null,
-                        enabled = enabled,
-                    )
-                    KitField(
-                        password,
-                        stringResource(
-                            if (state.computerKind == AgentComputerKind.Codex)
-                                Res.string.codexTokenLabel
-                            else Res.string.paseoPasswordLabel
-                        ),
-                        kind = KitFieldKind.Secret,
-                        helper =
-                            stringResource(
-                                if (state.computerKind == AgentComputerKind.Codex)
-                                    Res.string.codexTokenStorageHelp
-                                else Res.string.paseoPasswordHelp
-                            ),
-                        error =
-                            if (invalid?.password == true)
-                                stringResource(Res.string.agentsHubInvalidPassword)
-                            else null,
-                        enabled = enabled,
-                    )
-                    KitField(
-                        name,
-                        stringResource(Res.string.connectionDisplayName),
-                        placeholder = stringResource(Res.string.agentsHubDefaultName),
-                        enabled = enabled,
-                    )
-                    (state.check as? ComputerCheck.Ready)?.let { ready ->
-                        KitNotice(
-                            if (ready.agents.isEmpty())
-                                stringResource(Res.string.paseoCheckNoneReady)
-                            else
-                                stringResource(
-                                    Res.string.paseoCheckReady,
-                                    ready.agents.joinToString(", "),
-                                )
-                        )
-                    }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                        KitButton(
-                            stringResource(Res.string.agentsHubCheck),
-                            {
-                                actions.check(
-                                    address.text.toString(),
-                                    password.text.toString(),
-                                    folder.text.toString(),
-                                )
-                            },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                            working = state.busy,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serversSave),
-                            {
-                                actions.add(
-                                    name.text.toString(),
-                                    address.text.toString(),
-                                    password.text.toString(),
-                                    folder.text.toString(),
-                                )
-                            },
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serversCancel),
-                            actions::cancelAdding,
-                            role = KitButtonRole.Tertiary,
-                        )
-                    }
-                }
+            when (state.tab) {
+                AgentsTab.Phone -> PhoneTab(state, actions, hub, hubActions, enabled, gutter)
+                AgentsTab.Computers -> ComputersTab(state, actions, enabled, gutter) { AddComputerForm(state, actions, enabled, gutter, fields) }
             }
         }
+        PhoneAgentSheet(state, actions, enabled)
         KitSheet(
             visible = state.revertingAgent != null,
             onDismissRequest = actions::cancelPreviousVersion,
@@ -541,7 +248,7 @@ public fun AgentsScreen(
             dismissible = !state.busy,
             primary =
                 state.revertingAgent?.let { agent ->
-                    io.github.eslamasabry.oc.ui.kit.KitAction(
+                    KitAction(
                         stringResource(Res.string.agentsPreviousVersion, agent.name),
                         actions::confirmPreviousVersion,
                         destructive = true,
@@ -550,7 +257,7 @@ public fun AgentsScreen(
                     )
                 },
             secondary =
-                io.github.eslamasabry.oc.ui.kit.KitAction(
+                KitAction(
                     stringResource(Res.string.serversCancel),
                     actions::cancelPreviousVersion,
                     enabled = enabled,
@@ -565,7 +272,7 @@ public fun AgentsScreen(
             icon = KitIcons.login,
             dismissible = !state.busy,
             primary =
-                io.github.eslamasabry.oc.ui.kit.KitAction(
+                KitAction(
                     stringResource(Res.string.agentsResetSavedSignIns),
                     actions::confirmSignInReset,
                     destructive = true,
@@ -573,7 +280,7 @@ public fun AgentsScreen(
                     working = state.busy,
                 ),
             secondary =
-                io.github.eslamasabry.oc.ui.kit.KitAction(
+                KitAction(
                     stringResource(Res.string.serversCancel),
                     actions::cancelSignInReset,
                     enabled = enabled,
@@ -647,126 +354,351 @@ private fun issueWords(issue: AgentsProblem): String =
         }
     )
 
+
+
+/** The add-a-computer form's fields, kept by the screen so a save can clear them. */
+private class ComputerFields(
+    val name: TextFieldState,
+    val address: TextFieldState,
+    val folder: TextFieldState,
+    val password: TextFieldState,
+)
+
+/** The page's settings, in the top bar's ⋯ (owner 2026-11-08): never rows under the agents. */
 @Composable
-private fun phoneStatusWords(
-    agent: io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
-): String {
-    if (agent.status == PhoneAgentStatus.NotInstalled && !agent.supportedInstallation)
-        return stringResource(Res.string.agentsFailArchitecture)
-    if (agent.status == PhoneAgentStatus.NotInstalled && agent.downloadBytes != null)
-        return stringResource(
-            Res.string.agentsStateNotInstalled,
-            agentPayloadSize(agent.downloadBytes),
-        )
-    return stringResource(
-        when (agent.status) {
-            PhoneAgentStatus.Ready -> Res.string.agentsStateReady
-            PhoneAgentStatus.NotInstalled -> Res.string.agentsStateNotInstalledNoSize
-            PhoneAgentStatus.SignInNeeded -> Res.string.agentsStateSignInNeeded
-            PhoneAgentStatus.Checking -> Res.string.agentsStateChecking
-            PhoneAgentStatus.PhoneCheck -> Res.string.agentsStatePhoneCheck
-            PhoneAgentStatus.Stopped -> Res.string.agentsStateStopped
-            PhoneAgentStatus.Limit -> Res.string.agentsStateLimit
-            PhoneAgentStatus.Unavailable -> Res.string.agentsStateUnavailable
+private fun agentsMenu(
+    state: AgentsUi,
+    actions: AgentsActions,
+    hub: AgentsHubControlsUi?,
+    hubActions: AgentsHubActions?,
+    close: () -> Unit,
+): List<KitMenuItem> {
+    val phoneAvailable = state.phone.available
+    val items = mutableListOf<KitMenuItem>()
+    fun item(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onSelect: () -> Unit) {
+        items += KitMenuItem(label, { close(); onSelect() }, icon = icon)
+    }
+    if (phoneAvailable && hub?.connection?.usingBuiltIn != false && hubActions != null)
+        item(stringResource(Res.string.cardsFromAgentsTitle), KitIcons.category, hubActions::openCardsSettings)
+    val sources = state.draftSources
+    for (source in sources) {
+        item(
+            if (sources.size == 1) stringResource(Res.string.agentsConversationsStored)
+            else stringResource(Res.string.agentsConversationsStoredOn, source.name),
+            KitIcons.database,
+        ) {
+            actions.openDrafts(source.id)
         }
+    }
+    for (account in state.accounts)
+        item(stringResource(Res.string.agentsHostAccount, account.name), KitIcons.account) { actions.openAccount(account.id) }
+    if (phoneAvailable)
+        item(stringResource(Res.string.agentsResetSavedSignIns), KitIcons.login, actions::requestSignInReset)
+    return items
+}
+
+/** "On this phone": the phone's notices, its agent tiles and one status line with Check again. */
+@Composable
+private fun PhoneTab(
+    state: AgentsUi,
+    actions: AgentsActions,
+    hub: AgentsHubControlsUi?,
+    hubActions: AgentsHubActions?,
+    enabled: KitEnabled,
+    gutter: Modifier,
+) {
+    if (state.phone.needsRestart) {
+        KitNotice(stringResource(Res.string.agentsRestartAfterReset), gutter)
+    }
+    if (state.phone.helperStoppedUnexpectedly) {
+        KitNotice(
+            stringResource(
+                if (state.phone.helperMayHaveBeenStoppedByAndroid)
+                    Res.string.agentsHelperMayHaveStopped
+                else Res.string.agentsHelperStopped
+            ),
+            gutter,
+        )
+    }
+    if (state.resetFailed) {
+        KitErrorNotice(stringResource(Res.string.agentsResetSavedSignInsFailed), gutter)
+    }
+    state.removal?.let { removal ->
+        when (removal) {
+            is PhoneAgentRemoval.Removed ->
+                KitNotice(
+                    pluralStringResource(
+                        Res.plurals.linuxAgentPayloadRemoved,
+                        removal.freedBytes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                        removal.freedBytes,
+                    ),
+                    gutter,
+                )
+            is PhoneAgentRemoval.Refused ->
+                KitErrorNotice(
+                    stringResource(
+                        when (removal.issue) {
+                            PhoneAgentRemovalIssue.Busy -> Res.string.linuxAgentPayloadBusy
+                            PhoneAgentRemovalIssue.Unsafe ->
+                                Res.string.linuxAgentPayloadUnsafe
+                            PhoneAgentRemovalIssue.Unconfirmed ->
+                                Res.string.linuxAgentPayloadUnconfirmed
+                            PhoneAgentRemovalIssue.Unavailable ->
+                                Res.string.linuxAgentPayloadUnavailable
+                        }
+                    ),
+                    gutter,
+                )
+        }
+    }
+    hub?.failure?.let { failure ->
+        KitErrorNotice(
+            stringResource(Res.string.agentsHubSwitchFailed),
+            gutter,
+            failure = failure,
+            detailsLabel = stringResource(Res.string.kitDetails),
+            copyLabel = stringResource(Res.string.kitCopyDetails),
+        )
+    }
+    state.signOutFailed?.let { name ->
+        KitErrorNotice(stringResource(Res.string.agentsSignOutFailed, name), gutter)
+    }
+    if (state.previousVersionFailed)
+        KitErrorNotice(stringResource(Res.string.agentsPreviousVersionFailed), gutter)
+    if (state.previousVersionRestored)
+        KitNotice(stringResource(Res.string.agentsPreviousVersionRestored), gutter)
+    // Phone agents connect on their own; only a real failure says so, once, with Try again.
+    PhoneAgentConnectLine(state, actions, gutter)
+    // Phone payloads belong to the runtime owner, even while a computer is selected.
+    val phoneAvailable = state.phone.available
+    AgentInstallPanel(state, actions, gutter, enabled)
+    if (!phoneAvailable && hub?.connection?.builtInAvailable == true && hubActions != null) {
+        KitButton(
+            stringResource(Res.string.agentsSwitchToBuiltIn),
+            hubActions::switchToBuiltIn,
+            gutter,
+            enabled = if (hub.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking)) else enabled,
+            working = hub.working,
+        )
+    }
+    if (!phoneAvailable) {
+        KitRow(
+            title = stringResource(Res.string.agentsHubOnPhone),
+            supporting = stringResource(Res.string.agentsRunOnBuiltIn),
+            supportingMaxLines = 3,
+            leading = KitRowLeading.Glyph(KitIcons.phone),
+            trailing = KitRowTrailing.Chevron,
+            onClick = actions::openPhone,
+        )
+    }
+    if (state.phone.agents.isNotEmpty()) PhoneAgentTiles(state, actions)
+    PhoneStatusLine(state, actions, enabled)
+}
+
+/** "This phone is ready · arm64 · Android 15" with Check again, under the tiles (it replaces "Check this phone"). */
+@Composable
+private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
+    if (!state.phone.available || state.phone.needsRestart) return
+    val device = state.phone.device
+    KitStatusLine(
+        if (device == null) stringResource(Res.string.agentsPhoneReady)
+        else stringResource(Res.string.agentsPhoneReadyDetails, device.processor, device.android),
+        tone = StatusTone.Ok,
+        action =
+            KitLineAction(
+                stringResource(Res.string.agentsCheckAgain),
+                actions::checkPhoneAgents,
+                enabled = enabled.isEnabled,
+                disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            ),
+        quiet = true,
     )
 }
 
-/** No agent sheet is fabricated: only actions actually present in AgentsActions are offered. */
+/**
+ * "On computers": with no computer connected, the one call to add one comes first; then each computer's agents as
+ * tiles under its name, and the add form or a quiet Add a computer at the end.
+ */
 @Composable
-private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
-    if (state.phone.agents.isEmpty()) {
-        KitText(
-            stringResource(Res.string.agentsChecking),
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+private fun ComputersTab(
+    state: AgentsUi,
+    actions: AgentsActions,
+    enabled: KitEnabled,
+    gutter: Modifier,
+    form: @Composable () -> Unit,
+) {
+    // The phone's own helper is not a computer.
+    val shown = state.computers.filter { it.id != state.phone.conversations }
+    if (shown.none { it.connected } && !state.adding) {
+        KitActionCard(
+            KitIcons.computer,
+            stringResource(Res.string.agentsAddComputerLine),
+            KitAction(stringResource(Res.string.agentsHubAddComputer), actions::startAdding, enabled = enabled),
+            gutter,
         )
     }
-    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        for (agent in state.phone.agents) {
-            KitSurfacePanel(
-                Modifier.padding(
-                    horizontal = LocalKitTokens.current.gutter.dp,
-                    vertical = Space.S1.dp,
+    if (state.adding) form()
+    for (computer in shown) {
+        KitRow(
+            title = computer.name,
+            server = computer.folder.ifEmpty { computer.address },
+            supporting =
+                stringResource(if (computer.connected) Res.string.serversConnected else Res.string.agentsHubNotConnected),
+            leading = KitRowLeading.Glyph(KitIcons.computer),
+            // A named way to the computer's page (update its agents, import conversations), never a bare chevron.
+            trailing =
+                KitRowTrailing.Action(
+                    KitLineAction(stringResource(Res.string.computerToolsOpen), { actions.openComputer(computer.id) })
+                ),
+        )
+        val ready = state.ready[computer.id]
+        when {
+            computer.id in state.unreadComputers ->
+                KitText(stringResource(Res.string.agentsComputerReadFailed), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            ready == null ->
+                KitText(stringResource(Res.string.agentsComputerLooking), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            ready.isEmpty() ->
+                KitText(stringResource(Res.string.paseoCheckNoneReady), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            else -> ComputerAgentTiles(computer.id, ready, actions, gutter)
+        }
+    }
+    if (shown.any { it.connected } && !state.adding) {
+        KitButton(
+            stringResource(Res.string.agentsHubAddComputer),
+            actions::startAdding,
+            gutter,
+            role = KitButtonRole.Secondary,
+            icon = KitIcons.add,
+            enabled = enabled,
+        )
+    }
+}
+
+@Composable
+private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled, gutter: Modifier, fields: ComputerFields) {
+    val address = fields.address
+    val folder = fields.folder
+    val password = fields.password
+    val name = fields.name
+    Column(gutter, verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            for (kind in AgentComputerKind.entries) {
+                KitButton(
+                    stringResource(
+                        if (kind == AgentComputerKind.Paseo)
+                            Res.string.agentComputerPaseo
+                        else Res.string.agentComputerCodex
+                    ),
+                    { actions.selectComputerKind(kind) },
+                    role =
+                        if (kind == state.computerKind) KitButtonRole.Primary
+                        else KitButtonRole.Secondary,
+                    enabled = enabled,
                 )
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    val menu = buildList {
-                        if (agent.signOutAvailable)
-                            add(
-                                KitMenuItem(
-                                    stringResource(
-                                        Res.string.agentsSignOutAction,
-                                        agent.name,
-                                    ),
-                                    { actions.requestSignOut(agent.id) },
-                                    enabled = enabled,
-                                )
-                            )
-                        if (agent.previousVersionAvailable)
-                            add(
-                                KitMenuItem(
-                                    stringResource(
-                                        Res.string.agentsPreviousVersion,
-                                        agent.name,
-                                    ),
-                                    { actions.requestPreviousVersion(agent.id) },
-                                    enabled = enabled,
-                                )
-                            )
-                        if (agent.removable)
-                            add(
-                                KitMenuItem(
-                                    stringResource(
-                                        Res.string.linuxAgentPayloadRemove,
-                                        agent.name,
-                                    ),
-                                    { actions.requestRemoval(agent.id) },
-                                    destructive = true,
-                                    enabled = enabled,
-                                )
-                            )
-                    }
-                    KitRow(
-                        title = agent.name,
-                        supporting = phoneStatusWords(agent),
-                        supportingMaxLines = 3,
-                        leading = KitRowLeading.Logo(agent.id, agent.name, agent = true),
-                        trailing =
-                            if (menu.isEmpty()) KitRowTrailing.None
-                            else KitRowTrailing.Menu(agent.name, menu, title = agent.name),
-                    )
-                    when {
-                        agent.status == PhoneAgentStatus.NotInstalled &&
-                            agent.supportedInstallation ->
-                            KitButton(
-                                agentInstallLabel(agent.name),
-                                { actions.requestInstall(agent.id) },
-                                enabled = enabled,
-                            )
-                        agent.signInAvailable ->
-                            KitButton(
-                                stringResource(Res.string.agentsSignInAction, agent.name),
-                                { actions.signInPhone(agent.id) },
-                                enabled = enabled,
-                            )
-                    }
-                }
             }
         }
-        if (
-            state.phone.agents.any {
-                it.status != PhoneAgentStatus.NotInstalled &&
-                    it.status != PhoneAgentStatus.Unavailable
-            }
-        ) {
-            KitRow(
-                title = stringResource(Res.string.agentsCheckTitle),
-                leading = KitRowLeading.Glyph(KitIcons.phone),
-                trailing = KitRowTrailing.Chevron,
-                enabled = enabled.isEnabled,
-                disabledReason =
-                    if (enabled.isEnabled) null else stringResource(Res.string.agentsCheckTitle),
-                onClick = actions::checkPhoneAgents,
+        KitNotice(
+            stringResource(
+                if (state.computerKind == AgentComputerKind.Paseo)
+                    Res.string.paseoSetupNotice
+                else Res.string.agentComputerCodexNote
+            )
+        )
+        val invalid = state.check as? ComputerCheck.Invalid
+        KitField(
+            address,
+            stringResource(Res.string.serversAddress),
+            kind = KitFieldKind.Url,
+            placeholder =
+                stringResource(
+                    if (state.computerKind == AgentComputerKind.Codex)
+                        Res.string.codexAddressHint
+                    else Res.string.paseoAddressHint
+                ),
+            error =
+                if (invalid?.address == true)
+                    stringResource(Res.string.agentsHubInvalidAddress)
+                else null,
+            enabled = enabled,
+        )
+        KitField(
+            folder,
+            stringResource(Res.string.codexProjectFolder),
+            kind = KitFieldKind.Path,
+            placeholder = stringResource(Res.string.agentsHubFolderHint),
+            error =
+                if (invalid?.folder == true)
+                    stringResource(Res.string.agentsHubInvalidFolder)
+                else null,
+            enabled = enabled,
+        )
+        KitField(
+            password,
+            stringResource(
+                if (state.computerKind == AgentComputerKind.Codex)
+                    Res.string.codexTokenLabel
+                else Res.string.paseoPasswordLabel
+            ),
+            kind = KitFieldKind.Secret,
+            helper =
+                stringResource(
+                    if (state.computerKind == AgentComputerKind.Codex)
+                        Res.string.codexTokenStorageHelp
+                    else Res.string.paseoPasswordHelp
+                ),
+            error =
+                if (invalid?.password == true)
+                    stringResource(Res.string.agentsHubInvalidPassword)
+                else null,
+            enabled = enabled,
+        )
+        KitField(
+            name,
+            stringResource(Res.string.connectionDisplayName),
+            placeholder = stringResource(Res.string.agentsHubDefaultName),
+            enabled = enabled,
+        )
+        (state.check as? ComputerCheck.Ready)?.let { ready ->
+            KitNotice(
+                if (ready.agents.isEmpty())
+                    stringResource(Res.string.paseoCheckNoneReady)
+                else
+                    stringResource(
+                        Res.string.paseoCheckReady,
+                        ready.agents.joinToString(", "),
+                    )
+            )
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            KitButton(
+                stringResource(Res.string.agentsHubCheck),
+                {
+                    actions.check(
+                        address.text.toString(),
+                        password.text.toString(),
+                        folder.text.toString(),
+                    )
+                },
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+                working = state.busy,
+            )
+            KitButton(
+                stringResource(Res.string.serversSave),
+                {
+                    actions.add(
+                        name.text.toString(),
+                        address.text.toString(),
+                        password.text.toString(),
+                        folder.text.toString(),
+                    )
+                },
+                enabled = enabled,
+            )
+            KitButton(
+                stringResource(Res.string.serversCancel),
+                actions::cancelAdding,
+                role = KitButtonRole.Tertiary,
             )
         }
     }
