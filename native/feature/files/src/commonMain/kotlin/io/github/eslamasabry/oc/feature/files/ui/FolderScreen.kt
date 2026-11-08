@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -245,6 +246,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     })
                 else null,
             width = KitScreenWidth.List,
+            edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                 if (state.actionFailure != null)

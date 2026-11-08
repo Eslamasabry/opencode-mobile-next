@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.layout.Arrangement
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -304,7 +305,8 @@ public fun KitStateView(
     }
 
     if (!page) {
-        Box(capped.padding(start = tokens.gutter.dp, top = tokens.gutter.dp, end = tokens.gutter.dp, bottom = Space.S2.dp)) {
+        val side = kitPageGutter()
+        Box(capped.padding(start = side, top = tokens.gutter.dp, end = side, bottom = Space.S2.dp)) {
             column()
         }
         return
@@ -317,7 +319,7 @@ public fun KitStateView(
                 .heightIn(min = if (bounded) maxHeight else 0.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Box(Modifier.padding(horizontal = tokens.gutter.dp, vertical = FlutterKitTokens.STATE_VERTICAL_PADDING.dp)) {
+            Box(Modifier.padding(horizontal = kitPageGutter(), vertical = FlutterKitTokens.STATE_VERTICAL_PADDING.dp)) {
                 column()
             }
         }
@@ -368,7 +370,7 @@ private fun CalmState(
                 .then(if (bounded) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                 .heightIn(min = if (bounded) maxHeight else 0.dp)
                 .padding(bottom = end)
-                .padding(horizontal = tokens.gutter.dp)
+                .padding(horizontal = kitPageGutter())
                 .semantics { liveRegion = LiveRegionMode.Polite },
             verticalArrangement = if (spread) Arrangement.SpaceBetween else Arrangement.Center,
         ) {

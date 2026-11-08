@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev loop: an amber icon, so the dev copy is never mistaken for the real or the preview app. -->
+<resources><color name="launcher_background">#2B1A00</color></resources>

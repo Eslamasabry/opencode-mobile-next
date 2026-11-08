@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Agents page bento tiles and the automatic phone-agent connection (native/agents-bento, 2026-11-08). -->
+<resources>
+    <string name="agentsTileInstalling">جارٍ التثبيت…</string>
+    <string name="agentsHelperNotConnected">وكلاء الهاتف غير متصلين.</string>
+    <string name="agentsHelperNotStarted">وكلاء الهاتف غير متصلين: لم يبدأ مساعد الوكلاء.</string>
+    <string name="agentsHelperNoAnswer">وكلاء الهاتف غير متصلين: لم يستجب مساعد الوكلاء.</string>
+    <string name="agentsHelperKeyRefused">وكلاء الهاتف غير متصلين: لم يقبل مساعد الوكلاء مفتاح هذا التطبيق.</string>
+    <string name="agentsHelperKeyUnreadable">وكلاء الهاتف غير متصلين: تعذّر على هذا الهاتف قراءة مفتاح مساعد الوكلاء.</string>
+    <string name="agentsHelperNoLinux">وكلاء الهاتف غير متصلين: لم يُعدّ Linux المدمج في هذا الهاتف.</string>
+    <string name="agentsTabsLabel">أين يعمل الوكلاء</string>
+    <string name="agentsTabComputers">على الحواسيب</string>
+    <string name="agentsPhoneReady">هذا الهاتف جاهز</string>
+    <string name="agentsPhoneReadyDetails">هذا الهاتف جاهز · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">تحقق مجددًا</string>
+    <string name="agentsAddComputerLine">استخدم Claude Code أو Pi على حاسوب يشغّل Paseo.</string>
+    <string name="agentsComputerLooking">جارٍ البحث عن وكلاء على هذا الحاسوب…</string>
+    <string name="agentsComputerReadFailed">تعذرت قراءة وكلاء هذا الحاسوب. اسحب للأسفل للمحاولة مجددًا.</string>
+    <string name="agentsNewChat">محادثة جديدة</string>
+    <string name="agentsNewChatWith">محادثة جديدة مع %1$s</string>
+    <string name="agentsConversationsStored">أين تُحفظ المحادثات</string>
+    <string name="agentsConversationsStoredOn">أين تُحفظ المحادثات: %1$s</string>
+    <string name="agentsHostAccount">حساب المضيف: %1$s</string>
+</resources>

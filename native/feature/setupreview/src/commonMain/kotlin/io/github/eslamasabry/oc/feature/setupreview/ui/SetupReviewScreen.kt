@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.setupreview.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -69,6 +70,7 @@ public fun SetupReviewScreen(state: SetupReviewUi, actions: SetupReviewActions) 
                         working = state.refreshing,
                     )
                 }),
+        edges = KitScreenEdges.Bleed,
     ) {
         when {
             state.guided != null -> GuidedSetupContent(state.guided, actions)

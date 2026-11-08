@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.WireTag
@@ -26,6 +27,18 @@ public enum class PaseoFailureKind {
 
     /** The daemon answered, but has no agent by the id the app asked for. */
     NotFound,
+
+    /** The daemon answered a file read: the file is over the size it shows (B-184). */
+    FileTooBig,
+
+    /** The daemon answered a file read: there is no such file (moved or deleted). */
+    FileMissing,
+
+    /** The daemon answered a file read: it may not read that file. */
+    FileDenied,
+
+    /** The daemon answered a file read: it will not show this kind of file (binary). */
+    FileNotShowable,
 
     /** `hello.rejected` / close code 4003: the daemon does not speak this app's protocol. */
     IncompatibleProtocol,
@@ -65,6 +78,10 @@ public class PaseoException(
             PaseoFailureKind.DeliveryUnknown -> Failure.Refused(RefusalReason.DispatchUncertain, details)
             PaseoFailureKind.StaleRequest, PaseoFailureKind.ScopeMismatch -> Failure.Refused(RefusalReason.StaleScope, details)
             PaseoFailureKind.NotFound -> Failure.NotFound(tag, details = details)
+            PaseoFailureKind.FileTooBig -> Failure.Media(MediaProblem.FileTooBig, details)
+            PaseoFailureKind.FileMissing -> Failure.Media(MediaProblem.FileMissing, details)
+            PaseoFailureKind.FileDenied -> Failure.Media(MediaProblem.FileDenied, details)
+            PaseoFailureKind.FileNotShowable -> Failure.Media(MediaProblem.FileNotShowable, details)
             PaseoFailureKind.IncompatibleProtocol ->
                 Failure.Incompatible(IncompatibleKind.ProtocolMismatch, details)
         }
@@ -74,6 +91,28 @@ public class PaseoException(
         val DETAILS = Redactor()
     }
 }
+
+/**
+ * What a daemon's file read refusal says, sorted from its own words (`File is too large to display`, `ENOENT`,
+ * `EACCES`, `binary`); every one of these used to read as "couldn't reach your computer". Twin of Flutter's
+ * `_fileReason` (`lib/domain/product_failure.dart`, 39e15ae77). Null when the words match none.
+ */
+internal fun paseoFileReason(reason: String?): PaseoFailureKind? {
+    if (reason == null) return null
+    val text = reason.lowercase()
+    return when {
+        TOO_BIG.containsMatchIn(text) && "file" in text -> PaseoFailureKind.FileTooBig
+        MISSING.containsMatchIn(text) -> PaseoFailureKind.FileMissing
+        DENIED.containsMatchIn(text) -> PaseoFailureKind.FileDenied
+        BINARY.containsMatchIn(text) -> PaseoFailureKind.FileNotShowable
+        else -> null
+    }
+}
+
+private val TOO_BIG = Regex("too large|too big|exceeds? (the )?max")
+private val MISSING = Regex("enoent|no such file|file not found|file does not exist")
+private val DENIED = Regex("eacces|eperm|permission denied|not permitted|outside")
+private val BINARY = Regex("binary|cannot display|unsupported file")
 
 /** Throws the module failure. */
 internal fun paseoFail(kind: PaseoFailureKind, reason: String? = null): Nothing = throw PaseoException(kind, reason)

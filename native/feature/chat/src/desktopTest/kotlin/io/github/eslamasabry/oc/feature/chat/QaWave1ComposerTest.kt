@@ -91,18 +91,22 @@ class QaWave1ComposerTest {
     @Test
     fun `B8 QA wave1 while a reply runs the message box keeps the full width`() = runComposeUiTest {
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(), Actions(), chrome(busy = true)) } } }
-        // Looks pass (owner pick, 2026-11-05): one message box, the words on top and the controls on the row
-        // under them. Stop is the ringed round button; with words typed during a run Send joins the turn
-        // ("Add to this turn") and Stop moves beside the plus. Neither ever shares the words' line.
-        onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
+        // Flutter's composer (owner, 30 Oct 2026; 2026-11-09): Stop is the chip at the end of the strip above the
+        // box for the whole running turn, so the box keeps its one row; with words typed during a run Send joins the
+        // turn ("Add to this turn"). Neither ever squeezes the words.
+        onNodeWithTag("chat-stop-button", useUnmergedTree = true).assertIsDisplayed()
         onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("chat-composer-field")), useUnmergedTree = true)
             .performTextInput("Also check the docs")
         waitForIdle()
-        onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithTag("chat-stop-button", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithContentDescription("Add to this turn", useUnmergedTree = true).assertIsDisplayed()
         val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().size.width
         val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().size.width
-        assertTrue(field >= box * 8 / 10, "the field is $field px of $box px: Stop and steer never squeeze it")
+        // The box holds what it holds with words typed when nothing runs ("+", the words, the small mic, Send): Stop
+        // takes none of its room.
+        assertTrue(field >= box * 6 / 10, "the field is $field px of $box px: Stop and steer never squeeze it")
+        onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true)
+            .assertDoesNotExist()
     }
 
     @Test

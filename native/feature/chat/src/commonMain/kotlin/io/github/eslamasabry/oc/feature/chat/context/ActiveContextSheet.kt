@@ -114,6 +114,7 @@ internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClo
                     onClearFilter = { type = null },
                 )
             }),
+            edges = KitScreenEdges.Bleed,
         ) {
             // Ready carries no refresh-progress flag. Never manufacture a spinner or a timer in the screen.
             KitRefresh(refreshing = false, onRefresh = onRefresh, enabled = ready != null && openId == null) {

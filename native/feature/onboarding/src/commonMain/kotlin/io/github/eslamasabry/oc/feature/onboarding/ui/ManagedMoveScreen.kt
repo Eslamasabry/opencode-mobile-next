@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -41,7 +42,7 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) {
-    KitScreen(width = KitScreenWidth.Reading, page = true) {
+    KitScreen(width = KitScreenWidth.Reading, page = true, edges = KitScreenEdges.Bleed) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val available = maxHeight
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = available)

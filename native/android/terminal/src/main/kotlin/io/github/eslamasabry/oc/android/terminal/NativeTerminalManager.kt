@@ -1,13 +1,11 @@
 package io.github.eslamasabry.oc.android.terminal
 
 import android.app.Application
-import android.content.Context
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.inputmethod.InputMethodManager
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
 import com.termux.view.TerminalView
@@ -363,14 +361,14 @@ internal class TerminalInputClient(private val view: TerminalView) : TerminalVie
 
     override fun onSingleTapUp(event: MotionEvent) {
         if ((view.parent as? TerminalSurfaceHost)?.openLink(event) == true) return
-        view.requestFocus()
-        (view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
-            ?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        showTerminalKeyboard(view)
     }
 
     override fun shouldBackButtonBeMappedToEscape(): Boolean = false
 
-    override fun shouldEnforceCharBasedInput(): Boolean = false
+    // Like the phone's own terminal: character-based input, so keyboards that reset on a null input type (Samsung's) and
+    // voice or swipe typing still send what was typed.
+    override fun shouldEnforceCharBasedInput(): Boolean = true
 
     override fun shouldUseCtrlSpaceWorkaround(): Boolean = false
 

@@ -337,6 +337,9 @@ public interface NewConversationActions {
     /** N-48: Discard the unconfirmed first message: the form opens again, empty. */
     public fun discardUnconfirmed() {}
 
+    /** B-096/B-103: read the unconfirmed first message's record again (the server may be back); frees the form when it is settled. */
+    public fun recheckUnconfirmed() {}
+
     public fun shown() {}
 
     public fun back()
@@ -542,7 +545,13 @@ public class NewConversationViewModel(
                         }
                     } else
                         mutable.update {
-                            it.copy(deliveryUnconfirmed = false, reviewConversation = null)
+                            // attempted too: a record that settled (or is gone) leaves no frame to be stuck in.
+                            it.copy(
+                                deliveryUnconfirmed = false,
+                                attempted = if (before.deliveryUnconfirmed) false else it.attempted,
+                                failure = if (before.deliveryUnconfirmed) null else it.failure,
+                                reviewConversation = null,
+                            )
                         }
                 }
             }
@@ -576,6 +585,13 @@ public class NewConversationViewModel(
                 nav.openChat(ref)
             } else mutable.update { it.copy(reviewConversation = null) }
         }
+    }
+
+    override fun recheckUnconfirmed() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        if (!shown.deliveryUnconfirmed) return
+        viewModelScope.launch { restore(profile, shown.directory) }
     }
 
     override fun discardUnconfirmed() {

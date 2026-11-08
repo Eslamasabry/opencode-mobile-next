@@ -92,6 +92,24 @@ public object AuroraImage {
         return toward(apply(shown, darkest), 0f) to toward(apply(shown, brightest), 1f)
     }
 
+    /**
+     * The spots a clear Glass pane measures its words over (owner 2026-11-09, "crisper": the panes blur less, so the
+     * picture behind them keeps more of its extremes): the frosted spots ([spotsOf]) moved [LIGHT_FROST_SHARE] of the way
+     * to the picture's raw darkest and brightest. Conservative: Flutter measured the frost under a 40 px Gaussian, and
+     * Glass's clear panes still blur 10-12 dp.
+     */
+    public fun clearSpotsOf(ground: Argb, accent: Argb, dark: Boolean): List<Argb> {
+        val (fd, fb) = spotsOf(ground, accent, dark, frosted = true)
+        val (rd, rb) = spotsOf(ground, accent, dark, frosted = false)
+        return listOf(
+            io.github.eslamasabry.oc.ui.design.color.lerp(fd, rd, LIGHT_FROST_SHARE),
+            io.github.eslamasabry.oc.ui.design.color.lerp(fb, rb, LIGHT_FROST_SHARE),
+        )
+    }
+
+    /** How far [clearSpotsOf] moves the frosted spots towards the raw ones. */
+    public const val LIGHT_FROST_SHARE: Float = .25f
+
     /** The drift at [t] seconds: the zoom over the cover scale and the pan as a share of the slack (-.85 .. .85). */
     public data class Drift(val zoom: Float, val panX: Float, val panY: Float)
 

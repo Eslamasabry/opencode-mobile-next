@@ -62,6 +62,7 @@ import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceSkills
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceTips
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceTools
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 
 @Composable
 internal fun searchPlaceWords(place: SearchPlace): Pair<String, String> =
@@ -154,3 +155,40 @@ internal fun searchPlaceWords(place: SearchPlace): Pair<String, String> =
             stringResource(Res.string.nativeSearchPlaceShortcuts) to
                 stringResource(Res.string.nativeSearchAliasesShortcuts)
     }
+
+/** The glyph each place's row leads with under "Settings and pages" (bare, never in a tile). */
+internal fun searchPlaceIcon(place: SearchPlace) = placeIcons.getValue(place)
+
+private val placeIcons by lazy {
+    mapOf(
+        SearchPlace.Chats to KitIcons.chat,
+        SearchPlace.AllConversations to KitIcons.chat,
+        SearchPlace.Projects to KitIcons.folders,
+        SearchPlace.ProjectFiles to KitIcons.files,
+        SearchPlace.ProjectChanges to KitIcons.branch,
+        SearchPlace.ProjectTerminal to KitIcons.terminal,
+        SearchPlace.ProjectHealth to KitIcons.heartbeat,
+        SearchPlace.ProjectWorktrees to KitIcons.fork,
+        SearchPlace.ProjectSearch to KitIcons.searchList,
+        SearchPlace.Settings to KitIcons.settingsGear,
+        SearchPlace.Models to KitIcons.model,
+        SearchPlace.Providers to KitIcons.cloud,
+        SearchPlace.Integrations to KitIcons.extensions,
+        SearchPlace.Commands to KitIcons.code,
+        SearchPlace.Tools to KitIcons.tools,
+        SearchPlace.Skills to KitIcons.idea,
+        SearchPlace.References to KitIcons.bookmarks,
+        SearchPlace.AiSetup to KitIcons.sparkle,
+        SearchPlace.Agents to KitIcons.agent,
+        SearchPlace.Phone to KitIcons.phone,
+        SearchPlace.Running to KitIcons.activity,
+        SearchPlace.Services to KitIcons.processor,
+        SearchPlace.PhoneStorage to KitIcons.storage,
+        SearchPlace.Notifications to KitIcons.notificationImportant,
+        SearchPlace.BackgroundChecks to KitIcons.sync,
+        SearchPlace.Appearance to KitIcons.appearance,
+        SearchPlace.Language to KitIcons.globe,
+        SearchPlace.Tips to KitIcons.guide,
+        SearchPlace.Shortcuts to KitIcons.keyboard,
+    )
+}

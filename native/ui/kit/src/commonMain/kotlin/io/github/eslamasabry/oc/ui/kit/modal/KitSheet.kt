@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
@@ -588,6 +589,8 @@ private fun SheetPanel(
                 LocalSheetKeyboard.current?.let { Modifier.padding(bottom = it) }
                     ?: Modifier.imePadding()
             )
+            // Glass keeps its pane inset inside the sheet (owner 2026-11-09): room for the rim, sheen and lens.
+            .padding(kitPaneInset())
     ) {
         if (handle) {
             val scope = rememberCoroutineScope()

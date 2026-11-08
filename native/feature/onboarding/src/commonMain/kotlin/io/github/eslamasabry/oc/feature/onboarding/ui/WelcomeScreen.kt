@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,6 +84,7 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
                     ),
             )
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize().testTag("welcome-body")) {
             Column(

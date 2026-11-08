@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.shell.widgets.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,6 +50,7 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
         width = KitScreenWidth.Reading,
         loading = state.loading || state.saving,
         loadingLabel = saving,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(Space.S4.dp),

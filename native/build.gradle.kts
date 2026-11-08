@@ -11,6 +11,8 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.metro) apply false
+    // Dev loop (tool/dev/README.md): Compose Hot Reload, applied only with -Poc.hotReload=true (ADR §4 row 16 trial).
+    alias(libs.plugins.compose.hotreload) apply false
     // Applied by :androidApp only when the private Firebase config is present (OC_GOOGLE_SERVICES_DIR).
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.firebase.crashlytics) apply false

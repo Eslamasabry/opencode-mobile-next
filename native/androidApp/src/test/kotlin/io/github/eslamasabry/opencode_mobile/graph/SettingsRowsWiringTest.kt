@@ -27,8 +27,6 @@ class SettingsRowsWiringTest {
             opens = SETTINGS_OPENS,
             phraseChips = true,
             transcriptDisplay = true,
-            // B-190: a build carrying the private Firebase config (Send a problem report).
-            problemReport = true,
         )
 
     private fun rows(facts: SettingsFacts) =

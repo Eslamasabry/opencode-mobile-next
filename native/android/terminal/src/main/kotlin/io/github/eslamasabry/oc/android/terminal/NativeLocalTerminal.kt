@@ -5,7 +5,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.inputmethod.InputMethodManager
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
 import com.termux.view.TerminalView
@@ -191,9 +190,7 @@ class NativeLocalTerminal(
 
                 override fun onSingleTapUp(e: MotionEvent) {
                     if (held.host.openLink(e)) return
-                    held.view.requestFocus()
-                    (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
-                        .showSoftInput(held.view, InputMethodManager.SHOW_IMPLICIT)
+                    showTerminalKeyboard(held.view)
                 }
 
                 override fun onCopyTextToClipboard(session: TerminalSession, text: String) {

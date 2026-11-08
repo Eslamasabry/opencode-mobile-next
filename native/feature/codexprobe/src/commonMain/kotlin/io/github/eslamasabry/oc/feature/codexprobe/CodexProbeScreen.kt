@@ -43,6 +43,7 @@ public fun CodexProbeScreen(state: CodexProbeUi, actions: CodexProbeActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

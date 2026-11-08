@@ -69,6 +69,7 @@ public fun PlansManagementScreen(
         loading = state.busy,
         loadingLabel = words.loading,
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()),

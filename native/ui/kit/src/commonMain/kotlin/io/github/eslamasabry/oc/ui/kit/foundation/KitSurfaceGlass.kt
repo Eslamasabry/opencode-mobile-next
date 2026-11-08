@@ -96,8 +96,10 @@ internal val LocalKitGlassBackdrop: ProvidableCompositionLocal<KitGlassBackdrop?
 internal const val FROST_SATURATION: Float = 1.7f // FG: lib/ui/kit/kit_surface_look.dart:101
 
 /**
- * Draws [paint] (the picture only) behind the content and records it for the panes above ([KitGlassBackdrop]). It also
- * bounds the panes' "once per stack" rule: a pane over this source frosts on its own.
+ * Draws [paint] (the picture only) and records it for the panes above ([KitGlassBackdrop]). It also bounds the panes'
+ * "once per stack" rule: a pane over this source frosts on its own. The live background puts it on a node of its own
+ * behind the page's content ([kitGlassBackdropBoundary] bounds the content), so a step of the picture re-records the
+ * picture alone, never the page.
  */
 internal fun Modifier.kitGlassBackdropSource(backdrop: KitGlassBackdrop, paint: DrawScope.() -> Unit): Modifier =
     this then BackdropSourceElement(backdrop, paint)
@@ -139,11 +141,44 @@ internal fun Modifier.kitGlassStackRoot(): Modifier =
 @Composable
 internal fun kitGlassBlurs(backdrop: KitGlassBackdrop?): Boolean {
     if (backdrop == null || !backdrop.painted) return false
+    return kitGlassFrostAvailable()
+}
+
+/**
+ * Whether a Glass pane can blur a picture here at all: the platform has the blur (Android 12+) and neither reduced motion
+ * nor high contrast holds it. The live background records a shader look for the panes only then.
+ */
+@Composable
+internal fun kitGlassFrostAvailable(): Boolean {
     val platform = LocalKitPlatform.current
     val signals by platform.signals.collectAsState()
     if (LocalKitMotion.current.reduced || signals.highContrast) return false
     val density = LocalDensity.current.density
     return remember(platform, density) { platform.frostEffect(FrostSpec(1f, FROST_SATURATION, 0f), density) != null }
+}
+
+/**
+ * Bounds the panes' "once per stack" rule at a live background (the picture is recorded on a node of its own beside the
+ * content, [kitGlassBackdropSource]): a pane over it frosts on its own. Draws nothing.
+ */
+internal fun Modifier.kitGlassBackdropBoundary(): Modifier = this then BackdropBoundaryElement
+
+private object BackdropBoundaryElement : ModifierNodeElement<BackdropBoundaryNode>() {
+    override fun create(): BackdropBoundaryNode = BackdropBoundaryNode()
+
+    override fun update(node: BackdropBoundaryNode) {}
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitGlassBackdropBoundary"
+    }
+
+    override fun hashCode(): Int = 0x47_42_42
+
+    override fun equals(other: Any?): Boolean = other === this
+}
+
+private class BackdropBoundaryNode : Modifier.Node(), TraversableNode {
+    override val traverseKey: Any get() = GlassTraverseKey
 }
 
 /**
@@ -217,13 +252,11 @@ internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
             )
         }
     }
-    // A clear pane's top sheen (owner 2026-11-08, "more glossy"): lighter at the top, gone 30 % of the way down.
+    // A clear pane's top sheen (owner 2026-11-08, "more glossy"): lighter at the top, gone 30 % of the way down, and at
+    // most SHEEN_MAX_DP down a tall pane (owner 2026-11-09: the gloss is at the top, not over the rows).
     if (d.sheen.alpha > 0) {
         val sheen = Color(d.sheen.v)
-        drawOutline(
-            outline,
-            Brush.verticalGradient(listOf(sheen, sheen.copy(alpha = 0f)), startY = 0f, endY = size.height * SurfaceDecoration.SHEEN_SHARE),
-        )
+        drawOutline(outline, Brush.verticalGradient(listOf(sheen, sheen.copy(alpha = 0f)), startY = 0f, endY = sheenDepthPx()))
     }
     // The glow inside the face along its top edge, fading out innerGlowDepth down (kit_surface_paint.dart:92-106).
     if (d.innerGlow.alpha > 0) {
@@ -265,7 +298,49 @@ internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
             }
         }
     }
+    // The specular over the rim (owner 2026-11-09, "crisper glossy glass"): a bright segment at the top start and a thin
+    // line just inside the top edge. Crisp, never blurred.
+    if (d.specular.alpha > 0) {
+        val top = if (d.circle) minOf(size.width, size.height) / 2f else d.radii.topStart.dp.toPx()
+        drawGlassSpecular(shape, Color(d.specular.v), rtl, top, d.edgeWidthDp)
+    }
 }
+
+/** How far down a face its sheen reaches: [SurfaceDecoration.SHEEN_SHARE] of it, at most [SurfaceDecoration.SHEEN_MAX_DP]. */
+internal fun DrawScope.sheenDepthPx(): Float =
+    minOf(size.height * SurfaceDecoration.SHEEN_SHARE, SurfaceDecoration.SHEEN_MAX_DP.dp.toPx())
+
+/**
+ * Glass's specular light on a face of [shape] (in-flow panes and liquid panes alike; owner 2026-11-09): a bright
+ * segment of the 1 dp rim round the top-start corner, fading along both edges within [SPECULAR_REACH_DP] (at most
+ * [SPECULAR_REACH_SHARE] of the width), and a thin line [SurfaceDecoration.GLINT_DROP_DP] inside the top edge, between
+ * the top corners, brightest a quarter of the way from the start and gone at both ends ([SurfaceDecoration.GLINT_SHARE]
+ * of [color]). [topRadiusPx] is the top-start corner's radius. Both are crisp strokes clipped to the face.
+ */
+internal fun DrawScope.drawGlassSpecular(shape: Shape, color: Color, rtl: Boolean, topRadiusPx: Float, rimDp: Float = 1f) {
+    val w = rimDp.coerceIn(1f, 1.5f).dp.toPx()
+    if (size.width <= w * 4f || size.height <= w * 4f || color.alpha <= 0f) return
+    val corner = Offset(if (rtl) size.width else 0f, 0f)
+    val reach = minOf(SPECULAR_REACH_DP.dp.toPx(), size.width * SPECULAR_REACH_SHARE)
+    val segment = Brush.radialGradient(0f to color, .45f to color.copy(alpha = color.alpha * .55f), 1f to color.copy(alpha = 0f), center = corner, radius = reach)
+    inset(w / 2f) { drawOutline(shape.createOutline(size, layoutDirection, this), segment, style = Stroke(w)) }
+    // The glint: one thin line inside the top edge, clear of the corners' curve.
+    val y = SurfaceDecoration.GLINT_DROP_DP.dp.toPx()
+    val margin = maxOf(topRadiusPx * .8f, w * 4f)
+    val x0 = margin
+    val x1 = size.width - margin
+    if (x1 - x0 < w * 8f || y + w >= size.height / 2f) return
+    val glint = color.copy(alpha = color.alpha * SurfaceDecoration.GLINT_SHARE)
+    val peak = if (rtl) .75f else .25f
+    val brush = Brush.horizontalGradient(0f to Color.Transparent, peak to glint, 1f to Color.Transparent, startX = x0, endX = x1)
+    clipPath(Path().apply { addOutline(shape.createOutline(size, layoutDirection, this@drawGlassSpecular)) }) {
+        drawLine(brush, Offset(x0, y), Offset(x1, y), strokeWidth = w)
+    }
+}
+
+/** How far the specular's bright rim segment reaches from the top-start corner, in dp, and at most this share of the width. */
+internal const val SPECULAR_REACH_DP: Float = 120f
+internal const val SPECULAR_REACH_SHARE: Float = .45f
 
 /**
  * Records [block] into [layer] in the layer's own draw scope, with a snapshot of this scope's density, direction and

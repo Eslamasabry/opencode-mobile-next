@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -85,6 +86,7 @@ public fun TeamBoardScreen(state: TeamBoardUi, actions: TeamBoardActions) {
                 }),
         loading = state.phase == TeamPhase.Loading,
         loadingLabel = stringResource(Res.string.teamProjectLoad),
+        edges = KitScreenEdges.Bleed,
     ) {
         when {
             state.phase == TeamPhase.Loading -> Unit

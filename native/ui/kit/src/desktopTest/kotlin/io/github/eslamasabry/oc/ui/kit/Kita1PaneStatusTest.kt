@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
@@ -39,6 +40,7 @@ class Kita1PaneStatusTest {
                                         KitScreen(
                                             page = true,
                                             status = KitStatus(KitStatusKind.Work, "Working"),
+                                            edges = KitScreenEdges.Bleed,
                                         ) {
                                             KitText("Detail")
                                         }

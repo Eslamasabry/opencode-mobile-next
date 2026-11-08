@@ -8,8 +8,10 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.agents.account.AgentAccountController
 import kotlin.time.Clock
 import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,8 +39,85 @@ public class AgentsPresenter(
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi(helperOffered = phoneHost != null))
 
+    /** The running helper connection, the installed agents it was last tried for, and a wish to run once more. */
+    private var connectJob: Job? = null
+    private var triedFor: Set<String> = emptySet()
+    private var connectAgain = false
+    private var followJob: Job? = null
+    private var readJob: Job? = null
+
     init {
         refreshPhone()
+        // Phone agents connect on their own, as in Flutter: when the page opens with an agent installed, and again when
+        // another agent finishes installing. Nothing is tried, and so nothing fails, while no agent is installed.
+        if (phoneHost != null) scope.launch { phone.state.collect(::connectWhenInstalled) }
+        // No Refresh button: while an agent installs, its tile follows the install on its own.
+        scope.launch { phone.state.collect(::followInstall) }
+    }
+
+    private fun installing(phoneState: PhoneAgentsState): Boolean =
+        phoneState.installation?.phase == PhoneAgentInstallPhase.Installing
+
+    private fun followInstall(phoneState: PhoneAgentsState) {
+        if (!installing(phoneState) || followJob?.isActive == true) return
+        followJob =
+            scope.launch {
+                while (installing(phone.state.value)) {
+                    delay(INSTALL_FOLLOW_MS)
+                    phone.refresh()
+                }
+            }
+    }
+
+    override fun selectTab(tab: AgentsTab) {
+        local.update { it.copy(tab = tab) }
+        if (tab == AgentsTab.Computers) readComputers(force = false)
+    }
+
+    override fun pullRefresh() {
+        if (local.value.refreshing) return
+        local.update { it.copy(refreshing = true) }
+        scope.launch {
+            try {
+                phone.refresh()
+                if (local.value.tab == AgentsTab.Computers) readComputers(force = true)?.join()
+            } finally {
+                local.update { it.copy(refreshing = false) }
+            }
+        }
+    }
+
+    override fun newPhoneConversation() {
+        val id = phone.state.value.conversations ?: return
+        newConversation(id)
+    }
+
+    /** Reads each computer's ready agents (not the phone's own helper profile), without blocking the page. */
+    private fun readComputers(force: Boolean): Job? {
+        if (readJob?.isActive == true) return readJob
+        val phoneProfile = phone.state.value.conversations
+        val targets =
+            computers.computers.value.filter {
+                it.id != phoneProfile && (force || it.id !in local.value.ready)
+            }
+        if (targets.isEmpty()) return null
+        readJob =
+            scope.launch {
+                for (computer in targets) {
+                    when (val result = computers.agents(computer.id)) {
+                        is Outcome.Ok ->
+                            local.update {
+                                it.copy(
+                                    ready = (it.ready + (computer.id to result.value)).toPersistentMap(),
+                                    unreadComputers = (it.unreadComputers - computer.id).toPersistentSet(),
+                                )
+                            }
+                        is Outcome.Failed ->
+                            local.update { it.copy(unreadComputers = (it.unreadComputers + computer.id).toPersistentSet()) }
+                    }
+                }
+            }
+        return readJob
     }
 
     public val state: StateFlow<AgentsUi> =
@@ -79,6 +158,7 @@ public class AgentsPresenter(
 
     override fun back() {
         when {
+            local.value.sheetAgent != null -> closeAgent()
             local.value.installingAgent != null -> dismissInstall()
             local.value.draftSource != null -> closeDrafts()
             local.value.accountTarget != null -> closeAccount()
@@ -345,7 +425,7 @@ public class AgentsPresenter(
                     it.supportedInstallation &&
                     it.status == PhoneAgentStatus.NotInstalled
             } ?: return
-        local.update { it.copy(installingAgent = agent, installIssue = null) }
+        local.update { it.copy(installingAgent = agent, installIssue = null, sheetAgent = null) }
     }
 
     override fun dismissInstall() {
@@ -394,6 +474,7 @@ public class AgentsPresenter(
                 ?: return
         local.update {
             it.copy(
+                sheetAgent = null,
                 revertingAgent = agent,
                 previousVersionFailed = false,
                 previousVersionRestored = false,
@@ -416,19 +497,60 @@ public class AgentsPresenter(
                     previousVersionRestored = result is Outcome.Ok,
                 )
             }
+            // The helper stopped for the switch: phone agents connect again on their own.
+            if (result is Outcome.Ok && connectable(phone.state.value)) connectHelper()
         }
     }
 
-    override fun connectPhoneHelper(): Unit = operation {
-        val host = phoneHost ?: return@operation
-        val result = host.connect()
-        local.update {
-            it.copy(
-                helperConnectFailed = result is Outcome.Failed,
-                helperConnected = result is Outcome.Ok,
-            )
+    override fun openAgent(id: String) {
+        if (phone.state.value.agents.any { it.id == id }) local.update { it.copy(sheetAgent = id) }
+    }
+
+    override fun closeAgent() {
+        local.update { it.copy(sheetAgent = null) }
+    }
+
+    /** "Try again" on the failure line: the same connection the page makes on its own. */
+    override fun connectPhoneHelper() {
+        if (phoneHost == null || !connectable(phone.state.value)) return
+        connectHelper()
+    }
+
+    private fun connectWhenInstalled(phoneState: PhoneAgentsState) {
+        if (!connectable(phoneState)) return
+        val installed = phoneInstalledAgents(phoneState)
+        if (triedFor.containsAll(installed)) return
+        triedFor = triedFor + installed
+        connectHelper()
+    }
+
+    private fun connectable(phoneState: PhoneAgentsState): Boolean =
+        phoneState.available && !phoneState.needsRestart && phoneInstalledAgents(phoneState).isNotEmpty()
+
+    private fun connectHelper() {
+        val host = phoneHost ?: return
+        if (connectJob?.isActive == true) {
+            connectAgain = true
+            return
         }
-        phone.refresh()
+        connectJob =
+            scope.launch {
+                // A connect asked for while one runs (Try again, another install) runs once more after it.
+                do {
+                    connectAgain = false
+                    local.update { it.copy(helperConnecting = true, helperConnectFailed = false, helperConnectFailure = null) }
+                    val result = host.connect()
+                    local.update {
+                        it.copy(
+                            helperConnecting = false,
+                            helperConnectFailed = result is Outcome.Failed,
+                            helperConnectFailure = (result as? Outcome.Failed)?.failure,
+                            helperConnected = result is Outcome.Ok,
+                        )
+                    }
+                    phone.refresh()
+                } while (connectAgain && connectable(phone.state.value))
+            }
     }
 
     override fun requestSignInReset() {
@@ -455,7 +577,7 @@ public class AgentsPresenter(
         if (local.value.busy) return
         val agent =
             phone.state.value.agents.firstOrNull { it.id == id && it.signOutAvailable } ?: return
-        local.update { it.copy(signingOutAgent = agent, signOutFailed = null) }
+        local.update { it.copy(signingOutAgent = agent, signOutFailed = null, sheetAgent = null) }
     }
 
     override fun cancelSignOut() {
@@ -477,7 +599,7 @@ public class AgentsPresenter(
     override fun requestRemoval(id: String) {
         if (local.value.busy) return
         val agent = phone.state.value.agents.firstOrNull { it.id == id && it.removable } ?: return
-        local.update { it.copy(removingAgent = agent, removal = null) }
+        local.update { it.copy(removingAgent = agent, removal = null, sheetAgent = null) }
     }
 
     override fun cancelRemoval() {
@@ -512,5 +634,10 @@ public class AgentsPresenter(
 
     private fun failed(kind: AgentsIssue, failure: Failure) {
         local.update { it.copy(issue = AgentsProblem(kind, failure)) }
+    }
+
+    private companion object {
+        /** How often a running install is read again (the old "Tap Refresh to read its latest progress"). */
+        const val INSTALL_FOLLOW_MS = 2_000L
     }
 }

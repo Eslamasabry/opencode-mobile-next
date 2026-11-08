@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -135,6 +136,7 @@ public fun TriggersScreen(state: TriggersUi, actions: TriggersActions) {
                     )
                 }
             },
+        edges = KitScreenEdges.Bleed,
     ) {
         when (state.load) {
             TriggersLoad.Unavailable ->
@@ -264,6 +266,7 @@ public fun RuleEditorScreen(state: RuleEditorUi, actions: RuleEditorActions) {
                         ),
                 )
             },
+            edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(Modifier.fillMaxSize()) {
                 if (!state.canApprove) item("owner") { OwnerNotice(stringResource(Res.string.fbRuleNeedsOwner), actions::setUpApproval) }
@@ -549,6 +552,7 @@ public fun EventScreen(state: EventUi, actions: EventActions) {
         width = KitScreenWidth.Reading,
         loading = state.loading && event != null,
         loadingLabel = title,
+        edges = KitScreenEdges.Bleed,
     ) {
         when {
             event == null && state.error == null -> KitSkeletonRows()

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.relations.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -77,6 +78,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
             )
         },
         width = KitScreenWidth.List,
+        edges = KitScreenEdges.Bleed,
     ) {
         val tokens = LocalKitTokens.current
         KitRefresh(

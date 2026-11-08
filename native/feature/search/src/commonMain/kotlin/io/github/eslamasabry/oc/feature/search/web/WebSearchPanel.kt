@@ -14,21 +14,18 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * The web search's own field, provider and results, shown while the screen's Web chip is on (B1: the chip replaced
+ * this panel's switch row; [webOption] tells the screen whether to offer it).
+ */
 @Composable
 public fun WebSearchPanel(state: WebSearchUi, actions: WebSearchActions) {
-    if (!state.available && !state.open) return
+    if (!state.open && state.review == null) return
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        KitSwitchRow(
-            title = stringResource(Res.string.protoWebSearch),
-            supporting = stringResource(Res.string.protoWebSearchHelp),
-            checked = state.open,
-            onCheckedChange = { actions.toggle() },
-        )
         if (state.open) {
             val query = rememberTextFieldState()
             val held =
@@ -88,3 +85,6 @@ public fun WebSearchPanel(state: WebSearchUi, actions: WebSearchActions) {
         )
     }
 }
+
+/** Whether Search offers the Web chip: the server can search the web, or the panel is open already. */
+public fun webOption(state: WebSearchUi): Boolean = state.available || state.open

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,9 +22,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.frame.KitStatusPill
@@ -64,7 +65,6 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
 import io.github.eslamasabry.oc.ui.words.res.sessionOpenRelated
 import io.github.eslamasabry.oc.ui.words.res.sessionCopyHandoff
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
-import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -74,10 +74,10 @@ import io.github.eslamasabry.oc.ui.kit.KitScreen
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE
+import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_SIZE
 import io.github.eslamasabry.oc.ui.kit.action.KitFab
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -86,10 +86,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
-import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
-import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunNamed
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
-import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowNamed
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysConfirm
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysInProject
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
@@ -101,7 +98,16 @@ import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
-import io.github.eslamasabry.oc.ui.kit.row.KitFeedItem
+import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowPanel
+import io.github.eslamasabry.oc.ui.kit.row.KitPanelLinkRow
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
+import androidx.compose.runtime.key
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRun
+import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
@@ -114,15 +120,10 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRowWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
-import io.github.eslamasabry.oc.ui.kit.state.KitSummaryCard
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
-import io.github.eslamasabry.oc.ui.kit.style.KitRunningFeedLine
-import io.github.eslamasabry.oc.ui.kit.style.KitSignalSlip
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.statePin
@@ -132,28 +133,21 @@ import io.github.eslamasabry.oc.ui.words.res.p12DeleteFailed
 import io.github.eslamasabry.oc.ui.words.res.p12Deleted
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
-import io.github.eslamasabry.oc.ui.words.res.chatHomeAllow
 import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
-import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
-import io.github.eslamasabry.oc.ui.words.res.chatHomeReject
-import io.github.eslamasabry.oc.ui.words.res.chatHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeEarlier
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunningCount
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_back
@@ -162,17 +156,10 @@ import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
-import io.github.eslamasabry.oc.ui.words.res.kitRequestOpen
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
-import io.github.eslamasabry.oc.ui.words.res.notifStatusMore
-import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
-import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
-import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefSeen
 import io.github.eslamasabry.oc.ui.words.res.teamProjectDigest
-import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
-import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.eslamasabry.oc.ui.words.res.agentPersonaOtherName
@@ -221,6 +208,7 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    val sectionGap = LocalKitTokens.current.sectionGap.dp
     val needsLine =
         if (state.needsYou == 0) null
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
@@ -262,6 +250,7 @@ public fun ChatsScreen(
                 enabled = state.home.opening == null && state.phase != ChatsPhase.Opening,
             ),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
       Box(Modifier.fillMaxSize()) {
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again (KitRefresh); not
@@ -274,8 +263,13 @@ public fun ChatsScreen(
             contentPadding =
                 PaddingValues(
                     bottom =
-                        if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
-                        else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                        when {
+                            (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null -> 0.dp
+                            // A1: the list ends with All conversations beside the floating +, on its line (the + keeps
+                            // S3 from the bottom; the row stops short of it), so nothing scrolls under the button.
+                            showFab && state.phase == ChatsPhase.List -> Space.S3.dp
+                            else -> Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                        }
                 ),
         ) {
             state.home.opening?.let { opening ->
@@ -352,38 +346,50 @@ public fun ChatsScreen(
                 ChatsPhase.NoMatch ->
                     item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
                 ChatsPhase.List -> {
-                    val today = state.today.filterNot { it.key in briefKeys }
-                    val earlier = state.earlier.filterNot { it.key in briefKeys }
-                    // Lists breathe (motion lead 2026-11-07): a row that arrives fades in, one that leaves fades out
-                    // where it was, and the rest glide to their new places (a chat jumping to the top, Mark all seen).
-                    if (today.isNotEmpty()) {
-                        item(key = "today") {
-                            Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
-                        }
-                        items(today, key = { it.key }) { row ->
-                            Column(kitItemMotion()) {
-                                ConversationRow(row, actions, state)
-                                if (row != today.last()) RowDivider(state)
-                            }
-                        }
-                    }
-                    if (earlier.isNotEmpty()) {
-                        item(key = "earlier") {
-                            // F: lib/ui/kit/kit_section_label.dart:28-31: a section after another one keeps the
-                            // section gap above its label. In a lazy item the label cannot see what is above it
-                            // (it is first in its own box), so the gap is asked for here.
+                    // A1 (owner, 2026-11-08): "Right now" holds everything working or waiting on the person, never
+                    // capped; "Recent" the five latest of the rest; then the way to the whole list. Each section is
+                    // one grouped panel in the Style in force; the panel eases its height as rows come and go.
+                    val above = state.brief?.rows.orEmpty().isNotEmpty()
+                    // A conversation the return brief shows is said once, there.
+                    val rightNow = state.rightNow.filterNot { it.key in briefKeys }
+                    val recent = state.recent.filterNot { it.key in briefKeys }
+                    if (rightNow.isNotEmpty())
+                        item(key = "right-now") {
                             Box(kitItemMotion()) {
-                                // Alone, "Earlier" divides nothing: no label (Flutter conv-header).
-                                if (today.isNotEmpty()) KitSectionLabel(
-                                    stringResource(Res.string.chatsHomeEarlier),
-                                    gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
-                                )
+                                KitRowPanel(
+                                    label = stringResource(Res.string.chatsHomeRightNow),
+                                    // A step of air under the chips, as above Recent, so the first label is not pressed up.
+                                    gapBefore = if (above) sectionGap else Space.S4.dp,
+                                    prominentDividers = true,
+                                ) {
+                                    rightNow.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
+                                }
                             }
                         }
-                        items(earlier, key = { it.key }) {
-                            Column(kitItemMotion()) {
-                                ConversationRow(it, actions, state)
-                                if (it != earlier.last()) RowDivider(state)
+                    if (recent.isNotEmpty())
+                        item(key = "recent") {
+                            Box(kitItemMotion()) {
+                                KitRowPanel(
+                                    label = stringResource(Res.string.chatsHomeRecent),
+                                    gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
+                                    prominentDividers = true,
+                                ) {
+                                    recent.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
+                                }
+                            }
+                        }
+                    item(key = "all-conversations") {
+                        Box(kitItemMotion()) {
+                            // Short of the floating + (its 56 dp and a S3 gap), so the two share the list's last line.
+                            KitRowPanel(
+                                Modifier.padding(top = Space.S5.dp, end = (KIT_FAB_SIZE + Space.S3).dp),
+                                leadingMarks = false,
+                            ) {
+                                KitPanelLinkRow(
+                                    label = stringResource(Res.string.chats_all_title),
+                                    count = Numbers.format(state.allCount),
+                                    onClick = actions::showAll,
+                                )
                             }
                         }
                     }
@@ -541,7 +547,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
 private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = false) {
     KitFilterChips(bleed = bleed) {
         HomeFilterChips(state, actions)
-        val runningNow = (state.today + state.earlier).count { it.status == RowStatus.Running }
+        val runningNow = state.runningShown
         KitChip(
             label = if (runningNow > 0) stringResource(Res.string.chatsHomeRunningCount, runningNow) else stringResource(Res.string.chatsHomeRunning),
             kind = KitChipKind.Action,
@@ -559,12 +565,11 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
                 stringResource(Res.string.chatsReturnBriefUnknown),
                 Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
             )
-        // Headed and ruled like Today and Earlier, so the top group reads as part of the same list.
-        if (brief.rows.isNotEmpty()) KitSectionLabel(stringResource(Res.string.teamProjectDigest))
-        brief.rows.forEach { row ->
-            ConversationRow(row, actions, state)
-            if (row != brief.rows.last()) RowDivider(state)
-        }
+        // Headed and grouped like Right now and Recent, so the top group reads as part of the same list.
+        if (brief.rows.isNotEmpty())
+            KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {
+                brief.rows.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
+            }
         // One line on the gutter: the rest of what finished at the start, marking it all seen at the end.
         if (brief.more > 0 || brief.rows.isNotEmpty())
             Row(
@@ -617,30 +622,15 @@ private fun AlwaysAllowConfirm(row: ConversationRowUi?, actions: ChatsActions) {
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 /**
- * The line between two conversation rows (Today, Earlier and the return brief), on the 16 dp page edge where the row's
- * words start; past the agent tile in the Signal look, whose rows still lead with one.
- *
- * B-173 (twin of Flutter #129): Flutter's home groups pass `prominentDividers: true`
- * (lib/ui/screens/chats/chats_home_screen.dart:824), so KitSliverRowGroup draws `KitDivider.prominent(inset: inset,
- * endInset: reach)` (lib/ui/kit/kit_sliver_row_group.dart:148-150): 1 dp (`KitLayout.prominentRule`) in the theme's
- * tertiary ink at 30 % (`roles.text3`, alpha 0.3) unless the style draws its own rule (Brutal's ink keeps it; Soft still
- * draws none). That line reads on OLED dark screens, where the hairline does not.
+ * One conversation as A1's roomy row (KitRecentRow): the agent's bare mark, the title, one line of the last message
+ * (a waiting request's own words first: "Asks to run: npm test"), the time and the state word. Long-press opens the
+ * row's acts; a waiting permission keeps its answers (Allow once, Reject, Always allow) under the words, as Flutter's
+ * list does (F: lib/ui/screens/chats/chats_host.dart:240-270).
  */
 @Composable
-private fun RowDivider(state: ChatsUi) {
-    val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
-    io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(
-        inset =
-            if (signal && state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
-            else io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Gutter,
-        prominent = true,
-    )
-}
-
-@Composable
-private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null) {
+private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi) {
     val title = rowTitleText(row.title)
-    val canArchive = state != null && row.key in state.archivable
+    val canArchive = row.key in state.archivable
     val status =
         when (row.status) {
             RowStatus.NeedsYou -> stringResource(Res.string.chatsHomeNeedsYou)
@@ -649,7 +639,6 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
             RowStatus.Done -> stringResource(Res.string.chatsHomeDone)
             RowStatus.None -> null
         }
-    val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
     val tone =
         when (row.status) {
             RowStatus.NeedsYou -> KitRowStateTone.NeedsYou
@@ -657,54 +646,34 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
             RowStatus.Failed -> KitRowStateTone.Failed
             else -> KitRowStateTone.Quiet
         }
-    // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2). Looks pass: the
-    // state leads the supporting line in its colour, the time sits in its own column.
     val archiveWord = stringResource(Res.string.sessionMenuArchive)
     var menuOpen by remember(row.key) { mutableStateOf(false) }
-    val needsAttention = row.status == RowStatus.NeedsYou || row.status == RowStatus.Running
-    val agent =
-        if (state?.showAgents == true)
-            KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName))
-        else null
+    val agent = KitFeedAgent(row.agentMark, row.agentName ?: stringResource(Res.string.agentPersonaOtherName))
     val time =
-        row.updatedAtMs?.takeIf { state != null && state.nowMs > 0 }?.let { kitRelativeAge(it, state!!.nowMs) }
-            ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) }
-    val liveLabel = liveRunWords()
-    val feedItem: @Composable () -> Unit = {
-        // F: lib/ui/screens/chats/chats_home_screen.dart:900-933: every look draws Flutter's KitFeedItem, the title and
-        // one meta line ("Needs you · alpha · 2 min ago"); the agent leads that line only when the list mixes agents.
-        // A live run says how long it has been working in place of the plain state word.
-        KitFeedItem(
-            title = title,
-            project = row.project,
-            agent = agent,
-            server = row.server,
-            live = needsAttention,
-            onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
-            onLongClickLabel = stringResource(Res.string.chatsRowActions),
-            state =
-                KitRowState(
-                    if (row.status == RowStatus.Running && !signal && row.running != null)
-                        liveLabel(row.running.sinceMs?.let { since -> (state?.nowMs?.takeIf { it > 0 } ?: row.observedAtMs) - since })
-                    else status?.takeUnless { signal && row.running != null },
-                    tone,
-                ),
-            time = time,
-            done = row.status == RowStatus.Done,
-            growKey = row.ref,
-            onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
-            pinned = state != null && row.key in state.pinned,
-        )
-    }
+        row.updatedAtMs?.takeIf { state.nowMs > 0 }?.let { kitRelativeAge(it, state.nowMs) }
+            ?: row.ago?.let { agoText(it) }
+    // A command or a message can carry a token: masked as the chat masks it.
+    val mask = io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask()
+    val preview =
+        row.permission?.let { stringResource(Res.string.chatsHomeAsksToRun, KitBidi.ltr(mask(it.command))) }
+            ?: row.preview?.let { mask(it) }
+    val project = row.project.takeIf { state.showProjects && it.isNotBlank() }
+    // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
+    val meta = HomePreviewRules.fallback(row.project, row.server, projectShown = project != null)
+    val always = row.key in state.alwaysAllowable
+    val permission = row.permission
+    val below: (@Composable () -> Unit)? =
+        if (permission == null) null
+        else ({ PermissionAnswers(row, permission, always, actions, state) })
     KitMenu(
         expanded = menuOpen,
         // N-30: the same acts, in the same order, as a row on All conversations (a tap already opens it).
         items = buildList {
-            if (state != null && row.key in state.pinnable) {
+            if (row.key in state.pinnable) {
                 val pinned = row.key in state.pinned
                 add(KitMenuItem(stringResource(if (pinned) Res.string.stateUnpin else Res.string.statePin), { menuOpen = false; actions.togglePin(row) }, icon = if (pinned) KitIcons.unpin else KitIcons.pin))
             }
-            if (state != null && row.key in state.renamable) add(KitMenuItem(stringResource(Res.string.p12Rename), { menuOpen = false; actions.rename(row) }, icon = KitIcons.edit))
+            if (row.key in state.renamable) add(KitMenuItem(stringResource(Res.string.p12Rename), { menuOpen = false; actions.rename(row) }, icon = KitIcons.edit))
             if (row.canOpen) {
                 // Share, Details, Copy handoff and Open related open the conversation's own page and run the same
                 // act its menu runs (one path to the server for each).
@@ -714,74 +683,75 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
                 add(KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))
             }
             if (canArchive) add(KitMenuItem(archiveWord, { menuOpen = false; actions.archive(row) }, icon = KitIcons.archive))
-            if (state != null && row.key in state.deletable) add(KitMenuItem(stringResource(Res.string.sessionMenuDelete), { menuOpen = false; actions.delete(row) }, icon = KitIcons.delete, destructive = true))
+            if (row.key in state.deletable) add(KitMenuItem(stringResource(Res.string.sessionMenuDelete), { menuOpen = false; actions.delete(row) }, icon = KitIcons.delete, destructive = true))
         },
         onDismissRequest = { menuOpen = false },
         title = title,
     ) {
-        // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action
-        // are the same act, so the gesture is never the only way.
-        if (canArchive) KitSwipeRow(archiveWord, { actions.archive(row) }) { feedItem() } else feedItem()
-    }
-
-    // F: lib/ui/screens/chats/chats_host.dart:240-270: the row answers what the chat's card does: Allow once, Reject,
-    // and Always allow (after its confirm) where the server keeps the grant.
-    val always = state != null && row.key in state.alwaysAllowable
-    if (!signal && row.permission != null) {
-        val permission = row.permission
-        val answering = permission.requestId in state?.answering.orEmpty()
-        KitPermissionCard(
-            title = stringResource(Res.string.chatRequestAskRunNamed, permission.command),
-            summary = null,
-            subject = permission.command,
-            allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
-            alwaysLabel = if (always) stringResource(Res.string.chatRequestAlwaysAllowNamed, KitBidi.ltr(permission.command)) else null,
-            denyLabel = stringResource(Res.string.kitRequestReject),
-            secondary = true,
-            onAllowOnce = { actions.answerPermission(row, true) },
-            onAlways = if (always) ({ actions.askAlwaysAllow(row) }) else null,
-            onDeny = { actions.answerPermission(row, false) },
-            enabled = row.canOpen && !answering,
-            disabledReason = if (answering) stringResource(Res.string.serversWorking) else if (!row.canOpen) stringResource(Res.string.e7WorkspaceConnecting) else null,
-            modifier = Modifier.padding(start = Space.S4.dp, end = Space.S4.dp, bottom = Space.S3.dp),
-        )
-    }
-    if (signal) {
-        row.running?.let { running ->
-            val minuteTemplate = stringResource(Res.string.chatHomeMinutes)
-            KitRunningFeedLine(
-                running.sinceMs,
-                row.observedAtMs,
-                running.command,
-                stringResource(Res.string.chatHomeRunning),
-                { minuteTemplate.replace("%1\$s", it) },
+        val item: @Composable () -> Unit = {
+            KitRecentRow(
+                title = title,
+                agent = agent,
+                time = time,
+                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+                preview = preview,
+                meta = meta,
+                project = project,
+                state = status?.let { KitRowState(it, tone) },
+                pinned = row.key in state.pinned,
+                growKey = row.ref,
+                onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
+                onLongClickLabel = stringResource(Res.string.chatsRowActions),
+                below = below,
+                speakAgent = state.showAgents,
             )
         }
-        row.permission?.let { permission ->
-            KitSignalSlip {
-                KitText("$ " + permission.command, maxLines = 2)
-                KitChipWrap {
-                    KitButton(
-                        stringResource(Res.string.chatHomeAllow),
-                        { actions.answerPermission(row, true) },
-                        working = permission.requestId in state?.answering.orEmpty(),
-                    )
-                    KitButton(
-                        stringResource(Res.string.chatHomeReject),
-                        { actions.answerPermission(row, false) },
-                        role = KitButtonRole.Secondary,
-                        working = permission.requestId in state?.answering.orEmpty(),
-                    )
-                    if (always)
-                        KitButton(
-                            stringResource(Res.string.chatUiAlwaysAllow),
-                            { actions.askAlwaysAllow(row) },
-                            role = KitButtonRole.Tertiary,
-                            working = permission.requestId in state?.answering.orEmpty(),
-                        )
-                }
-            }
+        // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action
+        // are the same act, so the gesture is never the only way.
+        if (canArchive) KitSwipeRow(archiveWord, { actions.archive(row) }) { item() } else item()
+    }
+}
+
+/** A waiting permission's answers under its row: Allow once, Reject and, where the server keeps it, Always allow. */
+@Composable
+private fun PermissionAnswers(
+    row: ConversationRowUi,
+    permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission,
+    always: Boolean,
+    actions: ChatsActions,
+    state: ChatsUi,
+) {
+    val answering = permission.requestId in state.answering
+    val enabled =
+        when {
+            answering -> KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+            !row.canOpen -> KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting))
+            else -> KitEnabled.Enabled
         }
+    KitChipWrap {
+        KitButton(
+            stringResource(Res.string.kitRequestAllowOnce),
+            { actions.answerPermission(row, true) },
+            role = KitButtonRole.Secondary,
+            enabled = enabled,
+            working = answering,
+            expand = false,
+        )
+        KitButton(
+            stringResource(Res.string.kitRequestReject),
+            { actions.answerPermission(row, false) },
+            role = KitButtonRole.Tertiary,
+            enabled = enabled,
+            expand = false,
+        )
+        if (always)
+            KitButton(
+                stringResource(Res.string.chatUiAlwaysAllow),
+                { actions.askAlwaysAllow(row) },
+                role = KitButtonRole.Tertiary,
+                enabled = enabled,
+                expand = false,
+            )
     }
 }
 

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,6 +61,7 @@ class Kita1FrameInsetsTest {
                                     if (slots.value.second)
                                         ({ Box(Modifier.height(48.dp).testTag("bottom")) })
                                     else null,
+                                edges = KitScreenEdges.Bleed,
                             ) {
                                 Box(Modifier.fillMaxSize().testTag("body")) {
                                     // A nested inset-aware child must not pay for the same insets

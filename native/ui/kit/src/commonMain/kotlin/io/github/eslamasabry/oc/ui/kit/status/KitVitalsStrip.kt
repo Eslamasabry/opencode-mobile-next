@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -114,7 +115,13 @@ private fun FitVitalValue(value: String) {
             val measured = measurer.measure(value, style = target, softWrap = false, maxLines = 1)
             val available = with(LocalDensity.current) { maxWidth.toPx() }
             val ratio = if (measured.size.width > 0) (available / measured.size.width).coerceAtMost(1f) else 1f
-            BasicText(value, style = target.copy(fontSize = (fontDp * ratio).sp), softWrap = false, maxLines = 1)
+            BasicText(
+                value,
+                style = target.copy(fontSize = (fontDp * ratio).sp),
+                softWrap = false,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

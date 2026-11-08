@@ -19,7 +19,7 @@
     <string name="m40UsageWifi">عبر Wi-Fi فقط</string>
     <string name="m40UsageNothingToWatch">لا توجد خطط قابلة للقراءة لمراقبتها بعد.</string>
     <string name="m40UsageDownTo">عندما يتبقّى من الخطة</string>
-    <string name="m40UsageSameAsOthers">مثل البقية: متبقٍّ %1$d%%</string>
+    <string name="m40UsageSameAsOthers">مثل البقية: متبقٍّ %1$d%</string>
     <string name="m40UsageWidgetPlans">الخطط في الأداة</string>
     <string name="m40UsageWidgetSetup">إظهار الخطط التي تحتاج إلى إعداد</string>
     <string name="m40UsageWidgetWindows">الفترات المعروضة</string>

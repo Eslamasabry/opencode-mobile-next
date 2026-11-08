@@ -132,7 +132,15 @@ public fun KitChip(
             )
         }
     val baseStyle = LocalKitTypography.current.style(TypeRole.Secondary)
-    val style = baseStyle.copy(color = words, fontWeight = if (!adaptiveModel && (kind == KitChipKind.Plain || track)) FontWeight.SemiBold else baseStyle.fontWeight)
+    // C09: a label reads in its own direction (first strong letter), so a Latin model name in an Arabic layout
+    // keeps its ellipsis at its end ("Crouton Fa…"), never before it ("…Crouton Fa").
+    val firm = !adaptiveModel && (kind == KitChipKind.Plain || track)
+    val style =
+        baseStyle.copy(
+            color = words,
+            fontWeight = if (firm) FontWeight.SemiBold else baseStyle.fontWeight,
+            textDirection = androidx.compose.ui.text.style.TextDirection.Content,
+        )
     val formatted = count?.let { Numbers.format(it) }
     val text = if (kind == KitChipKind.Count && formatted != null) {
         AnnotatedString.Builder().apply {

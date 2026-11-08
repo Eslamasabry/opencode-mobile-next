@@ -54,7 +54,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -100,7 +99,7 @@ public fun TeamEditorScreen(state: TeamEditorUi, actions: TeamEditorActions) {
                 ({
                     val reason = blocked ?: creationError
                     KitActionBlock(
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                        Modifier.padding(vertical = Space.S2.dp),
                         primary =
                             KitAction(
                                 primaryLabel(state),

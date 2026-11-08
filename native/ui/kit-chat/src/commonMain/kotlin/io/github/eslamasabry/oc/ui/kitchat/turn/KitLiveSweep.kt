@@ -39,13 +39,21 @@ internal fun liveSweepSpeed(motion: KitMotionState): Float =
  * words under Off and when nothing works (the agent waits for the person). Still frames (tests, screenshots) draw the
  * light at the middle.
  *
+ * [step]: a running step's name on the timeline (Flutter `_StepSweep`): an accent light over words in ink (text1),
+ * at the same pace.
+ *
  * Draw phase only: the words never recompose or re-lay out for the sweep; the band's brush is cached per size and each
  * frame only translates it. The words keep their own semantics.
  *
  * Motion: progress loop. Replaces: `_LiveSweep` (lib/ui/kit/chat/kit_turn.dart).
  */
 @Composable
-public fun KitLiveSweep(working: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+public fun KitLiveSweep(
+    working: Boolean,
+    modifier: Modifier = Modifier,
+    step: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     val motion = KitMotion.state
     val colors = LocalKitColors.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -58,14 +66,15 @@ public fun KitLiveSweep(working: Boolean, modifier: Modifier = Modifier, content
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithCache {
                 val half = BAND * size.width
-                val band = Brush.horizontalGradient(
-                    0f to colors.text3, 0.5f to colors.text1, 1f to colors.text3, startX = -half, endX = half,
-                )
+                // F: kit_step_light.dart:653-660 a running step's name: an accent light over the ink (text1)
+                val base = if (step) colors.text1 else colors.text3
+                val light = if (step) colors.accent else colors.text1
+                val band = Brush.horizontalGradient(0f to base, 0.5f to light, 1f to base, startX = -half, endX = half)
                 val bandSize = Size(2 * half, size.height)
                 onDrawWithContent {
                     drawContent()
                     // The words take text3 everywhere, then the band lights them where it passes (srcIn keeps glyph alpha).
-                    drawRect(colors.text3, blendMode = BlendMode.SrcIn)
+                    drawRect(base, blendMode = BlendMode.SrcIn)
                     translate(left = liveSweepCentre(phase.floatValue, rtl) * size.width) {
                         drawRect(band, topLeft = Offset(-half, 0f), size = bandSize, blendMode = BlendMode.SrcIn)
                     }

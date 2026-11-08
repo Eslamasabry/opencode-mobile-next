@@ -156,6 +156,7 @@ class UsageHubEntries(
                         },
                         width = KitScreenWidth.Reading,
                         loading = if (plansActive) plan.refreshing else used.refreshing,
+                        edges = KitScreenEdges.Bleed,
                     ) {
                         Column(Modifier.fillMaxSize()) {
                             if (invalidTarget) KitNotice(stringResource(Res.string.hub40Changed))

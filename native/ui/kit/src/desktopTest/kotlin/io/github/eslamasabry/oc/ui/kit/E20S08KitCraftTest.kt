@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.testTag
@@ -93,6 +94,7 @@ class E20S08KitCraftTest {
                                 .then(Modifier.testTag("field"))
                         )
                     },
+                    edges = KitScreenEdges.Bleed,
                 ) {
                     KitText("Nothing matches", Modifier.testTag("heading"))
                 }

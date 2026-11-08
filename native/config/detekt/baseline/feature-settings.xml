@@ -12,7 +12,6 @@
     <ID>ComplexCondition:SettingsSearch.kt$SettingsSearch$i &gt; 1 &amp;&amp; j &gt; 1 &amp;&amp; a[i - 1] == b[j - 2] &amp;&amp; a[i - 2] == b[j - 1]</ID>
     <ID>CyclomaticComplexMethod:AppearancePage.kt$@Composable private fun ColumnScope.AppearanceControls( ui: AppearanceUi, actions: SettingsActions, question: AppearanceQuestion?, onePage: Boolean = false, top: Dp = Space.S6.dp, )</ID>
     <ID>CyclomaticComplexMethod:AutomationSection.kt$@Composable public fun ColumnScope.AutomationSection(state: AutomationUi, actions: AutomationActions)</ID>
-    <ID>CyclomaticComplexMethod:CrashBody.kt$@Composable internal fun ColumnScope.CrashBody(state: CrashUi, actions: SettingsActions)</ID>
     <ID>CyclomaticComplexMethod:FakeSettingsPorts.kt$FakeChoices$override suspend fun set(change: PersonalChange): Outcome&lt;PersonalPrefs&gt;</ID>
     <ID>CyclomaticComplexMethod:HubPage.kt$@Composable private fun rowValue(row: SettingsRowId, state: SettingsUi): String?</ID>
     <ID>CyclomaticComplexMethod:HubPage.kt$private fun rowGlyph(row: SettingsRowId)</ID>
@@ -47,7 +46,6 @@
     <ID>LongMethod:AppearanceGuide.kt$@Composable internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: SettingsActions)</ID>
     <ID>LongMethod:AppearancePage.kt$@Composable private fun ColumnScope.AppearanceControls( ui: AppearanceUi, actions: SettingsActions, question: AppearanceQuestion?, onePage: Boolean = false, top: Dp = Space.S6.dp, )</ID>
     <ID>LongMethod:AutomationSection.kt$@Composable public fun ColumnScope.AutomationSection(state: AutomationUi, actions: AutomationActions)</ID>
-    <ID>LongMethod:CrashBody.kt$@Composable internal fun ColumnScope.CrashBody(state: CrashUi, actions: SettingsActions)</ID>
     <ID>LongMethod:HubPage.kt$@Composable private fun ColumnScope.GroupBody( state: SettingsUi, actions: SettingsActions, page: SettingsPage.Group, )</ID>
     <ID>LongMethod:HubPage.kt$@Composable private fun ColumnScope.HubBody( state: SettingsUi, actions: SettingsActions, selected: SettingsGroupId? = null, )</ID>
     <ID>LongMethod:LibraryRegistry.kt$public fun libraryRegistryItem(entry: RegistryEntry): LibraryRegistryItem</ID>
@@ -111,7 +109,6 @@
     <ID>MagicNumber:VoiceNotificationsPages.kt$60</ID>
     <ID>MatchingDeclarationName:LibraryRegistry.kt$LibraryRegistryItem</ID>
     <ID>MatchingDeclarationName:LooksCapture.kt$Looks</ID>
-    <ID>MaxLineLength:DiagnosticsReport.kt$DiagnosticsReport$/** The report text (Flutter Report a problem's diagnostics block): fixed English labels, since it is read by maintainers. */</ID>
     <ID>MaxLineLength:LocalModelsPage.kt$!state.present -&gt; KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.migrationStorageEmpty))</ID>
     <ID>MaxLineLength:LocalModelsPage.kt$state.loading || state.deleting -&gt; KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.migrationStorageTitle))</ID>
     <ID>MaxLineLength:LooksCapture.kt$Looks$/** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */</ID>
@@ -207,7 +204,6 @@
     <ID>WildcardImport:AutomationSection.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:ByServerTest.kt$import androidx.compose.ui.test.*</ID>
     <ID>WildcardImport:ByServerTest.kt$import io.github.eslamasabry.oc.feature.settings.presentation.*</ID>
-    <ID>WildcardImport:CrashBody.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:HubPage.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:HubPage.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:LibraryEntries.kt$import dev.zacsweers.metro.*</ID>

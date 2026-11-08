@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import androidx.compose.foundation.ExperimentalFoundationApi
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.FocusInteraction
@@ -192,10 +194,11 @@ public fun KitTabStrip(
     }
     val pill = KitShapeId.Pill
     val pillShape = pill.shape()
-    Box(modifier.clipToBounds().testTag("kit-tab-strip")) {
+    // C08: a strip wider than the window fades out at the edge with more past it (the board's "Don" stood cut there).
+    Box(modifier.clipToBounds().kitScrollFade(scroll).testTag("kit-tab-strip")) {
         Row(
             Modifier.horizontalScroll(scroll)
-                .padding(horizontal = tokens.gutter.dp)
+                .padding(horizontal = kitPageGutter())
                 .semantics {
                     selectableGroup()
                     if (semanticsLabel != null) paneTitle = semanticsLabel

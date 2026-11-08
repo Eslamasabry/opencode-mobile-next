@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -83,7 +84,7 @@ public fun KitOneTimeCode(
                             fontSize = style.fontSize * scale,
                             lineHeight = style.lineHeight * scale,
                         ),
-                    maxLines = 1,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                     softWrap = false,
                 )
             }

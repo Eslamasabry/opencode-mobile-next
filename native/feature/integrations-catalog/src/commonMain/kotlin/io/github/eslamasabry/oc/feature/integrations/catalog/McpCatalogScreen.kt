@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.integrations.catalog
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -86,6 +87,7 @@ public fun McpCatalogScreen(ui: McpCatalogUi, actions: McpCatalogActions) {
         loading = state.loading,
         loadingLabel = stringResource(Res.string.mcpNativeRefresh),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),

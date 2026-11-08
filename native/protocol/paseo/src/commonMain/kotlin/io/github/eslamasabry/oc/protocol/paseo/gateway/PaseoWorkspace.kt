@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.protocol.paseo.longOrNull
 import io.github.eslamasabry.oc.protocol.paseo.objectOrNull
 import io.github.eslamasabry.oc.protocol.paseo.paseoAttempt
 import io.github.eslamasabry.oc.protocol.paseo.paseoFail
+import io.github.eslamasabry.oc.protocol.paseo.paseoFileReason
 import io.github.eslamasabry.oc.protocol.paseo.paseoList
 import io.github.eslamasabry.oc.protocol.paseo.paseoObject
 import io.github.eslamasabry.oc.protocol.paseo.paseoString
@@ -54,6 +55,8 @@ internal suspend fun PaseoGateway.workspaceRequest(
     body: JsonObject,
     mutation: Boolean = false,
     timeoutMs: Long? = null,
+    /** A file read: the daemon's refusal is sorted into too big, gone, denied or not showable (words only, no text). */
+    fileRead: Boolean = false,
 ): JsonObject {
     val scope = scopeDir
     val epoch = locationEpoch
@@ -67,10 +70,19 @@ internal suspend fun PaseoGateway.workspaceRequest(
                 beforeSend = { checkLocation(scope, epoch) },
             )
         } catch (e: PaseoException) {
-            throw PaseoException(e.kind)
+            throw PaseoException(if (fileRead) paseoFileReason(e.reason) ?: e.kind else e.kind)
         }
     checkLocation(scope, epoch)
+    if (fileRead) rejectFileError(result)
     return result
+}
+
+/** A file answer that says why it has no file: sorted by its words, never shown (B-184). */
+internal fun rejectFileError(payload: JsonObject) {
+    val error = payload["error"]
+    if (error == null || error is kotlinx.serialization.json.JsonNull) return
+    val text = error.stringOrNull() ?: error.objectOrNull()?.let { it.str("message") ?: it.str("code") }
+    paseoFail(paseoFileReason(text) ?: PaseoFailureKind.Unavailable)
 }
 
 /** Checkout answers carry their failure as `{code, message}`: a plain Unavailable. */
@@ -140,6 +152,7 @@ internal suspend fun PaseoGateway.readFileContent(path: String): FileContent {
                 "mode" to "file",
                 "maxBytes" to PASEO_MAX_FILE_BYTES,
             ),
+            fileRead = true,
         )
     val file = paseoObject(payload["file"])
     val kind = file.str("kind")

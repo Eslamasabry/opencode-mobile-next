@@ -64,3 +64,60 @@ public fun KitAgentGrid(children: List<@Composable () -> Unit>, modifier: Modifi
         }
     }
 }
+
+/** A tile's least comfortable width in the [KitAgentTiles] grid; a row holds as many as fit, two to four. */
+internal const val AGENT_TILE_MIN_WIDTH: Int = 200
+
+/**
+ * How many tiles side by side in [widthDp]: one above 1.3x text, else as many [AGENT_TILE_MIN_WIDTH] tiles as fit with
+ * the kit's gap, never fewer than two (a phone) nor more than four (a wide window, still inside the Reading cap).
+ */
+internal fun agentTileColumns(widthDp: Float, textScale: Float): Int {
+    if (agentGridOneColumn(textScale)) return 1
+    val gap = Space.S3.toFloat()
+    val fit = ((widthDp + gap) / (AGENT_TILE_MIN_WIDTH + gap)).toInt()
+    return fit.coerceIn(2, 4)
+}
+
+/**
+ * Where each tile goes for [columns]: full rows of [columns], and the rest in a last row. In two columns an odd last
+ * tile is alone and spans the row (as [KitAgentGrid]); with three or four the last row keeps the column width.
+ */
+internal fun agentTileRows(count: Int, columns: Int): List<List<Int>> = (0 until count).chunked(columns.coerceAtLeast(1))
+
+/**
+ * Agent tiles ([KitAgentTile]) in a bento grid: two columns on a phone, three or four when the window is wide (each at
+ * least [AGENT_TILE_MIN_WIDTH] dp, inside the Reading cap), every row as tall as its tallest tile with the kit's gap
+ * between them. In two columns an odd last tile spans the row and lies sideways, as in [KitAgentGrid]; at large text it
+ * is one column of full-width tiles. Unlike [KitAgentGrid] the tiles are separate buttons, not one choice.
+ *
+ * States: none — a layout of its children.
+ */
+@Composable
+public fun KitAgentTiles(children: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
+    val scale = kitTextScale()
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
+        val columns = agentTileColumns(maxWidth.value, scale)
+        val rows = agentTileRows(children.size, columns)
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            for (row in rows) {
+                if (row.size == 1 && columns == 2) {
+                    CompositionLocalProvider(LocalKitAgentGridSpan provides true) { children[row[0]]() }
+                } else if (columns == 1) {
+                    children[row[0]]()
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                    ) {
+                        for (i in row) {
+                            androidx.compose.foundation.layout.Box(Modifier.weight(1f).fillMaxHeight()) { children[i]() }
+                        }
+                        // A short last row keeps the column width: the empty cells hold their place.
+                        repeat(columns - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
+                    }
+                }
+            }
+        }
+    }
+}

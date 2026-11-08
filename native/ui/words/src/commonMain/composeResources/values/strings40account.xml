@@ -38,7 +38,7 @@
     <string name="account40OpenSignIn">Open official sign-in</string>
     <string name="account40Cancel">Cancel sign-in</string>
     <string name="account40Allowance">Reported allowance</string>
-    <string name="account40PercentUsed">%1$d%% used</string>
+    <string name="account40PercentUsed">%1$d% used</string>
     <string name="account40WindowUnknown">Window duration unavailable</string>
     <string name="account40WindowMinutes">%1$d-minute window</string>
     <string name="account40WindowHours">%1$d-hour window</string>

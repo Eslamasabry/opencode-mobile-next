@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -145,7 +145,9 @@ class PromptsScreensTest {
         onNodeWithText("Review the open pull request").assertExists()
         onNodeWithText("2 attachments").assertExists()
         onNodeWithText("Explain the failing test").performClick()
-        onNodeWithTag("prompt-delete-b").performClick()
+        // C05: Delete waits in the prompt's own menu (Flutter's row ⋯), never as loose words under it.
+        onAllNodesWithTag("kit-row-menu", useUnmergedTree = true)[0].performClick()
+        onNodeWithText("Delete saved prompt").performClick()
         onNodeWithText("Save prompt for later").performClick()
         onNodeWithText("Slash commands and agents").performClick()
         onNodeWithText("Tasks").performClick()
