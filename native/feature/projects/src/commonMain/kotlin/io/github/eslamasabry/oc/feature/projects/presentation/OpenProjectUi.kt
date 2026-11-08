@@ -82,6 +82,10 @@ public data class OpenProjectUi(
     val missingPath: String? = null,
     /** The path field starts here (the folder shown, or next to the one opened last). */
     val pathStart: String = "",
+    /** [OpenProjectStep.Folder] on this phone's own files: hidden folders are shown too (Flutter's "Show hidden folders"). */
+    val showHidden: Boolean = false,
+    /** Hidden folders can be switched on: inside a folder of this phone's files only, as in Flutter. */
+    val canShowHidden: Boolean = false,
 )
 
 public interface OpenProjectActions {
@@ -123,4 +127,7 @@ public interface OpenProjectActions {
     public fun dismissMissing()
 
     public fun openServers()
+
+    /** "Show hidden folders" / "Hide hidden folders" for the folder shown (this phone's files only). */
+    public fun toggleHidden() {}
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev loop build (tool/dev/README.md): the name on the launcher, in recents and in the share sheet. -->
+<resources>
+    <string name="app_label_preview" translatable="false">OpenCode Dev</string>
+</resources>
