@@ -17,6 +17,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.LiveStrength
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.Accents
+import io.github.eslamasabry.oc.ui.design.color.Packs
+import io.github.eslamasabry.oc.ui.design.color.withPartner
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
@@ -37,8 +39,8 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
 import io.github.eslamasabry.oc.ui.kit.choice.KitStepSlider
 import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
-import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
-import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
+import io.github.eslamasabry.oc.ui.kit.choice.KitAccentRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitAccentSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitThemeOptionCard
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -66,7 +68,6 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSaverNote
 import io.github.eslamasabry.oc.ui.words.res.appearanceSeeAllThemes
 import io.github.eslamasabry.oc.ui.words.res.appearanceShapeSpacing
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionSystemOff
-import io.github.eslamasabry.oc.ui.words.res.kitSwatchInUse
 import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
@@ -249,12 +250,17 @@ private fun ColumnScope.AppearanceControls(
             }
         }
         if (ui.seeAllCount > 0) {
-            KitButton(
-                stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
-                actions::onSeeAllPacks,
-                gutter.padding(top = Space.S3.dp).testTag("appearance-see-all"),
-                role = KitButtonRole.Secondary,
-            )
+            // Flutter's "See all" fills the column under the grid (lib/ui/screens/settings/appearance_screen.dart:783-786, :933); the gutter
+            // sits outside the button so the kit's own control cap does not shorten it.
+            Box(Modifier.fillMaxWidth().padding(top = Space.S3.dp).then(gutter)) {
+                KitButton(
+                    stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
+                    actions::onSeeAllPacks,
+                    Modifier.testTag("appearance-see-all"),
+                    role = KitButtonRole.Secondary,
+                    fullWidth = true,
+                )
+            }
         }
     }
     if (question == null || question == AppearanceQuestion.AccentColour) {
@@ -265,32 +271,22 @@ private fun ColumnScope.AppearanceControls(
             top,
         )
         Box(gutter) {
+            // Flutter's Accent: KitAccentRow.grid, "Match" first in the theme's own accent, then every swatch with its
+            // name, four to a row, each guarded for this theme (lib/ui/screens/settings/appearance_screen.dart:946-962).
             val dark = LocalKitColors.current.dark
-            val inUse = stringResource(Res.string.kitSwatchInUse)
-            val match = stringResource(Res.string.appearanceAccentMatchShort)
-            KitSwatchGrid(
-                label = stringResource(Res.string.appearanceAskAccent),
-                inUseLabel = inUse,
-                modifier = Modifier.testTag("appearance-accent"),
+            val own = Packs.of(ui.pack).palette(dark).roles
+            KitAccentRow(
+                semanticsLabel = stringResource(Res.string.appearanceAskAccent),
+                matchLabel = stringResource(Res.string.appearanceAccentMatchShort),
+                themeAccent = Color(own.accent.v),
                 swatches =
-                    listOf(
-                        KitSwatch(
-                            "match",
-                            match,
-                            null,
-                            ui.accent == null,
-                            onPressed = { actions.onAccent(null) },
-                        )
-                    ) +
-                        Accents.swatches.map { sw ->
-                            KitSwatch(
-                                sw.id,
-                                accentWords(sw.id),
-                                Color(sw.of(dark).v),
-                                ui.accent == sw.id,
-                                onPressed = { actions.onAccent(sw.id) },
-                            )
-                        },
+                    Accents.swatches.map { sw ->
+                        KitAccentSwatch(sw.id, Color(own.withPartner(sw.of(dark)).partner.v), accentWords(sw.id))
+                    },
+                selected = ui.accent,
+                onChanged = actions::onAccent,
+                modifier = Modifier.testTag("appearance-accent"),
+                grid = true,
             )
         }
         KitGroupNote(stringResource(Res.string.appearanceAccentMatchNote, packName(ui.pack)))
