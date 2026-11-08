@@ -76,8 +76,11 @@ storage, whether the phone is rooted, a random installation identifier, and
 the time. It never contains message text, prompts, file names or contents,
 paths, server addresses, usernames, passwords, keys or tokens; the app drops
 anything that is not a short plain code, and removes secrets from the rest
-before it leaves the app. A native (Java or C) crash report carries the
-crashed thread's code locations and the device facts above, not your data.
+before it leaves the app. A crash in the app's Android (Java or Kotlin) code
+carries only the exception class names and their code locations, plus the
+device facts above: the app drops every exception message, and any code
+location that is not a plain class, method and file name, before Crashlytics
+sees the crash.
 
 ### Usage analytics
 
