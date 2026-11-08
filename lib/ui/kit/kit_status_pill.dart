@@ -56,6 +56,7 @@ class KitStatusPill extends StatelessWidget {
       AppStatusTone.attention => roles.attention,
       AppStatusTone.failure => roles.text1,
     };
+    final word = this.word;
     final duration = KitMotion.reduced(context)
         ? Duration.zero
         : KitMotion.stepFade;
@@ -70,7 +71,6 @@ class KitStatusPill extends StatelessWidget {
               ),
             ),
           );
-    final word = this.word;
     return KitTappable(
       tappableKey: pillKey,
       onTap: onPressed,

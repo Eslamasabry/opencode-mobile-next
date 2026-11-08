@@ -447,7 +447,6 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
                   onPressed: onSettings,
                 ),
             ],
-            title2: null,
             line: needsCount > 0 ? _needsYouWords(l10n, needsCount) : null,
             lineNeedsYou: true,
             onLineTap: needsCount > 0

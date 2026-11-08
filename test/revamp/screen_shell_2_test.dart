@@ -130,10 +130,10 @@ void main() {
         findsNothing,
       );
       expect(
-        tester.getSemantics(
-          find.byKey(const ValueKey('server-switcher-button')),
-        ),
-        matchesSemantics(label: contains('Connected, Switch server')),
+        tester
+            .getSemantics(find.byKey(const ValueKey('server-switcher-button')))
+            .label,
+        contains('Connected, Switch server'),
       );
       // Search opens the same launcher as Ctrl/Cmd+K.
       await tester.tap(find.byKey(const ValueKey('home-shell-search')));
