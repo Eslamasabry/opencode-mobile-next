@@ -15,7 +15,7 @@ RC1 is the first build that meets all seven gates. Each gate is measured, not ju
 | G4 | Moves like native | 90/120 Hz on the owner phone; janky frames < 5 %, p99 < 20 ms scrolling chat and home; row→chat transform, animated lists, sheet physics, send morph in | 1.5 % janky at 60 Hz (owner phone 11-07); motion lead building |
 | G5 | Keeps data | Upgrade gate Flutter 2.1.4 → native: 29/29 (items 2.1.4 or the emulator can't seed are NOT RUN with a reason) | 21/29 + harness fix for grants |
 | G6 | Release shape | Switch build 3.0.0 / versionCode ≥ 10010, R8 + ABI splits, identity gate passes with the owner key | release work merged (merge 22), not yet run with the key |
-| G8 | Required features | Native twins of #125 (Antigravity quota) and #126 (in-app updater); security B-175 (launch token) and B-177 (cleartext only for private addresses) — owner 2026-11-08 | builders s22-twins, s22-security |
+| G8 | Required features | Native twins of #125 (Antigravity quota) and #126 (in-app updater); security B-175 (launch token) and B-177 (cleartext only for private addresses); analytics twin of 2.1.5 so the Firebase install ID carries across the update (B-180) — owner 2026-11-08 | builders s22-twins, s22-security; B-180 next |
 | G7 | Owner walk | Owner uses it on the phone and says yes | not yet |
 
 Out of RC1 (later, owner decides): Glass and school galleries (order 34-37), AI Team screens, pull requests from the
