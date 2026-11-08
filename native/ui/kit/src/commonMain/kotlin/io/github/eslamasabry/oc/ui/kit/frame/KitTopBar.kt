@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -60,6 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitBrandMark
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouBadge
+import io.github.eslamasabry.oc.ui.kit.state.kitNeedsYouSpan
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
@@ -67,6 +69,12 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarSwitchProject
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSwitchServer
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.LastBaseline
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.unit.Constraints
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 
 /**
  * How the bar leaves the page: Back at the start, Close at the end (LAY-8), or nothing at a root or
@@ -127,6 +135,8 @@ public fun KitTopBar(
     brand: Boolean = false,
     /** Requests waiting elsewhere: a switcher title carries the amber badge (Dart `needsYou`). */
     needsYou: Int = 0,
+    /** The subtitle's state colour (Dart `subtitleTone`): neutral is secondary, progress the accent, ok green. */
+    subtitleTone: StatusTone = StatusTone.Neutral,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -271,6 +281,8 @@ public fun KitTopBar(
     // The title starts on the page gutter (E20-S08: Back, when there is one, takes the line above); the project ·
     // branch line or the subtitle starts under the title's first letter, one left edge for both.
     val back = exit == KitTopBarExit.Back && onExit != null
+    // Flutter's pushed page: Back, the title and the actions share one row (kit_top_bar.dart:346-420).
+    val oneRowBack = back && !backBesideTitle
     val titleRole = TopBarTitle.role(switcher = onTitleTap != null)
     val titleRow: @Composable () -> Unit = {
         Row(
@@ -286,7 +298,8 @@ public fun KitTopBar(
                 title,
                 Modifier.weight(1f, fill = false)
                     .semantics { heading() }
-                    .kitContentEdge("bar-title").kitGrowPageTitle()
+                    // A pushed page's title starts on the 56 dp text rail beside Back (Flutter), not on the content edge.
+                    .then(if (oneRowBack) Modifier else Modifier.kitContentEdge("bar-title")).kitGrowPageTitle()
                     .testTag("kit-top-bar-title"),
                 role = if (branded) TypeRole.Headline else titleRole,
                 kind = KitTextKind.Frame,
@@ -300,7 +313,7 @@ public fun KitTopBar(
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = Space.S1.dp)
+            .padding(horizontal = if (oneRowBack) 0.dp else Space.S1.dp)
             .semantics { isTraversalGroup = true }
             .testTag("kit-top-bar"),
     ) {
@@ -330,14 +343,21 @@ public fun KitTopBar(
             scope
                 ?: subtitle?.let {
                     {
-                        KitText(
-                            it,
-                            Modifier.padding(horizontal = Space.S2.dp).kitContentEdge("bar-subtitle"),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                            kind = KitTextKind.Frame,
-                            maxLines = 1,
-                        )
+                        // Flutter `_KitTopBarTailLine`: a bar that is not a switcher starts its line with the
+                        // attention-toned "Needs you · " (the switcher carries the count as a badge instead).
+                        val needs = if (needsYou > 0 && onTitleTap == null) kitNeedsYouSpan(needsYou).text else null
+                        Row(Modifier.padding(horizontal = Space.S2.dp).then(if (oneRowBack) Modifier else Modifier.kitContentEdge("bar-subtitle"))) {
+                            if (needs != null)
+                                KitText(needs, role = TypeRole.Secondary, tone = TextTone.Attention, kind = KitTextKind.Frame, maxLines = 1)
+                            KitText(
+                                it,
+                                Modifier.weight(1f, fill = false),
+                                role = TypeRole.Secondary,
+                                tone = subtitleTone.text,
+                                kind = KitTextKind.Frame,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
         if (back && backBesideTitle) {
@@ -368,31 +388,28 @@ public fun KitTopBar(
             return@Column
         }
         if (back) {
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
-                Box(Modifier.weight(1f))
-                actionRow()
-            }
-            Row(
-                Modifier.fillMaxWidth()
-                    // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and
-                    // it stays above the line's targets, so the line can sit right under it without taking its taps.
-                    .then(
-                        if (hasLine)
-                            Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, if (onTitleTap != null) Space.S1.dp else 0.dp)
-                        else Modifier
-                    )
-                    // A step under Back (layout guard "tight": 4 dp); a tappable title is a control of its own too.
-                    .padding(top = Space.S1.dp)
-                    .heightIn(min = if (onTitleTap != null) tokens.minTarget.dp else 0.dp)
-                    .padding(start = titleStart),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                title()
-            }
+            BackBar(
+                exit = { ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f) },
+                // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and it
+                // stays above the line's targets, so the line sits right under it without taking its taps.
+                title = {
+                    Box(if (hasLine) Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, 0.dp) else Modifier) { title() }
+                },
+                titleLine = titleLine,
+                trimmed = hasLine,
+                under = under?.let { u ->
+                    {
+                        // A scope's words keep their own 8 dp inset like the title's; the line's words start the kit's
+                        // tight 2 dp step under the title's words, its targets keeping their 48 dp below (E20-S10).
+                        Box(
+                            Modifier.padding(start = if (scope != null) Space.S1.dp else 0.dp)
+                                .riseToText(lineLine, TITLE_LINE_GAP, if (scope != null) Space.S2.dp else 0.dp)
+                        ) { u() }
+                    }
+                },
+                actions = actionRow,
+            )
+            return@Column
         } else Row(
             Modifier.fillMaxWidth().heightIn(min = (if (hasLine) tokens.minTarget else tokens.rowHeightOne).dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -459,6 +476,78 @@ private fun ExitButton(glyph: ExitGlyph, label: String, onExit: () -> Unit, orde
         contentAlignment = Alignment.Center,
     ) {
         KitExitGlyph(glyph, colors.text1)
+    }
+}
+
+/**
+ * A pushed page's bar (Dart `KitTopBar`, kit_top_bar.dart:346-420): one row of Back, the title block and the actions.
+ * The title's words start on the page's text rail (56 dp: `textRail - minTarget` after Back, less the 8 dp the title
+ * row pads itself), its line under it. The title's first line and the buttons share one centre: a line shorter than a
+ * touch target moves down onto the buttons' centre, a taller one (large text) moves the buttons down instead. The row
+ * sits in the bar's 4 dp step above and below (min height a touch target plus two steps), and ends 4 dp from the edge.
+ */
+@Composable
+private fun BackBar(
+    exit: @Composable () -> Unit,
+    title: @Composable () -> Unit,
+    titleLine: androidx.compose.ui.unit.TextUnit,
+    trimmed: Boolean,
+    under: (@Composable () -> Unit)?,
+    actions: @Composable () -> Unit,
+) {
+    val tokens = LocalKitTokens.current
+    Layout(
+        contents = listOf(exit, title, { if (under != null) under() }, { Row(verticalAlignment = Alignment.CenterVertically) { actions() } }),
+        modifier = Modifier.fillMaxWidth()
+            .heightIn(min = (tokens.minTarget + 2 * Space.S1).dp) // F: lib/ui/kit/kit_top_bar.dart:270
+            .padding(vertical = Space.S1.dp), // F: lib/ui/kit/kit_top_bar.dart:414
+    ) { (exitM, titleM, underM, actionsM), constraints ->
+        val width = constraints.maxWidth
+        val loose = Constraints(maxWidth = width)
+        val exitP = exitM.map { it.measure(loose) }
+        // The actions cap their own share of the bar (ACTIONS_SHARE), so the title always keeps room.
+        val actionsP = actionsM.map { it.measure(loose) }
+        val exitW = exitP.maxOfOrNull { it.width } ?: 0
+        val actionsW = actionsP.maxOfOrNull { it.width } ?: 0
+        val gap = if (actionsW > 0) Space.S2.dp.roundToPx() else 0 // F: kit_top_bar.dart:394
+        val end = Space.S1.dp.roundToPx() // F: kit_top_bar.dart:446 (_endRoom without a last glyph)
+        // The title row pads its words by space 2 itself: its box starts that much before the 56 dp text rail.
+        // The title row's own 8 dp start padding may lie over Back's last 4 dp of empty target edge.
+        val titleX = maxOf(exitW + (Space.S1 - Space.S2).dp.roundToPx(), (FlutterKitTokens.TEXT_RAIL - Space.S2).dp.roundToPx()) // F: kit_top_bar.dart:362-370
+        val titleW = (width - titleX - gap - actionsW - end).coerceAtLeast(0)
+        val titleP = titleM.map { it.measure(Constraints(maxWidth = titleW)) }
+        val underP = underM.map { it.measure(Constraints(maxWidth = titleW)) }
+        val t = titleP.firstOrNull()
+        // The first line's centre. The words sit centred in the title's box (a switcher's is a touch target tall); a
+        // title [trimmed] to end under its words keeps the words' bottom as its own.
+        val lineCentre =
+            if (t == null) 0
+            else {
+                val first = t[FirstBaseline]
+                val last = t[LastBaseline]
+                val line = if (titleLine.isSp) titleLine.roundToPx() else t.height
+                val words = if (first != AlignmentLine.Unspecified && last != AlignmentLine.Unspecified) (last - first) + line else t.height
+                val wordsTop = if (trimmed) t.height - words else (t.height - words) / 2
+                (wordsTop + line / 2).coerceAtLeast(0)
+            }
+        val lift = tokens.minTarget.dp.roundToPx() / 2 - lineCentre // F: kit_top_bar.dart:332
+        val titleTop = lift.coerceAtLeast(0)
+        val controlsTop = (-lift).coerceAtLeast(0)
+        val titleH = (t?.height ?: 0) + underP.sumOf { it.height }
+        val controlsH = maxOf(exitP.maxOfOrNull { it.height } ?: 0, actionsP.maxOfOrNull { it.height } ?: 0)
+        val height = maxOf(titleTop + titleH, controlsTop + controlsH, constraints.minHeight)
+        layout(width, height) {
+            // Flutter puts Back flush on the window edge; native keeps the kit's 4 dp from the edge for a control (layout
+            // guard edge-tap). The glyph lands 4 dp further in; the title stays on the text rail.
+            exitP.forEach { it.placeRelative(Space.S1.dp.roundToPx(), controlsTop + (tokens.minTarget.dp.roundToPx() - it.height).coerceAtLeast(0) / 2) }
+            titleP.forEach { it.placeRelative(titleX, titleTop) }
+            var y = titleTop + (t?.height ?: 0)
+            underP.forEach {
+                it.placeRelative(titleX, y)
+                y += it.height
+            }
+            actionsP.forEach { it.placeRelative(width - end - it.width, controlsTop + (tokens.minTarget.dp.roundToPx() - it.height).coerceAtLeast(0) / 2) }
+        }
     }
 }
 

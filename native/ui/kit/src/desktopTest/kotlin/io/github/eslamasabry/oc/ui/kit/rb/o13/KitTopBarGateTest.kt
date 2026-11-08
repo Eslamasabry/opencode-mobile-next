@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -92,7 +93,16 @@ class KitTopBarGateTest {
         shot(
             "kit_top_bar_subtitle_working",
             screen {
-                KitTopBar("Fix login", subtitle = "Working · 2 min", exit = KitTopBarExit.Back, exitLabel = "Back", onExit = {}, actions = listOf(stop, copy))
+                // Flutter's scene: subtitleTone progress.
+                KitTopBar(
+                    "Fix login",
+                    subtitle = "Working · 2 min",
+                    subtitleTone = StatusTone.Progress,
+                    exit = KitTopBarExit.Back,
+                    exitLabel = "Back",
+                    onExit = {},
+                    actions = listOf(stop, copy),
+                )
             },
         )
     }
@@ -101,7 +111,7 @@ class KitTopBarGateTest {
         shot(
             "kit_top_bar_needs_you",
             screen {
-                KitTopBar("Fix login", subtitle = "Laptop", exit = KitTopBarExit.Back, exitLabel = "Back", onExit = {}, actions = listOf(stop, copy))
+                KitTopBar("Fix login", subtitle = "Laptop", exit = KitTopBarExit.Back, exitLabel = "Back", onExit = {}, actions = listOf(stop, copy), needsYou = 1)
             },
         )
     }

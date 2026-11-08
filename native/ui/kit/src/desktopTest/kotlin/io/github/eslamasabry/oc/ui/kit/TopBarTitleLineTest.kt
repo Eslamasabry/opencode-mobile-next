@@ -28,7 +28,9 @@ class TopBarTitleLineTest {
     private fun Themed(content: @Composable () -> Unit) {
         CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
             KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
-                InWindow(412, 915) { content() }
+                // The window fits the test's 768 px root: a taller one is centred and cuts off its top, where the
+                // one-row bar now sits (s21-kit), so a tap on the title would land outside the root.
+                InWindow(412, 760) { content() }
             }
         }
     }
