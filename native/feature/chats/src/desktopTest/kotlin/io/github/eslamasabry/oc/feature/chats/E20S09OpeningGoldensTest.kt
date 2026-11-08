@@ -12,6 +12,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -66,6 +67,8 @@ class E20S09OpeningGoldensTest {
     private fun failed(rows: List<ChatsOpeningRow>) =
         ChatsUi(
             phase = ChatsPhase.Opening,
+            // C18: a failed opening is never a dead end - Settings stays in the bar, like the real home.
+            settingsAvailable = true,
             home =
                 ChatsHomeExtraState(
                     opening =
@@ -118,7 +121,9 @@ class E20S09OpeningGoldensTest {
     fun `E20-S09 with no saved titles a failure shows no placeholder rows and does not mention saved titles`() =
         scene("home-opening-failed-empty", failed(emptyList())) { variant ->
             assertEquals(0, onAllNodesWithTag("kit-skeleton-rows").fetchSemanticsNodes().size)
+            // C18: the failed page keeps a way out beside Try again and Change server - the Settings gear.
             if (variant.locale == "en") {
+                onNodeWithContentDescription("Settings").assertExists()
                 assertEquals(0, onAllNodesWithText("saved last time", substring = true).fetchSemanticsNodes().size)
                 onNodeWithText("Check that the server is on", substring = true).assertExists()
             }
