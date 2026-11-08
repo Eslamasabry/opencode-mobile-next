@@ -38,6 +38,9 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Tips("settings-tips", SettingsGroupId.Help),
     Capabilities("settings-capabilities", SettingsGroupId.Help),
     ReportProblem("settings-report-problem", SettingsGroupId.Help),
+
+    /** Flutter 2.1.5 `settings-send-problem-report` (fixed in ed13c31dd): between Report a problem and About. */
+    SendProblemReport("settings-send-problem-report", SettingsGroupId.Help),
     About("settings-about", SettingsGroupId.Help),
 }
 
@@ -102,6 +105,8 @@ public data class SettingsFacts(
      */
     val transcriptDisplay: Boolean = true,
     val phraseChips: Boolean = false,
+    /** B-190: this build can send a problem report (the telemetry vendor is built in); else the Help row is absent. */
+    val problemReport: Boolean = false,
 ) {
     public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
 }
@@ -182,6 +187,8 @@ public object SettingsStructure {
                         SettingsRowId.ReportProblem ->
                             if (facts.diagnostics) SettingsDoor.Page(SettingsPage.ReportProblem)
                             else SettingsDoor.Outside(SettingsOutside.ReportProblem)
+                        SettingsRowId.SendProblemReport ->
+                            SettingsDoor.Page(SettingsPage.SendProblemReport).takeIf { facts.problemReport }
                         SettingsRowId.About -> SettingsDoor.Page(SettingsPage.About)
                     }
                 door

@@ -363,6 +363,7 @@ public class PaseoGateway(
 
     /** Admission for a new phone agent process; remote gateways leave this unset. */
     public var beforeAgentStart: (suspend () -> Outcome<Unit>)? = null
+
     internal var pendingPayloadWork: Int = 0
 
     internal fun payloadWorkChanged() {
@@ -1236,7 +1237,35 @@ public class PaseoGateway(
         }
     }
 
+    /**
+     * B-190 `agent_start`: times one agent start and tells [agentStartObserver] the runtime id, whether it started and,
+     * if not, the failure kind's name. Only fixed words leave; a stale or cancelled request is not an agent failure.
+     */
     private suspend fun createAgent(
+        id: String,
+        prompt: String,
+        messageId: String,
+        model: ModelRef?,
+        requestedMode: String?,
+        variant: String?,
+        images: List<JsonObject>,
+        fence: () -> Unit,
+    ) {
+        val provider =
+            if (model == null || model.providerId.isEmpty()) draftProviders[id] ?: DEFAULT_PROVIDER
+            else model.providerId
+        val started = nowMs()
+        try {
+            startAgent(id, prompt, messageId, model, requestedMode, variant, images, fence)
+            agentStartObserver?.invoke(provider, null, nowMs() - started)
+        } catch (e: PaseoException) {
+            if (e.kind != PaseoFailureKind.StaleRequest && e.kind != PaseoFailureKind.ScopeMismatch)
+                agentStartObserver?.invoke(provider, e.kind, nowMs() - started)
+            throw e
+        }
+    }
+
+    private suspend fun startAgent(
         id: String,
         prompt: String,
         messageId: String,
@@ -2284,6 +2313,13 @@ public class PaseoGateway(
     }
 
     public companion object {
+        /**
+         * B-190: told of every agent start, `(provider id, failure kind or null when it started, elapsed ms)`. Set once
+         * by the app (it maps the words and drops them unless `usage` is on); null records nothing.
+         */
+        @kotlin.concurrent.Volatile
+        public var agentStartObserver: ((String, PaseoFailureKind?, Long) -> Unit)? = null
+
         /** The runtime a conversation uses when the composer names no model. */
         public const val DEFAULT_PROVIDER: String = "claude"
 

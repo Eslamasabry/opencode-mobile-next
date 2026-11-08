@@ -47,6 +47,12 @@ public class GatewaySendLink(
 ) : SendLink {
     private val log = io.github.eslamasabry.oc.core.common.AppLog.tagged("delivery")
 
+    /** The phone's own server listens on loopback: only that fact is used, never the address. */
+    private val onPhone: Boolean by lazy {
+        val host = Regex("^[A-Za-z][A-Za-z0-9+.\\-]*://(\\[[^\\]]+\\]|[^/:?#]+)").find(baseUrl)?.groupValues?.get(1)
+        host != null && io.github.eslamasabry.oc.core.security.AddressRules.isLoopback(host)
+    }
+
     /** One gateway is one connection epoch; a status-change wrapper over it is the same target. */
     override val epoch: Any
         get() = gateway
@@ -143,7 +149,7 @@ public class GatewaySendLink(
         val admitted = admitInteractive()
         if (admitted is Outcome.Failed) return admitted
         val tracing = tracing ?: return admit(session, prompt, beforeSend)
-        tracing.sent(session.raw)
+        tracing.sent(session.raw, onPhone = onPhone)
         val result = admit(session, prompt, beforeSend)
         tracing.accepted(session.raw, error = result is Outcome.Failed)
         return result

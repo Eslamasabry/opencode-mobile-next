@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.opencode_mobile.telemetry.Telemetry
 import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
@@ -225,6 +226,7 @@ class AndroidSettingsHost(
     private val migrationMemory: NativeSettingsMemory,
     private val continuity: AppTelemetryContinuity,
     private val factsBook: io.github.eslamasabry.oc.feature.factsbook.presentation.FactsBookAccess,
+    private val telemetryHealth: AppTelemetryHealth,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -284,6 +286,7 @@ class AndroidSettingsHost(
                     opens = SETTINGS_OPENS,
                     surfaceStyles = true,
                     phraseChips = true,
+                    problemReport = Telemetry.vendorAvailable,
                     transcriptDisplay = false,
                 )
             }
@@ -298,6 +301,7 @@ class AndroidSettingsHost(
                     opens = SETTINGS_OPENS,
                     surfaceStyles = true,
                     phraseChips = true,
+                    problemReport = Telemetry.vendorAvailable,
                     transcriptDisplay = false,
                 ),
             )
@@ -476,7 +480,29 @@ class AndroidSettingsHost(
 
     /** s28: Privacy's "Usage and app health" and the crash answer under Flutter 2.1.5's keys. */
     override val healthConsent: io.github.eslamasabry.oc.feature.settings.presentation.HealthConsentSetting =
-        continuity.health
+        continuity.consent
+
+    /** B-190: Help › Send a problem report and About's report code, only where the vendor is built in. */
+    override val problemReport: io.github.eslamasabry.oc.feature.settings.presentation.ProblemReportSender? =
+        if (!Telemetry.vendorAvailable) null
+        else
+            object : io.github.eslamasabry.oc.feature.settings.presentation.ProblemReportSender {
+                private val telemetry get() = Telemetry.service
+
+                override suspend fun build(): String =
+                    io.github.eslamasabry.oc.engine.analytics.health
+                        .ProblemReportCollector(
+                            telemetry = telemetry,
+                            redaction = io.github.eslamasabry.oc.engine.analytics.health.ReportRedaction(reportRedactor),
+                            health = telemetryHealth.healthTelemetry,
+                            platform = telemetryHealth.platform,
+                        )
+                        .build()
+
+                override suspend fun send(text: String): String? = telemetry.sendProblemReport(text)
+
+                override suspend fun reportCode(): String? = telemetry.reportCode()
+            }
 
     /** s26: About › Developer's Memory (preview), the same `oc.dev.factsbook` switch Flutter writes. */
     override val memoryPreview: io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewSetting =

@@ -92,6 +92,8 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.sendReportRowDetail
+import io.github.eslamasabry.oc.ui.words.res.sendReportTitle
 import io.github.eslamasabry.oc.ui.words.res.libraryMcpTitle
 import io.github.eslamasabry.oc.ui.words.res.libraryProvidersTitle
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
@@ -218,6 +220,7 @@ internal fun rowKey(row: SettingsRowId): StringResource =
         SettingsRowId.Tips -> Res.string.tipsTitle
         SettingsRowId.Capabilities -> Res.string.nativeCapabilitiesTitle
         SettingsRowId.ReportProblem -> Res.string.kitReportProblem
+        SettingsRowId.SendProblemReport -> Res.string.sendReportTitle
         SettingsRowId.About -> Res.string.aboutTitle
     }
 
@@ -335,6 +338,9 @@ internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
                 Res.string.e7SettingsUi88,
                 Res.string.settingsHubSearchDiagnosticsAliases,
             )
+        // F: hub_rows.dart `settings-send-problem-report`: the bug aliases and the row's own line.
+        SettingsRowId.SendProblemReport ->
+            listOf(Res.string.settingsHubSearchBugAliases, Res.string.sendReportRowDetail)
         SettingsRowId.About ->
             listOf(
                 Res.string.settingsHubSearchAboutAliases,

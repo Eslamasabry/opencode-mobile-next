@@ -379,6 +379,9 @@ class NativePhoneSetup(
                         it.attributes,
                         error = it.failed,
                     )
+                    // B-190: linux_setup_step and its linux_setup_<step> trace, consent-gated.
+                    io.github.eslamasabry.oc.engine.analytics.health.HealthFlow()
+                        .setupTiming(it.name, it.attributes, it.durationMillis, it.failed)
                 },
                 finisher =
                     SetupFinisher { request ->
