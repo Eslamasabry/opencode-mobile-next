@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="composerLimitApproaching">اقتربت من الحد</string>
+    <string name="composerLimitReached">تم بلوغ الحد</string>
+    <string name="composerLimitResetsInHoursMinutes">يُعاد خلال %1$d س %2$d د</string>
+    <string name="composerLimitResetsInHours">يُعاد خلال %1$d س</string>
+    <string name="composerLimitResetsInMinutes">يُعاد خلال %1$d د</string>
+    <string name="composerLimitResetsOnDay">يُعاد يوم %1$s الساعة %2$s</string>
+    <string name="composerLimitResetsOnDate">يُعاد في %1$s</string>
+    <string name="composerLimitViewUsage">عرض الاستخدام</string>
+    <string name="composerLimitDismiss">إخفاء</string>
+    <string name="composerLimitMonday">الإثنين</string>
+    <string name="composerLimitTuesday">الثلاثاء</string>
+    <string name="composerLimitWednesday">الأربعاء</string>
+    <string name="composerLimitThursday">الخميس</string>
+    <string name="composerLimitFriday">الجمعة</string>
+    <string name="composerLimitSaturday">السبت</string>
+    <string name="composerLimitSunday">الأحد</string>
+    <string name="composerLimitClock12">%1$s&#160;%2$s</string>
+    <string name="composerLimitAm">ص</string>
+    <string name="composerLimitPm">م</string>
+</resources>
