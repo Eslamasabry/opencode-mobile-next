@@ -37,6 +37,16 @@ runs:
       uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       with:
         cache-read-only: false
+    - name: Stop a Gradle daemon left over from a cancelled run in this workspace
+      if: runner.environment == 'self-hosted'
+      shell: bash
+      run: |
+        # The warm daemon outlives a job on purpose (RUNNER_TRACKING_ID is empty), so a cancelled run leaves one that still
+        # holds this workspace's locks. Only daemons that have files open under this workspace are stopped.
+        for p in $(pgrep -f GradleDaemon || true); do
+          if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill "$p" 2>/dev/null || true; echo "stopped stale daemon $p"; fi
+        done
+        sleep 2
     - name: Cache vendored sherpa-onnx AAR
       if: runner.environment != 'self-hosted'
       id: vendor-cache

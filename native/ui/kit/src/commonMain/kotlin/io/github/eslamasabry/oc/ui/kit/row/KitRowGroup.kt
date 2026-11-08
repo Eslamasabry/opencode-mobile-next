@@ -118,6 +118,10 @@ private class Seams {
 
 /** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset on both reading edges. */
 @Composable
+internal fun KitHairlineColumn(inset: Dp, endInset: Dp, hairline: Color, content: @Composable () -> Unit): Unit =
+    HairlineColumn(inset, endInset, hairline, content)
+
+@Composable
 private fun HairlineColumn(inset: Dp, endInset: Dp, hairline: Color, content: @Composable () -> Unit, ruleAbove: Boolean = false) {
     val seams = remember { Seams() }
     Layout(

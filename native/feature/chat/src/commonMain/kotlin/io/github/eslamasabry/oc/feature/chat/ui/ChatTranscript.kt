@@ -16,6 +16,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -59,6 +61,8 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -101,6 +105,8 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
+import io.github.eslamasabry.oc.ui.words.res.chatLiveHideSteps
+import io.github.eslamasabry.oc.ui.words.res.chatLiveShowSteps
 import io.github.eslamasabry.oc.ui.words.res.chatHomeSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptCheckAgain
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptChecking
@@ -380,6 +386,11 @@ internal fun ChatTranscriptList(
     // removed. While a reply streams the rows above it never glide (the growing reply would drag them a few pixels
     // behind every frame); the newest row stays on the bottom edge either way (reverse layout keeps it anchored).
     val glide = live == null
+    // Flutter `_liveStepsShown` (chat_stop_after_step.dart): a tap on the live line shows the running turn's steps;
+    // cleared once the turn ends. Null = no running turn; false = the live line names the step and the work hides.
+    var stepsShown by remember { mutableStateOf(false) }
+    if (live == null && stepsShown) stepsShown = false
+    val runningSteps: Boolean? = if (live == null) null else stepsShown
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -404,7 +415,34 @@ internal fun ChatTranscriptList(
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }
-                if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
+                val runTurn = unique.firstOrNull()?.turnId
+                val runWork = runTurn?.let { facts.work[it] }
+                if (LocalKitAppearance.current.style != KitSurfaceStyle.Signal) {
+                    val line =
+                        liveLineWords(
+                            live = live,
+                            listWords = listWords,
+                            notice = notice,
+                            work = runWork,
+                            writing = unique.firstOrNull().let { it is BlockRow && it.live },
+                            // The turn's clock (Flutter `since`): when the run started, else when its prompt was sent.
+                            elapsedMs =
+                                (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
+                                    ?.let { facts.nowMs - it },
+                        )
+                    KitTurnLiveLine(
+                        words = line.words,
+                        tone = line.tone,
+                        spoken = line.spoken,
+                        step = line.step,
+                        onTap = if (runWork == null) null else ({ stepsShown = !stepsShown }),
+                        tapLabel =
+                            stringResource(
+                                if (stepsShown) Res.string.chatLiveHideSteps else Res.string.chatLiveShowSteps
+                            ),
+                        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-live-line"),
+                    )
+                } else {
                     val minutes = stringResource(Res.string.chatHomeMinutes)
                     val seconds = stringResource(Res.string.chatHomeSeconds)
                     val step = facts.work.values.lastOrNull { it.now != null }?.now
@@ -417,7 +455,7 @@ internal fun ChatTranscriptList(
                         minutesLabel = { minutes.replace("%1\$s", it) },
                         secondsLabel = { seconds.replace("%1\$s", it) },
                     )
-                } else KitQuietLine(liveWords, Modifier.testTag("chat-live-line"))
+                }
               }
             }
         }
@@ -494,6 +532,8 @@ internal fun ChatTranscriptList(
                             onCompactAgain,
                             onCopyReply.takeIf { row.turnId in copyableTurns },
                             teachDetails = row.key == newestCompleted,
+                            runningSteps = runningSteps,
+                            onHideSteps = { stepsShown = false },
                         )
                 } else {
                     ChatRow(
@@ -515,6 +555,8 @@ internal fun ChatTranscriptList(
                         teachDetails = row.key == newestCompleted,
                         onAllFiles = onAllFiles,
                         onSendAgain = onSendAgain.takeIf { row.key == newestPrompt },
+                        runningSteps = runningSteps,
+                        onHideSteps = { stepsShown = false },
                     )
                 }
                 if (display.timestampsVisible) {
@@ -663,6 +705,9 @@ private fun ChatRow(
     onAllFiles: (() -> Unit)? = null,
     /** The newest prompt that got no reply: its notice's "Send again"; null elsewhere. */
     onSendAgain: (() -> Unit)? = null,
+    /** A turn runs: whether the person asked to see its steps (null = no turn runs). */
+    runningSteps: Boolean? = null,
+    onHideSteps: () -> Unit = {},
 ) {
     when (row) {
         is BlockRow -> {
@@ -723,6 +768,7 @@ private fun ChatRow(
                     reply,
                     onCompactAgain,
                     onOpenSession,
+                    thinking = row.live,
                 )
             else KitQuietLine(words.thought(row.firstLine))
         }
@@ -731,18 +777,26 @@ private fun ChatRow(
             // (never folded in).
             Column {
                 val work = facts.work[row.turnId]
-                if (work != null && folds != null)
-                    TurnWorkLine(
-                        work,
-                        facts.nowMs,
-                        folds,
-                        onOpenSession,
-                        onOpenFile,
-                        facts.reading.workEntries[row.turnId].orEmpty(),
-                        reasoningExpanded,
-                        reply,
-                        onCompactAgain,
-                    )
+                if (work != null && folds != null) {
+                    // Flutter `_WorkGroup.hideWhileRunning` (owner decision 5, 20 Oct 2026): while the turn's live
+                    // line names the step in hand, the work draws nothing; once the step ends it unfolds back in
+                    // where the steps were. A tap on the live line shows the steps, opened.
+                    val running = work.state == WorkLineState.Running && runningSteps != null
+                    KitReveal(visible = !running || runningSteps == true) {
+                        TurnWorkLine(
+                            work,
+                            facts.nowMs,
+                            folds,
+                            onOpenSession,
+                            onOpenFile,
+                            facts.reading.workEntries[row.turnId].orEmpty(),
+                            reasoningExpanded,
+                            reply,
+                            onCompactAgain,
+                            openWhileRunning = if (running && runningSteps == true) onHideSteps else null,
+                        )
+                    }
+                }
                 else
                     KitQuietLine(
                         if (listWords != null) workLineWords(row.calls, row.state)

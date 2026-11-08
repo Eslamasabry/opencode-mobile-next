@@ -114,55 +114,65 @@ class S10HomeScreenTest {
         }
 
     @Test
-    fun `E20-S24 the rows lie on the page, not on a panel, in a panelled look`() =
+    fun `A1-HOME-07 the rows lie on a grouped panel in Solid too, whose lists used to run flat`() {
+        // Soft's panels share the page's colour (only their shadows lift them), so the fill is told apart in Solid.
+        val style = Style.Solid
         runDesktopComposeUiTest(360, 1200) {
-            home(mixed(), style = Style.Soft)
-            val image = onRoot().captureToImage().toAwtImage()
-            val last = onNode(hasContentDescriptionContaining("Write the notes")).getBoundsInRoot()
-            val ground = image.getRGB(2, 2)
-            // Near the right edge, just under the last row's top edge (clear of its words): no panel behind it.
-            val y = last.top.value.toInt() + 3
-            assertEquals(ground, image.getRGB(350, y), "the last row sits on a panel of its own")
-        }
+                home(mixed(), style = style)
+                val image = onRoot().captureToImage().toAwtImage()
+                val last = onNode(hasContentDescriptionContaining("Write the notes")).getBoundsInRoot()
+                val ground = image.getRGB(2, 2)
+                // Near the panel's end edge, just under the row's top (clear of its words): the panel, not the page.
+                val y = last.top.value.toInt() + 3
+                assertTrue(ground != image.getRGB(330, y), "$style: the last row lies on the page, not on its panel")
+                // Outside the panel, in the page gutter: the page.
+                assertEquals(ground, image.getRGB(4, y), "$style: the panel reaches into the page gutter")
+            }
+    }
 
     @Test
-    fun `E20-S24 P-107 the last row scrolls clear of the New conversation button with 16 dp to spare`() =
+    fun `A1-HOME-17 P-107 at the list's end All conversations shares the New conversation button's line, never under it`() =
         runDesktopComposeUiTest(360, 640) {
             home(mixed(extra = 12))
             val list = SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo)
-            val lastTitle = "Older conversation 11"
+            val lastTitle = "All conversations"
             onNode(list).performScrollToNode(hasContentDescriptionContaining(lastTitle))
             onNode(list).performTouchInput { swipeUp() }
             waitForIdle()
             val last = onNode(hasContentDescriptionContaining(lastTitle)).getBoundsInRoot()
             val root = onRoot().getBoundsInRoot()
-            // The round button: 56 dp, 12 dp above the bottom edge. The row ends at least 16 dp above its top.
+            // The round button: 56 dp, on the 16 dp gutter, 12 dp above the bottom edge.
             val buttonTop = root.bottom - 12.dp - 56.dp
-            assertTrue(last.bottom <= buttonTop - 16.dp, "the last row ends at ${last.bottom}, the button at $buttonTop")
+            val buttonStart = root.right - 16.dp - 56.dp
+            assertTrue(last.right <= buttonStart - 12.dp, "the row ends at ${last.right}, the button starts at $buttonStart")
+            val rowMiddle = (last.top + last.bottom) / 2
+            val buttonMiddle = buttonTop + 28.dp
+            assertTrue((rowMiddle - buttonMiddle).value in -2f..2f, "row middle $rowMiddle, button middle $buttonMiddle")
         }
 
     @Test
-    fun `B-CHATS-161 a live row says Working 34m instead of the plain state word and keeps Needs you on another`() =
+    fun `A1-HOME-08 a live row says Working once, and a waiting one says Needs you`() =
         runDesktopComposeUiTest(360, 900) {
             home(mixed())
-            // Flutter's row (KitFeedItem): the title, then one meta line led by the state word.
+            // A1: the state word sits under the time in plain coloured text, said once.
             val live = onNode(hasContentDescriptionContaining("Fix the reconnect loop")).fetchSemanticsNode()
             val words = live.config[SemanticsProperties.ContentDescription].single()
-            assertTrue("Working 34m" in words && words.split("Working").size == 2, words)
+            assertTrue(words.split("Working").size == 2, words)
             val asking = onNode(hasContentDescriptionContaining("Theme packs")).fetchSemanticsNode()
             assertTrue("Needs you" in asking.config[SemanticsProperties.ContentDescription].single())
         }
 
     @Test
-    fun `B-CHATS-161 rows are Flutter's title and meta line, with no project tile, branch or agent for one agent`() =
+    fun `A1-HOME-09 rows draw no project tile and no branch, and one agent kind is not said on each row`() =
         runDesktopComposeUiTest(360, 900) {
             home(mixed())
-            // F: lib/ui/screens/chats/chats_home_screen.dart:900-933: KitFeedItem has no tile and no branch.
+            // Owner 2026-11-08: no icons in boxes; the project is a small dot and its name when several are listed.
             assertEquals(0, onAllNodesWithTag("kit-project-tile", useUnmergedTree = true).fetchSemanticsNodes().size)
+            assertTrue(onAllNodesWithTag("kit-recent-project-dot", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
             val git = onNode(hasContentDescriptionContaining("Theme packs")).fetchSemanticsNode()
             val gitWords = git.config[SemanticsProperties.ContentDescription].single()
             assertTrue("web" in gitWords && "main" !in gitWords, gitWords)
-            // One agent kind: no row names an agent.
+            // One agent kind: its mark shows on every row, its name is not said on each.
             assertEquals(0, onAllNodes(hasContentDescriptionContaining("OpenCode")).fetchSemanticsNodes().size)
         }
 
@@ -175,15 +185,16 @@ class S10HomeScreenTest {
         }
 
     @Test
-    fun `B-CHATS-162 the list ends with its conversations, as Flutter's home does, with no place rows after it`() =
+    fun `A1-HOME-10 the list ends with All conversations and its count, which opens the whole list`() =
         runDesktopComposeUiTest(360, 1200) {
-            home(mixed().copy(usage = HomeUsageLimit("Claude Code", 34)))
-            // Owner order 2026-11-08: Flutter's home has no All conversations, Projects, Activity or Usage rows; those
-            // places are reached from Search and Settings.
-            listOf("Show all conversations", "Projects", "Activity", "Usage").forEach {
-                onAllNodesWithText(it).assertCountEquals(0)
-            }
-            assertEquals(0, onAllNodesWithText("left", substring = true, useUnmergedTree = true).fetchSemanticsNodes().size)
+            val actions = RecordingChatsActions()
+            home(mixed().copy(usage = HomeUsageLimit("Claude Code", 34)), actions)
+            listOf("Projects", "Activity", "Usage").forEach { onAllNodesWithText(it).assertCountEquals(0) }
+            val all = onNode(hasContentDescriptionContaining("All conversations, 4"))
+            val last = onNode(hasContentDescriptionContaining("Write the notes")).getBoundsInRoot()
+            assertTrue(all.getBoundsInRoot().top >= last.bottom, "All conversations closes the list")
+            all.performClick()
+            assertTrue("all" in actions.calls, actions.calls.toString())
         }
 
     private fun hasContentDescriptionContaining(text: String) =
@@ -200,12 +211,12 @@ class S10HomeScreenTest {
     }
 
     @Test
-    fun `B-FB-050 a section another feature places shows under the notes, above Today`() =
+    fun `B-FB-050 a section another feature places shows under the notes, above Right now`() =
         runDesktopComposeUiTest(360, 900) {
             home(mixed(), sections = listOf({ io.github.eslamasabry.oc.ui.kit.KitText("Memory section") }))
             val memory = onNodeWithText("Memory section").getBoundsInRoot()
-            val today = onNodeWithText("Today").getBoundsInRoot()
-            assertTrue(memory.bottom <= today.top, "the section sits above Today")
+            val today = onNodeWithText("Right now").getBoundsInRoot()
+            assertTrue(memory.bottom <= today.top, "the section sits above Right now")
         }
 }
 

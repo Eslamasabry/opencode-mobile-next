@@ -225,13 +225,14 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `SCREENS-NAV-27 rows sit under Today and Earlier with cleaned titles and one status word`() =
+    fun `A1-HOME-06 rows sit under Right now and Recent with cleaned titles and one status word`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
-            onNodeWithText("Today").assertExists()
-            onNodeWithText("Earlier").assertExists()
-            // A row is one merged node that reads title, agent, state and project (KitFeedItem), not loose texts.
+            onNodeWithText("Right now").assertExists()
+            onNodeWithText("Recent").assertExists()
+            onAllNodesWithText("Today").assertCountEquals(0)
+            // A row is one merged node that reads title, state, project and its line (KitRecentRow), not loose texts.
             onNodeWithContentDescription("Fix the reconnect loop", substring = true).assertExists()
             // One name for one thing (design review §2.3): the placeholder row and the floating button both say
             // "New conversation".
@@ -244,8 +245,8 @@ class ChatsScreenTest {
             onAllNodesWithContentDescription("New chat", substring = true).assertCountEquals(0)
             // One status word per row: the needs-you row says it once, the running row says Working.
             // One agent on every row: its name is not repeated on each (P-021).
-            onNodeWithContentDescription("Theme packs, Needs you, web").assertExists()
-            onNodeWithContentDescription("Fix the reconnect loop, Working, api").assertExists()
+            onNodeWithContentDescription("Theme packs, Needs you, web", substring = true).assertExists()
+            onNodeWithContentDescription("Fix the reconnect loop, Working, api", substring = true).assertExists()
             onNodeWithContentDescription("Theme packs", substring = true).performClick()
             assertTrue("open ask" in actions.calls)
         }
@@ -398,7 +399,7 @@ class ChatsScreenTest {
     }
 
     @Test
-    fun `P-021 the finished group is headed like Today and Earlier`() = runComposeUiTest {
+    fun `P-021 the finished group is headed like Right now and Recent`() = runComposeUiTest {
         val brief =
             ReturnBrief.build(
                 listOf(Session(SessionId("old"), directory = "/work/api", time = SessionTime(idleMs = 10))),

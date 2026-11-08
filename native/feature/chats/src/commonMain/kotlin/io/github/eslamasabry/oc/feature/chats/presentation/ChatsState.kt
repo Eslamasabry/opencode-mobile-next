@@ -18,6 +18,9 @@ public object ChatsState {
     /** Recent projects shown as chips (the selected project is always among them). */
     public const val RECENT_PROJECTS: Int = 4
 
+    /** A1: how many conversations "Recent" shows; the rest are one tap away on All conversations. */
+    public const val RECENT_ROWS: Int = 5
+
     public fun build(
         feed: ChatFeedSnapshot,
         brief: ReturnBrief,
@@ -55,15 +58,25 @@ public object ChatsState {
                 visible.isEmpty() -> ChatsPhase.NoMatch
                 else -> ChatsPhase.List
             }
-        val (today, earlier) = visible.partition { it.lastActivityMs >= startOfTodayMs }
-        val todayRows = today.map { row(it, nowMs) }
-        val earlierRows = earlier.map { row(it, nowMs) }
         val briefUi = if (filters.identities == null) briefUi(brief, roots, nowMs) else null
+        // A row the return brief already shows is not repeated under it.
+        val briefKeys = briefUi?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+        val listed = visible.filterNot { it.identity in briefKeys }
+        // A1: everything working or waiting on the person, uncapped, in the feed's order (needs you, then running,
+        // newest first); then the five latest of the rest.
+        val (live, rest) = listed.partition { it.status == ChatStatus.NeedsYou || it.status == ChatStatus.Running }
+        val rightNow = live.sortedWith(ChatFeedRules.order).map { row(it, nowMs) }
+        val latest =
+            rest.sortedWith(compareByDescending<ChatFeedItem> { it.lastActivityMs }.thenBy { it.identity })
+                .take(RECENT_ROWS)
+                .map { row(it, nowMs) }
         return ChatsUi(
             phase = phase,
-            today = todayRows.toImmutableList(),
-            earlier = earlierRows.toImmutableList(),
-            showAgents = agentsDiffer(todayRows + earlierRows + briefUi?.rows.orEmpty()),
+            rightNow = rightNow.toImmutableList(),
+            recent = latest.toImmutableList(),
+            showProjects = filters.projectDirectory == null && visible.distinctBy { it.projectName }.size > 1,
+            runningShown = visible.count { it.status == ChatStatus.Running },
+            showAgents = agentsDiffer(rightNow + latest + briefUi?.rows.orEmpty()),
             needsYou = roots.count { it.status == ChatStatus.NeedsYou },
             running = roots.count { it.status == ChatStatus.Running },
             projects = chips.toImmutableList(),
@@ -132,6 +145,7 @@ public object ChatsState {
             running = item.running,
             permission = item.permission,
             observedAtMs = nowMs,
+            preview = item.preview.takeIf { it.isNotBlank() }?.let(HomePreviewRules::oneLine),
         )
 
     /**

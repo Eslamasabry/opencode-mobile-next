@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Agents page bento tiles and the automatic phone-agent connection (native/agents-bento, 2026-11-08). -->
+<resources>
+    <string name="agentsTileInstalling">Installing…</string>
+    <string name="agentsHelperNotConnected">Phone agents are not connected.</string>
+    <string name="agentsHelperNotStarted">Phone agents are not connected: the agent helper did not start.</string>
+    <string name="agentsHelperNoAnswer">Phone agents are not connected: the agent helper did not answer.</string>
+    <string name="agentsHelperKeyRefused">Phone agents are not connected: the agent helper did not accept this app’s key.</string>
+    <string name="agentsHelperKeyUnreadable">Phone agents are not connected: this phone could not read the agent helper’s key.</string>
+    <string name="agentsHelperNoLinux">Phone agents are not connected: this phone’s built-in Linux is not set up.</string>
+    <string name="agentsTabsLabel">Where agents run</string>
+    <string name="agentsTabComputers">On computers</string>
+    <string name="agentsPhoneReady">This phone is ready</string>
+    <string name="agentsPhoneReadyDetails">This phone is ready · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Check again</string>
+    <string name="agentsAddComputerLine">Use Claude Code or Pi on a computer that runs Paseo.</string>
+    <string name="agentsComputerLooking">Looking for agents on this computer…</string>
+    <string name="agentsComputerReadFailed">This computer’s agents could not be read. Pull down to try again.</string>
+    <string name="agentsNewChat">New chat</string>
+    <string name="agentsNewChatWith">New chat with %1$s</string>
+    <string name="agentsConversationsStored">Where conversations are stored</string>
+    <string name="agentsConversationsStoredOn">Where conversations are stored: %1$s</string>
+    <string name="agentsHostAccount">Host account: %1$s</string>
+</resources>
