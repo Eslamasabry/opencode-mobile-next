@@ -14,6 +14,15 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderEditViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
+import io.github.eslamasabry.oc.engine.factsbook.ProposalDecision
+import io.github.eslamasabry.oc.engine.factsbook.RuleProblem
+import io.github.eslamasabry.oc.engine.factsbook.TriggerSourceKind
+import io.github.eslamasabry.oc.engine.factsbook.TriggersLoad
+import io.github.eslamasabry.oc.feature.factsbook.presentation.EventViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleEditorViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusViewModel
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
@@ -191,7 +200,7 @@ class FactsBookViewModelsTest {
     @Test
     fun `B-FB-031 Needs you lists the changes waiting and cannot approve without an owner device`() = runTest {
         val access = FakeAccess().apply { node.healthy() }
-        val vm = NeedsYouViewModel(access, nav)
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.review.isNotEmpty() }
         assertEquals("rvw_1", state.review.single().id)
@@ -203,7 +212,7 @@ class FactsBookViewModelsTest {
     fun `B-FB-035 an approval on Needs you is signed, sent once and says it was approved`() = runTest {
         val access = FakeAccess(owner = true).apply { node.healthy() }
         access.node.on("POST /v1/review/rvw_1/decision", """{"status":"ok","id":"rvw_1"}""")
-        val vm = NeedsYouViewModel(access, nav)
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.review.isNotEmpty() && it.canApprove }
         vm.approve(state.review.single())
@@ -215,7 +224,7 @@ class FactsBookViewModelsTest {
     fun `B-FB-036 a change approved elsewhere first says it changed and nothing else`() = runTest {
         val access = FakeAccess(owner = true).apply { node.healthy() }
         access.node.on("POST /v1/review/rvw_1/decision", """{"error":{"code":"stale_approval"}}""", status = 409)
-        val vm = NeedsYouViewModel(access, nav)
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val item = vm.state.first { it.review.isNotEmpty() && it.canApprove }.review.single()
         vm.approveEdited(item, "  Likes green tea ")
@@ -261,5 +270,78 @@ class FactsBookViewModelsTest {
         off.state.first { it.settings != null }
         off.setBriefCap(3)
         assertFalse(unowned.node.asked.any { it == "PATCH /v1/config" })
+    }
+
+    @Test
+    fun `B-FB-065 Triggers groups rules by source and pauses one, signed, saying it was paused`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("PUT /v1/rules/rul_1", RULE.replace("\"rev\":4", "\"rev\":5").replace("\"enabled\":true", "\"enabled\":false"))
+        val vm = TriggersViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.load == TriggersLoad.Ready && it.canApprove }
+        assertEquals(TriggerSourceKind.Share, state.groups.single().kind)
+        assertEquals(1, state.activity.getValue("rul_1").proposed)
+        vm.togglePause(state.groups.single().rules.single())
+        vm.state.first { it.notice == TriggersNotice.Paused }
+        assertEquals(1, access.node.asked.count { it == "PUT /v1/rules/rul_1" })
+
+        val unowned = FakeAccess(owner = false).apply { node.healthy(); node.triggers() }
+        val off = TriggersViewModel(unowned, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { off.state.collect {} }
+        val ready = off.state.first { it.load == TriggersLoad.Ready }
+        off.togglePause(ready.groups.single().rules.single())
+        assertFalse(unowned.node.asked.any { it.startsWith("PUT") })
+    }
+
+    @Test
+    fun `B-FB-066 a new rule is checked before it is sent, tried on a sample without saving, then saved signed`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/rules/test", """{"matched":true,"reason":"matched","summary":"Library visit","when":"2026-11-12T09:00"}""")
+        access.node.on("POST /v1/rules", RULE.replace("rul_1", "rul_9"))
+        val vm = RuleEditorViewModel(FactsBookRoute.Rule(null), access, nav, FixedClock())
+        vm.state.first { it.canApprove }
+        vm.save()
+        assertEquals(RuleProblem.NameEmpty, vm.state.value.problem)
+        assertFalse(access.node.asked.contains("POST /v1/rules"))
+        vm.edit { it.copy(name = "Library", words = "library, visit") }
+        vm.useExample()
+        assertTrue(vm.state.value.sample.startsWith("Appointment: Library visit | 2026-11-12T09:00"))
+        vm.test()
+        assertTrue(vm.state.first { it.result != null }.result!!.matched)
+        assertFalse(access.node.asked.contains("POST /v1/rules"))
+        vm.save()
+        val saved = vm.state.first { it.notice == RuleNotice.Saved }
+        assertEquals("rul_9", saved.saved?.id)
+    }
+
+    @Test
+    fun `B-FB-067 what happened to a message shows its rule and what it proposed, and a gone one says so`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        val vm = EventViewModel(FactsBookRoute.Event("evt_1"), access, nav)
+        val state = vm.state.first { !it.loading }
+        assertEquals("Clinic", state.event?.claims?.sender)
+        assertEquals("Clinic", state.ruleNames["trg_1"])
+        assertEquals(listOf("rpr_1"), state.proposals.map { it.id })
+        val gone = EventViewModel(FactsBookRoute.Event("evt_x"), access, nav).state.first { !it.loading }
+        assertEquals("not_found", gone.error?.code)
+    }
+
+    @Test
+    fun `B-FB-068 Needs you counts a rule's proposal and offer once, confirms it signed and dismisses the offer`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/reminder-proposals/rpr_1/decision", """{"status":"ok","id":"rpr_1"}""")
+        access.node.on("POST /v1/offers/off_1/cancel", """{"id":"off_1","rev":2,"digest":"od","state":"cancelled","expires_at":"2026-11-09T10:00:00Z"}""")
+        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.proposals.isNotEmpty() && it.offers.isNotEmpty() }
+        assertEquals(3, state.waiting) // one change, one proposal, one offer
+        assertEquals(3, access.engine.state.value.needsYouCount)
+        assertEquals("evt_1", state.fromEvent["rpr_1"]?.id)
+        assertEquals("Clinic", state.offerRule["off_1"])
+        vm.decideProposal(state.proposals.single(), ProposalDecision.Confirm)
+        vm.state.first { it.notice == CareNotice.Approved }
+        vm.notNow(state.offers.single())
+        vm.state.first { it.working.isEmpty() && access.node.asked.contains("POST /v1/offers/off_1/cancel") }
+        assertEquals(1, access.node.asked.count { it == "POST /v1/reminder-proposals/rpr_1/decision" })
     }
 }

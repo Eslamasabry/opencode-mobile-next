@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookLoad
+import io.github.eslamasabry.oc.engine.factsbook.ConversationOffer
+import io.github.eslamasabry.oc.engine.factsbook.ProposalDecision
+import io.github.eslamasabry.oc.engine.factsbook.ReminderProposal
 import io.github.eslamasabry.oc.engine.factsbook.ReviewItem
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouActions
@@ -83,7 +86,8 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
     val gutter = LocalKitTokens.current.gutter.dp
     var more by remember { mutableStateOf<ReviewItem?>(null) }
     var editing by remember { mutableStateOf<ReviewItem?>(null) }
-    val waiting = state.review.size + state.notSaved
+    val waiting = state.waiting
+    var moreProposal by remember { mutableStateOf<ReminderProposal?>(null) }
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
             topBar = {
@@ -110,7 +114,7 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
                     )
                 }
                 state.load == FactsBookLoad.Loading && waiting == 0 -> KitSkeletonRows()
-                else -> Body(state, actions, gutter, onMore = { more = it })
+                else -> Body(state, actions, gutter, onMore = { more = it }, onMoreProposal = { moreProposal = it })
             }
         }
         val open = more
@@ -145,6 +149,50 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
                             actions.skip(open)
                         },
                     )
+                    state.fromEvent[open.id]?.let { event ->
+                        KitRow(
+                            title = stringResource(Res.string.fbWhyFired),
+                            leading = KitRowLeading.Glyph(KitIcons.info),
+                            onClick = {
+                                more = null
+                                actions.whyFired(event)
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        val proposal = moreProposal
+        if (proposal != null) {
+            val claim = proposalClaim(proposal)
+            KitSheet(
+                visible = true,
+                onDismissRequest = { moreProposal = null },
+                title = claim,
+                subtitle = classWords("reminder"),
+                closeLabel = stringResource(Res.string.fbDismiss),
+            ) {
+                KitRowGroup {
+                    KitRow(
+                        title = stringResource(Res.string.fbCareSkipNamed, claim),
+                        titleMaxLines = 2,
+                        supporting = stringResource(Res.string.fbCareSkipDetail),
+                        leading = KitRowLeading.Glyph(KitIcons.forward),
+                        onClick = {
+                            moreProposal = null
+                            actions.decideProposal(proposal, ProposalDecision.Skip)
+                        },
+                    )
+                    state.fromEvent[proposal.id]?.let { event ->
+                        KitRow(
+                            title = stringResource(Res.string.fbWhyFired),
+                            leading = KitRowLeading.Glyph(KitIcons.info),
+                            onClick = {
+                                moreProposal = null
+                                actions.whyFired(event)
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -168,7 +216,13 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
 private fun claimOf(item: ReviewItem): String = item.text?.let { bidiName(it) } ?: classWords(item.reviewClass)
 
 @Composable
-private fun Body(state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp, onMore: (ReviewItem) -> Unit) {
+private fun Body(
+    state: NeedsYouUi,
+    actions: NeedsYouActions,
+    gutter: Dp,
+    onMore: (ReviewItem) -> Unit,
+    onMoreProposal: (ReminderProposal) -> Unit,
+) {
     LazyColumn(Modifier.fillMaxSize()) {
         if (!state.canApprove) {
             item("owner") {
@@ -199,7 +253,7 @@ private fun Body(state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp, onMore
                 )
             }
         }
-        if (state.review.isEmpty() && state.notSaved == 0) {
+        if (state.waiting == 0) {
             item("empty") {
                 KitStateView(
                     KitStateKind.Calm,
@@ -209,8 +263,9 @@ private fun Body(state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp, onMore
                 )
             }
         }
-        if (state.review.isNotEmpty()) {
-            item("label") { KitSectionLabel(pluralStringResource(Res.plurals.fbCareWaiting, state.review.size, state.review.size)) }
+        val changes = state.review.size + state.proposals.size
+        if (changes > 0) {
+            item("label") { KitSectionLabel(pluralStringResource(Res.plurals.fbCareWaiting, changes, changes)) }
             item("hint") {
                 KitText(
                     stringResource(Res.string.fbCareTapHint),
@@ -219,7 +274,12 @@ private fun Body(state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp, onMore
                     tone = TextTone.Secondary,
                 )
             }
+            state.proposals.forEach { p -> item(p.id) { ProposalCard(p, state, actions, gutter, onMoreProposal) } }
             state.review.forEach { item -> item(item.id) { Card(item, state, actions, gutter, onMore) } }
+        }
+        if (state.offers.isNotEmpty()) {
+            item("offersLabel") { KitSectionLabel(pluralStringResource(Res.plurals.fbNeedsYouOffers, state.offers.size, state.offers.size)) }
+            state.offers.forEach { offer -> item(offer.id) { OfferCard(offer, state, actions, gutter) } }
         }
         if (state.notSaved > 0) {
             item("notSaved") {
@@ -239,7 +299,8 @@ private fun Body(state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp, onMore
 
 /** Who suggested it: the person themself (with when and where), or an agent with nothing the person wrote behind it. */
 @Composable
-private fun sourceLine(item: ReviewItem): String {
+private fun sourceLine(item: ReviewItem, fromRule: Boolean): String {
+    if (fromRule) return stringResource(Res.string.fbCareSourceRule)
     val evidence = item.evidence.firstOrNull() ?: return stringResource(Res.string.fbCareSourceAgent)
     return provenanceLine(
         if (evidence.source == "note") KitProvenance.Told else KitProvenance.Seen,
@@ -254,6 +315,7 @@ private fun Card(item: ReviewItem, state: NeedsYouUi, actions: NeedsYouActions, 
     val kind = classWords(item.reviewClass)
     val claim = claimOf(item)
     val busy = item.id in state.working
+    val fromRule = item.id in state.fromEvent
     val off = if (state.canApprove) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.fbCareNeedsOwnerShort))
     KitPanel(
         Modifier.padding(horizontal = gutter, vertical = Space.S2.dp),
@@ -261,13 +323,14 @@ private fun Card(item: ReviewItem, state: NeedsYouUi, actions: NeedsYouActions, 
         onClick = if (state.canApprove && !busy) ({ onMore(item) }) else null,
     ) {
         if (item.text != null) KitText(kind, role = TypeRole.Caption, tone = TextTone.Secondary)
-        if (item.area.isNotEmpty() || item.risk.isNotEmpty()) {
+        if (item.area.isNotEmpty() || item.risk.isNotEmpty() || fromRule) {
             KitChipWrap {
+                if (fromRule) KitChip(stringResource(Res.string.fbTriggerChip))
                 if (item.area.isNotEmpty()) KitChip(areaName(item.area))
                 item.risk.forEach { KitChip(riskWords(it)) }
             }
         }
-        KitText(sourceLine(item), role = TypeRole.Caption, tone = TextTone.Secondary)
+        KitText(sourceLine(item, fromRule), role = TypeRole.Caption, tone = TextTone.Secondary)
         Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             KitButton(
                 KitAction(
@@ -290,5 +353,78 @@ private fun Card(item: ReviewItem, state: NeedsYouUi, actions: NeedsYouActions, 
                 role = KitButtonRole.Secondary,
             )
         }
+    }
+}
+
+@Composable
+private fun proposalClaim(proposal: ReminderProposal): String {
+    val what = bidiName(proposal.preview.what)
+    return proposal.preview.at?.let { stringResource(Res.string.fbCareProposalWhen, what, isoWhenWords(it.toString())) } ?: what
+}
+
+/** A reminder a rule proposes: confirm exactly what is shown or reject it; a tap skips it or says why it came. */
+@Composable
+private fun ProposalCard(proposal: ReminderProposal, state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp, onMore: (ReminderProposal) -> Unit) {
+    val claim = proposalClaim(proposal)
+    val busy = proposal.id in state.working
+    val off = if (state.canApprove) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.fbCareNeedsOwnerShort))
+    KitPanel(
+        Modifier.padding(horizontal = gutter, vertical = Space.S2.dp),
+        title = claim,
+        onClick = if (state.canApprove && !busy) ({ onMore(proposal) }) else null,
+    ) {
+        KitText(classWords("reminder"), role = TypeRole.Caption, tone = TextTone.Secondary)
+        KitChipWrap {
+            KitChip(stringResource(Res.string.fbTriggerChip))
+            KitChip(areaName(proposal.area))
+        }
+        KitText(stringResource(Res.string.fbCareSourceRule), role = TypeRole.Caption, tone = TextTone.Secondary)
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            KitButton(
+                KitAction(
+                    stringResource(Res.string.fbCareApprove),
+                    { actions.decideProposal(proposal, ProposalDecision.Confirm) },
+                    enabled = off,
+                    working = busy,
+                    semanticsLabel = stringResource(Res.string.fbCareApproveNamed, claim),
+                ),
+                role = KitButtonRole.Secondary,
+            )
+            KitButton(
+                KitAction(
+                    stringResource(Res.string.fbCareReject),
+                    { if (!busy) actions.decideProposal(proposal, ProposalDecision.Reject) },
+                    enabled = off,
+                    destructive = true,
+                    semanticsLabel = stringResource(Res.string.fbCareRejectNamed, claim),
+                ),
+                role = KitButtonRole.Secondary,
+            )
+        }
+    }
+}
+
+/**
+ * "Discuss with your agent?" (F: offer_card.dart): the offer's short summary, where it came from, and Not now. Opening
+ * the chat it offers needs the new-chat seed and first-message report from :feature:chats (report: s25-hooks), so
+ * Talk about this is not offered here yet.
+ */
+@Composable
+private fun OfferCard(offer: ConversationOffer, state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp) {
+    val event = state.fromEvent[offer.id]
+    KitPanel(Modifier.padding(horizontal = gutter, vertical = Space.S2.dp), title = stringResource(Res.string.fbOfferTitle)) {
+        state.offerRule[offer.id]?.let { KitText(stringResource(Res.string.fbOfferFromRule, bidiName(it)), role = TypeRole.Caption, tone = TextTone.Secondary) }
+        KitText(bidiName(offer.summary))
+        event?.let {
+            KitText(
+                stringResource(Res.string.fbOfferSource, sourceKindWords(it.source.kind).lowercase(), observedWords(it.capturedAt)),
+                role = TypeRole.Caption,
+                tone = TextTone.Secondary,
+            )
+        }
+        KitButton(
+            KitAction(stringResource(Res.string.fbOfferNotNow), { actions.notNow(offer) }, working = offer.id in state.working),
+            role = KitButtonRole.Tertiary,
+        )
     }
 }

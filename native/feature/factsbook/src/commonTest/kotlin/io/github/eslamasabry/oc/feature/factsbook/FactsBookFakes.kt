@@ -100,6 +100,29 @@ internal class FakeNode : FactsBookHttp {
         return answers["$method $path"] ?: FbHttpResult.Answer(404, """{"error":{"code":"not_found"}}""")
     }
 
+    /** Rules, one event, its firing, a proposed reminder and an open offer (F: test/fixtures/factsbook). */
+    fun triggers() {
+        on("GET /v1/rules", """{"items":[$RULE]}""")
+        on(
+            "GET /v1/events",
+            """{"items":[{"id":"evt_1","source":{"kind":"share"},"trust":"third_party_untrusted","sens":"normal","captured_at":"2026-11-08T09:00:00Z",
+              "processing":{"state":"evaluated","reason":"matched"},"firings":["trg_1"],"claims":{"sender":"Clinic"}}]}""",
+        )
+        on(
+            "GET /v1/trigger-firings",
+            """{"items":[{"id":"trg_1","event_id":"evt_1","rule_id":"rul_1","template":{"id":"appointment"},"at":"2026-11-08T09:00:01Z","state":"proposed","outcomes":["rpr_1","off_1"]}]}""",
+        )
+        on(
+            "GET /v1/reminder-proposals",
+            """{"items":[{"id":"rpr_1","rev":2,"event_id":"evt_1","firing_id":"trg_1","area":"health","digest":"dg","state":"proposed",
+              "preview":{"what":"Clinic visit","zone":"vault","locale":"en","preview_digest":"pd"}}]}""",
+        )
+        on(
+            "GET /v1/offers",
+            """{"items":[{"id":"off_1","rev":1,"event_id":"evt_1","firing_id":"trg_1","summary":"A clinic visit next week","digest":"od","state":"offered","expires_at":"2026-11-09T10:00:00Z"}]}""",
+        )
+    }
+
     fun healthy() {
         on("GET /v1/status", """{"modules":{},"index":{"normal":"ok","sensitive":"locked"}}""")
         on("GET /v1/review", """{"items":[{"rvw":"rvw_1","class":"fact_add","state":"proposed","digest":"d","proposal":{"text":"x"}}]}""")
@@ -107,6 +130,11 @@ internal class FakeNode : FactsBookHttp {
         on("GET /v1/things", THINGS)
     }
 }
+
+internal const val RULE: String =
+    """{"id":"rul_1","rev":4,"updated_at":"2026-11-07T10:00:00Z","definition":{"v":1,"name":"Clinic","enabled":true,
+      "source":{"client_id":"cli_01","kind":"share","instance":"manual-share"},"template":{"id":"appointment","version":2,"locale":"en"},
+      "area":"health","contains_all":["clinic"],"outcomes":[{"kind":"reminder"}],"limit_per_day":5}}"""
 
 internal const val THINGS: String =
     """{"items":[{"id":"per_01","title":"Sara","kind":"person","updated_at":"2026-10-10T08:00:00Z","facts":[

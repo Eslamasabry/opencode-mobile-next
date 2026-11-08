@@ -45,8 +45,12 @@ public data class FactsBookState(
     val pending: List<CouldNotSaveEntry> = emptyList(),
     val error: FactsBookError? = null,
     val capabilities: FactsBookCapabilities = FactsBookCapabilities.B5,
+    /** Reminders a rule proposed: they wait with the changes to review. */
+    val proposalsWaiting: Int = 0,
+    /** "Talk about this" offers that can still be answered. */
+    val openOffers: Int = 0,
 ) {
-    val reviewWaiting: Int get() = review.size
+    val reviewWaiting: Int get() = review.size + proposalsWaiting
 
     /** What needs the person, derived from the review queue and Not saved yet; counted once. */
     val needsYou: List<NeedsYouItem>
@@ -55,6 +59,7 @@ public data class FactsBookState(
             return buildList {
                 if (reviewWaiting > 0) add(NeedsYouItem(NeedsYouKind.Review, reviewWaiting))
                 if (notSaved.isNotEmpty()) add(NeedsYouItem(NeedsYouKind.NotSaved, notSaved.size, notSaved.minOf { it.createdAt }))
+                if (openOffers > 0) add(NeedsYouItem(NeedsYouKind.Offer, openOffers))
             }
         }
 
@@ -88,6 +93,12 @@ public class FactsBookEngine(
     /** The gateway, for the pages' own reads (things, a thing, search, areas). Null while unpaired. */
     public val node: FactsBookGateway? get() = gateway
 
+    /** Rules, events and what they proposed, read only where the node's capabilities list them. */
+    public val triggers: FactsBookTriggers =
+        FactsBookTriggers({ gateway }, { state.value.capabilities }, clock) { t ->
+            mutable.update { it.copy(proposalsWaiting = t.proposals.size, openOffers = t.openOffers(clock.now()).size) }
+        }
+
     /** Reads the pairing of [profileId] in place (Flutter's keys) and builds the gateway. Safe to call again. */
     public suspend fun open(profileId: String?): Unit =
         lane.withLock {
@@ -112,6 +123,7 @@ public class FactsBookEngine(
                 store.ownerSeed(profileId, signing.secureBytes)?.let { OwnerSigner(it, device, link, signing) { clock.now() } }
             } else null
         gateway = if (link != null && token != null) gatewayFor(link, token, signer) else null
+        triggers.reset()
         mutable.value =
             FactsBookState(
                 loaded = true,
@@ -124,8 +136,10 @@ public class FactsBookEngine(
     }
 
     /** Reads everything the overview shows, after sending what the outbox holds. */
-    public suspend fun refresh(): Unit =
+    public suspend fun refresh() {
         lane.withLock { refreshLocked() }
+        if (gateway != null && triggers.supported) triggers.refresh(quiet = true)
+    }
 
     private suspend fun refreshLocked() {
         val node = gateway ?: return

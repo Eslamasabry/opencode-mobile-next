@@ -70,6 +70,31 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusUi
 import io.github.eslamasabry.oc.feature.factsbook.ui.SettingsScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.StatusScreen
+import androidx.compose.ui.test.onNodeWithContentDescription
+import io.github.eslamasabry.oc.engine.factsbook.EventClaims
+import io.github.eslamasabry.oc.engine.factsbook.EventTrust
+import io.github.eslamasabry.oc.engine.factsbook.RuleActivity
+import io.github.eslamasabry.oc.engine.factsbook.TriggerEvent
+import io.github.eslamasabry.oc.engine.factsbook.TriggerOutcome
+import io.github.eslamasabry.oc.engine.factsbook.TriggerOutcomeKind
+import io.github.eslamasabry.oc.engine.factsbook.TriggerReason
+import io.github.eslamasabry.oc.engine.factsbook.TriggerSource
+import io.github.eslamasabry.oc.engine.factsbook.TriggerSourceKind
+import io.github.eslamasabry.oc.engine.factsbook.TriggerTemplate
+import io.github.eslamasabry.oc.engine.factsbook.TriggerTemplateId
+import io.github.eslamasabry.oc.engine.factsbook.TriggersLoad
+import io.github.eslamasabry.oc.feature.factsbook.presentation.EventActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.EventUi
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleEditorActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleEditorUi
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleForm
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RuleGroup
+import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersUi
+import io.github.eslamasabry.oc.feature.factsbook.ui.EventScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.RuleEditorScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.TriggersScreen
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
@@ -252,6 +277,11 @@ class FactsBookScreensTest {
         override fun reject(item: ReviewItem) { calls += "reject ${item.id}" }
         override fun skip(item: ReviewItem) { calls += "skip ${item.id}" }
         override fun approveEdited(item: ReviewItem, text: String) { calls += "edit ${item.id} $text" }
+        override fun decideProposal(proposal: io.github.eslamasabry.oc.engine.factsbook.ReminderProposal, decision: io.github.eslamasabry.oc.engine.factsbook.ProposalDecision) {
+            calls += "proposal ${proposal.id} $decision"
+        }
+        override fun whyFired(event: io.github.eslamasabry.oc.engine.factsbook.TriggerEvent) { calls += "why ${event.id}" }
+        override fun notNow(offer: io.github.eslamasabry.oc.engine.factsbook.ConversationOffer) { calls += "notNow ${offer.id}" }
     }
 
     @Test
@@ -385,5 +415,113 @@ class FactsBookScreensTest {
         onNodeWithText("Use this phone's time zone").performClick()
         onNodeWithText("Areas", substring = true, useUnmergedTree = true).assertExists()
         assertEquals(listOf("zone"), actions.calls)
+    }
+
+    private val rule =
+        io.github.eslamasabry.oc.engine.factsbook.Rule(
+            "rul_1",
+            4,
+            io.github.eslamasabry.oc.engine.factsbook.RuleDefinition(
+                name = "Clinic",
+                enabled = true,
+                source = TriggerSource("cli_01", TriggerSourceKind.Share, "manual-share"),
+                template = TriggerTemplate(TriggerTemplateId.Appointment),
+                area = "health",
+                containsAll = listOf("clinic"),
+                outcomes = listOf(TriggerOutcome(TriggerOutcomeKind.Reminder)),
+                limitPerDay = 5,
+            ),
+            t0,
+        )
+
+    private val event =
+        TriggerEvent(
+            "evt_1",
+            TriggerSource("cli_01", TriggerSourceKind.Share, "manual-share"),
+            EventClaims(sender = "Clinic"),
+            EventTrust.ThirdPartyUntrusted,
+            "health",
+            sensitive = false,
+            capturedAt = t0,
+            reason = TriggerReason.NoMatch,
+            firings = emptyList(),
+        )
+
+    private class Rules : TriggersActions, RuleEditorActions, EventActions {
+        val calls = mutableListOf<String>()
+        override fun back() { calls += "back" }
+        override fun refresh() { calls += "refresh" }
+        override fun newRule() { calls += "new" }
+        override fun openRule(rule: io.github.eslamasabry.oc.engine.factsbook.Rule) { calls += "rule ${rule.id}" }
+        override fun openEvent(event: TriggerEvent) { calls += "event ${event.id}" }
+        override fun togglePause(rule: io.github.eslamasabry.oc.engine.factsbook.Rule) { calls += "pause ${rule.id}" }
+        override fun setUpApproval() { calls += "approval" }
+        override fun dismiss() { calls += "dismiss" }
+        override fun edit(change: (RuleForm) -> RuleForm) { calls += "edit" }
+        override fun sample(text: String) { calls += "sample" }
+        override fun useExample() { calls += "example" }
+        override fun test() { calls += "test" }
+        override fun save() { calls += "save" }
+        override fun askDelete() { calls += "askDelete" }
+        override fun delete() { calls += "delete" }
+        override fun cancelDelete() { calls += "cancelDelete" }
+        override fun reload() { calls += "reload" }
+    }
+
+    @Test
+    fun `B-FB-069 Triggers lists rules by where messages come from, pauses one by name and opens a recent message`() = runComposeUiTest {
+        val actions = Rules()
+        setContent {
+            Themed {
+                TriggersScreen(
+                    TriggersUi(
+                        load = TriggersLoad.Ready,
+                        groups = persistentListOf(RuleGroup(TriggerSourceKind.Share, persistentListOf(rule))),
+                        activity = persistentMapOf("rul_1" to RuleActivity(proposed = 2, ignored = 1)),
+                        events = persistentListOf(event),
+                        canApprove = true,
+                    ),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Text you share · 1 rule").assertExists()
+        onNodeWithText("Looks for an appointment → propose a reminder", substring = true, useUnmergedTree = true).assertExists()
+        onNodeWithText("This week: 2 proposed, 1 ignored", substring = true, useUnmergedTree = true).assertExists()
+        onNodeWithContentDescription("Pause “Clinic”").performClick()
+        onNodeWithText("No rule matched this message.", useUnmergedTree = true).performClick()
+        onNodeWithText("New rule").performClick()
+        assertEquals(listOf("pause rul_1", "event evt_1", "new"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-070 a node without rules says so plainly`() = runComposeUiTest {
+        setContent { Themed { TriggersScreen(TriggersUi(load = TriggersLoad.Unavailable), Rules()) } }
+        onNodeWithText("Rules are off here").assertExists()
+    }
+
+    @Test
+    fun `B-FB-071 the rule editor shows a saved rule and deletes it only after asking`() = runComposeUiTest {
+        val actions = Rules()
+        setContent {
+            Themed {
+                RuleEditorScreen(
+                    RuleEditorUi(form = RuleForm.of(rule), saved = rule, dirty = false, canApprove = true, confirmDelete = true),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Edit rule", useUnmergedTree = true).assertExists()
+        onNodeWithText("Delete this rule?").assertExists()
+        onNodeWithText("Delete rule").performClick()
+        assertEquals(listOf("delete"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-072 what happened to a message says why first and labels the sender as a claim`() = runComposeUiTest {
+        setContent { Themed { EventScreen(EventUi(event = event, loading = false), Rules()) } }
+        onNodeWithText("No rule matched this message.").assertExists()
+        onNodeWithText("Sender (a claim)").assertExists()
+        onNodeWithText("Unverified sender", substring = true).assertExists()
     }
 }

@@ -160,7 +160,7 @@ public class HttpFactsBookGateway(
     private val retryDelayMs: Long = 250,
     /** Signs owner-only changes; null while this phone has no owner device id. */
     private val owner: OwnerSigner? = null,
-) : FactsBookGateway, FactsBookReminders {
+) : FactsBookGateway, FactsBookReminders, FactsBookTriggerCalls {
     private val lane = Mutex()
 
     override fun toString(): String = "HttpFactsBookGateway"
@@ -382,6 +382,67 @@ public class HttpFactsBookGateway(
         send("GET", "/v1/inbox/${seg(id)}/export").reading { CaptureExport(pretty.encodeToString(JsonObject.serializer(), it), it.str("item").orEmpty()) }
 
     override suspend fun control(): FbResult<ControlChain> = send("GET", "/v1/control", mapOf("since" to "0")).reading(ControlChain::read)
+
+    // ---- Event triggers (spec 44): asked only where the capability matrix lists them -------------------------------
+
+    override suspend fun rules(): FbResult<List<Rule>> = all("/v1/rules", Rule::read).map { list -> list.filter { !it.deleted } }
+
+    private suspend fun <T> signedRead(method: String, path: String, body: JsonObject, read: (JsonObject) -> T): FbResult<T> =
+        when (val proved = signed(method, path, body)) {
+            is FbResult.Err -> proved
+            is FbResult.Ok -> send(method, path, body = proved.value, idempotencyKey = key()).reading(read)
+        }
+
+    override suspend fun saveRule(definition: RuleDefinition, replacing: Rule?): FbResult<Rule> =
+        signedRead(
+            if (replacing == null) "POST" else "PUT",
+            if (replacing == null) "/v1/rules" else "/v1/rules/${seg(replacing.id)}",
+            obj("base_rev" to JsonPrimitive(replacing?.revision ?: 0), "rule" to definition.toJson()),
+            Rule::read,
+        )
+
+    override suspend fun deleteRule(rule: Rule): FbResult<Rule> =
+        signedRead("DELETE", "/v1/rules/${seg(rule.id)}", obj("base_rev" to JsonPrimitive(rule.revision)), Rule::read)
+
+    override suspend fun testDraft(draft: RuleDefinition, sample: TriggerSample): FbResult<RuleTestResult> =
+        send("POST", "/v1/rules/test", body = obj("rule" to draft.toJson(), "sample" to sample.toJson())).reading(RuleTestResult::read)
+
+    override suspend fun events(): FbResult<List<TriggerEvent>> = all("/v1/events", TriggerEvent::read)
+
+    override suspend fun firings(): FbResult<List<TriggerFiring>> = all("/v1/trigger-firings", TriggerFiring::read)
+
+    override suspend fun reminderProposals(): FbResult<List<ReminderProposal>> =
+        all("/v1/reminder-proposals", ReminderProposal::read).map { list -> list.filter { it.proposed } }
+
+    override suspend fun decideReminderProposal(proposal: ReminderProposal, decision: ProposalDecision): FbResult<MutationResult> =
+        signedSend(
+            "POST",
+            "/v1/reminder-proposals/${seg(proposal.id)}/decision",
+            obj("decision" to JsonPrimitive(decision.wire), "rev" to JsonPrimitive(proposal.revision), "digest" to JsonPrimitive(proposal.digest)),
+        )
+
+    override suspend fun editReminderProposal(proposal: ReminderProposal, preview: ReminderPreview): FbResult<MutationResult> =
+        signedSend(
+            "POST",
+            "/v1/reminder-proposals/${seg(proposal.id)}/decision",
+            obj(
+                "decision" to JsonPrimitive("edit"),
+                "rev" to JsonPrimitive(proposal.revision),
+                "digest" to JsonPrimitive(proposal.digest),
+                "preview" to preview.raw,
+                "preview_digest" to JsonPrimitive(preview.digest),
+            ),
+        )
+
+    override suspend fun offers(): FbResult<List<ConversationOffer>> = all("/v1/offers", ConversationOffer::read)
+
+    override suspend fun cancelOffer(offer: ConversationOffer): FbResult<ConversationOffer> =
+        send(
+            "POST",
+            "/v1/offers/${seg(offer.id)}/cancel",
+            body = obj("rev" to JsonPrimitive(offer.revision), "digest" to JsonPrimitive(offer.digest)),
+            idempotencyKey = key(),
+        ).reading(ConversationOffer::read)
 
     override suspend fun previewReminder(
         what: String,
