@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtras
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
+import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationsFeed
@@ -404,5 +405,84 @@ class ChatsViewModelTest {
         assertFalse(vm.state.value.refreshing)
         vm.refreshList()
         assertEquals(2, reads)
+    }
+
+    private class Answers : io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionAnswers {
+        val sent = mutableListOf<String>()
+
+        override suspend fun answer(ref: ConversationRef, requestId: String, allow: Boolean): Outcome<Unit> =
+            answer(ref, requestId, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+
+        override suspend fun answer(ref: ConversationRef, requestId: String, reply: HomePermissionReply): Outcome<Unit> {
+            sent += "$requestId $reply"
+            return Unit.ok()
+        }
+    }
+
+    private fun asking(grants: Boolean): Pair<ChatsViewModel, Answers> {
+        val feed = Feed()
+        feed.snapshot.value =
+            ChatFeedSnapshot(
+                persistentListOf(
+                    item("ask", status = ChatStatus.NeedsYou)
+                        .copy(permission = io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req1", "npm test"))
+                )
+            )
+        val gateway = io.github.eslamasabry.oc.core.testing.FakeServerGateway()
+        gateway.capabilities.value =
+            io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(persistentPermissionGrants = grants)
+        val servers =
+            object : io.github.eslamasabry.oc.feature.chats.presentation.ConversationServers {
+                override val servers =
+                    MutableStateFlow(
+                        persistentListOf(io.github.eslamasabry.oc.feature.chats.presentation.ConversationServer(P1, "p1", gateway, null))
+                    )
+            }
+        val answers = Answers()
+        val vm =
+            ChatsViewModel(
+                feed,
+                Briefs(),
+                Door(false),
+                { Instant.fromEpochMilliseconds(0) },
+                clock,
+                RecordingNavigator(),
+                permissionAnswers = setOf(answers),
+                connections = servers,
+            )
+        return vm to answers
+    }
+
+    @Test
+    fun `PARITY-B-224 a row's waiting permission offers Always allow, which asks first and then answers Always`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.today.single()
+        assertTrue(row.key in vm.state.value.alwaysAllowable)
+        vm.askAlwaysAllow(row)
+        assertEquals(row, vm.state.value.confirmAlways)
+        assertEquals(emptyList(), answers.sent, "nothing is granted before the confirm")
+        vm.cancelAlwaysAllow()
+        assertEquals(null, vm.state.value.confirmAlways)
+        assertEquals(emptyList(), answers.sent)
+        vm.askAlwaysAllow(row)
+        vm.confirmAlwaysAllow()
+        assertEquals(listOf("req1 Always"), answers.sent)
+        assertEquals(null, vm.state.value.confirmAlways)
+        // Allow once and Reject still answer as they did.
+        vm.answerPermission(row, false)
+        assertEquals(listOf("req1 Always", "req1 Reject"), answers.sent)
+    }
+
+    @Test
+    fun `PARITY-B-224 a server that keeps no grants offers no Always allow`() = runTest {
+        val (vm, answers) = asking(grants = false)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.today.single()
+        assertFalse(row.key in vm.state.value.alwaysAllowable)
+        vm.askAlwaysAllow(row)
+        vm.confirmAlwaysAllow()
+        assertEquals(null, vm.state.value.confirmAlways)
+        assertEquals(emptyList(), answers.sent)
     }
 }

@@ -106,6 +106,9 @@ public class ChatsViewModel(
     /** A pull to refresh in flight (one at a time). */
     private val refreshing = MutableStateFlow(false)
 
+    /** The row whose Always allow waits on its confirm. */
+    private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
+
     public val state: StateFlow<ChatsUi> =
         combine(
                 combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
@@ -159,8 +162,10 @@ public class ChatsViewModel(
                     deletable = deletable(snapshot),
                     pinnable = if (pins.supported) editable(snapshot) else kotlinx.collections.immutable.persistentSetOf(),
                     pinned = pinnedKeys(snapshot),
+                    alwaysAllowable = alwaysAllowable(snapshot),
                 )
             }
+            .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
@@ -206,6 +211,22 @@ public class ChatsViewModel(
             .toImmutableSet()
     }
 
+    /**
+     * F: lib/ui/screens/chats/chats_host.dart:262-270: Always allow is offered only where the server keeps the grant
+     * (`capabilities.persistentPermissionGrants`), and only with an answer port to send it through.
+     */
+    private fun alwaysAllowable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        if (permissionAnswers.size != 1) return kotlinx.collections.immutable.persistentSetOf()
+        val capable =
+            connections.servers.value
+                .filter { it.gateway.capabilities.value.persistentPermissionGrants }
+                .mapTo(hashSetOf()) { it.profile }
+        return snapshot.items
+            .filter { it.permission != null && it.profileId in capable }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
+
     private fun pinnedKeys(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
         if (!pins.supported) return kotlinx.collections.immutable.persistentSetOf()
         val byProfile = connections.servers.value.associateBy { it.profile }
@@ -245,12 +266,34 @@ public class ChatsViewModel(
         )
 
     override fun answerPermission(row: ConversationRowUi, allow: Boolean) {
+        sendAnswer(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+    }
+
+    override fun askAlwaysAllow(row: ConversationRowUi) {
+        if (row.permission == null || row.key !in state.value.alwaysAllowable) return
+        confirmingAlways.value = row
+    }
+
+    override fun confirmAlwaysAllow() {
+        val row = confirmingAlways.value ?: return
+        confirmingAlways.value = null
+        // The request it was asked for: a newer one on the same row is not what the person confirmed.
+        val now = (state.value.today + state.value.earlier + state.value.brief?.rows.orEmpty()).firstOrNull { it.key == row.key }
+        if (now?.permission?.requestId != row.permission?.requestId) return
+        sendAnswer(row, HomePermissionReply.Always)
+    }
+
+    override fun cancelAlwaysAllow() {
+        confirmingAlways.value = null
+    }
+
+    private fun sendAnswer(row: ConversationRowUi, reply: HomePermissionReply) {
         val permission = row.permission ?: return
         val port = permissionAnswers.singleOrNull() ?: return
         if (permission.requestId in answers.value.first) return
         answers.value = (answers.value.first + permission.requestId) to null
         viewModelScope.launch {
-            val result = port.answer(row.ref, permission.requestId, allow)
+            val result = port.answer(row.ref, permission.requestId, reply)
             answers.value =
                 (answers.value.first - permission.requestId) to
                     (result as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
@@ -628,7 +671,30 @@ public fun interface HomePermissionAnswers {
         requestId: String,
         allow: Boolean,
     ): io.github.eslamasabry.oc.core.common.Outcome<Unit>
+
+    /**
+     * The row's answer, Always allow included (F: lib/ui/screens/chats/chats_host.dart:258-270). A port that cannot
+     * keep a grant refuses Always, so nothing is allowed for longer than the person chose.
+     */
+    public suspend fun answer(
+        ref: ConversationRef,
+        requestId: String,
+        reply: HomePermissionReply,
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit> =
+        when (reply) {
+            HomePermissionReply.Once -> answer(ref, requestId, true)
+            HomePermissionReply.Reject -> answer(ref, requestId, false)
+            HomePermissionReply.Always ->
+                io.github.eslamasabry.oc.core.common.Outcome.Failed(
+                    io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                        io.github.eslamasabry.oc.core.common.FeatureId("persistentPermissionGrants")
+                    )
+                )
+        }
 }
+
+/** What a list row answers a waiting permission. */
+public enum class HomePermissionReply { Once, Always, Reject }
 
 @dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
 public interface HomePermissionBindings {

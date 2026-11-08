@@ -210,6 +210,10 @@ public data class ChatsUi(
     val switcher: ServerSwitcherUi = ServerSwitcherUi(),
     /** A pull to refresh is reading the list again. */
     val refreshing: Boolean = false,
+    /** Row keys whose waiting permission can be answered Always allow (its server keeps the grant). */
+    val alwaysAllowable: ImmutableSet<String> = persistentSetOf(),
+    /** The row whose Always allow waits on its confirm, or null. */
+    val confirmAlways: ConversationRowUi? = null,
 ) {
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
@@ -256,6 +260,14 @@ public interface ChatsActions {
     public fun rowAct(row: ConversationRowUi, act: RowAct) {}
 
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
+
+    /** Always allow on a row's waiting permission: asks first ([ChatsUi.confirmAlways]), as Flutter's list does. */
+    public fun askAlwaysAllow(row: ConversationRowUi) {}
+
+    /** The confirm said yes: answer the request Always allow. */
+    public fun confirmAlwaysAllow() {}
+
+    public fun cancelAlwaysAllow() {}
 
     /** Pull to refresh: read every source of the list again (Flutter KitRefresh → refreshChatFeed). */
     public fun refreshList() {}
