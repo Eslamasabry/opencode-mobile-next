@@ -104,7 +104,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.166.0",
+        "version": "0.167.0",
         "executable": "codex",
         "launchArgs": [
           "app-server"
@@ -151,7 +151,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "1.5.0",
+        "version": "1.5.3",
         "executable": "agy",
         "launchArgs": [
           "acp",

@@ -327,7 +327,7 @@ AgentCatalog _builtInCatalog() {
         'codex',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '0.166.0',
+          version: '0.167.0',
           executable: 'codex',
           artifacts: {
             AgentArchitecture.arm64: archive(
