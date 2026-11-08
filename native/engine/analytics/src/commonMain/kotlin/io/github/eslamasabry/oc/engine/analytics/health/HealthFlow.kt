@@ -69,6 +69,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         val t = telemetry()
         val result = if (ok) "ok" else "fail"
         t.breadcrumb("conn.connect")
+        if (!ok) ProblemTally.note(t.ring, failKindOf(failure))
         t.track(
             ProductEvent.ConnAttempt,
             buildMap {
@@ -94,6 +95,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
     public fun sendResult(result: String, failure: Failure? = null, firstReplyMs: Long? = null, serverKind: String? = null) {
         val t = telemetry()
         t.breadcrumb("chat.send")
+        if (result == "fail") ProblemTally.note(t.ring, failKindOf(failure, forSend = true))
         t.track(
             ProductEvent.SendResult,
             buildMap {

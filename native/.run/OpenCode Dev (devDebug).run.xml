@@ -1,0 +1,20 @@
+<!-- Dev loop (tool/dev/README.md): run "OpenCode Dev" (io.github.eslamasabry.opencode_mobile.native.dev) from Android
+     Studio so Live Edit / Apply Changes can push edits. Pick the devDebug variant for :androidApp in Build Variants first. -->
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="OpenCode Dev (devDebug)" type="AndroidRunConfigurationType" factoryName="Android App">
+    <module name="opencode-mobile-native.androidApp" />
+    <option name="DEPLOY" value="true" />
+    <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+    <option name="DEPLOY_AS_INSTANT" value="false" />
+    <option name="ALL_USERS" value="false" />
+    <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+    <option name="CLEAR_APP_STORAGE" value="false" />
+    <option name="MODE" value="default_activity" />
+    <option name="CLEAR_LOGCAT" value="false" />
+    <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+    <option name="DEBUGGER_TYPE" value="Auto" />
+    <method v="2">
+      <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
