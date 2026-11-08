@@ -60,6 +60,12 @@ public sealed interface SettingsPage {
      */
     public data object ReportProblem : SettingsPage
 
+    /**
+     * Settings › Help › Send a problem report (B-190, Flutter 2.1.5 section E): a redacted log, previewed whole, sent
+     * only on Send, then the report code.
+     */
+    public data object SendProblemReport : SettingsPage
+
     /** Local files kept for the deferred assistant, with a measured Delete action. */
     public data object Storage : SettingsPage
 

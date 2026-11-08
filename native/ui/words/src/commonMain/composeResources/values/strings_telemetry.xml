@@ -2,4 +2,18 @@
 <resources>
     <string name="telemetryCrashReportsTitle">Send crash reports to the developer (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">When the app crashes or a step fails, it sends the kind of problem, the app and Android version and a short list of code locations. It never sends your messages, files, addresses or keys.</string>
+    <!-- B-180/B-190: Flutter 2.1.5 app_en.arb, word for word. -->
+    <string name="telemetryConsentChoose">Choose</string>
+    <string name="telemetryConsentSave">Save my choices</string>
+    <string name="sendReportTitle">Send a problem report</string>
+    <string name="sendReportRowDetail">Review a redacted log, then send it</string>
+    <string name="sendReportSubtitle">This is everything the report holds. Nothing is sent until you tap Send.</string>
+    <string name="sendReportSend">Send</string>
+    <string name="sendReportCollecting">Collecting the report…</string>
+    <string name="sendReportSentTitle">Report sent</string>
+    <string name="sendReportSentBody">Quote this report code if you open an issue on GitHub, so the developer can find your report.</string>
+    <string name="sendReportFailed">The report could not be sent. Check your connection and try again.</string>
+    <string name="sendReportDone">Done</string>
+    <string name="reportCodeLabel">Report code</string>
+    <string name="reportCodeCopy">Copy report code</string>
 </resources>

@@ -228,6 +228,7 @@ private fun RowBody(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val onRail = LocalKitOnRail.current
+    val glassChosen = if (selected) io.github.eslamasabry.oc.ui.kit.effects.kitGlassChosenRow() else null
     val scale = kitTextScale()
     val large = TextScalePolicy.isLargeText(scale)
     val supportLine =
@@ -279,7 +280,8 @@ private fun RowBody(
                 // On a flat list (Solid) the chosen row is a rounded plate inset space2 from the row's ends, never a
                 // square band across the page (kit_row.dart:672-690).
                 else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.surface3)
-                else Modifier.kitSelectedFill(colors.surface3, onRail)
+                // Glass: accent-tinted frost with the accent rim, its corners following the group's (owner 2026-11-08).
+                else glassChosen ?: Modifier.kitSelectedFill(colors.surface3, onRail)
             )
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             // A row's 48 dp glyph target (its ⋯ menu or a labelled glyph) ends near the edge, so its glyph lines up
@@ -463,6 +465,8 @@ private fun RowBody(
                         io.github.eslamasabry.oc.ui.kit.icon.KitIcons.check,
                         Modifier.testTag("kit-row-check"),
                         size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                        // Glass marks the chosen row in the accent: its frost, its rim and its check.
+                        tone = if (glassChosen != null) TextTone.Accent else TextTone.Primary,
                     )
                     else -> Unit
                 }

@@ -241,7 +241,9 @@ public fun KitScreen(
                             .onSizeChanged { bottomPx = it.height }
                             .then(
                                 when {
-                                    liquid -> Modifier.kitLiquidEdgeFade(top = false)
+                                    // Glass: no band behind the chips over the message box (owner 2026-11-08): the
+                                    // transcript scrolls clean behind the glass chips and the glass message box.
+                                    liquid -> Modifier
                                     veil != null && frost != null -> Modifier.kitChromeVeil(veil, frost)
                                     else -> Modifier.kitChromeGround(FrostRole.Composer, frost)
                                 }

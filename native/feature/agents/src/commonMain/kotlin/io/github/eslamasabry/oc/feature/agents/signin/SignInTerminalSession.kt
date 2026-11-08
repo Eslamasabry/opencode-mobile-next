@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.agents.signin
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.failed
-import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.common.ok
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
@@ -42,10 +41,23 @@ public sealed interface SignInProblem {
             get() = "sign-in-lost/$reason"
     }
 
-    /** The native start failed (its text is never shown, B-SEC-098). */
-    public data object Start : SignInProblem {
+    /**
+     * The native start failed at [step]. [failure] is the host's redacted failure: the screen says
+     * [step] in fixed words and puts [failure] only under Details, never CLI text (B-SEC-098).
+     */
+    public class Start(
+        public val step: SignInStartStep = SignInStartStep.Unknown,
+        public val failure: Failure? = null,
+    ) : SignInProblem {
         override val code: String
             get() = "sign-in-start"
+
+        override fun equals(other: Any?): Boolean =
+            other is Start && other.step == step && other.failure == failure
+
+        override fun hashCode(): Int = step.hashCode() * 31 + (failure?.hashCode() ?: 0)
+
+        override fun toString(): String = "Start(${step.code})"
     }
 
     /**
@@ -162,18 +174,20 @@ public class SignInTerminalSession(
             return
         }
         opening.value = Open.Pending
-        val terminal =
+        val opened =
             withContext(NonCancellable) {
-                host.open(TerminalTarget.SignIn(command)).getOrNull().also {
-                    opening.value = Open.Done(it)
+                host.openSignIn(TerminalTarget.SignIn(command)).also {
+                    opening.value = Open.Done((it as? SignInOpen.Opened)?.terminal)
                 }
             }
         if (ending) return // end() is waiting for exactly this session and drains it
-        if (terminal == null) {
-            mutableState.value = SignInSessionState.Failed(SignInProblem.Start)
+        if (opened is SignInOpen.Failed) {
+            mutableState.value =
+                SignInSessionState.Failed(SignInProblem.Start(opened.step, opened.failure))
             releaseOnce()
             return
         }
+        val terminal = (opened as SignInOpen.Opened).terminal
         mutableState.value = SignInSessionState.Running(terminal)
         val events = scope.launch { terminal.events.collect { onEvent(it) } }
         val losses = scope.launch { claim.lost.collect { onLost(it) } }

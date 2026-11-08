@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -121,6 +122,21 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val enabled = action.disabledReason == null
+    // Glass: a bare glyph straight on the message box's glass, no disc and no word under it (owner 2026-11-08: "remove
+    // the titles, it's self explanatory"). The word stays its name for the screen reader and its long-press tooltip;
+    // the target stays 48 dp.
+    if (LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass) {
+        io.github.eslamasabry.oc.ui.kit.action.KitIconButton(
+            action.icon,
+            action.label,
+            action.onPick,
+            modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
+            enabled = action.disabledReason?.let { io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(it) }
+                ?: io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled,
+            size = GLASS_TRAY_GLYPH_DP,
+        )
+        return
+    }
     KitTappable(
         onClick = action.onPick,
         modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
@@ -160,3 +176,6 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
         }
     }
 }
+
+/** The tray's glyph under Glass, in dp (owner 2026-11-08: bare icons, about 26-28 dp). */
+internal const val GLASS_TRAY_GLYPH_DP: Int = 28

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.connection
 
+import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
+import kotlin.time.TimeSource
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -174,7 +176,16 @@ public class ConnectionRegistry(
                 }
             }
         val spec = GatewaySpec(profile = profile, credentials = credentials, scope = scope)
-        when (val pair = factory.connect(spec)) {
+        val attempt = TimeSource.Monotonic.markNow()
+        val connected = factory.connect(spec)
+        // B-190: the kind of server and of failure only, never its address; dropped unless `usage` is on.
+        HealthFlow().connAttempt(
+            serverKind = if (profile.managedOnPhone) "phone" else "computer",
+            ok = connected is Outcome.Ok,
+            elapsedMs = attempt.elapsedNow().inWholeMilliseconds,
+            failure = (connected as? Outcome.Failed)?.failure,
+        )
+        when (val pair = connected) {
             is Outcome.Failed -> {
                 (scope.coroutineContext[Job])?.cancelAndJoin()
                 pair

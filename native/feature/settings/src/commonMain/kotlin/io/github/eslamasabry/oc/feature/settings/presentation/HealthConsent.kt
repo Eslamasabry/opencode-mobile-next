@@ -151,3 +151,32 @@ public object HealthContract {
             CollectItem.Report to listOf("problem_report"),
         )
 }
+
+/**
+ * Settings › Help › Send a problem report (section E of the 2.1.5 contract; Flutter `openSendProblemReport`): the host
+ * builds the redacted report, sends exactly the previewed text, and answers the install's report code. Present only
+ * in a build that can send it (the vendor is built in).
+ */
+public interface ProblemReportSender {
+    /** The whole report, already redacted: what the person previews and what [send] sends. */
+    public suspend fun build(): String
+
+    /** Sends [text] once; the report code, or null when it could not be sent. */
+    public suspend fun send(text: String): String?
+
+    /** "Report code" in Settings › About, or null without a vendor. */
+    public suspend fun reportCode(): String?
+}
+
+/** The problem report page's stage. Only the Send button sends; leaving the page sends nothing. */
+public sealed interface SendReportUi {
+    public data object Collecting : SendReportUi
+
+    public data class Preview(val text: String) : SendReportUi
+
+    public data class Sending(val text: String) : SendReportUi
+
+    public data class Failed(val text: String) : SendReportUi
+
+    public data class Sent(val text: String, val code: String) : SendReportUi
+}

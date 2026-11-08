@@ -49,6 +49,7 @@ public object SurfaceFade {
             wordsPlate = if (t < .5f) a.wordsPlate else b.wordsPlate, // FG: lib/ui/kit/kit_surface_look.dart:755
             frost = if (t < .5f) a.frost else b.frost, // FG: lib/ui/kit/kit_surface_look.dart:757
             innerGlow = c(a.innerGlow, b.innerGlow) ?: Argb(0),
+            sheen = c(a.sheen, b.sheen) ?: Argb(0),
         )
     }
 
