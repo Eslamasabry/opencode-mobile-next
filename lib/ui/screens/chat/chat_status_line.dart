@@ -52,6 +52,11 @@ extension _ChatStatusLine on _ChatScreenState {
             context,
             message: promptError,
             onDismiss: () => _setChatState(() => _promptError = null),
+            agentRun: _agentRunForError(promptError),
+            onSignIn: switch (_agentRunForError(promptError)) {
+              final run? => _agentSignIn(run),
+              null => null,
+            },
             onChooseModel: _conn.isIsolated
                 ? null
                 : () => showModelPicker(

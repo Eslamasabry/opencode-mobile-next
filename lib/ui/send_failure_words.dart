@@ -37,6 +37,8 @@ String agentRunFailureWords(
   return switch (failure.kind) {
     AgentRunFailureKind.signIn when accountNeeded =>
       l10n.chatSendFailureNeedsAccount(agent),
+    AgentRunFailureKind.signIn when failure.signInExpired =>
+      l10n.chatSendFailureSignInAgain(agent),
     AgentRunFailureKind.signIn => l10n.chatSendFailureSignIn(agent),
     AgentRunFailureKind.noCredit => l10n.chatSendFailureNoCredit(agent),
     AgentRunFailureKind.modelUnavailable =>

@@ -40659,7 +40659,7 @@ abstract class AppLocalizations {
   /// Sign-in terminal: what to do while Claude's own sign-in runs
   ///
   /// In en, this message translates to:
-  /// **'{agent} opens its sign-in page. Sign in there with your Claude account, then come back. If {agent} asks for a code, copy it on the page and choose Paste.'**
+  /// **'{agent} opens its sign-in page. Sign in there with your Claude account and come back: {agent} finishes on its own. Only if the page shows a code, copy it and choose Paste.'**
   String agentsSignInTerminalIntro(String agent);
 
   /// Sign-in step body for an agent other than Claude Code
@@ -56057,6 +56057,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{agent} needs you to sign in'**
   String chatSendFailureSignIn(String agent);
+
+  /// Chat: why a message wasn't sent: the agent's earlier sign-in ran out or could not be renewed (Claude Code: OAuth session expired).
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} needs you to sign in again'**
+  String chatSendFailureSignInAgain(String agent);
 
   /// Chat: why a message wasn't sent: the agent's account has no credit or quota for the chosen model.
   ///

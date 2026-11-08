@@ -33651,6 +33651,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String chatSendFailureSignInAgain(String agent) {
+    return '$agent needs you to sign in again';
+  }
+
+  @override
   String chatSendFailureNoCredit(String agent) {
     return '$agent has no credits for this model';
   }
