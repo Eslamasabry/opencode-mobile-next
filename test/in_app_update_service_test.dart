@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/platform/app_installer.dart';
@@ -35,6 +37,17 @@ class _RecordingAdapter implements HttpClientAdapter {
 }
 
 void main() {
+  test('the APK is hashed in chunks, with the same result as whole', () async {
+    final dir = await Directory.systemTemp.createTemp('apk');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/update.apk');
+    final bytes = Uint8List.fromList(
+      List<int>.generate(3 * 1024 * 1024 + 17, (i) => (i * 31) & 0xff),
+    );
+    await file.writeAsBytes(bytes);
+    expect(await fileSha256(file), sha256.convert(bytes).toString());
+  });
+
   group('InAppUpdateService', () {
     test('extracts build number and determines newer releases', () {
       expect(buildNumberFromTag('v2.1.4+62'), 62);

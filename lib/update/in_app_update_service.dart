@@ -343,7 +343,7 @@ class InAppUpdateService implements AppUpdateService {
         cancelToken: cancelToken,
       );
       final expected = expectedSha256(sums.data ?? '', release.apkName);
-      final actual = sha256.convert(await targetFile.readAsBytes()).toString();
+      final actual = await fileSha256(targetFile);
       if (expected == null || expected != actual) {
         try {
           await targetFile.delete();
@@ -359,6 +359,12 @@ class InAppUpdateService implements AppUpdateService {
     }
   }
 }
+
+/// SHA-256 of [file], read in chunks: a 100 MB APK is never held in memory
+/// at once (a low-memory phone could fail there).
+@visibleForTesting
+Future<String> fileSha256(File file) async =>
+    (await sha256.bind(file.openRead()).first).toString();
 
 /// Only https downloads from this app's own GitHub releases are trusted.
 @visibleForTesting
