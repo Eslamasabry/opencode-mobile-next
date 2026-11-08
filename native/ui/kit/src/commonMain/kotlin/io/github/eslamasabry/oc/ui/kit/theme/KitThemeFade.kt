@@ -19,6 +19,11 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.material3.ColorScheme
+import io.github.eslamasabry.oc.ui.kit.motion.ThemeSwitchTimings
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * The theme change (P-029, M-019): dark to light, a new pack or accent fades over [MS] instead of jumping. The old
@@ -115,10 +120,14 @@ internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFa
         cover.alpha.snapTo(1f)
         cover.shot = shot
         shown.value = target
-        // P-116: the first frame in the new colours recomposes every part (it measured ~95 ms on the emulator); the
-        // fade's clock starts once that frame is under way, so all of MS is seen as motion.
-        withFrameNanos {}
-        cover.alpha.animateTo(0f, tween(ThemeFade.MS, easing = LinearEasing))
+        // P-116: the first frame in the new colours recomposes the parts that read them (it measured ~95 ms on the
+        // emulator when every part recomposed); the fade's clock starts once that frame is under way, so all of MS is
+        // seen as motion. The gap to the next frame is that frame's cost, kept for KitThemeMetrics.
+        val first = withFrameNanos { it }
+        coroutineScope {
+            launch { KitThemeMetrics.record((withFrameNanos { it } - first) / 1_000_000f) }
+            cover.alpha.animateTo(0f, tween(ThemeFade.MS, easing = LinearEasing))
+        }
         cover.shot = null
     }
     // Motion Off and still frames show the new colours on the same frame.
@@ -138,3 +147,42 @@ internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier = drawWithCo
     }
     drawLayer(cover.layer)
 }
+
+/**
+ * The theme-change frame meter (theme-switch-premium Step 0): after each faded theme change it holds how long the frame
+ * that first drew the new colours took (the gap between that frame and the next, so a 16 ms frame on a 60 Hz screen is
+ * on time). Debug builds and benchmarks read [lastChangeFrameMs] or set [listener]; the theme never reads it.
+ */
+public object KitThemeMetrics {
+    /** The last theme change's first-frame time in ms; null before the first faded change. */
+    public var lastChangeFrameMs: Float? = null
+        private set
+
+    /** Called with each change's first-frame time (ms). Set by a debug screen or a benchmark; null by default. */
+    public var listener: ((Float) -> Unit)? = null
+
+    internal fun record(ms: Float) {
+        lastChangeFrameMs = ms
+        listener?.invoke(ms)
+    }
+}
+
+/**
+ * Material's colour scheme, held back after a change until a theme switch's motion has finished
+ * ([ThemeSwitchTimings.IDLE_MS] after the tap, so [ThemeSwitchTimings.IDLE_MS] − [ThemeSwitchTimings.COMMIT_MS] after
+ * the commit). Material keeps it in a static local, so its swap recomposes every part under the theme; held back, that
+ * frame lands when nothing moves. The kit's own colours are not held back. A newer change restarts the wait (the latest
+ * wins). At once when [defers] is false (motion Off, still frames) and on the first frame.
+ */
+@Composable
+internal fun rememberSettledScheme(scheme: ColorScheme, defers: Boolean): ColorScheme {
+    val held = remember { mutableStateOf(scheme) }
+    LaunchedEffect(scheme, defers) {
+        if (defers && held.value !== scheme) delay(SCHEME_SETTLE_MS)
+        held.value = scheme
+    }
+    return if (defers) held.value else scheme
+}
+
+/** How long Material's scheme is held back after a theme change. */
+internal const val SCHEME_SETTLE_MS: Long = ThemeSwitchTimings.IDLE_MS - ThemeSwitchTimings.COMMIT_MS
