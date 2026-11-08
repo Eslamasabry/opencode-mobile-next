@@ -5,13 +5,7 @@
     <!-- B-180/B-190: Flutter 2.1.5 app_en.arb, word for word. -->
     <string name="telemetryConsentChoose">Choose</string>
     <string name="telemetryConsentSave">Save my choices</string>
-    <string name="sendReportTitle">Send a problem report</string>
-    <string name="sendReportRowDetail">Review a redacted log, then send it</string>
-    <string name="sendReportSubtitle">This is everything the report holds. Nothing is sent until you tap Send.</string>
-    <string name="sendReportSend">Send</string>
-    <string name="sendReportCollecting">Collecting the report…</string>
     <string name="sendReportSentTitle">Report sent</string>
-    <string name="sendReportSentBody">Quote this report code if you open an issue on GitHub, so the developer can find your report.</string>
     <string name="sendReportFailed">The report could not be sent. Check your connection and try again.</string>
     <string name="sendReportDone">Done</string>
     <string name="reportCodeLabel">Report code</string>

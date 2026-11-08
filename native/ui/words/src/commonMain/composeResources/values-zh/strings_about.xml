@@ -33,37 +33,14 @@
     <string name="e7SettingsAlphaBody">Android 是受支持的平台；桌面版仍为实验性。</string>
     <string name="e7SettingsNonAffiliation">OpenCode Mobile 是独立的社区项目，并非由 OpenCode 官方团队开发、维护、认可或与之关联。</string>
     <string name="e7SettingsDiagnosticOccurrences">出现 %1$d 次</string>
-    <string name="perfTraceTitle">性能</string>
-    <string name="perfTraceBody">应用打开期间每个步骤的耗时：连接、加载、每次向服务器发出的请求。仅保存在内存中，应用关闭时清除。报告包含名称和耗时，绝不含消息或密码。</string>
-    <string name="perfTraceCopy">复制耗时报告</string>
-    <string name="perfTraceCopied">性能报告已复制</string>
-    <string name="perfTraceEmpty">尚未测量任何内容。</string>
-    <string name="perfTraceSlowest">最慢的步骤</string>
     <string name="perfTraceRecent">最新步骤</string>
     <string name="perfTraceStatLine">%1$d× · 典型 %2$s · 较慢 %3$s · 最长 %4$s</string>
-    <plurals name="perfTraceFailed">
-        <item quantity="other">%1$d 次失败</item>
-    </plurals>
-    <string name="perfTraceFailed__eq1">1 次失败</string>
     <string name="perfTraceAt">于 %1$s</string>
     <string name="perfTraceWithin">在 %1$s 内</string>
     <string name="guideStepTwoScan">点击“添加服务器”，再点“扫描二维码”，把摄像头对准二维码；或选择“粘贴代码”。</string>
     <string name="guideStepTwoPaste">复制打印出的代码，然后点击“添加服务器”并选择“粘贴代码”。</string>
     <string name="guidePhonePathTitle">改用此手机</string>
     <string name="guidePhonePathBody">在此手机上安装 OpenCode 并直接使用，无需电脑</string>
-    <string name="perfTraceClearTimings">清除计时</string>
-    <plurals name="appDiagnosticsClearTitle">
-        <item quantity="other">清除 %1$d 条错误？</item>
-    </plurals>
-    <string name="appDiagnosticsClearTitle__eq1">清除 1 条错误？</string>
-    <plurals name="appDiagnosticsClearBody">
-        <item quantity="other">保留在此手机上的 %1$d 条错误会被移除，已保存的报告中也一并移除。此操作无法撤销。</item>
-    </plurals>
-    <string name="appDiagnosticsClearBody__eq1">保留在此手机上的这条错误会被移除，已保存的报告中也一并移除。此操作无法撤销。</string>
-    <plurals name="appDiagnosticsClearConfirm">
-        <item quantity="other">清除 %1$d 条错误</item>
-    </plurals>
-    <string name="appDiagnosticsClearConfirm__eq1">清除 1 条错误</string>
     <string name="aboutCopyVersion">复制版本号</string>
     <string name="aboutAllLicences">所有软件包许可</string>
     <string name="aboutAllLicencesDetail">此构建版本中打包的每个库的许可文本</string>
@@ -76,99 +53,16 @@
     <string name="reportProblemDescribeLabel">发生了什么？</string>
     <string name="reportProblemDescribeHint">你做了什么、期望什么、实际得到了什么</string>
     <string name="reportProblemDescribeFirst">请先说明发生了什么</string>
-    <plurals name="reportProblemErrorsLabel">
-        <item quantity="other">%1$d 条最近的错误</item>
-    </plurals>
-    <string name="reportProblemErrorsLabel__eq1">1 条最近的错误</string>
-    <string name="reportProblemClearFailed">无法清除已保存的报告。请重试。</string>
     <string name="reportProblemLinkCopiesDiagnostics">诊断信息过长，无法放进链接。打开表单时会复制它们，请粘贴到其中的“诊断”字段。</string>
     <string name="reportProblemLinkCopiesWhole">报告过长，无法放进链接。打开表单时会复制它，请粘贴到表单中。</string>
-    <string name="reportProblemCopied">报告已复制</string>
     <string name="reportProblemDiagnosticsCopied">诊断信息已复制：请粘贴到表单中</string>
     <string name="aboutHelpSection">提示与快捷方式</string>
     <string name="aboutBundledComponents">内置组件</string>
     <string name="aboutBundledComponentsDetail">此应用内置的图标、字体及其他组成部分</string>
-    <string name="crashReportsLabel">崩溃报告</string>
-    <string name="crashReportsSwitch">在此手机上保存崩溃报告</string>
-    <string name="crashReportsSwitchBody">保存在此手机上，绝不会自动发送。</string>
-    <string name="crashReportsUnavailable">崩溃报告目前不可用。请重启应用后重试。</string>
-    <string name="crashReportsFailed">无法更新崩溃报告。请重启应用后重试。</string>
-    <string name="crashReportsNone">还没有崩溃报告</string>
-    <string name="crashReportsNoneBody">如果应用关闭或停止响应，这里会出现一条。</string>
-    <string name="crashKindError">应用遇到意外错误</string>
-    <string name="crashKindScreen">某个界面无法显示</string>
-    <string name="crashReportPreviewBody">仅保存在此手机上。只有你自行将已保存的错误包含在问题报告中时，它才会被发送。</string>
-    <string name="crashReportDetailSource">来源</string>
-    <string name="crashReportDetailCategory">类别</string>
-    <plurals name="crashReportsDelete">
-        <item quantity="other">删除 %1$d 份已保存的崩溃报告</item>
-    </plurals>
-    <string name="crashReportsDelete__eq1">删除 1 份已保存的崩溃报告</string>
-    <string name="crashReportsDelete__eq2">删除 %1$d 份已保存的崩溃报告</string>
-    <string name="crashReportsDeleteTitle">删除已保存的崩溃报告？</string>
-    <string name="crashReportsDeleteBody">删除已保存的崩溃报告。崩溃报告保存功能保持开启。</string>
-    <string name="crashReportsDeleteConfirm">删除崩溃报告</string>
-    <string name="crashReportsNote">只保存问题的类型和发生时间，不含错误消息、对话或密码。最多保留最近 20 份报告。</string>
-    <plurals name="crashReportsOnClears">
-        <item quantity="other">开启后将清除上方的 %1$d 条已保存错误。</item>
-    </plurals>
-    <string name="crashReportsOnClears__eq1">开启后将清除上方的已保存错误。</string>
-    <string name="crashReportsOnClears__eq2">开启后将清除上方的 %1$d 条已保存错误。</string>
-    <string name="crashReportsOffDeletes">关闭后将删除已保存的崩溃报告。</string>
-    <plurals name="crashReportsOffDeletesAndClears">
-        <item quantity="other">关闭后将删除已保存的崩溃报告，并清除上方的 %1$d 条已保存错误。</item>
-    </plurals>
-    <string name="crashReportsOffDeletesAndClears__eq1">关闭后将删除已保存的崩溃报告，并清除上方的已保存错误。</string>
-    <string name="crashReportsOffDeletesAndClears__eq2">关闭后将删除已保存的崩溃报告，并清除上方的 %1$d 条已保存错误。</string>
-    <plurals name="crashReportsOffClears">
-        <item quantity="other">关闭后将清除上方的 %1$d 条已保存错误。</item>
-    </plurals>
-    <string name="crashReportsOffClears__eq1">关闭后将清除上方的已保存错误。</string>
-    <string name="crashReportsOffClears__eq2">关闭后将清除上方的 %1$d 条已保存错误。</string>
-    <plurals name="crashReportsDeleteBodyWithErrors">
-        <item quantity="other">删除崩溃报告并清除上方的 %1$d 条已保存错误。崩溃报告保存功能保持开启。</item>
-    </plurals>
-    <string name="crashReportsDeleteBodyWithErrors__eq1">删除崩溃报告并清除上方的已保存错误。崩溃报告保存功能保持开启。</string>
-    <string name="crashReportsDeleteBodyWithErrors__eq2">删除崩溃报告并清除上方的 %1$d 条已保存错误。崩溃报告保存功能保持开启。</string>
-    <string name="crashReportsClearedToo">已保存的崩溃报告也会一并删除。</string>
-    <string name="diagnosticsExitHistoryTitle">最近的应用退出记录</string>
-    <string name="diagnosticsExitHistoryNote">Android 会记录应用每次关闭。此处内容不会自动发送。</string>
-    <string name="diagnosticsExitHistoryUnsupported">此手机不支持</string>
-    <string name="diagnosticsExitHistoryUnsupportedBody">Android 11 及更高版本会保留此记录。</string>
-    <string name="diagnosticsExitHistoryFailed">无法读取最近的应用退出记录。请重试，或重新打开应用。</string>
-    <string name="diagnosticsExitNormal">应用已关闭</string>
-    <string name="diagnosticsExitUpdate">应用已更新</string>
-    <string name="diagnosticsExitForceStop">应用被停止</string>
-    <string name="diagnosticsExitLowMemory">手机内存不足</string>
-    <string name="diagnosticsExitCrash">应用意外停止</string>
-    <string name="diagnosticsExitKilled">Android 结束了该应用</string>
     <string name="diagnosticsExitReasonCode">原因代码</string>
     <string name="diagnosticsExitImportance">重要性</string>
     <string name="diagnosticsExitSummary">摘要</string>
-    <string name="diagnosticsReportOpen">分享已保存的崩溃报告</string>
-    <string name="diagnosticsReportTitle">预览崩溃报告</string>
-    <string name="diagnosticsReportPrivacy">只包含错误类别和时间，不含消息或对话。在你点击“分享报告”之前，不会有任何内容离开此手机。</string>
-    <plurals name="diagnosticsReportSize">
-        <item quantity="other">%1$d 份报告 · %2$s</item>
-    </plurals>
-    <string name="diagnosticsReportSize__eq1">1 份报告 · %2$s</string>
-    <string name="diagnosticsReportSize__eq2">%1$d 份报告 · %2$s</string>
-    <string name="diagnosticsReportShare">分享报告</string>
-    <string name="diagnosticsReportStale">已保存的详情已变更。分享前请检查新报告。</string>
-    <string name="diagnosticsReportShareFailed">无法打开分享。请重试。</string>
-    <string name="diagnosticsReportCaptureOff">崩溃报告保存已关闭。请开启以保存以后的应用错误。</string>
-    <string name="diagnosticsReportEmpty">没有可分享的已保存崩溃报告。</string>
     <string name="diagnosticsUnavailable">这些详情不可用。请重新打开应用后重试。</string>
-    <string name="diagnosticsExitNoProblems">最近没有异常关闭。</string>
-    <plurals name="diagnosticsExitRoutine">
-        <item quantity="other">%1$d 次常规关闭（更新、你主动关闭）</item>
-    </plurals>
-    <string name="diagnosticsExitRoutine__eq1">1 次常规关闭（更新、你主动关闭）</string>
-    <string name="diagnosticsExitRoutine__eq2">%1$d 次常规关闭（更新、你主动关闭）</string>
-    <plurals name="diagnosticsExitShowAll">
-        <item quantity="other">显示全部 %1$d 项</item>
-    </plurals>
-    <string name="diagnosticsExitShowAll__eq1">显示全部 1 项</string>
     <string name="diagnosticsExitUnknown">关闭原因未知</string>
     <string name="diagnosticsExitToday">今天 %1$s</string>
     <string name="diagnosticsExitYesterday">昨天 %1$s</string>

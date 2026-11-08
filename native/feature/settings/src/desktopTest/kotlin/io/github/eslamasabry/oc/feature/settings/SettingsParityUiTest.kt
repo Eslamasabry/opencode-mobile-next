@@ -12,6 +12,8 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -38,14 +40,10 @@ class SettingsParityUiTest {
     private val copied = mutableListOf<String>()
     private val export =
         object : DiagnosticsExport {
-            override suspend fun report(): Outcome<String> = Outcome.Ok("OpenCode Mobile 3.0.0+10002\nServers: 1 saved · 1 connected")
-
             override suspend fun copy(text: String): Outcome<Unit> {
                 copied += text
                 return Outcome.Ok(Unit)
             }
-
-            override suspend fun share(text: String): Outcome<Unit> = Outcome.Ok(Unit)
         }
     private lateinit var presenter: SettingsPresenter
 
@@ -99,16 +97,25 @@ class SettingsParityUiTest {
         }
 
     @Test
-    fun `B-SEC-060 Help, Report a problem previews the report and Copy hands over exactly it`() =
+    fun `R1-010 Help, Report a problem is the one R1 page; the nine old controls are gone`() =
         runComposeUiTest {
             show()
             tap("Help")
+            onNodeWithText("Send a problem report").assertDoesNotExist()
             tap("Report a problem")
-            onNodeWithText("Passwords, keys and server addresses are taken out.").assertExists()
-            onNodeWithText("Share report").assertExists()
-            tap("Copy")
-            assertEquals(listOf("OpenCode Mobile 3.0.0+10002\nServers: 1 saved · 1 connected"), copied)
-            onNodeWithText("Report copied").assertExists()
+            onNodeWithText("What happened?").assertExists()
+            onNodeWithText("Optional").assertExists()
+            onNodeWithText("What's included").assertExists()
+            onNodeWithText("App and phone details. Passwords, keys and server addresses are taken out.").assertExists()
+            onNodeWithText("Post publicly on GitHub").assertExists()
+            for (gone in
+                listOf(
+                    "Share report", "Copy", "Send as a GitHub issue", "Everything this phone kept", "Details",
+                    "Keep crash categories on this phone", "Preview crash report", "Clear saved evidence",
+                    "Refresh exit history",
+                )) {
+                onAllNodesWithText(gone).assertCountEquals(0)
+            }
         }
 
     @Test

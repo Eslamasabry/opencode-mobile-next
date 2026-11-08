@@ -55,16 +55,10 @@ public sealed interface SettingsPage {
     public data object Language : SettingsPage
 
     /**
-     * Settings › Help › Report a problem: the safe diagnostics report, previewed, then copied or
-     * shared.
+     * Settings › Help › Report a problem (R1): what happened, what is included, then Send report (or Copy text in a
+     * build that cannot send), and the report code.
      */
     public data object ReportProblem : SettingsPage
-
-    /**
-     * Settings › Help › Send a problem report (B-190, Flutter 2.1.5 section E): a redacted log, previewed whole, sent
-     * only on Send, then the report code.
-     */
-    public data object SendProblemReport : SettingsPage
 
     /** Local files kept for the deferred assistant, with a measured Delete action. */
     public data object Storage : SettingsPage
@@ -116,10 +110,8 @@ public enum class SettingsOutside {
     UsageAlerts,
     QuietHours,
     ReleaseNotes,
-    // BUILD-DIAGNOSTICS-ATTENTION: Report a problem's GitHub form and Everything this phone kept
-    // (:feature:diagnostics).
+    // BUILD-DIAGNOSTICS-ATTENTION: Report a problem's public GitHub form.
     ReportOnGitHub,
-    KeptDiagnostics,
     Updates,
     KeptPrompts,
     ReadState,

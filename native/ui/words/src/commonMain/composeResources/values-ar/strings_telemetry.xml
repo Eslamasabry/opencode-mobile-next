@@ -5,13 +5,7 @@
     <!-- B-180/B-190: Flutter 2.1.5 app_ar.arb, word for word. -->
     <string name="telemetryConsentChoose">اختيار</string>
     <string name="telemetryConsentSave">حفظ اختياري</string>
-    <string name="sendReportTitle">إرسال تقرير مشكلة</string>
-    <string name="sendReportRowDetail">راجع سجلاً منقّحاً ثم أرسله</string>
-    <string name="sendReportSubtitle">هذا كل ما يحتويه التقرير. لا يُرسل شيء حتى تضغط إرسال.</string>
-    <string name="sendReportSend">إرسال</string>
-    <string name="sendReportCollecting">جارٍ تجهيز التقرير…</string>
     <string name="sendReportSentTitle">أُرسل التقرير</string>
-    <string name="sendReportSentBody">اذكر رمز التقرير هذا إن فتحت بلاغاً على GitHub ليجد المطوّر تقريرك.</string>
     <string name="sendReportFailed">تعذّر إرسال التقرير. تحقق من الاتصال وحاول مجدداً.</string>
     <string name="sendReportDone">تم</string>
     <string name="reportCodeLabel">رمز التقرير</string>

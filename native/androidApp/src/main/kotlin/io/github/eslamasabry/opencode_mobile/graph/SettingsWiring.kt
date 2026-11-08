@@ -84,7 +84,6 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
-import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
@@ -211,7 +210,6 @@ class AndroidSettingsHost(
     override val reporting: io.github.eslamasabry.oc.engine.analytics.Reporting,
     private val dispatchers: AppDispatchers,
     private val diagnosticsLog: Diagnostics,
-    private val crashSettings: AppCrashDiagnostics,
     private val configurationInspection: AndroidConfigurationInspection,
     private val reportRedactor: Redactor,
     private val reportRegistry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
@@ -401,7 +399,6 @@ class AndroidSettingsHost(
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
                 application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
-            SettingsOutside.KeptDiagnostics -> nav.open(DiagnosticsRoute.Kept)
             SettingsOutside.ReportOnGitHub ->
                 gitHubReports.send(
                     connections.servers.value
@@ -464,27 +461,59 @@ class AndroidSettingsHost(
     override val healthConsent: io.github.eslamasabry.oc.feature.settings.presentation.HealthConsentSetting =
         continuity.consent
 
-    /** B-190: Help › Send a problem report and About's report code, only where the vendor is built in. */
-    override val problemReport: io.github.eslamasabry.oc.feature.settings.presentation.ProblemReportSender? =
-        if (!Telemetry.vendorAvailable) null
-        else
-            object : io.github.eslamasabry.oc.feature.settings.presentation.ProblemReportSender {
-                private val telemetry get() = Telemetry.service
+    /**
+     * R1 Report a problem: the report's facts (the last unexpected close from ApplicationExitInfo, app, phone, the
+     * connection without its address, the problem kinds counted on this phone), the person's words redacted, and Send
+     * report over the telemetry vendor's problem report, only where the vendor is built in. Reading sends nothing.
+     */
+    override val problemReport: io.github.eslamasabry.oc.feature.settings.presentation.ProblemReportSender =
+        object : io.github.eslamasabry.oc.feature.settings.presentation.ProblemReportSender {
+            private val telemetry get() = Telemetry.service
+            private val redaction = io.github.eslamasabry.oc.engine.analytics.health.ReportRedaction(reportRedactor)
 
-                override suspend fun build(): String =
-                    io.github.eslamasabry.oc.engine.analytics.health
-                        .ProblemReportCollector(
-                            telemetry = telemetry,
-                            redaction = io.github.eslamasabry.oc.engine.analytics.health.ReportRedaction(reportRedactor),
-                            health = telemetryHealth.healthTelemetry,
-                            platform = telemetryHealth.platform,
-                        )
-                        .build()
+            override val canSend: Boolean
+                get() = Telemetry.vendorAvailable
 
-                override suspend fun send(text: String): String? = telemetry.sendProblemReport(text)
+            override suspend fun build(): io.github.eslamasabry.oc.engine.analytics.health.ProblemReportContent =
+                io.github.eslamasabry.oc.engine.analytics.health
+                    .ProblemReportCollector(
+                        telemetry = telemetry,
+                        redaction = redaction,
+                        health = telemetryHealth.healthTelemetry,
+                        platform = telemetryHealth.platform,
+                        connection = ::reportConnection,
+                    )
+                    .build()
 
-                override suspend fun reportCode(): String? = telemetry.reportCode()
+            override fun words(text: String): String = redaction.redact(text.trim().take(4000))
+
+            override suspend fun send(text: String): String? =
+                if (Telemetry.vendorAvailable) telemetry.sendProblemReport(text) else null
+
+            override suspend fun reportCode(): String? = telemetry.reportCode()
+        }
+
+    /** The server in use, by kind and version only: never its name or address. */
+    private fun reportConnection(): io.github.eslamasabry.oc.engine.analytics.health.ReportConnection? {
+        val servers = connections.servers.value
+        val live =
+            servers.firstOrNull { it.id == stores.profiles.activeId.value && it.connected }
+                ?: servers.firstOrNull { it.connected }
+                ?: return null
+        val profile =
+            try {
+                stores.profiles.profile(live.id)?.profile
+            } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+                null
+            } ?: return null
+        val kind =
+            when (profile.backend) {
+                io.github.eslamasabry.oc.core.model.BackendKind.OpenCode2 -> "OpenCode"
+                io.github.eslamasabry.oc.core.model.BackendKind.Paseo -> "Paseo"
+                io.github.eslamasabry.oc.core.model.BackendKind.Codex -> "Codex"
             }
+        return io.github.eslamasabry.oc.engine.analytics.health.ReportConnection(kind, profile.serverVersion)
+    }
 
     /** s26: About › Developer's Memory (preview), the same `oc.dev.factsbook` switch Flutter writes. */
     override val memoryPreview: io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewSetting =
@@ -517,8 +546,6 @@ class AndroidSettingsHost(
     override val configuration:
         io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationInspection =
         configurationInspection
-    override val crashes: io.github.eslamasabry.oc.feature.settings.presentation.CrashSettings =
-        crashSettings
     override val licenses: VoiceLicenseSource =
         object : VoiceLicenseSource {
             override suspend fun read(asset: String): Outcome<String> {
@@ -557,69 +584,6 @@ class AndroidSettingsHost(
                     "Text size: ${p.textSize.wire} · Motion: ${p.effects.motion.wire}"
             }
 
-            override suspend fun report(): Outcome<String> = report("")
-
-            override suspend fun report(description: String): Outcome<String> =
-                (listOf(gitHubReports.preview(connectionWords(), description)) +
-                        failureAttachments())
-                    .joinToString("\n\n")
-                    .ok()
-
-            /**
-             * AGENT-1: a failed phone setup and failed development services, redacted, as report
-             * attachments.
-             */
-            private suspend fun failureAttachments(): List<String> {
-                val setup =
-                    withContext(dispatchers.io) {
-                        val status =
-                            io.github.eslamasabry.opencode_mobile.SetupRunner.get(application)
-                                .status()
-                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(status)
-                            ?.let {
-                                io.github.eslamasabry.oc.engine.runtime.setup.FailedSetupReport
-                                    .from(it, reportRedactor::redact)
-                                    ?.attachment()
-                            }
-                    }
-                val development = mutableListOf<String>()
-                for ((id, graph) in reportRegistry.live.value) {
-                    val gateway = graph.session.server
-                    val key =
-                        io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStore
-                            .keyFor(id.raw)
-                    val saved =
-                        (stores.prefs.get(key)
-                                as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
-                            ?.value
-                    if (saved == null) continue
-                    val reports =
-                        io.github.eslamasabry.oc.engine.runtime.services.DevelopmentFailureReports
-                            .capture(
-                                saved = saved,
-                                current = {
-                                    reportRegistry.live.value[id] === graph &&
-                                        stores.profiles.profile(id) != null &&
-                                        (stores.prefs.get(key)
-                                                as?
-                                                io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
-                                            ?.value == saved
-                                },
-                                inspect = { run, directory, workspace ->
-                                    io.github.eslamasabry.oc.protocol.oc2.live.Oc2ServiceReports
-                                        .inspect(gateway, run, directory, workspace)
-                                },
-                                output = { run, directory, workspace ->
-                                    io.github.eslamasabry.oc.protocol.oc2.live.Oc2ServiceReports
-                                        .output(gateway, run, directory, workspace)
-                                },
-                                redact = reportRedactor::redact,
-                            )
-                    development += reports.map { it.attachment() }
-                }
-                return listOfNotNull(setup) + development
-            }
-
             override fun endReport() = gitHubReports.clearAttachment()
 
             override suspend fun send(description: String): Outcome<Unit> =
@@ -633,11 +597,6 @@ class AndroidSettingsHost(
                             ClipData.newPlainText("OpenCode Mobile report", text)
                         )
                     }
-                }
-
-            override suspend fun share(text: String): Outcome<Unit> =
-                withContext(dispatchers.main) {
-                    sendText(text)
                 }
         }
 
@@ -701,7 +660,6 @@ internal fun androidSettingsFacts(platform: PlatformCapabilities, dynamicColour:
         opens = SETTINGS_OPENS,
         surfaceStyles = true,
         phraseChips = true,
-        problemReport = Telemetry.vendorAvailable,
         transcriptDisplay = true,
     )
 
@@ -737,7 +695,6 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
         SettingsOutside.VoiceSetup,
         SettingsOutside.VoiceNotices,
         SettingsOutside.ReportOnGitHub,
-        SettingsOutside.KeptDiagnostics,
         SettingsOutside.KeepRunning,
         SettingsOutside.Tips,
         SettingsOutside.AddServer,
