@@ -214,7 +214,7 @@ public fun KitScreen(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .onSizeChanged { topPx = it.height }
-                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar)) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
+                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar, frost)) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
                     ) {
                         if (barFace != null) KitLiquidBarPane(barFace)
                         it()
@@ -277,8 +277,8 @@ public fun KitScreen(
                         ).then(
                             when {
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
-                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar)) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
-                                barFace != null -> kitLiquidWordsHost(LiquidRole.Bar)
+                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar, under)) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
                                 else -> Modifier
                             }
                         )

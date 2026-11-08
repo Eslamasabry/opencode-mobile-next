@@ -353,3 +353,48 @@ public object RimLight {
         return Argb((0xFF shl 24) or (rgb[0] shl 16) or (rgb[1] shl 8) or rgb[2])
     }
 }
+
+/** The ink the words on one liquid pane are drawn in: light over dark content, dark over bright (Apple's adaptive glass). */
+public enum class LiquidInk { Light, Dark }
+
+/**
+ * When a liquid pane flips its ink (per pane, whatever the app's own light or dark mode): it samples the mean luminance
+ * of the content under it, flips to dark ink above [TO_DARK] and back to light ink below [TO_LIGHT] (the gap is the
+ * hysteresis, so a pane over mid-grey content never flickers), cross-fading over [FLIP_MS]. Busy content (luminance
+ * variance above [BUSY]) thickens the words plate by [BUSY_PLATE]; calm content lets it back.
+ */
+public object LiquidInkRule {
+    public const val TO_DARK: Float = .62f
+    public const val TO_LIGHT: Float = .42f
+    public const val FLIP_MS: Int = 180
+    public const val BUSY: Float = .035f
+    public const val BUSY_PLATE: Float = 1.35f
+
+    /** How often a pane samples at most while its content moves (10 Hz). */
+    public const val SAMPLE_MS: Long = 100
+
+    /** The ink after [current] given the content's mean [luminance] (0-1). */
+    public fun next(current: LiquidInk, luminance: Float): LiquidInk =
+        when {
+            luminance >= TO_DARK -> LiquidInk.Dark
+            luminance <= TO_LIGHT -> LiquidInk.Light
+            else -> current
+        }
+
+    /** The ink a theme draws its words in. */
+    public fun of(dark: Boolean): LiquidInk = if (dark) LiquidInk.Light else LiquidInk.Dark
+
+    /** Mean luminance and its variance of [argb] pixels (Rec. 709 on sRGB channels, cheap: no linearisation). */
+    public fun measure(argb: IntArray): Pair<Float, Float> {
+        if (argb.isEmpty()) return 0f to 0f
+        var sum = 0.0
+        var sq = 0.0
+        for (p in argb) {
+            val l = (.2126 * ((p shr 16) and 0xFF) + .7152 * ((p shr 8) and 0xFF) + .0722 * (p and 0xFF)) / 255.0
+            sum += l
+            sq += l * l
+        }
+        val mean = sum / argb.size
+        return mean.toFloat() to (sq / argb.size - mean * mean).coerceAtLeast(0.0).toFloat()
+    }
+}

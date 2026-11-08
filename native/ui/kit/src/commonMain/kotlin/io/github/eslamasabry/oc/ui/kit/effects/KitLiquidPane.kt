@@ -20,7 +20,11 @@ import io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe
  */
 
 /** What lies behind a liquid pane: draws it at the pane's place ([LayoutCoordinates] of the pane), ground first. */
-public class KitLiquidBackdrop(internal val draw: DrawScope.(LayoutCoordinates) -> Unit) {
+public class KitLiquidBackdrop(
+    /** How many times the source has recorded: a sampler reads the content again only when it moved. */
+    internal val version: () -> Int = { 0 },
+    internal val draw: DrawScope.(LayoutCoordinates) -> Unit,
+) {
     /** The platform's own wrapper for this backdrop, made once (Android: the library's `Backdrop`). */
     internal var platformHandle: Any? = null
 }

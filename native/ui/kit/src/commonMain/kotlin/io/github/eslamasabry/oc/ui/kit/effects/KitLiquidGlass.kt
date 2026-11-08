@@ -41,6 +41,24 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.TraversableNode
+import androidx.compose.ui.node.requireDensity
+import androidx.compose.ui.node.requireGraphicsContext
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.unit.IntSize
+import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
+import io.github.eslamasabry.oc.ui.design.effects.LiquidInk
+import io.github.eslamasabry.oc.ui.design.effects.LiquidInkRule
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import androidx.compose.ui.node.findNearestAncestor
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -115,6 +133,7 @@ public fun kitLiquidGlassOn(): Boolean = kitLiquidOn()
 public class KitLiquidSource internal constructor(internal val layer: GraphicsLayer) {
     internal var coordinates: LayoutCoordinates? = null
     internal var users: Int by mutableIntStateOf(0)
+    internal var version: Int = 0
 }
 
 @Composable
@@ -269,21 +288,54 @@ private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, s
                 frostBlurDp = GlassSpec.FLOAT_FROST,
             )
         }
-    val plate = remember(roles, role) { Color(LiquidEdge.wordsPlate(roles, role).v) }
+    val words = kitLiquidWords(role, backdrop)
     val latest by rememberUpdatedState(transform)
-    return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(plate)
+    return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
 }
 
-/** Marks a liquid pane for the words on it: each KitText inside lies on [plate] ([kitWordsPlate]). */
-internal fun Modifier.kitLiquidPlateHost(plate: Color): Modifier = this then PlateHostElement(plate)
+/**
+ * What the words on a [role] pane over [backdrop] are drawn with: the theme's own plate and ink, and the opposite
+ * theme's plate and ink the pane flips to over content of the other brightness ([LiquidInkRule]).
+ */
+@Composable
+internal fun kitLiquidWords(role: LiquidRole, backdrop: KitLiquidBackdrop?): KitLiquidWords {
+    val roles = LocalKitRoles.current
+    val appearance = LocalKitAppearance.current
+    return remember(roles, role, backdrop, appearance.pack, appearance.accent) {
+        val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
+        KitLiquidWords(
+            plate = Color(LiquidEdge.wordsPlate(roles, role).v),
+            flipPlate = Color(LiquidEdge.wordsPlate(other, role).v),
+            flipInk = Color(other.text1.v),
+            themeInk = LiquidInkRule.of(roles.dark),
+            backdrop = backdrop,
+        )
+    }
+}
+
+/** The words' plates and inks on one liquid pane (see [kitLiquidWords]). */
+@Immutable
+internal data class KitLiquidWords(
+    val plate: Color,
+    val flipPlate: Color,
+    val flipInk: Color,
+    val themeInk: LiquidInk,
+    val backdrop: KitLiquidBackdrop?,
+)
+
+/**
+ * Marks a liquid pane for the words on it: each KitText inside lies on its plate ([kitWordsPlate]); with a backdrop,
+ * the pane samples the content under it and flips its words' ink over content of the other brightness.
+ */
+internal fun Modifier.kitLiquidPlateHost(words: KitLiquidWords): Modifier = this then PlateHostElement(words)
 
 private object LiquidPlateKey
 
-private data class PlateHostElement(val plate: Color) : ModifierNodeElement<PlateHostNode>() {
-    override fun create(): PlateHostNode = PlateHostNode(plate)
+private data class PlateHostElement(val words: KitLiquidWords) : ModifierNodeElement<PlateHostNode>() {
+    override fun create(): PlateHostNode = PlateHostNode(words)
 
     override fun update(node: PlateHostNode) {
-        node.plate = plate
+        node.words = words
     }
 
     override fun InspectorInfo.inspectableProperties() {
@@ -291,9 +343,63 @@ private data class PlateHostElement(val plate: Color) : ModifierNodeElement<Plat
     }
 }
 
-private class PlateHostNode(var plate: Color) : Modifier.Node(), TraversableNode {
+private class PlateHostNode(var words: KitLiquidWords) : Modifier.Node(), TraversableNode, GlobalPositionAwareModifierNode {
     override val traverseKey: Any get() = LiquidPlateKey
+
+    /** 0: the theme's own ink and plate; 1: the flipped ones. */
+    val flip = Animatable(0f)
+
+    /** The plate's alpha multiplier: above 1 over busy content. */
+    var boost by mutableFloatStateOf(1f)
+
+    private var coordinates: LayoutCoordinates? = null
+    private var ink: LiquidInk = words.themeInk
+    private var sample: GraphicsLayer? = null
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        this.coordinates = coordinates
+    }
+
+    override fun onAttach() {
+        ink = words.themeInk
+        val backdrop = words.backdrop ?: return
+        coroutineScope.launch {
+            var seen = Int.MIN_VALUE
+            while (isActive) {
+                delay(LiquidInkRule.SAMPLE_MS)
+                // Only while the content moves: a source that has not recorded again shows nothing new.
+                val v = backdrop.version()
+                if (v == seen) continue
+                val c = coordinates?.takeIf { it.isAttached } ?: continue
+                seen = v
+                val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
+                val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
+                val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
+                layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h)) {
+                    scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) }
+                }
+                val pixels = IntArray(w * h)
+                layer.toImageBitmap().readPixels(pixels, 0, 0, w, h)
+                val (mean, variance) = LiquidInkRule.measure(pixels)
+                val next = LiquidInkRule.next(ink, mean)
+                if (next != ink) {
+                    ink = next
+                    launch { flip.animateTo(if (next == words.themeInk) 0f else 1f, tween(LiquidInkRule.FLIP_MS)) }
+                }
+                boost = if (variance > LiquidInkRule.BUSY) LiquidInkRule.BUSY_PLATE else 1f
+            }
+        }
+    }
+
+    override fun onDetach() {
+        sample?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
+        sample = null
+        coordinates = null
+    }
 }
+
+/** The sampled copy of a pane's backdrop is this many times smaller on each side. */
+private const val SAMPLE_SCALE: Int = 8
 
 /**
  * The words plate (GlassSpec.plateFor, hook H10) behind a text on a liquid pane: a soft rounded plate just round the
@@ -328,7 +434,12 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
     }
 
     override fun ContentDrawScope.draw() {
-        val plate = host?.plate
+        val h = host
+        val f = h?.flip?.value ?: 0f
+        val words = h?.words
+        val plate =
+            if (h == null || words == null) null
+            else androidx.compose.ui.graphics.lerp(words.plate, words.flipPlate, f).let { p -> p.copy(alpha = (p.alpha * h.boost).coerceAtMost(1f)) }
         if (plate != null && plate.alpha > 0f && size.width > 0f && size.height > 0f) {
             val padX = WORDS_PLATE_PAD_X.dp.toPx()
             val padY = WORDS_PLATE_PAD_Y.dp.toPx()
@@ -343,7 +454,22 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
             )
             drawRoundRect(plate, Offset(-padX, -padY), Size(size.width + 2 * padX, size.height + 2 * padY), androidx.compose.ui.geometry.CornerRadius(r))
         }
-        drawContent()
+        if (words == null || f <= 0f) {
+            drawContent()
+            return
+        }
+        // The flip: the theme's ink fades out while the other ink (the glyphs drawn through a tint) fades in.
+        val bounds = androidx.compose.ui.geometry.Rect(Offset(-size.width, -size.height), Size(size.width * 3f, size.height * 3f))
+        drawIntoCanvas { canvas ->
+            if (f < 1f) {
+                canvas.saveLayer(bounds, Paint().apply { alpha = 1f - f })
+                drawContent()
+                canvas.restore()
+            }
+            canvas.saveLayer(bounds, Paint().apply { alpha = f; colorFilter = ColorFilter.tint(words.flipInk, BlendMode.SrcIn) })
+            drawContent()
+            canvas.restore()
+        }
     }
 }
 
@@ -416,12 +542,22 @@ internal fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
 /** How far above a page's bottom block its content fades out (Apple's scroll edge effect: 16-24 dp). */
 internal const val EDGE_FADE_DP: Int = 20
 
-/** The words plate of [role]'s liquid pane, for a part whose words lie beside its pane rather than inside it (a bar). */
+/** The words of [role]'s liquid pane over a feature's [source], for words that lie beside their pane (a bar). */
 @Composable
-internal fun kitLiquidWordsHost(role: LiquidRole): Modifier {
-    val roles = LocalKitRoles.current
-    val plate = remember(roles, role) { Color(LiquidEdge.wordsPlate(roles, role).v) }
-    return Modifier.kitLiquidPlateHost(plate)
+internal fun kitLiquidWordsHost(role: LiquidRole, source: KitFrostState?): Modifier {
+    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
+    val picture = LocalKitGlassBackdrop.current
+    val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
+    return Modifier.kitLiquidPlateHost(kitLiquidWords(role, backdrop))
+}
+
+/** The words of [role]'s liquid pane over a kit [source] (a page body under its bar). */
+@Composable
+internal fun kitLiquidWordsHost(role: LiquidRole, source: KitLiquidSource?): Modifier {
+    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
+    val picture = LocalKitGlassBackdrop.current
+    val backdrop = remember(source, ground, picture) { source?.let { liquidSourceBackdrop(it, ground, picture) } }
+    return Modifier.kitLiquidPlateHost(kitLiquidWords(role, backdrop))
 }
 
 /** How much of the ground the edge fade reaches at the screen's edge. */
@@ -456,7 +592,7 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
 
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
 private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
-    KitLiquidBackdrop { c ->
+    KitLiquidBackdrop({ state.version }) { c ->
         drawGroundUnder(ground, picture, c)
         val shift = state.sourceOrigin - c.positionInRoot()
         translate(shift.x, shift.y) { drawLayer(state.layer) }
@@ -467,7 +603,7 @@ private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: Kit
  * screen position, which both windows share.
  */
 private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
-    KitLiquidBackdrop { c ->
+    KitLiquidBackdrop({ source.version }) { c ->
         drawGroundUnder(ground, picture, c)
         val s = source.coordinates?.takeIf { it.isAttached } ?: return@KitLiquidBackdrop
         val shift =
@@ -504,6 +640,7 @@ private class LiquidSourceNode(var source: KitLiquidSource) : Modifier.Node(), D
         // Read in the draw phase: a pane arriving or leaving redraws this once, to start or stop recording.
         if (source.users > 0) {
             source.layer.record { this@draw.drawContent() }
+            source.version++
             drawLayer(source.layer)
         } else {
             drawContent()
