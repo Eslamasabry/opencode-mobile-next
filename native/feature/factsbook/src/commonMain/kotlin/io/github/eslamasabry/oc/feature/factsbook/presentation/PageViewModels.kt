@@ -13,6 +13,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.engine.factsbook.Area
+import io.github.eslamasabry.oc.engine.factsbook.CaptureExport
 import io.github.eslamasabry.oc.engine.factsbook.CaptureKind
 import io.github.eslamasabry.oc.engine.factsbook.CaptureOutcome
 import io.github.eslamasabry.oc.engine.factsbook.CaptureRequest
@@ -24,6 +25,7 @@ import io.github.eslamasabry.oc.engine.factsbook.FactsBookGateway
 import io.github.eslamasabry.oc.engine.factsbook.FbResult
 import io.github.eslamasabry.oc.engine.factsbook.SearchResult
 import io.github.eslamasabry.oc.engine.factsbook.Thing
+import io.github.eslamasabry.oc.engine.factsbook.TriggersLoad
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
 import kotlin.time.Clock
@@ -317,7 +319,16 @@ public data class CaptureUi(
     /** Bumped when the field must be cleared (a save that reached somewhere other than the phone's editor). */
     val clearSeed: Int = 0,
     val needsText: Boolean = false,
-)
+    /** The node offers rules: "Let my rules read this" shows. */
+    val rulesSupported: Boolean = false,
+    /** How many rules are on. */
+    val rulesOn: Int = 0,
+    /** The person's choice; null follows whether any rule is on. */
+    val rules: Boolean? = null,
+) {
+    /** Whether this capture goes to the rules (F: `_rulesLook`). */
+    val rulesLook: Boolean get() = rulesSupported && (rules ?: (rulesOn > 0))
+}
 
 public interface CaptureActions {
     public fun back()
@@ -333,6 +344,10 @@ public interface CaptureActions {
     public fun seeNotSaved()
 
     public fun dismiss()
+
+    public fun rules(on: Boolean)
+
+    public fun seeRules()
 }
 
 /** Add something: a note or pasted text. Never a loss: saved, held by the node, kept on the phone, or kept on screen. */
@@ -348,8 +363,18 @@ public class CaptureViewModel(private val access: FactsBookAccess, private val n
             val node = access.node() ?: return@launch
             (node.things() as? FbResult.Ok)?.value?.let { t -> mutable.update { it.copy(things = t.toImmutableList()) } }
             (node.areas() as? FbResult.Ok)?.value?.let { a -> mutable.update { it.copy(areas = a.map(Area::slug).toImmutableList()) } }
+            val triggers = access.engine.triggers
+            if (triggers.supported) {
+                triggers.refresh(quiet = true)
+                val t = triggers.state.value
+                mutable.update { it.copy(rulesSupported = t.load == TriggersLoad.Ready, rulesOn = t.rules.count { r -> r.definition.enabled }) }
+            }
         }
     }
+
+    override fun rules(on: Boolean): Unit = mutable.update { it.copy(rules = on) }
+
+    override fun seeRules(): Unit = nav.open(FactsBookRoute.Triggers)
 
     override fun back(): Unit = nav.back()
 
@@ -385,7 +410,7 @@ public class CaptureViewModel(private val access: FactsBookAccess, private val n
                 return@launch
             }
             access.engine.open(access.activeProfileId.value)
-            val outcome = access.engine.capture(CaptureRequest(now.kind, text, now.area))
+            val outcome = access.engine.capture(CaptureRequest(now.kind, text, now.area), rulesLook = now.rulesLook)
             mutable.update {
                 when (outcome) {
                     is CaptureOutcome.SavedAtNode -> it.copy(working = false, notice = CaptureNotice.Saved, clearSeed = it.clearSeed + 1)
@@ -415,6 +440,10 @@ public data class NotSavedUi(
     val nowMs: Long = 0,
     /** False while the node cannot open the locked folder yet: "unlock it" is no way out then. */
     val canUnlock: Boolean = false,
+    /** The node hands back a note it holds as an encrypted object. */
+    val canExport: Boolean = false,
+    /** The export being shown, for the person to copy. */
+    val export: CaptureExport? = null,
 )
 
 public interface NotSavedActions {
@@ -429,6 +458,11 @@ public interface NotSavedActions {
     public fun cancelDiscard()
 
     public fun dismiss()
+
+    /** Export a note the node holds as the encrypted object it hands back. */
+    public fun export(entry: CouldNotSaveEntry)
+
+    public fun closeExport()
 }
 
 /** Notes not saved yet: kept until the person discards them (F105, D32); at 30 days the page asks. */
@@ -437,7 +471,12 @@ public interface NotSavedActions {
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 public class NotSavedViewModel(private val access: FactsBookAccess, private val nav: AppNavigator, private val clock: Clock) :
     ViewModel(), NotSavedActions {
-    private data class Local(val confirm: CouldNotSaveEntry? = null, val working: Boolean = false, val error: FactsBookError? = null)
+    private data class Local(
+        val confirm: CouldNotSaveEntry? = null,
+        val working: Boolean = false,
+        val error: FactsBookError? = null,
+        val export: CaptureExport? = null,
+    )
 
     private val local = MutableStateFlow(Local())
 
@@ -450,6 +489,8 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
                     error = own.error,
                     nowMs = clock.now().toEpochMilliseconds(),
                     canUnlock = !s.capabilities.isDisabled(io.github.eslamasabry.oc.engine.factsbook.FactsBookCapabilities.SENSITIVE_UNLOCK),
+                    canExport = s.capabilities.supports(EXPORT),
+                    export = own.export,
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotSavedUi())
@@ -486,6 +527,26 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
     override fun cancelDiscard(): Unit = local.update { it.copy(confirm = null) }
 
     override fun dismiss(): Unit = local.update { it.copy(error = null) }
+
+    override fun export(entry: CouldNotSaveEntry) {
+        if (entry.onPhone || local.value.working) return
+        local.update { it.copy(working = true, error = null) }
+        viewModelScope.launch {
+            val r = access.engine.node?.exportCapture(entry.id) ?: unreachable
+            local.update {
+                when (r) {
+                    is FbResult.Ok -> it.copy(working = false, export = r.value)
+                    is FbResult.Err -> it.copy(working = false, error = r.error)
+                }
+            }
+        }
+    }
+
+    override fun closeExport(): Unit = local.update { it.copy(export = null) }
+
+    private companion object {
+        const val EXPORT = "encrypted_unsaved_export"
+    }
 }
 
 // ---- Connect ------------------------------------------------------------------------------------------------------

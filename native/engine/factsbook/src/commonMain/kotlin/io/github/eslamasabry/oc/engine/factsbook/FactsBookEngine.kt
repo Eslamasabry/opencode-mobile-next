@@ -189,9 +189,29 @@ public class FactsBookEngine(
      * Saves a capture. A node that cannot be reached is not an error here: the text goes to the outbox, unless the
      * outbox is full, in which case the newest is refused and the caller keeps the text on screen.
      */
-    public suspend fun capture(request: CaptureRequest): CaptureOutcome =
+    public suspend fun capture(request: CaptureRequest, rulesLook: Boolean = false): CaptureOutcome {
+        // With rules on, the node keeps its evidence from the event and evaluates rules; the contract says not to post
+        // to both. Not posted (no capability, no approval key, the screen lock said no, or no answer): the inbox, as
+        // before, so nothing is lost and nothing is said twice.
+        val key = captureKey()
+        if (rulesLook) saveAsEvent(request, key)?.let { saved -> lane.withLock { refreshLocked() }; return saved }
+        return captureInbox(request, key)
+    }
+
+    private suspend fun saveAsEvent(request: CaptureRequest, key: String): CaptureOutcome? {
+        val kind = request.kind.triggerKind() ?: return null
+        if (!triggers.supported) return null
+        val classify = kind != TriggerSourceKind.Note
+        if (classify && !state.value.canApprove) return null
+        val api = gateway as? FactsBookTriggerCalls ?: return null
+        val suffix = key.removePrefix("cap-")
+        val sample =
+            TriggerSample(kind, request.text, request.area ?: "general", guessEventLocale(request.text), kind.defaultInstance, messageKey = "msg-$suffix")
+        return (api.postEvent(sample, "evt-$suffix", classify) as? FbResult.Ok)?.value?.let { CaptureOutcome.SavedAtNode(it.evidenceRef) }
+    }
+
+    private suspend fun captureInbox(request: CaptureRequest, key: String): CaptureOutcome =
         lane.withLock {
-            val key = captureKey()
             val node = gateway
             val outcome =
                 when (val result = node?.capture(request, key) ?: FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))) {

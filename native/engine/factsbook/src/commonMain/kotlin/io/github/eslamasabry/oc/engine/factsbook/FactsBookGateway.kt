@@ -434,6 +434,13 @@ public class HttpFactsBookGateway(
             ),
         )
 
+    override suspend fun postEvent(sample: TriggerSample, idempotencyKey: String, classifyNormal: Boolean): FbResult<TriggerEvent> {
+        val base = if (classifyNormal) JsonObject(sample.toJson() + ("classify_normal" to JsonPrimitive(true))) else sample.toJson()
+        val body = if (classifyNormal) when (val proved = signed("POST", "/v1/events", base)) { is FbResult.Err -> return proved; is FbResult.Ok -> proved.value } else base
+        return send("POST", "/v1/events", body = body, idempotencyKey = idempotencyKey)
+            .reading { json -> TriggerEvent.read(json.obj("event") ?: throw FactsBookShapeError("event")) }
+    }
+
     override suspend fun offers(): FbResult<List<ConversationOffer>> = all("/v1/offers", ConversationOffer::read)
 
     override suspend fun cancelOffer(offer: ConversationOffer): FbResult<ConversationOffer> =

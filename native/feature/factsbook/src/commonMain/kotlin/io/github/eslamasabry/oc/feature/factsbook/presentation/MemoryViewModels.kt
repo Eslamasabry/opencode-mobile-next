@@ -11,6 +11,8 @@ import io.github.eslamasabry.oc.engine.factsbook.FactsBookCapabilities
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookError
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookLoad
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookState
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeStatus
 import io.github.eslamasabry.oc.engine.factsbook.FbResult
 import io.github.eslamasabry.oc.engine.factsbook.NeedsYouItem
 import io.github.eslamasabry.oc.engine.factsbook.NeedsYouKind
@@ -46,6 +48,9 @@ public data class MemorySectionUi(
     val needsYouCount: Int = 0,
     val recent: ImmutableList<Thing> = persistentListOf(),
     val nowMs: Long = 0,
+    /** The memory on this phone is paired here and stopped (or coming up): said in words, with Start. */
+    val nodeStopped: Boolean = false,
+    val nodeStarting: Boolean = false,
 )
 
 public interface MemorySectionActions {
@@ -60,6 +65,9 @@ public interface MemorySectionActions {
     public fun openThing(id: String)
 
     public fun retry()
+
+    /** Starts the memory on this phone. */
+    public fun startNode()
 }
 
 /** Reads the connected profile's pairing and keeps the engine open on it. Shared by the section and About you. */
@@ -85,15 +93,17 @@ public class MemorySectionViewModel(
     private val clock: Clock,
 ) : ViewModel(), MemorySectionActions {
     public val state: StateFlow<MemorySectionUi> =
-        combine(access.enabled, access.engine.state) { on, s -> present(on, s) }
+        combine(access.enabled, access.engine.state, access.phoneNode.status) { on, s, node -> present(on, s, node) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MemorySectionUi())
 
     init {
         access.follow(viewModelScope, refresh = true)
     }
 
-    private fun present(on: Boolean, s: FactsBookState): MemorySectionUi =
+    private fun present(on: Boolean, s: FactsBookState, node: PhoneNodeStatus): MemorySectionUi =
         MemorySectionUi(
+            nodeStopped = node.pairedHere && node.state == PhoneNodeState.Stopped,
+            nodeStarting = node.pairedHere && (node.busy || node.state == PhoneNodeState.Installing),
             shown = on,
             loaded = s.loaded,
             paired = s.paired,
@@ -120,6 +130,13 @@ public class MemorySectionViewModel(
 
     override fun retry() {
         viewModelScope.launch { access.engine.refresh() }
+    }
+
+    override fun startNode() {
+        access.background {
+            access.phoneNode.start()
+            if (access.phoneNode.status.value.state == PhoneNodeState.Running) access.engine.refresh()
+        }
     }
 }
 

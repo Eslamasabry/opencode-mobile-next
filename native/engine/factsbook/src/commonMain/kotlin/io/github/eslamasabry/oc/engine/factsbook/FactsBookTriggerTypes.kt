@@ -251,6 +251,8 @@ public data class TriggerEvent(
     val capturedAt: Instant,
     val reason: TriggerReason,
     val firings: List<String>,
+    /** The stored evidence item (`itm_`): the capture the node kept. */
+    val evidenceRef: String = "",
 ) {
     internal companion object {
         fun read(json: JsonObject): TriggerEvent {
@@ -265,10 +267,23 @@ public data class TriggerEvent(
                 capturedAt = json.time("captured_at"),
                 reason = TriggerReason.parse(json.obj("processing")?.str("reason")),
                 firings = json.strings("firings"),
+                evidenceRef = json.str("evidence_ref").orEmpty(),
             )
         }
     }
 }
+
+/** The template language a text is written in: Arabic when it has Arabic letters, else English. */
+public fun guessEventLocale(text: String): String = if (Regex("[\u0600-\u06FF\u0750-\u077F]").containsMatchIn(text)) "ar" else "en"
+
+/** The event kind of a capture, or null for a kind rules do not read. */
+public fun CaptureKind.triggerKind(): TriggerSourceKind? =
+    when (this) {
+        CaptureKind.Note -> TriggerSourceKind.Note
+        CaptureKind.Share -> TriggerSourceKind.Share
+        CaptureKind.ChatSelection -> TriggerSourceKind.ChatSelection
+        CaptureKind.ImportText -> null
+    }
 
 public enum class FiringState { Proposed, Capped, Collapsed, Suppressed }
 
@@ -388,6 +403,12 @@ public interface FactsBookTriggerCalls {
     public suspend fun offers(): FbResult<List<ConversationOffer>>
 
     public suspend fun cancelOffer(offer: ConversationOffer): FbResult<ConversationOffer>
+
+    /**
+     * `POST /v1/events`: a capture the node's rules read. The answer is metadata only. With [classifyNormal] the owner
+     * key signs, for this request, that the text is ordinary (a share or a selected chat is ignored by rules without).
+     */
+    public suspend fun postEvent(sample: TriggerSample, idempotencyKey: String, classifyNormal: Boolean): FbResult<TriggerEvent>
 }
 
 internal fun JsonElement?.asObject(): JsonObject? = this as? JsonObject

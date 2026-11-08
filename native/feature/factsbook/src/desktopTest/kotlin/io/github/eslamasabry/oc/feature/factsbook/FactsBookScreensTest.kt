@@ -164,6 +164,11 @@ class FactsBookScreensTest {
         override fun share(area: Area, on: Boolean) { calls += "share ${area.slug} $on" }
         override fun confirmShare() { calls += "confirmShare" }
         override fun cancelShare() { calls += "cancelShare" }
+        override fun rules(on: Boolean) { calls += "rules $on" }
+        override fun seeRules() { calls += "seeRules" }
+        override fun startNode() { calls += "startNode" }
+        override fun export(entry: CouldNotSaveEntry) { calls += "export ${entry.id}" }
+        override fun closeExport() { calls += "closeExport" }
     }
 
     private val sara =
@@ -581,5 +586,36 @@ class FactsBookScreensTest {
         onNodeWithText("Every note, fact and reminder Memory holds here", substring = true).assertExists()
         onNodeWithText("Remove memory from this phone").performClick()
         assertEquals(listOf("remove"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-079 a stopped memory on this phone says so on the home section with Start, not that it did not answer`() = runComposeUiTest {
+        val actions = Recorder()
+        val state =
+            MemorySectionUi(
+                shown = true,
+                loaded = true,
+                paired = true,
+                load = FactsBookLoad.Failed,
+                error = io.github.eslamasabry.oc.engine.factsbook.FactsBookError("node_unreachable"),
+                nodeStopped = true,
+            )
+        setContent { Themed { MemorySectionContent(state, actions) } }
+        onNodeWithText("Memory is stopped").assertExists()
+        onNodeWithText("Memory did not answer").assertDoesNotExist()
+        onNodeWithText("Start").performClick()
+        assertEquals(listOf("startNode"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-080 a note the node holds can be exported as the encrypted object, with what it does not unlock`() = runComposeUiTest {
+        val entry = CouldNotSaveEntry("ivc_1", CouldNotSaveReason.KeyLocked, t0, onPhone = false)
+        val export = io.github.eslamasabry.oc.engine.factsbook.CaptureExport("{\n  \"item\": \"itm_1\"\n}", "itm_1")
+        setContent {
+            Themed { NotSavedScreen(NotSavedUi(entries = persistentListOf(entry), canExport = true, export = export, nowMs = t0.toEpochMilliseconds()), Recorder()) }
+        }
+        onNodeWithText("Export this note").assertExists()
+        onNodeWithText("It does not unlock the locked folder", substring = true).assertExists()
+        onNodeWithText("Copy export").assertExists()
     }
 }

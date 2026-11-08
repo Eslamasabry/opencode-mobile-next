@@ -388,4 +388,23 @@ class FactsBookViewModelsTest {
         assertTrue("start" in access.nodeHost.steps)
         assertEquals(PhoneNodeState.Running, access.phoneNode.status.value.state)
     }
+
+    @Test
+    fun `B-FB-078 with a rule on, Add something lets the rules read the note unless the person turns it off`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/events", """{"event":{"id":"evt_9","source":{"kind":"note"},"captured_at":"2026-11-08T10:00:00Z","evidence_ref":"itm_9"}}""")
+        access.node.on("POST /v1/inbox", """{"status":"saved","item_id":"itm_10"}""")
+        val vm = CaptureViewModel(access, nav)
+        val ready = vm.state.first { it.rulesSupported }
+        assertEquals(1, ready.rulesOn)
+        assertTrue(ready.rulesLook)
+        vm.save("Appointment: Clinic | 2026-11-12T09:00")
+        vm.state.first { it.notice == CaptureNotice.Saved }
+        assertTrue(access.node.asked.contains("POST /v1/events"))
+        assertFalse(access.node.asked.contains("POST /v1/inbox"))
+        vm.rules(false)
+        vm.save("Buy milk")
+        vm.state.first { it.clearSeed == 2 }
+        assertTrue(access.node.asked.contains("POST /v1/inbox"))
+    }
 }

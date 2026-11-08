@@ -56,7 +56,10 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.KitMonoText
+import io.github.eslamasabry.oc.ui.kit.action.KitCopyButton
 import io.github.eslamasabry.oc.ui.kit.row.KitFactRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -438,6 +441,19 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                     }
                 }
             }
+            if (state.rulesSupported && thing == null) {
+                item("rules") {
+                    KitRowGroup {
+                        KitSwitchRow(
+                            title = stringResource(Res.string.fbCaptureRulesLook),
+                            checked = state.rulesLook,
+                            supporting = pluralStringResource(Res.plurals.fbCaptureRulesOn, state.rulesOn, state.rulesOn),
+                            onCheckedChange = actions::rules,
+                        )
+                        KitRow(title = stringResource(Res.string.fbCaptureSeeRules), trailing = KitRowTrailing.Chevron, onClick = actions::seeRules)
+                    }
+                }
+            }
             val notice = state.notice
             if (notice != null || state.error != null) {
                 item("notice") {
@@ -528,6 +544,23 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
         onConfirm = actions::discard,
         onCancel = actions::cancelDiscard,
     )
+    val export = state.export
+    if (export != null) {
+        KitSheet(
+            visible = true,
+            onDismissRequest = actions::closeExport,
+            title = stringResource(Res.string.fbExportTitle),
+            closeLabel = stringResource(Res.string.fbDismiss),
+            icon = KitIcons.upload,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                KitText(stringResource(Res.string.fbExportBody), role = TypeRole.Secondary)
+                KitText(stringResource(Res.string.fbExportObject), role = TypeRole.Label, tone = TextTone.Secondary)
+                KitMonoText(export.text, maxLines = 12)
+                KitCopyButton(stringResource(Res.string.fbExportCopy), stringResource(Res.string.kitCopied), { export.text })
+            }
+        }
+    }
     }
 }
 
@@ -550,8 +583,9 @@ private fun EntryRow(entry: CouldNotSaveEntry, state: NotSavedUi, actions: NotSa
         trailing =
             KitRowTrailing.Menu(
                 stringResource(Res.string.fbNotSavedTryNow),
-                listOf(
+                listOfNotNull(
                     KitMenuItem(stringResource(Res.string.fbNotSavedRetry), { actions.retry(entry) }),
+                    if (!entry.onPhone && state.canExport) KitMenuItem(stringResource(Res.string.fbNotSavedExport), { actions.export(entry) }) else null,
                     KitMenuItem(stringResource(Res.string.fbNotSavedDiscard), { actions.askDiscard(entry) }, destructive = true),
                 ),
             ),

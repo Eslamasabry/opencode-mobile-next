@@ -150,4 +150,29 @@ class FactsBookTriggersTest {
         assertEquals("dg", body["digest"]!!.jsonPrimitive.content)
         assertTrue(body.containsKey("proof"))
     }
+
+    @Test
+    fun `B-FB-077 with rules on a capture becomes an event, a share signed as ordinary text, and never also goes to the inbox`() = runTest {
+        val http = FakeHttp().apply { triggerNode() }
+        http.on("POST /v1/events", 200, """{"event":{"id":"evt_9","source":{"kind":"share"},"captured_at":"2026-11-08T10:00:00Z","evidence_ref":"itm_9"}}""")
+        val e = engine(http)
+        e.open("p1")
+        val note = e.capture(CaptureRequest(CaptureKind.Note, "Appointment: Library visit | 2026-11-12T09:00"), rulesLook = true)
+        assertEquals("itm_9", assertIs<CaptureOutcome.SavedAtNode>(note).itemId)
+        val first = Json.parseToJsonElement(http.sent.first { it.path == "/v1/events" }.body!!).jsonObject
+        assertFalse(first.containsKey("proof"))
+        assertTrue(http.sent.first { it.path == "/v1/events" }.headers["Idempotency-Key"]!!.startsWith("evt-"))
+        e.capture(CaptureRequest(CaptureKind.Share, "موعد: زيارة | 2026-11-12T09:00"), rulesLook = true)
+        val share = Json.parseToJsonElement(http.sent.last { it.path == "/v1/events" }.body!!).jsonObject
+        assertEquals("true", share["classify_normal"]!!.jsonPrimitive.content)
+        assertEquals("ar", share["locale"]!!.jsonPrimitive.content)
+        assertTrue(share.containsKey("proof"))
+        assertFalse(http.sent.any { it.path == "/v1/inbox" })
+
+        // The node will not take the event: the capture is saved to the inbox as before.
+        http.on("POST /v1/events", 422, """{"error":{"code":"bad_request"}}""")
+        http.on("POST /v1/inbox", 200, """{"status":"saved","item_id":"itm_10"}""")
+        assertIs<CaptureOutcome.SavedAtNode>(e.capture(CaptureRequest(CaptureKind.Note, "Buy milk"), rulesLook = true))
+        assertTrue(http.sent.any { it.path == "/v1/inbox" })
+    }
 }
