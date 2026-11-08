@@ -97,7 +97,7 @@ class SettingsParityUiTest {
         }
 
     @Test
-    fun `R1-010 Help, Report a problem is the one R1 page; the nine old controls are gone`() =
+    fun `R1-010 Help, Report a problem is the one R1 page, the nine old controls are gone`() =
         runComposeUiTest {
             show()
             tap("Help")

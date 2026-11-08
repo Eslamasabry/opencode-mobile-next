@@ -98,7 +98,7 @@ class ReportProblemTest {
         ).also { runCurrent() }
 
     @Test
-    fun `R1-001 Help has one Report a problem row; the separate Send a problem report row is gone`() {
+    fun `R1-001 Help has one Report a problem row, the separate Send a problem report row is gone`() {
         val help = SettingsStructure.rows(SettingsGroupId.Help, phoneFacts().copy(diagnostics = true), false, false)
         assertEquals(
             listOf(
@@ -162,7 +162,7 @@ class ReportProblemTest {
     }
 
     @Test
-    fun `R1-005 a build without the vendor never sends; the report is still there to copy`() = runTest {
+    fun `R1-005 a build without the vendor never sends, the report is still there to copy`() = runTest {
         val sender = FakeSender(canSend = false)
         val p = presenter(sender, available = false)
         p.onOpen(SettingsPage.ReportProblem); runCurrent()
@@ -176,7 +176,7 @@ class ReportProblemTest {
     }
 
     @Test
-    fun `R1-006 Post publicly on GitHub asks first; only yes opens the form with the words`() = runTest {
+    fun `R1-006 Post publicly on GitHub asks first, only yes opens the form with the words`() = runTest {
         val github = GitHub()
         val p = presenter(FakeSender(), github)
         p.onOpen(SettingsPage.ReportProblem); runCurrent()

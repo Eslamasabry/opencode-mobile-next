@@ -125,7 +125,7 @@ class ReportProblemR1Test {
     }
 
     @Test
-    fun `R1-022 the included line opens the sheet; Send report, GitHub and Done reach the presenter`() = runComposeUiTest {
+    fun `R1-022 the included line opens the sheet, Send report, GitHub and Done reach the presenter`() = runComposeUiTest {
         val actions = RecordingActions()
         setContent { SettingsThemed { SettingsScreen(form, actions) } }
         onNodeWithTag("report-included").performClick()
