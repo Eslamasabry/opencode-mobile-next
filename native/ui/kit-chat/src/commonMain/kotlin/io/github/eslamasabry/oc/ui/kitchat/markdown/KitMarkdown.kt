@@ -174,7 +174,15 @@ public fun KitMarkdown(
     modifier: Modifier = Modifier,
     live: Boolean = false,
     reveal: KitMdReveal? = null,
+    role: TypeRole = TypeRole.Body,
 ) {
+    // F: lib/ui/kit/chat/kit_markdown.dart:90-110 — body (replies, documents) or secondary (a tool's note, a thought:
+    // the secondary size in text2).
+    val secondary = role == TypeRole.Secondary
+    CompositionLocalProvider(
+        LocalMdRole provides (if (secondary) TypeRole.Secondary else TypeRole.Body),
+        LocalMdTone provides (if (secondary) LocalKitColors.current.text2 else LocalMdTone.current),
+    ) {
     Column(modifier.widthIn(max = 700.dp)) {
         val last = blocks.lastIndex
         blocks.forEachIndexed { i, block ->
@@ -189,6 +197,7 @@ public fun KitMarkdown(
                 )
             }
         }
+    }
     }
 }
 
@@ -482,6 +491,9 @@ internal fun kitMdQuoteBarPx(density: Float): Float = if (density <= 1f) maxOf(2
 /** The tone of reading text inside a block that sets one (a quote's words are secondary); null = text1. */
 private val LocalMdTone = staticCompositionLocalOf<Color?> { null }
 
+/** The reading role of a [KitMarkdown] (body or secondary); blocks read it where Flutter reads `scope.role`. */
+private val LocalMdRole = staticCompositionLocalOf { TypeRole.Body }
+
 /**
  * A table (plan 09 §9.1): measured columns (each as wide as its widest cell, at most 320 dp) inside
  * one horizontal scroller, so a wide table scrolls inside the 700 dp column instead of squeezing
@@ -701,7 +713,7 @@ public const val STREAM_CARET_TAG: String = "kit-stream-caret"
 @Composable
 private fun readingStyle(role: TypeRole): TextStyle =
     LocalKitTypography.current
-        .style(role)
+        .style(if (role == TypeRole.Body) LocalMdRole.current else role)
         .copy(
             color = LocalMdTone.current ?: LocalKitColors.current.text1,
             textDirection = TextDirection.Content, // prose follows its own direction (R15)
@@ -750,6 +762,7 @@ internal fun kitMdInlineStyle(colors: KitColors, mono: TextStyle): KitMdInlineSt
         mono = mono.fontFamily ?: androidx.compose.ui.text.font.FontFamily.Monospace,
         monoSize = mono.fontSize,
         pathLink = colors.accent,
+        code = colors.text1, // F: lib/ui/kit/chat/kit_markdown.dart:1208-1215
     )
 
 /**

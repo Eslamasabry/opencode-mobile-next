@@ -23,6 +23,8 @@ public data class KitMdInlineStyle(
     val mono: FontFamily,
     val monoSize: TextUnit = TextUnit.Unspecified,
     val pathLink: Color = link,
+    /** Inline code's ink: text1 even in secondary prose (Flutter `_codeSpan`); Unspecified keeps the paragraph's. */
+    val code: Color = Color.Unspecified,
 )
 
 /** Where taps on inline links and confirmed path chips go. Plain lambdas (C5); the kit never opens anything (R17). */
@@ -91,7 +93,7 @@ public fun inlineAnnotated(
             // C-016: the mono face at the Mono size marks code; no tint and no padding (Flutter `_codeSpan`: a tinted
             // run beside thin prose fails the contrast check).
             KitSpanKind.Code ->
-                builder.addStyle(SpanStyle(fontFamily = style.mono, fontSize = style.monoSize), from, to)
+                builder.addStyle(SpanStyle(color = style.code, fontFamily = style.mono, fontSize = style.monoSize), from, to)
             is KitSpanKind.Link ->
                 builder.addLink(
                     LinkAnnotation.Clickable(
