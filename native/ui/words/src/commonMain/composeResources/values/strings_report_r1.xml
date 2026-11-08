@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- R1 Report a problem (owner's pick, 2026-11-09): one flow for Report a problem and Send a problem report. -->
+    <string name="reportR1Optional">Optional</string>
+    <string name="reportR1Included">What's included</string>
+    <string name="reportR1IncludedLine">App and phone details. Passwords, keys and server addresses are taken out.</string>
+    <string name="reportR1IncludedCrash">App and phone details, and the crash at %1$s. Passwords, keys and server addresses are taken out.</string>
+    <string name="reportR1IncludedFreeze">App and phone details, and the freeze at %1$s. Passwords, keys and server addresses are taken out.</string>
+    <string name="reportR1IncludedClose">App and phone details, and the close at %1$s. Passwords, keys and server addresses are taken out.</string>
+    <string name="reportR1IncludedOpen">Show what's included</string>
+    <string name="reportR1Send">Send report</string>
+    <string name="reportR1CopyText">Copy text</string>
+    <string name="reportR1PostGitHub">Post publicly on GitHub</string>
+    <string name="reportR1NoSend">This version can't send reports. Copy the text, or post it on GitHub.</string>
+    <string name="reportR1SheetSubtitle">This is exactly what gets sent.</string>
+    <string name="reportR1Words">Your words</string>
+    <string name="reportR1NoWords">Nothing written</string>
+    <string name="reportR1LastClose">Last time the app closed</string>
+    <string name="reportR1Crashed">Closed unexpectedly · %1$s</string>
+    <string name="reportR1Froze">Stopped responding · %1$s</string>
+    <string name="reportR1ClosedForMemory">Closed by Android to free memory · %1$s</string>
+    <string name="reportR1App">App</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Phone</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">%1$s GB memory</string>
+    <string name="reportR1Connection">Connection</string>
+    <string name="reportR1AddressOut">%1$s · address taken out</string>
+    <string name="reportR1NotConnected">Not connected</string>
+    <string name="reportR1Problems">Recent problems</string>
+    <string name="reportR1NoProblems">None</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Never sent: your conversations, files, passwords, keys and server addresses.</string>
+    <string name="reportR1SentBody">Thank you. If you write to us about this problem, give this code so we can find your report.</string>
+    <string name="reportR1PublicTitle">Post this report publicly?</string>
+    <string name="reportR1PublicBody">Anyone can read GitHub issues. The form opens with your words and the app details, and nothing is posted until you submit it there.</string>
+    <string name="reportR1PublicConfirm">Open GitHub</string>
+    <string name="reportR1GitHubFailed">Couldn't open GitHub. Try again.</string>
+    <string name="reportR1KindTimeout">Timed out</string>
+    <string name="reportR1KindAuth">Sign-in refused</string>
+    <string name="reportR1KindTls">Certificate not trusted</string>
+    <string name="reportR1KindServer">Server error</string>
+    <string name="reportR1KindProtocol">Unexpected server reply</string>
+    <string name="reportR1KindDns">Address not found</string>
+    <string name="reportR1KindRefused">Connection refused</string>
+    <string name="reportR1KindOffline">No network</string>
+    <string name="reportR1KindTooLarge">Message too large</string>
+    <string name="reportR1KindRejected">Message refused</string>
+    <string name="reportR1KindOther">Other problem</string>
+</resources>

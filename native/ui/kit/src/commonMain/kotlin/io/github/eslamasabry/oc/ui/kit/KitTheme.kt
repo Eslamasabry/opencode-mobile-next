@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitThemeCover
 import io.github.eslamasabry.oc.ui.kit.theme.kitThemeCover
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitThemeFade
 import io.github.eslamasabry.oc.ui.kit.theme.rememberSettledScheme
@@ -164,6 +165,7 @@ public fun KitTheme(
         LocalKitRoles provides roles,
         LocalKitLocaleTag provides localeTag,
         LocalKitColors provides colors,
+        LocalKitThemeCover provides fade.cover,
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,
         LocalKitMotion provides motion,

@@ -110,6 +110,21 @@ class S8ChatPolishRulesTest {
     }
 
     @Test
+    fun `B-CHAT-063 a step that simply runs is counted with the rest, never as waiting to run`() {
+        val work =
+            TurnWork(
+                "t",
+                listOf(step("a", "bash", StepState.Done), step("b", "bash", StepState.Running)),
+                WorkCounts(ran = 2, steps = 1),
+                WorkLineState.Running,
+                null,
+            )
+        val split = WorkLineRules.split(work)
+        assertEquals(2, split.done.ran)
+        assertEquals(0, split.waiting)
+    }
+
+    @Test
     fun `P-012 with every step finished the engine's counts are used unchanged`() {
         val counts = WorkCounts(edited = 2, ran = 1, steps = 3)
         val work =

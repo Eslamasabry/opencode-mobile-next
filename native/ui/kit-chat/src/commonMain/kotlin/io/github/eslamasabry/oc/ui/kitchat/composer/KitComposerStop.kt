@@ -103,6 +103,11 @@ public fun KitComposerStop(
     armKey: Any? = Unit,
     workingReason: String? = null,
     stopAfterStep: KitStopAfterStep? = null,
+    /**
+     * Draw [stopAfterStep] as a word beside the chip too. False keeps it on the hold and the screen reader's action only
+     * (Flutter's chat: the strip carries the Stop chip alone; the steps view under the live line offers the words).
+     */
+    afterStepButton: Boolean = true,
 ) {
     val platform = LocalKitPlatform.current
     val haptics = LocalKitAppearance.current.haptics
@@ -182,7 +187,7 @@ public fun KitComposerStop(
                 }
             }
         }
-        if (afterStep != null)
+        if (afterStep != null && afterStepButton)
             KitButton(
                 label = afterStep.label,
                 onClick = afterStep.onSelect,

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- R1 Report a problem (owner's pick, 2026-11-09): one flow for Report a problem and Send a problem report. -->
+    <string name="reportR1Optional">اختياري</string>
+    <string name="reportR1Included">ما يتضمّنه التقرير</string>
+    <string name="reportR1IncludedLine">تفاصيل التطبيق والهاتف. تُحذف كلمات المرور والمفاتيح وعناوين الخوادم.</string>
+    <string name="reportR1IncludedCrash">تفاصيل التطبيق والهاتف، والتعطّل في %1$s. تُحذف كلمات المرور والمفاتيح وعناوين الخوادم.</string>
+    <string name="reportR1IncludedFreeze">تفاصيل التطبيق والهاتف، والتجمّد في %1$s. تُحذف كلمات المرور والمفاتيح وعناوين الخوادم.</string>
+    <string name="reportR1IncludedClose">تفاصيل التطبيق والهاتف، والإغلاق في %1$s. تُحذف كلمات المرور والمفاتيح وعناوين الخوادم.</string>
+    <string name="reportR1IncludedOpen">عرض ما يتضمّنه التقرير</string>
+    <string name="reportR1Send">إرسال التقرير</string>
+    <string name="reportR1CopyText">نسخ النص</string>
+    <string name="reportR1PostGitHub">النشر علنًا على GitHub</string>
+    <string name="reportR1NoSend">لا يستطيع هذا الإصدار إرسال التقارير. انسخ النص أو انشره على GitHub.</string>
+    <string name="reportR1SheetSubtitle">هذا بالضبط ما يُرسَل.</string>
+    <string name="reportR1Words">كلماتك</string>
+    <string name="reportR1NoWords">لم تكتب شيئًا</string>
+    <string name="reportR1LastClose">آخر مرة أُغلق فيها التطبيق</string>
+    <string name="reportR1Crashed">أُغلق بشكل غير متوقع · %1$s</string>
+    <string name="reportR1Froze">توقّف عن الاستجابة · %1$s</string>
+    <string name="reportR1ClosedForMemory">أغلقه أندرويد لتحرير الذاكرة · %1$s</string>
+    <string name="reportR1App">التطبيق</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">الهاتف</string>
+    <string name="reportR1Android">أندرويد %1$s</string>
+    <string name="reportR1Memory">ذاكرة %1$s غيغابايت</string>
+    <string name="reportR1Connection">الاتصال</string>
+    <string name="reportR1AddressOut">%1$s · حُذف العنوان</string>
+    <string name="reportR1NotConnected">غير متصل</string>
+    <string name="reportR1Problems">مشكلات حديثة</string>
+    <string name="reportR1NoProblems">لا شيء</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">لا يُرسَل أبدًا: محادثاتك وملفاتك وكلمات المرور والمفاتيح وعناوين الخوادم.</string>
+    <string name="reportR1SentBody">شكرًا لك. إن راسلتنا بشأن هذه المشكلة فاذكر هذا الرمز لنجد تقريرك.</string>
+    <string name="reportR1PublicTitle">هل تنشر هذا التقرير علنًا؟</string>
+    <string name="reportR1PublicBody">يستطيع أي أحد قراءة بلاغات GitHub. يُفتح النموذج بكلماتك وتفاصيل التطبيق، ولا يُنشر شيء حتى ترسله هناك.</string>
+    <string name="reportR1PublicConfirm">فتح GitHub</string>
+    <string name="reportR1GitHubFailed">تعذّر فتح GitHub. حاول مجددًا.</string>
+    <string name="reportR1KindTimeout">انتهت المهلة</string>
+    <string name="reportR1KindAuth">رُفض تسجيل الدخول</string>
+    <string name="reportR1KindTls">شهادة غير موثوقة</string>
+    <string name="reportR1KindServer">خطأ في الخادم</string>
+    <string name="reportR1KindProtocol">ردّ غير متوقع من الخادم</string>
+    <string name="reportR1KindDns">لم يُعثر على العنوان</string>
+    <string name="reportR1KindRefused">رُفض الاتصال</string>
+    <string name="reportR1KindOffline">لا توجد شبكة</string>
+    <string name="reportR1KindTooLarge">الرسالة كبيرة جدًا</string>
+    <string name="reportR1KindRejected">رُفضت الرسالة</string>
+    <string name="reportR1KindOther">مشكلة أخرى</string>
+</resources>

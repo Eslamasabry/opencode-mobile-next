@@ -204,7 +204,14 @@ public fun SettingsScreen(
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
-                AboutBody(state.about, actions, state.voiceLicenses, state.updates, state.memoryPreview)
+                AboutBody(
+                    state.about,
+                    actions,
+                    state.voiceLicenses,
+                    state.updates,
+                    state.memoryPreview,
+                    reportCode = state.reportCode,
+                )
             }
         SettingsPage.KeyboardShortcuts ->
             SettingsFrame(
@@ -291,17 +298,7 @@ public fun SettingsScreen(
             ) {
                 state.localModels?.let { LocalModelsBody(it, actions) }
             }
-        SettingsPage.ReportProblem ->
-            SettingsFrame(
-                stringResource(Res.string.kitReportProblem),
-                back,
-                state,
-                actions,
-                modifier,
-            ) {
-                ReportBody(state.report, actions, state.reportDescription)
-                state.crash?.let { CrashBody(it, actions) }
-            }
+        SettingsPage.ReportProblem -> ReportProblemPage(state, actions, back, modifier)
         is SettingsPage.QuietTime ->
             SettingsFrame(
                 stringResource(

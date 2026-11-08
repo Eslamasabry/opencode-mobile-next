@@ -5,9 +5,9 @@
     <string name="crashOfferSettingTitle">Offer crash reports</string>
     <string name="crashOfferSettingDetail">After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.</string>
     <string name="telemetryConsentTitle">Help improve OpenCode Mobile?</string>
-    <string name="telemetryConsentBody">If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.</string>
-    <string name="telemetryConsentSends">Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.</string>
+    <string name="telemetryConsentBody">If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.</string>
+    <string name="telemetryConsentSends">Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.</string>
     <string name="telemetryConsentNever">Never sent: your code, conversations, files, server addresses or keys. No advertising ID.</string>
-    <string name="telemetryConsentShare">Share anonymous usage</string>
+    <string name="telemetryConsentShare">Share both</string>
     <string name="telemetryConsentNotNow">Not now</string>
 </resources>

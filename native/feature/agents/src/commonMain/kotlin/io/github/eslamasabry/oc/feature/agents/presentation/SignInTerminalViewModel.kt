@@ -61,6 +61,8 @@ public class SignInTerminalViewModel(
 
     override fun copyCode(): Unit = presenter.copyCode()
 
+    override fun paste(text: String): Unit = presenter.paste(text)
+
     override fun send(line: String): Unit = presenter.send(line)
 
     override fun setAccessibleMode(on: Boolean): Unit = presenter.setAccessibleMode(on)

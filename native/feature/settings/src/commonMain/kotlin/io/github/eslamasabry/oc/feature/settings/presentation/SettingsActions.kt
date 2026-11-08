@@ -134,31 +134,20 @@ public interface SettingsActions {
     /** Language: one tap chooses; the page stays, now in the chosen language (B-L10N-001). */
     public fun onLanguage(language: AppLanguage) {}
 
-    /** Report a problem: description stays in memory and is scrubbed in the preview. */
+    /** Report a problem: the words stay in memory and are redacted in the report. */
     public fun onReportDescription(text: String) {}
 
-    public fun onSendReport() {
-        onOutside(SettingsOutside.ReportOnGitHub)
-    }
+    /** Report a problem › What's included: opens ([open]) or closes the sheet listing exactly what is sent. */
+    public fun onShowIncluded(open: Boolean) {}
 
-    /** Report a problem: copy the previewed report as it is shown. */
-    public fun onCopyReport() {}
+    /** Report a problem › Send report: sends exactly the report "What's included" lists, once. */
+    public fun onSendProblemReport() {}
 
-    public fun onRefreshExitHistory() {}
+    /** Report a problem › Post publicly on GitHub: asks first, since an issue is public. */
+    public fun onAskPostPublicly() {}
 
-    public fun onCrashCapture(on: Boolean) {}
-
-    public fun onClearCrashes() {}
-
-    public fun onPreviewCrashes() {}
-
-    public fun onShareCrashes() {}
-
-    /** Report a problem: open Android's share sheet with the previewed report. */
-    public fun onShareReport() {}
-
-    /** Report a problem: build the report again after it could not be read. */
-    public fun onRetryReport() {}
+    /** The public-post question's answer: [post] opens the GitHub form (nothing is filed until the person submits). */
+    public fun onPostPublicly(post: Boolean) {}
 
     /** Notifications › Quiet hours switch: on starts at 22:00–08:00, off clears both times. */
     public fun onQuietHours(on: Boolean) {}

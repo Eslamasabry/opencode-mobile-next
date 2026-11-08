@@ -32,7 +32,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 
-/** An explicit helper start; creating the binding never launches a process or changes a profile. */
+/**
+ * Starts the phone agent helper and connects its conversations. The Agents page calls it on its own once an agent is
+ * installed; creating the binding never launches a process or changes a profile. Each failure names its real reason
+ * (no built-in Linux, a helper that did not start, a key that could not be read, a helper that did not answer).
+ */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<PhoneAgentHostStarter>())
@@ -86,7 +90,8 @@ class AppLocalAgentHostStarter(
             withContext(dispatchers.io) {
                 try {
                     val linux = BuiltinLinux.get(app)
-                    if (!linux.installed || phone.state.value.needsRestart) unavailable()
+                    if (!linux.installed) Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
+                    else if (phone.state.value.needsRestart) unavailable()
                     else {
                         linux.startPhoneAgentHelper(
                             owner.raw,
@@ -99,7 +104,7 @@ class AppLocalAgentHostStarter(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
-                    unavailable()
+                    Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
                 }
             }
         if (started is Outcome.Failed) return@withLock started

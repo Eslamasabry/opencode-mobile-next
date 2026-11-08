@@ -57,7 +57,6 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
-    private val crashes: CrashSettings? = null,
     private val phrases: PhraseSettings? = null,
     private val appearanceGuide: AppearanceGuideMemory? = null,
     private val exitWhatsNew: () -> Unit = {},
@@ -70,6 +69,8 @@ public class SettingsPresenter(
     private val memoryPreview: MemoryPreviewSetting? = null,
     /** s28: Flutter 2.1.5's two stored answers (usage and app health, crash reports). */
     private val healthConsent: HealthConsentSetting? = null,
+    /** R1: Report a problem's report, its Send report and About's report code. */
+    private val problemReport: ProblemReportSender? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -84,7 +85,7 @@ public class SettingsPresenter(
         val memoryPreview: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
-        val crash: CrashUi? = null,
+        val reportCode: String? = null,
         val focusedRow: SettingsRowId? = null,
         val focusedAnchor: String? = null,
         val phraseChips: Boolean = true,
@@ -176,73 +177,6 @@ public class SettingsPresenter(
             scope.launch {
                 port.enabled.collect { enabled -> local.update { it.copy(phraseChips = enabled) } }
             }
-        }
-        crashes?.let { port ->
-            scope.launch {
-                port.state.collect { evidence ->
-                    local.update { current ->
-                        val valid:
-                            io.github.eslamasabry.oc.engine.diagnostics.crash.CrashReportPreview? =
-                            null
-                        current.copy(
-                            crash =
-                                CrashUi(
-                                    current.crash?.history,
-                                    evidence?.available == true,
-                                    evidence?.enabled == true,
-                                    evidence?.records?.size ?: 0,
-                                    valid,
-                                    if (evidence?.storageFailed == true)
-                                        io.github.eslamasabry.oc.engine.diagnostics.crash
-                                            .CrashReportError
-                                            .StorageFailed
-                                    else null,
-                                )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    override fun onRefreshExitHistory() {
-        val port = crashes ?: return
-        scope.launch {
-            val history = port.history()
-            local.update { it.copy(crash = (it.crash ?: CrashUi()).copy(history = history)) }
-        }
-    }
-
-    override fun onCrashCapture(on: Boolean) {
-        val port = crashes ?: return
-        scope.launch {
-            if (!port.setEnabled(on)) local.update { it.copy(note = SettingsNote.ConsentNotSaved) }
-        }
-    }
-
-    override fun onClearCrashes() {
-        val port = crashes ?: return
-        scope.launch {
-            if (!port.clear()) local.update { it.copy(note = SettingsNote.ChoiceNotSaved) }
-        }
-    }
-
-    override fun onPreviewCrashes() {
-        val port = crashes ?: return
-        scope.launch {
-            val result = port.preview()
-            local.update {
-                it.copy(crash = it.crash?.copy(preview = result.preview, error = result.error))
-            }
-        }
-    }
-
-    override fun onShareCrashes() {
-        val port = crashes ?: return
-        val preview = local.value.crash?.preview ?: return
-        scope.launch {
-            val error = port.share(preview)
-            local.update { it.copy(crash = it.crash?.copy(error = error)) }
         }
     }
 
@@ -355,6 +289,7 @@ public class SettingsPresenter(
                             l.crashReports ?: reporting?.reportingConsent?.value ?: health?.crashes,
                             l.offerCrashReports ?: crashOffer?.enabled(),
                             usage = health?.usage,
+                            vendorSends = healthConsent?.available == true,
                         )
                     },
             localData =
@@ -382,10 +317,10 @@ public class SettingsPresenter(
                 },
             report = l.report,
             reportDescription = l.reportDescription,
+            reportCode = l.reportCode,
             phraseChips = l.phraseChips,
             focusedRow = l.focusedRow,
             focusedAnchor = l.focusedAnchor,
-            crash = l.crash,
             localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
             note = l.note,
             voiceLicenses = licenses != null,
@@ -597,6 +532,7 @@ public class SettingsPresenter(
             else it.copy(stack = (it.stack + page).toImmutableList())
         }
         if (page == SettingsPage.ReportProblem) loadReport()
+        if (page == SettingsPage.About) loadReportCode()
         if (page == SettingsPage.Storage) onRefreshLocalModels()
         if (
             page == SettingsPage.Notifications ||
@@ -956,55 +892,83 @@ public class SettingsPresenter(
 
     override fun onReportDescription(text: String) {
         if (text == local.value.reportDescription) return
-        local.update { it.copy(reportDescription = text) }
-        loadReport()
-    }
-
-    override fun onSendReport() {
-        val port = diagnostics ?: return
-        if (local.value.report !is ReportUi.Ready) return
-        val description = local.value.reportDescription
-        run(SettingsNote.ShareFailed) { port.send(description) }
-    }
-
-    override fun onRetryReport() {
-        loadReport()
-    }
-
-    override fun onCopyReport() {
-        val port = diagnostics ?: return
-        val text = (local.value.report as? ReportUi.Ready)?.text ?: return
-        scope.launch {
-            val note =
-                if (port.copy(text) is Outcome.Ok) SettingsNote.ReportCopied
-                else SettingsNote.ShareFailed
-            local.update { it.copy(note = note) }
+        val words = problemReport?.words(text)
+        local.update {
+            it.copy(
+                reportDescription = text,
+                report =
+                    it.report?.let { report ->
+                        report.copy(
+                            content = words?.let { w -> report.content?.withWords(w) } ?: report.content,
+                            stage = if (report.stage == ReportStage.Failed) ReportStage.Writing else report.stage,
+                        )
+                    },
+            )
         }
     }
 
-    override fun onShareReport() {
-        val port = diagnostics ?: return
-        val text = (local.value.report as? ReportUi.Ready)?.text ?: return
-        run(SettingsNote.ShareFailed) { port.share(text) }
+    override fun onShowIncluded(open: Boolean) {
+        local.update { it.copy(report = it.report?.copy(showIncluded = open)) }
     }
 
-    /** Builds the preview once per visit; a newer request wins over a slower older one. */
-    private fun loadReport() {
+    override fun onAskPostPublicly() {
+        local.update { it.copy(report = it.report?.copy(confirmPublic = true)) }
+    }
+
+    override fun onPostPublicly(post: Boolean) {
+        local.update { it.copy(report = it.report?.copy(confirmPublic = false)) }
+        if (!post) return
         val port = diagnostics ?: return
-        val generation = ++reportGeneration
         val description = local.value.reportDescription
-        local.update { it.copy(report = ReportUi.Loading) }
+        run(SettingsNote.GitHubFailed) { port.send(description) }
+    }
+
+    /**
+     * Report a problem › Send report: sends exactly the report "What's included" lists, once, then shows its code.
+     * Opening the page, typing and leaving send nothing.
+     */
+    override fun onSendProblemReport() {
+        val port = problemReport ?: return
+        val now = local.value.report ?: return
+        val content = now.content ?: return
+        if (!now.canSend || now.stage == ReportStage.Sending || now.stage is ReportStage.Sent) return
+        val generation = reportGeneration
+        local.update { it.copy(report = it.report?.copy(stage = ReportStage.Sending, showIncluded = false)) }
         scope.launch {
-            val built =
-                when (val result = port.report(description)) {
-                    is Outcome.Ok -> ReportUi.Ready(result.value)
-                    is Outcome.Failed -> ReportUi.Failed
-                }
-            if (generation == reportGeneration) local.update { it.copy(report = built) }
+            val code = port.send(content.text)
+            if (generation != reportGeneration) return@launch
+            local.update {
+                it.copy(
+                    report = it.report?.copy(stage = if (code == null) ReportStage.Failed else ReportStage.Sent(code)),
+                    reportCode = code ?: it.reportCode,
+                )
+            }
+        }
+    }
+
+    /** Reads the report's facts once per visit; a newer visit wins over a slower older one. */
+    private fun loadReport() {
+        val port = problemReport
+        val generation = ++reportGeneration
+        local.update { it.copy(report = ReportUi(canSend = port?.canSend == true)) }
+        port ?: return
+        scope.launch {
+            val content = port.build().withWords(port.words(local.value.reportDescription))
+            if (generation == reportGeneration) {
+                local.update { it.copy(report = it.report?.copy(content = content)) }
+            }
         }
     }
 
     private var reportGeneration = 0L
+
+    private fun loadReportCode() {
+        val port = problemReport ?: return
+        scope.launch {
+            val code = port.reportCode()
+            local.update { it.copy(reportCode = code) }
+        }
+    }
 
     public fun closeReport() {
         reportGeneration++

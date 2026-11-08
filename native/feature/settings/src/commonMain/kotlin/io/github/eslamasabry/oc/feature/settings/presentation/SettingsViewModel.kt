@@ -50,9 +50,6 @@ public interface SettingsHost {
     public val configuration: ConfigurationInspection?
         get() = null
 
-    public val crashes: CrashSettings?
-        get() = null
-
     public val phrases: PhraseSettings?
         get() = null
 
@@ -78,6 +75,10 @@ public interface SettingsHost {
     /** s28: Flutter 2.1.5's stored answers (usage and app health, crash reports); null hides the usage switch. */
     public val healthConsent: HealthConsentSetting?
         get() = null
+
+    /** R1: Report a problem's report and Send report (it says itself whether this build can send). */
+    public val problemReport: ProblemReportSender?
+        get() = null
 }
 
 /**
@@ -100,7 +101,6 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.updates,
             host.about,
             host.diagnostics,
-            host.crashes,
             host.phrases,
             host.appearanceGuide,
             nav::back,
@@ -112,6 +112,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             crashOffer = host.crashOffer,
             memoryPreview = host.memoryPreview,
             healthConsent = host.healthConsent,
+            problemReport = host.problemReport,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

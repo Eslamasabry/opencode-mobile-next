@@ -7,8 +7,8 @@ import java.util.zip.ZipFile
 
 plugins { id("oc.android.application") }
 
-// Crash reporting vendor adapter (Crashlytics). The private Firebase config is never in git: the Google Services and
-// Crashlytics plugins are applied only when it exists. OC_GOOGLE_SERVICES_DIR (Gradle property or environment, default
+// Telemetry vendor adapter (Crashlytics, Analytics, Performance SDK). The private Firebase config is never in git: the
+// Google Services and Crashlytics plugins are applied only when it exists (never the Performance plugin). OC_GOOGLE_SERVICES_DIR (Gradle property or environment, default
 // ~/.config/oc-app/firebase) holds google-services-<applicationId>.json; the matching file is copied next to each flavor
 // at configure time (both copies are git-ignored). Without it the build works and the app reports through the no-op sink.
 run {
@@ -39,7 +39,7 @@ run {
         apply(plugin = "com.google.gms.google-services")
         apply(plugin = "com.google.firebase.crashlytics")
     } else {
-        logger.lifecycle("No Firebase config in $dir: crash reports use the no-op sink.")
+        logger.lifecycle("No Firebase config in $dir: telemetry is a no-op in this build.")
     }
 }
 
@@ -395,7 +395,10 @@ dependencies {
         )
         .forEach { implementation(project(it)) }
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.crashlytics) // :androidApp only; see telemetry/CrashlyticsSink
+    // B-180/B-190: :androidApp only; see telemetry/FirebaseTelemetryVendor. Performance is the SDK alone (never the plugin).
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.perf)
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
@@ -538,9 +541,56 @@ abstract class VerifyStorageManifest : DefaultTask() {
     }
 }
 
+// B-180/B-190: the MERGED manifest (the Firebase SDKs merge in their own permissions and flags) keeps every collection
+// "enabled false" until consent, never "deactivated" (a deactivated flag can never be turned on at run time; Flutter
+// 2.1.5 shipped Performance that way), and asks for no advertising ID or Android ad services. TelemetryManifestTest
+// holds the same rules on the source manifest.
+abstract class VerifyTelemetryManifest : DefaultTask() {
+    @get:InputFile abstract val manifest: RegularFileProperty
+
+    @TaskAction
+    fun verify() {
+        val ns = "http://schemas.android.com/apk/res/android"
+        val doc =
+            javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                .apply { isNamespaceAware = true }
+                .newDocumentBuilder()
+                .parse(manifest.get().asFile)
+        fun elements(tag: String) =
+            doc.getElementsByTagName(tag).let { list -> (0 until list.length).map { list.item(it) as org.w3c.dom.Element } }
+        val problems = mutableListOf<String>()
+        val permissions = elements("uses-permission").map { it.getAttributeNS(ns, "name") }
+        for (p in permissions) if ("AD_ID" in p || "ADSERVICES" in p) problems += "requests $p"
+        if (elements("uses-library").any { it.getAttributeNS(ns, "name") == "android.ext.adservices" })
+            problems += "uses the android.ext.adservices library"
+        val meta = elements("meta-data").associate { it.getAttributeNS(ns, "name") to it.getAttributeNS(ns, "value") }
+        for (key in meta.keys.filter { it.endsWith("_deactivated") }) problems += "$key is set (consent could never turn it on)"
+        for (flag in
+            listOf(
+                "firebase_crashlytics_collection_enabled",
+                "firebase_analytics_collection_enabled",
+                "firebase_performance_collection_enabled",
+                "google_analytics_adid_collection_enabled",
+                "google_analytics_default_allow_ad_storage",
+                "google_analytics_default_allow_ad_user_data",
+                "google_analytics_default_allow_ad_personalization_signals",
+            )) {
+            if (meta[flag] != "false") problems += "$flag is ${meta[flag]} (must be false until consent)"
+        }
+        check(problems.isEmpty()) { "Merged manifest breaks the telemetry consent rules (B-180):\n" + problems.joinToString("\n") }
+    }
+}
+
 androidComponents.onVariants { variant ->
     if (variant.flavorName !in setOf("preview", "switch")) return@onVariants
     val name = variant.name.replaceFirstChar { it.uppercaseChar() }
+    val telemetryManifest =
+        tasks.register<VerifyTelemetryManifest>("verify${name}TelemetryManifest") {
+            group = "verification"
+            description = "Fails when the merged manifest could collect before consent or read an ad ID (B-180/B-190)."
+            manifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
+        }
+    tasks.matching { it.name == "assemble$name" }.configureEach { dependsOn(telemetryManifest) }
     val storage =
         tasks.register<VerifyStorageManifest>("verify${name}StorageManifest") {
             group = "verification"

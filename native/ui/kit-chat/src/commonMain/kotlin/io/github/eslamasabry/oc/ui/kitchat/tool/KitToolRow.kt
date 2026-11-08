@@ -57,7 +57,6 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitSwapCount
 import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveSweep
@@ -183,7 +182,6 @@ private fun stepGlyph(): Dp = workMark()
 /** The header line. [opened] is null for a row that does not open (no chevron). */
 @Composable
 private fun StepLine(view: KitToolView, opened: Boolean?) {
-    val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     // The person's text size (system × in-app), before any frame cap.
     val fontScale = (LocalKitAppDensity.current ?: LocalDensity.current).fontScale
@@ -200,13 +198,8 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
         // B-KIT-036: a running step's node carries the step light (one 2 s lap; still under reduced motion);
         // the node itself is the style's (Signal draws its lamp).
         Box(Modifier.padding(top = Space.S1.dp / 2), contentAlignment = Alignment.Center) {
+            // The node draws the step light itself while the step runs (one light, never two).
             KitToolNode(view, glyph)
-            KitStepLight(
-                state = if (view.status == KitToolStatus.Running) KitStepLightState.Working else KitStepLightState.Idle,
-                color = colors.live,
-                size = glyph,
-                animate = !LocalKitMotion.current.reduced,
-            )
         }
         Spacer(Modifier.width(WORK_GAP.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2)) {
@@ -214,7 +207,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             // checkout_bloc.dart"), so a list of steps scans as one column of verbs. From 1.3x text the subject
             // drops under the verb.
             if (wide || subject == null) {
-                KitLiveSweep(working = view.status == KitToolStatus.Running) {
+                KitLiveSweep(working = view.status == KitToolStatus.Running, step = true) {
                     StepTitle(view.title, lines)
                 }
                 if (subject != null) {
@@ -222,7 +215,7 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    KitLiveSweep(working = view.status == KitToolStatus.Running) {
+                    KitLiveSweep(working = view.status == KitToolStatus.Running, step = true) {
                         StepTitle(view.title, 1)
                     }
                     Spacer(Modifier.width(Space.S2.dp))

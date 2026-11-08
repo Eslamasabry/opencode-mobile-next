@@ -37,6 +37,7 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Guide("settings-guide", SettingsGroupId.Help),
     Tips("settings-tips", SettingsGroupId.Help),
     Capabilities("settings-capabilities", SettingsGroupId.Help),
+    /** R1: one Report a problem; Flutter 2.1.5's separate "Send a problem report" row is folded into it. */
     ReportProblem("settings-report-problem", SettingsGroupId.Help),
     About("settings-about", SettingsGroupId.Help),
 }

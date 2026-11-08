@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -28,20 +27,21 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
-/** The tint's strength over the ground (Dart `KitStatusPill`: the status colour at 16 %). */
-public const val KIT_STATUS_PILL_TINT: Float = .16f
-
 /**
  * A tonal pill for a thing that is not a filter and opens a chooser: the server switcher on the Conversations home
- * (Dart `KitStatusPill`, `lib/ui/kit/kit_status_pill.dart`). Filled, fully rounded, no outline; the fill is the status
- * colour at [KIT_STATUS_PILL_TINT] over the ground (green while connected). It holds the status dot, the [label] and a
+ * (Dart `KitStatusPill`, `lib/ui/kit/kit_status_pill.dart`). Filled, fully rounded, no outline; the fill is the style's own
+ * control surface (owner, 2026-11-08: only the dot carries the status, in the theme's accent while connected, the muted text colour otherwise). It holds the status dot, the [label] and a
  * down chevron (which never mirrors), and says a [word] only when the state is not the healthy one ("Offline",
  * "Connecting…"): the dot carries "connected". The name is cut with an ellipsis; the pill never scrolls (its host keeps
  * it fixed). The tint cross-fades and the word grows in on the kit's quick motion; both are instant under reduced
@@ -68,12 +68,11 @@ public fun KitStatusPill(
     val specs = KitMotion.specs
     val ink =
         when (tone) {
-            KitConnectionTone.Ok -> colors.success
-            KitConnectionTone.Working -> colors.accent
-            KitConnectionTone.Problem -> colors.attention
-            KitConnectionTone.Off -> colors.text3
+            KitConnectionTone.Ok -> colors.accent
+            KitConnectionTone.Working, KitConnectionTone.Problem, KitConnectionTone.Off -> colors.text3
         }
-    val fill by animateColorAsState(ink.copy(alpha = KIT_STATUS_PILL_TINT).compositeOver(colors.ground), specs.quick(), label = "kit-status-pill-tint")
+    val dot by animateColorAsState(ink, specs.quick(), label = "kit-status-pill-dot")
+    val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3))
     Box(
         modifier
             .heightIn(min = tokens.minTarget.dp)
@@ -87,16 +86,16 @@ public fun KitStatusPill(
         Row(
             Modifier
                 .height(tokens.chipHeight.dp)
-                .background(fill, CircleShape)
+                .then(look.modifier)
                 .padding(start = Space.S3.dp, end = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             Box(Modifier.size(tokens.smallIcon.dp), contentAlignment = Alignment.Center) {
                 if (tone == KitConnectionTone.Working && !KitMotion.state.reduced) {
-                    KitWorkingMark(colors.accent, size = tokens.smallIcon.dp)
+                    KitWorkingMark(dot, size = tokens.smallIcon.dp)
                 } else {
-                    Box(Modifier.size(Space.S2.dp).background(ink, CircleShape))
+                    Box(Modifier.size(Space.S2.dp).background(dot, CircleShape))
                 }
             }
             KitText(

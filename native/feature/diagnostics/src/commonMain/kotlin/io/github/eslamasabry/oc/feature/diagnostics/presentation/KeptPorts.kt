@@ -10,9 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Instant
 
 /**
- * What "Everything this phone kept" reads and does (port of `AppDiagnosticsKeptScreen`'s controllers). :androidApp
- * binds it over the real engines: CrashStartup's controller, DeviceDiagnostics, the persisted ReportProblem and the
- * Diagnostics ring. Nothing here sends anything; Share opens the share sheet with the previewed text only.
+ * What the retired "Everything this phone kept" page read (port of `AppDiagnosticsKeptScreen`'s controllers). R1
+ * (2026-11-09) removed the page and its door from Report a problem; :androidApp still binds this host
+ * (AppKeptDiagnosticsHost in DiagnosticsAttentionWiring.kt), which goes with it once native/prompt-editor-crash, which
+ * edits that file, has merged. Nothing here sends anything.
  */
 public interface KeptDiagnosticsHost {
     /** Null while the crash store is opening or when it could not open. */

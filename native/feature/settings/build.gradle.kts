@@ -44,6 +44,10 @@ tasks.withType<Test>().configureEach {
         "oc.goldens.record",
         providers.gradleProperty("oc.recordGoldens").orElse("false").get(),
     )
+    // R1 Report a problem's QA renders (`-Poc.r1Renders=true`): written to build/reports/r1-renders.
+    if (providers.gradleProperty("oc.r1Renders").orNull == "true") {
+        systemProperty("oc.r1.renders", layout.buildDirectory.dir("reports/r1-renders").get().asFile.absolutePath)
+    }
 }
 
 // Keep the Linux desktop golden fallback identical to the recording environment.

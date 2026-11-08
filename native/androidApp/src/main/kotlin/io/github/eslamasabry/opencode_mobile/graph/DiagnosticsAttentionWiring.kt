@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.exit.PolicyExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.RawLaunchReport
 import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
 import io.github.eslamasabry.oc.android.migration.android.AndroidMigration
+import io.github.eslamasabry.oc.android.platform.CrashSanitizer
 import io.github.eslamasabry.oc.engine.diagnostics.problem.AttachedError
 import io.github.eslamasabry.oc.engine.diagnostics.problem.MigrationCheck
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemEventKind
@@ -249,25 +250,12 @@ class DiagnosticsAttentionStartup(
     fun start() {
         if (started) return
         started = true
-        val capture = AppErrorCapture(diagnostics)
-        val previous = Thread.getDefaultUncaughtExceptionHandler()
-        // Keep the original failure before capture replaces its user-facing text with a category.
-        // Diagnostics.record redacts both fields and synchronously notifies the persisted report.
-        Thread.setDefaultUncaughtExceptionHandler { thread, error ->
-            Log.e("NativeCrash", "Uncaught native application error", error)
-            try {
-                diagnostics.record(
-                    AppErrorCapture.FRAMEWORK_SOURCE,
-                    "${error.javaClass.name}: ${error.message.orEmpty()}",
-                    error.stackTrace.take(15).joinToString("\n") { "at $it" },
-                )
-            } catch (_: Exception) {
-                // A diagnostics failure must not replace the throwable that ended the process.
+        Thread.setDefaultUncaughtExceptionHandler(
+            diagnosticsCrashHandler(diagnostics, Thread.getDefaultUncaughtExceptionHandler()) {
+                // This device's logcat only (never a report): the one place the message is kept.
+                Log.e("NativeCrash", "Uncaught native application error", it)
             }
-            val safe = capture.capture(error)
-            safe.initCause(error)
-            previous?.uncaughtException(thread, safe)
-        }
+        )
         crash.start()
         appScope.launch(dispatchers.io) {
             val opening = trace.begin("diagnostics.open")
@@ -278,6 +266,38 @@ class DiagnosticsAttentionStartup(
                 session.recordAndroidExit(it)
             } // B-STATE-077: once per exit
         }
+    }
+}
+
+/**
+ * The process's outermost uncaught-exception handler. The kept report gets the crash's class and top frames, never its
+ * message (B-STATE-074: redaction cannot prove a message safe); [AppErrorCapture] adds the category. [previous] (the
+ * crash store's handler, then Crashlytics', then Android's) gets [CrashSanitizer]'s copy: every class and frame of the
+ * crash, its causes included, and no message. It once got a fresh category error, so Android's crash dropbox read
+ * only "RuntimeException: Native application error" with no frames (2026-11-08). [logLocally] writes the original to
+ * this device's logcat.
+ */
+internal fun diagnosticsCrashHandler(
+    diagnostics: Diagnostics,
+    previous: Thread.UncaughtExceptionHandler?,
+    logLocally: (Throwable) -> Unit = {},
+): Thread.UncaughtExceptionHandler {
+    val capture = AppErrorCapture(diagnostics)
+    return Thread.UncaughtExceptionHandler { thread, error ->
+        try {
+            logLocally(error)
+        } catch (_: Throwable) {}
+        try {
+            diagnostics.record(
+                AppErrorCapture.FRAMEWORK_SOURCE,
+                error.javaClass.name,
+                error.stackTrace.take(15).joinToString("\n") { "at $it" },
+            )
+        } catch (_: Exception) {
+            // A diagnostics failure must not replace the throwable that ended the process.
+        }
+        capture.capture(error)
+        previous?.uncaughtException(thread, CrashSanitizer.sanitize(error))
     }
 }
 

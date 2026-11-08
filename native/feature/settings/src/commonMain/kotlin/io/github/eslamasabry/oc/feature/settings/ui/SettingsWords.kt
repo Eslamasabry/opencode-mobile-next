@@ -59,7 +59,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTimestampsUsage
 import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptDisplay
 import io.github.eslamasabry.oc.ui.words.res.configInspectionTitle
 import io.github.eslamasabry.oc.ui.words.res.demoScreenTitle
-import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShareFailed
 import io.github.eslamasabry.oc.ui.words.res.discoverLanguageAliases
 import io.github.eslamasabry.oc.ui.words.res.discoverShowTipsAgain
 import io.github.eslamasabry.oc.ui.words.res.discoverShowTipsAliases
@@ -94,6 +93,7 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.reportR1GitHubFailed
 import io.github.eslamasabry.oc.ui.words.res.libraryMcpTitle
 import io.github.eslamasabry.oc.ui.words.res.libraryProvidersTitle
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
@@ -104,7 +104,6 @@ import io.github.eslamasabry.oc.ui.words.res.openCodeConnectionLabel
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardTitle
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.rb34AppearanceSurfaceGlass
-import io.github.eslamasabry.oc.ui.words.res.reportProblemCopied
 import io.github.eslamasabry.oc.ui.words.res.settingsHubAccounts
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupAgent
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupConversations
@@ -440,8 +439,7 @@ internal fun noteWords(note: SettingsNote): String =
         SettingsNote.UpdateFailed -> stringResource(Res.string.appUpdateFailNetwork)
         SettingsNote.LicenseCopied -> stringResource(Res.string.kitCopied)
         SettingsNote.LicenseCopyFailed -> stringResource(Res.string.voiceNoticeCopyFailed)
-        SettingsNote.ReportCopied -> stringResource(Res.string.reportProblemCopied)
-        SettingsNote.ShareFailed -> stringResource(Res.string.diagnosticsReportShareFailed)
+        SettingsNote.GitHubFailed -> stringResource(Res.string.reportR1GitHubFailed)
     }
 
 @Composable
