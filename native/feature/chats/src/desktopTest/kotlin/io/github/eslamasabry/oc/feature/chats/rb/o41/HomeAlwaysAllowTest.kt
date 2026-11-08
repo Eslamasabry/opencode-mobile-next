@@ -46,7 +46,7 @@ class HomeAlwaysAllowTest {
                 10_000,
                 true,
             )
-        val row = (base.today + base.earlier).single()
+        val row = (base.rightNow + base.recent).single()
         return base.copy(alwaysAllowable = if (always) persistentSetOf(row.key) else persistentSetOf())
     }
 
@@ -90,7 +90,7 @@ class HomeAlwaysAllowTest {
     @Test fun `PARITY-B-224 Always allow asks first, naming the command and the project`() = runComposeUiTest {
         val actions = Actions()
         val state = asking(always = true)
-        show(state.copy(confirmAlways = (state.today + state.earlier).single()), actions)
+        show(state.copy(confirmAlways = (state.rightNow + state.recent).single()), actions)
         onNodeWithText("in this project?", substring = true).assertExists()
         onNode(hasText("Always allow") and hasClickAction()).performClick()
         assertEquals(listOf("always"), actions.calls)

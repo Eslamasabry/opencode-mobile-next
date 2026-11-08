@@ -300,6 +300,7 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.ServerCapabilities -> KitIcons.checklist
         SettingsRowId.ServerConfiguration -> KitIcons.dataObject
         SettingsRowId.ReportProblem -> KitIcons.bug
+        SettingsRowId.SendProblemReport -> KitIcons.upload
         SettingsRowId.About -> KitIcons.info
         else -> KitIcons.settings
     }

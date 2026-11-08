@@ -45,9 +45,13 @@ jobs:
           STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
         run: |
           set -euo pipefail
           missing=()
+          # B-180: the takeover build is the Flutter app's package and must keep its Firebase app (opt-in analytics,
+          # crash reports, Performance); without the private config it would silently send nothing for people who agreed.
+          [ -n "$FIREBASE_B64" ]   || missing+=(FIREBASE_GOOGLE_SERVICES_B64)
           [ -n "$KEYSTORE_B64" ]   || missing+=(RELEASE_KEYSTORE_BASE64)
           [ -n "$STORE_PASSWORD" ] || missing+=(RELEASE_STORE_PASSWORD)
           [ -n "$KEY_ALIAS" ]      || missing+=(RELEASE_KEY_ALIAS)
@@ -152,6 +156,18 @@ jobs:
             "keyPassword=$KEY_PASSWORD" \
             > "$KEY_PROPERTIES"
 
+      - name: Install the Firebase config (never in git, never printed)
+        env:
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/oc-firebase"
+          mkdir -p "$dir"
+          # The same Firebase app as the Flutter release (android-release.yml): the switch package's config.
+          printf '%s' "$FIREBASE_B64" | base64 -d > "$dir/google-services-io.github.eslamasabry.opencode_mobile.json"
+          echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
+          echo "Firebase config installed"
+
       - name: Build the switch release
         env:
           OC_KEY_PROPERTIES: ${{ runner.temp }}/native-key.properties
@@ -163,7 +179,7 @@ jobs:
 
       - name: Delete the signing file
         if: always()
-        run: rm -f "${{ runner.temp }}/native-key.properties" "${{ runner.temp }}/native-release.jks"
+        run: rm -rf "${{ runner.temp }}/native-key.properties" "${{ runner.temp }}/native-release.jks" "${{ runner.temp }}/oc-firebase"
 
       - name: Collect the APKs and SHA256SUMS
         env:

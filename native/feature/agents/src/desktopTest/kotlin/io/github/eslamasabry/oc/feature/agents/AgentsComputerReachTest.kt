@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
+import io.github.eslamasabry.oc.feature.agents.hub.AgentsTab
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -93,7 +94,7 @@ class AgentsComputerReachTest {
     @Test
     fun `B-AGENT-167 a computer row has a visible way to its update and import page`() = runComposeUiTest {
         val actions = Recorder()
-        setContent { Screen(AgentsUi(computers = persistentListOf(desk)), actions) }
+        setContent { Screen(AgentsUi(computers = persistentListOf(desk), tab = AgentsTab.Computers), actions) }
         onNodeWithText("Update and import").performClick()
         assertEquals(listOf("computer:p1"), actions.calls)
     }
@@ -102,7 +103,7 @@ class AgentsComputerReachTest {
     fun `B-AGENT-174 the way to the import page reads in Arabic`() = runComposeUiTest {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         val actions = Recorder()
-        setContent { Screen(AgentsUi(computers = persistentListOf(desk)), actions, "ar") }
+        setContent { Screen(AgentsUi(computers = persistentListOf(desk), tab = AgentsTab.Computers), actions, "ar") }
         onNodeWithText("التحديث والاستيراد").performClick()
         assertEquals(listOf("computer:p1"), actions.calls)
     }

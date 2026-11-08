@@ -1,6 +1,7 @@
 // Copied from android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeCrashStore.kt at cdfd713b
 // (plan 11 §3 "copy minus channel glue"; it had none). The class body is unchanged except the package line and one
-// marked S1-PLAT0 fix in write() (a dangling .tmp symlink was followed; docs/native/units/S1-PLAT0.md D2).
+// marked S1-PLAT0 fix in write() (a dangling .tmp symlink was followed; docs/native/units/S1-PLAT0.md D2), and install()
+// hands the chain CrashSanitizer's message-free copy instead of a frameless "Native application error" (2026-11-08).
 // The typed CrashStore port and NativeCrashRecords adapter below the class are native-authored (S1-PLAT0).
 package io.github.eslamasabry.oc.android.platform
 
@@ -48,8 +49,8 @@ class NativeCrashStore(private val directory: File) {
 
     /**
      * [onCrash] (optional) sees the category and safe frames of a fatal crash before it is handed on: the
-     * whitelisted exception class and `Class.method:line` frames only, never a message, cause or thread. The
-     * original exception is still not passed down the handler chain.
+     * whitelisted exception class and `Class.method:line` frames only, never a message, cause or thread. The handler
+     * chain gets [CrashSanitizer.sanitize]'s copy: every class and frame of the crash, causes included, no message.
      */
     fun install(onCrash: ((category: String, frames: List<String>) -> Unit)? = null): Thread.UncaughtExceptionHandler {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
@@ -60,10 +61,10 @@ class NativeCrashStore(private val directory: File) {
             try { write(error) } catch (_: Throwable) { }
             finally {
                 // Preserve Android's fatal handling, but never hand its logger (or any later
-                // handler) an exception message/cause/stack carrying credential values (B-SEC-043,
-                // Flutter NativeCrashStore.kt). The category is already recorded above.
-                val safe = RuntimeException("Native application error")
-                safe.stackTrace = emptyArray()
+                // handler, Crashlytics included) an exception message, which can carry credential
+                // values (B-SEC-043). The classes and frames go on: a cause-less "Native application
+                // error" with no frames left every crash undiagnosable (2026-11-08).
+                val safe = CrashSanitizer.sanitize(error)
                 if (previous != null) previous.uncaughtException(thread, safe)
             }
         }

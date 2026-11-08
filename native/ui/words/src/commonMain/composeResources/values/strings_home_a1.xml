@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A1 Conversations home (2026-11-08): the two sections and a waiting request's line. -->
+    <string name="chatsHomeRightNow">Right now</string>
+    <string name="chatsHomeRecent">Recent</string>
+    <string name="chatsHomeAsksToRun">Asks to run: %1$s</string>
+</resources>

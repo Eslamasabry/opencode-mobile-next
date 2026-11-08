@@ -99,9 +99,10 @@ class GlassSpecParityTest {
     }
 
     @Test fun chosenPaneIsRingedInTheAccentAndEdgesOffDropsTheRim() {
+        // Owner 2026-11-08: a chosen pane is accent-tinted frost with a soft accent rim (CHOSEN_RIM), not Flutter's 2 dp ring.
         val ringed = GlassSpec.resolve(req(Graphite.light, SurfaceRole.Control, selected = true))!!
         assertEquals(Graphite.light.accent, ringed.edgeStart)
-        assertEquals(2f, ringed.edgeWidthDp)
+        assertEquals(GlassSpec.CHOSEN_RIM, ringed.edgeWidthDp)
         val rimless = GlassSpec.resolve(req(Graphite.light, SurfaceRole.Content, Knobs(edges = Edges.None)))!!
         assertEquals(0, rimless.edgeStart!!.alpha)
     }

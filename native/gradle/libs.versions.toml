@@ -105,9 +105,13 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 androidx-tracing = { module = "androidx.tracing:tracing", version.ref = "tracing" }
 # --- Android platform
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-# Crash reporting adapter (Crashlytics only; no Analytics, Performance or Remote Config). Used by :androidApp only.
+# B-180/B-190 telemetry vendor (Crashlytics, Analytics and the Performance SDK; no Remote Config). Used by :androidApp
+# only, through telemetry/FirebaseTelemetryVendor. The Performance Gradle plugin is never added: it would trace HTTP
+# requests and record their URLs, which carry server addresses (TelemetryManifestTest checks).
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-perf = { module = "com.google.firebase:firebase-perf" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 # --- Tests

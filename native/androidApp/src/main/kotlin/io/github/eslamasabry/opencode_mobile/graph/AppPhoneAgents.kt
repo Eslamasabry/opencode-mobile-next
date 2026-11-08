@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.PhoneAgentPayloads
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -135,6 +136,17 @@ class AppPhoneAgents(
             "x86_64" in Build.SUPPORTED_ABIS -> AgentArchitecture.X64
             else -> null
         }
+
+    /** "arm64 · Android 15" for the Agents page's phone status line. */
+    private fun device(): PhoneDevice? {
+        val processor =
+            when (architecture()) {
+                AgentArchitecture.Arm64 -> "arm64"
+                AgentArchitecture.X64 -> "x86_64"
+                null -> return null
+            }
+        return PhoneDevice(processor, Build.VERSION.RELEASE ?: return null)
+    }
 
     /** Catalog discovery never needs an installed Linux or a selected phone server. */
     private fun catalogRows() =
@@ -239,6 +251,9 @@ class AppPhoneAgents(
             PhoneAgentsState(
                 available = installed,
                 owner = owner,
+                // The helper's own profile (AppLocalAgentHostStarter: "<agent owner>-agents").
+                conversations = authOwner?.let { ProfileId("${it.raw}-agents") },
+                device = device(),
                 installation = shown,
                 helperStoppedUnexpectedly = helper?.unexpectedStop == true,
                 helperMayHaveBeenStoppedByAndroid = helper?.possibleResourceKill == true,
