@@ -4,7 +4,7 @@ part of '../this_phone_screen.dart';
 /// installed list), split out to keep the screen file small.
 extension _ThisPhoneDetails on _ThisPhoneScreenState {
   Future<void> _readInstalled() async {
-    final engine = _hostEngine();
+    final engine = _ThisPhoneScreenState._engine();
     if (engine == null) return;
     // Reads can overlap (the page's first read, then one when a job ends):
     // only the newest answer counts, or an old slow read puts back a list
@@ -96,7 +96,6 @@ extension _ThisPhoneDetails on _ThisPhoneScreenState {
   /// server, whether the phone is kept awake for a reply, and the last
   /// reply's first-words wait split between the app and the server.
   List<KitTechnicalValue> _performanceValues(AppLocalizations l10n) {
-    if (_host.kind != PhoneHostKind.inApp) return const [];
     final performance = _performance;
     final last = _replies.lastInApp;
     final first = last?.firstToken;
@@ -157,7 +156,7 @@ extension _ThisPhoneDetails on _ThisPhoneScreenState {
       );
     }
     final names = <String>[];
-    final engine = _hostEngine();
+    final engine = _ThisPhoneScreenState._engine();
     final optional = _installedOptional ?? const <String>{};
     for (final component
         in engine == null
@@ -169,9 +168,6 @@ extension _ThisPhoneDetails on _ThisPhoneScreenState {
     }
     if (names.isEmpty) {
       names.add(l10n.phoneSetupLinuxTitle);
-      if (_host.kind == PhoneHostKind.termux) {
-        names.add(_runtimeName(_host.runtime));
-      }
     }
     return KitExpandRow(
       key: const ValueKey('this-phone-installed'),

@@ -6,14 +6,17 @@ import 'package:flutter/material.dart';
 import '../../../builtin/setup/phone_setup.dart';
 import '../../../builtin/setup/setup_contract.dart';
 import '../../../builtin/setup/setup_engine.dart' show setupAddingTitle;
+import '../../../diagnostics/failed_job_report.dart';
+import '../../../feedback/bug_report.dart' show failedJobReportAction;
 import '../../../l10n/app_localizations.dart';
 import '../../../platform/network.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
+import '../../../platform/app_info.dart';
 import '../../../voice/automatic_setup_platform.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../../kit/scenes/setup_steps_scene.dart' show SetupSceneStage;
 import '../../widgets/setup_progress_view.dart';
+import '../servers_screen.dart' show ServersRouteRequest;
 import 'phone_setup_routes.dart';
 
 /// Screen B: setting up OpenCode on this phone (vision pick "Phone setup
@@ -38,7 +41,12 @@ class PhoneSetupProgressScreen extends StatefulWidget {
     this.firstSetup = false,
     this.askNotifications = _askNotifications,
     this.readNetwork,
+    this.connectComputer = _connectComputer,
   });
+
+  /// Where "Connect a computer" goes when this phone cannot run Node.js:
+  /// adding a server, as from the chats list. A parameter for tests.
+  final Future<void> Function(BuildContext context) connectComputer;
 
   /// Only a first setup ends on screen C ("name your first project"). An
   /// update or added tools end here: the finished ring shows for a moment,
@@ -70,6 +78,10 @@ class PhoneSetupProgressScreen extends StatefulWidget {
   State<PhoneSetupProgressScreen> createState() =>
       _PhoneSetupProgressScreenState();
 }
+
+Future<void> _connectComputer(BuildContext context) => Navigator.of(
+  context,
+).pushNamed('/servers', arguments: const ServersRouteRequest.add());
 
 Future<bool> _askNotifications() =>
     const AndroidVoiceSetupPlatform().askNotificationsIfWired();
@@ -345,10 +357,25 @@ class _PhoneSetupProgressScreenState extends State<PhoneSetupProgressScreen> {
             icon: AppIconography.pause,
             onPressed: () => unawaited(_pause()),
           ),
+          // Issue #117: Node.js cannot run on this phone's system. Continue
+          // would only crash again; a computer is the way forward.
+          _ when progress.phoneUnsupported => KitActionStack(
+            primary: KitAction(
+              key: const Key('phone-setup-connect-computer'),
+              label: l10n.phoneSetupConnectComputer,
+              icon: AppIconography.computer,
+              onPressed: () => unawaited(widget.connectComputer(context)),
+            ),
+            secondary: failedJobReportAction(
+              context,
+              key: const Key('phone-setup-report-failure'),
+              capture: () => FailedJobReport.setup(_engine.progress.value),
+            ),
+          ),
           _ when ownership => KitButton.primary(
             key: const Key('setup-progress-recover-ownership'),
             label: l10n.e7SetupOpenAppSettings,
-            onPressed: () => unawaited(TermuxBridge.openAppSettings()),
+            onPressed: () => unawaited(AppInfoPlatform.openAppSettings()),
           ),
           _ when progress.canContinue => KitButton.primary(
             key: const Key('setup-progress-continue'),

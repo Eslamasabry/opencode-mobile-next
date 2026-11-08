@@ -362,7 +362,6 @@ void main() {
             baseUrl: 'http://127.0.0.1:4096',
             error: null,
             attempts: 1,
-            supportsTermux: true,
             onChangeServer: () {},
             onRetry: () {},
             onStartPhoneServer: () {},
@@ -396,10 +395,8 @@ void main() {
                     'Cannot reach http://127.0.0.1:4096: '
                     'Connection refused (errno = 111)',
                 attempts: 1,
-                supportsTermux: true,
                 onChangeServer: () {},
                 onRetry: () {},
-                onOpenTermuxSetup: () {},
                 onStartPhoneServer: () {},
                 startingPhoneServer: starting,
               ),

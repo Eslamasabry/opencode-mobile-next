@@ -5,8 +5,6 @@ import '../domain/git/git_credentials.dart';
 import '../domain/git/git_shell.dart';
 import '../domain/remote_shell.dart';
 import '../domain/server_gateway.dart';
-import '../termux/bridge.dart';
-import '../termux/git_shell.dart';
 import 'profiles.dart' show ServerProfile;
 
 /// Where the project of the Git page lives, which decides how commands run
@@ -15,10 +13,6 @@ enum GitHost {
   /// Ubuntu inside the app: commands via `BuiltinLinux.run`; GitHub sign-in
   /// handed over per command.
   phoneLinux,
-
-  /// Termux's managed Ubuntu: commands via Termux; pushes use Termux's own
-  /// Git sign-in (a token would have to travel in an intent).
-  termux,
 
   /// The connected server (`POST /api/shell`): pushes use the server's own
   /// Git sign-in; the app never sends its token.
@@ -76,15 +70,13 @@ class GitWorkspaceResolution {
 }
 
 /// Picks how to reach [directory] for [profile]/[gateway]:
-/// Ubuntu inside the app first, then the app-managed Termux server, then a
-/// server that reports [ServerCapabilities.remoteShell]. Gated on where the
+/// Ubuntu inside the app first, then a server that reports [ServerCapabilities.remoteShell]. Gated on where the
 /// server runs and on capabilities, never on the protocol flavor.
 GitWorkspaceResolution resolveGitWorkspace({
   required ServerProfile? profile,
   required ServerGateway? gateway,
   required String? directory,
   BuiltinLinux? linux,
-  bool? termuxSupported,
 }) {
   if (profile == null || gateway == null) {
     return const GitWorkspaceResolution.unavailable(
@@ -104,16 +96,6 @@ GitWorkspaceResolution resolveGitWorkspace({
         directory: folder,
         shell: BuiltinGitShell(linux ?? BuiltinLinux()),
         credentials: BuiltinGitSecretDrop(),
-      ),
-    );
-  }
-  if ((termuxSupported ?? TermuxBridge.supported) &&
-      TermuxBridge.managesServerUrl(profile.baseUrl)) {
-    return GitWorkspaceResolution.available(
-      GitWorkspace(
-        host: GitHost.termux,
-        directory: folder,
-        shell: TermuxGitShell(),
       ),
     );
   }

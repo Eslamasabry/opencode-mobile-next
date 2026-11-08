@@ -361,20 +361,7 @@ const _verbatimOwnContent = <String, (int, String)>{
 /// content (G12 findings, 2026-09-27): path -> count, owner and what is
 /// copied. Each is for its owner to fix (drop `redact: false`, or split the
 /// person's text from the rest); the count only goes down.
-const _verbatimFindings = <String, (int, String)>{
-  'lib/ui/screens/phone_setup/phone_setup_termux_screen.dart': (
-    1,
-    'owner: phone setup agent: copies the app-authored Termux setup '
-        'command (no secret; not the person\'s own text, so the default '
-        'redacted copy would do)',
-  ),
-  'lib/ui/screens/phone_setup/phone_setup_termux_job_screen.dart': (
-    1,
-    'owner: phone setup agent: copies TermuxBridge.unlockCommand, an '
-        'app-authored constant (no secret; the default redacted copy '
-        'would do)',
-  ),
-};
+const _verbatimFindings = <String, (int, String)>{};
 
 final _redactFalse = RegExp(r'\bredact\s*:\s*false\b');
 

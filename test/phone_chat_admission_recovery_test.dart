@@ -265,7 +265,6 @@ void main() {
                 bearerToken: bearerToken,
                 heartbeats: beats,
               ),
-      localWakeLockEnsurer: () async {},
       draftAttachmentVault: StashMemoryVault(),
       stashAttachmentVault: StashMemoryVault(),
     );

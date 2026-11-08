@@ -1342,6 +1342,27 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (agentId == openCodeChatAgentId) {
       return _self._ocStartChatIn(directory, firstPrompt: firstPrompt);
     }
+    try {
+      return await _paStartAgentChat(
+        directory,
+        agentId: agentId,
+        firstPrompt: firstPrompt,
+      );
+    } catch (error) {
+      // The daemon reports its own start and failure (prompts.dart); this
+      // counts the ones that never reached it, such as an agent not ready.
+      if (error is! PaseoFailure) {
+        HealthFlow.agentNotStarted(agentId, _paRowFor(agentId)?.status, error);
+      }
+      rethrow;
+    }
+  }
+
+  Future<String> _paStartAgentChat(
+    String directory, {
+    required String agentId,
+    String? firstPrompt,
+  }) async {
     if (!phoneAgentsAvailable) throw _notReady;
     if (_paRemovingAgent != null) {
       throw _PhoneAgentRoutes._removalBusy;

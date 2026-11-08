@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 
+import '../../builtin/builtin_server.dart' show looksLikeInAppServer;
 import '../../diagnostics/app_diagnostics.dart';
 import '../../diagnostics/crash_diagnostics.dart';
 import '../../diagnostics/report_problem.dart';
@@ -16,7 +17,6 @@ import '../../state/profiles.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../widgets/external_link.dart';
-import '../widgets/termux_running_server_entry.dart' show isPhoneOwnServer;
 import 'app_diagnostics_kept_screen.dart';
 import 'recent_error_words.dart';
 
@@ -463,7 +463,7 @@ String _connectionWords(ConnectionController? controller) {
     ServerBackend.codex => version == null ? 'Codex' : 'Codex $version',
     ServerBackend.paseo => version == null ? 'Paseo' : 'Paseo $version',
   };
-  final where = isPhoneOwnServer(profile)
+  final where = looksLikeInAppServer(profile)
       ? 'on this phone'
       : 'on another computer';
   final state = switch (controller.connectionStatus.phase) {

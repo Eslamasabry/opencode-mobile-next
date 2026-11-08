@@ -109,6 +109,8 @@ import '../git/git_sheet.dart';
 import '../widgets/command_sheet.dart';
 import '../widgets/session_menu.dart';
 import '../widgets/safety_confirms.dart';
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 import '../widgets/default_notices.dart';
 import '../widgets/external_link.dart';
 import '../widgets/file_preview.dart';
@@ -744,7 +746,7 @@ class _ChatScreenState extends State<ChatScreen>
     // Leaving the chat sends any answer still inside its undo window.
     unawaited(_conn.delayedAnswers.flush());
     _saveOpeningExcerpt();
-    _stopTipTimer?.cancel();
+    _stopTimers();
     _voiceEpoch.value++;
     _voiceEpoch.dispose();
     _conn.profileDataChanges.removeListener(_readAloudScopeChanged);

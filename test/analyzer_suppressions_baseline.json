@@ -10,7 +10,6 @@
     "tool/capture/census/areas/c_chat_compose.dart": 1,
     "tool/capture/census/areas/d_chat_sheets.dart": 1,
     "tool/capture/census/areas/e_workspace.dart": 1,
-    "tool/capture/census/areas/h_termux.dart": 1,
     "tool/capture/census/areas/i1_team_core.dart": 1,
     "tool/capture/census/areas/i2_team_sheets.dart": 1,
     "tool/capture/census/census_core.dart": 1,
@@ -54,9 +53,6 @@
       "ignore_for_file:invalid_use_of_visible_for_testing_member"
     ],
     "tool/capture/census/areas/e_workspace.dart": [
-      "ignore_for_file:invalid_use_of_visible_for_testing_member"
-    ],
-    "tool/capture/census/areas/h_termux.dart": [
       "ignore_for_file:invalid_use_of_visible_for_testing_member"
     ],
     "tool/capture/census/areas/i1_team_core.dart": [

@@ -65,6 +65,7 @@ extension _ChatVoice on _ChatScreenState {
   /// and hands over a recording already listening.
   Future<void> _openVoice() async {
     if (_conn.isIsolated) return;
+    AppTelemetry.feature(AnalyticsFeature.voice);
     // The tools sheet hides the entry point off Android; this keeps a
     // programmatic call (a shortcut, a restored intent) from starting a model
     // download for a recognizer that can never be fed.

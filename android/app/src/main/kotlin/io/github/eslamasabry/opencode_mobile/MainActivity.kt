@@ -19,7 +19,6 @@ class MainActivity : FlutterFragmentActivity() {
     private var byoHostSigner: ByoHostSigner? = null
     private var crashDiagnostics: CrashDiagnosticsBridge? = null
     private var appUpdateInstaller: AppUpdateInstaller? = null
-    private val termux by lazy { TermuxActivityBridge(this, handler) }
     private val launches by lazy { LaunchActivityBridge(this) }
     private val background by lazy { MainActivityBackground(this, handler) }
     private val media by lazy { MainActivityMedia(this) { readAloud?.beforeMicrophoneCapture() == true } }
@@ -54,10 +53,8 @@ class MainActivity : FlutterFragmentActivity() {
         scheduledPrompts?.close()
         scheduledPrompts = ScheduledPromptChannel(this).also { it.register(messenger) }
         ScheduledPromptScheduler(applicationContext).restore()
-        MethodChannel(messenger, "oc/termux").setMethodCallHandler { call, rawResult ->
-            val result = replies.wrap(rawResult)
-            result.guarded("termux_unavailable") { termux.handle(call, result) }
-        }
+        AppInfoChannel.register(this, messenger)
+        HealthChannel.register(this, messenger)
         MethodChannel(messenger, BUILTIN_LINUX_CHANNEL_NAME).setMethodCallHandler { call, rawResult ->
             val result = replies.wrap(rawResult)
             result.guarded("builtin_linux") { handleBuiltinLinux(call, result) }
@@ -70,12 +67,12 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        HealthChannel.dispose()
         scheduledPrompts?.close()
         scheduledPrompts = null
         background.cancelBackgroundRequests()
         nativeReplies?.detach()
         nativeReplies = null
-        termux.reset()
         projectExport?.dispose()
         projectExport = null
         appUpdateInstaller?.dispose()
@@ -571,7 +568,6 @@ class MainActivity : FlutterFragmentActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (media.onPermissionResult(requestCode, grantResults)) return
         when (requestCode) {
-            TermuxActivityBridge.PERMISSION_REQUEST -> termux.onPermissionResult(grantResults)
             MainActivityBackground.PERMISSION_REQUEST -> background.onPermissionResult(grantResults)
         }
     }

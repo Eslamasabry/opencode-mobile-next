@@ -14,9 +14,6 @@ enum SetupPhoneMood {
   /// screen breathes, the cursor blinks and a dot circles the phone.
   starting,
 
-  /// OpenCode in Termux: terminal lines, the last one lit.
-  termux,
-
   /// OpenCode installed and ready here: the portal on a lit screen.
   ready,
 
@@ -52,13 +49,6 @@ class SetupPhoneScene extends KitScene {
     Path()..addOval(Rect.fromCircle(center: const Offset(128, 26), radius: 9)),
     Path()..addOval(Rect.fromCircle(center: const Offset(133, 21), radius: 8)),
   );
-
-  static const _termLines = [
-    (Offset(66, 44), 22.0),
-    (Offset(66, 53), 14.0),
-    (Offset(66, 62), 26.0),
-    (Offset(66, 71), 18.0),
-  ];
 
   @override
   void paint(Canvas canvas, KitSceneFrame frame) {
@@ -131,9 +121,6 @@ class SetupPhoneScene extends KitScene {
         _portal(canvas, frame, breath, begin: .5);
       case SetupPhoneMood.ready:
         _portal(canvas, frame, breath, begin: .4, center: const Offset(80, 58));
-      case SetupPhoneMood.termux:
-        _promptLine(canvas, frame, cursor: false);
-        _terminal(canvas, frame);
       case SetupPhoneMood.stopped:
         SetupCast.portal(
           canvas,
@@ -175,32 +162,6 @@ class SetupPhoneScene extends KitScene {
         Offset(73 + 7 * typed, 34),
         KitDraw.pen(p.accent, KitDraw.hairline),
       );
-    }
-  }
-
-  void _terminal(Canvas canvas, KitSceneFrame frame) {
-    final p = frame.palette;
-    final t = frame.entrance;
-    for (final (index, (start, length)) in _termLines.indexed) {
-      final last = index == _termLines.length - 1;
-      final drawn = KitDraw.interval(t, .5 + index * .1, .7 + index * .1);
-      if (drawn <= 0) continue;
-      canvas.drawLine(
-        start,
-        start + Offset(length * drawn, 0),
-        KitDraw.pen(
-          last ? p.accent : KitDraw.fade(p.muted, .7),
-          KitDraw.hairline,
-        ),
-      );
-      if (last && drawn >= 1) {
-        final land = KitDraw.interval(t, .88, 1, KitMotion.land);
-        canvas.drawCircle(
-          start + Offset(length + 6, 0),
-          2.4 * land,
-          KitDraw.fill(p.accent),
-        );
-      }
     }
   }
 

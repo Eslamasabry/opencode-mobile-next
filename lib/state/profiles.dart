@@ -34,6 +34,8 @@ import 'setup_audit_store.dart';
 import 'session_link_bindings.dart';
 import 'agent_handoff_links.dart';
 import 'pending_command_journal.dart';
+import '../telemetry/analytics_events.dart';
+import '../telemetry/telemetry_provider.dart';
 
 export '../domain/server_probe.dart' show ServerFlavor;
 export '../domain/loopback_host.dart' show isLoopbackHost, isPrivateNetworkHost;
@@ -461,6 +463,7 @@ class ProfileStore {
     _cache = next;
     await _migratePhoneAgentOwners();
     _changes.changed();
+    if (i < 0) AppTelemetry.feature(AnalyticsFeature.serverAdd);
   }
 
   /// Explicit credential removal; a normal profile edit leaves it untouched.

@@ -5,13 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../builtin/builtin_linux.dart';
 import '../../../builtin/builtin_server.dart';
-import '../../../builtin/setup/setup_contract.dart' show SetupHostKind;
-import '../../../builtin/setup/termux_setup_host.dart';
 import '../../../domain/workspace_paths.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/profiles.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
 import '../../kit/kit.dart';
 import '../../navigation/chat_route.dart';
 import '../../kit/scenes/setup_ready_scene.dart';
@@ -28,19 +25,10 @@ import 'phone_setup_hero.dart';
 /// It opens with a celebration ([SetupReadyScene], played once) at the top
 /// of the page, not a lone check floating mid-screen.
 class PhoneSetupReadyScreen extends ConsumerStatefulWidget {
-  const PhoneSetupReadyScreen({
-    super.key,
-    this.linux,
-    this.host = SetupHostKind.builtin,
-  });
+  const PhoneSetupReadyScreen({super.key, this.linux});
 
-  /// Tests pass a fake bridge; the app uses [builtinLinuxProvider], or
-  /// Termux's Ubuntu ([TermuxSetupHost]) when setup ran in Termux.
+  /// Tests pass a fake bridge; the app uses [builtinLinuxProvider].
   final BuiltinLinux? linux;
-
-  /// Where setup put OpenCode: the project is made there, and a dropped
-  /// connection is made again to that server.
-  final SetupHostKind host;
 
   /// The suggestion in the name field: short, valid, and obviously a
   /// placeholder the person may keep.
@@ -60,15 +48,9 @@ class _PhoneSetupReadyScreenState extends ConsumerState<PhoneSetupReadyScreen> {
   bool _busy = false;
 
   late final BuiltinLinux _linux =
-      widget.linux ??
-      (widget.host == SetupHostKind.termux
-          ? TermuxSetupHost()
-          : ref.read(builtinLinuxProvider));
+      widget.linux ?? ref.read(builtinLinuxProvider);
 
-  bool _isSetupServer(ServerProfile profile) =>
-      widget.host == SetupHostKind.termux
-      ? TermuxBridge.managesServerUrl(profile.baseUrl)
-      : looksLikeInAppServer(profile);
+  bool _isSetupServer(ServerProfile profile) => looksLikeInAppServer(profile);
 
   AppLocalizations get _l10n =>
       lookupAppLocalizations(Localizations.localeOf(context));

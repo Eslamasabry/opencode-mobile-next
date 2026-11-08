@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../telemetry/flow_events.dart';
 import '../platform/app_installer.dart';
 import '../ui/app_iconography.dart';
 import '../ui/kit/kit_buttons.dart';
@@ -38,6 +39,7 @@ Future<void> showInAppUpdateSheet(
     secondary: KitAction(
       label: l10n.appUpdateLater,
       onPressed: () {
+        HealthFlow.updateResult(kind: 'in_app', result: 'declined');
         updateService.dismissForSession(release.tag);
         Navigator.of(context).pop();
       },
@@ -216,22 +218,13 @@ class _UpdateSheetBodyState extends State<_UpdateSheetBody> {
             ),
             if (_errorMessage != null) ...[
               SizedBox(height: tokens.space2),
-              KitText(
-                _errorMessage!,
-                role: KitTextRole.secondary,
-              ),
+              KitText(_errorMessage!, role: KitTextRole.secondary),
             ],
           ] else ...[
-            KitText(
-              widget.l10n.appUpdateChangelog,
-              role: KitTextRole.headline,
-            ),
+            KitText(widget.l10n.appUpdateChangelog, role: KitTextRole.headline),
             SizedBox(height: tokens.space2),
             if (widget.release.changelog.isNotEmpty)
-              KitText(
-                widget.release.changelog,
-                role: KitTextRole.body,
-              )
+              KitText(widget.release.changelog, role: KitTextRole.body)
             else
               KitText(
                 widget.l10n.desktopReleaseWhatChanged,

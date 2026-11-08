@@ -10,14 +10,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
-import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
-import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_termux_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 import '../../test/revamp/screen_phone_1_fixtures.dart';
-import '../../test/support/termux_channel_fixture.dart';
 import 'fixtures.dart';
 
 const _out = 'docs/qa/slice-P1.3-P1.5-2026-09-27';
@@ -50,7 +45,7 @@ void main() {
     final boundary = GlobalKey();
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
       optionalInstalled: {'python'},
@@ -61,31 +56,6 @@ void main() {
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
     await _settle(tester);
     await _shot(tester, boundary, 'after-this-phone-inapp-scrolled');
-    await unmountPhone(tester);
-  });
-
-  testWidgets('after: This phone, in Termux', (tester) async {
-    TermuxChannelFixture()
-      ..inventoryOutput = 'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n'
-      ..statusOutput = termuxSnapshot(phase: 'ready', version: '2.1.1')
-      ..install();
-    final boundary = GlobalKey();
-    await pumpPhone(
-      tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.termux),
-      profiles: [
-        ServerProfile(
-          id: 'termux',
-          name: 'This phone',
-          baseUrl: TermuxBridge.managedServerUrl,
-          password: 'synthetic-test-secret',
-          serverVersion: '2.1.1',
-        ),
-      ],
-      boundary: boundary,
-    );
-    await _settle(tester);
-    await _shot(tester, boundary, 'after-this-phone-termux');
     await unmountPhone(tester);
   });
 
@@ -100,28 +70,7 @@ void main() {
     await tester.ensureVisible(otherWays);
     await tester.tap(otherWays);
     await _settle(tester);
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('phone-setup-start-use-termux')),
-    );
-    await _settle(tester);
     await _shot(tester, boundary, 'after-phone-setup-start-other-ways');
-    await unmountPhone(tester);
-  });
-
-  testWidgets('after: phone setup on the Termux host', (tester) async {
-    TermuxChannelFixture()
-      ..permissionGranted = false
-      ..install();
-    final boundary = GlobalKey();
-    await pumpPhone(
-      tester,
-      home: PhoneSetupTermuxScreen(firstSetup: true, openLink: (_, _) async {}),
-      boundary: boundary,
-    );
-    await _settle(tester);
-    await _shot(tester, boundary, 'after-phone-setup-termux');
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 2));
     await unmountPhone(tester);
   });
 }

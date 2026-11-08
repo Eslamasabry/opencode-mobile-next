@@ -193,7 +193,6 @@ void main() {
                 ready: ready,
                 beats: beats,
               ),
-      localWakeLockEnsurer: () async {},
       draftAttachmentVault: StashMemoryVault(),
       stashAttachmentVault: StashMemoryVault(),
     );

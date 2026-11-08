@@ -22,7 +22,6 @@ Future<void> _settle(WidgetTester tester) async {
 
 void main() {
   setUp(() {
-    useNoTermuxJob();
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(

@@ -20,6 +20,7 @@ SIGNING_CERTIFICATE_OUTPUT=""
 usage() {
   cat >&2 <<'EOF'
 Usage: ./scripts/release.sh <release|sideload|patch|github|patch-plan> [--publish]
+       ./scripts/release.sh promote <vX.Y.Z+N> [--publish]
 
 For release/sideload/patch, the default runs gates and a Shorebird dry-run.
 Add --publish to upload to Shorebird after that dry-run succeeds.
@@ -29,9 +30,13 @@ release  creates the production/store AAB and rejects the legacy certificate.
 sideload creates the GitHub APK and requires the exact public legacy certificate.
 patch    creates a Dart-only patch for the exact tagged release version.
 patch-plan prints staging, owner-phone canary and rollback instructions only.
-github   verifies a CI-built draft and publishes it stable only with --publish.
+github   verifies the CI-published pre-release: CI provenance, full quality
+         gate, assets and signer. It never changes anything (no --publish).
          Requires OC_RELEASE_BUILD_RUN_ID and OC_RELEASE_QUALITY_RUN_ID.
-         No local signing files, Flutter build or Shorebird upload are used.
+promote  re-verifies a published pre-release (SHA256SUMS, signer, package,
+         version, at least OC_PROMOTE_MIN_HOURS=24 quiet hours) and, only with
+         --publish, marks it non-pre-release and latest.
+github and promote use no local signing files, Flutter build or Shorebird upload.
 EOF
 }
 
@@ -59,7 +64,7 @@ assert_private_file() {
     fail "$description must not be readable or writable by group or other users (found mode $permissions)."
 }
 
-if (( $# < 1 || $# > 2 )); then
+if (( $# < 1 || $# > 3 )); then
   usage
   exit "$EXIT_USAGE"
 fi
@@ -67,11 +72,25 @@ fi
 readonly MODE="$1"
 case "$MODE" in
   release | sideload | patch | github | patch-plan) ;;
+  promote)
+    # promote names the release it acts on: promote <vX.Y.Z+N> [--publish].
+    if (( $# < 2 )); then
+      usage
+      exit "$EXIT_USAGE"
+    fi
+    PROMOTE_TAG="$2"
+    shift
+    ;;
   *)
     usage
     exit "$EXIT_USAGE"
     ;;
 esac
+
+if (( $# > 2 )); then
+  usage
+  exit "$EXIT_USAGE"
+fi
 
 PUBLISH=false
 if (( $# == 2 )); then
@@ -121,7 +140,7 @@ fi
 
 
 required_commands=(git flutter shorebird python3)
-if [[ "$MODE" == github ]]; then
+if [[ "$MODE" == github || "$MODE" == promote ]]; then
   required_commands=(git gh python3)
 fi
 for command_name in "${required_commands[@]}"; do
@@ -129,9 +148,16 @@ for command_name in "${required_commands[@]}"; do
     fail "Required command is not available: $command_name"
 done
 
-VERSION="$(sed -n 's/^[[:space:]]*version:[[:space:]]*//p' pubspec.yaml)"
-if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]]; then
-  fail "pubspec.yaml must contain exactly one version in x.y.z+positive-build-number form. Found: ${VERSION:-<none>}"
+if [[ "$MODE" == promote ]]; then
+  # Promotion acts on an existing release, usually days after master moved on.
+  [[ "$PROMOTE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]] ||
+    fail "promote needs a release tag in vX.Y.Z+N form. Found: ${PROMOTE_TAG:-<none>}"
+  VERSION="${PROMOTE_TAG#v}"
+else
+  VERSION="$(sed -n 's/^[[:space:]]*version:[[:space:]]*//p' pubspec.yaml)"
+  if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]]; then
+    fail "pubspec.yaml must contain exactly one version in x.y.z+positive-build-number form. Found: ${VERSION:-<none>}"
+  fi
 fi
 readonly VERSION
 readonly BUILD_NAME="${VERSION%%+*}"
@@ -382,10 +408,10 @@ assert_patchable_diff() {
     fail "Range $RELEASE_TAG..HEAD is not a hotfix; ship it as a fix, feature or breaking release instead."
 }
 
-if [[ "$MODE" == github ]]; then
+if [[ "$MODE" == github || "$MODE" == promote ]]; then
   assert_git_ready
   source scripts/release_github.sh
-  release_github
+  if [[ "$MODE" == github ]]; then release_github; else release_promote; fi
   exit 0
 fi
 

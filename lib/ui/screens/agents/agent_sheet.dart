@@ -18,6 +18,8 @@ import 'agent_error_notice.dart';
 import 'agent_sign_in_terminal.dart';
 import 'agents_text.dart';
 import 'phone_check_view.dart';
+import '../../../telemetry/analytics_events.dart';
+import '../../../telemetry/telemetry_provider.dart';
 
 /// Where the agent sheet opens.
 enum AgentSheetStep { list, setup, check, signIn }
@@ -209,6 +211,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
 
   Future<void> _choose(String id) async {
     try {
+      AppTelemetry.feature(AnalyticsFeature.agentSwitch);
       await _agents.selectChatAgent(id);
       if (mounted) KitSheet.close(context, true);
     } catch (error) {

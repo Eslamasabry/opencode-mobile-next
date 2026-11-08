@@ -9,8 +9,7 @@ import '../../builtin/phone_process_watch.dart';
 import '../../builtin/phone_processes.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
-import '../screens/termux_processes_screen.dart'
-    show formatTermuxCpuPct, formatTermuxDuration;
+import 'process_format.dart';
 import 'phone_server_card.dart' show formatPhoneStorage;
 
 /// The `runningPhoneName` kind of [p], or null when its program has no
@@ -85,7 +84,7 @@ String runningCpuLevel(double percent) => percent < 5
 String runningCpuText(AppLocalizations l10n, double percent) =>
     l10n.runningPhoneCpu(
       runningCpuLevel(percent),
-      percent < 0.05 ? '0' : formatTermuxCpuPct(percent),
+      percent < 0.05 ? '0' : formatProcessCpuPct(percent),
     );
 
 /// "43 MB"; from a gigabyte, "1.5 GB".
@@ -101,11 +100,13 @@ String runningFacts(AppLocalizations l10n, PhoneProcess p) => [
     runningCpuLevel(p.cpuPercent) == 'veryBusy'
         ? 'busy'
         : runningCpuLevel(p.cpuPercent),
-    p.cpuPercent < 0.05 ? '0' : formatTermuxCpuPct(p.cpuPercent),
+    p.cpuPercent < 0.05 ? '0' : formatProcessCpuPct(p.cpuPercent),
   ),
   if (p.rssBytes > 0) runningMemoryText(l10n, p.rssBytes),
   if (p.elapsed.inSeconds > 0)
-    l10n.termuxProcsRunningFor(formatTermuxDuration(l10n, p.elapsed.inSeconds)),
+    l10n.termuxProcsRunningFor(
+      formatProcessDuration(l10n, p.elapsed.inSeconds),
+    ),
 ].join(' · ');
 
 /// A group's label: "OpenCode", "Left behind", "Claude Code · Fix login".

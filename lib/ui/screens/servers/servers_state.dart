@@ -12,13 +12,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
 
   String? _listFailureDetails;
 
-  /// Bumped after Termux setup returns so the running-server entry re-reads
-  /// the phone instead of trusting what it saw before the user left.
-  int _termuxRevision = 0;
-
-  /// The first screen's last look found OpenCode or Termux on this phone:
-  /// that leads the page, and the welcome steps back.
-  bool _termuxFound = false;
+  /// Bumped after phone setup returns so the welcome re-reads the phone
+  /// instead of trusting what it saw before the person left.
+  int _phoneRevision = 0;
 
   /// The welcome's chosen answer: this phone until the person picks the
   /// computer (off the phone path the computer is the only one).
@@ -121,12 +117,6 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       Widget welcome(PhoneWelcomeOffer? phone) => _WelcomeView(
         topBar: topBar,
         busy: _busy,
-        found: _termuxFound,
-        runningServer: _runningServerEntry(
-          store.profiles,
-          accountConnection,
-          lead: true,
-        ),
         phone: phone,
         choice: _welcomeChoice,
         onChoice: (choice) => setState(() => _welcomeChoice = choice),
@@ -135,9 +125,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         onDemo: _demo,
       );
       // The phone path exists only where this app can set a phone up.
-      if (!platformCapabilities.supportsTermux) return welcome(null);
+      if (!platformCapabilities.supportsThisPhone) return welcome(null);
       return PhoneSetupWelcomeEntry(
-        revision: _termuxRevision,
+        revision: _phoneRevision,
         openStart: (_) => _openPhoneSetup(),
         builder: (context, phone) => welcome(phone),
       );
@@ -146,15 +136,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     final phoneServer = phoneServerProfile(store.profiles, activeId);
     final saved = [
       for (final p in store.profiles)
-        if (!looksLikeInAppServer(p) &&
-            !shownAsPhoneRow(
-              p,
-              among: store.profiles,
-              preferID: accountConnection.api == null
-                  ? null
-                  : accountConnection.profile?.id,
-            ))
-          p,
+        if (!looksLikeInAppServer(p)) p,
     ];
     final tokens = KitTokens.of(context);
     // The other servers' words come from the one attention source, which an
@@ -344,12 +326,6 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                               ),
                             ),
                         ],
-                      ),
-                      // The phone's own servers close the list, a row each.
-                      _runningServerEntry(
-                        store.profiles,
-                        accountConnection,
-                        dividerAbove: ordered.isNotEmpty,
                       ),
                     ],
                   ),

@@ -777,7 +777,6 @@ Future<_World> _world(
               onStatus: onStatus,
               onError: onError,
             ),
-    localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: (profile) {
       final host = healthSupported

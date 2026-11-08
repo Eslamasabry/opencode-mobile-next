@@ -102,12 +102,9 @@ void main() {
   setUp(() {
     // Nothing of the team is installed yet, as the page's inventory reads it.
     final previousEngine = PhoneSetup.engine;
-    final previousTermux = PhoneSetup.termux;
     PhoneSetup.engine = FakeSetupEngine();
-    PhoneSetup.termux = FakeSetupEngine();
     addTearDown(() {
       PhoneSetup.engine = previousEngine;
-      PhoneSetup.termux = previousTermux;
     });
   });
   tearDown(() {

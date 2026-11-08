@@ -17,7 +17,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../setup_engine_test.dart' show FakeLinux;
@@ -128,8 +127,7 @@ void main() {
         );
         final result = await finish(
           const SetupFinishRequest(
-            host: SetupHostKind.builtin,
-            runtime: TermuxRuntime.openCode2,
+            runtime: OpenCodeRuntime.openCode2,
             openCodeChanged: true,
             version: '2.1.1',
           ),
@@ -185,8 +183,7 @@ void main() {
 
     final error = await finish(
       const SetupFinishRequest(
-        host: SetupHostKind.builtin,
-        runtime: TermuxRuntime.openCode2,
+        runtime: OpenCodeRuntime.openCode2,
         openCodeChanged: false,
         version: null,
       ),

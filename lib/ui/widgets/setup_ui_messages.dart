@@ -79,9 +79,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
 
   'Some Linux packages need repair. Continue setup to try again. Details show what stopped it.':
       l10n.phoneSetupErrorPackageRepair,
-  'Termux command failed.': l10n.e7SetupCommandFailed,
-  'Termux returned an unexpected bridge response.':
-      l10n.e7SetupUnexpectedBridge,
   'Setup queued': l10n.e7SetupSetupQueued,
   'No setup has been started': l10n.e7SetupNoSetup,
   'Setup manager is missing after launch':
@@ -100,14 +97,10 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupPasswordRejected,
   'These commands run on the computer that hosts this server — the app cannot run them for you. Copy each one into a terminal on that machine.':
       l10n.e7SetupHostInstructions,
-  'This version of Termux is too old for the app to control it. Install the current F-Droid or GitHub build of Termux, then check again.':
-      l10n.e7SetupTermuxOutdated,
   'There is nothing to scan with. Run opencode2 pair on the server, copy the code it prints, and paste it into the server editor.':
       l10n.e7SetupNoCameraDetail,
   'That pairing code carries no server address. Check that the server is actually listening, then run `opencode2 pair` again.':
       l10n.e7SetupPairAddressMissing,
-  'It drives Termux, which has no desktop equivalent. On this machine, run `opencode serve` yourself and add it as a server.':
-      l10n.e7SetupUnsupportedSetup,
   'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.':
       l10n.e7SetupMissingPasswordLong,
   'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.':
@@ -124,8 +117,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupPairShape,
   'A local server exists, but its saved credential is unavailable. Run setup again to replace it safely.':
       l10n.e7SetupExistingMissingCredential,
-  'Termux opened but the setup did not start. Retry once; if it happens again, copy the failure report.':
-      l10n.e7SetupSetupNotStarted,
   'That pairing code has no `password` field. It may have been truncated — scan or copy the whole code.':
       l10n.e7SetupPairPasswordMissing,
   'The local server is ready, but its observed version could not be saved. Refresh setup to try again.':
@@ -168,8 +159,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupNotOpenCode,
   'Another app may be holding the camera. Pasting the pairing code works either way.':
       l10n.e7SetupCameraFailedDetail,
-  'Termux did not answer. Open Termux once, run the unlock line, then verify again.':
-      l10n.e7SetupTermuxNoAnswer,
   'The server did not answer. Check that opencode serve is running on that address.':
       l10n.e7SetupNoServerAnswer,
   'The server’s TLS certificate was rejected. Use a certificate this phone trusts.':
@@ -194,8 +183,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupUbuntuUnusable,
   'That pairing code lists an address far too long to be a server URL.':
       l10n.e7SetupPairAddressLong,
-  'Could not refresh packages.termux.dev; check the network and retry':
-      l10n.e7SetupRepositoryRefreshFailed,
   'Enter a complete server URL, such as https://server.example:4096.':
       l10n.e7SetupCompleteUrl,
   'The local server port is still in use; no replacement was started':
@@ -204,10 +191,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupStopTerminalDetail,
   'Codex server URLs must use wss://, or ws:// for a local server.':
       l10n.e7SetupCodexScheme,
-  'Termux dependencies are still unusable after the package repair':
-      l10n.e7SetupDependenciesUnusable,
-  'Install the current F-Droid build of Termux, then return here.':
-      l10n.e7SetupInstallTermuxDetail,
   'That host name could not be found. Check the address spelling.':
       l10n.e7SetupDns,
   'OpenCode updated, but its model catalog could not be refreshed':
@@ -216,18 +199,12 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupUrlScheme,
   'The local server restarted, but the app could not reconnect.':
       l10n.e7SetupRestartReconnectFailed,
-  'Waiting for Termux to respond. This can take a little while.':
-      l10n.e7SetupWaitingTermux,
   'No server there yet? The setup guide shows how to start one.':
       l10n.e7SetupNoServerGuide,
   'That pairing code\'s `urls` field is not a list of addresses.':
       l10n.e7SetupPairUrlsType,
-  'Server URLs must use https://, or http:// for local Termux.':
-      l10n.e7SetupTermuxUrlScheme,
   'Remove the path from the server URL. Enter only its origin.':
       l10n.e7SetupUrlPath,
-  'Could not repair the interrupted Termux package transaction':
-      l10n.e7SetupRepairFailed,
   'Point the camera at the QR code printed by opencode2 pair.':
       l10n.e7SetupScanInstruction,
   'Leave empty only if this server no longer uses a password.':
@@ -256,8 +233,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupSetupGroupFailed,
   'Setup stopped unexpectedly; see live output for details':
       l10n.e7SetupSetupInterrupted,
-  'Could not select the official Termux package repository':
-      l10n.e7SetupRepositoryFailed,
   'That pairing code contains an unusable server address.':
       l10n.e7SetupPairAddressUnusable,
   'The tracked process is not the managed OpenCode server':
@@ -269,8 +244,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Terminal control keys. Swipe horizontally for more.':
       l10n.e7SetupControlKeys,
   'Ubuntu is installed. OpenCode is not installed yet.': l10n.e7SetupUbuntuOnly,
-  'Could not complete the safe Termux package upgrade':
-      l10n.e7SetupUpgradeFailed,
   'Could not save connection guidance. Retry saving.':
       l10n.e7SetupGuidanceSaveFailed,
   'That pairing code\'s `username` field is not text.':
@@ -300,10 +273,8 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Could not check the installed environment.': l10n.e7SetupCheckInstallFailed,
   'Remove the path from the Codex server URL.': l10n.e7SetupCodexPath,
   'Enter an absolute Codex project directory.': l10n.e7SetupCodexDirectory,
-  'Lost track of the setup running in Termux': l10n.e7SetupSetupLost,
   'Uses a one-time code. Works from a phone.': l10n.e7SetupDeviceCodeHint,
   'The previous runtime record is unreadable': l10n.e7SetupUnreadablePrevious,
-  'Could not install the Termux dependencies': l10n.e7SetupDependenciesFailed,
   'Install OpenCode as a background service': l10n.e7SetupInstallService,
   'Input is unavailable while disconnected.': l10n.e7SetupInputDisconnected,
   'Copied. Run it on the server\'s computer.': l10n.e7SetupHostCopied,
@@ -328,22 +299,18 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Full walkthrough (opens in browser)': l10n.e7SetupFullWalkthrough,
   'Could not read setup manager status': l10n.e7SetupReadManagerFailed,
   'Connection token re-entry required': l10n.e7SetupTokenRequired,
-  'Termux bridge verification failed.': l10n.e7SetupVerifyTermuxFailed,
   'OpenCode is running on this phone.': l10n.e7SetupRunningOnPhone,
   'Enter a complete Codex server URL.': l10n.e7SetupCodexCompleteUrl,
   'Switching the managed local server': l10n.e7SetupSwitchLocal,
   'Checking installed environment...': l10n.e7SetupCheckingInstall,
-  'Android could not inspect Termux.': l10n.e7SetupInspectTermuxFailed,
   'Reach it from this phone over USB': l10n.e7SetupUsbAccess,
   'The runtime switch did not start.': l10n.e7SetupSwitchNotStarted,
   'Day-to-day — run on your computer': l10n.e7SetupHostDaily,
-  'Repairing the Termux package set': l10n.e7SetupRepairPackages,
   'Camera access is needed to scan': l10n.e7SetupCameraNeeded,
   'On-device setup is Android only': l10n.e7SetupAndroidOnly,
   'Automatic recovery was disabled': l10n.e7SetupRecoveryWasDisabled,
   'The camera could not be opened': l10n.e7SetupCameraFailed,
   'Sends this key to the terminal': l10n.e7SetupSendKey,
-  'Installing Termux dependencies': l10n.e7SetupInstallDependencies,
   'This is an OpenCode 2 server.': l10n.e7SetupIsV2,
   'About and open source notices': l10n.e7SetupAboutNotices,
   'Installing Ubuntu environment': l10n.e7SetupInstallUbuntu,
@@ -358,9 +325,7 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'The server did not connect.': l10n.e7SetupDidNotConnect,
   'Automatic recovery disabled': l10n.e7SetupRecoveryDisabled,
   'Password re-entry required': l10n.e7SetupPasswordRequired,
-  'Checking Termux connection': l10n.e7SetupCheckingTermux,
   'Terminal input unavailable': l10n.e7SetupInputUnavailable,
-  'Refreshing Termux packages': l10n.e7SetupRefreshPackages,
   'Sign in with your account': l10n.e7SetupAccountHint,
   'Start installed OpenCode?': l10n.e7SetupStartInstalled,
   'This device has no camera': l10n.e7SetupNoCamera,
@@ -369,7 +334,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Stopping the local server': l10n.e7SetupStoppingLocal,
   'Update managed OpenCode?': l10n.e7SetupConfirmUpdate,
   'Use interactive terminal': l10n.e7SetupInteractiveTerminal,
-  'Starting setup in Termux': l10n.e7SetupStartingSetup,
   'Send command to terminal': l10n.e7SetupSendCommand,
   'Setup manager is missing': l10n.e7SetupMissingManager,
   'No terminal output yet.': l10n.e7SetupNoOutput,
@@ -389,7 +353,6 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Open the setup guide': l10n.e7SetupOpenSetupGuide,
   'Hide server password': l10n.e7SetupHidePassword,
   'Interrupt, Control C': l10n.e7SetupInterruptKey,
-  'This device (Termux)': l10n.e7SetupThisDevice,
   'Getting models ready': l10n.e7SetupPreparingModels,
   'Setup output copied.': l10n.e7SetupOutputCopied,
   'Local server stopped': l10n.e7SetupStoppedLocal,
@@ -399,10 +362,8 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Terminal transcript': l10n.e7SetupTranscript,
   'Enter a server URL.': l10n.e7SetupEnterUrl,
   'Unknown setup state': l10n.e7SetupUnknownSetup,
-  'Copy & open Termux': l10n.e7SetupCopyOpenTermux,
   'Restart the server': l10n.e7SetupRestartServer,
   'Paste pairing code': l10n.e7SetupPastePairing,
-  'Checking Termux...': l10n.e7SetupCheckingTermuxShort,
   'Connection failed.': l10n.e7SetupConnectionFailed,
   'Verify & continue': l10n.e7SetupVerifyContinue,
   'Setting up Ubuntu': l10n.e7SetupInstallingUbuntu,
@@ -420,5 +381,4 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
   'Resume live view': l10n.e7SetupResumeLive,
   'Terminal actions': l10n.e7SetupTerminalActions,
   'Remove terminal?': l10n.e7SetupRemoveTerminal,
-  'Preparing Termux': l10n.e7SetupPrepareTermux,
 };

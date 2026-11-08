@@ -66,6 +66,11 @@ final class AgentRunFailure {
 
   AgentRunFailureKind get kind => classifyAgentRunFailure(reason);
 
+  /// A sign-in the agent had and can no longer use ("OAuth session expired
+  /// and could not be refreshed"): "sign in again", not "sign in".
+  bool get signInExpired =>
+      kind == AgentRunFailureKind.signIn && _signInExpired.hasMatch(reason);
+
   @override
   String toString() => 'AgentRunFailure($kind, $provider, $model, $code)';
 }
@@ -96,6 +101,13 @@ final _signIn = RegExp(
   r'|authentication_error|unauthori[sz]ed'
   r'|invalid.?api.?key|missing api.?key|api.?key (?:is )?(?:missing|required|not set)'
   r'|\b401\b',
+  caseSensitive: false,
+);
+
+final _signInExpired = RegExp(
+  r'(?:oauth|auth|login|sign.?in)? ?(?:session|token|credentials?)'
+  r' (?:has |have )?(?:expired|been revoked)|could not be refreshed'
+  r'|failed to refresh',
   caseSensitive: false,
 );
 

@@ -35,9 +35,9 @@ String? serversRowValue(
 /// This phone's end: set up or not, and "Running" only while the app really
 /// is connected to the server it hosts.
 String? phoneRowValue(ConnectionController controller, AppLocalizations l10n) {
-  bool onPhone(ServerProfile p) =>
-      looksLikeInAppServer(p) || TermuxBridge.managesServerUrl(p.baseUrl);
-  final hosted = settingsServers(controller).where(onPhone).toList();
+  final hosted = settingsServers(
+    controller,
+  ).where(looksLikeInAppServer).toList();
   if (hosted.isEmpty) return l10n.settingsV3PhoneSetUp;
   return hosted.any((p) => _isConnectedServer(controller, p))
       ? l10n.settingsV3PhoneRunning
@@ -93,7 +93,7 @@ class SettingsServersBlock extends StatelessWidget {
             key: ValueKey('settings-server-${p.id}'),
             leading: KitRow.icon(
               context,
-              isPhoneOwnServer(p)
+              looksLikeInAppServer(p)
                   ? AppIconography.phone
                   : AppIconography.server,
             ),
@@ -341,7 +341,7 @@ class ByServerScreen extends StatelessWidget {
                       key: ValueKey('by-server-${p.id}'),
                       leading: KitRow.icon(
                         context,
-                        isPhoneOwnServer(p)
+                        looksLikeInAppServer(p)
                             ? AppIconography.phone
                             : AppIconography.server,
                       ),

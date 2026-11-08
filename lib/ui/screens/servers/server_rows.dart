@@ -157,7 +157,7 @@ class _ServerRow extends StatelessWidget {
         leading: waiting > 0
             ? KitNeedsYou.mark()
             : KitRowIcon(
-                isPhoneOwnServer(p)
+                looksLikeInAppServer(p)
                     ? AppIconography.phone
                     : AppIconography.server,
                 current: connected,
@@ -222,17 +222,11 @@ enum _WelcomeChoice { phone, computer }
 /// (vision 2026-10-20, concept A): "Where should your agent run?", a large
 /// card for this phone with what setting up costs, a card for a computer,
 /// and one main button that names the chosen answer. The demo and phone
-/// setup's own page (Termux, what to install) are quiet text actions under
-/// it. Product names, private networks and the guide are met later, at the
+/// setup's own page (what to install) are quiet text actions under it. Product names, private networks and the guide are met later, at the
 /// step where each one matters.
 class _WelcomeView extends StatelessWidget {
   final KitTopBar topBar;
   final bool busy;
-
-  /// The detected on-device server. It renders nothing unless a running
-  /// server was actually observed: a live thing the app found outranks
-  /// every generic choice.
-  final Widget runningServer;
 
   /// The phone card's words and the main button's action for it; null
   /// where this platform has no phone path.
@@ -243,16 +237,9 @@ class _WelcomeView extends StatelessWidget {
   final VoidCallback onPhoneSetup;
   final VoidCallback onDemo;
 
-  /// OpenCode or Termux was found on this phone: [runningServer] leads the
-  /// page, the in-app server is the fresh start after it, and the other
-  /// ways follow in a compact list. No question.
-  final bool found;
-
   const _WelcomeView({
     required this.topBar,
     required this.busy,
-    this.found = false,
-    required this.runningServer,
     required this.phone,
     required this.choice,
     required this.onChoice,
@@ -265,13 +252,6 @@ class _WelcomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = _connectionL10n(context);
     final tokens = KitTokens.of(context);
-    // Keyed, so the found server keeps its state while the page around it
-    // changes shape.
-    final lead = KeyedSubtree(
-      key: const ValueKey('welcome-termux'),
-      child: runningServer,
-    );
-    if (found) return _found(context, copy, tokens, lead);
     final phone = this.phone;
     // Off the phone path the computer is the only answer, chosen.
     final chosen = phone == null ? _WelcomeChoice.computer : choice;
@@ -288,7 +268,12 @@ class _WelcomeView extends StatelessWidget {
         key: const ValueKey('welcome-primary'),
         hero: true,
         label: copy.welcomeComputerConnect,
-        onPressed: busy || phoneWorking ? null : onComputer,
+        onPressed: busy || phoneWorking
+            ? null
+            : () {
+                AppTelemetry.track(AnalyticsEvent.connectComputerChosen);
+                onComputer();
+              },
       ),
     };
     final quiet = <Widget>[
@@ -319,7 +304,6 @@ class _WelcomeView extends StatelessWidget {
           bottom: KitScreen.endPadding(context),
         ),
         children: [
-          if (platformCapabilities.supportsTermux) lead,
           _Rails(
             child: KitHeroQuestion(
               copy.firstRunWhereQuestion,
@@ -362,95 +346,13 @@ class _WelcomeView extends StatelessWidget {
       ),
     );
   }
-
-  /// OpenCode or Termux was found on this phone: that server leads (with
-  /// its move to the in-app server under it), then a fresh in-app setup,
-  /// then the other ways.
-  Widget _found(
-    BuildContext context,
-    AppLocalizations copy,
-    KitTokens tokens,
-    Widget lead,
-  ) {
-    final busyReason = busy ? copy.e7SetupServerOperation : null;
-    Widget choice({
-      required String key,
-      required IconData icon,
-      required String title,
-      required String detail,
-      required VoidCallback onTap,
-    }) => KitRow(
-      key: ValueKey(key),
-      leading: KitRow.icon(context, icon),
-      title: title,
-      titleMaxLines: 2,
-      supporting: TextSpan(text: detail),
-      supportingMaxLines: 3,
-      trailing: const KitChevron(),
-      enabled: !busy,
-      disabledReason: busyReason,
-      onTap: onTap,
-    );
-    final phone = this.phone;
-    // A setup in the app that already started says where it stands.
-    final started = phone != null && phone.state != SetupState.idle;
-    return KitScreen(
-      topBar: topBar,
-      width: KitScreenWidth.reading,
-      body: ListView(
-        key: const ValueKey('first-run-welcome'),
-        padding: EdgeInsetsDirectional.only(
-          top: tokens.space6,
-          bottom: KitScreen.endPadding(context),
-        ),
-        children: [
-          lead,
-          SizedBox(height: tokens.sectionGap),
-          KitRowGroup(
-            key: const ValueKey('welcome-in-app-instead'),
-            children: [
-              choice(
-                key: 'welcome-choice-in-app',
-                icon: AppIconography.phone,
-                title: copy.termuxInAppInstead,
-                detail: started ? phone.line : copy.termuxInAppInsteadDetail,
-                onTap: started ? phone.onPressed : onPhoneSetup,
-              ),
-            ],
-          ),
-          SizedBox(height: tokens.sectionGap),
-          KitRowGroup(
-            key: const ValueKey('welcome-other-ways'),
-            label: copy.phoneSetupStartOtherWays,
-            children: [
-              choice(
-                key: 'welcome-choice-computer',
-                icon: AppIconography.computer,
-                title: copy.firstRunOnComputer,
-                detail: copy.welcomeComputerLine,
-                onTap: onComputer,
-              ),
-              choice(
-                key: 'welcome-choice-demo',
-                icon: AppIconography.playCircle,
-                title: copy.firstRunJustShowMe,
-                detail: copy.welcomeDemoLine,
-                onTap: onDemo,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 String _knownOpenCodeGeneration(ServerProfile profile) => 'OpenCode 2';
 
 /// A phone feature must stay discoverable when the current server is remote.
-/// One entry for every way of running an agent on this phone: it opens phone
-/// setup (screen A), where the in-app setup leads and Termux is one of the
-/// "Other ways".
+/// One entry for running an agent on this phone: it opens phone setup
+/// (screen A).
 class _PhoneSetupEntry extends StatelessWidget {
   const _PhoneSetupEntry({super.key, required this.onTap});
   final VoidCallback? onTap;

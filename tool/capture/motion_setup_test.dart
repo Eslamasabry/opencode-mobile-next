@@ -15,7 +15,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/ui/widgets/saved_server_connection_card.dart';
 
-import '../../test/support/phone_server_scenes.dart';
 import '../../test/support/phone_setup_scenes.dart';
 import '../../test/support/work_tab_fixture.dart';
 import 'fixtures.dart';
@@ -50,10 +49,8 @@ Widget _card({String? error, bool starting = false}) => Scaffold(
       baseUrl: 'http://127.0.0.1:4096',
       error: error,
       attempts: 1,
-      supportsTermux: true,
       onChangeServer: () {},
       onRetry: () {},
-      onOpenTermuxSetup: () {},
       onStartPhoneServer: () {},
       startingPhoneServer: starting,
     ),
@@ -140,25 +137,4 @@ void main() {
       }
     });
   }
-
-  testWidgets('${setupNames.length + cards.length + 1} phone stopped', (
-    tester,
-  ) async {
-    final boundary = GlobalKey();
-    final done = await mountPhoneServerScene(
-      tester,
-      PhoneServerScene.phoneStopped,
-      light: _light,
-      boundary: boundary,
-    );
-    try {
-      expect(tester.takeException(), isNull);
-      await writePng(
-        _file(setupNames.length + cards.length + 1, 'phone-stopped'),
-        await capturePng(tester, boundary, pixelRatio: 1),
-      );
-    } finally {
-      await done();
-    }
-  });
 }

@@ -92,7 +92,10 @@ class ConversationNudgeWatcher {
     required this.registry,
     required this.conversation,
     NudgeTimerFactory? createTimer,
-  }) : _createTimer = createTimer ?? Timer.new;
+    this.onFirstReply,
+    DateTime Function()? now,
+  }) : _createTimer = createTimer ?? Timer.new,
+       _now = now ?? DateTime.now;
 
   /// How long a run must keep the person waiting before leaving is suggested.
   static const longWait = Duration(seconds: 60);
@@ -103,6 +106,14 @@ class ConversationNudgeWatcher {
   final NudgeRegistry registry;
   final String conversation;
   final NudgeTimerFactory _createTimer;
+  final DateTime Function() _now;
+
+  /// Called once per install, when the first reply is seen. [waited] runs
+  /// from the start of the run that produced it, or is null when this
+  /// screen did not see that run start.
+  final void Function(Duration? waited)? onFirstReply;
+  DateTime? _runStarted;
+  bool _firstReplyReported = false;
 
   ConversationNudgeFacts? _facts;
   Timer? _waitTimer;
@@ -127,8 +138,16 @@ class ConversationNudgeWatcher {
       // First run. The observation that sees the first reply only records
       // it: that moment belongs to the reply itself (and to the phase 3b
       // notification card), so tips start with the next trigger.
+      if (facts.busy) _runStarted ??= _now();
       if (!facts.busy && facts.hasAssistantReply) {
         unawaited(registry.markFirstReplySeen());
+        final started = _runStarted;
+        if (!_firstReplyReported) {
+          _firstReplyReported = true;
+          onFirstReply?.call(
+            started == null ? null : _now().difference(started),
+          );
+        }
       }
       return;
     }

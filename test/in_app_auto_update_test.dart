@@ -5,23 +5,19 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/in_app_auto_update.dart';
 import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
+import 'package:opencode_mobile/builtin/opencode_runtime.dart';
 
 import 'support/fake_setup_engine.dart';
 
 class _Host extends PhoneHost {
   @override
-  PhoneHostKind get kind => PhoneHostKind.inApp;
-  @override
   PhoneHostState state = PhoneHostState.running;
   @override
-  TermuxRuntime runtime = TermuxRuntime.openCode2;
+  OpenCodeRuntime runtime = OpenCodeRuntime.openCode2;
   @override
   String? version;
   @override
   PhoneHostProblem? problem;
-  @override
-  TermuxRuntime? switchTarget;
   @override
   int? get bytesUsed => null;
   @override
@@ -48,7 +44,6 @@ void main() {
     String? installed = '2.0.29',
     bool busy = false,
     bool engineRunning = false,
-    bool switchPending = false,
     bool installProblem = false,
     bool attempted = false,
   }) => shouldAutoUpdateInApp(
@@ -56,7 +51,6 @@ void main() {
     pinnedVersion: pinned,
     busy: busy,
     engineRunning: engineRunning,
-    switchPending: switchPending,
     installProblem: installProblem,
     attemptedThisRun: attempted,
   );
@@ -77,9 +71,6 @@ void main() {
     });
     test('does nothing while a job runs', () {
       expect(decide(engineRunning: true), isFalse);
-    });
-    test('does nothing on a half-finished switch', () {
-      expect(decide(switchPending: true), isFalse);
     });
     test('does nothing after a failed install', () {
       expect(decide(installProblem: true), isFalse);
@@ -125,7 +116,7 @@ void main() {
           {'opencode'},
         ]);
         expect(engine.runParams.single, {
-          'opencode': {'runtime': TermuxRuntime.openCode2.wireName},
+          'opencode': {'runtime': OpenCodeRuntime.openCode2.wireName},
         });
       },
     );

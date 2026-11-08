@@ -8,6 +8,8 @@ import '../l10n/app_localizations.dart';
 import '../ui/app_iconography.dart';
 import '../ui/kit/kit_status_line.dart';
 import '../ui/kit/kit_status_slot.dart';
+import '../telemetry/analytics_events.dart';
+import '../telemetry/telemetry_provider.dart';
 
 enum AppUpdateState { current, available, restartRequired, unavailable }
 
@@ -260,6 +262,11 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
       // Never claims readiness after a failed download; the next resume
       // after the throttle tries again.
       debugPrint('App update could not be completed.');
+      HealthFlow.updateResult(
+        kind: 'patch',
+        result: 'failed',
+        failKind: 'download',
+      );
     } finally {
       _checking = false;
     }
@@ -267,6 +274,8 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
 
   void _showReady() {
     if (!mounted || _ready) return;
+    AppTelemetry.track(AnalyticsEvent.updateOffered);
+    HealthFlow.updateResult(kind: 'patch', result: 'installed');
     setState(() => _ready = true);
   }
 

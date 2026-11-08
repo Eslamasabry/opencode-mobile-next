@@ -1,9 +1,8 @@
-// This phone (programme P1.5): one host-neutral page for OpenCode inside the
-// app and OpenCode in Termux. The same page opens for both, with the same
-// status row, the same one act it needs now, and the same list; each host
-// adds only what it alone has (the in-app terminal and Remove, Termux's
-// Running now). Add tools opens phone setup's Customize sheet in add mode,
-// priced with the kit's cost line, and installs only the new tools.
+// This phone (programme P1.5): one page for OpenCode inside the app, with
+// the status row, the one act it needs now, and one list. Add tools opens
+// phone setup's Customize sheet in add mode, priced with the kit's cost
+// line, and installs only the new tools. A saved setup from Termux, which
+// the app no longer runs, gets the one notice about it.
 import 'dart:async';
 import 'dart:io';
 
@@ -13,17 +12,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_server_recovery.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
-import 'package:opencode_mobile/termux/processes.dart';
-import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_termux_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/widgets/phone_server_card.dart';
 
 import 'revamp/screen_phone_1_fixtures.dart';
-import 'support/termux_channel_fixture.dart';
 
 final _l10n = lookupAppLocalizations(const Locale('en'));
 
@@ -42,7 +36,7 @@ const _shared = [
 final _termuxProfile = ServerProfile(
   id: 'termux',
   name: 'This phone',
-  baseUrl: TermuxBridge.managedServerUrl,
+  baseUrl: 'http://127.0.0.1:4096',
   password: 'synthetic-test-secret',
   serverVersion: '1.18.29',
 );
@@ -60,7 +54,6 @@ Set<String> _present(WidgetTester tester) => {
 
 void main() {
   setUp(() {
-    useNoTermuxJob();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
@@ -71,32 +64,13 @@ void main() {
   Future<void> inApp(WidgetTester tester, {PhoneLinux? linux}) async {
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: linux ?? PhoneLinux(running: true),
       profiles: [inAppProfile],
       // The fake server never answers a start; the real wait is 90 s.
       readyTimeout: const Duration(milliseconds: 300),
     );
     await _settle(tester);
-  }
-
-  Future<TermuxChannelFixture> termux(
-    WidgetTester tester, {
-    String version = '1.18.29',
-    Future<TermuxProcessReport> Function()? scan,
-  }) async {
-    final channel = TermuxChannelFixture()
-      ..inventoryOutput =
-          'ubuntu=installed\nversion=$version\nruntime=opencode2\n'
-      ..statusOutput = termuxSnapshot(phase: 'ready', version: version);
-    channel.install();
-    await pumpPhone(
-      tester,
-      home: ThisPhoneScreen(kind: PhoneHostKind.termux, scanProcesses: scan),
-      profiles: [_termuxProfile],
-    );
-    await _settle(tester);
-    return channel;
   }
 
   String text(WidgetTester tester, String key) => tester
@@ -248,79 +222,12 @@ void main() {
     await unmountPhone(tester);
   });
 
-  testWidgets('in Termux: the same page, with Termux\'s own rows', (
-    tester,
-  ) async {
-    await termux(tester, scan: () async => const TermuxProcessReport([]));
-    expect(find.text(_l10n.setupRuntimeTwo), findsOneWidget);
-    expect(text(tester, 'this-phone-state'), _l10n.thisPhoneAnswerRunning);
-    expect(
-      text(tester, 'this-phone-detail'),
-      contains(_l10n.thisPhoneHostTermux),
-    );
-    expect(_present(tester), _shared.toSet());
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('termux-procs-row')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.byKey(const ValueKey('termux-storage-row')), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('this-phone-details')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.byKey(const ValueKey('this-phone-terminal')), findsNothing);
-    expect(find.byKey(const ValueKey('this-phone-remove')), findsNothing);
-    await unmountPhone(tester);
-  });
-
-  testWidgets('Running on this phone: its line is the budget; a list that '
-      'cannot be read leaves no dead row and no stray line', (tester) async {
-    final listing = TermuxProcessReport([
-      for (var pid = 100; pid < 118; pid++)
-        TermuxProcess.fromJson({'pid': pid, 'name': 'p$pid', 'rss_kb': 1024})!,
-    ]);
-    await termux(tester, scan: () async => listing);
-    final row = find.byKey(const ValueKey('termux-procs-row'));
-    await tester.scrollUntilVisible(
-      row,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Running on this phone'), findsOneWidget);
-    expect(find.text('18 of 32 background processes'), findsOneWidget);
-    expect(find.text('Not available right now'), findsNothing);
-    await unmountPhone(tester);
-
-    await termux(
-      tester,
-      scan: () async =>
-          throw const TermuxBridgeException('no tools', code: 'tools_missing'),
-    );
-    final list = find.byKey(const ValueKey('this-phone-list'));
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('termux-storage-row')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.byKey(const ValueKey('termux-procs-row')), findsNothing);
-    expect(find.text('Not available right now'), findsNothing);
-    // One hairline between each pair of rows, none for the missing one.
-    final group = tester.widget<KitRowGroup>(list);
-    expect(
-      find.descendant(of: list, matching: find.byType(KitDivider)),
-      findsNWidgets(group.children.length - 1),
-    );
-    await unmountPhone(tester);
-  });
-
   testWidgets('the server log waits folded under Details, last', (
     tester,
   ) async {
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true, log: 'INFO  session created\n'),
       profiles: [inAppProfile],
     );
@@ -416,7 +323,7 @@ void main() {
     addTearDown(() => PhoneServerCardRoutes.openProgressOverride = null);
     final engine = await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
     );
@@ -456,35 +363,6 @@ void main() {
     await unmountPhone(tester);
   });
 
-  testWidgets('Termux: Update asks, then runs in phone setup\'s progress', (
-    tester,
-  ) async {
-    final channel = await termux(tester, version: '2.0.28');
-    // From here the manager reports the update running.
-    channel.statusOutput = null;
-    await tester.ensureVisible(find.byKey(const ValueKey('this-phone-update')));
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('this-phone-update')));
-    await _settle(tester);
-    await tester.tap(find.byKey(const ValueKey('this-phone-update-confirm')));
-    await _settle(tester, frames: 4);
-    expect(find.byType(PhoneSetupTermuxScreen), findsOneWidget);
-    expect(find.text(_l10n.phoneSetupTermuxUpdatingTitle), findsOneWidget);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 2));
-    await unmountPhone(tester);
-  });
-
-  testWidgets('Update is not offered when the pinned version is installed', (
-    tester,
-  ) async {
-    await termux(tester, version: TermuxRuntime.openCode2.pinnedVersion);
-    expect(find.byKey(const ValueKey('this-phone-update')), findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 2));
-    await unmountPhone(tester);
-  });
-
   test('no screen pushes the retired Termux wizard route (P1.3)', () {
     final pushes = <String>[];
     for (final entity in Directory('lib').listSync(recursive: true)) {
@@ -503,10 +381,34 @@ void main() {
     );
   });
 
+  testWidgets('a saved setup from Termux gets the one notice, with its two '
+      'ways forward, and nothing else about Termux', (tester) async {
+    await pumpPhone(
+      tester,
+      home: const ThisPhoneScreen(),
+      linux: PhoneLinux(installed: false, openCode: false),
+      profiles: [_termuxProfile],
+    );
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('termux-retired-notice')), findsOneWidget);
+    expect(find.text(_l10n.termuxRetiredNotice), findsOneWidget);
+    expect(find.text(_l10n.termuxRetiredSetUpLinux), findsOneWidget);
+    expect(find.text(_l10n.chatsHomeConnectComputer), findsOneWidget);
+    // Nothing else on the page speaks of Termux.
+    expect(find.textContaining('Termux'), findsOneWidget);
+    await unmountPhone(tester);
+  });
+
+  testWidgets('without a Termux setup there is no notice', (tester) async {
+    await inApp(tester);
+    expect(find.byKey(const ValueKey('termux-retired-notice')), findsNothing);
+    await unmountPhone(tester);
+  });
+
   testWidgets('nothing set up: one act, set it up', (tester) async {
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(installed: false, openCode: false),
     );
     await _settle(tester);
@@ -527,7 +429,7 @@ void main() {
       addTearDown(recovery.dispose);
       await pumpPhone(
         tester,
-        home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+        home: const ThisPhoneScreen(),
         linux: PhoneLinux(),
         profiles: [inAppProfile],
         overrides: [thisPhoneRecoveryProvider.overrideWithValue(recovery)],
@@ -594,18 +496,13 @@ void main() {
     await pumpPhone(
       tester,
       home: const SizedBox.expand(key: ValueKey('opener')),
-      routes: {
-        thisPhoneRoute: (_) => const ThisPhoneScreen(kind: PhoneHostKind.inApp),
-      },
+      routes: {thisPhoneRoute: (_) => const ThisPhoneScreen()},
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
       readyTimeout: const Duration(milliseconds: 300),
     );
     unawaited(
-      openThisPhone(
-        tester.element(find.byKey(const ValueKey('opener'))),
-        kind: PhoneHostKind.inApp,
-      ),
+      openThisPhone(tester.element(find.byKey(const ValueKey('opener')))),
     );
     await _settle(tester);
     expect(find.byKey(const ValueKey('this-phone-back')), findsOneWidget);

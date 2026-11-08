@@ -166,6 +166,9 @@ object AppLifecycle {
             "manufacturer" to Build.MANUFACTURER,
             "brand" to Build.BRAND,
             "sdk" to Build.VERSION.SDK_INT,
+            // For an opt-in crash report the person reviews before sending.
+            "model" to Build.MODEL,
+            "release" to Build.VERSION.RELEASE,
             "batteryOptimizationIgnored" to
                 (power?.isIgnoringBatteryOptimizations(context.packageName) == true),
         )

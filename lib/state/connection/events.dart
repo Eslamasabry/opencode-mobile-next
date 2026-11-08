@@ -78,11 +78,13 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
         if (scope != null) _genUiState.invalidateScope(scope);
       }
       if (s == StreamStatus.reconnecting || s == StreamStatus.disconnected) {
+        if (previousStatus == StreamStatus.connected) _noteConnDrop();
         recovering = recovering || wasConnected;
         _stopDisallowedReconnect();
         if (!_isCurrentStream(generation, currentApi, stream)) return;
       }
       if (s == StreamStatus.connected) {
+        _settleConnDrop(recovered: true);
         if (previousStatus != StreamStatus.connected) _feedScheduleRefresh();
         _streamConnects += 1;
         _genUiSync();

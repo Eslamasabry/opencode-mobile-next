@@ -113,6 +113,9 @@ mixin _ChatSendFields {
   /// that got no reply says it too, so Send again is not the only way offered
   /// (the banner can be dismissed; this stays).
   Object? _sendWall;
+
+  /// Waits for the first reply after a send, for `send_result`.
+  Timer? _sendResultTimer;
 }
 
 extension _ChatSend on _ChatScreenState {
@@ -368,6 +371,7 @@ extension _ChatSend on _ChatScreenState {
           ? _promptAgentMentions(draftText, _subagents)
           : const <PromptAgentMention>[];
       if (await _queueDraft(draftText, draftAttachments, draftMentions)) {
+        HealthFlow.sendResult(result: 'queued');
         if (!mounted) return;
         _setChatState(() => _attachments.clear());
         _composer.clear();
@@ -584,6 +588,7 @@ extension _ChatSend on _ChatScreenState {
         );
       }
       _onlineSendAccepted = true;
+      _watchFirstReplyForTelemetry();
       if (!conversationSend) {
         unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
         _learnPhrase(text, attachments, phraseMoment);
@@ -606,6 +611,7 @@ extension _ChatSend on _ChatScreenState {
       if (!conversationSend && _composer.text.isEmpty) _restoreHistoryDraft();
     } catch (e) {
       if (!mounted || _sendStopped) return;
+      HealthFlow.sendResult(result: 'fail', failure: e);
       _setChatState(() {
         _sending = false;
         _localTurnSince = null;
@@ -651,6 +657,33 @@ extension _ChatSend on _ChatScreenState {
         }
       });
     }
+  }
+
+  void _stopTimers() {
+    _stopTipTimer?.cancel();
+    _sendResultTimer?.cancel();
+  }
+
+  /// `send_result` for an accepted send: reported at the first assistant
+  /// message that arrives after it, or as `none` after a minute. Nothing runs
+  /// unless the person agreed to share usage.
+  void _watchFirstReplyForTelemetry() {
+    _sendResultTimer?.cancel();
+    if (!AppTelemetry.current.usageConsented) {
+      HealthFlow.sendResult(result: 'ok');
+      return;
+    }
+    final sentAt = clock.now();
+    int replies() => _messages.where((m) => m.info.role == 'assistant').length;
+    final before = replies();
+    _sendResultTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final waited = clock.now().difference(sentAt);
+      final answered = mounted && replies() > before;
+      if (!answered && mounted && waited < const Duration(minutes: 1)) return;
+      timer.cancel();
+      _sendResultTimer = null;
+      HealthFlow.sendOk(answered ? waited : null, _conn.profile?.baseUrl);
+    });
   }
 
   ({_ChatCommand command, String arguments})? _typedChatCommand(String text) {

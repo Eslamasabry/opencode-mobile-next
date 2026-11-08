@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/domain/phone_agent_context.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 
 /// Runs [script] with `sh` (dash on Ubuntu, as inside the phone's Ubuntu)
 /// with every path under [root].
@@ -25,10 +24,10 @@ void main() {
 
   test('writes the phone context into both OpenCode generations\' global '
       'AGENTS.md', () async {
-    await _run(PhoneAgentContext.termuxScript, root);
+    await _run(PhoneAgentContext.builtinScript, root);
     for (final path in PhoneAgentContext.files) {
       final text = file(path).readAsStringSync();
-      expect(text, PhoneAgentContext.block(PhoneAgentContext.termuxHost));
+      expect(text, PhoneAgentContext.block(PhoneAgentContext.builtinHost));
       // What the agent on the owner's phone got wrong (2026-09-24).
       expect(text, contains("person's Android phone"));
       expect(text, contains('no desktop app'));
@@ -40,10 +39,13 @@ void main() {
       'text', () async {
     final global = file(PhoneAgentContext.files.first)
       ..createSync(recursive: true)
-      ..writeAsStringSync('# My rules\n\nUse tabs.\n');
-    await _run(PhoneAgentContext.termuxScript, root);
-    await _run(PhoneAgentContext.termuxScript, root);
-    // Moving to the built-in Ubuntu swaps the block, never adds a second.
+      ..writeAsStringSync(
+        // The block an older build wrote for its server in Termux.
+        '# My rules\n\nUse tabs.\n\n'
+        '${PhoneAgentContext.block('Ubuntu running in Termux (under proot)')}',
+      );
+    await _run(PhoneAgentContext.builtinScript, root);
+    // A second start swaps the block again, never adds a second.
     await _run(PhoneAgentContext.builtinScript, root);
     final text = global.readAsStringSync();
     expect(
@@ -67,18 +69,14 @@ void main() {
     },
   );
 
-  test('both phone servers write it before OpenCode starts, and a failure '
+  test('the phone server writes it before OpenCode starts, and a failure '
       'never stops the server', () {
-    for (final runtime in [TermuxRuntime.openCode2]) {
+    for (final runtime in [OpenCodeRuntime.openCode2]) {
       final script = BuiltinLinux.serverScript(runtime: runtime);
       final context = script.indexOf(PhoneAgentContext.begin);
       expect(context, greaterThan(0), reason: '$runtime');
       expect(context, lessThan(script.indexOf('exec ')));
       expect(script, contains('|| true'));
     }
-    final manager = TermuxBridge.managerScriptForTesting();
-    final context = manager.indexOf(PhoneAgentContext.begin);
-    expect(context, greaterThan(0));
-    expect(context, lessThan(manager.indexOf(' serve --hostname 127.0.0.1')));
   });
 }

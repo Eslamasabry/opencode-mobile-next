@@ -46,11 +46,12 @@ class NativeCrashStore(private val directory: File) {
         val handler = Thread.UncaughtExceptionHandler { thread, error ->
             try { write(error) } catch (_: Throwable) { }
             finally {
-                // Preserve Android's fatal handling, but never hand its logger
-                // an exception message/cause/stack carrying credential values.
-                val safe = RuntimeException("Native application error")
-                safe.stackTrace = emptyArray()
-                if (previous != null) previous.uncaughtException(thread, safe)
+                // Preserve Android's fatal handling and the opt-in crash
+                // reporter after it (Crashlytics installs itself first), but
+                // hand them only the exception classes and checked code
+                // locations: never a message, which can carry chat text,
+                // paths, host names or tokens (PRIVACY.md).
+                if (previous != null) previous.uncaughtException(thread, CrashSanitizer.sanitize(error))
             }
         }
         Thread.setDefaultUncaughtExceptionHandler(handler)
@@ -151,4 +152,50 @@ class NativeCrashStore(private val directory: File) {
                 "causes" to (1..3).mapNotNull { summary("cause.$it.") })
         }
     } catch (_: Throwable) { null }
+}
+
+/**
+ * A crash as other handlers may see it: the original exception class names
+ * and code locations, with every message dropped. Frames whose class, method
+ * or file name is not a plain identifier are left out, so a caller-supplied
+ * stack cannot smuggle text through.
+ */
+object CrashSanitizer {
+    private const val MAX_CAUSES = 4
+    private const val MAX_FRAMES = 64
+    private val identifier = Regex("^[A-Za-z0-9_.$<>-]{1,200}$")
+    private val fileName = Regex("^[A-Za-z0-9_.$-]{1,100}$")
+
+    /** Its message is the original class name only, e.g. "java.net.UnknownHostException". */
+    class SanitizedCrash(originalClass: String) : RuntimeException(originalClass) {
+        override fun fillInStackTrace(): Throwable = this
+    }
+
+    fun sanitize(error: Throwable): Throwable {
+        val chain = mutableListOf<Throwable>()
+        val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Throwable, Boolean>())
+        var current: Throwable? = error
+        while (current != null && chain.size < MAX_CAUSES && visited.add(current)) {
+            chain.add(current)
+            current = current.cause
+        }
+        var cause: Throwable? = null
+        for (original in chain.asReversed()) {
+            val name = original.javaClass.name.takeIf(identifier::matches) ?: "java.lang.Throwable"
+            val safe = if (cause == null) SanitizedCrash(name) else SanitizedCrash(name).also { it.initCause(cause) }
+            safe.stackTrace = frames(original.stackTrace)
+            cause = safe
+        }
+        return cause ?: SanitizedCrash("java.lang.Throwable")
+    }
+
+    private fun frames(original: Array<StackTraceElement>?): Array<StackTraceElement> =
+        (original ?: emptyArray()).asSequence()
+            .filter { identifier.matches(it.className) && identifier.matches(it.methodName) }
+            .take(MAX_FRAMES)
+            .map {
+                val file = it.fileName?.takeIf(fileName::matches)
+                StackTraceElement(it.className, it.methodName, file, if (file == null) -1 else it.lineNumber)
+            }
+            .toList().toTypedArray()
 }
