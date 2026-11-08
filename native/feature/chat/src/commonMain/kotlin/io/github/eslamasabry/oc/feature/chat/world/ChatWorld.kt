@@ -231,6 +231,14 @@ public interface ChatWorld {
     public suspend fun compact(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionCompact")))
 
+    /** S30 story 3: what running work this server can move to the background (Flutter `backgroundWorkSupport`). */
+    public suspend fun backgroundWorkSupport(): Outcome<io.github.eslamasabry.oc.core.model.BackgroundWorkSupport> =
+        Outcome.Ok(io.github.eslamasabry.oc.core.model.BackgroundWorkSupport.Unavailable)
+
+    /** S30 story 3: Prompt tools › Background (Flutter `backgroundSession`): the running work goes on by itself. */
+    public suspend fun backgroundWork(): Outcome<io.github.eslamasabry.oc.core.model.BackgroundWorkResult> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("experimentalCapabilities")))
+
     /**
      * Runs one shell command in this conversation's project, by its agent and model (Flutter
      * `_runShellCommand`). Gate on `ServerCapabilities.conversationShellOn`.

@@ -69,6 +69,8 @@ public data class ChatUi(
     val receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     /** S28 story 3: undone turns can come back (the launcher's `/redo`). */
     val canPutBack: Boolean = false,
+    /** S30 story 3: Prompt tools offers Background (Flutter `_canBackgroundWork`). */
+    val canBackground: Boolean = false,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -447,6 +449,9 @@ public interface ChatActions {
 
     /** The menu's "Shorten conversation": asks first (nothing runs until [confirmCompact]). */
     public fun compactRequested() {}
+
+    /** S30 story 3: Prompt tools › Background: the running work goes on by itself while the chat stays usable. */
+    public fun backgroundWork() {}
 
     /** The person said yes to "Shorten this conversation?". */
     public fun confirmCompact() {}

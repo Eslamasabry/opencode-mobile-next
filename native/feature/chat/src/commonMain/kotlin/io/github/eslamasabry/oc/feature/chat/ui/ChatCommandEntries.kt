@@ -263,7 +263,7 @@ internal fun rememberChatCommandEntries(
             serverCommands.forEach { command ->
                 add(
                     ChatCommandEntry(
-                        key = "server-${command.name}",
+                        key = SERVER_COMMAND_KEY + command.name,
                         slash = command.name,
                         title = "/" + command.name,
                         description = command.description,
@@ -275,6 +275,9 @@ internal fun rememberChatCommandEntries(
             }
     }
 }
+
+/** A server command's entry key starts with this; the "/" menu puts its `/name ` in the box instead of running it. */
+internal const val SERVER_COMMAND_KEY: String = "server-"
 
 /** S24-CHAT: the added commands' words (title to description), read once per composition. */
 private class MoreWords(

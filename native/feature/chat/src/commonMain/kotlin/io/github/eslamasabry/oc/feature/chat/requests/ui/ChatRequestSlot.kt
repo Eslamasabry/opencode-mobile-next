@@ -61,6 +61,7 @@ import io.github.eslamasabry.oc.ui.words.res.consentAlwaysAllowTitle
 import io.github.eslamasabry.oc.ui.words.res.chatUiAllMatchingRequests
 import io.github.eslamasabry.oc.ui.words.res.chatUiInThisChat
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysInProject
 import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
@@ -180,14 +181,16 @@ public fun ChatRequestSlot(
                 val patterns = request?.let { ask -> ask.always.ifEmpty { ask.patterns }.joinToString(", ") }
                 val mask = rememberKitMask()
                 KitConfirmSpec(
-                    title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle) else alwaysConfirmTitle(it.grant),
+                    title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle)
+                        else alwaysConfirmTitle(it.grant, request?.patterns?.firstOrNull()?.let(mask)),
                     confirmLabel = stringResource(Res.string.chatUiAlwaysAllow),
-                    body = if (it.invitation && patterns != null) stringResource(
+                    // S30 story 1 (Flutter `_confirmAlways`): the body always says what the grant covers and where.
+                    body = stringResource(
                         Res.string.chatRequestAlwaysScope,
-                        patterns.takeIf { scope -> scope.isNotEmpty() }?.let { scope -> KitBidi.ltr(mask(scope)) }
+                        patterns?.takeIf { scope -> scope.isNotEmpty() }?.let { scope -> KitBidi.ltr(mask(scope)) }
                             ?: stringResource(Res.string.chatUiAllMatchingRequests),
-                        stringResource(Res.string.chatUiInThisChat),
-                    ) else alwaysConfirmBody(it.grant),
+                        stringResource(if (it.invitation) Res.string.chatUiInThisChat else Res.string.chatRequestAlwaysInProject),
+                    ),
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 )
             },
@@ -323,9 +326,7 @@ private fun PermissionWaiting(
     actions: ChatRequestActions,
     onDetails: (() -> Unit)?,
 ) {
-    val mask = rememberKitMask()
     val always = card.canAlwaysAllow && !card.invitation
-    val request = card.captured?.request
     val copies = RequestCardRules.copiesTargets(card.ask)
     KitPermissionCard(
         // P-013: a file named by its one target line is not named again in the question.
@@ -356,14 +357,9 @@ private fun PermissionWaiting(
                 )
             },
         allowOnceLabel = stringResource(Res.string.approvalAllow),
-        alwaysLabel =
-            if (always)
-                alwaysExactLabel(
-                    card.ask.always,
-                    request?.always?.ifEmpty { request.patterns }.orEmpty(),
-                    mask,
-                )
-            else null,
+        // S30 story 1: Flutter's words (permission_ask.dart): "Always allow npm install", "Always allow commands like
+        // this", "Always allow edits", else "Always allow requests like this". The confirm names the exact patterns.
+        alwaysLabel = if (always) alwaysLabel(card.ask.always) else null,
         denyLabel = stringResource(Res.string.approvalDeny),
         onAllowOnce = { actions.performReviewed(card, ReviewedRequestAction.AllowOnce) },
         onAlways =

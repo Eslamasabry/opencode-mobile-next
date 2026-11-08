@@ -231,6 +231,8 @@ public class ChatViewModel(
 
     override fun compactRequested(): Unit = presenter.compactRequested()
 
+    override fun backgroundWork(): Unit = presenter.backgroundWork()
+
     override fun confirmCompact(): Unit = presenter.confirmCompact()
 
     override fun tryLinkNow(): Unit = presenter.tryLinkNow()

@@ -148,14 +148,14 @@ class ChatHeaderPresenterTest {
         assertEquals("app", ui.projectName)
         assertTrue(HeaderAction.ContinueWith in ui.menu)
         assertEquals(HeaderAction.Delete, ui.menu.last(), "destructive last")
-        assertEquals(listOf(HeaderAction.Find, HeaderAction.Details), ui.menu.take(2), "Go to first")
+        assertEquals(listOf(HeaderAction.Find, HeaderAction.Subagents, HeaderAction.Details), ui.menu.take(3), "Go to first")
     }
 
     @Test
     fun `B-163 Go to offers Schedule a prompt and opens this server's scheduled prompts from this conversation`() {
         world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
         val menu = p.current().menu
-        assertEquals(listOf(HeaderAction.Find, HeaderAction.Details, HeaderAction.Schedule), menu.take(3))
+        assertEquals(listOf(HeaderAction.Find, HeaderAction.Subagents, HeaderAction.Details, HeaderAction.Schedule), menu.take(4))
         p.choose(HeaderAction.Schedule)
         assertEquals(
             io.github.eslamasabry.oc.ui.routes.SchedulesRoute.List(
@@ -172,9 +172,9 @@ class ChatHeaderPresenterTest {
     fun `B-163 Schedule a prompt is a Go to place beside Details, not a More act`() {
         world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
         val menu = p.current().menu
-        assertEquals(listOf(HeaderAction.Details, HeaderAction.Schedule), HeaderRules.goTo(menu))
+        assertEquals(listOf(HeaderAction.Subagents, HeaderAction.Details, HeaderAction.Schedule), HeaderRules.goTo(menu))
         world.capabilities.value = ServerCapabilities(scheduledPrompts = false)
-        assertEquals(listOf(HeaderAction.Details), HeaderRules.goTo(p.current().menu))
+        assertEquals(listOf(HeaderAction.Subagents, HeaderAction.Details), HeaderRules.goTo(p.current().menu))
     }
 
     @Test
@@ -188,7 +188,11 @@ class ChatHeaderPresenterTest {
 
     @Test
     fun `B-CHAT-020 the menu offers only what this server supports`() {
-        world.capabilities.value = ServerCapabilities(sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = false)
+        world.capabilities.value =
+            ServerCapabilities(
+                sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = false,
+                projectManagement = false, sessionCompact = false,
+            )
         val menu = p.current().menu
         assertEquals(
             listOf(
@@ -403,6 +407,34 @@ class ChatHeaderPresenterTest {
         val d = assertIs<HeaderSheet.Details>(presenter.current().sheet).facts
         assertEquals(50, d.contextPercent)
         assertEquals(500L, d.totalTokens)
+    }
+
+    @Test
+    fun `S30-CHAT-003 Go to offers Subagents where the server manages projects and it opens the delegated conversations`() {
+        world.capabilities.value = ServerCapabilities(projectManagement = true)
+        val menu = p.current().menu
+        assertEquals(listOf(HeaderAction.Find, HeaderAction.Subagents, HeaderAction.Details), menu.take(3))
+        assertTrue(HeaderAction.Subagents in HeaderRules.goTo(menu), "a Go to place, as in Flutter")
+        p.choose(HeaderAction.Subagents)
+        assertEquals(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(world.ref), nav.opened.single())
+        assertFalse(p.current().menuOpen)
+        world.capabilities.value = ServerCapabilities(projectManagement = false)
+        assertFalse(HeaderAction.Subagents in p.current().menu)
+    }
+
+    @Test
+    fun `S30-CHAT-003 Do offers Compact context before Fork where the server compacts, and it waits for a prompt`() {
+        world.capabilities.value = ServerCapabilities(sessionCompact = true, sessionFork = true)
+        val menu = p.current().menu
+        assertTrue(HeaderAction.Compact in menu)
+        assertEquals(menu.indexOf(HeaderAction.Fork) - 1, menu.indexOf(HeaderAction.Compact), "$menu")
+        assertTrue(HeaderRules.needsPrompt(HeaderAction.Compact))
+        // The chat screen asks its own confirm; the header runs nothing and opens nothing.
+        p.choose(HeaderAction.Compact)
+        assertTrue(nav.opened.isEmpty())
+        assertTrue(port.calls.isEmpty())
+        world.capabilities.value = ServerCapabilities(sessionCompact = false)
+        assertFalse(HeaderAction.Compact in p.current().menu)
     }
 
     @Test

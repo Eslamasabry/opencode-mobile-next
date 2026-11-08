@@ -110,6 +110,8 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
+import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.revertStaged
 import io.github.eslamasabry.oc.ui.words.res.undoneStatus
@@ -302,6 +304,10 @@ public fun ChatScreen(
     handoffLine: (@Composable () -> Unit)? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
+    val slashCommands =
+        remember(state.ref) {
+            mutableStateOf<List<io.github.eslamasabry.oc.feature.chat.composer.ComposerSlashCommand>>(emptyList())
+        }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
     var commandInsert by
         remember(state.ref) {
@@ -414,7 +420,23 @@ public fun ChatScreen(
                 },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
                 // Read when the sheet draws, like rowChips: the approval state may change after the chrome is made.
-                promptSettings = { close -> headerState?.approval?.let { ApprovalSettingsRows(it, close) } },
+                promptSettings = { close ->
+                    headerState?.approval?.let { ApprovalSettingsRows(it, close) }
+                    // S30 story 3 (Flutter `_composerSettings` 'background'): while a reply runs work the server can
+                    // background, Background moves it there and the conversation stays usable.
+                    if (latest.canBackground)
+                        io.github.eslamasabry.oc.ui.kit.row.KitRow(
+                            title = stringResource(Res.string.chatStripBackground),
+                            supporting = stringResource(Res.string.backgroundWorkShortcut),
+                            supportingMaxLines = 2,
+                            leading = io.github.eslamasabry.oc.ui.kit.row.KitRowLeading.Glyph(KitIcons.lowPriority),
+                            onClick = {
+                                close()
+                                actions.backgroundWork()
+                            },
+                            modifier = Modifier.testTag("composer-setting-background"),
+                        )
+                },
                 freeModel = { headerState?.state?.freeModel == true },
                 agentName = { headerState?.state?.agentName ?: "OpenCode" },
                 openCommands =
@@ -425,6 +447,8 @@ public fun ChatScreen(
                             commandsOpen = true
                         }
                     },
+                // S30 story 2: read when `/word` is typed; filled below from the commands launcher's own entries.
+                slashCommands = { slashCommands.value },
                 openSavedPrompts = if (demoMode) null else prompts?.let { door -> door::open },
                 sendLater = if (demoMode) null else actions::sendLater,
                 laterScheduled = { scheduledId },
@@ -471,6 +495,22 @@ public fun ChatScreen(
                     { editorRequest = (editorRequest ?: 0L) + 1L }
                 } else null,
         )
+    // S30 story 2: the "/" menu offers what the Commands sheet offers (Flutter's one `_chatCommands` list).
+    val slashRows =
+        if (demoMode) emptyList()
+        else
+            commandEntries.map { entry ->
+                io.github.eslamasabry.oc.feature.chat.composer.ComposerSlashCommand(
+                    key = entry.key,
+                    slash = entry.slash,
+                    title = entry.title,
+                    description = entry.description,
+                    aliases = entry.aliases,
+                    inserts = entry.key.startsWith(SERVER_COMMAND_KEY),
+                    onRun = entry.onRun,
+                )
+            }
+    androidx.compose.runtime.SideEffect { slashCommands.value = slashRows }
 
     // The frame, its sibling menu and its confirmation share one modal layer. KitScreen
     // reuses this ancestor rather than creating a host scoped only to its own content.
@@ -605,7 +645,9 @@ public fun ChatScreen(
                                                 icon = KitIcons.unfoldLess,
                                             )
                                         else null,
-                                        if (state.capabilities.compact)
+                                        // S30 story 3: with the header, Compact context is a ⋯ menu entry of its own (Flutter's
+                                        // place); the plain bar keeps it here.
+                                        if (state.capabilities.compact && header == null)
                                             KitLineAction(
                                                 stringResource(Res.string.chatUiCompactSession),
                                                 actions::compactRequested,
@@ -638,6 +680,7 @@ public fun ChatScreen(
                                         onProject = actions::openFiles,
                                         onBranch = actions::openGit,
                                         canGoBack = canGoBack,
+                                        onCompact = actions::compactRequested,
                                     )
                                 }
                             } else

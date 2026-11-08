@@ -342,6 +342,9 @@ public class ChatHeaderPresenter(
                     io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(ref.profileId, ref.sessionId)
                 )
             HeaderAction.Find -> Unit // the chat screen's own find bar
+            HeaderAction.Compact -> Unit // the chat screen's own confirm (the launcher's `/compact` asks the same)
+            HeaderAction.Subagents ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(ref))
             HeaderAction.Details -> Unit // handled atomically above
             HeaderAction.Rename -> renameRequested()
             HeaderAction.ContinueWith -> {

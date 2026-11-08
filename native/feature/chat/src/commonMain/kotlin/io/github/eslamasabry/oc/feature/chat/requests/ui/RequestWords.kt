@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.engine.requests.ask.AskView
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.AnswerWords
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.approvalAllowedWhat
-import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysAllowExact
 import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysAllowedWhat
 import io.github.eslamasabry.oc.ui.words.res.approvalDenied
 import io.github.eslamasabry.oc.ui.words.res.approvalDeniedInstead
@@ -28,14 +27,13 @@ import io.github.eslamasabry.oc.ui.words.res.approvalToolTerminal
 import io.github.eslamasabry.oc.ui.words.res.approvalToolWeb
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowAnyCommand
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowCommands
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAlwaysAllowLike
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowEdits
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAllowNamed
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAnyCommandWhat
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysConfirm
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysEditsWhat
-import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysInProject
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysOn
-import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysTitle
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerAllowed
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerRejected
@@ -141,14 +139,18 @@ internal fun askSubject(targets: List<AskTarget>): String? {
     return lines.joinToString("\n")
 }
 
-/** The quiet action's name: "Always allow npm install", "Always allow edits", "Always allow commands like this". */
+/**
+ * The quiet action's name, as Flutter's card says it: "Always allow npm install", "Always allow edits", "Always allow
+ * commands like this", and "Always allow requests like this" for any other ask (Flutter `kitRequestAlwaysAllowLike`).
+ */
 @Composable
 internal fun alwaysLabel(grant: AlwaysGrant?): String =
     when (grant) {
         is AlwaysGrant.Named -> stringResource(Res.string.chatRequestAlwaysAllowNamed, ltr(grant.what))
         AlwaysGrant.Edits -> stringResource(Res.string.chatRequestAlwaysAllowEdits)
         AlwaysGrant.AnyCommand -> stringResource(Res.string.chatRequestAlwaysAllowAnyCommand)
-        AlwaysGrant.Commands, null -> stringResource(Res.string.chatRequestAlwaysAllowCommands)
+        AlwaysGrant.Commands -> stringResource(Res.string.chatRequestAlwaysAllowCommands)
+        null -> stringResource(Res.string.kitRequestAlwaysAllowLike)
     }
 
 /** What the grant covers, for the confirm; null when the request names nothing more exact than "these requests". */
@@ -161,15 +163,16 @@ private fun alwaysWhat(grant: AlwaysGrant?): String? =
         AlwaysGrant.Commands, null -> null
     }
 
-/** The confirm's question: "Always allow npm install in this project?" (what and where). */
+/**
+ * The confirm's question: "Always allow npm install in this project?" (what and where). As Flutter's
+ * `permissionAlwaysStep`, a grant with no family of its own is named by what the request asks ([asked], masked by the
+ * caller), else "these requests".
+ */
 @Composable
-internal fun alwaysConfirmTitle(grant: AlwaysGrant?): String =
-    alwaysWhat(grant)?.let { stringResource(Res.string.chatRequestAlwaysConfirm, it) } ?: stringResource(Res.string.chatRequestAlwaysTitle)
-
-/** The confirm's body states the grant's scope first. */
-@Composable
-internal fun alwaysConfirmBody(grant: AlwaysGrant?): String? =
-    alwaysWhat(grant)?.let { stringResource(Res.string.chatRequestAlwaysScope, it, stringResource(Res.string.chatRequestAlwaysInProject)) }
+internal fun alwaysConfirmTitle(grant: AlwaysGrant?, asked: String? = null): String =
+    (alwaysWhat(grant) ?: asked?.trim()?.takeIf { it.isNotEmpty() }?.let(::ltr))
+        ?.let { stringResource(Res.string.chatRequestAlwaysConfirm, it) }
+        ?: stringResource(Res.string.chatRequestAlwaysTitle)
 
 /** The collapsed line's words ("Allowed", "Always allowed", "Rejected", the chosen answer). */
 @Composable
@@ -228,15 +231,6 @@ internal fun askToolLine(ask: AskView): String {
             else -> stringResource(Res.string.approvalToolOther)
         }
     return stringResource(Res.string.approvalToolLabel, kind)
-}
-
-/** "Always allow <exact scope>": the request's own patterns, else the grant's family name. */
-@Composable
-internal fun alwaysExactLabel(grant: AlwaysGrant?, patterns: List<String>, mask: (String) -> String): String {
-    val exact = patterns.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(", ")
-    return if (exact.isNotEmpty() && grant !is AlwaysGrant.Named)
-        stringResource(Res.string.approvalAlwaysAllowExact, ltr(mask(exact)))
-    else alwaysLabel(grant)
 }
 
 /**
