@@ -205,7 +205,7 @@ internal class StatusWidgetRenderer(
     /** Opens the app at [action] (a known launch action), or just the app. Each line has its own
      * data so the intents stay apart. */
     private fun launch(action: String, tag: String): PendingIntent = PendingIntent.getActivity(context, id,
-        Intent().setClassName(context, MainActivity.COMPONENT).apply {
+        MainActivity.intent(context).apply {
             this.action = Intent.ACTION_MAIN
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP

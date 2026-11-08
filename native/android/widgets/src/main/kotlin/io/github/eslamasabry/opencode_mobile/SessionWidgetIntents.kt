@@ -10,7 +10,7 @@ import io.github.eslamasabry.oc.android.widgets.BackgroundConnectionService
 
 internal object SessionWidgetIntents {
     fun backgroundSettingsIntent(context: Context, id: Int): PendingIntent =
-        PendingIntent.getActivity(context, id, Intent().setClassName(context, MainActivity.COMPONENT).apply {
+        PendingIntent.getActivity(context, id, MainActivity.intent(context).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
             data = Uri.parse("opencode-widget://background-settings/$id")
@@ -31,7 +31,7 @@ internal object SessionWidgetIntents {
     fun chatIntent(context: Context, id: Int, snapshot: JSONObject, session: JSONObject?,
         reply: Boolean = false): PendingIntent {
         val profile = rowProfile(snapshot, session)
-        return PendingIntent.getActivity(context, id, Intent().setClassName(context, MainActivity.COMPONENT).apply {
+        return PendingIntent.getActivity(context, id, MainActivity.intent(context).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
             // The data keeps Reply's PendingIntent apart from Open's (extras do not).

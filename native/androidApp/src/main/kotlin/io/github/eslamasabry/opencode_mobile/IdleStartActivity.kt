@@ -29,7 +29,7 @@ class IdleStartActivity : ComponentActivity() {
             // The native receipt checks the exact profile, generation and recovery policy.
             graph.idleStartSource.resume()
             startActivity(
-                LaunchActions.mainActivityIntent(packageName, LaunchAction.Linux).apply {
+                LaunchActions.mainActivityIntent(this@IdleStartActivity, LaunchAction.Linux).apply {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
             )

@@ -37,6 +37,7 @@ dependencies {
     api(project(":engine:attention"))
     implementation(project(":core:domain"))
     implementation(project(":core:security"))
+    implementation(project(":core:common")) // B-175: LaunchToken
     implementation(project(":core:model"))
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(libs.androidx.core.ktx)

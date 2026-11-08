@@ -169,7 +169,7 @@ internal class UsageWidgetRenderer(private val context: Context, private val wid
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent().setClassName(context, MainActivity.COMPONENT).apply {
+            MainActivity.intent(context).apply {
                 action = Intent.ACTION_MAIN
                 flags =
                     Intent.FLAG_ACTIVITY_NEW_TASK or

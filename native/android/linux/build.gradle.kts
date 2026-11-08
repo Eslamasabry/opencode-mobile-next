@@ -24,6 +24,8 @@ fun catalogOr(alias: String, fallback: String): Any =
     extensions.getByType<VersionCatalogsExtension>().named("libs").findLibrary(alias).map<Any> { it.get() }.orElse(fallback)
 
 dependencies {
+    // B-175: the AppComponents shim stamps MainActivity intents with the per-install launch token.
+    implementation(project(":core:common"))
     implementation(catalogOr("commons-compress", "org.apache.commons:commons-compress:1.27.1"))
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit4)

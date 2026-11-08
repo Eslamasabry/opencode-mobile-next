@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 
 /** What posting an alert did (plan 11 §10, `NotificationSurface.showAlert`). */
 public sealed interface AlertShown {
@@ -333,6 +334,8 @@ public class AndroidAlertShade(
                     putExtra(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, request)
                 if (monitorToken.isNotEmpty())
                     putExtra(FrozenExtras.EXTRA_MONITOR_TOKEN, monitorToken)
+                // B-175: MainActivity opens the named conversation only with this install's launch token.
+                LaunchToken.stamp(context, this)
             }
         return PendingIntent.getActivity(
             context,

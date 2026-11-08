@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.android.tiles.PinnedShortcuts
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.opencode_mobile.MainActivity
 import io.github.eslamasabry.opencode_mobile.hooks.FileHookMarker
@@ -206,10 +207,14 @@ class FirstLaunchWiring(
                     .setShortLabel(label)
                     .setLongLabel(info.longLabel ?: label)
                     .setIntent(
-                        Intent(Intent.ACTION_MAIN)
-                            .setClass(application, MainActivity::class.java)
-                            .putExtra(LaunchActions.EXTRA_PROFILE, profile)
-                            .putExtra(LaunchActions.EXTRA_SESSION, session)
+                        // B-175: MainActivity opens the session only with this install's launch token.
+                        LaunchToken.stamp(
+                            application,
+                            Intent(Intent.ACTION_MAIN)
+                                .setClass(application, MainActivity::class.java)
+                                .putExtra(LaunchActions.EXTRA_PROFILE, profile)
+                                .putExtra(LaunchActions.EXTRA_SESSION, session),
+                        )
                     )
                     .build()
             }

@@ -87,7 +87,7 @@ class LaunchSurfacesNativeContractTest {
 
     @Test
     fun `B-ANDR-031 a tile tap sends only the whitelisted Activity action`() {
-        assertTrue(tile.contains("LaunchActions.mainActivityIntent(packageName, LaunchAction.Activity)"))
+        assertTrue(tile.contains("LaunchActions.mainActivityIntent(this, LaunchAction.Activity)"))
         assertFalse(tile.contains("EXTRA_SESSION"))
         assertFalse(tile.contains("EXTRA_PROFILE"))
         assertTrue(tile.contains("startActivityAndCollapse"))

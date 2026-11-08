@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.github.eslamasabry.oc.android.widgets.WidgetPanels
 import io.github.eslamasabry.oc.android.widgets.WidgetTextActions
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 import io.github.eslamasabry.oc.feature.widgetactions.presentation.*
 import io.github.eslamasabry.oc.feature.widgetactions.ui.WidgetActionEntries
 import io.github.eslamasabry.oc.feature.widgetactions.ui.WidgetPanelEntries
@@ -146,7 +147,11 @@ open class WidgetOverlayActivity : ComponentActivity() {
                                 messageModel.acknowledgeDestination()
                                 if (destination == WidgetActionDestination.Conversation) {
                                     startActivity(
-                                        Intent(this@WidgetOverlayActivity, MainActivity::class.java)
+                                        // B-175: MainActivity opens the conversation only with the launch token.
+                                        LaunchToken.stamp(
+                                            this@WidgetOverlayActivity,
+                                            Intent(this@WidgetOverlayActivity, MainActivity::class.java),
+                                        )
                                             .apply {
                                                 addFlags(
                                                     Intent.FLAG_ACTIVITY_CLEAR_TOP or

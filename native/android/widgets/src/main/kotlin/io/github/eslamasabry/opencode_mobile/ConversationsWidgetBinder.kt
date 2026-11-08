@@ -364,7 +364,7 @@ internal class ConversationsWidgetRows(private val env: WidgetRowEnv) {
             PendingIntent.getActivity(
                 env.context,
                 env.id,
-                Intent().setClassName(env.context, MainActivity.COMPONENT).apply {
+                MainActivity.intent(env.context).apply {
                     action = Intent.ACTION_MAIN
                     flags =
                         Intent.FLAG_ACTIVITY_NEW_TASK or

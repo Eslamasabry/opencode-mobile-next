@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -55,7 +56,8 @@ object PinnedShortcuts {
         val payload = payload(profileId, sessions)
         if (
             sessions.isNotEmpty() &&
-                !shouldPublish(prefs.getString(recordKey(profileId), null), payload)
+                !shouldPublish(prefs.getString(recordKey(profileId), null), payload) &&
+                !launcherUnstamped(context, profileId)
         )
             return true
         val untitled = context.getString(R.string.shortcut_session_untitled)
@@ -66,10 +68,14 @@ object PinnedShortcuts {
                 .setLongLabel(title)
                 .setIcon(IconCompat.createWithResource(context, R.drawable.ic_shortcut_session))
                 .setIntent(
-                    Intent(Intent.ACTION_MAIN)
-                        .setClassName(context, TilesComponents.MAIN_ACTIVITY)
-                        .putExtra(LaunchActions.EXTRA_PROFILE, profileId)
-                        .putExtra(LaunchActions.EXTRA_SESSION, pin.sessionId)
+                    // B-175: MainActivity opens the session only with this install's launch token.
+                    LaunchToken.stamp(
+                        context,
+                        Intent(Intent.ACTION_MAIN)
+                            .setClassName(context, TilesComponents.MAIN_ACTIVITY)
+                            .putExtra(LaunchActions.EXTRA_PROFILE, profileId)
+                            .putExtra(LaunchActions.EXTRA_SESSION, pin.sessionId),
+                    )
                 )
                 .build()
         }
@@ -172,6 +178,18 @@ object PinnedShortcuts {
         val trimmed = title.trim()
         return if (trimmed.length <= MAX_TITLE_LENGTH) trimmed
         else trimmed.take(MAX_TITLE_LENGTH).trimEnd()
+    }
+
+    /**
+     * B-175: a session shortcut published by an older build (or before the token changed) carries no
+     * matching launch token, so its tap would open the app plainly. Republish once to stamp it.
+     */
+    private fun launcherUnstamped(context: Context, profileId: String): Boolean {
+        val token = LaunchToken.value(context)
+        val prefix = "$ID_PREFIX$profileId:"
+        return ShortcutManagerCompat.getShortcuts(context, ShortcutManagerCompat.FLAG_MATCH_DYNAMIC).any {
+            it.id.startsWith(prefix) && it.intent.getStringExtra(LaunchToken.EXTRA) != token
+        }
     }
 
     private fun launcherIds(context: Context): List<String> =

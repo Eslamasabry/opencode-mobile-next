@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.android.tiles
 
 import android.content.Context
+import android.content.Intent
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import org.robolectric.RuntimeEnvironment
@@ -53,12 +55,17 @@ class PinnedShortcutsLauncherTest {
         val first = published.getValue("oc.session:server-1:s1")
         assertEquals("Fix auth", first.shortLabel.toString())
         assertEquals("Untitled conversation", published.getValue("oc.session:server-1:s2").shortLabel.toString())
-        // Exactly the two ids leave the app: no prompt text, busy state, timestamps or paths in the tap intent.
+        // Exactly the two ids (and the B-175 launch token) leave the app: no prompt text, busy state, timestamps or
+        // paths in the tap intent.
         for (shortcut in published.values) {
             val intent = shortcut.intent
             assertEquals(TilesComponents.MAIN_ACTIVITY, intent.component?.className)
-            assertEquals(setOf(LaunchActions.EXTRA_PROFILE, LaunchActions.EXTRA_SESSION), intent.extras!!.keySet())
+            assertEquals(
+                setOf(LaunchActions.EXTRA_PROFILE, LaunchActions.EXTRA_SESSION, LaunchToken.EXTRA),
+                intent.extras!!.keySet(),
+            )
             assertEquals("server-1", intent.getStringExtra(LaunchActions.EXTRA_PROFILE))
+            assertEquals(LaunchToken.value(context), intent.getStringExtra(LaunchToken.EXTRA))
         }
         val stored = JSONObject(record("server-1")!!)
         assertEquals("server-1", stored.getString("profileID"))
@@ -88,6 +95,27 @@ class PinnedShortcutsLauncherTest {
         assertEquals("Fix auth now", dynamic().single().shortLabel.toString())
         PinnedShortcuts.publish(context, "server-1", pins("s1" to "Fix auth now", "s2" to "Docs"))
         assertEquals(2, dynamic().size)
+    }
+
+    @Test
+    fun `B-175 a session shortcut from an older build without the token is republished with it`() {
+        PinnedShortcuts.publish(context, "server-1", pins("s1" to "Fix auth"))
+        // What an older build left on the launcher: the same id and ids, no launch token.
+        val old =
+            ShortcutInfoCompat.Builder(context, PinnedShortcuts.shortcutId("server-1", "s1"))
+                .setShortLabel("Fix auth")
+                .setIntent(
+                    Intent(Intent.ACTION_MAIN)
+                        .setClassName(context, TilesComponents.MAIN_ACTIVITY)
+                        .putExtra(LaunchActions.EXTRA_PROFILE, "server-1")
+                        .putExtra(LaunchActions.EXTRA_SESSION, "s1")
+                )
+                .build()
+        ShortcutManagerCompat.setDynamicShortcuts(context, listOf(old))
+        assertNull(dynamic().single().intent.getStringExtra(LaunchToken.EXTRA))
+
+        assertTrue(PinnedShortcuts.publish(context, "server-1", pins("s1" to "Fix auth")))
+        assertEquals(LaunchToken.value(context), dynamic().single().intent.getStringExtra(LaunchToken.EXTRA))
     }
 
     @Test
