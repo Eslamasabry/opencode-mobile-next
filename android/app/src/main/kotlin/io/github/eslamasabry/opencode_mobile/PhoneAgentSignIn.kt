@@ -16,7 +16,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
          * here made every check after the 2.1.294 update fail, which the
          * picker shows as "Sign in needed" even when signed in.
          */
-        val TESTED_CLAUDE_VERSIONS = setOf("2.1.283 (Claude Code)", "2.1.294 (Claude Code)")
+        val TESTED_CLAUDE_VERSIONS = setOf("2.1.283 (Claude Code)", "2.1.294 (Claude Code)", "2.1.319 (Claude Code)")
     }
 
     private val lock = Any()

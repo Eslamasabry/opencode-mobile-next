@@ -137,6 +137,7 @@ void main() {
     test('Claude Code: the previous and the current pin are accepted', () {
       expect(claudeCodeSupports('2.1.283'), isTrue);
       expect(claudeCodeSupports('2.1.294'), isTrue);
+      expect(claudeCodeSupports('2.1.319'), isTrue);
       expect(claudeCodeSupports('2.1.282'), isFalse);
       expect(claudeCodeSupports(null), isFalse);
     });

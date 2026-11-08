@@ -192,7 +192,7 @@ void main() {
         catalog.byId('gemini')!.artifactFor(AgentArchitecture.arm64)!.format,
         AgentArtifactFormat.npmTarGz,
       );
-      expect(catalog.byId('claude')!.recipe!.version, '2.1.294');
+      expect(catalog.byId('claude')!.recipe!.version, '2.1.319');
     },
   );
 
@@ -203,7 +203,7 @@ void main() {
     expect(entry.providerId, 'antigravity');
     expect(entry.route, AgentRoute.acpPaseo);
     expect(entry.signInMethod, AgentSignInMethod.browserOAuthHost);
-    expect(entry.recipe!.version, '1.5.0');
+    expect(entry.recipe!.version, '1.5.3');
     expect(entry.recipe!.executable, 'agy');
     expect(entry.recipe!.launchArgs, ['acp', '--disable-telemetry']);
     expect(entry.recipe!.signInArgs, ['acp', '--login']);
@@ -211,23 +211,23 @@ void main() {
       AgentArchitecture.arm64: (
         path: 'linux-arm/cli_linux_arm64.tar.gz',
         sha256:
-            '87e73a5ab4ecb3a9668660d259dafd13f5443149da0113664d59129a21a62ba4',
-        bytes: 66011999,
-        installedBytes: 227627384,
+            '2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675',
+        bytes: 69843447,
+        installedBytes: 235622776,
       ),
       AgentArchitecture.x64: (
         path: 'linux-x64/cli_linux_x64.tar.gz',
         sha256:
-            'f65e365a67be49abdaf92f5669c3157bd4b9c569f6b9f448340b00ca261b0f01',
-        bytes: 69781910,
-        installedBytes: 238604688,
+            '1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807',
+        bytes: 73694700,
+        installedBytes: 246837648,
       ),
     };
     for (final MapEntry(key: architecture, value: pin) in pins.entries) {
       final artifact = entry.artifactFor(architecture)!;
       expect(
         artifact.url.toString(),
-        'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/${pin.path}',
+        'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/${pin.path}',
       );
       expect(artifact.sha256, pin.sha256);
       expect(artifact.format, AgentArtifactFormat.tarGz);
