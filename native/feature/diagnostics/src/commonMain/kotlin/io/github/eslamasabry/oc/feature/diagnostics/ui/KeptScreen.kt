@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.diagnostics.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -125,6 +126,7 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

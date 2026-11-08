@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ public fun KitScreen(
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = tokens.gutter.dp),

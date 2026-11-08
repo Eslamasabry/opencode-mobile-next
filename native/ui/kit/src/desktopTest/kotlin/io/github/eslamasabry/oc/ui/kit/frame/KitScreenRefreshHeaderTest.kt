@@ -48,6 +48,7 @@ class KitScreenRefreshHeaderTest {
                     page = true,
                     header = { KitText("Conversations", Modifier.testTag("title").fillMaxWidth().height(80.dp)) },
                     refresh = KitScreenRefresh(refreshing = false, onRefresh = { refreshes++ }, state = pull),
+                    edges = KitScreenEdges.Bleed,
                 ) {
                     LazyColumn(Modifier.fillMaxSize().testTag("list")) {
                         items(60) { KitText("Row $it", Modifier.fillMaxWidth().height(56.dp)) }

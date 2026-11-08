@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,7 +56,9 @@ class E20S13ChatHeaderTest {
     @Composable
     private fun Page(bubble: Color, words: Boolean) {
         val frost = rememberKitFrostState()
-        KitScreen(page = true, overlayChrome = true, frost = frost, topBar = { Header() }) {
+        KitScreen(page = true, overlayChrome = true, frost = frost, topBar = { Header() },
+            edges = KitScreenEdges.Bleed,
+        ) {
             Box(Modifier.fillMaxSize().kitFrostSource(frost)) {
                 Column(
                     Modifier.fillMaxSize().verticalScroll(rememberScrollState(160)),

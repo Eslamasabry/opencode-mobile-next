@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,6 +117,7 @@ class S7PolishLooksTest {
                     KitText("2 need you", Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 }
             },
+            edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(Modifier.fillMaxSize().testTag("list")) {
                 items(40) { KitRow("Conversation $it", supporting = "laptop · 2 min", onClick = {}) }

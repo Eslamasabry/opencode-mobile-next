@@ -93,6 +93,7 @@ public fun KitStartingConversation(
                 KitChip(model, icon = KitIcons.model)
             }
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

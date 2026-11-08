@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -100,6 +101,7 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                 }
             } else null,
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             when (state.step) {

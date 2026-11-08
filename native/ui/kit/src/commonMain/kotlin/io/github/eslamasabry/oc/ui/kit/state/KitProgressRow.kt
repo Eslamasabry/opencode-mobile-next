@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.Canvas
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
@@ -31,7 +32,7 @@ public fun KitProgressRow(title: String, value: Float?, modifier: Modifier = Mod
     }
     val words = listOfNotNull(valueLabel?.takeIf(String::isNotBlank), limit).joinToString(" · ")
     Column(modifier.fillMaxWidth().heightIn(min = tokens.rowHeightTwo.dp)
-        .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
+        .padding(horizontal = kitPageGutter(), vertical = Space.S2.dp)
         .semantics(mergeDescendants = true) {}) {
         KitText(title, role = TypeRole.RowTitle)
         if (words.isNotEmpty()) {

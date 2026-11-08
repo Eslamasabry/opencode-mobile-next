@@ -58,6 +58,7 @@ public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminal
         },
         loading = state.busy,
         loadingLabel = working,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),

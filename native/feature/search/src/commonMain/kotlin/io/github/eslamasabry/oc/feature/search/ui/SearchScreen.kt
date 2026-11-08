@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.search.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -139,6 +140,7 @@ public fun SearchScreen(
         loading = state.phase == SearchPhase.Searching,
         loadingLabel = stringResource(Res.string.p12SearchSearching),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             if (state.servers.size > 1) {

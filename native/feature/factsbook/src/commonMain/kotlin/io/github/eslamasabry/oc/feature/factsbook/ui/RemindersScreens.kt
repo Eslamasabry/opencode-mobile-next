@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -119,6 +120,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
         width = KitScreenWidth.Reading,
         loading = state.loading && reminders != null,
         loadingLabel = title,
+        edges = KitScreenEdges.Bleed,
     ) {
         when {
             reminders == null && state.error == null -> KitSkeletonRows()
@@ -243,6 +245,7 @@ public fun ReminderEditScreen(state: ReminderEditUi, actions: ReminderEditAction
                             if (state.fromCapture) KitAction(stringResource(Res.string.fbReminderChange), actions::changeWritten) else null,
                     )
                 }),
+        edges = KitScreenEdges.Bleed,
     ) {
         if (draft == null) {
             if (state.error == null) KitSkeletonRows()

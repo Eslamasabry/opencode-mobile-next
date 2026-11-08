@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.search.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ public fun ShortcutsScreen(state: ShortcutsUi, actions: ShortcutsActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn {
             item { KitText(stringResource(Res.string.nativeSearchShortcutsBody)) }

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.setup
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -117,7 +118,7 @@ public fun KitProgressRing(
                         append(whole)
                         withStyle(SpanStyle(fontSize = (diameter * if (value != null) .13f else .1f).sp, letterSpacing = 0.sp)) { append(suffix) } // F: lib/ui/kit/kit_progress_ring.dart:228,259
                     }
-                    BasicText(text, style = big, maxLines = 1)
+                    BasicText(text, style = big, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (value == null || caption != null) {
                         Spacer(Modifier.height(Space.S2.dp))
                         KitText(caption ?: stepsLabel, role = TypeRole.Secondary, textAlign = TextAlign.Center)

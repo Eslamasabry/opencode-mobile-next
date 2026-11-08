@@ -49,6 +49,7 @@ public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions) 
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),

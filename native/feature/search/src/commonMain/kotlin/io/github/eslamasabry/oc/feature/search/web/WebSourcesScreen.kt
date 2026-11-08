@@ -50,6 +50,7 @@ public fun WebSourcesScreen(state: WebSourcesUi, actions: WebSourcesActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

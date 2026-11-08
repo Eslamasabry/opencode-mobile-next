@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agents.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -193,6 +194,7 @@ public fun AgentsScreen(
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

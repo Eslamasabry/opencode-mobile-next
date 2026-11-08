@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,7 +64,6 @@ import io.github.eslamasabry.oc.ui.kit.team.KitPromoteCard
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamFinding
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamItem
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamState
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -105,7 +105,7 @@ public fun TeamTaskScreen(state: TeamTaskUi, actions: TeamTaskActions) {
                         KitButton(
                             stringResource(Res.string.teamProjectTaskMessage),
                             { messaging = true },
-                            Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                            Modifier.fillMaxWidth().padding(vertical = Space.S2.dp),
                             role = KitButtonRole.Secondary,
                             enabled = enabled,
                         )
@@ -255,7 +255,7 @@ private fun Conversation(
     ignore: () -> Unit,
     move: (String, String) -> Unit,
 ) {
-    val pad = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+    val pad = Modifier.padding(horizontal = kitPageGutter())
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
@@ -598,6 +598,6 @@ private fun Controls(t: TaskView, actions: TeamTaskActions, enabled: KitEnabled)
             KitAction(stringResource(Res.string.teamProjectTaskStop), { actions.ask(TaskConfirm.Stop) }, enabled, destructive = true)
                 .takeIf { c.stop },
         )
-    KitActionBlock(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp), tertiary = tertiary)
+    KitActionBlock(Modifier.padding(horizontal = kitPageGutter()), tertiary = tertiary)
 }
 

@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -85,19 +88,25 @@ public fun KitViewerDocument(
             .copy(color = colors.text1)
     val rendering = formatted != null && !showSource && !finding
     Column(modifier.fillMaxSize()) {
+        // C05: the document's tools are text actions with their glyphs and a full step between them, on the page's
+        // gutter; they used to run together as one line of words ("Copy contents Find in file Show source").
         FlowRow(
-            Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp),
-            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+            Modifier.fillMaxWidth().padding(horizontal = kitPageGutter()).testTag("kit-viewer-tools"),
+            horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
         ) {
             KitButton(
                 stringResource(Res.string.kitViewerCopyContents),
                 { clipboard.setText(AnnotatedString(source)) },
                 role = KitButtonRole.Tertiary,
+                icon = KitIcons.copy,
+                expand = false,
             )
             KitButton(
                 stringResource(Res.string.kitViewerFind),
                 { finding = !finding },
                 role = KitButtonRole.Tertiary,
+                icon = KitIcons.search,
+                expand = false,
             )
             if (formatted != null)
                 KitButton(
@@ -107,6 +116,8 @@ public fun KitViewerDocument(
                     ),
                     { showSource = !showSource },
                     role = KitButtonRole.Tertiary,
+                    icon = KitIcons.code,
+                    expand = false,
                 )
             if (!rendering)
                 KitButton(
@@ -114,6 +125,8 @@ public fun KitViewerDocument(
                     { wrap = !wrap },
                     modifier = Modifier.semantics { selected = wrap },
                     role = KitButtonRole.Tertiary,
+                    icon = KitIcons.wrapText,
+                    expand = false,
                 )
         }
         if (finding) {

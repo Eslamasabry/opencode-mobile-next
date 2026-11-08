@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.image
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusable
@@ -400,6 +401,7 @@ public fun KitImageMarkup(
                     )
                 }
             },
+            edges = KitScreenEdges.Bleed,
         ) {
             val shown = image
             when {

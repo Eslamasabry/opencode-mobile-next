@@ -230,7 +230,7 @@ public fun KitJumpPillLayer(
     pill: @Composable () -> Unit,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val gutter = LocalKitTokens.current.gutter.dp
+    val gutter = kitPageGutter()
     Box(modifier) {
         content()
         val at = if (edge == KitJumpEdge.Bottom) Alignment.BottomCenter else Alignment.TopCenter

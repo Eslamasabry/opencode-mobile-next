@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -117,6 +118,7 @@ public fun AreasScreen(state: AreasUi, actions: AreasActions) {
         width = KitScreenWidth.Reading,
         loading = (state.loading && state.areas != null) || state.working.isNotEmpty(),
         loadingLabel = title,
+        edges = KitScreenEdges.Bleed,
     ) {
         val areas = state.areas
         when {
@@ -215,6 +217,7 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
         width = KitScreenWidth.Reading,
         loading = state.working,
         loadingLabel = stringResource(Res.string.fbThingFacts),
+        edges = KitScreenEdges.Bleed,
     ) {
         when {
             thing == null && state.error == null -> KitSkeletonRows()
@@ -326,6 +329,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions) {
         width = KitScreenWidth.Reading,
         loading = result == null && state.error == null,
         loadingLabel = title,
+        edges = KitScreenEdges.Bleed,
     ) {
         when {
             state.error != null -> ErrorState(state.error) { actions.search(state.query) }
@@ -390,6 +394,7 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                     ),
             )
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(Modifier.fillMaxSize()) {
             item("form") {
@@ -514,6 +519,7 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
         width = KitScreenWidth.Reading,
         loading = state.working,
         loadingLabel = title,
+        edges = KitScreenEdges.Bleed,
     ) {
         if (state.entries.isEmpty()) {
             KitStateView(
@@ -638,6 +644,7 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
                     ),
             )
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(Modifier.fillMaxSize()) {
             item("form") {

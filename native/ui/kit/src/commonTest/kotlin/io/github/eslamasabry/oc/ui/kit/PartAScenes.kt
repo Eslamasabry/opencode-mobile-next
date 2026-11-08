@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -138,6 +139,7 @@ fun ScreenScene(w: PartAWords, status: KitStatus? = null, loading: Boolean = fal
         loadingLabel = w.search,
         width = width,
         bottom = { KitButton(w.newChat, onClick = {}, modifier = Modifier.fillMaxWidth()) },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("scene-body")) { RowsScene(w) }
     }

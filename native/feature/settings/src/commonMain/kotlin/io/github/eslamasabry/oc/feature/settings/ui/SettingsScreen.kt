@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -367,6 +368,7 @@ internal fun SettingsFrame(
             if (state.page == SettingsPage.Appearance) KitScreenWidth.List
             else KitScreenWidth.Reading,
         page = true,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize()) {
             Column(

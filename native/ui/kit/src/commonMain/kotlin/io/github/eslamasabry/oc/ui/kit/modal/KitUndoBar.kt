@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.animation.AnimatedVisibility
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -118,13 +119,13 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
         Row(
             Modifier.widthIn(max = UNDO_MAX_DP.dp)
                 .fillMaxWidth()
-                .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
+                .padding(horizontal = kitPageGutter(), vertical = Space.S2.dp)
                 .clip(shape)
                 .background(colors.surface2)
                 .border(1.dp, colors.hairline, shape)
                 .heightIn(min = tokens.rowHeightOne.dp)
                 // Undo's words keep a 12 dp margin from the bar's end (they sat 4 dp from the edge).
-                .padding(start = tokens.gutter.dp, end = Space.S3.dp)
+                .padding(start = kitPageGutter(), end = Space.S3.dp)
                 .testTag("kit-undo")
                 .semantics(mergeDescendants = false) { liveRegion = LiveRegionMode.Polite },
             verticalAlignment = Alignment.CenterVertically,

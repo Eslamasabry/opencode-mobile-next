@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.monitor.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ public fun MonitorScreen(state: MonitorUi, actions: MonitorActions) {
         loading = state.checking,
         loadingLabel = stringResource(Res.string.monitorNativeChecking),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             item { KitGroupNote(stringResource(Res.string.monitorNativeForegroundOnly)) }

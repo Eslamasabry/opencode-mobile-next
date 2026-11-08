@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -34,7 +35,8 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
             )
-        }
+        },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             if (state.loading) KitSkeletonRows()

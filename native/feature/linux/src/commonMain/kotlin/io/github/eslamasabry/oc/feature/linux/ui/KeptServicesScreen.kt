@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -89,6 +90,7 @@ public fun KeptServicesScreen(state: KeptServicesUi, actions: KeptServicesAction
         },
         width = KitScreenWidth.Reading,
         loading = state.working,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             if (state.loading && state.services.isEmpty()) KitSkeletonRows()

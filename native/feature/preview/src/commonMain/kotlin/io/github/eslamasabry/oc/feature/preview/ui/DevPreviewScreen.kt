@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.preview.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -256,6 +257,7 @@ public fun DevPreviewScreen(
                             }
                         })
                     else null,
+                edges = KitScreenEdges.Bleed,
             ) {
                 Box(Modifier.fillMaxSize()) {
                     when {

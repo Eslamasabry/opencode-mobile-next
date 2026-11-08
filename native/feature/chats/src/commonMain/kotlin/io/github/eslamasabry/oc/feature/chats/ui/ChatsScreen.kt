@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -262,6 +263,7 @@ public fun ChatsScreen(
                 enabled = state.home.opening == null && state.phase != ChatsPhase.Opening,
             ),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
       Box(Modifier.fillMaxSize()) {
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again (KitRefresh); not

@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,6 +96,7 @@ class E20S30ChromeVeilTest {
                         seen.veil = LocalKitChromeVeil.current
                         Box(Modifier.fillMaxWidth().height(64.dp).testTag("composer"))
                     },
+                    edges = KitScreenEdges.Bleed,
                 ) {
                     seen.padding = kitScreenChromePadding()
                     Box(Modifier.fillMaxSize().kitFrostSource(source))

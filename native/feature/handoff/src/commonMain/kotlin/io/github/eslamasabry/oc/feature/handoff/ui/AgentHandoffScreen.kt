@@ -51,6 +51,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (state.loading) item { KitSkeletonRows(count = 3) }
