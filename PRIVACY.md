@@ -48,6 +48,11 @@ The front never receives a password from the app.
 
 ## Optional crash reports, usage and app health
 
+For a plain-words summary of why we collect this, what it never includes and
+how we use it, see [About analytics and crash
+reports](docs/releases/v2.1.5+63.md#about-analytics-and-crash-reports) in the
+2.1.5 release notes.
+
 Off by default, and opt-in only. There are two separate switches in
 **Settings > Privacy and data**, and a third choice that is asked every time:
 
