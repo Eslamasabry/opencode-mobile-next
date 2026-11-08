@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitFactRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -175,6 +176,7 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
     val thing = state.thing
     var adding by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Fact?>(null) }
+    KitSheetHost(Modifier.fillMaxSize()) {
     KitScreen(
         topBar = { BackBar(thing?.let { bidiName(it.title) } ?: stringResource(Res.string.fbAboutYouTitle), actions::back, thing?.let { kindWords(it.kind) }) },
         width = KitScreenWidth.Reading,
@@ -276,6 +278,7 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
         },
         onDismissRequest = { editing = null },
     )
+    }
 }
 
 // ---- Search -------------------------------------------------------------------------------------------------------
@@ -439,6 +442,7 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
 @Composable
 public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
     val title = stringResource(Res.string.fbNotSavedTitle)
+    KitSheetHost(Modifier.fillMaxSize()) {
     KitScreen(
         topBar = { BackBar(title, actions::back) },
         width = KitScreenWidth.Reading,
@@ -495,6 +499,7 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
         onConfirm = actions::discard,
         onCancel = actions::cancelDiscard,
     )
+    }
 }
 
 @Composable
