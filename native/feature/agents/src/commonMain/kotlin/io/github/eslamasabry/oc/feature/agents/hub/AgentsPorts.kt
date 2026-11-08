@@ -137,7 +137,17 @@ public data class PhoneAgentsState(
     val helperMayHaveBeenStoppedByAndroid: Boolean = false,
     /** Runtime owner, independent of the currently selected remote server. */
     val owner: ProfileId? = null,
+    /**
+     * Where the phone agents' conversations live once they are connected (the helper's own profile). It is not a
+     * computer: the Agents page never lists it under On computers.
+     */
+    val conversations: ProfileId? = null,
+    /** This phone as the status line names it ("arm64 · Android 15"); null where it is not known. */
+    val device: PhoneDevice? = null,
 )
+
+/** The phone's processor ("arm64") and Android version ("15"), as read by the platform. */
+public data class PhoneDevice(val processor: String, val android: String)
 
 public data class PhoneAgentRow(
     val id: String,
@@ -167,6 +177,17 @@ public enum class PhoneAgentRemovalIssue {
     Unconfirmed,
     Unavailable,
 }
+
+/** Installed agents: the ones whose helper connection is worth making (Flutter `_installed`). */
+public fun phoneInstalledAgents(state: PhoneAgentsState): Set<String> =
+    state.agents.filter { it.status.installed }.map { it.id }.toSet()
+
+/** Installed on this phone: not missing, not out of reach and not still being looked for. */
+public val PhoneAgentStatus.installed: Boolean
+    get() =
+        this != PhoneAgentStatus.NotInstalled &&
+            this != PhoneAgentStatus.Unavailable &&
+            this != PhoneAgentStatus.Checking
 
 /** The row states of Flutter `agentsState*` (17 §1.4 order); the words live in the screen. */
 public enum class PhoneAgentStatus {
@@ -219,7 +240,10 @@ public enum class PhoneAgentInstallIssue {
     Unavailable,
 }
 
-/** The visible local helper action. Platform bindings must use native owner admission. */
+/**
+ * Starts this phone's agent helper and connects its conversations. The Agents page calls it on its own once an agent is
+ * installed (never as a button, never while none is). Platform bindings must use native owner admission.
+ */
 public fun interface PhoneAgentHostStarter {
     public suspend fun connect(): Outcome<Unit>
 }
