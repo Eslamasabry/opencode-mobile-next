@@ -76,32 +76,23 @@ class LiquidEdgeTest {
     // ---- look
 
     @Test
-    fun `B-KIT-003 the lens bends only in a rim of 12 dp or a fifth of the shorter side`() {
-        assertEquals(12f * 3f, LiquidEdge.rimPx(56f * 3f * 4f, 3f))
-        assertEquals(.2f * 40f * 3f, LiquidEdge.rimPx(40f * 3f, 3f))
-        for (role in LiquidRole.entries) for (dark in listOf(true, false)) {
-            val r = LiquidEdge.recipe(role, dark)
-            assertTrue(r.refractionDp in 6f..20f, "$role refraction ${r.refractionDp} stays moderate")
-        }
+    fun `B-KIT-003 the lens bends in a rim of at most its share of the shorter side, the middle stays calm`() {
+        val bar = LiquidEdge.recipe(LiquidRole.Bar, dark = true)
+        assertEquals(bar.rimMaxDp * 3f, LiquidEdge.rimPx(400f * 3f, 3f, bar))
+        assertEquals(bar.rimShare * 56f * 3f, LiquidEdge.rimPx(56f * 3f, 3f, bar))
+        assertTrue(bar.rimShare < .5f, "a bar keeps a calm middle")
+        assertTrue(LiquidEdge.recipe(LiquidRole.Action, true).depth, "the + is a drop of glass")
+        assertTrue(!bar.depth, "no depth effect on panes that carry words")
     }
 
     @Test
-    fun `B-KIT-003 text1, text2 and text3 read on every pane over any content, in every pack, light and dark`() {
+    fun `B-KIT-003 text1, text2 and text3 read on their words plate over any content, in every pack, light and dark`() {
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val roles = ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null)
             for (role in LiquidRole.entries) {
-                val face = LiquidEdge.face(roles, role)
-                val (darkEnd, brightEnd) = LiquidEdge.backdropEnds(LiquidEdge.recipe(role, dark))
-                val solid = LiquidEdge.solidOf(roles, role)
-                val inks =
-                    if (role == LiquidRole.Action) listOf(roles.onAccent to minOf(3.0, wcagContrast(roles.onAccent, solid)))
-                    else listOf(roles.text1, roles.text2, roles.text3).map { it to minOf(4.5, wcagContrast(it, solid)) }
-                for (fill in listOfNotNull(face.fill, face.fillStart)) for (under in listOf(roles.ground.solid(), darkEnd, brightEnd)) {
-                    for ((ink, target) in inks) {
-                        val c = wcagContrast(ink, fill.over(under))
-                        assertTrue(c >= target - 1e-3, "$pack dark=$dark $role: $ink on ${fill.over(under)} is $c < $target")
-                    }
-                }
+                val target = LiquidEdge.inks(roles, role).minOf { it.second }
+                val worst = LiquidEdge.worstContrast(roles, role)
+                assertTrue(worst >= target - 1e-3, "$pack dark=$dark $role: worst $worst < $target")
             }
         }
     }
@@ -118,16 +109,14 @@ class LiquidEdgeTest {
     }
 
     @Test
-    fun `B-KIT-003 sheets keep their tint floor and Graphite's bars stay glass`() {
+    fun `B-KIT-003 the panes are clear glass and the words get the plate`() {
         for (dark in listOf(true, false)) {
             val roles = ThemeResolver.roles(PackId.Opencode, null, dark, saver = false, dynamic = null)
-            val sheet = LiquidEdge.face(roles, LiquidRole.Sheet)
-            assertTrue(sheet.fill!!.alpha / 255f >= LiquidEdge.tintFloor(LiquidRole.Sheet, dark) - .01f, "dark=$dark sheet")
-            for (role in listOf(LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Pill)) {
+            for (role in LiquidRole.entries.filter { it != LiquidRole.Action }) {
                 val a = LiquidEdge.face(roles, role).fill!!.alpha / 255f
-                // Dark: text3 at 4.5:1 over a white page behind the pane needs about 0.8; light keeps Glass's 0.62.
-                assertTrue(a < (if (dark) .85f else .70f), "dark=$dark $role tint $a: still glass, not a solid face")
+                assertTrue(a in .1f..0.42f, "dark=$dark $role tint $a: clear glass")
             }
+            assertTrue(LiquidEdge.wordsPlate(roles, LiquidRole.Bar).alpha > 0, "dark=$dark: the bar's words need their plate")
         }
     }
 

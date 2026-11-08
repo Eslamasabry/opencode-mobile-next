@@ -40,6 +40,8 @@ import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.TraversableNode
+import androidx.compose.ui.node.findNearestAncestor
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -267,9 +269,88 @@ private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, s
                 frostBlurDp = GlassSpec.FLOAT_FROST,
             )
         }
+    val plate = remember(roles, role) { Color(LiquidEdge.wordsPlate(roles, role).v) }
     val latest by rememberUpdatedState(transform)
-    return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot()
+    return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(plate)
 }
+
+/** Marks a liquid pane for the words on it: each KitText inside lies on [plate] ([kitWordsPlate]). */
+internal fun Modifier.kitLiquidPlateHost(plate: Color): Modifier = this then PlateHostElement(plate)
+
+private object LiquidPlateKey
+
+private data class PlateHostElement(val plate: Color) : ModifierNodeElement<PlateHostNode>() {
+    override fun create(): PlateHostNode = PlateHostNode(plate)
+
+    override fun update(node: PlateHostNode) {
+        node.plate = plate
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitLiquidPlateHost"
+    }
+}
+
+private class PlateHostNode(var plate: Color) : Modifier.Node(), TraversableNode {
+    override val traverseKey: Any get() = LiquidPlateKey
+}
+
+/**
+ * The words plate (GlassSpec.plateFor, hook H10) behind a text on a liquid pane: a soft rounded plate just round the
+ * words, at the alpha that keeps text1/2/3 at their contrast over any content behind the clear pane
+ * (`LiquidEdge.wordsPlate`). Outside a liquid pane, and under every other style, it draws nothing.
+ */
+public fun Modifier.kitWordsPlate(): Modifier = this then WordsPlateElement
+
+private object WordsPlateElement : ModifierNodeElement<WordsPlateNode>() {
+    override fun create(): WordsPlateNode = WordsPlateNode()
+
+    override fun update(node: WordsPlateNode) {}
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitWordsPlate"
+    }
+
+    override fun hashCode(): Int = 0x57_50_4C
+
+    override fun equals(other: Any?): Boolean = other === this
+}
+
+private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
+    private var host: PlateHostNode? = null
+
+    override fun onAttach() {
+        host = findNearestAncestor(LiquidPlateKey) as? PlateHostNode
+    }
+
+    override fun onDetach() {
+        host = null
+    }
+
+    override fun ContentDrawScope.draw() {
+        val plate = host?.plate
+        if (plate != null && plate.alpha > 0f && size.width > 0f && size.height > 0f) {
+            val padX = WORDS_PLATE_PAD_X.dp.toPx()
+            val padY = WORDS_PLATE_PAD_Y.dp.toPx()
+            val feather = WORDS_PLATE_FEATHER.dp.toPx()
+            val r = WORDS_PLATE_RADIUS.dp.toPx()
+            // A soft edge round the plate, then the plate itself at its full alpha behind the words.
+            drawRoundRect(
+                plate.copy(alpha = plate.alpha * .4f),
+                Offset(-padX - feather, -padY - feather),
+                Size(size.width + 2 * (padX + feather), size.height + 2 * (padY + feather)),
+                androidx.compose.ui.geometry.CornerRadius(r + feather),
+            )
+            drawRoundRect(plate, Offset(-padX, -padY), Size(size.width + 2 * padX, size.height + 2 * padY), androidx.compose.ui.geometry.CornerRadius(r))
+        }
+        drawContent()
+    }
+}
+
+internal const val WORDS_PLATE_PAD_X: Float = 6f
+internal const val WORDS_PLATE_PAD_Y: Float = 2f
+internal const val WORDS_PLATE_FEATHER: Float = 3f
+internal const val WORDS_PLATE_RADIUS: Float = 10f
 
 /** The rim light's width (and its soft blur), in dp: a soft line, never a hairline. */
 internal const val RIM_LIGHT_DP: Float = 1.5f

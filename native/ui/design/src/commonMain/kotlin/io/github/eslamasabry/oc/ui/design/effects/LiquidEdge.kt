@@ -60,14 +60,21 @@ public data class LiquidRecipe(
     val blurDp: Float,
     val refractionDp: Float,
     val shadowAlpha: Float,
+    /** The rim the lens bends in, at most this many dp and this share of the shorter side ([LiquidEdge.rimPx]). */
+    val rimMaxDp: Float = LiquidEdge.RIM_MAX_DP,
+    val rimShare: Float = LiquidEdge.RIM_SHARE,
+    /** A drop of glass (the +, a pill): the middle reads thicker too. */
+    val depth: Boolean = false,
+    /** How much of the pane's Glass tint lies over the backdrop (the words get their own plate). */
+    val tint: Float = .2f,
 )
 
 public object LiquidEdge {
-    /** The rim the lens bends in: at most this many dp ... */
-    public const val RIM_MAX_DP: Float = 12f
+    /** The rim the lens bends in on a large pane: at most this many dp ... */
+    public const val RIM_MAX_DP: Float = 22f
 
-    /** ... and at most this share of the pane's shorter side, so the middle, where words and the caret sit, stays calm. */
-    public const val RIM_SHARE: Float = .20f
+    /** ... and at most this share of the pane's shorter side; the middle, where the words sit, stays calm. */
+    public const val RIM_SHARE: Float = .40f
 
     /**
      * The liquid surfaces one window may hold at once. A pane costs 1; a page the kit records for panes over it costs 1,
@@ -76,32 +83,36 @@ public object LiquidEdge {
      */
     public const val BUDGET: Int = 4
 
-    /** How much colour the glass lifts from what lies behind it (the library's vibrancy is 1.5). */
-    public const val SATURATION: Float = 1.3f
+    /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
+    public const val SATURATION: Float = 1.45f
 
-    /** How far the glass presses the backdrop's contrast together (1 keeps it). */
-    public const val PRESS: Float = .28f
+    /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
+    public const val PRESS: Float = .86f
 
-    /**
-     * How far the pressed backdrop moves towards the theme: darker in a dark theme, lighter in a light one. Dark goes
-     * further: text3 must keep 4.5:1 over a white page behind a dark pane, and a darker backdrop needs less tint.
-     */
-    public const val PRESS_LIFT_DARK: Float = .48f
-    public const val PRESS_LIFT_LIGHT: Float = .40f
+    /** How far the backdrop moves towards the theme: a little darker in a dark theme, a little lighter in a light one. */
+    public const val PRESS_LIFT_DARK: Float = .06f
+    public const val PRESS_LIFT_LIGHT: Float = .06f
 
     /** The rim width the lens bends in, for a pane whose shorter side is [shortSidePx], at [density] px per dp. */
-    public fun rimPx(shortSidePx: Float, density: Float): Float = minOf(RIM_MAX_DP * density, RIM_SHARE * shortSidePx)
+    public fun rimPx(shortSidePx: Float, density: Float, recipe: LiquidRecipe? = null): Float =
+        minOf((recipe?.rimMaxDp ?: RIM_MAX_DP) * density, (recipe?.rimShare ?: RIM_SHARE) * shortSidePx)
 
-    /** The recipe for [role] in a [dark] or light theme: thin bars bend gently; sheets and menus blur more (more words). */
+    /**
+     * The recipe for [role] in a [dark] or light theme. The panes are clear glass (a thin tint: 0.18–0.34), bent hard in
+     * a wide rim so the content visibly curves at the edges; the + and the pills are drops (depth, lens to the middle).
+     * The words on a pane lie on their own plate ([wordsPlate]), so the pane itself never has to be thick.
+     */
     public fun recipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
+        fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false) =
+            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, shadow, rimMax, share, depth, if (dark) tintDark else tintLight)
         return when (role) {
-            LiquidRole.Bar -> LiquidRecipe(SATURATION, PRESS, lift, 4f, 14f, .10f)
-            LiquidRole.Composer -> LiquidRecipe(SATURATION, PRESS, lift, 4f, 14f, .12f)
-            LiquidRole.Sheet -> LiquidRecipe(SATURATION, PRESS, lift, if (dark) 10f else 14f, 18f, 0f)
-            LiquidRole.Menu -> LiquidRecipe(SATURATION, PRESS, lift, if (dark) 8f else 12f, 16f, .16f)
-            LiquidRole.Pill, LiquidRole.Status -> LiquidRecipe(SATURATION, PRESS, lift, 2f, 10f, .14f)
-            LiquidRole.Action -> LiquidRecipe(1.2f, .40f, if (dark) -.10f else .10f, 2f, 12f, .20f)
+            LiquidRole.Bar -> r(2f, 34f, .14f, .18f, .30f)
+            LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .32f)
+            LiquidRole.Sheet -> r(if (dark) 6f else 8f, 44f, 0f, .30f, .40f, rimMax = 30f)
+            LiquidRole.Menu -> r(if (dark) 4f else 6f, 36f, .18f, .28f, .38f, rimMax = 26f)
+            LiquidRole.Pill, LiquidRole.Status -> r(1f, 22f, .16f, .18f, .28f, rimMax = 40f, share = .5f, depth = true)
+            LiquidRole.Action -> r(1f, 26f, .22f, .55f, .62f, rimMax = 40f, share = .5f, depth = true)
         }
     }
 
@@ -123,18 +134,6 @@ public object LiquidEdge {
             LiquidRole.Action -> roles.accent.over(ground)
         }
     }
-
-    /**
-     * The least tint a [role] pane has, whatever GlassFinish needs: sheets and menus hold the most words (lists, long
-     * prose), so their glass stays a little thicker than a bar's.
-     */
-    public fun tintFloor(role: LiquidRole, dark: Boolean): Float =
-        when (role) {
-            LiquidRole.Sheet -> if (dark) .62f else .76f
-            LiquidRole.Menu -> if (dark) .56f else .70f
-            LiquidRole.Action -> .78f
-            else -> 0f
-        }
 
     /**
      * [c] through the recipe's colour controls, as the library's `colorControls` matrix applies them (sRGB channels;
@@ -166,48 +165,78 @@ public object LiquidEdge {
     }
 
     /**
-     * The face a liquid [role] pane lays over its backdrop: today's Glass tint and words plate for the role
-     * ([GlassSpec]), thickened by [GlassFinish] until text1, text2 and text3 read over the ground and over both ends of
-     * any backdrop ([backdropEnds]), at least the role's [tintFloor]; no rims and no top glow (the rim light replaces
-     * them). The + is the accent at its floor, thickened until its glyph keeps 3:1.
+     * The face a liquid [role] pane lays over its backdrop: today's Glass tint for the role ([GlassSpec], hook H10's
+     * words plate kept) at the recipe's thin [LiquidRecipe.tint], lit a little at its top start; no rims and no top glow
+     * (the accent rim light replaces them). The + is its accent at the recipe's tint.
      */
     public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero): SurfaceDecoration {
         val recipe = recipe(role, roles.dark)
-        val (darkEnd, brightEnd) = backdropEnds(recipe)
-        val ground = roles.ground.opaqueArgb()
         if (role == LiquidRole.Action) {
-            var a = tintFloor(role, roles.dark)
-            val accent = roles.accent.opaqueArgb()
-            val target = minOf(GlassFinish.FLOOR - 1.5, wcagContrast(roles.onAccent, accent))
-            fun reads(alpha: Float) = listOf(darkEnd, brightEnd).all { wcagContrast(roles.onAccent, accent.withAlpha(alpha).over(it)) >= target - 1e-6 }
-            while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
-            return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
+            return SurfaceDecoration(radii = radii, circle = true, fill = roles.accent.opaqueArgb().withAlpha(recipe.tint), wordsPlate = Argb(0))
         }
         val (glass, level) = glassRole(role)
         val request = SurfaceRequest(roles = roles, role = glass, knobs = Knobs(), level = level, radii = radii)
         val resolved = GlassSpec.resolve(request) ?: SurfaceDecoration(radii = radii, fill = solidOf(roles, role))
-        val floor = tintFloor(role, roles.dark)
-        val floored =
-            if (floor <= 0f) resolved
-            else resolved.copy(
-                fill = resolved.fill?.let { if (it.alpha / 255f < floor) it.withAlpha(floor) else it },
-                fillStart = resolved.fillStart?.let { if (it.alpha / 255f < floor) it.withAlpha(floor) else it },
-            )
-        val thick = GlassFinish.thickened(floored, roles, solidOf(roles, role), listOf(ground, darkEnd, brightEnd))
-        return thick.copy(edgeWidthDp = 0f, edgeStart = null, edgeEnd = null, innerGlow = Argb(0), shadows = emptyList(), frost = 0f)
+        val base = resolved.fill?.opaqueArgb() ?: solidOf(roles, role)
+        val lit = resolved.fillStart?.opaqueArgb() ?: base
+        return resolved.copy(
+            fill = base.withAlpha(recipe.tint),
+            fillStart = lit.withAlpha(minOf(1f, recipe.tint + .06f)),
+            edgeWidthDp = 0f, edgeStart = null, edgeEnd = null, innerGlow = Argb(0), shadows = emptyList(), frost = 0f,
+        )
+    }
+
+    /** What must read on a [role] pane: text1, text2 and text3 (the +: its glyph), each with its target contrast. */
+    public fun inks(roles: Roles, role: LiquidRole): List<Pair<Argb, Double>> {
+        val solid = solidOf(roles, role)
+        return if (role == LiquidRole.Action) listOf(roles.onAccent to minOf(GLYPH_FLOOR, wcagContrast(roles.onAccent, solid)))
+        else listOf(roles.text1, roles.text2, roles.text3).map { it to minOf(GlassFinish.FLOOR, wcagContrast(it, solid)) }
+    }
+
+    /** Non-text contrast (3:1, with GlassFinish's margin) for a glyph on the +. */
+    public const val GLYPH_FLOOR: Double = 3.0 + .04
+
+    /**
+     * The plate behind the words on a [role] pane (GlassSpec.plateFor, hook H10), at the least alpha at which text1,
+     * text2 and text3 reach their targets over the pane's face over either end of any backdrop ([backdropEnds]); the
+     * pane stays clear around the words. Transparent for the + (its glyph reads on its accent).
+     */
+    public fun wordsPlate(roles: Roles, role: LiquidRole): Argb {
+        if (role == LiquidRole.Action) return Argb(0)
+        val (glass, _) = glassRole(role)
+        val plate = GlassSpec.plateFor(roles, glass).opaqueArgb()
+        val face = face(roles, role)
+        val (darkEnd, brightEnd) = backdropEnds(recipe(role, roles.dark))
+        val unders = listOfNotNull(face.fill, face.fillStart).flatMap { f -> listOf(f.over(darkEnd), f.over(brightEnd)) }
+        val inks = inks(roles, role)
+        fun reads(a: Float): Boolean = unders.all { u ->
+            val seen = plate.withAlpha(a).over(u)
+            inks.all { (ink, target) -> wcagContrast(ink, seen) >= target - 1e-6 }
+        }
+        if (reads(0f)) return plate.withAlpha(0f)
+        var lo = 0f
+        var hi = 1f
+        repeat(14) {
+            val mid = (lo + hi) / 2f
+            if (reads(mid)) hi = mid else lo = mid
+        }
+        return plate.withAlpha(hi)
     }
 
     /**
-     * The lowest contrast any of text1/2/3 has on [role]'s face over the ground and both backdrop ends (for tests and the
-     * QA note); for the + it is its glyph's.
+     * The lowest contrast any ink of [role] has where it sits: on its words plate over the pane over either backdrop
+     * end (the +: its glyph on the accent face). For tests and the QA note.
      */
     public fun worstContrast(roles: Roles, role: LiquidRole): Double {
-        val d = face(roles, role)
+        val face = face(roles, role)
+        val plate = wordsPlate(roles, role)
         val (darkEnd, brightEnd) = backdropEnds(recipe(role, roles.dark))
-        val unders = listOf(roles.ground.opaqueArgb(), darkEnd, brightEnd)
-        val inks = if (role == LiquidRole.Action) listOf(roles.onAccent) else listOf(roles.text1, roles.text2, roles.text3)
-        val faces = listOfNotNull(d.fill, d.fillStart)
-        return faces.minOf { f -> unders.minOf { u -> inks.minOf { wcagContrast(it, f.over(u)) } } }
+        return listOfNotNull(face.fill, face.fillStart).minOf { f ->
+            listOf(darkEnd, brightEnd).minOf { e ->
+                val seen = plate.over(f.over(e))
+                inks(roles, role).minOf { (ink, _) -> wcagContrast(ink, seen) }
+            }
+        }
     }
 
     /**

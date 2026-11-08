@@ -42,7 +42,11 @@ internal object AndroidLiquidGlass {
                 colorControls(brightness = recipe.brightness, contrast = recipe.contrast, saturation = recipe.saturation)
                 blur((recipe.blurDp + (spec.frostBlurDp - recipe.blurDp) * t).dp.toPx())
                 if (size.isSpecified && t < 1f) {
-                    lens(LiquidEdge.rimPx(size.minDimension, density), recipe.refractionDp.dp.toPx() * (1f - t))
+                    lens(
+                        LiquidEdge.rimPx(size.minDimension, density, recipe),
+                        recipe.refractionDp.dp.toPx() * (1f - t),
+                        depthEffect = recipe.depth,
+                    )
                 }
             },
             highlight = {
