@@ -78,7 +78,7 @@ public fun SettingsScreen(
     }
     when (val page = state.page) {
         SettingsPage.Hub -> HubPage(state, actions, modifier, onExit)
-        is SettingsPage.Group -> GroupPage(state, actions, page, modifier)
+        is SettingsPage.Group -> GroupPage(state, actions, page, modifier, onExit)
         is SettingsPage.ByServer ->
             SettingsFrame(
                 if (
