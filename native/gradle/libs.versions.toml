@@ -101,9 +101,11 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 androidx-tracing = { module = "androidx.tracing:tracing", version.ref = "tracing" }
 # --- Android platform
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-# Crash reporting adapter (Crashlytics only; no Analytics, Performance or Remote Config). Used by :androidApp only.
+# Crash reports (Crashlytics) and opt-in product analytics (B-180, as Flutter 2.1.5); no Performance or Remote Config.
+# Used by :androidApp only.
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 # --- Tests

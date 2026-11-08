@@ -144,8 +144,8 @@ public enum class ProductScreen(override val wire: String) : ProductValue {
         public fun of(route: String): ProductScreen {
             val r = route.lowercase()
             return when {
-                r == "/" || r == "/home" || "chatshome" in r || "chatsroute.home" in r || r == "chatsroute" ->
-                    Conversations
+                r == "chatsroute.new" -> NewChat
+                r == "/" || r == "/home" || "chatshome" in r || r.startsWith("chatsroute") -> Conversations
                 "newchat" in r -> NewChat
                 r.startsWith("/chat/") || "chatscreen" in r || "chatroute" in r -> Chat
                 "thisphone" in r || "this-phone" in r -> ThisPhone

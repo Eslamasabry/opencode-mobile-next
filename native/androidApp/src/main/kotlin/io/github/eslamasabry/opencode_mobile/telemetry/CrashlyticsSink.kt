@@ -21,6 +21,15 @@ internal class CrashlyticsSink private constructor(private val crashlytics: Fire
         crashlytics.setCrashlyticsCollectionEnabled(enabled)
     }
 
+    /** The person turned reports off: anything not yet sent is discarded (Flutter 2.1.5 `deleteUnsentReports`). */
+    fun forgetUnsent() {
+        try {
+            crashlytics.deleteUnsentReports()
+        } catch (_: Throwable) {
+            // Reporting must never be the reason the app fails.
+        }
+    }
+
     override fun breadcrumb(text: String) {
         crashlytics.log(text)
     }

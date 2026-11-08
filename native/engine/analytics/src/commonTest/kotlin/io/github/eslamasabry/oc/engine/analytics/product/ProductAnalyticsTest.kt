@@ -108,8 +108,11 @@ class ProductAnalyticsTest {
         a.screen("ServersRoute.Edit")
         a.screen("PhoneRoute.ThisPhone")
         a.screen("SomethingNew")
+        a.screen("ChatsRoute.Home")
+        a.screen("ChatsRoute.All")
+        a.screen("ChatsRoute.New")
         assertEquals(
-            listOf("chat", "servers", "this_phone", "other"),
+            listOf("chat", "servers", "this_phone", "other", "conversations", "conversations", "new_chat"),
             sink.events.map { it.second.getValue("screen") },
         )
         assertTrue(sink.events.all { it.first == "screen_view" })
