@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.engine.team
 
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
@@ -25,7 +26,7 @@ public interface TeamHost {
      * One read of the phone engine for [profileId]: `GET /v1/health` (the profile and schema it answers for), then
      * `GET /v1/workspace`. Fails when the engine is not running, answers for another profile or breaks the contract.
      */
-    public suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamWorkspace>
+    public suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamRead>
 
     /**
      * Sends one command (Dart `PhoneEngineGateway.executeProject`): `GET /v1/health` first, refusing an action the
@@ -39,6 +40,15 @@ public interface TeamHost {
         command: TeamCommand,
         body: Map<String, Any?>,
     ): Outcome<TeamCommandResult>
+
+    /**
+     * The project editors' drafts for [profileId] (Flutter `oc.teamEditorDrafts.<id>`: one JSON map of target to
+     * text, redacted, no secrets); null when none were saved.
+     */
+    public suspend fun readDrafts(profileId: String): String? = null
+
+    /** Replaces the drafts map; [json] null removes it. */
+    public suspend fun writeDrafts(profileId: String, json: String?): Outcome<Unit> = Outcome.Ok(Unit)
 }
 
 /** What the team page shows (Dart `TeamPage`'s branches). */
@@ -71,7 +81,15 @@ public data class TeamState(
     val busy: Boolean = false,
     /** The last command's refusal code (Dart `errorCode` after `execute`); null after a success. */
     val refusal: String? = null,
-)
+    /** The action [refusal] answered, for its words ("The team couldn't start planning"). */
+    val refusedAction: String? = null,
+    /** The engine's health from the last good read; null before one. */
+    val health: TeamHealth? = null,
+) {
+    /** What the engine can run now; everything for the simulated demo, which is never gated. */
+    public val capabilities: TeamCapabilities
+        get() = if (workspace?.simulated == true) TeamCapabilities.ALL else health?.capabilities ?: TeamCapabilities()
+}
 
 /** One serial lane for every profile's reads; each profile has its own state. */
 public class TeamEngine(
@@ -79,6 +97,7 @@ public class TeamEngine(
     private val newRequestId: () -> String = Ids()::next,
 ) {
     private val lane = Mutex()
+    private val drafts = Mutex()
     private val states = AtomicReference<PersistentMap<String, MutableStateFlow<TeamState>>>(persistentHashMapOf())
     private val log = AppLog.tagged("Team")
 
@@ -113,8 +132,18 @@ public class TeamEngine(
             val previous = state.value.workspace?.takeIf { state.value.config == config }
             when (val read = host.workspace(profileId, config)) {
                 is Outcome.Ok -> {
-                    val next = read.value.takeIf { previous == null || it.revision >= previous.revision } ?: previous
-                    state.update { it.copy(phase = TeamPhase.Ready, config = config, workspace = next, loading = false, stale = false) }
+                    val fresh = read.value.workspace
+                    val next = fresh.takeIf { previous == null || it.revision >= previous.revision } ?: previous
+                    state.update {
+                        it.copy(
+                            phase = TeamPhase.Ready,
+                            config = config,
+                            workspace = next,
+                            health = read.value.health,
+                            loading = false,
+                            stale = false,
+                        )
+                    }
                     Outcome.Ok(Unit)
                 }
                 is Outcome.Failed -> {
@@ -138,9 +167,15 @@ public class TeamEngine(
         var admitted = false
         state.update { current ->
             admitted = !current.busy && config != null
-            if (admitted) current.copy(busy = true, refusal = null) else current
+            if (admitted) current.copy(busy = true, refusal = null, refusedAction = null) else current
         }
         if (!admitted) return Outcome.Ok(TeamCommandResult(accepted = false, code = "busy", projectId = command.projectId))
+        // Dart `executeProject`: an action the engine does not list, or one that runs work while it cannot, is refused
+        // here without a request.
+        state.value.health?.takeIf { state.value.workspace?.simulated != true }?.refusal(command)?.let { code ->
+            state.update { it.copy(busy = false, refusal = code, refusedAction = command.action) }
+            return Outcome.Ok(TeamCommandResult(accepted = false, code = code, projectId = command.projectId))
+        }
         try {
             val result = lane.withLock { host.command(profileId, config!!, command, command.body(newRequestId())) }
             val refusal =
@@ -148,7 +183,7 @@ public class TeamEngine(
                     is Outcome.Ok -> result.value.code.takeIf { !result.value.accepted }
                     is Outcome.Failed -> "saveFailed"
                 }
-            state.update { it.copy(refusal = refusal) }
+            state.update { it.copy(refusal = refusal, refusedAction = command.action.takeIf { refusal != null }) }
             refresh(profileId)
             return result
         } finally {
@@ -158,8 +193,25 @@ public class TeamEngine(
 
     /** Clears a shown refusal (the page's notice was dismissed). */
     public fun clearRefusal(profileId: String) {
-        flow(profileId).update { it.copy(refusal = null) }
+        flow(profileId).update { it.copy(refusal = null, refusedAction = null) }
     }
+
+    /** Dart `readEditorDraft`: the saved text for [target] in [profileId]'s drafts, or null. */
+    public suspend fun draft(profileId: String, target: String): String? =
+        drafts.withLock { (host.readDrafts(profileId)?.let(DartJson::decodeOrNull) as? Map<*, *>)?.get(target) as? String }
+
+    /**
+     * Dart `saveEditorDraft` / `clearEditorDraft`: one serial writer, so two editors never lose each other's text.
+     * [text] null removes [target]; an empty map removes the key.
+     */
+    public suspend fun saveDraft(profileId: String, target: String, text: String?): Outcome<Unit> =
+        drafts.withLock {
+            val current = (host.readDrafts(profileId)?.let(DartJson::decodeOrNull) as? Map<*, *>).orEmpty()
+            val next = LinkedHashMap<String, Any?>()
+            current.forEach { (k, v) -> if (k is String && k != target) next[k] = v }
+            if (text != null) next[target] = text
+            host.writeDrafts(profileId, if (next.isEmpty()) null else DartJson.encode(next))
+        }
 
     /** Forgets [profileId]'s state (the profile was deleted or the team turned off). */
     public fun forget(profileId: String) {

@@ -15,6 +15,8 @@ public data class TeamServer(
     val laneCap: Int = 8,
     val chatWaiting: Boolean = false,
     val reason: String = "",
+    /** Measured memory of the host, in MB; null when not measured. */
+    val memoryMb: Double? = null,
 )
 
 /** A role a task is done by (Dart `TeamProjectRole`). */
@@ -24,6 +26,7 @@ public data class TeamRole(
     val model: String = "",
     val fallbackModel: String = "",
     val readOnly: Boolean = false,
+    val instructions: String = "",
 )
 
 /** Dart `TeamBudget`. */
@@ -48,7 +51,16 @@ public data class TeamProjectSettings(
 )
 
 /** Dart `TeamRepo`. */
-public data class TeamRepo(val id: String = "", val name: String = "", val serverId: String = "", val path: String = "")
+public data class TeamRepo(
+    val id: String = "",
+    val name: String = "",
+    val serverId: String = "",
+    val path: String = "",
+    val devCommit: String = "fixture-base",
+    val mainCommit: String = "fixture-base",
+    val checkCommand: String = "flutter test",
+    val sharedRemote: Boolean = false,
+)
 
 /** Dart `TeamMilestone`. */
 public data class TeamMilestone(
@@ -58,12 +70,17 @@ public data class TeamMilestone(
     val accepted: Boolean = false,
 )
 
-/** Dart `TeamSpec` (what native shows of it). */
+/** Dart `TeamSpec`. */
 public data class TeamSpec(
     val version: Int = 1,
     val goal: String = "",
     val milestones: List<TeamMilestone> = emptyList(),
     val approvedAt: String = "",
+    val contextFiles: List<String> = emptyList(),
+    val constraints: String = "",
+    val decisions: String = "",
+    val outOfScope: String = "",
+    val approvedBy: String = "",
 )
 
 /** Dart `TeamPhase` (a step of a milestone). */
@@ -111,6 +128,9 @@ public data class TeamTask(
     val messages: List<TeamMessage> = emptyList(),
     val findings: List<TeamFinding> = emptyList(),
     val criterionResults: List<TeamCriterionResult> = emptyList(),
+    val affected: Boolean = false,
+    /** The task's patch (unified diff), empty when none. */
+    val diff: String = "",
 ) {
     /** Dart `finished`: merged or done. */
     public val finished: Boolean
@@ -126,6 +146,7 @@ public data class TeamRequest(
     val phaseId: String = "",
     val createdAt: String = "",
     val answered: Boolean = false,
+    val answer: String = "",
 )
 
 /** Dart `TeamMergeItem`. */
@@ -136,6 +157,17 @@ public data class TeamMergeItem(
     val status: String = "queued",
     val reason: String = "",
     val checksPassed: Boolean = false,
+)
+
+/** A merge into dev or a promotion to main (Dart `TeamProjectReceipt`). */
+public data class TeamReceipt(
+    val id: String = "",
+    val kind: String = "",
+    val repoId: String = "",
+    val before: String = "",
+    val after: String = "",
+    val at: String = "",
+    val actor: String = "person",
 )
 
 /** Dart `TeamTimelineEvent`. */
@@ -170,7 +202,10 @@ public data class TeamProject(
     val tasks: List<TeamTask> = emptyList(),
     val requests: List<TeamRequest> = emptyList(),
     val mergeQueue: List<TeamMergeItem> = emptyList(),
+    val receipts: List<TeamReceipt> = emptyList(),
     val timeline: List<TeamTimelineEvent> = emptyList(),
+    val timelineTruncated: Boolean = false,
+    val spendDay: String = "",
     val planningState: TeamPlanningState? = null,
     val spent: Double = 0.0,
     val spentToday: Double = 0.0,
@@ -195,6 +230,8 @@ public data class TeamWorkspace(
     val servers: List<TeamServer> = emptyList(),
     val roles: List<TeamRole> = emptyList(),
     val simulated: Boolean = true,
+    /** The team's defaults for new projects (Dart `defaultSettings`); null when the engine has none. */
+    val defaultSettings: TeamProjectSettings? = null,
 ) {
     public fun project(id: String): TeamProject? = projects.firstOrNull { it.id == id }
 }

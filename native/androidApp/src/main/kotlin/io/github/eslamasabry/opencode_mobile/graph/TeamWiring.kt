@@ -18,8 +18,11 @@ import io.github.eslamasabry.oc.engine.team.TeamCommand
 import io.github.eslamasabry.oc.engine.team.TeamCommandResult
 import io.github.eslamasabry.oc.engine.team.TeamConfig
 import io.github.eslamasabry.oc.engine.team.TeamEngine
+import io.github.eslamasabry.oc.engine.team.TeamHealth
 import io.github.eslamasabry.oc.engine.team.TeamHost
-import io.github.eslamasabry.oc.engine.team.TeamWorkspace
+import io.github.eslamasabry.oc.engine.team.TeamRead
+import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.team.TeamWorkspaceJson
 import kotlinx.collections.immutable.persistentMapOf
 import okhttp3.MediaType.Companion.toMediaType
@@ -63,21 +66,11 @@ class AppTeamHost(
         return Outcome.Ok(token)
     }
 
-    /** `GET /v1/health` answering for [profileId] in schema 1, or a thrown refusal. */
-    private suspend fun health(transport: AndroidQuotaTransport, base: String, token: String, profileId: String): JSONObject {
-        val health = JSONObject(get(transport, "$base/v1/health", token, HEALTH_BODY))
-        val capabilities = health.optJSONObject("capabilities")
-        check(
-            health.opt("schemaVersion") == 1 &&
-                health.optString("profileId") == profileId &&
-                health.optString("engineVersion").isNotBlank() &&
-                capabilities != null &&
-                health.optJSONArray("commandActions") != null
-        )
-        return health
-    }
+    /** `GET /v1/health` answering for [profileId] in schema 1 (Dart `PhoneEngineHealth.fromJson`), or a thrown refusal. */
+    private suspend fun health(transport: AndroidQuotaTransport, base: String, token: String, profileId: String): TeamHealth =
+        checkNotNull(TeamHealth.parse(DartJson.decodeOrNull(get(transport, "$base/v1/health", token, HEALTH_BODY)), profileId))
 
-    override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamWorkspace> {
+    override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamRead> {
         val base = config.loopbackBase ?: return Outcome.Failed(Failure.SecretUnavailable())
         val token =
             when (val t = token(profileId)) {
@@ -87,8 +80,8 @@ class AppTeamHost(
         val transport = AndroidQuotaTransport(dispatchers)
         return try {
             attempt({ Failure.Unexpected() }) {
-                health(transport, base, token, profileId)
-                checkNotNull(TeamWorkspaceJson.decode(get(transport, "$base/v1/workspace", token, WORKSPACE_BODY)))
+                val health = health(transport, base, token, profileId)
+                TeamRead(health, checkNotNull(TeamWorkspaceJson.decode(get(transport, "$base/v1/workspace", token, WORKSPACE_BODY))))
             }
         } finally {
             transport.close(true)
@@ -117,15 +110,7 @@ class AppTeamHost(
             } finally {
                 transport.close(true)
             }
-        val actions = health.getJSONArray("commandActions").let { a -> (0 until a.length()).map { a.optString(it) } }
-        if (command.action !in actions) return Outcome.Ok(TeamCommandResult(false, "unsupportedCommand", command.projectId))
-        val caps = health.getJSONObject("capabilities")
-        val boundary = caps.optBoolean("boundary")
-        val verified = caps.optBoolean("oc2") && caps.optBoolean("oc2Verified")
-        if (command.runsWork && !(caps.optBoolean("execution") && boundary && verified)) {
-            val code = if (!boundary) "boundaryUnverified" else if (!verified) "protocolUnverified" else "engineUnavailable"
-            return Outcome.Ok(TeamCommandResult(false, code, command.projectId))
-        }
+        health.refusal(command)?.let { return Outcome.Ok(TeamCommandResult(false, it, command.projectId)) }
         return attempt({ Failure.Unexpected() }) {
             val answer = JSONObject(post("$base/v1/commands", token, redacted(body).toString()))
             check(
@@ -145,6 +130,19 @@ class AppTeamHost(
                 answer.getLong("revision"),
                 answer.getBoolean("replayed"),
             )
+        }
+    }
+
+    override suspend fun readDrafts(profileId: String): String? {
+        stores.warm()
+        return (stores.prefs.get(DRAFTS + profileId) as? PrefValue.Str)?.value
+    }
+
+    /** Dart `saveEditorDraft`: the map is redacted before it is written (no secrets in drafts). */
+    override suspend fun writeDrafts(profileId: String, json: String?): Outcome<Unit> {
+        stores.warm()
+        return stores.prefs.commit(stores.lanes.forProfile(ProfileId(profileId))) {
+            if (json == null) remove(DRAFTS + profileId) else putString(DRAFTS + profileId, redactor.redact(json))
         }
     }
 
@@ -211,6 +209,9 @@ class AppTeamHost(
         val JSON = "application/json".toMediaType()
         val CODE = Regex("^[A-Za-z][A-Za-z0-9_]{0,63}$")
         const val HEALTH_BODY = 64 * 1024
+
+        /** Flutter `TeamProjectController._draftKey` (registered with the profile sweep as deferred team data). */
+        const val DRAFTS = "oc.teamEditorDrafts."
 
         /** Tasks carry their diffs and messages; Flutter's Dio had no cap, this keeps one answer bounded. */
         const val WORKSPACE_BODY = 16 * 1024 * 1024

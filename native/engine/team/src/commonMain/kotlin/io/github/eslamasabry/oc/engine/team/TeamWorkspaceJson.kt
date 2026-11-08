@@ -34,6 +34,7 @@ public object TeamWorkspaceJson {
             servers = servers.maps().map(::server),
             roles = roles.maps().map(::role),
             simulated = map.bool("simulated", true),
+            defaultSettings = (map["defaultSettings"] as? Map<*, *>)?.let(::settings),
         )
     }
 
@@ -46,7 +47,19 @@ public object TeamWorkspaceJson {
             status = j.str("status", "spec"),
             revision = j.long("revision"),
             settings = settings(j["settings"] as? Map<*, *> ?: emptyMap<String, Any?>()),
-            repos = j.list("repos").maps().map { TeamRepo(it.str("id"), it.str("name"), it.str("serverId"), it.str("path")) },
+            repos =
+                j.list("repos").maps().map {
+                    TeamRepo(
+                        id = it.str("id"),
+                        name = it.str("name"),
+                        serverId = it.str("serverId"),
+                        path = it.str("path"),
+                        devCommit = it.str("devCommit", "fixture-base"),
+                        mainCommit = it.str("mainCommit", "fixture-base"),
+                        checkCommand = it.str("checkCommand", "flutter test"),
+                        sharedRemote = it.bool("sharedRemote"),
+                    )
+                },
             specDraft = spec(j["specDraft"] as? Map<*, *> ?: emptyMap<String, Any?>()),
             specVersions = j.list("specVersions").maps().map(::spec),
             phases =
@@ -64,6 +77,7 @@ public object TeamWorkspaceJson {
                         phaseId = it.str("phaseId"),
                         createdAt = it.str("createdAt"),
                         answered = it.bool("answered"),
+                        answer = it.str("answer"),
                     )
                 },
             mergeQueue =
@@ -77,6 +91,20 @@ public object TeamWorkspaceJson {
                         checksPassed = it.bool("checksPassed"),
                     )
                 },
+            receipts =
+                j.list("receipts").maps().map {
+                    TeamReceipt(
+                        id = it.str("id"),
+                        kind = it.str("kind"),
+                        repoId = it.str("repoId"),
+                        before = it.str("before"),
+                        after = it.str("after"),
+                        at = it.str("at"),
+                        actor = it.str("actor", "person"),
+                    )
+                },
+            timelineTruncated = j.bool("timelineTruncated"),
+            spendDay = j.str("spendDay"),
             timeline =
                 j.list("timeline").maps().map {
                     TeamTimelineEvent(
@@ -134,6 +162,11 @@ public object TeamWorkspaceJson {
                     TeamMilestone(it.str("id"), it.str("title"), it.list("criteria").filterIsInstance<String>(), it.bool("accepted"))
                 },
             approvedAt = j.str("approvedAt"),
+            contextFiles = j.list("contextFiles").filterIsInstance<String>(),
+            constraints = j.str("constraints"),
+            decisions = j.str("decisions"),
+            outOfScope = j.str("outOfScope"),
+            approvedBy = j.str("approvedBy"),
         )
 
     private fun task(j: Map<*, *>): TeamTask =
@@ -168,6 +201,8 @@ public object TeamWorkspaceJson {
                 },
             criterionResults =
                 j.list("criterionResults").maps().map { TeamCriterionResult(it.str("criterion"), it.str("status", "unmet")) },
+            affected = j.bool("affected"),
+            diff = j.str("diff"),
         )
 
     private fun server(j: Map<*, *>): TeamServer =
@@ -179,10 +214,11 @@ public object TeamWorkspaceJson {
             laneCap = j.int("laneCap", 8),
             chatWaiting = j.bool("chatWaiting"),
             reason = j.str("reason"),
+            memoryMb = j.double("memoryMb"),
         )
 
     private fun role(j: Map<*, *>): TeamRole =
-        TeamRole(j.str("id"), j.str("name"), j.str("model"), j.str("fallbackModel"), j.bool("readOnly"))
+        TeamRole(j.str("id"), j.str("name"), j.str("model"), j.str("fallbackModel"), j.bool("readOnly"), j.str("instructions"))
 
     private fun Map<*, *>.str(key: String, default: String = ""): String = this[key] as? String ?: default
 

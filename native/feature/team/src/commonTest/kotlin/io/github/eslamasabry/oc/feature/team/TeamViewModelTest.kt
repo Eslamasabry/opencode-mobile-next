@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.engine.team.TeamCommandResult
 import io.github.eslamasabry.oc.engine.team.TeamConfig
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamHost
+import io.github.eslamasabry.oc.engine.team.TeamRead
 import io.github.eslamasabry.oc.engine.team.TeamHostMode
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProvider
@@ -51,9 +52,12 @@ class TeamViewModelTest {
         override suspend fun config(profileId: String): TeamConfig =
             TeamConfig(TeamProvider.PhoneEngine, "http://127.0.0.1:4098", hostMode = TeamHostMode.Phone)
 
-        override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamWorkspace> {
+        override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamRead> {
             reads++
-            return answer
+            return when (val a = answer) {
+                is Outcome.Ok -> Outcome.Ok(TeamRead(READY_HEALTH, a.value))
+                is Outcome.Failed -> a
+            }
         }
 
         val commands = mutableListOf<TeamCommand>()
