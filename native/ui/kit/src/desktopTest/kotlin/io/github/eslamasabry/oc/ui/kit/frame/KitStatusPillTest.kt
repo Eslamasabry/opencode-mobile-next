@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -50,21 +49,27 @@ class KitStatusPillTest {
     }
 
     @Test
-    fun tint_is_the_status_colour_at_low_alpha() = runComposeUiTest {
-        var expected = Color.Unspecified
+    fun pill_is_neutral_and_the_dot_is_the_accent() = runComposeUiTest {
+        var surface = Color.Unspecified
+        var accent = Color.Unspecified
         setContent {
             Themed(rtl = false, fontScale = 1f) {
                 val c = LocalKitColors.current
-                expected = c.success.copy(alpha = KIT_STATUS_PILL_TINT).compositeOver(c.ground)
+                surface = c.surface3
+                accent = c.accent
                 Box(Modifier.background(c.ground)) {
                     KitStatusPill("This phone", KitConnectionTone.Ok, "This phone, Connected, Switch server", {})
                 }
             }
         }
         val map = onNodeWithTag("kit-status-pill", useUnmergedTree = true).captureToImage().toPixelMap()
-        // Inside the pill's start padding: background only, no dot, no words.
-        val got = map[(3 * 3), map.height / 2]
-        assertTrue(abs(got.red - expected.red) < .02f && abs(got.green - expected.green) < .02f && abs(got.blue - expected.blue) < .02f, "tint $got vs $expected")
+        fun near(a: Color, b: Color) = abs(a.red - b.red) < .03f && abs(a.green - b.green) < .03f && abs(a.blue - b.blue) < .03f
+        // Inside the pill's start padding: the neutral surface, never a status tint.
+        val face = map[(3 * 3), map.height / 2]
+        assertTrue(near(face, surface), "face $face vs surface $surface")
+        var dotHit = false
+        for (x in 0 until map.width / 3) if (near(map[x, map.height / 2], accent)) dotHit = true
+        assertTrue(dotHit, "an accent-coloured dot")
     }
 
     @Test

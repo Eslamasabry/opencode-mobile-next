@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.analytics.product
 
+import io.github.eslamasabry.oc.engine.analytics.health.HealthRanges
+import io.github.eslamasabry.oc.engine.analytics.health.HealthWords
 import kotlin.time.Duration
 
 /*
@@ -44,6 +46,44 @@ public enum class ProductEvent(public val wire: String) {
 
     /** The app went to the background: `minutes` it was in front, a range. */
     SessionLength("session_length"),
+
+    // ---- B-190 health and diagnostics (docs/telemetry/health-and-diagnostics.md) ----
+
+    /** A connection attempt: `server_kind`, `result`, `fail_kind`, `ms_range`. */
+    ConnAttempt("conn_attempt"),
+
+    /** A live connection ended: `server_kind`, `reason`, `recovered`. */
+    ConnDrop("conn_drop"),
+
+    /** A message was sent: `result`, `fail_kind`, `first_reply_range`. */
+    SendResult("send_result"),
+
+    /** A turn stopped moving: `stage`, `minutes_range`. */
+    TurnStall("turn_stall"),
+
+    /** Queued messages were flushed: `sent`, `failed` (count ranges). */
+    QueueFlush("queue_flush"),
+
+    /** A step of the built-in Linux setup finished. */
+    LinuxSetupStep("linux_setup_step"),
+
+    /** An agent was started: `agent`, `result`, `fail_kind`. */
+    AgentStart("agent_start"),
+
+    /** The background service ended: `reason`, `battery_exempt`. */
+    BgServiceEnd("bg_service_end"),
+
+    /** An update finished: `kind`, `result`, `fail_kind`. */
+    UpdateResult("update_result"),
+
+    /** Time to the first frame: `kind`, `ms_range`. */
+    AppStart("app_start"),
+
+    /** Slow frames on one kind of page, once per session: `screen`, `janky_pct_range`, `refresh_hz`. */
+    Jank("jank"),
+
+    /** Android asked the app to free memory: `level`. */
+    MemoryPressure("memory_pressure"),
 }
 
 /** A value with a fixed wire word. */
@@ -258,15 +298,79 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
             ProductEvent.ConnectComputerChosen.wire to emptyMap(),
             ProductEvent.UpdateOffered.wire to emptyMap(),
             ProductEvent.UpdateInstalled.wire to emptyMap(),
-        )
+        ) + healthSchema()
     }
 
-private val SAFE_WORD = Regex("^[a-z0-9_]+$")
+/** Flutter's `_healthSchema`: the B-190 events, every value from [HealthWords] or [HealthRanges]. */
+private fun healthSchema(): Map<String, Map<String, Set<String>>> {
+    val screens = ProductScreen.entries.map { it.wire }.toSet()
+    return mapOf(
+        ProductEvent.ConnAttempt.wire to
+            mapOf(
+                "server_kind" to HealthWords.serverKinds,
+                "result" to HealthWords.okFail,
+                "fail_kind" to HealthWords.failKinds,
+                "ms_range" to HealthRanges.connMs.toSet(),
+            ),
+        ProductEvent.ConnDrop.wire to
+            mapOf(
+                "server_kind" to HealthWords.serverKinds,
+                "reason" to HealthWords.dropReasons,
+                "recovered" to HealthWords.yesNo,
+            ),
+        ProductEvent.SendResult.wire to
+            mapOf(
+                "result" to setOf("ok", "fail", "queued"),
+                "fail_kind" to HealthWords.failKinds + HealthWords.sendOnlyFailKinds,
+                "first_reply_range" to HealthRanges.firstReply.toSet(),
+            ),
+        ProductEvent.TurnStall.wire to
+            mapOf("stage" to HealthWords.stallStages, "minutes_range" to HealthRanges.stallMinutes.toSet()),
+        ProductEvent.QueueFlush.wire to
+            mapOf("sent" to HealthRanges.counts.toSet(), "failed" to HealthRanges.counts.toSet()),
+        ProductEvent.LinuxSetupStep.wire to
+            mapOf(
+                "step" to HealthWords.linuxSteps,
+                "result" to HealthWords.okFail,
+                "ms_range" to HealthRanges.setupMs.toSet(),
+                "exit_kind" to HealthWords.exitKinds,
+                "signal" to HealthWords.signals,
+                "compat_mode" to HealthWords.compatModes,
+                "free_space_range" to HealthRanges.storage.toSet(),
+            ),
+        ProductEvent.AgentStart.wire to
+            mapOf(
+                "agent" to HealthWords.agents,
+                "result" to HealthWords.okFail,
+                "fail_kind" to HealthWords.agentFailKinds,
+            ),
+        ProductEvent.BgServiceEnd.wire to
+            mapOf("reason" to HealthWords.bgReasons, "battery_exempt" to HealthWords.yesNo),
+        ProductEvent.UpdateResult.wire to
+            mapOf(
+                "kind" to HealthWords.updateKinds,
+                "result" to HealthWords.updateResults,
+                "fail_kind" to HealthWords.updateFailKinds,
+            ),
+        ProductEvent.AppStart.wire to
+            mapOf("kind" to HealthWords.startKinds, "ms_range" to HealthRanges.appStartMs.toSet()),
+        ProductEvent.Jank.wire to
+            mapOf(
+                "screen" to screens,
+                "janky_pct_range" to HealthRanges.jankPct.toSet(),
+                "refresh_hz" to HealthRanges.refreshHz.toSet(),
+            ),
+        ProductEvent.MemoryPressure.wire to mapOf("level" to HealthWords.memoryLevels),
+    )
+}
+
+private val SAFE_WORD = Regex("^[A-Za-z0-9_<>+\\-]+$")
 private val HOST_LIKE = Regex("\\w\\.\\w")
 
 /**
  * A last check on any value, whatever the schema says (Flutter's `analyticsValueIsSafe`): no path separators, no `@`,
- * nothing shaped like a host or address (`a.b`), at most 40 characters, and plain lower-case words, digits and `_`.
+ * nothing shaped like a host or address (`a.b`), at most 40 characters, and only letters, digits and `_ < > + -` (the
+ * range words such as `<500`, `2-10s`, `4+`, and signal names such as `SIGILL`).
  */
 public fun productValueIsSafe(value: String): Boolean =
     value.isNotEmpty() && value.length <= 40 && '/' !in value && '@' !in value &&
@@ -287,6 +391,7 @@ public fun cleanProductProps(event: ProductEvent, props: Map<String, Any?>): Map
                 is Boolean -> raw.toString()
                 is ProductValue -> raw.wire
                 is String -> raw
+                is Int -> raw.toString()
                 else -> null
             } ?: continue
         if (value !in values || !productValueIsSafe(value)) continue

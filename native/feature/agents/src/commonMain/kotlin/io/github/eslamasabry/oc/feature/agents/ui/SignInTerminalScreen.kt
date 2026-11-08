@@ -9,6 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.feature.agents.signin.SignInStartStep
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInPaste
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStartAttach
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStartCheck
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStartConnect
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStartPrepare
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStartServer
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInStartTerminal
 import io.github.eslamasabry.oc.feature.agents.presentation.SignInStep
 import io.github.eslamasabry.oc.feature.agents.presentation.SignInTerminalActions
 import io.github.eslamasabry.oc.feature.agents.presentation.SignInTerminalUi
@@ -202,14 +211,19 @@ public fun SignInTerminalScreen(
                             } else {
                                 stringResource(Res.string.localTerminalFailedTitle)
                             }
+                        val reason = state.startStep?.let { startStepWords(it) }
                         KitPageState(
                             KitStateKind.Error,
                             title,
                             icon = KitIcons.error,
-                            details = state.failureCode,
+                            details = state.failureDetails ?: state.failureCode,
                             body =
                                 if (state.step == SignInStep.Failed)
-                                    stringResource(Res.string.localTerminalFailedBody)
+                                    listOfNotNull(
+                                            reason,
+                                            stringResource(Res.string.localTerminalFailedBody),
+                                        )
+                                        .joinToString(" ")
                                 else null,
                             primary =
                                 KitAction(
@@ -270,11 +284,24 @@ public fun SignInTerminalScreen(
 @Composable
 private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
-        if (
-            state.step == SignInStep.Running &&
-                state.inputEnabled &&
-                (state.canOpenPage || state.code != null)
-        ) {
+        if (state.step == SignInStep.Running && state.inputEnabled) {
+            // Paste is always there while the sign-in runs (Flutter's terminal menu "Paste"): a
+            // long press on the grid selects text, so without it a browser's code could not reach
+            // Antigravity at all. It sits next to the page and code actions, never in a menu.
+            @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+            val paste =
+                KitAction(
+                    stringResource(Res.string.agentsSignInPaste),
+                    { clipboard.getText()?.text?.let(actions::paste) },
+                    icon = KitIcons.paste,
+                )
+            val copy =
+                state.code?.let {
+                    KitAction(
+                        stringResource(Res.string.agentsSignInCopyCode, "\u2066$it\u2069"),
+                        actions::copyCode,
+                    )
+                }
             io.github.eslamasabry.oc.ui.kit.action.KitActionBlock(
                 modifier =
                     Modifier.padding(
@@ -290,13 +317,8 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
                             icon = KitIcons.externalLink,
                         )
                     else null,
-                secondary =
-                    state.code?.let {
-                        KitAction(
-                            stringResource(Res.string.agentsSignInCopyCode, "\u2066$it\u2069"),
-                            actions::copyCode,
-                        )
-                    },
+                secondary = copy ?: paste,
+                tertiary = if (copy != null) listOf(paste) else emptyList(),
             )
         }
         KitTerminalView(
@@ -313,6 +335,19 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
         )
     }
 }
+
+/** Why a start stopped, in plain words (the technical text stays under Details). */
+@Composable
+private fun startStepWords(step: SignInStartStep): String? =
+    when (step) {
+        SignInStartStep.Prepare -> stringResource(Res.string.agentsSignInStartPrepare)
+        SignInStartStep.Server -> stringResource(Res.string.agentsSignInStartServer)
+        SignInStartStep.Connect -> stringResource(Res.string.agentsSignInStartConnect)
+        SignInStartStep.Check -> stringResource(Res.string.agentsSignInStartCheck)
+        SignInStartStep.Terminal -> stringResource(Res.string.agentsSignInStartTerminal)
+        SignInStartStep.Attach -> stringResource(Res.string.agentsSignInStartAttach)
+        SignInStartStep.Unknown -> null
+    }
 
 // The Flutter terminal's own strings name the readable-mode switch and the input field (plan 06
 // §7.7; S3-TERMMIN report, words requests).

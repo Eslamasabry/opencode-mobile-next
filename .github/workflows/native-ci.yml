@@ -31,6 +31,11 @@ on:
         description: Build only the preview APK (signed with the preview key), skip compile and test shards
         type: boolean
         default: false
+      runner:
+        description: "self: the always-warm oc-native runner (falls back to GitHub-hosted when it is offline). github: force GitHub-hosted runners"
+        type: choice
+        options: [self, github]
+        default: self
   push:
     branches:
       - "native/screens-merge*"
@@ -47,14 +52,57 @@ env:
   # Runners have 4 CPUs and 16 GB. Gradle daemon 6g + Kotlin in-process (gradle.properties) + test forks.
   GRADLE_FLAGS: --continue --stacktrace
   OC_GOLDEN_HOST: "0"
+  # The self-hosted runner kills every process that carries its tracking id when a job ends, which would stop the warm
+  # Gradle daemon. An empty id keeps the daemon alive between jobs.
+  RUNNER_TRACKING_ID: ""
 
 defaults:
   run:
     working-directory: native
 
 jobs:
+  where:
+    # Chooses the runners for every other job. Self-hosted (the always-warm oc-native machine, native/tool/ci/LANES.md) is
+    # used ONLY for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
+    # `github`. Everything else, and every offline moment, runs on GitHub-hosted ubuntu-latest.
+    name: runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    defaults:
+      run:
+        working-directory: .
+    outputs:
+      runs_on: ${{ steps.pick.outputs.runs_on }}
+    steps:
+      - name: Pick the runner
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          CHOICE: ${{ inputs.runner || 'self' }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN || github.token }}
+        run: |
+          hosted='["ubuntu-latest"]'; self='["self-hosted","linux","x64","oc-native"]'; runs_on="$hosted"; why=""
+          if [ "$EVENT" != workflow_dispatch ] && [ "$EVENT" != push ]; then why="event $EVENT is never allowed on the self-hosted runner"
+          elif [ "$REPO" != Eslamasabry/opencode-mobile-next ]; then why="not the main repository"
+          elif [ "$CHOICE" = github ]; then why="runner=github requested"
+          else
+            # Listing runners needs repository administration read, which only RUNNER_STATUS_TOKEN has; the workflow token
+            # gets a 403 and then we trust the runner (the dispatcher checks it locally with tool/ci/dispatch.sh).
+            if json="$(gh api "repos/$REPO/actions/runners" --jq '[.runners[] | select(.status=="online" and ([.labels[].name] | index("oc-native")))] | length' 2>/dev/null)"; then
+              if [ "$json" -ge 1 ]; then runs_on="$self"; why="$json oc-native runner(s) online"
+              else why="no oc-native runner online"; fi
+            else runs_on="$self"; why="runner status not readable with this token; assuming online"; fi
+          fi
+          echo "runs_on=$runs_on" >> "$GITHUB_OUTPUT"
+          echo "### Runner: \`$runs_on\` ($why)" >> "$GITHUB_STEP_SUMMARY"
+
   plan:
     name: plan
+    needs: where
     if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -68,6 +116,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: "Gate self-test (planted logs: a test-compile or drift failure must be FAIL)"
+        run: python3 -I tool/ci/test_gate.py
       - name: Pick the lane and the modules
         id: p
         env:
@@ -99,14 +149,17 @@ jobs:
 
   compile:
     name: compile
-    needs: plan
+    needs: [where, plan]
     if: ${{ needs.plan.result == 'success' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Compile the app (previewBenchmark), and every module's tests on the full lane
         env:
@@ -117,13 +170,15 @@ jobs:
           ./gradlew :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/compile.log"
       - name: Compile report
         if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
           python3 -I - <<'PY'
           import json, os
           log = open(os.environ['RUNNER_TEMP'] + '/compile.log', errors='replace').read().splitlines() if os.path.exists(os.environ['RUNNER_TEMP'] + '/compile.log') else []
-          errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or l.startswith('> ') and 'went wrong' in l]
+          errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or 'Execution failed for task' in l]
           os.makedirs('reports', exist_ok=True)
-          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15]}, open('reports/compile.json', 'w'))
+          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure'}, open('reports/compile.json', 'w'))
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -135,11 +190,11 @@ jobs:
 
   test:
     name: desktop tests ${{ matrix.shard }}
-    needs: plan
+    needs: [where, plan]
     if: ${{ needs.plan.result == 'success' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -155,6 +210,7 @@ jobs:
         with:
           # The full lane extracts Flutter reference goldens from git history; the fast lane has no picture tests.
           fetch-depth: ${{ needs.plan.outputs.lane != 'full' && '1' || '0' }}
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
         with:
           goldens: ${{ needs.plan.outputs.lane == 'full' && 'true' || 'false' }}
@@ -163,8 +219,10 @@ jobs:
         if: ${{ needs.plan.outputs.lane == 'full' }}
         working-directory: ${{ github.workspace }}
         run: |
-          sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
-          sudo chown -R "$USER" /home/eslam
+          mkdir -p /home/eslam/wt/lane-looks/looks-out/screens 2>/dev/null || {
+            sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
+            sudo chown -R "$USER" /home/eslam
+          }
       - name: Pick this shard's modules
         id: pick
         run: |
@@ -181,13 +239,16 @@ jobs:
         id: gradle
         continue-on-error: true
         if: ${{ steps.pick.outputs.tasks != '' }}
+        shell: bash
         run: |
           flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
-          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
+          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/gradle.log"
       - name: Summarise results
         if: always()
         env:
           GRADLE_OUTCOME: ${{ steps.gradle.outcome }}
+          GRADLE_LOG: ${{ runner.temp }}/gradle.log
+          TASKS: ${{ steps.pick.outputs.tasks }}
         run: python3 -I tool/ci/test_report.py "${LANE}-${{ matrix.shard }}" reports >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -209,13 +270,17 @@ jobs:
 
   record:
     name: record goldens
+    needs: where
     if: ${{ inputs.lane == 'goldens' && inputs.tasks == '' && !inputs.apk_only }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Re-record the desktop goldens on this runner
         # Every module that wires oc.goldens.record. -PrunQuarantined records quarantined pictures too.
@@ -250,13 +315,17 @@ jobs:
 
   apk:
     name: apk
+    needs: where
     if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Preview signing key (pre-release builds only; owner-approved 2026-11-08)
         env:
@@ -306,12 +375,15 @@ jobs:
           if-no-files-found: error
       - name: APK report
         if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
           mkdir -p reports
+          failed=false; [ "$JOB_STATUS" = failure ] && failed=true
           apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk 2>/dev/null | head -1 || true)
           if [ -n "$apk" ]; then
-            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" > reports/apk.json
-          else echo '{}' > reports/apk.json; fi
+            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s,"failed":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" > reports/apk.json
+          else echo "{\"failed\":$failed}" > reports/apk.json; fi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -322,19 +394,38 @@ jobs:
 
   custom:
     name: custom tasks
+    needs: where
     if: ${{ inputs.tasks != '' }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
+          clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
+      - name: Custom report
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          mkdir -p reports
+          failed=false; [ "$JOB_STATUS" = failure ] && failed=true
+          echo "{\"failed\":$failed}" > reports/custom.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-custom
+          path: native/reports/custom.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   summary:
     name: summary
-    needs: [plan, compile, test, apk, record, custom]
+    needs: [where, plan, compile, test, apk, record, custom]
     if: ${{ always() }}
     # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}

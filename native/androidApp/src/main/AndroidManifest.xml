@@ -18,6 +18,13 @@
          the Android 17 runtime permission for LAN access; it is asked only when the person taps "Find on my network". -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- B-180: opt-in analytics never reads an advertising ID. The permissions the Firebase Analytics SDK would merge in
+         (Google's ad ID and Android's ad services) are removed, as in the Flutter app; TelemetryManifestTest and
+         verify<Variant>TelemetryManifest check the source and the merged manifest. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" tools:node="remove" />
 
     <!-- P12-VOICE: voice typing uses the phone's speech recognizer; Android 11+ hides the service without this. -->
     <queries>
@@ -41,9 +48,22 @@
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/NativeAppTheme">
-        <!-- Crash reports are opt-in at run time (Settings > Privacy); nothing is collected until the person's answer is applied. -->
+        <!-- B-180/B-190: analytics, crash reports and Performance are opt-in at run time (Settings > Privacy and data, or the
+             first-start question); nothing is collected until the person's answer is applied. Each is "enabled false",
+             never "deactivated": a deactivated flag can never be turned on at run time, so consent could not work
+             (Flutter 2.1.5 shipped Performance "deactivated", which no consent could undo). No ad ID, SSAID, ad personalisation
+             or automatic screen reporting. -->
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
-        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_performance_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_analytics_storage" android:value="false" />
+        <meta-data android:name="google_analytics_automatic_screen_reporting_enabled" android:value="false" />
+        <uses-library android:name="android.ext.adservices" android:required="false" tools:node="remove" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

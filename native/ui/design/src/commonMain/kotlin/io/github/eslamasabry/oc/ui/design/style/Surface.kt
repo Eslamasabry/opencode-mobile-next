@@ -79,9 +79,17 @@ public data class SurfaceDecoration(
     val frost: Float = 0f,
     /** A glow inside the face along its top edge, [INNER_GLOW_DEPTH_DP] down (Glass); transparent draws none. */
     val innerGlow: Argb = Argb(0),
+    /**
+     * Glass's top sheen (owner 2026-11-08, "more glossy"): this colour at the face's top edge, fading out over the first
+     * [SHEEN_SHARE] of its height. Transparent draws none.
+     */
+    val sheen: Argb = Argb(0),
 ) {
     public companion object {
         /** How far down the face [innerGlow] reaches, in dp (at most half the face). */
         public const val INNER_GLOW_DEPTH_DP: Float = 22f // FG: lib/ui/kit/kit_surface_look.dart:608
+
+        /** The share of the face's height [sheen] fades over. */
+        public const val SHEEN_SHARE: Float = .30f
     }
 }
