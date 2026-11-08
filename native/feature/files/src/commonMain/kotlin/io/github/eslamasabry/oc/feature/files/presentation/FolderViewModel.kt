@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.engine.files.FilePaths
 import io.github.eslamasabry.oc.engine.files.FolderListing
 import io.github.eslamasabry.oc.engine.files.ProjectFiles
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.FilesPlace
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
@@ -89,6 +90,11 @@ public data class FolderUi(
     val canTerminal: Boolean = false,
     /** The project folder's own name ("my-app"), once the server says where the project is; null until then. */
     val projectName: String? = null,
+    /**
+     * False for a project opened without a conversation (the project page's Files row): there is no
+     * draft to ask in, reference into or attach to, and no conversation review.
+     */
+    val inConversation: Boolean = true,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -163,7 +169,7 @@ public interface FolderActions {
  */
 @AssistedInject
 public class FolderViewModel(
-    @Assisted private val route: FilesRoute.Folder,
+    @Assisted private val route: FilesRoute.AnyFolder,
     private val connections: FilesConnections,
     private val nav: AppNavigator,
     private val preferences: Set<FilesReaderPreferences>,
@@ -179,28 +185,36 @@ public class FolderViewModel(
     private var searches = 0
     private var clipSequence = 0L
     private var changesReads = 0
-    private val reader = preferences.singleOrNull()?.open(route.from.profileId)
+    private val files = PlaceFiles(route.place, connections)
+    /** The conversation these files belong to; null for a project opened on its own. */
+    private val ref = files.conversation
+    private val reader = preferences.singleOrNull()?.open(route.place.profileId)
 
     init {
         local.update {
             it.copy(
-                canSearchText = connections.canSearchText(route.from),
-                canSearchSymbols = connections.canSearchSymbols(route.from),
+                canSearchText = files.canSearchText(),
+                canSearchSymbols = files.canSearchSymbols(),
                 sourceFirst = reader?.value?.value?.sourceFirst == true,
                 canOrder = reader != null,
-                canAttach = mentions.canAttach(),
+                canAttach = ref != null && mentions.canAttach(),
+                inConversation = ref != null,
             )
         }
         load()
         // The root is titled with the project's own name, not the word "Project" (P-025).
         viewModelScope.launch {
-            val name = projectFolderName(connections.directory(route.from))
+            val name = projectFolderName(files.directory())
             if (name != null) local.update { it.copy(projectName = name) }
         }
     }
 
     override fun terminal() {
-        if (connections.canTerminal(route.from)) nav.open(TerminalRoute.Conversation(route.from))
+        if (!files.canTerminal()) return
+        when (val place = route.place) {
+            is FilesPlace.Conversation -> nav.open(TerminalRoute.Conversation(place.ref))
+            is FilesPlace.Project -> nav.open(TerminalRoute.Home(place.profile, place.directory))
+        }
     }
 
     override fun back(): Unit = nav.back()
@@ -211,11 +225,11 @@ public class FolderViewModel(
 
     private fun load() {
         val mine = ++loads
-        val gateway = connections.gateway(route.from)
+        val gateway = files.gateway()
         when {
             gateway == null ->
                 local.update { it.copy(phase = FolderPhase.NotConnected, failure = null) }
-            !connections.canBrowse(route.from) ->
+            !files.canBrowse() ->
                 local.update { it.copy(phase = FolderPhase.Unavailable, failure = null) }
             else -> {
                 local.update {
@@ -227,7 +241,7 @@ public class FolderViewModel(
                 }
                 viewModelScope.launch {
                     val listed = ProjectFiles.list(gateway, route.path)
-                    if (mine != loads || !connections.isCurrent(route.from, gateway)) return@launch
+                    if (mine != loads || !files.isCurrent(gateway)) return@launch
                     when (listed) {
                         is Outcome.Failed ->
                             local.update {
@@ -255,7 +269,7 @@ public class FolderViewModel(
                 entries = listing.entries,
                 hiddenCount = listing.hiddenCount,
                 failure = null,
-                canTerminal = connections.canTerminal(route.from),
+                canTerminal = files.canTerminal(),
             )
         }
     }
@@ -265,11 +279,11 @@ public class FolderViewModel(
 
     override fun open(node: FileNode) {
         if (local.value.changes[node.path]?.status == "deleted") {
-            nav.open(ReviewRoute.File(route.from, node.path, workingTree = true))
+            ref?.let { nav.open(ReviewRoute.File(it, node.path, workingTree = true)) }
             return
         }
-        if (node.isDir) nav.open(FilesRoute.Folder(route.from, node.path))
-        else nav.open(FilesRoute.File(route.from, node.path))
+        if (node.isDir) nav.open(FilesRoute.folder(route.place, node.path))
+        else nav.open(FilesRoute.file(route.place, node.path))
     }
 
     /** One storage flow: the head's checked request (block, directory, stale-scope guards). */
@@ -298,7 +312,7 @@ public class FolderViewModel(
             }
             return
         }
-        val gateway = connections.gateway(route.from)
+        val gateway = files.gateway()
         if (gateway == null) {
             local.update {
                 it.copy(
@@ -319,7 +333,7 @@ public class FolderViewModel(
                     loadChanges(loads)
                     if (mine != searches) return@launch
                     val found = ProjectFiles.find(gateway, trimmed)
-                    if (mine != searches || !connections.isCurrent(route.from, gateway))
+                    if (mine != searches || !files.isCurrent(gateway))
                         return@launch
                     local.update {
                         when (found) {
@@ -347,7 +361,7 @@ public class FolderViewModel(
                 }
                 FileSearchSurface.Text -> {
                     val found = gateway.findText(trimmed)
-                    if (mine != searches || !connections.isCurrent(route.from, gateway))
+                    if (mine != searches || !files.isCurrent(gateway))
                         return@launch
                     local.update {
                         when (found) {
@@ -369,8 +383,8 @@ public class FolderViewModel(
                     }
                 }
                 FileSearchSurface.Symbols -> {
-                    val found = connections.symbols(route.from, trimmed)
-                    if (mine != searches || !connections.isCurrent(route.from, gateway))
+                    val found = files.symbols(trimmed)
+                    if (mine != searches || !files.isCurrent(gateway))
                         return@launch
                     local.update {
                         when (found) {
@@ -432,8 +446,8 @@ public class FolderViewModel(
 
     override fun openMatch(match: FindMatch) {
         nav.open(
-            FilesRoute.File(
-                route.from,
+            FilesRoute.file(
+                route.place,
                 FilePaths.normalize(match.path),
                 match.lineNumber.takeIf { it > 0 },
             )
@@ -442,8 +456,8 @@ public class FolderViewModel(
 
     override fun openSymbol(symbol: WorkspaceSymbol) {
         nav.open(
-            FilesRoute.File(
-                route.from,
+            FilesRoute.file(
+                route.place,
                 FilePaths.normalize(symbol.path),
                 symbol.line.takeIf { it > 0 },
             )
@@ -476,16 +490,18 @@ public class FolderViewModel(
 
     override fun review() {
         val node = local.value.actionsFor ?: return
+        val ref = ref ?: return
         closeActions()
-        nav.open(ReviewRoute.File(route.from, node.path, workingTree = true))
+        nav.open(ReviewRoute.File(ref, node.path, workingTree = true))
     }
 
     override fun ask() {
         val node = local.value.actionsFor ?: return
+        val ref = ref ?: return
         closeActions()
         viewModelScope.launch {
-            val result = mentions.mention(route.from, node.path, connections.directory(route.from))
-            if (result is Outcome.Ok) nav.openChat(route.from, focusComposer = true)
+            val result = mentions.mention(ref, node.path, files.directory())
+            if (result is Outcome.Ok) nav.openChat(ref, focusComposer = true)
             else if (result is Outcome.Failed)
                 local.update { it.copy(actionFailure = result.failure) }
         }
@@ -494,10 +510,11 @@ public class FolderViewModel(
     override fun addReference() {
         val node = local.value.actionsFor ?: return
         if (node.isDir) return
+        val ref = ref ?: return
         closeActions()
         local.update { it.copy(attachNotice = null, referencedName = null) }
         viewModelScope.launch {
-            val result = mentions.mention(route.from, node.path, connections.directory(route.from))
+            val result = mentions.mention(ref, node.path, files.directory())
             local.update {
                 it.copy(
                     attachNotice =
@@ -511,20 +528,21 @@ public class FolderViewModel(
 
     override fun attach() {
         val node = local.value.actionsFor ?: return
+        val ref = ref ?: return
         if (node.isDir || local.value.attaching || !mentions.canAttach()) return
-        val gateway = connections.gateway(route.from) ?: return
+        val gateway = files.gateway() ?: return
         closeActions()
         local.update { it.copy(attaching = true, attachNotice = null) }
         viewModelScope.launch {
             val file = ProjectFiles.open(gateway, node.path)
-            if (!connections.isCurrent(route.from, gateway)) {
+            if (!files.isCurrent(gateway)) {
                 local.update { it.copy(attaching = false, attachNotice = FileNotice.AttachFailed) }
                 return@launch
             }
             val result =
                 when (file) {
                     is Outcome.Failed -> file
-                    is Outcome.Ok -> mentions.attach(route.from, file.value.data)
+                    is Outcome.Ok -> mentions.attach(ref, file.value.data)
                 }
             local.update {
                 it.copy(
@@ -541,11 +559,13 @@ public class FolderViewModel(
         gateway: io.github.eslamasabry.oc.core.domain.FileGateway,
     ) {
         if (!all.all { it.name.startsWith('.') }) return
+        // A project opened on its own was already checked by the project page's storage notice.
+        val ref = ref ?: return
         val access = storageAccess.singleOrNull() ?: return
-        val directory = connections.directory(route.from)
-        if (mine != loads || !connections.isCurrent(route.from, gateway)) return
-        val block = access.block(route.from, directory)
-        if (mine == loads && connections.isCurrent(route.from, gateway))
+        val directory = files.directory()
+        if (mine != loads || !files.isCurrent(gateway)) return
+        val block = access.block(ref, directory)
+        if (mine == loads && files.isCurrent(gateway))
             local.update { it.copy(storageBlock = block) }
     }
 
@@ -565,20 +585,21 @@ public class FolderViewModel(
     }
 
     private fun requestStorage() {
+        val ref = ref ?: return
         val access = storageAccess.singleOrNull() ?: return
         val block = local.value.storageBlock
         if (block == FilesStorageBlock.None || local.value.requestingStorage) return
         val mine = loads
-        val gateway = connections.gateway(route.from) ?: return
+        val gateway = files.gateway() ?: return
         local.update { it.copy(requestingStorage = true, storageResult = null) }
         viewModelScope.launch {
-            val directory = connections.directory(route.from)
-            if (mine != loads || !connections.isCurrent(route.from, gateway)) {
+            val directory = files.directory()
+            if (mine != loads || !files.isCurrent(gateway)) {
                 local.update { it.copy(requestingStorage = false) }
                 return@launch
             }
-            val result = access.request(route.from, directory, block)
-            if (mine != loads || !connections.isCurrent(route.from, gateway)) {
+            val result = access.request(ref, directory, block)
+            if (mine != loads || !files.isCurrent(gateway)) {
                 local.update { it.copy(requestingStorage = false) }
                 return@launch
             }
@@ -597,7 +618,7 @@ public class FolderViewModel(
 
     private suspend fun loadChanges(folderGeneration: Int) {
         val mine = ++changesReads
-        when (val changes = connections.changes(route.from)) {
+        when (val changes = files.changes()) {
             is Outcome.Ok ->
                 if (mine == changesReads && folderGeneration == loads) {
                     local.update {
@@ -671,7 +692,7 @@ public class FolderViewModel(
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
     public fun interface Factory : ManualViewModelAssistedFactory {
-        public fun create(@Assisted route: FilesRoute.Folder): FolderViewModel
+        public fun create(@Assisted route: FilesRoute.AnyFolder): FolderViewModel
     }
 }
 
