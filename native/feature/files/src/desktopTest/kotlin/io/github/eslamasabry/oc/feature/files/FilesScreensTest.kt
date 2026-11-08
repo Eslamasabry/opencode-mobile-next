@@ -294,4 +294,36 @@ class FilesScreensTest {
         setContent { Themed { FileScreen(long, FileCalls()) } }
         onNodeWithText("Showing part of this file").assertExists()
     }
+
+    @Test
+    fun `B-184 a file over the size limit says so in plain words, with no useless Try again`() = runComposeUiTest {
+        val big = FileUi(path = "dump.log", phase = FilePhase.Failed, failure = Failure.Media(MediaProblem.FileTooBig))
+        setContent { Themed { FileScreen(big, FileCalls()) } }
+        onNodeWithText("This file is too big to show here.").assertExists()
+        onNodeWithText("The limit is 2 MB. Open it on the computer where it lives, or ask the agent for a smaller piece.").assertExists()
+        onNodeWithText("Try again").assertDoesNotExist()
+        onNodeWithText("Couldn't open this file. Try again.").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-184 on this phone a too-big file points at Open with`() = runComposeUiTest {
+        val calls = FileCalls()
+        val big = FileUi(path = "dump.log", phase = FilePhase.Failed, failure = Failure.Media(MediaProblem.FileTooBig), canOpenLocal = true)
+        setContent { Themed { FileScreen(big, calls) } }
+        onNodeWithText("The limit is 2 MB. It is on this phone, so another app can open it: choose Open with.").assertExists()
+    }
+
+    @Test
+    fun `B-184 a missing file and a refused file each say their own reason`() = runComposeUiTest {
+        setContent { Themed { FileScreen(FileUi(path = "a.txt", phase = FilePhase.Failed, failure = Failure.NotFound()), FileCalls()) } }
+        onNodeWithText("That file isn't there any more.").assertExists()
+    }
+
+    @Test
+    fun `B-184 a refused read can be tried again, a connection problem keeps its own words`() = runComposeUiTest {
+        val calls = FileCalls()
+        setContent { Themed { FileScreen(FileUi(path = "a.txt", phase = FilePhase.Failed, failure = Failure.Media(MediaProblem.FileDenied)), calls) } }
+        onNodeWithText("This app isn't allowed to read that file.").assertExists()
+        onNodeWithText("Try again").assertExists()
+    }
 }

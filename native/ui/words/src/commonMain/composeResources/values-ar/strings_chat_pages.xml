@@ -436,7 +436,7 @@
     <string name="sessionDestinationWarpWithChanges">نقل إلى %1$s مع نسخة من التغييرات</string>
     <string name="sessionDestinationMoveTo">نقل إلى %1$s</string>
     <string name="sessionDestinationNoChanges">لا توجد تغييرات عمل في %1$s، لذا تنتقل المحادثة وحدها.</string>
-    <string name="defaultReviewScopeNotice">يُعرض %1$s، حيث توجد التغييرات.</string>
+    <string name="defaultReviewScopeNotice">يُعرض %1$s: فهو العرض الذي يتضمّن تغييرات.</string>
     <string name="isolatedTaskPromptLabel">ما المهمة التي تريد العمل عليها؟</string>
     <string name="isolatedTaskPromptHelper">يُرسل بعد تجهيز النسخة. اتركه فارغًا لكتابته في المحادثة.</string>
     <string name="isolatedTaskOptions">الخيارات</string>

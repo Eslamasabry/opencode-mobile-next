@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitProminentRule
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
@@ -120,11 +121,23 @@ private class Seams {
 
 /** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset on both reading edges. */
 @Composable
-internal fun KitHairlineColumn(inset: Dp, endInset: Dp, hairline: Color, content: @Composable () -> Unit): Unit =
-    HairlineColumn(inset, endInset, hairline, content)
+internal fun KitHairlineColumn(
+    inset: Dp,
+    endInset: Dp,
+    hairline: Color,
+    prominent: KitProminentRule? = null,
+    content: @Composable () -> Unit,
+): Unit = HairlineColumn(inset, endInset, hairline, content, prominent = prominent)
 
 @Composable
-private fun HairlineColumn(inset: Dp, endInset: Dp, hairline: Color, content: @Composable () -> Unit, ruleAbove: Boolean = false) {
+private fun HairlineColumn(
+    inset: Dp,
+    endInset: Dp,
+    hairline: Color,
+    content: @Composable () -> Unit,
+    ruleAbove: Boolean = false,
+    prominent: KitProminentRule? = null,
+) {
     val seams = remember { Seams() }
     Layout(
         content = content,
@@ -137,7 +150,13 @@ private fun HairlineColumn(inset: Dp, endInset: Dp, hairline: Color, content: @C
                 val (x0, x1) = if (rtl) end to size.width - start else start to size.width - end
                 val ys = if (ruleAbove) intArrayOf(0) + seams.ys else seams.ys
                 ys.forEach { y ->
-                    if (x1 > x0) drawLine(hairline, Offset(x0, y + 0.5f), Offset(x1, y + 0.5f), 1f)
+                    if (x1 <= x0) return@forEach
+                    if (prominent == null) drawLine(hairline, Offset(x0, y + 0.5f), Offset(x1, y + 0.5f), 1f)
+                    else {
+                        // B-173: the line sits on the seam and is at least 1 dp, in the theme's tertiary ink at 30 %.
+                        val t = prominent.thicknessDp.dp.toPx()
+                        drawRect(prominent.color, Offset(x0, y - t / 2f), androidx.compose.ui.geometry.Size(x1 - x0, t))
+                    }
                 }
             },
     ) { measurables, constraints ->
