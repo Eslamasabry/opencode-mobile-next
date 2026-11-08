@@ -400,7 +400,7 @@
     <string name="sessionDestinationWarpWithChanges">Move to %1$s with a copy of changes</string>
     <string name="sessionDestinationMoveTo">Move to %1$s</string>
     <string name="sessionDestinationNoChanges">No working changes in %1$s, so only the conversation moves.</string>
-    <string name="defaultReviewScopeNotice">Showing %1$s, where the changes are.</string>
+    <string name="defaultReviewScopeNotice">Showing %1$s: it is the view with changes.</string>
     <string name="isolatedTaskPromptLabel">What should it work on?</string>
     <string name="isolatedTaskPromptHelper">Sent once the copy is ready. Leave it empty to write it in the conversation.</string>
     <string name="isolatedTaskOptions">Options</string>
