@@ -1,5 +1,12 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitRequestNeedsYouLabel
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -122,6 +128,7 @@ public fun KitPermissionCard(
     waitingAge: String? = null,
     waitingMore: String? = null,
     onDetails: (() -> Unit)? = null,
+    needsYou: Boolean = false,
 ) {
     require(enabled || disabledReason != null) {
         "KitPermissionCard: a card that cannot answer must say why"
@@ -133,43 +140,77 @@ public fun KitPermissionCard(
         modifier = modifier,
         look = look,
         answers = {
-            Answers(
-                allowOnceLabel,
-                alwaysLabel?.takeIf { onAlways != null },
-                denyLabel,
-                onAllowOnce,
-                onAlways,
-                onDeny,
-                enabled,
-                reason,
-                secondary,
-                denyReply,
-                onDenyJustDeny = onDeny,
-                question = question,
-            )
+            // One block, so the frame's space3 between its children never lands between the answers and Details.
+            Column {
+                Answers(
+                    allowOnceLabel,
+                    alwaysLabel?.takeIf { onAlways != null },
+                    denyLabel,
+                    onAllowOnce,
+                    onAlways,
+                    onDeny,
+                    enabled,
+                    reason,
+                    secondary,
+                    denyReply,
+                    onDenyJustDeny = onDeny,
+                    question = question,
+                )
+                // The standard ask card's quiet line (kit_request_card.dart:1143-1235): "Details" at the far end, small and
+                // plain, space2 under the answers, space3 of air above and below as its own target.
+                if (!question && onDetails != null) {
+                    Box(Modifier.fillMaxWidth().padding(top = Space.S2.dp), contentAlignment = Alignment.CenterEnd) {
+                        KitTappable(onDetails, onClickLabel = stringResource(Res.string.kitDetails)) {
+                            KitText(
+                                stringResource(Res.string.kitDetails),
+                                Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
+                            )
+                        }
+                    }
+                }
+            }
         },
     ) {
         if (question) {
             QuestionWords(title, summary, toolLabel, targets, subject, waitingAge, waitingMore, onDetails)
             return@KitRequestFrame
         }
-        KitText(
-            title,
-            Modifier.semantics {
-                heading()
-                liveRegion = LiveRegionMode.Polite
-            },
-            role = TypeRole.Headline,
-            tone = TextTone.Primary,
-            kind = KitTextKind.Reading,
-        )
-        if (!summary.isNullOrEmpty()) {
+        val titleText: @Composable () -> Unit = {
             KitText(
-                summary,
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
+                title,
+                Modifier.semantics {
+                    heading()
+                    liveRegion = LiveRegionMode.Polite
+                },
+                role = TypeRole.Headline,
+                tone = TextTone.Primary,
                 kind = KitTextKind.Reading,
             )
+        }
+        if (needsYou) {
+            // The ask card's header (kit_request_card.dart:734-777): "Needs you" in the caption role and attention ink,
+            // space1, the title as the headline, space1, the one line of why; then space3 down to what it runs.
+            Column(Modifier.padding(bottom = Space.S1.dp)) {
+                KitText(stringResource(Res.string.kitRequestNeedsYouLabel), role = TypeRole.Caption, tone = TextTone.Attention)
+                Spacer(Modifier.height(Space.S1.dp))
+                titleText()
+                if (!summary.isNullOrEmpty()) {
+                    Spacer(Modifier.height(Space.S1.dp))
+                    KitText(summary, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
+                }
+            }
+        } else {
+            titleText()
+            if (!summary.isNullOrEmpty()) {
+                KitText(
+                    summary,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                    kind = KitTextKind.Reading,
+                )
+            }
         }
         if (!toolLabel.isNullOrEmpty()) {
             KitText(toolLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
@@ -398,14 +439,15 @@ private fun AlwaysLink(label: String, onAlways: () -> Unit, enabled: Boolean, re
 internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Send
 
 /**
- * 45 % of the window's height (60 % at 2× text and above); no cap while the window has no size yet.
+ * 45 % of the window's height (60 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
+ * every kit part reads; the raw platform container can be another size, e.g. a test host).
  */
 @Composable
 internal fun maxCardHeight(): Dp {
     val density = LocalDensity.current
-    val heightPx = LocalWindowInfo.current.containerSize.height
-    if (heightPx <= 0) return Dp.Infinity
+    val heightDp = LocalKitWindow.current.heightDp
+    if (heightDp <= 0f) return Dp.Infinity
     val fontScale = (LocalKitAppDensity.current ?: density).fontScale
     val share = if (fontScale >= LARGE_TEXT) HEIGHT_SHARE_LARGE_TEXT else HEIGHT_SHARE
-    return with(density) { (heightPx * share).toDp() }
+    return (heightDp * share).dp
 }

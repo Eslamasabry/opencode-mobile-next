@@ -41,6 +41,11 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitThoughtBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalKitTurn
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageMarker
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageNotice
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptAttachment
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptAttachmentKind
 import kotlin.test.Test
 
 /**
@@ -55,17 +60,9 @@ import kotlin.test.Test
  * vertical space, as in Flutter.
  *
  * Mismatch: no native KitMessage (prompt/reply/thought/notice/marker kinds); stand-ins below.
- * Mismatch: prompt time — Flutter puts "2:05 PM" as an end-aligned caption (tertiary) 4 dp under the bubble, 8 dp
- *   from its end; native [KitMessageTimestamp] is a start-aligned quiet line (bodyMedium, onSurfaceVariant).
  * Mismatch: prompt menu (Copy message, Edit and resend) — no native long-press menu on KitPromptBubble (not drawn).
- * Mismatch: prompt attachments — Flutter draws read-only KitComposerChips inside the bubble under the words; native
- *   KitPromptBubble takes only photos, so the chips stand in as a KitChipWrap under the bubble.
- * Mismatch: thought — native KitThoughtBlock has no idea glyph before the title and no working ("Thinking…") mark;
- *   its body is markdown in text2 rather than KitMarkdown(role: secondary).
- * Mismatch: notice — no native KitMessage.notice fold (glyph, words, middle-cut mono technical, tertiary action, open
- *   detail); hand-composed from KitIcon/KitText/KitButton with no fold chevron.
- * Mismatch: marker — no native KitMessage.marker (dividers either side of a centred caption, 75 % cap); hand-composed
- *   from KitDivider/KitIcon/KitStatusIcon/KitText.
+ * Mismatch: thought — no working ("Thinking…") mark.
+ * Notices and markers are the native [KitMessageNotice] and [KitMessageMarker].
  */
 class KitMessageGateTest {
     private val prompt = "Fix the flaky checkout test. It fails about one run in five on CI."
@@ -115,21 +112,17 @@ class KitMessageGateTest {
         Gutter { KitMarkdown(KitMdSource.blocks(key, text, false), actions) }
     }
 
-    /** `_promptMessage`: the prompt with its fixed time (and attachments). */
+    /** `_promptMessage`: the prompt with its fixed time ("2:05 PM", the device's 12-hour clock) and attachments. */
     @Composable private fun PromptMessage(attachments: Boolean = false) {
-        Column(Modifier.fillMaxWidth()) {
-            KitPromptBubble(prompt)
-            if (attachments) {
-                Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), contentAlignment = Alignment.CenterEnd) {
-                    KitChipWrap {
-                        KitChip("checkout_test.dart", icon = KitIcons.file)
-                        KitChip("ci-failure.png", icon = KitIcons.image)
-                    }
-                }
-            }
-            Spacer(Modifier.height(4.dp)) // F: lib/ui/kit/chat/kit_message.dart:398 (space1)
-            KitMessageTimestamp(createdMs = time, nowMs = time)
-        }
+        KitPromptBubble(
+            prompt,
+            attachments =
+                if (attachments) listOf(
+                    KitPromptAttachment("checkout_test.dart", KitPromptAttachmentKind.File),
+                    KitPromptAttachment("ci-failure.png", KitPromptAttachmentKind.Image),
+                ) else emptyList(),
+            time = "2:05 PM", // F: test/goldens/kit/kit_message_golden_test.dart:45 (14:05, formatTimeOfDay en_US)
+        )
     }
 
     @Composable private fun ReplyMessage() = Markdown("reply", reply)
@@ -140,47 +133,25 @@ class KitMessageGateTest {
 
     @Composable private fun Notice(
         text: String,
-        icon: ImageVector = KitIcons.info,
+        icon: ImageVector? = null,
         failed: Boolean = false,
         technical: String? = null,
         action: String? = null,
         detail: String? = null,
     ) {
-        val tone = if (failed) TextTone.Primary else TextTone.Secondary
-        Gutter {
-            Column(Modifier.fillMaxWidth()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    KitIcon(if (failed) KitIcons.error else icon, size = KitIconSize.Small, tone = TextTone.Secondary)
-                    Spacer(Modifier.width(8.dp)) // F: lib/ui/kit/chat/kit_message.dart:1173 (space2)
-                    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                        KitText(text, role = TypeRole.Secondary, tone = tone)
-                        if (technical != null) {
-                            Spacer(Modifier.width(8.dp)) // F: lib/ui/kit/chat/kit_message.dart:1145 (space2)
-                            KitText(technical, role = TypeRole.Mono, tone = tone, maxLines = 1)
-                        }
-                    }
-                    if (action != null) KitButton(action, {}, role = KitButtonRole.Tertiary)
-                }
-                if (detail != null) KitText(detail, Modifier.padding(start = 28.dp), role = TypeRole.Secondary, tone = TextTone.Secondary)
-            }
-        }
+        KitMessageNotice(
+            text,
+            icon = icon,
+            technical = technical,
+            failed = failed,
+            action = action?.let { KitAction(it, {}) },
+            expanded = if (detail != null) true else null,
+            detail = detail?.let { words -> { KitMarkdown(KitMdSource.blocks("detail", words, false), actions, role = TypeRole.Secondary) } },
+        )
     }
 
     @Composable private fun Marker(text: String, icon: ImageVector? = null, working: Boolean = false) {
-        Gutter {
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) { // F: lib/ui/kit/chat/kit_message.dart:1210 (space2)
-                KitDivider(Modifier.weight(1f))
-                Spacer(Modifier.width(8.dp)) // F: lib/ui/kit/chat/kit_message.dart:1219 (space2)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (working) KitStatusIcon(StatusTone.Progress, size = KitIconSize.Tiny)
-                    else if (icon != null) KitIcon(icon, size = KitIconSize.Tiny, tone = TextTone.Secondary)
-                    if (working || icon != null) Spacer(Modifier.width(4.dp)) // F: lib/ui/kit/chat/kit_message.dart:1229 (space1)
-                    KitText(text, role = TypeRole.Caption, tone = TextTone.Secondary, textAlign = TextAlign.Center)
-                }
-                Spacer(Modifier.width(8.dp)) // F: lib/ui/kit/chat/kit_message.dart:1242 (space2)
-                KitDivider(Modifier.weight(1f))
-            }
-        }
+        KitMessageMarker(text, icon = icon, working = working)
     }
 
     @Composable private fun Default() {
@@ -253,31 +224,20 @@ class KitMessageGateTest {
         PromptMessage()
     }
 
-    @Test fun kit_message_default() {
-        FlutterGoldenGate.check("kit_message_default", wrap = wrap) { Default() }
-        FlutterGoldenGate.check("kit_message_default_1280x800", wrap = wrap) { Default() }
-        FlutterGoldenGate.check("kit_message_default_text2", wrap = wrap) { Default() }
-        FlutterGoldenGate.check("kit_message_default_text2_1280x800", wrap = wrap) { Default() }
-    }
-
-    @Test fun kit_message_prompts() {
-        FlutterGoldenGate.check("kit_message_prompt", wrap = wrap) { Prompt() }
-        FlutterGoldenGate.check("kit_message_prompt_attachments", wrap = wrap) { PromptAttachments() }
-        FlutterGoldenGate.check("kit_message_prompt_long", wrap = wrap) { PromptLong() }
-    }
-
-    @Test fun kit_message_replies() {
-        FlutterGoldenGate.check("kit_message_reply", wrap = wrap) { Reply() }
-        FlutterGoldenGate.check("kit_message_reply_code", wrap = wrap) { ReplyCode() }
-        FlutterGoldenGate.check("kit_message_thought_folded", wrap = wrap) { ThoughtFolded() }
-        FlutterGoldenGate.check("kit_message_thought_open", wrap = wrap) { ThoughtOpen() }
-    }
-
-    @Test fun kit_message_notices() {
-        FlutterGoldenGate.check("kit_message_notice", wrap = wrap) { Notices() }
-        FlutterGoldenGate.check("kit_message_notice_failed", wrap = wrap) { NoticesFailed() }
-        FlutterGoldenGate.check("kit_message_marker", wrap = wrap) { Markers() }
-    }
+    @Test fun kit_message_default() { FlutterGoldenGate.check("kit_message_default", wrap = wrap) { Default() } }
+    @Test fun kit_message_default_1280x800() { FlutterGoldenGate.check("kit_message_default_1280x800", wrap = wrap) { Default() } }
+    @Test fun kit_message_default_text2() { FlutterGoldenGate.check("kit_message_default_text2", wrap = wrap) { Default() } }
+    @Test fun kit_message_default_text2_1280x800() { FlutterGoldenGate.check("kit_message_default_text2_1280x800", wrap = wrap) { Default() } }
+    @Test fun kit_message_prompt() { FlutterGoldenGate.check("kit_message_prompt", wrap = wrap) { Prompt() } }
+    @Test fun kit_message_prompt_attachments() { FlutterGoldenGate.check("kit_message_prompt_attachments", wrap = wrap) { PromptAttachments() } }
+    @Test fun kit_message_prompt_long() { FlutterGoldenGate.check("kit_message_prompt_long", wrap = wrap) { PromptLong() } }
+    @Test fun kit_message_reply() { FlutterGoldenGate.check("kit_message_reply", wrap = wrap) { Reply() } }
+    @Test fun kit_message_reply_code() { FlutterGoldenGate.check("kit_message_reply_code", wrap = wrap) { ReplyCode() } }
+    @Test fun kit_message_thought_folded() { FlutterGoldenGate.check("kit_message_thought_folded", wrap = wrap) { ThoughtFolded() } }
+    @Test fun kit_message_thought_open() { FlutterGoldenGate.check("kit_message_thought_open", wrap = wrap) { ThoughtOpen() } }
+    @Test fun kit_message_notice() { FlutterGoldenGate.check("kit_message_notice", wrap = wrap) { Notices() } }
+    @Test fun kit_message_notice_failed() { FlutterGoldenGate.check("kit_message_notice_failed", wrap = wrap) { NoticesFailed() } }
+    @Test fun kit_message_marker() { FlutterGoldenGate.check("kit_message_marker", wrap = wrap) { Markers() } }
 
     @Test fun matrix() {
         FlutterGoldenGate.matrix("part-kit_message", caps = mapOf("KitMessage" to "conversation"), wrap = wrap) { Default() }

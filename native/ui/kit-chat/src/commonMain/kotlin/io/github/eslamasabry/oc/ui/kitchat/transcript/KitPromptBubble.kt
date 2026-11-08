@@ -49,6 +49,24 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitAttachmentImage
 import io.github.eslamasabry.oc.ui.words.res.kitAttachmentOpen
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.KitMonoCut
+import io.github.eslamasabry.oc.ui.kit.KitMonoText
+import io.github.eslamasabry.oc.ui.words.res.kitAttachmentFile
+import io.github.eslamasabry.oc.ui.words.res.kitAttachmentFolder
+import io.github.eslamasabry.oc.ui.words.res.kitAttachmentReference
 import kotlin.math.ceil
 import org.jetbrains.compose.resources.stringResource
 
@@ -90,13 +108,22 @@ internal fun kitPromptBubbleFill(colors: KitColors): Color =
  * and 8 dp apart; a tile whose picture is still loading is a quiet square that fades into the picture.
  */
 @Composable
-public fun KitPromptBubble(text: String, modifier: Modifier = Modifier, photos: List<KitPromptPhoto> = emptyList()) {
+public fun KitPromptBubble(
+    text: String,
+    modifier: Modifier = Modifier,
+    photos: List<KitPromptPhoto> = emptyList(),
+    attachments: List<KitPromptAttachment> = emptyList(),
+    time: String? = null,
+) {
     val colors = LocalKitColors.current
     val shape = kitBubbleShape()
     Box(modifier.then(column()), contentAlignment = Alignment.CenterEnd) {
-        Box(Modifier.fillMaxWidth(BUBBLE_MAX_SHARE), contentAlignment = Alignment.CenterEnd) {
+        Column(Modifier.fillMaxWidth(BUBBLE_MAX_SHARE), horizontalAlignment = Alignment.End) {
             Column(
-                Modifier.testTag(PROMPT_BUBBLE_TAG)
+                // Plain words hug their longest line; anything with attachments takes the whole share
+                // (kit_message.dart:629-641).
+                (if (attachments.isEmpty()) Modifier else Modifier.fillMaxWidth())
+                    .testTag(PROMPT_BUBBLE_TAG)
                     .background(kitPromptBubbleFill(colors), shape)
                     .border(kitHairline(), colors.hairline, shape)
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
@@ -111,7 +138,67 @@ public fun KitPromptBubble(text: String, modifier: Modifier = Modifier, photos: 
                         photos.forEach { PromptPhoto(it) }
                     }
                 }
+                if (attachments.isNotEmpty()) {
+                    // F: lib/ui/kit/chat/kit_message.dart:613-620 — read-only KitComposerChips.attachments.
+                    Spacer(Modifier.height(Space.S2.dp))
+                    KitChipWrap { attachments.forEach { PromptAttachmentChip(it) } }
+                }
             }
+            if (time != null) {
+                // F: lib/ui/kit/chat/kit_message.dart:396-410 — caption, tertiary, space1 under the bubble, space2 from its end.
+                KitText(
+                    time,
+                    Modifier.padding(top = Space.S1.dp, end = Space.S2.dp),
+                    role = TypeRole.Caption,
+                    tone = TextTone.Tertiary,
+                )
+            }
+        }
+    }
+}
+
+/** What a read-only attachment chip in a sent prompt is (Dart `KitAttachmentKind`). */
+public enum class KitPromptAttachmentKind { File, Image, Folder, Reference }
+
+/** One file, picture, folder or reference a sent prompt carried, drawn as a read-only chip in the bubble. */
+public data class KitPromptAttachment(val label: String, val kind: KitPromptAttachmentKind = KitPromptAttachmentKind.File)
+
+/**
+ * A read-only attachment chip (kit_composer_chips.dart `_AttachmentChip` without onRemove/onOpen): the touch row of
+ * the minimum target, the `surface3` pill of the pill height inside it, space3 either side, the small glyph in text1,
+ * space2, the name in mono cut in the middle. Spoken as "File, checkout_test.dart".
+ */
+@Composable
+private fun PromptAttachmentChip(item: KitPromptAttachment) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    val spoken =
+        when (item.kind) {
+            KitPromptAttachmentKind.Image -> stringResource(Res.string.kitAttachmentImage, item.label)
+            KitPromptAttachmentKind.File -> stringResource(Res.string.kitAttachmentFile, item.label)
+            KitPromptAttachmentKind.Folder -> stringResource(Res.string.kitAttachmentFolder, item.label)
+            KitPromptAttachmentKind.Reference -> stringResource(Res.string.kitAttachmentReference, item.label)
+        }
+    val glyph =
+        when (item.kind) {
+            KitPromptAttachmentKind.Image -> KitIcons.image
+            KitPromptAttachmentKind.File -> KitIcons.file
+            KitPromptAttachmentKind.Folder -> KitIcons.folders
+            KitPromptAttachmentKind.Reference -> KitIcons.bookmark
+        }
+    Box(
+        Modifier.heightIn(min = tokens.minTarget.dp).widthIn(min = tokens.minTarget.dp).clearAndSetSemantics { contentDescription = spoken },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Row(
+            Modifier.background(colors.surface3, CircleShape)
+                .heightIn(min = FlutterKitTokens.PILL_HEIGHT.dp)
+                .padding(horizontal = Space.S3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            KitIcon(glyph, size = KitIconSize.Small, tone = TextTone.Primary)
+            Spacer(Modifier.width(Space.S2.dp))
+            KitMonoText(item.label, cut = KitMonoCut.Middle)
         }
     }
 }
