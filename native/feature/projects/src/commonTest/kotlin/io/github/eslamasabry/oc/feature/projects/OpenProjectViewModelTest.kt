@@ -337,7 +337,7 @@ class OpenProjectViewModelTest {
     }
 
     @Test
-    fun `B-182 Clone copies a repository into the folder shown; a failure keeps the dialog with the reason`() {
+    fun `B-182 Clone copies a repository into the folder shown, and a failure keeps the dialog with the reason`() {
         val gateway = Located()
         val ops = Ops(listOf(project("/srv/app", true, 1)))
         val nav = Nav()
@@ -377,7 +377,7 @@ class OpenProjectViewModelTest {
     }
 
     @Test
-    fun `B-182 Type a path opens it; on this phone a missing folder is offered and made first`() {
+    fun `B-182 Type a path opens it, and on this phone a missing folder is offered and made first`() {
         val nav = Nav()
         val creator = PhoneCreator(there = false)
         val gateway = FakeServerGateway().apply { capabilities.value = shell }
