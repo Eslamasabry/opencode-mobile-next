@@ -9,5 +9,6 @@ kotlin {
         api(project(":core:common"))
         api(project(":core:model"))
         api(project(":core:data"))
+        implementation(libs.kotlinx.datetime) // ComposerLimit: a reset on the phone's own clock (weekday, hour)
     }
 }
