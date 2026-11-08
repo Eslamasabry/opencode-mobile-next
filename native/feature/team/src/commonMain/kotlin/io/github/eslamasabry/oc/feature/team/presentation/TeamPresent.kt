@@ -226,7 +226,8 @@ public object TeamPresent {
                     ProjectMenu(
                         askAgain = p.status == "spec" && TeamRules.planningMinutes(p, nowMs) >= TeamRules.PLANNING_SLOW_MINUTES,
                         resumeInterrupted = p.status == "interrupted" && can.resume,
-                        pause = open && p.status != "paused" && p.status != "interrupted",
+                        // F: overview.dart:90-101 offers Pause on an interrupted project too, beside Resume.
+                        pause = open && p.status != "paused",
                         resume = open && p.status == "paused" && can.lanes,
                     )
                 },

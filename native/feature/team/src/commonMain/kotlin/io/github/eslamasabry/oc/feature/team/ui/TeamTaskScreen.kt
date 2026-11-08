@@ -269,6 +269,8 @@ private fun Conversation(
                     words.message,
                     title = stringResource(Res.string.teamProjectTaskSaveFailed),
                     notes = listOf(words.next),
+                    // F: team_project_conversation.dart:643, "Refresh task" reads the task again.
+                    actions = listOf(KitLineAction(stringResource(Res.string.teamProjectRefreshTask), actions::retry)),
                     dismiss = KitLineAction(stringResource(Res.string.kitConfirmCancel), actions::dismissRefusal),
                 )
             }

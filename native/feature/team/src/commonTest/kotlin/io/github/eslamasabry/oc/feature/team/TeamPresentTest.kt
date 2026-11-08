@@ -228,4 +228,12 @@ class TeamPresentTest {
         assertEquals("met", t.criteria.single().status)
         assertNull(TeamPresent.task(TeamState(TeamPhase.Ready, workspace = team(p)), "shop", "gone", NOW).task)
     }
+
+    @Test
+    fun `B-TEAM-136 an interrupted project's menu offers Pause beside Resume, as Flutter's overview does`() {
+        val interrupted = shop().copy(status = "interrupted")
+        val menu = TeamPresent.project(TeamState(TeamPhase.Ready, workspace = team(interrupted)), "shop", NOW).project!!.menu
+        assertEquals(true, menu.pause)
+        assertEquals(false, menu.resume)
+    }
 }

@@ -240,7 +240,9 @@ class TeamScreensUiTest {
             calls += "message $text"
         }
 
-        override fun retry() {}
+        override fun retry() {
+            calls += "retry"
+        }
 
         override fun dismissRefusal() {}
     }
@@ -255,5 +257,17 @@ class TeamScreensUiTest {
         onNode(hasSetTextAction()).performTextInput("Hello")
         onAllNodesWithText("Send answer").onLast().performClick()
         assertEquals(listOf("message Hello"), actions.calls)
+    }
+
+    @Test
+    fun `B-TEAM-137 a change the server refused offers Refresh task, which reads the task again`() = runComposeUiTest {
+        val actions = TaskRecorder()
+        val refused =
+            TeamPresent.task(ready, "shop", "t2", NOW).copy(
+                refusal = io.github.eslamasabry.oc.feature.team.presentation.RefusalUi("conflict", "message")
+            )
+        setContent { Themed { TeamTaskScreen(refused, actions) } }
+        onNodeWithText("Refresh task").performClick()
+        assertEquals(listOf("retry"), actions.calls)
     }
 }
