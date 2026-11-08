@@ -25,6 +25,13 @@ public sealed interface ChatsRoute : AppRoute {
         val draftKey: String? = null,
         val commandId: String = Uuid.random().toString(),
         val tabId: String = Uuid.random().toString(),
+        /** Words the field starts with, for the person to read, change and send (F: `showNewChat(initialText:)`). */
+        val initialText: String = "",
+        /**
+         * Asks for a [NewChatReports] report under this key: the first message was sent, the person left without
+         * sending, or the send is not known (F: `showNewChat(onSent:)`).
+         */
+        val reportKey: String? = null,
     ) : ChatsRoute {
         override val motion: RouteMotion
             get() = RouteMotion.SlideUp

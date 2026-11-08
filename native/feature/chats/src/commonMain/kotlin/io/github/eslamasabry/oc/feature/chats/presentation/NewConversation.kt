@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.NewChatOutcome
+import io.github.eslamasabry.oc.ui.routes.NewChatReports
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlin.time.Clock
@@ -394,8 +396,15 @@ public class NewConversationViewModel(
     private val host: NewConversationHost,
     private val nav: AppNavigator,
     private val clock: Clock,
+    private val reports: NewChatReports,
 ) : ViewModel(), NewConversationActions {
-    private val mutable = MutableStateFlow(NewConversationUi())
+    private val mutable =
+        MutableStateFlow(
+            if (route.initialText.isEmpty()) NewConversationUi()
+            else NewConversationUi(text = route.initialText, textRevision = 1)
+        )
+    /** Whether [ChatsRoute.New.reportKey] has had its one report. */
+    private var reported = false
     public val state: StateFlow<NewConversationUi> = mutable.asStateFlow()
     private val edits = Mutex()
     private var generation = 0
@@ -442,8 +451,23 @@ public class NewConversationViewModel(
         viewModelScope.launch {
             val saved = edits.withLock { host.saveDraft(profile, shown.directory, shown.text) }
             mutable.update { it.copy(busy = false, draftFailed = saved is Outcome.Failed) }
-            if (saved is Outcome.Ok) nav.back()
+            if (saved is Outcome.Ok) {
+                report(NewChatOutcome.Left)
+                nav.back()
+            }
         }
+    }
+
+    /** The one report a keyed new conversation makes (F: `showNewChat(onSent:)`, then cancelled when not sent). */
+    private fun report(outcome: NewChatOutcome) {
+        val key = route.reportKey ?: return
+        if (reported) return
+        reported = true
+        reports.report(key, outcome)
+    }
+
+    override fun onCleared() {
+        report(NewChatOutcome.Left)
     }
 
     override fun agents() {
@@ -972,6 +996,8 @@ public class NewConversationViewModel(
                 }
             }
             attempt = result
+            if (result.dispatched) report(NewChatOutcome.FirstMessageSent)
+            else if (result.deliveryUnconfirmed) report(NewChatOutcome.Unknown)
             if ((result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
                 // Once the session exists, its chat owns the receipt and always has an editor.
                 // An uncertain send must not strand the person on the chip-only starting frame.

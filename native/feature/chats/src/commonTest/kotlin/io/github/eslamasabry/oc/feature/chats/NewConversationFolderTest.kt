@@ -108,7 +108,8 @@ class NewConversationFolderTest {
 
     @AfterTest fun reset() = Dispatchers.resetMain()
 
-    private fun vm(host: Host) = NewConversationViewModel(ChatsRoute.New(phone), host, Nav(), Clock.System)
+    private fun vm(host: Host) =
+        NewConversationViewModel(ChatsRoute.New(phone), host, Nav(), Clock.System, ListenedReports())
 
     @Test
     fun `B-CHATS-110 B-063 a project whose folder is gone says so and Start sends nothing`() {
