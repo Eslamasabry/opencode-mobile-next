@@ -20,9 +20,11 @@ import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.agents.feed.FeedFolders
 import io.github.eslamasabry.oc.engine.attention.AttentionKind
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
+import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
@@ -160,6 +162,11 @@ public class ProjectPageViewModel(
                                     isolatedHosts.size == 1,
                             // B-163: Flutter's project hub offers "Scheduled prompts" where the server runs them.
                             canSchedule = next?.gateway?.capabilities?.value?.scheduledPrompts == true,
+                            canBrowseFiles = next?.gateway?.capabilities?.value?.fileBrowsing == true,
+                            canHealth =
+                                next?.gateway?.capabilities?.value?.let { caps ->
+                                    caps.languageServiceStatus || caps.formatterStatus
+                                } == true,
                         )
                     }
                     refreshCopies()
@@ -636,6 +643,20 @@ public class ProjectPageViewModel(
         viewModelScope.launch {
             if (checkStorage(live, run)) nav.open(LinuxRoute.Services(route.profile, directory))
         }
+    }
+
+    override fun openFiles() {
+        val live = server ?: return
+        if (!state.value.canBrowseFiles) return
+        val run = generation
+        viewModelScope.launch {
+            if (checkStorage(live, run)) nav.open(FilesRoute.ProjectFolder(route.profile, directory))
+        }
+    }
+
+    override fun openHealth() {
+        if (server == null || !state.value.canHealth) return
+        nav.open(SearchRoute.ProjectHealth(route.profile, directory))
     }
 
     /** B-163: this server's scheduled prompts; a new one starts in this project. */

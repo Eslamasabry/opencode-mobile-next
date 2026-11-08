@@ -59,7 +59,15 @@ public data class RunningUi(
     val selected: ProcessRowUi? = null,
     val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
     val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
-)
+    /** Non-null while the one question for everything left behind is open; it names each. */
+    val confirmStopLeftBehind: ImmutableList<ProcessRowUi>? = null,
+    /** What the last "Stop all left behind" did: how many stopped. */
+    val stoppedCount: Int? = null,
+) {
+    /** Every stoppable process left behind: the targets of "Stop all left behind" (Flutter's group). */
+    val leftBehind: ImmutableList<ProcessRowUi>
+        get() = rows.filter { it.leftBehind && it.stoppable }.toImmutableList()
+}
 
 public interface RunningActions {
     public fun shown(visible: Boolean)
@@ -71,6 +79,12 @@ public interface RunningActions {
     public fun askStop(pid: Int)
 
     public fun confirmStop()
+
+    /** One question for every process left behind, naming each (Flutter `_stopLeftBehind`). */
+    public fun askStopLeftBehind() {}
+
+    /** Stops only the processes the question named, one after another. */
+    public fun confirmStopLeftBehind() {}
 
     public fun dismiss()
 
@@ -200,8 +214,49 @@ public class RunningModel(
         }
     }
 
+    override fun askStopLeftBehind() {
+        val targets = ui.value.leftBehind
+        if (targets.isEmpty() || ui.value.stopping != null) return
+        ui.update {
+            it.copy(
+                confirmStopLeftBehind = targets,
+                confirmStop = null,
+                selected = null,
+                stopFailed = false,
+                stoppedCount = null,
+            )
+        }
+    }
+
+    override fun confirmStopLeftBehind() {
+        val targets = ui.value.confirmStopLeftBehind ?: return
+        if (ui.value.stopping != null) return
+        ui.update { it.copy(confirmStopLeftBehind = null, stopping = targets.first().pid) }
+        scope.launch {
+            var stopped = 0
+            var failed = false
+            for (row in targets) {
+                ui.update { it.copy(stopping = row.pid) }
+                // Each by the identity the question was built from, so a later process at the
+                // same pid is never stopped.
+                val result =
+                    if (row.stopIdentities.isNotEmpty()) source.stop(row.pid, row.stopIdentities)
+                    else source.stop(row.pid, row.identity)
+                if (result is Outcome.Ok) stopped++ else failed = true
+            }
+            ui.update { it.copy(stopping = null, stopFailed = failed, stoppedCount = stopped) }
+            load()
+        }
+    }
+
     override fun dismiss(): Unit = ui.update {
-        it.copy(confirmStop = null, selected = null, stopFailed = false)
+        it.copy(
+            confirmStop = null,
+            confirmStopLeftBehind = null,
+            selected = null,
+            stopFailed = false,
+            stoppedCount = null,
+        )
     }
 
     override fun openChildLimitSettings() {

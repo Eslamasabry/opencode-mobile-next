@@ -192,6 +192,44 @@ class ProjectsViewModelTest {
     }
 
     @Test
+    fun `B-NAV-044 the project page opens this project's Files with no conversation, where the server lists files`() {
+        val nav = Nav()
+        val gateway = FakeServerGateway(listOf(session("old", "/work/app", 5)))
+        gateway.capabilities.value = ServerCapabilities(fileBrowsing = true)
+        val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app/"), nav, Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders())
+        assertTrue(vm.state.value.canBrowseFiles)
+        vm.openFiles()
+        assertEquals("open ${io.github.eslamasabry.oc.ui.routes.FilesRoute.ProjectFolder(p1, "/work/app")}", nav.calls.last())
+
+        val plain = FakeServerGateway(listOf(session("old", "/work/app", 5)))
+        plain.capabilities.value = ServerCapabilities(fileBrowsing = false)
+        val quiet = Nav()
+        val none = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), quiet, Servers(listOf(ProjectServer(p1, "srv", plain, null))), SessionOpenedFolders())
+        assertFalse(none.state.value.canBrowseFiles)
+        none.openFiles()
+        assertTrue(quiet.calls.isEmpty())
+    }
+
+    @Test
+    fun `B-NAV-044 the project page offers Project health where the server reports language services or formatters`() {
+        val nav = Nav()
+        val gateway = FakeServerGateway(listOf(session("old", "/work/app", 5)))
+        gateway.capabilities.value = ServerCapabilities(formatterStatus = true)
+        val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), nav, Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders())
+        assertTrue(vm.state.value.canHealth)
+        vm.openHealth()
+        assertEquals("open ${io.github.eslamasabry.oc.ui.routes.SearchRoute.ProjectHealth(p1, "/work/app")}", nav.calls.last())
+
+        val plain = FakeServerGateway(listOf(session("old", "/work/app", 5)))
+        plain.capabilities.value = ServerCapabilities(languageServiceStatus = false, formatterStatus = false)
+        val quiet = Nav()
+        val none = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), quiet, Servers(listOf(ProjectServer(p1, "srv", plain, null))), SessionOpenedFolders())
+        assertFalse(none.state.value.canHealth)
+        none.openHealth()
+        assertTrue(quiet.calls.isEmpty())
+    }
+
+    @Test
     fun `New conversation here starts a conversation that works in this folder and opens it`() {
         val nav = Nav()
         val gateway = Creating(FakeServerGateway(listOf(session("old", "/work/app", 5), session("there", "/work/site", 9))))

@@ -14,7 +14,9 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.FileGateway
+import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
 import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
@@ -39,6 +41,7 @@ import io.github.eslamasabry.oc.feature.files.presentation.FilesConnections
 import io.github.eslamasabry.oc.feature.files.presentation.FilesExternalLinks
 import io.github.eslamasabry.oc.feature.files.presentation.FilesReaderPreferences
 import io.github.eslamasabry.oc.feature.files.presentation.FilesStorageAccess
+import io.github.eslamasabry.oc.feature.files.presentation.ProjectFilesSource
 import kotlin.io.encoding.Base64
 import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
@@ -191,6 +194,85 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null
         return ConversationFiles(gateway, ref.sessionId).directory()
+    }
+
+    /**
+     * One project's folder on its server's live connection (the project page's Files row). Every
+     * read carries that folder ([LocatedFileGateway]); a gateway that cannot scope reads is used
+     * only while its own location is that folder, never another project's tree.
+     */
+    override fun project(profile: ProfileId, directory: String): ProjectFilesSource? {
+        val graph = registry.live.value[profile] ?: return null
+        val accessors = graph as? FilesGraphAccessors ?: return null
+        val gateway = accessors.filesGateway
+        val target = ServerLocation(directory, null)
+        val located = gateway as? LocatedFileGateway
+        val files: FileGateway? =
+            when {
+                located != null -> located.filesAt(target)
+                sameFolder(gateway.location.value.directory, directory) -> gateway
+                else -> null
+            }
+        val caps = gateway.capabilities.value
+        fun current(): Boolean = registry.live.value[profile] === graph
+        return ProjectFilesSource(
+            identity = graph,
+            gateway = files ?: UnscopedFiles,
+            canBrowse = files != null && caps.fileBrowsing,
+            canTerminal = caps.terminal,
+            canSearchText = files != null && caps.textSearch,
+            canSearchSymbols =
+                caps.workspaceSymbols && sameFolder(gateway.location.value.directory, directory),
+            symbols = { query ->
+                if (!sameFolder(gateway.location.value.directory, directory))
+                    unavailable("workspaceSymbols")
+                else {
+                    val result = accessors.filesOperations.findWorkspaceSymbols(query)
+                    if (!current() || !sameFolder(gateway.location.value.directory, directory))
+                        unavailable("workspaceSymbols")
+                    else result
+                }
+            },
+            changes = {
+                val scoped = gateway as? LocatedVcsGateway
+                if (scoped == null) unavailable("projectManagement")
+                else
+                    when (val result = scoped.workingTreeAt(target)) {
+                        is Outcome.Failed -> result
+                        is Outcome.Ok ->
+                            if (!current()) unavailable("projectManagement")
+                            else
+                                Outcome.Ok(
+                                    result.value
+                                        .map {
+                                            VersionControlFile(
+                                                it.file,
+                                                it.status ?: "modified",
+                                                it.additions ?: 0,
+                                                it.deletions ?: 0,
+                                            )
+                                        }
+                                        .toImmutableList()
+                                )
+                    }
+            },
+        )
+    }
+
+    private fun sameFolder(a: String?, b: String): Boolean =
+        a != null && a.trimEnd('/') == b.trimEnd('/')
+
+    /** Refuses every read: the gateway could not be scoped to the asked folder. */
+    private object UnscopedFiles : FileGateway {
+        private val refused = Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+
+        override suspend fun listFiles(path: String) = refused
+
+        override suspend fun fileContent(path: String) = refused
+
+        override suspend fun findFile(query: String) = refused
+
+        override suspend fun findText(pattern: String) = refused
     }
 }
 

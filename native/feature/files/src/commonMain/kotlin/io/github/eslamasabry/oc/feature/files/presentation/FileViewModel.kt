@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.engine.files.WifiShare
 import io.github.eslamasabry.oc.engine.media.preview.DelimitedText
 import io.github.eslamasabry.oc.engine.media.preview.StaticSvg
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.FilesPlace
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.collections.immutable.ImmutableMap
@@ -131,6 +132,11 @@ public data class FileUi(
     val pdfPages: ImmutableMap<Int, PdfPageUi> = persistentMapOf(),
     val storageBlock: SharedStorageBlock = SharedStorageBlock.None,
     val requestingStorage: Boolean = false,
+    /**
+     * False for a project opened without a conversation: no Ask about this file, no reference or
+     * attachment, no conversation review.
+     */
+    val inConversation: Boolean = true,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -209,7 +215,7 @@ public interface FileActions {
  */
 @AssistedInject
 public class FileViewModel(
-    @Assisted private val route: FilesRoute.File,
+    @Assisted private val route: FilesRoute.AnyFile,
     private val connections: FilesConnections,
     private val mentions: ComposerMentions,
     private val share: WifiShare,
@@ -250,12 +256,13 @@ public class FileViewModel(
                 canShare = share.supported,
                 canOpenWith = handoffs.isNotEmpty(),
                 canSave = savers.isNotEmpty(),
-                canAttach = mentions.canAttach(),
+                canAttach = route.place is FilesPlace.Conversation && mentions.canAttach(),
+                inConversation = route.place is FilesPlace.Conversation,
                 canChooseWrap = preferences.size == 1,
                 wrapCode =
                     preferences
                         .singleOrNull()
-                        ?.open(route.from.profileId)
+                        ?.open(route.place.profileId)
                         ?.value
                         ?.value
                         ?.wrapCode == true,
@@ -267,7 +274,10 @@ public class FileViewModel(
     private var loads = 0
     private var shareWanted = false
     private var clips = 0L
-    private val reader = preferences.singleOrNull()?.open(route.from.profileId)
+    private val reader = preferences.singleOrNull()?.open(route.place.profileId)
+    private val files = PlaceFiles(route.place, connections)
+    /** The conversation this file was opened for; null for a project opened on its own. */
+    private val ref = files.conversation
 
     /** The share this viewer started; another viewer's share is never adopted or stopped here. */
     private var shareId: Long? = null
@@ -312,12 +322,12 @@ public class FileViewModel(
 
     private fun load() {
         val mine = ++loads
-        val identity = connections.sourceIdentity(route.from)
-        val gateway = connections.gateway(route.from)
+        val identity = files.identity()
+        val gateway = files.gateway()
         when {
             gateway == null ->
                 local.update { it.copy(phase = FilePhase.NotConnected, failure = null) }
-            !connections.canBrowse(route.from) ->
+            !files.canBrowse() ->
                 local.update { it.copy(phase = FilePhase.Unavailable, failure = null) }
             else -> {
                 local.update {
@@ -330,10 +340,10 @@ public class FileViewModel(
                 }
                 viewModelScope.launch {
                     if (!checkStorage(identity) { mine == loads }) return@launch
-                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                    if (mine != loads || files.identity() !== identity)
                         return@launch
                     val localFile =
-                        phoneFiles.singleOrNull()?.available(route.from, route.path) == true
+                        ref != null && phoneFiles.singleOrNull()?.available(ref, route.path) == true
                     if (mine != loads) return@launch
                     local.update {
                         it.copy(
@@ -345,8 +355,8 @@ public class FileViewModel(
                     val opened = ProjectFiles.open(gateway, route.path, route.line)
                     if (
                         mine != loads ||
-                            !connections.isCurrent(route.from, gateway) ||
-                            connections.sourceIdentity(route.from) !== identity
+                            !files.isCurrent(gateway) ||
+                            files.identity() !== identity
                     )
                         return@launch
                     when (opened) {
@@ -365,10 +375,11 @@ public class FileViewModel(
                                 )
                             }
                             (opened.value.body as? FileBody.Pdf)?.let { openPdf(it.bytes) }
-                            val changes = connections.changes(route.from)
+                            val changes = files.changes()
                             if (
-                                mine == loads &&
-                                    connections.isCurrent(route.from, gateway) &&
+                                ref != null &&
+                                    mine == loads &&
+                                    files.isCurrent(gateway) &&
                                     changes is Outcome.Ok
                             ) {
                                 local.update {
@@ -406,10 +417,10 @@ public class FileViewModel(
 
     private suspend fun checkStorage(identity: Any?, wanted: () -> Boolean = { true }): Boolean {
         val access = storageAccess.singleOrNull() ?: return true
-        val directory = connections.directory(route.from)
+        val directory = files.directory()
         if (!wanted()) return false
         if (!sourceCurrent(identity)) return false
-        val checked = access.check(route.from.profileId, directory, identity)
+        val checked = access.check(route.place.profileId, directory, identity)
         if (!wanted()) return false
         if (!sourceCurrent(identity)) return false
         projectDirectory = directory
@@ -450,7 +461,7 @@ public class FileViewModel(
     }
 
     private fun sourceCurrent(identity: Any?): Boolean {
-        if (connections.sourceIdentity(route.from) === identity) return true
+        if (files.identity() === identity) return true
         data = null
         closeShare()
         local.update {
@@ -481,12 +492,12 @@ public class FileViewModel(
     override fun requestStorage() {
         val access = storageAccess.singleOrNull() ?: return
         val block = local.value.storageBlock
-        val identity = connections.sourceIdentity(route.from)
+        val identity = files.identity()
         val run = loads
         if (block == SharedStorageBlock.None || local.value.requestingStorage) return
         local.update { it.copy(requestingStorage = true) }
         viewModelScope.launch {
-            val asked = access.request(route.from.profileId, projectDirectory, block, identity)
+            val asked = access.request(route.place.profileId, projectDirectory, block, identity)
             if (run != loads) return@launch
             if (!sourceCurrent(identity)) return@launch
             local.update {
@@ -570,15 +581,16 @@ public class FileViewModel(
         )
             return
         if (local.value.asking) return
-        val identity = connections.sourceIdentity(route.from)
+        val ref = ref ?: return
+        val identity = files.identity()
         val run = loads
         local.update { it.copy(asking = true, notice = null) }
         viewModelScope.launch {
             if (!checkStorage(identity) { run == loads }) return@launch
-            if (connections.sourceIdentity(route.from) !== identity) return@launch
-            val directory = projectDirectory ?: connections.directory(route.from)
-            val result = mentions.mentionAt(route.from, local.value.path, directory, route.line)
-            if (connections.sourceIdentity(route.from) !== identity) return@launch
+            if (files.identity() !== identity) return@launch
+            val directory = projectDirectory ?: files.directory()
+            val result = mentions.mentionAt(ref, local.value.path, directory, route.line)
+            if (files.identity() !== identity) return@launch
             local.update { it.copy(asking = false) }
             when (result) {
                 is Outcome.Failed -> local.update { it.copy(notice = FileNotice.MentionFailed) }
@@ -588,8 +600,9 @@ public class FileViewModel(
     }
 
     override fun review() {
+        val ref = ref ?: return
         if (local.value.canReview)
-            nav.open(ReviewRoute.File(route.from, local.value.path, workingTree = true))
+            nav.open(ReviewRoute.File(ref, local.value.path, workingTree = true))
     }
 
     override fun toggleSource() {
@@ -602,10 +615,11 @@ public class FileViewModel(
 
     override fun attach() {
         val file = data ?: return
+        val ref = ref ?: return
         if (local.value.attaching) return
         local.update { it.copy(attaching = true, notice = null) }
         viewModelScope.launch {
-            val result = mentions.attach(route.from, file)
+            val result = mentions.attach(ref, file)
             local.update {
                 it.copy(
                     attaching = false,
@@ -623,15 +637,16 @@ public class FileViewModel(
                 local.value.asking
         )
             return
-        val identity = connections.sourceIdentity(route.from)
+        val ref = ref ?: return
+        val identity = files.identity()
         val run = loads
         local.update { it.copy(asking = true, notice = null) }
         viewModelScope.launch {
             if (!checkStorage(identity) { run == loads }) return@launch
-            if (connections.sourceIdentity(route.from) !== identity) return@launch
-            val directory = projectDirectory ?: connections.directory(route.from)
-            val result = mentions.mentionAt(route.from, local.value.path, directory, route.line)
-            if (connections.sourceIdentity(route.from) !== identity) return@launch
+            if (files.identity() !== identity) return@launch
+            val directory = projectDirectory ?: files.directory()
+            val result = mentions.mentionAt(ref, local.value.path, directory, route.line)
+            if (files.identity() !== identity) return@launch
             local.update {
                 it.copy(
                     asking = false,
@@ -701,13 +716,14 @@ public class FileViewModel(
 
     override fun openPhone(install: Boolean) {
         val handoff = phoneFiles.singleOrNull() ?: return
+        val ref = ref ?: return
         if (
             local.value.opening || !local.value.canOpenLocal || (install && !local.value.canInstall)
         )
             return
         local.update { it.copy(opening = true, notice = null) }
         viewModelScope.launch {
-            val result = handoff.open(route.from, route.path, install)
+            val result = handoff.open(ref, route.path, install)
             local.update {
                 it.copy(
                     opening = false,
@@ -811,7 +827,7 @@ public class FileViewModel(
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
     public fun interface Factory : ManualViewModelAssistedFactory {
-        public fun create(@Assisted route: FilesRoute.File): FileViewModel
+        public fun create(@Assisted route: FilesRoute.AnyFile): FileViewModel
     }
 
     private companion object {

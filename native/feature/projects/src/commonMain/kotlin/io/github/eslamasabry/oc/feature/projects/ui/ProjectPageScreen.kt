@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
+import io.github.eslamasabry.oc.ui.kit.action.rememberKitCopyAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -40,6 +41,10 @@ import io.github.eslamasabry.oc.ui.words.res.agentElsewhereCounts
 import io.github.eslamasabry.oc.ui.words.res.agentElsewhereStale
 import io.github.eslamasabry.oc.ui.words.res.agentProjectWorkspace
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryProjectHealth
+import io.github.eslamasabry.oc.ui.words.res.kitCopied
+import io.github.eslamasabry.oc.ui.words.res.projectHubCopyFolderPath
+import io.github.eslamasabry.oc.ui.words.res.shellTabFiles
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMoreFailed
@@ -158,6 +163,13 @@ public fun ProjectPageScreen(
                             onClick = actions::developmentServices,
                         )
                     }
+                    // Flutter's project hub is the project's Files; here it is one row, no conversation needed.
+                    if (state.canBrowseFiles)
+                        KitRow(
+                            title = stringResource(Res.string.shellTabFiles),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = actions::openFiles,
+                        )
                     if (onTerminal != null)
                         KitRow(
                             title = stringResource(Res.string.terminal40Title),
@@ -185,6 +197,13 @@ public fun ProjectPageScreen(
                             trailing = KitRowTrailing.Chevron,
                             onClick = actions::openWorkspace,
                         )
+                    if (state.canHealth)
+                        KitRow(
+                            title = stringResource(Res.string.e7LibraryProjectHealth),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = actions::openHealth,
+                        )
+                    CopyFolderPathRow(state.directory)
                 }
             }
             // N-50: the project itself is not one of its separate copies; the group shows only real copies.
@@ -288,6 +307,19 @@ public fun ProjectPageScreen(
         }
         ProjectWorkspaceSheet(state.workspace, actions)
     }
+}
+
+/** Flutter's hub "Copy folder path": copies the project's folder, then reads Copied for a moment. */
+@Composable
+private fun CopyFolderPathRow(directory: String) {
+    if (directory.isEmpty()) return
+    val copy =
+        rememberKitCopyAction(
+            stringResource(Res.string.projectHubCopyFolderPath),
+            stringResource(Res.string.kitCopied),
+            { directory },
+        )
+    KitRow(title = copy.label, onClick = { copy.onClick?.invoke() })
 }
 
 @Composable

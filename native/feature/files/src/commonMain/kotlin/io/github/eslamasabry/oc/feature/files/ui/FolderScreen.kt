@@ -619,7 +619,8 @@ private fun EntryRow(node: FileNode, state: FolderUi, actions: FolderActions) {
         .ifEmpty { null }
     val deleted = change?.status == "deleted"
     val menu = buildList {
-        if (!node.isDir && !deleted) {
+        // A project opened without a conversation has no draft to ask in or add to.
+        if (!node.isDir && !deleted && state.inConversation) {
             add(
                 KitMenuItem(
                     stringResource(Res.string.filesAskAboutFile),
@@ -643,7 +644,7 @@ private fun EntryRow(node: FileNode, state: FolderUi, actions: FolderActions) {
                     )
                 )
         }
-        if (change != null)
+        if (change != null && state.inConversation)
             add(
                 KitMenuItem(
                     stringResource(Res.string.readerUiOpenReview),

@@ -149,7 +149,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     modifier = Modifier.weight(1f),
                     path = state.path,
                     primary =
-                        if (ready && !state.asking)
+                        if (ready && !state.asking && state.inConversation)
                             KitViewerAction(
                                 stringResource(Res.string.filesAskAboutFile),
                                 actions::ask,
@@ -261,13 +261,14 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                             actions.review()
                         },
                     )
-                KitRow(
-                    stringResource(Res.string.filesAddReference),
-                    onClick = {
-                        more = false
-                        actions.addReference()
-                    },
-                )
+                if (state.inConversation)
+                    KitRow(
+                        stringResource(Res.string.filesAddReference),
+                        onClick = {
+                            more = false
+                            actions.addReference()
+                        },
+                    )
                 if (state.canAttach)
                     KitRow(
                         stringResource(Res.string.readerUiAttachPrompt),

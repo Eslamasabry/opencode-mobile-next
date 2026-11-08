@@ -48,7 +48,32 @@ public interface FilesConnections {
 
     public suspend fun changes(ref: ConversationRef): Outcome<ImmutableList<VersionControlFile>> =
         Outcome.Failed(Failure.Unavailable(FeatureId("projectManagement")))
+
+    /**
+     * One project's files with no conversation (the project page's Files row): that server's live
+     * connection, scoped to [directory]. Null while the server is not connected.
+     */
+    public fun project(profile: ProfileId, directory: String): ProjectFilesSource? = null
 }
+
+/**
+ * A project folder on one live connection. [identity] is that exact live connection; every read is
+ * checked against it again, so a reconnect never shows another source's tree.
+ */
+public class ProjectFilesSource(
+    public val identity: Any,
+    public val gateway: FileGateway,
+    public val canBrowse: Boolean,
+    public val canTerminal: Boolean = false,
+    public val canSearchText: Boolean = false,
+    public val canSearchSymbols: Boolean = false,
+    public val symbols: suspend (String) -> Outcome<ImmutableList<WorkspaceSymbol>> = {
+        Outcome.Failed(Failure.Unavailable(FeatureId("workspaceSymbols")))
+    },
+    public val changes: suspend () -> Outcome<ImmutableList<VersionControlFile>> = {
+        Outcome.Failed(Failure.Unavailable(FeatureId("projectManagement")))
+    },
+)
 
 /** Puts a project file into the conversation's draft: `@path ` in the text and its file mention. */
 public fun interface ComposerMentions {
