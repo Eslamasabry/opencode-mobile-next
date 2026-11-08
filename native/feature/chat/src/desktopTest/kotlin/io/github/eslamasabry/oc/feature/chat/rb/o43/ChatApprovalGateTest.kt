@@ -3,14 +3,18 @@ package io.github.eslamasabry.oc.feature.chat.rb.o43
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
 import io.github.eslamasabry.oc.feature.chat.Immediate
 import io.github.eslamasabry.oc.feature.chat.RecordingNavigator
 import io.github.eslamasabry.oc.feature.chat.Ref
 import io.github.eslamasabry.oc.feature.chat.block
 import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
+import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
@@ -39,6 +43,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
+import io.github.eslamasabry.oc.ui.kitchat.composer.ComposerInbox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
@@ -56,6 +61,7 @@ import kotlin.test.Test
  * chip's popup menu, which the gate cannot capture (a second window root). Blocked on :feature:chat (evidence note
  * docs/design/native-ui-rebuild/evidence/score-F.md).
  */
+@OptIn(ExperimentalTestApi::class)
 class ChatApprovalGateTest {
     private val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
     private val headerActions = object : ChatHeaderActions {
@@ -81,6 +87,8 @@ class ChatApprovalGateTest {
         override fun cancelEverything() = Unit
         override fun dismissApprovalFailure() = Unit
     }
+    /** Flutter's capture keeps saved prompts, so the tools sheet has its "Prompts" fold (composer_tools.dart:221). */
+    private val prompts = ChatPromptsDoor(Ref, ComposerInbox(), RecordingNavigator())
     private val composerActions = object : BasicComposerActions {
         override fun draftChanged(text: String) = Unit
         override suspend fun send(text: String) = true
@@ -128,7 +136,8 @@ class ChatApprovalGateTest {
             rows =
                 persistentListOf(
                     footer("msg_user"),
-                    block("msg_user", "msg_assistant", "part_intro", 0, text),
+                    // One row per paragraph, as the engine's block splitter gives a reply (a blank line closes one).
+                    *text.split("\n\n").map { words -> block("msg_user", "msg_assistant", "part_intro", text.indexOf(words), words) }.reversed().toTypedArray(),
                     prompt("msg_user", "Fix the flaky checkout test"),
                 ),
         )
@@ -148,7 +157,10 @@ class ChatApprovalGateTest {
                 approval = ApprovalChipSlot(approval, approvalActions),
             )
         FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen, act = act) {
-            KitStandaloneRedaction { ChatScreen(state, actions, host, header = header, facts = facts) }
+            // The chat is the capture's root (no Back), as in chat_approval_chip_golden_test.dart.
+            KitStandaloneRedaction {
+                ChatScreen(state, actions, host, header = header, facts = facts, prompts = prompts, canGoBack = false)
+            }
         }
     }
 
@@ -161,6 +173,8 @@ class ChatApprovalGateTest {
         waitForIdle()
         mainClock.advanceTimeBy(TRAY_UNFOLD_MS)
         onNodeWithTag("composer-tray-more", useUnmergedTree = true).performClick()
+        // A finger leaves the glass after the tap; a desktop pointer left over the sheet would hover the row under it.
+        onRoot().performMouseInput { moveTo(androidx.compose.ui.geometry.Offset(1f, 1f)) }
     }
 
     @Test fun approvalAsk() = shot("chat_approval_ask", mode(ApprovalChoice.Ask))

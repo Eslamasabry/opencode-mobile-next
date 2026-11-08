@@ -464,7 +464,8 @@ internal fun TurnChangedFiles(
         if (files.size > shown.size)
             pluralStringResource(Res.plurals.chatTurnAllFilesMore, files.size - shown.size, files.size - shown.size)
         else stringResource(Res.string.chatTurnAllFiles)
-    Column(Modifier.fillMaxWidth().testTag("chat-turn-files")) {
+    // F: kit_turn.dart:564: the footer sits space1 under the turn's last block.
+    Column(Modifier.fillMaxWidth().padding(bottom = Space.S1.dp).testTag("chat-turn-files")) {
         // F: chat_files.dart:360 `margin: EdgeInsetsDirectional.only(top: tokens.space2)`.
         KitRowGroup(Modifier.padding(top = Space.S2.dp)) {
             for (file in shown) {

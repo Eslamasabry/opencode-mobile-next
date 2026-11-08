@@ -2,7 +2,10 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
@@ -90,6 +93,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -337,6 +341,9 @@ internal fun ChatTranscriptList(
         jumpLabel = words.jumpToLatest,
         motion = motion,
         modifier = modifier,
+        // F: kit_turn.dart:587-591: the newest turn ends space2 above the composer, and the footer row's 48 dp
+        // actions already give that room; the list's own 16 dp under it left the turn 16 px higher than Flutter's.
+        contentPadding = PaddingValues(top = Space.S4.dp),
     ) {
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
@@ -398,6 +405,7 @@ internal fun ChatTranscriptList(
               }
             }
         }
+        val olderInTurn = olderRowsInTurn(unique, facts.reading.hiddenPartKeys)
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
@@ -416,6 +424,7 @@ internal fun ChatTranscriptList(
                         else -> null
                     }
                 if (source in facts.reading.hiddenPartKeys) return@items
+                turnGapAbove(row, olderInTurn[row.key], facts)?.let { gap -> Spacer(Modifier.height(gap.dp)) }
                 // A table longer than one chunk is drawn whole by its first chunk; its later chunks
                 // draw nothing.
                 if (reply != null && row is BlockRow && row.key in tables) {
@@ -888,6 +897,14 @@ private fun ChatRow(
                             if (row.failed) KitQuietLine(words.footer(true))
                             else if (row.stopped) KitQuietLine(words.stoppedFooter())
                             facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                            // F: message_view.dart:423-437 and transcript_turns.dart:731-735: the newest turn's
+                            // footer names the model it ran on (older turns keep a quiet footer).
+                            facts.reading.metadata[row.turnId]
+                                ?.takeIf { it.latest && it.models.isNotEmpty() }
+                                ?.let { meta ->
+                                    val mask = rememberKitMask()
+                                    KitReplyMeta(meta.models.joinToString(" \u2192 ") { mask(it) })
+                                }
                         }
                     }
                 }
@@ -897,6 +914,55 @@ private fun ChatRow(
                 if (result != null && folds != null && facts.work[row.turnId] == null)
                     TurnResultLine(row.turnId, result, folds)
             }
+    }
+}
+
+/**
+ * For each row, the drawn row just above it in the same turn (rows are newest first, so that is the next one in
+ * [rows] that is not folded away); a turn's first row has none.
+ */
+private fun olderRowsInTurn(rows: List<TranscriptRow>, hidden: Set<String>): Map<String, TranscriptRow> {
+    val out = HashMap<String, TranscriptRow>()
+    fun drawn(row: TranscriptRow): Boolean {
+        val source =
+            when (row) {
+                is BlockRow -> row.key.removePrefix("b:").substringBeforeLast(':')
+                is ThoughtRow -> row.key.removePrefix("thought:")
+                is NoticeRow -> row.key.removePrefix("notice:")
+                else -> null
+            }
+        return source !in hidden
+    }
+    for (i in rows.indices) {
+        val row = rows[i]
+        var j = i + 1
+        while (j < rows.size && rows[j].turnId == row.turnId && !drawn(rows[j])) j++
+        if (j < rows.size && rows[j].turnId == row.turnId) out[row.key] = rows[j]
+    }
+    return out
+}
+
+/**
+ * C-001/C-003/C-011 (turn grouping): Flutter's turn spaces its parts (kit_turn.dart:485-565): the prompt, then the
+ * blocks [Space.S4] under it, each block [Space.S3] under the one before (kit_markdown.dart:664 inside one reply's
+ * words), and the footer [Space.S1] under the blocks. Native rows already carry [Space.S1] above and below a reply
+ * block ([replyColumn]); this adds what is missing so the same distances result. Null: no gap of its own.
+ */
+private fun turnGapAbove(row: TranscriptRow, older: TranscriptRow?, facts: TurnFactsUi): Int? {
+    if (older == null) return null
+    return when {
+        // F: kit_turn.dart:516 `add(blocks, tokens.space4)` under the prompt (a reply block brings S1 of its own).
+        older is PromptRow && row is BlockRow -> Space.S3
+        older is PromptRow && row !is PromptRow -> Space.S4
+        // A long block's next chunk joins it seamlessly.
+        row is BlockRow && row.continued -> null
+        // F: kit_markdown.dart:664: blocks of one reply's words, space3 apart (the rows' own 4 + 4, and 4 more).
+        row is BlockRow && older is BlockRow -> Space.S1
+        // F: kit_turn.dart:498: blocks space3 apart; a work line's row keeps no padding of its own.
+        // F: kit_turn.dart:498: the changed files are a block, space3 under the words (with their own space2 margin,
+        // chat_files.dart:360); the footer's own row already sits space1 under the last block.
+        row is FooterRow -> if (facts.results[row.turnId]?.files.isNullOrEmpty()) null else Space.S2
+        else -> Space.S2
     }
 }
 
