@@ -1,0 +1,17 @@
+<resources>
+    <!-- B-182: فتح مشروع من شريحة المشاريع في الصفحة الرئيسية. -->
+    <string name="openProjectWhereTitle">أين المشروع؟</string>
+    <string name="openProjectWhereBody">اختر الهاتف أو الحاسوب الذي يحمله.</string>
+    <string name="openProjectStatusConnected">متصل</string>
+    <string name="openProjectStatusConnecting">جارٍ الاتصال</string>
+    <string name="openProjectStatusNotConnected">غير متصل</string>
+    <string name="openProjectTypePath">اكتب مسارًا</string>
+    <string name="openProjectTypePathBody">افتح مجلدًا بمساره الكامل</string>
+    <string name="openProjectNewFolder">مجلد جديد</string>
+    <string name="openProjectNewFolderBody">أنشئ مجلدًا في %1$s وافتحه</string>
+    <string name="openProjectCloneBody">انسخ مستودعًا إلى %1$s وافتحه</string>
+    <string name="openProjectCloneFailed">تعذّر نسخ المستودع. تحقّق من عنوانه ومن أن الخادم يستطيع الوصول إليه.</string>
+    <string name="openProjectSlowBody">يستغرق الخادم وقتًا أطول من المعتاد للرد.</string>
+    <string name="openProjectProjectsEmptyBody">انسخ مستودعًا أو أنشئ مجلدًا جديدًا للبدء.</string>
+    <string name="openProjectServerNotConnected">هذا الخادم غير متصل الآن. حاول مجددًا عندما يتصل.</string>
+</resources>

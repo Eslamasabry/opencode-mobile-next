@@ -1,0 +1,17 @@
+<resources>
+    <!-- B-182: Open a project from the home's project chip (Flutter folder_browser.dart, remote_folder_picker.dart). -->
+    <string name="openProjectWhereTitle">Where is the project?</string>
+    <string name="openProjectWhereBody">Pick the phone or computer that has it.</string>
+    <string name="openProjectStatusConnected">Connected</string>
+    <string name="openProjectStatusConnecting">Connecting</string>
+    <string name="openProjectStatusNotConnected">Not connected</string>
+    <string name="openProjectTypePath">Type a path</string>
+    <string name="openProjectTypePathBody">Open a folder by its full path</string>
+    <string name="openProjectNewFolder">New folder</string>
+    <string name="openProjectNewFolderBody">Make a folder in %1$s and open it</string>
+    <string name="openProjectCloneBody">Copy a repository into %1$s and open it</string>
+    <string name="openProjectCloneFailed">The repository couldn’t be copied. Check its address and that the server can reach it.</string>
+    <string name="openProjectSlowBody">The server is taking longer than usual to answer.</string>
+    <string name="openProjectProjectsEmptyBody">Clone a repository or make a new folder to start.</string>
+    <string name="openProjectServerNotConnected">This server isn’t connected right now. Try again once it is.</string>
+</resources>
