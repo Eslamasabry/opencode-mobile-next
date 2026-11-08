@@ -20,11 +20,14 @@ import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
+import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
+import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
 import io.github.eslamasabry.oc.feature.updates.presentation.updatesUi
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateOfferSheet
+import io.github.eslamasabry.oc.feature.updates.ui.UpdatePromptSheet
 import io.github.eslamasabry.oc.feature.updates.ui.UpdatesScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -215,5 +218,26 @@ class UpdatesScreenUiTest {
         onNodeWithText("Not now").performClick()
         onNodeWithText("Update").performClick()
         assertEquals(listOf("notNow", "update"), actions.calls)
+    }
+
+    @Test
+    fun `B-BUILD-045 the start-up prompt asks Update now or Not now`() = runComposeUiTest {
+        val calls = mutableListOf<String>()
+        val actions =
+            object : UpdatePromptActions {
+                override fun onPromptUpdate() { calls += "update" }
+
+                override fun onPromptLater() { calls += "later" }
+
+                override fun onPromptClose() { calls += "close" }
+            }
+        val prompt = OfferUi("2.2.0", "This release is faster.")
+        setContent { Themed { KitSheetHost { UpdatePromptSheet(prompt, actions) } } }
+        waitForIdle()
+        onNodeWithText("Version 2.2.0 is ready").assertExists()
+        onNodeWithText("This release is faster.").assertExists()
+        onNodeWithText("Not now").performClick()
+        onNodeWithText("Update now").performClick()
+        assertEquals(listOf("later", "update"), calls)
     }
 }

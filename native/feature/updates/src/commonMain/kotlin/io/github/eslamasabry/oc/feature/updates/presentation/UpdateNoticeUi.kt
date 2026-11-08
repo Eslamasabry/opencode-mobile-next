@@ -66,3 +66,28 @@ public fun offerUi(state: AppUpdateState): OfferUi? {
 
 /** The gear's update badge ("Settings, update available"): on while a newer release waits, also after Not now. */
 public fun hasUpdateBadge(state: AppUpdateState): Boolean = state.hasPendingRelease
+
+/**
+ * The prompt a start-up or resume check opens (Flutter `showInAppUpdateSheet`, #126): "Version 2.2.0 is ready", the
+ * first plain sentence of its notes, then Update now or Not now. Null when it is closed, put off for the session, the
+ * Updates page is open or the release is already being fetched. Pure.
+ */
+public fun promptUi(state: AppUpdateState): OfferUi? =
+    state.release
+        ?.takeIf { state.promptWanted }
+        ?.let { OfferUi(it.version, it.summary) }
+
+private val AppUpdateState.promptWanted: Boolean
+    get() = supported && promptOpen && phase == UpdatePhase.Available && !(pageOpen || notNow)
+
+/** What the prompt's choices reach. */
+public interface UpdatePromptActions {
+    /** Closes the prompt and starts the download (AppUpdates.updateNow). */
+    public fun onPromptUpdate()
+
+    /** Not now: this release is not offered again this session (AppUpdates.later). */
+    public fun onPromptLater()
+
+    /** Back, Close or the scrim: only closes (AppUpdates.closePrompt). */
+    public fun onPromptClose()
+}

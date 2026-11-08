@@ -35,6 +35,9 @@ private fun quote(s: String) = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\
 internal class FakeFeed : UpdateFeed {
     var latestBody: Outcome<String> = releaseJson().ok()
     var sumsHash = GOOD_HASH
+
+    /** More SHA256SUMS lines, for releases with other file names. */
+    var extraSums = ""
     var latestCalls = 0
     var downloads = 0
     var downloadedUrl: String? = null
@@ -49,7 +52,7 @@ internal class FakeFeed : UpdateFeed {
     override suspend fun text(url: String): Outcome<String> =
         ("$sumsHash  opencode-mobile-2.2.0-arm64-v8a.apk\n" +
             "$sumsHash *opencode-mobile-2.2.0-armeabi-v7a.apk\n" +
-            "$sumsHash  opencode-mobile-2.2.0.apk\n").ok()
+            "$sumsHash  opencode-mobile-2.2.0.apk\n" + extraSums).ok()
 
     override suspend fun download(url: String, dest: String, onProgress: (Long, Long) -> Unit): Outcome<Unit> {
         downloads++

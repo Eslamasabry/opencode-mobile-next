@@ -17,8 +17,15 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.integrations.usage.AntigravityAgentState
+import io.github.eslamasabry.oc.engine.integrations.usage.AntigravityLinuxRunner
+import io.github.eslamasabry.oc.engine.integrations.usage.AntigravityQuotaClient
+import io.github.eslamasabry.oc.engine.integrations.usage.LinuxRunResult
 import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageReading
 import io.github.eslamasabry.oc.engine.integrations.usage.parseProviderUsageList
+import io.github.eslamasabry.oc.engine.integrations.usage.withAntigravityUsage
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
@@ -30,7 +37,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Reads only an already running, owned phone helper. There is no start, restart or credential
- * creation path.
+ * creation path. Antigravity's plan usage comes from its own CLI inside the built-in Linux
+ * (Flutter `_paReadUsage`, PR #125).
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -40,7 +48,32 @@ class PhoneUsageReader(
     private val dispatchers: AppDispatchers,
     private val redactor: Redactor,
     private val clock: Clock,
+    private val phoneAgents: PhoneAgents,
 ) {
+    private val antigravity =
+        AntigravityQuotaClient(
+            runner =
+                if (supported)
+                    AntigravityLinuxRunner { script, timeoutMs ->
+                        withContext(dispatchers.io) {
+                            val res =
+                                BuiltinLinux.get(app)
+                                    .run(script, timeoutSeconds = timeoutMs / 1000, logOutput = false)
+                            LinuxRunResult(res.exitCode, res.output)
+                        }
+                    }
+                else null,
+            clock = { clock.now() },
+        )
+
+    private fun antigravityAgent(): AntigravityAgentState =
+        when (phoneAgents.state.value.agents.firstOrNull { it.id == "antigravity" }?.status) {
+            null -> AntigravityAgentState.Absent
+            PhoneAgentStatus.Ready -> AntigravityAgentState.Ready
+            PhoneAgentStatus.SignInNeeded -> AntigravityAgentState.SignedOut
+            else -> AntigravityAgentState.Other
+        }
+
     private val retired = java.util.concurrent.ConcurrentHashMap.newKeySet<ProfileId>()
 
     val supported: Boolean
@@ -88,6 +121,19 @@ class PhoneUsageReader(
             return Failure.SecretUnavailable().failed()
         redactor.registerSecret(password)
         if (owner() != captured) return Failure.Refused(RefusalReason.StaleScope).failed()
+        val base = readHelper(captured, password)
+        val list = (base as? Outcome.Ok)?.value ?: return base
+        val readings =
+            withAntigravityUsage(list, antigravityAgent(), clock.now()) {
+                antigravity.fetchAllUsage(profileId = captured.raw)
+            }
+        return (if (owner() == captured) readings else list).ok()
+    }
+
+    private suspend fun readHelper(
+        captured: ProfileId,
+        password: String,
+    ): Outcome<List<ProviderUsageReading>?> {
         return coroutineScope {
             val transport =
                 PaseoTransport(

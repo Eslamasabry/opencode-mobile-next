@@ -141,8 +141,12 @@ public fun isTrustedReleaseFileUrl(url: String, feedOverride: String = ""): Bool
         val feed = SimpleUrl.parse(feedOverride) ?: return false
         return feed.host == u.host && feed.port == u.port
     }
-    return u.scheme == "https" && u.host == "github.com" && u.path.startsWith("/Eslamasabry/opencode-mobile-next/releases/")
+    // Only this project's release downloads (Flutter `isTrustedDownloadUrl`, #126): not its pages, not another path.
+    return u.scheme == "https" && u.host == "github.com" && u.port == null &&
+        u.path.startsWith(RELEASE_DOWNLOAD_PATH) && u.path.split('/').none { it == ".." || it == "." }
 }
+
+private const val RELEASE_DOWNLOAD_PATH = "/Eslamasabry/opencode-mobile-next/releases/download/"
 
 /** Just enough URL reading for the trust check; anything odd is refused (null). */
 internal data class SimpleUrl(val scheme: String, val host: String, val port: Int?, val path: String, val hasUserInfo: Boolean) {

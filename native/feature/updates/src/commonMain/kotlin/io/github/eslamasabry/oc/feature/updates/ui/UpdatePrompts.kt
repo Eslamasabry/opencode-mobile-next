@@ -3,7 +3,9 @@ package io.github.eslamasabry.oc.feature.updates.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
+import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
+import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -130,6 +132,26 @@ public fun UpdateOfferSheet(
             ),
         tertiary = listOfNotNull(onWhatsNew?.let { KitAction(stringResource(Res.string.appUpdateWhatsNew), it) }),
     ) {
+        if (summary.isNotEmpty()) KitText(summary)
+    }
+}
+
+/**
+ * The prompt a start-up or resume check opens over whatever screen is showing (Flutter `showInAppUpdateSheet`, #126):
+ * "Version 2.2.0 is ready", the release's first plain sentence, then Update now or Not now. Not now puts this release
+ * off for the session; Back, Close and the scrim only close the sheet. Needs a KitSheetHost above it.
+ */
+@Composable
+public fun UpdatePromptSheet(prompt: OfferUi?, actions: UpdatePromptActions) {
+    KitSheet(
+        visible = prompt != null,
+        onDismissRequest = actions::onPromptClose,
+        title = stringResource(Res.string.appUpdateReadyTitle, prompt?.version.orEmpty()),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        primary = KitAction(stringResource(Res.string.appUpdateNow), actions::onPromptUpdate),
+        secondary = KitAction(stringResource(Res.string.appUpdateNotNow), actions::onPromptLater),
+    ) {
+        val summary = prompt?.summary.orEmpty()
         if (summary.isNotEmpty()) KitText(summary)
     }
 }
