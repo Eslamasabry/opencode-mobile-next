@@ -105,7 +105,10 @@ class KitLayoutMarksTest {
     }
 
     @Test
-    fun `E20-S08 a top bar with Back starts its title and subtitle on the 16 dp gutter`() = runComposeUiTest {
+    fun `E20-S08 a top bar with Back keeps Back, the title and its subtitle in one row, the words on the 56 dp text rail`() = runComposeUiTest {
+        // s21-kit order 2 (Flutter kit_top_bar.dart:346-420): a pushed page's bar is one row, Back then the title, whose
+        // words start on the text rail (KitTokens.textRail, 56 dp) like the rows' words beside a leading mark; the
+        // subtitle starts under the title's first letter. (Before: Back on a line of its own, the title on the gutter.)
         setContent {
             Themed {
                 KitTopBar(
@@ -117,13 +120,13 @@ class KitLayoutMarksTest {
                 )
             }
         }
-        // The page's words (the transcript, the rows) start on the gutter; the title sat past Back at 64 dp.
         val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val subtitle = onNodeWithText("shopfront", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val back = onNodeWithTag("kit-top-bar-exit", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        assertEquals(16f, title.left)
-        assertEquals(16f, subtitle.left)
-        assertTrue(title.top >= back.bottom, "title $title under Back $back")
+        assertEquals(56f, title.left)
+        assertEquals(56f, subtitle.left)
+        assertTrue(title.top < back.bottom && title.bottom > back.top, "title $title beside Back $back, on its row")
+        assertTrue(subtitle.top >= title.bottom, "subtitle $subtitle under the title $title")
     }
 
     @Test

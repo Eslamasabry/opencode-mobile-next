@@ -345,7 +345,9 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
             }
         }
     } else {
-        KitButton(confirm, Modifier.fillMaxWidth())
+        // Flutter stretches the column and each button holds its control cap (KitMaxWidth.control, 400 dp) centred, so
+        // on a medium window the confirm and Cancel sit in the middle of the sheet, not at its start edge.
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { KitButton(confirm, Modifier.fillMaxWidth()) }
         confirm.enabled.reason?.let {
             Spacer(Modifier.height(Space.S2.dp))
             KitText(it, role = TypeRole.Secondary)
@@ -360,7 +362,9 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
             }
         }
         Spacer(Modifier.height(Space.S3.dp))
-        KitButton(cancel, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary)
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            KitButton(cancel, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary)
+        }
     }
 }
 

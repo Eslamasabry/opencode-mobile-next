@@ -617,9 +617,8 @@ private fun SheetPanel(
                         .background(colors.text3)
                 )
             }
-        } else {
-            Box(Modifier.height(Space.S3.dp))
         }
+        // Without a handle the header's own top padding (space 3) is the air above it, once (kit_sheet.dart:574-577).
         if (entry.asking) SheetQuestion(entry)
         BoxWithConstraints(
             Modifier.weight(1f, fill = false)

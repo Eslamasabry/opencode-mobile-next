@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -50,6 +52,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.layout.Layout
+import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
@@ -133,7 +137,12 @@ internal fun DialogLayer(state: KitSheetHostState) {
         )
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val bottom = entry.sheetOnCompact && maxWidth.value < SheetLayout.EXPANDED_FROM_DP
+        // Flutter `presentKitConfirmFrame` (kit_confirm_sheet.dart:139-150): the modal window class decides the shape
+        // and the cap: a bottom sheet capped at 640 dp on a compact window and at 560 dp on a medium one (a wide but
+        // short window counts as medium), the centred 480 dp panel from expanded up.
+        val window = WindowClass.modal(maxWidth.value, maxHeight.value)
+        val bottom = entry.sheetOnCompact && !window.isWide
+        val bottomCap = if (window == WindowClass.Compact) SheetLayout.BOTTOM_MAX_DP else Layout.CONFIRM_WIDTH
         val cap = maxHeight * SheetLayout.CONTENT_MAX_SHARE
         val panel =
             Modifier.pointerInput(Unit) { detectTapGestures { } }
@@ -142,12 +151,34 @@ internal fun DialogLayer(state: KitSheetHostState) {
                     isTraversalGroup = true
                 }
                 .testTag("kit-dialog")
-        val body: @Composable () -> Unit = {
-            Column(
-                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(tokens.gutter.dp + Space.S1.dp),
-                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-                content = entry.content,
-            )
+        val body: @Composable (handle: Boolean) -> Unit = { handle ->
+            Column(Modifier.fillMaxWidth()) {
+                // kit_confirm_sheet.dart:163-176: the bottom shape's drag handle sits above the content.
+                if (handle) {
+                    Box(
+                        Modifier.fillMaxWidth().height(tokens.handleBand.dp).testTag("kit-dialog-handle"),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.size(tokens.handleWidth.dp, tokens.handleThickness.dp)
+                                .clip(KitShapeId.Pill.shape())
+                                .background(colors.text3)
+                        )
+                    }
+                }
+                Column(
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                        // Under the handle the content's own air (space 3) is the gap; elsewhere the frame's.
+                        .padding(
+                            start = tokens.gutter.dp + Space.S1.dp,
+                            top = if (handle) Space.S3.dp else tokens.gutter.dp + Space.S1.dp,
+                            end = tokens.gutter.dp + Space.S1.dp,
+                            bottom = tokens.gutter.dp + Space.S1.dp,
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                    content = entry.content,
+                )
+            }
         }
         if (bottom) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -158,13 +189,13 @@ internal fun DialogLayer(state: KitSheetHostState) {
                 ) {
                     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Sheet, KitShapeId.Sheet, SurfaceLevel.Surface2, ownFill = colors.surface2))
                     Box(
-                        panel.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
+                        panel.widthIn(max = bottomCap.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin(0.5f, 1f))
                             .then(look.modifier)
                             .clip(KitShapeId.Sheet.shape())
                             .navigationBarsPadding()
                             .imePadding(),
-                    ) { body() }
+                    ) { body(true) }
                 }
             }
         } else {
@@ -176,7 +207,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
                             .predictiveShrink(back, TransformOrigin.Center)
                             .then(look.modifier)
                             .clip(KitShapeId.Dialog.shape()),
-                    ) { body() }
+                    ) { body(false) }
                 }
             }
         }

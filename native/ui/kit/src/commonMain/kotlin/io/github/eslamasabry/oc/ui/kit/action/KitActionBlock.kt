@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.LocalKitStackedAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitMore
@@ -91,7 +92,9 @@ public fun KitActionBlock(
     val (shown, overflow) = ActionBlockRules.split(tertiary)
     val gap = Space.S2.dp
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading)) {
-        val stacked = ActionBlockRules.layout(maxWidth.value, tertiary) == KitActionLayout.Stack
+        // Flutter decides on the window's class, not the block's own width (`KitLayout.windowOf(context) ==
+        // KitWindow.compact`, kit_buttons.dart:1043-1045): a block inside a 560 dp panel on a PC is still one row.
+        val stacked = ActionBlockRules.layout(LocalKitWindow.current.widthDp, tertiary) == KitActionLayout.Stack
         val large = LocalDensity.current.fontScale > PAIR_TEXT_LIMIT
         val paired =
             pair && stacked && primary != null && secondary != null && tertiary.isEmpty() &&

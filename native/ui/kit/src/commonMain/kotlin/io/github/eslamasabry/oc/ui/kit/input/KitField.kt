@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -100,6 +101,15 @@ import io.github.eslamasabry.oc.ui.words.res.kitFieldStillChecking
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.design.style.styleBoundary
+import io.github.eslamasabry.oc.ui.kit.theme.toColor
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitAction
 
 /** Dart `KitFieldKind`: what the words are, which decides keyboard, font and direction. */
 public enum class KitFieldKind {
@@ -268,6 +278,9 @@ public fun KitField(
                 multilineLines,
                 framed,
                 composer,
+                // Flutter `InputDecoration.labelText`: a label standing in the empty box keeps the body face, even
+                // over a monospaced value (kit_confirm_sheet.dart:556-560); only a given placeholder follows the kind.
+                placeholderIsLabel = placeholder == null && !labelShown,
             )
         }
         val disabledNote = error == null && !enabled.isEnabled
@@ -283,6 +296,26 @@ public fun KitField(
                 Box(Modifier.weight(1f)) {
                     when {
                         checking -> CheckingLine()
+                        // Flutter's error line (kit_field.dart:1031-1051): the error mark in text1, space 2, then the words.
+                        note != null && error != null ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                io.github.eslamasabry.oc.ui.kit.icon.KitIcon(
+                                    io.github.eslamasabry.oc.ui.kit.icon.KitIcons.error,
+                                    size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
+                                    tone = TextTone.Primary,
+                                    growsWithText = true,
+                                )
+                                KitText(
+                                    note,
+                                    Modifier.semantics {
+                                        liveRegion = LiveRegionMode.Polite
+                                        error(error)
+                                    },
+                                    role = TypeRole.Secondary,
+                                    tone = TextTone.Primary,
+                                    kind = KitTextKind.Frame,
+                                )
+                            }
                         note != null ->
                             KitText(
                                 note,
@@ -335,6 +368,7 @@ private fun FieldBox(
     multilineLines: IntRange,
     framed: Boolean = true,
     composer: Boolean = false,
+    placeholderIsLabel: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -369,12 +403,18 @@ private fun FieldBox(
     // Flutter's field radius is the control's (14), not the icon tile's.
     val shape = KitShapeId.Button.shape()
     val fieldLook = rememberFieldLook(colors.surface1, focused || hasError)
+    // Flutter `KitField` frame (kit_field.dart:863-879): the accent while focused, text1 with an error, and at rest the
+    // style's boundary, a grey that reads at 3:1 against the page and the fill (WCAG 1.4.11; `kitStyleBoundary`).
+    val roles = LocalKitRoles.current
+    val boundary = remember(roles) { styleBoundary(roles).toColor() }
     val edge =
         when {
-            hasError -> colors.text1
             focused -> colors.accent
-            else -> colors.hairline
+            hasError -> colors.text1
+            else -> boundary
         }
+    // `kitFieldFrame`: a hairline, or the focus ring's two physical pixels while focused.
+    val edgeWidth = if (focused) kitFocusRingWidth() else kitHairline()
     val keyboard =
         KeyboardOptions(
             capitalization =
@@ -441,26 +481,49 @@ private fun FieldBox(
                     // is the whole 48 dp target (F: kit_composer.dart:570-574, "the field's own node is the tap
                     // target a screen reader and G5 measure"; layout guard small-target).
                     composer -> Modifier
-                    !framed -> Modifier.padding(vertical = Space.S3.dp)
+                    !framed -> Modifier
                     // The style draws the field (B-KIT-043..045); Solid keeps the surface1 fill and
                     // the edge above.
                     fieldLook.isSolid ->
                         Modifier.clip(shape)
                             .background(colors.surface1)
-                            .border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
-                            .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
+                            .border(edgeWidth, edge, shape)
                     else ->
                         Modifier.clip(shape)
                             .then(fieldLook.look.modifier)
-                            .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
                 }
             )
+    // The words' inset inside the box. It sits inside the text field's decoration, so the field's own node (its
+    // focus, taps and accessible name) is the whole box, not just the line of words (layout guard small-target; a tap
+    // on the box's edge used to miss the field). The secret row keeps it on the row around its buttons.
+    // Flutter's contentPadding (kit_field.dart:732-735, 816-829): space 4 at the sides; a single line sits in a 48 dp
+    // box with (buttonHeight - minTarget) / 2 above and below (a 52 dp field), several lines take
+    // (buttonHeight - line) / 2.
+    val lineDp = with(LocalDensity.current) { style.lineHeight.toDp() }
+    val vertical =
+        if (kind == KitFieldKind.Multiline) ((tokens.buttonHeight.dp - lineDp) / 2).coerceAtLeast(0.dp)
+        else ((tokens.buttonHeight - tokens.minTarget) / 2).dp
+    val inset =
+        when {
+            composer -> PaddingValues()
+            !framed -> PaddingValues(vertical = Space.S3.dp)
+            else -> PaddingValues(horizontal = Space.S4.dp, vertical = vertical)
+        }
+    val singleLineBox = !composer && framed && kind != KitFieldKind.Multiline && kind != KitFieldKind.Secret
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
-        Box(Modifier.fillMaxWidth().then(if (composer) Modifier.padding(vertical = composerPadding) else Modifier)) {
+        Box(
+            Modifier.fillMaxWidth()
+                .then(if (composer) Modifier.padding(vertical = composerPadding) else Modifier)
+                .then(if (kind != KitFieldKind.Secret) Modifier.padding(inset) else Modifier)
+                // Flutter's lineBox: one line centred in the 48 dp box.
+                .then(if (singleLineBox) Modifier.heightIn(min = tokens.minTarget.dp) else Modifier),
+            // The secret's words sit centred in its 48 dp target, level with Paste and the eye beside it.
+            contentAlignment = if (kind == KitFieldKind.Secret || singleLineBox) Alignment.CenterStart else Alignment.TopStart,
+        ) {
             if (state.text.isEmpty() && placeholder != null) {
                 KitText(
                     placeholder,
-                    role = if (technical) TypeRole.Mono else TypeRole.Body,
+                    role = if (technical && !placeholderIsLabel) TypeRole.Mono else TypeRole.Body,
                     tone = TextTone.Tertiary,
                     maxLines = if (composer) multilineLines.last.coerceAtLeast(1) else 1,
                 )
@@ -484,11 +547,11 @@ private fun FieldBox(
         // The value is technical: left to right in an Arabic interface too, bidi-isolated by the
         // LTR box.
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Row(box.padding(end = 0.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(box.padding(inset).padding(end = 0.dp), verticalAlignment = Alignment.CenterVertically) {
                 BasicSecureTextField(
                     state = state,
                     modifier =
-                        Modifier.weight(1f).testTag("kit-field-secret").semantics {
+                        Modifier.weight(1f).heightIn(min = tokens.minTarget.dp).testTag("kit-field-secret").semantics {
                             contentDescription = label
                             // QA wave 4 N6: the accessibility tree gets dots, never the value (any
                             // accessibility
@@ -516,16 +579,18 @@ private fun FieldBox(
                         else TextObfuscationMode.RevealLastTyped,
                     decorator = { decorator(it) },
                 )
-                PasteButton(state, on, maxLength, sink)
+                // Flutter's trailing pair (kit_field.dart:881-907): Show/Hide, then Paste, both 20 dp glyphs.
                 KitIconButton(
                     icon = if (revealed) KitPartGlyphs.EyeOff else KitPartGlyphs.Eye,
                     label =
                         if (revealed) stringResource(Res.string.kitFieldHideNamed, label)
                         else stringResource(Res.string.kitFieldShowNamed, label),
                     onClick = { revealed = !revealed },
-                    tone = TextTone.Secondary,
                     enabled = enabled,
+                    selected = revealed,
+                    size = 20, // F: lib/ui/kit/kit_field.dart:885
                 )
+                PasteButton(state, enabled, maxLength, sink)
             }
         }
         return
@@ -557,9 +622,11 @@ private fun FieldBox(
     "DEPRECATION"
 ) // LocalClipboard has no common plain-text read yet; LocalClipboardManager.getText() does.
 @Composable
-private fun PasteButton(state: TextFieldState, on: Boolean, maxLength: Int?, sink: KitSecretSink) {
+private fun PasteButton(state: TextFieldState, enabled: KitEnabled, maxLength: Int?, sink: KitSecretSink) {
     val clipboard = LocalClipboardManager.current
-    KitTappable(
+    KitIconButton(
+        icon = KitIcons.paste,
+        label = stringResource(Res.string.kitFieldPaste),
         onClick = {
             clipboard.getText()?.text?.let { pasted ->
                 if (maxLength == null || pasted.length <= maxLength) {
@@ -570,18 +637,9 @@ private fun PasteButton(state: TextFieldState, on: Boolean, maxLength: Int?, sin
                 }
             }
         },
-        enabled = on,
-        disabledReason = if (on) null else "",
-        shape = KitShapeId.Pill,
-    ) {
-        KitText(
-            stringResource(Res.string.kitFieldPaste),
-            Modifier.padding(horizontal = Space.S2.dp),
-            role = TypeRole.Label,
-            tone = TextTone.Accent,
-            kind = KitTextKind.Frame,
-        )
-    }
+        enabled = enabled,
+        size = 20, // F: lib/ui/kit/kit_field.dart:899
+    )
 }
 
 @Composable
@@ -592,15 +650,17 @@ private fun SavedSecretLine(onReplace: () -> Unit) {
     // fields above and below it; Replace is the field's trailing action, like Paste.
     val shape = KitShapeId.Button.shape()
     val fieldLook = rememberFieldLook(colors.surface1, false)
+    val roles = LocalKitRoles.current
+    val boundary = remember(roles) { styleBoundary(roles).toColor() }
     Row(
         Modifier.fillMaxWidth()
-            .heightIn(min = tokens.minTarget.dp)
+            .heightIn(min = tokens.buttonHeight.dp) // F: lib/ui/kit/kit_field.dart:732-735 (a 52 dp field)
             .clip(shape)
             .then(
-                if (fieldLook.isSolid) Modifier.background(colors.surface1).border(1.dp, colors.hairline, shape)
+                if (fieldLook.isSolid) Modifier.background(colors.surface1).border(kitHairline(), boundary, shape)
                 else fieldLook.look.modifier
             )
-            .padding(start = Space.S3.dp, end = Space.S1.dp),
+            .padding(start = Space.S4.dp, end = (Space.S1 + Space.S2).dp), // F: lib/ui/kit/kit_field.dart:933,952 (space 1 after the button; the kit's tertiary bleeds its own space 2 out, Flutter's keeps it inside)
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
@@ -611,19 +671,13 @@ private fun SavedSecretLine(onReplace: () -> Unit) {
             tone = TextTone.Secondary,
             kind = KitTextKind.Frame,
         )
-        KitTappable(
-            onClick = onReplace,
-            shape = KitShapeId.Pill,
-            modifier = Modifier.testTag("kit-field-replace"),
-        ) {
-            KitText(
-                stringResource(Res.string.kitFieldReplace),
-                Modifier.padding(horizontal = Space.S2.dp),
-                role = TypeRole.Label,
-                tone = TextTone.Accent,
-                kind = KitTextKind.Frame,
-            )
-        }
+        // Flutter: Replace is a tertiary KitButton (kit_field.dart:943-950).
+        KitButton(
+            KitAction(stringResource(Res.string.kitFieldReplace), onClick = onReplace),
+            Modifier.testTag("kit-field-replace"),
+            role = KitButtonRole.Tertiary,
+            expand = false,
+        )
     }
 }
 

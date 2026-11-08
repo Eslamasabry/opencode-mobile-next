@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
@@ -152,7 +153,8 @@ class Kita2SecretReviewTest {
                     }
                 }
             }
-            onNodeWithText("Paste").performClick()
+            // Paste is Flutter's clipboard icon button (kit_field.dart:897-905): found by its accessible name.
+            onNodeWithContentDescription("Paste").performClick()
             waitForIdle()
             assertEquals(listOf(""), before)
             assertEquals(listOf("synthetic-paste"), accepted)
