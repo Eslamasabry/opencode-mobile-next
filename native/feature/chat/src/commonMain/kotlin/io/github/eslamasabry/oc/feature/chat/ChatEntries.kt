@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import kotlinx.collections.immutable.toImmutableMap
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.CompositionLocalProvider
@@ -115,6 +116,8 @@ public class ChatEntries(
     private val photoSources:
         Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource>,
     private val teaching: TeachingSource,
+    /** S28 story 14: the one nudge registry, where the app has bound one. */
+    private val nudges: io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeSource,
     private val transcriptPreferences:
         Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
         emptySet(),
@@ -374,6 +377,62 @@ public class ChatEntries(
             val formModel = remember(route.ref) { forms.open(route.ref) }
             val formState by formModel.state.collectAsStateWithLifecycle()
             DisposableEffect(formModel) { onDispose { formModel.close() } }
+            // S28 story 14 (Flutter nudge_slot.dart): one-time nudges read this conversation's facts.
+            var nudgeModel by
+                remember(route.ref) {
+                    mutableStateOf<io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeModel?>(null)
+                }
+            val nudgeScope = androidx.compose.runtime.rememberCoroutineScope()
+            LaunchedEffect(route.ref) {
+                nudges.registry()?.let { registry ->
+                    nudgeModel =
+                        io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeModel(
+                            registry,
+                            route.ref.sessionId.raw,
+                            nudgeScope,
+                        )
+                }
+            }
+            DisposableEffect(nudgeModel) { onDispose { nudgeModel?.close() } }
+            val activeNudge =
+                nudgeModel?.active?.collectAsStateWithLifecycle(null)?.value
+            val latestTurn = facts.results.values.lastOrNull()
+            val nudgeInputs =
+                io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeInputs(
+                    busy = state.live != null,
+                    hasReply = state.rows.any { it is BlockRow },
+                    pendingPermissions =
+                        slot.cards
+                            .filterIsInstance<io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi.Permission>()
+                            .mapNotNull { card -> card.captured?.request?.let { card.id.raw to it.permission } }
+                            .toMap()
+                            .toImmutableMap(),
+                    approvalsAvailable =
+                        state.capabilities.approvals && approval.offered &&
+                            approval.choice ==
+                                io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChoice.Ask,
+                    runChangedFiles = latestTurn?.files?.isNotEmpty() == true,
+                    reviewAvailable = state.capabilities.changes,
+                    contextPercent = facts.context?.percent,
+                    compactAvailable = state.capabilities.compact && state.live == null,
+                    suppressed = slot.card != null || formState.form != null,
+                )
+            LaunchedEffect(nudgeModel, nudgeInputs) { nudgeModel?.observe(nudgeInputs) }
+            val nudgeSlot: @androidx.compose.runtime.Composable () -> Unit = {
+                val model = nudgeModel
+                if (model != null && !nudgeInputs.suppressed)
+                    io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeSlot(
+                        activeNudge,
+                        filesChanged = latestTurn?.files?.size ?: 0,
+                        actions =
+                            io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeActions(
+                                approvals = headerVm::openApprovalMenu,
+                                review = vm::openChanges,
+                                compact = vm::compactRequested,
+                                done = model::done,
+                            ),
+                    )
+            }
             val prompts = remember(route.ref) { ChatPromptsDoor(route.ref, inbox, navigator) }
             // P12-CHAT-CARDS: the conversation's agent cards, read by the transcript's card slot.
             val cardModel = remember(route.ref) { cards.open(route.ref) }
@@ -482,7 +541,10 @@ public class ChatEntries(
                                     start = start,
                                     startActions = startVm,
                                     appStatus = appStatus,
-                                    replyOffer = offerContent,
+                                    replyOffer = {
+                                        nudgeSlot()
+                                        offerContent?.invoke()
+                                    },
                                     encodePng = pictureEncoders.firstOrNull()?.encodePng,
                                 )
                             }
