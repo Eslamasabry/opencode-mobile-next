@@ -81,6 +81,21 @@ class SettingsRowsWiringTest {
         assertEquals(PhoneSetupRoute.Setup, thisPhoneRoute(setUp = false))
     }
 
+    @Test
+    fun `B-NAV-090 Help Guide is a page and its doors are opened on Android`() {
+        val guide = rows(androidFacts()).single { it.id == SettingsRowId.Guide }
+        assertEquals(SettingsDoor.Page(io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.Guide), guide.door)
+        for (door in listOf(SettingsOutside.AddServer, SettingsOutside.PhoneSetup, SettingsOutside.Demo))
+            assertTrue(door in SETTINGS_OPENS, "Guide's $door leads nowhere")
+    }
+
+    @Test
+    fun `B-NAV-093 the signer reads as Flutter prints it, upper-case hex without separators`() {
+        val print = certificateFingerprint(byteArrayOf(1, 2, 3))
+        assertEquals(64, print.length)
+        assertEquals("039058C6F2C0CB492C533B0A4D14EF77CC0F78ABCCCED5287D84A1A2011CFB81", print)
+    }
+
     /** Rows whose Flutter page has no native page yet (reported, never faked). */
     private fun notNativeRows(): Set<SettingsRowId> =
         buildSet {

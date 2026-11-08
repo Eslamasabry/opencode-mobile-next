@@ -28,4 +28,7 @@ public sealed interface SettingsRoute : AppRoute {
         SettingsRoute
 
     @Serializable public data object Notifications : SettingsRoute
+
+    /** s28: the keyboard shortcut list (Ctrl/⌘ + /, F: shortcuts.dart `ShowShortcutsHelpIntent`). */
+    @Serializable public data object KeyboardShortcuts : SettingsRoute
 }

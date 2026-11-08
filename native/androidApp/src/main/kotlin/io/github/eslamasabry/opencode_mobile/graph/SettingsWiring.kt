@@ -434,6 +434,10 @@ class AndroidSettingsHost(
                 if (target != null) serverPage.open(target, place) else nav.open(ServersRoute.Home)
             }
             SettingsOutside.UsageAlerts -> nav.open(PlansAlertsRoute)
+            // s28: Help › Guide's doors (F: guide_screen.dart): Add server itself, phone setup, the demo.
+            SettingsOutside.AddServer -> nav.open(ServersRoute.Edit())
+            SettingsOutside.PhoneSetup -> nav.open(PhoneSetupRoute.Setup)
+            SettingsOutside.Demo -> nav.open(io.github.eslamasabry.oc.ui.routes.DemoRoute)
             // Notices and Quiet hours are Settings' own pages: the presenter opens them.
             else -> Unit // Absent rows: SETTINGS_OPENS keeps them off screen.
         }
@@ -493,6 +497,13 @@ class AndroidSettingsHost(
 
     override val configuration:
         io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationInspection =
+            packageId = application.packageName,
+            signer = signingCertificateSha256(application),
+            // F: about_screen.dart:301 shows the list with desktop keys; here, whenever a hardware
+            // keyboard is attached (the shell binds the same keys on a phone or tablet).
+            keyboardShortcuts =
+                application.resources.configuration.keyboard ==
+                    android.content.res.Configuration.KEYBOARD_QWERTY,
         configurationInspection
     override val crashes: io.github.eslamasabry.oc.feature.settings.presentation.CrashSettings =
         crashSettings
@@ -702,9 +713,12 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
 
 /**
  * Flutter places whose page this build does not have yet. Their rows stay absent (never a fake
- * page): Guide is Flutter's setup guide (lib/ui/screens/guide_screen.dart), not ported natively.
+        SettingsOutside.AddServer,
+        SettingsOutside.PhoneSetup,
+        SettingsOutside.Demo,
+ * page). s28: the setup guide is Settings' own page now (Help › Guide), so nothing is left here.
  */
-internal val SETTINGS_NOT_NATIVE_YET: Set<SettingsOutside> = setOf(SettingsOutside.Guide)
+internal val SETTINGS_NOT_NATIVE_YET: Set<SettingsOutside> = emptySet()
 
 /**
  * Notification choices under the Flutter keys (`oc.notify.*`, so a migrated install keeps them and
@@ -1124,3 +1138,38 @@ object AppLocale {
             ?.code
     }
 }
+
+/**
+ * The SHA-256 of the certificate that signed this install, as upper-case hex without separators
+ * (Flutter's `getSigningCertificateSha256`, MainActivity.kt), so the owner can compare it with
+ * `apksigner verify --print-certs` before an update. Null when the platform does not say.
+ */
+internal fun signingCertificateSha256(application: Application): String? =
+    try {
+        val pm = application.packageManager
+        @Suppress("DEPRECATION")
+        val signatures =
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                pm.getPackageInfo(
+                        application.packageName,
+                        android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES,
+                    )
+                    .signingInfo
+                    ?.apkContentsSigners
+            } else {
+                pm.getPackageInfo(
+                        application.packageName,
+                        android.content.pm.PackageManager.GET_SIGNATURES,
+                    )
+                    .signatures
+            }
+        signatures?.singleOrNull()?.toByteArray()?.let { certificateFingerprint(it) }
+    } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+        null
+    }
+
+/** SHA-256 of [der] as "ABCD…" (F: TermuxActivityEnvironment.kt:41; the form AGENTS.md lists signers in). */
+internal fun certificateFingerprint(der: ByteArray): String =
+    java.security.MessageDigest.getInstance("SHA-256").digest(der).joinToString("") {
+        "%02X".format(it.toInt() and 0xFF)
+    }

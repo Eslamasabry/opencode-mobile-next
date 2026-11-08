@@ -385,6 +385,18 @@ public class SettingsPresenter(
             packs = listed.toImmutableList(),
             seeAllCount = if (listed.size < available.size) available.size else 0,
             style = p.style,
+            firstGroup =
+                SettingsStructure.groups(f).firstOrNull()?.let {
+                    GroupUi(it, SettingsStructure.rows(it, f, p.reasoning, p.timestamps))
+                },
+            guide =
+                GuideUi(
+                    canScan = f.platform.qrPairing,
+                    addServer = f.canOpen(SettingsOutside.AddServer),
+                    phonePath = f.platform.builtinLinux && f.canOpen(SettingsOutside.PhoneSetup),
+                    demo = f.canOpen(SettingsOutside.Demo),
+                    androidKeystore = f.platform.builtinLinux,
+                ),
             corners = p.corners ?: ownKnobs.corners,
             spacing = p.spacing ?: ownKnobs.density,
             fineTuned =

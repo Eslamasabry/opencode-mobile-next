@@ -15,6 +15,11 @@ import io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
+import io.github.eslamasabry.oc.feature.settings.presentation.ShortcutDoes
+import io.github.eslamasabry.oc.feature.settings.presentation.ShortcutHelp
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -125,6 +130,36 @@ private fun updateLine(state: UpdateState): String =
         is UpdateState.Failed -> updateFailureWords(state.why)
     }
 
+/**
+ * About › Keyboard shortcuts (F: shortcuts.dart `showShortcutsHelp`): one row per shortcut, what it
+ * does with its keys at the end. Key names are the same in every language and read left to right.
+ */
+@Composable
+internal fun ColumnScope.ShortcutsBody(about: AboutFacts) {
+    KitRowGroup(Modifier.testTag("shortcuts-list")) {
+        ShortcutHelp.entries(about.shortcutModifier).forEach { entry ->
+            KitRow(
+                title = shortcutWords(entry.does),
+                titleMaxLines = 2,
+                trailing = KitRowTrailing.Value(entry.keys, chevron = false),
+            )
+        }
+    }
+}
+
+@Composable
+private fun shortcutWords(does: ShortcutDoes): String =
+    stringResource(
+        when (does) {
+            ShortcutDoes.NewConversation -> Res.string.e7LocaleUiNewSession
+            ShortcutDoes.Destinations -> Res.string.e7LocaleUiDestinations
+            ShortcutDoes.Settings -> Res.string.e7LocaleUiSettings
+            ShortcutDoes.CloseScreen -> Res.string.e7LocaleUiCloseScreen
+            ShortcutDoes.ThisList -> Res.string.e7LocaleUiThisList
+            ShortcutDoes.CloseOverlay -> Res.string.e7LocaleUiCloseOverlay
+        }
+    )
+
 /** About identity, notices and bundled components (Flutter about_screen.dart:246-416). */
 @Composable
 internal fun ColumnScope.AboutBody(
@@ -182,6 +217,31 @@ internal fun ColumnScope.AboutBody(
                 )
             }
         }
+        // F: about_screen.dart:407-430: the package id and signer folded under Details, for the
+        // same-signer check before an update.
+        if (about.packageId.isNotBlank()) {
+            val redactor = LocalKitRedactor.current
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyAll),
+                modifier = gutter.padding(top = Space.S2.dp).testTag("about-details"),
+                values =
+                    listOfNotNull(
+                        KitTechnicalValue(
+                            stringResource(Res.string.aboutPackageId),
+                            redactor.details(about.packageId),
+                        ),
+                        about.signer
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let {
+                                KitTechnicalValue(
+                                    stringResource(Res.string.aboutSigningCertificate),
+                                    redactor.details(it),
+                                )
+                            },
+                    ),
+            )
+        }
         Spacer(Modifier.height(Space.S4.dp))
         KitNotice(stringResource(Res.string.e7SettingsNonAffiliation), gutter, liveRegion = false)
         Spacer(Modifier.height(Space.S3.dp))
@@ -192,6 +252,20 @@ internal fun ColumnScope.AboutBody(
             icon = KitIcons.experiments,
             liveRegion = false,
         )
+        // F: about_screen.dart:274-310: the shortcut layer is discoverable without already knowing a
+        // shortcut, and means nothing without a keyboard.
+        if (about.keyboardShortcuts) {
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            KitRowGroup(label = stringResource(Res.string.aboutHelpSection), leadingTiles = true) {
+                KitRow(
+                    title = stringResource(Res.string.e7LibraryKeyboardShortcuts),
+                    leading = KitRowLeading.Glyph(KitIcons.keyboard),
+                    trailing = KitRowTrailing.Chevron,
+                    modifier = Modifier.testTag("library-keyboard-shortcuts"),
+                    onClick = { actions.onOpen(SettingsPage.KeyboardShortcuts) },
+                )
+            }
+        }
         if (about.notices) {
             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
             KitRowGroup(

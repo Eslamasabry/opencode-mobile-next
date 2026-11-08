@@ -53,7 +53,14 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
             KitBackGuard(enabled = state.page != SettingsPage.Hub, onBack = vm::back)
             SettingsCapabilityFlows(host) { SettingsScreen(state, vm.actions, onExit = vm::exit) }
         }
-        entry<SettingsRoute.WhatsNew> {
+        entry<SettingsRoute.KeyboardShortcuts> {
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            LaunchedEffect(vm) { vm.actions.onOpen(SettingsPage.KeyboardShortcuts) }
+            KitBackGuard(enabled = state.page != SettingsPage.Hub, onBack = vm::back)
+            SettingsCapabilityFlows(host) { SettingsScreen(state, vm.actions, onExit = vm::exit) }
+        }
+                entry<SettingsRoute.WhatsNew> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
             LaunchedEffect(vm) { vm.showWhatsNew() }

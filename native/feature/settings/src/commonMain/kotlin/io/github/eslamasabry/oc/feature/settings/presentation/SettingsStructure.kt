@@ -175,7 +175,7 @@ public object SettingsStructure {
                             }
                         SettingsRowId.Storage ->
                             SettingsDoor.Page(SettingsPage.Storage).takeIf { facts.localModelStorage }
-                        SettingsRowId.Guide -> SettingsDoor.Outside(SettingsOutside.Guide)
+                        SettingsRowId.Guide -> SettingsDoor.Page(SettingsPage.Guide)
                         SettingsRowId.Capabilities ->
                             SettingsDoor.Outside(SettingsOutside.Capabilities)
                         SettingsRowId.Tips -> SettingsDoor.Outside(SettingsOutside.Tips)

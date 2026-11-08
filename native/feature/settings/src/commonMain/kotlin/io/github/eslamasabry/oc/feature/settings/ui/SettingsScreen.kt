@@ -54,6 +54,9 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
 import io.github.eslamasabry.oc.ui.words.res.shareSessionViewsTitle
 import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
+import io.github.eslamasabry.oc.ui.words.res.collectTitle
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryKeyboardShortcuts
+import io.github.eslamasabry.oc.ui.words.res.onboardingSetupGuide
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -202,6 +205,26 @@ public fun SettingsScreen(
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
                 AboutBody(state.about, actions, state.voiceLicenses, state.updates, state.memoryPreview)
+            }
+        SettingsPage.KeyboardShortcuts ->
+            SettingsFrame(
+                stringResource(Res.string.e7LibraryKeyboardShortcuts),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                ShortcutsBody(state.about)
+            }
+        SettingsPage.Guide ->
+            SettingsFrame(
+                stringResource(Res.string.onboardingSetupGuide),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                GuideBody(state.guide, actions)
             }
         is SettingsPage.VoiceLicense -> VoiceLicenseScreen(page.id, state, actions)
         SettingsPage.PrivacyPolicy ->

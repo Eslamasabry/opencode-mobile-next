@@ -68,6 +68,15 @@ public sealed interface SettingsPage {
      * choice per time.
      */
     public data class QuietTime(val start: Boolean) : SettingsPage
+
+    /**
+     * Settings › Help › Guide (Flutter guide_screen.dart): the three steps to a first conversation,
+     * this phone's own path, the demo and the advanced notes.
+     */
+    public data object Guide : SettingsPage
+
+    /** About › Tips and shortcuts › Keyboard shortcuts (Flutter shortcuts.dart `showShortcutsHelp`). */
+    public data object KeyboardShortcuts : SettingsPage
 }
 
 /**
@@ -111,6 +120,10 @@ public enum class SettingsOutside {
     // s26: the AI Team page (Flutter Settings › Agents › AI Team) and FactsBook on this phone (About › Developer).
     AiTeam,
     MemoryOnPhone,
+    // s28: the Guide's doors (F: guide_screen.dart): Add server itself, phone setup, the offline demo.
+    AddServer,
+    PhoneSetup,
+    Demo,
 }
 
 /** Opens a place another feature owns. */
