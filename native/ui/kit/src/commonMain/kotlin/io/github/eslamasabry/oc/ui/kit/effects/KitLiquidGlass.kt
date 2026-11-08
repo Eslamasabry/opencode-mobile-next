@@ -71,7 +71,6 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
 import io.github.eslamasabry.oc.ui.design.effects.LiquidClaim
 import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
-import io.github.eslamasabry.oc.ui.design.effects.RimLight
 import io.github.eslamasabry.oc.ui.design.style.GlassSpec
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
@@ -86,6 +85,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.KitHct
+import io.github.eslamasabry.oc.ui.kit.theme.ThemeSwitchColorRules
 
 /*
  * Glass's liquid edges (docs/designs/liquid-glass.md; owner 2026-11-08 "go full blown glass"), drawn by
@@ -98,7 +99,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
  *
  * The face: the content behind (a source's recording) pressed together in contrast, blurred a little, bent only inside a
  * rim of min(12 dp, 20 % of the shorter side) with no depth effect and no dispersion, under today's Glass tint and words
- * plate thickened by GlassFinish ([LiquidEdge.face]), with a soft rim light tinted from the accent ([RimLight]).
+ * plate thickened by GlassFinish ([LiquidEdge.face]), with a soft rim light tinted from the accent ([LiquidRim]).
  *
  * Sources: a feature's [KitFrostState] (the transcript behind the chat's chrome, a list under its +), or a kit-owned
  * [KitLiquidSource] (the page under a sheet or a menu, a page body under its bar) that records only while a granted pane
@@ -282,7 +283,8 @@ private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, s
                 fill = fill,
                 fillStart = face.fillStart?.let { Color(it.v) } ?: fill,
                 rtl = rtl,
-                rim = Color(RimLight.of(roles).v).copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT),
+                rim = LiquidRim.of(Color(roles.accent.v).copy(alpha = 1f), roles.dark)
+                    .copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT),
                 rimAdds = roles.dark,
                 rimDp = RIM_LIGHT_DP,
                 shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
@@ -494,6 +496,29 @@ internal const val RIM_LIGHT_DP: Float = 1.5f
 /** The rim light's strength over a dark theme (added light) and a light one (laid over). */
 internal const val RIM_ALPHA_DARK: Float = .45f
 internal const val RIM_ALPHA_LIGHT: Float = .60f
+
+/**
+ * The rim light's colour: the theme accent with its HCT hue pulled toward the s33 theme switch's night anchor in a dark
+ * theme and its day anchor in a light one ([ThemeSwitchColorRules], one shared anchor for every rim light), at the liquid
+ * rim's own fixed tone and a clamped, gentle chroma: a tint, never a neon line, never plain white. Before s33 landed
+ * this was an OKLCH stand-in in :ui:design (RimLight, L .88 / .72, C .05-.12); the tones are those lightnesses as L*.
+ */
+internal object LiquidRim {
+    const val DARK_TONE: Double = 86.0
+    const val LIGHT_TONE: Double = 68.0
+    const val MIN_CHROMA: Double = 16.0
+    const val MAX_CHROMA: Double = 36.0
+
+    /** Below this HCT chroma the accent is grey and has no hue of its own: the rim takes the anchor's. */
+    private const val GREY_CHROMA: Double = 1.0
+
+    fun of(accent: Color, dark: Boolean): Color {
+        val hct = KitHct.of(accent)
+        val anchor = if (dark) ThemeSwitchColorRules.NIGHT_HUE else ThemeSwitchColorRules.DAY_HUE
+        val hue = if (hct.chroma < GREY_CHROMA) anchor else ThemeSwitchColorRules.pullHue(hct.hue, anchor, ThemeSwitchColorRules.PULL)
+        return KitHct(hue, hct.chroma.coerceIn(MIN_CHROMA, MAX_CHROMA), if (dark) DARK_TONE else LIGHT_TONE).toColor()
+    }
+}
 
 /**
  * A bar's liquid face, behind the bar's own content (call it first inside the bar's box): a floating capsule

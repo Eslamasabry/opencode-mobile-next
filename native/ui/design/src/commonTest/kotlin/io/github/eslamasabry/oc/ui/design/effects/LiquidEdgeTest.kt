@@ -7,7 +7,6 @@ import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.color.wcagContrast
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
 import io.github.eslamasabry.oc.ui.design.style.Style
-import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -130,20 +129,6 @@ class LiquidEdgeTest {
         assertTrue(GlassFinish.FLOOR > 4.5)
     }
 
-    @Test
-    fun `B-KIT-003 the rim light is the accent leaning cool in dark and warm in light, never white`() {
-        for (pack in PackId.entries) {
-            val dark = RimLight.of(ThemeResolver.roles(pack, null, true, saver = false, dynamic = null))
-            val light = RimLight.of(ThemeResolver.roles(pack, null, false, saver = false, dynamic = null))
-            assertNotEquals(dark, light, "$pack")
-            for ((c, anchor) in listOf(dark to RimLight.NIGHT_HUE, light to RimLight.DAY_HUE)) {
-                val (_, chroma, hue) = RimLight.oklch(c)
-                assertTrue(chroma >= .03, "$pack $c has colour (chroma $chroma)")
-                assertTrue(hueGap(hue, anchor) <= 95.0, "$pack $c hue $hue leans to $anchor")
-            }
-        }
-    }
-
     // ---- the cap
 
     @Test
@@ -211,9 +196,4 @@ class LiquidEdgeTest {
     }
 
     private fun Argb.solid(): Argb = Argb(v or (0xFF shl 24))
-
-    private fun hueGap(a: Double, b: Double): Double {
-        val d = abs(a - b) % 360.0
-        return if (d > 180.0) 360.0 - d else d
-    }
 }

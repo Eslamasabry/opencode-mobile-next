@@ -12,14 +12,7 @@ import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
-import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.cbrt
-import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 /*
  * Glass's liquid edges (docs/designs/liquid-glass.md v2 + owner decision 2026-11-08: "go full blown glass"). Under the
@@ -282,90 +275,6 @@ public object LiquidEdge {
 
 /** One floating part asking to be liquid glass: [order] breaks ties between equal roles (earlier first). */
 public data class LiquidClaim<K>(val key: K, val role: LiquidRole, val source: Any?, val order: Int = 0)
-
-/**
- * The rim light's colour: the theme accent with its hue pulled towards a cool night anchor in a dark theme and a warm day
- * anchor in a light one, at a fixed lightness and a clamped chroma (docs/designs/theme-switch-premium.md §4, the s33 rim
- * light). The perceptual space is OKLCH, standing in for HCT until s33's shared anchor lands; then this function reads it.
- */
-public object RimLight {
-    /** The cool anchor hue (OKLCH degrees) a dark theme's rim leans to. */
-    public const val NIGHT_HUE: Double = 250.0
-
-    /** The warm anchor hue a light theme's rim leans to. */
-    public const val DAY_HUE: Double = 75.0
-
-    /** How far the accent's hue moves towards the anchor (0 keeps the accent's hue, 1 is the anchor's). */
-    public const val PULL: Double = .5
-
-    /** The rim's lightness (OKLCH L) in a dark and a light theme. */
-    public const val DARK_L: Double = .88
-    public const val LIGHT_L: Double = .72
-
-    /** The rim's chroma stays within this range: a tint, never a neon line, and never plain white. */
-    public const val MIN_C: Double = .05
-    public const val MAX_C: Double = .12
-
-    public fun of(roles: Roles): Argb {
-        val (_, c, h) = oklch(roles.accent)
-        val anchor = if (roles.dark) NIGHT_HUE else DAY_HUE
-        val hue = if (c < 1e-4) anchor else mixHue(h, anchor, PULL)
-        var chroma = c.coerceIn(MIN_C, MAX_C)
-        val l = if (roles.dark) DARK_L else LIGHT_L
-        // Out of the sRGB gamut: give up chroma, never lightness.
-        while (chroma > 0.0 && !inGamut(l, chroma, hue)) chroma -= .005
-        return fromOklch(l, chroma.coerceAtLeast(0.0), hue)
-    }
-
-    private fun mixHue(from: Double, to: Double, t: Double): Double {
-        var d = (to - from) % 360.0
-        if (d > 180.0) d -= 360.0
-        if (d < -180.0) d += 360.0
-        return ((from + d * t) % 360.0 + 360.0) % 360.0
-    }
-
-    private fun lin(ch: Int): Double {
-        val s = ch / 255.0
-        return if (s <= .04045) s / 12.92 else ((s + .055) / 1.055).pow(2.4)
-    }
-
-    private fun enc(x: Double): Double = if (x <= .0031308) 12.92 * x else 1.055 * x.pow(1 / 2.4) - .055
-
-    internal fun oklch(c: Argb): Triple<Double, Double, Double> {
-        val r = lin(c.red)
-        val g = lin(c.green)
-        val b = lin(c.blue)
-        val l = cbrt(.4122214708 * r + .5363325363 * g + .0514459929 * b)
-        val m = cbrt(.2119034982 * r + .6806995451 * g + .1073969566 * b)
-        val s = cbrt(.0883024619 * r + .2817188376 * g + .6299787005 * b)
-        val L = .2104542553 * l + .7936177850 * m - .0040720468 * s
-        val A = 1.9779984951 * l - 2.4285922050 * m + .4505937099 * s
-        val B = .0259040371 * l + .7827717662 * m - .8086757660 * s
-        val h = (atan2(B, A) * 180.0 / PI + 360.0) % 360.0
-        return Triple(L, sqrt(A * A + B * B), h)
-    }
-
-    private fun linear(L: Double, C: Double, hDeg: Double): DoubleArray {
-        val h = hDeg * PI / 180.0
-        val a = C * cos(h)
-        val b = C * sin(h)
-        val l = (L + .3963377774 * a + .2158037573 * b).pow(3)
-        val m = (L - .1055613458 * a - .0638541728 * b).pow(3)
-        val s = (L - .0894841775 * a - 1.2914855480 * b).pow(3)
-        return doubleArrayOf(
-            4.0767416621 * l - 3.3077115913 * m + .2309699292 * s,
-            -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s,
-            -.0041960863 * l - .7034186147 * m + 1.7076147010 * s,
-        )
-    }
-
-    private fun inGamut(L: Double, C: Double, h: Double): Boolean = linear(L, C, h).all { it in -1e-4..1.0001 }
-
-    private fun fromOklch(L: Double, C: Double, h: Double): Argb {
-        val rgb = linear(L, C, h).map { (enc(it.coerceIn(0.0, 1.0)) * 255.0).roundToInt().coerceIn(0, 255) }
-        return Argb((0xFF shl 24) or (rgb[0] shl 16) or (rgb[1] shl 8) or rgb[2])
-    }
-}
 
 /** The ink the words on one liquid pane are drawn in: light over dark content, dark over bright (Apple's adaptive glass). */
 public enum class LiquidInk { Light, Dark }
