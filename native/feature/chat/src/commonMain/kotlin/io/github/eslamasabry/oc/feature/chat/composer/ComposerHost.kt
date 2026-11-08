@@ -91,6 +91,11 @@ public class ComposerChrome(
     /** The commands launcher (a Commands row in the attach tray); null = not offered. */
     public val openCommands: (() -> Unit)? = null,
     /**
+     * S30 story 2: everything the "/" menu offers, read when `/word` is typed (Flutter `_chatCommands`): the app's
+     * own actions this server can run, then the server's commands. Empty = only the server's commands, as chips.
+     */
+    public val slashCommands: () -> List<ComposerSlashCommand> = { emptyList() },
+    /**
      * Saved prompts (B-151): a row in the attach tray, where 2.1.4 kept them ("Attach and more ›
      * Prompts › Saved prompts"); null = not offered.
      */

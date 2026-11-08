@@ -61,6 +61,9 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.SendFieldRule
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.words.res.kitSuggestionsShowAll
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
@@ -768,7 +771,39 @@ public fun BasicComposer(
             )
         }
         val query = ComposerQuery.of(field.text.toString())
-        if (state.commandMatches.isNotEmpty() && query is ComposerQuery.Command) {
+        // S30 story 2 (Flutter `composer.dart` `_suggestions`): a `/word` lists the app's own actions and the
+        // server's commands together, best match first, five at most, then "Show all" opens the grouped,
+        // searchable Commands sheet. A server command fills the box with `/name `; an app action leaves it and runs.
+        val slashShown =
+            if (query is ComposerQuery.Command) SlashMenu.rank(chrome.slashCommands(), query.query) else emptyList()
+        if (slashShown.isNotEmpty()) {
+            KitRowGroup(Modifier.fillMaxWidth().testTag("chat-slash-menu")) {
+                slashShown.take(SlashMenu.VISIBLE).forEach { command ->
+                    KitRow(
+                        title = "/" + command.slash,
+                        supporting = command.description ?: command.title.takeIf { it != "/" + command.slash },
+                        modifier = Modifier.testTag("chat-slash-${command.key}"),
+                        onClick = {
+                            if (command.inserts) {
+                                replaceTail(0, "/${command.slash} ")
+                                focus.requestFocus()
+                            } else {
+                                if (field.text.toString().trimStart().startsWith("/")) replaceTail(0, "")
+                                command.onRun()
+                            }
+                        },
+                    )
+                }
+            }
+            val showAll = chrome.openCommands
+            if (slashShown.size > SlashMenu.VISIBLE && showAll != null)
+                KitButton(
+                    label = stringResource(Res.string.kitSuggestionsShowAll),
+                    onClick = showAll,
+                    role = KitButtonRole.Tertiary,
+                    modifier = Modifier.testTag("chat-slash-show-all"),
+                )
+        } else if (state.commandMatches.isNotEmpty() && query is ComposerQuery.Command) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-command-suggestions")) {
                 state.commandMatches.forEach { command ->
                     KitChip(

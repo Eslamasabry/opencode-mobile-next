@@ -302,6 +302,10 @@ public fun ChatScreen(
     handoffLine: (@Composable () -> Unit)? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
+    val slashCommands =
+        remember(state.ref) {
+            mutableStateOf<List<io.github.eslamasabry.oc.feature.chat.composer.ComposerSlashCommand>>(emptyList())
+        }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
     var commandInsert by
         remember(state.ref) {
@@ -425,6 +429,8 @@ public fun ChatScreen(
                             commandsOpen = true
                         }
                     },
+                // S30 story 2: read when `/word` is typed; filled below from the commands launcher's own entries.
+                slashCommands = { slashCommands.value },
                 openSavedPrompts = if (demoMode) null else prompts?.let { door -> door::open },
                 sendLater = if (demoMode) null else actions::sendLater,
                 laterScheduled = { scheduledId },
@@ -471,6 +477,22 @@ public fun ChatScreen(
                     { editorRequest = (editorRequest ?: 0L) + 1L }
                 } else null,
         )
+    // S30 story 2: the "/" menu offers what the Commands sheet offers (Flutter's one `_chatCommands` list).
+    val slashRows =
+        if (demoMode) emptyList()
+        else
+            commandEntries.map { entry ->
+                io.github.eslamasabry.oc.feature.chat.composer.ComposerSlashCommand(
+                    key = entry.key,
+                    slash = entry.slash,
+                    title = entry.title,
+                    description = entry.description,
+                    aliases = entry.aliases,
+                    inserts = entry.key.startsWith(SERVER_COMMAND_KEY),
+                    onRun = entry.onRun,
+                )
+            }
+    androidx.compose.runtime.SideEffect { slashCommands.value = slashRows }
 
     // The frame, its sibling menu and its confirmation share one modal layer. KitScreen
     // reuses this ancestor rather than creating a host scoped only to its own content.
