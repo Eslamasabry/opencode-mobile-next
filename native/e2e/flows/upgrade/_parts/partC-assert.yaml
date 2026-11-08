@@ -454,9 +454,10 @@ appId: ${APP_ID}
       - evalScript: ${output.pc.S11 = true}
 
 # The schedule still fires; the pinned shortcuts are published (and the widget redraws when one was placed).
-# Three days: Part B already caught up the daily schedule on its own clock jump, and the native app must not send that
-# occurrence again; the next one it owes falls due after Part B's jump, so the native jump has to pass it (run 4b:
-# with two days native correctly owed nothing yet; with three it owes one catch-up, which B-148 dropped).
+# 2.1.4 moves one day, native three: Part B's jump catches up the daily schedule, and the native app owes only the
+# runs that fall due after the moment Part B ran it. Its jump must pass the next 09:00 after Part B's, so it has to
+# go further than Part B's did (run 5: both moved three days and landed before that 09:00, so native rightly sent
+# nothing; run 4c: B-148 dropped the owed run).
 # adb: clock-advance
 - runFlow:
     label: "PC S12 schedule fires"
@@ -467,7 +468,7 @@ appId: ${APP_ID}
           file: ../../_hooks/adb.js
           env:
             HOOK: clock-advance
-            ARGS: '{"advance_minutes": 4320}'
+            ARGS: "${JSON.stringify({advance_minutes: output.phase == 'native' ? 4320 : 1440})}"
       - runFlow: ../../_sub/open-shade.yaml
       - extendedWaitUntil:
           visible: ${'(' + output.s.x_native_schedule_title + '|.*ECHO daily upgrade.*)'}  # literal-ok: the schedule's notification (title or the stub reply)
