@@ -159,6 +159,14 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
 import io.github.eslamasabry.oc.ui.words.res.chatUiUseModelAndResend
+import io.github.eslamasabry.oc.ui.words.res.b169AskSend
+import io.github.eslamasabry.oc.ui.words.res.b169AskTitle
+import io.github.eslamasabry.oc.ui.words.res.b169AttachAgain
+import io.github.eslamasabry.oc.ui.words.res.b169ConnectProvider
+import io.github.eslamasabry.oc.ui.words.res.b169Offline
+import io.github.eslamasabry.oc.ui.words.res.b169SwitchModel
+import io.github.eslamasabry.oc.ui.words.res.b169UsedUp
+import io.github.eslamasabry.oc.ui.words.res.b169UsedUpNoName
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmBody
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmTitle
@@ -286,6 +294,9 @@ public fun ChatScreen(
         io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
     /** The models the error card may suggest ("Use {model} and resend"). */
     modelChoices: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
+    /** B-169: the catalog with the person's recent models, for the switch sheet. */
+    switchModels: io.github.eslamasabry.oc.feature.chat.world.ComposerModels =
+        io.github.eslamasabry.oc.feature.chat.world.ComposerModels(choices = modelChoices),
     /** Background commands, Stop command and Run shell command (null = not offered here). */
     work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi =
         io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi(),
@@ -878,6 +889,9 @@ public fun ChatScreen(
                                                     if (workModel != null && state.capabilities.shell && !demoMode)
                                                         workModel::openShellDialog
                                                     else null,
+                                                limitSwitch = state.limitSwitch,
+                                                switchOnline = state.switchOnline,
+                                                attachAgain = state.attachAgain,
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
                                         onAllFiles = actions::openFiles,
@@ -960,6 +974,8 @@ public fun ChatScreen(
                 } else PictureSheet(shown, actions)
                 CodeReaderSheet(codeReader, actions) { codeReader = null }
                 ChatTimelineSheet(state.timeline, actions, facts.nowMs)
+                // B-169 §3: Switch model on a failed reply.
+                io.github.eslamasabry.oc.feature.chat.composer.SwitchModelSheet(state.switching, switchModels, actions)
                 KitConfirm(
                     spec = confirmSpec(state.confirm),
                     onConfirm = {
@@ -972,6 +988,7 @@ public fun ChatScreen(
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
                             is ChatConfirm.PhoneFile,
                             is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
+                            is ChatConfirm.SendAgainAfterSteps -> actions.confirmSwitch()
                             null -> Unit
                         }
                     },
@@ -1160,6 +1177,11 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                     body = stringResource(Res.string.phoneFileOpenBody),
                 )
         }
+        is ChatConfirm.SendAgainAfterSteps ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.b169AskTitle, confirm.steps, confirm.modelLabel),
+                confirmLabel = stringResource(Res.string.b169AskSend),
+            )
         is ChatConfirm.PhoneFileAccess ->
             KitConfirmSpec(
                 title = stringResource(Res.string.phoneSharedAccessTitle),
@@ -1371,7 +1393,16 @@ internal fun rememberReplyActions(
     onChooseModel: () -> Unit = {},
     onOpenCode: (KitMdBlock.Code) -> Unit = {},
     onRerunCommand: ((String) -> Unit)? = null,
+    limitSwitch: Map<String, io.github.eslamasabry.oc.feature.chat.presentation.LimitSwitchUi> = emptyMap(),
+    switchOnline: Boolean = true,
+    attachAgain: io.github.eslamasabry.oc.feature.chat.presentation.AttachAgainUi? = null,
 ): ReplyActions {
+    val switchModel = stringResource(Res.string.b169SwitchModel)
+    val connectProvider = stringResource(Res.string.b169ConnectProvider)
+    val switchOffline = stringResource(Res.string.b169Offline)
+    val usedUpTemplate = stringResource(Res.string.b169UsedUp, "\u0000")
+    val usedUpNoName = stringResource(Res.string.b169UsedUpNoName)
+    val attachAgainTemplate = stringResource(Res.string.b169AttachAgain, "\u0000")
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
@@ -1407,6 +1438,15 @@ internal fun rememberReplyActions(
         openFullCode,
         onOpenCode,
         onRerunCommand,
+        limitSwitch,
+        switchOnline,
+        attachAgain,
+        switchModel,
+        connectProvider,
+        switchOffline,
+        usedUpTemplate,
+        usedUpNoName,
+        attachAgainTemplate,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -1458,6 +1498,15 @@ internal fun rememberReplyActions(
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
             onRerunCommand = onRerunCommand,
+            limitSwitch = limitSwitch,
+            switchOnline = switchOnline,
+            switchOfflineReason = switchOffline,
+            switchModelLabel = switchModel,
+            onSwitchModel = { turnId -> actions.switchModel(turnId) },
+            connectProviderLabel = connectProvider,
+            usedUpLine = { name -> name?.let { usedUpTemplate.replace("\u0000", it) } ?: usedUpNoName },
+            attachAgain = attachAgain,
+            attachAgainLine = { file -> attachAgainTemplate.replace("\u0000", file) },
         )
     }
 }

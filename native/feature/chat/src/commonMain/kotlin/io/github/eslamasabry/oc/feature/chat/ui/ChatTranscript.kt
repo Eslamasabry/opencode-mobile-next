@@ -203,6 +203,19 @@ internal class ReplyActions(
     val onOpenProviders: () -> Unit = {},
     /** S28 story 6: a finished shell step's "Run this command again" (null = this server runs no shell here). */
     val onRerunCommand: ((String) -> Unit)? = null,
+    /** B-169: what each failed turn offers for a lasting limit (by turn id); missing = today's fixes. */
+    val limitSwitch: Map<String, io.github.eslamasabry.oc.feature.chat.presentation.LimitSwitchUi> = emptyMap(),
+    /** B-169 §6: Switch model is disabled while the server is unreachable. */
+    val switchOnline: Boolean = true,
+    val switchOfflineReason: String = "",
+    val switchModelLabel: String? = null,
+    val onSwitchModel: (turnId: String) -> Unit = {},
+    val connectProviderLabel: String? = null,
+    /** "{Model} is used up for now"; the argument is null when the model is not known. */
+    val usedUpLine: (String?) -> String = { "" },
+    /** B-169 §4.3: "Attach {file} again to send" under the failed turn whose prompt went to the composer. */
+    val attachAgain: io.github.eslamasabry.oc.feature.chat.presentation.AttachAgainUi? = null,
+    val attachAgainLine: (String) -> String = { it },
 )
 
 /**
@@ -784,13 +797,19 @@ private fun ChatRow(
                                 ?.takeUnless { it == MessageErrorKind.Unknown }
                                 ?.let(listWords.messageError)
                                 ?.takeIf { it.isNotBlank() }
-                        if (typed != null) KitQuietLine(typed)
+                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
+                        val limit = reply?.limitSwitch?.get(row.turnId)
+                        if (limit != null) KitQuietLine(reply.usedUpLine(limit.modelName))
+                        else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason)
                             KitQuietLine(headline)
                             KitQuietLine(hint)
                         }
                         // B-099: the ways on and Details keep the quiet lines' inset, never the screen edge.
+                        reply?.attachAgain
+                            ?.takeIf { it.turnId == row.turnId }
+                            ?.let { KitQuietLine(reply.attachAgainLine(it.file)) }
                         KitTranscriptActions {
                             if (
                                 AgentErrorText.classify(reason)?.offersSignIn == true &&
@@ -821,9 +840,34 @@ private fun ChatRow(
                                         reason,
                                         suggestion != null,
                                         reply.canCompact,
+                                        limit?.offer
+                                            ?: io.github.eslamasabry.oc.feature.chat.presentation.LimitSwitchOffer.None,
                                     )
                                     .forEach { fix ->
                                         when (fix) {
+                                            ErrorFix.SwitchModel ->
+                                                reply.switchModelLabel?.let {
+                                                    KitButton(
+                                                        it,
+                                                        { reply.onSwitchModel(row.turnId) },
+                                                        role = KitButtonRole.Primary,
+                                                        enabled =
+                                                            io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(
+                                                                reply.switchOnline,
+                                                                reply.switchOfflineReason,
+                                                            ),
+                                                        modifier = Modifier.testTag("error-action-switch-model"),
+                                                    )
+                                                }
+                                            ErrorFix.ConnectProvider ->
+                                                reply.connectProviderLabel?.let {
+                                                    KitButton(
+                                                        it,
+                                                        reply.onOpenProviders,
+                                                        role = KitButtonRole.Secondary,
+                                                        modifier = Modifier.testTag("error-action-connect-provider"),
+                                                    )
+                                                }
                                             ErrorFix.UseModel ->
                                                 if (suggestion != null)
                                                     KitButton(

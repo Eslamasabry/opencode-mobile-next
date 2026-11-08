@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
+import io.github.eslamasabry.oc.feature.chat.world.StoppedPrompt
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatUndone
@@ -92,6 +93,13 @@ internal data class ChatLocal(
     /** Parts already sent to the background (Flutter `_backgroundRequestedParts`); never offered twice. */
     val backgroundRequested: PersistentSet<String> = persistentSetOf(),
     val backgrounding: Boolean = false,
+    /** B-169: the open switch sheet. */
+    val switching: SwitchUi? = null,
+    /** B-169: the switch waiting on "already ran {N} steps" (turn id and the chosen model). */
+    val switchAsk: Pair<String, io.github.eslamasabry.oc.feature.chat.world.ModelKey>? = null,
+    /** B-169 §5: switches sent per stopped prompt ([LimitSwitchRules.promptKey]). */
+    val switches: PersistentMap<String, Int> = persistentMapOf(),
+    val attachAgain: AttachAgainUi? = null,
 )
 
 internal data class PendingArrival(
@@ -374,7 +382,30 @@ public class ChatPresenter(
                 l.receiptChecks
                     .filterKeys { id -> i.pending.any { it.localId == id } }
                     .toPersistentMap(),
+            limitSwitch = limitOffers(t, i.capabilities, l.switches),
+            switchOnline = i.link == ChatLink.Live,
+            switching = l.switching,
+            attachAgain = l.attachAgain,
         )
+    }
+
+    /** B-169: the limit offer of each failed turn. */
+    private fun limitOffers(
+        t: TranscriptState,
+        caps: ServerCapabilities,
+        switches: PersistentMap<String, Int>,
+    ): PersistentMap<String, LimitSwitchUi> {
+        if (!caps.promptModelChoice) return persistentMapOf()
+        val now = clock?.now()?.toEpochMilliseconds()
+        var out = persistentMapOf<String, LimitSwitchUi>()
+        for (row in t.rows) {
+            if (row !is FooterRow || !row.failed) continue
+            val words = t.rows.firstOrNull { it is PromptRow && it.turnId == row.turnId } as? PromptRow
+            val count = words?.let { switches[LimitSwitchRules.promptKey(it.text)] } ?: 0
+            val offer = LimitSwitchRules.offer(row.reason, now, caps.promptModelChoice, count)
+            if (offer != LimitSwitchOffer.None) out = out.put(row.turnId, LimitSwitchUi(offer, stoppedModelName(row.turnId)))
+        }
+        return out
     }
 
     /**
@@ -444,7 +475,7 @@ public class ChatPresenter(
     }
 
     override fun dismissConfirm() {
-        local.update { it.copy(confirm = null) }
+        local.update { it.copy(confirm = null, switchAsk = null) }
     }
 
     // ---- Load, stop, sends ----
@@ -554,6 +585,102 @@ public class ChatPresenter(
                 // A refused switch keeps the old model and sends nothing.
                 is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
                 is Outcome.Ok -> world.sendAgain(text)
+            }
+        }
+    }
+
+    // ---- B-169: switch model when a limit stops a reply ----
+
+    private val usedUp = UsedUpModels()
+
+    /** The catalog's name of the model [turnId] stopped on, else one made from its id. */
+    private fun stoppedModelName(turnId: String): String? {
+        val key = world.stoppedPrompt(turnId)?.model ?: return null
+        return world.models.value.choices
+            .firstOrNull { it.providerId == key.providerId && it.modelId == key.modelId }
+            ?.label
+            ?: ReplyModelNames.fromId(key.modelId)
+    }
+
+    private fun nowMs(): Long? = clock?.now()?.toEpochMilliseconds()
+
+    override fun switchModel(turnId: String, resetsAtMs: Long?) {
+        if (world.link.value != ChatLink.Live || !world.capabilities.value.promptModelChoice) return
+        val prompt = world.stoppedPrompt(turnId) ?: return
+        val count = local.value.switches[LimitSwitchRules.promptKey(prompt.text)] ?: 0
+        if (count >= LimitSwitchRules.MAX_SWITCHES) return
+        prompt.model?.let { usedUp.mark(it, resetsAtMs) }
+        local.update {
+            it.copy(
+                switching = SwitchUi(turnId, prompt.model, usedUp.all(nowMs()), prompt.contextTokens),
+                attachAgain = null,
+            )
+        }
+    }
+
+    override fun dismissSwitch() {
+        local.update { it.copy(switching = null) }
+    }
+
+    override fun switchTo(providerId: String, modelId: String) {
+        val open = local.value.switching ?: return
+        val choice =
+            world.models.value.choices.firstOrNull { it.providerId == providerId && it.modelId == modelId }
+                ?: return
+        val key = io.github.eslamasabry.oc.feature.chat.world.ModelKey.of(choice)
+        if (key == open.failed || key in open.usedUp || !choice.enabled) return
+        val prompt = world.stoppedPrompt(open.turnId) ?: return
+        // The context guard: a known window the conversation no longer fits is not choosable.
+        if (SwitchModelRules.tooLong(choice, prompt.contextTokens)) return
+        if (prompt.toolSteps > 0) {
+            local.update {
+                it.copy(
+                    switching = null,
+                    switchAsk = open.turnId to key,
+                    confirm = ChatConfirm.SendAgainAfterSteps(prompt.toolSteps, choice.label),
+                )
+            }
+            return
+        }
+        local.update { it.copy(switching = null) }
+        sendSwitched(prompt, choice)
+    }
+
+    override fun confirmSwitch() {
+        val (turnId, key) = local.value.switchAsk ?: return
+        if (local.value.confirm !is ChatConfirm.SendAgainAfterSteps) return
+        local.update { it.copy(confirm = null, switchAsk = null) }
+        val choice =
+            world.models.value.choices.firstOrNull { it.providerId == key.providerId && it.modelId == key.modelId }
+                ?: return
+        val prompt = world.stoppedPrompt(turnId) ?: return
+        sendSwitched(prompt, choice)
+    }
+
+    /** Selects [choice] as the model chip does, then sends [prompt] again with it (design §4.1–4.3). */
+    private fun sendSwitched(prompt: StoppedPrompt, choice: io.github.eslamasabry.oc.feature.chat.world.ComposerModel) {
+        launcher.launch {
+            when (val picked = world.selectModel(choice)) {
+                // A refused switch keeps the old model and sends nothing.
+                is Outcome.Failed -> local.update { it.copy(actionFailure = picked.failure) }
+                is Outcome.Ok -> {
+                    val missing = prompt.unreadable.firstOrNull()
+                    if (missing != null) {
+                        // A file that can no longer be read: the person sends it by hand, with the file again.
+                        world.replaceAttachments(prompt.attachments - prompt.unreadable.toSet())
+                        local.update {
+                            it.copy(
+                                insert = ClipUi(nextId++, prompt.text),
+                                attachAgain = AttachAgainUi(prompt.turnId, missing.filename.ifBlank { missing.mime }),
+                            )
+                        }
+                        return@launch
+                    }
+                    val promptKey = LimitSwitchRules.promptKey(prompt.text)
+                    local.update { it.copy(switches = it.switches.put(promptKey, (it.switches[promptKey] ?: 0) + 1)) }
+                    val sent = world.sendAgainWith(prompt)
+                    if (sent is Outcome.Failed) local.update { it.copy(actionFailure = sent.failure) }
+                }
             }
         }
     }

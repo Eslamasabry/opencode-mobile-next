@@ -17,6 +17,12 @@ public enum class ErrorFix {
     Compact,
     OpenProviders,
     OpenAccount,
+
+    /** B-169: "Switch model": another model, and the stopped prompt sent again with it. */
+    SwitchModel,
+
+    /** B-169 §5: "Connect a provider…" once a stopped prompt was switched as often as it may be. */
+    ConnectProvider,
 }
 
 public object ErrorRecovery {
@@ -58,9 +64,23 @@ public object ErrorRecovery {
         reason: String?,
         hasSuggestion: Boolean,
         canCompact: Boolean,
+        /** B-169: a lasting limit in a conversation whose prompts carry their own model. */
+        limit: LimitSwitchOffer = LimitSwitchOffer.None,
     ): List<ErrorFix> {
         val model = if (hasSuggestion) ErrorFix.UseModel else ErrorFix.ChooseModel
         val cause = AgentErrorText.classify(reason.orEmpty())
+        // B-169 §2: Switch model leads; the existing Compact and account fixes stay where they apply. One switch control
+        // per turn, so neither Choose nor Use model joins it.
+        when (limit) {
+            LimitSwitchOffer.Spent -> return listOf(ErrorFix.ConnectProvider)
+            LimitSwitchOffer.Switch ->
+                return listOfNotNull(
+                    ErrorFix.SwitchModel,
+                    ErrorFix.Compact.takeIf { canCompact && cause == AgentErrorCause.FreeTierLimit },
+                    ErrorFix.OpenAccount.takeIf { reply == ReplyFailureKind.NoCredit },
+                )
+            LimitSwitchOffer.None -> Unit
+        }
         return when {
             typed == MessageErrorKind.ModelNotFound -> listOf(model)
             typed == MessageErrorKind.ContextOverflow ->
