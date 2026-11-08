@@ -36,6 +36,9 @@ public interface TerminalActions {
     public fun resize(id: String, rows: Int, cols: Int)
 
     public fun remove(id: String)
+
+    /** The open terminal's details, for its sheet; null when none is open. */
+    public fun details(): TerminalDetailsUi? = null
 }
 
 @AssistedInject
@@ -85,6 +88,8 @@ public class TerminalViewModel(
     override fun remove(id: String) {
         viewModelScope.launch { terminals.remove(id) }
     }
+
+    override fun details(): TerminalDetailsUi? = state.value.selected?.let { TerminalDetails.of(it) }
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

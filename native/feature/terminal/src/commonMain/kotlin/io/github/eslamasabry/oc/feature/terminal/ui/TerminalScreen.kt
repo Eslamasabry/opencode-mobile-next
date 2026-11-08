@@ -21,6 +21,9 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalState
 import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalActions
+import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalDetailsUi
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -62,6 +65,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
     var rename by remember(terminal?.id) { mutableStateOf(false) }
     var remove by remember(terminal?.id) { mutableStateOf(false) }
     var resize by remember(terminal?.id) { mutableStateOf(false) }
+    var details by remember(terminal?.id) { mutableStateOf<TerminalDetailsUi?>(null) }
     val title =
         terminal?.title?.takeIf { it.isNotBlank() }
             ?: stringResource(Res.string.libraryTerminalTitle)
@@ -69,6 +73,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
     val renameLabel = stringResource(Res.string.terminalScreenRenameConfirm)
     val sizeLabel = stringResource(Res.string.remoteTerminalSize)
     val listLabel = stringResource(Res.string.remoteTerminalList)
+    val detailsLabel = stringResource(Res.string.terminalScreenDetails)
     val stopLabel =
         stringResource(
             if (terminal?.running == true) Res.string.terminalScreenStopConfirm
@@ -88,6 +93,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                             add(KitLineAction(listLabel, actions::showList))
                             add(KitLineAction(renameLabel, { rename = true }))
                             add(KitLineAction(sizeLabel, { resize = true }))
+                            add(KitLineAction(detailsLabel, { details = actions.details() }, testTag = "terminal-details"))
                             add(KitLineAction(stopLabel, { remove = true }))
                         }
                     },
@@ -207,6 +213,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                         actions.rename(terminal.id, it)
                     }
                 }
+                TerminalDetailsSheet(details) { details = null }
                 ResizeTerminal(resize, onDismiss = { resize = false }) { rows, columns ->
                     resize = false
                     actions.resize(terminal.id, rows, columns)
@@ -258,6 +265,43 @@ private fun terminalFailureText(failure: Failure): String =
             else -> Res.string.remoteTerminalFailed
         }
     )
+
+/**
+ * Flutter `showKitTechnicalDetails` for one terminal: state, command, folder, process id, exit code, each masked by
+ * the kit's redaction and copied together with "Copy details".
+ */
+@Composable
+private fun TerminalDetailsSheet(details: TerminalDetailsUi?, onDismiss: () -> Unit) {
+    KitSheet(
+        visible = details != null,
+        onDismissRequest = onDismiss,
+        title = details?.let { stringResource(Res.string.terminalScreenDetailsTitle, it.title) } ?: stringResource(Res.string.terminalScreenDetails),
+    ) {
+        if (details != null)
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                notes = terminalDetailLines(details),
+                initiallyExpanded = true,
+            )
+    }
+}
+
+/** "Label: value" lines, the state first (the server's own word for the program, not the connection's). */
+@Composable
+internal fun terminalDetailLines(details: TerminalDetailsUi): List<String> {
+    fun line(label: String, value: String) = "$label: ${KitRedact.text(value)}"
+    return listOfNotNull(
+        line(
+            stringResource(Res.string.terminalScreenDetailState),
+            stringResource(if (details.running) Res.string.terminalStateRunning else Res.string.terminalStateEnded),
+        ),
+        line(stringResource(Res.string.terminalScreenDetailCommand), details.command),
+        details.folder?.let { line(stringResource(Res.string.terminalScreenDetailFolder), it) },
+        line(stringResource(Res.string.terminalScreenDetailPid), details.pid.toString()),
+        details.exitCode?.let { line(stringResource(Res.string.terminalScreenDetailExit), it.toString()) },
+    )
+}
 
 @Composable
 private fun RenameTerminal(
