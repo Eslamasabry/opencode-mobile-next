@@ -12,8 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertDoesNotExist
-import androidx.compose.ui.test.assertExists
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
@@ -75,13 +74,13 @@ class KitStatusPillTest {
                 KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Offline")
             }
         }
-        onNodeWithTag("kit-status-pill-word").assertExists()
+        onNodeWithTag("kit-status-pill-word").fetchSemanticsNode()
     }
 
     @Test
     fun connected_has_no_word() = runComposeUiTest {
         setContent { Themed(rtl = false, fontScale = 1f) { KitStatusPill("This phone", KitConnectionTone.Ok, "x", {}) } }
-        onNodeWithTag("kit-status-pill-word").assertDoesNotExist()
+        assertTrue(onAllNodesWithTag("kit-status-pill-word").fetchSemanticsNodes().isEmpty())
     }
 
     private fun wordLeftAndWidth(rtl: Boolean): Pair<Float, Float> {
@@ -94,7 +93,7 @@ class KitStatusPillTest {
             }
             val word = onNodeWithTag("kit-status-pill-word").getUnclippedBoundsInRoot()
             val pill = onNodeWithTag("kit-status-pill").getUnclippedBoundsInRoot()
-            out = word.left.value to pill.width.value
+            out = word.left.value to (pill.right - pill.left).value
         }
         return out
     }
@@ -115,7 +114,7 @@ class KitStatusPillTest {
             }
         }
         val pill = onNodeWithTag("kit-status-pill").getUnclippedBoundsInRoot()
-        assertEquals(48f, pill.height.value, 1f)
-        onNodeWithTag("kit-status-pill-word").assertExists()
+        assertEquals(48f, (pill.bottom - pill.top).value, 1f)
+        onNodeWithTag("kit-status-pill-word").fetchSemanticsNode()
     }
 }

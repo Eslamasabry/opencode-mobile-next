@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.width
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
 import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionUi
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnected
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.serverSwitcherOpen
