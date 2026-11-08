@@ -112,6 +112,8 @@ import '../git/git_sheet.dart';
 import '../widgets/command_sheet.dart';
 import '../widgets/session_menu.dart';
 import '../widgets/safety_confirms.dart';
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 import '../widgets/default_notices.dart';
 import '../widgets/external_link.dart';
 import '../widgets/file_preview.dart';
@@ -276,6 +278,7 @@ part 'chat/agent_cards.dart';
 part 'chat/sent_photos.dart';
 part 'chat/chat_gallery.dart';
 part 'chat/no_reply_reason.dart';
+part 'chat/chat_path_link.dart';
 
 AppLocalizations _chatL10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -702,70 +705,6 @@ class _ChatScreenState extends State<ChatScreen>
   /// A reply's picture file, read for its thumbnail ([_loadPathImage]).
   Future<Uint8List?> _readPathImage(String path) => _loadPathImage(path);
 
-  Future<void> _openPathLink(String raw) async {
-    final strings = _chatL10n(context);
-    if (_conn.isIsolated || !_conn.capabilities.fileBrowsing) return;
-    final path = stripPathLineSuffix(raw);
-    final name = path.substring(path.lastIndexOf('/') + 1);
-    if (_drawablePictureName.hasMatch(name)) {
-      await _openPictureGallery('path:$path', fallbackPath: path);
-      return;
-    }
-    // A file in this phone's shared storage is an Android file: the system
-    // opens it (or installs the .apk after its own confirm), not a preview
-    // through the agent host.
-    final profile = _conn.profile;
-    final onPhone = profile != null && ProfileMonitor.isOnThisPhone(profile);
-    final phoneAction = phoneFileAction(path, serverOnThisPhone: onPhone);
-    if (phoneAction != PhoneFileAction.preview) {
-      await offerPhoneFile(
-        context,
-        path: path,
-        install: phoneAction == PhoneFileAction.install,
-      );
-      return;
-    }
-    try {
-      final api = await _conn.prepareActionTransport();
-      if (api == null) {
-        throw ProductException(strings.chatUiNotConnectedToTheServerRightNow);
-      }
-      final FileContent content;
-      try {
-        content = await api.fileContent(path);
-      } catch (error) {
-        // Too big for the preview, and the file is on this phone: Android
-        // can open it.
-        if (onPhone &&
-            isPhoneSharedStoragePath(path) &&
-            ProductFailure.from(error).category ==
-                ProductFailureCategory.fileTooBig) {
-          if (!mounted) return;
-          await offerPhoneFile(context, path: path, install: false);
-          return;
-        }
-        rethrow;
-      }
-      final binary = content.isBinary || content.encoding == 'base64';
-      final bytes = binary ? content.bytes() : null;
-      final data = FilePreviewData(
-        name: name,
-        mimeType: content.mimeType,
-        bytes: bytes,
-        text: binary ? null : content.content,
-      );
-      if (!mounted) return;
-      await showFilePreviewSheet(
-        context,
-        data,
-        onAttach: () => _attachProjectFile(path, data),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      showProductError(context, error);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return _buildPage(context);
@@ -776,7 +715,7 @@ class _ChatScreenState extends State<ChatScreen>
     // Leaving the chat sends any answer still inside its undo window.
     unawaited(_conn.delayedAnswers.flush());
     _saveOpeningExcerpt();
-    _stopTipTimer?.cancel();
+    _stopTimers();
     _voiceEpoch.value++;
     _voiceEpoch.dispose();
     _conn.profileDataChanges.removeListener(_readAloudScopeChanged);

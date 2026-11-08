@@ -1,8 +1,7 @@
 // Golden renders of screen-phone-1's pages (wave 2b), rebuilt from kit
-// parts: phone setup's screen A (fresh, stopped part way, ready with Termux
-// also there), its Customize sheet (first setup, nothing left to add), the
-// ready screen, the welcome's setup line, Termux storage (intro, scan,
-// report, an open category, the clean question, a failed scan) and the
+// parts: phone setup's screen A (fresh, stopped part way, ready with its
+// other ways open), its Customize sheet (first setup, nothing left to add),
+// the ready screen, the welcome's setup line and the
 // This phone in the app (not set up, running, its log, the Remove question;
 // P1.5 replaced the built-in server page). Phone
 // 412x915 and one wide window (1280x800), dark and light (owner decision
@@ -19,13 +18,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_customize_sheet.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_ready_screen.dart';
-import 'package:opencode_mobile/ui/screens/termux_storage_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 import '../../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -111,11 +106,6 @@ Widget _customizeHost({required bool addMode}) => Scaffold(
   ),
 );
 
-Widget _storage() => TermuxStorageScreen(
-  now: () => DateTime.fromMillisecondsSinceEpoch(1788800120000),
-  pollInterval: const Duration(hours: 1),
-);
-
 void main() {
   setUpAll(loadCaptureFonts);
   setUp(() {
@@ -124,7 +114,6 @@ void main() {
           const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
           (_) async => null,
         );
-    useNoTermuxJob();
   });
 
   for (final light in [false, true]) {
@@ -154,21 +143,12 @@ void main() {
       );
     });
 
-    testWidgets('setup start ready, Termux too, other ways ($theme)', (
-      tester,
-    ) async {
+    testWidgets('setup start ready, other ways ($theme)', (tester) async {
       await _shot(
         tester,
         'phone_setup_start_ready_other_ways',
         light: light,
-        home: startScreen(
-          inApp: true,
-          termux: TermuxRunningServer.running(
-            runtime: TermuxRuntime.openCode1,
-            version: '1.18.29',
-            observedAt: DateTime(2026, 9, 24),
-          ),
-        ),
+        home: startScreen(inApp: true),
         act: () async {
           final toggle = find.byKey(
             const ValueKey('phone-setup-start-other-ways'),
@@ -233,93 +213,6 @@ void main() {
       );
     });
 
-    // --- Termux storage ------------------------------------------------------
-
-    testWidgets('storage intro ($theme)', (tester) async {
-      StorageChannel().install();
-      await _shot(
-        tester,
-        'phone_termux_storage_intro',
-        light: light,
-        home: _storage(),
-      );
-    });
-
-    testWidgets('storage scanning ($theme)', (tester) async {
-      StorageChannel(
-        state: 'running',
-        log:
-            '[oc] Measuring storage on this phone\n[oc] Build caches\n'
-            '[oc] Agent scratch',
-      ).install();
-      await _shot(
-        tester,
-        'phone_termux_storage_scanning',
-        light: light,
-        home: _storage(),
-      );
-    });
-
-    for (final size in [phoneSize, wideSize]) {
-      testWidgets('storage report ($theme, $size)', (tester) async {
-        StorageChannel(state: 'done', report: storageReport()).install();
-        await _shot(
-          tester,
-          'phone_termux_storage_report',
-          light: light,
-          size: size,
-          home: _storage(),
-        );
-      });
-    }
-
-    testWidgets('storage clean question ($theme)', (tester) async {
-      StorageChannel(state: 'done', report: storageReport()).install();
-      await _shot(
-        tester,
-        'phone_termux_storage_clean_sheet',
-        light: light,
-        home: _storage(),
-        act: () async {
-          await tester.tap(
-            find.byKey(const Key('termux-storage-cat-build_caches')),
-          );
-          await _settle(tester);
-          final clean = find.byKey(
-            const Key('termux-storage-clean-build_caches'),
-          );
-          await tester.ensureVisible(clean);
-          await _settle(tester);
-          await tester.tap(clean);
-        },
-      );
-    });
-
-    if (!light) {
-      testWidgets('storage category open (dark)', (tester) async {
-        StorageChannel(state: 'done', report: storageReport()).install();
-        await _shot(
-          tester,
-          'phone_termux_storage_category_open',
-          light: light,
-          home: _storage(),
-          act: () => tester.tap(
-            find.byKey(const Key('termux-storage-cat-build_caches')),
-          ),
-        );
-      });
-
-      testWidgets('storage scan failed (dark)', (tester) async {
-        StorageChannel(state: 'failed').install();
-        await _shot(
-          tester,
-          'phone_termux_storage_failed',
-          light: light,
-          home: _storage(),
-        );
-      });
-    }
-
     // --- This phone (P1.5: the built-in server page is gone) ----------------
 
     testWidgets('this phone not set up ($theme)', (tester) async {
@@ -327,7 +220,7 @@ void main() {
         tester,
         'phone_this_phone_not_set_up',
         light: light,
-        home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+        home: const ThisPhoneScreen(),
         linux: PhoneLinux(installed: false, openCode: false),
       );
     });
@@ -339,7 +232,7 @@ void main() {
           'phone_this_phone_running',
           light: light,
           size: size,
-          home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+          home: const ThisPhoneScreen(),
           linux: PhoneLinux(running: true),
           profiles: [inAppProfile],
         );
@@ -359,7 +252,7 @@ void main() {
         tester,
         'phone_this_phone_details_log',
         light: light,
-        home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+        home: const ThisPhoneScreen(),
         linux: linux,
         profiles: [inAppProfile],
         act: () async {
@@ -380,7 +273,7 @@ void main() {
         tester,
         'phone_this_phone_remove_confirm',
         light: light,
-        home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+        home: const ThisPhoneScreen(),
         linux: PhoneLinux(),
         profiles: [inAppProfile],
         act: () async {

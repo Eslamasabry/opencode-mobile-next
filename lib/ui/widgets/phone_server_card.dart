@@ -12,11 +12,10 @@ import '../../domain/opencode_history_copy.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/managed_move.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../state/profiles.dart';
 import '../../state/queued_prompt_removal.dart'
     show QueuedPromptRemovalException, QueuedPromptRemovalPlan;
-import '../../termux/bridge.dart' show TermuxBridge, TermuxRuntime;
+import '../../platform/app_info.dart';
 import '../app_iconography.dart';
 import '../kit/kit.dart';
 import '../screens/phone_setup/phone_setup_routes.dart';
@@ -104,7 +103,7 @@ SetupEngine? _engine() {
   }
 }
 
-TermuxRuntime _runtimeOf(ServerProfile profile) =>
+OpenCodeRuntime _runtimeOf(ServerProfile profile) =>
     BuiltinLinux.runtimeForProfile(profile);
 
 /// Runs one ⋯ menu [action] for the in-app [profile] from [context], which
@@ -175,7 +174,7 @@ Future<bool> runPhoneServerAction(
 
   switch (action) {
     case PhoneServerAction.manage:
-      await openThisPhone(context, kind: PhoneHostKind.inApp);
+      await openThisPhone(context);
       return false;
     case PhoneServerAction.terminal:
       // A shell in this phone's Linux: it needs no running server, so it is
@@ -192,8 +191,8 @@ Future<bool> runPhoneServerAction(
     case PhoneServerAction.switchRuntime:
       // Re-running the one component with the other runtime; the engine
       // starts and connects the server it installed.
-      const target = TermuxRuntime.openCode2;
-      if (target == TermuxRuntime.openCode2) {
+      const target = OpenCodeRuntime.openCode2;
+      if (target == OpenCodeRuntime.openCode2) {
         // Refuse before setup can stop the old server or select a new profile.
         // Restarting an already selected OC2 server does not use this check.
         try {
@@ -1015,7 +1014,7 @@ class _PhoneServerCardState extends ConsumerState<PhoneServerCard> {
         ? KitAction(
             key: const ValueKey('phone-server-recover-ownership'),
             label: l10n.e7SetupOpenAppSettings,
-            onPressed: () => unawaited(TermuxBridge.openAppSettings()),
+            onPressed: () => unawaited(AppInfoPlatform.openAppSettings()),
           )
         : state == _Status.stopped
         ? KitAction(

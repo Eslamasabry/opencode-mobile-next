@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/phone_process_watch.dart';
 import 'package:opencode_mobile/builtin/phone_processes.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/running_on_phone_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
@@ -284,7 +283,6 @@ void main() {
   testWidgets("This phone's row says what was left behind and opens the page", (
     tester,
   ) async {
-    useNoTermuxJob();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
@@ -294,7 +292,7 @@ void main() {
     final watch = PhoneProcessWatch(processes: processes);
     await pumpPhone(
       tester,
-      home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      home: const ThisPhoneScreen(),
       linux: PhoneLinux(running: true),
       profiles: [inAppProfile],
       overrides: [phoneProcessWatchProvider.overrideWithValue(watch)],

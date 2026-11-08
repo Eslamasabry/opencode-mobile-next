@@ -1,5 +1,5 @@
 // The phone's Work tab as the owner's screenshots showed it (FinanceHub3
-// open on "This device (Termux)", FinanceHub and Tradebook in use), for the
+// open on "This device", FinanceHub and Tradebook in use), for the
 // Work tab goldens and status-line tests.
 import 'dart:async';
 
@@ -142,8 +142,8 @@ Future<WorkController> workController({
   Map<String, Session> sessions = const {},
   Set<String> busy = const {},
   bool savedLocation = true,
-  String baseUrl = 'http://127.0.0.1:4096',
-  String name = 'This device (Termux)',
+  String baseUrl = 'http://127.0.0.1:4123',
+  String name = 'This device',
   WorkRepository? repository,
   bool otherProjects = false,
   List<ServerProfile> otherServers = const [],

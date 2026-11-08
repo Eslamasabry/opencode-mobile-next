@@ -5,7 +5,6 @@ import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 
 /// The Android side as the starter sees it: Ubuntu installed or not, one
 /// server that runs once started (or dies at once when [serverDies]).
@@ -124,7 +123,7 @@ void main() {
       });
       expect(
         linux.started.single,
-        BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),
+        BuiltinLinux.serverScript(runtime: OpenCodeRuntime.openCode2),
       );
     });
 

@@ -10,9 +10,6 @@ import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/domain/history_migration.dart';
 import 'package:opencode_mobile/domain/opencode_history_copy.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/termux/bridge.dart'
-    show TermuxRuntime, TermuxBridgeException;
-import 'package:opencode_mobile/termux/scripts/manager_script.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 class _Real extends HttpOverrides {}
@@ -20,7 +17,7 @@ class _Real extends HttpOverrides {}
 void main() {
   group('the switch carries OpenCode 1 chats into OpenCode 2', () {
     test('the in-app OpenCode 2 start copies before the first start', () {
-      final two = BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2);
+      final two = BuiltinLinux.serverScript(runtime: OpenCodeRuntime.openCode2);
       expect(two, contains(openCode1HistoryCopyScript));
       expect(
         two.indexOf(openCode1HistoryCopyScript),
@@ -32,71 +29,18 @@ void main() {
         lessThan(two.indexOf(openCode1HistoryCopyScript)),
       );
       expect(
-        () => BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode1),
-        throwsA(isA<TermuxBridgeException>()),
+        () => BuiltinLinux.serverScript(runtime: OpenCodeRuntime.openCode1),
+        throwsA(isA<BuiltinLinuxException>()),
         reason: 'The legacy runtime can never be started',
       );
     });
 
-    test('the Termux runner copies inside Ubuntu before starting', () {
-      final copyAt = termuxManagerScript.indexOf(openCode1HistoryCopyScript);
-      expect(copyAt, greaterThan(0));
+    test('copy failures cannot be swallowed by the launcher', () {
       expect(
-        termuxManagerScript.lastIndexOf(
-          'proot-distro login opencode-ubuntu -- sh -s',
-          copyAt,
-        ),
-        greaterThan(0),
-      );
-      expect(
-        copyAt,
-        lessThan(
-          termuxManagerScript.indexOf(
-            'proot-distro login --work-dir /root/projects opencode-ubuntu',
-          ),
-        ),
-      );
-    });
-
-    test('copy failures cannot be swallowed by either launcher', () {
-      expect(
-        BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),
+        BuiltinLinux.serverScript(runtime: OpenCodeRuntime.openCode2),
         contains('(\n$openCode1HistoryCopyScript) || exit 74'),
       );
-      expect(
-        termuxManagerScript,
-        contains(
-          "<<'OC_HISTORY_COPY' | \"\$manager\" write-log server || exit 74",
-        ),
-      );
     });
-
-    test(
-      'Termux refuses conflicting history before stopping the old server',
-      () {
-        final start = termuxManagerScript.indexOf('switch_runtime()');
-        final check = termuxManagerScript.indexOf(
-          openCode1HistorySwitchCheckScript,
-          start,
-        );
-        expect(check, greaterThan(start));
-        expect(
-          check,
-          lessThan(
-            termuxManagerScript.indexOf('stop_server "\$CURRENT_PORT"', start),
-          ),
-        );
-        expect(
-          check,
-          lessThan(
-            termuxManagerScript.indexOf(
-              'write_switch "\$previous" "\$target" preparing',
-              start,
-            ),
-          ),
-        );
-      },
-    );
 
     test('the guard never overwrites and copies all three files', () {
       expect(

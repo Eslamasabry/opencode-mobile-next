@@ -12,8 +12,6 @@ import '../../../builtin/setup/setup_contract.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/profiles.dart';
-import '../../../state/termux_running_server.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
 import '../../../voice/device.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
@@ -27,8 +25,6 @@ import '../servers_screen.dart' show ServersRouteRequest;
 import 'phone_setup_hero.dart';
 import 'phone_setup_routes.dart';
 import 'phone_setup_selection.dart';
-import 'phone_setup_termux_job_screen.dart' show openPhoneSetupTermuxJob;
-import 'phone_setup_termux_screen.dart';
 
 /// Screen A of phone setup v2 (docs/design/phone-setup-v2-2026-09-24.md):
 /// "On this phone". One promise, one filled button, and the less common ways
@@ -36,22 +32,16 @@ import 'phone_setup_termux_screen.dart';
 ///
 /// The hero follows what is true on the phone right now, in this order:
 /// a setup that is running or stopped part way ("Setup is 42% done"), then
-/// one that runs or stopped in Termux ("Setup in Termux is 42% done"), an
-/// OpenCode that is ready in the app, one that Termux already runs, and only
-/// then the first-time promise. Every number in the promise comes from the
+/// an OpenCode that is ready in the app, and only then the first-time
+/// promise. Every number in the promise comes from the
 /// component registry, so adding a component changes it with no screen code.
 class PhoneSetupStartScreen extends ConsumerStatefulWidget {
   const PhoneSetupStartScreen({
     super.key,
-    this.termuxProbe,
     this.inAppProbe,
     this.deviceProbe,
     this.openProgress = _openFirstSetupProgress,
   });
-
-  /// Looks for an OpenCode that the Termux path already set up. Defaults to
-  /// the read-only [detectTermuxRunningServer]; tests stand in for Termux.
-  final Future<TermuxRunningServer> Function()? termuxProbe;
 
   /// Whether the in-app OpenCode is installed even though no setup job says
   /// so (it was set up before setup v2 kept a job). Defaults to a saved
@@ -72,21 +62,17 @@ class PhoneSetupStartScreen extends ConsumerStatefulWidget {
       _PhoneSetupStartScreenState();
 }
 
-enum _Hero { loading, fresh, progress, termuxProgress, ready, termux }
+enum _Hero { loading, fresh, progress, ready }
 
 class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
   late final SetupEngine _engine;
 
-  /// The Termux host's engine (P1.2), read so a job Termux runs or stopped
-  /// shows here too; null off Android.
-  SetupEngine? _termuxEngine;
   late Set<String> _selection;
 
   /// Until the persisted job is read, the screen cannot know whether to
   /// promise a first setup or offer to continue one, so it promises nothing.
   bool _restored = false;
   bool _inAppInstalled = false;
-  TermuxRunningServer? _termux;
   VoiceDeviceInfo? _device;
   bool _busy = false;
 
@@ -97,15 +83,10 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
   bool _otherWaysOpen = false;
   String? _failure;
 
-  /// Leaving the screen stops a Termux look that is still waiting, so its
-  /// deadlines do not outlive the page.
-  final _discovery = TermuxDiscoveryCancellation();
-
   @override
   void initState() {
     super.initState();
     _engine = PhoneSetup.engine;
-    if (TermuxBridge.supported) _termuxEngine = PhoneSetup.termux;
     _selection = defaultSetupSelection(installableComponents(_engine.registry));
     unawaited(_load());
   }
@@ -122,35 +103,8 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
     }
     if (!mounted) return;
     setState(() => _restored = true);
-    // Termux's job is read beside the rest, never before the screen shows:
-    // its progress listener redraws the hero when it arrives.
-    unawaited(_restoreTermux());
     unawaited(_probeInApp());
-    unawaited(_probeTermux());
     unawaited(_probeDevice());
-  }
-
-  /// The Termux job on disk, if any; unreadable counts as none.
-  Future<void> _restoreTermux() async {
-    try {
-      await _termuxEngine?.restore().timeout(const Duration(seconds: 3));
-    } catch (_) {
-      // No Termux job to show.
-    }
-  }
-
-  /// A Termux job that runs or stopped part way, which the hero leads with
-  /// when the app's own setup has none.
-  SetupProgress? get _termuxJob {
-    final progress = _termuxEngine?.progress.value;
-    if (progress == null) return null;
-    return switch (progress.state) {
-      SetupState.running ||
-      SetupState.interrupted ||
-      SetupState.failed ||
-      SetupState.cancelled => progress,
-      SetupState.idle || SetupState.done => null,
-    };
   }
 
   /// P0.8: the CPU ABI, free space and total RAM the pre-flight check reads,
@@ -196,30 +150,6 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
     return isInAppServer(profile, ref.read(builtinLinuxProvider));
   }
 
-  Future<void> _probeTermux() async {
-    TermuxRunningServer found;
-    try {
-      found =
-          await (widget.termuxProbe ??
-              () => detectTermuxRunningServer(
-                profiles: ref.read(bootstrapProvider).store.profiles,
-                cancellation: _discovery,
-              ))();
-    } catch (_) {
-      found = const TermuxRunningServer.unavailable();
-    }
-    if (mounted) setState(() => _termux = found);
-  }
-
-  @override
-  void dispose() {
-    _discovery.cancel();
-    super.dispose();
-  }
-
-  bool get _termuxPresent =>
-      _termux != null && (_termux!.isRunning || _termux!.isStopped);
-
   _Hero _heroFor(SetupProgress progress) {
     if (!_restored) return _Hero.loading;
     switch (progress.state) {
@@ -232,10 +162,8 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
       case SetupState.idle:
         break;
     }
-    if (_termuxJob != null) return _Hero.termuxProgress;
     if (progress.state == SetupState.done) return _Hero.ready;
     if (_inAppInstalled) return _Hero.ready;
-    if (_termuxPresent) return _Hero.termux;
     return _Hero.fresh;
   }
 
@@ -371,57 +299,6 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
     }
   }
 
-  /// Termux already runs OpenCode: hand over to the Servers screen, which
-  /// owns connecting, restoring the phone's password and the start card.
-  void _connectTermux() {
-    final server = _termux;
-    if (server == null) return;
-    final profile = savedProfileForTermuxServer(
-      ref.read(bootstrapProvider).store.profiles,
-      server,
-    );
-    final ServersRouteRequest? request;
-    if (!server.isRunning) {
-      // Stopped: the Servers list leads with that phone server and its Start.
-      request = null;
-    } else if (profile != null) {
-      request = ServersRouteRequest.connect(profile.id, detectedRunning: true);
-    } else {
-      request = ServersRouteRequest.enterPhoneCredentials(openCode2: true);
-    }
-    unawaited(
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil('/servers', (_) => false, arguments: request),
-    );
-  }
-
-  /// The Termux host of the same v2 job (P1.2): Termux and its permission
-  /// are rows only the person can do, then the same components as here,
-  /// with the same Customize choice, install in Termux.
-  Future<void> _useTermux() async {
-    await openPhoneSetupTermux(
-      context,
-      firstSetup: true,
-      selection: _selection,
-    );
-    // Setting Termux up there changes what this screen should lead with.
-    if (mounted) unawaited(_probeTermux());
-  }
-
-  /// The Termux job that runs or stopped: its own progress screen, which
-  /// follows a running job and continues a stopped one straight away.
-  Future<void> _continueTermux(SetupProgress progress) async {
-    await openPhoneSetupTermuxJob(
-      context,
-      selection: progress.adding.isEmpty ? _jobSelection(progress) : null,
-      adding: progress.adding.toSet(),
-      firstSetup: progress.firstSetup,
-      resume: true,
-    );
-    if (mounted) unawaited(_probeTermux());
-  }
-
   /// P0.8, low space: Android's Storage settings, so freeing space is one
   /// tap away instead of a dead end. Freeing space and coming back re-reads
   /// it on the next build rather than polling.
@@ -454,7 +331,7 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
   Widget build(BuildContext context) {
     final l10n = _l10n;
     return ListenableBuilder(
-      listenable: Listenable.merge([_engine.progress, _termuxEngine?.progress]),
+      listenable: _engine.progress,
       builder: (context, _) {
         final progress = _engine.progress.value;
         final hero = _heroFor(progress);
@@ -477,14 +354,7 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
               key: ValueKey(hero),
               child: hero == _Hero.loading
                   ? const SizedBox.shrink()
-                  : _state(
-                      context,
-                      l10n,
-                      hero,
-                      hero == _Hero.termuxProgress
-                          ? _termuxJob ?? progress
-                          : progress,
-                    ),
+                  : _state(context, l10n, hero, progress),
             ),
           ),
         );
@@ -546,22 +416,16 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
         action = l10n.phoneSetupStartSetUp;
         onPressed = () => unawaited(_run(_selection));
       case _Hero.progress:
-      case _Hero.termuxProgress:
         // Never "100% done" while it is still going: the last step
         // (starting OpenCode) has no bar of its own.
         final percent = (progress.overall * 100).floor().clamp(0, 99);
         final running = progress.state == SetupState.running;
-        final inTermux = hero == _Hero.termuxProgress;
-        headline = inTermux
-            ? l10n.phoneSetupStartTermuxProgressHeadline(percent)
-            : l10n.phoneSetupStartProgressHeadline(percent);
+        headline = l10n.phoneSetupStartProgressHeadline(percent);
         body = running
             ? l10n.phoneSetupStartRunningBody
             : l10n.phoneSetupStartStoppedBody;
         action = l10n.phoneSetupStartContinue;
-        onPressed = inTermux
-            ? () => unawaited(_continueTermux(progress))
-            : () => unawaited(_continue(progress));
+        onPressed = () => unawaited(_continue(progress));
         scene = SetupProgressView.sceneFor(l10n, progress);
         ambient = running;
         meter = KitProgress.known(
@@ -576,12 +440,6 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
         action = l10n.phoneSetupStartOpen;
         onPressed = () => unawaited(_open(progress));
         scene = const SetupPhoneScene(mood: SetupPhoneMood.ready);
-      case _Hero.termux:
-        headline = l10n.phoneSetupStartTermuxHeadline;
-        body = l10n.phoneSetupStartTermuxBody;
-        action = l10n.phoneSetupStartConnect;
-        onPressed = _connectTermux;
-        scene = const SetupPhoneScene(mood: SetupPhoneMood.termux);
     }
     final failure = _failure;
     final fresh = hero == _Hero.fresh;
@@ -665,20 +523,14 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
             onPressed: _busy ? null : _customize,
           ),
       ],
-      footer: _otherWays(context, l10n, hero, includesText),
+      footer: _otherWays(context, l10n),
     );
   }
 
   /// The less common ways in: one row that unfolds in place (a rare
   /// choice, [KitExpandRow]), then plain rows.
-  Widget _otherWays(
-    BuildContext context,
-    AppLocalizations l10n,
-    _Hero hero,
-    String? includesText,
-  ) {
+  Widget _otherWays(BuildContext context, AppLocalizations l10n) {
     final large = AppTheme.stackedActions(context);
-    final termux = _termux;
     Widget row({
       required Key key,
       required IconData icon,
@@ -706,43 +558,6 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
           expanded: _otherWaysOpen,
           onExpansionChanged: (open) => setState(() => _otherWaysOpen = open),
           children: [
-            // Termux already runs OpenCode, so Connect leads; the in-app
-            // setup stays one tap away for someone who wants to move off
-            // Termux.
-            if (hero == _Hero.termux)
-              row(
-                key: const ValueKey('phone-setup-start-set-up-here'),
-                icon: AppIconography.phone,
-                title: l10n.phoneSetupStartSetUpHere,
-                detail: includesText,
-                onTap: () => unawaited(_run(_selection)),
-              ),
-            // Both are on the phone: the app leads with the one inside it,
-            // and the one in Termux stays one tap away (map statesMissing
-            // "both in-app and Termux present").
-            if (hero == _Hero.ready && _termuxPresent)
-              row(
-                key: const ValueKey('phone-setup-start-connect-termux'),
-                icon: AppIconography.terminal,
-                title: l10n.phoneSetupStartUseTermuxOne,
-                detail: l10n.phoneSetupStartUseTermuxOneDetail,
-                onTap: _connectTermux,
-              ),
-            if (hero != _Hero.termux &&
-                !(hero == _Hero.ready && _termuxPresent))
-              row(
-                key: const ValueKey('phone-setup-start-use-termux'),
-                icon: AppIconography.terminal,
-                title: l10n.phoneSetupStartUseTermux,
-                // Termux is there but has not let the app in yet (map
-                // statesMissing "Termux installed but not yet allowed"):
-                // the Termux setup is where that permission is given.
-                // What it costs, said before anything installs.
-                detail: termux?.state == TermuxRunningServerState.denied
-                    ? l10n.phoneSetupStartTermuxNotAllowed
-                    : l10n.phoneSetupTermuxCost,
-                onTap: () => unawaited(_useTermux()),
-              ),
             row(
               key: const ValueKey('phone-setup-start-by-address'),
               icon: AppIconography.link,

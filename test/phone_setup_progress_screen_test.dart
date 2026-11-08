@@ -71,6 +71,7 @@ Future<_Harness> _pump(
   bool firstSetup = true,
   Future<bool> Function()? askNotifications,
   NetworkTransport transport = NetworkTransport.unknown,
+  Future<void> Function(BuildContext context)? connectComputer,
 }) async {
   PhoneSetupProgressScreen.resetNotificationAnswer();
   final h = _Harness();
@@ -104,6 +105,7 @@ Future<_Harness> _pump(
         firstSetup: firstSetup,
         askNotifications: askNotifications ?? () async => true,
         readNetwork: () async => NetworkReading(transport: transport),
+        connectComputer: connectComputer ?? (_) async {},
         openReady: (context) async {
           h.readyOpened++;
           if (!pushReady) return;
@@ -208,7 +210,7 @@ void main() {
     'ownership failure opens Android settings instead of continuing setup',
     (tester) async {
       var settings = 0;
-      const channel = MethodChannel('oc/termux');
+      const channel = MethodChannel('oc/app');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(channel, (call) async {
@@ -510,6 +512,54 @@ void main() {
       await _tapVisible(tester, find.text('Continue setup'));
       await tester.pump();
       expect(h.engine.runs, [_ids.toSet()]);
+    });
+
+    testWidgets('a phone that cannot run Node.js says so plainly and offers '
+        'a computer and the report, not Continue', (tester) async {
+      final en = lookupAppLocalizations(const Locale('en'));
+      var connects = 0;
+      await _pump(
+        tester,
+        connectComputer: (_) async => connects++,
+        initial: SetupProgress(
+          state: SetupState.failed,
+          overall: .55,
+          jobId: 'job-117',
+          phoneUnsupported: true,
+          current: 'node',
+          error: en.phoneSetupErrorNodeUnsupported,
+          logTail:
+              '[oc] probe version 139 # node --version\n'
+              "[oc] Node.js cannot run on this phone's system, also in a safe mode\n",
+          components: [
+            for (final id in _ids)
+              ComponentProgress(
+                id: id,
+                state: id == 'node'
+                    ? ComponentState.failed
+                    : id == 'opencode'
+                    ? ComponentState.pending
+                    : ComponentState.done,
+                error: id == 'node' ? en.phoneSetupErrorNodeUnsupported : null,
+              ),
+          ],
+        ),
+      );
+      expect(
+        find.text(
+          "This phone's system can't run Node.js inside built-in Linux. You "
+          'can still use OpenCode Mobile by connecting to your computer.',
+        ),
+        findsOneWidget,
+      );
+      // No raw text on the screen; it stays under Details.
+      expect(find.textContaining('[oc]'), findsNothing);
+      expect(find.text('Continue setup'), findsNothing);
+      expect(find.text('Report this failure'), findsOneWidget);
+      await _tapVisible(tester, find.text('Connect a computer'));
+      await tester.pump();
+      expect(connects, 1);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('network errors ask to reconnect', (tester) async {

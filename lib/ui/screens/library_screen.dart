@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../domain/list_load_problem.dart';
 import '../../domain/mcp_oauth.dart';
 import '../../l10n/app_localizations.dart';
 import '../../domain/model_display_name.dart';
@@ -9,6 +10,8 @@ import '../../domain/server_gateway.dart'
     show ProviderRuntimeBusyException, StreamStatus;
 import '../../domain/provider_presentation.dart';
 import '../widgets/phone_server_card.dart' show serverDisplayName;
+import '../../domain/product_failure.dart'
+    show ProductFailure, ProductFailureCategory;
 import '../../domain/product_repository.dart';
 import '../../state/connection.dart';
 import '../../state/pending_auth.dart';
@@ -26,6 +29,7 @@ import 'mcp_setup_screen.dart';
 
 part 'library/integrations_screen.dart';
 part 'library/integrations_mcp.dart';
+part 'library/integrations_load_states.dart';
 part 'library/integrations_page.dart';
 part 'library/integrations_signin.dart';
 part 'library/integrations_connect.dart';

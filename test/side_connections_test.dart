@@ -17,7 +17,6 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/phone_agent_host_port.dart';
 import 'package:opencode_mobile/state/phone_project_engine.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxBridge;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +31,7 @@ part 'support/feed_forms_tests.dart';
 // the main connection, Termux beside it, a server elsewhere only when shown.
 
 const _ubuntu = 'http://127.0.0.1:4097';
-final _termux = 'http://127.0.0.1:${TermuxBridge.managedServerPort}';
+final _termux = 'http://127.0.0.1:4096';
 const _vps = 'https://vps.example.com';
 
 class _RealHttpOverrides extends HttpOverrides {}
@@ -332,7 +331,6 @@ Future<_World> _world(
             onError: onError,
           );
         },
-    localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: agents,
   );

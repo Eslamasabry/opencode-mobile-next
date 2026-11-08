@@ -327,6 +327,13 @@ SetupProgress progressFromRecord(
     ),
     firstSetup: SetupJobParams.isFirstSetup(record.params),
     adding: SetupJobParams.addingIds(record.params),
+    phoneUnsupported:
+        state == SetupState.failed &&
+        record.components.any(
+          (row) =>
+              row.componentState == ComponentState.failed &&
+              nodeUnsupported(row),
+        ),
   );
 }
 
@@ -378,6 +385,12 @@ final _checksum = RegExp(
   caseSensitive: false,
 );
 
+/// [failed] is the Node.js step that found no way to run Node on this
+/// phone (node_compat.dart, issue #117).
+bool nodeUnsupported(SetupJobComponent failed) =>
+    failed.id == SetupComponentIds.node &&
+    (failed.error ?? '').startsWith(NodeCompatFailure.unsupported);
+
 /// A failed component in plain words, for its row ([component]) and for the
 /// whole job ([job]). The technical reason stays in the log tail, which the
 /// details view shows.
@@ -402,6 +415,12 @@ final _checksum = RegExp(
     // The finisher may return native exception text. Keep that in Details;
     // it is not safe or useful to interpolate into the person's recovery.
     final text = l10n.phoneSetupErrorCannotStart;
+    return (component: text, job: text);
+  }
+  // Issue #117: Node.js crashes on this phone's system in every safe mode.
+  // Not a retry, not a download: the way forward is another computer.
+  if (nodeUnsupported(failed)) {
+    final text = l10n.phoneSetupErrorNodeUnsupported;
     return (component: text, job: text);
   }
   // The OpenCode install names its own reason on its last line.

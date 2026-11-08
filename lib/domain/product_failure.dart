@@ -11,10 +11,7 @@ import '../builtin/builtin_folders.dart'
 import '../builtin/builtin_linux.dart' show BuiltinLinuxException;
 import 'agent_run_failure.dart' show AgentRunFailure;
 import '../paseo/transport.dart' show PaseoFailure, PaseoFailureKind;
-import '../state/local_server_controls.dart' show LocalServerControlFailure;
 import '../state/profiles.dart' show SecureStorageUnavailable;
-import '../termux/bridge.dart' show TermuxBridgeException;
-import '../termux/local_agent_runtime.dart' show LocalAgentFailure;
 
 /// Protocol-neutral presentation contract. Only [authoredMessage] may be
 /// displayed as prose. [technicalDetails] is untrusted and MUST be redacted
@@ -53,9 +50,6 @@ String? _authoredMessage(Object error) => switch (error) {
   McpOAuthCallbackException(:final message) => message,
   SecureStorageUnavailable(:final message) => message,
   BuiltinLinuxException(:final message) => message.trim(),
-  TermuxBridgeException(:final message) => message.trim(),
-  LocalAgentFailure(:final message) => message.trim(),
-  LocalServerControlFailure(:final message) => message.trim(),
   final String text => text,
   _ => null,
 };
@@ -94,9 +88,6 @@ enum ProductFailureCategory {
   /// The project's Git history can't be read (the agent host's Git refused
   /// it), so the agent could not start there.
   projectGit,
-
-  /// Termux did not finish a command the app sent it.
-  termux,
 
   /// The agent host answered a file read: the file is over the size it
   /// shows. Not a computer that is off.
@@ -289,30 +280,8 @@ ProductFailureCategory _builtin(BuiltinLinuxException error) {
   return _forText(message) ?? ProductFailureCategory.device;
 }
 
-/// A Termux bridge failure: the app's sentence (a setup check, a folder
-/// name), or Termux's own output and native text.
-ProductFailureCategory _termux(TermuxBridgeException error) {
-  final message = error.message.trim();
-  if (error.code != 'command_failed' && _isSentence(message)) {
-    return ProductFailureCategory.words;
-  }
-  return _forText(message) ?? ProductFailureCategory.termux;
-}
-
 ProductFailureCategory _classify(Object error) {
   if (error is BuiltinLinuxException) return _builtin(error);
-  if (error is TermuxBridgeException) return _termux(error);
-  if (error is LocalServerControlFailure) {
-    final message = error.message.trim();
-    if (message.isEmpty) return ProductFailureCategory.termux;
-    if (_isSentence(message)) return ProductFailureCategory.words;
-    return _forText(message) ?? ProductFailureCategory.termux;
-  }
-  if (error is LocalAgentFailure) {
-    final message = error.message.trim();
-    if (_isSentence(message)) return ProductFailureCategory.words;
-    return _forText(message) ?? ProductFailureCategory.termux;
-  }
   if (error is FolderListException) {
     return switch (error.problem) {
       FolderListProblem.timedOut => ProductFailureCategory.timedOut,
@@ -430,15 +399,6 @@ String? _technicalDetails(Object? error) {
     case BuiltinLinuxException(:final message, :final code):
       if (_builtin(error) == ProductFailureCategory.words) return null;
       raw = [message, ?code].join('\n');
-    case TermuxBridgeException(:final message, :final code):
-      if (_termux(error) == ProductFailureCategory.words) return null;
-      raw = '$message\n$code';
-    case LocalServerControlFailure(:final message):
-      if (_classify(error) == ProductFailureCategory.words) return null;
-      raw = message;
-    case LocalAgentFailure(:final message, :final kind):
-      if (_classify(error) == ProductFailureCategory.words) return null;
-      raw = '$message\n${kind.name}';
     case FolderListException(:final problem, :final detail):
       raw = detail.isEmpty ? problem.name : detail;
     case ApiException(:final message, :final statusCode, :final errorTag):

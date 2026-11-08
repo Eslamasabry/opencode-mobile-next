@@ -18,7 +18,7 @@ import '../../../builtin/builtin_server.dart'
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/phone_team_setup.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
+import '../../../platform/app_info.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
 import '../../kit/scenes/team_scenes.dart';
@@ -404,7 +404,7 @@ class _TeamPhoneSetupScreenState extends State<TeamPhoneSetupScreen> {
               ? KitAction(
                   key: const ValueKey('phone-team-recover-ownership'),
                   label: l.e7SetupOpenAppSettings,
-                  onPressed: () => unawaited(TermuxBridge.openAppSettings()),
+                  onPressed: () => unawaited(AppInfoPlatform.openAppSettings()),
                 )
               : KitAction(
                   key: const ValueKey('phone-team-start-again'),

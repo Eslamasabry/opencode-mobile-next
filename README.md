@@ -88,7 +88,7 @@ All screens are real captures from the app.
    - **Just show me:** a simulated conversation, no server needed.
 3. **Start a conversation.** Pick an agent and a model and describe the change. Add your own provider key in Settings when you want more than the free models.
 
-Coming from Termux? **Move from Termux** copies your projects into the app. More help is in [SUPPORT.md](SUPPORT.md) and the in-app guide.
+Coming from Termux? The app no longer runs anything in Termux: built-in Linux is its only engine on the phone. Your projects in Termux stay where they are; copy them to the phone's shared storage or push them with Git, then open them in the app. More help is in [SUPPORT.md](SUPPORT.md) and the in-app guide.
 
 ## Compatibility
 
@@ -119,6 +119,19 @@ The app is being rebuilt in native Kotlin, with Kotlin Multiplatform and Jetpack
 
 The app connects only to the servers you choose. Passwords stay in Android's keystore, voice is transcribed on the device, and diagnostics leave the phone only when you send a report yourself, with secrets removed. See [PRIVACY.md](PRIVACY.md).
 
+### What is sent
+
+Nothing goes to the developer unless you turn it on. There are two switches in **Settings > Privacy and data**, both off by default, and turning one off stops it:
+
+- **Usage and app health** goes to Google Analytics for Firebase, exactly these events with fixed words and ranges only: `app_open` (cold or warm), `setup_step_reached`, `setup_step_failed`, `setup_done`, `first_reply`, `connect_computer_chosen`, `update_offered`, `update_installed`, `screen_view` (the kind of page), `feature_used`, `session_length`; and for flows `conn_attempt`, `conn_drop`, `send_result`, `turn_stall`, `queue_flush`, `linux_setup_step`, `agent_start`, `bg_service_end`, `update_result`; and for performance `app_start`, `jank` (slow frames per kind of page) and `memory_pressure`. Timings go to Firebase Performance Monitoring under the same switch: `app_cold_start`, `conn_connect`, `send_first_reply`, `linux_setup_<step>` and `agent_start` with fixed words only, plus Firebase's own app start and slow and frozen frames; web requests are not traced. It also sets device ranges once: memory, free storage, CPU family, WebView version, whether notifications are allowed, and the kind and version of server.
+- **Crash reports** go to Google Firebase Crashlytics: the kind of error and its code locations (never its message), why Android ended the app last time, the last steps you took as short words such as `conn.connect`, and a few keys (app version, build kind, server kind, engine state, number of connections, OpenCode major.minor).
+
+Asked every time, whatever the switches say: **Settings > Help > Send a problem report** shows you the whole report (the app's last 500 log lines, the keys above, recent process ends and device ranges, with keys, URLs, host names, addresses and paths already blanked) and sends it only when you tap **Send**. You get a report code to quote in an issue; it is also in **Settings > About**.
+
+On the first start after installing or updating, the app asks once, "Help improve OpenCode Mobile?": "Share both", "Not now" (everything stays off and it never asks again) or "Choose". Every value sent is one of a fixed list of words, ranges or numbers; the exact lists are in [PRIVACY.md](PRIVACY.md) and [docs/telemetry/health-and-diagnostics.md](docs/telemetry/health-and-diagnostics.md).
+
+Never sent: messages, prompts, files, paths, server addresses, usernames, passwords, keys, tokens or the advertising ID.
+
 ## Development
 
 The released app is Flutter with native Android parts in Kotlin; the native Kotlin rewrite is on the `native/*` branches. Start with:
@@ -140,4 +153,4 @@ CI runs analysis, Android lint, the test suite in six shards and a signed releas
 
 [MIT](LICENSE). Bundled fonts, models and packages are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-OpenCode Mobile is an independent community project. It is not built, maintained, endorsed by, or affiliated with the official OpenCode team. It is not affiliated with Anthropic. It was built with substantial AI assistance. Thanks to the OpenCode team for the agent this app is a window onto.
+OpenCode Mobile is an independent community project. It is not built, maintained, endorsed by, or affiliated with the official OpenCode team. It is not affiliated with Anthropic. Built with AI coding agents and reviewed by the maintainer. Thanks to the OpenCode team for the agent this app is a window onto.

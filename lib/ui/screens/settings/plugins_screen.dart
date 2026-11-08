@@ -7,19 +7,11 @@ import '../../../l10n/app_localizations.dart';
 import '../../../state/orchestration.dart';
 import '../../../state/team_project_demo.dart' show teamProjectDemoConfig;
 import '../../../state/profiles.dart';
-import '../../../termux/bridge.dart';
 import '../../../builtin/builtin_server.dart' show looksLikeInAppServer;
 import '../../widgets/team_discovery_card.dart' show TeamDiscovery;
 import '../../widgets/team_technical_details.dart';
 
 export '../../widgets/team_technical_details.dart' show teamReadOnly;
-
-/// True when [profile] is the app-managed Termux server on this phone: the
-/// only profile that gets the "On this phone" section and the re-offer.
-bool teamPhoneProfile(ServerProfile? profile) =>
-    profile != null &&
-    TermuxBridge.supported &&
-    TermuxBridge.managesServerUrl(profile.baseUrl);
 
 /// The reason an [OrchestrationErrorKind] gives the row, lower-case so it
 /// reads after "Not available on this server ·".
@@ -46,7 +38,7 @@ String teamRowSubtitle(
   final config = profile.orchestration;
   // The server by the name a person knows it: "This phone" for the one on
   // this phone, not the name it was saved under.
-  final server = teamPhoneProfile(profile) || looksLikeInAppServer(profile)
+  final server = looksLikeInAppServer(profile)
       ? l10n.phoneServerCardTitle
       : profile.name;
   if (config == null) {

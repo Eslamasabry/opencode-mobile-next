@@ -8,9 +8,10 @@ import '../../state/download_size.dart';
 /// particular component, so adding one (AI Team, Python, anything) never
 /// changes this file.
 
-/// Where a setup job installs and runs OpenCode: the app's own Linux, or
-/// Termux's. The components are the same; a few checks differ by host.
-enum SetupHostKind { builtin, termux }
+/// The host name a setup job record carries for the app's own Linux, the
+/// only host phone setup installs into. A record without a host predates
+/// the field and belongs to it too.
+const builtinSetupHostName = 'builtin';
 
 /// One installable piece: a check that says whether it is there, and an
 /// install that puts it there and reports progress with `::oc` lines.
@@ -301,6 +302,7 @@ class SetupProgress {
     this.jobId,
     this.firstSetup = false,
     this.adding = const [],
+    this.phoneUnsupported = false,
   });
 
   static const idle = SetupProgress(
@@ -339,6 +341,11 @@ class SetupProgress {
   /// AI Team" instead of "Setting up OpenCode on this phone". Kept in the
   /// job's params like [firstSetup].
   final List<String> adding;
+
+  /// The job stopped because this phone's system cannot run Node.js inside
+  /// built-in Linux, in any safe mode (issue #117). Continue cannot help;
+  /// the screens offer connecting a computer instead.
+  final bool phoneUnsupported;
 
   bool get canContinue =>
       state == SetupState.failed ||

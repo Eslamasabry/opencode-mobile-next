@@ -36,10 +36,14 @@ class _Store extends ProfileStore {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  Map<String, dynamic> legacy({String? flavor, String? backend}) => {
+  Map<String, dynamic> legacy({
+    String? flavor,
+    String? backend,
+    String baseUrl = 'http://127.0.0.1:4096',
+  }) => {
     'id': 'phone',
     'name': 'This phone',
-    'baseUrl': 'http://127.0.0.1:4096',
+    'baseUrl': baseUrl,
     'flavor': ?flavor,
     'backend': ?backend,
   };
@@ -134,9 +138,13 @@ void main() {
           final store = _Store(await SharedPreferences.getInstance());
           final controller = ConnectionController(store, isIsolated: true);
           addTearDown(controller.dispose);
-          final profile = ServerProfile.fromJson(legacy(flavor: 'v2'))
-            ..requiresOpenCode2Migration = !pendingImport
-            ..openCode2HistoryPending = pendingImport;
+          // The in-app server: the one the app upgrades on the phone.
+          final profile =
+              ServerProfile.fromJson(
+                  legacy(flavor: 'v2', baseUrl: 'http://127.0.0.1:4097'),
+                )
+                ..requiresOpenCode2Migration = !pendingImport
+                ..openCode2HistoryPending = pendingImport;
           if (connected) {
             controller.adoptConnectedProfileForTesting(profile);
             controller.api = _CapableGateway();

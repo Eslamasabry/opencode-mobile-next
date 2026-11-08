@@ -288,7 +288,7 @@ final List<ServerFeature> serverFeatures = [
     source: ServerFeatureSource.device,
     title: (l10n) => l10n.capabilityOnThisPhone,
     detail: (l10n) => l10n.capabilityOnThisPhoneDetail,
-    available: (facts) => facts.device.supportsTermux,
+    available: (facts) => facts.device.supportsThisPhone,
   ),
   ServerFeature(
     id: 'voice',

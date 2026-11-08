@@ -347,32 +347,4 @@ extension _ConnectionControllerMonitorsImpl on ConnectionController {
     }
     return details;
   }
-
-  void _syncProfileServices() {
-    if (!_ownsProfileServices || _disposed) return;
-    ManagedServerRecovery.syncProfiles(
-      store.prefs,
-      store.profiles
-          .where(
-            (p) =>
-                TermuxBridge.supported &&
-                isProfileReadable(p.id) &&
-                TermuxBridge.managesServerUrl(p.baseUrl),
-          )
-          .map((p) => p.id),
-      runtimes: {
-        for (final p in store.profiles)
-          if (isProfileReadable(p.id) &&
-              TermuxBridge.managesServerUrl(p.baseUrl))
-            p.id: ManagedRuntimeFlavor.runtimeOf(p),
-      },
-      onRestart: ({required profileId, required eventId, required at}) =>
-          recordServerAct(
-            profileId: profileId,
-            kind: AutomaticActKind.restart,
-            eventId: eventId,
-            at: at,
-          ),
-    );
-  }
 }

@@ -12,8 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/orchestration_gateway.dart';
 import 'package:opencode_mobile/state/orchestration.dart';
-import 'package:opencode_mobile/state/orchestration_store.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 import 'package:opencode_mobile/ui/screens/team/team_page.dart';
 import 'package:opencode_mobile/ui/screens/team/agent_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/gate_sheet.dart';
@@ -22,13 +20,9 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart'
 import 'package:opencode_mobile/ui/screens/team/task_details_sheet.dart';
 import 'package:opencode_mobile/ui/screens/team/team_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/work_sheet.dart';
-import 'package:opencode_mobile/state/phone_host.dart' show PhoneHostKind;
-import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
-import 'package:opencode_mobile/ui/widgets/team_phone_onboarding.dart';
 
 import '../census_core.dart';
 import '../support/i1_team_core_world.dart';
-import '../support/i2_team_sheets_phone.dart';
 
 Future<(OrchestrationController, CensusTeamGateway)> _team(
   CensusKit kit, {
@@ -130,52 +124,6 @@ Future<void> _planning(
   }
 }
 
-// -- Phone ----------------------------------------------------------------
-
-Future<CensusTeamRuntime> _runtime(
-  CensusKit kit, {
-  bool supported = true,
-}) async {
-  final runtime = CensusTeamRuntime(supported: supported);
-  debugTeamPhoneRuntime = runtime;
-  kit.onDispose(() => debugTeamPhoneRuntime = null);
-  kit.mockChannel('oc/termux', readyTermux);
-  return runtime;
-}
-
-Future<void> _phoneSetup(
-  CensusKit kit,
-  CensusTeamRuntime runtime,
-  String key, {
-  bool configured = false,
-  Future<void> Function()? after,
-}) async {
-  final prefs = await kit.prefs();
-  final (conn, store) = await phoneConnection(
-    prefs,
-    phoneProfile(config: configured ? phoneConfig() : null),
-  );
-  kit.onDispose(conn.dispose);
-  // The block lives in This phone's Add tools sheet for Termux (slice
-  // P1.3/P1.5), no longer under the Termux wizard.
-  await kit.pumpApp(
-    const ThisPhoneScreen(kind: PhoneHostKind.termux),
-    controller: conn,
-    store: store,
-    routes: {'/home': (_) => const Scaffold(body: Text('home'))},
-  );
-  final addTools = find.byKey(const ValueKey('this-phone-add-tools'));
-  await _reveal(kit, addTools);
-  await kit.tapKey(
-    'this-phone-add-tools',
-    settleFor: const Duration(seconds: 2),
-  );
-  await after?.call();
-  final target = find.byKey(ValueKey(key));
-  await _reveal(kit, target);
-  kit.expectVisible(target);
-}
-
 /// Scrolls the screen's list until [finder] is on screen.
 Future<void> _reveal(CensusKit kit, Finder finder) async {
   if (finder.evaluate().isEmpty || finder.hitTestable().evaluate().isEmpty) {
@@ -192,68 +140,6 @@ Future<void> _reveal(CensusKit kit, Finder finder) async {
     await kit.tester.ensureVisible(finder.first);
   }
   await kit.settle();
-}
-
-Future<void> _phonePlugins(
-  CensusKit kit,
-  CensusTeamRuntime runtime, {
-  bool configured = true,
-  bool skipped = false,
-  bool openSheet = true,
-  bool teamAnswers = false,
-}) async {
-  final prefs = await kit.prefs({
-    if (skipped) OrchestrationStore.phoneOfferKey(phoneProfileId): 'skipped',
-  });
-  final (conn, store) = await phoneConnection(
-    prefs,
-    phoneProfile(config: configured ? phoneConfig() : null),
-  );
-  kit.onDispose(conn.dispose);
-  if (teamAnswers) {
-    // The supervisor on this phone answers: the fixture team, adopted as
-    // the connection's plugin controller under the profile's own config.
-    final old = conn.orchestration;
-    final (team, _) = await teamController(
-      onPhone: true,
-      prefs: prefs,
-      config: conn.profile!.orchestration,
-      profileId: phoneProfileId,
-      probe: (_) async => const ProbeFound(
-        host: OrchestrationHostIdentity(
-          provider: 'gascity',
-          url: 'http://127.0.0.1:8372',
-          hostMode: OrchestrationHostMode.phone,
-          version: '1.4.1',
-          city: 'phone',
-        ),
-        version: '1.4.1',
-        city: 'phone',
-        readOnly: false,
-        capabilities: OrchestrationCapabilities.gascityLoopback,
-      ),
-    );
-    conn.adoptOrchestrationForTesting(team);
-    old?.dispose();
-  }
-  await kit.pumpApp(
-    TeamPage(connection: conn, runtime: runtime),
-    controller: conn,
-    store: store,
-    routes: {'/home': (_) => const Scaffold(body: Text('home'))},
-  );
-  if (openSheet) {
-    // The team page's menu opens the phone team's own controls.
-    await kit.tapKey('team-home-more', settleFor: const Duration(seconds: 2));
-    await kit.tapKey('team-home-phone-controls');
-    kit.expectVisible(find.byKey(const ValueKey('team-phone-section')));
-  }
-}
-
-Future<void> _revealAndTap(CensusKit kit, String key) async {
-  final target = find.byKey(ValueKey(key));
-  await _reveal(kit, target);
-  await kit.tap(target, scroll: false);
 }
 
 // -- Plugins (a computer host) ----------------------------------------------
@@ -482,108 +368,6 @@ final i2TeamSheetsArea = CensusArea(
       await _planning(kit, MutationReceiptStatus.rejected);
     }, note: 'Host: the AI Team home; the host refused the message.'),
 
-    // -- Phone onboarding ------------------------------------------------------------
-    CensusShot('team-phone-onboarding-offer', (kit) async {
-      final runtime = await _runtime(kit);
-      await _phoneSetup(kit, runtime, 'team-phone-offer');
-    }, note: "Host: This phone's Add tools sheet (Termux), server running."),
-    CensusShot('team-phone-onboarding-project-sheet', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.projects = const [
-        '/root/projects/shopfront',
-        '/root/projects/notes-app',
-      ];
-      await _phoneSetup(kit, runtime, 'team-phone-set-up', after: () async {});
-      await _revealAndTap(kit, 'team-phone-set-up');
-      kit.expectVisible(find.byKey(const ValueKey('team-phone-project-sheet')));
-    }, note: 'Two managed projects: the person picks one.'),
-    CensusShot('team-phone-onboarding-steps', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime
-        ..current = phoneStatus(
-          TeamRuntimePhase.installingPackages,
-          verb: 'install',
-          busy: true,
-        )
-        ..log =
-            '[aiteam] downloading gc-1.4.1-android-arm64 (89 MB)\n'
-            '[aiteam] verified gc sha256\n'
-            '[aiteam] downloading bd-1.2.2-android-arm64 (70 MB)\n'
-            '[aiteam] verified bd sha256\n'
-            '[aiteam] Installing libicu git jq tmux\n';
-      await _phoneSetup(kit, runtime, 'team-phone-steps');
-    }, note: 'Re-entered while step 2 (packages) runs.'),
-    CensusShot('team-phone-onboarding-success', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady();
-      await _phoneSetup(kit, runtime, 'team-phone-success');
-    }),
-    CensusShot('team-phone-onboarding-failed', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime
-        ..current = phoneStatus(
-          TeamRuntimePhase.failed,
-          rawPhase: 'failed:download dns github.com 6',
-          reason: 'download dns github.com 6',
-          verb: 'install',
-          lastError: 'curl: (6) Could not resolve host: github.com',
-        )
-        ..log =
-            '[aiteam] downloading gc-1.4.1-android-arm64\n'
-            'curl: (6) Could not resolve host: github.com\n'
-            '[aiteam] ERROR: download failed\n';
-      await _phoneSetup(kit, runtime, 'team-phone-failed');
-    }, note: 'The download could not resolve github.com.'),
-    CensusShot('team-phone-onboarding-killed', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady(killed: true);
-      await _phoneSetup(kit, runtime, 'team-phone-killed', configured: true);
-    }),
-
-    // -- Phone section (AI Team page menu) ---------------------------------
-    CensusShot('embedded-team-phone-section', state: 'running', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady();
-      await _phonePlugins(kit, runtime, teamAnswers: true);
-    }, note: "Host: the AI Team page's menu › phone controls."),
-    CensusShot('embedded-team-phone-section', state: 'killed', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady(killed: true);
-      await _phonePlugins(kit, runtime);
-    }, note: 'Host: the AI Team sheet; Android stopped the team.'),
-    CensusShot('embedded-team-phone-section', state: 'not-installed', (
-      kit,
-    ) async {
-      final runtime = await _runtime(kit);
-      await _phonePlugins(kit, runtime, configured: false);
-    }, note: 'Host: the AI Team sheet; nothing installed yet.'),
-    CensusShot('embedded-team-phone-section', state: 'unsupported', (
-      kit,
-    ) async {
-      final runtime = await _runtime(kit, supported: false);
-      await _phonePlugins(kit, runtime, configured: false);
-    }, note: 'Host: the AI Team sheet; this phone cannot run a team.'),
-    CensusShot('team-phone-stop-sheet', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady();
-      await _phonePlugins(kit, runtime, teamAnswers: true);
-      await _revealAndTap(kit, 'team-phone-stop');
-      kit.expectVisible(find.byKey(const ValueKey('team-phone-stop-sheet')));
-    }),
-    CensusShot('team-phone-remove-sheet', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady();
-      await _phonePlugins(kit, runtime, teamAnswers: true);
-      await _revealAndTap(kit, 'team-phone-remove');
-      kit.expectVisible(find.byKey(const ValueKey('team-phone-remove-sheet')));
-    }),
-    CensusShot('team-phone-tips-sheet', (kit) async {
-      final runtime = await _runtime(kit);
-      runtime.current = phoneReady();
-      await _phonePlugins(kit, runtime, teamAnswers: true);
-      await _revealAndTap(kit, 'team-phone-keep-running');
-      kit.expectVisible(find.byKey(const ValueKey('team-phone-tips-sheet')));
-    }),
     // -- Hosts ------------------------------------------------------------------------
     CensusShot('team-host-sheet', state: 'empty', (kit) async {
       await _hostForm(kit);

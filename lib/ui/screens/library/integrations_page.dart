@@ -219,19 +219,18 @@ extension _IntegrationsPage on _IntegrationsScreenState {
       // Until the list itself shows, the sign-ins still lead on their own.
       if (signIns.isNotEmpty &&
           (staleSource ||
+              _waitingForConnection ||
               _integrationError != null ||
               integrations == null ||
               integrations.isEmpty)) ...[
         KitRowGroup(label: label, labelTerm: labelTerm, children: signIns),
         SizedBox(height: KitTokens.of(context).space3),
       ],
-      if (staleSource || _integrationError != null) ...[
-        ?_loadError(
-          _Section.providers,
-          key: const ValueKey('providers-load-failed'),
-          body: staleSource ? l10n.credentialScopeChanged : _integrationError,
-        ),
-      ] else if (integrations == null)
+      if (_waitingForConnection || _integrationError != null) ...[
+        ?_sectionLoadState(_Section.providers, _integrationError),
+      ] else if (integrations == null || staleSource)
+        // A list of another server or project is never shown: it reloads
+        // for the current one by itself (_onControllerChanged).
         const KitSkeletonRows(key: ValueKey('providers-loading'), count: 3)
       else if (integrations.isEmpty)
         KitStateView(
@@ -362,15 +361,13 @@ extension _IntegrationsPage on _IntegrationsScreenState {
             retry: KitAction(label: l10n.commonRetry, onPressed: _retryServers),
           ),
         ),
-      if (_serverError != null || scopeChanged)
-        ?_loadError(
-          _Section.servers,
-          key: const ValueKey('mcp-load-failed'),
-          body: _serverError ?? l10n.mcpScopeChanged,
-        ),
-      if (servers == null && _serverError == null)
+      if (_waitingForConnection || _serverError != null)
+        ?_sectionLoadState(_Section.servers, _serverError)
+      else if (servers == null || scopeChanged)
+        // Another server's or project's list is never shown: it reloads
+        // for the current one by itself (_onControllerChanged).
         const KitSkeletonRows(key: ValueKey('mcp-loading'), count: 2)
-      else if (servers != null && servers.isEmpty)
+      else if (servers.isEmpty)
         KitStateView(
           key: const ValueKey('mcp-empty'),
           size: KitStateSize.inline,
@@ -386,7 +383,7 @@ extension _IntegrationsPage on _IntegrationsScreenState {
             onPressed: _openMcpAdd,
           ),
         )
-      else if (servers != null)
+      else
         KitRowGroup(
           label: widget.mode == IntegrationsMode.all
               ? l10n.integrationsMcpServersLabel
@@ -423,15 +420,11 @@ extension _IntegrationsPage on _IntegrationsScreenState {
         _resourceError == null && resources != null && resources.isNotEmpty;
     return [
       if (!labelLeads) SizedBox(height: KitTokens.of(context).sectionGap),
-      if (_resourceError != null)
-        ?_loadError(
-          _Section.resources,
-          key: const ValueKey('resources-load-failed'),
-          body: _resourceError,
-        ),
-      if (resources == null && _resourceError == null)
+      if (_waitingForConnection || _resourceError != null)
+        ?_sectionLoadState(_Section.resources, _resourceError)
+      else if (resources == null)
         const KitSkeletonRows(key: ValueKey('resources-loading'), count: 2)
-      else if (resources != null && resources.isEmpty)
+      else if (resources.isEmpty)
         KitStateView(
           key: const ValueKey('resources-empty'),
           size: KitStateSize.inline,
@@ -439,7 +432,7 @@ extension _IntegrationsPage on _IntegrationsScreenState {
           title: l10n.e7LibraryNoResourcesAvailable,
           body: l10n.e7LibraryConnectedMCPServersHaveNotExposedAny,
         )
-      else if (resources != null)
+      else
         KitRowGroup(
           label: l10n.e7LibraryResources,
           labelTerm: l10n.integrationsResourcesExplanation,

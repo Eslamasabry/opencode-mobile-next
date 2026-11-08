@@ -1,4 +1,3 @@
-import 'package:opencode_mobile/termux/bridge.dart';
 // The setup prelude and component scripts, run in real shells on this
 // machine: oc_download against a local HTTP server (127.0.0.1 only) that
 // honours Range and sends slowly enough to watch, oc_apt_install against a
@@ -12,7 +11,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/components.dart';
-import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/builtin/setup/setup_scripts.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 
@@ -734,56 +732,6 @@ esac
         'exits': (ok: false, version: null),
         'after': (ok: true, version: '9'),
       });
-    }, skip: skip);
-
-    test('the OpenCode check fails on another version or runtime', () async {
-      final bin = Directory('${dir.path}/bin')..createSync();
-      File(
-        '${bin.path}/opencode',
-      ).writeAsStringSync('#!/bin/sh\necho 1.19.0\n');
-      File(
-        '${bin.path}/opencode2',
-      ).writeAsStringSync('#!/bin/sh\necho "opencode2 v2.0.9"\n');
-      Process.runSync('chmod', [
-        '+x',
-        '${bin.path}/opencode',
-        '${bin.path}/opencode2',
-      ]);
-      Future<ProcessResult> check(Map<String, String> params) {
-        // The Termux host's check; the in-app one wants the pinned native
-        // program (test/opencode_native_install_test.dart).
-        final component = setupComponents(
-          lookupAppLocalizations(const Locale('en')),
-          params: {'opencode': params},
-          host: SetupHostKind.termux,
-        ).firstWhere((c) => c.id == SetupComponentIds.openCode);
-        return Process.run(
-          'dash',
-          ['-c', component.checkScript],
-          environment: {'PATH': '${bin.path}:/usr/bin:/bin'},
-        );
-      }
-
-      expect(
-        (await check({})).exitCode,
-        isNot(0),
-        reason: 'a fresh setup requires pinned OC2, not installed OC1',
-      );
-      expect(
-        () => check({'runtime': 'opencode1'}),
-        throwsA(isA<TermuxBridgeException>()),
-      );
-      expect((await check({'version': '1.18.30'})).exitCode, isNot(0));
-      // OpenCode 2 is there but not at the pinned 2.0.10: an update is due.
-      expect((await check({'runtime': 'opencode2'})).exitCode, isNot(0));
-      final two = await check({'runtime': 'opencode2', 'version': '2.0.9'});
-      expect(two.exitCode, 0);
-      expect((two.stdout as String).trim(), '2.0.9');
-      File('${bin.path}/opencode2').deleteSync();
-      expect(
-        (await check({'runtime': 'opencode2', 'version': '2.0.9'})).exitCode,
-        isNot(0),
-      );
     }, skip: skip);
   });
 

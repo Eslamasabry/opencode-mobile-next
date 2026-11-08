@@ -1,6 +1,5 @@
 // Golden renders of shared-servers-1's pages (wave 2a): the server switcher
-// sheet, Claude Code's row on this phone in its states, and the Work tab's
-// other-servers panel, rebuilt from kit parts. Phone 412x915 and one wide
+// sheet, rebuilt from kit parts. Phone 412x915 and one wide
 // window (1280x800), dark and light (owner decision 2026-09-27: no Arabic),
 // with the app's real fonts at DPR 1.
 //
@@ -16,9 +15,6 @@ import '../support/fake_server_gateway.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
-import 'package:opencode_mobile/termux/local_agent_runtime.dart';
-import 'package:opencode_mobile/ui/kit/kit_row.dart';
-import 'package:opencode_mobile/ui/widgets/local_agent_server_entry.dart';
 import 'package:opencode_mobile/ui/widgets/server_switcher_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -101,19 +97,6 @@ Future<SwitcherController> _controller() async {
   return controller;
 }
 
-Widget _agent(LocalAgentStatus status, {bool notAnswering = false}) =>
-    LocalAgentServerEntry(
-      profiles: [savedAgentProfile()],
-      busy: false,
-      revision: 0,
-      runtime: FakeAgentRuntime(status)
-        ..statusFailure = notAnswering
-            ? const LocalAgentFailure(LocalAgentFailureKind.bridge, 'no answer')
-            : null,
-      onConnect: (_) {},
-      onManage: () {},
-    );
-
 void main() {
   setUpAll(loadCaptureFonts);
 
@@ -129,42 +112,6 @@ void main() {
           light: light,
           size: size,
           open: (context) => showServerSwitcher(context, controller),
-        );
-      });
-
-      testWidgets('Claude Code on this phone ($theme, $size)', (tester) async {
-        debugPlatformCapabilities = const PlatformCapabilities.android();
-        await _shot(
-          tester,
-          'local_agent_server_entry_states',
-          light: light,
-          size: size,
-          body: ListView(
-            children: [
-              for (final entry in [
-                _agent(agentStatus(LocalAgentPhase.ready)),
-                _agent(
-                  agentStatus(
-                    LocalAgentPhase.ready,
-                    signedIn: LocalAgentSignIn.no,
-                  ),
-                ),
-                _agent(
-                  const LocalAgentStatus(
-                    phase: LocalAgentPhase.failed,
-                    installed: true,
-                    failureKind: LocalAgentFailureKind.portInUse,
-                  ),
-                ),
-                _agent(agentStatus(LocalAgentPhase.installed, paseo: '0.0.1')),
-                _agent(agentStatus(LocalAgentPhase.ready), notAnswering: true),
-              ])
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: KitRowGroup(children: [entry]),
-                ),
-            ],
-          ),
         );
       });
     }

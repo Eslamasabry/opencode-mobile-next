@@ -288,9 +288,7 @@ exec /usr/local/bin/opencode2 "$@"
   /// use), tmux and jq (the Gas City pack).
   static const ubuntuPackages = 'tmux jq lsof procps';
 
-  /// The part of [installScript] after the downloads, shared with the
-  /// Termux runtime (lib/termux/team_scripts.dart), which downloads on the
-  /// Termux side and unpacks inside its own Ubuntu: unpacks the three
+  /// The part of [installScript] after the downloads: unpacks the three
   /// verified archives from [cache] into [home] (replacing an older one
   /// only once all three unpacked), writes the agents' `opencode`, links
   /// the programs into /usr/local/bin, sets the team's identity and runs
@@ -298,10 +296,6 @@ exec /usr/local/bin/opencode2 "$@"
   /// (each program's path inside its archive) to be set; leaves [cache] for
   /// the caller to delete.
   static String get unpackScript => _unpackScript(appFallback: true);
-
-  /// [unpackScript] with plain `tar`, for the Termux runtime: it has no
-  /// setup prelude and no app to answer `::oc unpack`.
-  static String get unpackScriptPlainTar => _unpackScript(appFallback: false);
 
   static String _unpackScript({required bool appFallback}) {
     const tools = ['gc', 'bd', 'dolt'];

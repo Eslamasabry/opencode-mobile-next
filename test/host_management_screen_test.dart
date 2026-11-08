@@ -123,10 +123,8 @@ void main() {
     expect(find.textContaining('ubuntu-opencode.sh'), findsNothing);
   });
 
-  testWidgets('the managed loopback profile hides host management', (
-    tester,
-  ) async {
-    final controller = await _controllerFor('http://127.0.0.1:4096');
+  testWidgets('the in-app server hides host management', (tester) async {
+    final controller = await _controllerFor('http://127.0.0.1:4097');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(

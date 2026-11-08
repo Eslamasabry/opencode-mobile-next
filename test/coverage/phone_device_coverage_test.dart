@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_start_screen.dart';
 import 'package:opencode_mobile/voice/device.dart';
 
@@ -52,7 +51,6 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       PhoneSetup.engine = FakeSetupEngine();
-      PhoneSetup.termux = FakeSetupEngine();
       final device = read(Map<String, dynamic>.from(variant['payload'] as Map));
       final boundary = GlobalKey();
       final (store, controller) = await serversState();
@@ -63,7 +61,6 @@ void main() {
           controller: controller,
           store: store,
           home: PhoneSetupStartScreen(
-            termuxProbe: () async => const TermuxRunningServer.absent(),
             inAppProbe: () async => false,
             deviceProbe: () async => device,
             openProgress: (_) async {},

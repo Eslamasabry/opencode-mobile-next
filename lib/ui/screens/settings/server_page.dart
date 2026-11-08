@@ -485,26 +485,13 @@ class _ServerPageScreenState extends State<ServerPageScreen> {
     Widget arrival(String id, Widget child) => KitArrival(id: id, child: child);
 
     // Update row: what applies to this server's kind and state.
-    final managedLocally =
-        platformCapabilities.supportsTermux &&
-        TermuxBridge.managesServerUrl(profile.baseUrl);
-    final availableVersion = managedLocally
-        ? null
-        : controller.availableServerVersion;
-    final installedVersion = managedLocally
-        ? null
-        : controller.installedServerVersion;
+    final availableVersion = controller.availableServerVersion;
+    final installedVersion = controller.installedServerVersion;
     late final String serverUpdateTitle;
     late final String serverUpdateSubtitle;
     Widget? serverUpdateTrailing;
     VoidCallback? serverUpdateAction;
-    if (managedLocally) {
-      serverUpdateTitle = copy.e7SettingsUi50;
-      serverUpdateSubtitle = copy.e7SettingsUi51;
-      serverUpdateTrailing = const _RowMark(AppIconography.chevronRight);
-      serverUpdateAction = () =>
-          openThisPhone(context, kind: PhoneHostKind.termux);
-    } else if (installedVersion != null) {
+    if (installedVersion != null) {
       serverUpdateTitle = copy.e7SettingsRestartVersion(installedVersion);
       serverUpdateSubtitle = _serverUpgradeError != null
           ? copy.e7SettingsRetryError(_serverUpgradeError!)
@@ -779,8 +766,7 @@ class _ServerPageScreenState extends State<ServerPageScreen> {
                       // The app's own server has no Linux service to set
                       // up; Claude Code, Pi and Codex servers have no such
                       // page either.
-                      if (!managedLocally &&
-                          !looksLikeInAppServer(profile) &&
+                      if (!looksLikeInAppServer(profile) &&
                           profile.backend == ServerBackend.openCode)
                         KitRow(
                           key: const Key('host-management-entry'),
@@ -793,12 +779,10 @@ class _ServerPageScreenState extends State<ServerPageScreen> {
                           ),
                         ),
                       ..._hostUpdateRows(context, copy, name),
-                      // §7 row 23. A Termux-managed server is upgraded by this
-                      // device, so that path is never gated; only the
-                      // remote-host one is. Paseo updates its own helper from
-                      // the row above.
+                      // §7 row 23: only the remote-host upgrade is gated.
+                      // Paseo updates its own helper from the row above.
                       if (_hostUpdater == null && !ownServer)
-                        if (!managedLocally && !capabilities.remoteUpgrade)
+                        if (!capabilities.remoteUpgrade)
                           KitRow.unavailable(
                             key: const ValueKey('gated-remote-upgrade'),
                             title: copy.e7SettingsUi67,

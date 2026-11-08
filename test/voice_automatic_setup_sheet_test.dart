@@ -132,6 +132,37 @@ void main() {
     await stopAutoSetupRecording(tester, rig);
   });
 
+  testWidgets(
+    'on a network it cannot read it is honest and not "mobile data"',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final rig = await openAutoSetup(
+        tester,
+        info: autoSetupInfo(memory: 2048),
+      );
+      rig.platform.current = VoiceSetupNetwork.unknown;
+      await autoSetupTap(
+        tester,
+        find.byKey(const Key('voice-auto-setup-download')),
+      );
+      final size = plainMb(voiceModelPack('base').downloadBytes);
+      expect(
+        find.text("This phone can't tell whether this connection costs data."),
+        findsOneWidget,
+      );
+      expect(find.textContaining('mobile data'), findsNothing);
+      expect(find.text('Download $size'), findsOneWidget);
+      expect(rig.downloader.downloads, isEmpty);
+      rig.downloader.gate = Completer<void>();
+      await autoSetupTap(tester, find.text('Download $size'));
+      expect(rig.downloader.downloads, ['base']);
+      rig.downloader.gate!.complete();
+      await pumpSheet(tester);
+      await pumpSheet(tester);
+      await stopAutoSetupRecording(tester, rig);
+    },
+  );
+
   testWidgets('Not now downloads nothing and records nothing', (tester) async {
     final rig = await openAutoSetup(tester);
     await autoSetupTap(tester, find.text('Not now'));

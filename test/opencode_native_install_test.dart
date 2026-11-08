@@ -16,8 +16,8 @@ import 'package:opencode_mobile/builtin/setup/components.dart';
 import 'package:opencode_mobile/builtin/setup/setup_engine.dart';
 import 'package:opencode_mobile/builtin/setup/setup_scripts.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
-import 'package:opencode_mobile/termux/opencode_ubuntu_setup.dart';
+import 'package:opencode_mobile/builtin/opencode_runtime.dart';
+import 'package:opencode_mobile/builtin/setup/opencode_ubuntu_setup.dart';
 
 const _server = r'''
 import http.server, os, sys
@@ -151,7 +151,7 @@ void main() {
       (url: 'http://127.0.0.1:$port/$name', sha256: sha, member: member);
 
   Future<ProcessResult> install(
-    TermuxRuntime runtime,
+    OpenCodeRuntime runtime,
     ({OpenCodeAsset arm64, OpenCodeAsset x64}) assets, {
     String machine = 'aarch64',
   }) {
@@ -175,7 +175,7 @@ void main() {
     );
   }
 
-  Future<ProcessResult> check(TermuxRuntime runtime) => Process.run(
+  Future<ProcessResult> check(OpenCodeRuntime runtime) => Process.run(
     'dash',
     ['-c', SetupScripts.openCodeNativeCheck(runtime, root: root.path)],
     environment: {'PATH': '${root.path}/usr/local/bin:/usr/bin:/bin'},
@@ -187,7 +187,7 @@ void main() {
   group('the pinned native install', () {
     test('the production script picks the pinned archive for each CPU, '
         'checks it before unpacking, and uses no npm', () {
-      for (final runtime in [TermuxRuntime.openCode2]) {
+      for (final runtime in [OpenCodeRuntime.openCode2]) {
         final script = SetupScripts.openCodeNativeInstall(runtime);
         final pins = OpenCodePins.of(runtime);
         final arm = script
@@ -230,7 +230,7 @@ void main() {
       // Another version is not installed from an unpinned file.
       expect(
         SetupScripts.openCodeNativeInstall(
-          TermuxRuntime.openCode2,
+          OpenCodeRuntime.openCode2,
           version: '1.18.30',
         ),
         allOf(contains(OpenCodeInstallFailure.unpinned), contains('exit 64')),
@@ -243,11 +243,11 @@ void main() {
       ).singleWhere((c) => c.id == SetupComponentIds.openCode);
       expect(
         builtin.installScript,
-        SetupScripts.openCodeNativeInstall(TermuxRuntime.openCode2),
+        SetupScripts.openCodeNativeInstall(OpenCodeRuntime.openCode2),
       );
       expect(
         builtin.checkScript,
-        SetupScripts.openCodeNativeCheck(TermuxRuntime.openCode2),
+        SetupScripts.openCodeNativeCheck(OpenCodeRuntime.openCode2),
       );
       final older = setupComponents(
         en,
@@ -257,13 +257,8 @@ void main() {
       ).singleWhere((c) => c.id == SetupComponentIds.openCode);
       expect(
         older.installScript,
-        SetupScripts.openCodeNativeInstall(TermuxRuntime.openCode2),
+        SetupScripts.openCodeNativeInstall(OpenCodeRuntime.openCode2),
       );
-      final termux = setupComponents(
-        en,
-        host: SetupHostKind.termux,
-      ).singleWhere((c) => c.id == SetupComponentIds.openCode);
-      expect(termux.installScript, contains(openCodeUbuntuSetupScript));
     });
 
     test('npm installs that remain allow exactly their own package\'s '
@@ -294,12 +289,12 @@ void main() {
       Link('${root.path}/usr/local/bin/opencode2').createSync(wrapper.path);
 
       expect(
-        (await check(TermuxRuntime.openCode2)).exitCode,
+        (await check(OpenCodeRuntime.openCode2)).exitCode,
         isNot(0),
         reason: 'the npm wrapper is not the pinned program: Continue redoes it',
       );
 
-      final result = await install(TermuxRuntime.openCode2, (
+      final result = await install(OpenCodeRuntime.openCode2, (
         arm64: asset('arm.tgz', sha, 'opencode'),
         x64: asset('missing-x64.tgz', '0' * 64, 'opencode'),
       ));
@@ -323,7 +318,7 @@ void main() {
         reason: 'the archive is deleted once installed',
       );
 
-      final after = await check(TermuxRuntime.openCode2);
+      final after = await check(OpenCodeRuntime.openCode2);
       expect(after.exitCode, 0, reason: '${after.stderr}');
       expect((after.stdout as String).trim(), '2.1.1');
     }, skip: skip);
@@ -335,7 +330,7 @@ void main() {
         'package/bin/opencode2',
         _fakeProgram('opencode v2.1.1'),
       );
-      final result = await install(TermuxRuntime.openCode2, (
+      final result = await install(OpenCodeRuntime.openCode2, (
         arm64: asset('missing-arm.tgz', '0' * 64, 'package/bin/opencode2'),
         x64: asset('x64.tgz', sha, 'package/bin/opencode2'),
       ), machine: 'x86_64');
@@ -349,14 +344,14 @@ void main() {
         Directory('${root.path}/opt/opencode2/package').existsSync(),
         isFalse,
       );
-      final after = await check(TermuxRuntime.openCode2);
+      final after = await check(OpenCodeRuntime.openCode2);
       expect(after.exitCode, 0, reason: '${after.stderr}');
       expect((after.stdout as String).trim(), '2.1.1');
     }, skip: skip);
 
     test('a checksum mismatch stops before anything is unpacked', () async {
       archive('arm.tgz', 'opencode', _fakeProgram('2.1.1'));
-      final result = await install(TermuxRuntime.openCode2, (
+      final result = await install(OpenCodeRuntime.openCode2, (
         arm64: asset('arm.tgz', 'f' * 64, 'opencode'),
         x64: asset('arm.tgz', 'f' * 64, 'opencode'),
       ));
@@ -397,7 +392,7 @@ void main() {
           _fakeProgram('2.1.1', activeFails: true),
         );
         final pin = asset('activation.tgz', sha, 'opencode');
-        final result = await install(TermuxRuntime.openCode2, (
+        final result = await install(OpenCodeRuntime.openCode2, (
           arm64: pin,
           x64: pin,
         ));
@@ -408,7 +403,7 @@ void main() {
         );
         expect(previous.readAsStringSync(), _fakeProgram('2.1.1'));
         expect(link.targetSync(), previous.path);
-        expect((await check(TermuxRuntime.openCode2)).exitCode, 0);
+        expect((await check(OpenCodeRuntime.openCode2)).exitCode, 0);
         expect(
           File('${root.path}/opt/opencode2.oc-pending').existsSync(),
           isFalse,
@@ -428,7 +423,7 @@ void main() {
         final name = 'a${program.hashCode}.tgz';
         final sha = archive(name, 'opencode', program);
         final pin = asset(name, sha, 'opencode');
-        return install(TermuxRuntime.openCode2, (arm64: pin, x64: pin));
+        return install(OpenCodeRuntime.openCode2, (arm64: pin, x64: pin));
       }
 
       final empty = await run(null);
@@ -473,7 +468,7 @@ void main() {
       'real pinned OpenCode on this PC (smoke)',
       () async {
         fakeUname('x86_64');
-        for (final runtime in [TermuxRuntime.openCode2]) {
+        for (final runtime in [OpenCodeRuntime.openCode2]) {
           final script = SetupScripts.openCodeNativeInstall(
             runtime,
             root: root.path,

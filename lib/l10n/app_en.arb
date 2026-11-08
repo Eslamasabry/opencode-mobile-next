@@ -178,27 +178,6 @@
   "backgroundWorkPromoted": "Subagents are continuing in the background.",
   "libraryNoModel": "No model selected",
   "chatAttachmentUnsupported": "Images, PDFs, text files, and Excel or Word files (.xlsx, .docx) can be attached.",
-  "termuxRestartTitle": "Restart the local server?",
-  "@termuxRestartTitle": {
-    "description": "Confirmation title before restarting the managed Termux server"
-  },
-  "termuxRestartMessage": "OpenCode will be briefly unavailable. The app will keep your current project and reconnect automatically.",
-  "@termuxRestartMessage": {
-    "description": "Confirmation explanation before restarting the managed Termux server"
-  },
-  "termuxRestartBusyMessage": "{count, plural, =1{1 conversation is generating. Restarting will interrupt it.} other{{count} conversations are generating. Restarting will interrupt them.}}",
-  "@termuxRestartBusyMessage": {
-    "description": "Additional restart warning when one or more sessions are generating",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxRestartConfirm": "Restart",
-  "@termuxRestartConfirm": {
-    "description": "Confirmation button that starts a managed Termux server restart"
-  },
   "chatCopyCompleteReply": "Copy complete reply",
   "chatCopyReplySoFar": "Copy reply so far",
   "commandRunTitle": "Run /{command}",
@@ -902,7 +881,7 @@
       }
     }
   },
-  "setupOutputWaiting": "Waiting for Termux output…",
+  "setupOutputWaiting": "Waiting for output…",
   "uncertainAuthDetail": "The server may have started this sign-in without confirming it. Check on the server before you start again.",
   "uncertainAuthCloseHint": "To start over, close this and clear the unconfirmed sign-in from the provider's row.",
   "pluginsUnsupported": "This server does not support plugin inspection.",
@@ -924,7 +903,6 @@
   "demoSetUpServer": "Set up your own server",
   "handoffCopyCommand": "Copy command",
   "quotaMiniMax": "MiniMax",
-  "managedHealthLifetime": "Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.",
   "quotaBudgetOff": "Off",
   "quotaBudgetSaveFailed": "Could not save this budget change. Your last saved settings remain in effect.",
   "quotaGlm": "GLM",
@@ -1000,34 +978,6 @@
     }
   },
   "monitorCheckInDue": "Time to check in",
-  "managedRecoveryAttempts": "Attempts used: {attempts} of 3. The limit survives app restarts.",
-  "@managedRecoveryAttempts": {
-    "placeholders": {
-      "attempts": {
-        "type": "int"
-      }
-    }
-  },
-  "managedRecoveryExhausted": "Recovery limit reached. Check the server and start it manually before resetting the retry budget.",
-  "managedRecoveryBackground": "Recovery waits while the app is in the background.",
-  "managedRecoveryChecking": "Checking the managed recovery operation…",
-  "managedRecoveryNext": "Next recovery attempt no earlier than {time}.",
-  "@managedRecoveryNext": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "managedRecoveryCheck": "Check recovery status",
-  "managedRecoveryReset": "Reset retry budget",
-  "managedRecoverySaveFailed": "Recovery settings could not be saved. Retry.",
-  "managedRecoveryRevokeFailed": "Could not save or revoke recovery. Keep this server and retry before removing it.",
-  "managedRecoverySettingsUnreadable": "Recovery settings could not be read. Check the server before enabling recovery.",
-  "managedRecoveryEnableFailed": "Could not enable recovery. Start the managed server, then try again.",
-  "managedRecoveryOwnershipChanged": "The managed operation changed. Check the server before enabling recovery again.",
-  "managedRecoveryUncertain": "Recovery paused because Termux did not confirm the result. Refresh to continue.",
-  "managedRecoveryRetryDisable": "Try disabling recovery again",
   "pluginMappingUnavailable": "This plugin or command is no longer available here. Refresh and review your links.",
   "mobileTasksUnfinished": "Show unfinished only",
   "mobileTasksNoUnfinished": "No unfinished tasks in this list.",
@@ -1141,10 +1091,6 @@
   "codexTokenLabel": "Connection token",
   "codexTokenStorageHelp": "Stored securely on this device and sent only to this Codex server.",
   "projectConfiguredFolder": "Configured folder",
-  "termuxGuideTitle": "Connect Termux once",
-  "termuxGuideOpenFailed": "The command was copied, but Termux could not open. Open Termux yourself or try Copy & open Termux again.",
-  "termuxGuideCopyOpenFailed": "Could not copy the command or open Termux.",
-  "termuxPermissionDenied": "Android didn't let this app run commands in Termux.",
   "launchShortcutWaiting": "Connecting to the saved server. The new conversation opens when it is ready.",
   "@launchShortcutWaiting": {
     "description": "Snackbar shown once when the New task home-screen shortcut arrives while the saved server is still connecting"
@@ -1577,33 +1523,7 @@
   "workBackgroundPending": "Requesting background work…",
   "workBackgroundRequested": "Background work requested. Status will update when the server reports it.",
   "oc2DiscoveryEditorTitle": "OpenCode 2",
-  "setupSwitchPending": "The update to OpenCode 2 has not finished. Your saved conversations are kept. Try again.",
-  "setupSwitchRetry": "Try {runtime} again",
-  "@setupSwitchRetry": {
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
   "setupSwitchFailed": "Could not finish updating to OpenCode 2. Your saved conversations are kept. Try again.",
-  "setupSwitchProfileName": "This phone · {runtime}",
-  "@setupSwitchProfileName": {
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "setupSwitchMissingCredential": "The saved server password could not be read. Your conversations and files are kept. Restore access to the saved password, then try again.",
-  "setupSwitchProgressTitle": "Switching to {runtime}",
-  "@setupSwitchProgressTitle": {
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
   "@e7ConnectionFailure1": {
     "description": "Connection recovery guidance shown in lib/ui/widgets/connection_failure.dart",
     "placeholders": {
@@ -1695,10 +1615,6 @@
   },
   "e7ConnectionFailure24": "Nothing answered on this phone",
   "@e7ConnectionFailure24": {
-    "description": "Connection recovery guidance shown in lib/ui/widgets/connection_failure.dart"
-  },
-  "e7ConnectionFailure26": "Running OpenCode in Termux? Open Termux and check that the server is still running.",
-  "@e7ConnectionFailure26": {
     "description": "Connection recovery guidance shown in lib/ui/widgets/connection_failure.dart"
   },
   "e7ConnectionFailure27": "Using adb reverse or an SSH forward? Check that the tunnel is still connected, then try again.",
@@ -1913,10 +1829,6 @@
   "@e7SharedAdvanced": {
     "description": "Shared app interface: Advanced"
   },
-  "e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals": "HTTPS, SSH tunnels, older servers, Termux internals",
-  "@e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals": {
-    "description": "Shared app interface: HTTPS, SSH tunnels, older servers, Termux internals"
-  },
   "e7SharedHTTPSSSHTunnelsOlderServers": "HTTPS, SSH tunnels, older servers",
   "@e7SharedHTTPSSSHTunnelsOlderServers": {
     "description": "Shared app interface: HTTPS, SSH tunnels, older servers"
@@ -1940,26 +1852,6 @@
   "e7SharedThenAddTheServerManuallyWithUsername": "Then add the server manually with username opencode and that password.",
   "@e7SharedThenAddTheServerManuallyWithUsername": {
     "description": "Shared app interface: Then add the server manually with username opencode and that password."
-  },
-  "e7SharedOnDeviceViaTermuxAutomated": "On-device via Termux (automated)",
-  "@e7SharedOnDeviceViaTermuxAutomated": {
-    "description": "Shared app interface: On-device via Termux (automated)"
-  },
-  "e7SharedUseTheOnDeviceTermuxCardOn": "Use the “On-device (Termux)” card on the Servers screen. The app installs Termux, unlocks the bridge, sets up opencode, starts the server and connects — all guided.",
-  "@e7SharedUseTheOnDeviceTermuxCardOn": {
-    "description": "Shared app interface: Use the “On-device (Termux)” card on the Servers screen. The app installs Termux, unlocks the bridge, sets up opencode, starts the server and connects — all guided."
-  },
-  "e7SharedOnlyTwoTapsNeedYouPersonallyDownloading": "Only two taps need you personally: downloading the Termux APK and pasting one unlock line inside Termux once — both required by Android’s security model, not by this app.",
-  "@e7SharedOnlyTwoTapsNeedYouPersonallyDownloading": {
-    "description": "Shared app interface: Only two taps need you personally: downloading the Termux APK and pasting one unlock line inside Termux once — both required by Android’s security model, not by this app."
-  },
-  "e7SharedPreferManualInsideTermuxRun": "Prefer manual? Inside Termux run:",
-  "@e7SharedPreferManualInsideTermuxRun": {
-    "description": "Shared app interface: Prefer manual? Inside Termux run:"
-  },
-  "e7SharedTheChrootSharesTheNetworkStackSo": "The chroot shares the network stack, so http://127.0.0.1:4096 works from this app. Run `termux-wake-lock` to keep it alive.",
-  "@e7SharedTheChrootSharesTheNetworkStackSo": {
-    "description": "Shared app interface: The chroot shares the network stack, so http://127.0.0.1:4096 works from this app. Run `termux-wake-lock` to keep it alive."
   },
   "e7SharedSecurityNotes": "Security notes",
   "@e7SharedSecurityNotes": {
@@ -2739,14 +2631,6 @@
   "@e7SettingsUi49": {
     "description": "Settings and appearance user interface."
   },
-  "e7SettingsUi50": "Update managed OpenCode",
-  "@e7SettingsUi50": {
-    "description": "Settings and appearance user interface."
-  },
-  "e7SettingsUi51": "Install the latest stable server, refresh models, restart safely, and reconnect.",
-  "@e7SettingsUi51": {
-    "description": "Settings and appearance user interface."
-  },
   "e7SettingsUi52": "the previous version",
   "@e7SettingsUi52": {
     "description": "Settings and appearance user interface."
@@ -2863,7 +2747,7 @@
   "@e7SettingsUi92": {
     "description": "Settings and appearance user interface."
   },
-  "e7SettingsUi93": "Servers, providers, voice, files, Termux, and updates",
+  "e7SettingsUi93": "Servers, providers, voice, files and updates",
   "@e7SettingsUi93": {
     "description": "Settings and appearance user interface."
   },
@@ -3616,10 +3500,6 @@
   "e7WorkspaceStopSharing": "Stop sharing",
   "@e7WorkspaceStopSharing": {
     "description": "Workspace and activity: Stop sharing"
-  },
-  "e7WorkspaceDisconnect": "Disconnect",
-  "@e7WorkspaceDisconnect": {
-    "description": "Workspace and activity: Disconnect"
   },
   "e7WorkspaceBackExit": "Press back again to exit",
   "@e7WorkspaceBackExit": {
@@ -6199,14 +6079,6 @@
   "@e7SetupCameraFailedDetail": {
     "description": "Setup journey: camera failed detail."
   },
-  "e7SetupTermuxNoAnswer": "Termux didn't answer. Tap Copy & open Termux, paste the line in Termux and press Enter, then come back here.",
-  "@e7SetupTermuxNoAnswer": {
-    "description": "Setup journey: termux no answer."
-  },
-  "e7SetupCopyOpenTermux": "Copy & open Termux",
-  "@e7SetupCopyOpenTermux": {
-    "description": "Setup journey: copy open termux."
-  },
   "e7SetupStopTerminalDetail": "The running process and its child processes will be terminated.",
   "@e7SetupStopTerminalDetail": {
     "description": "Setup journey: stop terminal detail."
@@ -6246,10 +6118,6 @@
   "e7SetupKeepAfterLogout": "Keep it running after logout",
   "@e7SetupKeepAfterLogout": {
     "description": "Setup journey: keep after logout."
-  },
-  "e7SetupGetTermux": "Get Termux",
-  "@e7SetupGetTermux": {
-    "description": "Setup journey: get termux."
   },
   "e7SetupRestartServer": "Restart the server",
   "@e7SetupRestartServer": {
@@ -6291,10 +6159,6 @@
   "@e7SetupCheckingInstall": {
     "description": "Setup journey: checking install."
   },
-  "e7SetupInspectTermuxFailed": "Android could not inspect Termux.",
-  "@e7SetupInspectTermuxFailed": {
-    "description": "Setup journey: inspect termux failed."
-  },
   "e7SetupUsername": "Username (optional)",
   "@e7SetupUsername": {
     "description": "Setup journey: username."
@@ -6327,10 +6191,6 @@
   "@e7SetupPasswordStartupHint": {
     "description": "Setup journey: password startup hint."
   },
-  "e7SetupInstallTermuxDetail": "Install the current F-Droid build of Termux, then return here.",
-  "@e7SetupInstallTermuxDetail": {
-    "description": "Setup journey: install termux detail."
-  },
   "e7SetupStopBeforeUpdate": "Stop active generation before updating OpenCode.",
   "@e7SetupStopBeforeUpdate": {
     "description": "Setup journey: stop before update."
@@ -6362,10 +6222,6 @@
   "e7SetupUsbAccess": "Reach it from this phone over USB",
   "@e7SetupUsbAccess": {
     "description": "Setup journey: usb access."
-  },
-  "e7SetupWaitingTermux": "Waiting for Termux to respond. This can take a little while.",
-  "@e7SetupWaitingTermux": {
-    "description": "Setup journey: waiting termux."
   },
   "e7SetupDiscardChanges": "Discard server changes?",
   "@e7SetupDiscardChanges": {
@@ -6410,18 +6266,6 @@
   "e7SetupServers": "Servers",
   "@e7SetupServers": {
     "description": "Setup journey: servers."
-  },
-  "e7SetupStartingSetup": "Starting setup in Termux",
-  "@e7SetupStartingSetup": {
-    "description": "Setup journey: starting setup."
-  },
-  "e7SetupSetupNotStarted": "Termux opened but the setup did not start. Retry once; if it happens again, copy the failure report.",
-  "@e7SetupSetupNotStarted": {
-    "description": "Setup journey: setup not started."
-  },
-  "e7SetupThisDevice": "This device (Termux)",
-  "@e7SetupThisDevice": {
-    "description": "Setup journey: this device."
   },
   "e7SetupTransportReconnecting": "The server transport is reconnecting.",
   "@e7SetupTransportReconnecting": {
@@ -6527,10 +6371,6 @@
   "@e7SetupChooseContinue": {
     "description": "Setup journey: choose continue."
   },
-  "e7SetupTermuxOutdated": "This Termux is too old for the app to use. Install the current one, then tap Continue setup.",
-  "@e7SetupTermuxOutdated": {
-    "description": "Setup journey: termux outdated."
-  },
   "e7SetupCameraNeeded": "Camera access is needed to scan",
   "@e7SetupCameraNeeded": {
     "description": "Setup journey: camera needed."
@@ -6550,14 +6390,6 @@
   "e7SetupTestConnection": "Test connection",
   "@e7SetupTestConnection": {
     "description": "Setup journey: test connection."
-  },
-  "e7SetupCheckingTermux": "Checking Termux connection",
-  "@e7SetupCheckingTermux": {
-    "description": "Setup journey: checking termux."
-  },
-  "e7SetupCheckingTermuxShort": "Checking Termux...",
-  "@e7SetupCheckingTermuxShort": {
-    "description": "Setup journey: checking termux short."
   },
   "e7SetupDefaultServer": "OpenCode server",
   "@e7SetupDefaultServer": {
@@ -6579,17 +6411,9 @@
   "@e7SetupAboutNotices": {
     "description": "Setup journey: about notices."
   },
-  "e7SetupSetupLost": "Lost track of the setup running in Termux",
-  "@e7SetupSetupLost": {
-    "description": "Setup journey: setup lost."
-  },
   "e7SetupReportCopied": "Failure report copied.",
   "@e7SetupReportCopied": {
     "description": "Setup journey: report copied."
-  },
-  "e7SetupAppSettings": "Allow the permission in Settings",
-  "@e7SetupAppSettings": {
-    "description": "Setup journey, Allow Termux row after Android denied the permission: opens this app's page in Android Settings, where the person allows running commands in Termux."
   },
   "e7SetupNoCamera": "This device has no camera",
   "@e7SetupNoCamera": {
@@ -6719,10 +6543,6 @@
   "@e7SetupCameraSettingsDetail": {
     "description": "Setup journey: camera settings detail."
   },
-  "e7SetupVerifyTermuxFailed": "Termux bridge verification failed.",
-  "@e7SetupVerifyTermuxFailed": {
-    "description": "Setup journey: verify termux failed."
-  },
   "e7SetupUbuntuOnly": "Ubuntu is installed. OpenCode is not installed yet.",
   "@e7SetupUbuntuOnly": {
     "description": "Setup journey: ubuntu only."
@@ -6754,10 +6574,6 @@
   "e7SetupSendCommand": "Send command to terminal",
   "@e7SetupSendCommand": {
     "description": "Setup journey: send command."
-  },
-  "e7SetupUnsupportedSetup": "Setting up on the device itself works only on Android phones. On this computer, start OpenCode yourself and add it as a server.",
-  "@e7SetupUnsupportedSetup": {
-    "description": "Setup journey: unsupported setup."
   },
   "e7SetupSendKey": "Sends this key to the terminal",
   "@e7SetupSendKey": {
@@ -6872,54 +6688,6 @@
     "placeholders": {
       "host": {
         "type": "String"
-      }
-    }
-  },
-  "e7SetupStartFailed": "Could not save or start the local setup: {detail}",
-  "@e7SetupStartFailed": {
-    "description": "Setup journey: start failed.",
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
-  "e7SetupRestartFailed": "Could not restart the local server: {detail}",
-  "@e7SetupRestartFailed": {
-    "description": "Setup journey: restart failed.",
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
-  "e7SetupStopFailed": "Could not stop the local server: {detail}",
-  "@e7SetupStopFailed": {
-    "description": "Setup journey: stop failed.",
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
-  "e7SetupElapsedSeconds": "{seconds}s elapsed",
-  "@e7SetupElapsedSeconds": {
-    "description": "Setup journey: elapsed seconds.",
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "e7SetupElapsedMinutes": "{minutes}m {seconds}s elapsed",
-  "@e7SetupElapsedMinutes": {
-    "description": "Setup journey: elapsed minutes.",
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "seconds": {
-        "type": "int"
       }
     }
   },
@@ -7048,10 +6816,6 @@
   "@e7SetupUrlScheme": {
     "description": "Setup journey: url scheme."
   },
-  "e7SetupTermuxUrlScheme": "Server URLs must use https://, or http:// for local Termux.",
-  "@e7SetupTermuxUrlScheme": {
-    "description": "Setup journey: termux url scheme."
-  },
   "e7SetupUrlCredentials": "Do not put credentials in the URL. Use the fields below.",
   "@e7SetupUrlCredentials": {
     "description": "Setup journey: url credentials."
@@ -7143,22 +6907,6 @@
   "e7SetupCodexToken": "Enter a valid Codex connection token.",
   "@e7SetupCodexToken": {
     "description": "Setup journey: codex token."
-  },
-  "e7SetupRefreshPackages": "Refreshing Termux packages",
-  "@e7SetupRefreshPackages": {
-    "description": "Setup journey: refresh packages."
-  },
-  "e7SetupRepairPackages": "Repairing the Termux package set",
-  "@e7SetupRepairPackages": {
-    "description": "Setup journey: repair packages."
-  },
-  "e7SetupInstallDependencies": "Installing Termux dependencies",
-  "@e7SetupInstallDependencies": {
-    "description": "Setup journey: install dependencies."
-  },
-  "e7SetupPrepareTermux": "Preparing Termux",
-  "@e7SetupPrepareTermux": {
-    "description": "Setup journey: prepare termux."
   },
   "e7SetupInstallUbuntu": "Installing Ubuntu environment",
   "@e7SetupInstallUbuntu": {
@@ -7284,30 +7032,6 @@
   "@e7SetupReadStorageFailed": {
     "description": "Setup journey: read storage failed."
   },
-  "e7SetupRepositoryFailed": "Could not select the official Termux package repository",
-  "@e7SetupRepositoryFailed": {
-    "description": "Setup journey: repository failed."
-  },
-  "e7SetupRepositoryRefreshFailed": "Could not refresh packages.termux.dev; check the network and retry",
-  "@e7SetupRepositoryRefreshFailed": {
-    "description": "Setup journey: repository refresh failed."
-  },
-  "e7SetupRepairFailed": "Could not repair the interrupted Termux package transaction",
-  "@e7SetupRepairFailed": {
-    "description": "Setup journey: repair failed."
-  },
-  "e7SetupUpgradeFailed": "Could not complete the safe Termux package upgrade",
-  "@e7SetupUpgradeFailed": {
-    "description": "Setup journey: upgrade failed."
-  },
-  "e7SetupDependenciesFailed": "Could not install the Termux dependencies",
-  "@e7SetupDependenciesFailed": {
-    "description": "Setup journey: dependencies failed."
-  },
-  "e7SetupDependenciesUnusable": "Termux dependencies are still unusable after the package repair",
-  "@e7SetupDependenciesUnusable": {
-    "description": "Setup journey: dependencies unusable."
-  },
   "e7SetupUbuntuUnusable": "An existing Ubuntu container is not usable; setup will not delete it",
   "@e7SetupUbuntuUnusable": {
     "description": "Setup journey: ubuntu unusable."
@@ -7366,33 +7090,6 @@
   "@e7SetupUpdatePassword": {
     "description": "Setup journey: UpdatePassword."
   },
-  "e7SetupLastSetupDetail": "Last setup output: {detail}",
-  "@e7SetupLastSetupDetail": {
-    "description": "Setup journey: LastSetupDetail.",
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
-  "e7SetupBridgeDetail": "Bridge detail: {detail}",
-  "@e7SetupBridgeDetail": {
-    "description": "Setup journey: BridgeDetail.",
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
-  "e7SetupDiagnosticsUnavailable": "Diagnostics unavailable: {detail}",
-  "@e7SetupDiagnosticsUnavailable": {
-    "description": "Setup journey: DiagnosticsUnavailable.",
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
   "e7SetupProbeHttp": "The address responded, but not like an OpenCode server (HTTP {status}). Check that the URL points at opencode serve.",
   "@e7SetupProbeHttp": {
     "description": "Setup journey: ProbeHttp.",
@@ -7419,18 +7116,6 @@
         "type": "String"
       }
     }
-  },
-  "e7SetupCheckTermux": "On this phone",
-  "@e7SetupCheckTermux": {
-    "description": "Connection recovery action to inspect Termux."
-  },
-  "e7SetupCommandFailed": "Termux command failed.",
-  "@e7SetupCommandFailed": {
-    "description": "Localized manager or bridge status: CommandFailed."
-  },
-  "e7SetupUnexpectedBridge": "Termux returned an unexpected bridge response.",
-  "@e7SetupUnexpectedBridge": {
-    "description": "Localized manager or bridge status: UnexpectedBridge."
   },
   "e7SetupSetupQueued": "Setup queued",
   "@e7SetupSetupQueued": {
@@ -9988,389 +9673,17 @@
   "@teamUiRunLabelRawTitle": {
     "description": "Run Technical details: the host's own title of the run (a convoy's sling-<id> name) when the product shows the work's title instead"
   },
-  "termuxStorageTitle": "Storage on this phone",
-  "@termuxStorageTitle": {
-    "description": "Settings › Termux server › Storage: screen title"
-  },
-  "termuxStorageRowUsed": "{size} used",
-  "@termuxStorageRowUsed": {
-    "description": "Settings entry row subtitle: bytes the phone server uses",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageRowNotScanned": "Not scanned yet",
-  "@termuxStorageRowNotScanned": {
-    "description": "Settings entry row subtitle before the first scan"
-  },
-  "termuxStorageRowScanning": "Measuring…",
-  "@termuxStorageRowScanning": {
-    "description": "Settings entry row subtitle while a scan runs"
-  },
-  "termuxStorageScanAction": "Scan storage",
-  "@termuxStorageScanAction": {
-    "description": "Primary button that starts the first scan"
-  },
-  "termuxStorageRescanAction": "Scan again",
-  "@termuxStorageRescanAction": {
-    "description": "Button that starts a fresh scan when a report exists"
-  },
-  "termuxStorageIntro": "See what Termux uses on this phone. Only caches that rebuild themselves can be cleaned here; your projects, sign-ins and conversations stay.",
-  "@termuxStorageIntro": {
-    "description": "Storage screen: paragraph before the first scan"
-  },
-  "termuxStorageScanning": "Measuring storage",
-  "@termuxStorageScanning": {
-    "description": "Storage screen: heading while a scan runs"
-  },
-  "termuxStorageScanningDetail": "Large caches take a minute or two. You can leave this screen; the scan keeps going.",
-  "@termuxStorageScanningDetail": {
-    "description": "Storage screen: line under the scanning heading"
-  },
-  "termuxStorageCancel": "Stop scan",
-  "@termuxStorageCancel": {
-    "description": "Button that cancels a running scan"
-  },
-  "termuxStorageCancelled": "Scan stopped",
-  "@termuxStorageCancelled": {
-    "description": "Status line after a cancelled scan"
-  },
-  "termuxStorageFailed": "The scan did not finish. Try again.",
-  "@termuxStorageFailed": {
-    "description": "Status line after a failed scan"
-  },
-  "termuxStorageTotal": "{size} measured in Termux",
-  "@termuxStorageTotal": {
-    "description": "Storage report headline",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageDeletableTotal": "{size} can be cleaned",
-  "@termuxStorageDeletableTotal": {
-    "description": "Storage report: sum of the deletable categories",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageScannedJustNow": "Scanned just now",
-  "@termuxStorageScannedJustNow": {
-    "description": "Storage report: scan age under a minute"
-  },
-  "termuxStorageScannedMinutesAgo": "Scanned {minutes} min ago",
-  "@termuxStorageScannedMinutesAgo": {
-    "description": "Storage report: scan age in minutes",
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxStorageScannedHoursAgo": "Scanned {hours} h ago",
-  "@termuxStorageScannedHoursAgo": {
-    "description": "Storage report: scan age in hours",
-    "placeholders": {
-      "hours": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxStorageCatBuildCaches": "Build caches",
-  "@termuxStorageCatBuildCaches": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteBuildCaches": "Gradle caches and npm’s downloaded content cache only. Downloads may be needed again, so offline builds can be affected. Stop builds and package installs before cleaning.",
-  "@termuxStorageNoteBuildCaches": {
-    "description": "Storage category note"
-  },
-  "termuxStorageCatAgentScratch": "Agent scratch",
-  "@termuxStorageCatAgentScratch": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteAgentScratch": "Temporary folders may contain unfinished work or files used by other tools. Their sizes are shown for reference; they cannot be removed here.",
-  "@termuxStorageNoteAgentScratch": {
-    "description": "Storage category note"
-  },
-  "termuxStorageCatProjectBuildOutputs": "Folders with build-related names",
-  "@termuxStorageCatProjectBuildOutputs": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteProjectBuildOutputs": "Folders named build, .dart_tool, node_modules or target may also contain your files. Names alone cannot prove they are disposable, so they cannot be removed here.",
-  "@termuxStorageNoteProjectBuildOutputs": {
-    "description": "Storage category note"
-  },
-  "termuxStorageCatToolchains": "Toolchains",
-  "@termuxStorageCatToolchains": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteToolchains": "Android SDK, Java and Flutter installations. These may support other projects and cannot be removed here.",
-  "@termuxStorageNoteToolchains": {
-    "description": "Storage category note"
-  },
-  "termuxStorageCatAiTeam": "AI Team",
-  "@termuxStorageCatAiTeam": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteAiTeam": "Team folders, databases and tools may contain work you need to keep. They cannot be removed here, even when the team is stopped.",
-  "@termuxStorageNoteAiTeam": {
-    "description": "Storage category note"
-  },
-  "termuxStorageCatOpenCode": "OpenCode itself",
-  "@termuxStorageCatOpenCode": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteOpenCode": "The server, its sign-ins and conversation history. Conversations have their own screen.",
-  "@termuxStorageNoteOpenCode": {
-    "description": "Storage on this phone: what the OpenCode category holds (the footnote says once that it is not removed here)"
-  },
-  "termuxStorageCatProjects": "Projects (your files)",
-  "@termuxStorageCatProjects": {
-    "description": "Storage category"
-  },
-  "termuxStorageNoteProjects": "Listed so you can see their size. Never removed from here.",
-  "@termuxStorageNoteProjects": {
-    "description": "Storage category note"
-  },
-  "termuxStorageWillRemove": "What Clean removes",
-  "@termuxStorageWillRemove": {
-    "description": "Storage category: heading over the path list"
-  },
-  "termuxStorageNothingHere": "Nothing here",
-  "@termuxStorageNothingHere": {
-    "description": "Storage category with no paths"
-  },
-  "termuxStorageCleanConfirmTitle": "Delete {size} of {category}?",
-  "@termuxStorageCleanConfirmTitle": {
-    "description": "Two-step confirmation title for cleaning over a gigabyte",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      },
-      "category": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageCleanConfirmBody": "Delete only the listed Gradle and npm content caches? Downloads may be needed again and offline builds can be affected. Stop builds and package installs first. Scan again afterward to update the measured sizes.",
-  "@termuxStorageCleanConfirmBody": {
-    "description": "Two-step confirmation body for cleaning"
-  },
-  "termuxStorageCleanConfirm": "Delete {size}",
-  "@termuxStorageCleanConfirm": {
-    "description": "Two-step confirmation button",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageKeep": "Keep",
-  "@termuxStorageKeep": {
-    "description": "Two-step confirmation cancel button"
-  },
-  "termuxStorageCleaning": "Deleting…",
-  "@termuxStorageCleaning": {
-    "description": "Status while a clean runs"
-  },
-  "termuxStorageFreed": "Removed {size}",
-  "@termuxStorageFreed": {
-    "description": "Result line after a clean",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageFreedNothing": "Nothing was removed",
-  "@termuxStorageFreedNothing": {
-    "description": "Result line after a clean that removed nothing"
-  },
-  "termuxStorageInUse": "In use by {process}. Stop it under Running on this phone first.",
-  "@termuxStorageInUse": {
-    "description": "Clean refused because a process is using the category",
-    "placeholders": {
-      "process": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageRefusedCount": "{count} paths were left in place",
-  "@termuxStorageRefusedCount": {
-    "description": "Clean result: paths the script refused to remove",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxStorageProjectBuild": "{size} · {build} in build-related folders",
-  "@termuxStorageProjectBuild": {
-    "description": "Project row subtitle",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      },
-      "build": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageOpenRunning": "Open Running on this phone",
-  "@termuxStorageOpenRunning": {
-    "description": "Action that opens the process screen"
-  },
-  "termuxStorageBytesGb": "{value} GB",
-  "@termuxStorageBytesGb": {
-    "description": "Byte formatting: gigabytes",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageBytesMb": "{value} MB",
-  "@termuxStorageBytesMb": {
-    "description": "Byte formatting: megabytes",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageBytesKb": "{value} KB",
-  "@termuxStorageBytesKb": {
-    "description": "Byte formatting: kilobytes",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxStorageBytesB": "{value} B",
-  "@termuxStorageBytesB": {
-    "description": "Byte formatting: bytes",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsTitle": "Running on this phone",
-  "@termuxProcsTitle": {
-    "description": "This phone › Running on this phone (P5.3): the processes tool's title and its row on This phone"
-  },
-  "termuxProcsRowLoading": "Checking…",
-  "@termuxProcsRowLoading": {
-    "description": "Settings entry row subtitle while the list loads"
-  },
   "termuxProcsAutoRefresh": "Refreshes every 10 seconds while open",
   "@termuxProcsAutoRefresh": {
     "description": "Line under the headline"
-  },
-  "termuxProcsStopSemantics": "Stop {name}",
-  "@termuxProcsStopSemantics": {
-    "description": "Accessibility label of a row's Stop button",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsStopOneTitle": "Stop {name}?",
-  "@termuxProcsStopOneTitle": {
-    "description": "Two-step confirmation title for one process",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsStopOneBody": "It gets a polite stop, then a forced one after 5 seconds.",
-  "@termuxProcsStopOneBody": {
-    "description": "Two-step confirmation body for one process"
-  },
-  "termuxProcsProtected": "Protected · control it from This phone",
-  "@termuxProcsProtected": {
-    "description": "Running now: a protected process (the OpenCode server, sshd) says so and where it is controlled"
-  },
-  "termuxProcsOrphanParentGone": "Its parent is gone · running for {elapsed}",
-  "@termuxProcsOrphanParentGone": {
-    "description": "Orphan reason line",
-    "placeholders": {
-      "elapsed": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsOrphanCpu": "{cpu} of CPU with no owner",
-  "@termuxProcsOrphanCpu": {
-    "description": "Orphan reason line",
-    "placeholders": {
-      "cpu": {
-        "type": "String"
-      }
-    }
   },
   "termuxProcsStopping": "Stopping…",
   "@termuxProcsStopping": {
     "description": "Status while a stop runs"
   },
-  "termuxProcsStopped": "Stopped {count}",
-  "@termuxProcsStopped": {
-    "description": "Result line after a stop",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsStoppedForced": "Stopped {count} ({forced} needed a forced stop)",
-  "@termuxProcsStoppedForced": {
-    "description": "Result line after a stop with forced kills",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "forced": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsRemaining": "{count} would not stop",
-  "@termuxProcsRemaining": {
-    "description": "Result line: processes that survived KILL",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsRefused": "{count} protected, not stopped",
-  "@termuxProcsRefused": {
-    "description": "Result line: refused protected processes",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsEmpty": "Nothing is running in the phone server",
-  "@termuxProcsEmpty": {
-    "description": "Empty state"
-  },
   "termuxProcsCommand": "Command",
   "@termuxProcsCommand": {
     "description": "Process detail sheet: command label"
-  },
-  "termuxProcsFolder": "Folder",
-  "@termuxProcsFolder": {
-    "description": "Process detail sheet: working directory label"
   },
   "termuxProcsDurationSeconds": "{seconds} s",
   "@termuxProcsDurationSeconds": {
@@ -10411,315 +9724,16 @@
       }
     }
   },
-  "teamUiPhoneOptionalTag": "Optional · experimental",
-  "@teamUiPhoneOptionalTag": {
-    "description": "On-device AI Team block: eyebrow label"
-  },
   "teamUiPhoneChooseProjectTitle": "Choose a project",
   "@teamUiPhoneChooseProjectTitle": {
     "description": "On-device setup: project picker title"
-  },
-  "teamUiPhoneContinue": "Continue",
-  "@teamUiPhoneContinue": {
-    "description": "On-device setup: continue with the chosen project"
   },
   "teamUiPhoneSuccessTitle": "AI Team is running on this phone",
   "@teamUiPhoneSuccessTitle": {
     "description": "On-device setup: success card title"
   },
-  "teamUiPhoneRetry": "Try again",
-  "@teamUiPhoneRetry": {
-    "description": "On-device setup: retry after a failure"
-  },
-  "teamUiPhoneFailedChecksum": "The downloaded {name} did not match the checksum this build pins, so it was not installed. Nothing from it was kept; check the network and try again.",
-  "@teamUiPhoneFailedChecksum": {
-    "description": "On-device setup: checksum mismatch failure",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedUnsupportedArch": "This phone's processor is not 64-bit ARM, which the team runtime needs.",
-  "@teamUiPhoneFailedUnsupportedArch": {
-    "description": "On-device setup: unsupported architecture failure"
-  },
-  "teamUiPhoneFailedDownload": "The download did not finish. Check the connection and try again.",
-  "@teamUiPhoneFailedDownload": {
-    "description": "On-device setup: download failure"
-  },
-  "teamUiPhoneFailedDownloadDns": "The phone could not find the download server {host}. Check that the phone is online and that no private DNS or ad blocker is blocking it, then try again.",
-  "@teamUiPhoneFailedDownloadDns": {
-    "description": "On-device setup: download failed because the host name did not resolve",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedDownloadConnect": "The phone could not reach the download server {host}. Check the connection, then try again; the download continues where it stopped.",
-  "@teamUiPhoneFailedDownloadConnect": {
-    "description": "On-device setup: download failed because the host could not be reached",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedDownloadTimeout": "The download server {host} took too long to answer. Try again on a steadier connection; the download continues where it stopped.",
-  "@teamUiPhoneFailedDownloadTimeout": {
-    "description": "On-device setup: download timed out",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedDownloadTls": "A secure connection to {host} could not be made. Check that the phone's date and time are right and that no proxy is in the way, then try again.",
-  "@teamUiPhoneFailedDownloadTls": {
-    "description": "On-device setup: download failed on TLS",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedDownloadHttp": "The download server {host} refused the file (HTTP {code}). Try again later; if it keeps happening, this app version's AI Team download is unavailable.",
-  "@teamUiPhoneFailedDownloadHttp": {
-    "description": "On-device setup: download failed with an HTTP error status",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedDownloadInterrupted": "The connection to {host} broke off during the download. Try again; the download continues where it stopped.",
-  "@teamUiPhoneFailedDownloadInterrupted": {
-    "description": "On-device setup: download interrupted mid-file",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedDownloadWrite": "The download could not be saved on this phone. Free some space, then try again.",
-  "@teamUiPhoneFailedDownloadWrite": {
-    "description": "On-device setup: downloaded file could not be written"
-  },
-  "teamUiPhoneFailedDownloadOther": "The download from {host} failed (error {code}). Check the connection, then try again.",
-  "@teamUiPhoneFailedDownloadOther": {
-    "description": "On-device setup: download failed for another reason",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedPackages": "Ubuntu could not install the prerequisites (tmux, jq, lsof, procps). The output below says which.",
-  "@teamUiPhoneFailedPackages": {
-    "description": "On-device setup: package install failure"
-  },
-  "teamUiPhoneFailedProject": "The project folder is missing or is not a git repository.",
-  "@teamUiPhoneFailedProject": {
-    "description": "On-device setup: project failure"
-  },
-  "teamUiPhoneFailedCity": "Gas City could not create the city. The output below says why.",
-  "@teamUiPhoneFailedCity": {
-    "description": "On-device setup: gc init failure"
-  },
-  "teamUiPhoneFailedSupervisorExited": "The supervisor stopped right after starting. The output below says why.",
-  "@teamUiPhoneFailedSupervisorExited": {
-    "description": "On-device setup: supervisor exited"
-  },
-  "teamUiPhoneFailedHealth": "The supervisor started but never answered on {url}.",
-  "@teamUiPhoneFailedHealth": {
-    "description": "On-device setup: health timeout failure",
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneFailedInterrupted": "The setup stopped before it finished. Android may have stopped Termux while the app was away; nothing is lost.",
-  "@teamUiPhoneFailedInterrupted": {
-    "description": "On-device setup: interrupted failure"
-  },
-  "teamUiPhoneFailedReason": "Reason: {reason}",
-  "@teamUiPhoneFailedReason": {
-    "description": "On-device setup: raw failure reason",
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneDispatchFailed": "Termux did not start the step. Open Termux once, then try again.",
-  "@teamUiPhoneDispatchFailed": {
-    "description": "On-device setup: the bridge could not dispatch a verb"
-  },
-  "teamUiPhoneSectionTitle": "On this phone",
-  "@teamUiPhoneSectionTitle": {
-    "description": "Settings › Plugins › AI Team: section title for the phone-hosted team"
-  },
-  "teamUiPhoneStatusChecking": "Checking…",
-  "@teamUiPhoneStatusChecking": {
-    "description": "On this phone: status while reading"
-  },
-  "teamUiPhoneStatusNotInstalled": "Not installed",
-  "@teamUiPhoneStatusNotInstalled": {
-    "description": "On this phone: status"
-  },
-  "teamUiPhoneStatusInstalled": "Installed · no city yet",
-  "@teamUiPhoneStatusInstalled": {
-    "description": "On this phone: status after install, before init"
-  },
-  "teamUiPhoneStatusStopped": "Stopped",
-  "@teamUiPhoneStatusStopped": {
-    "description": "On this phone: status"
-  },
-  "teamUiPhoneStatusStarting": "Starting…",
-  "@teamUiPhoneStatusStarting": {
-    "description": "On this phone: status"
-  },
-  "teamUiPhoneStatusStopping": "Stopping…",
-  "@teamUiPhoneStatusStopping": {
-    "description": "On this phone: status"
-  },
-  "teamUiPhoneStatusWorking": "Working… ({verb})",
-  "@teamUiPhoneStatusWorking": {
-    "description": "On this phone: a verb is running",
-    "placeholders": {
-      "verb": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneStatusRunning": "{count, plural, =0{Running} =1{Running · 1 agent} other{Running · {count} agents}}",
-  "@teamUiPhoneStatusRunning": {
-    "description": "On this phone: running status with the agent count",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "teamUiPhoneStatusFailed": "Not running · the last step failed",
-  "@teamUiPhoneStatusFailed": {
-    "description": "On this phone: status after a failure"
-  },
-  "teamUiPhoneStatusUnreachable": "Started, but not answering on {url}",
-  "@teamUiPhoneStatusUnreachable": {
-    "description": "On this phone: the supervisor process is up but its health check fails",
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneStatusUnknown": "Status could not be read",
-  "@teamUiPhoneStatusUnknown": {
-    "description": "On this phone: status unreadable"
-  },
-  "teamUiPhoneVersions": "gc {gc} · bd {bd} · dolt {dolt}",
-  "@teamUiPhoneVersions": {
-    "description": "On this phone: installed versions line",
-    "placeholders": {
-      "gc": {
-        "type": "String"
-      },
-      "bd": {
-        "type": "String"
-      },
-      "dolt": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneStopTitle": "Stop the team on this phone?",
-  "@teamUiPhoneStopTitle": {
-    "description": "On this phone: stop confirmation title"
-  },
-  "teamUiPhoneStopBody": "Running agents stop where they are. Nothing is lost; runs resume when you start it again.",
-  "@teamUiPhoneStopBody": {
-    "description": "On this phone: stop confirmation body"
-  },
-  "teamUiPhoneKilled": "Android stopped the team while the app was away. Nothing is lost.",
-  "@teamUiPhoneKilled": {
-    "description": "On this phone: killed by Android line (03-onboarding §5)"
-  },
-  "teamUiPhoneKeepRunningTitle": "Keep it running",
-  "@teamUiPhoneKeepRunningTitle": {
-    "description": "On this phone: tips row title"
-  },
-  "teamUiPhoneKeepRunningSubtitle": "Stop Android from closing the team in the background",
-  "@teamUiPhoneKeepRunningSubtitle": {
-    "description": "Settings › Plugins › On this phone: what the Keep it running row is for"
-  },
-  "teamUiPhoneTipsIntro": "Android stops background work it considers excessive, and the team is exactly that: dozens of short gc and bd processes and an agent at full CPU. Three things keep it alive.",
-  "@teamUiPhoneTipsIntro": {
-    "description": "Keep it running sheet: intro"
-  },
-  "teamUiPhoneTipWakeLock": "Keep Termux in front, or hold its wake lock: run termux-wake-lock in Termux, or tap Acquire wakelock in its notification. Screen off without it ends the run.",
-  "@teamUiPhoneTipWakeLock": {
-    "description": "Keep it running sheet: wake lock tip"
-  },
-  "teamUiPhoneTipBattery": "Settings › Apps › Termux › Battery › Unrestricted, and switch off your phone maker's auto-clean for Termux.",
-  "@teamUiPhoneTipBattery": {
-    "description": "Keep it running sheet: battery tip"
-  },
-  "teamUiPhoneTipPhantom": "Android 12 and later still kill the child processes of a background app (the phantom process killer). Turn that off once, from Termux itself over Wireless debugging; no computer needed:",
-  "@teamUiPhoneTipPhantom": {
-    "description": "Keep it running sheet: phantom process killer tip"
-  },
-  "teamUiPhoneTipsCopy": "Copy commands",
-  "@teamUiPhoneTipsCopy": {
-    "description": "Keep it running sheet: copy the ADB commands"
-  },
-  "teamUiPhoneRemoveTitle": "Delete AI Team from this phone?",
-  "@teamUiPhoneRemoveTitle": {
-    "description": "On this phone: remove confirmation title"
-  },
-  "teamUiPhoneActionFailed": "That did not work: {reason}",
-  "@teamUiPhoneActionFailed": {
-    "description": "On this phone: a verb failed",
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneNotAvailable": "Not available on this phone. Running a team needs the 64-bit Linux environment; this device or build can't provide it.",
-  "@teamUiPhoneNotAvailable": {
-    "description": "On this phone: unavailable copy (03-onboarding §5)"
-  },
-  "teamUiPhoneFailedNoSpace": "Not enough space on this phone. {detail} Free some space (Storage on this phone can clean build caches), then try again.",
-  "@teamUiPhoneFailedNoSpace": {
-    "description": "On-device setup: the runtime refused to install or create the city for lack of free space",
-    "placeholders": {
-      "detail": {
-        "type": "String",
-        "example": "420 MB free, 900 MB needed."
-      }
-    }
-  },
-  "phoneServerConnect": "Connect",
-  "phoneServerOpen": "Open",
   "phoneServerStart": "Start",
-  "phoneServerStop": "Stop",
-  "phoneServerMore": "More server actions",
-  "phoneServerForget": "Forget saved sign-in",
-  "phoneServerStartFailed": "The server did not start. Open Manage setup to see why.",
   "phoneServerRestartFailed": "The server did not restart. Open Manage setup to see why.",
-  "phoneServerStopFailed": "The server could not be stopped. Try again.",
-  "termuxStorageCatSharedCaches": "Other caches and package data",
-  "termuxStorageNoteSharedCaches": "Shared caches, package installs and download folders may support other tools or contain files worth keeping. They cannot be removed here.",
-  "termuxStorageRescanRequired": "Previous scan · Scan again before cleaning more",
   "safetyStopSharingTitle": "Stop sharing this conversation?",
   "@safetyStopSharingTitle": {
     "description": "Title of the confirmation shown before a shared session link is revoked."
@@ -10761,10 +9775,6 @@
   "@safetyMcpDisconnectKeep": {
     "description": "Cancel label of the MCP server disconnect confirmation."
   },
-  "safetyStopOrphanBody": "Nothing is waiting on it, but whatever it was still doing is lost. It gets a polite stop, then a forced one after 5 seconds.",
-  "@safetyStopOrphanBody": {
-    "description": "Body of the confirmation shown before an orphaned helper process is stopped."
-  },
   "settingsHubGroupNotifications": "Notifications and background",
   "@settingsHubGroupNotifications": {
     "description": "Settings hub group header."
@@ -10805,7 +9815,7 @@
   "@settingsHubSearchSavedServersAliases": {
     "description": "Search aliases for the Saved servers row; preserve English terms."
   },
-  "settingsHubSearchPhoneAliases": "phone termux local on-device on device android install setup storage services",
+  "settingsHubSearchPhoneAliases": "phone local on-device on device android install setup storage services linux",
   "@settingsHubSearchPhoneAliases": {
     "description": "Search aliases for the On this phone row; preserve English terms."
   },
@@ -11018,8 +10028,6 @@
   "discoverToolsAliases": "tools tools and capabilities inventory model tools",
   "discoverSkillsAliases": "skills skill instructions playbook",
   "discoverReferencesAliases": "references reference docs sources context",
-  "discoverRunningNowAliases": "running now running on this phone processes termux services stop busy memory background",
-  "discoverStorageAliases": "storage on this phone disk space clean termux",
   "discoverMonitorAliases": "saved-server attention monitor other servers waiting server attention",
   "discoverConnectionHelpAliases": "add server computer connect pair pairing code connection help cannot connect troubleshooting network refused timeout",
   "gestureEquivFileRowActions": "Actions for {name}",
@@ -11249,258 +10257,6 @@
   "localAgentTitle": "Claude Code on this phone",
   "@localAgentTitle": {
     "description": "On this phone setup: title of the block that installs and runs Claude Code in the managed Ubuntu; also the saved server's name."
-  },
-  "localAgentOfferBody": "Run Claude Code here with no computer. The app installs Node.js, the Paseo daemon and Claude Code into the Ubuntu it already manages, and reaches them on this phone only.",
-  "@localAgentOfferBody": {
-    "description": "Claude Code block, offer: what setting it up does."
-  },
-  "localAgentOfferSize": "About 60 MB to download for Node.js, plus the packages; about 1 GB once installed. Needs 2 GB free.",
-  "@localAgentOfferSize": {
-    "description": "Claude Code block, offer: honest download and disk size."
-  },
-  "localAgentOfferWarning": "Android may stop Termux in the background. The battery settings that keep the OpenCode server alive keep this alive too.",
-  "@localAgentOfferWarning": {
-    "description": "Claude Code block, offer: the background-kill caveat."
-  },
-  "localAgentSetUp": "Set up Claude Code",
-  "@localAgentSetUp": {
-    "description": "Claude Code block, offer: starts the install."
-  },
-  "localAgentNotNow": "Not now",
-  "@localAgentNotNow": {
-    "description": "Claude Code block, offer: hides the offer."
-  },
-  "localAgentNeedsUbuntuBody": "Claude Code runs in On this phone. Finish the On this phone setup first, then come back here.",
-  "@localAgentNeedsUbuntuBody": {
-    "description": "Claude Code block: shown when the managed Ubuntu is missing."
-  },
-  "localAgentOpenSetup": "Open phone setup",
-  "@localAgentOpenSetup": {
-    "description": "Claude Code block: opens the On this phone wizard when Ubuntu is missing."
-  },
-  "localAgentNeedsTermuxBody": "Claude Code needs Termux for now; On this phone does not run it yet. Set up Termux to use it here.",
-  "@localAgentNeedsTermuxBody": {
-    "description": "Claude Code block: shown when the in-app Linux is already installed but Termux, which Claude Code needs, is not."
-  },
-  "localAgentSetUpWithTermux": "Set up with Termux",
-  "@localAgentSetUpWithTermux": {
-    "description": "Claude Code block: opens the Termux setup wizard when only the in-app Linux exists."
-  },
-  "localAgentStepNode": "Node.js",
-  "@localAgentStepNode": {
-    "description": "Claude Code block, step list: installing the pinned Node.js."
-  },
-  "localAgentStepPaseo": "Paseo daemon",
-  "@localAgentStepPaseo": {
-    "description": "Claude Code block, step list: installing the Paseo daemon."
-  },
-  "localAgentStepClaude": "Claude Code",
-  "@localAgentStepClaude": {
-    "description": "Claude Code block, step list: installing Claude Code."
-  },
-  "localAgentStepSignIn": "Sign in to Claude",
-  "@localAgentStepSignIn": {
-    "description": "Claude Code block, step list and button: the person's own sign-in."
-  },
-  "localAgentStepStart": "Start on this phone",
-  "@localAgentStepStart": {
-    "description": "Claude Code block, step list: starting the daemon."
-  },
-  "localAgentInstalling": "Setting up Claude Code",
-  "@localAgentInstalling": {
-    "description": "Claude Code block: heading while install or start runs."
-  },
-  "localAgentLeaveNote": "You can leave this screen. The install keeps going in Termux.",
-  "@localAgentLeaveNote": {
-    "description": "Claude Code block: reassurance under the live output."
-  },
-  "localAgentSignInBody": "Termux opens and Claude Code shows a link. Approve it in your browser, paste the code back into Termux, then return here. This app never sees or stores your Claude sign-in.",
-  "@localAgentSignInBody": {
-    "description": "Claude Code block, sign-in step: what will happen."
-  },
-  "localAgentSignInAlready": "I already signed in",
-  "@localAgentSignInAlready": {
-    "description": "Claude Code block, sign-in step: continues when the app cannot see a sign-in the person knows exists."
-  },
-  "localAgentSignInOpenFailed": "Termux could not be opened. Open Termux yourself and run: {command}",
-  "@localAgentSignInOpenFailed": {
-    "description": "Claude Code block, sign-in step: fallback when the terminal did not open.",
-    "placeholders": {
-      "command": {
-        "type": "String",
-        "example": "bash ~/.oc/claude.sh signin"
-      }
-    }
-  },
-  "localAgentSignInMissing": "No Claude sign-in was found yet.",
-  "@localAgentSignInMissing": {
-    "description": "Claude Code block, sign-in step: shown after returning without a saved sign-in."
-  },
-  "localAgentReadyTitle": "Claude Code is running on this phone",
-  "@localAgentReadyTitle": {
-    "description": "Claude Code block and card: the daemon answered its health check."
-  },
-  "localAgentReadyBody": "It listens on this phone only (127.0.0.1), behind a password this app keeps.",
-  "@localAgentReadyBody": {
-    "description": "Claude Code block, ready: the loopback and password guarantee."
-  },
-  "localAgentVersions": "Claude Code {claude} · Paseo {paseo} · Node.js {node}",
-  "@localAgentVersions": {
-    "description": "Claude Code block and card: installed versions.",
-    "placeholders": {
-      "claude": {
-        "type": "String",
-        "example": "2.1.278"
-      },
-      "paseo": {
-        "type": "String",
-        "example": "0.8.0"
-      },
-      "node": {
-        "type": "String",
-        "example": "v24.21.0"
-      }
-    }
-  },
-  "localAgentInstalledTitle": "Claude Code is installed and stopped",
-  "@localAgentInstalledTitle": {
-    "description": "Claude Code block: installed, daemon not running."
-  },
-  "localAgentKilled": "Android stopped Claude Code while the app was away. Nothing is lost.",
-  "@localAgentKilled": {
-    "description": "Claude Code block: the daemon was killed in the background."
-  },
-  "localAgentFailedTitle": "Claude Code setup stopped",
-  "@localAgentFailedTitle": {
-    "description": "Claude Code block: heading of the failure view."
-  },
-  "localAgentFailedNoSpace": "Not enough space on this phone. {detail} Free some space, then try again.",
-  "@localAgentFailedNoSpace": {
-    "description": "Claude Code block: the free-space guard refused.",
-    "placeholders": {
-      "detail": {
-        "type": "String",
-        "example": "900 MB free, 1536 MB needed."
-      }
-    }
-  },
-  "localAgentFailedDownload": "Node.js could not be downloaded. Check the network, then try again.",
-  "@localAgentFailedDownload": {
-    "description": "Claude Code block: download failure."
-  },
-  "localAgentFailedChecksum": "The Node.js download did not match its pinned checksum, so nothing was installed. Try again; if it happens twice, something on the network is changing the file.",
-  "@localAgentFailedChecksum": {
-    "description": "Claude Code block: checksum refusal."
-  },
-  "localAgentFailedNativeBuild": "A package needs a native module with no ready-made build for this phone. Nothing was compiled; the output below names it.",
-  "@localAgentFailedNativeBuild": {
-    "description": "Claude Code block: npm reported a native build failure."
-  },
-  "localAgentFailedPackages": "The packages could not be installed. Check the network, then try again.",
-  "@localAgentFailedPackages": {
-    "description": "Claude Code block: npm failed for another reason."
-  },
-  "localAgentFailedPortInUse": "Port 6767 on this phone is already used by another program. Stop that program, then try again.",
-  "@localAgentFailedPortInUse": {
-    "description": "Claude Code block: the daemon port is taken by something else."
-  },
-  "localAgentFailedTimeout": "Claude Code did not answer within two minutes. The output below shows what it printed.",
-  "@localAgentFailedTimeout": {
-    "description": "Claude Code block: health check timed out."
-  },
-  "localAgentFailedInterrupted": "Android stopped the step before it finished. Try again; it picks up where it stopped.",
-  "@localAgentFailedInterrupted": {
-    "description": "Claude Code block: a verb was killed mid-way."
-  },
-  "localAgentFailedUnsupported": "Claude Code needs a 64-bit phone.",
-  "@localAgentFailedUnsupported": {
-    "description": "Claude Code block: unsupported CPU."
-  },
-  "localAgentFailedDaemon": "Claude Code stopped or does not answer. Start it again.",
-  "@localAgentFailedDaemon": {
-    "description": "Claude Code block and card: the daemon exited or is unhealthy."
-  },
-  "localAgentFailedReason": "It stopped: {detail}",
-  "@localAgentFailedReason": {
-    "description": "Claude Code block: any other failure, with the script's own sentence.",
-    "placeholders": {
-      "detail": {
-        "type": "String",
-        "example": "Node.js v24 could not be unpacked in Ubuntu"
-      }
-    }
-  },
-  "localAgentProjectTitle": "Choose a project folder",
-  "@localAgentProjectTitle": {
-    "description": "Claude Code connect: title of the folder chooser."
-  },
-  "localAgentProjectBody": "Claude Code works inside one project folder on this phone.",
-  "@localAgentProjectBody": {
-    "description": "Claude Code connect: what the folder is for."
-  },
-  "localAgentProjectPathLabel": "Or type a path inside Ubuntu",
-  "@localAgentProjectPathLabel": {
-    "description": "Claude Code connect: free path field."
-  },
-  "localAgentProjectPathInvalid": "Enter a full path, like /root/projects/my-app.",
-  "@localAgentProjectPathInvalid": {
-    "description": "Claude Code connect: the typed path is not absolute."
-  },
-  "localAgentConnectFailed": "Could not connect to Claude Code on this phone. {detail}",
-  "@localAgentConnectFailed": {
-    "description": "Claude Code connect: the connection attempt failed.",
-    "placeholders": {
-      "detail": {
-        "type": "String",
-        "example": "The daemon password on this phone is missing."
-      }
-    }
-  },
-  "localAgentCardActionFailed": "That did not work. {detail}",
-  "@localAgentCardActionFailed": {
-    "description": "Servers card: a control failed.",
-    "placeholders": {
-      "detail": {
-        "type": "String",
-        "example": "Port 6767 on this phone is already used by another program"
-      }
-    }
-  },
-  "localAgentRestartTitle": "Restart Claude Code on this phone?",
-  "@localAgentRestartTitle": {
-    "description": "Confirm sheet: restarting the daemon."
-  },
-  "localAgentRestartBody": "Claude Code is briefly unavailable and anything it is doing right now is interrupted. Your conversations stay on the phone.",
-  "@localAgentRestartBody": {
-    "description": "Confirm sheet: what restarting the daemon costs."
-  },
-  "localAgentStopTitle": "Stop Claude Code on this phone?",
-  "@localAgentStopTitle": {
-    "description": "Confirm sheet: stopping the daemon."
-  },
-  "localAgentStopBody": "Anything Claude Code is doing on this phone is interrupted, and this app disconnects from it. Your projects, conversations and Claude sign-in stay; start it again to continue.",
-  "@localAgentStopBody": {
-    "description": "Confirm sheet: what stopping the daemon costs."
-  },
-  "localAgentRemove": "Remove from this phone",
-  "@localAgentRemove": {
-    "description": "Claude Code block: menu action that uninstalls it."
-  },
-  "localAgentRemoveTitle": "Remove Claude Code from this phone?",
-  "@localAgentRemoveTitle": {
-    "description": "Confirm sheet: removing the install."
-  },
-  "localAgentRemoveBody": "Stops it and deletes Node.js, Paseo and Claude Code from Ubuntu, about 1 GB. Your projects and your Claude sign-in stay.",
-  "@localAgentRemoveBody": {
-    "description": "Confirm sheet: what removing deletes and keeps."
-  },
-  "localAgentRemoveKeep": "Keep it",
-  "@localAgentRemoveKeep": {
-    "description": "Confirm sheet: cancels the removal."
-  },
-  "localAgentMore": "More Claude Code actions",
-  "@localAgentMore": {
-    "description": "Claude Code block: tooltip of the overflow menu."
   },
   "firstRunAgentsSideBySide": "They run side by side on the same computer. Start with one, and add the others any time from the server name at the top.",
   "firstRunPaseoTitle": "Agents through Paseo",
@@ -11745,18 +10501,6 @@
       }
     }
   },
-  "localAgentUpdate": "Update Claude Code",
-  "@localAgentUpdate": {
-    "description": "Menu item: reinstall Paseo and Claude Code at their current versions, keeping sign-in"
-  },
-  "localAgentUpdateAvailable": "An update adds the newest Claude models, such as Opus 5.5.",
-  "@localAgentUpdateAvailable": {
-    "description": "Shown when the installed Paseo daemon is older than the app's pinned version"
-  },
-  "localAgentUpdateNow": "Update",
-  "@localAgentUpdateNow": {
-    "description": "Button that updates Claude Code and Paseo on the phone"
-  },
   "modelNewBadge": "New",
   "@modelNewBadge": {
     "description": "Small label after a model's name in the model picker when it was released in the last 30 days"
@@ -11792,14 +10536,6 @@
   "setupStoppedByRestart": "The phone restarted, so the local server stopped. Start it again when you need it.",
   "@setupStoppedByRestart": {
     "description": "Phone server status after the phone restarted; the server is simply stopped"
-  },
-  "phoneServerStoppedTitle": "The server on this phone is stopped",
-  "@phoneServerStoppedTitle": {
-    "description": "Title when the app-managed phone server is not running"
-  },
-  "phoneServerStoppedBody": "It stops when the phone restarts or Android closes Termux to save battery. Your conversations are kept; start it again to continue.",
-  "@phoneServerStoppedBody": {
-    "description": "Explanation when the app-managed phone server is not running"
   },
   "phoneServerStartAndConnect": "Start and connect",
   "@phoneServerStartAndConnect": {
@@ -11953,22 +10689,6 @@
   "phoneSetupProgressTitle": "Setting up OpenCode on this phone",
   "@phoneSetupProgressTitle": {
     "description": "Title of the screen showing phone setup in progress"
-  },
-  "phoneSetupProgressStopTitle": "Stop setup?",
-  "@phoneSetupProgressStopTitle": {
-    "description": "Title of the confirmation before cancelling phone setup"
-  },
-  "phoneSetupProgressStopMessage": "What's finished stays installed.",
-  "@phoneSetupProgressStopMessage": {
-    "description": "Body of the confirmation before cancelling phone setup"
-  },
-  "phoneSetupProgressStopConfirm": "Stop setup",
-  "@phoneSetupProgressStopConfirm": {
-    "description": "Confirms cancelling phone setup"
-  },
-  "phoneSetupProgressKeepGoing": "Keep going",
-  "@phoneSetupProgressKeepGoing": {
-    "description": "Dismisses the cancel confirmation and lets phone setup continue"
   },
   "builtinServerChooseRuntime": "Which OpenCode",
   "@builtinServerChooseRuntime": {
@@ -12574,17 +11294,9 @@
   "@phoneSetupStartOtherWays": {
     "description": "Collapsed section with the less common ways to get a coding agent"
   },
-  "phoneSetupStartUseTermux": "Use Termux instead",
-  "@phoneSetupStartUseTermux": {
-    "description": "Opens the Termux-based setup"
-  },
   "phoneSetupStartByAddress": "Connect to a computer by address",
   "@phoneSetupStartByAddress": {
     "description": "Opens the form for connecting to an agent running elsewhere"
-  },
-  "phoneSetupStartSetUpHere": "Set it up in this app instead",
-  "@phoneSetupStartSetUpHere": {
-    "description": "Under Other ways when Termux already runs OpenCode: set up the in-app one anyway"
   },
   "phoneSetupStartProgressHeadline": "Setup is {percent}% done",
   "@phoneSetupStartProgressHeadline": {
@@ -12618,18 +11330,6 @@
   "phoneSetupStartOpen": "Open",
   "@phoneSetupStartOpen": {
     "description": "Starts and connects to the in-app OpenCode"
-  },
-  "phoneSetupStartTermuxHeadline": "OpenCode is already set up in Termux",
-  "@phoneSetupStartTermuxHeadline": {
-    "description": "Headline when a Termux-managed OpenCode was found on this phone"
-  },
-  "phoneSetupStartTermuxBody": "You set it up with Termux before. Connect to keep using it.",
-  "@phoneSetupStartTermuxBody": {
-    "description": "Under the Termux headline"
-  },
-  "phoneSetupStartConnect": "Connect",
-  "@phoneSetupStartConnect": {
-    "description": "Connects to the Termux-managed OpenCode"
   },
   "phoneSetupStartFailed": "That didn't work: {reason}",
   "@phoneSetupStartFailed": {
@@ -13165,27 +11865,6 @@
   "@workServerRestartBody": {
     "description": "Confirm body before restarting the phone's server"
   },
-  "workRunaway": "OpenCode has been busy for {duration} with nothing to do",
-  "@workRunaway": {
-    "description": "Status line: a leftover process on the phone keeps using the CPU",
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "workRunawayInProject": "OpenCode has been busy in {project} for {duration} with nothing to do",
-  "@workRunawayInProject": {
-    "description": "Status line: a leftover process in a project folder keeps using the CPU",
-    "placeholders": {
-      "project": {
-        "type": "String"
-      },
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
   "connectStartingPhone": "Starting OpenCode on this phone…",
   "@connectStartingPhone": {
     "description": "Connecting screen title while the phone's own server starts"
@@ -13412,49 +12091,9 @@
   "@serverRowConnected": {
     "description": "Leads the supporting line of the server row the app is connected to (the current-server mark)"
   },
-  "phoneServerRowStatus": "{runtime} · {state}",
-  "@phoneServerRowStatus": {
-    "description": "The phone server row's one line: what it runs and where it stands, e.g. 'OpenCode 2 · Running'",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      },
-      "state": {
-        "type": "String"
-      }
-    }
-  },
-  "phoneServerRowRestarting": "Restarting",
-  "@phoneServerRowRestarting": {
-    "description": "State of the server on this phone while it restarts"
-  },
-  "phoneServerRowNotAnswering": "Not answering",
-  "@phoneServerRowNotAnswering": {
-    "description": "State of a server on this phone when the app could not reach it"
-  },
-  "phoneServerRowNotRunning": "Not running",
-  "@phoneServerRowNotRunning": {
-    "description": "State of a saved server on this phone that is not set up or not ready"
-  },
-  "phoneServerRowDetails": "Details",
-  "@phoneServerRowDetails": {
-    "description": "Menu entry that opens a server's or plugin's details"
-  },
-  "localAgentRowOptional": "Optional",
-  "@localAgentRowOptional": {
-    "description": "Supporting line of the Claude Code row on the On this phone page"
-  },
   "localAgentPageTitle": "Claude Code",
   "@localAgentPageTitle": {
     "description": "Title of the page for Claude Code on this phone"
-  },
-  "managedRecoveryRowTitle": "Restart after a crash",
-  "@managedRecoveryRowTitle": {
-    "description": "Switch that lets the app restart the phone server after it crashes"
-  },
-  "managedRecoveryRowDetail": "Up to 3 tries, only while this app is open. It never installs or updates.",
-  "@managedRecoveryRowDetail": {
-    "description": "What the restart-after-a-crash switch does"
   },
   "pluginsTeamRowFound": "Found on {server}",
   "@pluginsTeamRowFound": {
@@ -13627,10 +12266,6 @@
   "localTerminalSemantics": "Terminal on this phone. Tap to type; touch and hold to select text.",
   "@localTerminalSemantics": {
     "description": "Accessibility label of the local terminal's screen"
-  },
-  "phoneServerTermuxTitle": "Termux",
-  "@phoneServerTermuxTitle": {
-    "description": "Name of the OpenCode server this app runs in Termux (Servers row, switcher, Work tab header); the app's built-in server is plain \"This phone\""
   },
   "globalSessionsLoadFailedTitle": "Couldn't load conversations",
   "@globalSessionsLoadFailedTitle": {
@@ -13828,10 +12463,6 @@
   "@teamDiscoverInAppDownloadBody": {
     "description": "AI Team intro, OpenCode inside the app: where the download goes"
   },
-  "teamDiscoverTermuxDownloadBody": "Installed into Termux, next to OpenCode.",
-  "@teamDiscoverTermuxDownloadBody": {
-    "description": "AI Team intro, OpenCode in Termux: where the download goes"
-  },
   "teamDiscoverBatteryTitle": "More battery while it works",
   "@teamDiscoverBatteryTitle": {
     "description": "AI Team intro: the battery row's title"
@@ -13839,10 +12470,6 @@
   "teamDiscoverInAppBatteryBody": "Several agents run at once, and Android may stop some if it runs too many.",
   "@teamDiscoverInAppBatteryBody": {
     "description": "AI Team intro, OpenCode inside the app: why it costs battery"
-  },
-  "teamDiscoverTermuxBatteryBody": "Keep Termux open while it works; Android may stop it in the background. Nothing is lost.",
-  "@teamDiscoverTermuxBatteryBody": {
-    "description": "AI Team intro, OpenCode in Termux: why it costs battery"
   },
   "teamDiscoverProjectTitle": "You choose the projects",
   "@teamDiscoverProjectTitle": {
@@ -16866,22 +15493,6 @@
   "@kitCapPhoneBuiltinOffer": {
     "description": "KitCapabilityExplainer: the one-sentence turn-on offer for \"phone.builtin\" at the moment of need, beside its button and \"Not now\""
   },
-  "kitCapPhoneTermuxTitle": "Server in Termux",
-  "@kitCapPhoneTermuxTitle": {
-    "description": "KitCapabilityExplainer: the name of the capability \"phone.termux\", shown as the title of the dimmed row or the missing state"
-  },
-  "kitCapPhoneTermuxWhy": "Needs Termux on this phone.",
-  "@kitCapPhoneTermuxWhy": {
-    "description": "KitCapabilityExplainer: why the capability \"phone.termux\" is missing, in one sentence (the dimmed row's supporting line and the missing state's body)"
-  },
-  "kitCapPhoneTermuxEnable": "Set up with Termux",
-  "@kitCapPhoneTermuxEnable": {
-    "description": "KitCapabilityExplainer: the button that starts the flow turning \"phone.termux\" on (a verb, COPY-8)"
-  },
-  "kitCapPhoneTermuxOffer": "Run this phone's server in Termux instead?",
-  "@kitCapPhoneTermuxOffer": {
-    "description": "KitCapabilityExplainer: the one-sentence turn-on offer for \"phone.termux\" at the moment of need, beside its button and \"Not now\""
-  },
   "kitCapPhoneAnyTitle": "Server on this phone",
   "@kitCapPhoneAnyTitle": {
     "description": "KitCapabilityExplainer: the name of the capability \"phone.any\", shown as the title of the dimmed row or the missing state"
@@ -16950,7 +15561,7 @@
   "@kitCapClaudeLocalTitle": {
     "description": "KitCapabilityExplainer: the name of the capability \"claude.local\", shown as the title of the dimmed row or the missing state"
   },
-  "kitCapClaudeLocalWhy": "Needs Termux on this phone and a Claude subscription.",
+  "kitCapClaudeLocalWhy": "Needs built-in Linux on this phone and a Claude subscription.",
   "@kitCapClaudeLocalWhy": {
     "description": "KitCapabilityExplainer: why the capability \"claude.local\" is missing, in one sentence (the dimmed row's supporting line and the missing state's body)"
   },
@@ -17214,10 +15825,6 @@
   "@kitHostThisPhone": {
     "description": "KitCapabilityExplainer: a place a capability can run, read after \"on\" (\"isn't available on …\", \"Works on …\")"
   },
-  "kitHostTermux": "Termux",
-  "@kitHostTermux": {
-    "description": "KitCapabilityExplainer: a place a capability can run, read after \"on\" (\"isn't available on …\", \"Works on …\")"
-  },
   "kitHostOpenCode2": "computers with OpenCode 2",
   "@kitHostOpenCode2": {
     "description": "KitCapabilityExplainer: a place a capability can run, read after \"on\" (\"isn't available on …\", \"Works on …\")"
@@ -17322,11 +15929,11 @@
   "@searchClaudeCodeGateTitle": {
     "description": "Search: title of the alert that explains why Claude Code on this phone cannot open here (at most four words)"
   },
-  "searchClaudeCodeGateDevice": "Claude Code runs on a phone only through Termux, which this device doesn't have. Run it on a computer with Paseo and add that computer as a server.",
+  "searchClaudeCodeGateDevice": "Claude Code runs on a phone only in the app's built-in Linux, which this device doesn't have. Run it on a computer with Paseo and add that computer as a server.",
   "@searchClaudeCodeGateDevice": {
     "description": "Search: why Claude Code on this phone is unavailable on a phone without the Termux bridge, and where it is available"
   },
-  "searchClaudeCodeGateDesktop": "Claude Code on this phone is for Android phones with Termux. On a computer, run Claude Code with Paseo and add it as a server.",
+  "searchClaudeCodeGateDesktop": "Claude Code on this phone is for Android phones with built-in Linux. On a computer, run Claude Code with Paseo and add it as a server.",
   "@searchClaudeCodeGateDesktop": {
     "description": "Search on a desktop: why Claude Code on this phone is not here, and where Claude Code is available instead"
   },
@@ -18053,28 +16660,6 @@
   "@serverSwitcherCurrentMenu": {
     "description": "Server switcher: name of the menu a tap on the current server's row opens (holds Disconnect)."
   },
-  "localAgentEntryStillStarting": "Still starting · this can take a minute",
-  "@localAgentEntryStillStarting": {
-    "description": "Claude Code on this phone row: state word when Start or Restart has run for more than 8 seconds."
-  },
-  "localAgentEntryDidNotStart": "Didn't start",
-  "@localAgentEntryDidNotStart": {
-    "description": "Claude Code on this phone row: state word when the last start failed; the reason is shown under the row and a tap starts it again."
-  },
-  "localAgentEntryRemoving": "Removing",
-  "@localAgentEntryRemoving": {
-    "description": "Claude Code on this phone row: state word while Node.js, Paseo and Claude Code are being removed from the phone."
-  },
-  "localAgentEntrySignedOut": "{state} · Not signed in to Claude",
-  "@localAgentEntrySignedOut": {
-    "description": "Claude Code on this phone row: the state word followed by a note that Claude Code is not signed in; the row's menu offers Sign in to Claude.",
-    "placeholders": {
-      "state": {
-        "type": "String",
-        "example": "Running"
-      }
-    }
-  },
   "formRendererSending": "Sending your answers…",
   "@formRendererSending": {
     "description": "Form sheet: why Dismiss cannot be pressed while the answers are being sent"
@@ -18429,18 +17014,6 @@
   "@importEnvironmentId": {
     "description": "Import conversation: label of the destination environment id under Details."
   },
-  "phoneSetupStartUseTermuxOne": "Use the one in Termux",
-  "@phoneSetupStartUseTermuxOne": {
-    "description": "Phone setup screen A, Other ways, when OpenCode is ready in the app and also set up in Termux: connect to the Termux one instead."
-  },
-  "phoneSetupStartUseTermuxOneDetail": "OpenCode is also set up in Termux. Connect to it instead.",
-  "@phoneSetupStartUseTermuxOneDetail": {
-    "description": "Phone setup screen A, Other ways: the supporting line of \"Use the one in Termux\"."
-  },
-  "phoneSetupStartTermuxNotAllowed": "Termux is installed but hasn't let this app in yet. Finish its setup.",
-  "@phoneSetupStartTermuxNotAllowed": {
-    "description": "Phone setup screen A, Other ways: supporting line of \"Use Termux instead\" when Termux is installed but has not granted the run-command permission."
-  },
   "phoneSetupCustomizeAllInstalled": "Every optional tool is already on this phone.",
   "@phoneSetupCustomizeAllInstalled": {
     "description": "Add tools sheet: every optional tool is installed, so there is nothing to add."
@@ -18449,25 +17022,9 @@
   "@phoneSetupCustomizeIncluded": {
     "description": "Customize sheet: the word at the end of a required component's row, which cannot be switched off."
   },
-  "termuxProcsLoadFailedTitle": "Couldn't read what's running",
-  "@termuxProcsLoadFailedTitle": {
-    "description": "Running now: title when the process list could not be read"
-  },
-  "termuxProcsEmptyBody": "When OpenCode, the AI Team or a build runs here, it shows up in this list.",
-  "@termuxProcsEmptyBody": {
-    "description": "Running now: body of the empty state"
-  },
-  "termuxProcsNotStoppedTitle": "Not everything stopped",
-  "@termuxProcsNotStoppedTitle": {
-    "description": "Running now: title of the result when some processes did not stop"
-  },
   "termuxProcsCopyCommand": "Copy command",
   "@termuxProcsCopyCommand": {
     "description": "Copies a process's command line"
-  },
-  "termuxProcsOpenControls": "Open This phone",
-  "@termuxProcsOpenControls": {
-    "description": "Opens the phone server controls for a protected process"
   },
   "termuxProcsProcessId": "Process ID",
   "@termuxProcsProcessId": {
@@ -18477,41 +17034,9 @@
   "@termuxProcsParentId": {
     "description": "Details label for the parent process's ID"
   },
-  "termuxProcsAboutOpenCode": "Part of the OpenCode server on this phone.",
-  "@termuxProcsAboutOpenCode": {
-    "description": "Process details: what a process in the OpenCode server group is"
-  },
-  "termuxProcsAboutAiTeam": "Part of the AI Team. Stopping it stops the work the team is doing.",
-  "@termuxProcsAboutAiTeam": {
-    "description": "Process details: what a process in the AI Team group is"
-  },
-  "termuxProcsAboutBuild": "A build helper. The next build starts it again when it needs it.",
-  "@termuxProcsAboutBuild": {
-    "description": "Process details: what a build daemon is"
-  },
-  "termuxProcsAboutOrphan": "Nothing is waiting on it, so stopping it is safe.",
-  "@termuxProcsAboutOrphan": {
-    "description": "Process details: why an orphan is safe to stop"
-  },
-  "termuxProcsAboutOther": "Started by something else on this phone.",
-  "@termuxProcsAboutOther": {
-    "description": "Process details: what a process in the Other group is"
-  },
   "termuxProcsNoRestart": "It can't be started again from here.",
   "@termuxProcsNoRestart": {
     "description": "Stop confirmation: a stopped process has no undo"
-  },
-  "termuxProcsStopGroupTeamLost": "Any task the team is working on stops too.",
-  "@termuxProcsStopGroupTeamLost": {
-    "description": "Stop AI Team group confirmation: what is lost"
-  },
-  "termuxProcsStopGroupTeamRestart": "You can start the team again from AI Team.",
-  "@termuxProcsStopGroupTeamRestart": {
-    "description": "Stop AI Team group confirmation: how to start it again"
-  },
-  "phoneSetupProgressStopContinueLater": "Continue any time from On this phone.",
-  "@phoneSetupProgressStopContinueLater": {
-    "description": "In the Stop setup confirmation: where the person can pick setup up again"
   },
   "teamMergeFailedNext": "Nothing was merged. Fix what the host says, then try again, or review the changes.",
   "@teamMergeFailedNext": {
@@ -18671,47 +17196,6 @@
   "setupTerminalTitle": "Setup output",
   "@setupTerminalTitle": {
     "description": "Title of the setup log panel (live or finished output of a setup step)"
-  },
-  "teamPhoneStopTeam": "Stop the team",
-  "@teamPhoneStopTeam": {
-    "description": "On this phone section: stops the AI team running on this phone (asks first)"
-  },
-  "teamPhoneStartTeam": "Start the team",
-  "@teamPhoneStartTeam": {
-    "description": "On this phone section: starts the stopped AI team on this phone"
-  },
-  "teamPhoneStartTeamAgain": "Start the team again",
-  "@teamPhoneStartTeamAgain": {
-    "description": "On this phone section: starts the team Android stopped"
-  },
-  "teamPhoneDeleteTeam": "Delete the team from this phone",
-  "@teamPhoneDeleteTeam": {
-    "description": "On this phone section: deletes the AI team from this phone (asks first)"
-  },
-  "teamPhoneRemoveBody": "The team stops, and the AI Team turns off for this server.",
-  "@teamPhoneRemoveBody": {
-    "description": "Delete the team sheet: what happens, in plain words"
-  },
-  "teamPhoneRemoveLost": "The team's programs, its files and its task list are deleted",
-  "@teamPhoneRemoveLost": {
-    "description": "Delete the team sheet: what goes"
-  },
-  "teamPhoneRemoveKept": "Your project files and their git history stay",
-  "@teamPhoneRemoveKept": {
-    "description": "Delete the team sheet: what stays"
-  },
-  "teamPhoneRemoveFrees": "Frees about {size} MB",
-  "@teamPhoneRemoveFrees": {
-    "description": "Delete the team sheet: the space the team's downloads take",
-    "placeholders": {
-      "size": {
-        "type": "int"
-      }
-    }
-  },
-  "teamPhoneRemoveConfirm": "Delete the team",
-  "@teamPhoneRemoveConfirm": {
-    "description": "Delete the team sheet: confirm button"
   },
   "productStatesActionFailedTitle": "Couldn't finish that",
   "@productStatesActionFailedTitle": {
@@ -21881,14 +20365,6 @@
       }
     }
   },
-  "localAgentStopNamed": "Stop Claude Code",
-  "@localAgentStopNamed": {
-    "description": "Confirm button and menu item that stop Claude Code on this phone."
-  },
-  "localAgentStartNamed": "Start Claude Code",
-  "@localAgentStartNamed": {
-    "description": "Row action that starts Claude Code on this phone."
-  },
   "monitorSwitchToTitle": "Switch to {server}?",
   "@monitorSwitchToTitle": {
     "description": "Confirm title before switching to the saved server whose request the person opened.",
@@ -22164,10 +20640,6 @@
   "@thisPhoneHostInApp": {
     "description": "This phone: where OpenCode runs, when it runs inside this app's own Linux"
   },
-  "thisPhoneHostTermux": "In Termux",
-  "@thisPhoneHostTermux": {
-    "description": "This phone: where OpenCode runs, when it runs in the Termux app"
-  },
   "thisPhoneSetUp": "Set up OpenCode",
   "@thisPhoneSetUp": {
     "description": "This phone: the button when OpenCode is not set up yet"
@@ -22216,30 +20688,6 @@
   "thisPhoneBusy": "Wait for the current step to finish",
   "@thisPhoneBusy": {
     "description": "This phone: why a row is off while OpenCode starts, stops or installs"
-  },
-  "phoneSetupTermuxAllowHow": "In Termux, paste the copied line and press Enter.",
-  "@phoneSetupTermuxAllowHow": {
-    "description": "Termux setup checklist: the instruction under 'Connect Termux once' while it waits for the person"
-  },
-  "phoneSetupTermuxUpdatingTitle": "Updating this phone",
-  "@phoneSetupTermuxUpdatingTitle": {
-    "description": "Termux setup checklist: the title while an update runs"
-  },
-  "phoneSetupTermuxStartingTitle": "Starting the server",
-  "@phoneSetupTermuxStartingTitle": {
-    "description": "Termux setup checklist: the title while OpenCode starts"
-  },
-  "phoneSetupTermuxConnecting": "Connecting",
-  "@phoneSetupTermuxConnecting": {
-    "description": "Termux setup checklist: the line under 'Start OpenCode' while the app connects to it"
-  },
-  "phoneSetupTermuxLeaveHint": "You can leave the app. Termux keeps working and this list picks up where it is when you come back.",
-  "@phoneSetupTermuxLeaveHint": {
-    "description": "Termux setup checklist: the quiet line under the title while setup runs"
-  },
-  "phoneSetupTermuxCost": "About 10–15 minutes the first time, in Termux's storage",
-  "@phoneSetupTermuxCost": {
-    "description": "Phone setup start: the cost line under 'Use Termux instead', said before anything installs"
   },
   "removeFromPhoneKeepBody": "OpenCode and its tools are removed, freeing about {size}.",
   "@removeFromPhoneKeepBody": {
@@ -22374,57 +20822,6 @@
       }
     }
   },
-  "termuxProcsKindParentGone": "Parent gone",
-  "@termuxProcsKindParentGone": {
-    "description": "Running now: first words of an orphan's line, why it was flagged"
-  },
-  "termuxProcsKindNoOwner": "No owner",
-  "@termuxProcsKindNoOwner": {
-    "description": "Running now: first words of an orphan's line that burns CPU with nothing waiting on it"
-  },
-  "termuxProcsStopOrphans": "{count, plural, =1{Stop 1 orphaned helper} other{Stop {count} orphaned helpers}}",
-  "@termuxProcsStopOrphans": {
-    "description": "Running now: the one bulk stop, offered only while orphans exist; also its confirm button",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsStopOrphansTitle": "{count, plural, =1{Stop the orphaned helper?} other{Stop {count} orphaned helpers?}}",
-  "@termuxProcsStopOrphansTitle": {
-    "description": "Running now: title of the confirmation for the bulk orphan stop",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "teamPhoneStopTeamRow": "Stop the team on this phone",
-  "@teamPhoneStopTeamRow": {
-    "description": "Settings › Plugins › On this phone: the row that stops the team while it runs"
-  },
-  "teamPhoneStopTeamRowSupporting": "Agents stop where they are; nothing is lost",
-  "@teamPhoneStopTeamRowSupporting": {
-    "description": "Settings › Plugins › On this phone: what stopping the team does, under its row"
-  },
-  "teamUiPhoneWorkingOn": "Working on {name}",
-  "@teamUiPhoneWorkingOn": {
-    "description": "Settings › Plugins › On this phone: the team's project by name under its status",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "teamUiPhoneVersionsLabel": "Engine versions",
-  "@teamUiPhoneVersionsLabel": {
-    "description": "Technical details label for the team engine's versions"
-  },
-  "teamUiPhoneProjectLabel": "Project folder",
-  "@teamUiPhoneProjectLabel": {
-    "description": "Technical details label for the team's full project path"
-  },
   "phoneServerNameInSentence": "this phone",
   "@phoneServerNameInSentence": {
     "description": "The default name of the in-app server inside a sentence ('Disconnect from this phone')"
@@ -22469,23 +20866,6 @@
   "teamAgentLastCommandLabel": "Last command",
   "@teamAgentLastCommandLabel": {
     "description": "Agent page Technical details: the raw command of its newest step"
-  },
-  "termuxStorageOnlyBuildCaches": "Only build caches can be cleaned here",
-  "@termuxStorageOnlyBuildCaches": {
-    "description": "Storage on this phone: the one footnote under the list"
-  },
-  "termuxStorageWhereItIs": "Where it is",
-  "@termuxStorageWhereItIs": {
-    "description": "Storage on this phone: label over a category's folders when it cannot be cleaned"
-  },
-  "termuxStorageCleanBuildCaches": "Clean build caches ({size})",
-  "@termuxStorageCleanBuildCaches": {
-    "description": "Storage on this phone: the one clean button, with the size it frees",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
   },
   "monitorBackgroundChecks": "Background checks",
   "@monitorBackgroundChecks": {
@@ -22689,10 +21069,6 @@
   "thisPhoneAddToolsDetail": "Python, AI Team, voice typing and more",
   "@thisPhoneAddToolsDetail": {
     "description": "This phone: the line under Add tools, the optional tools phone setup can add (in the app or in Termux)"
-  },
-  "phoneSetupTermuxOtherRuntime": "Termux already runs the other OpenCode. Switch it on This phone, then continue setup.",
-  "@phoneSetupTermuxOtherRuntime": {
-    "description": "Termux setup: the job installed one OpenCode generation but Termux serves the other; switching is This phone's job"
   },
   "undoFromHereNowAction": "Undo now",
   "@undoFromHereNowAction": {
@@ -22981,15 +21357,6 @@
   "@automationSavedRulesDetail": {
     "description": "What runs by itself: the Always allowed actions row's line."
   },
-  "phoneSetupStartTermuxProgressHeadline": "Setup in Termux is {percent}% done",
-  "@phoneSetupStartTermuxProgressHeadline": {
-    "description": "Phone setup start screen: headline while a setup job in Termux is running or stopped part way. {percent} is a whole number.",
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "teamPhoneReadyChooseTitle": "Choose the team's project",
   "@teamPhoneReadyChooseTitle": {
     "description": "AI Team ready page (after Add tools installed AI Team): title when no project is open yet."
@@ -23040,10 +21407,6 @@
   "@teamHomeTurnOffFailed": {
     "description": "AI Team page: Turn off could not stop the team inside the app; nothing changed."
   },
-  "teamHomeHostStopped": "Stopped",
-  "@teamHomeHostStopped": {
-    "description": "AI Team page subtitle, after the place: Android stopped the phone's team (the line under the bar offers Start the team again)."
-  },
   "teamHomeHostCooling": "Cooling down",
   "@teamHomeHostCooling": {
     "description": "AI Team page subtitle, after the place: the heat guard paused the team because the phone is hot. Never the person's pause."
@@ -23069,10 +21432,6 @@
         "type": "String"
       }
     }
-  },
-  "teamHomePhoneControls": "Keep it running, stop it or remove it",
-  "@teamHomePhoneControls": {
-    "description": "AI Team page row on the phone's Termux team: opens its own controls (keep running tips, stop, remove from this phone)."
   },
   "teamHomeSpentToday": "Today · {usage}",
   "@teamHomeSpentToday": {
@@ -23409,10 +21768,6 @@
   "@productErrorStorage": {
     "description": "Error words: a local file read or write failed (storage unavailable, full, or denied)."
   },
-  "productErrorTermux": "Termux didn't finish that. Check that Termux is installed and open, then try again.",
-  "@productErrorTermux": {
-    "description": "Error words: a command the app sent to Termux failed (its output goes to details)."
-  },
   "productErrorDetailsLabel": "Error details",
   "@productErrorDetailsLabel": {
     "description": "Label of the folded technical text under an error alert."
@@ -23532,76 +21887,6 @@
   "@teamGateCardIfIgnoredReview": {
     "description": "A review-ready card: what happens if nobody reviews it."
   },
-  "termuxProcsBudget": "{count} of {limit} background processes",
-  "@termuxProcsBudget": {
-    "description": "Running on this phone: the budget line, also the row's summary on This phone. limit is Android's phantom process limit (32).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "limit": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsBudgetNote": "Android 12 and later may stop the oldest ones when all apps together run more than {limit}.",
-  "@termuxProcsBudgetNote": {
-    "description": "Running on this phone: under the budget line, what the limit is and that other apps count too",
-    "placeholders": {
-      "limit": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsBudgetOver": "More than {limit}: Android may stop the oldest of these at any time.",
-  "@termuxProcsBudgetOver": {
-    "description": "Running on this phone: under the budget line when the count is past the limit",
-    "placeholders": {
-      "limit": {
-        "type": "int"
-      }
-    }
-  },
-  "termuxProcsLoadFailedBody": "Termux did not answer. Open Termux, then try again.",
-  "@termuxProcsLoadFailedBody": {
-    "description": "Running on this phone: body when the list could not be read; the technical reason is under Details"
-  },
-  "termuxProcsRefreshFailed": "Couldn't read the list again, so it shows the last reading.",
-  "@termuxProcsRefreshFailed": {
-    "description": "Running on this phone: a later refresh failed; the technical reason is under Details"
-  },
-  "termuxProcsStopFailed": "Couldn't stop it. Try again, or stop it from Termux.",
-  "@termuxProcsStopFailed": {
-    "description": "Running on this phone: a stop could not be sent; the technical reason is under Details"
-  },
-  "termuxProcsKindOpenCode": "OpenCode server",
-  "@termuxProcsKindOpenCode": {
-    "description": "Running on this phone: what a process is, first words of its line"
-  },
-  "termuxProcsKindAiTeam": "AI Team",
-  "@termuxProcsKindAiTeam": {
-    "description": "Running on this phone: what a process is, first words of its line"
-  },
-  "termuxProcsKindClaudeCode": "Claude Code",
-  "@termuxProcsKindClaudeCode": {
-    "description": "Running on this phone: what a process is, first words of its line"
-  },
-  "termuxProcsKindDevService": "Dev service",
-  "@termuxProcsKindDevService": {
-    "description": "Running on this phone: what a process is (a build daemon or dev server), first words of its line"
-  },
-  "termuxProcsKindTerminal": "Terminal",
-  "@termuxProcsKindTerminal": {
-    "description": "Running on this phone: what a process is (a shell session), first words of its line"
-  },
-  "termuxProcsKindHelper": "Helper",
-  "@termuxProcsKindHelper": {
-    "description": "Running on this phone: what a process is (anything else), first words of its line"
-  },
-  "termuxProcsKindHostApp": "Termux app",
-  "@termuxProcsKindHostApp": {
-    "description": "Running on this phone: the Termux app's own process, first words of its line"
-  },
   "termuxProcsBusy": "Busy",
   "@termuxProcsBusy": {
     "description": "Running on this phone: the process used the processor since the last reading"
@@ -23618,79 +21903,6 @@
         "type": "String"
       }
     }
-  },
-  "termuxProcsStopKindBody": "{names}: each gets a polite stop, then a forced one after 5 seconds.",
-  "@termuxProcsStopKindBody": {
-    "description": "Running on this phone: what a kind's stop stops, by name",
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsStopKind": "Stop all {count} {things}",
-  "@termuxProcsStopKind": {
-    "description": "Running on this phone: one stop for every process of a kind (offered from two up); also its confirm button. things is a kind in the plural, e.g. 'dev services'",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "things": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsStopKindTitle": "Stop all {count} {things}?",
-  "@termuxProcsStopKindTitle": {
-    "description": "Running on this phone: the question of a kind's stop",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "things": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProcsKindsAiTeam": "AI Team processes",
-  "@termuxProcsKindsAiTeam": {
-    "description": "Running on this phone: the AI Team kind in the plural, inside 'Stop all 3 …'"
-  },
-  "termuxProcsKindsClaudeCode": "Claude Code processes",
-  "@termuxProcsKindsClaudeCode": {
-    "description": "Running on this phone: the Claude Code kind in the plural, inside 'Stop all 3 …'"
-  },
-  "termuxProcsKindsDevServices": "dev services",
-  "@termuxProcsKindsDevServices": {
-    "description": "Running on this phone: the dev service kind in the plural, inside 'Stop all 3 …'"
-  },
-  "termuxProcsKindsTerminals": "terminals",
-  "@termuxProcsKindsTerminals": {
-    "description": "Running on this phone: the terminal kind in the plural, inside 'Stop all 3 …'"
-  },
-  "termuxProcsKindsHelpers": "helpers",
-  "@termuxProcsKindsHelpers": {
-    "description": "Running on this phone: the helper kind in the plural, inside 'Stop all 3 …'"
-  },
-  "termuxProcsStopDevRestart": "The next build starts them again when it needs them.",
-  "@termuxProcsStopDevRestart": {
-    "description": "Running on this phone: what stopping the dev services costs"
-  },
-  "termuxProcsAboutClaudeCode": "Claude Code, the coding agent. Stopping it ends the answer it is writing.",
-  "@termuxProcsAboutClaudeCode": {
-    "description": "Running on this phone: what a Claude Code process is"
-  },
-  "termuxProcsAboutTerminal": "A terminal. Stopping it closes it and whatever runs in it.",
-  "@termuxProcsAboutTerminal": {
-    "description": "Running on this phone: what a terminal process is"
-  },
-  "termuxProcsAboutHostApp": "The Termux app itself. It is not stopped from here.",
-  "@termuxProcsAboutHostApp": {
-    "description": "Running on this phone: what the Termux app's own process is"
-  },
-  "termuxProcsAverageCpu": "Average processor use",
-  "@termuxProcsAverageCpu": {
-    "description": "Running on this phone › Details: ps's average CPU since the process started"
   },
   "termuxProcsCpuTime": "Processor time",
   "@termuxProcsCpuTime": {
@@ -23889,10 +22101,6 @@
   "@appNewConversationFailed": {
     "description": "Status line when a new conversation (launcher shortcut, Ctrl+N) could not be created; the reason in words is under it."
   },
-  "rootPhoneServerStartFailed": "OpenCode on this phone didn't start",
-  "@rootPhoneServerStartFailed": {
-    "description": "Status line on the connecting page when starting the phone server failed; the reason in words is under it."
-  },
   "connectionFailureLocalCodexBody": "A local Codex listener should answer on this phone, but nothing did.",
   "@connectionFailureLocalCodexBody": {
     "description": "Map page root-connecting: the address is under Details."
@@ -24017,10 +22225,6 @@
   "voiceAutoSetupMobileData": "You're on mobile data. This download counts against your data plan.",
   "@voiceAutoSetupMobileData": {
     "description": "First mic tap voice setup sheet (P10.4): warning on mobile data; the size is on the button"
-  },
-  "voiceAutoSetupMaybeMetered": "This connection may count against a data plan.",
-  "@voiceAutoSetupMaybeMetered": {
-    "description": "First mic tap voice setup sheet (P10.4): warning when the network type is unknown; the size is on the button"
   },
   "voiceAutoSetupDownload": "Download {size}",
   "@voiceAutoSetupDownload": {
@@ -24313,24 +22517,6 @@
   "teamStartRunKeepInBacklog": "Keep in backlog",
   "@teamStartRunKeepInBacklog": {
     "description": "Give the team a task (from the board): makes the task and leaves it in the Backlog, given to no one, instead of starting it now"
-  },
-  "workRunawayStopped": "Stopped {helper}",
-  "@workRunawayStopped": {
-    "description": "Announced once after the Work status line's Stop ended the leftover process",
-    "placeholders": {
-      "helper": {
-        "type": "String"
-      }
-    }
-  },
-  "workRunawayStopFailed": "Couldn't stop {helper}. Try again, or stop it from Termux.",
-  "@workRunawayStopFailed": {
-    "description": "Work status line when stopping the leftover process did not end it",
-    "placeholders": {
-      "helper": {
-        "type": "String"
-      }
-    }
   },
   "serverSettingsUpdateCommandsDetail": "Run them in a terminal on the server's computer; this app can't update it.",
   "@serverSettingsUpdateCommandsDetail": {
@@ -25997,22 +24183,6 @@
   "@addServerTailscaleNext": {
     "description": "Add server, Tailscale step: the primary that moves on to the step where the Tailscale address is entered."
   },
-  "phoneSetupTermuxGetCurrent": "Get the current Termux",
-  "@phoneSetupTermuxGetCurrent": {
-    "description": "Setup journey, failed Get Termux row when the installed Termux is too old: opens the current Termux download page in the browser."
-  },
-  "phoneSetupUnsupportedTitle": "Connect a server",
-  "@phoneSetupUnsupportedTitle": {
-    "description": "Phone setup reached on a device that cannot run it (not Android): title of the page that points to connecting a server instead."
-  },
-  "phoneSetupUnsupportedBody": "Setting up on the device itself works only on Android phones. On your computer, run this command, then add the server here with the code it prints.",
-  "@phoneSetupUnsupportedBody": {
-    "description": "Phone setup reached on a device that cannot run it: body above the command to copy (opencode2 pair)."
-  },
-  "termuxStorageStageTotal": "The whole Termux install",
-  "@termuxStorageStageTotal": {
-    "description": "Storage screen: the scan's last row while it runs, measuring everything Termux uses"
-  },
   "setupProgressViewFailedStep": "This step didn't finish. What went wrong is under Details.",
   "@setupProgressViewFailedStep": {
     "description": "A setup component failed; neither its stage nor a reason the app can word is known (the raw text is in the Details log)"
@@ -26026,37 +24196,6 @@
       }
     }
   },
-  "workRunawayHelper": "A leftover {helper} process has been busy for {duration} with nothing to do",
-  "@workRunawayHelper": {
-    "description": "Status line: a leftover helper process on the phone (not OpenCode itself) keeps using the CPU; helper is the process's own name, e.g. 'node'",
-    "placeholders": {
-      "helper": {
-        "type": "String"
-      },
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "workRunawayHelperInProject": "A leftover {helper} process in {project} has been busy for {duration} with nothing to do",
-  "@workRunawayHelperInProject": {
-    "description": "Status line: a leftover helper process in a project folder (not OpenCode itself) keeps using the CPU",
-    "placeholders": {
-      "helper": {
-        "type": "String"
-      },
-      "project": {
-        "type": "String"
-      },
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "workRunawaySeeRunning": "See what's running",
-  "@workRunawaySeeRunning": {
-    "description": "Status line menu: opens Running on this phone, the list of processes on the phone"
-  },
   "thisPhoneUpToDate": "Up to date · {version}",
   "@thisPhoneUpToDate": {
     "description": "Technical: This phone: the row in place of Update when the installed OpenCode is already the version the app installs, e.g. 'Up to date · 1.18.29'",
@@ -26065,32 +24204,6 @@
         "type": "String"
       }
     }
-  },
-  "thisPhoneUpdateTitle": "Update {runtime}?",
-  "@thisPhoneUpdateTitle": {
-    "description": "This phone: the title of the question before an update in Termux; runtime is 'OpenCode' or 'OpenCode 2'",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "thisPhoneUpdateBody": "Installs version {version}, restarts the server on this phone and connects again.",
-  "@thisPhoneUpdateBody": {
-    "description": "Technical: This phone: what an update does, in the question before it, naming the version it installs",
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
-  "thisPhoneUpdateKept": "Your conversations are kept. The server is away for a minute while it restarts.",
-  "@thisPhoneUpdateKept": {
-    "description": "This phone: the consequence line in the question before an update"
-  },
-  "thisPhoneUpdateBusy": "A reply is still being written. Stop it or let it finish, then update.",
-  "@thisPhoneUpdateBusy": {
-    "description": "This phone: why Update waits while a conversation is still working"
   },
   "thisPhoneStartAgain": "Start again",
   "@thisPhoneStartAgain": {
@@ -26121,15 +24234,6 @@
   "thisPhoneCheckFailed": "This phone couldn't check on {runtime}. Try again in a moment.",
   "@thisPhoneCheckFailed": {
     "description": "This phone: the line under the status when the host (Termux or the in-app Linux) did not answer",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "thisPhoneSwitchStopped": "{runtime} didn't start after the switch. Your conversations are kept.",
-  "@thisPhoneSwitchStopped": {
-    "description": "This phone: the line under the status when a switch between OpenCode versions stopped half way; runtime is the version it switched to",
     "placeholders": {
       "runtime": {
         "type": "String"
@@ -26252,475 +24356,9 @@
   "@chatWatchBackToWorker": {
     "description": "Ended worker session: returns to the worker's page it was opened from"
   },
-  "migrationTitle": "Move from Termux",
-  "@migrationTitle": {
-    "description": "Moving from Termux to the in-app server: the page title and the This phone row that opens it (its detail says where things go)."
-  },
-  "migrationChecking": "Checking Termux and phone storage…",
-  "@migrationChecking": {
-    "description": "Moving from Termux to the in-app server: the wait while Termux and the phone are checked."
-  },
-  "migrationReviewIntro": "Your projects are copied into OpenCode inside this app. Nothing in Termux is changed or removed.",
-  "@migrationReviewIntro": {
-    "description": "Moving from Termux to the in-app server: the review's opening line."
-  },
-  "migrationGroupMoves": "Copied and ready to use",
-  "@migrationGroupMoves": {
-    "description": "Moving from Termux to the in-app server: label of the group of items that become active files (projects)."
-  },
-  "migrationGroupExports": "Saved privately, not turned on",
-  "@migrationGroupExports": {
-    "description": "Moving from Termux to the in-app server: label of the group of items kept only as private copies."
-  },
-  "migrationGroupNotMoved": "Not moved",
-  "@migrationGroupNotMoved": {
-    "description": "Moving from Termux to the in-app server: label of what the move leaves behind."
-  },
-  "migrationItemProjects": "Projects",
-  "@migrationItemProjects": {
-    "description": "Moving from Termux to the in-app server: item: the project folders in Termux's Ubuntu."
-  },
-  "migrationItemConfig": "MCP and agent settings",
-  "@migrationItemConfig": {
-    "description": "Moving from Termux to the in-app server: item: OpenCode's global config, including MCP servers."
-  },
-  "migrationItemSessions": "Conversation history (backup copy)",
-  "@migrationItemSessions": {
-    "description": "Moving from Termux to the in-app server: item: OpenCode's raw data folder with past conversations; kept only as a backup copy."
-  },
-  "migrationItemGitConfig": "Git settings",
-  "@migrationItemGitConfig": {
-    "description": "Moving from Termux to the in-app server: item: the global Git configuration."
-  },
-  "migrationItemShellFiles": "Shell settings",
-  "@migrationItemShellFiles": {
-    "description": "Moving from Termux to the in-app server: item: the shell start files (.bashrc, .zshrc and the login one)."
-  },
-  "migrationItemAiTeam": "AI Team",
-  "@migrationItemAiTeam": {
-    "description": "Moving from Termux to the in-app server: item: the AI Team's saved state."
-  },
-  "migrationItemProjectsWhat": "Into a new folder in On this phone. Nothing there is overwritten.",
-  "@migrationItemProjectsWhat": {
-    "description": "Moving from Termux to the in-app server: what copying the projects does."
-  },
-  "migrationItemConfigWhat": "To review before using: commands and paths may only work in Termux.",
-  "@migrationItemConfigWhat": {
-    "description": "Moving from Termux to the in-app server: what the settings copy is."
-  },
-  "migrationItemSessionsWhat": "May contain your sign-ins, and the app doesn't open it. Termux keeps your usable history.",
-  "@migrationItemSessionsWhat": {
-    "description": "Moving from Termux to the in-app server: what the conversation history copy is."
-  },
-  "migrationItemGitConfigWhat": "Your Git name, email and options, to review.",
-  "@migrationItemGitConfigWhat": {
-    "description": "Moving from Termux to the in-app server: what the Git settings copy is."
-  },
-  "migrationItemShellFilesWhat": "Keeps .bashrc, .zshrc and your other shell start files; they never run.",
-  "@migrationItemShellFilesWhat": {
-    "description": "Moving from Termux to the in-app server: what the shell settings copy is."
-  },
-  "migrationItemAiTeamWhat": "The team's saved state. Setup installs its tools again.",
-  "@migrationItemAiTeamWhat": {
-    "description": "Moving from Termux to the in-app server: what the AI Team copy is."
-  },
-  "migrationItemSize": "{size} · {count, plural, =1{1 file} other{{count} files}}",
-  "@migrationItemSize": {
-    "description": "Moving from Termux to the in-app server: an item's measured size and file count, e.g. '1.2 GB · 3,400 files'.",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "migrationSizeUnknown": "Size unknown",
-  "@migrationSizeUnknown": {
-    "description": "Moving from Termux to the in-app server: an item Termux could not measure (its size is unknown, never zero)."
-  },
-  "migrationExportsNote": "Private copies stay in On this phone. Nothing in them runs or turns on by itself.",
-  "@migrationExportsNote": {
-    "description": "Moving from Termux to the in-app server: note under the private copies group."
-  },
-  "migrationNotMovedSignIn": "Sign-ins to AI providers: sign in again after the move",
-  "@migrationNotMovedSignIn": {
-    "description": "Moving from Termux to the in-app server: not moved: provider sign-ins, when their names are unknown."
-  },
-  "migrationNotMovedSignInNamed": "Sign-ins to {names}: sign in again after the move",
-  "@migrationNotMovedSignInNamed": {
-    "description": "Moving from Termux to the in-app server: not moved: provider sign-ins, named, e.g. 'Anthropic and OpenAI'.",
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationNotMovedKeys": "SSH keys and saved Git passwords",
-  "@migrationNotMovedKeys": {
-    "description": "Moving from Termux to the in-app server: not moved: SSH keys and Git credentials."
-  },
-  "migrationNotMovedTools": "Installed tools and caches: setup installs them again",
-  "@migrationNotMovedTools": {
-    "description": "Moving from Termux to the in-app server: not moved: toolchains and caches."
-  },
-  "migrationTermuxKept": "Termux stays as it is, and its server keeps working until you remove it",
-  "@migrationTermuxKept": {
-    "description": "Moving from Termux to the in-app server: what is kept: everything in Termux."
-  },
-  "migrationKeepOpen": "Keep the app open while copying. Android stops it when you leave the app, and it picks up from here when you resume.",
-  "@migrationKeepOpen": {
-    "description": "Moving from Termux to the in-app server: why the app must stay open."
-  },
-  "migrationStart": "Copy to On this phone",
-  "@migrationStart": {
-    "description": "Moving from Termux to the in-app server: the review's primary action."
-  },
-  "migrationChooseOne": "Choose at least one item to copy.",
-  "@migrationChooseOne": {
-    "description": "Moving from Termux to the in-app server: why the primary is off when nothing is selected."
-  },
-  "migrationPacking": "Preparing your files in Termux…",
-  "@migrationPacking": {
-    "description": "Moving from Termux to the in-app server: stage: Termux packs the item."
-  },
-  "migrationCopying": "Copying files to this app…",
-  "@migrationCopying": {
-    "description": "Moving from Termux to the in-app server: stage: the item is copied into the app."
-  },
-  "migrationUnpacking": "Importing your files…",
-  "@migrationUnpacking": {
-    "description": "Moving from Termux to the in-app server: stage: the copy is imported."
-  },
-  "migrationVerifying": "Checking the copied files…",
-  "@migrationVerifying": {
-    "description": "Moving from Termux to the in-app server: stage: the copy is verified."
-  },
-  "migrationSwitching": "Connecting to On this phone…",
-  "@migrationSwitching": {
-    "description": "Moving from Termux to the in-app server: stage: the app connects to the in-app server."
-  },
-  "migrationStepConnect": "Connect to On this phone",
-  "@migrationStepConnect": {
-    "description": "Moving from Termux to the in-app server: the last step of the copy."
-  },
-  "migrationStop": "Stop copying",
-  "@migrationStop": {
-    "description": "Moving from Termux to the in-app server: stops the running copy (asks first)."
-  },
-  "migrationStopTitle": "Stop copying?",
-  "@migrationStopTitle": {
-    "description": "Moving from Termux to the in-app server: the stop question's title."
-  },
-  "migrationStopBody": "You can resume later from This phone.",
-  "@migrationStopBody": {
-    "description": "Moving from Termux to the in-app server: the stop question's body."
-  },
-  "migrationStopKept": "What was copied so far is kept",
-  "@migrationStopKept": {
-    "description": "Moving from Termux to the in-app server: stop question: what is kept."
-  },
-  "migrationKeepGoing": "Keep copying",
-  "@migrationKeepGoing": {
-    "description": "Moving from Termux to the in-app server: stop question: keep the copy running."
-  },
-  "migrationCancelled": "Copy stopped. You can resume later.",
-  "@migrationCancelled": {
-    "description": "Moving from Termux to the in-app server: the stopped state's title."
-  },
-  "migrationCancelledBody": "What was copied is kept, and Termux isn't changed.",
-  "@migrationCancelledBody": {
-    "description": "Moving from Termux to the in-app server: the stopped state's body after Stop."
-  },
-  "migrationStoppedLeaving": "It stopped because the app left the screen: Android doesn't let it run in the background. What was copied is kept.",
-  "@migrationStoppedLeaving": {
-    "description": "Moving from Termux to the in-app server: the stopped state's body when leaving the app stopped it."
-  },
-  "migrationResume": "Resume copying",
-  "@migrationResume": {
-    "description": "Moving from Termux to the in-app server: resumes the saved copy."
-  },
-  "migrationNeedsSpace": "More free space is needed before copying.",
-  "@migrationNeedsSpace": {
-    "description": "Moving from Termux to the in-app server: the low-space state's title."
-  },
-  "migrationNeedsSpaceBody": "Needs about {needed}, and {free} is free. Free up space on this phone, or copy fewer items.",
-  "@migrationNeedsSpaceBody": {
-    "description": "Moving from Termux to the in-app server: the low-space state's body.",
-    "placeholders": {
-      "needed": {
-        "type": "String"
-      },
-      "free": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationNeedsSpaceBodyUnknown": "Needs about {needed}, and the free space couldn't be read. Free up space on this phone, or copy fewer items.",
-  "@migrationNeedsSpaceBodyUnknown": {
-    "description": "Moving from Termux to the in-app server: the low-space state's body when free space could not be read.",
-    "placeholders": {
-      "needed": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationChooseFewer": "Choose fewer items",
-  "@migrationChooseFewer": {
-    "description": "Moving from Termux to the in-app server: low space: back to the review."
-  },
-  "migrationNeedsBuiltin": "Set up On this phone first.",
-  "@migrationNeedsBuiltin": {
-    "description": "Moving from Termux to the in-app server: the state when OpenCode inside the app is not installed."
-  },
-  "migrationNeedsBuiltinBody": "Your projects move into OpenCode inside this app, so it needs setting up. Setup installs Linux and {runtime}, then this continues here.",
-  "@migrationNeedsBuiltinBody": {
-    "description": "Moving from Termux to the in-app server: why OpenCode 2 setup comes first.",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationSetUpBuiltin": "Set up On this phone",
-  "@migrationSetUpBuiltin": {
-    "description": "Moving from Termux to the in-app server: starts the in-app server's setup."
-  },
-  "migrationSetupFailed": "Setup couldn't start. Try again, or set it up from This phone.",
-  "@migrationSetupFailed": {
-    "description": "Moving from Termux to the in-app server: setup could not be started."
-  },
-  "migrationTermuxNotAnswering": "Termux isn't answering",
-  "@migrationTermuxNotAnswering": {
-    "description": "Moving from Termux to the in-app server: title when Termux cannot be reached."
-  },
-  "migrationTermuxUnavailable": "Open Termux, then try again.",
-  "@migrationTermuxUnavailable": {
-    "description": "Moving from Termux to the in-app server: way forward when Termux cannot be reached."
-  },
-  "migrationOpenTermux": "Open Termux",
-  "@migrationOpenTermux": {
-    "description": "Moving from Termux to the in-app server: opens the Termux app."
-  },
-  "migrationFailedTitle": "The move stopped",
-  "@migrationFailedTitle": {
-    "description": "Moving from Termux to the in-app server: the failed state's title; the body says why in plain words."
-  },
-  "migrationSourceChanged": "Files changed during copying. Try again when Termux is idle.",
-  "@migrationSourceChanged": {
-    "description": "Moving from Termux to the in-app server: failure: files changed in Termux while copying."
-  },
-  "migrationSourceBusy": "Termux is finishing the previous step. Try again shortly.",
-  "@migrationSourceBusy": {
-    "description": "Moving from Termux to the in-app server: failure: Termux is still busy with the last step."
-  },
-  "migrationUnsupportedFiles": "This item contains files that cannot be copied safely.",
-  "@migrationUnsupportedFiles": {
-    "description": "Moving from Termux to the in-app server: failure: links, sockets or external Git worktrees."
-  },
-  "migrationUnsupportedFilesFix": "Links, sockets and Git worktrees can't be copied. Remove them in Termux and try again, or copy that project by hand.",
-  "@migrationUnsupportedFilesFix": {
-    "description": "Moving from Termux to the in-app server: way forward for files that cannot be copied."
-  },
-  "migrationLinkedFileUnreadable": "Some of this project's Git history can't be read in Termux, so it can't be moved safely.",
-  "@migrationLinkedFileUnreadable": {
-    "description": "Moving from Termux to the in-app server: failure: a Git object link points at a Termux-private file that could not be read."
-  },
-  "migrationLinkedFileUnreadableFix": "Open Termux, run git fsck in that project to see what is missing, then try again. Nothing was changed on your phone.",
-  "@migrationLinkedFileUnreadableFix": {
-    "description": "Moving from Termux to the in-app server: way forward for unreadable Git object links."
-  },
-  "migrationTooLarge": "This item exceeds the migration size or file limit.",
-  "@migrationTooLarge": {
-    "description": "Moving from Termux to the in-app server: failure: an item is too big."
-  },
-  "migrationTooLargeFix": "Each item can hold up to 512 MB and 20,000 files. Delete build folders such as node_modules in Termux, then try again.",
-  "@migrationTooLargeFix": {
-    "description": "Moving from Termux to the in-app server: way forward for an item that is too big."
-  },
-  "migrationVerificationFailed": "The copy could not be verified. Your Termux files are unchanged.",
-  "@migrationVerificationFailed": {
-    "description": "Moving from Termux to the in-app server: failure: the copied archive did not match."
-  },
-  "migrationDestinationChanged": "Imported files changed. They will not be overwritten.",
-  "@migrationDestinationChanged": {
-    "description": "Moving from Termux to the in-app server: failure: moved files were changed afterwards."
-  },
-  "migrationDestinationChangedFix": "The files in On this phone stay as you left them.",
-  "@migrationDestinationChangedFix": {
-    "description": "Moving from Termux to the in-app server: what happens to changed files."
-  },
-  "migrationStorageFailed": "The copy could not be saved. Check phone storage and try again.",
-  "@migrationStorageFailed": {
-    "description": "Moving from Termux to the in-app server: failure: writing the copy failed."
-  },
-  "migrationTimedOut": "This step took too long. Keep the app open and resume.",
-  "@migrationTimedOut": {
-    "description": "Moving from Termux to the in-app server: failure: a step ran out of time."
-  },
-  "migrationSelectionChanged": "Use the saved migration selection to resume.",
-  "@migrationSelectionChanged": {
-    "description": "Moving from Termux to the in-app server: failure: the selection does not match the saved one."
-  },
-  "migrationConnectionFailed": "Files are copied, but On this phone could not connect.",
-  "@migrationConnectionFailed": {
-    "description": "Moving from Termux to the in-app server: failure: the files are in, the connection failed."
-  },
-  "migrationFailureCode": "Reason",
-  "@migrationFailureCode": {
-    "description": "Moving from Termux to the in-app server: Details label: the fixed reason code."
-  },
-  "migrationFailureItem": "Item",
-  "@migrationFailureItem": {
-    "description": "Moving from Termux to the in-app server: Details label: the item being copied when it stopped."
-  },
-  "migrationOpenThisPhone": "Open This phone",
-  "@migrationOpenThisPhone": {
-    "description": "Moving from Termux to the in-app server: opens This phone for the in-app server."
-  },
-  "migrationDoneTitle": "Moved from Termux",
-  "@migrationDoneTitle": {
-    "description": "Moving from Termux to the in-app server: the finished state's title."
-  },
-  "migrationDone": "Files copied. Your Termux server is still available.",
-  "@migrationDone": {
-    "description": "Moving from Termux to the in-app server: the finished state's body."
-  },
-  "migrationSignInAgain": "Sign in to your AI providers again",
-  "@migrationSignInAgain": {
-    "description": "Moving from Termux to the in-app server: next step: provider sign-in on the in-app server."
-  },
-  "migrationSignInAgainNamed": "{names} appear in your Termux settings. Sign in here to use them.",
-  "@migrationSignInAgainNamed": {
-    "description": "Moving from Termux to the in-app server: next step detail with the provider names.",
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationSignInAgainAny": "Sign-ins never move from Termux. Until you sign in here, replies use OpenCode's free model, which is slower.",
-  "@migrationSignInAgainAny": {
-    "description": "Moving from Termux to the in-app server: next step detail when provider names are unknown."
-  },
-  "migrationProjectsWhere": "Your projects",
-  "@migrationProjectsWhere": {
-    "description": "Moving from Termux to the in-app server: next step: where the projects are."
-  },
-  "migrationProjectsWhereBody": "In the folder {folder} in On this phone",
-  "@migrationProjectsWhereBody": {
-    "description": "Moving from Termux to the in-app server: where the projects are, e.g. 'termux-0123abcd'.",
-    "placeholders": {
-      "folder": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationExportsWhere": "Private copies",
-  "@migrationExportsWhere": {
-    "description": "Moving from Termux to the in-app server: next step: where the private copies are."
-  },
-  "migrationExportsWhereBody": "{items}: saved in On this phone, not turned on",
-  "@migrationExportsWhereBody": {
-    "description": "Moving from Termux to the in-app server: which private copies were saved.",
-    "placeholders": {
-      "items": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationRemoveTermux": "Remove the Termux server when you're ready",
-  "@migrationRemoveTermux": {
-    "description": "Moving from Termux to the in-app server: next step: removing Termux is the person's choice."
-  },
-  "migrationRemoveTermuxBody": "Nothing is removed for you. Until then it keeps working, and you can switch back to it on Servers.",
-  "@migrationRemoveTermuxBody": {
-    "description": "Moving from Termux to the in-app server: why and how Termux stays."
-  },
-  "migrationOpenBuiltin": "Open On this phone",
-  "@migrationOpenBuiltin": {
-    "description": "Moving from Termux to the in-app server: the finished state's primary: goes to the in-app server's home."
-  },
-  "migrationDetailProjects": "Projects folder",
-  "@migrationDetailProjects": {
-    "description": "Moving from Termux to the in-app server: Details label: the projects' folder inside the in-app Linux."
-  },
-  "migrationDetailExports": "Private copies folder",
-  "@migrationDetailExports": {
-    "description": "Moving from Termux to the in-app server: Details label: the private copies' folder inside the in-app Linux."
-  },
-  "migrationUnfinishedTitle": "The move didn't finish",
-  "@migrationUnfinishedTitle": {
-    "description": "Moving from Termux to the in-app server: shown after the app was closed during a copy."
-  },
-  "migrationUnfinishedBody": "Resume to carry on where it stopped. What was already copied is kept, and Termux isn't changed.",
-  "@migrationUnfinishedBody": {
-    "description": "Moving from Termux to the in-app server: the unfinished copy's body."
-  },
-  "migrationUnavailableTitle": "The move can't start",
-  "@migrationUnavailableTitle": {
-    "description": "Moving from Termux to the in-app server: the app could not prepare its private storage."
-  },
-  "migrationUnavailableBody": "The app couldn't prepare its private storage for the copy. Try again, and if it keeps happening, restart the app.",
-  "@migrationUnavailableBody": {
-    "description": "Moving from Termux to the in-app server: way forward when the migration cannot be prepared."
-  },
-  "migrationRowBody": "Copy your projects to the server on this phone. Termux stays as it is.",
-  "@migrationRowBody": {
-    "description": "Moving from Termux to the in-app server: This phone row: what moving does."
-  },
-  "migrationRowResume": "Resume moving to On this phone",
-  "@migrationRowResume": {
-    "description": "Moving from Termux to the in-app server: This phone row: a copy that did not finish."
-  },
-  "migrationRowResumeBody": "Stopped before it finished. What was copied is kept.",
-  "@migrationRowResumeBody": {
-    "description": "Moving from Termux to the in-app server: This phone row: the unfinished copy's detail."
-  },
-  "migrationRowRunning": "Moving to On this phone",
-  "@migrationRowRunning": {
-    "description": "Moving from Termux to the in-app server: This phone row: a copy is running."
-  },
-  "migrationRowDoneBody": "Remove the Termux server when you're ready.",
-  "@migrationRowDoneBody": {
-    "description": "Moving from Termux to the in-app server: This phone row: after the move."
-  },
-  "migrationOffer": "Move your Termux projects into this app? Termux stays as it is.",
-  "@migrationOffer": {
-    "description": "Moving from Termux to the in-app server: one-time offer under the Termux server row on Servers."
-  },
-  "migrationOfferAction": "Review what moves",
-  "@migrationOfferAction": {
-    "description": "Moving from Termux to the in-app server: the offer's action: opens the review; nothing starts yet."
-  },
   "integrationsSignInUncertainNext": "Check the server before you start again",
   "@integrationsSignInUncertainNext": {
     "description": "Providers: after 'Sign-in may not have started' on a provider's row (neutral, not needs-you): the way forward. The row's sheet offers to forget it on this phone."
-  },
-  "teamHomeLastKnownTasks": "Tasks as of {time}",
-  "@teamHomeLastKnownTasks": {
-    "description": "AI Team page while Android has the phone's team stopped: label over the tasks as the app last read them (dimmed, not live). {time} is a clock time, or a date and time before today.",
-    "placeholders": {
-      "time": {
-        "type": "String",
-        "example": "10:42 AM"
-      }
-    }
-  },
-  "teamHomeLastKnownAgents": "Agents as of {time}",
-  "@teamHomeLastKnownAgents": {
-    "description": "AI Team page while Android has the phone's team stopped: label over the agents as the app last read them (dimmed, not live). {time} is a clock time, or a date and time before today.",
-    "placeholders": {
-      "time": {
-        "type": "String",
-        "example": "10:42 AM"
-      }
-    }
-  },
-  "teamHomeStoppedStartFirst": "Start the team again to give it a task or open one.",
-  "@teamHomeStoppedStartFirst": {
-    "description": "AI Team page while Android has the phone's team stopped: why Start a task is off and why the last-known tasks do not open."
   },
   "inAppServerStartExitedBody": "OpenCode closed by itself while it was starting. Open setup to see its log, or start it again.",
   "@inAppServerStartExitedBody": {
@@ -26776,137 +24414,6 @@
         "type": "String"
       }
     }
-  },
-  "termuxProblemAccessHeard": "OpenCode is running in Termux, but this app can't reach Termux yet. Allow access and it connects.",
-  "@termuxProblemAccessHeard": {
-    "description": "Termux problem line: OpenCode answered on this phone but the app lacks Termux's Run commands permission."
-  },
-  "termuxProblemAccessNeeded": "This app can't reach Termux yet. Allow access so it can find OpenCode there and connect.",
-  "@termuxProblemAccessNeeded": {
-    "description": "Termux problem line: the app lacks Termux's Run commands permission (usual after the app's storage was cleared)."
-  },
-  "termuxProblemAccessBlocked": "Android blocked Termux access for this app. In this app's permissions, turn on “Run commands in Termux environment”.",
-  "@termuxProblemAccessBlocked": {
-    "description": "Termux problem line: Android no longer shows the permission question; only the app's settings page can grant it."
-  },
-  "termuxProblemOtherAppsOff": "Termux doesn't take commands from other apps yet. One line in Termux allows it.",
-  "@termuxProblemOtherAppsOff": {
-    "description": "Termux problem line: allow-external-apps is off in Termux."
-  },
-  "termuxProblemAsleep": "Termux didn't answer. Android may have put it to sleep. Open Termux to wake it.",
-  "@termuxProblemAsleep": {
-    "description": "Termux problem line: Termux did not answer a command in time."
-  },
-  "termuxProblemNotAnswering": "{runtime} is set up in Termux but isn't answering. A restart usually brings it back.",
-  "@termuxProblemNotAnswering": {
-    "description": "Termux problem line: Termux says OpenCode runs but OpenCode does not answer.",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxProblemNotInstalled": "Termux isn't on this phone. Install it again, or set up On this phone instead.",
-  "@termuxProblemNotInstalled": {
-    "description": "Termux problem line: Termux is not installed."
-  },
-  "termuxProblemOutdated": "This Termux is too old for the app to use. Install the current Termux from F-Droid.",
-  "@termuxProblemOutdated": {
-    "description": "Termux problem line: the installed Termux cannot take commands from other apps."
-  },
-  "termuxProblemUnknown": "This phone couldn't check on {runtime} in Termux. Try again in a moment.",
-  "@termuxProblemUnknown": {
-    "description": "Termux problem line: something else failed; retrying may help.",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxFixAllowAccess": "Allow access to Termux",
-  "@termuxFixAllowAccess": {
-    "description": "Termux fix action: shows Android's permission question."
-  },
-  "termuxFixOpenPermissions": "Open this app's permissions",
-  "@termuxFixOpenPermissions": {
-    "description": "Termux fix action: opens the app's Android settings page."
-  },
-  "termuxFixAllowOtherApps": "Allow other apps in Termux",
-  "@termuxFixAllowOtherApps": {
-    "description": "Termux fix action: opens the sheet with the line that turns on allow-external-apps."
-  },
-  "termuxFixOpenTermux": "Open Termux",
-  "@termuxFixOpenTermux": {
-    "description": "Termux fix action: opens Termux (wakes it; the copied line can be pasted there)."
-  },
-  "termuxFixRestart": "Restart {runtime} in Termux",
-  "@termuxFixRestart": {
-    "description": "Termux fix action: restarts OpenCode in Termux.",
-    "placeholders": {
-      "runtime": {
-        "type": "String"
-      }
-    }
-  },
-  "termuxFixGetTermux": "Get Termux",
-  "@termuxFixGetTermux": {
-    "description": "Termux fix action: opens the Termux download page."
-  },
-  "termuxFixGetCurrentTermux": "Get the current Termux",
-  "@termuxFixGetCurrentTermux": {
-    "description": "Termux fix action: opens the Termux download page to replace an old build."
-  },
-  "termuxOtherAppsTitle": "Allow other apps",
-  "@termuxOtherAppsTitle": {
-    "description": "Sheet title: the line that lets other apps run commands in Termux."
-  },
-  "termuxOtherAppsBody": "Paste this line in Termux and press Enter, then come back here. Open Termux copies it for you.",
-  "@termuxOtherAppsBody": {
-    "description": "Sheet body above the copyable allow-external-apps line."
-  },
-  "termuxLeadRunning": "OpenCode is running in Termux",
-  "@termuxLeadRunning": {
-    "description": "First screen, found on this phone: heading when OpenCode answered in Termux."
-  },
-  "termuxLeadAccessLine": "This app can't reach Termux yet. Allow access and it connects to your conversations.",
-  "@termuxLeadAccessLine": {
-    "description": "First screen, found on this phone: the line under 'OpenCode is running in Termux' when the app lacks Termux access (the heading already says OpenCode runs)."
-  },
-  "termuxLeadSetUp": "OpenCode is set up in Termux",
-  "@termuxLeadSetUp": {
-    "description": "First screen, found on this phone: heading when OpenCode is set up in Termux but not running or answering."
-  },
-  "termuxLeadTermuxOnly": "Termux is on this phone",
-  "@termuxLeadTermuxOnly": {
-    "description": "First screen, found on this phone: heading when only Termux is known."
-  },
-  "termuxLeadRunningBody": "Connect to pick up your conversations.",
-  "@termuxLeadRunningBody": {
-    "description": "First screen, found on this phone: the line under a running OpenCode in Termux."
-  },
-  "termuxLeadStoppedBody": "It's stopped. Start it to pick up your conversations.",
-  "@termuxLeadStoppedBody": {
-    "description": "First screen, found on this phone: the line under a stopped OpenCode in Termux."
-  },
-  "termuxLeadConnect": "Connect to the server in Termux",
-  "@termuxLeadConnect": {
-    "description": "First screen primary: connects to the running OpenCode in Termux."
-  },
-  "termuxLeadStart": "Start the server in Termux",
-  "@termuxLeadStart": {
-    "description": "First screen primary: starts the stopped OpenCode in Termux."
-  },
-  "termuxInAppInstead": "Set up On this phone instead",
-  "@termuxInAppInstead": {
-    "description": "Row: a fresh start with the server that runs inside this app, offered to a Termux user."
-  },
-  "termuxInAppInsteadDetail": "A fresh start that runs inside this app. No Termux needed.",
-  "@termuxInAppInsteadDetail": {
-    "description": "Row detail under Set up the in-app server instead."
-  },
-  "termuxInAppInsteadBlocked": "A fresh start inside this app. To bring your projects from Termux, fix Termux access first.",
-  "@termuxInAppInsteadBlocked": {
-    "description": "This phone row detail: the move needs Termux, which cannot be reached now."
   },
   "aboutBundledComponents": "Bundled components",
   "@aboutBundledComponents": {
@@ -27007,7 +24514,7 @@
       }
     }
   },
-  "manageSpaceKeptAll": "Termux, your computers and anything pushed to git stay",
+  "manageSpaceKeptAll": "Your computers and anything pushed to git stay",
   "@manageSpaceKeptAll": {
     "description": "Manage-space delete confirm: what is kept."
   },
@@ -27043,10 +24550,6 @@
   "manageSpaceKeptLabel": "Stays",
   "@manageSpaceKeptLabel": {
     "description": "Manage-space page: label of the list of what is kept."
-  },
-  "manageSpaceKeptTermux": "Termux and the projects in it",
-  "@manageSpaceKeptTermux": {
-    "description": "Manage-space page: kept row."
   },
   "manageSpaceKeptComputers": "Your computers and their servers",
   "@manageSpaceKeptComputers": {
@@ -27355,51 +24858,6 @@
         "type": "String"
       }
     }
-  },
-  "migrationReviewSpace": "Needs about {needed} · {free} free",
-  "@migrationReviewSpace": {
-    "description": "Moving from Termux to the in-app server: the review: the space the chosen items need while copying (a conservative estimate) and the phone's free space.",
-    "placeholders": {
-      "needed": {
-        "type": "String"
-      },
-      "free": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationReviewSpaceUnknown": "Needs about {needed} · Free space unknown",
-  "@migrationReviewSpaceUnknown": {
-    "description": "Moving from Termux to the in-app server: the review: the space the chosen items need when the phone's free space could not be read.",
-    "placeholders": {
-      "needed": {
-        "type": "String"
-      }
-    }
-  },
-  "migrationReviewSpaceShort": "Not enough free space for this. Choose fewer items, or free up space on this phone.",
-  "@migrationReviewSpaceShort": {
-    "description": "Moving from Termux to the in-app server: the review: why copying cannot start, and the way forward, when the chosen items need more than the free space."
-  },
-  "migrationDiscard": "Discard saved copy",
-  "@migrationDiscard": {
-    "description": "Moving from Termux to the in-app server: action on a stopped or unfinished copy: throw away the temporary copy and start over."
-  },
-  "migrationDiscardTitle": "Discard this saved copy?",
-  "@migrationDiscardTitle": {
-    "description": "Moving from Termux to the in-app server: confirmation title for discarding the saved copy."
-  },
-  "migrationDiscardBody": "Temporary copy files will be removed. Files already imported and everything in Termux will stay.",
-  "@migrationDiscardBody": {
-    "description": "Moving from Termux to the in-app server: confirmation body for discarding the saved copy."
-  },
-  "migrationDiscardFailed": "The saved copy couldn't be removed. Try again in a moment.",
-  "@migrationDiscardFailed": {
-    "description": "Moving from Termux to the in-app server: shown when discarding the saved copy failed; it stays and can be discarded again."
-  },
-  "migrationStopping": "Stopping…",
-  "@migrationStopping": {
-    "description": "Moving from Termux to the in-app server: shown while a stopped copy is still finishing its current step."
   },
   "pickerConnectProvider": "Connect a provider",
   "@pickerConnectProvider": {
@@ -29511,26 +26969,6 @@
   "@storageAccessRefusedBody": {
     "description": "Shared-storage project: body after access was not turned on."
   },
-  "storageTermuxTitle": "Allow Termux storage?",
-  "@storageTermuxTitle": {
-    "description": "Shared-storage project on a Termux server: title."
-  },
-  "storageTermuxBody": "Your server runs in Termux, and Termux cannot read your phone’s shared storage yet. Without that, this folder shows only hidden items such as .git.",
-  "@storageTermuxBody": {
-    "description": "Shared-storage project on a Termux server: body."
-  },
-  "storageTermuxAllow": "Open Termux",
-  "@storageTermuxAllow": {
-    "description": "Shared-storage project on a Termux server: opens Termux to run termux-setup-storage."
-  },
-  "storageTermuxStillTitle": "Allow storage in Termux",
-  "@storageTermuxStillTitle": {
-    "description": "Shared-storage project on a Termux server: title of the instruction after Termux opened."
-  },
-  "storageTermuxStillBody": "In Termux, allow storage when Android asks (the command is termux-setup-storage), then open the folder again.",
-  "@storageTermuxStillBody": {
-    "description": "Shared-storage project on a Termux server: what to do."
-  },
   "filesAccessNeededTitle": "Files are hidden",
   "@filesAccessNeededTitle": {
     "description": "Files: title when a shared-storage folder lists only hidden items and access is off."
@@ -29538,10 +26976,6 @@
   "filesAccessNeededBody": "This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.",
   "@filesAccessNeededBody": {
     "description": "Files: body for the missing-access notice."
-  },
-  "filesAccessNeededTermuxBody": "This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.",
-  "@filesAccessNeededTermuxBody": {
-    "description": "Files: body for the missing-access notice on a Termux server."
   },
   "storageRestartTitle": "Restart to open folder?",
   "@storageRestartTitle": {
@@ -30524,7 +27958,7 @@
       }
     }
   },
-  "agentsSignInTerminalIntro": "{agent} opens its sign-in page. Sign in there with your Claude account, then come back. If {agent} asks for a code, copy it on the page and choose Paste.",
+  "agentsSignInTerminalIntro": "{agent} opens its sign-in page. Sign in there with your Claude account and come back: {agent} finishes on its own. Only if the page shows a code, copy it and choose Paste.",
   "@agentsSignInTerminalIntro": {
     "description": "Sign-in terminal: what to do while Claude's own sign-in runs",
     "placeholders": {
@@ -39878,18 +37312,6 @@
       }
     }
   },
-  "gitRepairAskingTermux": "Copying {done} of {total} Git files from Termux…",
-  "@gitRepairAskingTermux": {
-    "description": "Repair sheet: Termux copies the missing files back",
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "gitRepairChecking": "Checking the project with Git…",
   "@gitRepairChecking": {
     "description": "Repair sheet: last step, Git checks the project"
@@ -39928,34 +37350,6 @@
   "gitRepairStart": "Start the conversation",
   "@gitRepairStart": {
     "description": "Repair sheet: after success, closes and sends the first message again"
-  },
-  "gitRepairTermuxNotAllowedTitle": "Files are in Termux",
-  "@gitRepairTermuxNotAllowedTitle": {
-    "description": "Repair sheet: the files are in Termux and the app may not run commands there yet"
-  },
-  "gitRepairTermuxNotAllowedBody": "Allow the app to run commands in Termux, and it copies them back.",
-  "@gitRepairTermuxNotAllowedBody": {
-    "description": "Repair sheet: what Allow does"
-  },
-  "gitRepairAllow": "Allow and repair",
-  "@gitRepairAllow": {
-    "description": "Repair sheet: asks for Termux's Run commands permission, then repairs"
-  },
-  "gitRepairTermuxNoAnswerTitle": "Termux didn't answer",
-  "@gitRepairTermuxNoAnswerTitle": {
-    "description": "Repair sheet: Termux did not run the copy"
-  },
-  "gitRepairTermuxNoAnswerBody": "Open Termux once so it starts, come back here, and repair again.",
-  "@gitRepairTermuxNoAnswerBody": {
-    "description": "Repair sheet: way forward when Termux did not answer"
-  },
-  "gitRepairAgain": "Repair again",
-  "@gitRepairAgain": {
-    "description": "Repair sheet: runs the repair again"
-  },
-  "gitRepairOpenTermux": "Open Termux",
-  "@gitRepairOpenTermux": {
-    "description": "Repair sheet: opens the Termux app"
   },
   "gitRepairCannotTitle": "Can't repair {project}",
   "@gitRepairCannotTitle": {
@@ -41413,14 +38807,6 @@
   "@thisPhoneAnswerStopFailed": {
     "description": "This phone: the answer when a stop failed"
   },
-  "thisPhoneAnswerSwitchStopped": "The switch didn't finish",
-  "@thisPhoneAnswerSwitchStopped": {
-    "description": "This phone: the answer when a switch between OpenCode versions stopped half way"
-  },
-  "thisPhoneAnswerTermux": "Can't reach Termux",
-  "@thisPhoneAnswerTermux": {
-    "description": "This phone: the answer when the app cannot reach Termux; the line under it says why and the button fixes it"
-  },
   "thisPhoneAnswerRecovery": "The server can't restart safely",
   "@thisPhoneAnswerRecovery": {
     "description": "This phone: the answer when the app cannot safely identify its old processes; the line says to force stop and reopen"
@@ -42062,10 +39448,6 @@
   "welcomeMoreWays": "More ways to set up",
   "@welcomeMoreWays": {
     "description": "First-run welcome's quiet text action: opens phone setup's own page (Termux, choosing what to install, an address)"
-  },
-  "welcomeDemoLine": "A simulated conversation",
-  "@welcomeDemoLine": {
-    "description": "First-run welcome, the Just show me row's one line when a server was found on the phone: the demo is offline and simulated"
   },
   "kitProgressRingPercent": "{percent}%",
   "@kitProgressRingPercent": {
@@ -44095,7 +41477,7 @@
   "@phoneFileInstallBody": {
     "description": "Body of the install question for an .apk on this phone; the app never installs silently"
   },
-  "phoneFileInstallAction": "Install…",
+  "phoneFileInstallAction": "Install app…",
   "@phoneFileInstallAction": {
     "description": "Confirm button that hands an .apk to Android's installer"
   },
@@ -44116,7 +41498,7 @@
   "@phoneFileOpenAction": {
     "description": "Confirm button that hands a phone file to Android's app chooser"
   },
-  "phoneFileFindTitle": "Open it in Files",
+  "phoneFileFindTitle": "Find the file",
   "@phoneFileFindTitle": {
     "description": "Title when this version cannot hand a phone file to another app"
   },
@@ -44150,6 +41532,200 @@
       },
       "folder": {
         "type": "String"
+      }
+    }
+  },
+  "integrationsProvidersLoadFailed": "Could not load providers",
+  "@integrationsProvidersLoadFailed": {
+    "description": "Providers page: headline when the list of providers did not load (issue #124); the body says why"
+  },
+  "integrationsMcpServersLoadFailed": "Could not load MCP servers",
+  "@integrationsMcpServersLoadFailed": {
+    "description": "Providers and MCP page: headline when the list of MCP servers did not load; the body says why"
+  },
+  "integrationsResourcesLoadFailed": "Could not load MCP resources",
+  "@integrationsResourcesLoadFailed": {
+    "description": "Providers and MCP page: headline when the list of MCP resources did not load; the body says why"
+  },
+  "integrationsListFailedBody": "The server didn't send this list. Try again.",
+  "@integrationsListFailedBody": {
+    "description": "Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text"
+  },
+  "integrationsFolderMissing": "This project's folder isn't on the server any more. Open another project.",
+  "@integrationsFolderMissing": {
+    "description": "Providers and MCP page: body when the server says the open project's folder does not exist on it"
+  },
+  "integrationsProvidersUnsupported": "This server doesn't list providers",
+  "@integrationsProvidersUnsupported": {
+    "description": "Providers page: calm state when the server has no provider list (an older or newer server version); not an error"
+  },
+  "integrationsMcpServersUnsupported": "This server doesn't list MCP servers",
+  "@integrationsMcpServersUnsupported": {
+    "description": "MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error"
+  },
+  "integrationsResourcesUnsupported": "This server doesn't list MCP resources",
+  "@integrationsResourcesUnsupported": {
+    "description": "MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error"
+  },
+  "integrationsListUnsupportedBody": "Its version doesn't offer this list.",
+  "@integrationsListUnsupportedBody": {
+    "description": "Providers and MCP page: body under the 'This server doesn't list …' states"
+  },
+  "integrationsWaitingTitle": "Waiting for the server",
+  "@integrationsWaitingTitle": {
+    "description": "Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error"
+  },
+  "integrationsWaitingBody": "This page loads by itself once the server is connected.",
+  "@integrationsWaitingBody": {
+    "description": "Providers and MCP page: body under 'Waiting for the server'"
+  },
+  "crashOfferMessage": "OpenCode Mobile closed unexpectedly last time. Send a crash report?",
+  "@crashOfferMessage": {
+    "description": "Crash report offer: the one calm notice shown once after the app crashed. Nothing is sent by itself."
+  },
+  "crashOfferReview": "Review and send",
+  "@crashOfferReview": {
+    "description": "Crash report offer: opens Report a problem with the crash details pre-filled, to review before sending."
+  },
+  "crashOfferNotNow": "Not now",
+  "@crashOfferNotNow": {
+    "description": "Crash report offer: dismisses the offer for this crash."
+  },
+  "crashOfferReportTitle": "The app closed unexpectedly",
+  "@crashOfferReportTitle": {
+    "description": "Crash report offer: heading of Report a problem and the GitHub issue title for a crash report. Fixed words, never the exception."
+  },
+  "crashOfferSection": "Crash reports",
+  "@crashOfferSection": {
+    "description": "Privacy and data: section holding the crash report offer switch."
+  },
+  "crashOfferSettingTitle": "Offer crash reports",
+  "@crashOfferSettingTitle": {
+    "description": "Privacy and data: switch that lets the app offer a crash report after it closed unexpectedly."
+  },
+  "crashOfferSettingDetail": "After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.",
+  "@crashOfferSettingDetail": {
+    "description": "Privacy and data: what the crash report offer switch does."
+  },
+  "voiceAutoSetupUnknownNetwork": "This phone can't tell whether this connection costs data.",
+  "@voiceAutoSetupUnknownNetwork": {
+    "description": "First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows"
+  },
+  "termuxRetiredNotice": "Termux is no longer supported. Set up built-in Linux on this phone, or connect to your computer. Your projects in Termux are still there; copy them to the phone's shared storage or push them with Git to bring them over.",
+  "@termuxRetiredNotice": {
+    "description": "The one notice for someone whose saved setup ran OpenCode in Termux, which the app no longer supports. Termux is an app name."
+  },
+  "termuxRetiredSetUpLinux": "Set up built-in Linux",
+  "@termuxRetiredSetUpLinux": {
+    "description": "Action on the Termux notice: opens phone setup for the Linux built into the app."
+  },
+  "phoneSetupErrorNodeUnsupported": "This phone's system can't run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.",
+  "@phoneSetupErrorNodeUnsupported": {
+    "description": "Setup error when Node.js crashes on this phone's system in every safe mode the app tried (issue #117); the screen then offers connecting a computer"
+  },
+  "phoneSetupConnectComputer": "Connect a computer",
+  "@phoneSetupConnectComputer": {
+    "description": "Button on the failed phone setup screen when this phone cannot run Node.js: opens adding a server on a computer"
+  },
+  "telemetryConsentTitle": "Help improve OpenCode Mobile?",
+  "@telemetryConsentTitle": {
+    "description": "One-time question on the first start of a build that can send analytics: title."
+  },
+  "telemetryConsentBody": "If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.",
+  "@telemetryConsentBody": {
+    "description": "One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md."
+  },
+  "telemetryConsentSends": "Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.",
+  "@telemetryConsentSends": {
+    "description": "One-time analytics question: what is sent."
+  },
+  "telemetryConsentNever": "Never sent: your code, conversations, files, server addresses or keys. No advertising ID.",
+  "@telemetryConsentNever": {
+    "description": "One-time analytics question: what is never sent."
+  },
+  "telemetryConsentShare": "Share both",
+  "@telemetryConsentShare": {
+    "description": "One-time analytics question: the button that turns sharing on."
+  },
+  "telemetryConsentNotNow": "Not now",
+  "@telemetryConsentNotNow": {
+    "description": "One-time analytics question: the button that leaves sharing off and never asks again."
+  },
+  "telemetryUsageTitle": "Usage and app health",
+  "@telemetryUsageTitle": {
+    "description": "Privacy and data: switch for anonymous usage counts, performance and device ranges (Google Analytics for Firebase)."
+  },
+  "telemetryUsageDetail": "Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone's memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.",
+  "@telemetryUsageDetail": {
+    "description": "Privacy and data: what the usage switch sends. Must match PRIVACY.md."
+  },
+  "telemetryCrashesTitle": "Crash reports",
+  "@telemetryCrashesTitle": {
+    "description": "Privacy and data: switch for sending crash reports (Google Firebase Crashlytics)."
+  },
+  "telemetryCrashesDetail": "Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app's code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.",
+  "@telemetryCrashesDetail": {
+    "description": "Privacy and data: what the crash reports switch sends. Must match PRIVACY.md."
+  },
+  "telemetryConsentChoose": "Choose",
+  "@telemetryConsentChoose": {
+    "description": "One-time analytics question: the link that opens the two separate switches."
+  },
+  "telemetryConsentSave": "Save my choices",
+  "@telemetryConsentSave": {
+    "description": "One-time analytics question: the button that applies the two switches as set."
+  },
+  "sendReportTitle": "Send a problem report",
+  "@sendReportTitle": {
+    "description": "Settings > Help: row and sheet title for sending a redacted log to the developer."
+  },
+  "sendReportRowDetail": "Review a redacted log, then send it",
+  "@sendReportRowDetail": {
+    "description": "Settings > Help: row detail under Send a problem report."
+  },
+  "sendReportSubtitle": "This is everything the report holds. Nothing is sent until you tap Send.",
+  "@sendReportSubtitle": {
+    "description": "Send a problem report: sheet subtitle above the preview."
+  },
+  "sendReportSend": "Send",
+  "@sendReportSend": {
+    "description": "Send a problem report: the button that sends the previewed text."
+  },
+  "sendReportCollecting": "Collecting the report…",
+  "@sendReportCollecting": {
+    "description": "Send a problem report: shown while the preview is built."
+  },
+  "sendReportSentTitle": "Report sent",
+  "@sendReportSentTitle": {
+    "description": "Send a problem report: heading after the report was sent."
+  },
+  "sendReportSentBody": "Quote this report code if you open an issue on GitHub, so the developer can find your report.",
+  "@sendReportSentBody": {
+    "description": "Send a problem report: what the report code is for."
+  },
+  "sendReportFailed": "The report could not be sent. Check your connection and try again.",
+  "@sendReportFailed": {
+    "description": "Send a problem report: plain words when sending failed."
+  },
+  "sendReportDone": "Done",
+  "@sendReportDone": {
+    "description": "Send a problem report: closes the sheet after sending."
+  },
+  "reportCodeLabel": "Report code",
+  "@reportCodeLabel": {
+    "description": "Report code row label (Settings > About and the sent report)."
+  },
+  "reportCodeCopy": "Copy report code",
+  "@reportCodeCopy": {
+    "description": "Tooltip of the copy button next to the report code."
+  },
+  "chatSendFailureSignInAgain": "{agent} needs you to sign in again",
+  "@chatSendFailureSignInAgain": {
+    "description": "Chat: why a message wasn't sent: the agent's earlier sign-in ran out or could not be renewed (Claude Code: OAuth session expired).",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
       }
     }
   }

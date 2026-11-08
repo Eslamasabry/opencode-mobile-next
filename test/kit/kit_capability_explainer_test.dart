@@ -18,7 +18,6 @@ import 'kit_motion_still.dart';
 
 const _hostColumns = <String, KitHost>{
   'builtin': KitHost.thisPhone,
-  'termux': KitHost.termux,
   'oc2Computer': KitHost.openCode2,
   'codex': KitHost.codex,
   'paseo': KitHost.paseo,
@@ -131,10 +130,10 @@ void main() {
   tearDown(KitCapabilities.debugReset);
 
   group('registry parity with capabilities.json', () {
-    test('every enable flow has an entry with a flow id; 21, distinct', () {
-      expect(KitEnableFlows.all, hasLength(21));
-      expect(KitEnableFlows.all.toSet(), hasLength(21));
-      expect(_flowCapabilities, hasLength(21));
+    test('every enable flow has an entry with a flow id; 20, distinct', () {
+      expect(KitEnableFlows.all, hasLength(20));
+      expect(KitEnableFlows.all.toSet(), hasLength(20));
+      expect(_flowCapabilities, hasLength(20));
       for (final capability in _flowCapabilities) {
         final entry = KitCapabilities.byId(capability);
         expect(entry, isNotNull, reason: capability);
@@ -157,7 +156,7 @@ void main() {
 
     test('every matrix capability has equal supported and partly sets', () {
       expect(KitCapabilities.all, hasLength(_matrix.length));
-      expect(_matrix, hasLength(34));
+      expect(_matrix, hasLength(33));
       for (final row in _matrix) {
         final id = row['capability'] as String;
         final hosts = row['hosts'] as Map<String, dynamic>;
@@ -177,7 +176,7 @@ void main() {
   group('registration', () {
     test('canEnable follows registerFlow; unregisteredFlows shrinks', () {
       expect(KitCapabilities.canEnable('voice.model'), isFalse);
-      expect(KitCapabilities.unregisteredFlows, hasLength(21));
+      expect(KitCapabilities.unregisteredFlows, hasLength(20));
       KitCapabilities.registerFlow(
         KitEnableFlows.voiceModelSetup,
         (context, request) async {},
@@ -187,7 +186,7 @@ void main() {
         KitCapabilities.unregisteredFlows,
         isNot(contains(KitEnableFlows.voiceModelSetup)),
       );
-      expect(KitCapabilities.unregisteredFlows, hasLength(20));
+      expect(KitCapabilities.unregisteredFlows, hasLength(19));
       // No flow at all: never enable.
       expect(KitCapabilities.canEnable('flag:sessionDiff'), isFalse);
     });
@@ -234,11 +233,10 @@ void main() {
     });
   });
 
-  group('the 21 enable flows', () {
+  group('the 20 enable flows', () {
     for (final capability in [
       'server.any',
       'phone.builtin',
-      'phone.termux',
       'server.oc2',
       'server.paseo',
       'claude.local',

@@ -8,10 +8,8 @@ import 'package:opencode_mobile/ui/widgets/saved_server_connection_card.dart';
 Widget _card({
   String? error,
   int attempts = 1,
-  bool termux = true,
   bool codex = false,
   bool tokenRequired = false,
-  VoidCallback? onTermux,
   VoidCallback? onPassword,
   VoidCallback? onCertificate,
   VoidCallback? onToken,
@@ -24,12 +22,10 @@ Widget _card({
       baseUrl: url,
       error: error,
       attempts: attempts,
-      supportsTermux: termux,
       usesConnectionToken: codex,
       requiresTokenReentry: tokenRequired,
       onChangeServer: () {},
       onRetry: () {},
-      onOpenTermuxSetup: onTermux,
       onUpdatePassword: onPassword,
       onReviewCertificate: onCertificate,
       onUpdateToken: onToken,
@@ -57,7 +53,6 @@ void main() {
                   baseUrl: 'http://127.0.0.1:4097',
                   error: null,
                   attempts: 1,
-                  supportsTermux: false,
                   inAppServer: true,
                   startingInAppServer: starting,
                   onStartPhoneServer: () {},
@@ -110,7 +105,6 @@ void main() {
               baseUrl: 'http://127.0.0.1:4097',
               error: 'IllegalStateException: ownershipUnknown',
               attempts: 1,
-              supportsTermux: false,
               inAppServer: true,
               inAppStartFailed: true,
               inAppStartFailedBody:
@@ -155,15 +149,11 @@ void main() {
     expect(find.text('Try again'), findsNothing);
   });
 
-  testWidgets('loopback keeps retry primary and Termux setup secondary', (
+  testWidgets('loopback keeps retry primary and never mentions Termux', (
     tester,
   ) async {
-    var opened = false;
     await tester.pumpWidget(
-      _card(
-        error: 'Health check failed: connection refused',
-        onTermux: () => opened = true,
-      ),
+      _card(error: 'Health check failed: connection refused'),
     );
     expect(find.text('Nothing answered on this phone'), findsOneWidget);
     // What to check is under Details, below the actions (standard §3).
@@ -171,33 +161,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('kit-state-details')));
     await tester.pumpAndSettle();
     expect(find.text('What to check'), findsOneWidget);
-    expect(find.textContaining('Termux'), findsWidgets);
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('saved-server-open-termux')),
-    );
-    await tester.tap(find.byKey(const ValueKey('saved-server-open-termux')));
-    expect(opened, isTrue);
-    // Retry is primary; optional setup is not presented as the diagnosis.
-    expect(
-      find.byKey(const ValueKey('saved-server-retry-primary')),
-      findsOneWidget,
-    );
-    expect(
-      tester.widget(find.byKey(const ValueKey('saved-server-open-termux'))),
-      isA<KitButton>().having((b) => b.role, 'role', KitButtonRole.tertiary),
-    );
-  });
-
-  testWidgets('remote failures do not offer a local Termux setup shortcut', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _card(
-        error: 'connection refused',
-        url: 'https://work.example',
-        onTermux: () {},
-      ),
-    );
+    expect(find.textContaining('Termux'), findsNothing);
     expect(
       find.byKey(const ValueKey('saved-server-open-termux')),
       findsNothing,
@@ -293,11 +257,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _card(
-        codex: true,
-        error: 'Health check failed: connection refused',
-        onTermux: () {},
-      ),
+      _card(codex: true, error: 'Health check failed: connection refused'),
     );
     expect(find.text('Codex listener unavailable'), findsOneWidget);
     expect(
@@ -314,7 +274,6 @@ void main() {
       bool startFailed = false,
       VoidCallback? onStart,
       VoidCallback? onSetup,
-      VoidCallback? onTermux,
     }) => MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
@@ -323,10 +282,8 @@ void main() {
           baseUrl: 'http://127.0.0.1:4097',
           error: error,
           attempts: 1,
-          supportsTermux: false,
           onChangeServer: () {},
           onRetry: () {},
-          onOpenTermuxSetup: onTermux,
           onStartPhoneServer: onStart ?? () {},
           inAppServer: true,
           startingInAppServer: starting,
@@ -343,7 +300,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       var started = 0;
-      await tester.pumpWidget(inApp(onStart: () => started++, onTermux: () {}));
+      await tester.pumpWidget(inApp(onStart: () => started++));
       expect(find.text('OpenCode inside the app is stopped'), findsOneWidget);
       expect(find.text('Start and connect'), findsOneWidget);
       expect(find.textContaining('Termux'), findsNothing);
@@ -409,11 +366,10 @@ void main() {
         theme: AppTheme.light(),
         home: Scaffold(
           body: SavedServerConnectionCard(
-            profileName: 'This device (Termux)',
-            baseUrl: 'http://127.0.0.1:4096',
-            error: 'Cannot reach http://127.0.0.1:4096: Connection refused',
+            profileName: 'This phone',
+            baseUrl: 'http://127.0.0.1:4097',
+            error: 'Cannot reach http://127.0.0.1:4097: Connection refused',
             attempts: 1,
-            supportsTermux: true,
             onChangeServer: () {},
             onRetry: () {},
             onStartPhoneServer: () {},
@@ -466,14 +422,14 @@ void main() {
         theme: AppTheme.light(),
         home: Scaffold(
           body: SavedServerConnectionCard(
-            profileName: 'This device (Termux)',
-            baseUrl: 'http://127.0.0.1:4096',
-            error: 'Cannot reach http://127.0.0.1:4096: Connection refused',
+            profileName: 'This phone',
+            baseUrl: 'http://127.0.0.1:4097',
+            error: 'Cannot reach http://127.0.0.1:4097: Connection refused',
             attempts: 1,
-            supportsTermux: true,
             onChangeServer: () {},
             onRetry: () {},
             onStartPhoneServer: () {},
+            inAppServer: true,
           ),
         ),
       ),

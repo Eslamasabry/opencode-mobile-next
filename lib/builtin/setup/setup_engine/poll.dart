@@ -27,14 +27,8 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     if (following || _foreground()) {
       try {
         await _refresh(timeout: readTimeout);
-        _hostAbsent = false;
       } on BuiltinLinuxException catch (error) {
-        if (_termuxAbsent(error)) {
-          // Expected on a phone without Termux: not a failure to report.
-          _hostAbsent = true;
-        } else {
-          debugPrint(KitRedact.text('setup: status poll failed: $error'));
-        }
+        debugPrint(KitRedact.text('setup: status poll failed: $error'));
       } catch (error, stack) {
         // Polling is the only way the screens see the job, and the only way
         // the app's own step gets run: one bad read must never end it.
@@ -47,7 +41,7 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     } else if (_jobRunning || _handoverUncertain) {
       _pollIdle = false;
       _poll = Timer(pollInterval, _tick);
-    } else if (_progress.watched && !_hostAbsent) {
+    } else if (_progress.watched) {
       // Nothing runs: a page merely shows the last job. A job this engine
       // starts brings the next read forward (see [_ensurePolling]).
       _pollIdle = true;
@@ -58,14 +52,6 @@ extension _SetupEnginePoll on ChannelSetupEngine {
       _poll = null;
     }
   }
-
-  /// Termux is not there to ask (not installed, or RUN_COMMAND refused).
-  bool _termuxAbsent(BuiltinLinuxException error) =>
-      host == SetupHostKind.termux &&
-      !_jobRunning &&
-      !_handoverUncertain &&
-      (error.code == 'permission_denied' ||
-          error.code == 'service_unavailable');
 
   Future<void> _refresh({Duration? timeout}) async {
     final record = await _read(timeout: timeout);
@@ -89,14 +75,6 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     if (_startingJobId != null && record.jobId != _startingJobId) return;
     _show(record);
     _followAppStep(record);
-    if (host == SetupHostKind.termux &&
-        record.state == 'running' &&
-        _cancelRequested) {
-      // A cancel during a lost start reply must survive until status recovers.
-      // Keep the flag through failures so polling retries before any finisher.
-      await _linux.cancelSetup();
-      return;
-    }
     if (record.state == 'running' &&
         record.current == SetupComponentIds.start &&
         _finishing != record.jobId) {
@@ -213,8 +191,7 @@ extension _SetupEnginePoll on ChannelSetupEngine {
           'setup.finish',
           () => finish(
             SetupFinishRequest(
-              host: host,
-              runtime: TermuxRuntime.parse(step.data['runtime']),
+              runtime: OpenCodeRuntime.parse(step.data['runtime']),
               openCodeChanged: step.data['openCodeChanged'] == 'true',
               version: version,
             ),
@@ -260,24 +237,20 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     final text = await _statusText(timeout ?? readTimeout, scope);
     final record = SetupJobRecord.parse(text);
     if (text != null && text.trim().isNotEmpty && record == null) {
-      throw BuiltinLinuxException(
-        host == SetupHostKind.termux
-            ? 'The saved Termux setup could not be read.'
-            : 'The saved phone setup could not be read.',
+      throw const BuiltinLinuxException(
+        'The saved phone setup could not be read.',
         code: 'setup_status_invalid',
       );
     }
     if (record != null) {
-      // Hostless records predate host selection and belong only to built-in.
-      final recordedHost = record.host ?? SetupHostKind.builtin.name;
-      if (recordedHost != host.name) {
+      // Hostless records predate host selection and belong to built-in. A
+      // record an older build wrote for another host is not this one's.
+      final recordedHost = record.host ?? builtinSetupHostName;
+      if (recordedHost != builtinSetupHostName) {
         throw const BuiltinLinuxException(
           'The saved setup belongs to a different host.',
           code: 'setup_host_mismatch',
         );
-      }
-      if (host == SetupHostKind.termux) {
-        TermuxSetupHost.validateParams(record.params);
       }
       _record = record;
     }
@@ -382,9 +355,33 @@ extension _SetupEnginePoll on ChannelSetupEngine {
     );
   }
 
+  /// The exit code a failed step reported (`data.exit`, or "exit 127" in its
+  /// error text); null when it gave none. Only the number is ever reported.
+  static int? _exitCodeOf(SetupJobComponent component) {
+    final fromData = int.tryParse(component.data['exit'] ?? '');
+    if (fromData != null) return fromData;
+    final match = RegExp(
+      r'\bexit(?: code| status)?[ :=]+(\d{1,3})\b',
+      caseSensitive: false,
+    ).firstMatch(component.error ?? '');
+    return match == null ? null : int.parse(match.group(1)!);
+  }
+
   /// Records each finished component, and the finished job, as spans timed
   /// by the native runner's own clock (setup.json's startedAt/endedAt).
   void _traceFinished(SetupJobRecord record) {
+    final counted = _countsForAnalytics(record);
+    for (final component in record.components) {
+      if (!counted) break;
+      if ((component.state == 'running' ||
+              component.state == 'done' ||
+              component.state == 'failed') &&
+          _traced.add('${record.jobId}/${component.id}/reached')) {
+        AppTelemetry.track(AnalyticsEvent.setupStepReached, {
+          'step': AnalyticsSetupStep.of(component.id),
+        });
+      }
+    }
     for (final component in record.components) {
       final started = component.startedAt;
       final ended = component.endedAt;
@@ -393,6 +390,39 @@ extension _SetupEnginePoll on ChannelSetupEngine {
           (component.state != 'done' && component.state != 'failed') ||
           !_traced.add('${record.jobId}/${component.id}')) {
         continue;
+      }
+      if (component.state == 'failed') {
+        final exit = _exitCodeOf(component);
+        AppTelemetry.failure('setup_step_failed', {
+          'step': component.id,
+          'exit': exit,
+        });
+        if (counted) {
+          final props = <String, Object?>{
+            'step': AnalyticsSetupStep.of(component.id),
+            'kind': analyticsFailureKind(exit: exit, error: component.error),
+            'compat_mode': _ranInCompatibilityMode(record, component),
+          };
+          if (component.id == SetupComponentIds.node) {
+            unawaited(
+              _nodeVariantForAnalytics(record, component).then((variant) {
+                if (variant != null) props['node_variant'] = variant;
+                AppTelemetry.track(AnalyticsEvent.setupStepFailed, props);
+              }),
+            );
+          } else {
+            AppTelemetry.track(AnalyticsEvent.setupStepFailed, props);
+          }
+        }
+      }
+      if (counted) {
+        unawaited(
+          _trackLinuxStep(
+            record,
+            component,
+            Duration(milliseconds: ended - started),
+          ),
+        );
       }
       PerfTrace.recordDuration(
         'setup.component',
@@ -411,7 +441,116 @@ extension _SetupEnginePoll on ChannelSetupEngine {
         attrs: {'state': record.state},
         error: record.state == 'done' ? null : record.state,
       );
+      if (counted && record.state == 'done') {
+        HealthFlow.linuxSetupStep(
+          step: 'done',
+          ok: true,
+          elapsed: Duration(milliseconds: record.updatedAt - record.startedAt),
+          freeGigabytes: AppTelemetry.health?.freeGigabytes,
+        );
+        AppTelemetry.track(AnalyticsEvent.setupDone, {
+          'minutes': AnalyticsBuckets.minutesOf(
+            Duration(milliseconds: record.updatedAt - record.startedAt),
+          ),
+        });
+      }
     }
+  }
+
+  /// The `linux_setup_step` word for [component], or null for a component
+  /// that is not a built-in Linux step (voice, the final start).
+  static String? _linuxStepWord(SetupJobComponent component, bool failed) =>
+      switch (component.id) {
+        SetupComponentIds.linux =>
+          failed &&
+                  analyticsFailureKind(
+                        exit: _exitCodeOf(component),
+                        error: component.error,
+                      ) ==
+                      AnalyticsFailureKind.network
+              ? 'download'
+              : 'unpack',
+        SetupComponentIds.essentials ||
+        SetupComponentIds.python => 'essentials',
+        SetupComponentIds.node => 'node',
+        SetupComponentIds.openCode => 'opencode',
+        SetupComponentIds.aiTeam => 'agents',
+        _ => null,
+      };
+
+  /// One finished step as `linux_setup_step`: result, time, exit and
+  /// signal kind, the Node safe mode that ran, and free space. Words and
+  /// ranges only; the step's error text is never sent.
+  Future<void> _trackLinuxStep(
+    SetupJobRecord record,
+    SetupJobComponent component,
+    Duration elapsed,
+  ) async {
+    final failed = component.state == 'failed';
+    final step = _linuxStepWord(component, failed);
+    if (step == null) return;
+    var compat = 'none';
+    if (component.id == SetupComponentIds.node) {
+      try {
+        final variant = await _nodeVariantForAnalytics(record, component);
+        compat = switch (variant) {
+          AnalyticsNodeVariant.armcap => 'armcap',
+          AnalyticsNodeVariant.threads => 'threads',
+          AnalyticsNodeVariant.both => 'both',
+          _ => 'none',
+        };
+      } catch (_) {}
+    }
+    HealthFlow.linuxSetupStep(
+      step: step,
+      ok: !failed,
+      elapsed: elapsed,
+      exit: failed ? _exitCodeOf(component) : null,
+      compatMode: compat,
+      freeGigabytes: AppTelemetry.health?.freeGigabytes,
+    );
+  }
+
+  /// Whether [record] belongs in setup analytics: a job this app run saw
+  /// working, or one that changed in the last half hour. An old finished
+  /// job read again at start-up is not counted twice.
+  bool _countsForAnalytics(SetupJobRecord record) {
+    if (record.state == 'running') _traced.add('${record.jobId}/live');
+    if (_traced.contains('${record.jobId}/live')) return true;
+    final age = _clock().millisecondsSinceEpoch - record.updatedAt;
+    return age >= 0 && age < const Duration(minutes: 30).inMilliseconds;
+  }
+
+  /// The Node.js safe mode for a failed Node step: none worked when the
+  /// step gave up (node_compat.dart), else the one this phone kept, if any.
+  Future<AnalyticsNodeVariant?> _nodeVariantForAnalytics(
+    SetupJobRecord record,
+    SetupJobComponent component,
+  ) async {
+    final text = '${component.error ?? ''}\n${record.logTail}';
+    if (text.contains(NodeCompatFailure.unsupported)) {
+      return AnalyticsNodeVariant.noneWorked;
+    }
+    try {
+      final state = await NodeCompatStore.load();
+      return state == null ? null : AnalyticsNodeVariant.of(state.variant.name);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Whether [component] was run again in compatibility mode (issue #117):
+  /// its data says so, or the job's log shows the retry line.
+  bool _ranInCompatibilityMode(
+    SetupJobRecord record,
+    SetupJobComponent component,
+  ) {
+    if (component.data['compat'] == 'true') return true;
+    final labels = {
+      'Trying again in compatibility mode',
+      strings().phoneSetupStageCompat,
+    };
+    return labels.any((label) => record.logTail.contains('==> $label'));
   }
 
   void _resetFloors(String jobId) {

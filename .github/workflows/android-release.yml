@@ -1,9 +1,11 @@
 # Builds the Android sideload APK on a release tag as a Shorebird release with
 # the project's real signing key, proves the signer is the public upgrade
 # lineage and the version matches the tag, keeps the APK as a workflow artifact
-# for 90 days, and creates or updates a draft stable GitHub release for a tag.
-# A maintainer must inspect and publish the draft; this workflow never
-# announces it publicly.
+# for 90 days, and publishes a tag's release as a GitHub PRE-RELEASE (never
+# "latest"). Normal users and the in-app update notice see only promoted
+# releases; after one or two quiet days a maintainer promotes it with
+# `scripts/release.sh promote <tag> --publish`, which re-verifies the assets
+# first. Obtainium users who opt into pre-releases get it straight away.
 #
 # Every installable release is a Shorebird release so later Dart-only fixes
 # can ship as `scripts/release.sh patch` against the exact released version.
@@ -60,9 +62,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
         run: |
           set -euo pipefail
           missing=()
+          # Analytics and crash reports (opt-in) need the private Firebase config (owner 2026-11-08).
+          [ -n "$FIREBASE_B64" ] || missing+=(FIREBASE_GOOGLE_SERVICES_B64)
           [ -n "$KEYSTORE_B64" ]  || missing+=(RELEASE_KEYSTORE_BASE64)
           [ -n "$STORE_PASSWORD" ] || missing+=(RELEASE_STORE_PASSWORD)
           [ -n "$KEY_ALIAS" ]     || missing+=(RELEASE_KEY_ALIAS)
@@ -202,13 +207,24 @@ jobs:
             "keyPassword=$KEY_PASSWORD" \
             > android/key.properties
 
+      - name: Install the Firebase config (never in git, never printed)
+        env:
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/oc-firebase"
+          mkdir -p "$dir"
+          printf '%s' "$FIREBASE_B64" | base64 -d > "$dir/google-services-io.github.eslamasabry.opencode_mobile.json"
+          echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
+          echo "Firebase config installed"
+
       - name: Read previous published release APK size
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git fetch --force --tags origin
-          # The latest published release; a draft tag is never a baseline.
+          # The latest promoted release; a draft or pre-release is never a baseline.
           baseline="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)"
           echo "APK_BASELINE_TAG=$baseline" >> "$GITHUB_ENV"
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$baseline" > "$RUNNER_TEMP/apk-baseline.json"
@@ -432,7 +448,11 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Create draft stable GitHub release
+      # Published as a pre-release so a bad build reaches few people; only
+      # `scripts/release.sh promote` makes it latest. A draft left for this
+      # tag by hand is filled and published the same way; an already
+      # published release is never touched.
+      - name: Publish GitHub pre-release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -442,15 +462,22 @@ jobs:
           if gh release view "$GITHUB_REF_NAME" --json isDraft > "$RUNNER_TEMP/release-state.json"; then
             python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("isDraft") is True else "Refusing to overwrite a published release")' "$RUNNER_TEMP/release-state.json"
             gh release edit "$GITHUB_REF_NAME" \
-              --draft --prerelease=false \
+              --draft --prerelease \
               --title "OpenCode Mobile $version" \
               --notes-file dist/RELEASE_NOTES.md
             gh release upload "$GITHUB_REF_NAME" \
               dist/opencode-mobile-"$version"*.apk dist/SHA256SUMS --clobber
+            gh release edit "$GITHUB_REF_NAME" \
+              --draft=false --prerelease --latest=false
           else
             gh release create "$GITHUB_REF_NAME" \
-              --verify-tag --draft --prerelease=false \
+              --verify-tag --prerelease --latest=false \
               --title "OpenCode Mobile $version" \
               --notes-file dist/RELEASE_NOTES.md \
               dist/opencode-mobile-"$version"*.apk dist/SHA256SUMS
           fi
+          # Prove the outcome: published, a pre-release, and not latest.
+          gh release view "$GITHUB_REF_NAME" --json isDraft,isPrerelease > "$RUNNER_TEMP/release-published.json"
+          python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); sys.exit(0 if r.get("isDraft") is False and r.get("isPrerelease") is True else "Release is not a published pre-release")' "$RUNNER_TEMP/release-published.json"
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)"
+          [ "$latest" != "$GITHUB_REF_NAME" ] || { echo "::error::$GITHUB_REF_NAME became latest before promotion"; exit 1; }

@@ -47,13 +47,7 @@ void main() {
       addTearDown(tester.view.reset);
       final raw = Map<String, dynamic>.from(variant['payload'] as Map);
       final record = SetupJobRecord.parse(jsonEncode(raw))!;
-      final registry = setupComponents(
-        l10n,
-        params: record.params,
-        host: raw['host'] == 'termux'
-            ? SetupHostKind.termux
-            : SetupHostKind.builtin,
-      );
+      final registry = setupComponents(l10n, params: record.params);
       final progress = progressFromRecord(
         record,
         registry,

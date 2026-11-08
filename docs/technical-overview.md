@@ -107,30 +107,13 @@ on loopback: bind the server to `127.0.0.1` and bring the connection to
   password would cross it in clear text. Binding the server itself to a
   network interface is an advanced path, requires
   `OPENCODE_ALLOW_REMOTE_BIND=1`, and should only be taken behind TLS.
-- **On-device (Termux)** — tap **On-device (Termux)** on the Servers
-  screen. The app detects Termux (or opens its F-Droid page), walks you
-  through the one required unlock line, installs Ubuntu via proot-distro
-  plus Node and `@opencode/cli@2.1.1` in the chroot, launches
-  `opencode2 serve` detached, health-polls until live, and connects. A "Live
-  log in Termux" button streams install/server logs at any time. The native
-  side is
-  [`MainActivity.kt`](../android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt)
-  + [`lib/termux/bridge.dart`](../lib/termux/bridge.dart). (Why the chroot:
-  the managed installer uses the Linux binaries inside Ubuntu, whose glibc
-  environment shares the phone’s network stack. The app reaches it at
-  `127.0.0.1:4096`.) Prefer manual? Inside Termux:
-
-  ```bash
-  pkg install proot-distro
-  proot-distro install ubuntu
-  proot-distro login ubuntu     # then inside the chroot:
-    apt update && apt install -y nodejs npm
-    npm i -g @opencode/cli@2.1.1
-    opencode2 serve --hostname 127.0.0.1 --port 4096
-    exit
-  ```
-
-  Run `termux-wake-lock` to keep it alive.
+- **On this phone (built-in Linux)** — choose **On this phone** on the
+  Servers screen. Phone setup installs an Ubuntu inside the app (bundled
+  proot, no other app needed), then Node and OpenCode 2, starts
+  `opencode2 serve` on `127.0.0.1:4097` and connects
+  ([`lib/builtin/`](../lib/builtin/)). Termux is no longer supported
+  (2026-11-07): a connection saved for it by an older build stays as an
+  ordinary saved server, and the app shows one notice with the way forward.
 
 For a persistent Linux host, [docs/ubuntu-host.md](ubuntu-host.md) and
 [`scripts/host/ubuntu-opencode.sh`](../scripts/host/ubuntu-opencode.sh) install
@@ -233,6 +216,41 @@ dart run tool/prompt_test.dart http://127.0.0.1:4097   # needs model auth
 Stop only the scratch process you started; never target an owner server.
 
 
+### Crash reporting and setup analytics (opt-in)
+
+`lib/telemetry/` is the app's own reporting layer; app code depends only on
+`Telemetry`. Firebase Crashlytics (`firebase_crashlytics_adapter.dart`) and
+Google Analytics for Firebase (`firebase_analytics_adapter.dart`) are two
+`TelemetryAdapter`s joined by `CombinedTelemetryAdapter`. One consent switch,
+off by default (Settings > Privacy and data), covers both; nothing reaches an
+adapter without it.
+
+`Telemetry.track(AnalyticsEvent, props)` sends only the events and values in
+`analytics_events.dart` (`analyticsSchema`): fixed names, enum or bucket
+values, no free text. `screen_view` comes from `AnalyticsNavigatorObserver`
+(page kind via `AnalyticsScreen.of`), `feature_used` from
+`AppTelemetry.feature` at each feature, `app_open`/`session_length`/
+`update_installed` from `AnalyticsLifecycle`. The one-time question
+(`lib/ui/widgets/telemetry_consent.dart`, key `oc.telemetryConsentAsked`)
+shows on the root route once `TelemetryStartup.ready` says a vendor is built
+in. Adding an event means adding it there, to PRIVACY.md
+(English and `assets/l10n/PRIVACY.ar.md`), to README "What is sent" and to
+`test/telemetry_analytics_test.dart`. The manifest keeps analytics collection
+off until consent, removes the `AD_ID` permission and turns off advertising
+ID, SSAID, ad personalisation and automatic screen reporting. No BigQuery
+export or other paid Firebase product is used.
+
+The private Firebase file `google-services-io.github.eslamasabry.opencode_mobile.json`
+is never in git. `android/app/build.gradle.kts` looks for it in
+`OC_GOOGLE_SERVICES_DIR` (Gradle property or environment variable; default
+`~/.config/oc-app/firebase`), copies it to the git-ignored
+`android/app/google-services.json` and applies the Google Services and
+Crashlytics Gradle plugins only then (analytics needs only Google Services). Without it the app builds, the switch is
+not shown and the no-op reporter is used. For CI, `android-release.yml` would
+need the file from a secret (for example a base64 secret written into a
+directory named by `OC_GOOGLE_SERVICES_DIR` before the build); the workflow is
+unchanged until that secret exists.
+
 ## Releases and code push
 
 Every installable release is a Shorebird release, so later Dart-only fixes
@@ -244,13 +262,16 @@ can ship as patches. There are two ways to make one:
   `shorebird release android --build-name x.y.z --build-number N
   --flutter-version 3.47.1 --artifact apk`, with the same version derivation as
   `scripts/release.sh`. It signs with the `RELEASE_*` keystore secrets, checks
-  the APK signer, package and version, and stages a draft GitHub release. The
-  draft notes record `Shorebird release <version>, Flutter 3.47.1 (Shorebird
-  engine)`. Only a tag run uploads to Shorebird. A manual dispatch on a branch
-  builds with `--dry-run` and uploads nothing. `./scripts/release.sh github`
-  will not publish that draft unless the build run ran on the candidate tag and
-  its `Build and upload Shorebird release APK` step succeeded. It also refuses
-  a plain `flutter build apk` or a dry-run build.
+  the APK signer, package and version, and publishes a GitHub **pre-release**
+  (never "latest"). The notes record `Shorebird release <version>, Flutter
+  3.47.1 (Shorebird engine)`. Only a tag run uploads to Shorebird. A manual
+  dispatch on a branch builds with `--dry-run` and uploads nothing.
+  `./scripts/release.sh github` (verify only) proves the pre-release came from
+  a run on the candidate tag whose `Build and upload Shorebird release APK`
+  step succeeded, and refuses a plain `flutter build apk` or a dry-run build.
+- **Promotion** (E02-S90): after 1–2 quiet days,
+  `./scripts/release.sh promote v<x.y.z+N>` re-verifies SHA256SUMS and the
+  signer (dry-run); add `--publish` to make it non-pre-release and latest.
 - **Local sideload**: `./scripts/release.sh sideload --publish`.
 
 Shorebird accepts each version once. Once a tag run's Shorebird step has
@@ -306,7 +327,7 @@ lib/
 ├── paseo/         # Paseo agent adapter
 ├── state/         # profiles (Keystore secrets), ConnectionController,
 │                  #  offline queue, session drafts, review→prompt handoff
-├── termux/        # Dart side of the Termux RUN_COMMAND bridge
+├── builtin/       # built-in Linux: the phone's own Ubuntu, setup, agents
 ├── background/    # foreground service, live-session notifications, home widget
 ├── voice/         # sherpa-onnx Whisper: model manager, downloader, recognizer
 ├── update/        # Shorebird update ownership
@@ -321,13 +342,13 @@ tool/demo-video/         # Remotion showcase project
 
 A project under `/sdcard`, `/storage/emulated/N` or `/storage/XXXX-XXXX`
 (`lib/domain/shared_storage_path.dart`) is read by the server's host process:
-this app for OpenCode inside the app, Termux for the Termux server. Android 11+
+this app, for OpenCode inside the app. Android 11+
 shows such a folder to a process without storage access but hides other apps'
 non-media files, so it lists only dot-folders such as `.git`. Opening or
 creating one therefore goes through `SharedStorageAccessFlow` (explanation,
 then Android's "All files access" page, `oc/storage` / `StorageAccess.kt`,
-`MANAGE_EXTERNAL_STORAGE`), and `SharedStorageGate` names which host lacks
-access (app, or Termux via `ls /storage/emulated/0`). The Files tab shows
+`MANAGE_EXTERNAL_STORAGE`), and `SharedStorageGate` says when the app lacks
+access. The Files tab shows
 "Allow access to files" when such a folder lists only hidden entries. proot
 binds all of `/storage` and `/sdcard` until AI Team is on; from then on one
 confined launcher covers every built-in process, so only the exact folders the
@@ -353,8 +374,8 @@ UI talks to domain gateways, never directly to `api2/`, `codex/` or `paseo/`. Se
   [protocol notes](opencode2-protocol-notes.md) — the v2 lane
 - [docs/opencode2-ui-design.md](opencode2-ui-design.md) — locked UI
   decisions for v2 surfaces (forms, integrations, inbox)
-- [docs/opencode2-termux.md](opencode2-termux.md) — the on-device story
-  under OpenCode 2
+- [docs/opencode2-termux.md](opencode2-termux.md) — the retired Termux
+  path's research (history only)
 - [docs/design-inspiration.md](design-inspiration.md) — the researched
   pattern library behind the facelift
 - [docs/desktop-feasibility.md](desktop-feasibility.md) — historical Linux

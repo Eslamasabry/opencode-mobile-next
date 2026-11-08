@@ -3,14 +3,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
-import 'package:opencode_mobile/builtin/setup/aiteam_scripts.dart';
 import 'package:opencode_mobile/builtin/setup/component_removal.dart';
 import 'package:opencode_mobile/builtin/setup/components.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/builtin/team/builtin_team.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 
 SetupComponent _component(
   String id, {
@@ -108,20 +105,6 @@ class _Team extends BuiltinTeam {
   Future<void> remove() async {
     removeCalls++;
     if (probe != null) fakeLinux.probes[probe!] = 1;
-  }
-}
-
-/// Termux's team manager, answering `remove` as told.
-class _TermuxRuntime extends TermuxTeamRuntime {
-  _TermuxRuntime(this.onRemove);
-
-  final Future<TeamRuntimeStatus> Function() onRemove;
-  int removes = 0;
-
-  @override
-  Future<TeamRuntimeStatus> remove() {
-    removes++;
-    return onRemove();
   }
 }
 
@@ -604,49 +587,6 @@ void main() {
         (entry) => entry.component.id == 'aiteam',
       );
       expect(entry.block, ComponentRemovalBlock.unsupported);
-    });
-
-    test('Termux: the manager removes the team, then the component script '
-        'runs in the same Ubuntu', () async {
-      final fake = _SizedLinux({});
-      final runtime = _TermuxRuntime(
-        () async => const TeamRuntimeStatus(phase: TeamRuntimePhase.idle),
-      );
-      await ComponentRemovalService.termuxTeamRemover(
-        runtime: runtime,
-        host: fake,
-      )();
-      expect(runtime.removes, 1);
-      expect(fake.ran, [AiTeamScripts.removeScript]);
-    });
-
-    test('Termux: a failed manager step stops before any file goes, and '
-        'says only that it failed', () async {
-      final fake = _SizedLinux({});
-      final failed = _TermuxRuntime(
-        () async => const TeamRuntimeStatus(phase: TeamRuntimePhase.failed),
-      );
-      await expectLater(
-        ComponentRemovalService.termuxTeamRemover(
-          runtime: failed,
-          host: fake,
-        )(),
-        _blocked(ComponentRemovalBlock.failed),
-      );
-      final broken = _TermuxRuntime(
-        () async => throw const TermuxBridgeException(
-          'token=synthetic-secret',
-          code: 'aiteam_dispatch_failed',
-        ),
-      );
-      await expectLater(
-        ComponentRemovalService.termuxTeamRemover(
-          runtime: broken,
-          host: fake,
-        )(),
-        _blocked(ComponentRemovalBlock.failed),
-      );
-      expect(fake.ran, isEmpty);
     });
   });
 }

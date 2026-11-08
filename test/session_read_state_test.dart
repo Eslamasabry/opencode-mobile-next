@@ -492,7 +492,12 @@ void main() {
       // One row, no switch of its own: it says whether this server shares.
       final row = find.byKey(const ValueKey('share-session-views'));
       expect(row, findsOneWidget);
-      expect(find.byType(Switch), findsNothing);
+      // (The page's one switch is the crash report offer, E02-S91.)
+      expect(
+        find.descendant(of: row, matching: find.byType(Switch)),
+        findsNothing,
+      );
+      expect(find.byType(Switch), findsOneWidget);
       expect(
         find.descendant(of: row, matching: find.text('On')),
         findsOneWidget,

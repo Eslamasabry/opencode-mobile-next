@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../diagnostics/perf_trace.dart';
 import '../platform/app_installer.dart';
+import '../telemetry/flow_events.dart';
 import '../platform/platform_capabilities.dart';
 import 'desktop_release_check.dart' show buildNumberFromTag, isNewerRelease;
 import 'shorebird_update_notice.dart' show AppUpdateService, AppUpdateState;
@@ -300,6 +301,8 @@ class InAppUpdateService implements AppUpdateService {
     void Function(double fraction, int received, int total)? onProgress,
     CancelToken? cancelToken,
   }) async {
+    // What was being done when it failed: the one word `update_result` sends.
+    var failKind = 'other';
     try {
       final tempDir = await getTemporaryDirectory();
       final updateDir = Directory('${tempDir.path}/updates');
@@ -319,6 +322,7 @@ class InAppUpdateService implements AppUpdateService {
         } catch (_) {}
       }
 
+      failKind = 'download';
       await _dio.download(
         release.apkUrl,
         targetFile.path,
@@ -342,6 +346,7 @@ class InAppUpdateService implements AppUpdateService {
         options: Options(responseType: ResponseType.plain),
         cancelToken: cancelToken,
       );
+      failKind = 'checksum';
       final expected = expectedSha256(sums.data ?? '', release.apkName);
       final actual = await fileSha256(targetFile);
       if (expected == null || expected != actual) {
@@ -351,10 +356,23 @@ class InAppUpdateService implements AppUpdateService {
         throw StateError('The download does not match the release checksum');
       }
 
+      failKind = 'installer';
       final installed = await AppInstaller.installApk(targetFile.path);
+      if (!installed) {
+        HealthFlow.updateResult(
+          kind: 'in_app',
+          result: 'failed',
+          failKind: 'installer',
+        );
+      }
       return installed;
     } catch (e) {
       debugPrint('Failed to download and install update: $e');
+      HealthFlow.updateResult(
+        kind: 'in_app',
+        result: 'failed',
+        failKind: failKind,
+      );
       rethrow;
     }
   }

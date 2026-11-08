@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 import '../../l10n/app_localizations.dart';
 import '../../platform/local_file_open.dart';
@@ -32,7 +31,7 @@ Future<void> offerPhoneFile(
       action: KitAction(
         key: const ValueKey('phone-file-copy-path'),
         label: l10n.readerUiCopyPath,
-        onPressed: () => Clipboard.setData(ClipboardData(text: path)),
+        onPressed: () => KitCopy.copy(context, path, redact: false),
       ),
       alertKey: const ValueKey('phone-file-where'),
     );

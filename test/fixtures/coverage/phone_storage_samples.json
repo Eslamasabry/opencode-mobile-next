@@ -15,10 +15,6 @@
         "kind": "boolean"
       },
       {
-        "path": "termuxCanRead",
-        "kind": "boolean"
-      },
-      {
         "path": "confinedRunning",
         "kind": "boolean"
       },
@@ -41,7 +37,6 @@
         "server": "inApp",
         "accessGranted": false,
         "accessAfterAllow": false,
-        "termuxCanRead": true,
         "confinedRunning": false,
         "restartBack": true,
         "workRunning": false
@@ -70,13 +65,6 @@
           "probes": [
             "Folder not opened"
           ],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
-          "kind": "boolean",
-          "probes": [],
           "primary": false
         },
         {
@@ -109,7 +97,6 @@
         "server": "inApp",
         "accessGranted": false,
         "accessAfterAllow": true,
-        "termuxCanRead": true,
         "confinedRunning": false,
         "restartBack": true,
         "workRunning": false
@@ -136,81 +123,6 @@
           "path": "accessAfterAllow",
           "kind": "boolean",
           "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.confinedRunning",
-          "path": "confinedRunning",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.restartBack",
-          "path": "restartBack",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.workRunning",
-          "path": "workRunning",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        }
-      ]
-    },
-    {
-      "id": "storage_termux",
-      "kind": "storage",
-      "payload": {
-        "server": "termux",
-        "accessGranted": false,
-        "accessAfterAllow": true,
-        "termuxCanRead": false,
-        "confinedRunning": false,
-        "restartBack": true,
-        "workRunning": false
-      },
-      "fields": [
-        {
-          "key": "gate.server",
-          "path": "server",
-          "kind": "enum",
-          "probes": [
-            "Allow Termux storage?"
-          ],
-          "primary": false
-        },
-        {
-          "key": "gate.accessGranted",
-          "path": "accessGranted",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.accessAfterAllow",
-          "path": "accessAfterAllow",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
-          "kind": "boolean",
-          "probes": [
-            "Allow storage in Termux"
-          ],
           "primary": false
         },
         {
@@ -243,7 +155,6 @@
         "server": "remote",
         "accessGranted": false,
         "accessAfterAllow": true,
-        "termuxCanRead": true,
         "confinedRunning": false,
         "restartBack": true,
         "workRunning": false
@@ -266,13 +177,6 @@
         {
           "key": "gate.accessAfterAllow",
           "path": "accessAfterAllow",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
           "kind": "boolean",
           "probes": [],
           "primary": false
@@ -307,7 +211,6 @@
         "server": "inApp",
         "accessGranted": true,
         "accessAfterAllow": true,
-        "termuxCanRead": true,
         "confinedRunning": true,
         "restartBack": true,
         "workRunning": false
@@ -330,13 +233,6 @@
         {
           "key": "gate.accessAfterAllow",
           "path": "accessAfterAllow",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
           "kind": "boolean",
           "probes": [],
           "primary": false
@@ -375,7 +271,6 @@
         "server": "inApp",
         "accessGranted": true,
         "accessAfterAllow": true,
-        "termuxCanRead": true,
         "confinedRunning": true,
         "restartBack": true,
         "workRunning": true
@@ -398,13 +293,6 @@
         {
           "key": "gate.accessAfterAllow",
           "path": "accessAfterAllow",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
           "kind": "boolean",
           "probes": [],
           "primary": false
@@ -441,7 +329,6 @@
         "server": "inApp",
         "accessGranted": true,
         "accessAfterAllow": true,
-        "termuxCanRead": true,
         "confinedRunning": true,
         "restartBack": false,
         "workRunning": false
@@ -464,13 +351,6 @@
         {
           "key": "gate.accessAfterAllow",
           "path": "accessAfterAllow",
-          "kind": "boolean",
-          "probes": [],
-          "primary": false
-        },
-        {
-          "key": "gate.termuxCanRead",
-          "path": "termuxCanRead",
           "kind": "boolean",
           "probes": [],
           "primary": false

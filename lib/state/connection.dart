@@ -58,7 +58,6 @@ import '../domain/product_repository.dart';
 import '../domain/server_gateway.dart';
 import '../domain/server_probe.dart';
 import 'server_trust_probe.dart';
-import '../termux/managed_server_recovery.dart';
 import 'notification_preferences.dart';
 import 'nudges.dart';
 import 'tips.dart';
@@ -98,7 +97,6 @@ import '../l10n/app_localizations.dart';
 import '../platform/platform_capabilities.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../diagnostics/perf_trace.dart';
-import '../termux/bridge.dart';
 // A plain value type (no widgets): the person's effect choices.
 import 'effects.dart' show KitEffects, KitTextSize;
 import '../builtin/builtin_linux.dart';
@@ -117,7 +115,6 @@ import 'team_glance.dart';
 import 'orchestration_store.dart';
 import 'elsewhere_attention.dart';
 import 'profiles.dart';
-import 'termux_host_setup.dart' show ManagedRuntimeFlavor;
 import 'pending_auth.dart';
 import 'session_drafts.dart';
 import 'draft_attachments.dart';
@@ -158,6 +155,7 @@ import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
 import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
 import 'conversation_title_memory.dart';
+import '../telemetry/flow_events.dart';
 
 part 'connection/gen_ui.dart';
 part 'connection/connector_search.dart';
@@ -262,8 +260,6 @@ typedef V2GatewayPairFactory =
     ({ServerGateway gateway, ServerOperationsGateway operations}) Function(
       ServerProfile profile,
     );
-
-typedef LocalWakeLockEnsurer = Future<void> Function();
 
 typedef EventStreamFactory =
     LiveEventChannel Function({
@@ -497,7 +493,6 @@ class ConnectionController extends ChangeNotifier
   final AgentSignInHost Function()? _agentSignInHostFactory;
   final EventStreamFactory _eventStreamFactory;
   final EventStreamFactory? _globalEventStreamFactory;
-  final LocalWakeLockEnsurer _localWakeLockEnsurer;
   final DraftAttachmentVault _draftAttachmentVault;
   final PromptPhotoStore? _promptPhotoStore;
   late final PromptPhotoStore promptPhotos =
@@ -548,8 +543,8 @@ class ConnectionController extends ChangeNotifier
   /// [ConnectionController.agentBackend].
   final bool isAgentBackend;
 
-  /// Another saved server's conversations beside the app's main connection
-  /// (Termux while the app is on the in-app Ubuntu): like an agent backend
+  /// Another saved server's conversations beside the app's main connection:
+  /// like an agent backend
   /// it owns no profile-wide service and never becomes the active profile.
   /// Built by [ConnectionController.sideBackend].
   final bool isSideBackend;
@@ -675,7 +670,6 @@ class ConnectionController extends ChangeNotifier
         globalEventStreamFactory: main._globalEventStreamFactory,
         backgroundLive: main.backgroundLive,
         diagnostics: main.diagnostics,
-        localWakeLockEnsurer: main._localWakeLockEnsurer,
         draftAttachmentVault: main._draftAttachmentVault,
         promptPhotoStore: main._promptPhotoStore,
       );
@@ -712,7 +706,6 @@ class ConnectionController extends ChangeNotifier
     EventStreamFactory? globalEventStreamFactory,
     BackgroundLiveController? backgroundLive,
     AppDiagnosticsController? diagnostics,
-    LocalWakeLockEnsurer? localWakeLockEnsurer,
     DraftAttachmentVault? draftAttachmentVault,
     DraftAttachmentVault? stashAttachmentVault,
     PromptPhotoStore? promptPhotoStore,
@@ -746,8 +739,6 @@ class ConnectionController extends ChangeNotifier
        _globalEventStreamFactory =
            globalEventStreamFactory ??
            (eventStreamFactory == null ? _createGlobalEventStream : null),
-       _localWakeLockEnsurer =
-           localWakeLockEnsurer ?? TermuxBridge.ensureWakeLock,
        backgroundLive =
            backgroundLive ?? BackgroundLiveController(preferences: store.prefs),
        _widgetSnapshot = WidgetSessionSnapshot(prefs: store.prefs),
@@ -776,7 +767,6 @@ class ConnectionController extends ChangeNotifier
       this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
       this.backgroundLive.bindStatusActionHandler(_handleStatusAction);
       this.backgroundLive.bindWidgetActionHandler(_handleWidgetAction);
-      _syncProfileServices();
       profileMonitor.start();
       quotaMonitor.start();
       paseoUsageMonitor.start();
@@ -827,7 +817,6 @@ class ConnectionController extends ChangeNotifier
   /// nobody, so connecting does not rebuild the shell twice.
   void _profilesSaved() {
     if (_disposed) return;
-    _syncProfileServices();
     _syncSideConnections();
     final next = _profilesSignature();
     if (next == _profilesShown) return;
@@ -853,11 +842,7 @@ class ConnectionController extends ChangeNotifier
       foreground: !_lifecycleWasBackgrounded,
       backgroundAllowed: keepLiveInBackground && backgroundLive.active,
     );
-    if (keepLiveInBackground) {
-      _ensureLocalServerWakeLock();
-    } else {
-      _dismissAllCodingAlerts(clearActive: true);
-    }
+    if (!keepLiveInBackground) _dismissAllCodingAlerts(clearActive: true);
     if (!_disposed) notifyListeners();
   }
 
@@ -1085,9 +1070,6 @@ class ConnectionController extends ChangeNotifier
     _paseoUsageMonitor?.removeListener(_quotaMonitorChanged);
     _paseoUsageMonitor?.dispose();
     _usageSubscriptions?.dispose();
-    if (_ownsProfileServices) {
-      ManagedServerRecovery.disposeForPreferences(store.prefs);
-    }
     backgroundLive.removeListener(_backgroundLiveChanged);
     thermalPauseActive.removeListener(_publishLiveStatus);
     // A secondary backend borrows the main connection's.

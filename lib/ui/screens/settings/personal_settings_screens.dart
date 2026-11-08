@@ -22,6 +22,47 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
 
   ConnectionController get _controller => widget.controller;
 
+  /// "Offer to send crash reports" (E02-S91): only whether the app offers a
+  /// report after a crash; it never sends one by itself.
+  late bool _offerCrashReports = CrashReportOffer.enabled(
+    _controller.store.prefs,
+  );
+
+  /// "Usage and app health" and "Crash reports" (Google Firebase): both off
+  /// until the person turns them on; drive the vendor-neutral consents.
+  late final Telemetry _telemetry = telemetryOf(context);
+  late bool _sendUsage = _telemetry.usageConsented;
+  late bool _sendCrashes = _telemetry.crashesConsented;
+
+  Future<void> _setSendUsage(bool value) async {
+    setState(() => _sendUsage = value);
+    AppTelemetry.crumb('settings.change:privacy');
+    try {
+      await _telemetry.setUsageConsent(value);
+    } catch (_) {
+      if (mounted) setState(() => _sendUsage = !value);
+    }
+  }
+
+  Future<void> _setSendCrashes(bool value) async {
+    setState(() => _sendCrashes = value);
+    AppTelemetry.crumb('settings.change:privacy');
+    try {
+      await _telemetry.setCrashesConsent(value);
+    } catch (_) {
+      if (mounted) setState(() => _sendCrashes = !value);
+    }
+  }
+
+  Future<void> _setOfferCrashReports(bool value) async {
+    setState(() => _offerCrashReports = value);
+    try {
+      await CrashReportOffer.setEnabled(_controller.store.prefs, value);
+    } catch (_) {
+      if (mounted) setState(() => _offerCrashReports = !value);
+    }
+  }
+
   /// Rounded the way a phone's storage screens round: one decimal past a
   /// kilobyte, and never "0 B" for something that exists.
   static String formatBytes(int bytes) {
@@ -245,6 +286,41 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                 ],
               );
             },
+          ),
+          SizedBox(height: tokens.sectionGap),
+          KitRowGroup(
+            label: copy.crashOfferSection,
+            children: [
+              KitSwitchRow(
+                key: const ValueKey('privacy-offer-crash-reports'),
+                leading: KitRow.icon(context, AppIconography.bug),
+                title: copy.crashOfferSettingTitle,
+                supporting: copy.crashOfferSettingDetail,
+                supportingMaxLines: 3,
+                value: _offerCrashReports,
+                onChanged: (value) => unawaited(_setOfferCrashReports(value)),
+              ),
+              if (_telemetry.available) ...[
+                KitSwitchRow(
+                  key: const ValueKey('privacy-send-usage'),
+                  leading: KitRow.icon(context, AppIconography.shield),
+                  title: copy.telemetryUsageTitle,
+                  supporting: copy.telemetryUsageDetail,
+                  supportingMaxLines: 8,
+                  value: _sendUsage,
+                  onChanged: (value) => unawaited(_setSendUsage(value)),
+                ),
+                KitSwitchRow(
+                  key: const ValueKey('privacy-send-crashes'),
+                  leading: KitRow.icon(context, AppIconography.bug),
+                  title: copy.telemetryCrashesTitle,
+                  supporting: copy.telemetryCrashesDetail,
+                  supportingMaxLines: 6,
+                  value: _sendCrashes,
+                  onChanged: (value) => unawaited(_setSendCrashes(value)),
+                ),
+              ],
+            ],
           ),
           // The policy itself: About's old Privacy tab lives here now
           // (P3.10), so what the app keeps and what it sends sit together.

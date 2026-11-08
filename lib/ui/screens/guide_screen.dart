@@ -20,8 +20,7 @@ import 'servers_screen.dart' show ServersRouteRequest;
 
 /// Setup guide. Leads with the one story a first-time user needs — run
 /// `opencode2 pair`, scan or paste, start talking — and folds every other
-/// route (HTTPS proxies, SSH tunnels, older `opencode serve` servers, Termux
-/// internals) behind an "Advanced" disclosure so nobody has to pick a path
+/// route (HTTPS proxies, SSH tunnels, older `opencode serve` servers) behind an "Advanced" disclosure so nobody has to pick a path
 /// before they know what the app does.
 ///
 /// Step 2 acts as well as explains: its words name the buttons of the Add
@@ -35,10 +34,10 @@ class GuideScreen extends StatelessWidget {
   Widget _body(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = _sharedCopy(context);
-    // The on-device path is Termux, which is Android-only. A desktop reader
+    // The on-device path is built-in Linux, Android-only. A desktop reader
     // is told about the one path that exists for them rather than a second
     // one they cannot take.
-    final onDevice = platformCapabilities.supportsTermux;
+    final onDevice = platformCapabilities.supportsThisPhone;
     final canScan = platformCapabilities.supportsQrPairing;
     final rails = EdgeInsets.symmetric(horizontal: tokens.gutter);
     return ListView(
@@ -159,9 +158,7 @@ class GuideScreen extends StatelessWidget {
               leading: KitRow.icon(context, AppIconography.settingsAdvanced),
               title: l10n.e7SharedAdvanced,
               supporting: TextSpan(
-                text: onDevice
-                    ? l10n.e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals
-                    : l10n.e7SharedHTTPSSSHTunnelsOlderServers,
+                text: l10n.e7SharedHTTPSSSHTunnelsOlderServers,
               ),
               supportingMaxLines: 2,
               children: [
@@ -195,25 +192,6 @@ class GuideScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (onDevice)
-                        _Section(
-                          key: const ValueKey('guide-termux-section'),
-                          title: l10n.e7SharedOnDeviceViaTermuxAutomated,
-                          children: [
-                            KitText(l10n.e7SharedUseTheOnDeviceTermuxCardOn),
-                            KitNotice(
-                              message: l10n
-                                  .e7SharedOnlyTwoTapsNeedYouPersonallyDownloading,
-                              icon: AppIconography.idea,
-                              liveRegion: false,
-                            ),
-                            KitText(l10n.e7SharedPreferManualInsideTermuxRun),
-                            const Cmd(_termuxManual, script: true),
-                            KitText(
-                              l10n.e7SharedTheChrootSharesTheNetworkStackSo,
-                            ),
-                          ],
-                        ),
                       _Section(
                         title: l10n.e7SharedSecurityNotes,
                         children: [
@@ -241,18 +219,6 @@ class GuideScreen extends StatelessWidget {
       ],
     );
   }
-
-  static const _termuxManual =
-      '# plain-Termux npm installs are broken upstream\n'
-      '# (npm os=android -> no opencode-android-arm64 package),\n'
-      '# so we use an Ubuntu chroot:\n'
-      'pkg install proot-distro\n'
-      'proot-distro install ubuntu\n'
-      'proot-distro login ubuntu\n'
-      '  apt update && apt install -y nodejs npm\n'
-      '  npm i -g @opencode/cli@2.1.1\n'
-      '  opencode2 serve --hostname 127.0.0.1 --port 4096 &\n'
-      'exit';
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +278,7 @@ class _Step extends StatelessWidget {
 class _Section extends StatelessWidget {
   final String title;
   final List<Widget> children;
-  const _Section({super.key, required this.title, required this.children});
+  const _Section({required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {

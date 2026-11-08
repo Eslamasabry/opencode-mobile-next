@@ -322,6 +322,22 @@ extension _ChatNotices on _ChatScreenState {
     );
   }
 
+  /// A session-level error text (the banner) read as an agent's refusal: the
+  /// conversation's own agent, when it is one of the phone's.
+  AgentRunFailure? _agentRunForError(String text) {
+    final provider = _messages
+        .map((message) => message.info.providerID)
+        .whereType<String>()
+        .lastOrNull;
+    if (provider == null || !_conn.isAgentBackend) return null;
+    if (AgentCatalog.builtIn.byId(provider) == null) return null;
+    return AgentRunFailure(
+      reason: text,
+      provider: provider,
+      model: _conn.sessionsById[widget.sessionID]?.model,
+    );
+  }
+
   /// This conversation's model picker, to leave a model that cannot answer.
   VoidCallback? _chooseAnotherModel() => _conn.isIsolated
       ? null

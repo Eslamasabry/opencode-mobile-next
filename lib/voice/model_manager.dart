@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../telemetry/telemetry_provider.dart';
 import 'model_download.dart';
 import 'device.dart';
 import 'model_manifest.dart';
@@ -309,6 +310,10 @@ class VoiceModelManager extends ChangeNotifier {
       progress = null;
     } catch (exception) {
       if (!_isCurrent(generation)) return;
+      AppTelemetry.failure('voice_model_download_failed', {
+        'pack': pack.id,
+        'error': exception.runtimeType.toString(),
+      });
       error = exception;
       state = VoiceModelState.error;
     } finally {

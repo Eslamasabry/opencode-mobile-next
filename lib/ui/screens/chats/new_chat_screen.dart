@@ -25,6 +25,8 @@ import '../agents/agents_text.dart' show agentChoosable;
 import 'chats_host.dart';
 import 'claude_import_screen.dart';
 import 'git_repair_sheet.dart';
+import '../../../telemetry/analytics_events.dart';
+import '../../../telemetry/telemetry_provider.dart';
 
 /// Opens the start screen for a new chat. [directory] is the project to
 /// start in; null uses the last project the person used on this server.
@@ -347,6 +349,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
   /// Chooses an agent card; a refusal is said in plain words.
   Future<void> _selectAgent(PhoneAgentsSource agents, String id) async {
     try {
+      AppTelemetry.feature(AnalyticsFeature.agentSwitch);
       await agents.selectChatAgent(id);
     } catch (error) {
       if (!mounted) return;

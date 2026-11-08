@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/platform/app_installer.dart';
+import 'package:opencode_mobile/telemetry/telemetry_provider.dart';
 import 'package:opencode_mobile/update/desktop_release_check.dart';
 import 'package:opencode_mobile/update/in_app_update_service.dart';
+
+import 'support/telemetry_recorder.dart';
 
 class _RecordingAdapter implements HttpClientAdapter {
   _RecordingAdapter(this.responses);
@@ -36,7 +39,132 @@ class _RecordingAdapter implements HttpClientAdapter {
   }
 }
 
+/// Serves an APK and its SHA256SUMS, or fails the APK download.
+class _ApkAdapter implements HttpClientAdapter {
+  _ApkAdapter({required this.apk, required this.sums, this.failApk = false});
+  final Uint8List apk;
+  final String sums;
+  final bool failApk;
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path.endsWith('.apk')) {
+      if (failApk) throw DioException(requestOptions: options);
+      return ResponseBody.fromBytes(apk, 200);
+    }
+    return ResponseBody.fromString(sums, 200);
+  }
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('update_result from the in-app updater', () {
+    const base =
+        'https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v9';
+    final release = AppReleaseInfo(
+      tag: 'v9',
+      name: 'v9',
+      changelog: '',
+      apkUrl: '$base/opencode-mobile-9.apk',
+      apkName: 'opencode-mobile-9.apk',
+      apkSize: 4,
+      htmlUrl: 'https://github.com/x',
+      buildNumber: 9,
+      checksumsUrl: '$base/SHA256SUMS',
+    );
+    final apk = Uint8List.fromList([1, 2, 3, 4]);
+    final good = '${sha256.convert(apk)}  opencode-mobile-9.apk\n';
+    late Directory temp;
+    late RecordingAdapter adapter;
+
+    setUp(() async {
+      temp = await Directory.systemTemp.createTemp('upd');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (call) async => temp.path,
+          );
+      adapter = RecordingAdapter();
+      AppTelemetry.install(
+        await startedService(adapter, usage: true, crashes: true),
+      );
+    });
+    tearDown(() async {
+      AppInstaller.installApkOverride = null;
+      AppTelemetry.reset();
+      await temp.delete(recursive: true);
+    });
+
+    InAppUpdateService service(_ApkAdapter http) =>
+        InAppUpdateService(dio: Dio()..httpClientAdapter = http);
+
+    test('a download that fails is a failed update of kind download', () async {
+      await expectLater(
+        service(
+          _ApkAdapter(apk: apk, sums: good, failApk: true),
+        ).downloadAndInstall(release: release),
+        throwsA(anything),
+      );
+      await settleTelemetry();
+      expect(adapter.events.single.$1, 'update_result');
+      expect(adapter.events.single.$2, {
+        'kind': 'in_app',
+        'result': 'failed',
+        'fail_kind': 'download',
+      });
+    });
+
+    test(
+      'a download that does not match the checksum is kind checksum',
+      () async {
+        await expectLater(
+          service(
+            _ApkAdapter(apk: apk, sums: '${'0' * 64}  opencode-mobile-9.apk\n'),
+          ).downloadAndInstall(release: release),
+          throwsA(anything),
+        );
+        await settleTelemetry();
+        expect(adapter.events.single.$2['fail_kind'], 'checksum');
+      },
+    );
+
+    test('an installer that would not open is kind installer; one that '
+        'opened reports nothing yet', () async {
+      AppInstaller.installApkOverride = (_) async => false;
+      expect(
+        await service(
+          _ApkAdapter(apk: apk, sums: good),
+        ).downloadAndInstall(release: release),
+        isFalse,
+      );
+      await settleTelemetry();
+      expect(adapter.events.single.$2, {
+        'kind': 'in_app',
+        'result': 'failed',
+        'fail_kind': 'installer',
+      });
+
+      adapter.events.clear();
+      AppInstaller.installApkOverride = (_) async => true;
+      expect(
+        await service(
+          _ApkAdapter(apk: apk, sums: good),
+        ).downloadAndInstall(release: release),
+        isTrue,
+      );
+      await settleTelemetry();
+      expect(adapter.events, isEmpty);
+    });
+  });
+
   test('the APK is hashed in chunks, with the same result as whole', () async {
     final dir = await Directory.systemTemp.createTemp('apk');
     addTearDown(() => dir.delete(recursive: true));

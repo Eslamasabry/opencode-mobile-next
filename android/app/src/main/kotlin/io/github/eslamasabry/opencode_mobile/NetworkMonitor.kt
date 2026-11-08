@@ -50,7 +50,8 @@ class NetworkMonitor(context: Context, messenger: BinaryMessenger) : EventChanne
             }
 
             override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) = deliver {
-                if (network == defaultNetwork) sink?.success(reading(caps))
+                // Capabilities alone in callbacks.
+                if (network == defaultNetwork) sink?.success(reading(caps, activeMetered = false))
             }
 
             override fun onLost(network: Network) = deliver {
@@ -108,17 +109,21 @@ class NetworkMonitor(context: Context, messenger: BinaryMessenger) : EventChanne
             // Do not combine capabilities with a different default network.
             if (manager.activeNetwork != network) unknown()
             else if (caps == null) unknown(connected = true)
-            else reading(caps)
+            else reading(caps, activeMetered = manager.isActiveNetworkMetered)
         } catch (_: Exception) {
             unknown()
         }
     }
 
-    private fun reading(caps: NetworkCapabilities): Map<String, Any?> {
+    private fun reading(caps: NetworkCapabilities, activeMetered: Boolean): Map<String, Any?> {
         val wifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
         val mobile = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
         val transport = when {
-            caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> "unknown"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ->
+                if (VpnMetering.classify(
+                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
+                        activeMetered,
+                    ) == VpnMetering.UNMETERED) "other" else "unknown"
             wifi && mobile -> "unknown"
             wifi -> "wifi"
             mobile -> "mobile"

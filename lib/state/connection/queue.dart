@@ -739,6 +739,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
             automationPolicy.allows(AutomationBehavior.reconcileQueuedSends));
     _flushingOfflineQueue = true;
     var sent = 0;
+    var failed = 0;
     var touched = false;
     try {
       await _reconcileQueuedCommandReceipts();
@@ -977,6 +978,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
             stop = true;
           }
         }
+        if (!delivered && (dispatched || stop || markerRefused)) failed += 1;
         if (delivered && !recorded) {
           // The server has this prompt; the device could not record that.
           // Say so — a plain "unconfirmed" would invite a resend that is a
@@ -1024,6 +1026,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
         offlineFlushRevision += 1;
       }
       if (touched && !_disposed) _notifyListeners();
+      if (touched) HealthFlow.queueFlush(sent: sent, failed: failed);
       if (_flushOfflineQueueAgain) {
         _flushOfflineQueueAgain = false;
         if (!_disposed) unawaited(flushOfflineQueue());

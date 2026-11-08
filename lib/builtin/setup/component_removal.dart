@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import '../../termux/bridge.dart' show TermuxBridgeException;
-import '../../termux/team_runtime.dart';
 import '../builtin_linux.dart';
 import '../team/builtin_team.dart';
 import 'aiteam_scripts.dart';
@@ -78,8 +76,8 @@ class ComponentRemovalService {
   final List<SetupComponent> _registry;
   final BuiltinTeam? _team;
 
-  /// Removes AI Team on a host whose team is not the in-app [BuiltinTeam]
-  /// (Termux: [termuxTeamRemover]). Without it or [_team], AI Team is
+  /// Removes AI Team where the team is not the in-app [BuiltinTeam] (tests
+  /// pass their own). Without it or [_team], AI Team is
   /// [ComponentRemovalBlock.unsupported].
   final Future<void> Function()? _removeTeam;
   final _busy = ValueNotifier(false);
@@ -316,31 +314,4 @@ class ComponentRemovalService {
   }
 
   static const _sizeTimeout = Duration(seconds: 20);
-
-  /// AI Team's removal on the Termux host: the Termux team manager stops
-  /// the supervisor and deletes its programs and store (`aiteam.sh
-  /// remove`), then the component's own [AiTeamScripts.removeScript] runs
-  /// in the same Ubuntu through [host], so both hosts leave the same
-  /// nothing behind (the presence probe then finds no trace). Throws on a
-  /// failed step; no manager text crosses this API.
-  static Future<void> Function() termuxTeamRemover({
-    required TermuxTeamRuntime runtime,
-    required BuiltinLinux host,
-  }) => () async {
-    try {
-      final status = await runtime.remove();
-      if (status.phase == TeamRuntimePhase.failed) {
-        throw const ComponentRemovalException(ComponentRemovalBlock.failed);
-      }
-    } on TermuxBridgeException {
-      throw const ComponentRemovalException(ComponentRemovalBlock.failed);
-    }
-    final result = await host.run(
-      AiTeamScripts.removeScript,
-      timeout: const Duration(minutes: 5),
-    );
-    if (!result.ok) {
-      throw const ComponentRemovalException(ComponentRemovalBlock.failed);
-    }
-  };
 }

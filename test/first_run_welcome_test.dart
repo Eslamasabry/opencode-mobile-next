@@ -225,12 +225,9 @@ void main() {
     final (store, controller) = await _state();
     addTearDown(controller.dispose);
     final previousEngine = PhoneSetup.engine;
-    final previousTermux = PhoneSetup.termux;
     PhoneSetup.engine = FakeSetupEngine();
-    PhoneSetup.termux = FakeSetupEngine();
     addTearDown(() {
       PhoneSetup.engine = previousEngine;
-      PhoneSetup.termux = previousTermux;
     });
     // Phone setup's own page reads the device for its pre-flight.
     answerVoiceDeviceProbe();

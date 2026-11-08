@@ -203,20 +203,45 @@ class KeepAliveInfo {
     this.manufacturer = '',
     this.brand = '',
     this.batteryOptimizationIgnored = false,
+    this.model = '',
+    this.androidRelease = '',
+    this.sdk = 0,
   });
 
   factory KeepAliveInfo.fromMap(Object? raw) {
     if (raw is! Map) return const KeepAliveInfo();
+    final sdk = raw['sdk'];
     return KeepAliveInfo(
       manufacturer: (raw['manufacturer'] ?? '').toString(),
       brand: (raw['brand'] ?? '').toString(),
       batteryOptimizationIgnored: raw['batteryOptimizationIgnored'] == true,
+      model: plainFact(raw['model']),
+      androidRelease: plainFact(raw['release']),
+      sdk: sdk is int && sdk > 0 && sdk < 1000 ? sdk : 0,
     );
+  }
+
+  /// A short device fact, or '' when it is not plain letters and digits:
+  /// it may go in a public crash report, so nothing free-form passes.
+  static String plainFact(Object? value) {
+    if (value is! String) return '';
+    final text = value.trim();
+    if (text.isEmpty || text.length > 64) return '';
+    return RegExp(r'^[A-Za-z0-9 ._()+-]+$').hasMatch(text) ? text : '';
   }
 
   final String manufacturer;
   final String brand;
   final bool batteryOptimizationIgnored;
+
+  /// `Build.MODEL` ("SM-S918B"); '' when unknown or not plain.
+  final String model;
+
+  /// `Build.VERSION.RELEASE` ("15"); '' when unknown or not plain.
+  final String androidRelease;
+
+  /// `Build.VERSION.SDK_INT`; 0 when unknown.
+  final int sdk;
 }
 
 /// A settings screen the keep-alive advice can open.

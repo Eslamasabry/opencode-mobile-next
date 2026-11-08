@@ -25,7 +25,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_home_screen.dart';
@@ -35,8 +34,6 @@ import 'package:opencode_mobile/ui/screens/team/team_page.dart';
 import 'package:opencode_mobile/ui/widgets/builtin_team_section.dart';
 import 'package:opencode_mobile/ui/widgets/team_discover.dart';
 import 'package:opencode_mobile/ui/widgets/team_host_form.dart';
-import 'package:opencode_mobile/ui/widgets/team_phone_onboarding.dart'
-    show debugTeamPhoneRunJob;
 import 'package:opencode_mobile/voice/device.dart';
 import 'package:opencode_mobile/ui/widgets/team_moments.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,28 +69,6 @@ ProbeFound _found() => const ProbeFound(
   city: 'bright-lights',
   readOnly: true,
 );
-
-/// A Termux team runtime that answers whether this phone can run a team.
-class _Runtime extends TermuxTeamRuntime {
-  _Runtime({required this.supported})
-    : super(
-        runner: (_, {timeout = Duration.zero}) async => '',
-        manifestLoader: () async => null,
-        archProbe: () async => 'aarch64',
-      );
-
-  final bool supported;
-
-  @override
-  Future<bool> get supportsAiTeam async => supported;
-
-  @override
-  Future<TeamRuntimeManifest?> manifest() async => null;
-
-  @override
-  Future<TeamRuntimeStatus> status() async =>
-      const TeamRuntimeStatus(phase: TeamRuntimePhase.idle);
-}
 
 /// The fake registry with AI Team, as a host's engine lists it.
 final _teamRegistry = [
@@ -155,12 +130,6 @@ ServerProfile _computer() => ServerProfile(
   id: 'workstation',
   name: 'Workstation',
   baseUrl: 'http://100.100.1.2:4096',
-);
-
-ServerProfile _termux() => ServerProfile(
-  id: 'termux',
-  name: 'This device (Termux)',
-  baseUrl: 'http://127.0.0.1:4096',
 );
 
 ServerProfile _inApp() => ServerProfile(
@@ -230,7 +199,6 @@ void main() {
     Future<void> pumpIntro(
       WidgetTester tester,
       ConnectionController controller, {
-      TermuxTeamRuntime? runtime,
       Future<VoiceDeviceInfo> Function()? device,
     }) async {
       _tallScreen(tester);
@@ -243,7 +211,6 @@ void main() {
                   onPressed: () => openTeamPage(
                     context,
                     controller,
-                    runtime: runtime,
                     deviceProbe: device ?? goodPhone,
                   ),
                   child: const Text('open'),
@@ -253,7 +220,7 @@ void main() {
           ),
           routes: {
             '/this-phone': (_) =>
-                const Scaffold(body: Text('termux setup screen')),
+                const Scaffold(body: Text('this phone screen')),
           },
         ),
       );
@@ -493,32 +460,11 @@ void main() {
       controller.dispose();
     });
 
-    testWidgets('Termux: Set it up is Add tools › AI Team on the Termux host', (
-      tester,
-    ) async {
-      debugPlatformCapabilities = const PlatformCapabilities.android();
-      final hosts = <SetupHostKind>[];
-      debugTeamPhoneRunJob = (_, host, _) async => hosts.add(host);
-      addTearDown(() => debugTeamPhoneRunJob = null);
-      PhoneSetup.termux = FakeSetupEngine(registry: _teamRegistry);
-      _mockChannels();
-      final controller = await _boot(_termux());
-      await pumpIntro(tester, controller, runtime: _Runtime(supported: true));
-      await reveal(tester, find.text(_en.teamDiscoverTermuxBatteryBody));
-      await tester.tap(_key('team-intro-set-up'));
-      await _settle(tester);
-      expect(_key('phone-setup-customize-sheet'), findsOneWidget);
-      await tester.tap(_key('phone-setup-customize-done'));
-      await _settle(tester);
-      expect(hosts, [SetupHostKind.termux]);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
-
     testWidgets('a 32-bit phone is told why by the pre-flight, never '
         'hidden, and offered a computer', (tester) async {
       debugPlatformCapabilities = const PlatformCapabilities.android();
       _mockChannels();
-      final controller = await _boot(_termux());
+      final controller = await _boot(_inApp());
       // New conversation still offers Team on this server.
       expect(await teamPossibleOn(controller.profile!), isTrue);
       await pumpIntro(
@@ -547,6 +493,9 @@ void main() {
       await _settle(tester);
       expect(_key('team-host-guide'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(const SizedBox());
+      controller.dispose();
+      await tester.pump(const Duration(minutes: 1));
     });
 
     testWidgets('a phone short of space is told how much to free', (

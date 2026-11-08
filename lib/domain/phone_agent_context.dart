@@ -3,7 +3,7 @@
 /// OpenCode loads a global `AGENTS.md` into every conversation. Without it an
 /// agent on the phone assumed a desktop: it sent the person to "the OpenCode
 /// desktop app" and said "no phone ADB connection needed" (owner's phone,
-/// 2026-09-24). The phone servers (Termux and the built-in Ubuntu) write this
+/// 2026-09-24). The phone's server (the built-in Ubuntu) writes this
 /// block into the global file of both OpenCode generations before each
 /// start. Only the text between the markers is ours; anything the person
 /// wrote in the file stays.
@@ -13,13 +13,12 @@ abstract final class PhoneAgentContext {
 
   /// OpenCode 1 reads `~/.config/opencode/AGENTS.md`; OpenCode 2 runs with
   /// its config isolated under `/root/.oc-opencode2/config` (see
-  /// BuiltinLinux.serverScript and the Termux runner).
+  /// BuiltinLinux.serverScript).
   static const files = [
     '/root/.config/opencode/AGENTS.md',
     '/root/.oc-opencode2/config/opencode/AGENTS.md',
   ];
 
-  static const termuxHost = 'Ubuntu running in Termux (under proot)';
   static const builtinHost = "the OpenCode Mobile app's built-in Ubuntu";
 
   static const _intro =
@@ -52,18 +51,14 @@ abstract final class PhoneAgentContext {
       '- Long builds (Gradle, the Android SDK, large installs) are slow here '
       'and may be stopped by Android: say so before starting one.\n';
 
-  /// The block for a server hosted in [host] ([termuxHost], [builtinHost]).
+  /// The block for a server hosted in [host] ([builtinHost]).
   static String block(String host) => '$begin\n$_intro$host$_rest$end\n';
 
-  static const _termuxBlock = '$begin\n$_intro$termuxHost$_rest$end\n';
   static const _builtinBlock = '$begin\n$_intro$builtinHost$_rest$end\n';
 
   /// POSIX sh, run inside the Ubuntu: writes the block into every file in
   /// [files], replacing an earlier block and keeping everything else. Set
   /// `OC_CTX_ROOT` to write under another root (tests).
-  static const termuxScript =
-      '${_scriptHead}cat <<\'OC_CTX_BODY\'\n${_termuxBlock}OC_CTX_BODY\n'
-      '$_scriptTail';
   static const builtinScript =
       '${_scriptHead}cat <<\'OC_CTX_BODY\'\n${_builtinBlock}OC_CTX_BODY\n'
       '$_scriptTail';

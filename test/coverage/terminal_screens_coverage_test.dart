@@ -1,6 +1,6 @@
 // The terminal area's empty and unavailable states, drawn for the contact
-// sheet (the look gate): no terminals yet, a server without terminals, an
-// empty and an unreadable process list. Checks the words a person needs are
+// sheet (the look gate): no terminals yet and a server without terminals.
+// Checks the words a person needs are
 // on each screen and writes build/coverage/termscene_*.png.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/fake_server_gateway.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
-import 'package:opencode_mobile/ui/screens/termux_processes_screen.dart';
 
 import '../../tool/capture/fixtures.dart';
 import '../goldens/kit/kit_gallery.dart' show loadKitGalleryFonts;
@@ -80,51 +79,4 @@ void main() {
     final text = await scene(tester, 'unavailable', api: _NoTerminalApi());
     expect(text.length, greaterThan(40));
   });
-
-  for (final (name, listing) in const [
-    ('empty', '[]'),
-    ('unreadable', 'not json'),
-  ]) {
-    testWidgets('running on this phone: $name list', (tester) async {
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      const channel = MethodChannel('oc/termux');
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-            if (call.method != 'runInTermux') return true;
-            return {
-              'stdout': '$listing\n',
-              'stderr': '',
-              'exitCode': 0,
-              'err': -1,
-              'errorMessage': '',
-            };
-          });
-      addTearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, null),
-      );
-      final (store, controller) = await toolsConnection(ToolsRepo());
-      addTearDown(controller.dispose);
-      final boundary = GlobalKey();
-      await tester.pumpWidget(
-        serversApp(
-          boundary,
-          store,
-          controller,
-          home: const TermuxProcessesScreen(
-            refreshInterval: Duration(seconds: 60),
-            sampleDelay: Duration(milliseconds: 50),
-          ),
-        ),
-      );
-      await frames(tester, 16);
-      await writeCasePng(tester, boundary, 'termscene_procs_$name');
-      final text = flat(screenText(tester).join('\n'));
-      expect(text.length, greaterThan(40));
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump(const Duration(seconds: 1));
-    });
-  }
 }

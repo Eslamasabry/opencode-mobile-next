@@ -6,9 +6,13 @@ import '../domain/opencode_history_copy.dart';
 import '../domain/phone_agent_context.dart';
 import '../platform/platform_capabilities.dart';
 import '../state/profiles.dart' show ServerProfile;
-import '../termux/bridge.dart' show TermuxBridge, TermuxRuntime;
-import '../termux/opencode_ubuntu_setup.dart';
+import 'opencode_runtime.dart';
+import 'setup/node_compat.dart' show NodeCompat, NodeCompatState;
+import 'setup/node_pins.dart';
+import 'setup/opencode_ubuntu_setup.dart';
 import 'setup/setup_contract.dart' show setupToolsChanged;
+
+export 'opencode_runtime.dart';
 
 part 'builtin_linux_types.dart';
 
@@ -72,7 +76,7 @@ class BuiltinServerRestoreRecipe {
   });
 
   final String profileId;
-  final TermuxRuntime runtime;
+  final OpenCodeRuntime runtime;
 
   Map<String, Object> toMap() => {
     'version': 1,
@@ -253,10 +257,9 @@ class BuiltinLinux {
   static const channelName =
       'io.github.eslamasabry.opencode_mobile/builtin_linux';
 
-  /// Not Termux's 4096. [TermuxBridge.managesServerUrl] treats
-  /// 127.0.0.1:4096 as the Termux server and would try Termux restarts and
-  /// Termux wake locks on it; a separate port keeps the two apart, and both
-  /// can even run at once.
+  /// Not 4096: older builds gave that to the server they ran in Termux, and
+  /// a saved connection there is recognised as that setup
+  /// (`isTermuxRetiredProfile`).
   static const serverPort = 4097;
   static const serverUrl = 'http://127.0.0.1:$serverPort';
   static const serverUsername = 'opencode';
@@ -998,17 +1001,17 @@ class BuiltinLinux {
   static String _quote(String value) => "'${value.replaceAll("'", "'\"'\"'")}'";
 
   /// The runtime a saved in-app profile was set up with.
-  static TermuxRuntime runtimeFor(ServerFlavor flavor) =>
-      TermuxRuntime.openCode2;
+  static OpenCodeRuntime runtimeFor(ServerFlavor flavor) =>
+      OpenCodeRuntime.openCode2;
 
   /// Legacy identity is retained only for automatic history migration.
-  static TermuxRuntime runtimeForProfile(ServerProfile profile) =>
+  static OpenCodeRuntime runtimeForProfile(ServerProfile profile) =>
       profile.requiresOpenCode2Migration
-      ? TermuxRuntime.openCode1
-      : TermuxRuntime.openCode2;
+      ? OpenCodeRuntime.openCode1
+      : OpenCodeRuntime.openCode2;
 
-  static TermuxRuntime? knownRuntimeFor(ServerFlavor flavor) =>
-      flavor == ServerFlavor.unknown ? null : TermuxRuntime.openCode2;
+  static OpenCodeRuntime? knownRuntimeFor(ServerFlavor flavor) =>
+      flavor == ServerFlavor.unknown ? null : OpenCodeRuntime.openCode2;
 
   static final _versionPattern = RegExp(r'^[A-Za-z0-9._+-]+$');
 
@@ -1017,7 +1020,7 @@ class BuiltinLinux {
   /// caller asks for another on purpose.
   ///
   static String installOpenCodeScript({
-    TermuxRuntime runtime = TermuxRuntime.defaultForNewInstall,
+    OpenCodeRuntime runtime = OpenCodeRuntime.defaultForNewInstall,
     String? version,
   }) {
     runtime.requireSupported();
@@ -1052,14 +1055,14 @@ if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1 ||
 fi
 if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
   case "\$(uname -m)" in
-    aarch64|arm64) node_arch=arm64; node_sha=${TermuxBridge.localAgentsPins['node_sha256_arm64']} ;;
-    x86_64|amd64) node_arch=x64; node_sha=${TermuxBridge.localAgentsPins['node_sha256_x64']} ;;
+    aarch64|arm64) node_arch=arm64; node_sha=${builtinNodePins['node_sha256_arm64']} ;;
+    x86_64|amd64) node_arch=x64; node_sha=${builtinNodePins['node_sha256_x64']} ;;
     *) echo "[oc] Unsupported CPU: \$(uname -m)" >&2; exit 64 ;;
   esac
-  node_version=${TermuxBridge.localAgentsPins['node_version']}
+  node_version=${builtinNodePins['node_version']}
   echo "[oc] Installing Node.js \$node_version"
   curl -fsSL --retry 5 -o /tmp/node.tar.gz \\
-    "${TermuxBridge.localAgentsPins['node_base_url']}/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz"
+    "${builtinNodePins['node_base_url']}/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz"
   echo "\$node_sha  /tmp/node.tar.gz" | sha256sum -c --quiet -
   rm -rf /opt/node && mkdir -p /opt/node
   tar -xzf /tmp/node.tar.gz -C /opt/node --strip-components=1
@@ -1070,8 +1073,8 @@ fi
 ''';
 
   /// Prints the installed version of [runtime], or fails when it is missing.
-  static String versionScript(TermuxRuntime runtime) =>
-      runtime == TermuxRuntime.openCode2
+  static String versionScript(OpenCodeRuntime runtime) =>
+      runtime == OpenCodeRuntime.openCode2
       ? 'command -v opencode2 >/dev/null 2>&1 && opencode2 --version'
       : 'command -v opencode >/dev/null 2>&1 && opencode --version';
 
@@ -1197,9 +1200,14 @@ fi
   ///
   /// OpenCode 2 gets the Termux runner's isolated XDG folders, so its data and
   /// config never mix with OpenCode 1 installed in the same Ubuntu.
+  ///
+  /// [nodeCompat] is this phone's Node.js safe mode, when it needs one
+  /// (issue #117, node_compat.dart): the server, and the agents it starts,
+  /// get the same environment Node gets.
   static String serverScript({
-    TermuxRuntime runtime = TermuxRuntime.defaultForNewInstall,
+    OpenCodeRuntime runtime = OpenCodeRuntime.defaultForNewInstall,
     int port = serverPort,
+    NodeCompatState? nodeCompat,
   }) {
     if (port < 1024 || port > 65535) {
       throw ArgumentError.value(
@@ -1235,6 +1243,7 @@ fi
         'export OPENCODE_SERVER_PASSWORD="\$password"\n'
         'export OPENCODE_PASSWORD="\$password"\n'
         'unset password\n'
+        '${NodeCompat.serverExports(nodeCompat)}'
         'exec $binary serve --hostname 127.0.0.1 --port $port\n';
   }
 }

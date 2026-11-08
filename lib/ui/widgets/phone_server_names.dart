@@ -1,7 +1,6 @@
 import '../../builtin/builtin_server.dart' show looksLikeInAppServer;
 import '../../l10n/app_localizations.dart';
 import '../../state/profiles.dart';
-import 'termux_running_server_entry.dart' show isManagedPhoneProfile;
 
 /// How a saved server is named wherever the app shows it: the server card,
 /// the switcher, Settings and the model picker.
@@ -20,10 +19,6 @@ String serverDisplayName(
   Iterable<ServerProfile> among = const [],
 }) {
   if (profile == null) return 'OpenCode';
-  // OpenCode in Termux is named as its row on Servers and in the switcher
-  // ("This phone · Termux"), not by the name setup saved it under; the
-  // app's own server is plain "This phone".
-  if (isManagedPhoneProfile(profile)) return l10n.phoneServerTermuxTitle;
   if (!looksLikeInAppServer(profile)) {
     return _distinctServerName(profile, among);
   }
@@ -41,9 +36,7 @@ String _distinctServerName(
   final same = [
     for (final other in among)
       if (other.id == profile.id ||
-          (!looksLikeInAppServer(other) &&
-              !isManagedPhoneProfile(other) &&
-              plainServerName(other.name) == name))
+          (!looksLikeInAppServer(other) && plainServerName(other.name) == name))
         other,
   ];
   if (same.length < 2 || !same.any((o) => o.id == profile.id)) return name;

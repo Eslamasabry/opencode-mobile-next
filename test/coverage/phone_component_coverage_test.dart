@@ -10,7 +10,6 @@ import 'package:opencode_mobile/builtin/setup/components.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_customize_sheet.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_selection.dart';
@@ -133,14 +132,12 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       final boundary2 = GlobalKey();
       PhoneSetup.engine = FakeSetupEngine(registry: registry());
-      PhoneSetup.termux = FakeSetupEngine(registry: registry());
       await tester.pumpWidget(
         captureApp(
           boundaryKey: boundary2,
           controller: controller,
           store: store,
           home: PhoneSetupStartScreen(
-            termuxProbe: () async => const TermuxRunningServer.absent(),
             inAppProbe: () async => false,
             deviceProbe: () async => _device,
             openProgress: (_) async {},

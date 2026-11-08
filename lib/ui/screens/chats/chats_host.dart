@@ -15,12 +15,10 @@ import '../../../domain/server_gateway.dart'
         ProviderConversationImportGateway,
         WorkspaceProject;
 import '../../../platform/platform_capabilities.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
-import '../../widgets/termux_phone_tools.dart' show TermuxRunawayWatcher;
-import '../../widgets/work_status_line.dart' show WorkRunawayNotice;
 import '../isolated_task_sheet.dart' show showIsolatedTaskSheet;
 import '../project_hub_screen.dart' show projectForDirectory;
-import '../termux_processes_screen.dart' show TermuxProcessesScreen;
+import '../../../state/termux_retired.dart';
+import '../../widgets/termux_retired_notice.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/profiles.dart' show ServerProfile;
@@ -78,10 +76,10 @@ abstract interface class ChatsHost {
   /// Opens the model picker.
   Future<void> chooseModel(BuildContext context);
 
-  /// The leftover-process notice (a helper burning CPU on this phone's own
-  /// server) as a quiet status with its Stop. Draws nothing until the watcher
-  /// reports something, and never on a server that is not on this phone.
-  Widget leftoverNotice(BuildContext context);
+  /// The one notice for a saved setup from Termux, which the app no longer
+  /// runs ([TermuxRetiredNotice]): drawn only while the connected server is
+  /// that setup's.
+  Widget termuxRetiredNotice(BuildContext context);
 
   /// The project a task can be started in a separate copy of (a worktree of
   /// it) for [directory], or null where the server cannot make one: the
@@ -137,8 +135,8 @@ abstract interface class ChatsHost {
   /// choice of which; null when there is only the one.
   ChatListSources? get listSources;
 
-  /// A saved server's name as the server switcher says it ("This phone ·
-  /// Termux"), or [fallback] for anything else.
+  /// A saved server's name as the server switcher says it ("This phone"),
+  /// or [fallback] for anything else.
   String connectionName(BuildContext context, String id, String fallback);
 
   /// The request [item]'s conversation waits on, as the card that answers
@@ -501,13 +499,13 @@ class ConnectionChatsHost implements ChatsHost {
       ProjectFolderActions.openFolder(context, _conn);
 
   @override
-  Widget leftoverNotice(BuildContext context) {
-    if (!(platformCapabilities.supportsTermux &&
-        TermuxBridge.managesServerUrl(_conn.profile?.baseUrl))) {
-      return const SizedBox.shrink();
-    }
-    return TermuxRunawayWatcher(
-      builder: (context, notice) => leftoverNoticeLine(context, notice),
+  Widget termuxRetiredNotice(BuildContext context) {
+    if (!isTermuxRetiredProfile(_conn.profile)) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsetsDirectional.symmetric(
+        horizontal: KitTokens.of(context).gutter,
+      ),
+      child: const TermuxRetiredNotice(),
     );
   }
 
@@ -571,33 +569,4 @@ class ConnectionChatsHost implements ChatsHost {
   AppLocalizations _l10n(BuildContext context) =>
       Localizations.of<AppLocalizations>(context, AppLocalizations) ??
       lookupAppLocalizations(Localizations.localeOf(context));
-}
-
-/// The leftover-process notice as a quiet kit status (the same one the Work
-/// tab used): wording, Stop and Dismiss, and See what's running under More.
-Widget leftoverNoticeLine(BuildContext context, WorkRunawayNotice? notice) {
-  final l10n = AppLocalizations.of(context);
-  final status = notice?.status(
-    l10n,
-    onSeeRunning: () => unawaited(
-      pushKitPage<void>(context, (_) => const TermuxProcessesScreen()),
-    ),
-  );
-  return KitStatusContribution(
-    status: status == null
-        ? null
-        : KitStatus(
-            kind: KitStatusKind.work,
-            id: 'work:${status.id}',
-            key: ValueKey('work-status-${status.id}'),
-            icon: status.icon,
-            tone: status.tone,
-            message: status.message,
-            messageKey: status.messageKey,
-            action: status.action,
-            more: status.more,
-            onDismiss: status.onDismiss,
-          ),
-    child: const SizedBox.shrink(),
-  );
 }

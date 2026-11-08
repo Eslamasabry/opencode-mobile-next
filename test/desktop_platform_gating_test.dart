@@ -23,7 +23,6 @@ import 'package:opencode_mobile/ui/screens/guide_screen.dart';
 import 'package:opencode_mobile/ui/screens/host_management_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_termux_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'support/composer_tools.dart';
 
@@ -216,14 +215,14 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('documents both paths on Android', (tester) async {
+    testWidgets('documents the pairing path on Android, without Termux', (
+      tester,
+    ) async {
       await pumpGuide(tester);
 
       expect(find.byKey(const ValueKey('guide-pair-command')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('guide-termux-section')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('guide-termux-section')), findsNothing);
+      expect(find.textContaining('Termux'), findsNothing);
       expect(find.textContaining('Android Keystore'), findsOneWidget);
       expect(
         find.text('Scan the QR or paste the code in this app'),
@@ -231,7 +230,7 @@ void main() {
       );
     });
 
-    testWidgets('drops the Termux path on desktop', (tester) async {
+    testWidgets('keeps to the remote path on desktop', (tester) async {
       onDesktop();
       await pumpGuide(tester);
 
@@ -250,45 +249,6 @@ void main() {
       );
       expect(find.textContaining('libsecret'), findsNothing);
       expect(find.textContaining('Keychain'), findsNothing);
-    });
-  });
-
-  group('the Termux setup screen', () {
-    testWidgets('says so plainly if it is ever reached on desktop', (
-      tester,
-    ) async {
-      onDesktop();
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final store = ProfileStore(prefs: prefs);
-      await store.load();
-      final controller = ConnectionController(store);
-      addTearDown(controller.dispose);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            bootstrapProvider.overrideWithValue(AppBootstrap(store)),
-            connProvider.overrideWithValue(controller),
-          ],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: PhoneSetupTermuxScreen(),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      expect(
-        find.byKey(const ValueKey('phone-setup-termux-unsupported')),
-        findsOneWidget,
-      );
-      // The way that works instead (slice-close-servers).
-      expect(find.text('Connect a server'), findsOneWidget);
-      // No step list, so nothing invites a tap that cannot work.
-      expect(find.text('Get Termux'), findsNothing);
-      expect(tester.takeException(), isNull);
     });
   });
 

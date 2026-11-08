@@ -339,10 +339,6 @@
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
-  "oc.managedServerRecovery.": {
-    "scope": "profile",
-    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
-  },
   "oc.mobile.permissionRequests": {
     "scope": "other",
     "why": "not a local preference: a metadata field stored on the OpenCode 2 session itself, deleted with the session on the server"
@@ -671,14 +667,6 @@
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
-  "oc.termuxMigration.": {
-    "scope": "other",
-    "why": "keyed by migration id, removed when it finishes"
-  },
-  "oc.termuxMigrationOffer.": {
-    "scope": "profile",
-    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
-  },
   "oc.textSize": {
     "scope": "global",
     "why": "app-wide, not tied to one server"
@@ -750,5 +738,49 @@
   "oc.widgetUsageSubs": {
     "scope": "shared",
     "why": "shared blob rebuilt from the live subscriptions; cleared by UsageWidgetSnapshot when none remain"
+  },
+  "oc.crashReports.lastOffered": {
+    "scope": "global",
+    "why": "app-wide time of the last crash offered (E02-S91), not about any server"
+  },
+  "oc.crashReports.offer": {
+    "scope": "global",
+    "why": "app-wide Privacy and data switch \"Offer crash reports\" (E02-S91)"
+  },
+  "oc.builtin.nodeCompat.device": {
+    "scope": "global",
+    "why": "this phone's Node.js safe mode (issue #117, node_compat.dart): about the device's system, not any server"
+  },
+  "oc.telemetry.crashReports": {
+    "scope": "global",
+    "why": "app-wide consent for crash reports and setup analytics (Settings > Privacy and data), off by default"
+  },
+  "oc.telemetry.lastVersion": {
+    "scope": "global",
+    "why": "app version seen at the last start, so a newer one counts as update_installed; not about any server"
+  },
+  "oc.telemetryConsentAsked": {
+    "scope": "global",
+    "why": "app-wide: the one-time \"Help improve OpenCode Mobile\" question was asked; set before it shows so it is never asked twice"
+  },
+  "oc.telemetry.usage": {
+    "scope": "global",
+    "why": "app-wide consent: Usage and app health switch (Settings > Privacy and data), off by default"
+  },
+  "oc.telemetry.crashes": {
+    "scope": "global",
+    "why": "app-wide consent: Crash reports switch (Settings > Privacy and data), off by default"
+  },
+  "oc.telemetry.reportCounter": {
+    "scope": "global",
+    "why": "counter for the problem report code shown after sending; not about any server"
+  },
+  "oc.telemetry.installCode": {
+    "scope": "global",
+    "why": "short report code derived from the analytics app-instance id, shown in About; not about any server"
+  },
+  "oc.telemetry.lastExitAt": {
+    "scope": "global",
+    "why": "time of the last process end already reported from ApplicationExitInfo, so it is reported once"
   }
 }

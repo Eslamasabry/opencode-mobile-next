@@ -1,5 +1,13 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Opt-in analytics (lib/telemetry) never reads the advertising ID:
+         the permission Firebase Analytics would merge in is removed. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+    <!-- Nor Android's ad services (Privacy Sandbox ad ID and attribution),
+         which the Analytics SDK would also merge in. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -34,20 +42,15 @@
          app's own project space. API 30+ uses All files access; older
          Androids use the classic storage permissions. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
-    <!-- Lets Android's installer open an .apk the agent saved to Downloads; it still asks the person first -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
-    <!-- Drive the on-device opencode server through Termux's RUN_COMMAND service -->
-    <uses-permission android:name="com.termux.permission.RUN_COMMAND"/>
     <!-- In-app APK updates -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-    <!-- Package visibility (Android 11+) so we can detect Termux and launch it -->
+    <!-- Package visibility (Android 11+) for the apps this one hands off to -->
     <queries>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
-        <package android:name="com.termux" />
         <package android:name="com.tailscale.ipn" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
@@ -76,6 +79,24 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/local_file_paths"/>
         </provider>
+        <!-- Crash reports and setup analytics are opt-in (Settings > Privacy
+             and data): both vendors start with collection off and the app
+             turns them on only after the person agrees (lib/telemetry).
+             Analytics never collects the advertising ID or SSAID, never
+             allows ad personalisation and reports no screens by itself. -->
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <!-- Performance Monitoring stays off until the person turns on usage and
+             app health; the Performance Gradle plugin (which would trace HTTP and
+             record request URLs) is never applied. -->
+        <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
+        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
+        <meta-data android:name="google_analytics_automatic_screen_reporting_enabled" android:value="false" />
+        <uses-library android:name="android.ext.adservices" android:required="false" tools:node="remove" />
         <receiver android:name=".ScheduledPromptReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
@@ -184,9 +205,6 @@
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/WidgetOverlayTheme" />
         </activity>
         <receiver android:name=".WidgetActionReceiver" android:exported="false" />
-        <service
-            android:name=".TermuxResultService"
-            android:exported="false" />
         <service
             android:name=".BuiltinServerService"
             android:exported="false"

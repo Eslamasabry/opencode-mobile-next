@@ -3,7 +3,6 @@
 // server's "not answering" line, and a phone with a given total RAM.
 import 'package:flutter/widgets.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_progress_screen.dart';
@@ -57,7 +56,6 @@ Widget underAppConditions(List<KitStatus> conditions, Widget child) =>
 
 /// Screen A on a phone with [memoryMb] of total RAM.
 Widget startOnPhone({int memoryMb = 8192}) => PhoneSetupStartScreen(
-  termuxProbe: () async => const TermuxRunningServer.absent(),
   inAppProbe: () async => false,
   deviceProbe: () async => deviceWithMemory(memoryMb),
   openProgress: (_) async {},

@@ -2,9 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../builtin/builtin_server.dart' show looksLikeInAppServer;
 import '../../l10n/app_localizations.dart';
-import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
-import '../../termux/bridge.dart' show TermuxBridge;
 import '../app_theme.dart';
 import '../kit/kit_sheet.dart';
 
@@ -22,15 +20,13 @@ import '../kit/kit_sheet.dart';
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
 
-/// Whether the active server is this phone's own (the in-app Linux server or
-/// the Termux server this app manages). Shape only, from the saved profile:
+/// Whether the active server is this phone's own (the in-app Linux server).
+/// Shape only, from the saved profile:
 /// the same test `phoneServerRestartFor` makes. A token server never is.
 bool isServerOnThisPhone(ConnectionController controller) {
   final profile = controller.profile;
   if (profile == null || controller.usesConnectionToken) return false;
-  return looksLikeInAppServer(profile) ||
-      (platformCapabilities.supportsTermux &&
-          TermuxBridge.managesServerUrl(profile.baseUrl));
+  return looksLikeInAppServer(profile);
 }
 
 /// Disconnecting from the active server. It says whether the server keeps
@@ -95,85 +91,6 @@ Future<bool> confirmStopLocalServer(BuildContext context) {
     kind: KitConfirmKind.stop,
     sheetKey: const ValueKey('stop-local-server-confirm-sheet'),
     confirmKey: const ValueKey('confirm-stop-local-server'),
-  );
-}
-
-/// Restarting the phone's server interrupts whatever is running on it.
-/// Neutral: a restart is not a loss (LOOK-5).
-Future<bool> confirmRestartLocalServer(
-  BuildContext context, {
-  required int busyConversations,
-}) {
-  final l10n = _copy(context);
-  return showKitConfirm(
-    context,
-    title: l10n.termuxRestartTitle,
-    body: l10n.termuxRestartMessage,
-    consequences: [
-      if (busyConversations > 0)
-        l10n.termuxRestartBusyMessage(busyConversations),
-    ],
-    confirmLabel: l10n.termuxRestartConfirm,
-    icon: AppIconography.restart,
-    sheetKey: const ValueKey('restart-local-server-sheet'),
-    confirmKey: const ValueKey('confirm-restart-local-server'),
-  );
-}
-
-/// Stopping the Claude Code daemon on the phone. It has its own sheet rather
-/// than the OpenCode server's because that copy names OpenCode, and a person
-/// running both must be able to tell which one they are about to stop.
-Future<bool> confirmStopLocalAgents(BuildContext context) {
-  final l10n = _copy(context);
-  return showKitConfirm(
-    context,
-    title: l10n.localAgentStopTitle,
-    body: l10n.localAgentStopBody,
-    confirmLabel: l10n.localAgentStopNamed,
-    cancelLabel: l10n.safetyStopLocalServerKeep,
-    icon: AppIcons.stop,
-    kind: KitConfirmKind.stop,
-    sheetKey: const ValueKey('stop-local-agents-confirm-sheet'),
-    confirmKey: const ValueKey('confirm-stop-local-agents'),
-  );
-}
-
-/// Restarting the Claude Code daemon interrupts whatever it is running.
-/// Neutral: a restart is not a loss (LOOK-5).
-Future<bool> confirmRestartLocalAgents(
-  BuildContext context, {
-  required int busyConversations,
-}) {
-  final l10n = _copy(context);
-  return showKitConfirm(
-    context,
-    title: l10n.localAgentRestartTitle,
-    body: l10n.localAgentRestartBody,
-    consequences: [
-      if (busyConversations > 0)
-        l10n.termuxRestartBusyMessage(busyConversations),
-    ],
-    confirmLabel: l10n.termuxRestartConfirm,
-    icon: AppIconography.restart,
-    sheetKey: const ValueKey('restart-local-agents-sheet'),
-    confirmKey: const ValueKey('confirm-restart-local-agents'),
-  );
-}
-
-/// Removing Claude Code from the phone. Says what goes and, because people
-/// fear losing it, what stays: projects and the Claude sign-in.
-Future<bool> confirmRemoveLocalAgents(BuildContext context) {
-  final l10n = _copy(context);
-  return showKitConfirm(
-    context,
-    title: l10n.localAgentRemoveTitle,
-    body: l10n.localAgentRemoveBody,
-    confirmLabel: l10n.localAgentRemove,
-    cancelLabel: l10n.localAgentRemoveKeep,
-    icon: AppIconography.delete,
-    kind: KitConfirmKind.destructive,
-    sheetKey: const ValueKey('remove-local-agents-confirm-sheet'),
-    confirmKey: const ValueKey('confirm-remove-local-agents'),
   );
 }
 

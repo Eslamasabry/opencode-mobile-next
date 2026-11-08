@@ -62,7 +62,6 @@ String _name(String base, Size size) =>
 void main() {
   setUpAll(loadCaptureFonts);
   setUp(() {
-    useNoTermuxJob();
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(

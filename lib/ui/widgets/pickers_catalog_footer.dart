@@ -231,6 +231,7 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
       _saveError = null;
     });
     var modelConfirmed = false;
+    AppTelemetry.feature(AnalyticsFeature.modelSwitch);
     try {
       final sessionID = _scopedSessionID;
       if (sessionID != null) {
@@ -263,6 +264,7 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
       if (widget.controller.capabilities.agentSelection &&
           agent.isNotEmpty &&
           agent != _currentAgent) {
+        AppTelemetry.feature(AnalyticsFeature.agentSwitch);
         if (sessionID != null) {
           await widget.controller.selectAgentForSession(sessionID, agent);
         } else {

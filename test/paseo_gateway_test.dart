@@ -613,6 +613,55 @@ void main() {
       expect(finished['time']['completed'], isNotNull);
     });
 
+    test('a sign-in failure sent in pieces becomes an error row, not reply '
+        'text', () async {
+      for (final (i, text) in [
+        'Failed to',
+        ' authenticate: OAuth session expired',
+        ' and could not be refreshed',
+      ].indexed) {
+        daemon.push(
+          'agent_stream',
+          stream(
+            'a1',
+            timeline({
+              'type': 'assistant_message',
+              'text': text,
+              'messageId': 'msg_f',
+            }),
+            seq: 10 + i,
+          ),
+        );
+      }
+      await pumpEventQueue();
+      // No delta ever carried the agent's words as reply text after the
+      // first piece, and the first piece's text part was taken back.
+      expect(types(), contains('message.part.removed'));
+      final infos = events
+          .where((e) => e.type == 'message.updated')
+          .map((e) => e.properties['info'] as Map)
+          .toList();
+      expect(infos.last['error']['message'], contains('refreshed'));
+      expect(infos.last['error']['name'], 'ProviderAuthError');
+      final deltas = events.where((e) => e.type == 'message.part.delta');
+      expect(
+        deltas.where((e) => '${e.properties['delta']}'.contains('OAuth')),
+        isEmpty,
+      );
+      // The turn ending later does not turn it back into a finished reply.
+      daemon.push(
+        'agent_stream',
+        stream('a1', {'type': 'turn_completed', 'provider': 'claude'}, seq: 20),
+      );
+      await pumpEventQueue();
+      final last = events
+          .where((e) => e.type == 'message.updated')
+          .map((e) => e.properties['info'] as Map)
+          .where((info) => info['id'] == 'msg_f')
+          .last;
+      expect(last['error'], isNotNull);
+    });
+
     test('assistant text is announced once, then streamed as deltas', () async {
       for (final (i, text) in ['Done', '. The file', ' exists.'].indexed) {
         daemon.push(

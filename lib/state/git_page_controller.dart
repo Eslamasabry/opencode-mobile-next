@@ -6,6 +6,8 @@ import '../domain/git/git_repository.dart';
 import '../domain/git/github_device_flow.dart';
 import 'git_workspace.dart';
 import 'github_account.dart';
+import '../telemetry/analytics_events.dart';
+import '../telemetry/telemetry_provider.dart';
 
 /// What the Git page body shows.
 sealed class GitPageView {
@@ -399,6 +401,7 @@ class GitPageController extends ChangeNotifier {
   ) async {
     final repo = _repository;
     if (repo == null || _busy != null) return null;
+    AppTelemetry.feature(AnalyticsFeature.gitAction);
     _busy = action;
     _lastResult = null;
     _savedBeforeSend = false;

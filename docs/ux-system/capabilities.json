@@ -3,10 +3,9 @@
   "date": "2026-09-26",
   "hosts": {
    "builtin": "built-in Ubuntu inside the app on this phone",
-   "termux": "Termux on this phone",
    "oc2Computer": "OpenCode 2 on a computer",
    "codex": "Codex app-server on a computer",
-   "paseo": "Paseo daemon (Claude Code, Pi) — on a computer, or on the phone via Termux",
+   "paseo": "Paseo daemon (Claude Code, Pi) on a computer",
    "demo": "offline demo"
   },
   "statusValues": [
@@ -33,11 +32,6 @@
      "status": "supported",
      "note": "'This phone' profile at 127.0.0.1:4097, made by setup's last step",
      "evidence": "lib/builtin/setup/setup_finish.dart:38-47; lib/builtin/builtin_linux.dart:124"
-    },
-    "termux": {
-     "status": "supported",
-     "note": "Termux-managed server at 127.0.0.1:4096",
-     "evidence": "lib/termux/bridge.dart:54-55"
     },
     "oc2Computer": {
      "status": "supported",
@@ -66,11 +60,6 @@
    "kind": "taxonomy",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "The only supported OpenCode runtime. Legacy managed servers upgrade automatically with history preserved.",
-     "evidence": "lib/state/connection/lifecycle.dart; lib/domain/opencode_history_copy.dart"
-    },
-    "termux": {
      "status": "supported",
      "note": "The only supported OpenCode runtime. Legacy managed servers upgrade automatically with history preserved.",
      "evidence": "lib/state/connection/lifecycle.dart; lib/domain/opencode_history_copy.dart"
@@ -106,11 +95,6 @@
      "note": "no Codex component in the phone installer; Codex app-server runs on a computer",
      "evidence": "lib/builtin/setup/components.dart:25-129"
     },
-    "termux": {
-     "status": "not",
-     "note": "no Codex path in the Termux manager",
-     "evidence": "lib/termux/local_agent_runtime.dart:1-24 (Claude Code only)"
-    },
     "oc2Computer": {
      "status": "partly",
      "note": "as above",
@@ -141,11 +125,6 @@
      "status": "not",
      "note": "Claude Code/Paseo installs only through the Termux bridge (`claude.sh`)",
      "evidence": "lib/termux/local_agent_runtime.dart:1-6,258-277"
-    },
-    "termux": {
-     "status": "supported",
-     "note": "'Claude Code on this phone' installs Node, Paseo 0.9.1 and Claude Code into Termux's Ubuntu",
-     "evidence": "lib/termux/local_agent_runtime.dart:12; lib/termux/bridge.dart:3184-3190"
     },
     "oc2Computer": {
      "status": "partly",
@@ -178,47 +157,6 @@
      "note": "",
      "evidence": "lib/builtin/builtin_linux.dart:140"
     },
-    "termux": {
-     "status": "partly",
-     "note": "both can live on one phone (ports 4096 vs 4097; teams 8372 vs 8472); projects do not move between them",
-     "evidence": "lib/builtin/team/builtin_team.dart:52-54; lib/termux/bridge.dart:54"
-    },
-    "oc2Computer": {
-     "status": "n/a",
-     "note": "About this phone, not the connected server: present or not whichever server is open. Android only (desktop build: no).",
-     "evidence": "lib/platform/platform_capabilities.dart:59; lib/builtin/builtin_linux.dart:140"
-    },
-    "codex": {
-     "status": "n/a",
-     "note": "About this phone, not the connected server: present or not whichever server is open. Android only (desktop build: no).",
-     "evidence": "lib/platform/platform_capabilities.dart:59; lib/builtin/builtin_linux.dart:140"
-    },
-    "paseo": {
-     "status": "n/a",
-     "note": "About this phone, not the connected server: present or not whichever server is open. Android only (desktop build: no).",
-     "evidence": "lib/platform/platform_capabilities.dart:59; lib/builtin/builtin_linux.dart:140"
-    },
-    "demo": {
-     "status": "n/a",
-     "note": "About this phone, not the connected server: present or not whichever server is open. Android only (desktop build: no).",
-     "evidence": "lib/platform/platform_capabilities.dart:59; lib/builtin/builtin_linux.dart:140"
-    }
-   }
-  },
-  {
-   "capability": "phone.termux",
-   "kind": "taxonomy",
-   "hosts": {
-    "builtin": {
-     "status": "partly",
-     "note": "Termux is an 'Other ways' choice on the setup screen; both hosts can coexist",
-     "evidence": "lib/ui/screens/phone_setup/phone_setup_start_screen.dart:313-316"
-    },
-    "termux": {
-     "status": "supported",
-     "note": "needs the F-Droid/GitHub Termux build and allow-external-apps",
-     "evidence": "lib/l10n/app_en.arb:10546,10778; lib/termux/bridge.dart:444-445"
-    },
     "oc2Computer": {
      "status": "n/a",
      "note": "About this phone, not the connected server: present or not whichever server is open. Android only (desktop build: no).",
@@ -250,11 +188,6 @@
      "note": "",
      "evidence": "lib/builtin/builtin_linux.dart:140"
     },
-    "termux": {
-     "status": "supported",
-     "note": "",
-     "evidence": "lib/platform/platform_capabilities.dart:59"
-    },
     "oc2Computer": {
      "status": "n/a",
      "note": "About this phone, not the connected server: present or not whichever server is open. Android only (desktop build: no).",
@@ -284,11 +217,6 @@
     "builtin": {
      "status": "supported",
      "note": "provider sign-in in Settings › Providers (OpenCode on the phone)",
-     "evidence": "lib/ui/screens/library/integrations_screen.dart"
-    },
-    "termux": {
-     "status": "supported",
-     "note": "same as builtin",
      "evidence": "lib/ui/screens/library/integrations_screen.dart"
     },
     "oc2Computer": {
@@ -322,11 +250,6 @@
      "note": "'aiteam' component, then 'Turn on AI Team for {project}' in Settings › Plugins; agents always run `exec opencode` (OpenCode 1 binary), even on a phone switched to OpenCode 2",
      "evidence": "lib/builtin/setup/components.dart:97-115; lib/ui/widgets/builtin_team_section.dart:6-16; lib/builtin/team/builtin_team.dart:207"
     },
-    "termux": {
-     "status": "partly",
-     "note": "64-bit phone and a build that carries the team manifest; otherwise the Work entry is hidden",
-     "evidence": "lib/termux/team_runtime.dart:509-535; lib/ui/widgets/team_discover.dart:152-190"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "same: the team is its own Gas City host attached to the profile",
@@ -357,11 +280,6 @@
      "status": "supported",
      "note": "loopback supervisor on 8472, lean tuning for the 32-process limit",
      "evidence": "lib/builtin/team/builtin_team.dart:50-54,119-160"
-    },
-    "termux": {
-     "status": "partly",
-     "note": "arm64 (or x86_64 emulator) and a manifest; port 8372",
-     "evidence": "lib/termux/team_runtime.dart:509-535"
     },
     "oc2Computer": {
      "status": "not",
@@ -394,11 +312,6 @@
      "note": "loopback supervisor honours X-GC-Request: create a task, give it to an agent",
      "evidence": "lib/builtin/team/builtin_team.dart:84-94"
     },
-    "termux": {
-     "status": "supported",
-     "note": "loopback supervisor on the phone",
-     "evidence": "lib/termux/team_runtime.dart"
-    },
     "oc2Computer": {
      "status": "partly",
      "note": "as above",
@@ -426,14 +339,9 @@
    "kind": "taxonomy",
    "hosts": {
     "builtin": {
-     "status": "not",
-     "note": "Claude Code on the phone runs only through the Termux bridge; the page is a dead end on an in-app phone",
-     "evidence": "lib/termux/local_agent_runtime.dart:258-277; lib/ui/widgets/local_agent_onboarding.dart:779-800"
-    },
-    "termux": {
      "status": "supported",
-     "note": "~60 MB download, ~1 GB installed, needs 2 GB free; sign-in in a Termux terminal",
-     "evidence": "lib/l10n/app_en.arb:17701,17753"
+     "note": "Built-in Linux installs Claude Code and runs it through the Paseo daemon on the phone; sign-in uses the agent's own CLAUDE_CONFIG_DIR",
+     "evidence": "lib/builtin/agents/agent_scripts.dart:16,56,143; lib/builtin/agents/agent_sign_in.dart:528-539"
     },
     "oc2Computer": {
      "status": "n/a",
@@ -462,11 +370,6 @@
    "kind": "taxonomy",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "on-device dictation; independent of the server. Packs: Compact ~104 MB (1 GB RAM), Balanced ~160 MB (1.5 GB RAM), High accuracy ~375 MB (3.4 GB RAM); 30 s per recording",
-     "evidence": "lib/voice/model_manifest.dart:63-145; lib/voice/model_manager.dart:162-168; lib/voice/audio.dart:11"
-    },
-    "termux": {
      "status": "supported",
      "note": "on-device dictation; independent of the server. Packs: Compact ~104 MB (1 GB RAM), Balanced ~160 MB (1.5 GB RAM), High accuracy ~375 MB (3.4 GB RAM); 30 s per recording",
      "evidence": "lib/voice/model_manifest.dart:63-145; lib/voice/model_manager.dart:162-168; lib/voice/audio.dart:11"
@@ -502,11 +405,6 @@
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
     },
-    "termux": {
-     "status": "partly",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
     "oc2Computer": {
      "status": "partly",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
@@ -538,11 +436,6 @@
      "note": "create a folder under /root/projects or pick one in the in-app browser",
      "evidence": "lib/builtin/builtin_server.dart:308; lib/termux/opencode_ubuntu_setup.dart:36"
     },
-    "termux": {
-     "status": "supported",
-     "note": "create or browse via the Termux bridge",
-     "evidence": "lib/ui/screens/project_folder_actions.dart"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "as OpenCode 1",
@@ -570,11 +463,6 @@
    "kind": "proposed (map proposals: workspace-folder-chooser)",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
-    "termux": {
      "status": "supported",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
@@ -610,11 +498,6 @@
      "note": "Android permission; same on every host. Background watching of a computer uses the dataSync service (Android 15+: 6 h per 24 h)",
      "evidence": "lib/platform/platform_capabilities.dart:82-86; android/app/src/main/AndroidManifest.xml:117-120"
     },
-    "termux": {
-     "status": "supported",
-     "note": "Android permission; same on every host. Background watching of a computer uses the dataSync service (Android 15+: 6 h per 24 h)",
-     "evidence": "lib/platform/platform_capabilities.dart:82-86; android/app/src/main/AndroidManifest.xml:117-120"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "Android permission; same on every host. Background watching of a computer uses the dataSync service (Android 15+: 6 h per 24 h)",
@@ -645,11 +528,6 @@
      "status": "supported",
      "note": "matters most here: the phone is the server. In-app server and setup run as specialUse foreground services (no 6 h cap)",
      "evidence": "android/app/src/main/AndroidManifest.xml:101-116"
-    },
-    "termux": {
-     "status": "supported",
-     "note": "Termux must also be exempted; Android may stop it in the background",
-     "evidence": "lib/l10n/app_en.arb:20854"
     },
     "oc2Computer": {
      "status": "supported",
@@ -682,11 +560,6 @@
      "note": "photos in prompts only; no pairing needed (loopback)",
      "evidence": "lib/platform/platform_capabilities.dart:78"
     },
-    "termux": {
-     "status": "partly",
-     "note": "same",
-     "evidence": ""
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "QR pairing + photos",
@@ -714,11 +587,6 @@
    "kind": "taxonomy",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "voice input is on the phone, whatever the server",
-     "evidence": "lib/platform/platform_capabilities.dart:68,77"
-    },
-    "termux": {
      "status": "supported",
      "note": "voice input is on the phone, whatever the server",
      "evidence": "lib/platform/platform_capabilities.dart:68,77"
@@ -754,11 +622,6 @@
      "note": "loopback 127.0.0.1: no network needed to reach it",
      "evidence": "lib/builtin/builtin_linux.dart:124"
     },
-    "termux": {
-     "status": "n/a",
-     "note": "loopback",
-     "evidence": "lib/termux/bridge.dart:54"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "same",
@@ -790,11 +653,6 @@
      "note": "nothing in the phone installer provides it",
      "evidence": "lib/builtin/setup/components.dart:25-129"
     },
-    "termux": {
-     "status": "not",
-     "note": "same",
-     "evidence": ""
-    },
     "oc2Computer": {
      "status": "partly",
      "note": "same",
@@ -822,11 +680,6 @@
    "kind": "proposed (map proposals: external-agents)",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "app-side A2A client (lib/a2a); needs only the agent card's URL to be reachable, independent of the connected server",
-     "evidence": "lib/a2a; lib/ui/screens/external_agents_screen.dart:41,139"
-    },
-    "termux": {
      "status": "supported",
      "note": "app-side A2A client (lib/a2a); needs only the agent card's URL to be reachable, independent of the connected server",
      "evidence": "lib/a2a; lib/ui/screens/external_agents_screen.dart:41,139"
@@ -862,11 +715,6 @@
      "note": "follows the phone's runtime (OpenCode 1 or 2)",
      "evidence": "lib/builtin/setup/components.dart:15-31"
     },
-    "termux": {
-     "status": "supported",
-     "note": "follows the phone's runtime (OpenCode 1 or 2)",
-     "evidence": "lib/builtin/setup/components.dart:15-31"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "",
@@ -898,11 +746,6 @@
      "note": "follows the phone's runtime (OpenCode 1 or 2); the Terminal page's 'This phone' source is a shell in the app's Linux and needs no server",
      "evidence": "lib/builtin/setup/components.dart:15-31; lib/ui/screens/terminal_screen.dart:88-97"
     },
-    "termux": {
-     "status": "supported",
-     "note": "follows the phone's runtime (OpenCode 1 or 2)",
-     "evidence": "lib/builtin/setup/components.dart:15-31"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "",
@@ -930,11 +773,6 @@
    "kind": "ServerCapabilities flag (derived, not a taxonomy id): Review changes",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "follows the phone's runtime (OpenCode 1 or 2)",
-     "evidence": "lib/builtin/setup/components.dart:15-31"
-    },
-    "termux": {
      "status": "supported",
      "note": "follows the phone's runtime (OpenCode 1 or 2)",
      "evidence": "lib/builtin/setup/components.dart:15-31"
@@ -970,11 +808,6 @@
      "note": "follows the phone's runtime (OpenCode 1 or 2)",
      "evidence": "lib/builtin/setup/components.dart:15-31"
     },
-    "termux": {
-     "status": "supported",
-     "note": "follows the phone's runtime (OpenCode 1 or 2)",
-     "evidence": "lib/builtin/setup/components.dart:15-31"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "",
@@ -1002,11 +835,6 @@
    "kind": "ServerCapabilities flag (derived, not a taxonomy id): the list of tools the server's agent can use (slice-R10: the Tools page gates on this, not on server.oc1)",
    "hosts": {
     "builtin": {
-     "status": "not",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
-    "termux": {
      "status": "not",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
@@ -1042,11 +870,6 @@
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
     },
-    "termux": {
-     "status": "supported",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
     "oc2Computer": {
      "status": "supported",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
@@ -1074,11 +897,6 @@
    "kind": "ServerCapabilities flag (derived, not a taxonomy id): Staged revert, notes for the agent, forms, inbox",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
-    "termux": {
      "status": "supported",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
@@ -1114,11 +932,6 @@
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
     },
-    "termux": {
-     "status": "partly",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
     "oc2Computer": {
      "status": "partly",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
@@ -1146,11 +959,6 @@
    "kind": "ServerCapabilities flag (derived, not a taxonomy id): Development services (start/stop/logs)",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
-    "termux": {
      "status": "supported",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
@@ -1186,11 +994,6 @@
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
      "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
     },
-    "termux": {
-     "status": "not",
-     "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
-     "evidence": "lib/api2/gateway_mappers.dart; docs/qa/oc2-2.0.29-probe-2026-10-14/README.md"
-    },
     "oc2Computer": {
      "status": "not",
      "note": "OpenCode 2 only; uses the verified OC2 capability contract.",
@@ -1218,11 +1021,6 @@
    "kind": "ServerCapabilities flag (derived, not a taxonomy id): Photos and files in prompts",
    "hosts": {
     "builtin": {
-     "status": "supported",
-     "note": "follows the phone's runtime (OpenCode 1 or 2)",
-     "evidence": "lib/builtin/setup/components.dart:15-31"
-    },
-    "termux": {
      "status": "supported",
      "note": "follows the phone's runtime (OpenCode 1 or 2)",
      "evidence": "lib/builtin/setup/components.dart:15-31"
@@ -1346,47 +1144,6 @@
    "target": "One installer: setup v2. Pre-flight (ABI, free space, RAM) on screen A before the button; retire builtin-server-setup; Remove offers 'keep my projects' (export/zip) before deleting."
   },
   {
-   "capability": "phone.termux",
-   "discover": [
-    "phone-setup-start › Other ways › 'Use Termux instead' (advanced)",
-    "Termux page from Servers/Settings/root-connecting (12 entries, termux-setup record)"
-   ],
-   "expect": {
-    "time": "Get Termux from F-Droid + allow + setup: 5-10 min, several app switches",
-    "size": "Termux app + Ubuntu + OpenCode (similar ~200 MB+)",
-    "storage": "inside Termux's own storage; shown in Storage on this phone",
-    "battery": "Termux must be kept alive and battery-exempted; Android may stop it",
-    "processes": "Termux's processes, not this app's",
-    "network": "download once",
-    "cost": "none"
-   },
-   "steps": [
-    "Target: the same v2 checklist, with person-steps as rows that wait: 'Get Termux (F-Droid)' → 'Allow this app to run commands' → then the same components installed through the bridge"
-   ],
-   "limitations": [
-    "Play Store Termux is too old (app_en.arb:10778)",
-    "Termux only on Android",
-    "Not needed for anything the in-app host does except Claude Code today"
-   ],
-   "failure": [
-    "termux-setup-failed (to be unified with v2 failure/continue)"
-   ],
-   "undo": "Termux page: remove managed OpenCode; uninstall Termux in Android",
-   "todayBehaviour": [
-    {
-     "page": "termux-setup",
-     "whenMissing": "offers-enable (own 3-step wizard, owner: 'Align with v2')",
-     "evidence": "lib/ui/screens/termux_setup_screen.dart:1649-1706"
-    },
-    {
-     "page": "termux-processes / termux-storage",
-     "whenMissing": "hidden for in-app phones: no process or storage view there",
-     "evidence": "docs/ux-system/map/all.json#termux-processes"
-    }
-   ],
-   "target": "Termux becomes a host choice inside setup v2 (component graph unchanged, host = termux), not a separate wizard. Default stays in-app."
-  },
-  {
    "capability": "server.oc2",
    "discover": [
     "This phone card ⋯ › Switch to OpenCode 2 (phone_server_card.dart:645)",
@@ -1474,7 +1231,7 @@
   {
    "capability": "claude.local",
    "discover": [
-    "Termux page › 'Claude Code · Optional' row (termux_setup_screen.dart:2365-2376)",
+    "New conversation › Add an agent › Claude Code (built-in Linux, through Paseo)",
     "Search 'Claude Code' on any Android phone (search_index.dart:979-990)",
     "Target: setup v2 Customize/Add tools row 'Claude Code (needs a Claude sign-in)'"
    ],

@@ -13,6 +13,12 @@ extension _ChatNudges on _ChatScreenState {
     _nudgeWatcher = ConversationNudgeWatcher(
       registry: _nudges,
       conversation: widget.sessionID,
+      onFirstReply: (waited) => AppTelemetry.track(AnalyticsEvent.firstReply, {
+        'server_kind': isServerOnThisPhone(_conn)
+            ? AnalyticsServerKind.phone
+            : AnalyticsServerKind.computer,
+        'seconds': AnalyticsBuckets.secondsOf(waited),
+      }),
     );
     _nudges.addListener(_nudgesChanged);
     _conn.tips.addListener(_nudgesChanged);

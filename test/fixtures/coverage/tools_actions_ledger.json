@@ -7,7 +7,6 @@
   "app commands.run": "reachable: Tools > Commands > a command > Run; proof: test/library_commands_test.dart :: new workspace creates a chat and runs without duplicate submission",
   "app context.open-and-copy": "reachable: Active context > a message > open or copy; proof: test/active_context_test.dart :: search, type filter, full preview and copy act on the selected content",
   "app external.add-and-ask": "reachable: Tools > External agents > Add agent, Check, Save, New task, Send, Reply, Forget, Remove; proof: test/external_agent_widget_test.dart :: check save draft task input result reopen and remove journey",
-  "app local-agent.connect": "reachable: Claude Code on this phone > Connect; proof: test/local_agent_onboarding_test.dart :: ready -> Connect saves exactly one Paseo server on loopback",
   "app mcp.add": "reachable: Tools > MCP > Add MCP server",
   "app mcp.connect": "reachable: Tools > MCP > Connect <server>",
   "app mcp.copy-resource": "reachable: Tools > MCP > press and hold a resource > Copy address; proof: test/library_integrations_mcp_test.dart :: MCP resources remain available when integrations fail",

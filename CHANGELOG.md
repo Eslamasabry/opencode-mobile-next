@@ -2,6 +2,20 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.5+63 — draft, not released
+
+Spanish, complete (#122, thanks @Lxchoooo). The Termux app integration is
+removed: built-in Linux is the only way to run an agent on the phone, and old
+Termux setups get a notice with a way forward. Node.js setup adapts on phones
+where it crashed (#117, #119) and stops early with a way out. A VPN is no
+longer shown as mobile data for the voice download. The Integrations page
+loads again after a reconnect and explains a list the server doesn't offer
+(#124). Optional usage and app health numbers and
+crash reports, two switches asked once and off unless you agree, a way to send a
+problem report you review first, and a crash report offer after an unexpected
+exit. Full notes:
+[docs/releases/v2.1.5+63.md](docs/releases/v2.1.5+63.md).
+
 ## 2.1.4+62 — 2026-11-06
 
 Built-in Linux sets up on phones where its unpacking tool crashes (#117): the

@@ -43,6 +43,12 @@ mixin _ConnectionControllerPhoneChat on ChangeNotifier {
   /// Tool calls (by part id) seen pending or running per session; a long
   /// command is the agent working, so it holds the stall watch off.
   final _turnStallTools = <String, Set<String>>{};
+
+  /// Per open turn: what it has been waiting on (`waiting_tool`,
+  /// `waiting_approval`), since when, and whether `turn_stall` was reported
+  /// for this wait (health telemetry).
+  final _longWaits =
+      <String, ({String stage, DateTime since, bool reported})>{};
   Timer? _turnStallTimer;
   Future<TurnStallEvidence> Function()? _turnStallProbe;
   Completer<void>? _turnStallProbeCancellation;

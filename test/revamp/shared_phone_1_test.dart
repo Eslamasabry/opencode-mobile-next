@@ -1,10 +1,7 @@
 // Behaviour of shared-phone-1's rebuilt parts (wave 2a): "This phone"
 // (PhoneServerCard) with its own Disconnect, the setup log (SetupTerminal
-// on KitLogPanel), the AI team's "On this phone" section with its stop and
-// delete questions and the Keep it running sheet, the re-offer, and the
-// phone server row's failure line and row menu.
+// on KitLogPanel) and the phone server row's failure line and row menu.
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -12,16 +9,12 @@ import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/state/orchestration_store.dart';
-import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/team_runtime.dart';
 import 'package:opencode_mobile/ui/kit/kit_log_panel.dart';
 import 'package:opencode_mobile/ui/kit/kit_row.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/widgets/local_server_row.dart';
 import 'package:opencode_mobile/ui/widgets/phone_server_card.dart';
 import 'package:opencode_mobile/ui/widgets/setup_terminal.dart';
-import 'package:opencode_mobile/ui/widgets/team_phone_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_setup_engine.dart';
@@ -333,166 +326,6 @@ void main() {
       await mount(tester, output: 'done', onCopy: () {});
       expect(find.byKey(const ValueKey('setup-copy-report')), findsNothing);
       expect(find.byKey(const ValueKey('kit-log-copy-all')), findsOneWidget);
-    });
-  });
-
-  group('AI team on this phone (TeamPhoneSection)', () {
-    late TeamRuntime runtime;
-
-    Future<void> mount(
-      WidgetTester tester, {
-      ServerProfile? profile,
-      VoidCallback? onRemoved,
-    }) async {
-      final saved = profile ?? teamProfile();
-      store.saved.add(saved);
-      tester.view
-        ..physicalSize = const Size(412, 915)
-        ..devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-        app(
-          TeamPhoneSection(
-            connection: connection,
-            profile: saved,
-            runtime: runtime,
-            onRemoved: onRemoved,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
-    String status(WidgetTester tester) => tester
-        .widget<Text>(find.byKey(const ValueKey('team-phone-status')))
-        .data!;
-
-    testWidgets('running: Stop the team asks the one stop question', (
-      tester,
-    ) async {
-      runtime = TeamRuntime()..current = teamReady();
-      runtime.results['stop'] = teamStatus(
-        TeamRuntimePhase.stopped,
-        installed: true,
-        city: 'phone',
-      );
-      await mount(tester);
-      expect(status(tester), l10n.teamUiPhoneStatusRunning(2));
-      await tester.tap(find.text(l10n.teamPhoneStopTeamRow));
-      await tester.pumpAndSettle();
-      expect(runtime.calls, isEmpty, reason: 'the first tap only asks');
-      expect(find.byKey(const ValueKey('team-phone-stop-sheet')), findsOne);
-      await tester.tap(find.byKey(const ValueKey('team-phone-stop-confirm')));
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['stop']);
-      expect(status(tester), l10n.teamUiPhoneStatusStopped);
-      // Stopped: the one primary starts the team again.
-      await tester.tap(find.text(l10n.teamPhoneStartTeam));
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['stop', 'start']);
-    });
-
-    testWidgets('killed by Android: says so, Start the team again', (
-      tester,
-    ) async {
-      runtime = TeamRuntime()..current = teamReady(killed: true);
-      runtime.results['start'] = teamReady(agents: 1);
-      await mount(tester);
-      expect(find.text(l10n.teamUiPhoneKilled), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('team-phone-start-again')));
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['start']);
-      expect(status(tester), l10n.teamUiPhoneStatusRunning(1));
-    });
-
-    testWidgets('delete: what goes, what stays, the space, then deletes', (
-      tester,
-    ) async {
-      runtime = TeamRuntime(totalBytes: 294 * 1024 * 1024)
-        ..current = teamReady();
-      runtime.results['remove'] = teamStatus(TeamRuntimePhase.idle);
-      var removed = false;
-      await mount(tester, onRemoved: () => removed = true);
-      await tester.ensureVisible(
-        find.byKey(const ValueKey('team-phone-remove')),
-      );
-      await tester.tap(find.text(l10n.teamPhoneDeleteTeam));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('team-phone-remove-sheet')), findsOne);
-      expect(find.text(l10n.teamPhoneRemoveLost), findsOneWidget);
-      expect(find.text(l10n.teamPhoneRemoveKept), findsOneWidget);
-      expect(find.text(l10n.teamPhoneRemoveFrees(294)), findsOneWidget);
-      expect(runtime.calls, isEmpty);
-      await tester.tap(find.byKey(const ValueKey('team-phone-remove-confirm')));
-      // Sweeping the team's cache touches real storage: let it finish.
-      for (var i = 0; i < 10 && !removed; i++) {
-        await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 50)),
-        );
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-      await tester.pumpAndSettle();
-      expect(runtime.calls, ['remove']);
-      expect(store.saved.single.orchestration, isNull);
-      expect(
-        connection.orchestrationStore.phoneOffer('termux'),
-        PhoneOffer.dismissed,
-      );
-      expect(removed, isTrue);
-      expect(find.byType(SnackBar), findsNothing);
-    });
-
-    testWidgets('not available on this phone: explains, offers nothing', (
-      tester,
-    ) async {
-      runtime = TeamRuntime(supported: false);
-      await mount(tester);
-      expect(find.text(l10n.teamUiPhoneNotAvailable), findsOneWidget);
-      expect(find.byKey(const ValueKey('team-phone-status')), findsNothing);
-    });
-
-    testWidgets('not installed: the one act opens the phone setup', (
-      tester,
-    ) async {
-      runtime = TeamRuntime();
-      await mount(tester);
-      expect(status(tester), l10n.teamUiPhoneStatusNotInstalled);
-      expect(find.byKey(const ValueKey('team-phone-remove')), findsNothing);
-      expect(find.byKey(const ValueKey('team-phone-open-setup')), findsOne);
-    });
-
-    testWidgets('Keep it running: the tips and the commands, copyable', (
-      tester,
-    ) async {
-      runtime = TeamRuntime()..current = teamReady();
-      await mount(tester);
-      await tester.tap(find.byKey(const ValueKey('team-phone-keep-running')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('team-phone-tips-sheet')), findsOne);
-      expect(find.text(l10n.teamUiPhoneTipPhantom), findsOneWidget);
-      expect(find.byKey(const ValueKey('team-phone-tips-commands')), findsOne);
-      String? copied;
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async {
-          if (call.method == 'Clipboard.setData') {
-            copied = (call.arguments as Map)['text'] as String;
-          }
-          return null;
-        },
-      );
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
-        ),
-      );
-      final copy = find.byKey(const ValueKey('team-phone-tips-copy'));
-      await tester.ensureVisible(copy);
-      await tester.pumpAndSettle();
-      await tester.tap(copy);
-      await tester.pumpAndSettle();
-      expect(copied, teamPhoneAdbCommands);
     });
   });
 

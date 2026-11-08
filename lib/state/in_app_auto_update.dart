@@ -13,8 +13,8 @@ import 'phone_host.dart';
 /// Whether the in-app server should be updated to the pinned OpenCode now.
 ///
 /// The server on this phone is only worth restarting when it is behind, and
-/// never under running work, over another job, or on a half-finished switch
-/// or install. One automatic try per app run and pinned version: a failure
+/// never under running work, over another job, or on a half-finished
+/// install. One automatic try per app run and pinned version: a failure
 /// is left to the manual "Update OpenCode" row.
 @visibleForTesting
 bool shouldAutoUpdateInApp({
@@ -22,7 +22,6 @@ bool shouldAutoUpdateInApp({
   required String pinnedVersion,
   required bool busy,
   required bool engineRunning,
-  required bool switchPending,
   required bool installProblem,
   required bool attemptedThisRun,
 }) {
@@ -30,7 +29,7 @@ bool shouldAutoUpdateInApp({
   if (installed == null || installed.isEmpty) return false;
   if (installed == pinnedVersion) return false;
   if (attemptedThisRun || busy || engineRunning) return false;
-  if (switchPending || installProblem) return false;
+  if (installProblem) return false;
   return true;
 }
 
@@ -102,7 +101,6 @@ class InAppAutoUpdater {
     pinnedVersion: host.runtime.pinnedVersion,
     busy: workBusy(),
     engineRunning: engine.progress.value.state == SetupState.running,
-    switchPending: host.switchTarget != null,
     installProblem:
         host.problem == PhoneHostProblem.install ||
         engine.progress.value.state == SetupState.failed,
