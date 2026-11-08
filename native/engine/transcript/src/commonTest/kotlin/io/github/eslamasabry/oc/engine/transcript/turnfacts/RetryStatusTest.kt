@@ -133,11 +133,15 @@ class RetryStatusTest {
             assistantErrorState(MessageErrorKind.ContextOverflow, "Context window exceeded"),
         )
         assertEquals(
-            AssistantErrorState.FreeTier,
+            AssistantErrorState.UsageLimit,
             assistantErrorState(
                 MessageErrorKind.Unknown,
                 "FreeUsageLimitError: Free usage limit reached. Subscribe to OpenCode Go to keep going: https://opencode.ai/go",
             ),
+        )
+        assertEquals(
+            AssistantErrorState.UsageLimit,
+            assistantErrorState(MessageErrorKind.Unknown, "FreeUsageLimitError: Free usage exceeded"),
         )
         assertEquals(AssistantErrorState.ProviderAuth, assistantErrorState(MessageErrorKind.ProviderAuth, "Invalid API key"))
         assertEquals(AssistantErrorState.OutputLength, assistantErrorState(MessageErrorKind.OutputLength, "Output too long"))

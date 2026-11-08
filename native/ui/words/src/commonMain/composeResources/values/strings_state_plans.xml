@@ -45,7 +45,7 @@
     <string name="statePlansCopy43">signed in</string>
     <string name="statePlansCopy44">Claude's plan limits can't be read through OpenCode</string>
     <string name="statePlansAlerts">Usage alerts</string>
-    <string name="statePlansThreshold">Alert at %1$d%% used</string>
+    <string name="statePlansThreshold">Alert at %1$d% used</string>
     <string name="statePlansResetOn">Reset notice is on</string>
     <string name="statePlansResetOff">Reset notice is off</string>
     <string name="statePlansPercent">Percent used (1–100)</string>

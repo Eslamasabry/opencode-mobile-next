@@ -45,8 +45,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}
-  cancel-in-progress: true
+  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}-${{ inputs.apk_only == true }}
+  # native/next runs queue (the batcher is the only dispatcher); every other branch still cancels its older run
+  cancel-in-progress: ${{ github.ref != 'refs/heads/native/next' }}
 
 env:
   # Runners have 4 CPUs and 16 GB. Gradle daemon 6g + Kotlin in-process (gradle.properties) + test forks.
@@ -63,7 +64,7 @@ defaults:
 jobs:
   where:
     # Chooses the runners for every other job. Self-hosted (the always-warm oc-native machine, native/tool/ci/LANES.md) is
-    # used ONLY for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
+    # used ONLY for native/next, native/screens-merge* and master, for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
     # `github`. Everything else, and every offline moment, runs on GitHub-hosted ubuntu-latest.
     name: runner
     runs-on: ubuntu-latest
@@ -83,11 +84,13 @@ jobs:
           EVENT: ${{ github.event_name }}
           CHOICE: ${{ inputs.runner || 'self' }}
           REPO: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
           GH_TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN || github.token }}
         run: |
           hosted='["ubuntu-latest"]'; self='["self-hosted","linux","x64","oc-native"]'; runs_on="$hosted"; why=""
           if [ "$EVENT" != workflow_dispatch ] && [ "$EVENT" != push ]; then why="event $EVENT is never allowed on the self-hosted runner"
           elif [ "$REPO" != Eslamasabry/opencode-mobile-next ]; then why="not the main repository"
+          elif [ "$REF" != native/next ] && [ "${REF#native/screens-merge}" = "$REF" ] && [ "$REF" != master ]; then why="branch $REF is not native/next, native/screens-merge* or master"
           elif [ "$CHOICE" = github ]; then why="runner=github requested"
           else
             # Listing runners needs repository administration read, which only RUNNER_STATUS_TOKEN has; the workflow token
@@ -126,10 +129,14 @@ jobs:
         run: |
           mode=all; tasks=""; count=4
           if [ "$LANE" = fast ]; then
-            if ! git rev-parse --verify -q "origin/$BASE^{commit}" >/dev/null; then
-              git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+            # base is a branch name, or a commit sha (the native/next batcher passes the last green sha)
+            if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else
+              ref="origin/$BASE"
+              if ! git rev-parse --verify -q "$ref^{commit}" >/dev/null; then
+                git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+              fi
             fi
-            out="$(tool/ci/fast_tasks.sh "origin/$BASE" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
+            out="$(tool/ci/fast_tasks.sh "$ref" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
             cat "$RUNNER_TEMP/why.txt"
             if [ "$out" != ALL ]; then
               mode=list; tasks="$(printf '%s\n' "$out" | tr '\n' ' ')"; n=$(printf '%s\n' "$out" | grep -c . || true)
@@ -161,6 +168,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Compile the app (previewBenchmark), and every module's tests on the full lane
         env:
           LANE: ${{ needs.plan.outputs.lane }}
@@ -214,6 +228,13 @@ jobs:
       - uses: ./.github/actions/native-setup
         with:
           goldens: ${{ needs.plan.outputs.lane == 'full' && 'true' || 'false' }}
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Output directory the LooksCapture tests hard-code
         # Several LooksCapture helpers mkdirs() /home/eslam/wt/lane-looks/looks-out/screens; the runner user cannot create /home/eslam.
         if: ${{ needs.plan.outputs.lane == 'full' }}
@@ -282,6 +303,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Re-record the desktop goldens on this runner
         # Every module that wires oc.goldens.record. -PrunQuarantined records quarantined pictures too.
         run: |
@@ -327,6 +355,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Preview signing key (pre-release builds only; owner-approved 2026-11-08)
         env:
           KEYSTORE_B64: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 }}
@@ -406,6 +441,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
       - name: Custom report
         if: always()
@@ -452,6 +494,8 @@ jobs:
         env:
           BASE: ${{ inputs.base || 'native/screens-merge41' }}
         run: |
+          # a sha base (native/next batcher) has no runs of its own: compare with the newest native/next run instead
+          if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then BASE=native/next; fi
           mkdir -p reports base
           gh run download "${{ github.run_id }}" -p 'report-*' -D reports || true
           for id in $(gh run list --workflow native-ci.yml --branch "$BASE" --status completed --limit 10 --json databaseId -q '.[].databaseId'); do

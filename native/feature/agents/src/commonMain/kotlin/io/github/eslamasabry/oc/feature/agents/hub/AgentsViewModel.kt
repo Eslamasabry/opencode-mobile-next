@@ -145,6 +145,7 @@ public class AgentsViewModel(
         val phone = state.value.phone
         val owner = phone.owner ?: return
         if (phone.agents.none { it.id == id && it.signInAvailable }) return
+        presenter.closeAgent()
         nav.open(AgentsRoute.SignInTerminal(owner, id))
     }
 
@@ -161,6 +162,16 @@ public class AgentsViewModel(
     override fun confirmPreviousVersion(): Unit = presenter.confirmPreviousVersion()
 
     override fun connectPhoneHelper(): Unit = presenter.connectPhoneHelper()
+
+    override fun openAgent(id: String): Unit = presenter.openAgent(id)
+
+    override fun selectTab(tab: AgentsTab): Unit = presenter.selectTab(tab)
+
+    override fun pullRefresh(): Unit = presenter.pullRefresh()
+
+    override fun newPhoneConversation(): Unit = presenter.newPhoneConversation()
+
+    override fun closeAgent(): Unit = presenter.closeAgent()
 
     override fun requestSignInReset(): Unit = presenter.requestSignInReset()
 

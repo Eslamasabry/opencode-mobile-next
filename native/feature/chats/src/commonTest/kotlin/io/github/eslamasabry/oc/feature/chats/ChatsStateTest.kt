@@ -38,7 +38,7 @@ class ChatsStateTest {
         )
 
     @Test
-    fun `SCREENS-NAV-27 one list by urgency in Today and Earlier sections only`() {
+    fun `A1-HOME-01 working and waiting rows lead in Right now, the rest under Recent newest first`() {
         val ui =
             build(
                 item("ask", at = 2_000, status = ChatStatus.NeedsYou),
@@ -53,11 +53,11 @@ class ChatsStateTest {
                 item("child", at = 20_000, parent = "run"),
             )
         assertEquals(ChatsPhase.List, ui.phase)
-        assertEquals(listOf("run", "new"), ui.today.map { it.ref.sessionId.raw })
-        assertEquals(listOf("ask", "old"), ui.earlier.map { it.ref.sessionId.raw })
-        assertEquals(RowTitle.New, ui.today[1].title)
-        assertEquals(RowStatus.Done, ui.today[1].status)
-        assertEquals(RowStatus.Running, ui.today[0].status)
+        assertEquals(listOf("ask", "run"), ui.rightNow.map { it.ref.sessionId.raw }, "needs you first, then running")
+        assertEquals(listOf("new", "old"), ui.recent.map { it.ref.sessionId.raw })
+        assertEquals(RowTitle.New, ui.recent[0].title)
+        assertEquals(RowStatus.Done, ui.recent[0].status)
+        assertEquals(RowStatus.Running, ui.rightNow[1].status)
         assertEquals(1, ui.needsYou)
         assertEquals(1, ui.running)
         assertTrue(ui.settingsAvailable)
@@ -84,7 +84,7 @@ class ChatsStateTest {
         val ui = build(*rows)
         assertEquals(listOf("web", "api"), ui.projects.map { it.name })
         val filtered = build(*rows, filters = ChatsFilters(projectDirectory = "/work/api"))
-        assertEquals(listOf("a"), (filtered.today + filtered.earlier).map { it.ref.sessionId.raw })
+        assertEquals(listOf("a"), (filtered.rightNow + filtered.recent).map { it.ref.sessionId.raw })
         assertTrue(filtered.projects.single { it.directory == "/work/api" }.selected)
     }
 
@@ -97,13 +97,13 @@ class ChatsStateTest {
             )
         assertEquals(
             listOf("a"),
-            build(*rows, filters = ChatsFilters(query = "login")).earlier.map {
+            build(*rows, filters = ChatsFilters(query = "login")).recent.map {
                 it.ref.sessionId.raw
             },
         )
         assertEquals(
             listOf("b"),
-            build(*rows, filters = ChatsFilters(query = "WEB")).earlier.map {
+            build(*rows, filters = ChatsFilters(query = "WEB")).recent.map {
                 it.ref.sessionId.raw
             },
         )
@@ -259,5 +259,65 @@ class ChatsStateTest {
                 false,
             )
         assertEquals(listOf("Laptop"), ui.incomplete)
+    }
+
+    @Test
+    fun `A1-HOME-02 Recent shows only the five latest of the rest and counts every conversation for All`() {
+        val idle = (1..8).map { item("i$it", at = it * 1_000L) }
+        val ui = build(*idle.toTypedArray(), item("ask", at = 1, status = ChatStatus.NeedsYou))
+        assertEquals(ChatsState.RECENT_ROWS, ui.recent.size)
+        assertEquals(listOf("i8", "i7", "i6", "i5", "i4"), ui.recent.map { it.ref.sessionId.raw })
+        assertEquals(9, ui.allCount, "All conversations counts the whole list, not the rows shown")
+    }
+
+    @Test
+    fun `A1-HOME-03 Right now is never capped and never holds a quiet, failed or finished row`() {
+        val live = (1..9).map { item("r$it", at = it * 1_000L, status = if (it % 3 == 0) ChatStatus.NeedsYou else ChatStatus.Running) }
+        val ui =
+            build(
+                *live.toTypedArray(),
+                item("failed", at = 50_000, status = ChatStatus.Failed),
+                item("done", at = 60_000, unseen = true),
+                item("quiet", at = 70_000),
+            )
+        assertEquals(9, ui.rightNow.size, "every running and waiting conversation, however many")
+        assertEquals(listOf("r9", "r6", "r3"), ui.rightNow.take(3).map { it.ref.sessionId.raw }, "needs you first, newest first")
+        assertTrue(ui.rightNow.all { it.status == RowStatus.NeedsYou || it.status == RowStatus.Running })
+        assertEquals(listOf("quiet", "done", "failed"), ui.recent.map { it.ref.sessionId.raw })
+    }
+
+    @Test
+    fun `A1-HOME-04 the project filter keeps Right now and the five Recent rows inside the chosen project`() {
+        val api = (1..7).map { item("a$it", "/work/api", at = it * 1_000L) }
+        val web = (1..3).map { item("w$it", "/work/web", at = 100_000L + it) }
+        val ui =
+            build(
+                *(api + web).toTypedArray(),
+                item("web-run", "/work/web", at = 200_000, status = ChatStatus.Running),
+                item("api-run", "/work/api", at = 150_000, status = ChatStatus.Running),
+                filters = ChatsFilters(projectDirectory = "/work/api"),
+            )
+        assertEquals(listOf("api-run"), ui.rightNow.map { it.ref.sessionId.raw })
+        assertEquals(listOf("a7", "a6", "a5", "a4", "a3"), ui.recent.map { it.ref.sessionId.raw })
+        assertFalse(ui.showProjects, "one project chosen: the rows do not name it")
+        assertTrue(build(*(api + web).toTypedArray()).showProjects, "two projects listed: each row names its own")
+        assertFalse(build(*api.toTypedArray()).showProjects, "one project only: no dot, no name")
+    }
+
+    @Test
+    fun `A1-HOME-05 a row the return brief shows is not repeated under Recent`() {
+        val brief =
+            ReturnBrief.build(
+                listOf(Session(SessionId("seen"), directory = "/work/api", time = SessionTime(idleMs = 10))),
+                true,
+                false,
+                { true },
+                { false },
+                { null },
+                scope = BRIEF_SCOPE,
+            )
+        val ui = build(item("seen", at = 2_000), item("old", at = 1_000), brief = brief)
+        assertEquals(listOf("seen"), ui.brief?.rows?.map { it.ref.sessionId.raw })
+        assertEquals(listOf("old"), ui.recent.map { it.ref.sessionId.raw })
     }
 }

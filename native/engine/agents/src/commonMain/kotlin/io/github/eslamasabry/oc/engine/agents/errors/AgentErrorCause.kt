@@ -59,9 +59,11 @@ public object AgentErrorText {
         ci(
             "queue overflow|payload too large|request entity too large|\\b413\\b|request too large|body exceeded",
         ) to AgentErrorCause.RequestTooLarge,
-        ci("free.?usage.?limit|free (?:tier|model)s? limit") to AgentErrorCause.FreeTierLimit,
+        // "Free usage limit reached" / "Free usage exceeded" (FreeUsageLimitError) is the allowance used up, so it is a
+        // UsageLimit below, never the long-conversation refusal (B-100).
+        ci("free (?:tier|model)s? limit") to AgentErrorCause.FreeTierLimit,
         ci(
-            "usage limit (?:reached|exceeded)|usagelimiterror" +
+            "usage limit (?:reached|exceeded)|usagelimiterror|free.?usage.?(?:limit|exceeded|reached)" +
                 "|(?:free|plan|daily|weekly|monthly|\\d+.?hour) limit (?:reached|exceeded)",
         ) to AgentErrorCause.UsageLimit,
         ci(

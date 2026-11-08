@@ -114,19 +114,29 @@ internal fun TurnWorkLine(
     reasoningExpanded: Boolean = false,
     reply: ReplyActions? = null,
     onCompactAgain: (() -> Unit)? = null,
+    /**
+     * Non-null while a step runs and the person tapped the live line to see the steps (Flutter `openWhileRunning`):
+     * the line is drawn opened, and tapping it hides the steps again.
+     */
+    openWhileRunning: (() -> Unit)? = null,
 ) {
     val key = "work:${work.turnId}"
     val kitState = work.state.toKit()
-    val expanded = folds.open[key] ?: kitState.opensByDefault
+    val expanded = openWhileRunning != null || (folds.open[key] ?: kitState.opensByDefault)
     val summary = workSummary(work)
     val now = work.now
     // Folded while the turn runs, the line names the real current step with its count; opened, it says the summary
     // and the running step on the rail carries the progress (Flutter `KitWorkLine`).
     val nowLabel = if (now != null) nowWords(now, work.counts) else null
     val c = work.counts
+    // F: kit_work_line.dart:273-281 and transcript_rows.dart:489-491: a running line keeps its newest three steps in
+    // view (when at least three more came before them); the earlier ones fold behind "Show N earlier steps".
+    val window =
+        if (work.state == WorkLineState.Running && work.steps.size >= RUNNING_TAIL + 3) RUNNING_TAIL
+        else KIT_WORK_STEP_CAP
     val hidden =
         if (work.state == WorkLineState.Running)
-            (work.steps.size - KIT_WORK_STEP_CAP - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
+            (work.steps.size - window - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
         else 0
     val earlier =
         if (expanded && hidden > 0) {
@@ -143,7 +153,7 @@ internal fun TurnWorkLine(
         stateWords = workStateWords(work.state),
         state = kitState,
         expanded = expanded,
-        onToggle = { folds.open[key] = it },
+        onToggle = { if (openWhileRunning != null) openWhileRunning() else folds.open[key] = it },
         earlier = earlier,
         icon = kitWorkIcon(c.read, c.searched, c.listed, c.edited, c.ran, c.fetched, c.delegated, c.other),
         now = nowLabel,
@@ -182,12 +192,15 @@ internal fun TurnWorkLine(
     }
 }
 
+/** How many of the newest steps a running work line keeps in view when opened (Dart `tail: 3`). */
+private const val RUNNING_TAIL = 3
+
 /** What makes two step rows the same step: its part, its kind, what it ran and how it ended. */
 private fun stepIdentity(step: TurnStep): String =
     "${step.partId}|${step.facts.kind}|${step.facts.subject}|${step.state}"
 
 @Composable
-private fun nowWords(step: TurnStep, counts: WorkCounts): String {
+internal fun nowWords(step: TurnStep, counts: WorkCounts): String {
     val f = step.facts
     // B-SEC-094 / R18: the subject is a command or path the agent wrote; it reads redacted like
     // every mono surface.

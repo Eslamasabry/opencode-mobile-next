@@ -276,6 +276,33 @@ class OpenProjectViewModelTest {
     }
 
     @Test
+    fun `B-182 on this phone hidden folders are shown only when asked, and a computer never offers it`() {
+        val phone =
+            Phone(mapOf("/root/projects" to listOf("app"), "/root/projects/app" to listOf(".git", "lib", ".cache")))
+        val gateway = FakeServerGateway().apply { capabilities.value = shell }
+        val vm =
+            OpenProjectViewModel(
+                Nav(),
+                Servers(listOf(ProjectServer(phoneId, "This phone", gateway, Ops(), phoneFolders = true))),
+                SessionOpenedFolders(),
+                PhoneCreator(),
+                phone,
+            )
+        vm.chooseServer(phoneId)
+        assertEquals(false, vm.state.value.canShowHidden)
+        vm.toggleHidden()
+        assertEquals(false, vm.state.value.showHidden)
+        vm.enterFolder("/root/projects/app")
+        assertEquals(true, vm.state.value.canShowHidden)
+        assertEquals(listOf("lib"), vm.state.value.folders.map { it.name })
+        vm.toggleHidden()
+        assertEquals(true, vm.state.value.showHidden)
+        assertEquals(listOf(".cache", ".git", "lib"), vm.state.value.folders.map { it.name })
+        vm.toggleHidden()
+        assertEquals(listOf("lib"), vm.state.value.folders.map { it.name })
+    }
+
+    @Test
     fun `B-182 a slow listing says it is still reading, a failed one says why and Try again lists again`() = runTest {
         val gateway = Located().apply { tree = mapOf("/srv/app" to listOf(dir("src"))) }
         val vm = OpenProjectViewModel(Nav(), Servers(listOf(computer(gateway, Ops(listOf(project("/srv/app", true, 1)))))), SessionOpenedFolders())

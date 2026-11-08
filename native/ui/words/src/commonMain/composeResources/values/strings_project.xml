@@ -578,6 +578,7 @@
     <string name="folderBrowserInternalStorage">Internal storage</string>
     <string name="folderBrowserOpenedBefore">Opened before</string>
     <string name="folderBrowserShowHidden">Show hidden folders</string>
+    <string name="folderBrowserHideHidden">Hide hidden folders</string>
     <string name="folderBrowserHintEmpty">Empty</string>
     <string name="folderBrowserHintMore">%1$s, %2$d more</string>
     <string name="folderBrowserEmptyPhoneBody">Open it, or go up one level.</string>

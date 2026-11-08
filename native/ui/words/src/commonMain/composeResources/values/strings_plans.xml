@@ -30,14 +30,14 @@
     <string name="p12PlansWeekly">This week</string>
     <string name="p12PlansMonthly">This month</string>
     <string name="p12PlansLimit">Limit</string>
-    <string name="p12PlansLeft">%1$s%% left</string>
+    <string name="p12PlansLeft">%1$s% left</string>
     <string name="p12PlansResetsNow">resets now</string>
     <string name="p12PlansResetsMinutes">resets in %1$s min</string>
     <string name="p12PlansResetsHours">resets in %1$s h</string>
     <string name="p12PlansResetsDays">resets in %1$s days</string>
     <string name="p12PlansResetSince">It has reset since these numbers were read.</string>
     <string name="p12PlansPlan">Plan: %1$s</string>
-    <string name="p12PlansAlertAt">Alert at %1$s%% used</string>
+    <string name="p12PlansAlertAt">Alert at %1$s% used</string>
     <string name="p12PlansOffline">offline</string>
     <string name="p12PlansExpired">sign-in ran out</string>
     <string name="p12PlansSignedOut">not signed in</string>

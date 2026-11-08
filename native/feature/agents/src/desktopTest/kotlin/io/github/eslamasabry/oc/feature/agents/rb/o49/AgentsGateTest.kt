@@ -566,8 +566,9 @@ class AgentsGateTest {
                 )
             }
         }
-        // The row's button opens the install review for that agent (Flutter's setup sheet); the review starts it.
-        onNode(hasText("Install or update Gemini CLI") and hasClickAction()).performClick()
+        // The tile's small Install chip opens the install review for that agent (Flutter's setup sheet); the review
+        // starts it. The chip says only the act; a screen reader hears its target.
+        onNode(hasContentDescription("Install Gemini CLI") and hasClickAction()).performClick()
         assertEquals("gemini", actions.installRequested)
         assertEquals(null, actions.installed)
     }

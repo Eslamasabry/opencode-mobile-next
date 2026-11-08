@@ -23,9 +23,11 @@ private val CAUSE_RULES: List<Pair<Regex, Cause>> =
     listOf(
         ci("queue overflow|payload too large|request entity too large|\\b413\\b|request too large|body exceeded") to
             Cause.RequestTooLarge,
-        ci("free.?usage.?limit|free (?:tier|model)s? limit") to Cause.FreeTierLimit,
+        // "Free usage limit reached" / "Free usage exceeded" (FreeUsageLimitError) is the allowance used up, so it is a
+        // UsageLimit below, never the long-conversation refusal (B-100).
+        ci("free (?:tier|model)s? limit") to Cause.FreeTierLimit,
         ci(
-            "usage limit (?:reached|exceeded)|usagelimiterror" +
+            "usage limit (?:reached|exceeded)|usagelimiterror|free.?usage.?(?:limit|exceeded|reached)" +
                 "|(?:free|plan|daily|weekly|monthly|\\d+.?hour) limit (?:reached|exceeded)",
         ) to Cause.UsageLimit,
         ci(

@@ -6,12 +6,9 @@
     <string name="agentsRestartAfterReset">أعد تشغيل التطبيق قبل الاتصال أو استخدام وكلاء الهاتف مجددًا.</string>
     <string name="agentsHelperStopped">توقف مساعد الوكلاء بشكل غير متوقع. تحقق من إعداد الهاتف قبل بدء محادثة أخرى.</string>
     <string name="agentsHelperMayHaveStopped">توقف مساعد الوكلاء. ربما أوقفه Android لتحرير الذاكرة أو للحد من العمليات في الخلفية.</string>
-    <string name="agentsConnectPhoneHelper">الاتصال بوكلاء الهاتف</string>
-    <string name="agentsConnectPhoneHelperFailed">تعذر الاتصال بوكلاء الهاتف. ثبّت وكيلًا ومساعده ثم حاول مجددًا.</string>
-    <string name="agentsPhoneHelperConnected">وكلاء الهاتف متصلون. تظهر محادثاتهم الآن في المحادثات.</string>
     <string name="agentsPhoneHelperProfile">وكلاء الهاتف</string>
     <string name="agentsPreviousVersion">استخدام إصدار أقدم من %1$s</string>
-    <string name="agentsPreviousVersionBody">هل تريد التبديل إلى الإصدار الأقدم الموثّق المحفوظ على هذا الهاتف؟ سيتوقف المساعد أولًا. تبقى تسجيلات الدخول والمحادثات. أعد الاتصال بوكلاء الهاتف بعد ذلك.</string>
+    <string name="agentsPreviousVersionBody">هل تريد التبديل إلى الإصدار الأقدم الموثّق المحفوظ على هذا الهاتف؟ سيتوقف المساعد أولًا ثم يعيد وكلاء الهاتف الاتصال. تبقى تسجيلات الدخول والمحادثات.</string>
     <string name="agentsPreviousVersionFailed">تعذرت استعادة الإصدار الأقدم. أنهِ العمل الجاري ثم حاول مجددًا.</string>
-    <string name="agentsPreviousVersionRestored">تمت استعادة الإصدار الأقدم. أعد الاتصال بوكلاء الهاتف للمتابعة.</string>
+    <string name="agentsPreviousVersionRestored">تمت استعادة الإصدار الأقدم.</string>
 </resources>

@@ -7,7 +7,6 @@ import io.github.eslamasabry.oc.feature.settings.presentation.ServerModelChoice
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPresenter
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFacts
-import io.github.eslamasabry.oc.feature.settings.presentation.reportHeadline
 import io.github.eslamasabry.oc.feature.settings.presentation.serverModelLabel
 import io.github.eslamasabry.oc.feature.settings.presentation.tidyModelId
 import kotlin.test.Test
@@ -49,12 +48,6 @@ class S8PolishSettingsTest {
         assertEquals("Claude Opus 4.5", tidyModelId("claude-opus-4-5"))
         assertEquals("GLM-4.6", tidyModelId("glm-4.6"))
         assertEquals("Model 20250101", tidyModelId("model-20250101"))
-    }
-
-    @Test
-    fun `P-022 the closed Details fold is headed by the report's first line`() {
-        assertEquals("The app closed unexpectedly", reportHeadline("\nThe app closed unexpectedly\n\nEnvironment\nApp: 3"))
-        assertNull(reportHeadline("  \n \n"))
     }
 
     @Test

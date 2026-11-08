@@ -37,7 +37,7 @@ class BriefPlacementTest {
         )
         val state = ChatsUi(
             phase = ChatsPhase.List,
-            today = persistentListOf(row),
+            rightNow = persistentListOf(row),
             brief = BriefUi(persistentListOf(row), 0, false),
             answering = persistentSetOf("request"),
         )
@@ -49,7 +49,7 @@ class BriefPlacementTest {
 
     @Test fun aConversationInTheReturnBriefIsSaidOnce() = runComposeUiTest {
         val row = ConversationRowUi("login", ConversationRef(ProfileId("p"), SessionId("s")), RowTitle.Text("Fix login"), "alpha", RowStatus.NeedsYou, RelativeAge.Minutes(2))
-        val state = ChatsUi(phase = ChatsPhase.List, today = persistentListOf(row), brief = BriefUi(persistentListOf(row), 0, false))
+        val state = ChatsUi(phase = ChatsPhase.List, rightNow = persistentListOf(row), brief = BriefUi(persistentListOf(row), 0, false))
         setContent { ChatEnvironment { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, RecordingChatsActions()) } } }
         // The brief takes the row out of the list under it: one row says the conversation, whatever else it reads.
         onAllNodesWithContentDescription("Fix login", substring = true).assertCountEquals(1)

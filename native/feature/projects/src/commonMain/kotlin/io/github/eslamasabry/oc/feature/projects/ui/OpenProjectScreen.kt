@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -83,6 +84,19 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                         if (state.step == OpenProjectStep.Folder) Res.string.folderBrowserUp else Res.string.kitTopBarBack
                     ),
                 onExit = actions::back,
+                actions =
+                    if (state.step == OpenProjectStep.Folder && state.canShowHidden)
+                        listOf(
+                            KitLineAction(
+                                stringResource(
+                                    if (state.showHidden) Res.string.folderBrowserHideHidden
+                                    else Res.string.folderBrowserShowHidden
+                                ),
+                                actions::toggleHidden,
+                                testTag = "open-toggle-hidden",
+                            )
+                        )
+                    else emptyList(),
             )
         },
         bottom =

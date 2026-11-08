@@ -101,4 +101,12 @@ class RecordingActions : SettingsActions {
     override fun onDetailedUsage(on: Boolean) { calls += "detailed:$on" }
 
     override fun onNoteSeen() { calls += "noteSeen" }
+
+    override fun onShowIncluded(open: Boolean) { calls += "included:$open" }
+
+    override fun onSendProblemReport() { calls += "send" }
+
+    override fun onAskPostPublicly() { calls += "askPublic" }
+
+    override fun onPostPublicly(post: Boolean) { calls += "public:$post" }
 }

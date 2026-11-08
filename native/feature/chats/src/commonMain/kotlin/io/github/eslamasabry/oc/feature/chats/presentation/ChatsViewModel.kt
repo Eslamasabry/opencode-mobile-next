@@ -109,6 +109,10 @@ public class ChatsViewModel(
     /** The row whose Always allow waits on its confirm. */
     private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
 
+    /** A1: the last-message lines of the rows the home shows, read lazily and kept while the screen lives. */
+    private val previews =
+        HomePreviews(viewModelScope, { connections.servers.value }, { clock.now().toEpochMilliseconds() })
+
     public val state: StateFlow<ChatsUi> =
         combine(
                 combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
@@ -169,6 +173,7 @@ public class ChatsViewModel(
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
+            .combine(previews.texts) { base, texts -> HomePreviewRules.withPreviews(base, texts) }
             // G4: the project sheet's kind glyphs and "Git" pills.
             .combine(home.projectFacts) { base, facts -> base.copy(projectFacts = facts.toImmutableMap()) }
             // The pill's switcher: every saved server, what it is doing now, and the switch in flight.
@@ -244,6 +249,16 @@ public class ChatsViewModel(
                 .distinctUntilChanged()
                 .collect { home.wantBranches(it) }
         }
+        // A1: the last message of the rows on show, and only those; the list never waits for it.
+        viewModelScope.launch {
+            combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen ->
+                    val ui = build(snapshot, brief, chosen)
+                    val shown = (ui.rightNow + ui.recent + ui.brief?.rows.orEmpty()).mapTo(hashSetOf()) { it.key }
+                    snapshot.items.filter { it.identity in shown }
+                }
+                .distinctUntilChanged()
+                .collect { previews.want(it) }
+        }
     }
 
     /** Rows the person can archive: any agent's conversation on a connection whose server offers it (E04-S05). */
@@ -278,7 +293,7 @@ public class ChatsViewModel(
         val row = confirmingAlways.value ?: return
         confirmingAlways.value = null
         // The request it was asked for: a newer one on the same row is not what the person confirmed.
-        val now = (state.value.today + state.value.earlier + state.value.brief?.rows.orEmpty()).firstOrNull { it.key == row.key }
+        val now = (state.value.rightNow + state.value.recent + state.value.brief?.rows.orEmpty()).firstOrNull { it.key == row.key }
         if (now?.permission?.requestId != row.permission?.requestId) return
         sendAnswer(row, HomePermissionReply.Always)
     }
