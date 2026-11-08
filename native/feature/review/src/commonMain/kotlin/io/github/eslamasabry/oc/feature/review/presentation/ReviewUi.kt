@@ -20,6 +20,9 @@ public interface ReviewNavigation {
     /** One file of the conversation folder's uncommitted changes. */
     public fun openWorkingTreeFile(path: String): Unit = openFile(path, staged = false)
 
+    /** One file of the whole branch's changes, compared with the main branch. */
+    public fun openBranchFile(path: String): Unit = openFile(path, staged = false)
+
     /** "Review the undo". */
     public fun openStaged()
 }
@@ -30,6 +33,27 @@ public interface ReviewNavigation {
  */
 public fun interface ReviewSendBack {
     public suspend fun send(text: String): Outcome<Unit>
+}
+
+/**
+ * The whole branch's changes, compared with the main branch's merge base (Flutter `loadBranchDiffs`, OpenCode 2
+ * `GET /vcs/diff?mode=branch`). A [Failure.Unavailable] answer means the server cannot show it, so the scope is not
+ * offered.
+ */
+public fun interface ReviewBranchRead {
+    public suspend fun read(): Outcome<ImmutableList<FileDiff>>
+}
+
+/** Which changes the Changes page shows (Flutter `ReviewDiffScope`). */
+public enum class ReviewScope {
+    /** What this conversation (or turn) changed, from the tools' records. */
+    Conversation,
+
+    /** The folder's uncommitted changes, whoever made them. */
+    WorkingTree,
+
+    /** Everything on this branch, compared with the main branch. */
+    Branch,
 }
 
 /** A page's read: loading, failed (a plain line + Details) or ready. */
@@ -50,6 +74,8 @@ public data class ChangeRowUi(
     val removed: Int?,
     /** The tools reported lines for it, so the row opens a diff. */
     val hasDiff: Boolean,
+    /** Its diff was opened in this visit and has not changed since (Flutter's "Viewed", session-local only). */
+    val viewed: Boolean = false,
 )
 
 /** What "Undo all" can do here. Hidden where nothing would happen (Flutter `onUndoAll == null`). */
@@ -93,6 +119,10 @@ public data class ChangesUi(
     val workingTree: Boolean = false,
     /** The server can show the folder's uncommitted changes too, so the change-scope picker is offered. */
     val canPickScope: Boolean = false,
+    /** The scope on screen; [workingTree] is true exactly when it is [ReviewScope.WorkingTree]. */
+    val scope: ReviewScope = ReviewScope.Conversation,
+    /** The scopes this server can show, in Flutter's order; the picker shows when there are two or more. */
+    val scopes: ImmutableList<ReviewScope> = persistentListOf(ReviewScope.Conversation),
     /** "Send back with a note" is offered (a conversation's message can take it). */
     val canSendBack: Boolean = false,
     /** The note field is open. */
@@ -109,7 +139,13 @@ public data class ChangesUi(
     /** "Guided" can be turned on here (B-155): the conversation's agent can be asked. */
     val canGuide: Boolean = false,
     val guide: GuideUi = GuideUi.Off,
-)
+) {
+    /** Rows whose diff was opened and is unchanged. */
+    val viewedCount: Int get() = files.count { it.viewed }
+
+    /** Every file was opened: with comments written, the page says so and offers the way back. */
+    val allViewed: Boolean get() = files.isNotEmpty() && files.all { it.viewed }
+}
 
 /** The Guided view of the Changes page (B-155). */
 public sealed interface GuideUi {

@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.feature.review.presentation
 
 import io.github.eslamasabry.oc.core.common.BusyKind
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.engine.composer.references.ReviewReference
@@ -13,6 +15,7 @@ import io.github.eslamasabry.oc.engine.review.StagedReview
 import io.github.eslamasabry.oc.engine.review.TurnChanges
 import io.github.eslamasabry.oc.engine.review.UndoShape
 import io.github.eslamasabry.oc.core.model.FileDiff
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -45,10 +48,14 @@ public interface ChangesActions {
 
     /**
      * The change-scope picker: true shows the folder's uncommitted changes, false the changes this
-     * conversation (or turn) made. Flutter also has "since base branch"; the review engine has no
-     * branch read yet.
+     * conversation (or turn) made.
      */
-    public fun chooseWorkingTree(on: Boolean) {}
+    public fun chooseWorkingTree(on: Boolean) {
+        chooseScope(if (on) ReviewScope.WorkingTree else ReviewScope.Conversation)
+    }
+
+    /** The change-scope picker: this conversation, uncommitted, or the whole branch (Flutter `_selectScope`). */
+    public fun chooseScope(scope: ReviewScope) {}
 
     /** "Send back with a note": opens the note field. */
     public fun sendBack()
@@ -75,6 +82,7 @@ public class ChangesPresenter(
     private val scope: CoroutineScope,
     private val sendBack: ReviewSendBack? = null,
     agent: ReviewAgentPorts = ReviewAgentPorts(),
+    private val branch: ReviewBranchRead? = null,
 ) : ChangesActions {
     private val runner = agent.runner(review)
     private val guideAsk = agent.guideAsk
@@ -90,7 +98,19 @@ public class ChangesPresenter(
     private var basis: Long? = null
 
     /** The person's scope choice; null keeps the automatic one (the folder's changes when the tools reported none). */
-    private var pickedTree: Boolean? = null
+    private var pickedScope: ReviewScope? = null
+
+    /** Whether the server answers the branch read; null until it was asked once. */
+    private var branchAnswers: Boolean? = null
+
+    /**
+     * Files whose diff was opened in this visit, by scope and path, with what the diff was then (Flutter
+     * `_viewedFiles`): a file the agent changed again is not viewed any more.
+     */
+    private val viewed = HashMap<String, String>()
+
+    /** What each row on screen looks like now, to compare with [viewed]. */
+    private var shown: Map<String, String> = emptyMap()
 
     init {
         scope.launch {
@@ -141,8 +161,13 @@ public class ChangesPresenter(
                     set = read.value
                     basis = review.basis()
                     val toolRows =
-                        set.files.map { ChangeRowUi(it.path, it.name, it.folder, it.added, it.removed, it.hasDiff) }
-                    val (rows, working) =
+                        set.files.map {
+                            Scoped(
+                                ChangeRowUi(it.path, it.name, it.folder, it.added, it.removed, it.hasDiff),
+                                "${it.added}|${it.removed}|${it.patches.hashCode()}|${it.after.hashCode()}",
+                            )
+                        }
+                    val (scopedFiles, chosen) =
                         when (val scoped = scopedRows(toolRows)) {
                             is Outcome.Failed -> {
                                 mutable.update { it.copy(load = ReviewLoad.Failed(scoped.failure)) }
@@ -150,11 +175,16 @@ public class ChangesPresenter(
                             }
                             is Outcome.Ok -> scoped.value
                         }
+                    val rows = markViewed(chosen, scopedFiles)
+                    val working = chosen != ReviewScope.Conversation
+                    val scopes = scopes()
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
-                            workingTree = working,
-                            canPickScope = review.workingTreeAvailable(),
+                            workingTree = chosen == ReviewScope.WorkingTree,
+                            scope = chosen,
+                            scopes = scopes,
+                            canPickScope = scopes.size > 1,
                             files = rows.toImmutableList(),
                             complete = set.complete,
                             added = rows.sumOrNull { r -> r.added },
@@ -169,31 +199,76 @@ public class ChangesPresenter(
         }
     }
 
+    /** A row and what its diff is now (compared with what it was when viewed). */
+    private class Scoped(val row: ChangeRowUi, val fingerprint: String)
+
     /**
-     * The rows in the chosen scope, and whether they are the folder's uncommitted changes. With nothing from the tools
-     * (an agent may edit through commands) the conversation's view gives way to the folder's changes, where the server
-     * has them (B-NAV-053).
+     * The rows in the chosen scope, and that scope. With nothing from the tools (an agent may edit through commands)
+     * the conversation's view gives way to the first view with changes, uncommitted then the whole branch, where the
+     * server has them (B-NAV-053; Flutter `_viewWithChanges`, the same order).
      */
-    private suspend fun scopedRows(toolRows: List<ChangeRowUi>): Outcome<Pair<List<ChangeRowUi>, Boolean>> {
-        val picked = pickedTree
-        val available = review.workingTreeAvailable()
+    private suspend fun scopedRows(toolRows: List<Scoped>): Outcome<Pair<List<Scoped>, ReviewScope>> {
+        val picked = pickedScope
+        val treeOk = review.workingTreeAvailable()
         val nothingFromTools = toolRows.isEmpty() && messageId == null
         return when {
-            picked == true && available ->
+            picked == ReviewScope.WorkingTree && treeOk ->
                 when (val tree = review.workingTree()) {
                     is Outcome.Failed -> tree
-                    is Outcome.Ok -> Outcome.Ok(tree.value.map(::workingRow) to true)
+                    is Outcome.Ok -> Outcome.Ok(tree.value.map(::diffRow) to ReviewScope.WorkingTree)
                 }
-            picked == null && nothingFromTools && available -> {
-                val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
-                Outcome.Ok(if (tree.isNotEmpty()) tree.map(::workingRow) to true else toolRows to false)
+            picked == ReviewScope.Branch && branch != null ->
+                when (val read = readBranch()) {
+                    is Outcome.Failed -> read
+                    is Outcome.Ok -> Outcome.Ok(read.value.map(::diffRow) to ReviewScope.Branch)
+                }
+            picked == null && nothingFromTools -> {
+                val tree = if (treeOk) (review.workingTree() as? Outcome.Ok)?.value.orEmpty() else emptyList()
+                val whole = if (tree.isEmpty() && branch != null) (readBranch() as? Outcome.Ok)?.value.orEmpty() else emptyList()
+                Outcome.Ok(
+                    when {
+                        tree.isNotEmpty() -> tree.map(::diffRow) to ReviewScope.WorkingTree
+                        whole.isNotEmpty() -> whole.map(::diffRow) to ReviewScope.Branch
+                        else -> toolRows to ReviewScope.Conversation
+                    }
+                )
             }
-            else -> Outcome.Ok(toolRows to false)
+            else -> Outcome.Ok(toolRows to ReviewScope.Conversation)
         }
     }
 
-    private fun workingRow(d: FileDiff): ChangeRowUi =
-        workingRow(d.file, d.additions, d.deletions, !d.patch.isNullOrBlank())
+    /** The branch read; an "unavailable" answer takes the scope off the picker for this visit. */
+    private suspend fun readBranch(): Outcome<List<FileDiff>> {
+        val read = branch?.read() ?: return Failure.Unavailable(BRANCH_FEATURE).failed()
+        branchAnswers = !(read is Outcome.Failed && read.failure is Failure.Unavailable)
+        return read
+    }
+
+    /** The scopes to offer: the branch one once the server answered it (asked once, ahead of the first pick). */
+    private suspend fun scopes(): ImmutableList<ReviewScope> {
+        if (branch != null && branchAnswers == null) readBranch()
+        return buildList {
+            add(ReviewScope.Conversation)
+            if (review.workingTreeAvailable()) add(ReviewScope.WorkingTree)
+            if (branchAnswers == true) add(ReviewScope.Branch)
+        }.toImmutableList()
+    }
+
+    /** Rows with their Viewed marks; a mark whose file changed since is dropped (Flutter `_apply`). */
+    private fun markViewed(scope: ReviewScope, rows: List<Scoped>): List<ChangeRowUi> {
+        val now = rows.associate { key(scope, it.row.path) to it.fingerprint }
+        viewed.keys.removeAll { k -> k.startsWith("${scope.name}:") && viewed[k] != now[k] }
+        shown = now
+        return rows.map { it.row.copy(viewed = viewed[key(scope, it.row.path)] == it.fingerprint) }
+    }
+
+    private fun key(scope: ReviewScope, path: String): String = "${scope.name}:$path"
+
+    private fun diffRow(d: FileDiff): Scoped =
+        Scoped(
+            workingRow(d.file, d.additions, d.deletions, !d.patch.isNullOrBlank()),
+            "${d.additions}|${d.deletions}|${d.status}|${d.patch.hashCode()}",
+        )
 
     /** Guided is on: show the cached guide for these changes, or ask for one (the files changed, or none yet). */
     private fun followGuide() {
@@ -273,17 +348,25 @@ public class ChangesPresenter(
 
     override fun retry(): Unit = load()
 
-    override fun chooseWorkingTree(on: Boolean) {
+    override fun chooseScope(scope: ReviewScope) {
         val s = state.value
-        if (s.working || s.load == ReviewLoad.Loading || s.workingTree == on) return
-        pickedTree = on
+        if (s.working || s.load == ReviewLoad.Loading || s.scope == scope || scope !in s.scopes) return
+        pickedScope = scope
         load()
     }
 
     override fun openFile(path: String) {
         val s = state.value
         if (s.files.none { it.path == path && it.hasDiff }) return
-        if (s.workingTree) nav.openWorkingTreeFile(path) else nav.openFile(path, staged = false)
+        // Its diff is on screen now: Viewed from here on, until the file changes again.
+        val k = key(s.scope, path)
+        shown[k]?.let { viewed[k] = it }
+        mutable.update { ui -> ui.copy(files = ui.files.map { if (it.path == path) it.copy(viewed = true) else it }.toImmutableList()) }
+        when (s.scope) {
+            ReviewScope.WorkingTree -> nav.openWorkingTreeFile(path)
+            ReviewScope.Branch -> nav.openBranchFile(path)
+            ReviewScope.Conversation -> nav.openFile(path, staged = false)
+        }
     }
 
     private fun workingRow(
@@ -379,6 +462,9 @@ public enum class FileDiffSource {
 
     /** The conversation folder's uncommitted changes. */
     WorkingTree,
+
+    /** The whole branch's changes, compared with the main branch. */
+    Branch,
 }
 
 /** Intents of one file's diff page. */
@@ -412,9 +498,11 @@ public class FileDiffPresenter(
     source: FileDiffSource,
     private val scope: CoroutineScope,
     agent: ReviewAgentPorts = ReviewAgentPorts(),
+    private val branch: ReviewBranchRead? = null,
 ) : FileDiffActions {
     private val staged = source == FileDiffSource.Staged
     private val workingTree = source == FileDiffSource.WorkingTree
+    private val wholeBranch = source == FileDiffSource.Branch
     private val runner = if (staged) null else agent.runner(review)
     private val mutable = MutableStateFlow(FileDiffUi(path, canComment = runner != null))
     public val state: StateFlow<FileDiffUi> = mutable.asStateFlow()
@@ -497,6 +585,7 @@ public class FileDiffPresenter(
         val read =
             when {
                 workingTree -> readWorkingTree(review, path)
+                wholeBranch -> readBranch(branch, path)
                 staged -> readStaged(review, path)
                 else -> readChanges(review, path, messageId)
             }
@@ -515,6 +604,16 @@ private typealias PageChange = (FileDiffUi) -> FileDiffUi
 
 private suspend fun readWorkingTree(review: ConversationReview, path: String): Outcome<PageChange> =
     when (val read = review.workingTree()) {
+        is Outcome.Failed -> read
+        is Outcome.Ok -> {
+            val file = read.value.firstOrNull { it.file == path }
+            val noDiff = file != null && file.patch.isNullOrBlank()
+            Outcome.Ok { ui -> ui.copy(diff = file, missing = file == null, noDiff = noDiff) }
+        }
+    }
+
+private suspend fun readBranch(branch: ReviewBranchRead?, path: String): Outcome<PageChange> =
+    when (val read = branch?.read() ?: Failure.Unavailable(BRANCH_FEATURE).failed()) {
         is Outcome.Failed -> read
         is Outcome.Ok -> {
             val file = read.value.firstOrNull { it.file == path }
@@ -827,6 +926,9 @@ public class StagedPresenter(
         }
     }
 }
+
+/** The feature the branch read names when nothing can answer it. */
+internal val BRANCH_FEATURE: FeatureId = FeatureId("vcsBranchDiff")
 
 private inline fun <T> List<T>.sumOrNull(of: (T) -> Int?): Int? {
     var total = 0

@@ -25,8 +25,14 @@ private class RouteNavigation(private val nav: AppNavigator, private val ref: Co
 
     override fun openWorkingTreeFile(path: String): Unit = nav.open(ReviewRoute.File(ref, path, messageId, workingTree = true))
 
+    // ReviewRoute.File has no branch field yet (:ui:routes is not this module's): the reserved id names the source.
+    override fun openBranchFile(path: String): Unit = nav.open(ReviewRoute.File(ref, path, BRANCH_FILE))
+
     override fun openStaged(): Unit = nav.open(ReviewRoute.Staged(ref))
 }
+
+/** The [ReviewRoute.File.messageId] that names the whole branch's diff (never a server message id: they have no NUL). */
+internal const val BRANCH_FILE: String = "\u0000branch"
 
 /** "Changes": one per entry; all behaviour is [ChangesPresenter]'s. */
 @AssistedInject
@@ -46,6 +52,7 @@ public class ChangesViewModel(
                 viewModelScope,
                 drafts.sendBack(route.ref),
                 ReviewAgentPorts(notes.comments, agent.sender(route.ref), agent.guideAsk(route.ref), notes.guides),
+                hub.branch(route.ref),
             )
         }
     public val state: StateFlow<ChangesUi> = presenter.state
@@ -67,6 +74,8 @@ public class ChangesViewModel(
     override fun openStaged(): Unit = presenter.openStaged()
 
     override fun chooseWorkingTree(on: Boolean): Unit = presenter.chooseWorkingTree(on)
+
+    override fun chooseScope(scope: ReviewScope): Unit = presenter.chooseScope(scope)
 
     override fun sendBack(): Unit = presenter.sendBack()
 
@@ -96,14 +105,16 @@ public class FileDiffViewModel(
         FileDiffPresenter(
             hub.review(route.ref),
             route.path,
-            route.messageId,
+            route.messageId.takeUnless { it == BRANCH_FILE },
             when {
                 route.staged -> FileDiffSource.Staged
                 route.workingTree -> FileDiffSource.WorkingTree
+                route.messageId == BRANCH_FILE -> FileDiffSource.Branch
                 else -> FileDiffSource.Changes
             },
             viewModelScope,
             ReviewAgentPorts(hub.notes(route.ref).comments, agent.sender(route.ref)),
+            hub.branch(route.ref),
         )
     public val state: StateFlow<FileDiffUi> = presenter.state
 

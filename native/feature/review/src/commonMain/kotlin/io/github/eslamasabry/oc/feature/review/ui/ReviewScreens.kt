@@ -23,6 +23,16 @@ import io.github.eslamasabry.oc.ui.words.res.reviewCopyPatch
 import io.github.eslamasabry.oc.ui.words.res.reviewExpandContext
 import io.github.eslamasabry.oc.ui.words.res.s40iCopied
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import org.jetbrains.compose.resources.StringResource
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceBackToChat
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceAllViewedTitle
+import io.github.eslamasabry.oc.ui.words.res.readerUiBranchScopeHint
+import io.github.eslamasabry.oc.ui.words.res.readerUiWorkingScopeHint
+import io.github.eslamasabry.oc.ui.words.res.readerUiSessionScopeHint
+import io.github.eslamasabry.oc.ui.words.res.readerUiBranch
+import io.github.eslamasabry.oc.ui.words.res.kitDiffViewed
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewScope
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -326,11 +336,29 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                 )
             ReviewLoad.Ready ->
                 if (state.files.isEmpty()) {
-                    KitStateView(
-                        KitStateKind.Empty,
-                        stringResource(Res.string.kitDiffNoChanges),
-                        body = stringResource(Res.string.reviewNoChangesBody),
-                    )
+                    if (state.canPickScope) {
+                        // An empty view keeps its picker, so another view is one tap away (Flutter keeps it in the
+                        // header), and says what this view covers.
+                        Page {
+                            ScopePicker(state, actions)
+                            KitText(
+                                stringResource(scopeHint(state.scope)),
+                                Modifier.testTag("review-scope-hint"),
+                                role = TypeRole.Body,
+                                tone = TextTone.Secondary,
+                            )
+                            KitStateView(
+                                KitStateKind.Empty,
+                                stringResource(Res.string.kitDiffNoChanges),
+                                body = stringResource(Res.string.reviewNoChangesBody),
+                            )
+                        }
+                    } else
+                        KitStateView(
+                            KitStateKind.Empty,
+                            stringResource(Res.string.kitDiffNoChanges),
+                            body = stringResource(Res.string.reviewNoChangesBody),
+                        )
                 } else {
                     Page {
                         val sum = lines(state.added, state.removed)
@@ -347,37 +375,12 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 role = TypeRole.Title,
                             )
                         }
-                        if (state.canPickScope)
-                            KitChipWrap {
-                                val conversation =
-                                    stringResource(
-                                        if (state.turn) Res.string.reviewTurnTitle
-                                        else Res.string.chatUiChanges
-                                    )
-                                KitChip(
-                                    label = conversation,
-                                    kind = KitChipKind.Action,
-                                    tone =
-                                        if (!state.workingTree) KitChipTone.Active
-                                        else KitChipTone.Neutral,
-                                    selected = !state.workingTree,
-                                    onClick = { actions.chooseWorkingTree(false) },
-                                )
-                                KitChip(
-                                    label = stringResource(Res.string.readerUiWorkingTree),
-                                    kind = KitChipKind.Action,
-                                    tone =
-                                        if (state.workingTree) KitChipTone.Active
-                                        else KitChipTone.Neutral,
-                                    selected = state.workingTree,
-                                    onClick = { actions.chooseWorkingTree(true) },
-                                )
-                            }
-                        if (state.workingTree) {
+                        if (state.canPickScope) ScopePicker(state, actions)
+                        if (state.scope != ReviewScope.Conversation) {
                             KitNotice(
                                 stringResource(
                                     Res.string.defaultReviewScopeNotice,
-                                    stringResource(Res.string.readerUiWorkingTree),
+                                    stringResource(scopeLabel(state.scope, state.turn)),
                                 )
                             )
                         } else {
@@ -387,6 +390,21 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 tone = TextTone.Secondary,
                             )
                         }
+                        // Flutter `review-all-viewed`: every file seen with comments written, the way back is offered.
+                        if (state.allViewed && state.drafts > 0)
+                            KitNotice(
+                                pluralStringResource(Res.plurals.reviewSendComments, state.drafts, state.drafts),
+                                Modifier.testTag("review-all-viewed"),
+                                title = stringResource(Res.string.reviewWorkspaceAllViewedTitle),
+                                tone = StatusTone.Ok,
+                                actions =
+                                    listOf(
+                                        KitLineAction(
+                                            stringResource(Res.string.reviewWorkspaceBackToChat),
+                                            actions::back,
+                                        )
+                                    ),
+                            )
                         if (state.undoAll == UndoAllUi.Waiting)
                             KitNotice(stringResource(Res.string.reviewWaiting))
                         if (!state.complete) KitNotice(stringResource(Res.string.reviewIncomplete))
@@ -522,11 +540,47 @@ private fun ChangeRow(row: ChangeRowUi, actions: ChangesActions) {
         title = row.name,
         supporting = listOfNotNull(row.folder, counts).joinToString(" · ").ifEmpty { null },
         titleIsFileName = true,
-        trailing = if (row.hasDiff) KitRowTrailing.Chevron else KitRowTrailing.None,
+        trailing =
+            when {
+                row.viewed -> KitRowTrailing.Value(stringResource(Res.string.kitDiffViewed), chevron = row.hasDiff)
+                row.hasDiff -> KitRowTrailing.Chevron
+                else -> KitRowTrailing.None
+            },
         modifier = Modifier.testTag("review-file-${row.path}"),
         onClick = if (row.hasDiff) ({ actions.openFile(row.path) }) else null,
     )
 }
+
+/** The change-scope chips (Flutter `_ReviewScopePicker`, "Changes to show"), in the server's offered order. */
+@Composable
+private fun ScopePicker(state: ChangesUi, actions: ChangesActions) {
+    KitChipWrap(Modifier.testTag("review-scope-picker")) {
+        state.scopes.forEach { scope ->
+            KitChip(
+                label = stringResource(scopeLabel(scope, state.turn)),
+                kind = KitChipKind.Action,
+                tone = if (state.scope == scope) KitChipTone.Active else KitChipTone.Neutral,
+                selected = state.scope == scope,
+                modifier = Modifier.testTag("review-scope-${scope.name}"),
+                onClick = { actions.chooseScope(scope) },
+            )
+        }
+    }
+}
+
+private fun scopeLabel(scope: ReviewScope, turn: Boolean): StringResource =
+    when (scope) {
+        ReviewScope.Conversation -> if (turn) Res.string.reviewTurnTitle else Res.string.chatUiChanges
+        ReviewScope.WorkingTree -> Res.string.readerUiWorkingTree
+        ReviewScope.Branch -> Res.string.readerUiBranch
+    }
+
+private fun scopeHint(scope: ReviewScope): StringResource =
+    when (scope) {
+        ReviewScope.Conversation -> Res.string.readerUiSessionScopeHint
+        ReviewScope.WorkingTree -> Res.string.readerUiWorkingScopeHint
+        ReviewScope.Branch -> Res.string.readerUiBranchScopeHint
+    }
 
 /**
  * One file's diff, full width, in the kit diff view (left to right, sign column, number gutter).

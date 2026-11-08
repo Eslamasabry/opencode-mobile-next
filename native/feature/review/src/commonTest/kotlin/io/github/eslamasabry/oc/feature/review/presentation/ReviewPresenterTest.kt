@@ -119,6 +119,10 @@ private class Nav : ReviewNavigation {
     override fun openWorkingTreeFile(path: String) {
         went += "working $path"
     }
+
+    override fun openBranchFile(path: String) {
+        went += "branch $path"
+    }
 }
 
 class ReviewPresenterTest {
@@ -380,5 +384,79 @@ class ReviewPresenterTest {
         val ui = ChangesPresenter(review(), null, nav, backgroundScope).state.value
         assertFalse(ui.workingTree)
         assertTrue(vcs.at.isEmpty())
+    }
+
+    // Parity audit 2026-11-08 rows 263 and 266 (Flutter review_workspace.dart:45,165,275,362).
+
+    private fun branchOf(vararg files: FileDiff) = ReviewBranchRead { files.toList().toImmutableList().ok() }
+
+    @Test
+    fun `AUDIT-263 the whole branch is a third scope where the server answers it, and its files open from it`() = runTest(UnconfinedTestDispatcher()) {
+        val vcs = VcsFake(fake, listOf(FileDiff("lib/x.kt", patch = "@@ -1 +1 @@\n-a\n+b", additions = 1, deletions = 1)))
+        gateways.value = ReviewGateways(vcs, FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, branch = branchOf(FileDiff("lib/y.kt", patch = "@@ -1 +1 @@\n-c\n+d", additions = 4, deletions = 2)))
+        assertEquals(listOf(ReviewScope.Conversation, ReviewScope.WorkingTree, ReviewScope.Branch), p.state.value.scopes)
+        assertEquals(ReviewScope.Conversation, p.state.value.scope)
+        p.chooseScope(ReviewScope.Branch)
+        val ui = p.state.value
+        assertEquals(ReviewScope.Branch, ui.scope)
+        assertFalse(ui.workingTree)
+        assertEquals(listOf("lib/y.kt"), ui.files.map { it.path })
+        assertEquals(4, ui.added)
+        p.openFile("lib/y.kt")
+        assertEquals(listOf("branch lib/y.kt"), nav.went)
+        val file = FileDiffPresenter(review(), "lib/y.kt", null, FileDiffSource.Branch, scope = backgroundScope, branch = branchOf(FileDiff("lib/y.kt", patch = "@@ -1 +1 @@\n-c\n+d")))
+        assertEquals("lib/y.kt", file.state.value.diff?.file)
+        p.chooseScope(ReviewScope.Conversation)
+        assertEquals(listOf("src/a.kt", "src/b.kt"), p.state.value.files.map { it.path }.sorted())
+    }
+
+    @Test
+    fun `AUDIT-263 a server without a branch diff never offers the branch scope`() = runTest(UnconfinedTestDispatcher()) {
+        val none = ReviewBranchRead { Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("sessionDiff")).failed() }
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, branch = none)
+        assertEquals(listOf(ReviewScope.Conversation), p.state.value.scopes)
+        assertFalse(p.state.value.canPickScope)
+        p.chooseScope(ReviewScope.Branch)
+        assertEquals(ReviewScope.Conversation, p.state.value.scope)
+    }
+
+    @Test
+    fun `AUDIT-263 with nothing from the tools and nothing uncommitted the page opens the branch`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), reply("a1", 2))
+        gateways.value = ReviewGateways(VcsFake(fake, emptyList()), FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, branch = branchOf(FileDiff("lib/y.kt", patch = "x")))
+        assertEquals(ReviewScope.Branch, p.state.value.scope)
+        assertEquals(listOf("lib/y.kt"), p.state.value.files.map { it.path })
+    }
+
+    @Test
+    fun `AUDIT-266 an opened file is Viewed until it changes, and every file viewed is said once comments wait`() = runTest(UnconfinedTestDispatcher()) {
+        val p = ChangesPresenter(review(), null, nav, backgroundScope)
+        assertTrue(p.state.value.files.none { it.viewed })
+        p.openFile("src/a.kt")
+        assertEquals(listOf("src/a.kt"), p.state.value.files.filter { it.viewed }.map { it.path })
+        p.retry() // read again, same changes: the mark stays
+        assertEquals(listOf("src/a.kt"), p.state.value.files.filter { it.viewed }.map { it.path })
+        assertFalse(p.state.value.allViewed)
+        p.openFile("src/b.kt")
+        assertTrue(p.state.value.allViewed)
+        // The agent edits a.kt again: it is not viewed any more.
+        fake.history = fake.history + listOf(prompt("u3", 5), reply("a3", 6, "src/a.kt" to 9))
+        p.retry()
+        assertEquals(listOf("src/b.kt"), p.state.value.files.filter { it.viewed }.map { it.path })
+        assertFalse(p.state.value.allViewed)
+    }
+
+    @Test
+    fun `AUDIT-266 Viewed marks belong to their scope`() = runTest(UnconfinedTestDispatcher()) {
+        val vcs = VcsFake(fake, listOf(FileDiff("src/a.kt", patch = "@@ -1 +1 @@\n-a\n+b", additions = 1, deletions = 1)))
+        gateways.value = ReviewGateways(vcs, FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope)
+        p.openFile("src/a.kt")
+        p.chooseScope(ReviewScope.WorkingTree)
+        assertTrue(p.state.value.files.none { it.viewed })
+        p.chooseScope(ReviewScope.Conversation)
+        assertTrue(p.state.value.files.single { it.path == "src/a.kt" }.viewed)
     }
 }

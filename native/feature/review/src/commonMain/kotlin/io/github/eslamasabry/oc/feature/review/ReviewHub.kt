@@ -5,6 +5,10 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.ConnectionScope
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.model.VcsDiffMode
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
@@ -13,6 +17,7 @@ import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
 import io.github.eslamasabry.oc.engine.review.ConversationReview
 import io.github.eslamasabry.oc.engine.review.ReviewGateways
 import io.github.eslamasabry.oc.engine.review.ReviewLifetime
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewBranchRead
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewCommentBook
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewGuide
 import kotlinx.coroutines.flow.SharingStarted
@@ -72,6 +77,17 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
         }
         return review
     }
+
+    /**
+     * The whole branch's changes for this conversation, read through its current connection at read time (a
+     * reconnect swaps the graph). A server whose gateway has no branch diff answers Unavailable, so the scope hides.
+     */
+    public fun branch(ref: ConversationRef): ReviewBranchRead =
+        ReviewBranchRead {
+            val ops = (registry.graphFor(ref) as? ReviewGraphAccessors)?.reviewOperations
+                ?: return@ReviewBranchRead Failure.Unavailable(FeatureId("vcsBranchDiff")).failed()
+            ops.listVcsDiffs(VcsDiffMode.Branch)
+        }
 
     private fun gatewaysOf(ref: ConversationRef): ReviewGateways? =
         (registry.graphFor(ref) as? ReviewGraphAccessors)?.let { ReviewGateways(it.reviewGateway, it.reviewOperations) }
