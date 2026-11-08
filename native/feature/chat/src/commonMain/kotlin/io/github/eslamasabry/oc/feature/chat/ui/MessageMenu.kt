@@ -47,6 +47,10 @@ internal fun MessageMenu(
                 (feel || prompt || it != MessageAction.Copy) &&
                     (reads || it != MessageAction.ReadAloud)
             }
+            // S28 story 7: where the app reads replies, the same reply can be read with another voice.
+            .flatMap {
+                if (it == MessageAction.ReadAloud) listOf(it, MessageAction.ReadAloudOtherVoice) else listOf(it)
+            }
             .map { action ->
                 KitMenuItem(
                     label =
@@ -59,6 +63,8 @@ internal fun MessageMenu(
                                 stringResource(Res.string.chatFeelEditAndResend)
                             MessageAction.ReadAloud ->
                                 stringResource(Res.string.voiceNativeReadAloud)
+                            MessageAction.ReadAloudOtherVoice ->
+                                stringResource(Res.string.readAloudOtherVoice)
                             MessageAction.SendAgain ->
                                 stringResource(Res.string.chatUiSendPromptAgain)
                             MessageAction.Fork ->
@@ -75,6 +81,7 @@ internal fun MessageMenu(
                             MessageAction.SelectText -> KitIcons.text
                             MessageAction.EditAndResend -> KitIcons.edit
                             MessageAction.ReadAloud -> KitIcons.volume
+                            MessageAction.ReadAloudOtherVoice -> KitIcons.speakUser
                             MessageAction.SendAgain -> KitIcons.send
                             MessageAction.Fork -> KitIcons.fork
                             MessageAction.Changes -> KitIcons.review

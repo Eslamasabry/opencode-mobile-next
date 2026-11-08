@@ -900,10 +900,12 @@ public class ChatPresenter(
                     textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 local.update { it.copy(insert = ClipUi(nextId++, text)) }
             }
-            MessageAction.ReadAloud -> {
+            MessageAction.ReadAloud,
+            MessageAction.ReadAloudOtherVoice -> {
                 val text =
                     textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
-                local.update { it.copy(readAloud = ReadAloudUi(nextId++, target.rowKey, text)) }
+                val choose = action == MessageAction.ReadAloudOtherVoice
+                local.update { it.copy(readAloud = ReadAloudUi(nextId++, target.rowKey, text, choose)) }
             }
             MessageAction.SendAgain -> {
                 val text =

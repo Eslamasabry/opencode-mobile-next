@@ -82,7 +82,13 @@ public interface KitComposerVoice {
 /**
  * A reply the person asked to hear (the message menu's "Read aloud"). [id] changes on every ask.
  */
-public data class KitReadRequest(val id: Long, val rowKey: String, val text: String)
+public data class KitReadRequest(
+    val id: Long,
+    val rowKey: String,
+    val text: String,
+    /** S28: "Read aloud with another voice" (Flutter `chooseVoice: true`): the reader asks which voice first. */
+    val chooseVoice: Boolean = false,
+)
 
 /**
  * Contributed by `:feature:voice`: reads a reply aloud, with consent once per phone, and draws its

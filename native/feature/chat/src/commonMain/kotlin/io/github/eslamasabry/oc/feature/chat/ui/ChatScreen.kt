@@ -720,7 +720,7 @@ public fun ChatScreen(
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
                             replyReader?.Reader(
-                                state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
+                                state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text, chooseVoice = it.chooseVoice) },
                                 actions::readAloudDone,
                                 Modifier,
                             )

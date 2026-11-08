@@ -245,6 +245,11 @@ public enum class MessageAction {
     SelectText,
     /** P12-VOICE: hear a reply (shown only where the app has a reply reader). */
     ReadAloud,
+    /**
+     * S28 story 7 (Flutter `message-menu-read-aloud-voice`): the same reply, after choosing a voice. The menu offers
+     * it beside [ReadAloud]; the action list never carries it on its own.
+     */
+    ReadAloudOtherVoice,
     EditAndResend,
     SendAgain,
     Fork,
@@ -327,7 +332,13 @@ public data class ClipUi(val id: Long, val text: String)
 /** One copy made ([id] grows with each); [masked] = the redactor hid something that looked like a password or key. */
 public data class CopiedUi(val id: Long, val masked: Boolean)
 
-public data class ReadAloudUi(val id: Long, val rowKey: String, val text: String)
+public data class ReadAloudUi(
+    val id: Long,
+    val rowKey: String,
+    val text: String,
+    /** S28 story 7: the reader asks which voice first ("Read aloud with another voice"). */
+    val chooseVoice: Boolean = false,
+)
 
 /**
  * One-time details the chat was opened with, acknowledged through [ChatActions.arrivalShown] (07
