@@ -62,9 +62,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
         run: |
           set -euo pipefail
           missing=()
+          # Analytics and crash reports (opt-in) need the private Firebase config (owner 2026-11-08).
+          [ -n "$FIREBASE_B64" ] || missing+=(FIREBASE_GOOGLE_SERVICES_B64)
           [ -n "$KEYSTORE_B64" ]  || missing+=(RELEASE_KEYSTORE_BASE64)
           [ -n "$STORE_PASSWORD" ] || missing+=(RELEASE_STORE_PASSWORD)
           [ -n "$KEY_ALIAS" ]     || missing+=(RELEASE_KEY_ALIAS)
@@ -203,6 +206,17 @@ jobs:
             "keyAlias=$KEY_ALIAS" \
             "keyPassword=$KEY_PASSWORD" \
             > android/key.properties
+
+      - name: Install the Firebase config (never in git, never printed)
+        env:
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/oc-firebase"
+          mkdir -p "$dir"
+          printf '%s' "$FIREBASE_B64" | base64 -d > "$dir/google-services-io.github.eslamasabry.opencode_mobile.json"
+          echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
+          echo "Firebase config installed"
 
       - name: Read previous published release APK size
         env:
