@@ -227,6 +227,10 @@ class AndroidKeptServices(
 
     private suspend fun ensure() {
         check(stores.warm() is Outcome.Ok)
+        val running = linux.serviceRunning(KeptServiceSupervisor.NATIVE_NAME)
+        val anyOn = definitions().any { wanted(it.name) }
+        // B-147: no kept service and no supervisor: leave the Linux files untouched (no svc/ folder, no script).
+        if (!KeptServiceSupervisor.hasWork(running, anyOn)) return
         // Installation may finish without a new thermal event. Admit no freshly started
         // supervised process while Android already reports critical heat.
         if (
@@ -238,8 +242,6 @@ class AndroidKeptServices(
         val scriptPath = "${KeptServiceSupervisor.HOME}/oc-svd"
         val changed = readFile(scriptPath) != KeptServiceSupervisor.script
         if (changed) write(scriptPath, KeptServiceSupervisor.script)
-        val running = linux.serviceRunning(KeptServiceSupervisor.NATIVE_NAME)
-        val anyOn = definitions().any { wanted(it.name) }
         if (running && !changed) return
         if (!anyOn) {
             if (running) retire()

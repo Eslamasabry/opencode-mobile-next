@@ -5,6 +5,13 @@ public object KeptServiceSupervisor {
     public const val NATIVE_NAME: String = "svc"
     public const val HOME: String = "/root/.oc-builtin/svc"
     public const val LOGS: String = "/var/log/oc-svc"
+
+    /**
+     * B-147: the supervisor has work, so its files may be written into the person's Linux: a kept service is on,
+     * or the supervisor runs (to update or retire it). On a plain start with neither, as after the update from
+     * 2.1.4 (which had no supervisor), nothing is written into the Linux files.
+     */
+    public fun hasWork(running: Boolean, anyWanted: Boolean): Boolean = running || anyWanted
     public val script: String =
         """
         #!/bin/bash
