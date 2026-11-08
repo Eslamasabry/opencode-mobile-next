@@ -140,31 +140,34 @@ public fun KitPermissionCard(
         modifier = modifier,
         look = look,
         answers = {
-            Answers(
-                allowOnceLabel,
-                alwaysLabel?.takeIf { onAlways != null },
-                denyLabel,
-                onAllowOnce,
-                onAlways,
-                onDeny,
-                enabled,
-                reason,
-                secondary,
-                denyReply,
-                onDenyJustDeny = onDeny,
-                question = question,
-            )
-            // The standard ask card's quiet line (kit_request_card.dart:1143-1235): "Details" at the far end, small and
-            // plain, space2 under the answers, space3 of air above and below as its own target.
-            if (!question && onDetails != null) {
-                Box(Modifier.fillMaxWidth().padding(top = Space.S2.dp), contentAlignment = Alignment.CenterEnd) {
-                    KitTappable(onDetails, onClickLabel = stringResource(Res.string.kitDetails)) {
-                        KitText(
-                            stringResource(Res.string.kitDetails),
-                            Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
-                            role = TypeRole.Secondary,
-                            tone = TextTone.Secondary,
-                        )
+            // One block, so the frame's space3 between its children never lands between the answers and Details.
+            Column {
+                Answers(
+                    allowOnceLabel,
+                    alwaysLabel?.takeIf { onAlways != null },
+                    denyLabel,
+                    onAllowOnce,
+                    onAlways,
+                    onDeny,
+                    enabled,
+                    reason,
+                    secondary,
+                    denyReply,
+                    onDenyJustDeny = onDeny,
+                    question = question,
+                )
+                // The standard ask card's quiet line (kit_request_card.dart:1143-1235): "Details" at the far end, small and
+                // plain, space2 under the answers, space3 of air above and below as its own target.
+                if (!question && onDetails != null) {
+                    Box(Modifier.fillMaxWidth().padding(top = Space.S2.dp), contentAlignment = Alignment.CenterEnd) {
+                        KitTappable(onDetails, onClickLabel = stringResource(Res.string.kitDetails)) {
+                            KitText(
+                                stringResource(Res.string.kitDetails),
+                                Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
+                            )
+                        }
                     }
                 }
             }
