@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -151,6 +152,7 @@ public fun StatusScreen(state: StatusUi, actions: StatusActions) {
             width = KitScreenWidth.Reading,
             loading = state.loading && state.status != null,
             loadingLabel = title,
+            edges = KitScreenEdges.Bleed,
         ) {
             val status = state.status
             when {
@@ -316,6 +318,7 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
         width = KitScreenWidth.Reading,
         loading = (state.loading && state.settings != null) || state.saving,
         loadingLabel = title,
+        edges = KitScreenEdges.Bleed,
     ) {
         val settings = state.settings
         when {

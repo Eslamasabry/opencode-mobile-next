@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Search (B1, 2026-11-08): the bar, its option chips and the grouped results. -->
+    <string name="searchB1Web">Web</string>
+    <string name="searchB1InsideMessages">Inside messages</string>
+    <string name="searchB1AboutOptions">About search options</string>
+    <string name="searchB1OptionsTitle">Search options</string>
+    <string name="searchB1ChooseServer">Choose the server to search</string>
+    <string name="searchB1RecentConversations">Recent conversations</string>
+    <string name="searchB1Clear">Clear</string>
+    <string name="searchB1Conversations">Conversations</string>
+    <string name="searchB1Places">Settings and pages</string>
+    <string name="searchB1SeeAll">See all %1$s</string>
+    <string name="searchB1SeeAllSpoken">See all %1$s conversations</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="one">%1$s conversation</item>
+        <item quantity="other">%1$s conversations</item>
+    </plurals>
+</resources>

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -84,6 +85,7 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
         width = KitScreenWidth.Reading,
         loading = state.busy,
         loadingLabel = working,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

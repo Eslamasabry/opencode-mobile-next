@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.capabilities.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -85,6 +86,7 @@ public fun CapabilitiesScreen(state: CapabilitiesUi, actions: CapabilitiesAction
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

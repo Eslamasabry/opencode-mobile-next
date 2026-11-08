@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -63,7 +64,7 @@ internal fun VoiceLicenseScreen(id: String, state: SettingsUi, actions: Settings
     val component = VoiceLicenseComponent.entries.firstOrNull { it.id == id } ?: return
     val name = licenseName(component)
     val text = (state.license as? LicenseUi.Ready)?.text
-    KitScreen(page = true, modifier = Modifier.fillMaxSize()) {
+    KitScreen(page = true, modifier = Modifier.fillMaxSize(), edges = KitScreenEdges.Bleed) {
         Column(Modifier.fillMaxSize()) {
             KitViewerFrame(
                 name = name,

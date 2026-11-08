@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.runtime.procs.*
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.kit.text.kitUnits
 
 @Composable
 internal fun DurationWords.words(): String =
@@ -17,7 +18,7 @@ internal fun DurationWords.words(): String =
 
 @Composable
 internal fun CpuWords.words(): String =
-    stringResource(
+    kitUnits(stringResource(
         when (level) {
             CpuLevel.Idle -> Res.string.runningPhoneCpu__idle
             CpuLevel.Light -> Res.string.runningPhoneCpu__light
@@ -25,7 +26,7 @@ internal fun CpuWords.words(): String =
             CpuLevel.VeryBusy -> Res.string.runningPhoneCpu__other
         },
         percent,
-    )
+    ))
 
 @Composable
 internal fun RunawayMessage.words(): String =
@@ -71,7 +72,10 @@ private fun RunningProcessName.words(): String =
     }
 
 @Composable
-internal fun RunningRowStatus.words(): String =
+internal fun RunningRowStatus.words(): String = kitUnits(rowStatusWords())
+
+@Composable
+private fun RunningRowStatus.rowStatusWords(): String =
     when (this) {
         is RunningRowStatus.LeftBehind ->
             pluralStringResource(Res.plurals.runningPhoneRowLeftBehind, count, count)

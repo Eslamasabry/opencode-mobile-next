@@ -1,5 +1,11 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.FlowRow
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -140,6 +146,7 @@ import org.jetbrains.compose.resources.stringResource
  * only.
  */
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 public fun FileScreen(state: FileUi, actions: FileActions) {
     var more by remember { mutableStateOf(false) }
     KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
@@ -150,7 +157,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
     var localOpen by rememberSaveable { mutableStateOf<Boolean?>(null) }
     // One modal layer for the frame and the share sheet (the chat's KitSheetHost pattern).
     KitSheetHost(Modifier.fillMaxSize()) {
-        KitScreen(modifier = Modifier.fillMaxSize(), page = true) {
+        KitScreen(modifier = Modifier.fillMaxSize(), page = true, edges = KitScreenEdges.Bleed) {
             Column(Modifier.fillMaxSize()) {
                 val ready = state.phase == FilePhase.Ready
                 KitViewerFrame(
@@ -190,56 +197,69 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                             ),
                     )
                 }
-                if (ready && state.body is FileBody.Code) {
-                    KitButton(
-                        stringResource(
-                            if (state.wrapCode) Res.string.stateReaderNoWrap
-                            else Res.string.stateReaderWrap
-                        ),
-                        actions::toggleWrap,
-                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.preferencesSaving,
-                    )
-                }
-                if (ready)
-                    KitButton(
-                        stringResource(Res.string.filesMoreActions),
-                        { more = true },
-                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
-                        role = KitButtonRole.Tertiary,
-                    )
-                if (state.canInstall) {
-                    KitButton(
-                        stringResource(Res.string.phoneFileInstallAction),
-                        { localOpen = true },
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.opening,
-                    )
-                }
-                if ((ready && state.canOpenWith) || state.canOpenLocal) {
-                    KitButton(
-                        stringResource(Res.string.filesOpenWith),
-                        { if (state.canOpenLocal) localOpen = false else actions.openWith() },
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.opening,
-                        enabled = KitEnabled.Enabled,
-                    )
-                }
-                if (ready && state.canSave) {
-                    KitButton(
-                        stringResource(Res.string.fileSave),
-                        actions::save,
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.saving,
-                        enabled = KitEnabled.Enabled,
-                    )
+                // C05: the file's other acts are text actions with their glyphs, side by side on the gutter with a
+                // full step between them (Flutter's viewer keeps them as visible actions too), never centred lines of
+                // words. A file shown as "Can't show this file" already offers Open with as its main button.
+                val openWithShown = state.body is FileBody.Binary && state.canOpenWith
+                FlowRow(
+                    Modifier.fillMaxWidth().padding(horizontal = kitPageGutter(), vertical = Space.S1.dp)
+                        .testTag("project-file-actions"),
+                    horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                ) {
+                    if (ready && state.body is FileBody.Code) {
+                        KitButton(
+                            stringResource(
+                                if (state.wrapCode) Res.string.stateReaderNoWrap
+                                else Res.string.stateReaderWrap
+                            ),
+                            actions::toggleWrap,
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.wrapText,
+                            expand = false,
+                            working = state.preferencesSaving,
+                        )
+                    }
+                    if (state.canInstall) {
+                        KitButton(
+                            stringResource(Res.string.phoneFileInstallAction),
+                            { localOpen = true },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.download,
+                            expand = false,
+                            working = state.opening,
+                        )
+                    }
+                    val offerOpenWith = (ready && state.canOpenWith || state.canOpenLocal) && !openWithShown
+                    if (offerOpenWith) {
+                        KitButton(
+                            stringResource(Res.string.filesOpenWith),
+                            { if (state.canOpenLocal) localOpen = false else actions.openWith() },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.externalLink,
+                            expand = false,
+                            working = state.opening,
+                            enabled = KitEnabled.Enabled,
+                        )
+                    }
+                    if (ready && state.canSave) {
+                        KitButton(
+                            stringResource(Res.string.fileSave),
+                            actions::save,
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.save,
+                            expand = false,
+                            working = state.saving,
+                            enabled = KitEnabled.Enabled,
+                        )
+                    }
+                    if (ready)
+                        KitButton(
+                            stringResource(Res.string.filesMoreActions),
+                            { more = true },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.more,
+                            expand = false,
+                        )
                 }
             }
         }

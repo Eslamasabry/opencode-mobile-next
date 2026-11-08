@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -93,7 +94,9 @@ class S7PolishKitTest {
         setContent {
             Themed {
                 val heading = Modifier.testTag("heading")
-                KitScreen(header = { KitText("Conversations", heading, role = TypeRole.LargeTitle) }) {
+                KitScreen(header = { KitText("Conversations", heading, role = TypeRole.LargeTitle) },
+                    edges = KitScreenEdges.Bleed,
+                ) {
                     LazyColumn(Modifier.fillMaxSize().testTag("list")) {
                         items(60) { KitText("Row $it", Modifier.height(56.dp)) }
                     }

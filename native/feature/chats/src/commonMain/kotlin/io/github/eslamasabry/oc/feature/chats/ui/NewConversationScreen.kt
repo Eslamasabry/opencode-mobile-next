@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -171,6 +172,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     )
                 }
             },
+            edges = KitScreenEdges.Bleed,
         ) {
             Column(
                 Modifier.fillMaxSize()
@@ -386,6 +388,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 )
             },
             width = KitScreenWidth.Reading,
+            edges = KitScreenEdges.Bleed,
         ) {
             Column(
                 Modifier.fillMaxSize()

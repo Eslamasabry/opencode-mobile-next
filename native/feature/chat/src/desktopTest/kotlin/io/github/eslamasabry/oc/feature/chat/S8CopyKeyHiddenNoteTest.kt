@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -40,6 +41,7 @@ class S8CopyKeyHiddenNoteTest {
             page = true,
             topBar = { KitTopBar(title = "Greeting", exit = KitTopBarExit.Back, exitLabel = "Back", onExit = {}) },
             bottom = { inside() },
+            edges = KitScreenEdges.Bleed,
         ) {
             Box(Modifier.fillMaxSize()) { KitText("Hello there") }
         }

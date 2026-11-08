@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.rb.o18
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -25,7 +26,10 @@ class KitScannerGateTest {
     private enum class State { Starting, Slow, Scanning, Rejected, Paused }
 
     private fun scene(state: State): @Composable () -> Unit = {
-        KitScreen(topBar = { KitTopBar("Scan pairing code", exit = KitTopBarExit.Close, exitLabel = "Close", onExit = {}) }) {
+        KitScreen(
+            topBar = { KitTopBar("Scan pairing code", exit = KitTopBarExit.Close, exitLabel = "Close", onExit = {}) },
+            edges = KitScreenEdges.Bleed,
+        ) {
             val surface3 = LocalKitColors.current.surface3
             KitScanner(
                 phase = when (state) {

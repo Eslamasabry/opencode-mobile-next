@@ -51,7 +51,8 @@ public fun IntegrationsScreen(
                 exitLabel = back,
                 onExit = actions::back,
             )
-        }
+        },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),

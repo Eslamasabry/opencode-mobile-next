@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
 import androidx.compose.foundation.horizontalScroll
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -61,7 +62,7 @@ public fun KitFilterChips(
     // [bleed]: the line sits in a block that already keeps the gutter (a screen's bottom block). E20-S08: it scrolls
     // inside that gutter, its chips starting on it and fading out at the block's end, never cut at the screen's edge
     // (it used to reach out over the gutter, so the last chip ran off the screen).
-    val inset = if (bleed) 0.dp else tokens.gutter.dp
+    val inset = if (bleed) 0.dp else kitPageGutter()
     Box(
         modifier.kitMaxWidth(CapRole.Reading)
             .kitShadowRoom(room)

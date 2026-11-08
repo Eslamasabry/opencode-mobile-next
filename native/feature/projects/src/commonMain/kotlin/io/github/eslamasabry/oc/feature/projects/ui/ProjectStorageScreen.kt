@@ -36,6 +36,7 @@ public fun ProjectStorageScreen(state: ProjectStorageUi, actions: ProjectStorage
         },
         loading = state.checking,
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.padding(LocalKitTokens.current.gutter.dp),

@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.feature.prompts.ui
 
+import io.github.eslamasabry.oc.ui.words.res.promptStashDeleteAction
+import io.github.eslamasabry.oc.ui.words.res.promptStashRowActions
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -44,7 +48,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiEdit
 import io.github.eslamasabry.oc.ui.words.res.chatUiSlashCommandsAndAgents
@@ -65,7 +68,6 @@ import io.github.eslamasabry.oc.ui.words.res.promptFixWordsOnly
 import io.github.eslamasabry.oc.ui.words.res.promptStashAttachments
 import io.github.eslamasabry.oc.ui.words.res.promptStashBusy
 import io.github.eslamasabry.oc.ui.words.res.promptStashContextOnly
-import io.github.eslamasabry.oc.ui.words.res.promptStashDelete
 import io.github.eslamasabry.oc.ui.words.res.promptStashDeleteFailed
 import io.github.eslamasabry.oc.ui.words.res.promptStashDeleted
 import io.github.eslamasabry.oc.ui.words.res.promptStashEmptyTitle
@@ -127,7 +129,7 @@ public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsAction
             Modifier.fillMaxSize()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+                .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             KitRow(
@@ -318,6 +320,44 @@ private fun PromptRow(
             supportingMaxLines = 2,
             enabled = !busy,
             disabledReason = if (busy) busyReason else null,
+            // C05 (Flutter prompt_stash.dart: a row with its ⋯ menu): a tap restores the prompt; its other acts wait
+            // in the row's menu with their glyphs, Delete marked, instead of "Edit Delete" as loose words under it.
+            trailing =
+                KitRowTrailing.Menu(
+                    stringResource(Res.string.promptStashRowActions),
+                    listOfNotNull(
+                        KitMenuItem(
+                            stringResource(Res.string.promptStashRestoreToDraft),
+                            { actions.insert(prompt.id) },
+                            icon = KitIcons.unarchive,
+                            enabled =
+                                if (prompt.text.isBlank() && !prompt.kept) KitEnabled.Disabled(title) else enabled,
+                        ),
+                        if (prompt.kept && prompt.attachments > 0 && prompt.text.isNotBlank())
+                            KitMenuItem(
+                                stringResource(Res.string.promptFixWordsOnly),
+                                { actions.insertWordsOnly(prompt.id) },
+                                icon = KitIcons.text,
+                                enabled = enabled,
+                            )
+                        else null,
+                        if (!prompt.kept)
+                            KitMenuItem(
+                                stringResource(Res.string.chatUiEdit),
+                                { actions.editPrompt(prompt.id) },
+                                icon = KitIcons.edit,
+                                enabled = enabled,
+                            )
+                        else null,
+                        KitMenuItem(
+                            stringResource(Res.string.promptStashDeleteAction),
+                            { actions.delete(prompt.id) },
+                            icon = KitIcons.delete,
+                            destructive = true,
+                            enabled = enabled,
+                        ),
+                    ),
+                ),
             onClickLabel = stringResource(Res.string.promptStashRestoreToDraft),
             onClick =
                 if (prompt.text.isBlank() && !prompt.kept) null
@@ -326,37 +366,5 @@ private fun PromptRow(
         )
         if (prompt.kept) KitText(stringResource(Res.string.keptPromptsKeptFrom))
         if (prompt.uncertain) KitNotice(stringResource(Res.string.keptPromptsUncertain))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            KitButton(
-                stringResource(Res.string.promptStashRestoreToDraft),
-                { actions.insert(prompt.id) },
-                role = KitButtonRole.Secondary,
-                enabled =
-                    if (prompt.text.isBlank() && !prompt.kept) KitEnabled.Disabled(title)
-                    else enabled,
-            )
-            if (prompt.kept && prompt.attachments > 0 && prompt.text.isNotBlank())
-                KitButton(
-                    stringResource(Res.string.promptFixWordsOnly),
-                    { actions.insertWordsOnly(prompt.id) },
-                    role = KitButtonRole.Tertiary,
-                    enabled = enabled,
-                )
-            if (!prompt.kept)
-                KitButton(
-                    stringResource(Res.string.chatUiEdit),
-                    { actions.editPrompt(prompt.id) },
-                    role = KitButtonRole.Tertiary,
-                    enabled = enabled,
-                )
-            KitButton(
-                stringResource(Res.string.promptStashDelete),
-                { actions.delete(prompt.id) },
-                role = KitButtonRole.Tertiary,
-                destructive = true,
-                enabled = enabled,
-                modifier = Modifier.testTag("prompt-delete-${prompt.id}"),
-            )
-        }
     }
 }

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.preview.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -67,6 +68,7 @@ public fun PortsScreen(state: PortsUi, actions: PortsActions, modifier: Modifier
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 package io.github.eslamasabry.oc.ui.kit.rb.o48
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -16,7 +17,7 @@ class CheckedInputDialogTest {
         val field = TextFieldState("htop")
         var checked = 0
         setContent { KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
-            KitScreen(page = true) {
+            KitScreen(page = true, edges = KitScreenEdges.Bleed) {
                 KitCheckedInputDialog(true, "Install", field, "Package", "Check", { checked++ }, {}, error = "Not available")
             }
         } }

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.usage.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -192,6 +193,7 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
             loading = state.refreshing,
             loadingLabel = stringResource(Res.string.usageLoading),
             width = KitScreenWidth.Reading,
+            edges = KitScreenEdges.Bleed,
         ) {
             // F: lib/ui/screens/usage_screen.dart:266-275: the whole page is the missing feature, said by the
             // capability explainer's page state (no description, filters or budgets on a server without usage).

@@ -125,6 +125,87 @@ public enum class KitScreenWidth(internal val cap: CapRole) {
     List(CapRole.List),
 }
 
+/**
+ * Where a screen's body sits across the window (audit C02, 2026-11-09). The frame owns the page gutter: a body that
+ * forgot its own padding drew buttons, labels and fields against the window edge on 14 screens.
+ */
+public enum class KitScreenEdges {
+    /**
+     * The default: the body sits between the page gutters (16 dp each side) and is on the rail, so kit rows, groups and
+     * section labels line up with it instead of stepping in a second gutter (as on a sheet).
+     */
+    Gutter,
+
+    /**
+     * The body runs to the window edges and keeps its own gutters: lists of kit rows whose touch area and selected fill
+     * span the window, a transcript, edge-to-edge output. Opt in only when the body really draws to the edge.
+     */
+    Bleed,
+}
+
+/** True inside a body that already sits between the page gutters: a nested [KitScreen] adds none of its own. */
+internal val LocalKitScreenGutter = compositionLocalOf { false }
+
+/**
+ * The page gutter a kit part keeps from its box's edge on a page: the tokens' gutter, or 0 inside a
+ * [KitScreenEdges.Gutter] body, where the frame already keeps it. A part that pads itself by the page gutter reads
+ * this, so it never steps in twice.
+ */
+@Composable
+public fun kitPageGutter(): androidx.compose.ui.unit.Dp =
+    if (LocalKitScreenGutter.current) 0.dp else LocalKitTokens.current.gutter.dp
+
+/**
+ * How far a band (a key bar's ground, a full-width surface) reaches past its box to meet the window edges: the page
+ * gutter inside a [KitScreenEdges.Gutter] body, else 0. Pair [kitPageBleed] with this much padding inside, so the
+ * band's content stays on the gutter while its ground runs edge to edge.
+ */
+@Composable
+public fun kitPageBleedWidth(): androidx.compose.ui.unit.Dp =
+    if (LocalKitScreenGutter.current) LocalKitTokens.current.gutter.dp else 0.dp
+
+/** Widens the box by [kitPageBleedWidth] on both sides without taking more room: its ground meets the window edges. */
+@Composable
+public fun Modifier.kitPageBleed(): Modifier {
+    val bleed = kitPageBleedWidth()
+    if (bleed <= 0.dp) return this
+    return layout { measurable, constraints ->
+        val b = bleed.roundToPx()
+        val wide =
+            if (constraints.hasBoundedWidth)
+                constraints.copy(minWidth = constraints.minWidth + 2 * b, maxWidth = constraints.maxWidth + 2 * b)
+            else constraints
+        val placeable = measurable.measure(wide)
+        val width = (placeable.width - 2 * b).coerceAtLeast(0)
+        layout(width, placeable.height) { placeable.placeRelative(-b, 0) }
+    }
+}
+
+/**
+ * Lays [content] between the page gutters for [KitScreenEdges.Gutter], once: a body already between gutters or on a
+ * sheet's rail adds none. [KitScreenEdges.Bleed] leaves it alone.
+ */
+@Composable
+internal fun KitScreenBody(edges: KitScreenEdges, content: @Composable () -> Unit) {
+    val placed = LocalKitScreenGutter.current || io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail.current
+    if (edges == KitScreenEdges.Bleed || placed) {
+        content()
+        return
+    }
+    Box(
+        Modifier.fillMaxSize()
+            .padding(horizontal = LocalKitTokens.current.gutter.dp)
+            .testTag("kit-screen-body"),
+    ) {
+        CompositionLocalProvider(
+            LocalKitScreenGutter provides true,
+            io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true,
+        ) {
+            content()
+        }
+    }
+}
+
 /** A screen's pull to refresh, set on [KitScreen] so it wraps the scrolling header as well as the body. */
 @OptIn(ExperimentalMaterial3Api::class)
 public class KitScreenRefresh(
@@ -143,6 +224,8 @@ public class KitScreenRefresh(
  * over 12 dp. There is no other slot (R9: no new bar levels). A screen with no status slot above
  * it owns the window's slot; one under a slot (a tab body, a pane) contributes its [status] instead
  * of drawing a second line. It hosts the screen's sheets.
+ *
+ * The body sits between the page gutters unless the screen passes [KitScreenEdges.Bleed] (C02).
  *
  * States: default, loading, status, search, keyboard Text: none (its slots bring their own) Cap:
  * Fill (the body is capped by [width] from medium up) Motion: none of its own (the status line
@@ -170,6 +253,8 @@ public fun KitScreen(
     frost: KitFrostState? = null,
     /** Pull to refresh for the whole scrolling part (header and body); see [KitScreenRefresh]. */
     refresh: KitScreenRefresh? = null,
+    /** Where the body sits across the window: between the page gutters (the default) or edge to edge. */
+    edges: KitScreenEdges = KitScreenEdges.Gutter,
     body: @Composable () -> Unit,
 ) {
     val framed = topBar != null || page
@@ -221,7 +306,7 @@ public fun KitScreen(
                     .testTag("kit-screen")
             ) {
                 CompositionLocalProvider(LocalChromePadding provides padding) {
-                    Box(Modifier.fillMaxSize().kitMaxWidth(cap)) { bodyPart() }
+                    Box(Modifier.fillMaxSize().kitMaxWidth(cap)) { KitScreenBody(edges) { bodyPart() } }
                 }
                 topPart?.let {
                     Box(
@@ -338,13 +423,13 @@ public fun KitScreen(
                                 if (!runs) header else ({ Spacer(Modifier.height(runDp)); header() })
                             KitScrollingHeaderFrame(shownHeader, m) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                                Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                                Box(Modifier.fillMaxWidth().weight(1f)) { KitScreenBody(edges) { bodyPart() } }
                             }
                         } else {
                             // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
                             Column(m) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                                Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                                Box(Modifier.fillMaxWidth().weight(1f)) { KitScreenBody(edges) { bodyPart() } }
                             }
                         }
                     }
@@ -520,6 +605,8 @@ private fun Panes(
             loadingLabel = loadingLabel,
             bottom = bottom,
             page = showsDetail && topBar == null,
+            // The list pane's rows keep their own gutters; the pane's hairline meets their touch area.
+            edges = KitScreenEdges.Bleed,
             body = list,
         )
     }

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,12 +44,13 @@ private const val LINE_WIDTH = 0.28f
 public fun KitSkeletonRows(modifier: Modifier = Modifier, count: Int = 4) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
+    val pageGutter = kitPageGutter()
     val shape = colors.text1.copy(alpha = SKELETON_SHAPE_ALPHA)
     val line = colors.text1.copy(alpha = SKELETON_LINE_ALPHA)
     Column(modifier.fillMaxWidth().testTag("kit-skeleton-rows").clearAndSetSemantics {}) {
         repeat(count) { i ->
             Row(
-                Modifier.fillMaxWidth().height(tokens.skeletonRow.dp).padding(horizontal = tokens.gutter.dp),
+                Modifier.fillMaxWidth().height(tokens.skeletonRow.dp).padding(horizontal = pageGutter),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {

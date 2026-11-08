@@ -39,7 +39,8 @@ public object KitBidi {
         modifier: Modifier = Modifier,
         style: TextStyle = TextStyle.Default,
         maxLines: Int = Int.MAX_VALUE,
-        overflow: TextOverflow = TextOverflow.Clip,
+        // C08: a capped line ends in an ellipsis, never cut mid-word.
+        overflow: TextOverflow = if (maxLines == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis,
         softWrap: Boolean = true,
     ) {
         BasicText(ltr(value), modifier, style = style, overflow = overflow, softWrap = softWrap, maxLines = maxLines)

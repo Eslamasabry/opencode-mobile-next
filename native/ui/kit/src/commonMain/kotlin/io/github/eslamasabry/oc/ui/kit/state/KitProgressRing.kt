@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
@@ -244,10 +245,14 @@ public fun KitProgressRing(
                             // The measured figure always reads left to right ("64%").
                             if (figure is KitRingFigure.Measured) {
                                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                    OneEmLine(big.fontSize) { BasicText(text, style = big, maxLines = 1) }
+                                    OneEmLine(big.fontSize) {
+                                        BasicText(text, style = big, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
                                 }
                             } else {
-                                OneEmLine(big.fontSize) { BasicText(text, style = big, maxLines = 1) }
+                                OneEmLine(big.fontSize) {
+                                        BasicText(text, style = big, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
                             }
                             val small = caption ?: if (figure is KitRingFigure.Steps) stepsDone else null
                             if (small != null) {
@@ -256,7 +261,7 @@ public fun KitProgressRing(
                                 BasicText(
                                     small,
                                     style = typography.style(TypeRole.Secondary).copy(color = colors.text2, textAlign = TextAlign.Center),
-                                    maxLines = 1,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }

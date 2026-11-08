@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -289,7 +290,7 @@ private fun WheelColumn(
                             fontSize = style.fontSize * fit,
                             lineHeight = style.lineHeight * fit,
                         ),
-                    maxLines = 1,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                     softWrap = false,
                 )
             }

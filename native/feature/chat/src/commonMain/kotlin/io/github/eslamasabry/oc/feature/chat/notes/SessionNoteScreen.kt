@@ -118,6 +118,7 @@ public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) 
                                     ),
                         )
                     }),
+            edges = KitScreenEdges.Bleed,
         ) {
             if (!state.ready) {
                 if (state.failure != null)

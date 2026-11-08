@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /**
  * Search across one server's conversations: the server's own title search (every project when it
@@ -39,6 +40,7 @@ public class SearchViewModel(
     private val source: ConversationSearchSource,
     private val recents: RecentSearchStore,
     private val nav: AppNavigator,
+    private val clock: Clock,
 ) : ViewModel(), SearchActions {
     private val local = MutableStateFlow(SearchUi(server = route.profile))
     public val state: StateFlow<SearchUi> = local.asStateFlow()
@@ -46,6 +48,7 @@ public class SearchViewModel(
     private var cancelSearch: () -> Unit = {}
     private var cancelMore: () -> Unit = {}
     private var cancelGoTo: () -> Unit = {}
+    private var cancelActivity: () -> Unit = {}
     private var cursor: String? = null
     private var titlesDone = false
     private var generation = 0
@@ -164,6 +167,17 @@ public class SearchViewModel(
         }
     }
 
+    override fun openProject(project: SearchProject) {
+        val server = local.value.server ?: return
+        if (local.value.activity.projects.none { it.directory == project.directory }) return
+        remember(local.value.query)
+        nav.open(ProjectsRoute.Project(server, project.directory))
+    }
+
+    override fun openRecent(conversation: SearchRecentConversation) {
+        nav.openChat(conversation.ref)
+    }
+
     override fun openDestination(entry: SearchIndexEntry) {
         // Capabilities can change while a search result is visible. Recheck membership before
         // opening.
@@ -172,8 +186,25 @@ public class SearchViewModel(
         nav.open(entry.destination)
     }
 
+    private fun loadActivity(server: ProfileId?) {
+        cancelActivity()
+        local.update { it.copy(activity = SearchActivity(), nowMs = now()) }
+        if (server == null) return
+        viewModelScope
+            .launch {
+                source.activity(server).collect { activity ->
+                    if (local.value.server != server) return@collect
+                    local.update { it.copy(activity = activity, nowMs = now()) }
+                }
+            }
+            .also { job -> cancelActivity = { job.cancel() } }
+    }
+
+    private fun now(): Long = clock.now().toEpochMilliseconds()
+
     private fun loadGoTo(server: ProfileId?) {
         cancelGoTo()
+        loadActivity(server)
         local.update {
             it.copy(
                 goTo = persistentListOf(),
@@ -246,6 +277,7 @@ public class SearchViewModel(
         val inside = s.content != ContentPhase.Off
         val cleared =
             s.copy(
+                nowMs = now(),
                 titleHits = persistentListOf(),
                 contentHits = persistentListOf(),
                 contentRead = 0,
@@ -350,6 +382,7 @@ public class SearchViewModel(
                                 snippet = excerpt,
                                 snippetFromYou = message.fromYou,
                                 messageId = message.id,
+                                updatedMs = conversation.updatedMs,
                             )
                         }
                         settle(
@@ -381,6 +414,7 @@ public class SearchViewModel(
                     ConversationRef(server, it.id),
                     it.title,
                     SearchMatch.projectName(it.directory),
+                    updatedMs = it.updatedMs,
                 )
             }
 

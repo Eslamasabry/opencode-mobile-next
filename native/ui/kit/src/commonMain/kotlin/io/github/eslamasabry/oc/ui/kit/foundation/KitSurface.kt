@@ -135,7 +135,8 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val sharp = style.spec.tokens.sharpRadius
     val base = input.radius?.value ?: input.shape.radiusDp()
     val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
-    val r = StyleResolver.corner(base, style.knobs.corners, sharp)
+    // A pane's corners grow with the style's pane inset (Glass, owner 2026-11-09), as its named shape does.
+    val r = if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens) else StyleResolver.corner(base, style.knobs.corners, sharp)
     val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val shape =
         if (input.radius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)) {
@@ -181,7 +182,10 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             val ground = roles.ground.withAlpha(1f)
             val spots = if (blurs && backdrop != null) listOf(ground) + backdrop.frostedSpots else listOf(ground)
             val solid = (input.ownFill?.toArgb() ?: request.levelFill).over(ground)
-            remember(resolved, spots, solid, roles, clear) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots), roles, clear) }
+            // A clear content pane (a card, a row group) keeps its first line of words below Glass's pane inset, where its
+            // top sheen has mostly faded (GlassFinish.sheenAt); a chip's or a field's words may lie anywhere on it.
+            val wordsDp = if (clear && input.role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
+            remember(resolved, spots, solid, roles, clear) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear) }
         }
     // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree
     // holds through a fade (kit_surface_look.dart:1257-1266).
@@ -495,7 +499,9 @@ private fun SurfaceBox(
     var box = modifier.then(look.modifier)
     if (outlined) box = box.kitHairlineBorder(hairline, argbColor(roles.hairline), look.shape)
     if (clip) box = box.clip(look.shape)
-    Box(box.padding(padding.dp())) { content() }
+    // Glass keeps its pane inset beyond the surface's own padding (owner 2026-11-09: room for the rim and the sheen).
+    val inset = if (padding == KitSurfacePadding.None) 0.dp else kitPaneInset()
+    Box(box.padding(padding.dp() + inset)) { content() }
 }
 
 /**

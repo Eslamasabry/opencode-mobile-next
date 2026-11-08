@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,6 +56,7 @@ class E20S30JumpPillTest {
                     overlayChrome = true,
                     frost = source,
                     bottom = { Box(Modifier.fillMaxWidth().height(72.dp).testTag("composer")) },
+                    edges = KitScreenEdges.Bleed,
                 ) {
                     Box(Modifier.fillMaxSize().kitFrostSource(source)) {
                         KitTranscriptList(state, newestKey = rows.first(), jumpLabel = "Jump to latest", motion = KitMotionLevel.Off) {

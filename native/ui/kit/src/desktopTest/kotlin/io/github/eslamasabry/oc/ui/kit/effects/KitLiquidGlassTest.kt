@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.ui.kit.effects
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -127,6 +128,7 @@ class KitLiquidGlassTest {
                     seen(face != null)
                     Box(Modifier.fillMaxWidth().height(56.dp).then(face ?: Modifier.background(Color.Gray)).testTag("composer"))
                 },
+                edges = KitScreenEdges.Bleed,
             ) {
                 Box(Modifier.fillMaxSize()) {
                     Stripes(source)

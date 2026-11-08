@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.review.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -323,6 +324,7 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                     )
                 }
             } else null,
+        edges = KitScreenEdges.Bleed,
     ) {
         when (val load = state.load) {
             ReviewLoad.Loading -> Unit
@@ -605,6 +607,7 @@ public fun FileDiffScreen(state: FileDiffUi, actions: FileDiffActions) {
         topBar = { FileTopBar(state, fullContext, { fullContext = !fullContext }, actions::back) },
         loading = state.load == ReviewLoad.Loading,
         bottom = if (state.canComment && state.drafts > 0) ({ SendCommentsBlock(state, actions) }) else null,
+        edges = KitScreenEdges.Bleed,
     ) {
         when (val load = state.load) {
             ReviewLoad.Loading -> Unit
@@ -901,6 +904,7 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
                     )
                 }
             } else null,
+        edges = KitScreenEdges.Bleed,
     ) {
         if (!state.available) {
             KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewUndoUnavailable))
@@ -1021,6 +1025,7 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                     )
                 }
             } else null,
+        edges = KitScreenEdges.Bleed,
     ) {
         val back = KitAction(stringResource(Res.string.reviewRevertBackAction), actions::back)
         state.loadFailure?.let {

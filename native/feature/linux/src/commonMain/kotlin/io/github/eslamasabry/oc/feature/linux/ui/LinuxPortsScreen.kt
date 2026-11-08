@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -121,6 +122,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
         width = KitScreenWidth.Reading,
         loading = state.ownerStopping || state.stoppingPid != null,
         loadingLabel = stringResource(Res.string.linuxMgrStopping),
+        edges = KitScreenEdges.Bleed,
     ) {
         if (!state.loading && state.ports.isEmpty() && state.problem != null) {
             KitPageState(
