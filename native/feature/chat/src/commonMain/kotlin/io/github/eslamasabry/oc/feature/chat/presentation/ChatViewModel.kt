@@ -233,6 +233,8 @@ public class ChatViewModel(
 
     override fun tryLinkNow(): Unit = presenter.tryLinkNow()
 
+    override fun stopAfterStep(note: String): Unit = presenter.stopAfterStep(note)
+
     override fun openPlace(place: ChatPlace): Unit = presenter.openPlace(place)
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()

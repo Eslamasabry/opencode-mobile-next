@@ -153,6 +153,7 @@ internal class ChatListWords(
     val messageActions: String,
     val working: String,
     val stopping: String,
+    val stoppingAfterStep: String = stopping,
     val sending: String,
     val notSent: String,
     val unconfirmed: String,
@@ -361,6 +362,7 @@ internal fun ChatTranscriptList(
                 val liveWords =
                     when {
                         live.stopping -> listWords.stopping
+                        live.stoppingAfterStep -> listWords.stoppingAfterStep
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }

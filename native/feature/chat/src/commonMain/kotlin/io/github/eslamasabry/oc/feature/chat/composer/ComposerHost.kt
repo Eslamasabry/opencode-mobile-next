@@ -62,6 +62,11 @@ public class ComposerChrome(
     public val onStop: () -> Unit,
     public val stopping: () -> Boolean,
     /**
+     * S24-CHAT story 6: what holding Stop does now ("Stop after this step"), or null when the hold
+     * offers nothing (no steering, a note already went).
+     */
+    public val stopAfterStep: () -> (() -> Unit)? = { null },
+    /**
      * Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER).
      * Never a new bar.
      */

@@ -388,7 +388,8 @@ public fun KitComposerSend(
  * Stop while a reply runs (owner decisions 11B and 02B, 2026-10-02): Send turns into a neutral disc
  * (`text1`) with the stop square, ringed by a turning arc in the live colour, so "it is working,
  * tap to stop" reads at a glance. The ring holds still under reduced motion and battery saver.
- * Plays `KitHaptic.Commit`. [label] names the target ("Stop Claude Code").
+ * Plays `KitHaptic.Commit`. [label] names the target ("Stop Claude Code"). [onLongClick] (S24-CHAT, Flutter
+ * `_stopMenu`): the hold, named [onLongClickLabel] for a screen reader; null = no hold. Ignored while stopping.
  */
 @Composable
 public fun KitComposerStopRing(
@@ -396,6 +397,8 @@ public fun KitComposerStopRing(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     stopping: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
 ) {
     val colors = LocalKitColors.current
     val still = KitMotion.state.reduced || LocalKitAppearance.current.saver
@@ -419,6 +422,8 @@ public fun KitComposerStopRing(
     KitTappable(
         onClick = { if (!stopping) onClick() },
         modifier = modifier.semantics { contentDescription = label },
+        onLongClick = onLongClick?.takeUnless { stopping },
+        onLongClickLabel = onLongClickLabel,
         haptic = KitHaptic.Commit,
         shape = KitShapeId.Circle,
     ) {

@@ -167,7 +167,13 @@ public enum class ChatStatusKind {
  * The live line while a turn runs (plan 09 §4.1, trimmed: no step count until S2-DLV's
  * `ConversationActivity`).
  */
-public data class LiveTurnUi(val stopping: Boolean)
+public data class LiveTurnUi(
+    val stopping: Boolean,
+    /** S24-CHAT (Flutter `_stopAfterStepPending`): the stop note went; the line says it waits for the step. */
+    val stoppingAfterStep: Boolean = false,
+    /** Hold Stop offers "Stop after this step": the server steers a running turn and no note went yet. */
+    val canStopAfterStep: Boolean = false,
+)
 
 /**
  * Find (plan 09 §6.6, Flutter `transcript_find.dart`): hits in reading order, "3 of 12". [current]
@@ -374,6 +380,12 @@ public interface ChatActions {
 
     /** "Report a problem" from the could-not-load page (Flutter chat_states.dart:85, `product-error-report-bug`). */
     public fun reportProblem() {}
+
+    /**
+     * S24-CHAT story 6 (Flutter `_stopAfterThisStep`): [note] ("Please stop after the step you are on
+     * now…") steers the running turn; the draft stays as it is. A tap on Stop still stops at once.
+     */
+    public fun stopAfterStep(note: String) {}
 
     /** S24-CHAT: a commands-launcher place for this conversation (Flutter `_ChatCommandAction`). */
     public fun openPlace(place: ChatPlace) {}

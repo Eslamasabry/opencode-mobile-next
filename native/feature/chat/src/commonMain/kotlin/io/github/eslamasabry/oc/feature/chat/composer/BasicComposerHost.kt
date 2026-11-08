@@ -75,6 +75,9 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStep
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -769,13 +772,32 @@ public fun BasicComposer(
                 if (chrome.stopping()) Res.string.phoneServerCardStopping
                 else Res.string.kitTurnLiveStopShort
             )
+        // S24-CHAT story 6 (Flutter `_stopMenu`): holding Stop offers "Stop after this step" where the
+        // server steers the running turn; a tap still stops at once.
+        val afterStep = chrome.stopAfterStep()
+        val afterStepLabel = stringResource(Res.string.chatStopAfterStep)
+        var stopMenu by remember { mutableStateOf(false) }
+        if (afterStep == null && stopMenu) stopMenu = false
         val stopPart: @Composable () -> Unit = {
-            KitComposerStopRing(
-                label = stopLabel,
-                onClick = chrome.onStop,
-                stopping = chrome.stopping(),
-                modifier = Modifier.testTag("chat-stop-button"),
-            )
+            KitMenu(
+                expanded = stopMenu,
+                items =
+                    listOfNotNull(
+                        afterStep?.let { run ->
+                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; run() })
+                        }
+                    ),
+                onDismissRequest = { stopMenu = false },
+            ) {
+                KitComposerStopRing(
+                    label = stopLabel,
+                    onClick = chrome.onStop,
+                    stopping = chrome.stopping(),
+                    onLongClick = afterStep?.let { { stopMenu = true } },
+                    onLongClickLabel = afterStepLabel,
+                    modifier = Modifier.testTag("chat-stop-button"),
+                )
+            }
         }
         // F1 (scoreboard 2026-11-07), Flutter's layout (chat_composer_region.dart:44-77, kit_composer.dart:796-808):
         // the approval and model chips ride one strip ABOVE the message box (approval at the start, the model at

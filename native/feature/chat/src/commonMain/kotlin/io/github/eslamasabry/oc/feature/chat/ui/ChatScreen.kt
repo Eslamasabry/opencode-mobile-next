@@ -166,6 +166,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
 import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.commandDestination
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPending
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
 import io.github.eslamasabry.oc.ui.words.res.connectionTryNow
@@ -307,11 +309,13 @@ public fun ChatScreen(
     val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
     val words = rememberChatWords()
+    val stopNote = stringResource(Res.string.chatStopAfterStepPrompt)
     val listWords =
         ChatListWords(
             messageActions = stringResource(Res.string.kitMessageActions),
             working = stringResource(Res.string.kitTurnLiveWorking),
             stopping = stringResource(Res.string.phoneServerCardStopping),
+            stoppingAfterStep = stringResource(Res.string.chatStopAfterStepPending),
             sending = stringResource(Res.string.kitTurnLiveSending),
             notSent = stringResource(Res.string.chatSendFailed),
             unconfirmed = stringResource(Res.string.queuedDiscardUnconfirmedMessage),
@@ -386,6 +390,10 @@ public fun ChatScreen(
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
+                stopAfterStep = {
+                    if (latest.live?.canStopAfterStep == true) { { actions.stopAfterStep(stopNote) } }
+                    else null
+                },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
                 // Read when the sheet draws, like rowChips: the approval state may change after the chrome is made.
                 promptSettings = { close -> headerState?.approval?.let { ApprovalSettingsRows(it, close) } },

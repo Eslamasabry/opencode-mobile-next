@@ -75,6 +75,7 @@ internal data class ChatLocal(
     val actionFailure: Failure? = null,
     val atLiveEdge: Boolean = true,
     val stopping: Boolean = false,
+    val stopAfterStep: Boolean = false,
     val leaving: Boolean = false,
     val select: SelectTextUi? = null,
     val insert: ClipUi? = null,
@@ -286,7 +287,15 @@ public class ChatPresenter(
                 },
             rows = t.rows,
             newestRowKey = t.newestKey,
-            live = if (t.run.busy) LiveTurnUi(l.stopping) else null,
+            live =
+                if (t.run.busy)
+                    LiveTurnUi(
+                        l.stopping,
+                        stoppingAfterStep = l.stopAfterStep,
+                        canStopAfterStep =
+                            !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
+                    )
+                else null,
             pending = i.pending.asReversed().toImmutableList(),
             find = find,
             menu = l.menu,
@@ -472,6 +481,21 @@ public class ChatPresenter(
     internal fun settleStop() {
         if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy)
             local.update { it.copy(stopping = false) }
+        // The turn ended: the stop note did its work (or the turn finished first).
+        if (local.value.stopAfterStep && !world.transcript.value.run.busy)
+            local.update { it.copy(stopAfterStep = false) }
+    }
+
+    override fun stopAfterStep(note: String) {
+        val l = local.value
+        if (note.isBlank() || l.stopping || l.stopAfterStep) return
+        if (!world.transcript.value.run.busy || !world.capabilities.value.promptSteering) return
+        local.update { it.copy(stopAfterStep = true) }
+        launcher.launch {
+            val sent = world.sendAgain(note)
+            if (sent is Outcome.Failed)
+                local.update { it.copy(stopAfterStep = false, actionFailure = sent.failure) }
+        }
     }
 
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
