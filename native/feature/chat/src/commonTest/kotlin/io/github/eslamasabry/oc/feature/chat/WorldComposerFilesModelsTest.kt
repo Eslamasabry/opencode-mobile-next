@@ -899,6 +899,85 @@ class WorldComposerFilesModelsTest {
         assertTrue(f.base.calls.any { it.startsWith("replyPermission r1") }, "${f.base.calls}")
     }
 
+    // ---- B-169: switch model when a limit stops a reply ----
+
+    @Test
+    fun `B-169-030 the stopped prompt goes again with its words, file, mention and agent on the chosen model`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "m1"))
+            f.gateway.appliedAgent = "build"
+            f.operations.catalog =
+                Outcome.Ok(
+                    snapshot(catalogModel("m1"), catalogModel("m2")).copy(
+                        agents = persistentListOf(
+                            io.github.eslamasabry.oc.core.model.CatalogAgent("build", "primary", null, false, null, null, null),
+                            io.github.eslamasabry.oc.core.model.CatalogAgent("plan", "primary", null, false, null, null, null),
+                            io.github.eslamasabry.oc.core.model.CatalogAgent("helper", "subagent", null, false, null, null, null),
+                        ),
+                    ),
+                )
+            f.switchesModels()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val sid = ref.sessionId.raw
+            val shot = file("shot.txt")
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u1", sid, Role.User, agent = "plan")))
+            f.base.events.emit(GatewayEvent.PartUpserted(Part("t1", "u1", sid, PartType.Text, "text", text = "@helper fix it")))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(
+                    Part("f1", "u1", sid, PartType.File, "file", mime = shot.mime, filename = shot.filename, url = shot.url)
+                )
+            )
+            f.base.events.emit(
+                GatewayEvent.MessageUpserted(
+                    MessageInfo(
+                        "a1",
+                        sid,
+                        Role.Assistant,
+                        providerId = "prov",
+                        modelId = "m1",
+                        parentId = "u1",
+                        errorText = "Rate limit exceeded: free-models-per-day (429)",
+                    )
+                )
+            )
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(
+                    Part(
+                        "k1",
+                        "a1",
+                        sid,
+                        PartType.Tool,
+                        "tool",
+                        toolName = "edit",
+                        tool = io.github.eslamasabry.oc.core.model.transcript.ToolState(
+                            io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Completed
+                        ),
+                    )
+                )
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            val stopped = assertNotNull(f.world.stoppedPrompt("u1"))
+            assertEquals("@helper fix it", stopped.text)
+            assertEquals(listOf("shot.txt"), stopped.attachments.map { it.filename })
+            assertEquals("plan", stopped.agent)
+            assertEquals(io.github.eslamasabry.oc.feature.chat.world.ModelKey("prov", "m1"), stopped.model)
+            assertEquals(1, stopped.toolSteps)
+
+            val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
+            assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
+            assertIs<Outcome.Ok<Unit>>(f.world.sendAgainWith(stopped))
+            advanceTimeBy(60)
+            runCurrent()
+            val sent = f.base.sentPrompts.last().second
+            assertEquals("@helper fix it", sent.text)
+            assertEquals(listOf("shot.txt"), sent.attachments.map { it.filename })
+            assertEquals(listOf("helper"), sent.mentions.map { it.name })
+            assertEquals(ModelRef("prov", "m2"), sent.model?.model)
+            assertEquals("plan", f.gateway.appliedAgent)
+        }
+
     // ---- QA wave 4 / Codex composer review ----
 
     @Test

@@ -109,6 +109,11 @@ public data class ServerCapabilities(
     val projectFolderCreation: Boolean = false,
     val agentFeatures: Boolean = false,
     val worktreeInspection: Boolean = false,
+    /**
+     * B-169: each prompt carries its own model, so a stopped prompt can be sent again with another one (OpenCode 2's
+     * `/session/{id}/prompt` model). Gates Switch model on a failed reply.
+     */
+    val promptModelChoice: Boolean = false,
 ) {
     /** Whether a conversation runs shell commands here (Dart `conversationShellOn`). */
     public val conversationShellOn: Boolean

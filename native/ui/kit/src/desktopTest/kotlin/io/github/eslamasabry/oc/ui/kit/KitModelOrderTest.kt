@@ -60,4 +60,14 @@ class KitModelOrderTest {
         val sections = KitModelOrder.sections(all, favorites = listOf(gone))
         assertTrue(sections.none { it.kind == KitModelSectionKind.Favorites })
     }
+
+    @Test
+    fun `B-169-020 a switch suggestion leads under its own heading and shows once`() {
+        val sections = KitModelOrder.sections(all, recent = listOf(fable), current = terra.key, suggested = fable.key)
+        assertEquals(KitModelSectionKind.Suggested, sections.first().kind)
+        assertEquals(listOf(fable), sections.first().rows)
+        assertEquals(1, sections.sumOf { s -> s.rows.count { it.key == fable.key } })
+        // A suggestion the search does not match is not forced in.
+        assertTrue(KitModelOrder.sections(all, suggested = fable.key, query = "glm").none { it.kind == KitModelSectionKind.Suggested })
+    }
 }

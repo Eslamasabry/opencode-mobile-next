@@ -159,6 +159,14 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
 import io.github.eslamasabry.oc.ui.words.res.chatUiUseModelAndResend
+import io.github.eslamasabry.oc.ui.words.res.b169AskSend
+import io.github.eslamasabry.oc.ui.words.res.b169AskTitle
+import io.github.eslamasabry.oc.ui.words.res.b169AttachAgain
+import io.github.eslamasabry.oc.ui.words.res.b169ConnectProvider
+import io.github.eslamasabry.oc.ui.words.res.b169Offline
+import io.github.eslamasabry.oc.ui.words.res.b169SwitchModel
+import io.github.eslamasabry.oc.ui.words.res.b169UsedUp
+import io.github.eslamasabry.oc.ui.words.res.b169UsedUpNoName
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmBody
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactConfirmTitle
@@ -829,65 +837,69 @@ public fun ChatScreen(
                                         projectName = header?.state?.projectName,
                                     )
                                 } else
-                                    ChatTranscriptList(
-                                        folds = folds,
-                                        rows = state.rows,
-                                        live = state.live,
-                                        pending = state.pending,
-                                        words = words,
-                                        listWords = listWords,
-                                        list = list,
-                                        reveal = reveal,
-                                        motion = motion,
-                                        onOpenMenu = actions::openMessageMenu,
-                                        onCopyReply = { footer ->
-                                            actions.messageAction(
-                                                io.github.eslamasabry.oc.feature.chat.presentation
-                                                    .MessageTarget(
-                                                        footer.turnId,
-                                                        footer.key,
-                                                        io.github.eslamasabry.oc.feature.chat
-                                                            .presentation
-                                                            .TargetKind
-                                                            .Reply,
-                                                        null,
-                                                    ),
-                                                MessageAction.Copy,
-                                            )
-                                        },
-                                        onRetrySend = actions::retrySend,
-                                        receiptChecks = state.receiptChecks,
-                                        onCheckReceipt = actions::checkReceipt,
-                                        onReviewPending = onReviewPending,
-                                        modifier = Modifier.fillMaxSize().chatPane(),
-                                        facts = facts,
-                                        display = transcriptDisplay,
-                                        onOpenSession = onOpenSession,
-                                        reply =
-                                            rememberReplyActions(
-                                                actions,
-                                                state.confirmedPaths,
-                                                models = modelChoices,
-                                                canCompact =
-                                                    state.capabilities.compact && state.live == null,
-                                                onChooseModel = {
-                                                    modelPicker = (modelPicker ?: 0L) + 1L
-                                                },
-                                                onOpenCode = { codeReader = it },
-                                                onRerunCommand =
-                                                    if (workModel != null && state.capabilities.shell && !demoMode)
-                                                        workModel::openShellDialog
-                                                    else null,
-                                            ),
-                                        onOpenFile = { file -> openArtifact(actions, file) },
-                                        onAllFiles = actions::openFiles,
-                                        onSendAgain = actions::retryLastPrompt,
-                                        reasoningExpanded = state.reasoningExpanded,
-                                        onCompactAgain =
-                                            if (state.capabilities.compact) actions::compactAgain
-                                            else null,
-                                        topLine = handoffLine,
-                                    )
+                                    androidx.compose.runtime.CompositionLocalProvider(
+                                        LocalLimitSwitchReply provides rememberLimitSwitchReply(state, actions)
+                                    ) {
+                                        ChatTranscriptList(
+                                            folds = folds,
+                                            rows = state.rows,
+                                            live = state.live,
+                                            pending = state.pending,
+                                            words = words,
+                                            listWords = listWords,
+                                            list = list,
+                                            reveal = reveal,
+                                            motion = motion,
+                                            onOpenMenu = actions::openMessageMenu,
+                                            onCopyReply = { footer ->
+                                                actions.messageAction(
+                                                    io.github.eslamasabry.oc.feature.chat.presentation
+                                                        .MessageTarget(
+                                                            footer.turnId,
+                                                            footer.key,
+                                                            io.github.eslamasabry.oc.feature.chat
+                                                                .presentation
+                                                                .TargetKind
+                                                                .Reply,
+                                                            null,
+                                                        ),
+                                                    MessageAction.Copy,
+                                                )
+                                            },
+                                            onRetrySend = actions::retrySend,
+                                            receiptChecks = state.receiptChecks,
+                                            onCheckReceipt = actions::checkReceipt,
+                                            onReviewPending = onReviewPending,
+                                            modifier = Modifier.fillMaxSize().chatPane(),
+                                            facts = facts,
+                                            display = transcriptDisplay,
+                                            onOpenSession = onOpenSession,
+                                            reply =
+                                                rememberReplyActions(
+                                                    actions,
+                                                    state.confirmedPaths,
+                                                    models = modelChoices,
+                                                    canCompact =
+                                                        state.capabilities.compact && state.live == null,
+                                                    onChooseModel = {
+                                                        modelPicker = (modelPicker ?: 0L) + 1L
+                                                    },
+                                                    onOpenCode = { codeReader = it },
+                                                    onRerunCommand =
+                                                        if (workModel != null && state.capabilities.shell && !demoMode)
+                                                            workModel::openShellDialog
+                                                        else null,
+                                                ),
+                                            onOpenFile = { file -> openArtifact(actions, file) },
+                                            onAllFiles = actions::openFiles,
+                                            onSendAgain = actions::retryLastPrompt,
+                                            reasoningExpanded = state.reasoningExpanded,
+                                            onCompactAgain =
+                                                if (state.capabilities.compact) actions::compactAgain
+                                                else null,
+                                            topLine = handoffLine,
+                                        )
+                                    }
                                 EarlierMessagesPill(
                                     state,
                                     list,
@@ -960,6 +972,8 @@ public fun ChatScreen(
                 } else PictureSheet(shown, actions)
                 CodeReaderSheet(codeReader, actions) { codeReader = null }
                 ChatTimelineSheet(state.timeline, actions, facts.nowMs)
+                // B-169 §3: Switch model on a failed reply.
+                io.github.eslamasabry.oc.feature.chat.composer.SwitchModelSheet(state.switching, modelChoices, actions)
                 KitConfirm(
                     spec = confirmSpec(state.confirm),
                     onConfirm = {
@@ -972,6 +986,7 @@ public fun ChatScreen(
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
                             is ChatConfirm.PhoneFile,
                             is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
+                            is ChatConfirm.SendAgainAfterSteps -> actions.confirmSwitch()
                             null -> Unit
                         }
                     },
@@ -1160,6 +1175,12 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                     body = stringResource(Res.string.phoneFileOpenBody),
                 )
         }
+        is ChatConfirm.SendAgainAfterSteps ->
+            KitConfirmSpec(
+                title =
+                    pluralStringResource(Res.plurals.b169AskTitle, confirm.steps, confirm.steps, confirm.modelLabel),
+                confirmLabel = stringResource(Res.string.b169AskSend),
+            )
         is ChatConfirm.PhoneFileAccess ->
             KitConfirmSpec(
                 title = stringResource(Res.string.phoneSharedAccessTitle),
@@ -1458,6 +1479,36 @@ internal fun rememberReplyActions(
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
             onRerunCommand = onRerunCommand,
+        )
+    }
+}
+
+/** B-169: the words and actions of a failed reply a lasting limit stopped, for [LocalLimitSwitchReply]. */
+@Composable
+internal fun rememberLimitSwitchReply(state: ChatUi, actions: ChatActions): LimitSwitchReply {
+    val switchModel = stringResource(Res.string.b169SwitchModel)
+    val connectProvider = stringResource(Res.string.b169ConnectProvider)
+    val switchOffline = stringResource(Res.string.b169Offline)
+    val usedUpTemplate = stringResource(Res.string.b169UsedUp, "\u0000")
+    val usedUpNoName = stringResource(Res.string.b169UsedUpNoName)
+    val attachAgainTemplate = stringResource(Res.string.b169AttachAgain, "\u0000")
+    val words =
+        remember(switchModel, connectProvider, switchOffline, usedUpTemplate, usedUpNoName, attachAgainTemplate) {
+            LimitSwitchWords(
+                switchModel = switchModel,
+                connectProvider = connectProvider,
+                switchOffline = switchOffline,
+                usedUp = { name -> name?.let { usedUpTemplate.replace("\u0000", it) } ?: usedUpNoName },
+                attachAgain = { file -> attachAgainTemplate.replace("\u0000", file) },
+            )
+        }
+    return remember(state.limitSwitch, state.switchOnline, state.attachAgain, actions, words) {
+        LimitSwitchReply(
+            limitSwitch = state.limitSwitch,
+            switchOnline = state.switchOnline,
+            attachAgain = state.attachAgain,
+            onSwitchModel = { turnId -> actions.switchModel(turnId) },
+            words = words,
         )
     }
 }

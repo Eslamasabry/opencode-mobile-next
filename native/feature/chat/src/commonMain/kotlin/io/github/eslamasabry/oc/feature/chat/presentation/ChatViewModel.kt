@@ -192,6 +192,14 @@ public class ChatViewModel(
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String): Unit =
         presenter.useModelAndResend(turnId, providerId, modelId)
 
+    override fun switchModel(turnId: String, resetsAtMs: Long?): Unit = presenter.switchModel(turnId, resetsAtMs)
+
+    override fun switchTo(providerId: String, modelId: String): Unit = presenter.switchTo(providerId, modelId)
+
+    override fun dismissSwitch(): Unit = presenter.dismissSwitch()
+
+    override fun confirmSwitch(): Unit = presenter.confirmSwitch()
+
     /** The models the error card may suggest (safe catalog projection). */
     public val models = world.models
 

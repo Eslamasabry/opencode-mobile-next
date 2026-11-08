@@ -17,6 +17,12 @@ public enum class ErrorFix {
     Compact,
     OpenProviders,
     OpenAccount,
+
+    /** B-169: "Switch model": another model, and the stopped prompt sent again with it. */
+    SwitchModel,
+
+    /** B-169 §5: "Connect a provider…" once a stopped prompt was switched as often as it may be. */
+    ConnectProvider,
 }
 
 public object ErrorRecovery {
@@ -50,6 +56,30 @@ public object ErrorRecovery {
         }
         return null
     }
+
+    /**
+     * B-169 §2/§5: the fixes for a failed reply a lasting limit stopped ([limit] is not None): Switch model
+     * leads, and the existing Compact and account fixes stay where they apply. One switch control per turn, so
+     * neither Choose nor Use model joins it. A prompt switched as often as it may be offers only Connect a provider.
+     */
+    public fun limitFixes(
+        limit: LimitSwitchOffer,
+        reply: ReplyFailureKind,
+        reason: String?,
+        canCompact: Boolean,
+    ): List<ErrorFix> =
+        when (limit) {
+            LimitSwitchOffer.None -> emptyList()
+            LimitSwitchOffer.Spent -> listOf(ErrorFix.ConnectProvider)
+            LimitSwitchOffer.Switch ->
+                listOfNotNull(
+                    ErrorFix.SwitchModel,
+                    ErrorFix.Compact.takeIf {
+                        canCompact && AgentErrorText.classify(reason.orEmpty()) == AgentErrorCause.FreeTierLimit
+                    },
+                    ErrorFix.OpenAccount.takeIf { reply == ReplyFailureKind.NoCredit },
+                )
+        }
 
     /** The fixes for a failed reply, most useful first. */
     public fun fixes(

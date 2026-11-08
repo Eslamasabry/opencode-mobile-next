@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchNoMatch
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
@@ -48,12 +49,16 @@ public data class KitModelOption(
     val label: String,
     val providerName: String = "",
     val supporting: String? = null,
+    /** Shown but not choosable, saying why ("Too long for this model"); null = choosable. */
+    val disabledReason: String? = null,
 ) {
     val key: String
         get() = "$providerId/$modelId"
 }
 
 public enum class KitModelSectionKind {
+    /** One pre-selected suggestion, above everything else (B-169 switch sheet). */
+    Suggested,
     Favorites,
     Recent,
     Provider,
@@ -80,6 +85,8 @@ public object KitModelOrder {
         /** The chosen model's [KitModelOption.key]; null = the server default. */
         current: String? = null,
         query: String = "",
+        /** One suggestion's [KitModelOption.key], listed first under its own heading; it shows once. */
+        suggested: String? = null,
     ): List<KitModelSection> {
         val q = query.trim().lowercase()
         fun matches(m: KitModelOption) =
@@ -91,6 +98,10 @@ public object KitModelOrder {
         val known = options.mapTo(HashSet()) { it.key }
         val listed = HashSet<String>()
         val out = ArrayList<KitModelSection>()
+        options
+            .firstOrNull { it.key == suggested && matches(it) }
+            ?.also { listed += it.key }
+            ?.let { out += KitModelSection(KitModelSectionKind.Suggested, listOf(it)) }
         val favs = favorites.filter { it.key in known && matches(it) && listed.add(it.key) }
         if (favs.isNotEmpty()) out += KitModelSection(KitModelSectionKind.Favorites, favs)
         val recents = recent.filter { it.key in known && matches(it) && listed.add(it.key) }
@@ -142,13 +153,18 @@ public fun KitModelSheet(
     offersServerDefault: Boolean = true,
     /** Resets the search when the sheet now serves another conversation. */
     resetKey: Any? = null,
+    /** B-169: one suggestion's key, listed first under [suggestedLabel]. */
+    suggested: String? = null,
+    suggestedLabel: String = "",
+    /** The sheet's title; null = "Choose a model". */
+    title: String? = null,
     above: @Composable ColumnScope.() -> Unit = {},
     below: @Composable ColumnScope.() -> Unit = {},
 ) {
     KitSheet(
         visible = visible,
         onDismissRequest = onDismissRequest,
-        title = stringResource(Res.string.composerPreviewModelsTitle),
+        title = title ?: stringResource(Res.string.composerPreviewModelsTitle),
         closeLabel = stringResource(Res.string.kitSheetClose),
         height = KitSheetHeight.Full,
     ) {
@@ -165,8 +181,8 @@ public fun KitModelSheet(
                     modifier = Modifier.fillMaxWidth().padding(bottom = Space.S2.dp).testTag("chat-model-search"),
                 )
             val sections =
-                remember(options, favorites, recent, current, query) {
-                    KitModelOrder.sections(options, favorites, recent, current, query)
+                remember(options, favorites, recent, current, query, suggested) {
+                    KitModelOrder.sections(options, favorites, recent, current, query, suggested)
                 }
             if (offersServerDefault && query.isBlank())
                 KitRowGroup(Modifier.testTag("chat-model-default")) {
@@ -191,6 +207,7 @@ public fun KitModelSheet(
                 KitRowGroup(
                     label =
                         when (section.kind) {
+                            KitModelSectionKind.Suggested -> suggestedLabel
                             KitModelSectionKind.Favorites -> stringResource(Res.string.chat_model_favorites)
                             KitModelSectionKind.Recent -> stringResource(Res.string.chatModelsRecent)
                             KitModelSectionKind.Provider ->
@@ -208,6 +225,7 @@ public fun KitModelSheet(
                             leading = if (mixed) ({ KitProviderLogo(option.providerId, option.providerName) }) else null,
                             selected = option.key == current,
                             mark = KitChoiceMark.Tick,
+                            enabled = KitEnabled.of(option.disabledReason == null, option.disabledReason),
                             supporting =
                                 option.supporting
                                     ?: if (mixed) kitProviderName(option.providerId, option.providerName) else null,

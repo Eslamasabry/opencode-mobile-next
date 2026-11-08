@@ -23,9 +23,11 @@ class CapabilitySnapshotTest {
 
     /**
      * Native-only flags, appended after Dart's 86 (N-41 `projectFolderCreation`; Paseo agent features; the
-     * project worktree inspection pane). Dart has no twin for them; each defaults to false.
+     * project worktree inspection pane; B-169 per-prompt model choice). Dart has no twin for them; each defaults to
+     * false.
      */
-    private val nativeOnly = listOf("projectFolderCreation", "agentFeatures", "worktreeInspection")
+    private val nativeOnly =
+        listOf("projectFolderCreation", "agentFeatures", "worktreeInspection", "promptModelChoice")
 
     @Test
     fun `capability snapshot - every Kotlin default equals the Dart vector file, in Dart order`() {

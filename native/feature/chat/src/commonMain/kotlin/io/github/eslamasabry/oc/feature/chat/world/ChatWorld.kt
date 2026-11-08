@@ -198,6 +198,18 @@ public interface ChatWorld {
     public suspend fun sendAgain(text: String): Outcome<Unit> = send(text)
 
     /**
+     * B-169: the prompt that started [turnId] as the transcript holds it (words, files, agent, the model its reply ran
+     * on and the tool steps it ran), or null when this conversation cannot read it back.
+     */
+    public fun stoppedPrompt(turnId: String): StoppedPrompt? = null
+
+    /**
+     * B-169 §4: [prompt] sent again with the conversation's selected model, carrying its words, its files and its
+     * agent (the agent is selected first when the conversation moved on to another one). The draft stays as it is.
+     */
+    public suspend fun sendAgainWith(prompt: StoppedPrompt): Outcome<Unit> = sendAgain(prompt.text)
+
+    /**
      * Explicit repeat of this exact draft revision, permitted only for canonical-history ambiguity.
      */
     public suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> =

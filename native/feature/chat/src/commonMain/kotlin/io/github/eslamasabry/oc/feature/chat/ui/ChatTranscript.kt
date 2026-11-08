@@ -206,6 +206,37 @@ internal class ReplyActions(
 )
 
 /**
+ * B-169: what a failed reply a lasting limit stopped shows (its words and Switch model / Connect a provider). The chat
+ * screen provides it to its transcript through [LocalLimitSwitchReply]; without it every failed turn keeps today's
+ * fixes.
+ */
+@Immutable
+internal class LimitSwitchReply(
+    /** What each failed turn offers for a lasting limit (by turn id); missing = today's fixes. */
+    val limitSwitch: Map<String, io.github.eslamasabry.oc.feature.chat.presentation.LimitSwitchUi>,
+    /** §6: Switch model is disabled while the server is unreachable. */
+    val switchOnline: Boolean,
+    /** §4.3: "Attach {file} again to send" under the failed turn whose prompt went to the composer. */
+    val attachAgain: io.github.eslamasabry.oc.feature.chat.presentation.AttachAgainUi?,
+    val onSwitchModel: (turnId: String) -> Unit,
+    val words: LimitSwitchWords,
+)
+
+/** B-169's words on a failed reply. */
+@Immutable
+internal class LimitSwitchWords(
+    val switchModel: String,
+    val connectProvider: String,
+    val switchOffline: String,
+    /** "{Model} is used up for now"; the argument is null when the model is not known. */
+    val usedUp: (String?) -> String,
+    val attachAgain: (String) -> String,
+)
+
+internal val LocalLimitSwitchReply =
+    androidx.compose.runtime.compositionLocalOf<LimitSwitchReply?> { null }
+
+/**
  * B2: a short, safe code for a send failure (no server text, no address): what QA asked to see
  * under Details.
  */
@@ -784,13 +815,20 @@ private fun ChatRow(
                                 ?.takeUnless { it == MessageErrorKind.Unknown }
                                 ?.let(listWords.messageError)
                                 ?.takeIf { it.isNotBlank() }
-                        if (typed != null) KitQuietLine(typed)
+                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
+                        val limits = LocalLimitSwitchReply.current
+                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
+                        else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason)
                             KitQuietLine(headline)
                             KitQuietLine(hint)
                         }
                         // B-099: the ways on and Details keep the quiet lines' inset, never the screen edge.
+                        limits?.attachAgain
+                            ?.takeIf { it.turnId == row.turnId }
+                            ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
                             if (
                                 AgentErrorText.classify(reason)?.offersSignIn == true &&
@@ -815,15 +853,41 @@ private fun ChatRow(
                                 val showSignIn =
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                         reply.signInSettingsLabel != null
-                                ErrorRecovery.fixes(
-                                        row.errorKind,
-                                        kind,
-                                        reason,
-                                        suggestion != null,
-                                        reply.canCompact,
-                                    )
+                                (if (limit != null)
+                                        ErrorRecovery.limitFixes(limit.offer, kind, reason, reply.canCompact)
+                                    else
+                                        ErrorRecovery.fixes(
+                                            row.errorKind,
+                                            kind,
+                                            reason,
+                                            suggestion != null,
+                                            reply.canCompact,
+                                        ))
                                     .forEach { fix ->
                                         when (fix) {
+                                            ErrorFix.SwitchModel ->
+                                                limits?.words?.switchModel?.let {
+                                                    KitButton(
+                                                        it,
+                                                        { limits.onSwitchModel(row.turnId) },
+                                                        role = KitButtonRole.Primary,
+                                                        enabled =
+                                                            io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(
+                                                                limits.switchOnline,
+                                                                limits.words.switchOffline,
+                                                            ),
+                                                        modifier = Modifier.testTag("error-action-switch-model"),
+                                                    )
+                                                }
+                                            ErrorFix.ConnectProvider ->
+                                                limits?.words?.connectProvider?.let {
+                                                    KitButton(
+                                                        it,
+                                                        reply.onOpenProviders,
+                                                        role = KitButtonRole.Secondary,
+                                                        modifier = Modifier.testTag("error-action-connect-provider"),
+                                                    )
+                                                }
                                             ErrorFix.UseModel ->
                                                 if (suggestion != null)
                                                     KitButton(
