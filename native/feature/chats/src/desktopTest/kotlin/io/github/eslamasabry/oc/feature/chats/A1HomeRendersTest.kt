@@ -47,7 +47,10 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * A1 Conversations home, rendered for the eye (docs/native/qa/home-a1-2026-11-08): one phone screen per picture at the
  * mockup's size (412 x 915 dp at 2.5x), Glass and Solid, dark and light, with running, needs-you and more than five
- * recent conversations. The agent marks are the app's own bundled marks. Writes `build/a1-renders/<name>.png`.
+ * recent conversations. The agent marks are the app's own bundled marks. Writes `build/a1-renders/<name>.png`; while
+ * goldens are recorded (`oc.goldens.record`, the CI goldens lane, whose runner fonts are the reference) it writes them
+ * under `oc.goldens.dir`/a1-renders instead, so they come back in the lane's artifact. They are pictures to look at, not
+ * goldens: nothing is compared.
  */
 @OptIn(ExperimentalTestApi::class)
 class A1HomeRendersTest {
@@ -152,7 +155,9 @@ class A1HomeRendersTest {
             waitForIdle()
             mainClock.advanceTimeBy(1_500)
             waitForIdle()
-            val file = File("build/a1-renders/$name.png").also { it.parentFile.mkdirs() }
+            val recording = System.getProperty("oc.goldens.record") == "true"
+            val dir = if (recording) File(System.getProperty("oc.goldens.dir"), "a1-renders") else File("build/a1-renders")
+            val file = File(dir, "$name.png").also { it.parentFile.mkdirs() }
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
             assertTrue(file.isFile)
         }
