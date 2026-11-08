@@ -191,10 +191,14 @@ public fun KitMenu(
     }
 }
 
-/** What a menu showed when it was last open, kept while it fades out. */
+/**
+ * What a menu showed when it was last open, kept while it fades out. Items and title are state: a menu that swaps its
+ * items while open (the chat header's Go to / More pages) must redraw, and [MenuPopup] takes this same instance each
+ * time, so it is not recomposed by a changed argument (B-178).
+ */
 private class MenuShown {
-    var items: List<KitMenuItem> = emptyList()
-    var title: String? = null
+    var items: List<KitMenuItem> by mutableStateOf(emptyList())
+    var title: String? by mutableStateOf(null)
     var at: IntRect = IntRect.Zero
 }
 
