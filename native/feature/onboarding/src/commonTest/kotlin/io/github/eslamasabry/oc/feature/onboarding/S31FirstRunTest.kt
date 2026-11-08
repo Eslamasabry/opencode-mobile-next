@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.routes.DemoRoute
 import io.github.eslamasabry.oc.ui.routes.OnboardingRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasText
@@ -119,12 +120,13 @@ class S31FirstRunTest {
     }
 
     @Test
-    fun `B-NAV-112 the quiet ways in open the demo and phone setup's own page`() {
+    fun `B-NAV-112 the quiet ways in open the demo, phone setup's own page and Report a problem`() {
         val nav = Nav()
         val vm = WelcomeViewModel(nav)
         vm.showDemo()
         vm.moreWays()
-        assertEquals(listOf(DemoRoute, PhoneSetupRoute.Setup), nav.opened)
+        vm.reportProblem()
+        assertEquals(listOf(DemoRoute, PhoneSetupRoute.Setup, SettingsRoute.ReportProblem), nav.opened)
     }
 
     private fun recording(): Pair<WelcomeActions, MutableList<String>> {

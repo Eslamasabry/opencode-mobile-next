@@ -26,6 +26,8 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceCards
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitHeroQuestion
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -56,7 +58,32 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
     val working = KitEnabled.of(!phone.working, stringResource(Res.string.r40SetupWorking))
     // Off the phone path the computer is the only answer, chosen.
     val chosen = if (phone.available) state.place else WelcomePlace.Computer
-    KitScreen(width = KitScreenWidth.Reading, page = true) {
+    KitScreen(
+        width = KitScreenWidth.Reading,
+        page = true,
+        // Flutter's welcome sits under the product bar; its menu's ways out are here as the bar's actions.
+        topBar = {
+            KitTopBar(
+                title = stringResource(Res.string.openCodeConnectionLabel),
+                brand = true,
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.e7LibraryReportABug),
+                            actions::reportProblem,
+                            icon = KitIcons.bug,
+                        ),
+                        // Native addition: language and appearance before anything else, for a person who cannot
+                        // read the default language.
+                        KitLineAction(
+                            stringResource(Res.string.e7LocaleUiSettings),
+                            actions::openSettings,
+                            icon = KitIcons.settings,
+                        ),
+                    ),
+            )
+        },
+    ) {
         Column(Modifier.fillMaxSize().testTag("welcome-body")) {
             Column(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = Space.S4.dp),
@@ -103,13 +130,6 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
                             role = KitButtonRole.Tertiary,
                             enabled = working,
                         )
-                    // Native addition kept from first run: language and appearance before anything else, for a
-                    // person who cannot read the default language.
-                    KitButton(
-                        stringResource(Res.string.e7LocaleUiSettings),
-                        actions::openSettings,
-                        role = KitButtonRole.Tertiary,
-                    )
                 }
                 Spacer(Modifier.height(Space.S4.dp))
             }

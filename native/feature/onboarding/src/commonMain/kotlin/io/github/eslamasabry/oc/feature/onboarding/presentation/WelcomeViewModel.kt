@@ -45,6 +45,9 @@ public interface WelcomeActions {
 
     /** "More ways to set up": phone setup's own page, where what to install is chosen (Flutter `_openPhoneSetup`). */
     public fun moreWays() {}
+
+    /** The bar's "Report a problem" (Flutter's welcome menu `servers-report-bug`). */
+    public fun reportProblem() {}
 }
 
 /** The welcome shares the durable phone job; leaving and returning never creates a second owner. */
@@ -123,6 +126,8 @@ public class WelcomeViewModel(
     override fun showDemo(): Unit = nav.open(DemoRoute)
 
     override fun moreWays(): Unit = nav.open(PhoneSetupRoute.Setup)
+
+    override fun reportProblem(): Unit = nav.open(SettingsRoute.ReportProblem)
 
     override fun openSettings(): Unit = nav.open(SettingsRoute.Home)
 }
