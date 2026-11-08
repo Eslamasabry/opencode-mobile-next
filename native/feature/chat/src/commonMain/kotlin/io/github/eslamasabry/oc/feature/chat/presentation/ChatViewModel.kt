@@ -231,6 +231,16 @@ public class ChatViewModel(
 
     override fun confirmCompact(): Unit = presenter.confirmCompact()
 
+    override fun tryLinkNow(): Unit = presenter.tryLinkNow()
+
+    override fun stopAfterStep(note: String): Unit = presenter.stopAfterStep(note)
+
+    override fun openPlace(place: ChatPlace): Unit = presenter.openPlace(place)
+
+    override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()
+
+    override fun confirmRestartPhoneServer(): Unit = presenter.confirmRestartPhoneServer()
+
     override fun openTimeline(): Unit = presenter.openTimeline()
 
     override fun closeTimeline(): Unit = presenter.closeTimeline()

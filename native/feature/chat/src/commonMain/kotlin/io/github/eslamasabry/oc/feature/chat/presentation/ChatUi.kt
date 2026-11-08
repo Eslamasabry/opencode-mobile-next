@@ -111,6 +111,13 @@ public data class ChatStatusUi(
     val failure: Failure? = null,
     val localId: Long? = null,
     val receiptResult: ReceiptCheckResult? = null,
+    /**
+     * S24-CHAT (Flutter `countdownLine`): whole seconds until the link tries again by itself; 0 =
+     * "trying again now"; null = no try is scheduled. Only on the connection lines.
+     */
+    val retryInSeconds: Int? = null,
+    /** This conversation's server runs on this phone: the line offers Restart (after a confirm). */
+    val canRestart: Boolean = false,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
@@ -160,7 +167,13 @@ public enum class ChatStatusKind {
  * The live line while a turn runs (plan 09 §4.1, trimmed: no step count until S2-DLV's
  * `ConversationActivity`).
  */
-public data class LiveTurnUi(val stopping: Boolean)
+public data class LiveTurnUi(
+    val stopping: Boolean,
+    /** S24-CHAT (Flutter `_stopAfterStepPending`): the stop note went; the line says it waits for the step. */
+    val stoppingAfterStep: Boolean = false,
+    /** Hold Stop offers "Stop after this step": the server steers a running turn and no note went yet. */
+    val canStopAfterStep: Boolean = false,
+)
 
 /**
  * Find (plan 09 §6.6, Flutter `transcript_find.dart`): hits in reading order, "3 of 12". [current]
@@ -273,6 +286,12 @@ public sealed interface ChatConfirm {
 
     /** Flutter `compact` in the session menu: "Shorten this conversation?" before it runs. */
     public data object Compact : ChatConfirm
+
+    /**
+     * Flutter `confirmPhoneServerRestart`: "Restart OpenCode on this phone?" (a running turn stops;
+     * conversations are kept).
+     */
+    public data object RestartPhoneServer : ChatConfirm
 }
 
 /**
@@ -284,6 +303,9 @@ public class PictureUi(
     public val name: String,
     public val bytes: ByteArray?,
     public val failed: Boolean,
+    /** S24-CHAT story 3: every server picture of the conversation, to swipe between; [index] is this one. */
+    public val gallery: List<GalleryPicture> = emptyList(),
+    public val index: Int = 0,
 )
 
 /**
@@ -319,7 +341,31 @@ public data class ChatCapabilitiesUi(
     val shell: Boolean = false,
     val files: Boolean = false,
     val slashCommands: Boolean = false,
+    /** S24-CHAT launcher gates (Flutter `_builtinChatCommands`). */
+    val terminal: Boolean = false,
+    val serverCatalog: Boolean = false,
+    val agents: Boolean = false,
+    val approvals: Boolean = false,
+    /** Language services or formatters report a status (Project health has something to show). */
+    val health: Boolean = false,
 )
+
+/**
+ * S24-CHAT story 2: the places the commands launcher opens, named as Flutter's commands name them.
+ * The presenter turns each into this conversation's route (same server, same project).
+ */
+public enum class ChatPlace {
+    Workspaces,
+    Health,
+    Terminal,
+    McpServers,
+    Providers,
+    Skills,
+    References,
+    ServerStatus,
+    Diagnostics,
+    Appearance,
+}
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
@@ -337,6 +383,15 @@ public interface ChatActions {
 
     /** "Report a problem" from the could-not-load page (Flutter chat_states.dart:85, `product-error-report-bug`). */
     public fun reportProblem() {}
+
+    /**
+     * S24-CHAT story 6 (Flutter `_stopAfterThisStep`): [note] ("Please stop after the step you are on
+     * now…") steers the running turn; the draft stays as it is. A tap on Stop still stops at once.
+     */
+    public fun stopAfterStep(note: String) {}
+
+    /** S24-CHAT: a commands-launcher place for this conversation (Flutter `_ChatCommandAction`). */
+    public fun openPlace(place: ChatPlace) {}
 
     /** Opens Project Files for this conversation (P12-FILES). */
     public fun openFiles() {}
@@ -376,6 +431,14 @@ public interface ChatActions {
 
     /** The person said yes to "Shorten this conversation?". */
     public fun confirmCompact() {}
+
+    /** Flutter "Try now" on the connection line: try the link at once, and read again if needed. */
+    public fun tryLinkNow() {}
+
+    /** Flutter "Restart OpenCode" on the connection line: asks first ([ChatConfirm.RestartPhoneServer]). */
+    public fun restartPhoneServer() {}
+
+    public fun confirmRestartPhoneServer() {}
 
     /**
      * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.

@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
+import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
@@ -20,6 +22,7 @@ import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
+import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
@@ -31,12 +34,14 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -70,6 +75,7 @@ internal data class ChatLocal(
     val actionFailure: Failure? = null,
     val atLiveEdge: Boolean = true,
     val stopping: Boolean = false,
+    val stopAfterStep: Boolean = false,
     val leaving: Boolean = false,
     val select: SelectTextUi? = null,
     val insert: ClipUi? = null,
@@ -96,6 +102,7 @@ internal data class ChatInputs(
     val link: ChatLink,
     val pending: ImmutableList<PendingSend>,
     val draft: DraftFacts,
+    val retry: LinkRetryFacts = LinkRetryFacts.None,
 )
 
 /**
@@ -172,6 +179,7 @@ public class ChatPresenter(
                 }
                 .combine(world.pending) { f, p -> f to p }
                 .combine(world.draft) { (f, p), d -> ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d) }
+                .combine(retryFacts()) { i, r -> i.copy(retry = r) }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
                 syncRead()
@@ -201,7 +209,26 @@ public class ChatPresenter(
             world.link.value,
             world.pending.value,
             world.draft.value,
+            retryNow(world.linkRetryAtMs.value),
         )
+
+    /** The retry schedule at the clock's present (no countdown without a clock). */
+    private fun retryNow(at: Long?): LinkRetryFacts =
+        LinkRetryFacts(
+            retryAtMs = at.takeIf { clock != null },
+            nowMs = clock?.now()?.toEpochMilliseconds() ?: 0,
+            onThisPhone = world.serverOnThisPhone,
+        )
+
+    /** S24-CHAT: ticks once a second only while a retry is scheduled (Flutter's `_Ticker`). */
+    private fun retryFacts(): Flow<LinkRetryFacts> {
+        val c = clock ?: return world.linkRetryAtMs.map { retryNow(it) }
+        return world.linkRetryAtMs.latest { at ->
+            factTicks(c, flowOf(at != null)).map { now ->
+                LinkRetryFacts(at, now, world.serverOnThisPhone)
+            }
+        }
+    }
 
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
@@ -243,7 +270,7 @@ public class ChatPresenter(
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =
-                (if (kept != null) ChatStatusUi(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused)
+                (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
                             RECEIPT_STATUS,
@@ -260,7 +287,15 @@ public class ChatPresenter(
                 },
             rows = t.rows,
             newestRowKey = t.newestKey,
-            live = if (t.run.busy) LiveTurnUi(l.stopping) else null,
+            live =
+                if (t.run.busy)
+                    LiveTurnUi(
+                        l.stopping,
+                        stoppingAfterStep = l.stopAfterStep,
+                        canStopAfterStep =
+                            !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
+                    )
+                else null,
             pending = i.pending.asReversed().toImmutableList(),
             find = find,
             menu = l.menu,
@@ -375,6 +410,25 @@ public class ChatPresenter(
         launcher.launch { world.reload() }
     }
 
+    override fun tryLinkNow() {
+        world.tryLinkNow()
+        if (world.load.value is ChatLoad.Failed) retryLoad()
+    }
+
+    override fun restartPhoneServer() {
+        if (!world.serverOnThisPhone) return
+        local.update { it.copy(confirm = ChatConfirm.RestartPhoneServer) }
+    }
+
+    override fun confirmRestartPhoneServer() {
+        if (local.value.confirm !is ChatConfirm.RestartPhoneServer) return
+        local.update { it.copy(confirm = null) }
+        launcher.launch {
+            val result = world.restartPhoneServer()
+            if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
+        }
+    }
+
     override fun reportProblem() {
         nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem)
     }
@@ -427,6 +481,21 @@ public class ChatPresenter(
     internal fun settleStop() {
         if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy)
             local.update { it.copy(stopping = false) }
+        // The turn ended: the stop note did its work (or the turn finished first).
+        if (local.value.stopAfterStep && !world.transcript.value.run.busy)
+            local.update { it.copy(stopAfterStep = false) }
+    }
+
+    override fun stopAfterStep(note: String) {
+        val l = local.value
+        if (note.isBlank() || l.stopping || l.stopAfterStep) return
+        if (!world.transcript.value.run.busy || !world.capabilities.value.promptSteering) return
+        local.update { it.copy(stopAfterStep = true) }
+        launcher.launch {
+            val sent = world.sendAgain(note)
+            if (sent is Outcome.Failed)
+                local.update { it.copy(stopAfterStep = false, actionFailure = sent.failure) }
+        }
     }
 
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String) {
@@ -554,7 +623,47 @@ public class ChatPresenter(
             shell = c.conversationShellOn,
             files = c.fileBrowsing,
             slashCommands = c.slashCommands,
+            terminal = c.terminal,
+            serverCatalog = c.serverCatalog,
+            agents = c.agentSelection,
+            approvals = c.permissionRequests,
+            health = c.languageServiceStatus || c.formatterStatus,
         )
+
+    override fun openPlace(place: ChatPlace) {
+        val ref = world.ref
+        val profile = ref.profileId
+        val directory = world.directory
+        val route: io.github.eslamasabry.oc.ui.routes.AppRoute =
+            when (place) {
+                ChatPlace.Workspaces ->
+                    directory?.let {
+                        io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Project(
+                            profile,
+                            it,
+                            initialWorkspace = true,
+                        )
+                    } ?: io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Picker(profile)
+                ChatPlace.Health ->
+                    io.github.eslamasabry.oc.ui.routes.SearchRoute.ProjectHealth(
+                        profile,
+                        directory ?: return,
+                    )
+                ChatPlace.Terminal -> io.github.eslamasabry.oc.ui.routes.TerminalRoute.Conversation(ref)
+                ChatPlace.McpServers -> integration(ServerIntegrationPage.Mcp)
+                ChatPlace.Providers -> integration(ServerIntegrationPage.Providers)
+                ChatPlace.Skills -> integration(ServerIntegrationPage.Skills)
+                ChatPlace.References -> integration(ServerIntegrationPage.References)
+                ChatPlace.ServerStatus -> io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(profile)
+                ChatPlace.Diagnostics -> io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem
+                ChatPlace.Appearance ->
+                    io.github.eslamasabry.oc.ui.routes.SettingsRoute.Target("settings-appearance")
+            }
+        nav.open(route)
+    }
+
+    private fun integration(page: ServerIntegrationPage) =
+        io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute(world.ref.profileId, page)
 
     // ---- Find (plan 09 §6.6) ----
 
@@ -871,7 +980,10 @@ public class ChatPresenter(
 
     override fun openPicture(path: String, name: String) {
         val id = nextId++
-        local.update { it.copy(picture = PictureUi(id, name, bytes = null, failed = false)) }
+        val (gallery, index) = ConversationPictures.around(world.transcript.value.rows, path, name)
+        local.update {
+            it.copy(picture = PictureUi(id, name, bytes = null, failed = false, gallery, index))
+        }
         launcher.launch {
             val read = world.readPicture(path)
             local.update {
@@ -884,6 +996,8 @@ public class ChatPresenter(
                                 name,
                                 (read as? Outcome.Ok)?.value,
                                 failed = read !is Outcome.Ok,
+                                gallery,
+                                index,
                             )
                     )
             }

@@ -51,6 +51,7 @@ public object HeaderRules {
         caps: ServerCapabilities,
         shared: Boolean,
         directory: String? = null,
+        canExport: Boolean = false,
     ): ImmutableList<HeaderAction> =
         buildList {
             add(HeaderAction.Find)
@@ -74,6 +75,7 @@ public object HeaderRules {
             if (caps.sessionImportExport) add(HeaderAction.ImportConversation)
             if (caps.agentFeatures) add(HeaderAction.AgentOptions)
             add(HeaderAction.CopyTranscript)
+            if (canExport) add(HeaderAction.ExportTranscript)
             add(HeaderAction.Reload)
             if (caps.sessionArchive) add(HeaderAction.Archive)
             if (caps.sessionDelete) add(HeaderAction.Delete)

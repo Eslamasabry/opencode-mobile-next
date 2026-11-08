@@ -16,6 +16,10 @@ import androidx.compose.ui.Modifier
 public interface ComposerHost {
     @Composable
     public fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier)
+
+    /** S24-CHAT: the composer can open the full-screen prompt editor ([ComposerChrome.editorRequest]). */
+    public val hasPromptEditor: Boolean
+        get() = false
 }
 
 /** Plain ids: the profile, and the session (null = a new conversation that has none yet). */
@@ -62,6 +66,17 @@ public class ComposerChrome(
     public val onStop: () -> Unit,
     public val stopping: () -> Boolean,
     /**
+     * S24-CHAT story 6: what holding Stop does now ("Stop after this step"), or null when the hold
+     * offers nothing (no steering, a note already went).
+     */
+    public val stopAfterStep: () -> (() -> Unit)? = { null },
+    /** S24-CHAT story 4: the commands launcher's `/editor` asks the composer to open its editor once. */
+    public val editorRequest: () -> Long? = { null },
+    public val editorDone: (id: Long) -> Unit = {},
+    /** S24-CHAT story 3: the picture viewer's Send puts a picture in the draft once, then acknowledges. */
+    public val pendingPicture: () -> PictureRequest? = { null },
+    public val pictureDone: (id: Long) -> Unit = {},
+    /**
      * Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER).
      * Never a new bar.
      */
@@ -103,3 +118,6 @@ public class ComposerTypingTarget {
     /** True when the message field took focus. */
     public fun focus(): Boolean = focus?.invoke() ?: false
 }
+
+/** A picture the viewer hands the composer (its bytes, as shown or as marked up). */
+public class PictureRequest(public val id: Long, public val name: String, public val bytes: ByteArray)

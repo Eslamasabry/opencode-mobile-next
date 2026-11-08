@@ -90,7 +90,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiAnyoneWithTheLinkCanViewThis
 import io.github.eslamasabry.oc.ui.words.res.chatUiAssistant
 import io.github.eslamasabry.oc.ui.words.res.chatUiAttachment
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyShareLink
+import io.github.eslamasabry.oc.ui.kitchat.header.KitCopyAnnouncement
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
+import io.github.eslamasabry.oc.ui.words.res.chatUiExportTranscript
+import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptSaved
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ClipKind
 import io.github.eslamasabry.oc.ui.words.res.chatUiShareLinkCopied
 import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptCopiedMasked
@@ -577,6 +580,8 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                 ClipKind.PhoneLink -> copied
             },
     )
+    // S24-CHAT story 8 (Flutter `chatUiTranscriptSaved`): said once after the file was saved.
+    KitCopyAnnouncement(state.saved, stringResource(Res.string.chatUiTranscriptSaved))
     // E15-S06: the on-screen line for a transcript copy that hid a key is drawn by the chat screen
     // (CopyKeyHiddenNotes), inside the screen that owns the status slot.
 }
@@ -847,6 +852,7 @@ private fun menuItems(
                         onFind()
                     }
                     HeaderAction.CopyTranscript -> actions.copyTranscript(words, mask)
+                    HeaderAction.ExportTranscript -> actions.exportTranscript(words, mask)
                     else -> actions.choose(action)
                 }
             },
@@ -870,6 +876,7 @@ private fun menuItems(
                     HeaderAction.ImportConversation -> KitIcons.download
                     HeaderAction.Handoff -> KitIcons.forward
                     HeaderAction.CopyTranscript -> KitIcons.copy
+                    HeaderAction.ExportTranscript -> KitIcons.download
                     HeaderAction.Archive -> KitIcons.archive
                     HeaderAction.Delete -> KitIcons.delete
                 },
@@ -909,6 +916,7 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.AgentOptions -> stringResource(Res.string.agentToolsTitle)
         HeaderAction.CardsSettings -> stringResource(Res.string.cardsFromAgentsTitle)
         HeaderAction.CopyTranscript -> stringResource(Res.string.chatUiCopyTranscript)
+        HeaderAction.ExportTranscript -> stringResource(Res.string.chatUiExportTranscript)
         HeaderAction.Archive -> stringResource(Res.string.sessionMenuArchive)
         HeaderAction.Delete -> stringResource(Res.string.sessionMenuDelete)
     }
@@ -924,6 +932,19 @@ private fun failureWords(action: HeaderAction): String =
         HeaderAction.Delete -> stringResource(Res.string.chatHeaderDeleteFailed)
         else -> stringResource(Res.string.continueWithModelFailed)
     }
+
+/** S24-CHAT: Copy and Export transcript for the commands launcher, with the menu's own words and mask. */
+internal class TranscriptActs(val copy: () -> Unit, val export: () -> Unit)
+
+@Composable
+internal fun rememberTranscriptActs(actions: ChatHeaderActions): TranscriptActs {
+    val words = transcriptWords()
+    val mask = rememberKitMask()
+    return TranscriptActs(
+        copy = { actions.copyTranscript(words, mask) },
+        export = { actions.exportTranscript(words, mask) },
+    )
+}
 
 @Composable
 private fun transcriptWords(): TranscriptWords {

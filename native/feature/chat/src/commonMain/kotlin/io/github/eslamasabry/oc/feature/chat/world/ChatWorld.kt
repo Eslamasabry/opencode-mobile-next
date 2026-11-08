@@ -59,6 +59,28 @@ public interface ChatWorld {
      */
     public val link: StateFlow<ChatLink>
 
+    /**
+     * S24-CHAT (Flutter `snapshot.nextAttemptAt`): when the link tries again by itself, in epoch
+     * ms; null when no try is scheduled (the first connection, or a stop retrying cannot fix).
+     */
+    public val linkRetryAtMs: StateFlow<Long?>
+        get() = NoRetry
+
+    /** Flutter "Try now": cancel the wait and try the link at once. Never resends anything. */
+    public fun tryLinkNow() {}
+
+    /** The project folder the server reports for this conversation; null until known. */
+    public val directory: String?
+        get() = null
+
+    /** True when this conversation's server is the one this phone runs (Restart is offered). */
+    public val serverOnThisPhone: Boolean
+        get() = false
+
+    /** Flutter "Restart OpenCode" for this phone's server, after the person confirmed. */
+    public suspend fun restartPhoneServer(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
+
     /** Optimistic prompt bubbles not yet in the transcript, oldest first (plan 09 §4.6). */
     public val pending: StateFlow<ImmutableList<PendingSend>>
 
@@ -388,5 +410,7 @@ private val NoCommands =
     kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())
 
 public data class ReadOnlyChat(val parent: ConversationRef? = null)
+
+private val NoRetry: StateFlow<Long?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)

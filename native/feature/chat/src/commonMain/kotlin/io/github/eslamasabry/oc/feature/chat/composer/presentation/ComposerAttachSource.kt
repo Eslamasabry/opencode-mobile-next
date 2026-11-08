@@ -38,6 +38,17 @@ public interface ComposerAttachSource {
         conversation: ConversationRef?,
     ): Outcome<List<PromptAttachment>> = attach(kind, current)
 
+    /**
+     * S24-CHAT story 5 (Flutter `_handleInsertedContent`): a picture the keyboard committed (a GIF,
+     * a sticker, the clipboard chip), already read bounded by the platform. Null = this source takes
+     * none.
+     */
+    public suspend fun attachInserted(
+        mime: String?,
+        bytes: ByteArray,
+        current: List<PromptAttachment>,
+    ): Outcome<List<PromptAttachment>>? = null
+
     /** Opens the app's Android settings page, where a refused [kind] (the camera) can be allowed. */
     public fun openSettings(kind: AttachKind) {}
 }

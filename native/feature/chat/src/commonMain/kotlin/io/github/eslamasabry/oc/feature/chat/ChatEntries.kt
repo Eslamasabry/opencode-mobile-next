@@ -118,6 +118,8 @@ public class ChatEntries(
     private val transcriptPreferences:
         Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
         emptySet(),
+    private val pictureEncoders: Set<io.github.eslamasabry.oc.feature.chat.ui.ChatPictureEncoder> =
+        emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -481,6 +483,7 @@ public class ChatEntries(
                                     startActions = startVm,
                                     appStatus = appStatus,
                                     replyOffer = offerContent,
+                                    encodePng = pictureEncoders.firstOrNull()?.encodePng,
                                 )
                             }
                             ChatInboxSlot(

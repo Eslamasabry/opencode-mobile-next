@@ -34,6 +34,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -75,6 +76,11 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitInsertedPicture
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitPictureReceiver
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStep
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -148,7 +154,14 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Inject
 @ContributesBinding(AppScope::class)
-public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : ComposerHost {
+public class BasicComposerHost(
+    private val voices: Set<KitComposerVoice>,
+    private val editors: Set<ComposerPromptEditor> = emptySet(),
+    private val pictures: Set<ComposerInsertedPictures> = emptySet(),
+) : ComposerHost {
+    override val hasPromptEditor: Boolean
+        get() = editors.isNotEmpty()
+
     @Composable
     override fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier) {
         val vm =
@@ -171,6 +184,8 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 },
             history = history,
             refreshHistory = vm::loadHistory,
+            promptEditor = editors.firstOrNull(),
+            insertedPictures = pictures.firstOrNull(),
         )
     }
 }
@@ -196,6 +211,8 @@ public fun BasicComposer(
     conversationRef: ConversationRef? = null,
     history: ComposerHistoryUi = ComposerHistoryUi(),
     refreshHistory: (() -> Unit)? = null,
+    promptEditor: ComposerPromptEditor? = null,
+    insertedPictures: ComposerInsertedPictures? = null,
 ) {
     if (state.readOnly != null) {
         Column(modifier) {
@@ -399,6 +416,35 @@ public fun BasicComposer(
             modelsOpen = true
             chrome.modelPickerDone(pickerId)
         }
+    }
+    // S24-CHAT story 4: the full-screen editor works on this same field; what it changed becomes the
+    // draft when it closes (Cancel puts the words back first, so nothing changes).
+    var promptEditorOpen by remember(state.targetKey) { mutableStateOf(false) }
+    val editorId = chrome.editorRequest()
+    LaunchedEffect(editorId) {
+        if (editorId != null) {
+            if (promptEditor != null) {
+                focusManager.clearFocus()
+                promptEditorOpen = true
+            }
+            chrome.editorDone(editorId)
+        }
+    }
+    promptEditor?.Editor(promptEditorOpen, field) {
+        promptEditorOpen = false
+        val words = field.text.toString()
+        if (words != editor.lastReported) {
+            editor.userEditSerial += 1
+            editor.lastReported = words
+            actions.draftChanged(words)
+        }
+    }
+    // S24-CHAT story 3: a picture the viewer sent joins the draft like a pasted one.
+    val sentPicture = chrome.pendingPicture()
+    LaunchedEffect(sentPicture?.id) {
+        val picture = sentPicture ?: return@LaunchedEffect
+        actions.attachInserted(pictureMime(picture.name), picture.bytes)
+        chrome.pictureDone(picture.id)
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var toolsOpen by remember(state.targetKey) { mutableStateOf(false) }
@@ -623,6 +669,13 @@ public fun BasicComposer(
                             { actions.attach(AttachKind.Camera) }
                         } else null,
                     commands = chrome.openCommands,
+                    promptEditor =
+                        promptEditor?.let {
+                            {
+                                focusManager.clearFocus()
+                                promptEditorOpen = true
+                            }
+                        },
                     reuse =
                         refreshHistory?.let { refresh ->
                             {
@@ -769,13 +822,32 @@ public fun BasicComposer(
                 if (chrome.stopping()) Res.string.phoneServerCardStopping
                 else Res.string.kitTurnLiveStopShort
             )
+        // S24-CHAT story 6 (Flutter `_stopMenu`): holding Stop offers "Stop after this step" where the
+        // server steers the running turn; a tap still stops at once.
+        val afterStep = chrome.stopAfterStep()
+        val afterStepLabel = stringResource(Res.string.chatStopAfterStep)
+        var stopMenu by remember { mutableStateOf(false) }
+        if (afterStep == null && stopMenu) stopMenu = false
         val stopPart: @Composable () -> Unit = {
-            KitComposerStopRing(
-                label = stopLabel,
-                onClick = chrome.onStop,
-                stopping = chrome.stopping(),
-                modifier = Modifier.testTag("chat-stop-button"),
-            )
+            KitMenu(
+                expanded = stopMenu,
+                items =
+                    listOfNotNull(
+                        afterStep?.let { run ->
+                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; run() })
+                        }
+                    ),
+                onDismissRequest = { stopMenu = false },
+            ) {
+                KitComposerStopRing(
+                    label = stopLabel,
+                    onClick = chrome.onStop,
+                    stopping = chrome.stopping(),
+                    onLongClick = afterStep?.let { { stopMenu = true } },
+                    onLongClickLabel = afterStepLabel,
+                    modifier = Modifier.testTag("chat-stop-button"),
+                )
+            }
         }
         // F1 (scoreboard 2026-11-07), Flutter's layout (chat_composer_region.dart:44-77, kit_composer.dart:796-808):
         // the approval and model chips ride one strip ABOVE the message box (approval at the start, the model at
@@ -809,6 +881,22 @@ public fun BasicComposer(
         ) {
             chrome.rowChips()
         }
+        // S24-CHAT story 5: a picture the keyboard inserts (a GIF, a sticker, the clipboard chip) joins
+        // the draft like a picked photo; only where this agent takes pictures.
+        val takePicture: ((KitInsertedPicture) -> Unit)? =
+            insertedPictures
+                ?.takeIf { state.attachmentsSupported }
+                ?.let { reader ->
+                    { picture ->
+                        scope.launch {
+                            when (val read = reader.read(picture)) {
+                                is Outcome.Ok -> read.value.firstOrNull()?.let { actions.attachInserted(it.mime, it.bytes) }
+                                is Outcome.Failed -> actions.insertFailed(read.failure)
+                            }
+                        }
+                    }
+                }
+        KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
         // B8: Stop beside the plus while words wait for the run: the words take the whole width above them.
         KitComposerRowFit(words, leadingTargets = if (stopLeads) 2 else 1, stack = stopLeads) { stacked ->
             KitComposerBox(
@@ -986,6 +1074,7 @@ public fun BasicComposer(
                 },
             )
         }
+        }
     }
     ModelSheet(
         visible = modelsOpen,
@@ -1118,3 +1207,13 @@ private class DraftEditorState {
     var lastReported: String? = null
     var userEditSerial: Long = 0
 }
+
+/** The type a picture's name says (the intake checks the bytes again); PNG when it says none. */
+internal fun pictureMime(name: String): String =
+    when (name.substringAfterLast('.', "").lowercase()) {
+        "jpg", "jpeg" -> "image/jpeg"
+        "gif" -> "image/gif"
+        "webp" -> "image/webp"
+        "bmp" -> "image/bmp"
+        else -> "image/png"
+    }

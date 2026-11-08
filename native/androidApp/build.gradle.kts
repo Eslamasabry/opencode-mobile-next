@@ -232,6 +232,7 @@ dependencies {
             ":ui:shell",
             ":feature:chats",
             ":feature:chat",
+            ":feature:chat-composer",
             ":feature:servers",
             ":feature:setupassistant",
             ":core:data",

@@ -1,7 +1,11 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.header.ui.rememberTranscriptActs
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPlace
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
@@ -41,6 +45,50 @@ import io.github.eslamasabry.oc.ui.words.res.commandSheetShellDescription
 import io.github.eslamasabry.oc.ui.words.res.revertUndoDescription
 import io.github.eslamasabry.oc.ui.words.res.usageSessions
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiProjectsAndWorkspaces
+import io.github.eslamasabry.oc.ui.words.res.chatUiSwitchProjectDirectoryOrWorktree
+import io.github.eslamasabry.oc.ui.words.res.chatUiPromptEditor
+import io.github.eslamasabry.oc.ui.words.res.chatUiEditTheCurrentPromptInAFocused
+import io.github.eslamasabry.oc.ui.words.res.chatUiProjectHealth
+import io.github.eslamasabry.oc.ui.words.res.chatUiInspectGitLanguageServicesAndFormattersFor
+import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiOpenPersistentWorkspaceTerminals
+import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
+import io.github.eslamasabry.oc.ui.words.res.chatUiChooseTheActiveOpenCodeAgent
+import io.github.eslamasabry.oc.ui.words.res.modelThinkingMode
+import io.github.eslamasabry.oc.ui.words.res.chatUiChooseTheCurrentModelVariantOrReasoning
+import io.github.eslamasabry.oc.ui.words.res.chatUiMCPServers
+import io.github.eslamasabry.oc.ui.words.res.chatUiInspectMCPStatusAuthenticationAndResources
+import io.github.eslamasabry.oc.ui.words.res.chatUiConnectProvider
+import io.github.eslamasabry.oc.ui.words.res.chatUiManageProviderAndIntegrationAuthentication
+import io.github.eslamasabry.oc.ui.words.res.chatUiSkills
+import io.github.eslamasabry.oc.ui.words.res.chatUiBrowseProjectAndGlobalSkills
+import io.github.eslamasabry.oc.ui.words.res.chatUiProjectReferences
+import io.github.eslamasabry.oc.ui.words.res.chatUiAddAnOpenCodeProjectReferenceToThis
+import io.github.eslamasabry.oc.ui.words.res.chatUiServerStatus
+import io.github.eslamasabry.oc.ui.words.res.chatUiConnectionHealthServerVersionAndLiveMode
+import io.github.eslamasabry.oc.ui.words.res.chatUiAppDiagnostics
+import io.github.eslamasabry.oc.ui.words.res.chatUiReviewHandledAppErrorsAndSendA
+import io.github.eslamasabry.oc.ui.words.res.chatUiAppearance
+import io.github.eslamasabry.oc.ui.words.res.chatUiFollowAndroidOrChooseTheNativeLight
+import io.github.eslamasabry.oc.ui.words.res.chatUiSessionContext
+import io.github.eslamasabry.oc.ui.words.res.chatUiInspectCurrentTokensCacheCostAndContext
+import io.github.eslamasabry.oc.ui.words.res.chatUiShareSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyShareLink
+import io.github.eslamasabry.oc.ui.words.res.chatUiCreateOrCopyAPublicSessionLink
+import io.github.eslamasabry.oc.ui.words.res.chatUiStopSharing
+import io.github.eslamasabry.oc.ui.words.res.chatUiDisableTheCurrentPublicSessionLink
+import io.github.eslamasabry.oc.ui.words.res.chatUiForkSession
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuForkHint
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTheRenderedConversationAsMarkdown
+import io.github.eslamasabry.oc.ui.words.res.chatUiExportTranscript
+import io.github.eslamasabry.oc.ui.words.res.chatUiSaveTheConversationAsAMarkdownFile
+import io.github.eslamasabry.oc.ui.words.res.sessionNoteTitle
+import io.github.eslamasabry.oc.ui.words.res.commandSheetNoteDescription
+import io.github.eslamasabry.oc.ui.words.res.approvalsUiMenu
+import io.github.eslamasabry.oc.ui.words.res.commandSheetApprovalsDescription
+import io.github.eslamasabry.oc.ui.words.res.chatUiCompose
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -61,6 +109,9 @@ internal fun rememberChatCommandEntries(
     onChooseModel: () -> Unit,
     onRename: (() -> Unit)?,
     onInsert: (String) -> Unit,
+    header: ChatHeaderSlot? = null,
+    onContext: (() -> Unit)? = null,
+    onEditor: (() -> Unit)? = null,
 ): List<ChatCommandEntry> {
     val navigate = stringResource(Res.string.chatUiNavigate)
     val current = stringResource(Res.string.chatUiCurrentSession)
@@ -101,6 +152,33 @@ internal fun rememberChatCommandEntries(
     val plansBody = stringResource(Res.string.commandSheetPlanDescription)
     val reloadTitle = stringResource(Res.string.chatUiReloadMessages)
     val reloadBody = stringResource(Res.string.commandSheetReloadDescription)
+    val compose = stringResource(Res.string.chatUiCompose)
+    val more =
+        MoreWords(
+            workspaces = stringResource(Res.string.chatUiProjectsAndWorkspaces) to stringResource(Res.string.chatUiSwitchProjectDirectoryOrWorktree),
+            editor = stringResource(Res.string.chatUiPromptEditor) to stringResource(Res.string.chatUiEditTheCurrentPromptInAFocused),
+            health = stringResource(Res.string.chatUiProjectHealth) to stringResource(Res.string.chatUiInspectGitLanguageServicesAndFormattersFor),
+            terminal = stringResource(Res.string.libraryTerminalTitle) to stringResource(Res.string.chatUiOpenPersistentWorkspaceTerminals),
+            agents = stringResource(Res.string.chatUiAgent) to stringResource(Res.string.chatUiChooseTheActiveOpenCodeAgent),
+            variants = stringResource(Res.string.modelThinkingMode) to stringResource(Res.string.chatUiChooseTheCurrentModelVariantOrReasoning),
+            mcps = stringResource(Res.string.chatUiMCPServers) to stringResource(Res.string.chatUiInspectMCPStatusAuthenticationAndResources),
+            connect = stringResource(Res.string.chatUiConnectProvider) to stringResource(Res.string.chatUiManageProviderAndIntegrationAuthentication),
+            skills = stringResource(Res.string.chatUiSkills) to stringResource(Res.string.chatUiBrowseProjectAndGlobalSkills),
+            references = stringResource(Res.string.chatUiProjectReferences) to stringResource(Res.string.chatUiAddAnOpenCodeProjectReferenceToThis),
+            status = stringResource(Res.string.chatUiServerStatus) to stringResource(Res.string.chatUiConnectionHealthServerVersionAndLiveMode),
+            debug = stringResource(Res.string.chatUiAppDiagnostics) to stringResource(Res.string.chatUiReviewHandledAppErrorsAndSendA),
+            themes = stringResource(Res.string.chatUiAppearance) to stringResource(Res.string.chatUiFollowAndroidOrChooseTheNativeLight),
+            context = stringResource(Res.string.chatUiSessionContext) to stringResource(Res.string.chatUiInspectCurrentTokensCacheCostAndContext),
+            share = stringResource(Res.string.chatUiShareSession) to stringResource(Res.string.chatUiCreateOrCopyAPublicSessionLink),
+            shareLink = stringResource(Res.string.chatUiCopyShareLink) to stringResource(Res.string.chatUiCreateOrCopyAPublicSessionLink),
+            unshare = stringResource(Res.string.chatUiStopSharing) to stringResource(Res.string.chatUiDisableTheCurrentPublicSessionLink),
+            fork = stringResource(Res.string.chatUiForkSession) to stringResource(Res.string.sessionMenuForkHint),
+            copy = stringResource(Res.string.chatUiCopyTranscript) to stringResource(Res.string.chatUiCopyTheRenderedConversationAsMarkdown),
+            export = stringResource(Res.string.chatUiExportTranscript) to stringResource(Res.string.chatUiSaveTheConversationAsAMarkdownFile),
+            note = stringResource(Res.string.sessionNoteTitle) to stringResource(Res.string.commandSheetNoteDescription),
+            approvals = stringResource(Res.string.approvalsUiMenu) to stringResource(Res.string.commandSheetApprovalsDescription),
+        )
+    val transcript = header?.let { rememberTranscriptActs(it.actions) }
     val hasPrompt = state.rows.any { it is io.github.eslamasabry.oc.engine.transcript.state.PromptRow }
     return buildList {
         add(
@@ -114,11 +192,52 @@ internal fun rememberChatCommandEntries(
         )
         if (caps.files)
             add(ChatCommandEntry("files", "files", filesTitle, filesBody, navigate, KitIcons.files, listOf("open"), actions::openFiles))
+        add(more.entry("workspaces", more.workspaces, navigate, KitIcons.folders, listOf("workspace")) { actions.openPlace(ChatPlace.Workspaces) })
+        if (onEditor != null)
+            add(more.entry("editor", more.editor, compose, KitIcons.edit, emptyList(), onEditor))
+        if (caps.health)
+            add(more.entry("health", more.health, navigate, KitIcons.checklist, emptyList()) { actions.openPlace(ChatPlace.Health) })
+        if (caps.terminal)
+            add(more.entry("terminal", more.terminal, navigate, KitIcons.terminal, emptyList()) { actions.openPlace(ChatPlace.Terminal) })
         add(ChatCommandEntry("models", "models", modelTitle, modelBody, modelGroup, KitIcons.swap, listOf("model", "mo"), onChooseModel))
+        if (caps.agents)
+            add(more.entry("agents", more.agents, modelGroup, KitIcons.swap, listOf("agent"), onChooseModel))
+        if (caps.serverCatalog)
+            add(more.entry("variants", more.variants, modelGroup, KitIcons.idea, emptyList(), onChooseModel))
+        add(more.entry("mcps", more.mcps, serverGroup, KitIcons.tools, listOf("mcp")) { actions.openPlace(ChatPlace.McpServers) })
+        add(more.entry("connect", more.connect, serverGroup, KitIcons.tools, emptyList()) { actions.openPlace(ChatPlace.Providers) })
+        add(more.entry("skills", more.skills, serverGroup, KitIcons.tools, emptyList()) { actions.openPlace(ChatPlace.Skills) })
+        add(more.entry("references", more.references, serverGroup, KitIcons.files, listOf("reference", "refs")) { actions.openPlace(ChatPlace.References) })
+        add(more.entry("status", more.status, serverGroup, KitIcons.idea, emptyList()) { actions.openPlace(ChatPlace.ServerStatus) })
+        add(more.entry("debug", more.debug, serverGroup, KitIcons.review, emptyList()) { actions.openPlace(ChatPlace.Diagnostics) })
+        add(more.entry("themes", more.themes, display, KitIcons.idea, listOf("theme")) { actions.openPlace(ChatPlace.Appearance) })
         add(ChatCommandEntry("tools", "tools", toolsTitle, null, serverGroup, KitIcons.tools, emptyList(), actions::openTools))
         add(ChatCommandEntry("diff", "diff", diffTitle, diffBody, current, KitIcons.review, listOf("changes"), actions::openChanges))
         if (onRename != null)
             add(ChatCommandEntry("rename", "rename", renameTitle, renameBody, current, KitIcons.edit, emptyList(), onRename))
+        if (onContext != null)
+            add(more.entry("context", more.context, current, KitIcons.layers, listOf("usage"), onContext))
+        // The header's ⋯ menu is the truth for what this conversation can share, fork and copy.
+        val menu = header?.state?.menu.orEmpty()
+        val choose: (HeaderAction) -> () -> Unit = { a -> { header?.actions?.choose(a) } }
+        if (HeaderAction.Share in menu)
+            add(more.entry("share", more.share, current, KitIcons.link, emptyList(), choose(HeaderAction.Share)))
+        if (HeaderAction.CopyShareLink in menu)
+            add(more.entry("share", more.shareLink, current, KitIcons.link, emptyList(), choose(HeaderAction.CopyShareLink)))
+        if (HeaderAction.Unshare in menu)
+            add(more.entry("unshare", more.unshare, current, KitIcons.unlink, emptyList(), choose(HeaderAction.Unshare)))
+        if (HeaderAction.Fork in menu && hasPrompt)
+            add(more.entry("fork", more.fork, current, KitIcons.swap, emptyList(), choose(HeaderAction.Fork)))
+        if (HeaderAction.CopyTranscript in menu && transcript != null)
+            add(more.entry("copy", more.copy, current, KitIcons.copy, emptyList(), transcript.copy))
+        if (HeaderAction.ExportTranscript in menu && transcript != null)
+            add(more.entry("export", more.export, current, KitIcons.download, emptyList(), transcript.export))
+        header?.noteActions?.let { note ->
+            add(more.entry("note", more.note, current, KitIcons.edit, emptyList(), note::openNote))
+        }
+        header?.approval?.takeIf { caps.approvals && it.state.offered }?.let { slot ->
+            add(more.entry("approvals", more.approvals, current, KitIcons.checklist, emptyList(), slot.actions::openApprovalMenu))
+        }
         add(ChatCommandEntry("timeline", "timeline", timelineTitle, timelineBody, current, KitIcons.timeline, emptyList(), actions::openTimeline))
         add(ChatCommandEntry("find", "find", timelineTitle, null, current, KitIcons.search, listOf("search"), onFind))
         if (caps.compact && idle && hasPrompt)
@@ -148,4 +267,39 @@ internal fun rememberChatCommandEntries(
                 )
             }
     }
+}
+
+/** S24-CHAT: the added commands' words (title to description), read once per composition. */
+private class MoreWords(
+    val workspaces: Pair<String, String>,
+    val editor: Pair<String, String>,
+    val health: Pair<String, String>,
+    val terminal: Pair<String, String>,
+    val agents: Pair<String, String>,
+    val variants: Pair<String, String>,
+    val mcps: Pair<String, String>,
+    val connect: Pair<String, String>,
+    val skills: Pair<String, String>,
+    val references: Pair<String, String>,
+    val status: Pair<String, String>,
+    val debug: Pair<String, String>,
+    val themes: Pair<String, String>,
+    val context: Pair<String, String>,
+    val share: Pair<String, String>,
+    val shareLink: Pair<String, String>,
+    val unshare: Pair<String, String>,
+    val fork: Pair<String, String>,
+    val copy: Pair<String, String>,
+    val export: Pair<String, String>,
+    val note: Pair<String, String>,
+    val approvals: Pair<String, String>,
+) {
+    fun entry(
+        slash: String,
+        words: Pair<String, String>,
+        group: String,
+        icon: androidx.compose.ui.graphics.vector.ImageVector?,
+        aliases: List<String>,
+        onRun: () -> Unit,
+    ): ChatCommandEntry = ChatCommandEntry(slash, slash, words.first, words.second, group, icon, aliases, onRun)
 }

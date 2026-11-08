@@ -672,6 +672,19 @@ class AndroidComposerMedia(private val files: AndroidComposerFiles, application:
         }
     }
 
+    // S24-CHAT story 5: a picture the keyboard inserted, already read bounded by AndroidComposerInsertedPictures.
+    override suspend fun attachInserted(
+        mime: String?,
+        bytes: ByteArray,
+        current: List<PromptAttachment>,
+    ): Outcome<List<PromptAttachment>> =
+        when (val result = (files.intake() ?: return noHost()).fromInserted(current, mime, bytes)) {
+            is Outcome.Ok ->
+                if (result.value.added.isEmpty() && result.value.skipped != null) Outcome.Failed(result.value.skipped!!)
+                else Outcome.Ok(result.value.added.toList())
+            is Outcome.Failed -> result
+        }
+
     override fun openSettings(kind: AttachKind) {
         if (kind == AttachKind.Camera) files.openCameraSettings()
     }

@@ -23,6 +23,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiAttachFile
 import io.github.eslamasabry.oc.ui.words.res.chatUiAttachedCount
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptTools
 import io.github.eslamasabry.oc.ui.words.res.chatUiSlashCommandsAndAgents
+import io.github.eslamasabry.oc.ui.words.res.chatUiPromptEditor
+import io.github.eslamasabry.oc.ui.words.res.chatUiEditTheCurrentPromptInAFocused
 import io.github.eslamasabry.oc.ui.words.res.composerClearTextSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
 import io.github.eslamasabry.oc.ui.words.res.composerReuseSubtitle
@@ -87,6 +89,8 @@ internal class ComposerToolsChoices(
     val photos: (() -> Unit)?,
     val camera: (() -> Unit)?,
     val commands: (() -> Unit)?,
+    /** S24-CHAT story 4: "Prompt editor" (Flutter `/editor`); null where the app has none. */
+    val promptEditor: (() -> Unit)? = null,
     val reuse: (() -> Unit)?,
     val saved: (() -> Unit)?,
     val sendLater: (() -> Unit)?,
@@ -217,6 +221,16 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
                 leading = KitRowLeading.Glyph(KitIcons.run),
                 onClick = { run(commands) },
                 modifier = Modifier.testTag("composer-tool-commands"),
+            )
+        }
+        choices.promptEditor?.let { open ->
+            KitRow(
+                title = stringResource(Res.string.chatUiPromptEditor),
+                supporting = stringResource(Res.string.chatUiEditTheCurrentPromptInAFocused),
+                supportingMaxLines = 2,
+                leading = KitRowLeading.Glyph(KitIcons.edit),
+                onClick = { run(open) },
+                modifier = Modifier.testTag("composer-tool-editor"),
             )
         }
     }

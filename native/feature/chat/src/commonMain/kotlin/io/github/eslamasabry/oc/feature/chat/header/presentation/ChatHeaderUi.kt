@@ -40,6 +40,8 @@ public data class ChatHeaderUi(
     val agentName: String = "OpenCode",
     /** The rename dialog is open with this text. */
     val renaming: String? = null,
+    /** S24-CHAT: a new id each time a transcript file was saved ("Transcript saved", said once). */
+    val saved: Long? = null,
 )
 
 /** What the ⋯ menu offers (Flutter `SessionMenuAction`, the native subset with a real path). */
@@ -75,6 +77,9 @@ public enum class HeaderAction {
     ImportConversation,
     Handoff,
     CopyTranscript,
+
+    /** S24-CHAT story 8: "Export transcript" (Flutter `_exportTranscript`): the Markdown as a file. */
+    ExportTranscript,
     Archive,
     Delete,
 }
@@ -191,6 +196,9 @@ public interface ChatHeaderActions {
 
     /** Copy transcript, headed in the person's own language. */
     public fun copyTranscript(words: TranscriptWords, mask: (String) -> String)
+
+    /** S24-CHAT story 8: the same masked Markdown as [copyTranscript], saved as `opencode-<id>.md`. */
+    public fun exportTranscript(words: TranscriptWords, mask: (String) -> String) {}
 
     /** The title was tapped (the visible rename path; the menu has it too). */
     public fun renameRequested()

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
@@ -94,6 +95,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyNote
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
@@ -151,6 +153,7 @@ internal class ChatListWords(
     val messageActions: String,
     val working: String,
     val stopping: String,
+    val stoppingAfterStep: String = stopping,
     val sending: String,
     val notSent: String,
     val unconfirmed: String,
@@ -359,6 +362,7 @@ internal fun ChatTranscriptList(
                 val liveWords =
                     when {
                         live.stopping -> listWords.stopping
+                        live.stoppingAfterStep -> listWords.stoppingAfterStep
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }
@@ -908,8 +912,12 @@ private fun ChatRow(
                             // target keeps 4 dp from it (LAYOUT-RULES edge-tap), a shift a person does not see.
                             modifier = Modifier.padding(end = FOOTER_EDGE_INSET_DP.dp).testTag("chat-turn-footer"),
                         ) {
-                            if (row.failed) KitQuietLine(words.footer(true))
-                            else if (row.stopped) KitQuietLine(words.stoppedFooter())
+                            // S24-CHAT: KitReplyFooter insets its line 16 dp from the reply's text edge (room for
+                            // Copy/More at the end); the "Stopped" note belongs on that edge, as in Flutter, so it
+                            // steps back by the inset (offset follows the layout direction, so RTL mirrors).
+                            val note = Modifier.offset(x = -Space.S4.dp).testTag("chat-turn-footer-note")
+                            if (row.failed) KitReplyNote(words.footer(true), note)
+                            else if (row.stopped) KitReplyNote(words.stoppedFooter(), note)
                             facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
                             // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
                             // (message_view.dart:423-427: the model, when it changed).
