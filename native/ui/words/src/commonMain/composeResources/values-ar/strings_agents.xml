@@ -332,6 +332,12 @@
     <string name="agentsInstallHint">تثبيت</string>
     <string name="agentsActionFailed">لم ينجح ذلك على هذا الهاتف. افتح التفاصيل لمعرفة السبب.</string>
     <string name="agentsSignInPaste">لصق</string>
+    <string name="agentsSignInStartPrepare">تعذّر على التطبيق تجهيز مجلد الوكيل على هذا الهاتف.</string>
+    <string name="agentsSignInStartServer">لم يبدأ OpenCode على هذا الهاتف.</string>
+    <string name="agentsSignInStartConnect">تعذّر على التطبيق الاتصال بـ OpenCode على هذا الهاتف.</string>
+    <string name="agentsSignInStartCheck">OpenCode على هذا الهاتف غير جاهز لفتح طرفية.</string>
+    <string name="agentsSignInStartTerminal">تعذّر على OpenCode على هذا الهاتف فتح طرفية تسجيل الدخول.</string>
+    <string name="agentsSignInStartAttach">فُتحت طرفية تسجيل الدخول، لكن تعذّر على التطبيق الاتصال بها.</string>
     <string name="agentCardAsks">%1$s يسأل</string>
     <string name="agentCardReports">%1$s يقدّم تقريرًا</string>
     <string name="agentCardAsksAnnouncement">%1$s يسأل: %2$s</string>

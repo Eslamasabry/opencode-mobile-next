@@ -30,6 +30,12 @@ class SignInTerminalParityTest {
 
         override fun copyCode() {}
 
+        val pasted = mutableListOf<String>()
+
+        override fun paste(text: String) {
+            pasted += text
+        }
+
         override fun send(line: String) {}
 
         override fun setAccessibleMode(on: Boolean) {}
@@ -128,6 +134,67 @@ class SignInTerminalParityTest {
             onNodeWithText("sign-in-start", substring = true).assertExists()
             onNode(hasText("Sign in with Codex") and hasClickAction()).performScrollTo().performClick()
             assertEquals(1, actions.restarted)
+        }
+
+    @Test
+    fun `a failed start says why in words and keeps the step and failure under Details`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    SignInTerminalScreen(
+                        SignInTerminalUi(
+                            agentName = "Antigravity",
+                            pastesBrowserCode = true,
+                            step = SignInStep.Failed,
+                            failureCode = "sign-in-start",
+                            startStep = io.github.eslamasabry.oc.feature.agents.signin.SignInStartStep.Server,
+                            failureDetails = "sign-in-start · server\nRuntime (ServerStartUnavailable)",
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("OpenCode on this phone didn't start.", substring = true).assertExists()
+            onNodeWithText("Runtime (ServerStartUnavailable)", substring = true).assertDoesNotExist()
+            onNodeWithText("Details").performScrollTo().performClick()
+            onNodeWithText("Runtime (ServerStartUnavailable)", substring = true).assertExists()
+            onNode(hasText("Sign in with Antigravity") and hasClickAction()).performScrollTo().performClick()
+            assertEquals(1, actions.restarted)
+        }
+
+    @Test
+    fun `a running sign-in offers Paste, which hands the clipboard to the terminal`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val clipboard =
+                object : androidx.compose.ui.platform.ClipboardManager {
+                    override fun getText() = androidx.compose.ui.text.AnnotatedString("4/0AbCd-code")
+
+                    override fun setText(annotatedString: androidx.compose.ui.text.AnnotatedString) {}
+                }
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    @Suppress("DEPRECATION")
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        androidx.compose.ui.platform.LocalClipboardManager provides clipboard,
+                    ) {
+                        SignInTerminalScreen(
+                            SignInTerminalUi(
+                                agentName = "Antigravity",
+                                pastesBrowserCode = true,
+                                step = SignInStep.Running,
+                                inputEnabled = true,
+                                canOpenPage = true,
+                                transcript = "Open https://accounts.google.com/o/oauth2/auth?x=1",
+                            ),
+                            actions,
+                        )
+                    }
+                }
+            }
+            onNode(hasText("Paste") and hasClickAction()).performClick()
+            assertEquals(listOf("4/0AbCd-code"), actions.pasted)
         }
 
     @Test
