@@ -78,6 +78,9 @@ import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.feature.servers.links.LinkNotice
+import io.github.eslamasabry.oc.feature.servers.links.SessionAddressLinks
+import io.github.eslamasabry.oc.feature.servers.links.SessionLinkNotices
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
@@ -328,6 +331,8 @@ class PlatformHub(
     private val widgetTeams: NativeWidgetTeam,
     // Created with the hub at startup so it sees the first activity start (Pacer reads it).
     private val appVisibility: AppVisibility,
+    // s28-app: what a link that cannot complete says (F: link_routes.dart).
+    private val linkNotices: AppLinkNotices,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -520,6 +525,13 @@ class PlatformHub(
             // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
             val raw = intent.dataString
             intent.data = null
+            // An address link (session/v2) has its own sheet; released Flutter keeps it closed (F: link_routes.dart:103).
+            if (raw != null && SessionAddressLinks.isAddressLink(raw)) {
+                linkNotices.notices.show(
+                    LinkNotice.AddressLink(SessionAddressLinks.check(raw, redactor::containsSecret))
+                )
+                return
+            }
             when (val link = raw?.let(EntryLinkParser::parse)) {
                 is ParsedLink.Session -> openSessionLink(link)
                 // AI Team links open that server's team page (Flutter openTeamPage).
@@ -604,13 +616,17 @@ class PlatformHub(
      */
     private fun openSessionLink(link: ParsedLink.Session) {
         val saved = stores.profiles.profile(link.profileId)
-        if (saved == null || saved.reentry.password || saved.reentry.agentToken) {
-            navigator.open(ServersRoute.Home)
+        val notice = SessionLinkNotices.before(saved != null, saved?.reentry?.let { it.password || it.agentToken } == true)
+        if (notice != null) {
+            // Unknown server: "Add this server?" over the current screen; re-entry: Servers with the reason.
+            if (notice != LinkNotice.ServerMissing) navigator.open(ServersRoute.Home)
+            linkNotices.notices.show(notice)
             return
         }
         appScope.launch {
             if (runtime.connect(link.profileId) !is Outcome.Ok) {
                 navigator.open(ServersRoute.Home)
+                linkNotices.notices.show(LinkNotice.ConnectionFailed)
                 return@launch
             }
             navigator.openChat(ConversationRef(link.profileId, link.sessionId))
