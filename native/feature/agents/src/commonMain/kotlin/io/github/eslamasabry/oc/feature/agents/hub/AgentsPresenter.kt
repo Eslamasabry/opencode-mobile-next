@@ -533,23 +533,23 @@ public class AgentsPresenter(
             connectAgain = true
             return
         }
-        local.update { it.copy(helperConnecting = true, helperConnectFailed = false, helperConnectFailure = null) }
         connectJob =
             scope.launch {
-                val result = host.connect()
-                local.update {
-                    it.copy(
-                        helperConnecting = false,
-                        helperConnectFailed = result is Outcome.Failed,
-                        helperConnectFailure = (result as? Outcome.Failed)?.failure,
-                        helperConnected = result is Outcome.Ok,
-                    )
-                }
-                phone.refresh()
-                if (connectAgain) {
+                // A connect asked for while one runs (Try again, another install) runs once more after it.
+                do {
                     connectAgain = false
-                    if (connectable(phone.state.value)) connectHelper()
-                }
+                    local.update { it.copy(helperConnecting = true, helperConnectFailed = false, helperConnectFailure = null) }
+                    val result = host.connect()
+                    local.update {
+                        it.copy(
+                            helperConnecting = false,
+                            helperConnectFailed = result is Outcome.Failed,
+                            helperConnectFailure = (result as? Outcome.Failed)?.failure,
+                            helperConnected = result is Outcome.Ok,
+                        )
+                    }
+                    phone.refresh()
+                } while (connectAgain && connectable(phone.state.value))
             }
     }
 

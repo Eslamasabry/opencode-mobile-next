@@ -75,7 +75,7 @@ class AgentsBentoTest {
         Locale.setDefault(previousLocale)
     }
 
-    private class Recorder : AgentsActions {
+    internal class Recorder : AgentsActions {
         val calls = mutableListOf<String>()
 
         override fun back() {}
@@ -146,8 +146,8 @@ class AgentsBentoTest {
             onNode(hasContentDescription("Antigravity. Phone check needed")).assertExists()
             onNodeWithText("Connect phone agents").assertDoesNotExist()
             // One status line replaces "Check this phone", and no Refresh row is left.
-            onNodeWithText("This phone is ready · arm64 · Android 15").assertExists()
-            onNodeWithText("Check again").assertExists()
+            onNode(hasContentDescription("This phone is ready · arm64 · Android 15")).assertExists()
+            onNode(hasText("Check again") or hasContentDescription("Check again")).assertExists()
             onNodeWithText("Check this phone").assertDoesNotExist()
             onNodeWithText("Refresh", substring = true).assertDoesNotExist()
             // The install note lives on the tile and in the sheet, not as a notice over the page.
@@ -196,8 +196,8 @@ class AgentsBentoTest {
                 actions,
             )
         }
-        onNodeWithText("Phone agents are not connected: the agent helper did not start.").assertExists()
-        onNode(hasText("Try again") and hasClickAction()).performScrollTo().performClick()
+        onNode(hasContentDescription("Phone agents are not connected: the agent helper did not start.")).assertExists()
+        onNode((hasText("Try again") or hasContentDescription("Try again")) and hasClickAction()).performScrollTo().performClick()
         assertEquals(listOf("connect"), actions.calls)
     }
 
@@ -210,8 +210,8 @@ class AgentsBentoTest {
                 helperConnectFailure = Failure.Runtime(RuntimeProblem.Generic),
             )
         setContent { Screen(nothing, Recorder()) }
-        onNodeWithText("Phone agents are not connected", substring = true).assertDoesNotExist()
-        onNodeWithText("Try again").assertDoesNotExist()
+        onNode(hasContentDescription("Phone agents are not connected", substring = true)).assertDoesNotExist()
+        onNode(hasText("Try again") or hasContentDescription("Try again")).assertDoesNotExist()
         onNode(hasContentDescription("Install Gemini CLI")).assertExists()
     }
 
@@ -237,78 +237,10 @@ class AgentsBentoTest {
     @Test
     fun `B-AGENT-181 while connecting or connected there is no line at all`() = runComposeUiTest {
         setContent { Screen(EVERY_STATE.copy(helperConnecting = true, helperConnectFailed = true), Recorder()) }
-        onNodeWithText("Phone agents are not connected", substring = true).assertDoesNotExist()
+        onNode(hasContentDescription("Phone agents are not connected", substring = true)).assertDoesNotExist()
     }
 
-    /**
-     * Not a check: the review renders. Runs only when `AGENTS_BENTO_RENDER_DIR` names a folder, and writes one phone
-     * screen per image (412 x 915 dp at 2.625) of the page with one agent in each state, in Solid and Glass, light and
-     * dark; the agent sheet; the failure line; and a tablet-width page.
-     */
-    @Test
-    fun renders() {
-        val out = System.getenv("AGENTS_BENTO_RENDER_DIR")?.let(::File) ?: return
-        out.mkdirs()
-        for (style in listOf(Style.Solid, Style.Glass))
-            for (mode in listOf(AppearanceMode.Light, AppearanceMode.Dark)) {
-                val look = "${style.storageName}-${mode.name.lowercase()}"
-                shoot(File(out, "phone-$look.png"), style, mode, EVERY_STATE)
-                shoot(File(out, "computers-empty-$look.png"), style, mode, EVERY_STATE.copy(tab = AgentsTab.Computers, computers = persistentListOf(PHONE_HELPER)))
-                shoot(File(out, "computers-connected-$look.png"), style, mode, COMPUTERS)
-            }
-        shoot(File(out, "sheet-antigravity-solid-dark.png"), Style.Solid, AppearanceMode.Dark, ANTIGRAVITY_SHEET)
-        shoot(File(out, "sheet-installing-glass-light.png"), Style.Glass, AppearanceMode.Light, EVERY_STATE.copy(sheetAgent = "kilo"))
-        shoot(
-            File(out, "phone-connect-failed-solid-light.png"),
-            Style.Solid,
-            AppearanceMode.Light,
-            EVERY_STATE.copy(helperConnected = false, helperConnectFailed = true, helperConnectFailure = Failure.TimedOut()),
-        )
-        shoot(File(out, "menu-solid-dark.png"), Style.Solid, AppearanceMode.Dark, EVERY_STATE) {
-            onNode(hasContentDescription("More actions") and hasClickAction()).performClick()
-        }
-        shoot(File(out, "phone-tablet-solid-dark.png"), Style.Solid, AppearanceMode.Dark, EVERY_STATE, widthDp = 900, heightDp = 1200)
-    }
-
-    private fun shoot(
-        file: File,
-        style: Style,
-        mode: AppearanceMode,
-        state: AgentsUi,
-        widthDp: Int = 412,
-        heightDp: Int = 915,
-        then: androidx.compose.ui.test.ComposeUiTest.() -> Unit = {},
-    ) {
-        val density = 2.625f
-        runDesktopComposeUiTest((widthDp * density).toInt(), (heightDp * density).toInt()) {
-            setContent {
-                CompositionLocalProvider(
-                    LocalDensity provides Density(density),
-                    LocalKitSecretSink provides KitSecretSink {},
-                    LocalKitLogoLoader provides MARKS,
-                ) {
-                    KitTheme(
-                        appearance = KitAppearance(mode = mode, style = style, motion = MotionLevel.Off),
-                        platform = DesktopKitPlatform(),
-                        localeTag = "en",
-                        stillFrame = true,
-                    ) {
-                        Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { AgentsScreen(state, Recorder()) }
-                    }
-                }
-            }
-            waitForIdle()
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
-            then()
-            waitForIdle()
-            mainClock.advanceTimeBy(1_000)
-            waitForIdle()
-            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
-        }
-    }
-
-    private companion object {
+    internal companion object {
         /** The phone's own helper profile: it is never listed as a computer. */
         val PHONE_HELPER = AgentComputer(ProfileId("owner-agents"), "Phone agents", "ws://127.0.0.1:4099", "/root/projects", connected = true)
 
