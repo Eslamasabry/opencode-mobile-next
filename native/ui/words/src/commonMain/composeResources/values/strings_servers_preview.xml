@@ -25,4 +25,5 @@
     <string name="serversCreateFailed">Could not start a conversation. Your server is still saved.</string>
     <string name="serversRemoveFailed">Could not remove this server. Its saved details are unchanged.</string>
     <string name="serversSignInFailed">The server did not accept these sign-in details. Check the username and password.</string>
+    <string name="serverHttpsRequired">This address is on the public internet, so it needs HTTPS. Plain HTTP would send your password unencrypted. Change the address to start with https://, or reach the server through Tailscale or your own network.</string>
 </resources>

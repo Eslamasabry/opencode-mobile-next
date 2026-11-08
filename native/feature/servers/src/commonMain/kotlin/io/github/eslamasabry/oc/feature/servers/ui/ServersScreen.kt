@@ -177,7 +177,8 @@ public fun ServersScreen(
 @Composable
 private fun issueWords(issue: ServerIssue, failure: Failure?): String =
     stringResource(
-        when (serverFailureKind(failure)) {
+        if (issue == ServerIssue.HttpsRequired) Res.string.serverHttpsRequired
+        else when (serverFailureKind(failure)) {
             ServerFailureKind.SignIn -> Res.string.serversSignInFailed
             ServerFailureKind.CleartextConsent -> Res.string.serversCleartextRequired
             ServerFailureKind.InvalidAddress -> Res.string.serversInvalidAddress
@@ -200,6 +201,7 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
                         ServerIssue.CreateFailed -> Res.string.serversCreateFailed
                         ServerIssue.RemoveFailed -> Res.string.serversRemoveFailed
                         ServerIssue.Connected -> Res.string.serversConnected
+                        ServerIssue.HttpsRequired -> Res.string.serverHttpsRequired
                     }
         }
     )

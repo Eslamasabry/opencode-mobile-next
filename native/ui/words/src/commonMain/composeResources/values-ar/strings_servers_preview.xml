@@ -25,4 +25,5 @@
     <string name="serversCreateFailed">تعذّر بدء المحادثة. ما زال خادمك محفوظًا.</string>
     <string name="serversRemoveFailed">تعذّرت إزالة هذا الخادم. لم تتغير بياناته المحفوظة.</string>
     <string name="serversSignInFailed">لم يقبل الخادم بيانات تسجيل الدخول هذه. تحقّق من اسم المستخدم وكلمة المرور.</string>
+    <string name="serverHttpsRequired">هذا العنوان على الإنترنت العام، لذا يحتاج إلى HTTPS. سيُرسل HTTP العادي كلمة مرورك دون تشفير. غيّر العنوان ليبدأ بـ https://، أو صِل إلى الخادم عبر Tailscale أو شبكتك الخاصة.</string>
 </resources>

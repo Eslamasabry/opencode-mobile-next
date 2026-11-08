@@ -11,7 +11,9 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingChoice
 import io.github.eslamasabry.oc.feature.servers.pairing.NoPairingProbe
@@ -304,6 +306,11 @@ public class ServersViewModel(
             }
             return
         }
+        // B-177: plain HTTP on the public internet is never offered; say why instead of asking.
+        if (needsHttps(address)) {
+            local.update { it.copy(issue = ServerIssue.HttpsRequired, failure = null) }
+            return
+        }
         // Capture this explicit choice for exactly this submitted address; it is not a global
         // transport setting.
         val consent = local.value.cleartextAllowed && consentAddress == address.trim()
@@ -350,7 +357,7 @@ public class ServersViewModel(
     override fun connect(id: ProfileId) = operation {
         when (val result = connections.connect(id)) {
             is Outcome.Ok -> local.update { it.copy(issue = ServerIssue.Connected) }
-            is Outcome.Failed -> failed(ServerIssue.ConnectFailed, result.failure)
+            is Outcome.Failed -> connectFailed(id, result.failure)
         }
     }
 
@@ -364,7 +371,7 @@ public class ServersViewModel(
         operation {
             when (val connected = connections.connect(id)) {
                 is Outcome.Ok -> createNow(id)
-                is Outcome.Failed -> failed(ServerIssue.ConnectFailed, connected.failure)
+                is Outcome.Failed -> connectFailed(id, connected.failure)
             }
         }
     }
@@ -464,6 +471,24 @@ public class ServersViewModel(
     private fun failed(issue: ServerIssue, failure: Failure) {
         local.update { it.copy(issue = issue, failure = failure) }
     }
+
+    /**
+     * B-177: a saved public HTTP server (consent given before the rule) is refused as unconfirmed; tell the person it
+     * needs HTTPS rather than asking them to confirm HTTP again.
+     */
+    private fun connectFailed(id: ProfileId, failure: Failure) {
+        val address = connections.servers.value.firstOrNull { it.id == id }?.address
+        if (
+            (failure as? Failure.Refused)?.reason == RefusalReason.CleartextNotConfirmed &&
+                address != null &&
+                needsHttps(address)
+        )
+            local.update { it.copy(issue = ServerIssue.HttpsRequired, failure = null) }
+        else failed(ServerIssue.ConnectFailed, failure)
+    }
+
+    private fun needsHttps(address: String): Boolean =
+        (AddressRules.normalize(address) as? Outcome.Ok)?.value?.let(AddressRules::cleartextNeedsHttps) == true
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

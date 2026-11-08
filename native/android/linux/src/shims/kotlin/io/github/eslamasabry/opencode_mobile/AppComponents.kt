@@ -6,6 +6,7 @@ package io.github.eslamasabry.opencode_mobile
 
 import android.content.Context
 import android.content.Intent
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 
 internal object AppComponents {
     /** Frozen extra name, verbatim from the Flutter app's MainActivity (the native MainActivity reads the same). */
@@ -14,8 +15,12 @@ internal object AppComponents {
     const val MAIN_ACTIVITY = "io.github.eslamasabry.opencode_mobile.MainActivity"
     const val STATUS_ACTION_RECEIVER = "io.github.eslamasabry.opencode_mobile.StatusActionReceiver"
 
-    /** `Intent(context, MainActivity::class.java)`: the app's launcher activity in this package. */
-    fun mainActivity(context: Context): Intent = Intent().setClassName(context.packageName, MAIN_ACTIVITY)
+    /**
+     * `Intent(context, MainActivity::class.java)`: the app's launcher activity in this package, carrying this install's
+     * launch token (B-175) so MainActivity accepts the setup and Linux actions these notifications send.
+     */
+    fun mainActivity(context: Context): Intent =
+        LaunchToken.stamp(context, Intent().setClassName(context.packageName, MAIN_ACTIVITY))
 
     /** `Intent(context, StatusActionReceiver::class.java)`: the app's status-row receiver. */
     fun statusAction(context: Context): Intent = Intent().setClassName(context.packageName, STATUS_ACTION_RECEIVER)

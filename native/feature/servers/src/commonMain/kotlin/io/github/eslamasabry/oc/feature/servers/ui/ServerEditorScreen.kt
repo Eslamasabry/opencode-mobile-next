@@ -275,7 +275,13 @@ public fun ServerEditorScreen(
     val connectionEnabled =
         if (!enabled.isEnabled) enabled
         else if (requiresHttpReview(backend, address.text.toString(), confirmedOrigin))
-            KitEnabled.Disabled(stringResource(Res.string.serversCleartextRequired))
+            KitEnabled.Disabled(
+                stringResource(
+                    if (editorOrigin(address.text.toString())?.let(AddressRules::cleartextNeedsHttps) == true)
+                        Res.string.serverHttpsRequired
+                    else Res.string.serversCleartextRequired
+                )
+            )
         else KitEnabled.Enabled
     val discard =
         if (state.discard)
@@ -353,7 +359,11 @@ public fun ServerEditorScreen(
                     {
                         val reviewed = trustOrigin
                         // F: lib/ui/screens/servers/profile_editor_trust.dart:20-24
-                        if (reviewed != null && reviewed == editorOrigin(address.text.toString())) {
+                        if (
+                            reviewed != null &&
+                                !AddressRules.cleartextNeedsHttps(reviewed) &&
+                                reviewed == editorOrigin(address.text.toString())
+                        ) {
                             confirmedOrigin = reviewed.toString()
                             actions.changed()
                         }
@@ -556,7 +566,7 @@ public fun ServerEditorScreen(
                             stringResource(Res.string.tailscaleReturned),
                             icon = KitIcons.info,
                         )
-                    state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
+                    state.failure?.let { KitErrorNotice(editorFailureWords(it, httpsRequired = false), failure = it) }
                     TailscaleHelpContent()
                 }
                 ServerEditorStep.Ready -> {
@@ -594,7 +604,7 @@ public fun ServerEditorScreen(
                         stringResource(Res.string.addServerReadyBody),
                         tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary,
                     )
-                    state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
+                    state.failure?.let { KitErrorNotice(editorFailureWords(it, httpsRequired = false), failure = it) }
                 }
                 ServerEditorStep.Connect -> {
                     // OpenCode on a computer leads with the fastest way: scan (or paste) the code
@@ -812,7 +822,9 @@ public fun ServerEditorScreen(
                                     origin != null &&
                                     AddressRules.needsCleartextConsent(origin)
                             ) {
-                                val pending = editorOrigin(confirmedOrigin.orEmpty()) != origin
+                                // B-177: a public address can't be confirmed, even if an older build saved consent.
+                                val public = AddressRules.cleartextNeedsHttps(origin)
+                                val pending = public || editorOrigin(confirmedOrigin.orEmpty()) != origin
                                 if (pending)
                                     KitNotice(
                                         message = httpWarning(origin),
@@ -838,7 +850,7 @@ public fun ServerEditorScreen(
                                                             disabledReason = enabled.reason,
                                                         )
                                                     )
-                                                if (pending)
+                                                if (pending && !public)
                                                     add(
                                                         KitLineAction(
                                                             stringResource(
@@ -878,7 +890,12 @@ public fun ServerEditorScreen(
                             }
                             state.failure?.let { failure ->
                                 KitErrorNotice(
-                                    editorFailureWords(failure),
+                                    editorFailureWords(
+                                        failure,
+                                        httpsRequired =
+                                            editorOrigin(address.text.toString())
+                                                ?.let(AddressRules::cleartextNeedsHttps) == true,
+                                    ),
                                     failure = failure,
                                     detailsLabel = stringResource(Res.string.kitDetails),
                                     copyLabel = stringResource(Res.string.kitCopyDetails),
@@ -1023,7 +1040,8 @@ internal fun suggestServerName(address: String, fallback: String): String {
 internal fun editorOrigin(address: String): ServerOrigin? =
     (AddressRules.normalize(address) as? Outcome.Ok)?.value
 
-private fun requiresHttpReview(
+/** True while the address still needs an HTTP decision, so neither the check nor Save may run (B-SEC-124, B-177). */
+internal fun requiresHttpReview(
     backend: BackendKind,
     address: String,
     confirmedOrigin: String?,
@@ -1031,15 +1049,18 @@ private fun requiresHttpReview(
     if (backend != BackendKind.OpenCode2) return false
     val origin = editorOrigin(address) ?: return false
     return AddressRules.needsCleartextConsent(origin) &&
-        editorOrigin(confirmedOrigin.orEmpty()) != origin
+        (AddressRules.cleartextNeedsHttps(origin) || editorOrigin(confirmedOrigin.orEmpty()) != origin)
 }
 
+/**
+ * B-177: a private, link-local or Tailscale address may use HTTP after consent (the text says the password travels
+ * unencrypted); a public address is told it needs HTTPS and what to do instead.
+ */
 @Composable
 private fun httpWarning(origin: ServerOrigin): String =
     stringResource(
-        if (AddressRules.isPrivateNetwork(origin.host) || AddressRules.isTailnet(origin.host))
-            Res.string.addServerCleartextWarning
-        else Res.string.serverTrustHttpPublicBody
+        if (AddressRules.cleartextNeedsHttps(origin)) Res.string.serverHttpsRequired
+        else Res.string.addServerCleartextWarning
     )
 
 /** One copyable setup command (Flutter `KitCodeBlock(copyLabel: handoffCopyCommand)`). */
@@ -1071,7 +1092,7 @@ private fun backendName(backend: BackendKind): String =
     )
 
 @Composable
-private fun editorFailureWords(failure: Failure): String =
+private fun editorFailureWords(failure: Failure, httpsRequired: Boolean): String =
     stringResource(
         when (failure) {
             is Failure.SignIn -> Res.string.serversSignInFailed
@@ -1080,7 +1101,9 @@ private fun editorFailureWords(failure: Failure): String =
             is Failure.Network -> Res.string.serverFailureNetwork
             is Failure.Refused ->
                 when (failure.reason) {
-                    RefusalReason.CleartextNotConfirmed -> Res.string.serversCleartextRequired
+                    RefusalReason.CleartextNotConfirmed ->
+                        if (httpsRequired) Res.string.serverHttpsRequired
+                        else Res.string.serversCleartextRequired
                     RefusalReason.StaleScope -> Res.string.editor40Stale
                     RefusalReason.ProfileDeleted -> Res.string.editor40Deleted
                     else -> Res.string.serversInvalidAddress

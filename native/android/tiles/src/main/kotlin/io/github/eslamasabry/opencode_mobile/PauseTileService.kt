@@ -52,7 +52,7 @@ class PauseTileService : TileService() {
      * below Android 14 (the lint check cannot see the version guard). */
     @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     private fun openApp() {
-        val intent = LaunchActions.mainActivityIntent(packageName, LaunchAction.BackgroundSettings).apply {
+        val intent = LaunchActions.mainActivityIntent(this, LaunchAction.BackgroundSettings).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

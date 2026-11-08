@@ -223,7 +223,10 @@ class PreviewRuntime(
         val normalized = AddressRules.normalize(address)
         if (normalized is Outcome.Failed) return@command normalized
         val origin = (normalized as Outcome.Ok).value.toString()
-        if (ProfileOrigins.needsCleartextConsent(origin) && !allowCleartext)
+        if (
+            ProfileOrigins.needsCleartextConsent(origin) &&
+                (!allowCleartext || ProfileOrigins.cleartextNeedsHttps(origin)) // B-177
+        )
             return@command Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
         val id = ProfileId(UUID.randomUUID().toString())
         profiles

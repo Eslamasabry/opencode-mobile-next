@@ -285,19 +285,19 @@ class ProfileStoreTest {
     @Test
     fun `B-SEC-121 cleartext consent applies to one exact origin and an address edit drops it in the same commit`() = runTest {
         val h = harness()
-        val lan = StoredProfile(id("lan"), "LAN", "http://203.0.113.20:4096")
+        val lan = StoredProfile(id("lan"), "LAN", "http://10.0.2.2:4096")
         assertTrue(h.store.upsert(lan).ok().cleartextUnconfirmed)
 
-        val confirmed = h.store.upsert(lan, trust = TrustInput(cleartextOrigin = "http://203.0.113.20:4096")).ok()
+        val confirmed = h.store.upsert(lan, trust = TrustInput(cleartextOrigin = "http://10.0.2.2:4096")).ok()
         assertFalse(confirmed.cleartextUnconfirmed)
-        assertEquals("http://203.0.113.20:4096", h.string("oc.cleartextOk.lan"))
+        assertEquals("http://10.0.2.2:4096", h.string("oc.cleartextOk.lan"))
         // A rebuilt profile (no trust given) keeps it; a reload keeps it.
         h.store.upsert(lan.copy(name = "Renamed")).ok()
         val reloaded = Harness(StandardTestDispatcher(testScheduler), h.secrets, h.backend).store.load().ok().single()
         assertFalse(reloaded.cleartextUnconfirmed)
 
         // Another address (another port) is not covered: the consent is gone with the edit.
-        val moved = h.store.upsert(lan.copy(baseUrl = "http://203.0.113.20:4097")).ok()
+        val moved = h.store.upsert(lan.copy(baseUrl = "http://10.0.2.2:4097")).ok()
         assertTrue(moved.cleartextUnconfirmed)
         assertNull(h.string("oc.cleartextOk.lan"))
         // Loopback never needs it.

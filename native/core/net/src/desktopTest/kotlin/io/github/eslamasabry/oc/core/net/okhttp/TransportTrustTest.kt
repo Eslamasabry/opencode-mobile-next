@@ -91,6 +91,24 @@ class TransportTrustTest {
     }
 
     @Test
+    fun `B-177 consent never permits plain http to a public address and nothing is sent`() = runBlocking {
+        val origin = ServerOrigin("http", "203.0.113.7", 4096)
+        val public = net(TransportSpec(origin, HostClass.Public, cleartextPermitted = true))
+        assertEquals(
+            Failure.Refused(RefusalReason.CleartextNotConfirmed),
+            failureOf(public.get("http://203.0.113.7:4096/api/health")),
+        )
+    }
+
+    @Test
+    fun `B-177 a confirmed private address still passes the gate`() = runBlocking {
+        val server = plainServer()
+        server.handler = { _, _ -> Reply.Ok("ok") }
+        val outcome = net(spec("http", server.port, cleartext = true)).get(server.url("/api/health"))
+        assertEquals(Outcome.Ok("ok"), outcome)
+    }
+
+    @Test
     fun `B-SEC-007 a request to another origin is refused and nothing is sent (review MAJOR 4)`() = runBlocking {
         val server = plainServer()
         val outcome = net(spec("http", server.port + 1, cleartext = true)).get(server.url("/api/health"))

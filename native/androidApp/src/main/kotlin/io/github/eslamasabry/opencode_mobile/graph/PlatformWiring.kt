@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.string
@@ -496,6 +497,10 @@ class PlatformHub(
     fun route(intent: Intent?) {
         if (intent == null) return
         pinnedLaunchGeneration++ // Any newer launch invalidates a pin still waiting for startup.
+        // B-175: MainActivity is exported. Session, alert and action extras count only when the intent carries this
+        // install's launch token (the app's own shortcuts, tiles, widgets and notifications); otherwise the app opens
+        // plainly. Monitor and quota taps keep their own token; share and deep links keep their own validation.
+        val trusted = LaunchToken.consume(application, intent)
         if (intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID) == "quota") {
             val profile =
                 intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID).orEmpty()
@@ -525,16 +530,16 @@ class PlatformHub(
             incomingShare.arrived(share.text)
             return
         }
-        LaunchActions.consumeSessionShortcut(intent)?.let { tap ->
+        LaunchActions.consumeSessionShortcut(intent, trusted)?.let { tap ->
             openPinnedSession(tap)
             return
         }
-        alertTap(intent)?.let { ref ->
+        alertTap(intent)?.takeIf { trusted }?.let { ref ->
             shade.dismiss(AlertKeys.status(ref.profileId.raw, ref.sessionId.raw))
             navigator.openChat(ref)
             return
         }
-        when (val action = LaunchActions.consume(intent)) {
+        when (val action = LaunchActions.consume(intent, trusted)) {
             LaunchAction.PhoneSetup,
             LaunchAction.PhoneSetupDone ->
                 when (

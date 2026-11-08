@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 import org.robolectric.annotation.Config
 
 /** What `AndroidAlertShade` actually puts in the shade (plan 11 §10.4, §10.6; 16 §1.8). */
@@ -76,6 +77,16 @@ class AlertShadeTest {
         assertNull(n.publicVersion.extras.getCharSequence(Notification.EXTRA_TEXT))
         assertEquals("opencode_coding_action", n.channelId)
         assertEquals(AlertGroups.NEEDS_YOU, n.group)
+    }
+
+    @Test
+    fun `B-175 the alert's open tap carries this install's launch token with the conversation ids`() {
+        val alert = permission()
+        shade.show(alert, needsYou)
+        val open: Intent = shadowOf(posted(alert.key).contentIntent).savedIntent
+        assertEquals(FrozenComponents.MAIN_ACTIVITY, open.component!!.className)
+        assertEquals("ses_1", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID))
+        assertEquals(LaunchToken.value(app), open.getStringExtra(LaunchToken.EXTRA))
     }
 
     @Test

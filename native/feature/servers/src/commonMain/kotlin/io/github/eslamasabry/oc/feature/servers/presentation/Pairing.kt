@@ -189,7 +189,10 @@ public class PairingDialer(
                 }
                 is Outcome.Ok -> {
                     val origin = o.value
-                    if (policy.needsCleartextConsent(origin) && origin !in confirmedCleartext) {
+                    // B-177: a public HTTP address stays held whatever was confirmed; the editor explains HTTPS.
+                    if (policy.needsCleartextConsent(origin) &&
+                        (origin !in confirmedCleartext || policy.cleartextNeedsHttps(origin))
+                    ) {
                         outcomes +=
                             PairingAddressOutcome(origin.toString(), origin, probed = false, verdict = AddressVerdict.NeedsCleartextConsent)
                     } else if (origin !in candidates) {

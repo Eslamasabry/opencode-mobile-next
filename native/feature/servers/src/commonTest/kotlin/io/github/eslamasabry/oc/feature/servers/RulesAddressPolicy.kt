@@ -22,6 +22,8 @@ object RulesAddressPolicy : AddressPolicy {
 
     override fun isTailnet(host: String): Boolean = AddressRules.isTailnet(host)
 
+    override fun cleartextNeedsHttps(origin: ServerOrigin): Boolean = AddressRules.cleartextNeedsHttps(origin)
+
     override fun checkPin(origin: ServerOrigin, fingerprint: String): Outcome<String> =
         AddressRules.checkPin(origin, fingerprint)
 }

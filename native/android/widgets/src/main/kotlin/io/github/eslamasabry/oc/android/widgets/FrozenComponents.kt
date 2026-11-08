@@ -4,10 +4,21 @@
 // `setClassName(context, X.COMPONENT)` with the frozen FQCN: the in-place update keeps every component name.
 package io.github.eslamasabry.oc.android.widgets
 
+import android.content.Context
+import android.content.Intent
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
+
 /** E5: the launcher activity. The frozen extra name is copied from the Flutter `MainActivity`. */
 public object MainActivity {
     public const val COMPONENT: String = "io.github.eslamasabry.opencode_mobile.MainActivity"
     public const val EXTRA_LAUNCH_ACTION: String = "oc.shortcut"
+
+    /**
+     * B-175: an intent for the launcher activity carrying this install's launch token, so MainActivity accepts the
+     * widget's action and conversation extras (it ignores them from other apps).
+     */
+    public fun intent(context: Context): Intent =
+        LaunchToken.stamp(context, Intent().setClassName(context, COMPONENT))
 
     /** Flutter read `MainActivity.backgroundChannel != null` as "the live engine can take a widget action now". */
     public val backgroundChannel: Any? get() = WidgetFeed.liveDispatcher

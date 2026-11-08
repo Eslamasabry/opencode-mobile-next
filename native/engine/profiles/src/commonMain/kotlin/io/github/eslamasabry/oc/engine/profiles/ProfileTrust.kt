@@ -39,6 +39,13 @@ public object ProfileOrigins {
     public fun needsCleartextConsent(url: String): Boolean =
         AddressRules.origin(url.trim()).getOrNull()?.let(AddressRules::needsCleartextConsent) == true
 
+    /**
+     * B-177: plain HTTP to a public address. No stored or new consent counts for it: the person is asked again and
+     * told to use HTTPS.
+     */
+    public fun cleartextNeedsHttps(url: String): Boolean =
+        AddressRules.origin(url.trim()).getOrNull()?.let(AddressRules::cleartextNeedsHttps) == true
+
     /** The connection origin, ws/wss included for agent sockets (null when unusable). */
     public fun serverOrigin(url: String): ServerOrigin? {
         val raw = url.trim()
@@ -84,7 +91,7 @@ internal object TrustCodec {
         val origin = ProfileOrigins.trustOrigin(profile.baseUrl)
         val wantedConsent = input.cleartextOrigin ?: stored.cleartext?.origin
         val consent = if (!profile.usesAgentSocket && ProfileOrigins.needsCleartextConsent(profile.baseUrl) &&
-            wantedConsent != null && wantedConsent == origin
+            !ProfileOrigins.cleartextNeedsHttps(profile.baseUrl) && wantedConsent != null && wantedConsent == origin
         ) {
             CleartextOkRecord(wantedConsent)
         } else {

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
+import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 
 /**
  * Draws the one status row (plan 11 §10.3, §10.5). Port of `StatusNotificationRenderer` with the
@@ -94,6 +95,8 @@ public class StatusRenderer(private val context: Context, private val words: Not
                     putExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, it.sessionId.raw)
                 }
                 if (launch != null) putExtra(FrozenExtras.EXTRA_LAUNCH_ACTION, launch)
+                // B-175: MainActivity acts on the conversation and action extras only with this install's token.
+                LaunchToken.stamp(context, this)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

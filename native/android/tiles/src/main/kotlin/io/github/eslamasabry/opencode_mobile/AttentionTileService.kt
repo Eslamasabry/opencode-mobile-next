@@ -73,7 +73,7 @@ class AttentionTileService : TileService() {
     }
 
     private fun openActivity() {
-        val intent = LaunchActions.mainActivityIntent(packageName, LaunchAction.Activity).apply {
+        val intent = LaunchActions.mainActivityIntent(this, LaunchAction.Activity).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP

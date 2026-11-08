@@ -29,6 +29,10 @@ public interface AddressPolicy {
 
     public fun isTailnet(host: String): Boolean
 
+    /** B-177: plain HTTP to a public address, which no consent can permit (the person must use HTTPS). */
+    public fun cleartextNeedsHttps(origin: ServerOrigin): Boolean =
+        origin.scheme == "http" && !isLoopback(origin.host) && !isPrivateNetwork(origin.host) && !isTailnet(origin.host)
+
     /** A pin needs HTTPS and 64 hex digits (colons allowed); returns the lower-case hex. */
     public fun checkPin(origin: ServerOrigin, fingerprint: String): Outcome<String>
 }

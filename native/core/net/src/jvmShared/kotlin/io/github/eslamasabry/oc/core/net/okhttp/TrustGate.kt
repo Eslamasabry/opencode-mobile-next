@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.net.TransportSpec
 import io.github.eslamasabry.oc.core.net.TrustRefusal
+import io.github.eslamasabry.oc.core.security.AddressRules
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -36,7 +37,9 @@ internal object TrustEnforcement {
         val pin = spec.pinnedLeafSha256?.let { PinnedLeafTrustManager(it.copyOf()) }
         val builder = client.newBuilder()
         builder.interceptors().removeAll { it is TrustGateInterceptor }
-        builder.interceptors().add(0, TrustGateInterceptor(originString(spec), spec.cleartextPermitted, pin))
+        // B-177: consent never permits plain HTTP to a public address, whatever the caller passed.
+        val cleartext = spec.cleartextPermitted && AddressRules.cleartextAllowedHost(spec.origin.host)
+        builder.interceptors().add(0, TrustGateInterceptor(originString(spec), cleartext, pin))
         if (pin != null) {
             val tls = SSLContext.getInstance("TLS").apply { init(null, arrayOf(pin), null) }
             builder.sslSocketFactory(tls.socketFactory, pin).hostnameVerifier(pin.hostnameVerifier())
@@ -59,8 +62,8 @@ internal object TrustEnforcement {
 
 /**
  * Plan 04 §4.6, in this order; each refusal is thrown before `chain.proceed`, so nothing is sent:
- * user info → `CredentialsInUrl`; another origin (also any redirect target) → `OriginChanged`; `http` without consent →
- * `CleartextNotConfirmed`; `http` with a pin → `PinNeedsHttps`; a pin that already mismatched → `Certificate(Changed)`.
+ * user info → `CredentialsInUrl`; another origin (also any redirect target) → `OriginChanged`; `http` without consent,
+ * or to a public address (B-177) → `CleartextNotConfirmed`; `http` with a pin → `PinNeedsHttps`; a pin that already mismatched → `Certificate(Changed)`.
  * A handshake that fails on the pin, or on certificate validity, comes back as `Certificate(...)` too.
  */
 internal class TrustGateInterceptor(

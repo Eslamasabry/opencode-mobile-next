@@ -246,6 +246,16 @@ class PairingTest {
         }
 
     @Test
+    fun `B-177 a public HTTP pairing address is never dialed, even with a saved confirmation`() =
+        runTest {
+            val origin = ServerOrigin("http", "192.0.2.20", 4097)
+            val p = parsed(pairJson(listOf("http://192.0.2.20:4097")))
+            val selection = dialer({ fail("must not be dialed: ${it.origin}") }, confirmed = setOf(origin)).select(p)
+            assertEquals(AddressVerdict.NeedsCleartextConsent, selection.outcomes.single().verdict)
+            assertFalse(selection.ok)
+        }
+
+    @Test
     fun `B-SEC-124 loopback http is dialed without asking`() =
         runTest {
             val selection = dialer({ v2Ok }).select(parsed(pairJson(listOf("http://127.0.0.1:4097"))))

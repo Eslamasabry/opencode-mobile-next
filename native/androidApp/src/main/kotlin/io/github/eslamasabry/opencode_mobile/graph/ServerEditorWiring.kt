@@ -167,7 +167,11 @@ class NativeServerEditor(
         if (input.backend != BackendKind.OpenCode2) return TrustInput().ok()
         val consent =
             input.cleartextOrigin?.let { AddressRules.normalize(it).getOrNull()?.toString() }
-        if (AddressRules.needsCleartextConsent(origin) && consent != origin.toString())
+        // B-177: a public HTTP address can't be confirmed; the editor tells the person to use HTTPS.
+        if (
+            AddressRules.needsCleartextConsent(origin) &&
+                (consent != origin.toString() || AddressRules.cleartextNeedsHttps(origin))
+        )
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
         val pin = input.certificatePin?.takeIf { input.certificateOrigin == origin.toString() }
         val checked = pin?.let { AddressRules.checkPin(origin, it) }
