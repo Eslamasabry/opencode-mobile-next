@@ -80,7 +80,7 @@ class TelemetryContinuityTest {
     }
 
     @Test
-    fun `E02-S91-010 a fresh crash is offered once; Offer crash reports off marks it seen without showing`() = runTest {
+    fun `E02-S91-010 a fresh crash is offered once, and with Offer crash reports off it is marked seen without showing`() = runTest {
         val crash = LaunchReport(exit = ExitRecord(reason = ExitReason.CRASH, timestampMs = now.toEpochMilliseconds() - 3_600_000))
         val c = TelemetryContinuity(answers(disk()), ErrorReporter(NoOpReportSink, false), available = false, clock)
         assertTrue(c.enabled(), "on unless turned off")
