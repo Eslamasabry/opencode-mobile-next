@@ -16,6 +16,11 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchMessage
 import io.github.eslamasabry.oc.feature.search.presentation.SearchPhase
 import io.github.eslamasabry.oc.feature.search.presentation.SearchServer
 import io.github.eslamasabry.oc.feature.search.presentation.SearchViewModel
+import io.github.eslamasabry.oc.feature.search.presentation.SearchActivity
+import io.github.eslamasabry.oc.feature.search.presentation.SearchProject
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRecentConversation
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRowStatus.Working
+import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
@@ -39,6 +44,10 @@ import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchViewModelTest {
+    private companion object {
+        const val NOW = 1_800_000_000_000L
+    }
+
     private val home = ProfileId("home")
     private val work = ProfileId("work")
 
@@ -56,6 +65,9 @@ class SearchViewModelTest {
         var titlesResult: Outcome<SearchConversationPage>? = null
         var gate: CompletableDeferred<Unit>? = null
         var pageSize = 50
+        val live = MutableStateFlow(SearchActivity())
+
+        override fun activity(profile: ProfileId) = live
 
         /** Exact server pages by cursor, for continuation tests (an archived-only page arrives empty with a cursor). */
         var scripted: Map<String?, Outcome<SearchConversationPage>>? = null
@@ -123,7 +135,11 @@ class SearchViewModelTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     private fun vm(source: Source = Source(), recents: Recents = Recents(), nav: Navigator = Navigator(), profile: ProfileId? = null) =
-        SearchViewModel(SearchRoute.Conversations(profile), source, recents, nav)
+        SearchViewModel(SearchRoute.Conversations(profile), source, recents, nav, FixedClock)
+
+    private object FixedClock : kotlin.time.Clock {
+        override fun now(): kotlin.time.Instant = kotlin.time.Instant.fromEpochMilliseconds(NOW)
+    }
 
     @Test
     fun `B-NAV-049 a query shows only conversations whose title matches, on the active server`() = runTest {
@@ -311,4 +327,33 @@ class SearchViewModelTest {
         assertEquals(listOf("late"), vm.state.value.titleHits.map { it.ref.sessionId.raw })
         assertEquals(false, vm.state.value.canLoadMore)
     }
+
+    @Test
+    fun `SCREENS-NAV-34 B1 the chosen server's live conversations, projects and waiting count reach the screen, and a project opens`() =
+        runTest {
+            val source = Source()
+            val nav = Navigator()
+            val vm = vm(source, nav = nav)
+            val ref = ConversationRef(home, SessionId("s1"))
+            val project = SearchProject("debian-box", "/src/debian-box", 3)
+            source.live.value =
+                SearchActivity(
+                    persistentListOf(
+                        SearchRecentConversation(ref, "Fix login", "debian-box", NOW - 60_000, "opencode", status = Working)
+                    ),
+                    persistentListOf(project),
+                    needsYou = 2,
+                )
+            val s = vm.state.value
+            assertEquals(2, s.activity.needsYou)
+            assertEquals(listOf(ref), s.activity.recent.map { it.ref })
+            assertEquals(NOW, s.nowMs)
+            vm.openProject(project)
+            assertEquals(listOf<AppRoute>(ProjectsRoute.Project(home, "/src/debian-box")), nav.opened)
+            // A project the server no longer lists is not opened from a stale row.
+            vm.openProject(SearchProject("gone", "/src/gone", 1))
+            assertEquals(1, nav.opened.size)
+            vm.openRecent(s.activity.recent.single())
+            assertEquals(listOf(ref), nav.chats)
+        }
 }
