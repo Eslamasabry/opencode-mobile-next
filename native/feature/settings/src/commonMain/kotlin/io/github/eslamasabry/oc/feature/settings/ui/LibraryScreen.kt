@@ -895,6 +895,7 @@ private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: 
                 stringResource(Res.string.nlibDisconnect),
                 KitConfirmKind.Destructive,
                 body = stringResource(Res.string.nlibDisconnectBody),
+                icon = KitIcons.unlink,
             )
         else null,
         {
@@ -1272,6 +1273,7 @@ private fun McpSheet(server: McpServerInfo, state: LibraryUi, actions: LibraryAc
                 stringResource(Res.string.nlibDisconnectQuestion),
                 stringResource(Res.string.nlibMcpDisconnect),
                 kind = KitConfirmKind.Destructive,
+                icon = KitIcons.unlink,
             )
         else null,
         {

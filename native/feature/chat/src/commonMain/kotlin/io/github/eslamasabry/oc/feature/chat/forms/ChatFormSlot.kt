@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -192,6 +193,7 @@ public fun ChatFormSlot(
                         body = stringResource(Res.string.stateFormDeclineBody),
                         confirmLabel = stringResource(Res.string.stateFormDecline),
                         kind = KitConfirmKind.Destructive,
+                        icon = KitIcons.close,
                         cancelLabel = stringResource(Res.string.stateFormKeepEditing),
                     )
                 else null,
