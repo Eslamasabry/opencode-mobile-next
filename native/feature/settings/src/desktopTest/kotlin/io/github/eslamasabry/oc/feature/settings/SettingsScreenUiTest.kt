@@ -7,6 +7,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -87,6 +89,17 @@ class SettingsScreenUiTest {
             tap("Calm")
             assertEquals(MotionLevel.Calm, choices.value.value.motion)
             onNodeWithText("Drawings appear, nothing keeps moving and nothing celebrates").assertExists()
+        }
+
+    @Test
+    fun `C12 the Storage page never draws a title over a blank page`() =
+        runComposeUiTest {
+            show()
+            presenter.onOpen(SettingsPage.Storage); waitForIdle()
+            // While the model facts are read the page is a loading state; afterwards it has its own words.
+            val loading = onAllNodesWithText("Storage").fetchSemanticsNodes().size >= 2
+            val settled = onAllNodes(hasText("on this phone", substring = true)).fetchSemanticsNodes().isNotEmpty()
+            assertTrue(loading || settled, "Storage has a loading state or its own words")
         }
 
     @Test

@@ -211,6 +211,16 @@ class SetupJourneyGateTest {
         }
 
     @Test
+    fun `C12 the checking page says what it is doing instead of drawing nothing`() = runComposeUiTest {
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                SetupJourneyScreen(SetupJourneyUi(checking = true), Actions())
+            }
+        }
+        onNodeWithText("Checking what's installed…").assertExists()
+    }
+
+    @Test
     fun `pause dispatches the named stop flow without starting a new job`() = runComposeUiTest {
         val actions = Actions()
         setContent {

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.phonesetup.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,7 +98,10 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         bottom = if (idle || state.customizing || state.checking) null else ({ JobAction(state, actions) }),
         edges = KitScreenEdges.Bleed,
     ) {
-        if (!state.checking) {
+        if (state.checking) {
+            // C12: the checking page says what it is doing instead of drawing nothing under the progress line.
+            KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.phoneSetupStartChecking))
+        } else {
             if (state.customizing || idle) StartHero(state, actions)
             else Job(state, actions)
         }

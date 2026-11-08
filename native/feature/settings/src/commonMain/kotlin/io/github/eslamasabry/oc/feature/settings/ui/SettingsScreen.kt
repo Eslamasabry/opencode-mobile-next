@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -298,6 +300,7 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 state.localModels?.let { LocalModelsBody(it, actions) }
+                    ?: KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.migrationStorageTitle))
             }
         SettingsPage.ReportProblem -> ReportProblemPage(state, actions, back, modifier)
         is SettingsPage.QuietTime ->
