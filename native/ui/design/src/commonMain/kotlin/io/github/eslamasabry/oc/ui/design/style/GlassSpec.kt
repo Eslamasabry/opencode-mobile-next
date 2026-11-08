@@ -55,9 +55,25 @@ public object GlassSpec : StyleSpec {
      * surface step, under which dark words fell back to an opaque face). [plain] is the pane's own tint, kept for the
      * callers that lean a tint they already have.
      */
-    public fun chosenTintOf(roles: Roles, @Suppress("UNUSED_PARAMETER") plain: Argb): Argb =
-        if (roles.dark) lerp(roles.ground.opaque(), roles.accent.opaque(), CHOSEN_TINT_DARK).opaque()
-        else lerp(styleLight(roles), roles.accent.opaque(), CHOSEN_TINT_LIGHT).opaque()
+    public fun chosenTintOf(roles: Roles, @Suppress("UNUSED_PARAMETER") plain: Argb): Argb {
+        val base = if (roles.dark) roles.ground.opaque() else styleLight(roles)
+        val most = if (roles.dark) CHOSEN_TINT_DARK else CHOSEN_TINT_LIGHT
+        // As much accent as the words allow on the tint itself (an accent close to the words' own lightness, as in
+        // Solarized's light theme, gets less): text1/2/3 keep their targets on the opaque tint, so the pane can stay
+        // translucent over the page.
+        val inks = GlassFinish.textInks(roles, roles.surface1.over(roles.ground.opaque()))
+        for (step in CHOSEN_STEPS downTo 0) {
+            val tint = lerp(base, roles.accent.opaque(), most * step / CHOSEN_STEPS).opaque()
+            if (inks.all { (ink, target) -> contrast(ink, tint) >= target + CHOSEN_MARGIN }) return tint
+        }
+        return base
+    }
+
+    /** The accent steps [chosenTintOf] tries, from the most down to none. */
+    private const val CHOSEN_STEPS: Int = 4
+
+    /** The room the chosen tint leaves over its target, so the pane's own translucency can still read. */
+    private const val CHOSEN_MARGIN: Double = .25
 
     /** How much thicker a chosen pane's tint is than its resting one. */
     public const val CHOSEN_LIFT: Float = .10f
