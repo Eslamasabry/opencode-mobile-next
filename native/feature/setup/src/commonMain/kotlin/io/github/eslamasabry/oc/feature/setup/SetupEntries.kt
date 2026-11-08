@@ -8,8 +8,11 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import io.github.eslamasabry.oc.feature.setup.presentation.ComputerUpdateViewModel
 import io.github.eslamasabry.oc.feature.setup.presentation.SetupViewModel
+import io.github.eslamasabry.oc.feature.setup.ui.ComputerUpdateScreen
 import io.github.eslamasabry.oc.feature.setup.ui.SetupScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.SetupRoute
@@ -23,6 +26,14 @@ public class SetupEntries : EntryInstaller {
             val vm = metroViewModel<SetupViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
             SetupScreen(state, vm)
+        }
+        entry<SetupRoute.UpdateComputer> { route ->
+            val vm =
+                assistedMetroViewModel<ComputerUpdateViewModel, ComputerUpdateViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ComputerUpdateScreen(state, vm)
         }
     }
 }
