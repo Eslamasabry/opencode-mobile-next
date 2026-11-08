@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRole
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningModel
+import io.github.eslamasabry.oc.engine.runtime.procs.RunningGroupKind
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -234,4 +235,50 @@ class RunningModelTest {
         }
 
     private fun refusedFailure() = (refused as Outcome.Failed).failure
+
+    @Test
+    fun `B-LINUX-083 rows are grouped by what started them, one group per Claude Code conversation, in Flutter's order`() =
+        runTest {
+            val all =
+                listOf(
+                    PhoneProcess(pid = 40, parentPid = 1, name = "Terminal", kind = ProcessKind.Terminal, group = RunningGroupKind.Terminal),
+                    PhoneProcess(pid = 21, parentPid = 1, name = "Claude Code", group = RunningGroupKind.ClaudeCode, session = "s-b", conversationTitle = "Fix login", cpuPercent = 90.0, heavy = true, memoryBytes = 300L shl 20),
+                    PhoneProcess(pid = 20, parentPid = 1, name = "Claude Code", group = RunningGroupKind.ClaudeCode, session = "s-a", memoryBytes = 100L shl 20),
+                    PhoneProcess(pid = 22, parentPid = 20, name = "node", group = RunningGroupKind.ClaudeCode, session = "s-a", depth = 1, memoryBytes = 50L shl 20),
+                    PhoneProcess(pid = 10, parentPid = 1, name = "OpenCode", group = RunningGroupKind.OpenCode, role = ProcessRole.ServerRoot),
+                    PhoneProcess(pid = 30, parentPid = 1, name = "node", leftBehind = true, group = RunningGroupKind.LeftBehind),
+                )
+            val rig = Rig(this, reading.copy(processes = all).ok(), FakeChildLimit())
+            rig.model.shown(true)
+            runCurrent()
+            val groups = rig.model.state.value.groups
+            assertEquals(listOf("leftBehind", "openCode", "claudeCode:s-a", "claudeCode:s-b", "terminal"), groups.map { it.id })
+            assertEquals(listOf(20, 22), groups[2].rows.map { it.pid })
+            assertEquals(1, groups[2].rows[1].depth)
+            assertEquals(150L shl 20, groups[2].memoryBytes)
+            assertEquals("Fix login", groups[3].title)
+            assertNull(groups[2].title)
+            // Heat shows on the heading: the heavy conversation's group is hot and very busy.
+            assertTrue(groups[3].hot)
+            assertEquals(io.github.eslamasabry.oc.engine.runtime.procs.CpuLevel.VeryBusy, groups[3].cpuWords?.level)
+            assertFalse(groups[2].hot)
+        }
+
+    @Test
+    fun `B-LINUX-083 a reading without the runtime's group still groups by kind, never calling a busy ownerless row left behind`() =
+        runTest {
+            val stray = PhoneProcess(pid = 50, parentPid = 1, name = "python", leftBehind = true, orphanReason = io.github.eslamasabry.oc.feature.phone.presentation.ProcessOrphanReason.CpuWithoutOwner)
+            val gone = PhoneProcess(pid = 51, parentPid = 1, name = "esbuild", leftBehind = true, orphanReason = io.github.eslamasabry.oc.feature.phone.presentation.ProcessOrphanReason.ParentGone)
+            val rig = Rig(this, reading.copy(processes = processes + stray + gone).ok(), FakeChildLimit())
+            rig.model.shown(true)
+            runCurrent()
+            val byPid = rig.model.state.value.groups.flatMap { g -> g.rows.map { it.pid to g.kind } }.toMap()
+            assertEquals(RunningGroupKind.OpenCode, byPid[10])
+            assertEquals(RunningGroupKind.ClaudeCode, byPid[11])
+            assertEquals(RunningGroupKind.App, byPid[2])
+            assertEquals(RunningGroupKind.Other, byPid[50])
+            assertEquals(RunningGroupKind.LeftBehind, byPid[51])
+            // Both are still offered to "Stop all left behind".
+            assertEquals(listOf(50, 51), rig.model.state.value.leftBehind.map { it.pid })
+        }
 }

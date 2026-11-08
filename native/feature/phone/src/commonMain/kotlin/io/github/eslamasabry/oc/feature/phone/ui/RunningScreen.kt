@@ -17,6 +17,9 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRole
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRowUi
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningActions
+import io.github.eslamasabry.oc.feature.phone.presentation.RunningGroupUi
+import io.github.eslamasabry.oc.engine.runtime.procs.RunningGroupKind
+import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -195,42 +198,43 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 )
             }
             if (state.rows.isNotEmpty()) {
-                KitRowGroup(
-                    leadingTiles = true,
-                    note = stringResource(Res.string.termuxProcsAutoRefresh),
-                ) {
-                    state.rows.forEach {
-                        ProcessRow(
-                            it,
-                            stopping = state.stopping == it.pid,
-                            busy = state.stopping != null,
-                            actions,
-                        )
+                // Flutter running-summary: how many run and the memory they hold, then one group per thing that
+                // started them (OpenCode, each Claude Code conversation by its title, the agent helper, terminals,
+                // setup and checks, ...), each heading saying its load so heat shows where it comes from.
+                state.memoryBytes?.let { bytes ->
+                    KitText(
+                        pluralStringResource(Res.plurals.runningPhoneSummary, state.rows.size, state.rows.size, runningLargeMemory(bytes)),
+                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("running-summary"),
+                        role = TypeRole.Headline,
+                    )
+                }
+                val leftBehind = state.leftBehind.size
+                state.groups.forEach { group ->
+                    KitRowGroup(
+                        Modifier.testTag("running-group-${group.id}"),
+                        label = groupLabel(group),
+                        note = groupFacts(group).ifEmpty { null },
+                        leadingTiles = group.kind != RunningGroupKind.LeftBehind,
+                    ) {
+                        group.rows.forEach {
+                            ProcessRow(
+                                it,
+                                stopping = state.stopping == it.pid,
+                                busy = state.stopping != null,
+                                actions,
+                            )
+                        }
+                        // Flutter: the one bulk stop, last in Left behind, while something is left behind.
+                        if (group.kind == RunningGroupKind.LeftBehind && leftBehind > 0)
+                            StopLeftBehindRow(leftBehind, state, actions)
                     }
                 }
+                if (leftBehind > 0 && state.groups.none { it.kind == RunningGroupKind.LeftBehind })
+                    KitRowGroup { StopLeftBehindRow(leftBehind, state, actions) }
+                KitGroupNote(stringResource(Res.string.termuxProcsAutoRefresh))
             } else if (!state.loadFailed) {
                 KitGroupNote(stringResource(Res.string.termuxProcsAutoRefresh))
             }
-            // Flutter: the one bulk stop, last, while something is left behind.
-            val leftBehind = state.leftBehind.size
-            if (leftBehind > 0)
-                KitRowGroup {
-                    KitRow(
-                        title =
-                            pluralStringResource(
-                                Res.plurals.runningPhoneStopAllLeftBehind,
-                                leftBehind,
-                                leftBehind,
-                            ),
-                        supporting = stringResource(Res.string.runningPhoneStopAllDetail),
-                        titleMaxLines = 2,
-                        supportingMaxLines = 2,
-                        leading = KitRowLeading.Glyph(KitIcons.stop),
-                        enabled = state.stopping == null,
-                        disabledReason = stringResource(Res.string.termuxProcsStopping),
-                        onClick = actions::askStopLeftBehind,
-                    )
-                }
         }
         val all = state.confirmStopLeftBehind
         KitConfirm(
@@ -294,7 +298,7 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
             visible = selected != null,
             title = selected?.name ?: stringResource(Res.string.runningPhoneTitle),
             onDismissRequest = actions::dismiss,
-            subtitle = selected?.kind?.words(),
+            subtitle = selected?.let { row -> state.groups.firstOrNull { g -> g.rows.any { it.pid == row.pid } }?.let { groupLabel(it) } ?: row.kind.words() },
             icon = selected?.let { processGlyph(it) },
             tertiary = listOfNotNull(copy),
             secondary =
@@ -336,19 +340,84 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                         stringResource(Res.string.runningPhoneServerRoot),
                         role = TypeRole.Secondary,
                     )
+                startedBy(row)?.let { KitText(it, role = TypeRole.Secondary) }
+                row.heavyForSeconds?.takeIf { row.heavy && it > 0 }?.let {
+                    KitText(
+                        stringResource(Res.string.runningPhoneHeavyFor, DurationWords.of(it).words()),
+                        role = TypeRole.Secondary,
+                    )
+                }
                 processFacts(row)
                     .takeIf { it.isNotEmpty() }
                     ?.let { KitText(it, role = TypeRole.Secondary) }
+                // Flutter _Details: the technical values once, under one Details fold.
                 KitDetailsFold(
                     label = stringResource(Res.string.kitDetails),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
-                    notes = listOf(stringResource(Res.string.runningDetailPid, row.pid)),
+                    notes =
+                        listOfNotNull(
+                            stringResource(Res.string.runningDetailPid, row.pid),
+                            row.parentPid?.let { "${stringResource(Res.string.termuxProcsParentId)}: $it" },
+                            row.owner?.let { "${stringResource(Res.string.runningPhoneOwner)}: $it" },
+                            row.session?.let { "${stringResource(Res.string.runningPhoneConversationId)}: $it" },
+                        ),
                     text = row.command,
                 )
             }
         }
     }
 }
+
+@Composable
+private fun StopLeftBehindRow(count: Int, state: RunningUi, actions: RunningActions) {
+    KitRow(
+        title = pluralStringResource(Res.plurals.runningPhoneStopAllLeftBehind, count, count),
+        supporting = stringResource(Res.string.runningPhoneStopAllDetail),
+        titleMaxLines = 2,
+        supportingMaxLines = 2,
+        leading = KitRowLeading.Glyph(KitIcons.stop),
+        enabled = state.stopping == null,
+        disabledReason = stringResource(Res.string.termuxProcsStopping),
+        modifier = Modifier.testTag("running-stop-left-behind"),
+        onClick = actions::askStopLeftBehind,
+    )
+}
+
+/** Flutter `runningGroupLabel`: "OpenCode", "Left behind", "Claude Code · Fix login". */
+@Composable
+internal fun groupLabel(group: RunningGroupUi): String =
+    group.title?.takeIf { group.kind == RunningGroupKind.ClaudeCode }?.let { stringResource(Res.string.runningPhoneGroupChat, it) }
+        ?: stringResource(
+            when (group.kind) {
+                RunningGroupKind.LeftBehind -> Res.string.runningPhoneGroup__leftBehind
+                RunningGroupKind.OpenCode -> Res.string.runningPhoneGroup__openCode
+                RunningGroupKind.ClaudeCode -> Res.string.runningPhoneGroup__claudeCode
+                RunningGroupKind.AgentHelper -> Res.string.runningPhoneGroup__agentHelper
+                RunningGroupKind.AiTeam -> Res.string.runningPhoneGroup__aiTeam
+                RunningGroupKind.Terminal -> Res.string.runningPhoneGroup__terminal
+                RunningGroupKind.Setup -> Res.string.runningPhoneGroup__setup
+                RunningGroupKind.Helpers -> Res.string.runningPhoneGroup__helpers
+                RunningGroupKind.App -> Res.string.runningPhoneGroup__app
+                RunningGroupKind.Other -> Res.string.runningPhoneGroup__other
+            }
+        )
+
+/** The heading's figures (Flutter `_headingFacts`): the group's load in words (Very busy lives here) and memory. */
+@Composable
+private fun groupFacts(group: RunningGroupUi): String =
+    listOfNotNull(
+            group.cpuWords?.words(),
+            group.memoryBytes?.takeIf { it > 0 }?.let { runningMemory(it) },
+            if (group.hot) stringResource(Res.string.linuxProcessHeavy) else null,
+        )
+        .joinToString(" · ")
+
+/** "Started by Claude Code · <title>", said on the top of what a conversation left behind. */
+@Composable
+private fun startedBy(row: ProcessRowUi): String? =
+    if (row.session == null) null
+    else row.conversationTitle?.let { stringResource(Res.string.runningPhoneFromChat, it) }
+        ?: stringResource(Res.string.runningPhoneFromClaude)
 
 @Composable
 private fun ProcessRow(
@@ -364,6 +433,7 @@ private fun ProcessRow(
                     pluralStringResource(Res.plurals.linuxProcessMembers, row.memberCount, row.memberCount)
                 else null,
                 if (row.heavy) stringResource(Res.string.linuxProcessHeavy) else null,
+                if (row.group == RunningGroupKind.LeftBehind && row.depth == 0) startedBy(row) else null,
                 when (row.orphanReason) {
                     io.github.eslamasabry.oc.feature.phone.presentation.ProcessOrphanReason
                         .ParentGone -> stringResource(Res.string.runningOrphanParentGone)
