@@ -70,8 +70,13 @@ public class SignInTerminalPresenter(
                     it.copy(
                         agentName = plan.agentName,
                         usesClaudeAccount = plan.usesClaudeAccount,
-                        pastesBrowserCode = agent.id == "antigravity",
+                        pastesBrowserCode = agent.id == ANTIGRAVITY,
                         offersAntigravityNote = agent.id == "gemini",
+                        // Antigravity's sign-in ends with a code to paste. The readable view has a
+                        // real text field (long-press paste, the keyboard, Send); the live grid did
+                        // not take keyboard input on the phone (owner report, merge41), so the
+                        // field is where the code goes. The person can still switch to the grid.
+                        accessibleMode = if (agent.id == ANTIGRAVITY) true else it.accessibleMode,
                     )
                 }
                 when (val built = agents.command(owner, agent)) {
@@ -335,6 +340,7 @@ public class SignInTerminalPresenter(
 
     internal companion object {
         const val CLAUDE = "claude"
+        const val ANTIGRAVITY = "antigravity"
 
         /** A pasted code stays far below this; anything longer is not a sign-in code. */
         const val PASTE_MAX = 4096

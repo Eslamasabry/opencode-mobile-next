@@ -296,6 +296,38 @@ class SignInTerminalPresenterTest {
         }
 
     @Test
+    fun `Antigravity opens in the readable view, whose text field takes the pasted code`() =
+        loop.run {
+            val antigravity =
+                SignInTerminalPresenter(
+                    scope = loop.scope,
+                    owner = owner,
+                    agent = AgentRef("antigravity"),
+                    agents =
+                        object : io.github.eslamasabry.oc.feature.agents.signin.SignInAgents by agents {
+                            override fun plan(agent: AgentRef) =
+                                io.github.eslamasabry.oc.feature.agents.signin.SignInPlan.Terminal("Antigravity", false)
+
+                            override fun command(owner: ProfileId, agent: AgentRef) =
+                                io.github.eslamasabry.oc.core.common.Outcome.Ok(
+                                    SignInCommand("agy", listOf("acp", "--login"), home = "p1")
+                                )
+                        },
+                    host = host,
+                    foreground = foreground,
+                    links = links,
+                    clipboard = clipboard,
+                    onLeave = { left++ },
+                ).also { it.begin() }
+            loop.pump()
+            val ui = antigravity.state.value
+            assertEquals(SignInStep.Running, ui.step)
+            assertTrue(ui.pastesBrowserCode)
+            assertEquals(true, ui.accessibleMode)
+            assertNull(presenter("claude").state.value.accessibleMode)
+        }
+
+    @Test
     fun `Paste writes the clipboard's code into the running sign-in, trimmed, and nothing once it ended`() =
         loop.run {
             val screen = presenter()

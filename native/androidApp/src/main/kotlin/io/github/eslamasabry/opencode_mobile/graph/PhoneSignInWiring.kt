@@ -454,6 +454,22 @@ class NativePhoneSignIn(
         }
 
         /**
+         * Ends the sign-in program itself before its PTY is removed. OpenCode's PTY removal
+         * leaves `agy acp --login` running (seen on the owner's phone and the emulator: one
+         * leaked process per Back), while Ctrl-C at its prompt ends it at once. Bounded, and
+         * skipped when the program already ended or the connection is gone.
+         */
+        private suspend fun interruptProgram() {
+            if (!reader.isActive || registry.live.value[ownerId] !== graph) return
+            withTimeoutOrNull(1_500) {
+                repeat(2) {
+                    attempt({ Failure.Network() }) { channel.write("\u0003") }
+                    delay(250)
+                }
+            }
+        }
+
+        /**
          * Removes exactly this PTY. When the connection was replaced since (the phone server
          * restarted or the app reconnected), the id is removed through the owner's live connection
          * to the same phone server, where an id that no longer exists counts as removed; with no
@@ -479,6 +495,7 @@ class NativePhoneSignIn(
             if (closed) return@withLock Unit.ok()
             // Cleanup is admitted after stopAdmission too; it uses the exact PTY id, on the
             // captured connection while it is still the live one.
+            interruptProgram()
             when (val removed = removeExact()) {
                 is Outcome.Failed -> removed
                 is Outcome.Ok -> {
