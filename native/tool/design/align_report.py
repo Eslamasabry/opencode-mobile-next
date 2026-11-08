@@ -32,7 +32,7 @@ def severity(rule, detail):
     if rule == 'icon-squeezed':
         return nums[0] - min(nums[1], nums[2]) if len(nums) > 2 else 0.0
     if rule == 'icon-size':
-        return min(abs(nums[0] - s) for s in (20, 22, 24))
+        return min(abs(nums[0] - s) for s in (16, 20, 22, 24, 28))
     if rule == 'clip':
         return nums[4] if len(nums) > 4 else 0.0
     return 1.0

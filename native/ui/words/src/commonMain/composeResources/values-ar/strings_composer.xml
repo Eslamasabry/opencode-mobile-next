@@ -243,7 +243,8 @@
     <string name="voiceSetupDone">إتمام الإعداد</string>
     <string name="modelPickerThinkingChip">التفكير: %1$s</string>
     <string name="modelPickerAgentChip">الوكيل: %1$s</string>
-    <string name="voiceAutoSetupTitle">إعداد الكتابة الصوتية؟</string>
+    <string name="voiceAutoSetupTitle">الكتابة الصوتية</string>
+    <string name="voiceAutoSetupQuestion">إعداد الكتابة الصوتية؟</string>
     <string name="voiceAutoSetupChecking">جارٍ التحقّق مما يستطيع هذا الهاتف تشغيله</string>
     <string name="voiceAutoSetupOffer">تحدّث بدلًا من الكتابة. يتحوّل الكلام إلى نص على هذا الهاتف حتى دون اتصال، ولا يغادر الصوت الهاتف أبدًا. يحتاج إلى تنزيل مرة واحدة.</string>
     <string name="voiceAutoSetupPicked">نموذج الكلام %1$s، اختير بحسب ذاكرة هذا الهاتف</string>
