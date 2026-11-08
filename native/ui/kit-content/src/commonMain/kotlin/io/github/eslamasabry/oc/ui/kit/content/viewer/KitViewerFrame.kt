@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import androidx.compose.foundation.layout.wrapContentHeight
+import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -485,7 +488,10 @@ public fun KitViewer(
                                 }
                             },
                         )
-                        KitDivider()
+                        // A hairline is a third of a pixel: its box lays out at no height, so at the very end of the
+                        // scrolling top the scroll's clip would hide it. With no notice under it, it is drawn just
+                        // below the scrolling top instead (the same place).
+                        if (notice != null) KitDivider()
                     }
                     if (notice != null) {
                         val tokens = LocalKitTokens.current
@@ -498,6 +504,10 @@ public fun KitViewer(
                             ),
                         )
                     }
+                }
+                if (showHeader && notice == null) {
+                    // No height of its own, as Flutter's third-of-a-pixel line: it draws over the body's top edge.
+                    Box(Modifier.fillMaxWidth().height(0.dp).wrapContentHeight(Alignment.Top, unbounded = true)) { KitDivider() }
                 }
                 // Find stays outside the scrolling top: it is short, and its count must stay in view while typing.
                 KitReveal(findOpen) {
@@ -688,6 +698,9 @@ private fun ViewerBody(
                 stringResource(Res.string.kitViewerLoadFailed, name),
                 icon = KitIcons.error,
                 primary = KitAction(stringResource(Res.string.kitTryAgain), onClick = state::retry),
+                size = KitStateSize.Inline, // F: lib/ui/kit/kit_viewer_build.dart:354
+                // Folded Details (Dart passes the redacted error): the failure's shape only, never exception text.
+                details = Redacted.shape(state.error), // F: lib/ui/kit/kit_viewer_build.dart:355
             )
         }
         return
@@ -738,6 +751,7 @@ private fun ViewerBody(
                         ViewerText.sizeInWords(content.byteLength) ?: stringResource(Res.string.kitViewerUnknownSize),
                     ),
                     primary = primary,
+                    size = KitStateSize.Inline, // F: lib/ui/kit/kit_viewer_build.dart:444
                 )
             }
         else -> Unit
