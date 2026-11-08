@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
+import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneIntro
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneLinkLabel
@@ -298,11 +299,9 @@ public fun ChatHeaderTopBar(
                                 )
                             } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
                         onProject = onProject,
-                        // Flutter chat_top_bar.dart:180-190 shows the Git chip always ("Git" until the branch is
-                        // known). Native KitTopBarScope draws its "·" as a word of its own outside the branch's target
-                        // (Flutter kit_top_bar_scope.dart:164 keeps it inside), which the alignment gate rejects, so
-                        // "Git" waits for that :ui:kit fix (score-E.md) and only a known branch shows for now.
-                        branch = state.branch,
+                        // F: chat_top_bar.dart:180-190: the Git chip always shows, the branch once known and
+                        // "Git" (gitSheetTitle) until then; it opens the Git sheet.
+                        branch = onBranch?.let { state.branch ?: stringResource(Res.string.gitSheetTitle) },
                         onBranch = onBranch,
                     )
                 }
