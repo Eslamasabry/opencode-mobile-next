@@ -1387,8 +1387,15 @@
       "text": {}
     },
     "KitPageHeading": {
+      "lists": {
+        "actions": {
+          "beyond": "fixed",
+          "shows": 3
+        }
+      },
       "role": "reading",
       "text": {
+        "Conversations": "ellipsis:2",
         "Files": "ellipsis:2",
         "neon-breaker / src": "ellipsis:1"
       }
@@ -2135,6 +2142,14 @@
     "KitStatusMark": {
       "role": "glyph",
       "text": {}
+    },
+    "KitStatusPill": {
+      "role": "chip",
+      "text": {
+        "Office workstation (secure):####": "ellipsis:1",
+        "This phone": "ellipsis:1",
+        "· Connecting…": "ellipsis:1"
+      }
     },
     "KitStatusScope": {
       "role": "scope",

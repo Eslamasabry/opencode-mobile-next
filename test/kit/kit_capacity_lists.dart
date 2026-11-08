@@ -93,6 +93,22 @@ final kitListStress = <KitListStress>[
     ),
   ),
   KitListStress(
+    'KitPageHeading.actions',
+    item: 'KitIconButton',
+    count: 3,
+    build: (_, c, n) => KitPageHeading(
+      title: c.t('Conversations', 'المحادثات'),
+      actions: [
+        for (var i = 1; i <= n; i++)
+          KitIconButton(
+            icon: Icons.search,
+            tooltip: _label(c, i),
+            onPressed: _noop,
+          ),
+      ],
+    ),
+  ),
+  KitListStress(
     'KitChipWrap.children',
     item: 'KitChip',
     build: (_, c, n) => KitChipWrap(

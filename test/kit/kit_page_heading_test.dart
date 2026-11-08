@@ -5,7 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/ui/kit/kit_page_heading.dart';
+import 'package:opencode_mobile/ui/kit/kit.dart';
 
 import 'kit_harness.dart';
 import 'kit_motion_still.dart';
@@ -31,6 +31,16 @@ void main() {
         line: 'neon-breaker',
         onLineTap: () {},
         lineTapLabel: 'Project neon-breaker. Switch project',
+      ),
+      'with actions': () => KitPageHeading(
+        title: 'Conversations',
+        actions: [
+          KitIconButton(
+            icon: Icons.search,
+            tooltip: 'Search',
+            onPressed: () {},
+          ),
+        ],
       ),
       'disabled': () =>
           const KitPageHeading(title: 'Files', line: 'neon-breaker / src'),

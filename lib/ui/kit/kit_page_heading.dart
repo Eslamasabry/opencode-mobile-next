@@ -69,6 +69,10 @@ class KitPageHeading extends StatelessWidget {
       KitMaxWidth.reading(child: _buildContent(context));
 
   Widget _buildContent(BuildContext context) {
+    assert(
+      actions.length <= 3,
+      'KitPageHeading: at most three icon actions (search, Settings, Update)',
+    );
     final tokens = KitTokens.of(context);
     final line = this.line;
     Widget? quiet;
@@ -129,13 +133,17 @@ class KitPageHeading extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
     );
+    // An icon button's glyph sits in a 48 dp target: its own air (half of
+    // what the target leaves around a 24 dp glyph) is not added to the
+    // gutter again.
+    final actionAir = (tokens.minTarget - 24) / 2;
     return Padding(
       // A step of air under the bar (or a wide window's toolbar hairline).
       padding: EdgeInsetsDirectional.only(
         start: tokens.gutter,
         // Icon buttons carry their own 12 dp of air: their glyphs sit on the
         // gutter's line.
-        end: actions.isEmpty ? tokens.gutter : tokens.gutter - 12,
+        end: actions.isEmpty ? tokens.gutter : tokens.gutter - actionAir,
         top: tokens.space2,
       ),
       child: Column(

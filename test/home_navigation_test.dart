@@ -1064,7 +1064,7 @@ void main() {
     expect(find.text('Switch server'), findsOneWidget);
   });
 
-  testWidgets('phone header names the server above the Conversations title', (
+  testWidgets('phone header puts the Conversations title above the server pill', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(411, 891);
@@ -1080,7 +1080,10 @@ void main() {
     final title = find.text('Conversations');
     expect(profile, findsOneWidget);
     expect(find.byKey(const ValueKey('home-shell-tab-chats')), findsNothing);
-    expect(tester.getRect(profile).bottom, lessThan(tester.getRect(title).top));
+    expect(
+      tester.getRect(title).bottom,
+      lessThanOrEqualTo(tester.getRect(profile).top + 1),
+    );
     expect(
       tester.getSemantics(profile).label,
       contains('This device (Termux)'),

@@ -72,6 +72,7 @@
 /// | [KitFeedItem] | Chats home: one conversation with its project, title, state and last line |
 /// | [KitStatusTag], [KitStatusTagTone] | a small worded state tag at the end of a feed row |
 /// | [KitFilterChips], [KitFilterChip] | one scrolling line of filter chips under a title |
+/// | [KitStatusPill] | a tonal, status-tinted pill for a chooser that is not a filter: the server switcher beside the filters |
 /// | [KitScrollFade] | a sideways-scrolling line whose edges fade where there is more past them, never a hard cut mid-word |
 /// | [KitLeadColumn] | which leading column a part's words start after: the list's 56 dp text rail, or the conversation's compact 48 |
 /// | [KitFloatingAction] | a screen's one floating primary, a round accent plus at the thumb, clearing the dock |

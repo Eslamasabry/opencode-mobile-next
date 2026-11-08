@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
-import 'kit_motion.dart';
+import 'kit_surface.dart' show kitSurfaceMaterial;
+import 'motion/kit_motion_parts.dart' show KitSwap;
+import 'kit_max_width.dart';
 import 'kit_status_mark.dart';
 import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
@@ -17,13 +19,15 @@ import 'kit_tokens.dart';
 /// "Offline" or "Connecting…"): the dot carries "connected".
 ///
 /// The name is cut with an ellipsis when it is long; the pill never scrolls
-/// (its host keeps it fixed). The tint cross-fades on `KitMotion.stepFade`
-/// and the word grows in; under reduced motion both are instant.
+/// (its host keeps it fixed). The tint cross-fades through the style
+/// resolver and the word cross-fades ([KitSwap]); under reduced motion both
+/// are instant.
 ///
 /// [semanticsLabel] is what a screen reader says in full ("This phone,
 /// connected, Switch server").
 ///
-/// States: connected, connecting, offline, attention (tone), pressed.
+/// States: none — a look per status tone; the word appears only when the
+/// connection is not healthy.
 class KitStatusPill extends StatelessWidget {
   const KitStatusPill({
     super.key,
@@ -57,88 +61,108 @@ class KitStatusPill extends StatelessWidget {
       AppStatusTone.failure => roles.text1,
     };
     final word = this.word;
-    final duration = KitMotion.reduced(context)
-        ? Duration.zero
-        : KitMotion.stepFade;
     final dot = tone == AppStatusTone.progress
         ? KitStatusMark(state: KitMarkState.working, label: word)
         : SizedBox.square(
             dimension: tokens.iconSize(context, tokens.smallIconSize),
             child: Center(
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
-                child: SizedBox.square(dimension: tokens.space2),
+              child: CustomPaint(
+                size: Size.square(tokens.space2),
+                painter: _KitStatusDot(tint),
               ),
             ),
           );
-    return KitTappable(
-      tappableKey: pillKey,
-      onTap: onPressed,
-      label: semanticsLabel,
-      shape: KitShape.pill,
-      surface: KitSurfaceLevel.ground,
-      child: ExcludeSemantics(
-        child: KitText.capScale(
-          max: 1.3,
-          child: AnimatedContainer(
-            duration: duration,
-            curve: Curves.easeOut,
-            height: KitTokens.chipHeight,
-            padding: EdgeInsetsDirectional.only(
-              start: tokens.space3,
-              end: tokens.space2,
-            ),
-            decoration: ShapeDecoration(
-              shape: const StadiumBorder(),
-              color: Color.alphaBlend(
-                tint.withValues(alpha: .16),
-                roles.ground,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                dot,
-                SizedBox(width: tokens.space2),
-                Flexible(
-                  child: KitText(
-                    label,
-                    role: KitTextRole.secondary,
-                    tone: KitTextTone.primary,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+    // The status colour at low alpha over the ground: the fill the
+    // resolver paints (and cross-fades when the state changes).
+    final fill = Color.alphaBlend(tint.withValues(alpha: .16), roles.ground);
+    return KitMaxWidth.chip(
+      child: KitTappable(
+        tappableKey: pillKey,
+        onTap: onPressed,
+        label: semanticsLabel,
+        shape: KitShape.pill,
+        surface: KitSurfaceLevel.ground,
+        child: ExcludeSemantics(
+          child: KitText.capScale(
+            max: 1.3,
+            child: SizedBox(
+              height: KitTokens.chipHeight,
+              child: kitSurfaceMaterial(
+                context,
+                level: KitSurfaceLevel.ground,
+                shape: tokens.shapeOf(KitShape.pill),
+                fill: fill,
+                role: KitSurfaceRole.control,
+                child: Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: tokens.space3,
+                    end: tokens.space2,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      dot,
+                      SizedBox(width: tokens.space2),
+                      Flexible(
+                        child: KitText(
+                          label,
+                          role: KitTextRole.secondary,
+                          tone: KitTextTone.primary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Flexible(
+                        child: KitSwap(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: word == null
+                              ? const SizedBox.shrink()
+                              : Padding(
+                                  key: ValueKey(word),
+                                  padding: EdgeInsetsDirectional.only(
+                                    start: tokens.space1,
+                                  ),
+                                  child: KitText(
+                                    '· $word',
+                                    role: KitTextRole.secondary,
+                                    tone: KitTextTone.secondary,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      SizedBox(width: tokens.space1),
+                      Icon(
+                        AppIconography.chevronDown,
+                        size: tokens.iconSize(context, tokens.smallIconSize),
+                        color: roles.text2,
+                      ),
+                    ],
                   ),
                 ),
-                AnimatedSize(
-                  duration: duration,
-                  curve: Curves.easeOut,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: word == null
-                      ? const SizedBox.shrink()
-                      : Padding(
-                          padding: EdgeInsetsDirectional.only(
-                            start: tokens.space1,
-                          ),
-                          child: KitText(
-                            '· $word',
-                            role: KitTextRole.secondary,
-                            tone: KitTextTone.secondary,
-                            maxLines: 1,
-                            softWrap: false,
-                          ),
-                        ),
-                ),
-                SizedBox(width: tokens.space1),
-                Icon(
-                  AppIconography.chevronDown,
-                  size: tokens.iconSize(context, tokens.smallIconSize),
-                  color: roles.text2,
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// The state dot: a filled circle in the status colour.
+class _KitStatusDot extends CustomPainter {
+  const _KitStatusDot(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawCircle(
+    size.center(Offset.zero),
+    size.shortestSide / 2,
+    Paint()..color = color,
+  );
+
+  @override
+  bool shouldRepaint(_KitStatusDot old) => old.color != color;
 }

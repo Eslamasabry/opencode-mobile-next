@@ -144,7 +144,10 @@ class _KitFilterChipsState extends State<KitFilterChips> {
             ),
             SizedBox(width: tokens.space2),
             if (chips.isNotEmpty) ...[
-              SizedBox(height: 24, child: const KitDivider.vertical()),
+              SizedBox(
+                height: tokens.minTarget / 2,
+                child: const KitDivider.vertical(),
+              ),
               SizedBox(width: tokens.space2),
             ],
             Expanded(child: scrolling),

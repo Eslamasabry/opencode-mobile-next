@@ -5,16 +5,19 @@
 //
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/chats_home_header_golden_test.dart
+// and look at every changed image before committing it.
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
-import 'package:opencode_mobile/ui/app_theme.dart' show AppStatusTone;
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 
-import '../../tool/capture/fixtures.dart' show loadCaptureFonts;
+import 'package:opencode_mobile/ui/app_theme.dart' show AppStatusTone, AppTheme;
+
+import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
+import 'kit/kit_gallery.dart' show loadKitGalleryFonts;
 import '../support/chats_fakes.dart';
 
 final _now = DateTime(2026, 10, 3, 12);
@@ -58,7 +61,10 @@ FakeChatFeedSource _source() => FakeChatFeedSource(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(loadCaptureFonts);
+  setUpAll(() async {
+    await loadCaptureFonts();
+    await loadKitGalleryFonts();
+  });
 
   final scenes = <String, ({ChatsHomeControls? controls, Locale locale})>{
     'before': (controls: null, locale: const Locale('en')),
@@ -113,7 +119,16 @@ void main() {
           await tester.pumpWidget(
             RepaintBoundary(
               key: boundary,
-              child: chatsApp(host, home, light: light, locale: value.locale),
+              child: chatsApp(
+                host,
+                home,
+                light: light,
+                locale: value.locale,
+                theme: AppTheme.forLocale(
+                  captureTheme(light: light),
+                  value.locale,
+                ),
+              ),
             ),
           );
           await tester.pump(const Duration(milliseconds: 400));

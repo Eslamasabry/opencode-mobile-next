@@ -3,7 +3,7 @@
   "cut": {
     "KitAgentChoice/tests-d-default": {
       "value": 3,
-      "note": "280x640 text 1.0 ltr pseudo: cut with no ellipsis (clip:3, \"⟦Çáŕéƒûļ ŵîţĥ ƀîĝ çĥáñĝéš one two th⟧\")"
+      "note": "280x640 text 1.0 ltr pseudo: cut with no ellipsis (clip:3, \"⟦Ûñðéŕšţáñðš ýöûŕ çöðéƀášé one two th⟧\")"
     },
     "KitAvatar/default": {
       "value": 10,
@@ -67,7 +67,7 @@
     },
     "KitWheel/default": {
       "value": 2,
-      "note": "280x640 text 1.0 ltr emoji: cut with no ellipsis (clip:1, \"👨‍👩‍👧‍👦👩🏽‍💻🧑🏿‍🚀🏳️‍🌈🇪🇬🇯🇵🇧🇷1️⃣2️⃣#️⃣ 👨‍👩‍👧…\") (+1 more)"
+      "note": "280x640 text 1.0 ltr emoji: cut with no ellipsis (clip:1, \"👨‍👩‍👧‍👦👩🏽‍💻🧑🏿‍🚀🏳️‍🌈🇪🇬🇯🇵🇧🇷1️⃣2️⃣#️⃣ 👨‍👩‍👧…\")"
     },
     "KitWidgetStyleForm/default": {
       "value": 3,
@@ -109,15 +109,15 @@
   "error": {
     "KitBreadcrumb/50 items in segments": {
       "value": 2,
-      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 46 pixels on the right."
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 45 pixels on the right."
     },
     "KitBreadcrumb/collapsed": {
       "value": 2,
-      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 46 pixels on the right."
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 45 pixels on the right."
     },
     "KitBreadcrumb/tests-d-collapsed": {
       "value": 2,
-      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 46 pixels on the right."
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 45 pixels on the right."
     },
     "KitButton/default": {
       "value": 24,
@@ -125,7 +125,7 @@
     },
     "KitContextRing/default": {
       "value": 20,
-      "note": "280x640 text 1.0 ltr pseudo: A RenderFlex overflowed by 13 pixels on the right."
+      "note": "280x640 text 1.0 ltr pseudo: A RenderFlex overflowed by 10.0 pixels on the right."
     },
     "KitDateTimeRow/row-error": {
       "value": 16,
@@ -133,11 +133,11 @@
     },
     "KitDiffView/binary": {
       "value": 2,
-      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 92 pixels on the right."
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 91 pixels on the right."
     },
     "KitDiffView/renamed": {
       "value": 2,
-      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 92 pixels on the right."
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 91 pixels on the right."
     },
     "KitField/secret-saved": {
       "value": 1,
@@ -145,7 +145,7 @@
     },
     "KitIconButton/default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 57 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
     },
     "KitMessage/notice action": {
       "value": 14,
@@ -173,7 +173,7 @@
     },
     "KitPageHeading/default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_page_heading.dart': Failed assertion: line 43 pos 10: 'onLineTap == null || (lineTapLabel ?? '') != ''': KitPageHeading: a switcher line needs a lineTapLabel"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_page_heading.dart': Failed assertion: line 44 pos 10: 'onLineTap == null || (lineTapLabel ?? '') != ''': KitPageHeading: a switcher line needs a lineTapLabel"
     },
     "KitQueuedMessage/addToThisTurn": {
       "value": 4,
@@ -229,63 +229,63 @@
     },
     "KitRowMenu/default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 57 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
     },
     "KitScreen/default": {
       "value": 6,
-      "note": "280x640 text 2.0 ltr prose: A RenderFlex overflowed by 1522 pixels on the bottom."
+      "note": "280x640 text 2.0 ltr prose: A RenderFlex overflowed by 1450 pixels on the bottom."
     },
     "KitSenseAsk/tests-d-default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 57 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
     },
     "KitSenseAsk/tests-d-working": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 57 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
     },
     "KitStatusLine/default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 57 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
     },
     "KitStepTimeline/expanded": {
       "value": 2,
-      "note": "280x640 text 1.0 ltr pseudo: A RenderFlex overflowed by 19 pixels on the right."
+      "note": "280x640 text 1.0 ltr pseudo: A RenderFlex overflowed by 18 pixels on the right."
     },
     "KitTaskCard/default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 57 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
     },
     "KitTip/shown": {
       "value": 7,
-      "note": "280x640 text 2.0 ltr prose: A RenderFlex overflowed by 1824 pixels on the bottom."
+      "note": "280x640 text 2.0 ltr prose: A RenderFlex overflowed by 1752 pixels on the bottom."
     },
     "KitTopBar/brand": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/close": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/default": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/needs_you": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/not_answering": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/subtitle_neutral": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/subtitle_working": {
       "value": 4,
-      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (2) were detected during the running of the current test, and at least one was unexpected."
     },
     "KitTopBar/switcher": {
       "value": 4,

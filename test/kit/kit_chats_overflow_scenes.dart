@@ -4,6 +4,7 @@
 import 'package:opencode_mobile/domain/agent_persona.dart';
 import 'package:flutter/material.dart';
 import 'package:opencode_mobile/ui/app_iconography.dart';
+import 'package:opencode_mobile/ui/app_theme.dart' show AppStatusTone;
 import 'package:opencode_mobile/ui/kit/kit.dart';
 
 import 'kit_overflow_scenes.dart';
@@ -70,6 +71,32 @@ final kitChatsOverflowScenes = <KitOverflowScene>[
         KitFilterChip(
           label: c.t('Running', 'قيد العمل'),
           selected: false,
+          onPressed: _noop,
+        ),
+      ],
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitStatusPill'],
+    'default',
+    build: (_, c) => Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        KitStatusPill(
+          label: c.t('This phone', 'هذا الهاتف'),
+          semanticsLabel: c.t('This phone, Connected', 'هذا الهاتف، متصل'),
+          tone: AppStatusTone.ok,
+          onPressed: _noop,
+        ),
+        KitStatusPill(
+          label: c.t(
+            'Office workstation (secure):4443',
+            'محطة العمل في المكتب',
+          ),
+          semanticsLabel: c.t('Office, Connecting', 'المكتب، يتصل'),
+          tone: AppStatusTone.progress,
+          word: c.t('Connecting…', 'جارٍ الاتصال…'),
           onPressed: _noop,
         ),
       ],
