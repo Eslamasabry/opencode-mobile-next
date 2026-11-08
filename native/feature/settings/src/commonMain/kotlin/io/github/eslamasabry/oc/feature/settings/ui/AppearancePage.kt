@@ -37,6 +37,9 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveLooks
 import io.github.eslamasabry.oc.ui.kit.choice.KitPlainOptionCard
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
+import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegmented
+import io.github.eslamasabry.oc.ui.kit.icon.KitPixelIcons
 import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
 import io.github.eslamasabry.oc.ui.kit.choice.KitStepSlider
 import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
@@ -191,22 +194,9 @@ private fun ColumnScope.AppearanceControls(
             top,
         )
         Box(gutter) {
-            KitSegmented(
-                segments =
-                    AppearanceMode.entries.map {
-                        KitSegment(
-                            it,
-                            modeWords(it),
-                            icon =
-                                when (it) {
-                                    AppearanceMode.System -> KitIcons.systemTheme
-                                    AppearanceMode.Light -> KitIcons.lightMode
-                                    AppearanceMode.Dark -> KitIcons.darkMode
-                                    AppearanceMode.Saver -> KitIcons.leaf
-                                },
-                        )
-                    },
-                tall = true,
+            // s33 theme-switch-premium plan step 3: the mode control slides, rims and morphs its pixel icons.
+            KitModeSegmented(
+                segments = AppearanceMode.entries.map { KitModeSegment(it, modeWords(it), KitPixelIcons.of(it)) },
                 selected = ui.mode,
                 semanticsLabel = stringResource(Res.string.appearanceAskMode),
                 modifier = Modifier.testTag("appearance-mode"),
