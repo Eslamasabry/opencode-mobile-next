@@ -80,11 +80,15 @@ internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean): Surf
     }
 }
 
-/** A clear pane's white rim light: the specular at its top start, faint at its bottom end (low in a light theme). */
-internal const val PANE_RIM_START_DARK: Float = .30f
-internal const val PANE_RIM_START_LIGHT: Float = .45f
-internal const val PANE_RIM_END_DARK: Float = .05f
-internal const val PANE_RIM_END_LIGHT: Float = .10f
+/**
+ * A clear pane's white rim (owner 2026-11-09, "crisper": a sharp, thin 1 dp white rim): clearly there all round,
+ * brighter at its top start and faint at its bottom end. The bright top-start segment on it is the face's specular
+ * ([SurfaceDecoration.specular], drawn by [drawGlassFace]).
+ */
+internal const val PANE_RIM_START_DARK: Float = .24f
+internal const val PANE_RIM_START_LIGHT: Float = .60f
+internal const val PANE_RIM_END_DARK: Float = .07f
+internal const val PANE_RIM_END_LIGHT: Float = .16f
 
 /** A chosen pane's accent rim: clearly there all round, brightest at its top start. */
 internal const val CHOSEN_RIM_START_DARK: Float = .90f
@@ -109,8 +113,9 @@ internal fun kitGlassChosenRow(): Modifier? {
     val blurs = kitGlassBlurs(backdrop)
     val clear = kitClearPanesOn() && blurs
     val spots = if (blurs && backdrop != null) backdrop.frostedSpots else emptyList()
-    val panel = StyleResolver.corner(FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens.sharpRadius)
-    val radius = (panel - CHOSEN_ROW_INSET_DP).coerceAtLeast(0f)
+    // Concentric with its group: the group's (grown) panel corner, less the group's pane inset and the row's own inset.
+    val panel = StyleResolver.paneCorner(FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens)
+    val radius = (panel - style.spec.tokens.paneInsetDp - CHOSEN_ROW_INSET_DP).coerceAtLeast(0f)
     val face =
         remember(roles, style, clear, spots, radius) {
             chosenRowFace(roles, style.knobs, clear, spots, radius)
@@ -140,6 +145,7 @@ internal fun chosenRowFace(
         SurfaceRequest(roles, SurfaceRole.Control, knobs, SurfaceLevel.Surface3, Radii.all(radius), color = roles.surface3.withAlpha(1f), selected = true)
     val solid = roles.surface3.over(ground)
     // The row lies inside its group's pane, which frosts already: no frost, no shadow of its own.
-    val face = resolve(request).copy(frost = 0f, shadows = emptyList())
+    // Its specular stays on the group's edge: a row inside a pane is not an edge of glass.
+    val face = resolve(request).copy(frost = 0f, shadows = emptyList(), specular = Argb(0))
     return glassRims(GlassFinish.thickened(face, roles, solid, under), roles, clear)
 }

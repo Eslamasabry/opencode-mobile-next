@@ -50,6 +50,7 @@ public object SurfaceFade {
             frost = if (t < .5f) a.frost else b.frost, // FG: lib/ui/kit/kit_surface_look.dart:757
             innerGlow = c(a.innerGlow, b.innerGlow) ?: Argb(0),
             sheen = c(a.sheen, b.sheen) ?: Argb(0),
+            specular = c(a.specular, b.specular) ?: Argb(0),
         )
     }
 

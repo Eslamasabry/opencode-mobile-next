@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidChipsFade
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
@@ -46,6 +47,8 @@ public fun KitPhraseChips(
     Box(
         modifier.kitMaxWidth(CapRole.Conversation)
             .padding(bottom = Space.S2.dp) // F: lib/ui/kit/chat/kit_phrase_chips.dart:56-58
+            // Glass: a soft fade of the ground under the glass chips only, so the transcript never reads behind them.
+            .kitLiquidChipsFade()
             .semantics { contentDescription = label },
     ) {
         KitFilterChips(bleed = bleed) {

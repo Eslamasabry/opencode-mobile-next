@@ -14,6 +14,12 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -50,7 +56,41 @@ internal fun LiveShaderLayer(
     )
 }
 
-/** The drawn size in render pixels and render pixels per dp; [setFrame] sends them with the frame. */
+/**
+ * [look]'s shader as a picture for Glass's panes to blur (owner 2026-11-09: in-flow panes show real glass over the
+ * shader looks): the paint the glass backdrop records (`kitGlassBackdropSource`), drawing the ground and the shader at
+ * [RENDER_SCALE] into one offscreen layer scaled up, exactly as [LiveShaderLayer] draws it. The page shows the
+ * backdrop's recording, so the look is drawn once per frame and every pane samples that one picture; [time] is read in
+ * the paint, so a clock step re-records this paint alone, and a still look (Calm, reduced motion, a resting clock)
+ * records nothing. Null where the platform has no runtime shaders.
+ */
+@Composable
+internal fun rememberLiveShaderBackdrop(look: LiveLook, strength: Float, time: () -> Float): (DrawScope.() -> Unit)? {
+    val platform = LocalKitPlatform.current
+    val program = remember(look, platform) { platform.liveShaders?.compile(LiveShaderLib.PRELUDE + look.shader) } ?: return null
+    val palette = rememberLivePalette()
+    val density = LocalDensity.current.density
+    val reduced = rememberGraphicsLayer()
+    return remember<DrawScope.() -> Unit>(program, palette, strength, density, reduced, time, look) {
+        {
+            drawRect(palette.ground)
+            val sw = max(1, (size.width * RENDER_SCALE).roundToInt())
+            val sh = max(1, (size.height * RENDER_SCALE).roundToInt())
+            reduced.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
+            reduced.pivotOffset = Offset.Zero
+            reduced.scaleX = size.width / sw
+            reduced.scaleY = size.height / sh
+            reduced.record(Density(density), LayoutDirection.Ltr, IntSize(sw, sh)) {
+                program.setSize(sw.toFloat(), sh.toFloat(), density * RENDER_SCALE)
+                program.setFrame(look, time(), strength, palette)
+                drawRect(program.brush)
+            }
+            drawLayer(reduced)
+        }
+    }
+}
+
+$a
 internal fun LiveUniforms.setSize(width: Float, height: Float, density: Float) {
     this.width = width
     this.height = height
