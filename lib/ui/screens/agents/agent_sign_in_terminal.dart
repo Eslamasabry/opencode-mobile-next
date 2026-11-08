@@ -20,8 +20,11 @@ import '../../widgets/external_link.dart';
 
 /// Claude's own sign-in, on a terminal: `claude auth login` for the agents'
 /// account on this phone. Claude asks the system for its sign-in page and
-/// the app opens it; the person signs in on Anthropic's page and, when
-/// Claude asks for a code, pastes it into Claude itself. The app never reads
+/// the app opens it; the person signs in on Anthropic's page, which sends
+/// the browser back to a port Claude listens on here, so no code is needed
+/// (Claude 2.1.319 sets that redirect whenever it can open a browser).
+/// Only when Claude still asks for a code, the person pastes it into Claude
+/// itself. The app never reads
 /// or passes on the code (Anthropic's terms: sign-in completes in its own
 /// flow). Pops true once the agent is signed in.
 ///
@@ -69,6 +72,12 @@ class _AgentSignInTerminalScreenState
   bool _stopFailed = false;
   AgentSignInOutput _found = const AgentSignInOutput();
 
+  /// The page the agent asked the system to open (its `BROWSER` hand-off),
+  /// kept in memory only, never logged. Claude gives that page a redirect
+  /// back to a port on this phone, so signing in there finishes without a
+  /// code; the page it prints for people to copy asks for a code instead.
+  String? _handedOver;
+
   AppLocalizations get _l10n =>
       lookupAppLocalizations(Localizations.localeOf(context));
 
@@ -90,6 +99,7 @@ class _AgentSignInTerminalScreenState
       _shell = shell;
       _notYet = false;
       _found = const AgentSignInOutput();
+      _handedOver = null;
     });
   }
 
@@ -140,6 +150,9 @@ class _AgentSignInTerminalScreenState
 
   void _openPage(String url) {
     if (!mounted) return;
+    if (widget.agentId == 'claude' && _handedOver != url) {
+      setState(() => _handedOver = url);
+    }
     final open = widget.openPage;
     unawaited(
       open != null ? open(context, url) : openAgentSignInPage(context, url),
@@ -318,13 +331,15 @@ class _AgentSignInTerminalScreenState
       );
     }
     final found = _found;
-    final page = found.page;
+    final handedOver = _handedOver;
+    final page = handedOver != null ? Uri.tryParse(handedOver) : found.page;
     final code = found.code;
+    final showActions = shell.running && (!found.isEmpty || handedOver != null);
     final tokens = KitTokens.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (shell.running && !found.isEmpty)
+        if (showActions)
           Padding(
             padding: EdgeInsetsDirectional.only(
               start: tokens.gutter,

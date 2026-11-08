@@ -730,6 +730,42 @@ final _claudeTurnFailure = RegExp(
   r'|Credit balance is too low\b)',
 );
 
+/// Whether an agent's reply text is really a failed turn, and whether it is
+/// a sign-in failure. Inside the bridge's error report any ask to sign in is
+/// one ("You need to sign in to use this model."); in a reply it could be
+/// advice. Also read on the live stream as the text grows, because a
+/// failure sent in several pieces does not match on its first piece.
+({bool signIn, bool failure}) paseoReplyFailure(String text) {
+  final system = _paseoSystemError(text);
+  final signIn =
+      paseoSignInFailure.hasMatch(text) ||
+      (system && _signInAsk.hasMatch(text));
+  return (
+    signIn: signIn,
+    failure: signIn || system || _claudeTurnFailure.hasMatch(text),
+  );
+}
+
+/// The error message an agent's failed-turn reply becomes: the agent's own
+/// words under `errorText` (for Details), never as reply text.
+MessageInfo paseoReplyFailureInfo({
+  required String agentID,
+  required String id,
+  required String provider,
+  required String text,
+  required bool signIn,
+  int? created,
+  int? completed,
+}) => MessageInfo(
+  id: id,
+  sessionID: agentID,
+  role: 'assistant',
+  providerID: provider,
+  time: MsgTime(created: created, completed: completed ?? created),
+  errorText: paseoText(text, max: 2000),
+  errorKind: signIn ? MessageErrorKind.providerAuth : null,
+);
+
 /// A stable message id for a timeline item, or null when it has none of its
 /// own and the caller must derive one from its position ([fallbackSeq]).
 String paseoItemID(Map<String, dynamic> item, {required int? fallbackSeq}) {
@@ -770,22 +806,17 @@ MessageWithParts? paseoItemMessage(
   // rows too.
   if (type == 'assistant_message') {
     final text = paseoText(item['text']);
-    final system = _paseoSystemError(text);
-    // Inside the bridge's error report, any ask to sign in is one ("You need
-    // to sign in to use this model."); in a reply it could be advice.
-    final signIn =
-        paseoSignInFailure.hasMatch(text) ||
-        (system && _signInAsk.hasMatch(text));
-    if (signIn || system || _claudeTurnFailure.hasMatch(text)) {
+    final (:signIn, :failure) = paseoReplyFailure(text);
+    if (failure) {
       return MessageWithParts(
-        info: MessageInfo(
+        info: paseoReplyFailureInfo(
+          agentID: agentID,
           id: id,
-          sessionID: agentID,
-          role: 'assistant',
-          providerID: provider,
-          time: MsgTime(created: created, completed: completed ?? created),
-          errorText: paseoText(item['text'], max: 2000),
-          errorKind: signIn ? MessageErrorKind.providerAuth : null,
+          provider: provider,
+          text: text,
+          signIn: signIn,
+          created: created,
+          completed: completed,
         ),
         parts: const [],
       );

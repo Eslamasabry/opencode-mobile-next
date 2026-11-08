@@ -35905,6 +35905,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String chatSendFailureSignInAgain(String agent) {
+    return '$agent needs you to sign in again';
+  }
+
+  @override
   String chatSendFailureNoCredit(String agent) {
     return '$agent no tiene créditos para este modelo';
   }

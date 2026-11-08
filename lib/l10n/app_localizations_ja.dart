@@ -25643,7 +25643,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String agentsSignInTerminalIntro(String agent) {
-    return '$agent opens its sign-in page. Sign in there with your Claude account, then come back. If $agent asks for a code, copy it on the page and choose Paste.';
+    return '$agent opens its sign-in page. Sign in there with your Claude account and come back: $agent finishes on its own. Only if the page shows a code, copy it and choose Paste.';
   }
 
   @override
@@ -35452,6 +35452,11 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String chatSendFailureSignIn(String agent) {
     return '$agent needs you to sign in';
+  }
+
+  @override
+  String chatSendFailureSignInAgain(String agent) {
+    return '$agent needs you to sign in again';
   }
 
   @override

@@ -25715,7 +25715,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String agentsSignInTerminalIntro(String agent) {
-    return 'يفتح $agent صفحة تسجيل الدخول. سجّل الدخول هناك بحسابك في Claude ثم عُد. إذا طلب $agent رمزًا، فانسخه من الصفحة واختر لصق.';
+    return 'يفتح $agent صفحة تسجيل الدخول. سجّل الدخول هناك بحسابك في Claude ثم عُد، وسيُكمل $agent الباقي بنفسه. فقط إذا عرضت الصفحة رمزًا، فانسخه واختر لصق.';
   }
 
   @override
@@ -35615,6 +35615,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String chatSendFailureSignIn(String agent) {
     return 'يحتاج $agent إلى تسجيل دخولك';
+  }
+
+  @override
+  String chatSendFailureSignInAgain(String agent) {
+    return 'يحتاج $agent إلى تسجيل دخولك مرة أخرى';
   }
 
   @override
