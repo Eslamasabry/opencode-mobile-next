@@ -29,6 +29,7 @@ import 'background/live_background.dart';
 import 'telemetry/app_log_ring.dart';
 import 'telemetry/firebase_analytics_adapter.dart';
 import 'telemetry/firebase_crashlytics_adapter.dart';
+import 'telemetry/firebase_performance_adapter.dart';
 import 'telemetry/health_probe.dart' show AppStartClock;
 import 'telemetry/telemetry.dart';
 import 'telemetry/telemetry_provider.dart';
@@ -192,6 +193,7 @@ Future<void> main() async {
             ? CombinedTelemetryAdapter([
                 FirebaseCrashlyticsAdapter(),
                 FirebaseAnalyticsAdapter(),
+                FirebasePerformanceAdapter(),
               ])
             : const NoOpTelemetryAdapter(),
       ),

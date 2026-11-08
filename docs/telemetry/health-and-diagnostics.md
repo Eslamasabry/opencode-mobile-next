@@ -52,6 +52,24 @@ The existing events stay: `app_open`, `setup_step_*`, `first_reply`, `screen_vie
 | `jank` | Sent once per session per page kind: `screen` (the list from `screen_view`), `janky_pct_range` (<1, 1-5, 5-15, >15), `refresh_hz` (60, 90, 120, other) |
 | `memory_pressure` | `level` (moderate, low, critical) |
 
+### C2. Firebase Performance Monitoring (`usage` consent)
+
+Performance Monitoring is collected only while `usage` is on (`setPerformanceCollectionEnabled`), and the manifest keeps it off before that (`firebase_performance_collection_deactivated` true). The Performance Gradle plugin (`com.google.firebase.firebase-perf`) is **never applied**: it instruments HTTP and would record request URLs, which carry server addresses. With it absent, the SDK records no network request; the app never calls `newHttpMetric`. `test/perf_telemetry_test.dart` checks both.
+
+Built in (Firebase's own, no app code): app start (`_app_start`) and screen rendering (slow and frozen frames).
+
+Custom traces, named from the flow events. Each carries the numeric metric `duration_ms` (the time measured at the existing call site), and attributes from fixed lists only; anything else is dropped by `PerfSchema.clean`:
+
+| Trace | Attributes | Sent from |
+|---|---|---|
+| `app_cold_start` | none | the `app_start` cold measure |
+| `conn_connect` | `server_kind`, `result` | `conn_attempt` |
+| `send_first_reply` | `server_kind` | `send_result`, only when a reply came |
+| `linux_setup_<step>` | `step`, `result` | `linux_setup_step`; `<step>` is one of the `step` values |
+| `agent_start` | `agent`, `result` | `agent_start` |
+
+Native 3.0 uses the same names, attributes and values.
+
 ## D. Device context (`usage` consent, set once as user properties)
 
 | Property | Values |

@@ -145,6 +145,7 @@ import '../../domain/session_title_text.dart'
     show displaySessionTitleText, isPlaceholderSessionTitle, stripIsoStamp;
 import '../../state/orchestration.dart';
 import '../../state/team_glance.dart';
+import '../../builtin/builtin_linux.dart' show BuiltinLinux;
 import '../../builtin/builtin_server.dart';
 import '../../builtin/team/builtin_team.dart';
 import '../../state/team_dispatch.dart';

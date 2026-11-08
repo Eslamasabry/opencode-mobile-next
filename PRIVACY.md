@@ -67,7 +67,8 @@ yes turns `usage` on, and turns `crashes` on too unless you had turned the
 "Offer crash reports" switch off. Either way each switch can be changed at any
 time. The two services are run by Google, so Google receives the data under its
 own terms: **Google Firebase Crashlytics** for crash data and problem reports,
-and **Google Analytics for Firebase** for the counts. Nothing is collected or
+**Google Analytics for Firebase** for the counts, and **Firebase Performance
+Monitoring** for timings (see "Performance" below). Nothing is collected or
 sent while a switch is off. Turning `crashes` off discards unsent crash
 reports; turning `usage` off resets the analytics data kept on the phone
 together with its random install identifier, so turning it on again later
@@ -153,6 +154,28 @@ collected (the app does not even hold the advertising-ID permission), ad
 personalisation and ad storage are denied, Analytics does not report screens
 by itself (only the page kinds above), and no data is exported to any other
 Google product.
+
+### Performance
+
+With `usage` on, the app also measures how long app start, connecting, the
+first reply and setup steps take, and how smooth screens are (slow and frozen
+frames), through Google's Firebase Performance Monitoring. It never records
+addresses or text. Collection is off in the app until you turn `usage` on, and
+off again when you turn it off. Only these fixed traces are sent, each with a
+duration in milliseconds and attributes that are one word from a fixed list:
+
+| Trace | Attributes |
+| --- | --- |
+| `app_cold_start` | none |
+| `conn_connect` | `server_kind`: phone or computer; `result`: ok or fail |
+| `send_first_reply` | `server_kind`: phone or computer |
+| `linux_setup_<step>` | `step`: one of download, unpack, essentials, node, opencode, paseo, agents, done; `result`: ok or fail |
+| `agent_start` | `agent`: one of claude_code, codex, gemini, antigravity, opencode, other; `result`: ok or fail |
+
+Firebase also records its own app start time and the share of slow and frozen
+frames per screen on its own. The app does not use Firebase's network
+monitoring: no web request, address, host name or path is traced or sent.
+Anything outside the lists above is dropped by the app before it can be sent.
 
 ### Problem report
 

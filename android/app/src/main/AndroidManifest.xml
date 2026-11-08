@@ -77,6 +77,10 @@
              allows ad personalisation and reports no screens by itself. -->
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
         <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <!-- Performance Monitoring stays off until the person turns on usage and
+             app health; the Performance Gradle plugin (which would trace HTTP and
+             record request URLs) is never applied. -->
+        <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
