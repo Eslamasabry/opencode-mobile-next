@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalSettingsRows
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
@@ -377,6 +378,8 @@ public fun ChatScreen(
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
+                // Read when the sheet draws, like rowChips: the approval state may change after the chrome is made.
+                promptSettings = { close -> headerState?.approval?.let { ApprovalSettingsRows(it, close) } },
                 freeModel = { headerState?.state?.freeModel == true },
                 agentName = { headerState?.state?.agentName ?: "OpenCode" },
                 openCommands =
@@ -785,6 +788,7 @@ public fun ChatScreen(
                                                 onOpenCode = { codeReader = it },
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
+                                        onAllFiles = actions::openFiles,
                                         reasoningExpanded = state.reasoningExpanded,
                                         onCompactAgain =
                                             if (state.capabilities.compact) actions::compactAgain
