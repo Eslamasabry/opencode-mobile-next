@@ -17,6 +17,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -141,7 +142,7 @@ class ChatRunningRenders {
 
     private fun messages(scene: Scene): List<MessageWithParts> =
         when (scene) {
-            Scene.Started -> listOf(prompt)
+            Scene.Started -> listOf(MessageWithParts(info("m1", Role.User, NOW - 2_000), prompt.parts))
             Scene.Commands,
             Scene.CommandsSteps ->
                 listOf(
@@ -179,7 +180,8 @@ class ChatRunningRenders {
     private fun facts(scene: Scene, now: Long): TurnFactsUi {
         val keeper = TurnFeedKeeper(sid)
         keeper.history(messages(scene))
-        keeper.event(GatewayEvent.RunStarted(SessionId(sid)), NOW - 41_000)
+        // Just started: the run began two seconds ago (the line says only what it does, no clock yet).
+        keeper.event(GatewayEvent.RunStarted(SessionId(sid)), if (scene == Scene.Started) NOW - 2_000 else NOW - 41_000)
         val facts = TurnFactsPresenter(FixedClock).present(keeper.feed.value, now, waitingForYou = scene == Scene.Waiting)
         if (scene != Scene.Failed) return facts
         val part = messages(scene).last().parts.last()
@@ -290,13 +292,15 @@ class ChatRunningRenders {
             shoot(Scene.Commands, style, "2-mid-commands")
             shoot(Scene.CommandsSteps, style, "3-mid-commands-steps-shown") {
                 onNodeWithTag("chat-live-line").performClick()
+                // The pointer leaves, as a finger lifts: no hover highlight left on the line.
+                onRoot().performMouseInput { exit() }
             }
             shoot(Scene.Waiting, style, "4-waiting-for-approval")
             shoot(Scene.Failed, style, "5-failed-step")
         }
     }
 
-    /** Frames of the running animation (30 fps, three seconds) for the screen recording, steps shown, Solid dark. */
+    /** Frames of the running animation (30 fps, two seconds: one step-light lap) for the screen recording, steps shown, Solid dark. */
     @Test
     fun `chat running motion frames`() {
         val dir = out?.let { File(it, "frames").also(File::mkdirs) } ?: return
@@ -307,6 +311,7 @@ class ChatRunningRenders {
             setContent { Screen(Scene.CommandsSteps, Style.Solid, facts, still = false) }
             mainClock.advanceTimeBy(500)
             onNodeWithTag("chat-live-line").performClick()
+            onRoot().performMouseInput { exit() }
             mainClock.advanceTimeBy(600)
             for (frame in 0 until FRAMES) {
                 if (frame % 30 == 0) facts = facts(Scene.CommandsSteps, NOW + frame / 30 * 1_000L)
@@ -325,7 +330,7 @@ class ChatRunningRenders {
         const val WIDTH = 1081
         const val HEIGHT = 2402
         const val DENSITY = 2.625f
-        const val FRAMES = 90
+        const val FRAMES = 60
         const val PROMPT = "The checkout test still fails about one run in five. Install, run it ten times and fix it."
         const val THOUGHT_KEY = "thought:m2/r1"
         const val THOUGHT =
