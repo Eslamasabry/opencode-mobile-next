@@ -9,6 +9,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.DemoRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
@@ -38,6 +39,12 @@ public interface WelcomeActions {
     }
 
     public fun refresh() {}
+
+    /** "Just show me": the demo, with nothing set up (Flutter `_demo`). */
+    public fun showDemo() {}
+
+    /** "More ways to set up": phone setup's own page, where what to install is chosen (Flutter `_openPhoneSetup`). */
+    public fun moreWays() {}
 }
 
 /** The welcome shares the durable phone job; leaving and returning never creates a second owner. */
@@ -106,7 +113,16 @@ public class WelcomeViewModel(
         }
     }
 
-    override fun connect(): Unit = nav.open(ServersRoute.Home)
+    /**
+     * The question was answered here, so this goes straight to the server editor (Flutter `onComputer: _edit`). The
+     * Servers home is not opened: with nothing saved it would ask "Where should your agent run?" a second time and
+     * forget this answer.
+     */
+    override fun connect(): Unit = nav.open(ServersRoute.Edit(null))
+
+    override fun showDemo(): Unit = nav.open(DemoRoute)
+
+    override fun moreWays(): Unit = nav.open(PhoneSetupRoute.Setup)
 
     override fun openSettings(): Unit = nav.open(SettingsRoute.Home)
 }
