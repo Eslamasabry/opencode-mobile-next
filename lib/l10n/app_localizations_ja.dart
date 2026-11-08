@@ -35939,4 +35939,62 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'Trying again in compatibility mode';
+
+  @override
+  String get productErrorFileTooBig =>
+      'This file is too big to show here (the limit is 2 MB). Open it on the computer where it lives, or ask the agent for a smaller piece.';
+
+  @override
+  String get productErrorFileMissing =>
+      'That file isn\'t there any more. It may have been moved or deleted.';
+
+  @override
+  String get productErrorFileDenied =>
+      'The computer won\'t let this app read that file.';
+
+  @override
+  String get productErrorFileUnreadable =>
+      'This kind of file can\'t be shown here.';
+
+  @override
+  String phoneFileInstallTitle(String name) {
+    return 'Install $name?';
+  }
+
+  @override
+  String get phoneFileInstallBody =>
+      'This app file is on this phone. Android asks you to confirm before anything is installed.';
+
+  @override
+  String get phoneFileInstallAction => 'Install…';
+
+  @override
+  String phoneFileOpenTitle(String name) {
+    return 'Open $name?';
+  }
+
+  @override
+  String get phoneFileOpenBody =>
+      'This file is on this phone and is too big or the wrong kind to show here. Choose which app opens it.';
+
+  @override
+  String get phoneFileOpenAction => 'Open with…';
+
+  @override
+  String get phoneFileFindTitle => 'Open it in Files';
+
+  @override
+  String phoneFileFindBody(String path) {
+    return 'This version can\'t hand the file to another app yet. Find it in your Files app: $path';
+  }
+
+  @override
+  String phoneFileWhereInstall(String name, String folder) {
+    return '$name is in $folder. Open it from the Files app to install it.';
+  }
+
+  @override
+  String phoneFileWhereOpen(String name, String folder) {
+    return '$name is in $folder. Open it from the Files app.';
+  }
 }

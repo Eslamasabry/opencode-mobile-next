@@ -104,6 +104,10 @@ String productErrorText(Object error, {AppLocalizations? l10n}) {
     ProductFailureCategory.storage => copy.productErrorStorage,
     ProductFailureCategory.projectGit => copy.productErrorProjectGit,
     ProductFailureCategory.termux => copy.productErrorTermux,
+    ProductFailureCategory.fileTooBig => copy.productErrorFileTooBig,
+    ProductFailureCategory.fileMissing => copy.productErrorFileMissing,
+    ProductFailureCategory.fileDenied => copy.productErrorFileDenied,
+    ProductFailureCategory.fileUnreadable => copy.productErrorFileUnreadable,
     // An error nobody classified is not a network failure: saying
     // "unreachable" here sent the Add tools investigation the wrong way.
     ProductFailureCategory.unknown => copy.productErrorUnknown,

@@ -36,6 +36,12 @@ extension _ChatDevPreview on _ChatScreenState {
   /// else is not claimed and goes through the external-link gate.
   bool _claimDevLink(BuildContext context, String url) {
     if (_conn.isIsolated || _watching) return false;
+    // A file: link is a file, not a web page: the same opening as a plain
+    // path (the phone's own Android files, or the server's file preview).
+    if (_conn.capabilities.fileBrowsing &&
+        claimFileLink(url, open: (path) => unawaited(_openPathLink(path)))) {
+      return true;
+    }
     final link = DevPreviewLink.parse(url);
     if (link == null) return false;
     unawaited(_openDevPreviewLink(link));

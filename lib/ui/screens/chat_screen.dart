@@ -73,6 +73,9 @@ import '../../state/free_model_notice.dart'
     show FreeModelNoteDismissals, freeModelNoteDue;
 import '../../state/session_tail_cache.dart' show SessionTailPreview;
 import '../../state/profiles.dart' show ServerBackend, ServerProfile;
+import '../../state/profile_monitor.dart' show ProfileMonitor;
+import '../../domain/phone_file.dart';
+import '../widgets/phone_file_prompt.dart';
 import '../../state/context_usage.dart';
 import '../../state/conversation_nudges.dart';
 import '../../state/nudges.dart';
@@ -708,12 +711,41 @@ class _ChatScreenState extends State<ChatScreen>
       await _openPictureGallery('path:$path', fallbackPath: path);
       return;
     }
+    // A file in this phone's shared storage is an Android file: the system
+    // opens it (or installs the .apk after its own confirm), not a preview
+    // through the agent host.
+    final profile = _conn.profile;
+    final onPhone = profile != null && ProfileMonitor.isOnThisPhone(profile);
+    final phoneAction = phoneFileAction(path, serverOnThisPhone: onPhone);
+    if (phoneAction != PhoneFileAction.preview) {
+      await offerPhoneFile(
+        context,
+        path: path,
+        install: phoneAction == PhoneFileAction.install,
+      );
+      return;
+    }
     try {
       final api = await _conn.prepareActionTransport();
       if (api == null) {
         throw ProductException(strings.chatUiNotConnectedToTheServerRightNow);
       }
-      final content = await api.fileContent(path);
+      final FileContent content;
+      try {
+        content = await api.fileContent(path);
+      } catch (error) {
+        // Too big for the preview, and the file is on this phone: Android
+        // can open it.
+        if (onPhone &&
+            isPhoneSharedStoragePath(path) &&
+            ProductFailure.from(error).category ==
+                ProductFailureCategory.fileTooBig) {
+          if (!mounted) return;
+          await offerPhoneFile(context, path: path, install: false);
+          return;
+        }
+        rethrow;
+      }
       final binary = content.isBinary || content.encoding == 'base64';
       final bytes = binary ? content.bytes() : null;
       final data = FilePreviewData(

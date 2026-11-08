@@ -44065,5 +44065,92 @@
   "phoneSetupStageCompat": "Trying again in compatibility mode",
   "@phoneSetupStageCompat": {
     "description": "Setup stage when a program crashed and the app runs the step again more carefully"
+  },
+  "productErrorFileTooBig": "This file is too big to show here (the limit is 2 MB). Open it on the computer where it lives, or ask the agent for a smaller piece.",
+  "@productErrorFileTooBig": {
+    "description": "Failure words when the agent host refuses to send a file because it is over the size the viewer reads; not a computer that is off"
+  },
+  "productErrorFileMissing": "That file isn't there any more. It may have been moved or deleted.",
+  "@productErrorFileMissing": {
+    "description": "Failure words when the agent host answers that a file does not exist"
+  },
+  "productErrorFileDenied": "The computer won't let this app read that file.",
+  "@productErrorFileDenied": {
+    "description": "Failure words when the agent host refuses to read a file (permission)"
+  },
+  "productErrorFileUnreadable": "This kind of file can't be shown here.",
+  "@productErrorFileUnreadable": {
+    "description": "Failure words when the agent host will not show a file (binary or unsupported)"
+  },
+  "phoneFileInstallTitle": "Install {name}?",
+  "@phoneFileInstallTitle": {
+    "description": "Question when a reply links an Android app file (.apk) that is on this phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileInstallBody": "This app file is on this phone. Android asks you to confirm before anything is installed.",
+  "@phoneFileInstallBody": {
+    "description": "Body of the install question for an .apk on this phone; the app never installs silently"
+  },
+  "phoneFileInstallAction": "Install…",
+  "@phoneFileInstallAction": {
+    "description": "Confirm button that hands an .apk to Android's installer"
+  },
+  "phoneFileOpenTitle": "Open {name}?",
+  "@phoneFileOpenTitle": {
+    "description": "Question when a reply links a large or non-text file that is on this phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileOpenBody": "This file is on this phone and is too big or the wrong kind to show here. Choose which app opens it.",
+  "@phoneFileOpenBody": {
+    "description": "Body of the open question for a large or binary file on this phone"
+  },
+  "phoneFileOpenAction": "Open with…",
+  "@phoneFileOpenAction": {
+    "description": "Confirm button that hands a phone file to Android's app chooser"
+  },
+  "phoneFileFindTitle": "Open it in Files",
+  "@phoneFileFindTitle": {
+    "description": "Title when this version cannot hand a phone file to another app"
+  },
+  "phoneFileFindBody": "This version can't hand the file to another app yet. Find it in your Files app: {path}",
+  "@phoneFileFindBody": {
+    "description": "Body when the phone file cannot be opened from here; names where it is",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileWhereInstall": "{name} is in {folder}. Open it from the Files app to install it.",
+  "@phoneFileWhereInstall": {
+    "description": "Shown instead of Install… when this build cannot hand the .apk to Android; says where the file is",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileWhereOpen": "{name} is in {folder}. Open it from the Files app.",
+  "@phoneFileWhereOpen": {
+    "description": "Shown instead of Open with… when this build cannot hand the file to Android; says where the file is",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
   }
 }

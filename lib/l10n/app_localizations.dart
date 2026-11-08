@@ -56639,6 +56639,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trying again in compatibility mode'**
   String get phoneSetupStageCompat;
+
+  /// Failure words when the agent host refuses to send a file because it is over the size the viewer reads; not a computer that is off
+  ///
+  /// In en, this message translates to:
+  /// **'This file is too big to show here (the limit is 2 MB). Open it on the computer where it lives, or ask the agent for a smaller piece.'**
+  String get productErrorFileTooBig;
+
+  /// Failure words when the agent host answers that a file does not exist
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t there any more. It may have been moved or deleted.'**
+  String get productErrorFileMissing;
+
+  /// Failure words when the agent host refuses to read a file (permission)
+  ///
+  /// In en, this message translates to:
+  /// **'The computer won\'t let this app read that file.'**
+  String get productErrorFileDenied;
+
+  /// Failure words when the agent host will not show a file (binary or unsupported)
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of file can\'t be shown here.'**
+  String get productErrorFileUnreadable;
+
+  /// Question when a reply links an Android app file (.apk) that is on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Install {name}?'**
+  String phoneFileInstallTitle(String name);
+
+  /// Body of the install question for an .apk on this phone; the app never installs silently
+  ///
+  /// In en, this message translates to:
+  /// **'This app file is on this phone. Android asks you to confirm before anything is installed.'**
+  String get phoneFileInstallBody;
+
+  /// Confirm button that hands an .apk to Android's installer
+  ///
+  /// In en, this message translates to:
+  /// **'Install…'**
+  String get phoneFileInstallAction;
+
+  /// Question when a reply links a large or non-text file that is on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}?'**
+  String phoneFileOpenTitle(String name);
+
+  /// Body of the open question for a large or binary file on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'This file is on this phone and is too big or the wrong kind to show here. Choose which app opens it.'**
+  String get phoneFileOpenBody;
+
+  /// Confirm button that hands a phone file to Android's app chooser
+  ///
+  /// In en, this message translates to:
+  /// **'Open with…'**
+  String get phoneFileOpenAction;
+
+  /// Title when this version cannot hand a phone file to another app
+  ///
+  /// In en, this message translates to:
+  /// **'Open it in Files'**
+  String get phoneFileFindTitle;
+
+  /// Body when the phone file cannot be opened from here; names where it is
+  ///
+  /// In en, this message translates to:
+  /// **'This version can\'t hand the file to another app yet. Find it in your Files app: {path}'**
+  String phoneFileFindBody(String path);
+
+  /// Shown instead of Install… when this build cannot hand the .apk to Android; says where the file is
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is in {folder}. Open it from the Files app to install it.'**
+  String phoneFileWhereInstall(String name, String folder);
+
+  /// Shown instead of Open with… when this build cannot hand the file to Android; says where the file is
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is in {folder}. Open it from the Files app.'**
+  String phoneFileWhereOpen(String name, String folder);
 }
 
 class _AppLocalizationsDelegate

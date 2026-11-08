@@ -98,6 +98,19 @@ enum ProductFailureCategory {
   /// Termux did not finish a command the app sent it.
   termux,
 
+  /// The agent host answered a file read: the file is over the size it
+  /// shows. Not a computer that is off.
+  fileTooBig,
+
+  /// The agent host answered: there is no such file (moved or deleted).
+  fileMissing,
+
+  /// The agent host answered: it may not read that file.
+  fileDenied,
+
+  /// The agent host answered: it will not show this kind of file (binary).
+  fileUnreadable,
+
   /// Nothing known about it: the generic connectivity line.
   unknown,
 }
@@ -129,6 +142,32 @@ final RegExp _gitReason = RegExp(
 
 bool _isGitReason(String? reason) =>
     reason != null && _gitReason.hasMatch(reason);
+
+/// What a daemon's file read refusal says, from its reason. Sorted from the
+/// daemon's own words (`File is too large to display`, `ENOENT`, `EACCES`);
+/// every one of these used to read as "couldn't reach your computer".
+ProductFailureCategory? _fileReason(String? reason) {
+  if (reason == null) return null;
+  final text = reason.toLowerCase();
+  if (RegExp(r'too large|too big|exceeds? (the )?max').hasMatch(text) &&
+      text.contains('file')) {
+    return ProductFailureCategory.fileTooBig;
+  }
+  if (RegExp(
+    r'enoent|no such file|file not found|file does not exist',
+  ).hasMatch(text)) {
+    return ProductFailureCategory.fileMissing;
+  }
+  if (RegExp(
+    r'eacces|eperm|permission denied|not permitted|outside',
+  ).hasMatch(text)) {
+    return ProductFailureCategory.fileDenied;
+  }
+  if (RegExp(r'binary|cannot display|unsupported file').hasMatch(text)) {
+    return ProductFailureCategory.fileUnreadable;
+  }
+  return null;
+}
 
 /// Why an agent host refused this send and what it concerns, when the
 /// host said ([PaseoFailure.runFailure]); null for any other failure. The
@@ -307,6 +346,10 @@ ProductFailureCategory _classify(Object error) {
     }
     if (error is PaseoFailure && _isGitReason(error.reason)) {
       return ProductFailureCategory.projectGit;
+    }
+    if (error is PaseoFailure) {
+      final file = _fileReason(error.reason);
+      if (file != null) return file;
     }
     final code = error.statusCode;
     if (code != null && code >= 400) return _forStatus(code);

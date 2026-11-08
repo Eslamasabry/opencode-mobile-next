@@ -36100,4 +36100,62 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'جارٍ المحاولة مجددًا في وضع التوافق';
+
+  @override
+  String get productErrorFileTooBig =>
+      'هذا الملف أكبر من أن يُعرض هنا (الحد 2 ميغابايت). افتحه على الحاسوب الذي يوجد عليه، أو اطلب من الوكيل جزءًا أصغر.';
+
+  @override
+  String get productErrorFileMissing =>
+      'هذا الملف لم يعد موجودًا. ربما نُقل أو حُذف.';
+
+  @override
+  String get productErrorFileDenied =>
+      'لا يسمح الحاسوب لهذا التطبيق بقراءة هذا الملف.';
+
+  @override
+  String get productErrorFileUnreadable =>
+      'لا يمكن عرض هذا النوع من الملفات هنا.';
+
+  @override
+  String phoneFileInstallTitle(String name) {
+    return 'تثبيت $name؟';
+  }
+
+  @override
+  String get phoneFileInstallBody =>
+      'ملف التطبيق هذا على هذا الهاتف. يطلب منك Android التأكيد قبل تثبيت أي شيء.';
+
+  @override
+  String get phoneFileInstallAction => 'تثبيت…';
+
+  @override
+  String phoneFileOpenTitle(String name) {
+    return 'فتح $name؟';
+  }
+
+  @override
+  String get phoneFileOpenBody =>
+      'هذا الملف على هذا الهاتف وهو أكبر من أن يُعرض هنا أو من نوع لا يُعرض. اختر التطبيق الذي يفتحه.';
+
+  @override
+  String get phoneFileOpenAction => 'فتح باستخدام…';
+
+  @override
+  String get phoneFileFindTitle => 'افتحه من الملفات';
+
+  @override
+  String phoneFileFindBody(String path) {
+    return 'لا يستطيع هذا الإصدار تسليم الملف إلى تطبيق آخر بعد. ابحث عنه في تطبيق الملفات: $path';
+  }
+
+  @override
+  String phoneFileWhereInstall(String name, String folder) {
+    return 'الملف $name موجود في $folder. افتحه من تطبيق الملفات لتثبيته.';
+  }
+
+  @override
+  String phoneFileWhereOpen(String name, String folder) {
+    return 'الملف $name موجود في $folder. افتحه من تطبيق الملفات.';
+  }
 }

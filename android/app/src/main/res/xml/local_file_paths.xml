@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Opening a phone file: shared storage only (/sdcard, where the built-in Linux
+     and Termux save for the person). LocalFileGate narrows it further in code
+     (no Android/ folders, symlinks and .. resolved). Never add files-path,
+     cache-path, root-path or external-files-path here: the app's private
+     files/ holds the built-in Linux root with the server password file. The
+     updater has its own paths in file_paths.xml. -->
+<paths>
+    <external-path name="shared_storage" path="."/>
+</paths>

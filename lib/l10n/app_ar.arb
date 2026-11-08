@@ -10970,5 +10970,19 @@
   "agentPersonaAntigravityNeeds": "حساب Google؛ سجّل الدخول في المتصفح",
   "agentsAntigravitySignInIntro": "يعرض Antigravity رابط تسجيل الدخول في الطرفية. افتحه في المتصفح وسجّل الدخول باستخدام Google، ثم الصق الرمز الذي يعرضه المتصفح في الطرفية.",
   "agentsGeminiMigrationNote": "إذا طلب منك Gemini CLI استخدام Antigravity، ارجع إلى الوكلاء وثبّت Antigravity (agy). تبقى محادثات Gemini هنا.",
-  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق"
+  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق",
+  "productErrorFileTooBig": "هذا الملف أكبر من أن يُعرض هنا (الحد 2 ميغابايت). افتحه على الحاسوب الذي يوجد عليه، أو اطلب من الوكيل جزءًا أصغر.",
+  "productErrorFileMissing": "هذا الملف لم يعد موجودًا. ربما نُقل أو حُذف.",
+  "productErrorFileDenied": "لا يسمح الحاسوب لهذا التطبيق بقراءة هذا الملف.",
+  "productErrorFileUnreadable": "لا يمكن عرض هذا النوع من الملفات هنا.",
+  "phoneFileInstallTitle": "تثبيت {name}؟",
+  "phoneFileInstallBody": "ملف التطبيق هذا على هذا الهاتف. يطلب منك Android التأكيد قبل تثبيت أي شيء.",
+  "phoneFileInstallAction": "تثبيت…",
+  "phoneFileOpenTitle": "فتح {name}؟",
+  "phoneFileOpenBody": "هذا الملف على هذا الهاتف وهو أكبر من أن يُعرض هنا أو من نوع لا يُعرض. اختر التطبيق الذي يفتحه.",
+  "phoneFileOpenAction": "فتح باستخدام…",
+  "phoneFileFindTitle": "افتحه من الملفات",
+  "phoneFileFindBody": "لا يستطيع هذا الإصدار تسليم الملف إلى تطبيق آخر بعد. ابحث عنه في تطبيق الملفات: {path}",
+  "phoneFileWhereInstall": "الملف {name} موجود في {folder}. افتحه من تطبيق الملفات لتثبيته.",
+  "phoneFileWhereOpen": "الملف {name} موجود في {folder}. افتحه من تطبيق الملفات."
 }
