@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -125,7 +126,12 @@ private fun EqualRow(cells: List<@Composable () -> Unit>, columns: Int) {
         val width = ((constraints.maxWidth - gap * (columns - 1)) / columns).coerceAtLeast(0)
         val cell = androidx.compose.ui.unit.Constraints(minWidth = width, maxWidth = width)
         val height =
-            cells.indices.maxOfOrNull { k -> subcompose("probe-$k", cells[k]).maxOfOrNull { it.measure(cell).height } ?: 0 }
+            cells.indices.maxOfOrNull { k -> subcompose("probe-$k") {
+                    // Measured only, never placed: no semantics of its own, so the page reads each tile once.
+                    androidx.compose.foundation.layout.Box(
+                        Modifier.clearAndSetSemantics {}
+                    ) { cells[k]() }
+                }.maxOfOrNull { it.measure(cell).height } ?: 0 }
                 ?: 0
         val placed =
             cells.indices.map { k ->

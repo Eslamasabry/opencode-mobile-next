@@ -309,6 +309,9 @@ class AgentsBentoTest {
     }
 
     private companion object {
+        /** The phone's own helper profile: it is never listed as a computer. */
+        val PHONE_HELPER = AgentComputer(ProfileId("owner-agents"), "Phone agents", "ws://127.0.0.1:4099", "/root/projects", connected = true)
+
         val GEMINI =
             PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.NotInstalled, installable = true, downloadBytes = 340_000_000L)
 
@@ -334,9 +337,6 @@ class AgentsBentoTest {
                             ),
                     )
             )
-
-        /** The phone's own helper profile: it is never listed as a computer. */
-        val PHONE_HELPER = AgentComputer(ProfileId("owner-agents"), "Phone agents", "ws://127.0.0.1:4099", "/root/projects", connected = true)
 
         val COMPUTERS =
             EVERY_STATE.copy(
