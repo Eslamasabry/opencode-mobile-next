@@ -169,6 +169,15 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
+    fun `B-163 Schedule a prompt is a Go to place beside Details, not a More act`() {
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        val menu = p.current().menu
+        assertEquals(listOf(HeaderAction.Details, HeaderAction.Schedule), HeaderRules.goTo(menu))
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = false)
+        assertEquals(listOf(HeaderAction.Details), HeaderRules.goTo(p.current().menu))
+    }
+
+    @Test
     fun `B-163 Schedule a prompt needs the server's schedules and a project folder`() {
         world.capabilities.value = ServerCapabilities(scheduledPrompts = false)
         assertFalse(HeaderAction.Schedule in p.current().menu)

@@ -257,7 +257,7 @@ public fun ChatHeaderTopBar(
                 onFind,
                 transcriptWords,
                 state.menu.filterNot {
-                    it in primaryActions || it == HeaderAction.Details || it in continueGroup
+                    it in primaryActions || it in HeaderRules.goTo(state.menu) || it in continueGroup
                 },
             )
             .map { it.copy(group = null) }
@@ -268,7 +268,7 @@ public fun ChatHeaderTopBar(
             actions,
             onFind,
             transcriptWords,
-            state.menu.filter { it == HeaderAction.Details },
+            HeaderRules.goTo(state.menu),
         ) +
             listOfNotNull(
                 slot.noteActions

@@ -82,6 +82,14 @@ public object HeaderRules {
         }
         .toImmutableList()
 
+    /**
+     * B-163: the menu's places, shown on its Go to page in menu order (Details, then "Schedule a prompt" when
+     * offered). Everything else the menu offers belongs on the main page, More or the Continue page.
+     */
+    public fun goTo(menu: List<HeaderAction>): List<HeaderAction> = menu.filter { it in goToPlaces }
+
+    private val goToPlaces = setOf(HeaderAction.Details, HeaderAction.Schedule)
+
     /** P-018: every way to carry this conversation on somewhere else, in menu order. */
     private val continueFamily =
         listOf(
