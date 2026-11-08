@@ -151,7 +151,13 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Inject
 @ContributesBinding(AppScope::class)
-public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : ComposerHost {
+public class BasicComposerHost(
+    private val voices: Set<KitComposerVoice>,
+    private val editors: Set<ComposerPromptEditor> = emptySet(),
+) : ComposerHost {
+    override val hasPromptEditor: Boolean
+        get() = editors.isNotEmpty()
+
     @Composable
     override fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier) {
         val vm =
@@ -174,6 +180,7 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 },
             history = history,
             refreshHistory = vm::loadHistory,
+            promptEditor = editors.firstOrNull(),
         )
     }
 }
@@ -199,6 +206,7 @@ public fun BasicComposer(
     conversationRef: ConversationRef? = null,
     history: ComposerHistoryUi = ComposerHistoryUi(),
     refreshHistory: (() -> Unit)? = null,
+    promptEditor: ComposerPromptEditor? = null,
 ) {
     if (state.readOnly != null) {
         Column(modifier) {
@@ -401,6 +409,28 @@ public fun BasicComposer(
             focusManager.clearFocus()
             modelsOpen = true
             chrome.modelPickerDone(pickerId)
+        }
+    }
+    // S24-CHAT story 4: the full-screen editor works on this same field; what it changed becomes the
+    // draft when it closes (Cancel puts the words back first, so nothing changes).
+    var promptEditorOpen by remember(state.targetKey) { mutableStateOf(false) }
+    val editorId = chrome.editorRequest()
+    LaunchedEffect(editorId) {
+        if (editorId != null) {
+            if (promptEditor != null) {
+                focusManager.clearFocus()
+                promptEditorOpen = true
+            }
+            chrome.editorDone(editorId)
+        }
+    }
+    promptEditor?.Editor(promptEditorOpen, field) {
+        promptEditorOpen = false
+        val words = field.text.toString()
+        if (words != editor.lastReported) {
+            editor.userEditSerial += 1
+            editor.lastReported = words
+            actions.draftChanged(words)
         }
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
@@ -626,6 +656,13 @@ public fun BasicComposer(
                             { actions.attach(AttachKind.Camera) }
                         } else null,
                     commands = chrome.openCommands,
+                    promptEditor =
+                        promptEditor?.let {
+                            {
+                                focusManager.clearFocus()
+                                promptEditorOpen = true
+                            }
+                        },
                     reuse =
                         refreshHistory?.let { refresh ->
                             {

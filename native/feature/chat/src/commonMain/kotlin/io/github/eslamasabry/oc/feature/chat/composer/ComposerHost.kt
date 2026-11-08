@@ -16,6 +16,10 @@ import androidx.compose.ui.Modifier
 public interface ComposerHost {
     @Composable
     public fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier)
+
+    /** S24-CHAT: the composer can open the full-screen prompt editor ([ComposerChrome.editorRequest]). */
+    public val hasPromptEditor: Boolean
+        get() = false
 }
 
 /** Plain ids: the profile, and the session (null = a new conversation that has none yet). */
@@ -66,6 +70,9 @@ public class ComposerChrome(
      * offers nothing (no steering, a note already went).
      */
     public val stopAfterStep: () -> (() -> Unit)? = { null },
+    /** S24-CHAT story 4: the commands launcher's `/editor` asks the composer to open its editor once. */
+    public val editorRequest: () -> Long? = { null },
+    public val editorDone: (id: Long) -> Unit = {},
     /**
      * Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER).
      * Never a new bar.

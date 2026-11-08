@@ -297,6 +297,7 @@ public fun ChatScreen(
         }
     var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
+    var editorRequest by remember(state.ref) { mutableStateOf<Long?>(null) }
     var codeReader by remember(state.ref) { mutableStateOf<KitMdBlock.Code?>(null) }
     val folds = rememberTranscriptFolds()
     var contextOpen by remember { mutableStateOf(false) }
@@ -412,6 +413,8 @@ public fun ChatScreen(
                 laterScheduled = { scheduledId },
                 laterShown = actions::laterShown,
                 modelPickerRequest = { modelPicker },
+                editorRequest = { editorRequest },
+                editorDone = { id -> if (editorRequest == id) editorRequest = null },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
             )
         }
@@ -444,6 +447,10 @@ public fun ChatScreen(
             },
             header = header,
             onContext = facts.context?.let { { contextOpen = true } },
+            onEditor =
+                if (composerHost.hasPromptEditor) {
+                    { editorRequest = (editorRequest ?: 0L) + 1L }
+                } else null,
         )
 
     // The frame, its sibling menu and its confirmation share one modal layer. KitScreen
