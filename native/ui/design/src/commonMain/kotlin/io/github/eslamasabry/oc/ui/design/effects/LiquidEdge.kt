@@ -174,7 +174,14 @@ public object LiquidEdge {
     public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero): SurfaceDecoration {
         val recipe = recipe(role, roles.dark)
         if (role == LiquidRole.Action) {
-            return SurfaceDecoration(radii = radii, circle = true, fill = roles.accent.opaqueArgb().withAlpha(recipe.tint), wordsPlate = Argb(0))
+            // The + is accent glass, as thin as its glyph allows: 3:1 over either end of any backdrop.
+            val accent = roles.accent.opaqueArgb()
+            val (darkEnd, brightEnd) = backdropEnds(recipe)
+            val (glyph, target) = inks(roles, role).single()
+            fun reads(a: Float) = listOf(darkEnd, brightEnd).all { wcagContrast(glyph, accent.withAlpha(a).over(it)) >= target - 1e-6 }
+            var a = recipe.tint
+            while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
+            return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
         }
         val (glass, level) = glassRole(role)
         val request = SurfaceRequest(roles = roles, role = glass, knobs = Knobs(), level = level, radii = radii)
