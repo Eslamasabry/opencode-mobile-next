@@ -605,7 +605,9 @@ public fun ChatScreen(
                                                 icon = KitIcons.unfoldLess,
                                             )
                                         else null,
-                                        if (state.capabilities.compact)
+                                        // S30 story 3: with the header, Compact context is a ⋯ menu entry of its own (Flutter's
+                                        // place); the plain bar keeps it here.
+                                        if (state.capabilities.compact && header == null)
                                             KitLineAction(
                                                 stringResource(Res.string.chatUiCompactSession),
                                                 actions::compactRequested,
@@ -638,6 +640,7 @@ public fun ChatScreen(
                                         onProject = actions::openFiles,
                                         onBranch = actions::openGit,
                                         canGoBack = canGoBack,
+                                        onCompact = actions::compactRequested,
                                     )
                                 }
                             } else

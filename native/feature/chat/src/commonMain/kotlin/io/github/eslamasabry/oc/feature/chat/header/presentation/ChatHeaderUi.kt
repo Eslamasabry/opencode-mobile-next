@@ -47,6 +47,9 @@ public data class ChatHeaderUi(
 /** What the ⋯ menu offers (Flutter `SessionMenuAction`, the native subset with a real path). */
 public enum class HeaderAction {
     Find,
+
+    /** S30 story 3: "Subagents" (Flutter `SessionMenuAction.subagents`, Go to): the conversations it delegated. */
+    Subagents,
     Details,
 
     /** "Schedule a prompt" (Flutter `scheduleCreate`, B-163): this server's scheduled prompts, seeded from here. */
@@ -59,6 +62,12 @@ public enum class HeaderAction {
 
     /** "Refresh messages" (Flutter `chatUiReloadMessages`): read the conversation again. */
     Reload,
+
+    /**
+     * S30 story 3: "Compact context" (Flutter `SessionMenuAction.compact`, Do): summarize the conversation so the
+     * agent has room again. The chat screen asks its own confirm, as the commands launcher's `/compact` does.
+     */
+    Compact,
     Fork,
     Rename,
     ContinueWith,

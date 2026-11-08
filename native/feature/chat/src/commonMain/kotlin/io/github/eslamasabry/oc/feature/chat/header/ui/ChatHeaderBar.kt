@@ -165,6 +165,8 @@ import io.github.eslamasabry.oc.ui.words.res.sessionDeleteTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuSubagents
+import io.github.eslamasabry.oc.ui.words.res.chatUiCompactContext
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDo
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuFind
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuGoTo
@@ -223,6 +225,8 @@ public fun ChatHeaderTopBar(
      * the root of its window (a wide layout's detail pane, the gate's scene) starts its title on the gutter.
      */
     canGoBack: Boolean = true,
+    /** S30 story 3: Compact context opens the chat's own confirm (Flutter `_compact`). */
+    onCompact: () -> Unit = {},
 ) {
     val state = slot.state
     val actions = slot.actions
@@ -243,18 +247,19 @@ public fun ChatHeaderTopBar(
             )
             .filter { it in state.menu }
     val primary =
-        menuItems(state, actions, onFind, transcriptWords, primaryActions).map {
+        menuItems(state, actions, onFind, onCompact, transcriptWords, primaryActions).map {
             it.copy(group = null)
         }
     val continueGroup = HeaderRules.continueGroup(state.menu)
     val continueItems =
-        menuItems(state, actions, onFind, transcriptWords, continueGroup).map { it.copy(group = null) }
+        menuItems(state, actions, onFind, onCompact, transcriptWords, continueGroup).map { it.copy(group = null) }
     // P-018: a sub-page is its own section; its rows carry no "Do" heading of their own.
     val secondary =
         menuItems(
                 state,
                 actions,
                 onFind,
+                onCompact,
                 transcriptWords,
                 state.menu.filterNot {
                     it in primaryActions || it in HeaderRules.goTo(state.menu) || it in continueGroup
@@ -267,6 +272,7 @@ public fun ChatHeaderTopBar(
             state,
             actions,
             onFind,
+            onCompact,
             transcriptWords,
             HeaderRules.goTo(state.menu),
         ) +
@@ -827,6 +833,7 @@ private fun menuItems(
     state: ChatHeaderUi,
     actions: ChatHeaderActions,
     onFind: () -> Unit,
+    onCompact: () -> Unit,
     words: TranscriptWords,
     offered: List<HeaderAction> = state.menu,
 ): List<KitMenuItem> {
@@ -851,6 +858,10 @@ private fun menuItems(
                         actions.closeMenu()
                         onFind()
                     }
+                    HeaderAction.Compact -> {
+                        actions.closeMenu()
+                        onCompact()
+                    }
                     HeaderAction.CopyTranscript -> actions.copyTranscript(words, mask)
                     HeaderAction.ExportTranscript -> actions.exportTranscript(words, mask)
                     else -> actions.choose(action)
@@ -859,12 +870,14 @@ private fun menuItems(
             icon =
                 when (action) {
                     HeaderAction.Find -> KitIcons.search
+                    HeaderAction.Subagents -> KitIcons.branch
                     HeaderAction.Details -> KitIcons.info
                     HeaderAction.Schedule -> KitIcons.clock
                     HeaderAction.Share -> KitIcons.link
                     HeaderAction.Unshare -> KitIcons.unlink
                     HeaderAction.CopyShareLink -> KitIcons.copy
                     HeaderAction.Reload -> KitIcons.sync
+                    HeaderAction.Compact -> KitIcons.layers
                     HeaderAction.Fork -> KitIcons.fork
                     HeaderAction.Rename -> KitIcons.edit
                     HeaderAction.ContinueWith -> KitIcons.swap
@@ -883,6 +896,7 @@ private fun menuItems(
             group =
                 when (action) {
                     HeaderAction.Find,
+                    HeaderAction.Subagents,
                     HeaderAction.Details,
                     HeaderAction.Schedule -> goTo
                     HeaderAction.Delete -> null
@@ -899,12 +913,14 @@ private fun menuItems(
 private fun menuWords(action: HeaderAction): String =
     when (action) {
         HeaderAction.Find -> stringResource(Res.string.sessionMenuFind)
+        HeaderAction.Subagents -> stringResource(Res.string.sessionMenuSubagents)
         HeaderAction.Details -> stringResource(Res.string.sessionMenuDetails)
         HeaderAction.Schedule -> stringResource(Res.string.scheduleCreate)
         HeaderAction.Share -> stringResource(Res.string.chatUiShareSession)
         HeaderAction.Unshare -> stringResource(Res.string.chatUiStopSharing)
         HeaderAction.CopyShareLink -> stringResource(Res.string.chatUiCopyShareLink)
         HeaderAction.Reload -> stringResource(Res.string.chatUiReloadMessages)
+        HeaderAction.Compact -> stringResource(Res.string.chatUiCompactContext)
         HeaderAction.Fork -> stringResource(Res.string.chatUiForkSession)
         HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
         HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)

@@ -40,8 +40,8 @@ public object HeaderRules {
     }
 
     /**
-     * The ⋯ menu (Flutter `sessionMenuItems`): Go to (Find, Details), then Do (Share or Stop
-     * sharing, Fork, Rename, Continue with…, Continue on computer, Copy transcript, Archive),
+     * The ⋯ menu (Flutter `sessionMenuItems`): Go to (Find, Subagents, Details), then Do (Share or Stop
+     * sharing, Compact context, Fork, Rename, Continue with…, Continue on computer, Copy transcript, Archive),
      * Delete last. Gated on the conversation's own capabilities, never on the backend kind.
      *
      * B-163: "Schedule a prompt" (Flutter `canSchedulePrompts`) is offered when the server runs scheduled prompts
@@ -55,6 +55,8 @@ public object HeaderRules {
     ): ImmutableList<HeaderAction> =
         buildList {
             add(HeaderAction.Find)
+            // S30 story 3 (Flutter `SessionMenuOffer.of`: `subagents: capabilities.projectManagement`).
+            if (caps.projectManagement) add(HeaderAction.Subagents)
             add(HeaderAction.Details)
             if (caps.scheduledPrompts && !directory.isNullOrBlank()) add(HeaderAction.Schedule)
             add(HeaderAction.CardsSettings)
@@ -63,6 +65,8 @@ public object HeaderRules {
                 add(if (shared) HeaderAction.Unshare else HeaderAction.Share)
                 if (shared) add(HeaderAction.CopyShareLink)
             }
+            // S30 story 3 (Flutter `compact: capabilities.sessionCompact`), before Fork as Flutter orders them.
+            if (caps.sessionCompact) add(HeaderAction.Compact)
             if (caps.sessionFork) add(HeaderAction.Fork)
             add(HeaderAction.Rename)
             if (
@@ -88,7 +92,7 @@ public object HeaderRules {
      */
     public fun goTo(menu: List<HeaderAction>): List<HeaderAction> = menu.filter { it in goToPlaces }
 
-    private val goToPlaces = setOf(HeaderAction.Details, HeaderAction.Schedule)
+    private val goToPlaces = setOf(HeaderAction.Subagents, HeaderAction.Details, HeaderAction.Schedule)
 
     /** P-018: every way to carry this conversation on somewhere else, in menu order. */
     private val continueFamily =
@@ -110,8 +114,9 @@ public object HeaderRules {
         return if (offered.size >= 2) offered else emptyList()
     }
 
-    /** Fork acts on prompts: before the first one it waits, dimmed, with the reason. */
-    public fun needsPrompt(action: HeaderAction): Boolean = action == HeaderAction.Fork
+    /** Compact and Fork act on prompts: before the first one they wait, dimmed, with the reason (Flutter `hasPrompt`). */
+    public fun needsPrompt(action: HeaderAction): Boolean =
+        action == HeaderAction.Fork || action == HeaderAction.Compact
 
     /** Rename refuses a blank title (Flutter `chatRenameEmpty`). */
     public fun renameValid(title: String): Boolean = title.isNotBlank()

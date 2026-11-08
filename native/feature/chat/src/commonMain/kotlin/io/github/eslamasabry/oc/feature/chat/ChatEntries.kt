@@ -543,8 +543,11 @@ public class ChatEntries(
                                                     },
                                                     testTag = "session-relations-open",
                                                 )
+                                                // S30 story 3: where the server manages projects the ⋯ menu's
+                                                // Go to › Subagents opens this page; this stays for the rest.
                                                 .takeIf {
-                                                    serverCapabilities?.subagentSessions == true
+                                                    serverCapabilities?.subagentSessions == true &&
+                                                        serverCapabilities.projectManagement != true
                                                 },
                                         ),
                                     activeContext = activeContext,
