@@ -275,8 +275,11 @@ public fun terminalBarKeyInput(
 /** A key's height, and the least width of a key: `KitTokens.minTarget` (Dart `TerminalKeyBar.keyHeight`). */
 internal const val TERMINAL_KEY_HEIGHT = 48f // F: lib/ui/kit/terminal_key_bar.dart:283
 
-/** The least width of a key in the full bar before it scrolls sideways (C08: eight keys fit 380 dp). */
-internal const val TERMINAL_KEY_GRID_MIN_WIDTH = 44f
+/**
+ * The least width of a key in the full bar before it scrolls sideways (C08): eight keys share a 412 dp phone's
+ * width between the gutters (about 44 dp each); a key never narrows below this.
+ */
+internal const val TERMINAL_KEY_GRID_MIN_WIDTH = 40f
 
 /** A key's width in the one-row form (Dart `TerminalKeyBar.compactKeyWidth`). */
 internal const val TERMINAL_KEY_COMPACT_WIDTH = 56f // F: lib/ui/kit/terminal_key_bar.dart:286
@@ -452,6 +455,8 @@ public fun TerminalKeyBar(
                             },
                         side = side,
                         gap = gap,
+                        // On a page that keeps the gutter the keys may narrow to share its width (C08).
+                        least = if (bleed > 0.dp) minOf(side, TERMINAL_KEY_GRID_MIN_WIDTH.dp) else side,
                     ) { key ->
                         TerminalKeyCap(
                             key = key,
@@ -473,6 +478,7 @@ private fun TerminalKeyBarGrid(
     rows: List<List<KitTerminalBarKey>>,
     side: Dp,
     gap: Dp,
+    least: Dp,
     key: @Composable (KitTerminalBarKey) -> Unit,
 ) {
     BoxWithConstraints {
@@ -483,9 +489,8 @@ private fun TerminalKeyBarGrid(
             } else {
                 Layout.READING_WIDTH.dp
             }
-        // C08: eight keys share a phone's width between the gutters (380 dp at 412) at 44 dp each, as a
+        // C08: eight keys share a phone's width between the gutters (about 44 dp each at 412), as a
         // keyboard's keys do, instead of scrolling with the last key cut at the edge; each keeps its 48 dp height.
-        val least = minOf(side, TERMINAL_KEY_GRID_MIN_WIDTH.dp)
         val needed = least * columns + gap * (columns - 1) // F: lib/ui/kit/terminal_key_bar.dart:444
         val fits = needed <= room // F: lib/ui/kit/terminal_key_bar.dart:445
         // Whole physical pixels: a fractional width puts every other cap edge on a half pixel, and it blurs (LOOK-21).

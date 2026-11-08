@@ -5,7 +5,7 @@ preview (`…opencode_mobile.native`) alone: the phone loops install a third app
 
 | Loop | What you see | Edit → visible (measured 2026-11-09, PC pop-os, ZTE NX721J over wireless adb) | Command |
 |---|---|---|---|
-| 1. Desktop hot reload | real screens with canned data in a desktop window, state kept | first reload after start 77 s (cold second daemon); warm reload __WARMHOT__ | `dev-loop.sh hot` |
+| 1. Desktop hot reload | real screens with canned data in a desktop window, state kept | **7–11 s** per saved edit in `feature:chats` (2 s on a build-cache hit); the first reload after a start is slow (see below) | `dev-loop.sh hot` |
 | 2. Phone, warm incremental install | the whole app on the phone, as "OpenCode Dev" | **19–26 s** (`once`), ~21 s (`watch`); 34 s on a loaded PC | `dev-loop.sh once` / `dev-loop.sh watch` |
 | 3. Android Studio Live Edit | Compose edits pushed into the running dev app | not measured here (needs the Studio GUI once) | Run **OpenCode Dev (devDebug)** once in Studio |
 
@@ -82,13 +82,27 @@ entry) shows a 412 × 915 dp phone frame with:
 - **ChatParts**: kit-chat transcript parts (tool steps, command box, permission card, code, inline diff), as in ChatScenes;
 - **Shell**: the real desktop app (`ui:shell` `App`), no server.
 
-Chips switch light/dark, Arabic and 1.3× text. Every redraw of the frame is saved as `<scene>-<light|dark>.png` and
-`latest.png` in `~/.cache/oc-dev-loop/shots` (`OC_HOT_SHOTS`), so an agent edits, saves, and reads the picture.
+Chips switch light/dark, Arabic and 1.3× text. A changed picture of the frame is saved (at most about once a second)
+as `<scene>-<light|dark>.png` and `latest.png` in `~/.cache/oc-dev-loop/shots` (`OC_HOT_SHOTS`), so an agent edits,
+saves, waits for the reload line and reads the picture.
 A new canned screen: add a `Scene` and a composable that calls the real `XScreen(state, noActions())`.
 
-Measured: start (first time, all desktop jars compiled with the hot-reload compiler flags) about 4 min; later starts
-reuse them. The first explicit `reload` after start took 77 s, because the running gallery holds the dev daemon and
-the reload starts a second, cold one; __WARMHOT_DETAIL__
+Measured (2026-11-09, one-line padding edits in `feature/chats` `ChatsScreen.kt`, timed from the save to the runtime's
+"Resolved 'dirty' @Composable scopes" line in `build/…/desktopApp/run/main/main.chr.log`, and checked on the picture):
+
+| Step | Time |
+|---|---|
+| `dev-loop.sh hot` to the first picture, after a pull that changed many modules | 3–4.5 min (desktop jars compile with the hot-reload flags) |
+| `--auto`: the first reload after a start | ~4.5 min: the recompiler forks its own single-use Gradle daemon and recompiles ~40 tasks once |
+| `--auto`: each later saved edit → redrawn | **7.0, 7.4, 9.2, 11.2 s**; 2.1 s when the build cache already has that variant |
+| explicit `dev-loop.sh reload`, the first one | 77 s (a second, cold Gradle daemon, because the gallery holds the first) |
+
+Most of the 7–11 s is `:feature:chats:compileKotlinDesktop` recompiling the whole module (the same KT-62686 fallback as
+on Android); a smaller module reloads faster. State survives a reload (the selected scene, theme and toggles stay).
+Editing `DevGallery.kt` itself also reloads, but the screenshot writer then stops until the next start.
+
+Memory: the gallery JVM, the dev daemon that launched it and the recompiler's own daemon (`-Xmx2g` from
+gradle.properties) run together, about 6–7 GB; start it only when `free -m` shows that much available.
 
 Needs a JetBrains Runtime for enhanced class redefinition. The script passes Android Studio's bundled JBR 25
 (`-Pcompose.reload.jbr.binary=/snap/android-studio/current/jbr/bin/java`, override with `DEV_LOOP_JBR`); without one the

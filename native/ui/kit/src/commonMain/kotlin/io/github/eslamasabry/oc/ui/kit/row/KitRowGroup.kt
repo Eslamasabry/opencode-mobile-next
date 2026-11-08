@@ -153,9 +153,9 @@ private fun HairlineColumn(
                     if (x1 <= x0) return@forEach
                     if (prominent == null) drawLine(hairline, Offset(x0, y + 0.5f), Offset(x1, y + 0.5f), 1f)
                     else {
-                        // B-173: the line sits on the seam and is at least 1 dp, in the theme's tertiary ink at 30 %.
+                        // B-173: the line starts on the seam's pixel row and is at least 1 dp thick, in the theme's tertiary ink at 30 %.
                         val t = prominent.thicknessDp.dp.toPx()
-                        drawRect(prominent.color, Offset(x0, y - t / 2f), androidx.compose.ui.geometry.Size(x1 - x0, t))
+                        drawRect(prominent.color, Offset(x0, y.toFloat()), androidx.compose.ui.geometry.Size(x1 - x0, t))
                     }
                 }
             },
