@@ -81,6 +81,16 @@ public object GlassFinish {
         // The thinnest tint at which [faces] read, or null when even the thickest does not.
         fun thinnest(faces: List<Argb>, sheen: Argb = d.sheen): Float? = leastAlpha { reads(faces, it, sheen) }
 
+        // A clear pane (one with a sheen) is clear first, glossy second (owner 2026-11-08: much lighter): where its lit
+        // corner and sheen would cost more than [GLOSS_ALLOWANCE] of extra tint, they go and the pane stays thin.
+        if (d.sheen.alpha != 0) {
+            val glossy = thinnest(listOf(fill, fillStart))
+            val plain = thinnest(listOf(fill), Argb(0))
+            if (plain != null && (glossy == null || glossy > plain + GLOSS_ALLOWANCE)) {
+                val thin = d.copy(fill = at(fill, plain), fillStart = at(fill, plain), sheen = Argb(0))
+                return withoutCostlyGlow(thin, texts, targets, spots)
+            }
+        }
         val faced =
             thinnest(listOf(fill, fillStart))?.let { a ->
                 if (a == 0f) d else d.copy(fill = at(fill, a), fillStart = at(fillStart, a))
@@ -149,6 +159,9 @@ public object GlassFinish {
     public fun glyphInks(roles: Roles, solid: Argb): List<Pair<Argb, Double>> =
         listOf(roles.text1, roles.text2, roles.accent.opaque(), styleBoundary(roles))
             .map { it to minOf(NON_TEXT_FLOOR, wcagContrast(it, solid.opaque())) }
+
+    /** How much extra tint a clear pane's gloss (its lit corner and sheen) may cost before it goes. */
+    public const val GLOSS_ALLOWANCE: Float = .06f
 
     /** Where a pane's first line of words sits: the kit's compact surface padding (Space 3). */
     private const val FIRST_LINE_DP: Float = 12f // FG: lib/ui/kit/kit_surface.dart:187 lib/ui/kit/kit_tokens.dart:40-44

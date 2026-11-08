@@ -42,9 +42,18 @@ public object GlassSpec : StyleSpec {
      */
     public const val CLEAR_CONTENT_FROST: Float = 24f
 
-    /** The accent a chosen pane's tint leans to (dark, light): accent-tinted frost, never a solid slab. */
-    public const val CHOSEN_TINT_DARK: Float = .30f
-    public const val CHOSEN_TINT_LIGHT: Float = .24f
+    /**
+     * The accent a chosen pane's tint takes (dark, light): accent-tinted frost, never a solid slab. A dark chosen pane
+     * is the page's own smoke with the accent in it (a lifted grey with accent would wash out light words), a light one
+     * the milk with a little accent (more would grey out dark words).
+     */
+    public const val CHOSEN_TINT_DARK: Float = .20f
+    public const val CHOSEN_TINT_LIGHT: Float = .12f
+
+    /** A chosen pane's opaque tint: the accent in the ground's smoke (dark) or in the pane's milk (light). */
+    public fun chosenTintOf(roles: Roles, plain: Argb): Argb =
+        if (roles.dark) lerp(roles.ground.opaque(), roles.accent.opaque(), CHOSEN_TINT_DARK).opaque()
+        else lerp(plain, roles.accent.opaque(), CHOSEN_TINT_LIGHT).opaque()
 
     /** How much thicker a chosen pane's tint is than its resting one. */
     public const val CHOSEN_LIFT: Float = .10f
@@ -176,7 +185,7 @@ public object GlassSpec : StyleSpec {
             val lift = (if (chosen) CHOSEN_LIFT else if (r.selected) .12f else 0f) + (if (r.pressed) .08f else 0f) // FG: lib/ui/kit/style/kit_style_glass.dart:180
             val alpha = minOf(1f, (if (clear) clearOpacity(role, dark) else opacity(role, dark)) + lift)
             val plain = tintOf(roles, role, r.level)
-            val base = if (chosen) lerp(plain, roles.accent.opaque(), if (dark) CHOSEN_TINT_DARK else CHOSEN_TINT_LIGHT) else plain
+            val base = if (chosen) chosenTintOf(roles, plain) else plain
             fill = base.withAlpha(alpha)
             fillStart = lerp(base, white, if (dark) SHEEN else SHEEN * 2).withAlpha(minOf(1f, alpha + (if (dark) .04f else .12f))) // FG: lib/ui/kit/style/kit_style_glass.dart:188,189
         }

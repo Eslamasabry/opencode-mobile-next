@@ -192,6 +192,7 @@ public object LiquidEdge {
     /** How much more the lit top-start corner of a liquid face holds than the rest. */
     private const val LIT: Float = .06f
 
+
     /** The share of a clear in-flow pane's sheen a liquid face takes: the lens and rim light already carry the gloss. */
     private const val SHEEN_SHARE: Float = .85f
 
@@ -206,25 +207,19 @@ public object LiquidEdge {
     public fun faceTint(roles: Roles, role: LiquidRole): FaceTint {
         val recipe = recipe(role, roles.dark)
         val (base, lit) = tintOf(roles, role)
-        val sheen = sheenOf(roles)
-        val inks = inks(roles, role)
-        val spots = themeSpots(roles, recipe)
-        fun reads(fill: Argb, start: Argb, sh: Argb, a: Float): Boolean =
-            listOf(fill.withAlpha(a), start.withAlpha(minOf(1f, a + if (start == fill) 0f else LIT))).all { f ->
-                spots.all { e ->
-                    val bare = f.over(e)
-                    listOf(bare, sh.over(bare)).all { seen -> inks.all { (ink, t) -> wcagContrast(ink, seen) >= t - 1e-6 } }
-                }
-            }
-        fun at(t: Float) = recipe.tint + (1f - recipe.tint) * t
-        val solid = solidOf(roles, role)
-        val none = Argb(0)
-        for ((fill, start, sh) in listOf(Triple(base, lit, sheen), Triple(base, base, sheen), Triple(solid, solid, sheen), Triple(solid, solid, none))) {
-            val t = GlassFinish.leastAlpha { reads(fill, start, sh, at(it)) } ?: continue
-            val a = at(t)
-            return FaceTint(fill.withAlpha(a), start.withAlpha(minOf(1f, a + if (start == fill) 0f else LIT)), sh)
-        }
-        return FaceTint(solid, solid, none)
+        val thin =
+            SurfaceDecoration(
+                fill = base.withAlpha(recipe.tint),
+                fillStart = lit.withAlpha(minOf(1f, recipe.tint + LIT)),
+                sheen = sheenOf(roles),
+                // Marks a face that carries its own words (GlassFinish thickens only such faces); never drawn.
+                wordsPlate = base,
+            )
+        // The same measure as Glass's in-flow panes: a dark face deepens with the ground's smoke, a light one with its
+        // own milk, the gloss goes first where it costs, then the Solid surface itself.
+        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(roles, recipe), inks(roles, role))
+        val fill = d.fill ?: base
+        return FaceTint(fill, d.fillStart ?: fill, d.sheen)
     }
 
     /** Today's Glass tint for [role]'s pane and its lit top-start corner, opaque. */
@@ -253,11 +248,12 @@ public object LiquidEdge {
         return content.map { filtered(it, recipe) }
     }
 
-    /** How much of the ink a line of words keeps once the glass has blurred it (7 dp over 14 sp words). */
-    public const val BLURRED_INK: Float = .30f
+    /** How much of the ink a line of words keeps once the glass has blurred it (7 dp over 14 sp words: ink covers a
+     * fifth of a line's box). */
+    public const val BLURRED_INK: Float = .20f
 
-    /** An accent-filled part (a send button, a chip) behind the glass, blurred into the ground. */
-    public const val ACCENT_WASH: Float = .50f
+    /** An accent-filled part (a chip, a link run) behind the glass, blurred into the ground. */
+    public const val ACCENT_WASH: Float = .25f
 
     /**
      * The lowest text contrast on [role]'s face over content of any colour whose luminance stays on the theme's side

@@ -142,7 +142,10 @@ class LiquidEdgeTest {
         assertEquals(0, face.wordsPlate.alpha, "owner 2026-11-08: no haze behind the text")
         assertEquals(0f, face.edgeWidthDp)
         assertEquals(0, face.innerGlow.alpha)
-        assertTrue(face.sheen.alpha in 1..40, "a soft sheen: ${face.sheen.alpha}")
+        // A soft sheen, or none where it would cost the words more than a little tint (GlassFinish.GLOSS_ALLOWANCE).
+        assertTrue(face.sheen.alpha in 0..40, "a soft sheen: ${face.sheen.alpha}")
+        val light = LiquidEdge.face(ThemeResolver.roles(PackId.Opencode, null, dark = false, saver = false, dynamic = null), LiquidRole.Composer)
+        assertTrue(light.sheen.alpha in 0..80, "a soft sheen in light: ${light.sheen.alpha}")
         assertTrue(GlassFinish.FLOOR > 4.5)
     }
 

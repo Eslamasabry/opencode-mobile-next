@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -318,10 +319,12 @@ private fun Modifier.liquidPane(
             val face = LiquidEdge.face(roles, role)
             val otherFace = LiquidEdge.face(other, role)
             // A chosen part's glass leans to the accent and holds a little more (GlassSpec's chosen tint and lift).
-            fun lean(c: Color, dark: Boolean): Color =
-                if (!chosen) c
-                else androidx.compose.ui.graphics.lerp(c.copy(alpha = 1f), Color(roles.accent.v).copy(alpha = 1f), if (dark) GlassSpec.CHOSEN_TINT_DARK else GlassSpec.CHOSEN_TINT_LIGHT)
-                    .copy(alpha = minOf(1f, c.alpha + GlassSpec.CHOSEN_LIFT))
+            fun lean(c: Color, dark: Boolean): Color {
+                if (!chosen) return c
+                val theme = if (dark == roles.dark) roles else other
+                val opaque = io.github.eslamasabry.oc.ui.design.color.Argb(c.copy(alpha = 1f).toArgb())
+                return Color(GlassSpec.chosenTintOf(theme, opaque).v).copy(alpha = minOf(1f, c.alpha + GlassSpec.CHOSEN_LIFT))
+            }
             val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, roles.dark)
             val recipe = LiquidEdge.recipe(role, roles.dark)
             val rim = LiquidRim.Light
