@@ -22,6 +22,8 @@ import io.github.eslamasabry.opencode_mobile.graph.AppLocale
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
 import io.github.eslamasabry.opencode_mobile.graph.termuxRetired
 import io.github.eslamasabry.opencode_mobile.graph.IncomingShareHost
+import io.github.eslamasabry.opencode_mobile.graph.TelemetryAccessors
+import io.github.eslamasabry.opencode_mobile.graph.TelemetryConsentHost
 import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
 import io.github.eslamasabry.opencode_mobile.graph.ProviderLogoGraph
 import io.github.eslamasabry.opencode_mobile.graph.SettingsAppGraph
@@ -91,7 +93,10 @@ class MainActivity : ComponentActivity() {
                             AppLocale.applied,
                             windowContent = { shell ->
                                 UpdateNoticeHost((graph as UpdateNoticeAccessors).updateNotices) {
-                                    IncomingShareHost(platformHub.incomingShare, shell)
+                                    // B-180: the one-time consent question over the shell (Flutter 2.1.5).
+                                    TelemetryConsentHost((graph as TelemetryAccessors).telemetryContinuity) {
+                                        IncomingShareHost(platformHub.incomingShare, shell)
+                                    }
                                 }
                             },
                         )

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S23 (B-180, E02-S91): Flutter 2.1.5's words, unchanged (lib/l10n/app_ar.arb telemetryConsent*, crashOffer*). -->
+<resources>
+    <string name="andr_crashOfferMessage">أُغلق OpenCode Mobile بشكل غير متوقع في المرة الماضية. هل تريد إرسال تقرير عن العطل؟</string>
+    <string name="andr_crashOfferReview">مراجعة وإرسال</string>
+    <string name="andr_crashOfferNotNow">ليس الآن</string>
+    <string name="andr_crashOfferReportTitle">أُغلق التطبيق بشكل غير متوقع</string>
+    <string name="andr_telemetryConsentTitle">هل تساعد في تحسين التطبيق؟</string>
+    <string name="andr_telemetryConsentBody">إن وافقت، يرسل التطبيق إحصاءات استخدام مجهولة وتقارير الأعطال إلى المطوّر عبر Google Firebase. يمكنك إيقاف ذلك في أي وقت من الإعدادات › الخصوصية والبيانات.</string>
+    <string name="andr_telemetryConsentSends">يُرسل: الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، وتقارير الأعطال، مع معرّف تثبيت عشوائي.</string>
+    <string name="andr_telemetryConsentNever">لا يُرسل أبدًا: شيفرتك ومحادثاتك وملفاتك وعناوين خوادمك ومفاتيحك. ولا معرّف إعلاني.</string>
+    <string name="andr_telemetryConsentShare">مشاركة الاستخدام المجهول</string>
+    <string name="andr_telemetryConsentNotNow">ليس الآن</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S23 (B-180, E02-S91): Flutter 2.1.5's words, unchanged (lib/l10n/app_en.arb telemetryConsent*, crashOffer*). -->
+<resources>
+    <string name="andr_crashOfferMessage">OpenCode Mobile closed unexpectedly last time. Send a crash report?</string>
+    <string name="andr_crashOfferReview">Review and send</string>
+    <string name="andr_crashOfferNotNow">Not now</string>
+    <string name="andr_crashOfferReportTitle">The app closed unexpectedly</string>
+    <string name="andr_telemetryConsentTitle">Help improve OpenCode Mobile?</string>
+    <string name="andr_telemetryConsentBody">If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.</string>
+    <string name="andr_telemetryConsentSends">Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.</string>
+    <string name="andr_telemetryConsentNever">Never sent: your code, conversations, files, server addresses or keys. No advertising ID.</string>
+    <string name="andr_telemetryConsentShare">Share anonymous usage</string>
+    <string name="andr_telemetryConsentNotNow">Not now</string>
+</resources>

@@ -55,6 +55,8 @@ class AndroidAppNotices(
     private val navigator: AppNavigator,
     private val preferences: AppPreferences,
     private val thermal: ThermalRuntime,
+    private val telemetry: TelemetryContinuity,
+    private val reports: GitHubProblemReporter,
     private val clock: Clock,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
@@ -240,10 +242,13 @@ class AndroidAppNotices(
                         else -> null
                     }
                 }
-                // The Termux notice ranks last; it waits behind any live condition.
+                // After the exit, pause and heat lines, one calm notice at a time: the crash offer (Flutter 2.1.5
+                // app_connection_status.dart), then the Termux notice, which ranks last.
                 .let { conditions ->
-                    combine(conditions, termuxRetiredShown) { condition, termux ->
-                        condition ?: termuxRetiredNotice().takeIf { termux }
+                    combine(conditions, telemetry.crashOffer.pending, termuxRetiredShown) { condition, crash, termux ->
+                        condition
+                            ?: crash?.let { crashOfferNotice() }
+                            ?: termuxRetiredNotice().takeIf { termux }
                     }
                 }
                 .collect { mutableStatus.value = it }
@@ -322,6 +327,29 @@ class AndroidAppNotices(
         }
     }
 
+    /** E02-S91: fixed words only; the exception shows only in Report a problem's Details, which hold what is sent. */
+    private fun crashOfferNotice(): AppNotice =
+        AppNotice(
+            CRASH_OFFER_ID,
+            words.text(R.string.andr_crashOfferMessage),
+            action = AppNoticeAction.ReviewCrashReport,
+            actionLabel = words.text(R.string.andr_crashOfferReview),
+            // "Not now" is the line's own dismiss, so the offer has exactly two answers and no menu.
+            dismissLabel = words.text(R.string.andr_crashOfferNotNow),
+            stoppedApp = true,
+        )
+
+    /** "Review and send": Report a problem opens with the crash attached; the person files it from there. */
+    private fun reviewCrashReport() {
+        val facts = telemetry.crashOffer.take() ?: return
+        reports.attachFailure(
+            words.text(R.string.andr_crashOfferReportTitle),
+            listOfNotNull(facts.exceptionType?.let { "Error: $it" }, facts.details()).joinToString("\n"),
+            io.github.eslamasabry.oc.engine.diagnostics.crash.CrashOffer.SOURCE,
+        )
+        navigator.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem)
+    }
+
     private fun termuxRetiredNotice(): AppNotice =
         AppNotice(
             TermuxRetiredNotice.ID,
@@ -382,8 +410,12 @@ class AndroidAppNotices(
             }
             AppNoticeAction.ConnectComputer -> {
                 closeTermuxRetired()
+                io.github.eslamasabry.opencode_mobile.telemetry.Telemetry.product.track(
+                    io.github.eslamasabry.oc.engine.analytics.product.ProductEvent.ConnectComputerChosen
+                )
                 navigator.open(ServersRoute.Edit())
             }
+            AppNoticeAction.ReviewCrashReport -> reviewCrashReport()
         }
     }
 
@@ -393,6 +425,7 @@ class AndroidAppNotices(
             "thermal" -> thermal.dismiss()
             "background-pause" -> background.launchOnMain { background.notice().dismiss() }
             TermuxRetiredNotice.ID -> closeTermuxRetired()
+            CRASH_OFFER_ID -> telemetry.crashOffer.take()
         }
     }
 
@@ -408,6 +441,8 @@ class AndroidAppNotices(
         }
     }
 }
+
+private const val CRASH_OFFER_ID = "crash-offer"
 
 @dev.zacsweers.metro.ContributesTo(AppScope::class)
 interface AppNoticesAccessors {

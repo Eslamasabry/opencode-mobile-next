@@ -106,6 +106,8 @@ class OcApplication : Application(), GraphOwner {
             .start() // persisted report, crash store, exits
         (appGraph as BackgroundAccessors).background.start()
         (appGraph as AppExitAccessors).appExit.start()
+        // B-180 / E02-S91: Flutter's consent answers, analytics lifecycle and the crash offer (before the notices read it).
+        (appGraph as io.github.eslamasabry.opencode_mobile.graph.TelemetryAccessors).telemetryContinuity.start()
         (appGraph as AppNoticesAccessors).appNotices.start()
         (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
         (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
