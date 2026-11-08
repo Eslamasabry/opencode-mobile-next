@@ -21,6 +21,8 @@ import 'chats_host.dart';
 import 'chats_project_sheet.dart';
 import 'chats_sources_sheet.dart' show showChatsSourcesSheet;
 import 'new_chat_screen.dart';
+import '../../../telemetry/analytics_events.dart';
+import '../../../telemetry/telemetry_provider.dart';
 
 /// Chats home ("chats first, project as a setting"): every conversation on
 /// the connected server in one list, grouped Needs you, Today, Earlier, with
@@ -482,9 +484,8 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       ...quietLines,
       // Room between the notes and the first section label.
       if (quietLines.isNotEmpty) SizedBox(height: tokens.space2),
-      // The leftover-process notice: a quiet status with its Stop, drawn
-      // only while the phone's watcher reports a helper.
-      host.leftoverNotice(context),
+      // A saved setup from Termux: the one notice about it.
+      host.termuxRetiredNotice(context),
       // Quiet lines about the agents on this phone, each with its action.
       AgentStatusNotices(host: host),
     ];
@@ -755,12 +756,15 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
                 key: const ValueKey('chats-connect-computer'),
                 label: l10n.chatsHomeConnectComputer,
                 icon: AppIconography.computer,
-                onPressed: () => unawaited(
-                  Navigator.of(context).pushNamed(
-                    '/servers',
-                    arguments: const ServersRouteRequest.add(),
-                  ),
-                ),
+                onPressed: () {
+                  AppTelemetry.track(AnalyticsEvent.connectComputerChosen);
+                  unawaited(
+                    Navigator.of(context).pushNamed(
+                      '/servers',
+                      arguments: const ServersRouteRequest.add(),
+                    ),
+                  );
+                },
               ),
           ],
         );

@@ -133,7 +133,7 @@ class FakeHost implements ChatsHost {
   Future<void> openInbox(BuildContext context) async {}
 
   @override
-  Widget leftoverNotice(BuildContext context) => const SizedBox.shrink();
+  Widget termuxRetiredNotice(BuildContext context) => const SizedBox.shrink();
 
   @override
   String modelValue(BuildContext context) => 'Server default';

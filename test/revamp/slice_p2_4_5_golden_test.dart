@@ -21,7 +21,6 @@ import 'package:opencode_mobile/api2/gateway_mappers.dart'
 import 'package:opencode_mobile/domain/setup_registry.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart' show PhoneHostKind;
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/mcp_catalog_screen.dart';
@@ -239,12 +238,12 @@ Widget _addHost(ServerCapabilities caps) => Builder(
 Widget _catalog(
   _Controller controller, {
   _Registry? registry,
-  PhoneHostKind? phone,
+  bool phone = false,
 }) => McpCatalogScreen(
   controller: controller,
   client: registry ?? _Registry(),
-  phoneHostOf: (_) => phone,
-  openPhoneTools: (_, _) async {},
+  onThisPhone: (_) => phone,
+  openPhoneTools: (_) async {},
 );
 
 void main() {
@@ -312,7 +311,7 @@ void main() {
     await _shot(
       tester,
       'slice_p245_catalog_node',
-      home: _catalog(controller, phone: PhoneHostKind.inApp),
+      home: _catalog(controller, phone: true),
       act: () => tester.tap(
         find.byKey(const ValueKey('mcp-catalog-switch-files-mcp')),
       ),

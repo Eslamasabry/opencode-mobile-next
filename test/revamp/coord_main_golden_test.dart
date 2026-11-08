@@ -147,7 +147,6 @@ void main() {
                   baseUrl: 'http://100.101.12.7:4096',
                   error: 'Health check failed: connection refused',
                   attempts: 3,
-                  supportsTermux: true,
                   onChangeServer: () {},
                   onRetry: () {},
                 ),

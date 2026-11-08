@@ -10,7 +10,8 @@ import 'package:opencode_mobile/builtin/setup/setup_engine.dart';
 import 'package:opencode_mobile/builtin/setup/setup_scripts.dart';
 import 'package:opencode_mobile/diagnostics/perf_trace.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
+import 'package:opencode_mobile/telemetry/telemetry_provider.dart';
+import 'support/telemetry_recorder.dart';
 
 /// The native side, scripted: a status, the check output, and a job the
 /// test moves along by setting [job].
@@ -492,7 +493,7 @@ void main() {
       expect(
         spec(linux, 'opencode')['script'],
         withSetupPrelude(
-          SetupScripts.openCodeNativeInstall(TermuxRuntime.openCode2),
+          SetupScripts.openCodeNativeInstall(OpenCodeRuntime.openCode2),
         ),
       );
       expect(spec(linux, 'start')['step'], isTrue);
@@ -821,6 +822,62 @@ void main() {
       expect(engine.progress.value.jobId, 'live');
       expect(engine.progress.value.components.single.bytesDone, 5);
     });
+
+    test('a finished step is reported as linux_setup_step with words and '
+        'ranges only, never its error text', () async {
+      final adapter = RecordingAdapter();
+      AppTelemetry.install(
+        await startedService(adapter, usage: true, crashes: true),
+      );
+      addTearDown(AppTelemetry.reset);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      linux.job = {
+        'jobId': 'telemetry',
+        'state': 'running',
+        'current': 'node',
+        'order': ['essentials', 'node'],
+        'startedAt': now - 90000,
+        'updatedAt': now,
+        'components': {
+          'essentials': {
+            'state': 'done',
+            'startedAt': now - 80000,
+            'endedAt': now - 50000,
+          },
+          'node': {
+            'state': 'failed',
+            'startedAt': now - 50000,
+            'endedAt': now - 20000,
+            'error': 'node crashed at /data/user/0/app/files/home/x',
+            'data': {'exit': '132'},
+          },
+        },
+      };
+      await engine.run(const {});
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      final steps = adapter.events
+          .where((e) => e.$1 == 'linux_setup_step')
+          .map((e) => e.$2)
+          .toList();
+      expect(steps, hasLength(2));
+      expect(steps.first, {
+        'step': 'essentials',
+        'result': 'ok',
+        'ms_range': '10000-60000',
+        'exit_kind': '0',
+        'signal': 'none',
+        'compat_mode': 'none',
+      });
+      expect(steps.last['step'], 'node');
+      expect(steps.last['result'], 'fail');
+      expect(steps.last['exit_kind'], 'signal');
+      expect(steps.last['signal'], 'SIGILL');
+      expect(steps.last['ms_range'], '10000-60000');
+      expect(
+        adapter.events.map((e) => '${e.$2}').join(),
+        isNot(contains('/data')),
+      );
+    });
   });
 
   group('the start step', () {
@@ -841,7 +898,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 30));
       engine.progress.removeListener(listener);
       expect(finishes, hasLength(1));
-      expect(finishes.single.runtime, TermuxRuntime.openCode2);
+      expect(finishes.single.runtime, OpenCodeRuntime.openCode2);
       expect(finishes.single.openCodeChanged, isFalse);
       expect(linux.steps.single, containsPair('ok', true));
       expect(engine.progress.value.state, SetupState.done);

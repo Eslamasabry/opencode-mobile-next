@@ -7,8 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../platform/app_info.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
+import '../../telemetry/telemetry_provider.dart' show telemetryOf;
 import '../../state/factsbook/factsbook_flag.dart';
 import '../../state/factsbook/factsbook_phone_node.dart';
 import 'factsbook/factsbook_routes.dart';
@@ -74,8 +76,6 @@ enum _UpdateCheck {
 }
 
 class _AboutScreenState extends State<AboutScreen> {
-  static const _platform = MethodChannel('oc/termux');
-
   Future<String>? _notices;
   late final Future<_BuildData> _build = _loadBuild();
   _UpdateCheck _update = _UpdateCheck.idle;
@@ -104,23 +104,31 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   Future<_BuildData> _loadBuild() async {
+    // The code to quote in a GitHub issue; null in a build that cannot send
+    // reports to the developer.
+    final telemetry = telemetryOf(context);
+    final reportCode = telemetry.reportCode();
     PackageInfo? package;
     try {
       package = await PackageInfo.fromPlatform();
     } catch (_) {
-      return const _BuildData(package: null, signer: null);
+      return _BuildData(
+        package: null,
+        signer: null,
+        reportCode: await reportCode,
+      );
     }
     String? signer;
-    if (platformCapabilities.supportsTermux) {
-      try {
-        signer = await _platform.invokeMethod<String>(
-          'getSigningCertificateSha256',
-        );
-      } catch (_) {
-        // Desktop and older Android builds do not expose a signer.
-      }
+    try {
+      signer = await AppInfoPlatform.signingCertificateSha256();
+    } catch (_) {
+      // Desktop and older Android builds do not expose a signer.
     }
-    return _BuildData(package: package, signer: signer);
+    return _BuildData(
+      package: package,
+      signer: signer,
+      reportCode: await reportCode,
+    );
   }
 
   Future<void> _checkForUpdate() async {
@@ -391,6 +399,18 @@ class _AboutScreenState extends State<AboutScreen> {
                       text: () => version,
                     ),
             ),
+            if (d?.reportCode case final code?)
+              KitRow(
+                key: const ValueKey('about-report-code'),
+                leading: KitRow.icon(context, AppIconography.bug),
+                title: l10n.reportCodeLabel,
+                supporting: TextSpan(text: code),
+                trailing: KitIconButton.copy(
+                  key: const ValueKey('about-copy-report-code'),
+                  tooltip: l10n.reportCodeCopy,
+                  text: () => code,
+                ),
+              ),
             if (_canCheckUpdates)
               KitRow(
                 key: const ValueKey('about-check-updates'),
@@ -467,10 +487,15 @@ String reflowMarkdown(String source) {
 }
 
 class _BuildData {
-  const _BuildData({required this.package, required this.signer});
+  const _BuildData({
+    required this.package,
+    required this.signer,
+    this.reportCode,
+  });
 
   final PackageInfo? package;
   final String? signer;
+  final String? reportCode;
 }
 
 AppLocalizations _screenCopy(BuildContext context) =>

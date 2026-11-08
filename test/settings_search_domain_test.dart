@@ -12,7 +12,6 @@ void main() {
     arabic ? AppLocalizationsAr() : AppLocalizationsEn(),
     supportsBackgroundService: available,
     thermalGuardAvailable: available,
-    managedRecoveryAvailable: available,
   );
 
   test('acceptance words and bilingual aliases reach specific rows', () {
@@ -23,8 +22,7 @@ void main() {
         'حركة': ('appearance-settings', 'effects-motion'),
         'heat': ('keep-running', 'keep-running-thermal'),
         'حَرَارَة': ('keep-running', 'keep-running-thermal'),
-        'crash': ('termux-setup-installed', 'managed-recovery-option'),
-        'إعادة تشغيل': ('termux-setup-installed', 'managed-recovery-option'),
+        'crash': ('app-diagnostics', null),
         'battery': ('keep-running', 'keep-running-battery'),
         'البطارية': ('keep-running', 'keep-running-battery'),
         'reduced motion': ('appearance-settings', 'effects-motion'),
@@ -44,7 +42,7 @@ void main() {
       expect(index.search(query).first.target.rowId, 'effects-motion');
     }
     expect(index.search('batery').first.target.rowId, 'keep-running-battery');
-    expect(index.search('crsah').first.target.rowId, 'managed-recovery-option');
+    expect(index.search('crsah').first.target.pageId, 'app-diagnostics');
     for (final query in [
       '',
       '   ',
@@ -69,7 +67,6 @@ void main() {
         AppLocalizationsEn(),
         supportsBackgroundService: true,
         thermalGuardAvailable: false,
-        managedRecoveryAvailable: false,
       ),
     );
     expect(withoutGuard.search('heat'), isEmpty);
@@ -96,7 +93,6 @@ void main() {
       ],
       supportsBackgroundService: true,
       thermalGuardAvailable: true,
-      managedRecoveryAvailable: true,
     );
     final index = SettingsSearchIndex(documents);
     expect(index.search('battery').first.target.rowId, 'keep-running-battery');

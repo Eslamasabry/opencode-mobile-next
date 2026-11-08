@@ -13,10 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show WorkspaceProject;
-import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
-    show leftoverNoticeLine;
-import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
-    show WorkRunawayNotice;
+import 'package:opencode_mobile/ui/widgets/termux_retired_notice.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 
@@ -33,7 +30,7 @@ enum _Scene {
   homeNoMatch('chats_home_nomatch'),
   newChatProject('chats_new_project'),
   newChatChoose('chats_new_choose'),
-  homeLeftover('chats_home_leftover'),
+  homeTermuxRetired('chats_home_termux_retired'),
   newChatCopy('chats_new_copy');
 
   const _Scene(this.name);
@@ -137,20 +134,8 @@ Future<void> _mount(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final host = FakeChatsHost(_source(scene));
-  if (scene == _Scene.homeLeftover) {
-    host.leftover = Builder(
-      builder: (context) => leftoverNoticeLine(
-        context,
-        WorkRunawayNotice(
-          identity: 1,
-          helper: 'node',
-          project: 'beta',
-          busyFor: '12 min',
-          onStop: () {},
-          onDismiss: () {},
-        ),
-      ),
-    );
+  if (scene == _Scene.homeTermuxRetired) {
+    host.termuxRetired = const TermuxRetiredNotice();
   }
   if (scene == _Scene.newChatCopy) {
     host.copyProject = const WorkspaceProject(

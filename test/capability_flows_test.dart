@@ -60,7 +60,6 @@ void main() {
     );
     expect(KitCapabilities.unregisteredFlows.toSet(), {
       KitEnableFlows.phoneSetup,
-      KitEnableFlows.phoneSetupTermux,
       KitEnableFlows.addToolClaude,
       KitEnableFlows.voiceModelSetup,
       KitEnableFlows.allowMicrophone,

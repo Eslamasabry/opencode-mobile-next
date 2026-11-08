@@ -106,6 +106,7 @@ extension _ChatAttachments on _ChatScreenState {
 
   Future<void> _pickAttachment() async {
     if (_conn.isIsolated) return;
+    AppTelemetry.feature(AnalyticsFeature.fileAttach);
     if (!_supportsPromptAttachments) {
       _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
       return;
@@ -158,6 +159,9 @@ extension _ChatAttachments on _ChatScreenState {
       return;
     }
     if (_promptShelfBusy || !platformCapabilities.supportsPromptPhotos) return;
+    if (source == ImageSource.camera) {
+      AppTelemetry.feature(AnalyticsFeature.camera);
+    }
     if (_attachments.length >= _maxAttachmentCount ||
         _attachments.fold<int>(
               0,

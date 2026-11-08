@@ -9,7 +9,7 @@
       "widget": "AppBootstrapGate",
       "presentedBy": [],
       "line": 73,
-      "purpose": "Pre-app surface shown while AppBootstrap.create loads preferences/secure storage: a spinner with 'Starting OpenCode\u2026', or a start-failure message with a retry.",
+      "purpose": "Pre-app surface shown while AppBootstrap.create loads preferences/secure storage: a spinner with 'Starting OpenCode…', or a start-failure message with a retry.",
       "reachedFrom": [
         {
           "page": "system",
@@ -230,7 +230,7 @@
     },
     {
       "id": "home-shell",
-      "title": "{server name} \u00b7 Chats / Files / Settings",
+      "title": "{server name} · Chats / Files / Settings",
       "kind": "screen",
       "file": "lib/ui/screens/home_screen.dart",
       "widget": "HomeScreen",
@@ -329,7 +329,7 @@
         {
           "id": "home-shell-shortcut-destinations",
           "type": "gesture",
-          "label": "Ctrl/Cmd+1 \u2026 3",
+          "label": "Ctrl/Cmd+1 … 3",
           "key": null,
           "line": 80,
           "action": "navigate",
@@ -566,69 +566,6 @@
           "line": 204,
           "action": "open-sheet",
           "effect": "confirmDisconnectServer(context, controller); on cancel the switcher stays open; on confirm pops ServerSwitcherLeave and the shell runs conn.disconnect() then pushNamedAndRemoveUntil('/servers')."
-        },
-        {
-          "id": "server-switcher-sheet-phone-connect",
-          "key": "termux-running-server-connect",
-          "target": "servers",
-          "targetWidget": "/servers",
-          "gates": [
-            "platformCapabilities.supportsTermux",
-            "a running or stopped managed server was observed"
-          ],
-          "destructive": false,
-          "type": "button",
-          "label": "Connect | Open (phone server card)",
-          "file": "lib/ui/widgets/termux_running_server_entry.dart",
-          "line": 132,
-          "action": "navigate",
-          "effect": "Card onConnect: when this shell is already connected through that profile the sheet just closes; otherwise pops ServerSwitcherOpenServers(ServersRouteRequest.connect(id, detectedRunning: true)) and the Servers screen connects without the runtime-choice detour. Card onEnterCredentials pops ServersRouteRequest.enterPhoneCredentials, which opens the editor on the phone server URL."
-        },
-        {
-          "id": "server-switcher-sheet-phone-disconnect",
-          "key": "termux-running-server-disconnect",
-          "target": "settings-disconnect-sheet",
-          "targetWidget": "confirmDisconnectServer",
-          "gates": [
-            "connected through the phone server profile"
-          ],
-          "destructive": true,
-          "type": "menu-item",
-          "label": "Disconnect (phone server card menu)",
-          "file": "lib/ui/widgets/termux_running_server_entry.dart",
-          "line": 112,
-          "action": "open-sheet",
-          "effect": "confirmDisconnectServer; on confirm controller.disconnect(keepActive: true), then pops ServerSwitcherLeave(alreadyDisconnected: true) and the shell goes to '/servers'. The server keeps running."
-        },
-        {
-          "id": "server-switcher-sheet-phone-manage",
-          "key": "termux-running-server-manage",
-          "target": "termux-setup-installed",
-          "targetWidget": "openThisPhone",
-          "gates": [],
-          "destructive": false,
-          "type": "menu-item",
-          "label": "Manage (phone server card menu)",
-          "file": "lib/ui/widgets/termux_running_server_entry.dart",
-          "line": 128,
-          "action": "navigate",
-          "effect": "Pops ServerSwitcherOpenPhoneSetup; the shell opens This phone for Termux (openThisPhone(kind: termux), home_screen.dart:540)."
-        },
-        {
-          "id": "server-switcher-sheet-phone-forget",
-          "key": "termux-running-server-forget",
-          "target": "servers",
-          "targetWidget": "/servers",
-          "gates": [
-            "a saved profile matches the phone server"
-          ],
-          "destructive": true,
-          "type": "menu-item",
-          "label": "Forget saved sign-in (phone server card menu)",
-          "file": "lib/ui/widgets/termux_running_server_entry.dart",
-          "line": 123,
-          "action": "navigate",
-          "effect": "Pops ServerSwitcherOpenServers(ServersRouteRequest.forget(profile.id)); the Servers screen opens its remove-server confirm sheet for that profile."
         }
       ]
     },
@@ -838,7 +775,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "FindInSurfaceIntent: no shell fallback (no-op) \u2014 only a claiming surface (HomeScreen on Files, others) services it; registered so the key does not type a character.",
+          "effect": "FindInSurfaceIntent: no shell fallback (no-op) — only a claiming surface (HomeScreen on Files, others) services it; registered so the key does not type a character.",
           "gates": [
             "desktopInteractions (platformCapabilities.isDesktop); AppShortcuts returns child untouched otherwise"
           ],
@@ -908,7 +845,7 @@
         {
           "id": "global-shortcuts-destinations",
           "type": "gesture",
-          "label": "Ctrl/Cmd+1 \u2026 4",
+          "label": "Ctrl/Cmd+1 … 4",
           "key": null,
           "line": 346,
           "action": "navigate",
@@ -947,7 +884,7 @@
         {
           "id": "command-palette-dialog-query",
           "type": "text-field",
-          "label": "Type a command\u2026",
+          "label": "Type a command…",
           "key": "command-palette-query",
           "line": 471,
           "action": "other",
@@ -966,7 +903,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "CallbackShortcuts: _move(\u00b11) changes the highlighted row.",
+          "effect": "CallbackShortcuts: _move(±1) changes the highlighted row.",
           "gates": [],
           "destructive": false
         },
@@ -986,7 +923,7 @@
         {
           "id": "command-palette-dialog-cmd-new-session",
           "type": "list-tile",
-          "label": "New session (Ctrl + N; \u2318 on macOS)",
+          "label": "New session (Ctrl + N; ⌘ on macOS)",
           "key": "command-New session",
           "file": "lib/main.dart",
           "line": 471,
@@ -1000,7 +937,7 @@
         {
           "id": "command-palette-dialog-cmd-workspace",
           "type": "list-tile",
-          "label": "Workspace (Ctrl + 1; \u2318 on macOS)",
+          "label": "Workspace (Ctrl + 1; ⌘ on macOS)",
           "key": "command-Workspace",
           "file": "lib/main.dart",
           "line": 1101,
@@ -1014,7 +951,7 @@
         {
           "id": "command-palette-dialog-cmd-files",
           "type": "list-tile",
-          "label": "Files (Ctrl + 2; \u2318 on macOS)",
+          "label": "Files (Ctrl + 2; ⌘ on macOS)",
           "key": "command-Files",
           "file": "lib/main.dart",
           "line": 1108,
@@ -1028,7 +965,7 @@
         {
           "id": "command-palette-dialog-cmd-activity",
           "type": "list-tile",
-          "label": "Activity (Ctrl + 3; \u2318 on macOS)",
+          "label": "Activity (Ctrl + 3; ⌘ on macOS)",
           "key": "command-Activity",
           "file": "lib/main.dart",
           "line": 1115,
@@ -1042,7 +979,7 @@
         {
           "id": "command-palette-dialog-cmd-more",
           "type": "list-tile",
-          "label": "More (Ctrl + 4; \u2318 on macOS)",
+          "label": "More (Ctrl + 4; ⌘ on macOS)",
           "key": "command-More",
           "file": "lib/main.dart",
           "line": 1122,
@@ -1056,7 +993,7 @@
         {
           "id": "command-palette-dialog-cmd-settings",
           "type": "list-tile",
-          "label": "Settings (Ctrl + 4; \u2318 on macOS)",
+          "label": "Settings (Ctrl + 4; ⌘ on macOS)",
           "key": "command-Settings",
           "file": "lib/main.dart",
           "line": 1125,
@@ -1070,7 +1007,7 @@
         {
           "id": "command-palette-dialog-cmd-shortcuts",
           "type": "list-tile",
-          "label": "Keyboard shortcuts (Ctrl + /; \u2318 on macOS)",
+          "label": "Keyboard shortcuts (Ctrl + /; ⌘ on macOS)",
           "key": "command-Keyboard shortcuts",
           "file": "lib/ui/desktop/shortcuts.dart",
           "line": 403,
@@ -1137,7 +1074,7 @@
         "showShortcutsHelp"
       ],
       "line": 548,
-      "purpose": "Read-only AlertDialog (key 'keyboard-shortcuts-sheet') listing every shortcut: Mod+K, N, F, 1\u20264, ',', '`', W, Enter (send prompt), C (copy transcript), F2/Shift+F2 (recent model), Ctrl+B (move running work to background), F3/Shift+F3 (next/previous find match), \u2191/\u2193 (prompt history), '/', Esc, and context-menu keys.",
+      "purpose": "Read-only AlertDialog (key 'keyboard-shortcuts-sheet') listing every shortcut: Mod+K, N, F, 1…4, ',', '`', W, Enter (send prompt), C (copy transcript), F2/Shift+F2 (recent model), Ctrl+B (move running work to background), F3/Shift+F3 (next/previous find match), ↑/↓ (prompt history), '/', Esc, and context-menu keys.",
       "reachedFrom": [
         {
           "page": "global-shortcuts",
@@ -1492,13 +1429,13 @@
     },
     {
       "id": "shorebird-update-notice",
-      "title": "Shorebird update ready \u2014 restart to apply.",
+      "title": "Shorebird update ready — restart to apply.",
       "kind": "overlay",
       "file": "lib/update/shorebird_update_notice.dart",
       "widget": "ShorebirdUpdateNotice",
       "presentedBy": [],
       "line": 58,
-      "purpose": "Code-push notices via the app ScaffoldMessenger: a day-long 'Receiving Shorebird update\u2026' progress snackbar (line 130, no action) and a 10s ready snackbar. Hard-coded English.",
+      "purpose": "Code-push notices via the app ScaffoldMessenger: a day-long 'Receiving Shorebird update…' progress snackbar (line 130, no action) and a 10s ready snackbar. Hard-coded English.",
       "reachedFrom": [
         {
           "page": "system",
@@ -1908,7 +1845,7 @@
       "widget": "CapabilitiesScreen",
       "presentedBy": [],
       "line": 11,
-      "purpose": "Settings \u203a Tools (target-ia \u00a71.3 row 7, FG6): the one page for what the agent can use besides the model. Tabs MCP, Commands, Tools, Skills, References and External agents; each embeds another screen with embedded: true and is built on first visit. Without a shared catalog (Codex, Paseo, no saved server) only External agents shows, with one muted line and a Why.",
+      "purpose": "Settings › Tools (target-ia §1.3 row 7, FG6): the one page for what the agent can use besides the model. Tabs MCP, Commands, Tools, Skills, References and External agents; each embeds another screen with embedded: true and is built on first visit. Without a shared catalog (Codex, Paseo, no saved server) only External agents shows, with one muted line and a Why.",
       "reachedFrom": [
         {
           "page": "?",
@@ -2065,7 +2002,7 @@
     }
   ],
   "notes": [
-    "ROUTE TABLE (lib/main.dart:1227-1260, initialRoute '/'):\n'/' -> _Root (ServersScreen when conn.profile == null or the profile requiresPasswordReentry/requiresCodexTokenReentry; HomeScreen when conn.hasConnectedServer; else the root-connecting card)\n'/servers' -> ServersScreen (RouteSettings.arguments 'edit-active' opens the active profile editor)\n'/home' -> HomeScreen\n'/activity' -> ActivityScreen(controller)\n'/requests' -> ActivityScreen(controller) (legacy deep link alias)\n'/guide' -> GuideScreen(embedded: false)\n'/about' -> AboutScreen\n'/termux-setup' -> TermuxSetupScreen \u2014 registered only if platformCapabilities.supportsTermux\n'/debug' -> AppDiagnosticsScreen(controller)\nonGenerateRoute: '/chat/<sessionID>' -> ChatScreen(sessionID, discardIfUntouched: arguments is ChatRouteArguments && arguments.discardIfUntouched); any other name -> null\nUnregistered route name used only for top-of-stack tracking: '/activity/launch' (main.dart:665, pushed as MaterialPageRoute of ActivityScreen)",
+    "ROUTE TABLE (lib/main.dart:1227-1260, initialRoute '/'):\n'/' -> _Root (ServersScreen when conn.profile == null or the profile requiresPasswordReentry/requiresCodexTokenReentry; HomeScreen when conn.hasConnectedServer; else the root-connecting card)\n'/servers' -> ServersScreen (RouteSettings.arguments 'edit-active' opens the active profile editor)\n'/home' -> HomeScreen\n'/activity' -> ActivityScreen(controller)\n'/requests' -> ActivityScreen(controller) (legacy deep link alias)\n'/guide' -> GuideScreen(embedded: false)\n'/about' -> AboutScreen\n'/termux-setup' -> TermuxSetupScreen — registered only if platformCapabilities.supportsTermux\n'/debug' -> AppDiagnosticsScreen(controller)\nonGenerateRoute: '/chat/<sessionID>' -> ChatScreen(sessionID, discardIfUntouched: arguments is ChatRouteArguments && arguments.discardIfUntouched); any other name -> null\nUnregistered route name used only for top-of-stack tracking: '/activity/launch' (main.dart:665, pushed as MaterialPageRoute of ActivityScreen)",
     "main.dart opens no showDialog/showModalBottomSheet itself. Its surfaces are two MaterialBanners (share-session-failed-banner main.dart:427, session-link-server-missing-banner main.dart:925) and action-less snackbars via _messengerKey: shareWaitingForServer (367), _showLaunchNotice (693) with launchShortcutWaiting / launchUiSessionWaiting / launchShortcutNoServer / launchShortcutReentry / launchShortcutConnectionFailed / launchShortcutNewTaskFailed / launchUiSessionNoServer / launchUiSessionOtherServer / launchUiSessionReentry / launchUiSessionConnectionFailed / launchUiActivityNoServer / handoffUiLinkWaiting / handoffUiLinkReentry / handoffUiLinkConnectionFailed, quotaMonitorSourceChanged (991), monitorOpenFailed (1021), new-session failure productErrorText (1066).",
     "MaterialApp.builder wrapper order (main.dart:1171-1209): Theme(AppTheme.forLocale) > MediaQuery(text scale capped at AppTheme.maxTextScale) > ShorebirdUpdateNotice > DesktopReleaseNotice > AppShortcuts > navigator child.",
     "page 'system-entry' is a synthetic overlay page added so system-triggered edges into pages owned by other agents (ChatScreen, ServersScreen, QuotaMonitorScreen, RunScreen, openMonitoredRequest) carry a resolvable targetWidget; coordinator may fold its elements into those pages' reachedFrom as {page:'system'}.",

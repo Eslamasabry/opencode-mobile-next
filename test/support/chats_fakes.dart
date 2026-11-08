@@ -106,9 +106,9 @@ class FakeChatsHost implements ChatsHost {
   /// What "Open a project" returns.
   String? openProjectResult;
 
-  /// The leftover-process notice the Conversations tab shows, if a test has
-  /// one to show.
-  Widget leftover = const SizedBox.shrink();
+  /// The Termux notice the Conversations tab shows, if a test has given
+  /// one.
+  Widget termuxRetired = const SizedBox.shrink();
 
   /// The project a separate copy is offered for (null: not offered).
   WorkspaceProject? copyProject;
@@ -221,7 +221,7 @@ class FakeChatsHost implements ChatsHost {
   void closeApp() => closed++;
 
   @override
-  Widget leftoverNotice(BuildContext context) => leftover;
+  Widget termuxRetiredNotice(BuildContext context) => termuxRetired;
 
   @override
   Future<WorkspaceProject?> separateCopyProject(String directory) async =>

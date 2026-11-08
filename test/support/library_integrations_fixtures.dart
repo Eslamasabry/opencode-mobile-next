@@ -197,14 +197,28 @@ class _IntegrationsController extends ConnectionController {
 
   final bool withAuthorization;
 
+  /// Swaps the transport the way a reconnect or a wake does, and tells
+  /// the screens listening.
+  void replaceRepository(ProductRepository? next) {
+    repository = next;
+    notifyListeners();
+  }
+
   @override
   ServerCapabilities get capabilities => withAuthorization
       ? const ServerCapabilities(mcpOAuth: true, providerRuntimeRefresh: true)
       : super.capabilities;
 }
 
+/// What a reconnect does to [controller] (one made by
+/// [integrationsController]): a new transport, or none while it is down.
+void reconnectIntegrations(
+  ConnectionController controller,
+  ProductRepository? next,
+) => (controller as _IntegrationsController).replaceRepository(next);
+
 Future<ConnectionController> integrationsController(
-  ProductRepository repository, {
+  ProductRepository? repository, {
   bool withAuthorization = false,
 }) async {
   SharedPreferences.setMockInitialValues({});

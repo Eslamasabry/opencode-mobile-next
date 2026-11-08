@@ -90,6 +90,17 @@ class _RootState extends ConsumerState<_Root> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _startThermalGuard();
     });
+    unawaited(_askTelemetryConsent());
+  }
+
+  /// The one-time "Help improve OpenCode Mobile" question, once the
+  /// reporter knows whether this build can send anything at all.
+  Future<void> _askTelemetryConsent() async {
+    await TelemetryStartup.ready;
+    // Let the first page settle before a sheet rises over it.
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    await askTelemetryConsentOnce(context, prefs: _controller.store.prefs);
   }
 
   void _startThermalGuard() {
@@ -197,22 +208,6 @@ class _RootState extends ConsumerState<_Root> {
           );
         },
       ).call(request),
-      // The Termux host ends the same way, through Termux's own manager.
-      termuxFinisher: (request) => TermuxSetupFinisher(
-        store: store,
-        strings: strings,
-        isConnectedTo: (profile) =>
-            _controller.profile?.id == profile.id &&
-            _controller.hasConnectedServer,
-        connect: (profile) async {
-          await _controller.connect(profile);
-          if (_controller.hasConnectedServer) return null;
-          final l10n = strings();
-          return l10n.builtinServerConnectFailed(
-            _controller.lastError ?? l10n.e7SetupAuthFailed,
-          );
-        },
-      ).call(request),
     );
   }
 
@@ -221,7 +216,40 @@ class _RootState extends ConsumerState<_Root> {
     // A successful connect resets the streak, so the next failure after a
     // long healthy session starts its count from one again.
     if (_controller.hasConnectedServer) _attempts = 0;
+    _feedHealthContext();
     setState(() {});
+  }
+
+  /// Tells the health telemetry which kind of server is in use and how many
+  /// there are; it passes on only what changed, and only with consent.
+  void _feedHealthContext() {
+    final health = AppTelemetry.health;
+    if (health == null) return;
+    final profiles = _controller.store.profiles;
+    final phone = profiles.any((p) => BuiltinLinux.managesServerUrl(p.baseUrl));
+    final computer = profiles.any(
+      (p) => !BuiltinLinux.managesServerUrl(p.baseUrl),
+    );
+    final current = _controller.profile;
+    final onPhone =
+        current != null && BuiltinLinux.managesServerUrl(current.baseUrl);
+    health.updateConnection(
+      serverKind: current == null ? 'none' : (onPhone ? 'phone' : 'computer'),
+      engineState: _builtin.starting
+          ? 'starting'
+          : _builtin.failureFor(current) != null
+          ? 'failing'
+          : (onPhone && _controller.hasConnectedServer ? 'ready' : 'stopped'),
+      connections: profiles.length,
+      userServerKind: phone && computer
+          ? 'both'
+          : phone
+          ? 'phone'
+          : computer
+          ? 'computer'
+          : null,
+      serverVersion: _controller.version,
+    );
   }
 
   String? _migrationAttemptedFor;
@@ -248,11 +276,6 @@ class _RootState extends ConsumerState<_Root> {
               details: failure.technicalDetails ?? failure.problem.name,
             );
           }
-        } else {
-          await LocalServerControls(
-            store: _controller.store,
-            connection: _controller,
-          ).restart();
         }
         await _controller.connect(profile);
       } else if (looksLikeInAppServer(profile)) {
@@ -266,12 +289,6 @@ class _RootState extends ConsumerState<_Root> {
           onMoveFailure: (failure) => failed = failure,
         );
         if (failed != null) return failed!;
-      } else {
-        await openPhoneSetupTermux(
-          context,
-          job: TermuxHostJob.switchRuntime,
-          target: TermuxRuntime.openCode2,
-        );
       }
       final confirmed = await _controller.confirmManagedOpenCode2Migration();
       return confirmed
@@ -344,32 +361,6 @@ class _RootState extends ConsumerState<_Root> {
       retries: _migrationRetries,
       onTryAgain: () => unawaited(_upgradeManagedServer(profile)),
     );
-  }
-
-  bool _startingPhoneServer = false;
-
-  Future<void> _startPhoneServer() async {
-    if (_startingPhoneServer) return;
-    setState(() => _startingPhoneServer = true);
-    final strings = lookupAppLocalizations(Localizations.localeOf(context));
-    try {
-      await LocalServerControls(
-        store: _controller.store,
-        connection: _controller,
-      ).restart();
-    } on LocalServerControlFailure catch (failure) {
-      // What failed in words; Termux's own text stays in diagnostics.
-      widget.say(
-        strings.rootPhoneServerStartFailed,
-        supporting: productErrorText(failure, l10n: strings),
-        failed: true,
-      );
-    } finally {
-      if (mounted) setState(() => _startingPhoneServer = false);
-    }
-    if (!mounted) return;
-    _started = false;
-    _connectSaved();
   }
 
   void _connectSaved() {
@@ -495,83 +486,79 @@ class _RootState extends ConsumerState<_Root> {
             status.phase == ConnectionStatusPhase.notAnswering &&
             status.since != null;
     final inAppStartFailed = !pending && startFailure != null;
-    final card = SavedServerConnectionCard(
-      size: opening ? KitStateSize.inline : KitStateSize.page,
-      profileName: serverDisplayName(profile, l10n, among: conn.store.profiles),
-      usesConnectionToken: conn.usesConnectionToken,
-      requiresTokenReentry: profile.requiresCodexTokenReentry,
-      baseUrl: profile.baseUrl,
-      // The raw failure: the card diagnoses it into words and keeps
-      // the text itself under Details only.
-      error: error,
-      attempts: _attempts,
-      // The controller's one eight-second clock, shared with every status
-      // line; `since` is set once an attempt actually began (P4.4).
-      notAnswering: notAnswering,
-      inAppServer: inApp,
-      startingInAppServer: inApp && _builtin.starting,
-      inAppStartFailed: inAppStartFailed,
-      // Why it did not start, in plain words (QA B1); the technical line
-      // stays under Details.
-      inAppStartFailedBody: pending ? null : startFailure?.explanation(l10n),
-      onRecoverInAppOwnership:
-          !pending &&
-              startFailure?.problem == BuiltinStartProblem.componentRecovery
-          ? () => unawaited(TermuxBridge.openAppSettings())
-          : null,
-      onOpenInAppSetup: !pending && startFailure != null
-          ? () => openPhoneSetupStart(context)
-          : null,
-      supportsTermux:
-          !inApp &&
-          !conn.usesConnectionToken &&
-          platformCapabilities.supportsTermux,
-      onChangeServer: () =>
-          navigator.pushNamedAndRemoveUntil('/servers', (_) => false),
-      onUpdateToken: () => navigator.pushNamedAndRemoveUntil(
-        '/servers',
-        (_) => false,
-        arguments: 'edit-active',
-      ),
-      onReviewCertificate: () => navigator.pushNamedAndRemoveUntil(
-        '/servers',
-        (_) => false,
-        arguments: ServersRouteRequest.edit(profile.id),
-      ),
-      onUpdatePassword: () => navigator.pushNamedAndRemoveUntil(
-        '/servers',
-        (_) => false,
-        arguments: 'edit-active',
-      ),
-      onOpenTermuxSetup:
-          !inApp &&
-              !conn.usesConnectionToken &&
-              platformCapabilities.supportsTermux
-          // The phone's own Termux server goes to This phone (Start is
-          // there); any other server on this phone goes to phone setup.
-          ? () => TermuxBridge.managesServerUrl(profile.baseUrl)
-                ? openThisPhone(context, kind: PhoneHostKind.termux)
-                : openPhoneSetupStart(context)
-          : null,
-      // The app's own phone server: when nothing answers, it is stopped
-      // (a phone restart, Android closing Termux, the app closed for
-      // OpenCode inside the app), and one tap starts it.
-      onStartPhoneServer: inApp
-          ? _startInAppServer
-          : !conn.usesConnectionToken &&
-                platformCapabilities.supportsTermux &&
-                TermuxBridge.managesServerUrl(profile.baseUrl)
-          ? _startPhoneServer
-          : null,
-      startingPhoneServer: inApp ? _builtin.starting : _startingPhoneServer,
-      onRetry: () {
-        _builtin.clearFailure();
-        _started = false;
-        _retrying = true;
-        _connectSaved();
-        _retrying = false;
-      },
-    );
+    // A saved setup from Termux, which the app no longer runs: once nothing
+    // answers there, the one notice about it takes the card's place (the
+    // connect keeps trying in case a server still answers there).
+    final termuxRetired =
+        isTermuxRetiredProfile(profile) && (error != null || notAnswering);
+    final Widget card = termuxRetired
+        ? Padding(
+            padding: EdgeInsetsDirectional.all(KitTokens.of(context).gutter),
+            child: const TermuxRetiredNotice(),
+          )
+        : SavedServerConnectionCard(
+            size: opening ? KitStateSize.inline : KitStateSize.page,
+            profileName: serverDisplayName(
+              profile,
+              l10n,
+              among: conn.store.profiles,
+            ),
+            usesConnectionToken: conn.usesConnectionToken,
+            requiresTokenReentry: profile.requiresCodexTokenReentry,
+            baseUrl: profile.baseUrl,
+            // The raw failure: the card diagnoses it into words and keeps
+            // the text itself under Details only.
+            error: error,
+            attempts: _attempts,
+            // The controller's one eight-second clock, shared with every status
+            // line; `since` is set once an attempt actually began (P4.4).
+            notAnswering: notAnswering,
+            inAppServer: inApp,
+            startingInAppServer: inApp && _builtin.starting,
+            inAppStartFailed: inAppStartFailed,
+            // Why it did not start, in plain words (QA B1); the technical line
+            // stays under Details.
+            inAppStartFailedBody: pending
+                ? null
+                : startFailure?.explanation(l10n),
+            onRecoverInAppOwnership:
+                !pending &&
+                    startFailure?.problem ==
+                        BuiltinStartProblem.componentRecovery
+                ? () => unawaited(AppInfoPlatform.openAppSettings())
+                : null,
+            onOpenInAppSetup: !pending && startFailure != null
+                ? () => openPhoneSetupStart(context)
+                : null,
+            onChangeServer: () =>
+                navigator.pushNamedAndRemoveUntil('/servers', (_) => false),
+            onUpdateToken: () => navigator.pushNamedAndRemoveUntil(
+              '/servers',
+              (_) => false,
+              arguments: 'edit-active',
+            ),
+            onReviewCertificate: () => navigator.pushNamedAndRemoveUntil(
+              '/servers',
+              (_) => false,
+              arguments: ServersRouteRequest.edit(profile.id),
+            ),
+            onUpdatePassword: () => navigator.pushNamedAndRemoveUntil(
+              '/servers',
+              (_) => false,
+              arguments: 'edit-active',
+            ),
+            // The app's own phone server: when nothing answers, it is stopped
+            // (a phone restart, the app closed), and one tap starts it.
+            onStartPhoneServer: inApp ? _startInAppServer : null,
+            startingPhoneServer: inApp && _builtin.starting,
+            onRetry: () {
+              _builtin.clearFailure();
+              _started = false;
+              _retrying = true;
+              _connectSaved();
+              _retrying = false;
+            },
+          );
     if (opening) {
       // Last time's titles: the home itself, read-only under the honest
       // connection state, so its bar, title, filters and rows are already
@@ -580,6 +567,7 @@ class _RootState extends ConsumerState<_Root> {
       // 2026-10-29). The pill says Starting or Connecting; the card comes
       // above the rows only when the server needs the person.
       final needsPerson =
+          termuxRetired ||
           error != null ||
           notAnswering ||
           inAppStartFailed ||

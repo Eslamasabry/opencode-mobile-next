@@ -1,5 +1,9 @@
 # Claude Code on this phone
 
+> **Retired (2026-11-07).** The app no longer runs anything in Termux;
+> built-in Linux (`lib/builtin/`) is its only engine on the phone. This page
+> is kept as history.
+
 The app can install and run Claude Code on the phone itself, with no computer.
 It does this the way it already runs OpenCode: inside Termux, in the Ubuntu it
 manages (`proot-distro` container `opencode-ubuntu`). Claude Code has no

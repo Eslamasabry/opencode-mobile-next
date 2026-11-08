@@ -25,6 +25,10 @@ class _PaseoLive {
   /// that is an error row): its failure needs no second notice.
   bool turnErrorShown = false;
 
+  /// Reply texts already read as failed turns, by message id (true: a
+  /// sign-in failure).
+  final Map<String, bool> failedReplies = {};
+
   /// The saved record said its last turn failed (status "error") before the
   /// helper loaded it; the loaded agent reads idle (agent-loading.js), so
   /// this is the one sign left until a new turn starts.
@@ -269,6 +273,42 @@ extension _PaseoEvents on PaseoGateway {
     if (streamed && text != null) {
       final delta = paseoText(item['text']);
       text.write(delta);
+      // A failed turn the agent wrote as reply text, sent in pieces, only
+      // reads as one once enough has arrived ("Failed to authenticate: OAuth
+      // session expired…"): from then on it is an error row, its words under
+      // Details, never reply text.
+      if (type == 'assistant_message' && text.length <= 4000) {
+        final words = text.toString();
+        final seen = live.failedReplies[messageID];
+        final read = paseoReplyFailure(words);
+        if (seen != null || read.failure) {
+          final signIn = read.signIn || (seen ?? false);
+          live.failedReplies[messageID] = signIn;
+          final at = DateTime.now().millisecondsSinceEpoch;
+          if (seen == null) {
+            _emit('message.part.removed', {
+              'sessionID': id,
+              'messageID': messageID,
+              'partID': '$messageID:0',
+            });
+            live.turnErrorShown = true;
+            live.open.remove(messageID);
+          }
+          _emit('message.updated', {
+            'info': paseoMessageJson(
+              paseoReplyFailureInfo(
+                agentID: id,
+                id: messageID,
+                provider: provider,
+                text: words,
+                signIn: signIn,
+                created: at,
+              ),
+            ),
+          });
+          return;
+        }
+      }
       _emit('message.part.delta', {
         'sessionID': id,
         'messageID': messageID,

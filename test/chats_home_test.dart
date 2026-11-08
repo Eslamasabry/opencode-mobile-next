@@ -12,10 +12,7 @@ import 'package:opencode_mobile/ui/kit/kit_divider.dart' show KitDivider;
 import 'package:opencode_mobile/ui/kit/kit_feed_item.dart' show KitFeedItem;
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart' show KitIconButton;
 import 'package:opencode_mobile/ui/kit/motion/kit_reveal.dart' show KitEntrance;
-import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
-    show leftoverNoticeLine;
-import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
-    show WorkRunawayNotice;
+import 'package:opencode_mobile/ui/widgets/termux_retired_notice.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_opening.dart';
 import 'package:opencode_mobile/state/session_inventory_cache.dart'
@@ -1138,32 +1135,23 @@ void main() {
     expect(heading.size.height, lessThan(34 * 1.5 * 1.3));
   });
 
-  clocked('the leftover-process notice shows above the list only when the '
-      'watcher reports something', (tester) async {
+  clocked('the Termux notice shows above the list only when the host '
+      'gives it', (tester) async {
     final host = FakeChatsHost(_source());
     await _pump(tester, host);
-    expect(find.byKey(const ValueKey('work-status-runaway')), findsNothing);
+    expect(find.byKey(const ValueKey('termux-retired-notice')), findsNothing);
 
-    host.leftover = Builder(
-      builder: (context) => leftoverNoticeLine(
-        context,
-        WorkRunawayNotice(
-          identity: 1,
-          helper: 'node',
-          busyFor: '10 min',
-          onStop: () {},
-          onDismiss: () {},
-        ),
-      ),
+    host.termuxRetired = TermuxRetiredNotice(
+      onSetUpLinux: () {},
+      onConnectComputer: () {},
     );
     await _pump(tester, host);
     await tester.pump(const Duration(milliseconds: 300));
     expect(
-      find.text(
-        'A leftover node process has been busy for 10 min with nothing to do',
-      ),
+      find.textContaining('Termux is no longer supported'),
       findsOneWidget,
     );
-    expect(find.text('Stop node'), findsOneWidget);
+    expect(find.text('Set up built-in Linux'), findsOneWidget);
+    expect(find.text('Connect a computer'), findsOneWidget);
   });
 }

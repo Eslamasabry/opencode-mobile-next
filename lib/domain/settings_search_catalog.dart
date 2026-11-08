@@ -9,7 +9,6 @@ List<SettingsSearchDocument> settingsSearchRows(
   AppLocalizations l10n, {
   required bool supportsBackgroundService,
   required bool thermalGuardAvailable,
-  required bool managedRecoveryAvailable,
 }) {
   SettingsSearchDocument effect(String row, String title, String aliases) =>
       SettingsSearchDocument(
@@ -94,21 +93,7 @@ List<SettingsSearchDocument> settingsSearchRows(
           ),
         ),
     ],
-    if (managedRecoveryAvailable)
-      SettingsSearchDocument(
-        id: 'inside-phone-crash-recovery',
-        title: l10n.managedRecoveryRowTitle,
-        parent: l10n.onboardingTermuxSetup,
-        aliases:
-            'crash restart recovery recover watchdog termux '
-            'تعطل انهيار إعادة تشغيل استعادة',
-        target: const SettingsSearchTarget(
-          pageId: 'termux-setup-installed',
-          sectionId: 'options',
-          rowId: 'managed-recovery-option',
-        ),
-      ),
-    // "Crash" still has a useful destination without a managed phone server.
+    // "Crash" leads to the app's diagnostics.
     SettingsSearchDocument(
       id: 'app-diagnostics-entry',
       title: l10n.e7SettingsUi88,
@@ -128,14 +113,12 @@ List<SettingsSearchDocument> settingsSearchCatalog(
   required Iterable<SettingsSearchDocument> existing,
   required bool supportsBackgroundService,
   required bool thermalGuardAvailable,
-  required bool managedRecoveryAvailable,
 }) {
   final legacy = {for (final document in existing) document.id: document};
   final rows = settingsSearchRows(
     l10n,
     supportsBackgroundService: supportsBackgroundService,
     thermalGuardAvailable: thermalGuardAvailable,
-    managedRecoveryAvailable: managedRecoveryAvailable,
   );
   return List.unmodifiable([
     for (final row in rows)

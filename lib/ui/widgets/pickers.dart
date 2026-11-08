@@ -38,6 +38,8 @@ import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
 import '../screens/library_screen.dart'
     show IntegrationsMode, IntegrationsScreen;
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 
 part 'pickers_catalog_sections.dart';
 part 'pickers_catalog_footer.dart';

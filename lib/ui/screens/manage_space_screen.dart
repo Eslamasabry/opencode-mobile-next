@@ -259,10 +259,6 @@ class _ManageSpaceScreenState extends State<ManageSpaceScreen> {
       label: l10n.manageSpaceKeptLabel,
       children: [
         KitRow(
-          leading: icon(AppIconography.terminal),
-          title: l10n.manageSpaceKeptTermux,
-        ),
-        KitRow(
           leading: icon(AppIconography.computer),
           title: l10n.manageSpaceKeptComputers,
         ),

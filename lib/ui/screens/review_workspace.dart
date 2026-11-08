@@ -32,6 +32,8 @@ import '../kit/motion/kit_refresh.dart';
 import '../widgets/default_notices.dart';
 import '../widgets/product_states.dart' show productErrorText;
 import '../widgets/reader_preferences.dart';
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 
 typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
 
@@ -196,6 +198,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   @override
   void initState() {
     super.initState();
+    AppTelemetry.feature(AnalyticsFeature.reviewOpen);
     final scopes = _availableScopes;
     final wanted = widget.initialScope;
     _scope = wanted != null && scopes.contains(wanted) ? wanted : scopes.first;

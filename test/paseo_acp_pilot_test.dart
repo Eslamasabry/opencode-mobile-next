@@ -6,6 +6,8 @@ import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
+import 'package:opencode_mobile/telemetry/telemetry_provider.dart';
+import 'support/telemetry_recorder.dart';
 
 const _cwd = '/work/acp-pilot';
 const _fakeSecret = 'synthetic-provider-credential-do-not-display';
@@ -576,6 +578,29 @@ void main() {
       'approval',
     );
     expect(daemon.of('agent_permission_response'), isEmpty);
+  });
+
+  test('starting a new chat reports agent_start with the agent word and '
+      'nothing else', () async {
+    final adapter = RecordingAdapter();
+    AppTelemetry.install(
+      await startedService(adapter, usage: true, crashes: true),
+    );
+    addTearDown(AppTelemetry.reset);
+    final draft = await gateway.createSession();
+    await gateway.promptAsync(
+      draft.id,
+      text: 'a private prompt',
+      model: ModelRef(providerID: 'gemini', modelID: 'gemini-model'),
+    );
+    await settleTelemetry();
+    final started = adapter.events.where((e) => e.$1 == 'agent_start');
+    expect(started.single.$2, {'agent': 'gemini', 'result': 'ok'});
+    expect(adapter.crumbs, contains('agent.start:gemini'));
+    expect(
+      adapter.events.map((e) => '${e.$2}').join(),
+      isNot(contains('private')),
+    );
   });
 
   test('existing Copilot route remains in the normal picker', () async {

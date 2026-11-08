@@ -7,7 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/agent_sign_in_foreground.dart';
 import '../domain/background_pause.dart';
 import '../domain/diagnostics_error.dart';
+import '../platform/app_exit.dart' show AppLifecycleBridge;
 import '../platform/platform_capabilities.dart';
+import '../telemetry/telemetry_provider.dart';
 import 'notification_status.dart';
 import 'widget_v2_contract.dart';
 
@@ -724,6 +726,9 @@ class BackgroundLiveController extends ChangeNotifier
     );
     ++_pauseRevision;
     stoppedByAndroidTimeout = reason != pauseReason;
+    unawaited(
+      _reportServiceEnd(reason == pauseReason ? 'user_stopped' : 'os_limit'),
+    );
     final nativePause = arguments is Map ? arguments['backgroundPause'] : null;
     _backgroundPause = nativePause is Map
         ? BackgroundPauseState.fromPlatform(nativePause)
@@ -966,6 +971,7 @@ class BackgroundLiveController extends ChangeNotifier
     final wasActive = active;
     active = value;
     if (!active && wasActive) {
+      unawaited(_reportServiceEnd('other'));
       // A status read found the service gone (Android stopped it).
       _signInForeground.serviceStopped(
         AgentSignInForegroundFailure.unavailable,
@@ -980,6 +986,19 @@ class BackgroundLiveController extends ChangeNotifier
       _lastPublishedLiveStatus = null;
       _lastLivePublishAt = null;
     }
+  }
+
+  /// `bg_service_end`: why the background service ended and whether the
+  /// battery optimisation exemption was on. Reads the exemption only when
+  /// the person agreed to share usage.
+  Future<void> _reportServiceEnd(String reason) async {
+    if (!AppTelemetry.current.usageConsented) return;
+    var exempt = false;
+    try {
+      exempt = (await AppLifecycleBridge().keepAliveInfo())
+          .batteryOptimizationIgnored;
+    } catch (_) {}
+    HealthFlow.bgServiceEnd(reason: reason, batteryExempt: exempt);
   }
 
   void _applyPauseState(BackgroundPauseState state) {

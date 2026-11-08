@@ -338,7 +338,7 @@ void main() {
         envelope({'push': failed(fx.noPromptError, exit: 128)}),
         _snapshot(),
       ]);
-      final page = _controller(shell, host: GitHost.termux, account: account);
+      final page = _controller(shell, host: GitHost.server, account: account);
       await page.refresh();
       expect(page.abilities.offersGitHubSignIn, isFalse);
       expect(page.abilities.usesOwnGitSignIn, isTrue);
@@ -396,7 +396,6 @@ void main() {
         profile: profile('https://example.test'),
         gateway: gateway,
         directory: '/srv/app',
-        termuxSupported: false,
       );
       expect(resolution.workspace!.host, GitHost.server);
       expect(resolution.workspace!.shell, isA<ServerGitShell>());
@@ -408,7 +407,6 @@ void main() {
         profile: profile('https://example.test'),
         gateway: DemoGateway(),
         directory: '/srv/app',
-        termuxSupported: false,
       );
       expect(resolution.workspace, isNull);
       expect(resolution.reason, GitUnavailableReason.serverCannotRunCommands);

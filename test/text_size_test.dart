@@ -15,7 +15,6 @@ import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/update/shorebird_update_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -215,10 +214,7 @@ void main() {
     });
 
     testWidgets('This phone', (tester) async {
-      await pumpPhone(
-        tester,
-        home: smallest(const ThisPhoneScreen(kind: PhoneHostKind.termux)),
-      );
+      await pumpPhone(tester, home: smallest(const ThisPhoneScreen()));
       await settle(tester);
       expect(tester.takeException(), isNull);
       expect(find.byType(ThisPhoneScreen), findsOneWidget);

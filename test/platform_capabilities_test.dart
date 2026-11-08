@@ -18,7 +18,7 @@ void main() {
     const caps = PlatformCapabilities.android();
     expect(caps.isAndroid, isTrue);
     expect(caps.isDesktop, isFalse);
-    expect(caps.supportsTermux, isTrue);
+    expect(caps.supportsThisPhone, isTrue);
     expect(caps.supportsVoice, isTrue);
     expect(caps.supportsPromptPhotos, isTrue);
     expect(caps.supportsBackgroundService, isTrue);
@@ -35,7 +35,7 @@ void main() {
     const caps = PlatformCapabilities.linuxDesktop();
     expect(caps.isAndroid, isFalse);
     expect(caps.isDesktop, isTrue);
-    expect(caps.supportsTermux, isFalse);
+    expect(caps.supportsThisPhone, isFalse);
     expect(caps.supportsVoice, isFalse);
     expect(caps.supportsPromptPhotos, isFalse);
     expect(caps.supportsBackgroundService, isFalse);
@@ -54,7 +54,7 @@ void main() {
     const caps = PlatformCapabilities(platform: TargetPlatform.iOS);
     expect(caps.isAndroid, isFalse);
     expect(caps.isDesktop, isFalse);
-    expect(caps.supportsTermux, isFalse);
+    expect(caps.supportsThisPhone, isFalse);
     expect(caps.supportsVoice, isFalse);
     expect(caps.supportsPromptPhotos, isFalse);
     expect(caps.supportsBackgroundService, isFalse);
@@ -110,7 +110,7 @@ void main() {
     );
     expect(caps.isAndroid, isFalse);
     expect(caps.isDesktop, isFalse);
-    expect(caps.supportsTermux, isFalse);
+    expect(caps.supportsThisPhone, isFalse);
     expect(caps.supportsDesktopReleaseCheck, isFalse);
   });
 
@@ -123,7 +123,7 @@ void main() {
   test('the ambient value is overridable and restorable', () {
     debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
     expect(platformCapabilities.isDesktop, isTrue);
-    expect(platformCapabilities.supportsTermux, isFalse);
+    expect(platformCapabilities.supportsThisPhone, isFalse);
     debugPlatformCapabilities = null;
     expect(platformCapabilities.isAndroid, isTrue);
   });

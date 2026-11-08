@@ -1,7 +1,7 @@
 name: opencode_mobile
 description: "OpenCode client for Android - connect to a remote opencode server or one running on-device via Termux."
 publish_to: "none"
-version: 2.1.4+62
+version: 2.1.5+63
 
 environment:
   sdk: ^3.10.0
@@ -87,6 +87,10 @@ dependencies:
   screen_retriever: ^0.2.0
 
   path: ^1.9.1
+  firebase_core: ^5.1.0
+  firebase_crashlytics: ^6.0.1
+  firebase_analytics: ^13.0.1
+  firebase_performance: ^0.12.1
 dev_dependencies:
   cross_file: 0.3.5+5
   local_auth_platform_interface: 1.1.0
@@ -116,11 +120,6 @@ flutter:
     - assets/branding/open-portal/mark.svg
     # Agent and provider marks (lobe-icons, MIT): THIRD_PARTY_NOTICES.md.
     - assets/marks/
-    # AI Team on this phone (TEAM-301): the pinned download manifest for the
-    # Android-built gc/bd/dolt and the opencode wrapper; a copy of
-    # tool/host/aiteam-manifest-<date>.json.
-    - assets/aiteam/manifest.json
-    - assets/aiteam/manifest-x86_64.json
     - assets/agents/paseo-package-lock.json
     # The optional quota collector the app runs in In-app Ubuntu
     # (lib/builtin/quota_collector_host.dart). One file, no npm install.

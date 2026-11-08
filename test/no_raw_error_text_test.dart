@@ -59,10 +59,6 @@ const _allowed = <String, Map<String, String>>{
     'var text = error.toString();':
         'builds the verdict Details fold text (KitDetailsFold)',
   },
-  'widgets/local_agent_server_entry.dart': {
-    'localAgentFailureText(l10n, failure.kind, failure.message),':
-        'says the failure kind in words; the message is classified inside',
-  },
   'kit/kit_scanner.dart': {
     "failure = KitScannerFailure('\$error');":
         'deviceMessage is shown only as details (pairing_scanner_screen)',

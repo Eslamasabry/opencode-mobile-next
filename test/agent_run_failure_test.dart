@@ -99,6 +99,31 @@ void main() {
       });
     }
 
+    test('a sign-in that ran out is "sign in again"', () {
+      for (final reason in [
+        'Failed to authenticate: OAuth session expired and could not be '
+            'refreshed',
+        'OAuth token has expired',
+      ]) {
+        expect(
+          AgentRunFailure(reason: reason).signInExpired,
+          isTrue,
+          reason: reason,
+        );
+      }
+      for (final reason in [
+        'Authentication required',
+        'Internal error: You need to sign in to use this model.',
+        'Insufficient credits',
+      ]) {
+        expect(
+          AgentRunFailure(reason: reason).signInExpired,
+          isFalse,
+          reason: reason,
+        );
+      }
+    });
+
     test('the error code the reason names is kept', () {
       expect(agentRunFailureCode('Internal error | code=-32603'), '-32603');
       expect(agentRunFailureCode('Provider run failed\n\ncode: 402'), '402');

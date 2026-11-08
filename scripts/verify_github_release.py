@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Validate GitHub publication metadata and bytes; never accesses credentials."""
 
+from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -54,7 +56,7 @@ RELEASE_STEPS = {
     "Require the release signing and Shorebird secrets",
     "Build and upload Shorebird release APK",
     "Verify APK signer and version",
-    "Create draft stable GitHub release",
+    "Publish GitHub pre-release",
 }
 UNPATCHABLE_BUILD_STEPS = {
     "Compile signed release APK",
@@ -174,6 +176,63 @@ def verify_artifact(folder, name, names):
     return digest
 
 
+TAG_BUILD = re.compile(r"v\d+\.\d+\.\d+\+([1-9]\d*)")
+# A promoted release must have been public as a pre-release this long.
+DEFAULT_PROMOTE_MIN_HOURS = 24
+
+
+def asset_identities(data):
+    fields = ("id", "name", "size", "digest", "updated_at")
+    return sorted(
+        (tuple(asset.get(key) for key in fields) for asset in data.get("assets", [])),
+        key=repr,
+    )
+
+
+def require_unchanged(root, release):
+    """After a first verification, the release and its assets must not move."""
+    previous = root / "release-verified.json"
+    if previous.exists():
+        verified = read_json(root, "release-verified.json")
+        require(
+            release["id"] == verified["id"] and asset_identities(release) == asset_identities(verified),
+            "Release assets changed during verification",
+        )
+
+
+def promote_min_hours():
+    raw = os.environ.get("OC_PROMOTE_MIN_HOURS", str(DEFAULT_PROMOTE_MIN_HOURS))
+    require(re.fullmatch(r"\d{1,4}", raw) is not None, "OC_PROMOTE_MIN_HOURS must be a whole number of hours")
+    return int(raw)
+
+
+def verify_promotable(root, release, version):
+    """A published pre-release, quiet long enough, with intact checksummed APKs."""
+    require(release.get("draft") is False, "A draft is not promotable; CI publishes a pre-release")
+    require(release.get("prerelease") is True, "Release is not a pre-release (already promoted?)")
+    published = release.get("published_at")
+    require(isinstance(published, str), "Release has no publication time")
+    published_at = datetime.fromisoformat(published.replace("Z", "+00:00"))
+    age_hours = (datetime.now(timezone.utc) - published_at).total_seconds() / 3600
+    min_hours = promote_min_hours()
+    require(
+        age_hours >= min_hours,
+        f"Pre-release is {age_hours:.1f} h old; promote after {min_hours} quiet hours (OC_PROMOTE_MIN_HOURS)",
+    )
+    names = apk_names(version)
+    for name in names:
+        verify_artifact(root / "assets", name, names)
+    latest = read_json(root, "previous-latest.json")
+    latest_tag = latest.get("tag_name")
+    if isinstance(latest_tag, str) and latest.get("id") is not None:
+        match = TAG_BUILD.match(latest_tag)
+        own = int(TAG_BUILD.fullmatch(release["tag_name"]).group(1))
+        require(
+            match is None or int(match.group(1)) < own,
+            f"Latest release {latest_tag} is not older than {release['tag_name']}; refusing to move latest backwards",
+        )
+
+
 def main():
     action, directory, head, version = sys.argv[1:]
     root = Path(directory)
@@ -190,18 +249,11 @@ def main():
         "Release must contain exactly the candidate APKs and one SHA256SUMS asset",
     )
     if action == "preflight":
-        previous = root / "release-verified.json"
-        if previous.exists():
-            verified = read_json(root, "release-verified.json")
-            fields = ("id", "name", "size", "digest", "updated_at")
-            def identities(data):
-                return sorted(
-                    (tuple(asset.get(key) for key in fields) for asset in data.get("assets", [])),
-                    key=repr,
-                )
-            require(release["id"] == verified["id"] and identities(release) == identities(verified), "Draft assets changed during verification")
-        require(release.get("draft") is True, "Refusing to overwrite a published release")
-        require(release.get("prerelease") is False, "Expected a stable draft")
+        # CI publishes every new release as a pre-release (E02-S90); this
+        # proves that pre-release's provenance. `promote` makes it latest.
+        require_unchanged(root, release)
+        require(release.get("draft") is False, "Expected the CI-published pre-release, found a draft")
+        require(release.get("prerelease") is True, "Release is no longer a pre-release (already promoted)")
         build = read_json(root, "build.json")
         verify_run(build, "android-release", head)
         require(build.get("head_branch") == f"v{version}", "Release build did not run on the candidate tag")
@@ -218,11 +270,14 @@ def main():
         notes = verify_notes(root, version)
         require(f"Source commit: `{head}`" in notes, "Release notes have no matching source evidence")
         require(shorebird_provenance(version) in notes, "Release notes have no Shorebird release provenance")
-    elif action == "published":
-        require(release.get("draft") is False, "Release remains a draft")
-        require(release.get("prerelease") is False, "Release remains a prerelease")
+    elif action == "promote":
+        require_unchanged(root, release)
+        verify_promotable(root, release, version)
+    elif action == "promoted":
+        require_unchanged(root, release)
+        require(release.get("draft") is False, "Release is a draft")
+        require(release.get("prerelease") is False, "Release remains a pre-release")
         require(read_json(root, "latest.json").get("id") == release.get("id"), "Release is not latest")
-        verify_notes(root, version)
     else:
         raise SystemExit("Unknown verification action")
 

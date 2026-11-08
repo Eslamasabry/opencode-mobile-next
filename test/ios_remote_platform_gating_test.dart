@@ -19,7 +19,6 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/platform/share_intent.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -326,23 +325,6 @@ void main() {
       );
       expect(await background.dismissCodingAlert('input:session-1'), isFalse);
       expect(await background.consumeCodingAlertOpen(), isNull);
-
-      final termux = await TermuxBridge.capabilities();
-      expect(termux.platformSupported, isFalse);
-      expect(termux.installed, isFalse);
-      expect(await TermuxBridge.requestPermission(), isFalse);
-      expect(await TermuxBridge.openTermux(), isFalse);
-      expect(await TermuxBridge.openAppSettings(), isFalse);
-      await expectLater(
-        TermuxBridge.run('true'),
-        throwsA(
-          isA<TermuxBridgeException>().having(
-            (error) => error.code,
-            'code',
-            TermuxBridge.unsupportedPlatformCode,
-          ),
-        ),
-      );
 
       const voice = AndroidVoiceDevicePlatform();
       final device = await voice.getDeviceInfo();

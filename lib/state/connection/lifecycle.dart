@@ -22,6 +22,56 @@ mixin _ConnectionControllerLifecycle on ChangeNotifier {
   bool _lifecycleSuspended = false;
   bool _lifecycleWasBackgrounded = false;
 
+  /// When the connect in flight began, for `conn_attempt`; null once its
+  /// result was reported (health telemetry).
+  DateTime? _connAttemptStart;
+
+  /// The live connection dropped and has not come back yet (`conn_drop`):
+  /// the reason word, reported with `recovered` when it settles.
+  String? _pendingDropReason;
+
+  String get _healthServerKind =>
+      BuiltinLinux.managesServerUrl(
+        (_self._connectedProfile ?? _self.profile)?.baseUrl,
+      )
+      ? 'phone'
+      : 'computer';
+
+  /// Reports the connect in flight as [ok] (once).
+  void _reportConnAttempt({required bool ok, Object? failure}) {
+    final started = _connAttemptStart;
+    if (started == null) return;
+    _connAttemptStart = null;
+    HealthFlow.connAttempt(
+      serverKind: _healthServerKind,
+      ok: ok,
+      elapsed: DateTime.now().difference(started),
+      failure: failure,
+    );
+  }
+
+  /// The stream lost the server: remember why, so the answer to "did it
+  /// come back" can be reported when it settles.
+  void _noteConnDrop() {
+    _pendingDropReason ??= _lifecycleSuspended || _appBackgrounded
+        ? 'background'
+        : failKindOf(_self.lastFailure) == 'timeout'
+        ? 'idle_timeout'
+        : 'other';
+  }
+
+  /// The drop ended: back ([recovered]) or given up on.
+  void _settleConnDrop({required bool recovered}) {
+    final reason = _pendingDropReason;
+    if (reason == null) return;
+    _pendingDropReason = null;
+    HealthFlow.connDrop(
+      serverKind: _healthServerKind,
+      reason: reason,
+      recovered: recovered,
+    );
+  }
+
   /// Between a suspend and the next resume: the app is out of sight.
   bool _appBackgrounded = false;
   Future<void>? _lifecycleResume;
@@ -259,7 +309,6 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     if (currentApi == null) return;
     final generation = _generation;
     try {
-      _ensureLocalServerWakeLock();
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return;
       if (!health.healthy) {
@@ -361,7 +410,6 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _notifyListeners();
     enablePollingFallback();
     try {
-      _ensureLocalServerWakeLock();
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return false;
       if (!health.healthy) {
@@ -485,6 +533,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _failCurrentConnection(String error, {Object? failure}) {
+    _reportConnAttempt(ok: false, failure: failure);
     _retireTransport();
     version = null;
     status = StreamStatus.disconnected;
@@ -494,6 +543,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _retireTransport() {
+    _settleConnDrop(recovered: false);
     _resetQuietReconnect();
     _feedRetireTransport();
     _resetTurnStalls();

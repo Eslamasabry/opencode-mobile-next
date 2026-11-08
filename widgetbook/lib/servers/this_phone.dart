@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 import 'package:widgetbook/widgetbook.dart';
 
@@ -84,7 +83,7 @@ Widget _scene({
         connProvider.overrideWithValue(app.connection),
         builtinLinuxProvider.overrideWithValue(linux),
       ],
-      child: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      child: const ThisPhoneScreen(),
     );
   },
 );

@@ -74,12 +74,6 @@ class _GitRepairBodyState extends State<_GitRepairBody> {
     });
   }
 
-  Future<void> _allowAndRun() async {
-    final allowed = await widget.actions.allowTermux();
-    if (!mounted || !allowed) return;
-    await _run();
-  }
-
   void _close(bool repaired) => Navigator.of(context).pop(repaired);
 
   @override
@@ -106,36 +100,6 @@ class _GitRepairBodyState extends State<_GitRepairBody> {
           label: l10n.gitRepairStart,
           onPressed: () => _close(true),
         ),
-        details: details,
-      ),
-      GitRepairResult.termux => KitStateView(
-        key: const ValueKey('git-repair-termux'),
-        size: KitStateSize.inline,
-        icon: AppIconography.terminal,
-        tone: AppStatusTone.neutral,
-        title: outcome.termux == GitRepairTermux.notAllowed
-            ? l10n.gitRepairTermuxNotAllowedTitle
-            : l10n.gitRepairTermuxNoAnswerTitle,
-        body: outcome.termux == GitRepairTermux.notAllowed
-            ? l10n.gitRepairTermuxNotAllowedBody
-            : l10n.gitRepairTermuxNoAnswerBody,
-        primary: outcome.termux == GitRepairTermux.notAllowed
-            ? KitAction(
-                key: const ValueKey('git-repair-allow'),
-                label: l10n.gitRepairAllow,
-                onPressed: () => unawaited(_allowAndRun()),
-              )
-            : KitAction(
-                key: const ValueKey('git-repair-again'),
-                label: l10n.gitRepairAgain,
-                onPressed: () => unawaited(_run()),
-              ),
-        secondary: outcome.termux == GitRepairTermux.notAllowed
-            ? null
-            : KitAction(
-                label: l10n.gitRepairOpenTermux,
-                onPressed: () => unawaited(widget.actions.openTermux()),
-              ),
         details: details,
       ),
       GitRepairResult.cannotRepair => KitStateView(
@@ -175,16 +139,10 @@ class _GitRepairBodyState extends State<_GitRepairBody> {
         progress.done,
         progress.total,
       ),
-      GitRepairStage.askingTermux => l10n.gitRepairAskingTermux(
-        progress.done,
-        progress.total,
-      ),
       GitRepairStage.checking => l10n.gitRepairChecking,
     };
     final counted =
-        progress.total > 0 &&
-        (progress.stage == GitRepairStage.restoring ||
-            progress.stage == GitRepairStage.askingTermux);
+        progress.total > 0 && progress.stage == GitRepairStage.restoring;
     return KitStateView(
       key: const ValueKey('git-repair-working'),
       size: KitStateSize.inline,

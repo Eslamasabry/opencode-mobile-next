@@ -97,6 +97,9 @@ extension _PaseoPrompts on PaseoGateway {
       Error.throwWithStackTrace(error, stack);
     }
     final agent = _agents[sessionID];
+    AppTelemetry.failure('prompt_not_accepted', {
+      'kind': classifyAgentRunFailure(reason).name,
+    });
     String? named(Object? value) =>
         value is String && value.isNotEmpty && value != paseoDefaultModel
         ? value
@@ -162,6 +165,7 @@ extension _PaseoPrompts on PaseoGateway {
     final Map<String, dynamic> result;
     _creating++;
     final sentAt = DateTime.now().millisecondsSinceEpoch;
+    final startWatch = Stopwatch()..start();
     try {
       result = await transport.request(
         'create_agent_request',
@@ -197,6 +201,19 @@ extension _PaseoPrompts on PaseoGateway {
         },
       );
     } on PaseoFailure catch (error) {
+      HealthFlow.agentStart(
+        agent: _healthAgentWord(provider),
+        ok: false,
+        elapsed: startWatch.elapsed,
+        failKind: switch (error.kind) {
+          PaseoFailureKind.authentication => 'needs_sign_in',
+          PaseoFailureKind.disconnected ||
+          PaseoFailureKind.deliveryUnknown => 'timeout',
+          PaseoFailureKind.unavailable ||
+          PaseoFailureKind.notFound => 'not_installed',
+          _ => 'other',
+        },
+      );
       if (error.kind == PaseoFailureKind.deliveryUnknown && !browserRequested) {
         final start = (
           messageID: messageID,
@@ -210,6 +227,11 @@ extension _PaseoPrompts on PaseoGateway {
       _creating--;
       if (_creating == 0 && _closed) _heldEvents.clear();
     }
+    HealthFlow.agentStart(
+      agent: _healthAgentWord(provider),
+      ok: true,
+      elapsed: startWatch.elapsed,
+    );
     final agent = paseoObject(result['agent']);
     _checkLocation(scope, locationEpoch);
     if (agent['provider'] != provider) {
@@ -345,3 +367,7 @@ extension _PaseoPrompts on PaseoGateway {
     agent['thinkingOptionId'] = thinking;
   }
 }
+
+/// The contract's agent word for a Paseo provider id.
+String _healthAgentWord(String provider) =>
+    provider == 'claude' ? 'claude_code' : provider;

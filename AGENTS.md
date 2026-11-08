@@ -64,7 +64,8 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   `lib/domain/` protocol-neutral gateway (`ServerGateway`,
   `ServerOperationsGateway`, `ServerCapabilities`);
   `lib/state/` profiles/Keystore, `ConnectionController`, offline queue;
-  `lib/termux/`, `lib/background/`, `lib/voice/`, `lib/platform/` native
+  `lib/builtin/` (built-in Linux, the only phone engine), `lib/background/`,
+  `lib/voice/`, `lib/platform/` native
   bridges; `lib/ui/` screens and widgets.
 - **Kit only (owner rule, 2026-09-26):** every UI component comes from `lib/ui/kit/`.
   Outside the kit, `lib/ui/` only arranges kit parts with layout, scrolling, builder,
@@ -86,8 +87,8 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   `lib/ui/screens/chat_screen.dart` **plus every `chat/*.dart` part file as one
   library**, `lib/domain/server_gateway.dart`, `lib/domain/product_repository.dart`,
   `lib/main.dart`, `lib/l10n/` output, each protocol cluster, and both halves of
-  any MethodChannel (`oc/termux`, `oc/voice`, `oc/camera`, `oc/background`,
-  `oc/share`, `oc/byo_host_signer`).
+  any MethodChannel (`oc/app` (app settings, signing certificate),
+  `oc/voice`, `oc/camera`, `oc/background`, `oc/share`, `oc/byo_host_signer`).
 - OpenCode 2 event stream is volatile: after reconnect, reconcile by refetch,
   not replay (the beta session log replays only durable events; deltas and
   `tool.progress` never replay). Wire truth: `docs/opencode2-protocol-notes.md`.
@@ -147,6 +148,7 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
 - `master` is fast-forwarded only at approved milestones — see
   `docs/verification/` for the branch ledger.
 - Releases are Shorebird releases (CI tag build or `scripts/release.sh sideload`); Dart-only fixes ship as `scripts/release.sh patch` against the exact released version; native/asset/pubspec changes need a new release.
+- CI publishes each release as a GitHub pre-release; after 1–2 quiet days `scripts/release.sh promote <tag> [--publish]` re-verifies SHA256SUMS/signer and makes it latest.
 - Releases/signing go through `scripts/release.sh` / `scripts/cut-alpha.sh`
   (master-only, clean tree, dry-run by default). Never publish, tag, or use
   signing secrets without explicit maintainer approval.

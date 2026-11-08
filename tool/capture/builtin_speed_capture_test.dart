@@ -17,7 +17,6 @@ import 'package:opencode_mobile/builtin/reply_watch.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 import '../../test/revamp/screen_phone_1_fixtures.dart';
@@ -174,7 +173,7 @@ void main() {
       try {
         await pumpPhone(
           tester,
-          home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+          home: const ThisPhoneScreen(),
           linux: _Linux(),
           profiles: [inAppProfile],
           size: size,

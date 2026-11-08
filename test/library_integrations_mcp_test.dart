@@ -106,8 +106,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Providers unavailable'), findsOneWidget);
-    expect(find.text('Could not load this section'), findsOneWidget);
+    // The section names itself and says why in the app's words; the
+    // gateway's English sentence is not shown (issue #124).
+    expect(find.text('Could not load providers'), findsOneWidget);
+    expect(
+      find.text("The server didn't send this list. Try again."),
+      findsOneWidget,
+    );
+    expect(find.text('Providers unavailable'), findsNothing);
+    expect(find.text('Could not load this section'), findsNothing);
     await tester.scrollUntilVisible(
       find.text('Project handbook'),
       180,

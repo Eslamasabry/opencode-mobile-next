@@ -18,7 +18,6 @@ to the wrong one costs everybody a week.
 | The Android app crashes, renders wrong, loses state, or a control does nothing | **Here** — open a bug report |
 | A tool ran, was refused, or produced the wrong result on the server | The **OpenCode server** project — reproduce with the `opencode` CLI first |
 | The model is slow, refuses, hallucinates, or bills you oddly | Your **model provider** |
-| `proot-distro`, `pkg`, or the Ubuntu chroot fails on its own | **Termux** / proot-distro |
 | A code-push update fails to download or apply | **Shorebird**, unless the app's own update UI is what is broken |
 | An APK will not install, or Android warns about the signer | Read the signing section of the [README](README.md) first — sideload builds are signed with the project's own certificate |
 
@@ -35,7 +34,7 @@ not this app.
    Android version and device, OpenCode server version, and whether the
    server is v1 or v2.
 4. **Note how you connect** — adb reverse, SSH forward, TLS/Tailscale, or
-   on-device Termux. A surprising share of connection reports come down to
+   built-in Linux on the phone. A surprising share of connection reports come down to
    this.
 5. **Redact.** Never paste a server password, a provider API key, a real
    server hostname, or an unredacted session transcript. The app's

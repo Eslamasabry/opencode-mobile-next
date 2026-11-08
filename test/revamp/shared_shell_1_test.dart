@@ -159,53 +159,6 @@ void main() {
     });
   });
 
-  group('local agent sheets', () {
-    testWidgets('stop says what keeps running and cancels with Keep running', (
-      tester,
-    ) async {
-      final context = await _host(tester);
-      final answer = confirmStopLocalAgents(context);
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const ValueKey('stop-local-agents-confirm-sheet')),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Keep running'));
-      await tester.pumpAndSettle();
-      expect(await answer, isFalse);
-    });
-
-    testWidgets('restart lists the conversations it would interrupt', (
-      tester,
-    ) async {
-      final context = await _host(tester);
-      final answer = confirmRestartLocalAgents(context, busyConversations: 2);
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining('2 conversations are generating'),
-        findsOneWidget,
-      );
-      await tester.tap(
-        find.byKey(const ValueKey('confirm-restart-local-agents')),
-      );
-      await tester.pumpAndSettle();
-      expect(await answer, isTrue);
-    });
-
-    testWidgets('remove keeps "Keep it" as its way out', (tester) async {
-      final context = await _host(tester);
-      final answer = confirmRemoveLocalAgents(context);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Remove Claude Code from this phone?'), findsOneWidget);
-      await tester.tap(find.text('Keep it'));
-      await tester.pumpAndSettle();
-      expect(await answer, isFalse);
-    });
-  });
-
   group('embedded-connection-status-banner', () {
     // Since 3d64653c the line presents the controller's connection
     // snapshot: a server that stopped answering, not a raw stream state.

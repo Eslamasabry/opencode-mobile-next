@@ -402,7 +402,6 @@ String _safePairingOutcomeReason(PairingUrlOutcome outcome) {
         'network address.',
     cleartextConfirmReason,
     'Enter a complete server URL, such as https://server.example:4096.',
-    'Server URLs must use https://, or http:// for local Termux.',
     'Server URLs must use https://, or http:// for a local server.',
     'Do not put credentials in the URL. Use the fields below.',
     'Remove query parameters and fragments from the server URL.',

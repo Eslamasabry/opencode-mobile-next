@@ -24,6 +24,27 @@ val ocBuiltinRuntimeQa = (project.findProperty("ocBuiltinRuntimeQa") as String?)
 require(listOf(ocBd9Smoke, ocBb8Smoke, ocBuiltinRuntimeQa).count { it } <= 1) {
     "Choose one instrumentation runner per QA build."
 }
+// Crash reporting (lib/telemetry): the Firebase config is private and never in
+// git. Looked up in OC_GOOGLE_SERVICES_DIR (Gradle property or environment
+// variable; default ~/.config/oc-app/firebase) as
+// google-services-<applicationId>.json and copied to app/google-services.json
+// (git-ignored) at configure time. Without it the plugins are not applied and
+// the app builds with the no-op reporter. The preview build has another
+// package name, so it never gets one.
+val ocGoogleServicesDir = (project.findProperty("OC_GOOGLE_SERVICES_DIR") as String?)
+    ?: System.getenv("OC_GOOGLE_SERVICES_DIR")
+    ?: "${System.getProperty("user.home")}/.config/oc-app/firebase"
+val ocGoogleServicesSource = file("$ocGoogleServicesDir/google-services-io.github.eslamasabry.opencode_mobile.json")
+val ocGoogleServicesTarget = file("google-services.json")
+val ocTelemetryConfig = !ocPreview && ocGoogleServicesSource.isFile
+if (ocTelemetryConfig) {
+    ocGoogleServicesSource.copyTo(ocGoogleServicesTarget, overwrite = true)
+    pluginManager.apply("com.google.gms.google-services")
+    pluginManager.apply("com.google.firebase.crashlytics")
+} else {
+    ocGoogleServicesTarget.delete()
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.isFile) {

@@ -205,7 +205,6 @@ class _Controller extends ConnectionController {
     super.v2GatewayFactory,
     super.eventStreamFactory,
     super.globalEventStreamFactory,
-    super.localWakeLockEnsurer,
   });
 
   bool holdMergedRefresh = false;
@@ -230,7 +229,6 @@ class _Harness {
       },
       eventStreamFactory: stream,
       globalEventStreamFactory: stream,
-      localWakeLockEnsurer: () async {},
     );
   }
   _Script script = _Script();

@@ -37,6 +37,7 @@ extension _ChatSessionActions on _ChatScreenState {
   Future<void> _abort() async {
     _abortSucceeded = false;
     if (_aborting) return;
+    AppTelemetry.crumb('chat.stop');
     if (!_conn.isIsolated) KitHaptics.commit(context);
     // The send is still waiting (for the connection, the model choice):
     // it is called off here, and nothing reaches the server.

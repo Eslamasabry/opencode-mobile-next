@@ -731,6 +731,8 @@ class BuiltinLinux(private val context: Context) {
     @Synchronized
     fun prootCommand(program: List<String>, agentUser: Boolean = false, compat: Boolean = false): List<String> {
         prepareGuestForProot()
+        // A phone whose Node.js runs only this way (issue #117) gets it everywhere.
+        val compatMode = compat || NodeCompatProot.required(rootfs)
         val agentRoot = if (agentUser) PhoneAgentPaths.prepare(context.filesDir, "linux/agent-root-view").apply {
             PhoneAgentPaths.prepare(this, "projects")
         } else null
@@ -758,7 +760,7 @@ class BuiltinLinux(private val context: Context) {
                 else "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "TERM=xterm-256color",
             "TMPDIR=/tmp",
-        ) + (if (compat) listOf(COMPAT_GLIBC_TUNABLES) else emptyList()) + program
+        ) + (if (compatMode) listOf(COMPAT_GLIBC_TUNABLES) else emptyList()) + program
         workLeases.observeTerminalsSoon()
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
     }
@@ -1850,8 +1852,9 @@ class BuiltinLinux(private val context: Context) {
             "PROOT_TMP_DIR" to tmp.absolutePath,
             "LD_LIBRARY_PATH" to nativeDir,
         )
-        // Compatibility mode (issue #117): no seccomp acceleration in proot.
-        return if (compat) base + ("PROOT_NO_SECCOMP" to "1") else base
+        // Compatibility mode (issue #117): no seccomp acceleration in proot,
+        // also for every proot of a phone whose Node.js needed it in setup.
+        return if (compat || NodeCompatProot.required(rootfs)) base + ("PROOT_NO_SECCOMP" to "1") else base
     }
 
     // ---- long-running services ---------------------------------------------

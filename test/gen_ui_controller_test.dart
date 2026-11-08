@@ -656,7 +656,6 @@ void main() {
                   ),
               genUiInstaller: installer,
               phoneEngineBridge: _EngineBridge(),
-              localWakeLockEnsurer: () async {},
             )
             ..api = mainApi
             ..repository = _SideRepo(mainApi)

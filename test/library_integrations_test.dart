@@ -305,16 +305,16 @@ void main() {
 
       expect(find.text('GitHub'), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.text('Could not refresh MCP data. Try again.'),
+        find.text('Could not load MCP resources'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
       expect(
-        find.text('Could not refresh MCP data. Try again.'),
+        find.text("The server didn't send this list. Try again."),
         findsOneWidget,
       );
       expect(find.text('Resources unavailable'), findsNothing);
-      expect(find.text('Could not load this section'), findsOneWidget);
+      expect(find.text('Could not load this section'), findsNothing);
     },
   );
 

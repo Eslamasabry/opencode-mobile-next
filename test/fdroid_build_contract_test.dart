@@ -37,7 +37,7 @@ void main() {
       expect(caps.supportsQrPairing, isTrue);
       // Everything else on the phone is still there.
       expect(caps.supportsBackgroundService, isTrue);
-      expect(caps.supportsTermux, isTrue);
+      expect(caps.supportsThisPhone, isTrue);
       expect(caps.supportsVoice, isTrue);
     });
 

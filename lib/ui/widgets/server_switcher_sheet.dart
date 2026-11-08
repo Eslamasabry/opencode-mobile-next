@@ -10,7 +10,6 @@ import '../../domain/profile_monitor.dart'
     show ProfileAttentionSnapshot, ProfileMonitorStatus;
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
-import '../../state/local_server_controls.dart';
 import '../../state/profile_monitor.dart' show ProfileMonitor;
 import '../../state/profiles.dart';
 import '../app_theme.dart';
@@ -19,9 +18,7 @@ import '../screens/chat/permission_sheet.dart'
     show PermissionAnswers, answerPermissionRequest, permissionSummary;
 import '../screens/servers_screen.dart' show ServersRouteRequest;
 import 'safety_confirms.dart';
-import 'local_agent_server_entry.dart';
 import 'phone_server_card.dart';
-import 'termux_running_server_entry.dart';
 
 /// What the person chose in the server switcher. The sheet only chooses; the
 /// shell acts after it has closed, so navigation never runs from a context
@@ -97,8 +94,8 @@ Future<ServerSwitcherChoice?> showServerSwitcher(
 /// - any other: its name, and that its password must be entered again.
 ///
 /// A question with options or free text, or a form, is "Needs you" with
-/// Open, which opens that conversation. The phone's own servers (in the
-/// app, in Termux, Claude Code) are rows of the same group. Most urgent
+/// Open, which opens that conversation. The phone's own server is a row of
+/// the same group. Most urgent
 /// first: waiting on the person, then working, then the rest as saved.
 class ServerSwitcherSheet extends StatelessWidget {
   const ServerSwitcherSheet({super.key, required this.controller});
@@ -146,12 +143,6 @@ class ServerSwitcherSheet extends StatelessWidget {
     // after its address or the runtime it was saved with.
     final phone = phoneServerProfile(profiles, current?.id);
     final currentIsPhone = current != null && current.id == phone?.id;
-    // The phone's own servers in Termux are their own rows, "Connected"
-    // when in use: their saved sign-ins are never listed again.
-    final connectedForRows = controller.api == null ? null : current?.id;
-    final currentIsPhoneRow =
-        current != null &&
-        shownAsPhoneRow(current, among: profiles, preferID: connectedForRows);
     ProfileAttentionSnapshot? watchedOf(ServerProfile profile) =>
         monitor != null && controller.isProfileReadable(profile.id)
         ? monitor.snapshotFor(profile.id)
@@ -169,13 +160,7 @@ class ServerSwitcherSheet extends StatelessWidget {
 
     final others = [
       for (final profile in profiles)
-        if (profile.id != current?.id &&
-            !looksLikeInAppServer(profile) &&
-            !shownAsPhoneRow(
-              profile,
-              among: profiles,
-              preferID: connectedForRows,
-            ))
+        if (profile.id != current?.id && !looksLikeInAppServer(profile))
           profile,
     ];
     final states = {for (final p in others) p.id: stateOf(p)};
@@ -185,15 +170,6 @@ class ServerSwitcherSheet extends StatelessWidget {
       return byRank != 0 ? byRank : order[a.id]!.compareTo(order[b.id]!);
     });
 
-    // A phone row leaves in place and keeps its server running.
-    Future<void> disconnectInPlace() async {
-      if (!await confirmDisconnectServer(context, controller)) return;
-      await controller.disconnect(keepActive: true);
-      if (navigator.mounted) {
-        navigator.pop(const ServerSwitcherLeave(alreadyDisconnected: true));
-      }
-    }
-
     // Any other server: the shell leaves once the sheet has closed.
     Future<void> leave() async {
       if (!await confirmDisconnectServer(context, controller)) return;
@@ -202,16 +178,6 @@ class ServerSwitcherSheet extends StatelessWidget {
 
     void connect(ServerProfile profile) => navigator.pop(
       ServerSwitcherOpenServers(ServersRouteRequest.connect(profile.id)),
-    );
-
-    // "Open" on the server already behind this shell has nowhere to go but
-    // back to it; reconnecting would drop live state.
-    void openPhoneRow(ServerProfile profile) => navigator.pop(
-      controller.api != null && profile.id == current?.id
-          ? null
-          : ServerSwitcherOpenServers(
-              ServersRouteRequest.connect(profile.id, detectedRunning: true),
-            ),
     );
 
     void openChat(ChatFeedItem item) =>
@@ -257,61 +223,7 @@ class ServerSwitcherSheet extends StatelessWidget {
       );
     }
 
-    final connectedID = controller.api == null ? null : current?.id;
-    // A live server the app found on this phone, and the Claude Code daemon
-    // on it, are controlled where they are shown (plan 5.7). Each decides on
-    // its own whether there is anything to show and draws its own hairline.
-    final phoneEntries = <Widget>[
-      TermuxRunningServerEntry(
-        dividerAbove: true,
-        profiles: profiles,
-        busy: false,
-        revision: 0,
-        connectedProfileID: connectedID,
-        busyConversations: controller.busySessions.length,
-        actions: () {
-          final controls = LocalServerControls(
-            store: controller.store,
-            connection: controller,
-          );
-          return LocalServerCardActions(
-            restart: () async => controls.restart(),
-            stop: controls.stop,
-          );
-        }(),
-        onDisconnect: disconnectInPlace,
-        onForget: (profile) => navigator.pop(
-          ServerSwitcherOpenServers(ServersRouteRequest.forget(profile.id)),
-        ),
-        onManage: () => navigator.pop(const ServerSwitcherOpenPhoneSetup()),
-        onConnect: openPhoneRow,
-        onEnterCredentials: (server, existing) => navigator.pop(
-          ServerSwitcherOpenServers(
-            ServersRouteRequest.enterPhoneCredentials(
-              profileID: existing?.id,
-              openCode2: true,
-            ),
-          ),
-        ),
-      ),
-      LocalAgentServerEntry(
-        dividerAbove: true,
-        profiles: profiles,
-        busy: false,
-        revision: 0,
-        connectedProfileID: connectedID,
-        busyConversations: controller.busySessions.length,
-        onDisconnect: disconnectInPlace,
-        onForget: (profile) => navigator.pop(
-          ServerSwitcherOpenServers(ServersRouteRequest.forget(profile.id)),
-        ),
-        onManage: () => navigator.pop(const ServerSwitcherOpenPhoneSetup()),
-        onConnect: openPhoneRow,
-      ),
-    ];
-
-    final showCurrent =
-        current != null && !currentIsPhone && !currentIsPhoneRow;
+    final showCurrent = current != null && !currentIsPhone;
     final entries = <Widget>[
       if (currentIsPhone) phoneRow(current),
       if (showCurrent)
@@ -381,7 +293,6 @@ class ServerSwitcherSheet extends StatelessWidget {
                       ),
                   ],
                 ),
-                ...phoneEntries,
               ],
             ),
           ],
@@ -961,8 +872,9 @@ class _SavedServerRow extends StatelessWidget {
   }
 }
 
-IconData _serverIcon(ServerProfile profile) =>
-    isPhoneOwnServer(profile) ? AppIconography.phone : AppIconography.server;
+IconData _serverIcon(ServerProfile profile) => looksLikeInAppServer(profile)
+    ? AppIconography.phone
+    : AppIconography.server;
 
 /// The same words as the shell's server pill for the same phase.
 String _statusLabel(AppLocalizations l10n, ConnectionStatusPhase status) =>

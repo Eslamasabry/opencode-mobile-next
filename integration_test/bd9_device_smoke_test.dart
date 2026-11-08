@@ -76,12 +76,8 @@ void main() {
         app.AppBootstrapGate(
           diagnostics: activeDiagnostics,
           loader: () async => AppBootstrap(store),
-          controllerFactory: (store, diagnostics) => ConnectionController(
-            store,
-            diagnostics: diagnostics,
-            // The fixture is an HTTP server, not a Termux-hosted runtime.
-            localWakeLockEnsurer: () async {},
-          ),
+          controllerFactory: (store, diagnostics) =>
+              ConnectionController(store, diagnostics: diagnostics),
         ),
       );
       phase = Bd9SmokePhase.conversation;
