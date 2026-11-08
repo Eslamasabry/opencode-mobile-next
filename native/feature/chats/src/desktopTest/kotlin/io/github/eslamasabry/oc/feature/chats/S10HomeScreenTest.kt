@@ -251,3 +251,4 @@ internal fun mixed(extra: Int = 0, claude: Boolean = false): ChatsUi {
         .copy(archivable = items.map { it.identity }.toImmutableSet(), pinned = persistentSetOf())
 
 
+}
