@@ -53681,7 +53681,7 @@ abstract class AppLocalizations {
   /// Privacy and data: what the usage switch sends. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.'**
+  /// **'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Also sends timings to Firebase Performance Monitoring: how long app start, connecting, the first reply, setup steps and starting an agent take. Only fixed words, ranges and numbers, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.'**
   String get telemetryUsageDetail;
 
   /// Privacy and data: switch for sending crash reports (Google Firebase Crashlytics).
