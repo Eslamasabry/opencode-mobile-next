@@ -126,6 +126,34 @@ class SignInTerminalPresenterTest {
         }
 
     @Test
+    fun `B-189 Claude's handed-over page is the one offered again, not the printed one that asks for a code`() =
+        loop.run {
+            val screen = presenter("claude")
+            loop.pump()
+            val handed =
+                "https://claude.com/cai/oauth/authorize?code=true&client_id=9d1c&response_type=code" +
+                    "&redirect_uri=http%3A%2F%2Flocalhost%3A45369%2Fcallback&state=XyZ"
+            val printed =
+                "https://claude.com/cai/oauth/authorize?code=true&client_id=9d1c&response_type=code" +
+                    "&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback&state=XyZ"
+            val terminal = host.terminals.single()
+            terminal.eventsFlow.emit(TerminalEvent.OpenUrl(handed))
+            loop.pump()
+            assertEquals(listOf(handed), links.opened)
+            assertTrue(screen.state.value.canOpenPage)
+            terminal.transcript.value = "If the browser didn't open, visit: $printed\n"
+            loop.pump()
+            screen.openSignInPage()
+            loop.pump()
+            assertEquals(listOf(handed, handed), links.opened)
+            // A new sign-in forgets it: only that run's pages are offered.
+            lease.held = true
+            screen.startAgain()
+            loop.pump()
+            assertFalse(screen.state.value.canOpenPage)
+        }
+
+    @Test
     fun `DESKTOP-WEB-CROSS-30 Send to terminal writes what the field sends`() =
         loop.run {
             val screen = presenter()

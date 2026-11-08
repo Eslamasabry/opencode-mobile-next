@@ -198,6 +198,7 @@ public class ScheduleEngine(
             if (!ScheduleIds.valid(profileId)) continue
             try {
                 migrate(profileId)
+                advanceAllSettled(profileId)
                 sync(profileId)
             } catch (e: CancellationException) {
                 throw e
@@ -334,6 +335,23 @@ public class ScheduleEngine(
         schedule.due(now, zone()) ?: return
         val ranAt = (claims.claimedAtMs(entry) ?: now).coerceIn(entry.dueAtMs, now)
         store.advanceOccurrence(schedule, Recurrences.next(schedule.recurrence, ranAt, zone()))
+    }
+
+    /**
+     * Before a restore arms anything: a stored occurrence that is already past and already settled (Flutter 2.1.4 ran
+     * it late and left `nextRunAt` on it) moves to its next time now. Arming it as stored gives the OS only an
+     * already-due run and no exact alarm, so after the update the phone held no alarm for the schedule until that
+     * catch-up worker had run (upgrade gate run 6, schedule-armed `1 -> 0`). An unsettled past occurrence is still
+     * owed and stays as it is, armed due.
+     */
+    private suspend fun advanceAllSettled(profileId: String) {
+        val now = nowMs()
+        for (schedule in store.load(profileId)) {
+            val due = schedule.nextRunAtMs ?: continue
+            if (!schedule.enabled || due > now) continue
+            val entry = ArmedEntry(profileId, schedule.id, schedule.revision, due)
+            if (claims.finished(entry)) advanceSettled(entry)
+        }
     }
 
     /**

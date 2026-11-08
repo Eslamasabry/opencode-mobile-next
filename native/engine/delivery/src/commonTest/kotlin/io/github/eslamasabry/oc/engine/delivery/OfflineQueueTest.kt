@@ -6,7 +6,9 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.ModelRef
+import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueErrors
+import io.github.eslamasabry.oc.engine.delivery.queue.QueueRead
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
 import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchScope
 import kotlinx.coroutines.CompletableDeferred
@@ -42,6 +44,26 @@ class OfflineQueueTest {
         w.queue.flush()
         assertEquals(2, w.link.delivered.size, "a second flush sends nothing twice")
     }
+
+    @Test
+    fun `B-146 another server's queue writing the shared queue during the pass does not skip this server's prompt`() =
+        runTest {
+            val w = World(Disk(), this)
+            w.queue.queuePrompt(prompt("b1", "e2e:echo queued once"))
+            // The other saved server's connection keeps its own queue over the same stored blob.
+            val other = OfflineQueueStore(w.kv, w.lanes.app)
+            w.link.transport = {
+                val read = other.load() as QueueRead.Readable
+                assertTrue(other.save(read.entries + prompt("a1", profile = P2)))
+                Outcome.Ok(Unit)
+            }
+            w.queue.flush()
+            assertEquals(listOf("e2e:echo queued once"), w.link.deliveredTexts())
+            assertEquals(listOf("a1"), w.queue.entries().map { it.id }, "the other server's prompt stays for it")
+            w.link.transport = { Outcome.Ok(Unit) }
+            w.queue.flush()
+            assertEquals(1, w.link.delivered.size, "never twice")
+        }
 
     @Test
     fun `B-STATE-038 the auto-send policy gates the flush, and an explicit retry still sends`() = runTest {

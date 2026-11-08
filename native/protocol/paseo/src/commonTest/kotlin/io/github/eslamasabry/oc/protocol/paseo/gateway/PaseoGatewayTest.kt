@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
@@ -327,6 +328,32 @@ class PaseoGatewayTest {
         assertEquals(PaseoTurnFailedTag, failed.tag)
         assertNull(failed.details) // never the daemon's words
         assertNull(failed.kind)
+    }
+
+    @Test
+    fun `B-189 a sign-in failure Claude sends in pieces becomes a sign-in error row, never reply text`() = runTest {
+        val h = streaming()
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        for (piece in listOf("Failed to", " authenticate: OAuth session expired", " and could not be refreshed")) {
+            h.daemon.push(
+                "agent_stream",
+                stream("a1", timeline(jsonOf("type" to "assistant_message", "text" to piece))),
+            )
+        }
+        h.daemon.push("agent_stream", stream("a1", turn("turn_failed")))
+        h.pump()
+        // The first piece alone reads as prose; once the reply reads as a failure it is an error row.
+        val row = h.events.filterIsInstance<GatewayEvent.MessageUpserted>().last().message
+        assertEquals(MessageErrorKind.ProviderAuth, row.errorKind)
+        assertTrue(row.errorText!!.contains("could not be refreshed"), "the agent's words, for Details only")
+        val shown = h.events.filterIsInstance<GatewayEvent.PartUpserted>().last().part
+        assertEquals("", shown.text, "the piece already shown as text is taken back")
+        assertTrue(
+            h.events.filterIsInstance<GatewayEvent.PartDelta>().none { "authenticate" in it.delta },
+            "no later piece reaches the reply text",
+        )
+        // The error row already said why: no second, generic failure.
+        assertTrue(h.events.filterIsInstance<GatewayEvent.RunEnded>().none { it.outcome is RunOutcome.Failed })
     }
 
     @Test

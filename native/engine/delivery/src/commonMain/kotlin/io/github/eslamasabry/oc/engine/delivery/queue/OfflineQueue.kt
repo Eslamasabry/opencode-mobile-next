@@ -743,7 +743,10 @@ public class OfflineQueue(
         // write begins.
         val marked = changes.withLock {
             val q = queue()
-            val index = q.indexOfFirst { it === entry && !it.dispatched }
+            // The same entry as read at the start of the pass, unchanged, not the same object: the queue blob is
+            // shared by every server's queue, and another server's write reloads this cache with new objects.
+            // Matching by identity skipped the prompt on that pass (B-146: the second server's prompt stayed queued).
+            val index = q.indexOfFirst { !it.dispatched && it.sameSend(entry) }
             if (index < 0 || !allowed()) return@withLock null
             inFlight = entry.id
             val next =
