@@ -264,6 +264,7 @@ public fun KitButton(
                 .semantics {
                     if (working) disabled()
                     if (semanticsLabel != null) contentDescription = semanticsLabel
+                    if (role == KitButtonRole.Primary && !hero) this[KitPrimaryButtonKey] = true
                 }
                 .then(if (hero) Modifier.testTag("kit-button-hero") else Modifier)
                 .then(
@@ -294,6 +295,13 @@ public fun KitButton(
         KitButtonWords(label, wordsColor, maxLines, shortcut, role)
     }
 }
+
+/**
+ * Marks a filled accent button in the semantics tree so a page test can hold the one-accent-button rule (audit C15):
+ * `onAllNodes(SemanticsMatcher.keyIsDefined(KitPrimaryButtonKey))` is at most one per page.
+ */
+public val KitPrimaryButtonKey: androidx.compose.ui.semantics.SemanticsPropertyKey<Boolean> =
+    androidx.compose.ui.semantics.SemanticsPropertyKey("KitPrimaryButton")
 
 /** True inside a stacked [io.github.eslamasabry.oc.ui.kit.action.KitActionBlock]: every action there fills one column. */
 internal val LocalKitStackedAction = androidx.compose.runtime.staticCompositionLocalOf { false }

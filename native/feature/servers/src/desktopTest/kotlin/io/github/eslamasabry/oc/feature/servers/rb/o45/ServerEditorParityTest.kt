@@ -78,6 +78,27 @@ class ServerEditorParityTest {
         override fun pickFound(finding: LanFinding) {}
     }
 
+    private fun androidx.compose.ui.test.ComposeUiTest.primaries() =
+        onAllNodes(SemanticsMatcher.keyIsDefined(io.github.eslamasabry.oc.ui.kit.KitPrimaryButtonKey))
+            .fetchSemanticsNodes()
+            .size
+
+    @Test
+    fun `C15 the connect step shows one accent button - Scan code leads and Save steps back`() =
+        runComposeUiTest {
+            setContent {
+                ServersTestTheme {
+                    ServerEditorScreen(ServerEditorUi(step = ServerEditorStep.Connect, canScan = true), Actions())
+                }
+            }
+            onNodeWithText("Scan code").assertExists()
+            onNodeWithText("Save and connect").assertExists()
+            kotlin.test.assertEquals(1, primaries(), "Scan code is the page's only accent button")
+            // Typing the address by hand makes Save and connect the lead again, and Scan is no longer on the page.
+            onNodeWithText("Enter the address instead").performScrollTo().performClick()
+            kotlin.test.assertEquals(1, primaries(), "Save and connect is the only accent button once Scan is gone")
+        }
+
     @Test
     fun `a new OpenCode server leads with pairing and manual fields open by a visible fold`() =
         runComposeUiTest {
