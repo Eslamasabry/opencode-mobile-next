@@ -64,7 +64,7 @@ defaults:
 jobs:
   where:
     # Chooses the runners for every other job. Self-hosted (the always-warm oc-native machine, native/tool/ci/LANES.md) is
-    # used ONLY for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
+    # used ONLY for native/next, native/screens-merge* and master, for workflow_dispatch and push events on this repository, and only when it is online and `runner` is not
     # `github`. Everything else, and every offline moment, runs on GitHub-hosted ubuntu-latest.
     name: runner
     runs-on: ubuntu-latest
@@ -84,11 +84,13 @@ jobs:
           EVENT: ${{ github.event_name }}
           CHOICE: ${{ inputs.runner || 'self' }}
           REPO: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
           GH_TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN || github.token }}
         run: |
           hosted='["ubuntu-latest"]'; self='["self-hosted","linux","x64","oc-native"]'; runs_on="$hosted"; why=""
           if [ "$EVENT" != workflow_dispatch ] && [ "$EVENT" != push ]; then why="event $EVENT is never allowed on the self-hosted runner"
           elif [ "$REPO" != Eslamasabry/opencode-mobile-next ]; then why="not the main repository"
+          elif [ "$REF" != native/next ] && [ "${REF#native/screens-merge}" = "$REF" ] && [ "$REF" != master ]; then why="branch $REF is not native/next, native/screens-merge* or master"
           elif [ "$CHOICE" = github ]; then why="runner=github requested"
           else
             # Listing runners needs repository administration read, which only RUNNER_STATUS_TOKEN has; the workflow token
