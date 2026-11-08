@@ -645,7 +645,7 @@ internal const val CHIPS_FADE_FEATHER_DP: Int = 14
 /** How much of the ground lies behind the chips at the fade's core: words behind them no longer read. */
 internal const val CHIPS_FADE_ALPHA: Float = .86f
 
-$a
+/** How far above a page's bottom block its content fades out (Apple's scroll edge effect: 16-24 dp). */
 internal const val EDGE_FADE_DP: Int = 20
 
 /** The words of [role]'s liquid pane over a feature's [source], for words that lie beside their pane (a bar). */

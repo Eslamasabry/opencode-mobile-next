@@ -110,7 +110,7 @@ public object AuroraImage {
     /** How far [clearSpotsOf] moves the frosted spots towards the raw ones. */
     public const val LIGHT_FROST_SHARE: Float = .25f
 
-$a
+    /** The drift at [t] seconds: the zoom over the cover scale and the pan as a share of the slack (-.85 .. .85). */
     public data class Drift(val zoom: Float, val panX: Float, val panY: Float)
 
     public fun driftAt(t: Double): Drift =

@@ -90,7 +90,7 @@ internal fun rememberLiveShaderBackdrop(look: LiveLook, strength: Float, time: (
     }
 }
 
-$a
+/** The drawn size in render pixels and render pixels per dp; [setFrame] sends them with the frame. */
 internal fun LiveUniforms.setSize(width: Float, height: Float, density: Float) {
     this.width = width
     this.height = height
