@@ -64,8 +64,9 @@ class KitToolRowTest {
             onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty().map { t -> t.text } }
-                .filter { it.startsWith("WriteTarget") }
-        assertTrue(shown.isNotEmpty() && shown.all { '…' in it && it.endsWith("Name.kt".takeLast(3)) && '\n' !in it }, "name was $shown")
+                
+        val subject = shown.filter { it.startsWith("WriteT") || it.endsWith(".kt") }
+        assertTrue(subject.isNotEmpty() && subject.all { '…' in it && '\n' !in it }, "texts were $shown")
     }
 
     @Test

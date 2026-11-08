@@ -109,7 +109,7 @@ class TopBarTitleLineTest {
                 KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
                     InWindow(360, 760) {
                         KitTopBar(
-                            "Terminal",
+                            "Quarterly planning notes",
                             exit = KitTopBarExit.Back,
                             exitLabel = "Back",
                             onExit = {},
