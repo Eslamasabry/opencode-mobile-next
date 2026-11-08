@@ -91,6 +91,17 @@ public object AddressRules {
     /** Dart isCleartextChoiceRequired: plain HTTP anywhere but this device needs the person's explicit choice. */
     public fun needsCleartextConsent(origin: ServerOrigin): Boolean = origin.scheme == "http" && !isLoopback(origin.host)
 
+    /**
+     * B-177 (audit 2026-11-08): plain HTTP may be used, or offered for consent, only on this device, a private LAN
+     * (10/8, 172.16/12, 192.168/16, fc00::/7, `*.local`), a link-local address (169.254/16, fe80::/10) or Tailscale
+     * (100.64/10, `*.ts.net`). Everything else is the public internet and needs HTTPS.
+     */
+    public fun cleartextAllowedHost(host: String): Boolean = classify(host) in CLEARTEXT_HOSTS
+
+    /** B-177: an `http` origin on the public internet. No consent can permit it; the person must use HTTPS. */
+    public fun cleartextNeedsHttps(origin: ServerOrigin): Boolean =
+        origin.scheme == "http" && !cleartextAllowedHost(origin.host)
+
     /** Dart normalizeCertificateFingerprint: 64 hex digits, colons allowed, lower-cased. */
     public fun normalizePin(fingerprint: String): Outcome<String> {
         val normalized = fingerprint.replace(":", "").lowercase()
@@ -104,6 +115,7 @@ public object AddressRules {
     // ---- parsing (plain common Kotlin: the same verdict on every platform)
 
     private val LOOPBACK = setOf("localhost", "127.0.0.1", "::1")
+    private val CLEARTEXT_HOSTS = setOf(HostClass.Loopback, HostClass.PrivateLan, HostClass.LinkLocal, HostClass.Tailnet)
     private val BARE = Regex("""^\[?[A-Za-z0-9._\-:]+]?(:\d{1,5})?$""")
     private val PIN = Regex("^[0-9a-f]{64}$")
 

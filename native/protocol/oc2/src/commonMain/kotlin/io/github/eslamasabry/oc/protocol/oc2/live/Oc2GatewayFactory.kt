@@ -34,7 +34,7 @@ public class Oc2GatewayFactory(
         // Unsaved addresses have no trust. Saved targets carry only trust bound to this origin.
         val cleartext =
             AddressRules.isLoopback(target.origin.host) ||
-                target.trust?.cleartextConsentAtMs != null
+                (target.trust?.cleartextConsentAtMs != null && !AddressRules.cleartextNeedsHttps(target.origin))
         if (target.origin.scheme != "https" && !cleartext)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
         val pin = target.trust?.pinnedLeafSha256
@@ -75,7 +75,8 @@ public class Oc2GatewayFactory(
         trust: ProfileTrust,
     ): Outcome<Health> {
         val loopback = AddressRules.isLoopback(origin.host)
-        if (origin.scheme != "https" && !loopback && trust.cleartextConsentAtMs == null)
+        val consented = trust.cleartextConsentAtMs != null && !AddressRules.cleartextNeedsHttps(origin) // B-177
+        if (origin.scheme != "https" && !loopback && !consented)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
         val pin = trust.pinnedLeafSha256
         val pinBytes = pin?.let { decodePin(it) ?: return Failure.UnreadableReply().failed() }
@@ -86,7 +87,7 @@ public class Oc2GatewayFactory(
                 TransportSpec(
                     origin,
                     AddressRules.classify(origin.host),
-                    loopback || trust.cleartextConsentAtMs != null,
+                    loopback || consented,
                     pinBytes,
                 )
             )
@@ -101,7 +102,8 @@ public class Oc2GatewayFactory(
         val profile = spec.profile
         val origin = profile.origin
         val loopback = AddressRules.isLoopback(origin.host)
-        if (origin.scheme != "https" && !loopback && profile.trust.cleartextConsentAtMs == null)
+        val consented = profile.trust.cleartextConsentAtMs != null && !AddressRules.cleartextNeedsHttps(origin) // B-177
+        if (origin.scheme != "https" && !loopback && !consented)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
         val pin = profile.trust.pinnedLeafSha256
         val pinBytes = pin?.let { decodePin(it) ?: return Failure.UnreadableReply().failed() }
@@ -112,7 +114,7 @@ public class Oc2GatewayFactory(
                 TransportSpec(
                     origin,
                     AddressRules.classify(origin.host),
-                    loopback || profile.trust.cleartextConsentAtMs != null,
+                    loopback || consented,
                     pinBytes,
                 )
             )

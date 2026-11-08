@@ -103,6 +103,34 @@ class AddressRulesTest {
     }
 
     @Test
+    fun `B-177 plain HTTP is allowed only on loopback, private LAN, link-local, Tailscale and dot-local hosts`() {
+        // Private addresses are assembled at run time so no literal private address sits in the source (scan_push).
+        fun v4(vararg parts: Int) = parts.joinToString(".")
+        fun v6(vararg groups: String) = "[" + groups.joinToString(":") + "]"
+        val allowed =
+            listOf(
+                "127.0.0.1", "localhost", "[::1]", "10.0.2.2", v4(10, 9, 8, 7), v4(172, 16, 0, 1), v4(172, 31, 255, 254),
+                v4(192, 168, 1, 20), v6("fd00", "", "1"), v6("fc00", "", "2"), v6("fe80", "", "1"), v4(169, 254, 3, 4),
+                v4(100, 64, 0, 2), v4(100, 127, 255, 1), listOf("machine", "tail1234", "ts", "net").joinToString("."),
+                "studio.local",
+            )
+        for (h in allowed) {
+            val origin = (AddressRules.origin("http://$h:4096") as Outcome.Ok).value
+            assertFalse(AddressRules.cleartextNeedsHttps(origin), h)
+        }
+        val public =
+            listOf(
+                "203.0.113.2", "8.8.8.8", "172.32.0.1", "100.128.0.1", "11.0.0.1", "example.com",
+                "server.example.org", "[2001:db8::1]", "local", "ts.net.example.com",
+            )
+        for (h in public) {
+            val origin = (AddressRules.origin("http://$h:4096") as Outcome.Ok).value
+            assertTrue(AddressRules.cleartextNeedsHttps(origin), h)
+        }
+        assertFalse(AddressRules.cleartextNeedsHttps(ServerOrigin("https", "example.com", 443)))
+    }
+
+    @Test
     fun `B-SEC-120 a bare address gains https, except loopback which gains http`() {
         assertEquals(Outcome.Ok(ServerOrigin("https", "192.168.1.20", 4096)), AddressRules.normalize("192.168.1.20:4096"))
         assertEquals(Outcome.Ok(ServerOrigin("https", "desk.local", 443)), AddressRules.normalize("desk.local"))

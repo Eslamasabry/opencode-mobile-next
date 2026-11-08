@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.data.secret.SecretStore
 import io.github.eslamasabry.oc.core.model.ProfileTrust
 import io.github.eslamasabry.oc.core.model.ServerProfile
+import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -71,12 +72,16 @@ public data class LoadedProfile(
     val id: ProfileId
         get() = profile.id
 
-    /** Plain HTTP to a non-loopback address the person has not confirmed for this exact address. */
+    /**
+     * Plain HTTP to a non-loopback address the person has not confirmed for this exact address. A public address is
+     * always unconfirmed (B-177): consent saved before the rule changed no longer counts.
+     */
     val cleartextUnconfirmed: Boolean
         get() =
             !profile.usesAgentSocket &&
                 ProfileOrigins.needsCleartextConsent(profile.baseUrl) &&
-                trust.cleartext?.origin != ProfileOrigins.trustOrigin(profile.baseUrl)
+                (ProfileOrigins.cleartextNeedsHttps(profile.baseUrl) ||
+                    trust.cleartext?.origin != ProfileOrigins.trustOrigin(profile.baseUrl))
 
     /** The `:core:model` connection shape, or null when the address is not usable. */
     public fun toServerProfile(managedOnPhone: Boolean = false): ServerProfile? {
@@ -87,7 +92,11 @@ public data class LoadedProfile(
             name = profile.name,
             backend = profile.backend,
             origin = origin,
-            trust = ProfileTrust(applying.pin?.leafSha256, applying.cleartext?.let { 0L }),
+            trust =
+                ProfileTrust(
+                    applying.pin?.leafSha256,
+                    applying.cleartext?.takeIf { !AddressRules.cleartextNeedsHttps(origin) }?.let { 0L },
+                ),
             managedOnPhone = managedOnPhone,
             username = profile.username.ifEmpty { null },
         )
