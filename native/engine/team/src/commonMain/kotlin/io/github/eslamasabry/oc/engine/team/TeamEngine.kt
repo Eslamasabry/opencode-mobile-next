@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.engine.team
 
 import io.github.eslamasabry.oc.core.common.AppLog
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import kotlin.concurrent.atomics.AtomicReference
@@ -49,6 +51,21 @@ public interface TeamHost {
 
     /** Replaces the drafts map; [json] null removes it. */
     public suspend fun writeDrafts(profileId: String, json: String?): Outcome<Unit> = Outcome.Ok(Unit)
+
+    /**
+     * Whether this app can turn on the phone's own team for [profileId] now (Flutter's in-app turn-on: the engine is
+     * bundled with the app and [profileId] is this phone's OpenCode). False where no wiring can, so the off page
+     * offers the set-up step instead of a button that cannot work.
+     */
+    public suspend fun canTurnOnPhoneTeam(profileId: String): Boolean = false
+
+    /**
+     * Turns on the phone's own team for [profileId] (Flutter `openPhoneTeamSetup`): starts the bundled engine, keeps
+     * its credential in the Keystore under `oc.teamEngineAuth.<id>` and saves the profile's team config, so the next
+     * [config] answers. Never retried; a failure leaves the team off.
+     */
+    public suspend fun turnOnPhoneTeam(profileId: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("team.on")))
 }
 
 /** What the team page shows (Dart `TeamPage`'s branches). */
@@ -193,6 +210,19 @@ public class TeamEngine(
             state.update { it.copy(busy = false) }
         }
     }
+
+    /**
+     * Turns the phone's own team on for [profileId] (the off page's primary), then reads the team again, so the same
+     * page becomes the team (Flutter `TeamPage`: no hop back, no second page). On the lane, so no read overlaps it.
+     */
+    public suspend fun turnOn(profileId: String): Outcome<Unit> {
+        val done = lane.withLock { host.turnOnPhoneTeam(profileId) }
+        if (done is Outcome.Ok) refresh(profileId)
+        return done
+    }
+
+    /** Whether [turnOn] can work for [profileId] here ([TeamHost.canTurnOnPhoneTeam]). */
+    public suspend fun canTurnOn(profileId: String): Boolean = host.canTurnOnPhoneTeam(profileId)
 
     /** Clears a shown refusal (the page's notice was dismissed). */
     public fun clearRefusal(profileId: String) {
