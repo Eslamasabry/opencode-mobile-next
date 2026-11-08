@@ -44065,5 +44065,21 @@
   "phoneSetupStageCompat": "Trying again in compatibility mode",
   "@phoneSetupStageCompat": {
     "description": "Setup stage when a program crashed and the app runs the step again more carefully"
+  },
+  "teamRefusalServerRestarted": "OpenCode restarted while this step was running, so it was cut off.",
+  "@teamRefusalServerRestarted": {
+    "description": "Plain reason for engine code serverRestarted: the phone's OpenCode restarted or crashed during a team step"
+  },
+  "teamRefusalServerRestartedNext": "Resume to send that step again. It picks up from the work already done.",
+  "@teamRefusalServerRestartedNext": {
+    "description": "Way forward for engine code serverRestarted"
+  },
+  "teamRefusalRestartResend": "OpenCode restarted while this step was running. The team is sending it again.",
+  "@teamRefusalRestartResend": {
+    "description": "Plain line for engine code restartResend: the engine resends the cut-off step by itself"
+  },
+  "teamRefusalRestartResendNext": "Nothing to do. Work already done is kept.",
+  "@teamRefusalRestartResendNext": {
+    "description": "Way forward for engine code restartResend"
   }
 }

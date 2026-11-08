@@ -10970,5 +10970,9 @@
   "agentPersonaAntigravityNeeds": "حساب Google؛ سجّل الدخول في المتصفح",
   "agentsAntigravitySignInIntro": "يعرض Antigravity رابط تسجيل الدخول في الطرفية. افتحه في المتصفح وسجّل الدخول باستخدام Google، ثم الصق الرمز الذي يعرضه المتصفح في الطرفية.",
   "agentsGeminiMigrationNote": "إذا طلب منك Gemini CLI استخدام Antigravity، ارجع إلى الوكلاء وثبّت Antigravity (agy). تبقى محادثات Gemini هنا.",
-  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق"
+  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق",
+  "teamRefusalServerRestarted": "أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة، فانقطعت.",
+  "teamRefusalServerRestartedNext": "استأنف لإرسال هذه الخطوة مرة أخرى. ستكمل من العمل المنجز.",
+  "teamRefusalRestartResend": "أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة. يرسلها الفريق مرة أخرى.",
+  "teamRefusalRestartResendNext": "لا شيء مطلوب منك. العمل المنجز محفوظ."
 }

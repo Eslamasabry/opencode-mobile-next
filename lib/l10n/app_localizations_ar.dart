@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -36100,4 +36101,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'جارٍ المحاولة مجددًا في وضع التوافق';
+
+  @override
+  String get teamRefusalServerRestarted =>
+      'أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة، فانقطعت.';
+
+  @override
+  String get teamRefusalServerRestartedNext =>
+      'استأنف لإرسال هذه الخطوة مرة أخرى. ستكمل من العمل المنجز.';
+
+  @override
+  String get teamRefusalRestartResend =>
+      'أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة. يرسلها الفريق مرة أخرى.';
+
+  @override
+  String get teamRefusalRestartResendNext =>
+      'لا شيء مطلوب منك. العمل المنجز محفوظ.';
 }

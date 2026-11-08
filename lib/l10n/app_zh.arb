@@ -8654,5 +8654,9 @@
   "pluginMappingUnavailable": "此插件或命令在此已不可用。请刷新并检查你的关联。",
   "productErrorProjectGit": "无法读取此项目的 Git 历史，因此对话无法开始。请从备份恢复项目，或重新克隆。",
   "projectsOneFolderTitle": "服务器只使用一个文件夹",
-  "uncertainAuthCloseHint": "若要重新开始，请关闭此页面，并从该提供商所在行清除未确认的登录。"
+  "uncertainAuthCloseHint": "若要重新开始，请关闭此页面，并从该提供商所在行清除未确认的登录。",
+  "teamRefusalServerRestarted": "此步骤运行时 OpenCode 重启了，因此被中断。",
+  "teamRefusalServerRestartedNext": "请继续以重新发送此步骤。它会从已完成的工作接着做。",
+  "teamRefusalRestartResend": "此步骤运行时 OpenCode 重启了。团队正在重新发送它。",
+  "teamRefusalRestartResendNext": "无需操作。已完成的工作会保留。"
 }
