@@ -8,24 +8,42 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import kotlinx.coroutines.flow.MutableStateFlow
+import io.github.eslamasabry.oc.engine.analytics.health.MemoryTelemetryReportStore
+import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent
+import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsentStore
+import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
+import io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 
-private class RecordingProductSink : ProductEventSink {
+/** The vendor side as the tests read it: events only. */
+private class RecordingProductSink : TelemetryVendor {
     val events = mutableListOf<Pair<String, Map<String, String>>>()
-    val collection = mutableListOf<Boolean>()
-    var forgotten = 0
+    val collection = mutableListOf<TelemetryConsent>()
 
-    override fun setCollectionEnabled(enabled: Boolean) {
-        collection += enabled
+    override fun setCollection(usage: Boolean, crashes: Boolean) {
+        collection += TelemetryConsent(usage, crashes)
     }
 
-    override fun forget() {
-        forgotten++
-    }
+    override fun crash(category: String, frames: List<String>, fatal: Boolean) = Unit
+
+    override fun failure(name: String, keys: Map<String, String>) = Unit
+
+    override fun breadcrumb(name: String) = Unit
 
     override fun event(name: String, props: Map<String, String>) {
         events += name to props
     }
+
+    override fun setKeys(keys: Map<String, String>) = Unit
+
+    override fun setUserProperties(properties: Map<String, String>) = Unit
+
+    override fun perfTrace(name: String, attributes: Map<String, String>, durationMs: Long) = Unit
+
+    override suspend fun problemReport(text: String, collecting: Boolean) = Unit
+
+    override suspend fun appInstanceId(): String? = null
 }
 
 private class StepClock(var ms: Long = 1_793_528_100_000L) : Clock {
@@ -34,9 +52,17 @@ private class StepClock(var ms: Long = 1_793_528_100_000L) : Clock {
 
 class ProductAnalyticsTest {
     private val sink = RecordingProductSink()
-    private val consent = MutableStateFlow(true)
+    private val scope = TestScope()
 
-    private fun analytics(available: Boolean = true) = ProductAnalytics(sink, consent, available)
+    private fun analytics(usage: Boolean = true, available: Boolean = true): TelemetryService =
+        TelemetryService(sink, available, scope = scope).also {
+            it.start(TelemetryConsent(usage = usage), NoStore, MemoryTelemetryReportStore())
+            sink.collection.clear()
+        }
+
+    private object NoStore : TelemetryConsentStore {
+        override suspend fun write(consent: TelemetryConsent): Boolean = true
+    }
 
     @Test
     fun `B-180-001 the event list is Flutter 2_1_5's, name for name`() {
@@ -46,7 +72,7 @@ class ProductAnalyticsTest {
                 "connect_computer_chosen", "update_offered", "update_installed", "screen_view", "feature_used",
                 "session_length",
             ),
-            ProductEvent.entries.map { it.wire },
+            ProductEvent.entries.map { it.wire }.take(11),
         )
         assertEquals(ProductEvent.entries.map { it.wire }.toSet(), productSchema.keys)
         assertEquals(
@@ -66,9 +92,7 @@ class ProductAnalyticsTest {
 
     @Test
     fun `B-180-002 nothing reaches the vendor while the switch is off or the build has no vendor`() {
-        consent.value = false
-        analytics().track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
-        consent.value = true
+        analytics(usage = false).track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
         analytics(available = false).track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
         assertTrue(sink.events.isEmpty())
 
@@ -98,16 +122,16 @@ class ProductAnalyticsTest {
             sink.events,
         )
         assertTrue(!productValueIsSafe("a.b") && !productValueIsSafe("a/b") && !productValueIsSafe("a@b"))
-        assertTrue(!productValueIsSafe("Chat") && !productValueIsSafe("x".repeat(41)))
+        // Flutter's last check: letters of either case (SIGILL), digits and `_ < > + -` only, 40 at most.
+        assertTrue(productValueIsSafe("SIGILL") && productValueIsSafe("<500") && productValueIsSafe("4+"))
+        assertTrue(!productValueIsSafe("a b") && !productValueIsSafe("x".repeat(41)) && !productValueIsSafe(""))
     }
 
     @Test
     fun `B-180-004 screen views carry the page kind only, never a route argument`() {
         val a = analytics()
-        a.screen("ChatRoute(profile=p_secret, session=ses_123)")
-        a.screen("ServersRoute.Edit")
-        a.screen("PhoneRoute.ThisPhone")
-        a.screen("SomethingNew")
+        for (route in listOf("ChatRoute(profile=p_secret, session=ses_123)", "ServersRoute.Edit", "PhoneRoute.ThisPhone", "SomethingNew"))
+            a.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.of(route)))
         assertEquals(
             listOf("chat", "servers", "this_phone", "other"),
             sink.events.map { it.second.getValue("screen") },
@@ -116,30 +140,25 @@ class ProductAnalyticsTest {
     }
 
     @Test
-    fun `B-180-005 the vendor follows the switch and is told at start`() {
-        consent.value = false
-        val a = analytics()
-        a.applyConsent(true, chosenNow = true)
-        a.applyConsent(false, chosenNow = true)
-        assertEquals(listOf(false, true, false), sink.collection)
-        assertEquals(1, sink.forgotten, "the person's off resets the install id")
-        ProductAnalytics(sink, consent, available = false).applyConsent(true, chosenNow = true)
-        assertEquals(listOf(false, true, false), sink.collection, "no vendor, no calls")
-    }
-
-    @Test
-    fun `B-180-009 starting off and adopting Flutter's answer never resets the install id`() {
-        consent.value = false
-        val a = analytics() // the switch build starts OFF before the adopted store opens
-        a.applyConsent(true, chosenNow = false) // Flutter's yes carried over
-        a.applyConsent(false, chosenNow = false) // or Flutter's no
-        assertEquals(0, sink.forgotten, "the Analytics app-instance id survives the Flutter → native update")
+    fun `B-180-005 the vendor follows the switch, and adopting Flutter's answer at start applies it once`() = runTest {
+        val a = TelemetryService(sink, available = true, scope = this)
+        a.start(TelemetryConsent(usage = true), NoStore, MemoryTelemetryReportStore())
+        a.setConsent(usage = false, crashes = false)
+        a.setConsent(usage = true, crashes = false)
+        assertEquals(
+            listOf(TelemetryConsent(usage = true), TelemetryConsent(), TelemetryConsent(usage = true)),
+            sink.collection,
+        )
+        sink.collection.clear()
+        TelemetryService(sink, available = false, scope = this).setConsent(usage = true, crashes = true)
+        assertEquals(emptyList(), sink.collection, "no vendor, no calls")
     }
 
     @Test
     fun `B-180-006 cold and warm opens, session length and an installed update, as Flutter counts them`() {
         val clock = StepClock()
         val lifecycle = ProductLifecycle(analytics(), clock)
+        // Breadcrumbs and update_result are crash-side or health events: this test reads the product events.
         assertEquals("2.2.0+80", lifecycle.coldStart("2.2.0+80", previousVersion = "2.1.5+70"))
         clock.ms += 7.minutes.inWholeMilliseconds
         lifecycle.onBackground()
@@ -150,6 +169,7 @@ class ProductAnalyticsTest {
             listOf(
                 "app_open" to mapOf("kind" to "cold"),
                 "update_installed" to emptyMap(),
+                "update_result" to mapOf("kind" to "in_app", "result" to "installed"),
                 "session_length" to mapOf("minutes" to "5_to_15"),
                 "app_open" to mapOf("kind" to "warm"),
             ),

@@ -4,9 +4,9 @@
     <string name="crashOfferSettingTitle">عرض تقارير الأعطال</string>
     <string name="crashOfferSettingDetail">بعد أن يُغلق التطبيق بشكل غير متوقع، يعرض عليك تقريرًا تراجعه أولًا. لا يُرسَل أي شيء تلقائيًا أبدًا.</string>
     <string name="telemetryConsentTitle">هل تساعد في تحسين التطبيق؟</string>
-    <string name="telemetryConsentBody">إن وافقت، يرسل التطبيق إحصاءات استخدام مجهولة وتقارير الأعطال إلى المطوّر عبر Google Firebase. يمكنك إيقاف ذلك في أي وقت من الإعدادات › الخصوصية والبيانات.</string>
-    <string name="telemetryConsentSends">يُرسل: الصفحات والميزات التي تستخدمها، وإلى أين يصل الإعداد، وتقارير الأعطال، مع معرّف تثبيت عشوائي.</string>
+    <string name="telemetryConsentBody">إن وافقت يرسل التطبيق أعداد استخدام وصحة مجهولة وتقارير أعطال عبر Google Firebase. يمكنك تغيير كل منها من الإعدادات › الخصوصية والبيانات.</string>
+    <string name="telemetryConsentSends">يُرسل: الصفحات والميزات المستخدمة، وهل ينجح الاتصال والإرسال والإعداد، وسرعة التطبيق، ونطاقات الذاكرة والمساحة، وتقارير الأعطال. مع معرّف تثبيت عشوائي.</string>
     <string name="telemetryConsentNever">لا يُرسل أبدًا: شيفرتك ومحادثاتك وملفاتك وعناوين خوادمك ومفاتيحك. ولا معرّف إعلاني.</string>
-    <string name="telemetryConsentShare">مشاركة الاستخدام المجهول</string>
+    <string name="telemetryConsentShare">مشاركة الاثنين</string>
     <string name="telemetryConsentNotNow">ليس الآن</string>
 </resources>

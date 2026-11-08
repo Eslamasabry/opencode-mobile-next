@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agents.signin
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.PlatformViewHandle
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -16,6 +17,50 @@ public interface TerminalHost {
      * carries no CLI text.
      */
     public suspend fun open(target: TerminalTarget): Outcome<TerminalModel>
+
+    /**
+     * [open], and when it fails, the step it stopped at, so the screen can say why in words and
+     * Details can name it. A host that does not track steps reports [SignInStartStep.Unknown].
+     */
+    public suspend fun openSignIn(target: TerminalTarget): SignInOpen =
+        when (val opened = open(target)) {
+            is Outcome.Ok -> SignInOpen.Opened(opened.value)
+            is Outcome.Failed -> SignInOpen.Failed(SignInStartStep.Unknown, opened.failure)
+        }
+}
+
+/** Where opening a sign-in terminal stopped. Each step has its own sentence in `:ui:words`. */
+public enum class SignInStartStep(public val code: String) {
+    /** The agent's private home on this phone could not be prepared. */
+    Prepare("prepare"),
+
+    /** OpenCode on this phone did not start. */
+    Server("server"),
+
+    /** The app could not connect to OpenCode on this phone. */
+    Connect("connect"),
+
+    /** OpenCode on this phone is not the one this sign-in needs, or has no terminals. */
+    Check("check"),
+
+    /** OpenCode on this phone did not open the terminal. */
+    Terminal("terminal"),
+
+    /** The terminal opened, but the app could not attach to it. */
+    Attach("attach"),
+
+    /** The host did not say. */
+    Unknown("unknown"),
+}
+
+/** What [TerminalHost.openSignIn] gives back. */
+public sealed interface SignInOpen {
+    public class Opened(public val terminal: TerminalModel) : SignInOpen
+
+    /** [failure]'s [Failure.details] is already redacted; it is shown only under Details. */
+    public class Failed(public val step: SignInStartStep, public val failure: Failure) : SignInOpen {
+        override fun toString(): String = "Failed(${step.code})"
+    }
 }
 
 /** What a terminal runs (plan 17 §2.6; only the sign-in target is in slice 3). */
@@ -41,6 +86,15 @@ public interface TerminalModel {
 
     public suspend fun write(bytes: ByteArray)
 
+    /**
+     * Pastes [text] the way a terminal does (xterm `paste`): line breaks as carriage returns,
+     * other control characters dropped, inside bracketed-paste marks when the program turned them
+     * on. A host with a live grid lets the grid decide the marks; this default never adds them.
+     */
+    public suspend fun paste(text: String) {
+        write(pasteInput(text).encodeToByteArray())
+    }
+
     public suspend fun resize(cols: Int, rows: Int)
 
     /**
@@ -49,6 +103,13 @@ public interface TerminalModel {
      */
     public suspend fun close(): Outcome<Unit>
 }
+
+/** [TerminalModel.paste]'s text without bracketed-paste marks (Termux `TerminalEmulator.paste`). */
+public fun pasteInput(text: String): String =
+    text
+        .replace("\r\n", "\r")
+        .replace('\n', '\r')
+        .filter { it == '\r' || it == '\t' || (it.code >= 0x20 && it.code != 0x7f && it.code !in 0x80..0x9f) }
 
 public sealed interface TerminalEvent {
     /**

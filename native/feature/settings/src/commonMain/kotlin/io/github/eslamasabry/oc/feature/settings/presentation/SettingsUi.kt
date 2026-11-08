@@ -37,6 +37,10 @@ public data class SettingsUi(
     val capabilities: ServerCapabilitiesUi? = null,
     /** Report a problem's preview; null until the page opens. */
     val report: ReportUi? = null,
+    /** B-190: Help › Send a problem report's stage; null while the page is closed. */
+    val sendReport: SendReportUi? = null,
+    /** B-190: About's "Report code"; null in a build without the vendor. */
+    val reportCode: String? = null,
     val reportDescription: String = "",
     val phraseChips: Boolean = true,
     val focusedRow: SettingsRowId? = null,
@@ -306,6 +310,8 @@ public data class PrivacyUi(
     val offerCrashReports: Boolean? = null,
     /** Flutter 2.1.5's "Usage and app health" answer; null where the build has no such switch. */
     val usage: Boolean? = null,
+    /** B-180: the telemetry vendor is built in, so the two switches really send (What we collect drops its notice). */
+    val vendorSends: Boolean = false,
 )
 
 public enum class SettingsNote {

@@ -37,25 +37,49 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
     io.github.eslamasabry.oc.engine.delivery.PromptTracing {
     private val timeline = io.github.eslamasabry.oc.engine.diagnostics.perf.PromptTimeline(trace)
 
+    /** B-190: `send_result` ok with the first reply's time and the `send_first_reply` trace (consent-gated). */
+    private val firstReply =
+        io.github.eslamasabry.oc.engine.analytics.health.FirstReplyMeter({ android.os.SystemClock.elapsedRealtime() })
+
     override fun sent(sessionId: String) = timeline.sent(sessionId)
 
-    override fun accepted(sessionId: String, error: Boolean) = timeline.accepted(sessionId, error)
+    override fun sent(sessionId: String, onPhone: Boolean) {
+        timeline.sent(sessionId)
+        firstReply.sent(sessionId, onPhone)
+    }
 
-    override fun message(sessionId: String, messageId: String, assistant: Boolean) =
+    override fun accepted(sessionId: String, error: Boolean) {
+        timeline.accepted(sessionId, error)
+        firstReply.accepted(sessionId, error)
+    }
+
+    override fun message(sessionId: String, messageId: String, assistant: Boolean) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Message(sessionId, messageId, assistant))
+        firstReply.message(sessionId, messageId, assistant)
+    }
 
-    override fun part(sessionId: String, messageId: String, kind: String) =
+    override fun part(sessionId: String, messageId: String, kind: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Part(sessionId, messageId, kind))
+        firstReply.part(sessionId, messageId, kind)
+    }
 
-    override fun delta(sessionId: String) =
+    override fun delta(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Delta(sessionId))
+        firstReply.delta(sessionId)
+    }
 
-    override fun busy(sessionId: String) =
+    override fun busy(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Busy(sessionId))
+        firstReply.busy(sessionId)
+    }
 
-    override fun idle(sessionId: String) =
+    override fun idle(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Idle(sessionId))
+        firstReply.ended(sessionId)
+    }
 
-    override fun error(sessionId: String) =
+    override fun error(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
+        firstReply.ended(sessionId)
+    }
 }

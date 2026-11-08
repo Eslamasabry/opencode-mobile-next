@@ -73,3 +73,19 @@ Local, if you must: `./gradlew :feature:chat:desktopTest -Poc.recordGoldens=true
 A `schedule:` trigger only runs from the default branch's copy of the workflow, which this work must not touch, and a
 full run costs about 20 runner-minutes x 6 jobs. With a limited CI budget the full lane stays on demand and on pushes
 to `native/screens-merge*`.
+
+## The gate (summary job): what is FAIL and what is noise
+
+The `summary` job prints `## Native CI: PASS` or `FAIL` with the reasons first. On work branches the job has
+`continue-on-error`, so the run stays green and nobody is mailed, but the table still says FAIL; on `native/next`,
+`native/screens-merge*` and `master` a FAIL turns the run red.
+
+Always FAIL, never noise (`tool/ci/summary.py`, `tool/ci/test_report.py` reading the shard's Gradle log):
+- a failed compile, APK, record or custom job;
+- any Gradle task failure that is not a test task reporting failing tests: test compile, resource or strings generation,
+  drift checks, detekt, konsist, any custom check;
+- a selected module with no test results (its task never ran);
+- a failing test in `quality`, `tools/strings`, `ui/words`, `core/security`, `ui/gate`, or in a Drift / Konsist / Detekt / Lint / SpecFile / Glossary class.
+
+Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
+`known_failures.txt`, or is quarantined. `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.

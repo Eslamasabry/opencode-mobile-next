@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.agents.presentation
 
 import io.github.eslamasabry.oc.core.common.PlatformViewHandle
+import io.github.eslamasabry.oc.feature.agents.signin.SignInStartStep
 
 /** Where the sign-in terminal is (plan 07 G03). Each step has fixed words in `:ui:words`. */
 public enum class SignInStep {
@@ -56,13 +57,21 @@ public data class SignInTerminalUi(
     val code: String? = null,
     /** Fixed failure code for Details (`sign-in-start`, `sign-in-lost/…`); never CLI text. */
     val failureCode: String? = null,
+    /** Where a failed start stopped; the screen says it in words above Details. */
+    val startStep: SignInStartStep? = null,
+    /**
+     * Details' technical text: the code, the step and the redacted failure ([SignInDetails]). Never
+     * CLI output.
+     */
+    val failureDetails: String? = null,
     /** The last attempt to stop the sign-in failed; it still runs and is still protected. */
     val stopFailed: Boolean = false,
     val linkPrompt: SignInPagePrompt? = null,
 ) {
     override fun toString(): String =
         "SignInTerminalUi(step=$step, terminal=${terminal != null}, transcript=${transcript.length} chars, " +
-            "canOpenPage=$canOpenPage, code=${code != null}, failureCode=$failureCode, stopFailed=$stopFailed)"
+            "canOpenPage=$canOpenPage, code=${code != null}, failureCode=$failureCode, startStep=$startStep, " +
+            "stopFailed=$stopFailed)"
 }
 
 public data class SignInPagePrompt(val host: String, val insecure: Boolean)
@@ -78,6 +87,13 @@ public interface SignInTerminalActions {
 
     /** "Copy code": the one-time code, copied as sensitive. */
     public fun copyCode()
+
+    /**
+     * "Paste": writes [text] (the clipboard, read by the screen when the person asks) into the
+     * running sign-in as one bracketed paste, the way a desktop terminal pastes. Antigravity asks
+     * for the browser's code this way. Does nothing once the sign-in ended.
+     */
+    public fun paste(text: String)
 
     /** "Send to terminal": [line] is exactly what to write (the field adds the carriage return). */
     public fun send(line: String)

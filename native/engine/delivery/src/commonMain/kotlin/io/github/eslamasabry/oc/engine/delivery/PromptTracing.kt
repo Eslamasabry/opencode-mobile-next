@@ -12,6 +12,11 @@ import dev.zacsweers.metro.Multibinds
 public interface PromptTracing {
     public fun sent(sessionId: String)
 
+    /** B-190: as [sent], saying whether the server runs on this phone (`send_first_reply.server_kind`). */
+    public fun sent(sessionId: String, onPhone: Boolean) {
+        sent(sessionId)
+    }
+
     public fun accepted(sessionId: String, error: Boolean)
 
     public fun message(sessionId: String, messageId: String, assistant: Boolean)

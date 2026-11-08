@@ -25,7 +25,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitModeSegmented
-import io.github.eslamasabry.oc.ui.kit.icon.KitPixelIcons
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.awt.Color as AwtColor
 import java.awt.Font
@@ -44,7 +44,7 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class)
 class ThemeSwitchRenders {
     private val outDir: File? = System.getenv("S33_RENDER_DIR")?.let(::File)
-    private val stripTimes = listOf(0L, 40L, 80L, 120L, 160L, 220L, 300L, 400L, 520L, 700L)
+    private val stripTimes = listOf(0L, 40L, 80L, 120L, 160L, 200L, 240L, 280L, 320L, 700L)
     private val modes = listOf(AppearanceMode.Light, AppearanceMode.Dark, AppearanceMode.System, AppearanceMode.Saver)
     private val words =
         mapOf(
@@ -53,6 +53,14 @@ class ThemeSwitchRenders {
             AppearanceMode.System to "Auto",
             AppearanceMode.Saver to "Saver",
         )
+
+    private fun modeIcon(mode: AppearanceMode) =
+        when (mode) {
+            AppearanceMode.Light -> KitIcons.lightMode
+            AppearanceMode.Dark -> KitIcons.darkMode
+            AppearanceMode.System -> KitIcons.systemTheme
+            AppearanceMode.Saver -> KitIcons.leaf
+        }
 
     /** One switch to render: [style], [from] → [to]; also every [frameStep] ms into [frameDir] when set. */
     private class Switch(
@@ -79,7 +87,7 @@ class ThemeSwitchRenders {
                     KitTheme(KitAppearance(mode = mode, style = style, motion = MotionLevel.Full), platform, "en") {
                         val ground = LocalKitColors.current.ground
                         Box(Modifier.requiredSize(360.dp, 112.dp).background(ground).testTag("stage").padding(16.dp)) {
-                            val segments = modes.map { KitModeSegment(it, words.getValue(it), KitPixelIcons.of(it)) }
+                            val segments = modes.map { KitModeSegment(it, words.getValue(it), modeIcon(it)) }
                             KitModeSegmented(segments, mode, "Mode") { mode = it }
                         }
                     }
@@ -96,7 +104,9 @@ class ThemeSwitchRenders {
             var frame = 0
             for (t in wanted) {
                 if (t > now) {
-                    mainClock.advanceTimeBy(t - now)
+                    // Exact steps: without ignoreFrameDuration each 4 ms step rounds up to a 16 ms frame, which ran
+                    // the motion 4x fast against the labels (the first renders' compressed timeline).
+                    mainClock.advanceTimeBy(t - now, ignoreFrameDuration = true)
                     now = t
                 }
                 val img = onNodeWithTag("stage").captureToImage().toAwtImage()

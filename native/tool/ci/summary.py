@@ -1,19 +1,29 @@
 #!/usr/bin/env python3
-"""Final job of Native CI: one short table in the run summary.
+"""Final job of Native CI: one short table in the run summary, and the run's gate.
 
-    python3 -I tool/ci/summary.py <reports-dir> <base-reports-dir> <lane>   (markdown to stdout)
+    python3 -I tool/ci/summary.py <reports-dir> <base-reports-dir> <lane>   (markdown to stdout; exit 1 = FAIL)
 
-This job is the run's gate: it exits 1 (the only red the owner gets mailed about) only for a real problem:
-a compile error, a failed APK / record / custom job, a test shard whose build broke without any test failing, or a
-failing test that is NOT known noise. A failing test is known noise when it also fails in the base reports, matches
-tool/ci/known_failures.txt (fnmatch on "<module> :: <class>", plus an optional "#test" suffix on the class), or is
-listed in tool/ci/quarantine.txt. Test jobs themselves never fail the run (continue-on-error).
+FAIL (exit 1) means a real problem, and the table starts with FAIL and the reasons. The workflow decides whether that
+turns the run red: on work branches the summary job has continue-on-error, so the run stays green and agents read the
+FAIL in the table; on native/next, native/screens-merge* and master the run goes red.
 
-Reads <reports-dir>/**/report-*.json (test shards), compile.json, apk.json and record.json written by the jobs, and
-diffs the failing test ids against <base-reports-dir> (the newest run on the base branch that kept reports), when any.
+Always real, never noise:
+  * a compile error, a failed APK / record / custom job (the job's own report says failed);
+  * any Gradle task failure that is not a test task reporting failing tests: test compile, resource or strings
+    generation, a drift check, detekt, a custom check (test_report.py reads the shard's Gradle log);
+  * a selected module that produced no test results;
+  * a failing test in a gate module (HARD_MODULES) or a drift / Konsist / detekt / lint class (HARD_CLASS), whatever
+    the lists or the base say.
+Noise (does not fail): an individual failing test class that also fails in the base reports, matches
+tool/ci/known_failures.txt (fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
+failures can be absorbed this way.
+
+Reads <reports-dir>/**/report-*.json (test shards), compile.json, apk.json, custom.json and record.json written by the
+jobs, and diffs failing test ids against <base-reports-dir> (the newest run on the base branch that kept reports).
 Job results come from the environment: RESULT_COMPILE, RESULT_TEST, RESULT_APK, RESULT_RECORD, RESULT_CUSTOM.
+Tests for this file: tool/ci/test_gate.py.
 """
-import fnmatch, glob, json, os, sys
+import fnmatch, glob, json, os, re, sys
 
 reports, base_dir, lane = sys.argv[1], sys.argv[2], sys.argv[3]
 env = os.environ.get
@@ -49,7 +59,18 @@ known_pats = patterns('known_failures.txt')
 quar_pats = patterns('quarantine.txt', quarantine=True)
 
 
+HARD_MODULES = {'quality', 'tools/strings', 'ui/words', 'core/security', 'ui/gate'}
+HARD_CLASS = re.compile(r'Drift|Konsist|Detekt|Lint|SpecFile|Glossary')
+
+
+def is_hard(f):
+    mod, rest = f['id'].split(' :: ', 1)
+    return mod in HARD_MODULES or bool(HARD_CLASS.search(rest.split(' > ')[0].split('.')[-1]))
+
+
 def is_known(f):
+    if is_hard(f):
+        return False
     mod, rest = f['id'].split(' :: ', 1)
     full = f'{mod} :: {rest}'
     cls = rest.split(' > ')[0]
@@ -63,10 +84,13 @@ def is_known(f):
     return False
 
 
-new = [f for f in failed if f['id'] not in base_failed and not is_known(f)] if base_shards else [f for f in failed if not is_known(f)]
+new = [f for f in failed if is_hard(f) or (f['id'] not in base_failed and not is_known(f))]
 known = [f for f in failed if f not in new]
-broken = [s['name'] for s in shards if s.get('build_failed') and not s['failures']]
+real = [f'{s["name"]}: {r}' for s in shards for r in s.get('real_failures', [])]
+broken = [s['name'] for s in shards if s.get('build_failed') and not s['failures'] and not s.get('real_failures')]
+real += [f'{n}: the Gradle run failed with no readable cause' for n in broken]
 compile_ = (load('compile.json', reports) or [{}])[0]
+custom = (load('custom.json', reports) or [{}])[0]
 apk = (load('apk.json', reports) or [{}])[0]
 record = (load('record.json', reports) or [{}])[0]
 
@@ -82,8 +106,8 @@ if env('RESULT_TEST') not in (None, '', 'skipped'):
     line = f'{tests} run, {len(failed)} failed'
     line += f', {len(new)} new ({len(known)} known noise: on base {len(base_failed)}, known list/quarantine)' if base_shards else \
         f', {len(new)} new ({len(known)} on the known list/quarantine; no base reports to compare with)'
-    if broken:
-        line += f'; build broke in shard {", ".join(broken)}'
+    if real:
+        line += f'; {len(real)} real build/task problem(s), listed below'
     rows.append(('desktop tests', line))
 if env('RESULT_RECORD') not in (None, '', 'skipped'):
     rows.append(('goldens', f'{mark(env("RESULT_RECORD"))}: {record.get("files", 0)} images recorded'))
@@ -92,11 +116,25 @@ if env('RESULT_APK') not in (None, '', 'skipped'):
 if env('RESULT_CUSTOM') not in (None, '', 'skipped'):
     rows.append(('custom tasks', mark(env('RESULT_CUSTOM'))))
 
-print('## Native CI result\n\n| step | result |\n|---|---|')
+reasons = []
+for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
+    if env(key) in ('failure', 'cancelled') or rep.get('failed'):
+        reasons.append(f'{label} job failed')
+if env('RESULT_TEST') not in (None, '', 'skipped') and not shards:
+    reasons.append('the test shards left no reports at all')
+reasons += [f'real failure, {r}' for r in real]
+if new:
+    reasons.append(f'{len(new)} failing test(s) that are not known noise')
+red = bool(reasons)
+
+print(f'## Native CI: {"FAIL" if red else "PASS"}\n')
+for r in reasons[:12]:
+    print(f'- **FAIL**: {r}')
+if len(reasons) > 12:
+    print(f'- ... {len(reasons) - 12} more reasons')
+print('\n| step | result |\n|---|---|')
 for k, v in rows:
     print(f'| {k} | {v} |')
-
-red = any(env(k) in ('failure', 'cancelled') for k in ('RESULT_COMPILE', 'RESULT_APK', 'RESULT_RECORD', 'RESULT_CUSTOM')) or bool(new) or bool(broken)
 if compile_.get('first_errors'):
     print('\n### Compile errors (first lines)\n\n```')
     print('\n'.join(compile_['first_errors'][:15]))
@@ -108,7 +146,7 @@ if new:
     if len(new) > 40:
         print(f'- ... {len(new) - 40} more')
 elif failed:
-    print(f'\n{len(failed)} failing tests are all known noise (also failing on the base, or on tool/ci/known_failures.txt): the run stays green.')
+    print(f'\n{len(failed)} failing test(s) are all known noise (also failing on the base, or on tool/ci/known_failures.txt).')
 if not red:
-    print('\nGreen: nothing here needs anyone.' )
+    print('\nPASS: nothing here needs anyone.')
 sys.exit(1 if red else 0)
