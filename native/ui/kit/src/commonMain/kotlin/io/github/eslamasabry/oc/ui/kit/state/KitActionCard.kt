@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +10,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
@@ -29,7 +32,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
@@ -51,7 +53,13 @@ public fun KitActionCard(picture: ImageVector, line: String, action: KitAction, 
         modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().then(look.modifier).then(edge).padding(Space.S5.dp),
         horizontalAlignment = Alignment.Start,
     ) {
-        KitIcon(picture, Modifier.size(FlutterKitTokens.MARK_SIZE.dp).clearAndSetSemantics {}, tone = TextTone.Secondary)
+        // A picture, not a glyph: drawn at the mark size (KitIcon stops at the FAB size), tinted like secondary words.
+        Image(
+            rememberVectorPainter(picture),
+            null,
+            Modifier.size(FlutterKitTokens.MARK_SIZE.dp).clearAndSetSemantics {},
+            colorFilter = ColorFilter.tint(colors.text2),
+        )
         Spacer(Modifier.height(Space.S4.dp))
         KitText(line, role = TypeRole.Body, tone = TextTone.Primary)
         Spacer(Modifier.height(Space.S4.dp))
