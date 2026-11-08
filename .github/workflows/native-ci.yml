@@ -71,6 +71,9 @@ jobs:
     permissions:
       actions: read
       contents: read
+    defaults:
+      run:
+        working-directory: .
     outputs:
       runs_on: ${{ steps.pick.outputs.runs_on }}
     steps:
