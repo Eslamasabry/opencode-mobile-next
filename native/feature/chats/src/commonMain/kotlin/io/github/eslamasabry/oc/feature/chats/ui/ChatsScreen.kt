@@ -529,13 +529,20 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 /**
- * The hairline between two conversation rows, on the 16 dp page edge where the row's words start (B-161 rows close
- * with the agent's mark instead of leading with it); past the agent tile in the Signal look, whose rows still lead
- * with one.
+ * The line between two conversation rows (Today, Earlier and the return brief), on the 16 dp page edge where the row's
+ * words start; past the agent tile in the Signal look, whose rows still lead with one.
+ *
+ * B-173 (twin of Flutter #129): Flutter's home groups pass `prominentDividers: true`
+ * (lib/ui/screens/chats/chats_home_screen.dart:824), so KitSliverRowGroup draws `KitDivider.prominent(inset: inset,
+ * endInset: reach)` (lib/ui/kit/kit_sliver_row_group.dart:148-150): 1 dp (`KitLayout.prominentRule`) in the theme's
+ * tertiary ink at 30 % (`roles.text3`, alpha 0.3) unless the style draws its own rule (Brutal's ink keeps it; Soft still
+ * draws none). That line reads on OLED dark screens, where the hairline does not.
  */
 @Composable
 private fun RowDivider(state: ChatsUi) {
     val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
+    // TODO(B-173): switch to the kit's prominent divider once the s21-kit builder lands it in :ui:kit, keeping the inset:
+    //  KitDivider(inset = <same inset>, prominent = true)  (Flutter KitDivider.prominent). Until then this is the hairline.
     io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(
         inset =
             if (signal && state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
