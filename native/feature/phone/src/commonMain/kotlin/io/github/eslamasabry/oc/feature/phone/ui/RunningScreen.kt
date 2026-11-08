@@ -472,6 +472,8 @@ private fun ProcessRow(
                         enabled = !busy,
                         disabledReason = stringResource(Res.string.termuxProcsStopping),
                         semanticsLabel = stringResource(Res.string.runningPhoneStopNamed, row.name),
+                        // C05: the row's Stop carries its glyph, so it reads as an action, not bold words.
+                        icon = KitIcons.stopCircle,
                     )
                 )
             } else {
