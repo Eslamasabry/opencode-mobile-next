@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -164,6 +165,7 @@ public fun ThisPhoneScreen(
                 }
             }
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
         val available = maxHeight
@@ -184,7 +186,7 @@ public fun ThisPhoneScreen(
                     message =
                         stringResource(
                             when {
-                                exit.restored -> Res.string.linuxExitRestored
+                                state.exitSaysRunning -> Res.string.linuxExitRestored
                                 !exit.recoveryAllowed -> Res.string.linuxExitPolicyOff
                                 else -> Res.string.linuxExitCheckStatus
                             }

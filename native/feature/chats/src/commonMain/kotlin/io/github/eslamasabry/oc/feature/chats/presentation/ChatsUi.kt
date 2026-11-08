@@ -56,6 +56,11 @@ public data class ConversationRowUi(
     val directory: String? = null,
     /** B-161: the folder's git branch; null outside git or until it is known. */
     val branch: String? = null,
+    /**
+     * A1: the last message, one line of plain words (the list's own, or read lazily for the rows the home shows);
+     * null until it is known or where it cannot be had cheaply: the row then says its project and server.
+     */
+    val preview: String? = null,
 )
 
 /**
@@ -160,8 +165,14 @@ public data class ChatsUi(
      * says nothing (P-021; Flutter rows have none).
      */
     val showAgents: Boolean = false,
-    val today: ImmutableList<ConversationRowUi> = persistentListOf(),
-    val earlier: ImmutableList<ConversationRowUi> = persistentListOf(),
+    /** A1 "Right now": every conversation that is working or needs the person, never capped; needs you first. */
+    val rightNow: ImmutableList<ConversationRowUi> = persistentListOf(),
+    /** A1 "Recent": the [ChatsState.RECENT_ROWS] latest of the rest, newest first. */
+    val recent: ImmutableList<ConversationRowUi> = persistentListOf(),
+    /** The rows name their project (a dot and its name) only when the shown list spans more than one. */
+    val showProjects: Boolean = false,
+    /** Conversations working now among those the filters let through ("Running 2"). */
+    val runningShown: Int = 0,
     val needsYou: Int = 0,
     val running: Int = 0,
     val projects: ImmutableList<ProjectChipUi> = persistentListOf(),

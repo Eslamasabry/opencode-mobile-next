@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -201,6 +202,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         loadingLabel = stringResource(Res.string.globalSessionsRefresh),
         refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::retry, enabled = listed && !state.selecting),
         width = KitScreenWidth.List,
+        edges = KitScreenEdges.Bleed,
     ) {
         val list = rememberLazyListState()
         // Reaching the end asks for the next page; after a failure only the visible Try again does.

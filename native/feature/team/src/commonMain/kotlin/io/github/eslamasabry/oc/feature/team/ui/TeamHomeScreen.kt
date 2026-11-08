@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -103,6 +104,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                                 listOf(KitAction(stringResource(Res.string.teamProjectQuick), { actions.openEditor(EditorKind.Quick) })),
                         )
                     }),
+            edges = KitScreenEdges.Bleed,
         ) {
             when (state.phase) {
                 TeamPhase.Loading -> Unit

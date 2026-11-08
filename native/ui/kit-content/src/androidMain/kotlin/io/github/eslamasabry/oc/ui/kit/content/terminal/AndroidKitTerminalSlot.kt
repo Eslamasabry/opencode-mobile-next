@@ -71,7 +71,13 @@ public object AndroidKitTerminalSlot : KitTerminalSlot {
         }
         key(platformView) {
             AndroidView(
-                factory = { _ -> hostable(platformView) },
+                factory = { _ ->
+                    hostable(platformView).also { grid ->
+                        // A hardware keyboard types into the grid as soon as it shows; the on-screen keyboard still
+                        // waits for a tap (the grid's own tap handler asks for it).
+                        grid.post { grid.requestFocus() }
+                    }
+                },
                 modifier = modifier,
                 update = { (it as? TerminalSurface)?.appearance(palette) },
             )

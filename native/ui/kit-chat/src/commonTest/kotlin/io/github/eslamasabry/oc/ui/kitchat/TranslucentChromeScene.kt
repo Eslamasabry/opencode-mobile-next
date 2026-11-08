@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,6 +73,7 @@ fun TranslucentChromeScene(trayOpen: Boolean, words: TrayWords = TrayWords.of("e
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 )
             },
+            edges = KitScreenEdges.Bleed,
         ) {
             Box(Modifier.fillMaxSize().kitFrostSource(source)) {
                 KitTranscriptList(state, TRANSLUCENT_ROWS.first(), "Jump to latest", KitMotionLevel.Off) {

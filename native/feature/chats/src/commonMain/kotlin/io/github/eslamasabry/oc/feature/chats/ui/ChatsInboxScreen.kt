@@ -48,6 +48,7 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(Modifier.fillMaxSize().testTag("inbox-scroll")) {
             state.answerFailure?.let { failure ->

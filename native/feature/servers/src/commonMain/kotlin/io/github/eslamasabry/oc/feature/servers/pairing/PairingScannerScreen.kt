@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.pairing
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -63,6 +64,7 @@ public fun PairingScannerScreen(
             KitTopBar(stringResource(Res.string.e7SetupScanPairing), exit = KitTopBarExit.Close,
                 exitLabel = stringResource(Res.string.e7SetupCloseScanner), onExit = actions::close)
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         Box(Modifier.fillMaxSize()) {
             if (slot.supported) {

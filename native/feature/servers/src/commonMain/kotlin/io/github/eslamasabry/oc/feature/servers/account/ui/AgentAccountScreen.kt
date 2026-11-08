@@ -73,6 +73,7 @@ public fun AgentAccountScreen(state: AgentAccountUi, actions: AgentAccountAction
                     )
                 })
             else null,
+        edges = KitScreenEdges.Bleed,
     ) {
         KitConfirm(
             state.askedHost?.let {

@@ -99,6 +99,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                 }
             } else null,
         loading = inventory.loading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(
             Modifier.fillMaxSize(),

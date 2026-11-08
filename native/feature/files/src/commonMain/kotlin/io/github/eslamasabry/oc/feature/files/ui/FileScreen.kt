@@ -1,5 +1,11 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.FlowRow
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +34,7 @@ import io.github.eslamasabry.oc.engine.media.preview.StaticSvg
 import io.github.eslamasabry.oc.feature.files.presentation.FileActions
 import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.files.presentation.FilePhase
+import io.github.eslamasabry.oc.feature.files.presentation.FileReadReason
 import io.github.eslamasabry.oc.feature.files.presentation.FileUi
 import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -74,13 +81,12 @@ import io.github.eslamasabry.oc.ui.words.res.filePdfEncrypted
 import io.github.eslamasabry.oc.ui.words.res.filePdfFailed
 import io.github.eslamasabry.oc.ui.words.res.filePdfLimit
 import io.github.eslamasabry.oc.ui.words.res.filePdfUnavailable
+import io.github.eslamasabry.oc.ui.words.res.fileReload
 import io.github.eslamasabry.oc.ui.words.res.fileSave
 import io.github.eslamasabry.oc.ui.words.res.fileShareAction
-import io.github.eslamasabry.oc.ui.words.res.fileReload
 import io.github.eslamasabry.oc.ui.words.res.fileSource
 import io.github.eslamasabry.oc.ui.words.res.filesAddReference
 import io.github.eslamasabry.oc.ui.words.res.filesAskAboutFile
-import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceAdded
 import io.github.eslamasabry.oc.ui.words.res.filesAttachFailed
 import io.github.eslamasabry.oc.ui.words.res.filesLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
@@ -93,8 +99,18 @@ import io.github.eslamasabry.oc.ui.words.res.filesOpenLinkQuestion
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWith
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWithFailed
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWithNone
-import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.filesPreferencesFailed
+import io.github.eslamasabry.oc.ui.words.res.filesReasonDenied
+import io.github.eslamasabry.oc.ui.words.res.filesReasonDeniedBody
+import io.github.eslamasabry.oc.ui.words.res.filesReasonMissing
+import io.github.eslamasabry.oc.ui.words.res.filesReasonMissingBody
+import io.github.eslamasabry.oc.ui.words.res.filesReasonNotShowable
+import io.github.eslamasabry.oc.ui.words.res.filesReasonNotShowableBody
+import io.github.eslamasabry.oc.ui.words.res.filesReasonNotShowablePhoneBody
+import io.github.eslamasabry.oc.ui.words.res.filesReasonTooBig
+import io.github.eslamasabry.oc.ui.words.res.filesReasonTooBigBody
+import io.github.eslamasabry.oc.ui.words.res.filesReasonTooBigPhoneBody
+import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.filesShowPreview
 import io.github.eslamasabry.oc.ui.words.res.filesUnavailable
 import io.github.eslamasabry.oc.ui.words.res.filesUnwrapCode
@@ -103,17 +119,18 @@ import io.github.eslamasabry.oc.ui.words.res.kitCodeCopyCode
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
-import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
-import io.github.eslamasabry.oc.ui.words.res.readerUiAttached
-import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
-import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
 import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallAction
 import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallBody
 import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenAction
 import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenBody
 import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenTitle
+import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
+import io.github.eslamasabry.oc.ui.words.res.readerUiAttached
+import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
+import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
 import io.github.eslamasabry.oc.ui.words.res.readerUiPathLine
+import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceAdded
 import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import io.github.eslamasabry.oc.ui.words.res.stateReaderNoWrap
 import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
@@ -130,6 +147,7 @@ import org.jetbrains.compose.resources.stringResource
  * only.
  */
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 public fun FileScreen(state: FileUi, actions: FileActions) {
     var more by remember { mutableStateOf(false) }
     KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
@@ -140,7 +158,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
     var localOpen by rememberSaveable { mutableStateOf<Boolean?>(null) }
     // One modal layer for the frame and the share sheet (the chat's KitSheetHost pattern).
     KitSheetHost(Modifier.fillMaxSize()) {
-        KitScreen(modifier = Modifier.fillMaxSize(), page = true) {
+        KitScreen(modifier = Modifier.fillMaxSize(), page = true, edges = KitScreenEdges.Bleed) {
             Column(Modifier.fillMaxSize()) {
                 val ready = state.phase == FilePhase.Ready
                 KitViewerFrame(
@@ -180,56 +198,69 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                             ),
                     )
                 }
-                if (ready && state.body is FileBody.Code) {
-                    KitButton(
-                        stringResource(
-                            if (state.wrapCode) Res.string.stateReaderNoWrap
-                            else Res.string.stateReaderWrap
-                        ),
-                        actions::toggleWrap,
-                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.preferencesSaving,
-                    )
-                }
-                if (ready)
-                    KitButton(
-                        stringResource(Res.string.filesMoreActions),
-                        { more = true },
-                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
-                        role = KitButtonRole.Tertiary,
-                    )
-                if (state.canInstall) {
-                    KitButton(
-                        stringResource(Res.string.phoneFileInstallAction),
-                        { localOpen = true },
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.opening,
-                    )
-                }
-                if ((ready && state.canOpenWith) || state.canOpenLocal) {
-                    KitButton(
-                        stringResource(Res.string.filesOpenWith),
-                        { if (state.canOpenLocal) localOpen = false else actions.openWith() },
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.opening,
-                        enabled = KitEnabled.Enabled,
-                    )
-                }
-                if (ready && state.canSave) {
-                    KitButton(
-                        stringResource(Res.string.fileSave),
-                        actions::save,
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        role = KitButtonRole.Tertiary,
-                        working = state.saving,
-                        enabled = KitEnabled.Enabled,
-                    )
+                // C05: the file's other acts are text actions with their glyphs, side by side on the gutter with a
+                // full step between them (Flutter's viewer keeps them as visible actions too), never centred lines of
+                // words. A file shown as "Can't show this file" already offers Open with as its main button.
+                val openWithShown = state.body is FileBody.Binary && state.canOpenWith
+                FlowRow(
+                    Modifier.fillMaxWidth().padding(horizontal = kitPageGutter(), vertical = Space.S1.dp)
+                        .testTag("project-file-actions"),
+                    horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                ) {
+                    if (ready && state.body is FileBody.Code) {
+                        KitButton(
+                            stringResource(
+                                if (state.wrapCode) Res.string.stateReaderNoWrap
+                                else Res.string.stateReaderWrap
+                            ),
+                            actions::toggleWrap,
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.wrapText,
+                            expand = false,
+                            working = state.preferencesSaving,
+                        )
+                    }
+                    if (state.canInstall) {
+                        KitButton(
+                            stringResource(Res.string.phoneFileInstallAction),
+                            { localOpen = true },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.download,
+                            expand = false,
+                            working = state.opening,
+                        )
+                    }
+                    val offerOpenWith = (ready && state.canOpenWith || state.canOpenLocal) && !openWithShown
+                    if (offerOpenWith) {
+                        KitButton(
+                            stringResource(Res.string.filesOpenWith),
+                            { if (state.canOpenLocal) localOpen = false else actions.openWith() },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.externalLink,
+                            expand = false,
+                            working = state.opening,
+                            enabled = KitEnabled.Enabled,
+                        )
+                    }
+                    if (ready && state.canSave) {
+                        KitButton(
+                            stringResource(Res.string.fileSave),
+                            actions::save,
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.save,
+                            expand = false,
+                            working = state.saving,
+                            enabled = KitEnabled.Enabled,
+                        )
+                    }
+                    if (ready)
+                        KitButton(
+                            stringResource(Res.string.filesMoreActions),
+                            { more = true },
+                            role = KitButtonRole.Tertiary,
+                            icon = KitIcons.more,
+                            expand = false,
+                        )
                 }
             }
         }
@@ -373,14 +404,28 @@ private fun Body(state: FileUi, actions: FileActions) {
                 kind = KitStateKind.Calm,
                 title = stringResource(Res.string.filesUnavailable),
             )
-        FilePhase.Failed ->
-            KitStateView(
-                kind = KitStateKind.Error,
-                title = stringResource(Res.string.filesOpenFailed),
-                failure = state.failure,
-                onRetry = actions::retry,
-                retryLabel = stringResource(Res.string.kitTryAgain),
-            )
+        FilePhase.Failed -> {
+            // B-184: a file that will not open says why, in the file's own terms; a connection problem keeps Try again.
+            val reason = FileReadReason.of(state.failure)
+            if (reason == null) {
+                KitStateView(
+                    kind = KitStateKind.Error,
+                    title = stringResource(Res.string.filesOpenFailed),
+                    failure = state.failure,
+                    onRetry = actions::retry,
+                    retryLabel = stringResource(Res.string.kitTryAgain),
+                )
+            } else {
+                KitStateView(
+                    kind = KitStateKind.Error,
+                    title = stringResource(reasonTitle(reason)),
+                    body = stringResource(reasonBody(reason, onPhone = state.canOpenLocal)),
+                    failure = state.failure,
+                    onRetry = if (reason.retryHelps) actions::retry else null,
+                    retryLabel = if (reason.retryHelps) stringResource(Res.string.kitTryAgain) else null,
+                )
+            }
+        }
         FilePhase.Ready ->
             when (val body = state.body) {
                 null -> KitSkeletonRows()
@@ -538,6 +583,25 @@ private fun Pdf(state: FileUi, actions: FileActions) {
         }
     }
 }
+
+private fun reasonTitle(reason: FileReadReason) =
+    when (reason) {
+        FileReadReason.TooBig -> Res.string.filesReasonTooBig
+        FileReadReason.Missing -> Res.string.filesReasonMissing
+        FileReadReason.Denied -> Res.string.filesReasonDenied
+        FileReadReason.NotShowable -> Res.string.filesReasonNotShowable
+    }
+
+/** On this phone the same file can go to another app, so the words point at Open with. */
+private fun reasonBody(reason: FileReadReason, onPhone: Boolean) =
+    when (reason) {
+        FileReadReason.TooBig ->
+            if (onPhone) Res.string.filesReasonTooBigPhoneBody else Res.string.filesReasonTooBigBody
+        FileReadReason.Missing -> Res.string.filesReasonMissingBody
+        FileReadReason.Denied -> Res.string.filesReasonDeniedBody
+        FileReadReason.NotShowable ->
+            if (onPhone) Res.string.filesReasonNotShowablePhoneBody else Res.string.filesReasonNotShowableBody
+    }
 
 @Composable
 private fun pdfWords(failure: Failure): String =

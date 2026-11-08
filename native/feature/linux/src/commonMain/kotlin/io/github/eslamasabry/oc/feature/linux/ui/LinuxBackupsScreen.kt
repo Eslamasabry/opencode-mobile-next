@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,6 +76,7 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
                 working = backup.phase == LinuxBackupPhase.Preparing || backup.phase == LinuxBackupPhase.Saving,
                 hero = true, modifier = Modifier.testTag("linux-backup-go"))
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxWidth().testTag("linux-backups").verticalScroll(rememberScrollState()),

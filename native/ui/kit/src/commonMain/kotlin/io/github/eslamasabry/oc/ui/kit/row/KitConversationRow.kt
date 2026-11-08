@@ -284,7 +284,7 @@ private fun ProjectTile(project: String) {
                 LocalKitTypography.current
                     .style(TypeRole.Caption)
                     .copy(color = colors.text1, fontWeight = FontWeight.SemiBold, fontSize = 9.sp, lineHeight = 10.sp),
-            maxLines = 1,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
     }
 }

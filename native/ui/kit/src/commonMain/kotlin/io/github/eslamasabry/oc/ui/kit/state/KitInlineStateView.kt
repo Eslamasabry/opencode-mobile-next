@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.layout.Column
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,9 +46,9 @@ public fun KitInlineStateView(
             .kitMaxWidth(CapRole.State)
             .fillMaxWidth()
             .padding(
-                start = tokens.gutter.dp,
+                start = kitPageGutter(),
                 top = tokens.gutter.dp,
-                end = tokens.gutter.dp,
+                end = kitPageGutter(),
                 bottom = Space.S2.dp,
             ),
         horizontalAlignment = Alignment.Start,

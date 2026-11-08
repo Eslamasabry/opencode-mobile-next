@@ -346,6 +346,7 @@ public fun ServerEditorScreen(
                         fullWidth = true,
                     )
                 }),
+        edges = KitScreenEdges.Bleed,
     ) {
         KitConfirm(discard, actions::discard, actions::keepEditing)
         KitSheet(
@@ -929,10 +930,12 @@ public fun ServerEditorScreen(
                                 if (address.text.toString().trim().startsWith("https://")) {
                                     if (pin != null)
                                         KitNotice(stringResource(Res.string.editor40Pinned))
+                                    // C05: a text action with its glyph, so it never reads as a heading.
                                     KitButton(
                                         stringResource(Res.string.editor40Inspect),
                                         { actions.inspect(address.text.toString()) },
                                         role = KitButtonRole.Tertiary,
+                                        icon = KitIcons.shield,
                                         enabled = enabled,
                                         working = state.inspecting,
                                     )
@@ -945,10 +948,13 @@ public fun ServerEditorScreen(
                                     actions::cancelCheck,
                                     role = KitButtonRole.Tertiary,
                                 )
+                            // C05: the page's own check is a button (a face and its glyph), not bold words
+                            // that read as a heading; the accent stays with Save and connect.
                             KitButton(
                                 stringResource(Res.string.editor40Check),
                                 { actions.check(input()) },
-                                role = KitButtonRole.Tertiary,
+                                role = KitButtonRole.Secondary,
+                                icon = KitIcons.networkCheck,
                                 enabled = connectionEnabled,
                                 working = state.checking,
                             )

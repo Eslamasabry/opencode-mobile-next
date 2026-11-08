@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -71,6 +72,7 @@ public fun TeamServersScreen(state: TeamServersUi, actions: TeamServersActions) 
             loading = state.phase == TeamPhase.Loading,
             loadingLabel = stringResource(Res.string.teamProjectLoad),
             width = KitScreenWidth.Reading,
+            edges = KitScreenEdges.Bleed,
         ) {
             if (state.phase == TeamPhase.Loading) return@KitScreen
             if (state.projectName == null) {
@@ -222,6 +224,7 @@ public fun TeamTimelineScreen(state: TeamTimelineUi, actions: TeamTimelineAction
         loading = state.phase == TeamPhase.Loading,
         loadingLabel = stringResource(Res.string.teamProjectLoad),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         if (state.phase == TeamPhase.Loading) return@KitScreen
         if (state.days.isEmpty()) {

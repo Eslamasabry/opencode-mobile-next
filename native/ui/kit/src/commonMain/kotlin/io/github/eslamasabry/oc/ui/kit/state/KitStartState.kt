@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -70,7 +71,7 @@ public fun KitStartState(
             Column(
                 Modifier.kitMaxWidth(CapRole.Reading, CapAlign.Start)
                     .fillMaxWidth()
-                    .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, top = Space.S2.dp),
+                    .padding(start = kitPageGutter(), end = kitPageGutter(), top = Space.S2.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 // The calm mark: the list's own glyph, bare in the accent: no wash, circle or tile (audit 2026-11-09 C01).

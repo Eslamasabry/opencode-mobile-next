@@ -43,6 +43,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding(),

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.rb.o13
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -46,7 +47,7 @@ class KitScreenGateTest {
     private val emptyDetail: @Composable () -> Unit = { KitStateView(KitStateKind.Empty, "Pick a conversation", icon = KitIcons.chat) }
 
     private val detail: @Composable () -> Unit = {
-        KitScreen(topBar = { KitTopBar("Conversation 2") }, width = KitScreenWidth.Full) {
+        KitScreen(topBar = { KitTopBar("Conversation 2") }, width = KitScreenWidth.Full, edges = KitScreenEdges.Bleed) {
             Column(Modifier.padding(horizontal = FlutterKitTokens.GUTTER.dp)) {
                 KitText("The login fix is ready for review.")
                 KitText("Two files changed; the tests pass.")
@@ -58,7 +59,13 @@ class KitScreenGateTest {
         FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen, content = content)
 
     private val default: @Composable () -> Unit = {
-        KitScreen(topBar = bar("Conversations"), width = KitScreenWidth.Reading, bottom = save, body = rows())
+        KitScreen(
+            topBar = bar("Conversations"),
+            width = KitScreenWidth.Reading,
+            bottom = save,
+            body = rows(),
+            edges = KitScreenEdges.Bleed,
+        )
     }
 
     @Test fun kit_screen_default() { shot("kit_screen_default", default) }
@@ -67,20 +74,39 @@ class KitScreenGateTest {
 
     @Test fun kit_screen_loading() {
         shot("kit_screen_loading") {
-            KitScreen(topBar = bar("Conversations"), loading = true, loadingLabel = "Loading conversations", body = rows())
+            KitScreen(
+                topBar = bar("Conversations"),
+                loading = true,
+                loadingLabel = "Loading conversations",
+                body = rows(),
+                edges = KitScreenEdges.Bleed,
+            )
         }
     }
 
-    @Test fun kit_screen_status() { shot("kit_screen_status") { KitScreen(topBar = bar("Conversations"), status = connection, body = rows()) } }
+    @Test fun kit_screen_status() {
+        shot("kit_screen_status") {
+            KitScreen(topBar = bar("Conversations"), status = connection, body = rows(), edges = KitScreenEdges.Bleed)
+        }
+    }
 
     @Test fun kit_screen_search() {
         shot("kit_screen_search") {
-            KitScreen(topBar = bar("Conversations"), search = { KitSearchField("Search conversations", {}) }, body = rows())
+            KitScreen(
+                topBar = bar("Conversations"),
+                search = { KitSearchField("Search conversations", {}) },
+                body = rows(),
+                edges = KitScreenEdges.Bleed,
+            )
         }
     }
 
     // The keyboard shot raises a 300 dp inset; the desktop gate has no keyboard, so this renders the resting page.
-    @Test fun kit_screen_keyboard() { shot("kit_screen_keyboard") { KitScreen(topBar = bar("New task"), bottom = save, body = rows()) } }
+    @Test fun kit_screen_keyboard() {
+        shot("kit_screen_keyboard") {
+            KitScreen(topBar = bar("New task"), bottom = save, body = rows(), edges = KitScreenEdges.Bleed)
+        }
+    }
 
     @Test fun kit_screen_two_pane_empty_1280x800() {
         shot("kit_screen_two_pane_empty_1280x800") {

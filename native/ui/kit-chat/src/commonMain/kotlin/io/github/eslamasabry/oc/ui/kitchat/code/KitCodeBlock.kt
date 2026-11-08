@@ -706,7 +706,13 @@ private fun CodeCounts(added: Int?, removed: Int?, mono: TextStyle, colors: KitC
             if (added != null && removed != null) withStyle(body) { append(" ") }
             if (removed != null) withStyle(SpanStyle(color = colors[CodeRole.Deletion])) { append("−$removed") }
         }
-    BasicText(text, modifier.clearAndSetSemantics { contentDescription = spoken }, style = mono, maxLines = 1)
+    BasicText(
+        text,
+        modifier.clearAndSetSemantics { contentDescription = spoken },
+        style = mono,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 /**

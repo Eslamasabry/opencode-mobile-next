@@ -50,9 +50,6 @@ public interface SettingsHost {
     public val configuration: ConfigurationInspection?
         get() = null
 
-    public val crashes: CrashSettings?
-        get() = null
-
     public val phrases: PhraseSettings?
         get() = null
 
@@ -79,7 +76,7 @@ public interface SettingsHost {
     public val healthConsent: HealthConsentSetting?
         get() = null
 
-    /** B-190: Help › Send a problem report; null in a build that cannot send one. */
+    /** R1: Report a problem's report and Send report (it says itself whether this build can send). */
     public val problemReport: ProblemReportSender?
         get() = null
 }
@@ -104,7 +101,6 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.updates,
             host.about,
             host.diagnostics,
-            host.crashes,
             host.phrases,
             host.appearanceGuide,
             nav::back,

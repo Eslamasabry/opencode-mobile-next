@@ -83,11 +83,16 @@ public object UsageFigures {
         return if (symbolAfter) "$sign$amount $" else "$sign$$amount"
     }
 
-    /** A count with thousands grouped: 1234567 → "1,234,567". */
-    public fun count(value: Long): String = (if (value < 0) "-" else "") + grouped(abs(value))
+    /**
+     * A count with thousands grouped: 1234567 → "1,234,567", in the phone's digits (C09: Usage wrote Western digits
+     * while Conversations and Schedules wrote the phone's, so one Arabic screen showed two kinds).
+     */
+    public fun count(value: Long): String = Numbers.format(value)
 
-    /** Compact tokens: 950, 12.3K, 4.5M, 1.2B. */
-    public fun compact(value: Long): String {
+    /** Compact tokens: 950, 12.3K, 4.5M, 1.2B, in the phone's digits and decimal mark. */
+    public fun compact(value: Long): String = phone(latinCompact(value))
+
+    private fun latinCompact(value: Long): String {
         val v = abs(value)
         val sign = if (value < 0) "-" else ""
         return when {
@@ -98,23 +103,19 @@ public object UsageFigures {
         }
     }
 
-    /** A share 0..1 as a whole percent: 0.876 → "88%". */
-    public fun percent(share: Double): String = (share * 100).roundToLong().toString() + "%"
+    /** A share 0..1 as a whole percent: 0.876 → "88%", in the phone's digits. */
+    public fun percent(share: Double): String = Numbers.format((share * 100).roundToLong()) + "%"
+
+    /** Latin figures ("12.3") in the phone's digits and decimal mark. */
+    private fun phone(latin: String): String {
+        val symbols = Numbers.symbols()
+        return Numbers.digits(latin, symbols).replace('.', symbols.decimal).replace('-', symbols.minus)
+    }
 
     private fun oneDecimal(value: Long, unit: Long): String {
         val tenths = (value * 10 + unit / 2) / unit
         val whole = tenths / 10
         val rest = tenths % 10
         return if (rest == 0L) whole.toString() else "$whole.$rest"
-    }
-
-    private fun grouped(value: Long): String {
-        val digits = value.toString()
-        val out = StringBuilder()
-        digits.forEachIndexed { i, c ->
-            if (i > 0 && (digits.length - i) % 3 == 0) out.append(',')
-            out.append(c)
-        }
-        return out.toString()
     }
 }

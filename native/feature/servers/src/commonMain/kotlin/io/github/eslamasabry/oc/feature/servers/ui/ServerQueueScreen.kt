@@ -69,7 +69,7 @@ public fun ServerQueueScreen(state: ServerQueueUi, actions: ServerQueueActions) 
                 )
             else -> null
         }
-    KitScreen(width = KitScreenWidth.Reading) {
+    KitScreen(width = KitScreenWidth.Reading, edges = KitScreenEdges.Bleed) {
         KitSheet(
             visible = true,
             onDismissRequest = actions::back,

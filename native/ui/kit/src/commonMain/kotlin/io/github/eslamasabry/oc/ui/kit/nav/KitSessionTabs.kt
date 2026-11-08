@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -49,7 +52,7 @@ public fun KitSessionTabs(
     Row(
         modifier
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = (tokens.gutter - Space.S1).dp)
+            .padding(horizontal = (kitPageGutter() - Space.S1.dp).coerceAtLeast(0.dp))
             .semantics {
                 contentDescription = label
                 selectableGroup()
@@ -104,7 +107,7 @@ public fun KitSessionTabs(
                                         .style(TypeRole.Label)
                                         .copy(color = chosen.words ?: colors.onAccent),
                                 maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         } else
                             KitText(

@@ -43,6 +43,7 @@ internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose
             width = KitScreenWidth.Reading,
             topBar = { KitTopBar(title, exit = KitTopBarExit.Close, exitLabel = stringResource(Res.string.kitSheetClose), onExit = close) },
             bottom = { KitActionBlock(primary = KitAction(stringResource(Res.string.promptEditorDone), onClose, icon = KitIcons.check)) },
+            edges = KitScreenEdges.Bleed,
         ) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S2.dp, bottom = Space.S4.dp)) {
                 KitField(

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.schedules.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -97,6 +98,7 @@ public fun SchedulesScreen(state: SchedulesUi, actions: SchedulesActions) {
                         )
                     }),
             width = KitScreenWidth.Reading,
+            edges = KitScreenEdges.Bleed,
         ) {
             when (state.phase) {
                 SchedulesPhase.Loading -> Unit

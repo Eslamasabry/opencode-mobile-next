@@ -520,20 +520,23 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
     }
 }
 
-/** The rim light's width (and its soft blur), in dp: a soft line, never a hairline. */
-internal const val RIM_LIGHT_DP: Float = 1.5f
+/** The rim light's width, in dp: a sharp, thin 1 dp line with no blur (owner 2026-11-09, "crisper"). */
+internal const val RIM_LIGHT_DP: Float = 1f
 
 /**
  * The rim light's strength over a dark theme (added light) and a light one (laid over): soft white light (owner
  * 2026-11-08: glass edges are a neutral white light, not accent-tinted; an HCT-pulled yellow accent read as blue-teal),
  * low in a light theme where white on milk needs little.
  */
-internal const val RIM_ALPHA_DARK: Float = .42f
-internal const val RIM_ALPHA_LIGHT: Float = .40f
+internal const val RIM_ALPHA_DARK: Float = .36f
+internal const val RIM_ALPHA_LIGHT: Float = .55f
 
-/** The specular highlight along a pane's top-start edge (the rim light's colour), strongest at the corner. */
-internal const val SPECULAR_ALPHA_DARK: Float = .55f
-internal const val SPECULAR_ALPHA_LIGHT: Float = .45f
+/**
+ * The specular light (the rim light's colour): a bright segment round the top-start corner and a thin glint line just
+ * inside the top edge, as Glass's in-flow panes draw it (`drawGlassSpecular`). Restrained, never plastic.
+ */
+internal const val SPECULAR_ALPHA_DARK: Float = .60f
+internal const val SPECULAR_ALPHA_LIGHT: Float = .85f
 
 /**
  * The rim light's colour on every glass edge, liquid and frosted (panes, sheets, menus): neutral white light (owner
@@ -596,6 +599,51 @@ internal fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
         }
     }
 }
+
+/**
+ * The soft fade of the page's ground behind a row of glass chips over the message box (owner 2026-11-09: "transcript
+ * text must not read through behind controls"): under the chips only, never a band behind the whole bottom block (the
+ * message box stays glass over the transcript), feathered [CHIPS_FADE_FEATHER_DP] past the row on every side. Drawn
+ * only where the chips are liquid glass on a chat's bottom block; elsewhere the modifier draws nothing.
+ */
+@Composable
+public fun Modifier.kitLiquidChipsFade(): Modifier {
+    if (LocalKitLiquidChrome.current == null || !kitLiquidOn()) return this
+    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
+    return drawBehind {
+        val f = CHIPS_FADE_FEATHER_DP.dp.toPx()
+        val w = size.width + 2 * f
+        val h = size.height + 2 * f
+        if (w <= 0f || h <= 0f) return@drawBehind
+        val core = ground.copy(alpha = CHIPS_FADE_ALPHA)
+        val clear = ground.copy(alpha = 0f)
+        val fy = f / h
+        val fx = f / w
+        drawIntoCanvas { canvas ->
+            val bounds = androidx.compose.ui.geometry.Rect(-f, -f, size.width + f, size.height + f)
+            canvas.saveLayer(bounds, Paint())
+            drawRect(
+                Brush.verticalGradient(0f to clear, fy * 1.6f to core, 1f - fy to core, 1f to clear, startY = -f, endY = size.height + f),
+                topLeft = Offset(-f, -f),
+                size = Size(w, h),
+            )
+            // Feather the ends: keep the band only where the horizontal mask is opaque.
+            drawRect(
+                Brush.horizontalGradient(0f to Color.Transparent, fx * 1.6f to Color.Black, 1f - fx * 1.6f to Color.Black, 1f to Color.Transparent, startX = -f, endX = size.width + f),
+                topLeft = Offset(-f, -f),
+                size = Size(w, h),
+                blendMode = BlendMode.DstIn,
+            )
+            canvas.restore()
+        }
+    }
+}
+
+/** How far the chips' fade reaches past the row, in dp. */
+internal const val CHIPS_FADE_FEATHER_DP: Int = 14
+
+/** How much of the ground lies behind the chips at the fade's core: words behind them no longer read. */
+internal const val CHIPS_FADE_ALPHA: Float = .86f
 
 /** How far above a page's bottom block its content fades out (Apple's scroll edge effect: 16-24 dp). */
 internal const val EDGE_FADE_DP: Int = 20

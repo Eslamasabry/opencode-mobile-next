@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.onboarding.presentation.OpeningGateActions
 import io.github.eslamasabry.oc.feature.onboarding.presentation.OpeningGateUi
@@ -38,7 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 public fun OpeningGateScreen(state: OpeningGateUi, actions: OpeningGateActions) {
     if (state is OpeningGateUi.Open) return
     val retry = stringResource(Res.string.commonRetry)
-    KitScreen(width = KitScreenWidth.Reading, page = true) {
+    KitScreen(width = KitScreenWidth.Reading, page = true, edges = KitScreenEdges.Bleed) {
         when (state) {
             is OpeningGateUi.Waiting ->
                 KitStateView(

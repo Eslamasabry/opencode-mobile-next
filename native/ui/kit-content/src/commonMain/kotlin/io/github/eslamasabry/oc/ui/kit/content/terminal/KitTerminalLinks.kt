@@ -1,9 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.content.terminal
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -154,6 +156,7 @@ public fun KitTerminalLinkSheet(flow: KitTerminalLinkFlow) {
  * A visible way to open detected addresses, also usable without hitting a terminal grid cell. A tap
  * opens the same sheet a tapped link in the grid does ([KitTerminalLinkSheet]).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 public fun KitTerminalLinks(
     transcript: String,
@@ -170,7 +173,12 @@ public fun KitTerminalLinks(
         }
     if (urls.isEmpty()) return
     val flow = remember { KitTerminalLinkFlow() }
-    Row(modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+    // C08 (Terminal blocker): the buttons ran together in one sideways row ("…help.ubuntu.comOpen link · landsc"),
+    // the last one cut at the window edge. They wrap onto lines instead, a step apart, every address whole.
+    FlowRow(
+        modifier.fillMaxWidth().testTag("terminal-links"),
+        horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
+    ) {
         urls.forEach { url ->
             KitButton(
                 label = stringResource(Res.string.terminalParityOpenAddress, shownHost(url)),

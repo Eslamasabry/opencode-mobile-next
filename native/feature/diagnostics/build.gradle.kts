@@ -1,8 +1,8 @@
 plugins { id("oc.kmp.feature") }
 
-// :feature:diagnostics (BUILD-DIAGNOSTICS-ATTENTION): Settings › Report a problem › Everything this phone kept. Port of
-// lib/ui/screens/app_diagnostics_kept_screen.dart with its crash reports, exit history and kept errors sections. The
-// engines come from :engine:diagnostics; :androidApp binds KeptDiagnosticsHost (DiagnosticsAttentionWiring.kt).
+// :feature:diagnostics (BUILD-DIAGNOSTICS-ATTENTION): the stale-failure prompt and the report headlines. Its "Everything
+// this phone kept" page was removed by R1 (2026-11-09); KeptDiagnosticsHost stays until its :androidApp binding
+// (DiagnosticsAttentionWiring.kt) can go. The engines come from :engine:diagnostics.
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:diagnostics"))

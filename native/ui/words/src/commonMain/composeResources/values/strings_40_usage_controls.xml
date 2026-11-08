@@ -19,7 +19,7 @@
     <string name="m40UsageWifi">Wi-Fi only</string>
     <string name="m40UsageNothingToWatch">There are no readable plans to watch yet.</string>
     <string name="m40UsageDownTo">When a plan is down to</string>
-    <string name="m40UsageSameAsOthers">Same as the others: %1$d%% left</string>
+    <string name="m40UsageSameAsOthers">Same as the others: %1$d% left</string>
     <string name="m40UsageWidgetPlans">Plans on the widget</string>
     <string name="m40UsageWidgetSetup">Show plans that need setup</string>
     <string name="m40UsageWidgetWindows">Windows to show</string>

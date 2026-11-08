@@ -58,7 +58,8 @@ public sealed interface KitRowLeading {
      */
     public data class Svg(val text: String) : KitRowLeading
 
-    public data class Logo(val id: String, val name: String, val agent: Boolean = false) :
+    /** [bare] draws the mark alone at the list icon size, with no tile behind it (Search's rows). */
+    public data class Logo(val id: String, val name: String, val agent: Boolean = false, val bare: Boolean = false) :
         KitRowLeading
 }
 

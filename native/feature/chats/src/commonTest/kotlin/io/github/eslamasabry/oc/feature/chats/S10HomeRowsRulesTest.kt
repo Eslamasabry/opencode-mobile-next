@@ -70,8 +70,8 @@ class S10HomeRowsRulesTest {
                 ui,
                 mapOf(BranchPlace(P1, "/work/api") to "main", BranchPlace(ProfileId("other"), "/work/web") to "dev"),
             )
-        assertEquals("main", branched.today.single { it.project == "api" }.branch)
-        assertNull(branched.today.single { it.project == "web" }.branch, "another server's folder is not this one")
+        assertEquals("main", branched.recent.single { it.project == "api" }.branch)
+        assertNull(branched.recent.single { it.project == "web" }.branch, "another server's folder is not this one")
     }
 
     @Test
@@ -97,6 +97,6 @@ class S10HomeRowsRulesTest {
                 10_000,
                 false,
             )
-        assertEquals("/work/api", ui.today.single().directory)
+        assertEquals("/work/api", ui.rightNow.single().directory)
     }
 }

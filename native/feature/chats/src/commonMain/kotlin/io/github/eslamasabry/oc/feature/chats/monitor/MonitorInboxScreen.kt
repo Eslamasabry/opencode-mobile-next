@@ -35,6 +35,7 @@ public fun MonitorInboxScreen(state: MonitorInboxUi, actions: MonitorInboxAction
         },
         width = KitScreenWidth.Reading,
         loading = !state.facts.loaded || state.working,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.verticalScroll(rememberScrollState())

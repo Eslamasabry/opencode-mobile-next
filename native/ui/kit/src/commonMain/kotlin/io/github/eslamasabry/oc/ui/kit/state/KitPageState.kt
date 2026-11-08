@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.layout.*
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
@@ -70,7 +71,7 @@ public fun KitPageState(
                 .then(if (constraints.hasBoundedHeight) Modifier.verticalScroll(scroll) else Modifier)
                 .heightIn(min = height)
                 .padding(
-                    horizontal = tokens.gutter.dp,
+                    horizontal = kitPageGutter(),
                     vertical = FlutterKitTokens.STATE_VERTICAL_PADDING.dp,
                 ),
             contentAlignment = Alignment.Center,

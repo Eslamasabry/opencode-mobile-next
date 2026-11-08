@@ -122,6 +122,14 @@ public data class StyleTokens(
     val track: Boolean = false,
     /** Whether floating pieces and sheets blur what lies behind them (Glass; GLASS_REF `blursBehind`). */
     val blursBehind: Boolean = false,
+    /**
+     * Extra inner inset of a pane (row groups, cards, sheets, the message box, menus) beyond its own padding, in dp, so
+     * a style's edge effects have room to show between the edge and the content (Glass, owner 2026-11-09: "good inside
+     * padding to let glass effects show"). 0 keeps the part's own padding.
+     */
+    val paneInsetDp: Float = 0f,
+    /** What a pane's corner radius grows by to stay concentric with [paneInsetDp] (not under Sharp corners). */
+    val paneCornerBoostDp: Float = 0f,
 ) {
     public val fieldHaloShown: Boolean get() = fieldHalo ?: glow.halo
 }

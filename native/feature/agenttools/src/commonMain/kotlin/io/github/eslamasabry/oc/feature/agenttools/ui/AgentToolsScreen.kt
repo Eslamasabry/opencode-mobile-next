@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agenttools.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (!state.connected)

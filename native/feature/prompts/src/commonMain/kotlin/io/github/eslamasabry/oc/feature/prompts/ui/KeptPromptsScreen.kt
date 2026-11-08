@@ -61,6 +61,7 @@ public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions) 
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.setup.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -134,6 +135,7 @@ public fun SetupScreen(state: SetupUi, actions: SetupActions) {
         width = KitScreenWidth.Reading,
         loading = state.phase == SetupPhase.Loading,
         bottom = if (progress == null) null else ({ ProgressAction(progress, state.working, actions) }),
+        edges = KitScreenEdges.Bleed,
     ) {
         when (val phase = state.phase) {
             SetupPhase.Loading -> Unit

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -102,6 +103,7 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
             width = KitScreenWidth.Reading,
             loading = state.load == FactsBookLoad.Loading,
             loadingLabel = title,
+            edges = KitScreenEdges.Bleed,
         ) {
             when {
                 state.load == FactsBookLoad.Failed -> {

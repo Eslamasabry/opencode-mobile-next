@@ -25,8 +25,6 @@ import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalKeyBar
 import io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalKeyBarController
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -198,8 +196,8 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
         width = KitScreenWidth.Full,
     ) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-            // The page's notices keep the gutter; they never start on the screen's edge.
-            val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+            // The frame keeps the page gutter (KitScreenEdges.Gutter): the notices, output and keys sit inside it.
+            val inset = Modifier
             state.failure?.let {
                 KitErrorNotice(
                     modifier = inset,

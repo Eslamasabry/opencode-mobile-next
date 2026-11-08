@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkCounts
 
@@ -24,8 +25,13 @@ public object WorkLineRules {
     private val editTools = setOf("edit", "write", "patch", "apply_patch", "multiedit")
     private val runTools = setOf("bash", "shell")
 
-    private fun unfinished(step: TurnStep): Boolean =
-        step.state == StepState.Pending || step.state == StepState.Running
+    /**
+     * Not yet doing its work: a step the server has not started, or (while a request waits for the person) the one
+     * that asks. A step that simply runs is counted with the finished ones, as Flutter's `_workCounts` does ("Ran 5
+     * commands"), never as "waiting to run" (owner's merge41 screenshot, 2026-11-09).
+     */
+    private fun unfinished(step: TurnStep, asking: Boolean): Boolean =
+        step.state == StepState.Pending || (asking && step.state == StepState.Running)
 
     /**
      * Splits [work]'s counts into finished and unfinished steps. With every step finished it is the engine's own
@@ -34,13 +40,14 @@ public object WorkLineRules {
      */
     public fun split(work: TurnWork): WorkLineCounts {
         // P-102: a stopped step did not do its work; it is not counted as "edited" or "ran".
-        if (work.steps.none { unfinished(it) || it.state == StepState.Stopped }) return WorkLineCounts(work.counts)
+        val asking = work.state == WorkLineState.WaitingForYou
+        if (work.steps.none { unfinished(it, asking) || it.state == StepState.Stopped }) return WorkLineCounts(work.counts)
         var out = WorkLineCounts(WorkCounts(steps = work.counts.steps))
         val editedFiles = HashSet<String>()
         val waitingFiles = HashSet<String>()
         for (step in work.steps) {
             out =
-                if (unfinished(step)) waiting(out, step, waitingFiles)
+                if (unfinished(step, asking)) waiting(out, step, waitingFiles)
                 else out.copy(done = finished(out.done, step, editedFiles))
         }
         return out

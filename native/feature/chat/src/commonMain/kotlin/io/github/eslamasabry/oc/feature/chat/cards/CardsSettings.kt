@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.cards
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -98,6 +99,7 @@ public fun CardsSettingsScreen(
                 onExit = actions::back,
             )
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

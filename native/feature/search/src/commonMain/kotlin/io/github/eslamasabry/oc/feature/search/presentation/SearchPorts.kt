@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 
 /** A connected server the person can search. */
 public data class SearchServer(val id: ProfileId, val name: String)
@@ -55,6 +56,33 @@ public data class SearchGoToFacts(
     val hasTeam: Boolean = false,
 )
 
+/** What a conversation is doing now, as Search's rows say it (the home's words). */
+public enum class SearchRowStatus { None, Working, NeedsYou, Failed }
+
+/** One of the server's newest conversations, with what the home knows of it (B1 "Recent conversations"). */
+public data class SearchRecentConversation(
+    val ref: ConversationRef,
+    val title: String?,
+    val project: String?,
+    val updatedMs: Long? = null,
+    /** The agent's bundled mark slug; blank = the neutral mark. */
+    val agentMark: String = "",
+    val agentName: String? = null,
+    val status: SearchRowStatus = SearchRowStatus.None,
+)
+
+/** A project the server's conversations live in, found by its name (B1 "Projects"). */
+public data class SearchProject(val name: String, val directory: String, val conversations: Int)
+
+/** The server's live picture for Search: newest conversations, their projects, and how many wait on the person. */
+public data class SearchActivity(
+    /** Newest first. */
+    val recent: ImmutableList<SearchRecentConversation> = kotlinx.collections.immutable.persistentListOf(),
+    /** Most recently active first. */
+    val projects: ImmutableList<SearchProject> = kotlinx.collections.immutable.persistentListOf(),
+    val needsYou: Int = 0,
+)
+
 /** The visible text of one message (text parts only; no tool output, no files). */
 public data class SearchMessage(val id: String, val fromYou: Boolean, val text: String)
 
@@ -100,6 +128,9 @@ public interface ConversationSearchSource {
                 io.github.eslamasabry.oc.core.common.FeatureId("projectHealth")
             )
         )
+
+    /** [profile]'s newest conversations, projects and waiting count, live; empty when the app has none. */
+    public fun activity(profile: ProfileId): Flow<SearchActivity> = flowOf(SearchActivity())
 
     /** The newest [limit] messages of one conversation. */
     public suspend fun recentMessages(

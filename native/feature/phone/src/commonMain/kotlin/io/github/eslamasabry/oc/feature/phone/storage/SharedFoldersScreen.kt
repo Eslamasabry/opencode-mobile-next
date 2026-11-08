@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.storage
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -57,6 +58,7 @@ public fun SharedFoldersScreen(state: SharedFoldersUi, actions: SharedFoldersAct
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             KitNotice(stringResource(Res.string.sharedFoldersSelected))
