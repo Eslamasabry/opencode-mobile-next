@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.servers.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.RefusalReason
 
 /**
@@ -52,3 +53,7 @@ public fun serverFailureKind(failure: Failure?): ServerFailureKind =
             }
         else -> ServerFailureKind.Other
     }
+
+/** An OpenCode 1 server (native speaks OpenCode 2 only): its own plain line, never the generic version text. */
+public fun serverRunsOpenCode1(failure: Failure?): Boolean =
+    (failure as? Failure.Incompatible)?.kind == IncompatibleKind.LegacyOpenCode1

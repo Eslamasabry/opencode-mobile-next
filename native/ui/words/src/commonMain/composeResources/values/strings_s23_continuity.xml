@@ -1,0 +1,4 @@
+<resources>
+    <!-- S23 continuity: an OpenCode 1 server (native speaks OpenCode 2 only), on the servers list and on connect. -->
+    <string name="serverFailureOpenCode1">This server runs OpenCode 1. Update it to OpenCode 2 to use it here.</string>
+</resources>

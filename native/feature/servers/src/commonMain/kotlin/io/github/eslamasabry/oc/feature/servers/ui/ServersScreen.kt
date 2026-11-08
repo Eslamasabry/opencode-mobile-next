@@ -184,7 +184,9 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
             ServerFailureKind.Network -> Res.string.serverFailureNetwork
             ServerFailureKind.Timeout -> Res.string.serverFailureTimeout
             ServerFailureKind.Certificate -> Res.string.serverFailureCertificate
-            ServerFailureKind.Incompatible -> Res.string.serverFailureIncompatible
+            ServerFailureKind.Incompatible ->
+                if (serverRunsOpenCode1(failure)) Res.string.serverFailureOpenCode1
+                else Res.string.serverFailureIncompatible
             ServerFailureKind.UnreadableReply -> Res.string.serverFailureUnreadableReply
             ServerFailureKind.Server -> Res.string.serverFailureServer
             ServerFailureKind.Rejected -> Res.string.serverFailureRejected

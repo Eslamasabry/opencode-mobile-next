@@ -1085,7 +1085,9 @@ private fun editorFailureWords(failure: Failure): String =
                     RefusalReason.ProfileDeleted -> Res.string.editor40Deleted
                     else -> Res.string.serversInvalidAddress
                 }
-            is Failure.Incompatible -> Res.string.serverFailureIncompatible
+            is Failure.Incompatible ->
+                if (serverRunsOpenCode1(failure)) Res.string.serverFailureOpenCode1
+                else Res.string.serverFailureIncompatible
             is Failure.SecretUnavailable -> Res.string.serverFailureSecret
             else -> Res.string.serverFailureOther
         }
