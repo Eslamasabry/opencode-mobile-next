@@ -485,4 +485,13 @@ class ChatsViewModelTest {
         assertEquals(null, vm.state.value.confirmAlways)
         assertEquals(emptyList(), answers.sent)
     }
+
+    @Test
+    fun `B-182 Open a project from the project chip opens the real flow, not a path box`() {
+        val nav = RecordingNavigator()
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(available = false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        vm.showProjectChoices()
+        vm.openFilterProject()
+        assertEquals(listOf<AppRoute>(io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Open), nav.routes)
+    }
 }

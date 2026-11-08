@@ -35,10 +35,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
-import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -116,26 +114,6 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
     KitPageOverlay(sheet == ChatsHomeSheet.Inbox, stringResource(Res.string.inboxTitle), actions::closeHomeSheet) {
         ChatsInboxScreen(state, actions)
     }
-    val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
-    val badParts = stringResource(Res.string.p12PathBadParts)
-    KitInputDialog(
-        visible = sheet == ChatsHomeSheet.OpenProject,
-        title = stringResource(Res.string.chatsFilterOpenProject),
-        fieldLabel = stringResource(Res.string.projectFolderPathLabel),
-        confirmLabel = stringResource(Res.string.projectFolderOpenAction),
-        initial = state.filters.projectDirectory.orEmpty(),
-        kind = KitFieldKind.Path,
-        operationKey = "filter-project",
-        validate = { path ->
-            when {
-                !path.trim().startsWith('/') -> notAbsolute
-                path.trim().split('/').any { it == ".." || it == "." } ||
-                    path.any { it.code <= 0x1f || it.code == 0x7f } -> badParts
-                else -> null
-            }
-        },
-        onResult = actions::finishFilterProject,
-    )
     KitConfirm(
         spec =
             state.confirmWatched?.let { watched ->

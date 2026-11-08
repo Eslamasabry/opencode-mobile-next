@@ -609,8 +609,13 @@ public class ChatsViewModel(
         nav.open(io.github.eslamasabry.oc.ui.routes.DemoRoute)
     }
 
+    /**
+     * B-182: "Open a project…" leads to the real flow (where the project is, its server's projects, its folders), as
+     * Flutter's chip opens ProjectFolderActions.openFolder; the old path-only box stays inside it as Type a path.
+     */
     override fun openFilterProject() {
-        sheet.value = ChatsHomeSheet.OpenProject
+        sheet.value = null
+        nav.open(ProjectsRoute.Open)
     }
 
     override fun finishFilterProject(directory: String?) {
