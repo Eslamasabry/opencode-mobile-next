@@ -30,7 +30,7 @@ class CrashSanitizerTest {
     fun `a copy is never a frameless cause-less wrapper`() {
         val crash = thrown { error("chat text: fake-secret") }
         val safe = CrashSanitizer.sanitize(crash)
-        assertEquals(IllegalStateException::class.java, safe.javaClass)
+        assertEquals<Class<*>>(IllegalStateException::class.java, safe.javaClass)
         assertNull(safe.message)
         assertTrue(safe.stackTrace.isNotEmpty())
         assertEquals(crash.stackTrace.toList(), safe.stackTrace.toList())
@@ -46,11 +46,11 @@ class CrashSanitizerTest {
 
         val safe = CrashSanitizer.sanitize(outer)
 
-        assertEquals(RuntimeException::class.java, safe.javaClass)
-        assertEquals(IllegalArgumentException::class.java, safe.cause!!.javaClass)
-        assertEquals(IOException::class.java, safe.cause!!.cause!!.javaClass)
+        assertEquals<Class<*>>(RuntimeException::class.java, safe.javaClass)
+        assertEquals<Class<*>>(IllegalArgumentException::class.java, safe.cause!!.javaClass)
+        assertEquals<Class<*>>(IOException::class.java, safe.cause!!.cause!!.javaClass)
         assertEquals(middle.stackTrace.toList(), safe.cause!!.stackTrace.toList())
-        assertEquals(NullPointerException::class.java, safe.suppressed.single().javaClass)
+        assertEquals<Class<*>>(NullPointerException::class.java, safe.suppressed.single().javaClass)
         val printed = safe.stackTraceToString()
         for (secret in listOf("fake-token", "fake-password", "prompt words", "fake-login-code")) {
             assertFalse(secret in printed, printed)

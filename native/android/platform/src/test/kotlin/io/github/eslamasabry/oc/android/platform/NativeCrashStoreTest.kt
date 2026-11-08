@@ -180,11 +180,11 @@ class NativeCrashStoreTest {
             handler.uncaughtException(Thread.currentThread(), crash)
             val seen = forwarded!!
             // 2026-11-08: a cause-less "Native application error" with no frames hid every crash's real stack.
-            assertEquals(IOException::class.java, seen.javaClass)
+            assertEquals<Class<*>>(IOException::class.java, seen.javaClass)
             assertNull(seen.message)
             assertEquals(crash.stackTrace.toList(), seen.stackTrace.toList())
             val cause = seen.cause!!
-            assertEquals(IllegalStateException::class.java, cause.javaClass)
+            assertEquals<Class<*>>(IllegalStateException::class.java, cause.javaClass)
             assertNull(cause.message)
             assertEquals(crash.cause!!.stackTrace.toList(), cause.stackTrace.toList())
             val printed = seen.stackTraceToString()

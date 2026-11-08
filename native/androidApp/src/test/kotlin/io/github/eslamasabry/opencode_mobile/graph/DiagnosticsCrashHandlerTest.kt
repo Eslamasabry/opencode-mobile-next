@@ -33,10 +33,10 @@ class DiagnosticsCrashHandlerTest {
         handler.uncaughtException(Thread.currentThread(), original)
 
         val seen = forwarded!!
-        assertEquals(IllegalStateException::class.java, seen.javaClass)
+        assertEquals<Class<*>>(IllegalStateException::class.java, seen.javaClass)
         assertNull(seen.message)
         assertEquals(original.stackTrace.toList(), seen.stackTrace.toList())
-        assertEquals(NoSuchElementException::class.java, seen.cause!!.javaClass)
+        assertEquals<Class<*>>(NoSuchElementException::class.java, seen.cause!!.javaClass)
         assertEquals(original.cause!!.stackTrace.toList(), seen.cause!!.stackTrace.toList())
         assertFalse("fake-prompt" in seen.stackTraceToString())
         assertSame(original, logged, "this device's logcat keeps the original")
