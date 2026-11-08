@@ -31,6 +31,9 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.state.KitNeedsYouBadge
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
+/** The most places one [KitShortcutRow] holds; more belong in a list. */
+public const val KIT_SHORTCUTS_MAX: Int = 5
+
 /** One place a [KitShortcutRow] opens: its glyph, its name, and how many requests wait there (the amber badge). */
 public data class KitShortcut(
     val icon: ImageVector,
@@ -41,10 +44,11 @@ public data class KitShortcut(
 )
 
 /**
- * A short row of places to jump to (Search, B1: Needs you, Projects, Settings, Servers). Each is a bare 24 dp glyph over
- * its name, sharing the width equally: no tile, no box, the press ink alone shows the target (owner 2026-11-08: icons
- * in boxes read as decoration). A place with requests waiting carries the amber needs-you badge on its glyph, spoken
- * after its name. The row keeps the 16 dp gutter; each cell is at least 64 dp tall, a 48 dp target and more.
+ * A short row of places to jump to (Search, B1: Needs you, Projects, Settings, Servers). Each is a bare
+ * 24 dp glyph over its name, sharing the width equally: no tile, no box, the press ink alone shows the
+ * target (owner 2026-11-08: icons in boxes read as decoration). A place with requests waiting carries the
+ * amber needs-you badge on its glyph, spoken after its name. The row keeps the 16 dp gutter; each cell is
+ * at least 64 dp tall, a 48 dp target and more.
  *
  * States: default, badge
  * Text: frame (names stop growing at 1.3×; two lines from 1.3×)
@@ -54,20 +58,27 @@ public data class KitShortcut(
  */
 @Composable
 public fun KitShortcutRow(items: List<KitShortcut>, modifier: Modifier = Modifier) {
-    kitAssert(items.size in 1..5) { "KitShortcutRow: one to five places; more belong in a list" }
+    kitAssert(items.size in 1..KIT_SHORTCUTS_MAX) { "KitShortcutRow: one to five places; more belong in a list" }
     val tokens = LocalKitTokens.current
+    // The cells' ink reaches space2 past the gutter, so each glyph and name stay centred in its share.
+    val edge = (tokens.gutter - Space.S2).dp
     Row(
-        modifier.kitMaxWidth(CapRole.List).fillMaxWidth().padding(horizontal = (tokens.gutter - Space.S2).dp).testTag("kit-shortcut-row"),
+        modifier.kitMaxWidth(CapRole.List).fillMaxWidth().padding(horizontal = edge).testTag("kit-shortcut-row"),
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
         for (item in items) {
             KitTappable(
                 onClick = item.onClick,
-                modifier = Modifier.weight(1f).heightIn(min = (tokens.minTarget + Space.S4).dp).semantics { role = Role.Button },
+                modifier =
+                    Modifier.weight(1f)
+                        .heightIn(min = (tokens.minTarget + Space.S4).dp)
+                        .semantics { role = Role.Button },
                 shape = KitShapeId.Panel,
             ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(vertical = Space.S3.dp, horizontal = Space.S1.dp).semantics(mergeDescendants = true) {},
+                    Modifier.fillMaxWidth()
+                        .padding(vertical = Space.S3.dp, horizontal = Space.S1.dp)
+                        .semantics(mergeDescendants = true) {},
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {

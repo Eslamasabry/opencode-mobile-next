@@ -228,7 +228,13 @@ public fun KitSearchField(
         ) {
             if (onBack != null) {
                 // The arrow's 48 dp target starts space1 in, so its glyph sits on the field's 16 dp rail.
-                KitIconButton(icon = KitIcons.back, label = backLabel.orEmpty(), onClick = onBack, modifier = Modifier.padding(start = Space.S1.dp), tone = TextTone.Primary)
+                KitIconButton(
+                    icon = KitIcons.back,
+                    label = backLabel.orEmpty(),
+                    onClick = onBack,
+                    modifier = Modifier.padding(start = Space.S1.dp),
+                    tone = TextTone.Primary,
+                )
             } else {
                 KitGlyph(KitIcons.search, colors.text3, tokens.smallIcon.dp * minOf(kitTextScale(), tokens.maxIconScale), Modifier.padding(start = Space.S4.dp, end = Space.S3.dp))
             }

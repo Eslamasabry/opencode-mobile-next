@@ -9,17 +9,16 @@ import androidx.compose.ui.text.font.FontWeight
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /**
- * The words a search matched, shown in place (Search's results): each word of the query, wherever it occurs, case
- * ignored. The match is marked in the accent ink at semibold weight only: no fill behind it, so a row stays calm and the
- * words keep their place. Pure rules here; [kitHighlighted] dresses them.
+ * The words a search matched, shown in place (Search's results): each word of the query, wherever it
+ * occurs, case ignored. The match is marked in the accent ink at semibold weight only: no fill behind it,
+ * so a row stays calm and the words keep their place. Pure rules here; [kitHighlighted] dresses them.
  */
 public object KitHighlight {
     private val WORDS = Regex("\\s+")
 
     /** Where each word of [query] occurs in [text], case ignored: sorted, overlaps merged. Blank query = none. */
     public fun ranges(text: String, query: String?): List<IntRange> {
-        if (query.isNullOrBlank() || text.isEmpty()) return emptyList()
-        val words = query.trim().split(WORDS).filter { it.isNotEmpty() }.distinct()
+        val words = query.orEmpty().trim().split(WORDS).filter { it.isNotEmpty() }.distinct()
         val found = mutableListOf<IntRange>()
         for (word in words) {
             var from = 0
@@ -30,12 +29,10 @@ public object KitHighlight {
                 from = at + word.length
             }
         }
-        if (found.isEmpty()) return emptyList()
-        val sorted = found.sortedBy { it.first }
-        val merged = mutableListOf(sorted.first())
-        for (r in sorted.drop(1)) {
-            val last = merged.last()
-            if (r.first <= last.last + 1) merged[merged.lastIndex] = last.first..maxOf(last.last, r.last)
+        val merged = mutableListOf<IntRange>()
+        for (r in found.sortedBy { it.first }) {
+            val last = merged.lastOrNull()
+            if (last != null && r.first <= last.last + 1) merged[merged.lastIndex] = last.first..maxOf(last.last, r.last)
             else merged += r
         }
         return merged

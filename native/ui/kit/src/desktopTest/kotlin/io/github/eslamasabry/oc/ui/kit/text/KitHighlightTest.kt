@@ -33,21 +33,27 @@ class KitHighlightTest {
     }
 
     @Test
-    fun `SCREENS-NAV-34 B1 a row marks the matched words of its title and supporting line in the accent ink`() = runComposeUiTest {
+    fun `SCREENS-NAV-34 B1 a row marks the matched words of its title and supporting line in the accent ink`() =
+        runComposeUiTest {
         var accent = Color.Unspecified
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), stillFrame = true) {
+            val look = KitAppearance(motion = MotionLevel.Off)
+            KitTheme(platform = DesktopKitPlatform(), appearance = look, stillFrame = true) {
                 accent = LocalKitColors.current.accent
-                Box(Modifier.width(400.dp)) { KitRow("Debug log", supporting = "Help › Diagnostics debug", highlight = "deb", onClick = {}) }
+                Box(Modifier.width(400.dp)) {
+                    KitRow("Debug log", supporting = "Help › Diagnostics debug", highlight = "deb", onClick = {})
+                }
             }
         }
-        val title = onNodeWithTag("kit-row-title", useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        fun words(tag: String) =
+            onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        val title = words("kit-row-title")
         assertEquals("Debug log", title.text)
         val span = title.spanStyles.single()
         assertEquals(0 to 3, span.start to span.end)
         assertEquals(accent, span.item.color)
         assertEquals(Color.Unspecified, span.item.background)
-        val supporting = onNodeWithTag("kit-row-supporting", useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        val supporting = words("kit-row-supporting")
         assertTrue(supporting.spanStyles.any { supporting.text.substring(it.start, it.end) == "deb" })
     }
 }

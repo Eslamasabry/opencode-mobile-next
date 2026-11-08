@@ -64,19 +64,32 @@ class SearchB1Renders {
     private val minute = 60_000L
 
     private val marks = KitLogoLoader { id, _ ->
-        File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$id.svg").takeIf { it.isFile }?.readText()
+        val assets = File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks")
+        File(assets, "$id.svg").takeIf { it.isFile }?.readText()
     }
 
     private fun ref(id: String) = ConversationRef(home, SessionId(id))
 
+    private fun recent(
+        id: String,
+        title: String,
+        project: String,
+        minutesAgo: Int,
+        mark: String,
+        status: SearchRowStatus = SearchRowStatus.None,
+    ) = SearchRecentConversation(ref(id), title, project, now - minutesAgo * minute, mark, null, status)
+
+    private fun hit(id: String, title: String, snippet: String, fromYou: Boolean, minutesAgo: Int) =
+        SearchHitUi(ref(id), title, "new", snippet, fromYou, "m-$id", now - minutesAgo * minute)
+
     private val activity =
         SearchActivity(
             persistentListOf(
-                SearchRecentConversation(ref("a"), "Explain this project", "new", now, "claude", "Claude Code", SearchRowStatus.Working),
-                SearchRecentConversation(ref("b"), "Hi", "new", now - 5 * minute, "", null, SearchRowStatus.NeedsYou),
-                SearchRecentConversation(ref("c"), "You know who you are and where are we heading next", "new", now - 26 * 60 * minute, "opencode", "OpenCode"),
-                SearchRecentConversation(ref("d"), "Fix the login redirect on the web shell", "shopfront", now - 30 * 60 * minute, "codex", "Codex"),
-                SearchRecentConversation(ref("e"), "Hi", "new", now - 50 * 60 * minute, "opencode", "OpenCode"),
+                recent("a", "Explain this project", "new", 0, "claude", SearchRowStatus.Working),
+                recent("b", "Hi", "new", 5, "", SearchRowStatus.NeedsYou),
+                recent("c", "You know who you are and where are we heading next", "new", 26 * 60, "opencode"),
+                recent("d", "Fix the login redirect on the web shell", "shopfront", 30 * 60, "codex"),
+                recent("e", "Hi", "new", 50 * 60, "opencode"),
             ),
             persistentListOf(SearchProject("debian-box", "/root/debian-box", 3), SearchProject("new", "/root/new", 9)),
             needsYou = 1,
@@ -102,15 +115,17 @@ class SearchB1Renders {
         empty.copy(
             query = "deb",
             phase = SearchPhase.Results,
-            titleHits = persistentListOf(SearchHitUi(ref("x"), "Debug the release build", "shopfront", updatedMs = now - 3 * 60 * minute)),
+            titleHits =
+                persistentListOf(SearchHitUi(ref("x"), "Debug the release build", "shopfront", updatedMs = now - 3 * 60 * minute)),
             contentHits =
                 persistentListOf(
-                    SearchHitUi(ref("a"), "Explain this project", "new", "…the debug build won't run on the pinned engine…", false, "m1", now),
-                    SearchHitUi(ref("e"), "Hi", "new", "…install the Debian image first, then sign in…", true, "m2", now - 50 * 60 * minute),
-                    SearchHitUi(ref("c"), "You know who you are", "new", "…a debian chroot keeps the agents apart…", false, "m3", now - 26 * 60 * minute),
+                    hit("a", "Explain this project", "…the debug build won't run on the pinned engine…", false, 0),
+                    hit("e", "Hi", "…install the Debian image first, then sign in…", true, 50 * 60),
+                    hit("c", "You know who you are", "…a debian chroot keeps the agents apart…", false, 26 * 60),
                 ),
             destinations =
-                SearchIndex.appEntries(PlatformCapabilities.desktop().copy(builtinLinux = true), hasShell = true).toImmutableList(),
+                SearchIndex.appEntries(PlatformCapabilities.desktop().copy(builtinLinux = true), hasShell = true)
+                    .toImmutableList(),
         )
 
     private object Quiet : SearchActions {
@@ -175,12 +190,11 @@ class SearchB1Renders {
         File(out).mkdirs()
         val previous = Locale.getDefault()
         try {
-            for (style in listOf(Style.Glass, Style.Solid)) {
-                for (dark in listOf(true, false)) {
-                    val look = "${style.storageName}-${if (dark) "dark" else "light"}"
-                    shoot("search-empty-$look", empty, style, dark)
-                    shoot("search-typing-$look", typing, style, dark)
-                }
+            val looks = listOf(Style.Glass, Style.Solid).flatMap { style -> listOf(style to true, style to false) }
+            for ((style, dark) in looks) {
+                val look = "${style.storageName}-${if (dark) "dark" else "light"}"
+                shoot("search-empty-$look", empty, style, dark)
+                shoot("search-typing-$look", typing, style, dark)
             }
             shoot("search-empty-glass-dark-ar", empty, Style.Glass, dark = true, arabic = true)
             shoot("search-typing-glass-dark-ar", typing.copy(query = "deb"), Style.Glass, dark = true, arabic = true)

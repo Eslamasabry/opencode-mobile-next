@@ -62,6 +62,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowTitle
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -317,9 +319,10 @@ private fun RowBody(
             }
             leading is KitRowLeading.Logo && leading.bare -> {
                 // A bare mark (Search's rows): the agent's or provider's mark at the list icon size, no tile behind it.
-                val icon = (io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Large.dp * minOf(scale, TextScalePolicy.ICON_CAP)).dp
-                Box(lead.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
-                    io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo(leading.id, leading.name, leading.agent, Modifier.size(icon), markSize = icon)
+                val grow = minOf(scale, TextScalePolicy.ICON_CAP)
+                val icon = (KitIconSize.Large.dp * grow).dp
+                Box(lead.size((tokens.iconTile * grow).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    KitProviderLogo(leading.id, leading.name, leading.agent, Modifier.size(icon), markSize = icon)
                 }
             }
             leading != null -> Box(lead) { RowLeadingTile(leading, dim = !enabled || unavailable, selected = selected) }

@@ -19,7 +19,7 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchViewModel
 import io.github.eslamasabry.oc.feature.search.presentation.SearchActivity
 import io.github.eslamasabry.oc.feature.search.presentation.SearchProject
 import io.github.eslamasabry.oc.feature.search.presentation.SearchRecentConversation
-import io.github.eslamasabry.oc.feature.search.presentation.SearchRowStatus
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRowStatus.Working
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -338,7 +338,9 @@ class SearchViewModelTest {
             val project = SearchProject("debian-box", "/src/debian-box", 3)
             source.live.value =
                 SearchActivity(
-                    persistentListOf(SearchRecentConversation(ref, "Fix login", "debian-box", NOW - 60_000, "opencode", null, SearchRowStatus.Working)),
+                    persistentListOf(
+                        SearchRecentConversation(ref, "Fix login", "debian-box", NOW - 60_000, "opencode", status = Working)
+                    ),
                     persistentListOf(project),
                     needsYou = 2,
                 )

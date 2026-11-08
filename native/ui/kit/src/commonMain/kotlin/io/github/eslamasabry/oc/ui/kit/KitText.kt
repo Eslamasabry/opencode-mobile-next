@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import androidx.compose.ui.text.AnnotatedString
+import io.github.eslamasabry.oc.ui.kit.text.kitHighlighted
 import io.github.eslamasabry.oc.ui.kit.effects.kitWordsPlate
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.text.BasicText
@@ -74,10 +76,9 @@ public fun KitText(
             textAlign = textAlign ?: TextAlign.Start,
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
         )
-    val marked = if (highlight.isNullOrBlank()) null else io.github.eslamasabry.oc.ui.kit.text.kitHighlighted(text, highlight)
+    val marked = if (highlight.isNullOrBlank()) AnnotatedString(text) else kitHighlighted(text, highlight)
     if (kind == KitTextKind.Reading) {
-        if (marked != null) BasicText(marked, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
-        else BasicText(text, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        BasicText(marked, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
         return
     }
     // Frame text, the Flutter way: min(platform size at the current scale, 1.3 × spec), per role size. Compose text
@@ -94,8 +95,7 @@ public fun KitText(
             letterSpacing = (style.letterSpacing.value * k).sp,
         )
     CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
-        if (marked != null) BasicText(marked, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
-        else BasicText(text, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        BasicText(marked, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
     }
 }
 

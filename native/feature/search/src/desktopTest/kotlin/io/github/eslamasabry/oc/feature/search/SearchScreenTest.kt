@@ -163,7 +163,11 @@ class SearchScreenTest {
             val actions = Actions()
             var webOpen = false
             var state by mutableStateOf(SearchUi(servers = servers, server = home))
-            setContent { Screen(state, actions, web = SearchWebOption(webOpen) { webOpen = !webOpen; actions.calls += "web" }) }
+            val web = SearchWebOption(webOpen) {
+                webOpen = !webOpen
+                actions.calls += "web"
+            }
+            setContent { Screen(state, actions, web = web) }
             onNodeWithContentDescription("Inside messages").assertIsNotSelected().performClick()
             assertEquals(listOf("inside:true"), actions.calls)
             state = state.copy(content = ContentPhase.Done)
@@ -174,8 +178,8 @@ class SearchScreenTest {
             onNodeWithContentDescription("About search options").performClick()
             waitForIdle()
             onNodeWithText("Search options").assertExists()
-            onNodeWithText("Reads the newest messages of your 20 most recent conversations on this server.").assertExists()
-            onNodeWithText("Search with this server’s provider. Searches stay out of conversation history.").assertExists()
+            onNodeWithText("Reads the newest messages", substring = true).assertExists()
+            onNodeWithText("Search with this server’s provider.", substring = true).assertExists()
         }
 
     @Test
@@ -184,7 +188,9 @@ class SearchScreenTest {
         val ref = ConversationRef(home, SessionId("r1"))
         val activity =
             SearchActivity(
-                persistentListOf(SearchRecentConversation(ref, "Explain this project", "new", null, "", null, SearchRowStatus.Working)),
+                persistentListOf(
+                    SearchRecentConversation(ref, "Explain this project", "new", status = SearchRowStatus.Working)
+                ),
                 needsYou = 1,
             )
         setContent { Screen(SearchUi(servers = servers, server = home, activity = activity), actions) }
@@ -210,7 +216,8 @@ class SearchScreenTest {
                 phase = SearchPhase.Results,
                 titleHits = hits.toImmutableList(),
                 activity = SearchActivity(projects = persistentListOf(SearchProject("app-store", "/src/app-store", 3))),
-                destinations = SearchIndex.appEntries(PlatformCapabilities.desktop(), hasShell = true).toImmutableList(),
+                destinations =
+                    SearchIndex.appEntries(PlatformCapabilities.desktop(), hasShell = true).toImmutableList(),
             )
         setContent { Screen(state, actions) }
         onNodeWithText("Conversations").assertExists()

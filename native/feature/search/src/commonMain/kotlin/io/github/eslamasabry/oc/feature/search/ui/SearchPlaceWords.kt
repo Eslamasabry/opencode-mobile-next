@@ -157,34 +157,38 @@ internal fun searchPlaceWords(place: SearchPlace): Pair<String, String> =
     }
 
 /** The glyph each place's row leads with under "Settings and pages" (bare, never in a tile). */
-internal fun searchPlaceIcon(place: SearchPlace) =
-    when (place) {
-        SearchPlace.Chats, SearchPlace.AllConversations -> KitIcons.chat
-        SearchPlace.Projects -> KitIcons.folders
-        SearchPlace.ProjectFiles -> KitIcons.files
-        SearchPlace.ProjectChanges -> KitIcons.branch
-        SearchPlace.ProjectTerminal -> KitIcons.terminal
-        SearchPlace.ProjectHealth -> KitIcons.heartbeat
-        SearchPlace.ProjectWorktrees -> KitIcons.fork
-        SearchPlace.ProjectSearch -> KitIcons.searchList
-        SearchPlace.Settings -> KitIcons.settingsGear
-        SearchPlace.Models -> KitIcons.model
-        SearchPlace.Providers -> KitIcons.cloud
-        SearchPlace.Integrations -> KitIcons.extensions
-        SearchPlace.Commands -> KitIcons.code
-        SearchPlace.Tools -> KitIcons.tools
-        SearchPlace.Skills -> KitIcons.idea
-        SearchPlace.References -> KitIcons.bookmarks
-        SearchPlace.AiSetup -> KitIcons.sparkle
-        SearchPlace.Agents -> KitIcons.agent
-        SearchPlace.Phone -> KitIcons.phone
-        SearchPlace.Running -> KitIcons.activity
-        SearchPlace.Services -> KitIcons.processor
-        SearchPlace.PhoneStorage -> KitIcons.storage
-        SearchPlace.Notifications -> KitIcons.notificationImportant
-        SearchPlace.BackgroundChecks -> KitIcons.sync
-        SearchPlace.Appearance -> KitIcons.appearance
-        SearchPlace.Language -> KitIcons.globe
-        SearchPlace.Tips -> KitIcons.guide
-        SearchPlace.Shortcuts -> KitIcons.keyboard
-    }
+internal fun searchPlaceIcon(place: SearchPlace) = placeIcons.getValue(place)
+
+private val placeIcons by lazy {
+    mapOf(
+        SearchPlace.Chats to KitIcons.chat,
+        SearchPlace.AllConversations to KitIcons.chat,
+        SearchPlace.Projects to KitIcons.folders,
+        SearchPlace.ProjectFiles to KitIcons.files,
+        SearchPlace.ProjectChanges to KitIcons.branch,
+        SearchPlace.ProjectTerminal to KitIcons.terminal,
+        SearchPlace.ProjectHealth to KitIcons.heartbeat,
+        SearchPlace.ProjectWorktrees to KitIcons.fork,
+        SearchPlace.ProjectSearch to KitIcons.searchList,
+        SearchPlace.Settings to KitIcons.settingsGear,
+        SearchPlace.Models to KitIcons.model,
+        SearchPlace.Providers to KitIcons.cloud,
+        SearchPlace.Integrations to KitIcons.extensions,
+        SearchPlace.Commands to KitIcons.code,
+        SearchPlace.Tools to KitIcons.tools,
+        SearchPlace.Skills to KitIcons.idea,
+        SearchPlace.References to KitIcons.bookmarks,
+        SearchPlace.AiSetup to KitIcons.sparkle,
+        SearchPlace.Agents to KitIcons.agent,
+        SearchPlace.Phone to KitIcons.phone,
+        SearchPlace.Running to KitIcons.activity,
+        SearchPlace.Services to KitIcons.processor,
+        SearchPlace.PhoneStorage to KitIcons.storage,
+        SearchPlace.Notifications to KitIcons.notificationImportant,
+        SearchPlace.BackgroundChecks to KitIcons.sync,
+        SearchPlace.Appearance to KitIcons.appearance,
+        SearchPlace.Language to KitIcons.globe,
+        SearchPlace.Tips to KitIcons.guide,
+        SearchPlace.Shortcuts to KitIcons.keyboard,
+    )
+}
