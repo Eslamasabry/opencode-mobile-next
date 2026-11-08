@@ -160,6 +160,7 @@ public class OpenProjectViewModel(
                 serverName = server.name,
                 onThisPhone = server.phoneFolders,
                 path = null,
+                canShowHidden = false,
                 openedBefore = before.map { d -> OpenFolderUi(ProjectRules.name(d), d) }.toImmutableList(),
                 canMake = canMake(server),
                 canClone = canClone(server),
@@ -186,6 +187,7 @@ public class OpenProjectViewModel(
                 makeIn = target,
                 pathStart = "$target/",
                 dialog = null,
+                canShowHidden = builtin(server),
             )
         }
         list(server) { folders(server, root ?: target, target) }
@@ -298,7 +300,7 @@ public class OpenProjectViewModel(
     }
 
     /**
-     * The folders inside [path], hidden ones left out, by name. This phone's Linux is read from its files; a computer's
+     * The folders inside [path], hidden ones left out unless asked for (this phone only), by name. This phone's Linux is read from its files; a computer's
      * server lists [path] relative to the project [top] it sits in.
      */
     private suspend fun folders(server: ProjectServer, top: String, path: String): Outcome<List<OpenFolderUi>> {
@@ -308,7 +310,7 @@ public class OpenProjectViewModel(
                 is Outcome.Ok ->
                     Outcome.Ok(
                         read.value
-                            .filter { !it.name.startsWith('.') }
+                            .filter { state.value.showHidden || !it.name.startsWith('.') }
                             .map { OpenFolderUi(it.name, ProjectRules.normalize(it.path)) }
                             .sortedBy { it.name.lowercase() }
                     )
@@ -331,6 +333,14 @@ public class OpenProjectViewModel(
                 )
             }
         }
+    }
+
+    override fun toggleHidden() {
+        val server = current() ?: return
+        if (!state.value.canShowHidden || state.value.step != OpenProjectStep.Folder) return
+        val path = state.value.path ?: return
+        mutable.update { it.copy(showHidden = !it.showHidden) }
+        list(server) { folders(server, root ?: path, path) }
     }
 
     override fun openShown() {
