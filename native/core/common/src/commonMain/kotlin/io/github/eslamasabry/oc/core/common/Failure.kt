@@ -148,6 +148,8 @@ public enum class MediaProblem {
     ClipboardImageTooLarge, AttachmentContentMissing, RemoteAttachmentPreview,
     // previews
     PdfEncrypted, PdfInvalid, PdfTooLarge, PdfNeedsAndroid10, PdfTimedOut, PdfFailed, SvgNotStatic, FileNotShowable,
+    // a server's file read (B-184): over the size the viewer reads, gone, or not allowed
+    FileTooBig, FileMissing, FileDenied,
     // save, share, open
     SaveFailed, NoAppToOpen, ShareUnavailable, WifiShareNoWifi, WifiSharePrivateFile, WifiShareUnavailable, WifiShareEnded,
     // camera

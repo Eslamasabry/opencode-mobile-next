@@ -27,11 +27,7 @@ public class AndroidLocalFileOpener(context: Context, private val dispatchers: A
 
     private fun readable(path: String): File? =
         try {
-            val file = File(path).canonicalFile
-            val root = Environment.getExternalStorageDirectory().canonicalFile
-            file.takeIf {
-                it.path.startsWith(root.path + File.separator) && it.isFile && it.canRead()
-            }
+            LocalFileGate.allowed(Environment.getExternalStorageDirectory(), path)?.takeIf { it.canRead() }
         } catch (_: Exception) {
             null
         }
