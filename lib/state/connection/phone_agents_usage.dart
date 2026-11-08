@@ -59,6 +59,9 @@ extension _PhoneAgentsUsage on _ConnectionControllerPhoneAgents {
             displayName: 'Antigravity',
             fetchedAt: DateTime.now().toUtc(),
             windows: const [],
+            accountRef: AntigravityQuotaClient.readLocalAccount(
+              profileId: _paProfile?.id,
+            ),
             needsSignIn: true,
           ),
         );
@@ -68,6 +71,26 @@ extension _PhoneAgentsUsage on _ConnectionControllerPhoneAgents {
         final agyReadings = await _readAntigravityUsage();
         if (agyReadings != null && agyReadings.isNotEmpty) {
           readings.addAll(agyReadings.where((r) => !r.needsSignIn));
+        }
+      }
+    }
+    final localAccount = AntigravityQuotaClient.readLocalAccount(
+          profileId: _paProfile?.id,
+        ) ??
+        AntigravityQuotaClient.lastKnownAccountEmail;
+    if (localAccount != null) {
+      for (var i = 0; i < readings.length; i++) {
+        final r = readings[i];
+        if (r.providerId.startsWith('antigravity') && r.accountRef == null) {
+          readings[i] = ProviderUsageReading(
+            providerId: r.providerId,
+            displayName: r.displayName,
+            fetchedAt: r.fetchedAt,
+            windows: r.windows,
+            needsSignIn: r.needsSignIn,
+            planLabel: r.planLabel,
+            accountRef: localAccount,
+          );
         }
       }
     }

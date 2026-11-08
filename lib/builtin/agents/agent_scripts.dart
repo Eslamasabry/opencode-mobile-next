@@ -131,7 +131,15 @@ def antigravity_status():
         if isinstance(error, dict) and type(error.get('code')) is int and error['code'] == -32000 and error.get('message') == 'Authentication required':
             emit('signedOut')
         elif isinstance(reply.get('result'), dict) and isinstance(reply['result'].get('sessions'), list):
-            emit('signedIn')
+            user_email = None
+            try:
+                tf = os.path.join(home, '.gemini', 'antigravity-cli', 'antigravity-oauth-token')
+                if os.path.isfile(tf):
+                    with open(tf, 'r', encoding='utf-8') as f:
+                        d = json.load(f)
+                        user_email = account(d.get('id_token_email') or d.get('email'))
+            except Exception: pass
+            emit('signedIn', user_email)
         else: raise ValueError()
     finally:
         selector.close()

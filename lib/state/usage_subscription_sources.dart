@@ -8,6 +8,7 @@ import '../domain/agent_account.dart';
 import '../domain/provider_quota.dart';
 import '../domain/provider_usage.dart';
 import '../domain/usage_subscriptions.dart';
+import '../quota/antigravity_quota_client.dart';
 import 'notification_preferences.dart';
 import 'paseo_usage_monitor.dart';
 import 'profiles.dart';
@@ -330,6 +331,11 @@ class PaseoUsageSource implements UsageSource {
       }
       for (final reading in list) {
         final provider = reading.providerId;
+        final accountRef = reading.accountRef ??
+            (provider.startsWith('antigravity')
+                ? AntigravityQuotaClient.readLocalAccount(profileId: id) ??
+                    AntigravityQuotaClient.lastKnownAccountEmail
+                : null);
         if (reading.needsSignIn && reading.windows.isEmpty) {
           readings.add(
             UsageReading(
@@ -338,6 +344,7 @@ class PaseoUsageSource implements UsageSource {
               connectionId: id,
               status: UsageReadingStatus.notSignedIn,
               fetchedAt: reading.fetchedAt,
+              accountRef: accountRef,
               method: SignInMethod.plan,
             ),
           );
@@ -352,6 +359,8 @@ class PaseoUsageSource implements UsageSource {
                 ? UsageReadingStatus.noLimits
                 : UsageReadingStatus.ok,
             fetchedAt: reading.fetchedAt,
+            plan: reading.planLabel,
+            accountRef: accountRef,
             method: SignInMethod.plan,
             windows: [
               for (final w in reading.windows)

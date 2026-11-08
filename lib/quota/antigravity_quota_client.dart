@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
 
 import '../domain/provider_usage.dart';
 
@@ -44,9 +47,173 @@ class AntigravityQuotaClient {
   /// installed. Paths are fixed strings (the profile id is checked above).
   static String cliScript({String? profileId}) {
     final candidates = candidateCliPaths(profileId: profileId).join(' ');
+    final pId = (profileId != null && _safeId.hasMatch(profileId))
+        ? profileId
+        : '';
     return 'for b in $candidates; do '
-        'if [ -x "\$b" ]; then HOME="\${b%/.local/bin/agy}" exec "\$b" -p /usage --output-format json; fi; '
+        'if [ -x "\$b" ]; then '
+        'h="\${b%/.local/bin/agy}"; '
+        'if [ -n "$pId" ] && [ -d "/home/oc/.oc-profiles/$pId" ]; then h="/home/oc/.oc-profiles/$pId"; '
+        'elif [ ! -f "\$h/.gemini/antigravity-cli/antigravity-oauth-token" ]; then '
+        'for o in /home/oc/.oc-profiles/*/.gemini/antigravity-cli/antigravity-oauth-token; do '
+        'if [ -f "\$o" ]; then h="\${o%/.gemini/antigravity-cli/antigravity-oauth-token}"; break; fi; '
+        'done; fi; '
+        'export HOME="\$h"; '
+        'f="\$HOME/.gemini/antigravity-cli/antigravity-oauth-token"; '
+        'e=\$(sed -n \'s/.*"id_token_email"[^"]*" *\\([^"]*\\)".*/\\1/p; s/.*"email"[^"]*" *\\([^"]*\\)".*/\\1/p\' "\$f" 2>/dev/null | head -n 1); '
+        'if [ -z "\$e" ]; then e=\$(grep -o \'"id_token_email"[[:space:]]*:[[:space:]]*"[^"]*"\' "\$f" 2>/dev/null | cut -d\'"\' -f4); fi; '
+        'if [ -z "\$e" ]; then e=\$(grep -o \'"email"[[:space:]]*:[[:space:]]*"[^"]*"\' "\$f" 2>/dev/null | cut -d\'"\' -f4); fi; '
+        'if [ -n "\$e" ]; then echo "ACCOUNT_EMAIL:\$e"; fi; '
+        'exec "\$b" -p /usage --output-format json; '
+        'fi; '
         'done; exit 127';
+  }
+
+  /// Cached in memory across calls once resolved.
+  static String? lastKnownAccountEmail;
+
+  static final RegExp _accountPattern =
+      RegExp(r'ACCOUNT_EMAIL:([^\r\n]+)');
+
+  static String? _accountIn(String output) {
+    final match = _accountPattern.firstMatch(output);
+    if (match != null) {
+      final email = match.group(1)?.trim();
+      if (email != null && email.isNotEmpty) {
+        final cleaned = cleanUsageText(email, 64);
+        if (cleaned != null) lastKnownAccountEmail = cleaned;
+        return cleaned;
+      }
+    }
+    return null;
+  }
+
+  static String? _readEmailFromFile(File file) {
+    try {
+      if (!file.existsSync()) return null;
+      final content = file.readAsStringSync();
+      final match = RegExp(
+        r'"id_token_email"\s*:\s*"([^"]+)"|"email"\s*:\s*"([^"]+)"',
+      ).firstMatch(content);
+      if (match != null) {
+        final raw = match.group(1) ?? match.group(2);
+        if (raw != null && raw.isNotEmpty) {
+          final cleaned = cleanUsageText(raw, 64);
+          if (cleaned != null) {
+            lastKnownAccountEmail = cleaned;
+            return cleaned;
+          }
+        }
+      }
+      final parsed = jsonDecode(content);
+      if (parsed is Map) {
+        final email = parsed['id_token_email'] ?? parsed['email'];
+        if (email is String && email.isNotEmpty) {
+          final cleaned = cleanUsageText(email, 64);
+          if (cleaned != null) {
+            lastKnownAccountEmail = cleaned;
+            return cleaned;
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static String? _scanRoot(String rootPath, {String? profileId}) {
+    if (profileId != null && _safeId.hasMatch(profileId)) {
+      final f = File(
+        '$rootPath/.oc-profiles/$profileId/.gemini/antigravity-cli/antigravity-oauth-token',
+      );
+      final email = _readEmailFromFile(f);
+      if (email != null) return email;
+    }
+    final sharedFile = File(
+      '$rootPath/.gemini/antigravity-cli/antigravity-oauth-token',
+    );
+    final sharedEmail = _readEmailFromFile(sharedFile);
+    if (sharedEmail != null) return sharedEmail;
+
+    try {
+      final dir = Directory('$rootPath/.oc-profiles');
+      if (dir.existsSync()) {
+        for (final entry in dir.listSync()) {
+          if (entry is Directory) {
+            final f = File(
+              '${entry.path}/.gemini/antigravity-cli/antigravity-oauth-token',
+            );
+            final email = _readEmailFromFile(f);
+            if (email != null) return email;
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Reads only the account email from local credentials if present on disk.
+  /// Never touches or exposes tokens or secrets.
+  static String? readLocalAccount({String? profileId}) {
+    if (lastKnownAccountEmail != null) return lastKnownAccountEmail;
+
+    final candidateRoots = <String>[
+      '/home/oc',
+      '/data/data/com.termux/files/home',
+      '/data/user/0/io.github.eslamasabry.opencode_mobile/files/linux/ubuntu/home/oc',
+      '/data/data/io.github.eslamasabry.opencode_mobile/files/linux/ubuntu/home/oc',
+      '/data/user/0/com.opencode.app/files/linux/ubuntu/home/oc',
+      '/data/data/com.opencode.app/files/linux/ubuntu/home/oc',
+      if (Platform.environment['HOME'] != null) Platform.environment['HOME']!,
+    ];
+
+    for (final root in candidateRoots) {
+      final email = _scanRoot(root, profileId: profileId);
+      if (email != null) return email;
+    }
+
+    // Check application storage patterns on Android
+    for (final prefix in const ['/data/user/0', '/data/data']) {
+      try {
+        final base = Directory(prefix);
+        if (base.existsSync()) {
+          for (final appDir in base.listSync()) {
+            if (appDir is Directory &&
+                (appDir.path.contains('opencode') ||
+                    appDir.path.contains('eslamasabry'))) {
+              final root = '${appDir.path}/files/linux/ubuntu/home/oc';
+              final email = _scanRoot(root, profileId: profileId);
+              if (email != null) return email;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    return null;
+  }
+
+  /// Asynchronously resolves the account email, checking the application's
+  /// support directory (where in-app Ubuntu rootfs lives on Android) if sync
+  /// resolution hasn't found it yet.
+  static Future<String?> readLocalAccountAsync({String? profileId}) async {
+    final syncAccount = readLocalAccount(profileId: profileId);
+    if (syncAccount != null) return syncAccount;
+
+    try {
+      final support = await getApplicationSupportDirectory();
+      final root = '${support.path}/linux/ubuntu/home/oc';
+      final email = _scanRoot(root, profileId: profileId);
+      if (email != null) return email;
+    } catch (_) {}
+
+    try {
+      final docs = await getApplicationDocumentsDirectory();
+      final root = '${docs.path}/linux/ubuntu/home/oc';
+      final email = _scanRoot(root, profileId: profileId);
+      if (email != null) return email;
+    } catch (_) {}
+
+    return null;
   }
 
   /// The CLI's quota readings, or an empty list when the CLI is missing, not
@@ -57,7 +224,22 @@ class AntigravityQuotaClient {
     DateTime? now,
   }) async {
     final run = runner;
-    if (run == null) return const [];
+    if (run == null) {
+      final fallbackAccount = readLocalAccount(profileId: profileId);
+      if (fallbackAccount != null) {
+        return [
+          ProviderUsageReading(
+            providerId: 'antigravity',
+            displayName: 'Antigravity',
+            fetchedAt: (now ?? _clock()).toUtc(),
+            windows: const [],
+            accountRef: fallbackAccount,
+            needsSignIn: true,
+          ),
+        ];
+      }
+      return const [];
+    }
     final currentNow = (now ?? _clock()).toUtc();
     try {
       final res = await run(
@@ -67,7 +249,14 @@ class AntigravityQuotaClient {
       if (res.exitCode != 0) return const [];
       final body = _jsonObjectIn(res.output);
       if (body == null) return const [];
-      final readings = parseCliJson(body, currentNow: currentNow);
+      final accountEmail =
+          _accountIn(res.output) ?? readLocalAccount(profileId: profileId);
+      if (accountEmail != null) lastKnownAccountEmail = accountEmail;
+      final readings = parseCliJson(
+        body,
+        currentNow: currentNow,
+        accountEmail: accountEmail,
+      );
       if (readings.isNotEmpty) _cachedReadings = readings;
       return readings;
     } catch (_) {
@@ -92,6 +281,7 @@ class AntigravityQuotaClient {
     Map<String, dynamic> data, {
     DateTime? currentNow,
     String? planLabel,
+    String? accountEmail,
   }) {
     final now = currentNow ?? DateTime.now().toUtc();
     final readings = <ProviderUsageReading>[];
@@ -101,6 +291,18 @@ class AntigravityQuotaClient {
     if (cmdData is! Map) return readings;
     final groups = cmdData['groups'];
     if (groups is! List) return readings;
+
+    final resolvedEmail = accountEmail ??
+        cleanUsageText(
+          cmdData['account'] ??
+              cmdData['email'] ??
+              cmdData['user'] ??
+              command['account'] ??
+              command['email'] ??
+              data['account'] ??
+              data['email'],
+          64,
+        );
 
     for (final group in groups) {
       if (group is! Map) continue;
@@ -199,6 +401,7 @@ class AntigravityQuotaClient {
             fetchedAt: now,
             windows: windows,
             planLabel: planLabel ?? 'Google AI Pro',
+            accountRef: resolvedEmail,
             needsSignIn: false,
           ),
         );
