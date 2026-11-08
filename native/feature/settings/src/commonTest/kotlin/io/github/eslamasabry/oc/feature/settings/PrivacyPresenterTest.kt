@@ -48,7 +48,7 @@ class PrivacyPresenterTest {
             val p = presenter(FakeAnalytics())
             p.onRow(SettingsRowId.Privacy); runCurrent()
             p.onOpen(SettingsPage.WhatWeCollect); runCurrent()
-            val collect = p.state.value.privacy!!.collect
+            val collect = p.state.value.privacy!!.collect!!
             assertEquals(SendingState.NotSentInThisVersion, collect.sending)
             assertFalse(collect.detailedSwitchShown)
         }
@@ -58,13 +58,13 @@ class PrivacyPresenterTest {
         runTest {
             val analytics = FakeAnalytics(RemoteSink)
             val p = presenter(analytics)
-            val before = p.state.value.privacy!!.collect
+            val before = p.state.value.privacy!!.collect!!
             assertTrue(before.detailedSwitchShown)
             assertEquals(DetailedConsent.NotAsked, before.detailed)
             assertTrue(before.detailedEvents.none { it.active })
             p.onDetailedUsage(true); runCurrent()
             assertEquals(listOf(true), analytics.asked)
-            val after = p.state.value.privacy!!.collect
+            val after = p.state.value.privacy!!.collect!!
             assertEquals(DetailedConsent.Granted, after.detailed)
             assertTrue(after.detailedEvents.all { it.active })
         }
@@ -75,7 +75,7 @@ class PrivacyPresenterTest {
             val analytics = FakeAnalytics(RemoteSink).apply { refuseNext = true }
             val p = presenter(analytics)
             p.onDetailedUsage(true); runCurrent()
-            assertEquals(DetailedConsent.NotAsked, p.state.value.privacy!!.collect.detailed)
+            assertEquals(DetailedConsent.NotAsked, p.state.value.privacy!!.collect!!.detailed)
             assertEquals(SettingsNote.ConsentNotSaved, p.state.value.note)
             assertFalse(p.state.value.privacy!!.saving)
         }
@@ -83,7 +83,7 @@ class PrivacyPresenterTest {
     @Test
     fun `plan 18 6 the page lists every event the schema can send, by tier`() =
         runTest {
-            val collect = presenter(FakeAnalytics()).state.value.privacy!!.collect
+            val collect = presenter(FakeAnalytics()).state.value.privacy!!.collect!!
             assertEquals(11, collect.basicEvents.size)
             assertEquals(5, collect.detailedEvents.size)
             assertTrue(collect.never.isNotEmpty())

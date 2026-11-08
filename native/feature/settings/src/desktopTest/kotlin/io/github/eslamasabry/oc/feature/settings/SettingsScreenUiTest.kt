@@ -152,29 +152,30 @@ class SettingsScreenUiTest {
         }
 
     @Test
-    fun `B-SEC-191 Privacy says nothing is sent yet and offers no switch`() =
+    fun `B-SEC-191 What we collect says usage is not sent yet and offers no detailed switch`() =
         runComposeUiTest {
             show()
             presenter.onOpen(SettingsPage.Privacy); waitForIdle()
-            onNodeWithText("What we collect").assertExists()
-            onNodeWithText(PENDING_NOT_SENT).assertExists()
+            tap("What we collect")
+            onNodeWithText(NOT_SENT_YET).assertExists()
             onNodeWithText("Share detailed usage").assertDoesNotExist()
         }
 
     @Test
-    fun `B-SEC-191 What we collect lists the events and the switch turns detailed usage on`() =
+    fun `B-SEC-191 What we collect lists the 2-1-5 contract by switch`() =
         runComposeUiTest {
             analytics = FakeAnalytics(RemoteSink)
             show()
             presenter.onOpen(SettingsPage.Privacy); waitForIdle()
             tap("What we collect")
-            onNodeWithText("Sent to collect.invalid").assertExists()
-            onNodeWithText("The app opened, and how fast").performScrollTo().assertExists()
-            tap("Share detailed usage")
-            assertEquals(listOf(true), analytics.asked)
+            onNodeWithText(NOT_SENT_YET).assertDoesNotExist()
+            onNodeWithText("With Usage and app health").assertExists()
+            onNodeWithText("How fast the app starts").performScrollTo().assertExists()
+            onNodeWithText("With Crash reports").performScrollTo().assertExists()
+            onNodeWithText("Never sent").performScrollTo().assertExists()
         }
 
     private companion object {
-        const val PENDING_NOT_SENT = "Not sent yet. Basic reports wait on this phone, at most 90 days, until a service is chosen."
+        const val NOT_SENT_YET = "This version does not send usage and app health yet. Your answer is kept and used once it does."
     }
 }

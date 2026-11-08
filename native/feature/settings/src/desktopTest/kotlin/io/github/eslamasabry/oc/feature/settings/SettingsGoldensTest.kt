@@ -148,10 +148,20 @@ class SettingsGoldensTest {
         )
 
     @Test
-    fun `B-SEC-191 what we collect with the detailed-usage switch`() =
+    fun `B-SEC-191 what we collect lists the 2-1-5 contract under its two switches`() =
         scene(
             "what-we-collect",
-            on(SettingsPage.WhatWeCollect, SettingsUi(privacy = PrivacyUi(WhatWeCollectSource.build(ConsentState(), RemoteSink)))),
+            on(
+                SettingsPage.WhatWeCollect,
+                SettingsUi(
+                    privacy =
+                        PrivacyUi(
+                            WhatWeCollectSource.build(ConsentState(), RemoteSink),
+                            crashReports = false,
+                            usage = false,
+                        )
+                ),
+            ),
         )
 
     private companion object {

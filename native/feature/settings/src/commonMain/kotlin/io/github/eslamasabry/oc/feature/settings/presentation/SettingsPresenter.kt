@@ -63,6 +63,8 @@ public class SettingsPresenter(
     private val reporting: Reporting? = null,
     private val crashOffer: CrashOfferSetting? = null,
     private val memoryPreview: MemoryPreviewSetting? = null,
+    /** s28: Flutter 2.1.5's two stored answers (usage and app health, crash reports). */
+    private val healthConsent: HealthConsentSetting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -73,6 +75,7 @@ public class SettingsPresenter(
         val consentSaving: Boolean = false,
         val crashReports: Boolean? = null,
         val offerCrashReports: Boolean? = null,
+        val health: HealthAnswers? = null,
         val memoryPreview: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
@@ -336,7 +339,19 @@ public class SettingsPresenter(
             about = about,
             memoryPreview = memoryPreview?.let { MemoryPreviewUi(l.memoryPreview ?: it.enabled(), it.phoneNode) },
             whatsNew = whatsNew(l, f),
-            privacy = e.collect?.let { PrivacyUi(it, l.consentSaving, l.crashReports ?: reporting?.reportingConsent?.value, l.offerCrashReports ?: crashOffer?.enabled()) },
+            privacy =
+                (e.collect != null || healthConsent?.available == true)
+                    .takeIf { it }
+                    ?.let {
+                        val health = healthConsent?.takeIf { it.available }?.let { l.health ?: it.read() }
+                        PrivacyUi(
+                            e.collect,
+                            l.consentSaving,
+                            l.crashReports ?: reporting?.reportingConsent?.value ?: health?.crashes,
+                            l.offerCrashReports ?: crashOffer?.enabled(),
+                            usage = health?.usage,
+                        )
+                    },
             localData =
                 localData?.let {
                     LocalDataUi(
@@ -370,6 +385,18 @@ public class SettingsPresenter(
             note = l.note,
             voiceLicenses = licenses != null,
             license = l.license,
+            firstGroup =
+                SettingsStructure.groups(f).firstOrNull()?.let {
+                    GroupUi(it, SettingsStructure.rows(it, f, p.reasoning, p.timestamps))
+                },
+            guide =
+                GuideUi(
+                    canScan = f.platform.qrPairing,
+                    addServer = f.canOpen(SettingsOutside.AddServer),
+                    phonePath = f.platform.builtinLinux && f.canOpen(SettingsOutside.PhoneSetup),
+                    demo = f.canOpen(SettingsOutside.Demo),
+                    androidKeystore = f.platform.builtinLinux,
+                ),
         )
     }
 
@@ -385,18 +412,6 @@ public class SettingsPresenter(
             packs = listed.toImmutableList(),
             seeAllCount = if (listed.size < available.size) available.size else 0,
             style = p.style,
-            firstGroup =
-                SettingsStructure.groups(f).firstOrNull()?.let {
-                    GroupUi(it, SettingsStructure.rows(it, f, p.reasoning, p.timestamps))
-                },
-            guide =
-                GuideUi(
-                    canScan = f.platform.qrPairing,
-                    addServer = f.canOpen(SettingsOutside.AddServer),
-                    phonePath = f.platform.builtinLinux && f.canOpen(SettingsOutside.PhoneSetup),
-                    demo = f.canOpen(SettingsOutside.Demo),
-                    androidKeystore = f.platform.builtinLinux,
-                ),
             corners = p.corners ?: ownKnobs.corners,
             spacing = p.spacing ?: ownKnobs.density,
             fineTuned =
@@ -847,9 +862,29 @@ public class SettingsPresenter(
     }
 
     override fun onCrashReports(on: Boolean) {
-        val port = reporting ?: return
-        port.setReportingConsent(on)
-        local.update { it.copy(crashReports = port.reportingConsent.value) }
+        val port = reporting
+        val health = healthConsent?.takeIf { it.available }
+        if (port == null && health == null) return
+        port?.setReportingConsent(on)
+        local.update { it.copy(crashReports = port?.reportingConsent?.value ?: on) }
+        if (health != null) saveHealth { it.copy(crashes = on) }
+    }
+
+    /** Settings › Privacy › Usage and app health (Flutter 2.1.5 `privacy-send-usage`): stored, sent by a later build. */
+    override fun onUsage(on: Boolean) {
+        if (healthConsent?.available != true) return
+        saveHealth { it.copy(usage = on) }
+    }
+
+    private fun saveHealth(change: (HealthAnswers) -> HealthAnswers) {
+        val port = healthConsent ?: return
+        val before = local.value.health ?: port.read()
+        val next = change(before)
+        local.update { it.copy(health = next) }
+        scope.launch {
+            if (!port.write(next))
+                local.update { it.copy(health = before, crashReports = null, note = SettingsNote.ConsentNotSaved) }
+        }
     }
 
     override fun onMemoryPreview(on: Boolean) {

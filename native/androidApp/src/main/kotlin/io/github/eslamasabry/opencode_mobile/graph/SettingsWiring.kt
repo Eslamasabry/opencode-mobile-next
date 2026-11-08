@@ -474,6 +474,10 @@ class AndroidSettingsHost(
     override val crashOffer: io.github.eslamasabry.oc.feature.settings.presentation.CrashOfferSetting =
         continuity.runtime
 
+    /** s28: Privacy's "Usage and app health" and the crash answer under Flutter 2.1.5's keys. */
+    override val healthConsent: io.github.eslamasabry.oc.feature.settings.presentation.HealthConsentSetting =
+        continuity.health
+
     /** s26: About › Developer's Memory (preview), the same `oc.dev.factsbook` switch Flutter writes. */
     override val memoryPreview: io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewSetting =
         object : io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewSetting {
@@ -493,10 +497,6 @@ class AndroidSettingsHost(
             build = buildInfo.versionCode.toString(),
             whatsNew = true,
             notices = true,
-        )
-
-    override val configuration:
-        io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationInspection =
             packageId = application.packageName,
             signer = signingCertificateSha256(application),
             // F: about_screen.dart:301 shows the list with desktop keys; here, whenever a hardware
@@ -504,6 +504,10 @@ class AndroidSettingsHost(
             keyboardShortcuts =
                 application.resources.configuration.keyboard ==
                     android.content.res.Configuration.KEYBOARD_QWERTY,
+        )
+
+    override val configuration:
+        io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationInspection =
         configurationInspection
     override val crashes: io.github.eslamasabry.oc.feature.settings.presentation.CrashSettings =
         crashSettings
@@ -709,13 +713,13 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
         SettingsOutside.KeptDiagnostics,
         SettingsOutside.KeepRunning,
         SettingsOutside.Tips,
+        SettingsOutside.AddServer,
+        SettingsOutside.PhoneSetup,
+        SettingsOutside.Demo,
     )
 
 /**
  * Flutter places whose page this build does not have yet. Their rows stay absent (never a fake
-        SettingsOutside.AddServer,
-        SettingsOutside.PhoneSetup,
-        SettingsOutside.Demo,
  * page). s28: the setup guide is Settings' own page now (Help › Guide), so nothing is left here.
  */
 internal val SETTINGS_NOT_NATIVE_YET: Set<SettingsOutside> = emptySet()

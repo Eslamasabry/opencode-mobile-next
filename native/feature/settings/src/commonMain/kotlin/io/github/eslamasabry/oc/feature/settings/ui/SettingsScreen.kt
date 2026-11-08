@@ -252,7 +252,7 @@ public fun SettingsScreen(
                 PrivacyBody(state.privacy, actions)
             }
         SettingsPage.WhatWeCollect ->
-            SettingsFrame(PendingWords.WHAT_WE_COLLECT, back, state, actions, modifier) {
+            SettingsFrame(stringResource(Res.string.collectTitle), back, state, actions, modifier) {
                 state.privacy?.let { WhatWeCollectBody(it, actions) }
             }
         SettingsPage.Language ->
