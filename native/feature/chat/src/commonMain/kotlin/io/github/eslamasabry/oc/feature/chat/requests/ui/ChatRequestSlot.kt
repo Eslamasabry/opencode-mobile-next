@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.requests.ui
 
+import androidx.compose.foundation.layout.padding
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -215,9 +217,12 @@ private fun RequestCard(
         when (val phase = card.state) {
             CardState.Waiting -> {
                 val since = card.waitingSinceMs
+                // C02: the caption keeps the page gutter, as the card under it does; it used to start on the window's
+                // edge (and was clipped there in Arabic).
                 KitRequestWaitingCaption(
                     waiting =
-                        if (nowMs != null && since != null) waitedWords(nowMs - since) else null
+                        if (nowMs != null && since != null) waitedWords(nowMs - since) else null,
+                    modifier = Modifier.padding(horizontal = kitPageGutter()),
                 )
                 when (card) {
                     is RequestCardUi.Permission -> {

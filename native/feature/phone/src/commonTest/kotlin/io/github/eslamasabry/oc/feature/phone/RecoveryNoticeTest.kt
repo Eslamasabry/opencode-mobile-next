@@ -44,14 +44,15 @@ class RecoveryNoticeTest {
     }
 
     @Test
-    fun `P-115 a recovery line that adds something stays beside the exit notice`() {
+    fun `P-115 and B-113 a recovery line that adds something stays beside the exit notice`() {
         assertEquals(
             LifecycleReadiness.Partial,
             ThisPhoneUi(lifecycle = report(LifecycleReadiness.Partial), exitNotice = exit()).recoveryNotice,
         )
-        assertEquals(
-            LifecycleReadiness.Ready,
-            ThisPhoneUi(lifecycle = report(LifecycleReadiness.Ready), exitNotice = exit()).recoveryNotice,
-        )
+        // B-113: "answering again" beside "The app was closed" was the same news twice; the exit notice says it.
+        val ready = ThisPhoneUi(lifecycle = report(LifecycleReadiness.Ready), exitNotice = exit())
+        assertNull(ready.recoveryNotice)
+        assertEquals(true, ready.exitSaysRunning)
+        assertEquals(false, ThisPhoneUi(lifecycle = report(LifecycleReadiness.Stopped), exitNotice = exit()).exitSaysRunning)
     }
 }

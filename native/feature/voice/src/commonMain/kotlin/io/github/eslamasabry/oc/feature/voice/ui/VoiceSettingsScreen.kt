@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.voice.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -149,6 +154,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                     )
                 }
             } else null,
+        edges = KitScreenEdges.Bleed,
     ) {
         // One rail: rows and groups bring their own 16 dp gutter, so the column adds none and every other part pads
         // itself by the same gutter (owner 2026-11-07: the cards sat a second gutter further in than the labels).
@@ -379,17 +385,6 @@ private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
         label = stringResource(Res.string.voiceSetupModelLabel),
         note = if (state.busy) stringResource(Res.string.voiceSetupBusyChoice) else null,
         section = true,
-        destructive =
-            row?.let {
-                {
-                    KitRow(
-                        title = stringResource(Res.string.voiceSetupDeletePack, name, size),
-                        titleMaxLines = 2,
-                        onClick = actions::askDelete,
-                        modifier = Modifier.testTag("voice-delete-${it.id.raw}"),
-                    )
-                }
-            },
     ) {
         KitChoiceList(
             choices = state.packs.map { row -> packChoice(row, state.busy) },
@@ -399,14 +394,27 @@ private fun Models(state: VoiceSettingsUi, actions: VoiceSettingsPresenter) {
             empty = {},
             onSelect = actions::choose,
         )
-        if (row != null)
-            KitRow(
-                title = stringResource(Res.string.voiceSetupRedownloadPack, name),
-                titleMaxLines = 2,
-                onClick = actions::downloadAgain,
-                modifier = Modifier.testTag("voice-redownload-${row.id.raw}"),
-            )
     }
+    // C05 (Flutter voice_ui.dart: KitActionStack of two tertiary actions): the installed model's two acts are text
+    // actions with their glyphs and 48 dp targets, Delete marked by its glyph, never bold lines that read as headings.
+    if (row != null)
+        Column(Modifier.fillMaxWidth().padding(horizontal = kitPageGutter(), vertical = Space.S1.dp)) {
+            KitButton(
+                stringResource(Res.string.voiceSetupRedownloadPack, name),
+                actions::downloadAgain,
+                Modifier.testTag("voice-redownload-${row.id.raw}"),
+                role = KitButtonRole.Tertiary,
+                icon = KitIcons.retry,
+            )
+            KitButton(
+                stringResource(Res.string.voiceSetupDeletePack, name, size),
+                actions::askDelete,
+                Modifier.testTag("voice-delete-${row.id.raw}"),
+                role = KitButtonRole.Tertiary,
+                icon = KitIcons.delete,
+                destructive = true,
+            )
+        }
 }
 
 @Composable

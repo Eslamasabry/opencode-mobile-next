@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.schedules.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -111,6 +112,7 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
                     )
                 }),
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         when (state.phase) {
             EditPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)

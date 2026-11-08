@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.ui.kit.rb.walkfix
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -120,6 +121,7 @@ class KitScreenChromeRoomTest {
                         bottom = {
                             androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().height(80.dp))
                         },
+                        edges = KitScreenEdges.Bleed,
                     ) {
                         room = io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding().calculateBottomPadding()
                     }

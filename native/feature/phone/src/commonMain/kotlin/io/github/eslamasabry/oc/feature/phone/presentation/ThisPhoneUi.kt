@@ -94,8 +94,9 @@ public data class ThisPhoneUi(
     /**
      * The recovery notice to show, or null. P-115: after Android stops the app, the exit notice
      * already says so; the recovery line "Android stopped the app. …" would repeat it. While the
-     * exit notice is up, recovery shows only what it adds: some services are not ready yet, or
-     * everything answers again when the exit notice has not said so.
+     * exit notice is up, recovery shows only what it adds: some services are not ready yet. That
+     * everything answers again is said by the exit notice itself ([exitSaysRunning]), so the page
+     * never carries two notices for one event (B-113).
      */
     val recoveryNotice: LifecycleReadiness?
         get() {
@@ -103,9 +104,16 @@ public data class ThisPhoneUi(
             val exit = exitNotice ?: return report.readiness
             return when (report.readiness) {
                 LifecycleReadiness.Partial -> report.readiness
-                LifecycleReadiness.Ready -> report.readiness.takeUnless { exit.restored }
                 else -> null
             }
+        }
+
+    /** The exit notice says OpenCode is running again: it restarted it, or the recovery check found everything answering. */
+    val exitSaysRunning: Boolean
+        get() {
+            val exit = exitNotice ?: return false
+            return exit.restored ||
+                lifecycle?.takeIf { it.showNotice }?.readiness == LifecycleReadiness.Ready
         }
 }
 

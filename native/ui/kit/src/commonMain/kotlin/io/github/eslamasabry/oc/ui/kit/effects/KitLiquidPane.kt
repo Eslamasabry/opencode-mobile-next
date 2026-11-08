@@ -10,12 +10,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.inset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.LayoutCoordinates
+import io.github.eslamasabry.oc.ui.kit.foundation.drawGlassSpecular
+import io.github.eslamasabry.oc.ui.kit.foundation.sheenDepthPx
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe
 
 /*
@@ -93,30 +91,15 @@ internal fun DrawScope.drawLiquidTint(spec: KitLiquidPaneSpec, shape: Shape? = n
         drawRect(Brush.linearGradient(0f to fillStart, .7f to fill, start = start, end = end))
     }
     if (sheen.alpha > 0f) {
-        drawRect(Brush.verticalGradient(0f to sheen, 1f to sheen.copy(alpha = 0f), startY = 0f, endY = size.height * SHEEN_SHARE))
+        drawRect(Brush.verticalGradient(0f to sheen, 1f to sheen.copy(alpha = 0f), startY = 0f, endY = sheenDepthPx()))
     }
-    if (shape != null && spec.specular.alpha > 0f) drawSpecular(shape, spec.specular, spec.rtl)
+    if (shape != null && spec.specular.alpha > 0f) {
+        // The same crisp specular as Glass's in-flow panes: a bright rim segment at the top start and a thin glint line
+        // just inside the top edge (owner 2026-11-09, "crisper glossy glass").
+        val top = (shape as? CornerBasedShape)?.let { it.topStart.toPx(size, this) } ?: (size.minDimension / 2f)
+        drawGlassSpecular(shape, spec.specular, spec.rtl, minOf(top, size.minDimension / 2f))
+    }
 }
-
-/**
- * The specular highlight along a pane's top-start edge: a soft line inside the edge, brightest at the top-start corner
- * and gone [SPECULAR_REACH] of the way to the bottom-end one (Apple's light from above, never a white hairline).
- */
-internal fun DrawScope.drawSpecular(shape: Shape, color: Color, rtl: Boolean) {
-    val w = SPECULAR_DP.dp.toPx()
-    if (size.width <= w || size.height <= w) return
-    val start = Offset(if (rtl) size.width else 0f, 0f)
-    val end = Offset(if (rtl) 0f else size.width, size.height)
-    val brush = Brush.linearGradient(0f to color, SPECULAR_REACH to color.copy(alpha = 0f), start = start, end = end)
-    inset(w / 2f) { drawOutline(shape.createOutline(size, layoutDirection, this), brush, style = Stroke(w)) }
-}
-
-/** The share of a pane's height its sheen fades over. */
-internal const val SHEEN_SHARE: Float = .30f
-
-/** The specular line's width in dp, and how far along the diagonal it fades out. */
-internal const val SPECULAR_DP: Float = 1.25f
-internal const val SPECULAR_REACH: Float = .45f
 
 /** Where the platform cannot bend light: the pane's tint alone, clipped to its shape. Never drawn by the desktop app. */
 public fun kitLiquidStandIn(spec: KitLiquidPaneSpec, shape: CornerBasedShape): Modifier =

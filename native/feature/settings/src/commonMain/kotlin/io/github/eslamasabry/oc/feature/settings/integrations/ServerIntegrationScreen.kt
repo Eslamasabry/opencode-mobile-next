@@ -46,6 +46,7 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
             )
         },
         loading = state.loading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             state.failure?.let {

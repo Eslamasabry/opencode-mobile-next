@@ -73,10 +73,22 @@ class OpenProjectScreenTest {
 
     private fun shoot(name: String, state: OpenProjectUi, advanceMs: Long = 1_000, check: ComposeUiTest.() -> Unit) {
         Locale.setDefault(Locale.forLanguageTag("en"))
+        // The same page in the light appearance too (parity-1109 renders); the checks run on the dark frame.
         runDesktopComposeUiTest(412, 915) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
-                    Frame { OpenProjectScreen(state, actions) }
+                    Frame(AppearanceMode.Light) { OpenProjectScreen(state, actions) }
+                }
+            }
+            waitForIdle()
+            mainClock.advanceTimeBy(advanceMs)
+            waitForIdle()
+            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$name-light.png"))
+        }
+        runDesktopComposeUiTest(412, 915) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
+                    Frame(AppearanceMode.Dark) { OpenProjectScreen(state, actions) }
                 }
             }
             waitForIdle()
@@ -88,9 +100,9 @@ class OpenProjectScreenTest {
     }
 
     @Composable
-    private fun Frame(content: @Composable () -> Unit) {
+    private fun Frame(mode: AppearanceMode, content: @Composable () -> Unit) {
         KitTheme(
-            appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+            appearance = KitAppearance(mode = mode, motion = MotionLevel.Off),
             platform = DesktopKitPlatform(),
             localeTag = "en",
             stillFrame = true,
@@ -208,6 +220,20 @@ class OpenProjectScreenTest {
                 calls,
             )
         }
+
+    @Test
+    fun `B-182 inside a folder on this phone Show hidden folders is offered, and says Hide once on`() {
+        shoot("open_project_inside_hidden_off", inside.copy(canShowHidden = true)) {
+            onNodeWithContentDescription("Show hidden folders").performClick()
+            assertEquals(listOf<Pair<String, List<Any?>>>("toggleHidden" to emptyList()), calls)
+        }
+        shoot("open_project_inside_hidden_on", inside.copy(canShowHidden = true, showHidden = true)) {
+            onNodeWithContentDescription("Hide hidden folders").assertExists()
+        }
+        shoot("open_project_inside_no_hidden", inside) {
+            onNodeWithContentDescription("Show hidden folders").assertDoesNotExist()
+        }
+    }
 
     @Test
     fun `B-182 loading shows placeholder rows`() =

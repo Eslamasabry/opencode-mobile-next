@@ -48,6 +48,7 @@ public fun SavedPermissionsScreen(state: SavedPermissionsUi, actions: SavedPermi
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

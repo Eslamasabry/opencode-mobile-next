@@ -94,6 +94,7 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
         width = KitScreenWidth.Reading,
         loading = state.checking,
         bottom = if (idle || state.customizing || state.checking) null else ({ JobAction(state, actions) }),
+        edges = KitScreenEdges.Bleed,
     ) {
         if (!state.checking) {
             if (state.customizing || idle) StartHero(state, actions)

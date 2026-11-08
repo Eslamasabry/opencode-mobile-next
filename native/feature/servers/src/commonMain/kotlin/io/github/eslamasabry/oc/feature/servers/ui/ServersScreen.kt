@@ -109,6 +109,7 @@ public fun ServersScreen(
             if (empty) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { KitButton(primary, fullWidth = true, hero = true) }
             else KitActionBlock(primary = primary)
         },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             state.issue?.takeIf { it != ServerIssue.Connected }?.let { issue ->

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agenttools.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -159,6 +160,7 @@ internal fun AgentTerminalScreen(state: AgentTerminalUi, actions: AgentTerminalA
             )
         },
         width = KitScreenWidth.Full,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             KitNotice(stringResource(Res.string.agentToolsTerminalViewBody))

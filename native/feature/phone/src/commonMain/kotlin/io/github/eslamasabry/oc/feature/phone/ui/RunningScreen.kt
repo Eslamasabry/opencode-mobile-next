@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
+import io.github.eslamasabry.oc.ui.kit.text.kitUnits
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -123,6 +125,7 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
         },
         width = KitScreenWidth.Reading,
         loading = state.stopping != null,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxWidth()
@@ -203,7 +206,14 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 // setup and checks, ...), each heading saying its load so heat shows where it comes from.
                 state.memoryBytes?.let { bytes ->
                     KitText(
-                        pluralStringResource(Res.plurals.runningPhoneSummary, state.rows.size, state.rows.size, runningLargeMemory(bytes)),
+                        kitUnits(
+                            pluralStringResource(
+                                Res.plurals.runningPhoneSummary,
+                                state.rows.size,
+                                state.rows.size,
+                                runningLargeMemory(bytes),
+                            )
+                        ),
                         Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("running-summary"),
                         role = TypeRole.Headline,
                     )
@@ -495,8 +505,9 @@ private fun processFacts(row: ProcessRowUi): String =
 @Composable
 private fun runningMemory(bytes: Long): String {
     val mb = (bytes / 1048576.0).roundToLong() // F: lib/ui/widgets/running_on_phone_text.dart:93
-    if (mb < 1024) return stringResource(Res.string.termuxProcsMemoryMb, mb)
-    return runningLargeMemory(bytes)
+    // C09: "215.0 MB" keeps its order in an Arabic line ("MB 215.0" before).
+    if (mb < 1024) return kitUnits(stringResource(Res.string.termuxProcsMemoryMb, mb))
+    return kitUnits(runningLargeMemory(bytes))
 }
 
 /** Locale-neutral byte unit data, as Flutter formatPhoneStorage's fixed Latin units. */

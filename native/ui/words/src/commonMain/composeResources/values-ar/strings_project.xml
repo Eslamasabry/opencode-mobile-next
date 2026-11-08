@@ -606,6 +606,7 @@
     <string name="folderBrowserInternalStorage">التخزين الداخلي</string>
     <string name="folderBrowserOpenedBefore">فُتحت سابقًا</string>
     <string name="folderBrowserShowHidden">إظهار المجلدات المخفية</string>
+    <string name="folderBrowserHideHidden">إخفاء المجلدات المخفية</string>
     <string name="folderBrowserHintEmpty">فارغ</string>
     <string name="folderBrowserHintMore">%1$s، و%2$d أخرى</string>
     <string name="folderBrowserEmptyPhoneBody">افتحه، أو اصعد مستوى واحدًا.</string>

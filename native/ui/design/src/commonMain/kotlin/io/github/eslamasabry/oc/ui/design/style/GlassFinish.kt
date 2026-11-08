@@ -43,6 +43,11 @@ public object GlassFinish {
         solid: Argb,
         spots: List<Argb>,
         inks: List<Pair<Argb, Double>>? = null,
+        /**
+         * How far below the face's top edge its first line of words lies at least, in dp; 0 (a part whose words may sit
+         * anywhere: a chip, a liquid face) measures them under the sheen's full strength.
+         */
+        wordsDp: Float = 0f,
     ): SurfaceDecoration {
         val fill = d.fill ?: return d
         if (d.wordsPlate.alpha == 0 || spots.isEmpty()) return d
@@ -79,7 +84,7 @@ public object GlassFinish {
         }
 
         // The thinnest tint at which [faces] read, or null when even the thickest does not.
-        fun thinnest(faces: List<Argb>, sheen: Argb = d.sheen): Float? = leastAlpha { reads(faces, it, sheen) }
+        fun thinnest(faces: List<Argb>, sheen: Argb = sheenAt(d.sheen, wordsDp)): Float? = leastAlpha { reads(faces, it, sheen) }
 
         // A clear pane (one with a sheen) is clear first, glossy second (owner 2026-11-08: much lighter): where its lit
         // corner and sheen would cost more than [GLOSS_ALLOWANCE] of extra tint, they go and the pane stays thin.
@@ -88,7 +93,7 @@ public object GlassFinish {
             val plain = thinnest(listOf(fill), Argb(0))
             if (plain != null && (glossy == null || glossy > plain + GLOSS_ALLOWANCE)) {
                 val thin = d.copy(fill = at(fill, plain), fillStart = at(fill, plain), sheen = Argb(0))
-                return withoutCostlyGlow(thin, texts, targets, spots)
+                return withoutCostlyGlow(thin, texts, targets, spots, wordsDp)
             }
         }
         val faced =
@@ -103,8 +108,22 @@ public object GlassFinish {
                 ?: thinnest(listOf(fill), Argb(0))?.let { a -> d.copy(fill = at(fill, a), fillStart = at(fill, a), sheen = Argb(0)) }
                 // Last: the Solid surface itself, opaque, which the target never asks more of.
                 ?: d.copy(fill = solidFace, fillStart = solidFace, sheen = Argb(0))
-        return withoutCostlyGlow(faced, texts, targets, spots)
+        return withoutCostlyGlow(faced, texts, targets, spots, wordsDp)
     }
+
+    /**
+     * [sheen] as strong as it still is [wordsDp] below a face's top edge: it fades out over at most
+     * [SurfaceDecoration.SHEEN_MAX_DP] (a short face fades it sooner), so words that far down lie under at most this much
+     * of it. Glass's pane inset keeps a pane's first line clear of most of it (owner 2026-11-09).
+     */
+    public fun sheenAt(sheen: Argb, wordsDp: Float): Argb {
+        if (sheen.alpha == 0 || wordsDp <= 0f) return sheen
+        val share = (1f - wordsDp / SurfaceDecoration.SHEEN_MAX_DP).coerceIn(0f, 1f)
+        return sheen.withAlpha(sheen.alpha / 255f * share)
+    }
+
+    /** Where a Glass pane's first line of words lies at least: the kit's compact padding plus Glass's pane inset. */
+    public val PANE_WORDS_DP: Float get() = FIRST_LINE_DP + GlassSpec.PANE_INSET
 
     /**
      * [d] without its top-edge glow where the glow, as strong as it is at a pane's first line of words (the kit's
@@ -112,11 +131,11 @@ public object GlassFinish {
      * its target. Native only: a dark pane's light glow lowers the contrast of light words; a light pane's glow is
      * white milk and only helps dark words, so it stays.
      */
-    private fun withoutCostlyGlow(d: SurfaceDecoration, texts: List<Argb>, targets: List<Double>, spots: List<Argb>): SurfaceDecoration {
+    private fun withoutCostlyGlow(d: SurfaceDecoration, texts: List<Argb>, targets: List<Double>, spots: List<Argb>, wordsDp: Float): SurfaceDecoration {
         val glow = d.innerGlow
         if (glow.alpha == 0) return d
         val fill = d.fill ?: return d
-        val share = 1f - FIRST_LINE_DP / SurfaceDecoration.INNER_GLOW_DEPTH_DP
+        val share = (1f - maxOf(FIRST_LINE_DP, wordsDp) / SurfaceDecoration.INNER_GLOW_DEPTH_DP).coerceAtLeast(0f)
         val atLine = glow.withAlpha(glow.alpha / 255f * share)
         for (face in listOf(fill, d.fillStart ?: fill)) {
             for (under in spots) {
@@ -159,6 +178,13 @@ public object GlassFinish {
     public fun glyphInks(roles: Roles, solid: Argb): List<Pair<Argb, Double>> =
         listOf(roles.text1, roles.text2, roles.accent.opaque(), styleBoundary(roles))
             .map { it to minOf(NON_TEXT_FLOOR, wcagContrast(it, solid.opaque())) }
+
+    /**
+     * What a clear in-flow pane is thickened for: its words ([textInks]) and its icons and track edges ([glyphInks]).
+     * Over the shader looks' wider spots (owner 2026-11-09: panes now blur them) a switch track's edge can ask more of
+     * the tint than the words do, so a clear pane measures both.
+     */
+    public fun paneInks(roles: Roles, solid: Argb): List<Pair<Argb, Double>> = textInks(roles, solid) + glyphInks(roles, solid)
 
     /** How much extra tint a clear pane's gloss (its lit corner and sheen) may cost before it goes. */
     public const val GLOSS_ALLOWANCE: Float = .06f

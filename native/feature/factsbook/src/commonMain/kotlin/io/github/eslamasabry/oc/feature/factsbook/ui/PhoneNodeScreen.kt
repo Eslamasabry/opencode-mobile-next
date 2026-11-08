@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -116,6 +117,7 @@ public fun PhoneNodeScreen(state: PhoneNodeUi, actions: PhoneNodeActions) {
                 primary?.let { action ->
                     { KitActionBlock(Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = Space.S2.dp), primary = action) }
                 },
+            edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(Modifier.fillMaxSize()) {
                 if (state.removed) {

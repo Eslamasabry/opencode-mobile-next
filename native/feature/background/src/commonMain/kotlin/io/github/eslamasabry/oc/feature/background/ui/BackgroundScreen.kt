@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.background.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -98,6 +99,7 @@ public fun BackgroundScreen(
         },
         width = KitScreenWidth.Reading,
         status = state.pause?.let { pauseStatus(it, state.resuming, actions) },
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

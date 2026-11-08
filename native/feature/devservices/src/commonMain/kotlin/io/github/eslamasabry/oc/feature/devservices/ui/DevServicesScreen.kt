@@ -151,7 +151,7 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
         Column(
             Modifier.fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S4.dp)
+                .padding(vertical = Space.S4.dp)
         ) {
             if (!state.available) {
                 KitInlineState(

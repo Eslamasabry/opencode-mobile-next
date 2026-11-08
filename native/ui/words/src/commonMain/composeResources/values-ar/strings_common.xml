@@ -590,7 +590,7 @@
     <string name="kitTurnLiveSeconds">%1$d ث</string>
     <string name="e7WorkspaceYesterday">أمس</string>
     <string name="kitComposerRailRetry">إعادة المحاولة</string>
-    <string name="addServerCleartextWarning">يستخدم عنوان الشبكة الخاصة أو Tailscale هذا HTTP غير المشفّر. تنتقل كلمة المرور والشيفرة دون تشفير في طبقة HTTP. استخدمه فقط على شبكة خاصة تثق بها أو عبر Tailscale؛ فهو خطر على شبكات Wi-Fi العامة.</string>
+    <string name="addServerCleartextWarning">يستخدم هذا العنوان HTTP العادي، فتُرسل كلمة المرور والرمز دون تشفير. استخدمه فقط على شبكة خاصة تثق بها أو عبر Tailscale، ولا تستخدمه أبدًا على شبكات Wi-Fi العامة.</string>
     <string name="storageAccessAllow">السماح بالوصول إلى الملفات</string>
     <string name="phoneScanGit">Git</string>
     <string name="chatsHomeAllProjects">كل المشاريع</string>

@@ -60,6 +60,7 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

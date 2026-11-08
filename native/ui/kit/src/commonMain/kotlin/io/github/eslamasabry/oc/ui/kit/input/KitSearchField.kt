@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusRequester
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -157,13 +158,28 @@ public fun KitSearchField(
     disabledReason: String? = null,
     filters: List<KitMenuItem> = emptyList(),
     prominent: Boolean = false,
+    /**
+     * The search page's own bar (Search, B1): a back arrow leads in place of the magnifier, the field is a 56 dp pill,
+     * and Esc on an empty field leaves through it. [backLabel] names it for TalkBack.
+     */
+    onBack: (() -> Unit)? = null,
+    backLabel: String? = null,
+    /** A control that ends the bar after Clear (Search: the server pill); it keeps its own size. */
+    trailing: (@Composable () -> Unit)? = null,
+    /** Focus the field when it first shows, so the keyboard comes up with the page. */
+    autoFocus: Boolean = false,
 ) {
+    kitAssert(onBack == null || !backLabel.isNullOrBlank()) { "KitSearchField: a back arrow needs its label" }
     kitAssert(label.isNotBlank()) { "KitSearchField: a search field names what it searches" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitSearchField: a disabled field says why (STATE-8)" }
     kitAssert(activeFilter == null || (onClearFilter != null && !removeFilterLabel.isNullOrBlank())) {
         "KitSearchField: an active filter needs onClearFilter and its remove label"
     }
     val interactions = remember { MutableInteractionSource() }
+    val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+    if (autoFocus) LaunchedEffect(Unit) { focus.requestFocus() }
+    val bar = onBack != null
+    val leave by rememberUpdatedState(onBack)
     val focused by interactions.collectIsFocusedAsState()
     val focusManager = LocalFocusManager.current
     var filterOpen by remember { mutableStateOf(false) }
@@ -190,7 +206,7 @@ public fun KitSearchField(
         NavigationBackHandler(state = back, isBackEnabled = true, onBackCompleted = { state.clearText() })
     }
     // A filled, fully rounded field with no outline (the Flutter search look): the magnifier and the words carry it.
-    val shapeId = if (prominent) KitShapeId.Pill else KitShapeId.Button
+    val shapeId = if (prominent || bar) KitShapeId.Pill else KitShapeId.Button
     val shape = shapeId.shape()
     val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Field, shape = shapeId, ownFill = colors.surface1, selected = focused))
     val edge = if (focused) colors.accent else if (prominent) colors.surface1 else colors.hairline
@@ -204,13 +220,24 @@ public fun KitSearchField(
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth()
-                .heightIn(min = tokens.buttonHeight.dp)
+                .heightIn(min = if (bar) (tokens.minTarget + Space.S2).dp else tokens.buttonHeight.dp)
                 .then(look.modifier)
                 .then(if (plain) Modifier.border(if (focused) hairline * 2 else hairline, edge, shape) else Modifier), // F: lib/ui/kit/kit_tokens.dart:324-325
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
-            KitGlyph(KitIcons.search, colors.text3, tokens.smallIcon.dp * minOf(kitTextScale(), tokens.maxIconScale), Modifier.padding(start = Space.S4.dp, end = Space.S3.dp))
+            if (onBack != null) {
+                // The arrow's 48 dp target starts space1 in, so its glyph sits on the field's 16 dp rail.
+                KitIconButton(
+                    icon = KitIcons.back,
+                    label = backLabel.orEmpty(),
+                    onClick = onBack,
+                    modifier = Modifier.padding(start = Space.S1.dp),
+                    tone = TextTone.Primary,
+                )
+            } else {
+                KitGlyph(KitIcons.search, colors.text3, tokens.smallIcon.dp * minOf(kitTextScale(), tokens.maxIconScale), Modifier.padding(start = Space.S4.dp, end = Space.S3.dp))
+            }
             Box(Modifier.weight(1f).padding(end = Space.S2.dp, top = vertical, bottom = vertical).heightIn(min = lineBox), contentAlignment = Alignment.CenterStart) {
                 BasicTextField(
                     state = state,
@@ -232,12 +259,16 @@ public fun KitSearchField(
                     },
                     modifier =
                         Modifier.fillMaxWidth()
+                            .focusRequester(focus)
                             .testTag("kit-search-field")
                             .semantics { contentDescription = label }
                             .onPreviewKeyEvent { e ->
                                 val esc = e.type == KeyEventType.KeyDown && e.key == Key.Escape
                                 if (esc && SearchRules.escape(state.text.toString()) == SearchEscape.Clear) {
                                     state.clearText()
+                                    true
+                                } else if (esc && leave != null) {
+                                    leave?.invoke()
                                     true
                                 } else if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionDown) {
                                     focusManager.moveFocus(FocusDirection.Down)
@@ -266,6 +297,7 @@ public fun KitSearchField(
                     tone = TextTone.Secondary,
                 )
             }
+            if (trailing != null) Box(Modifier.padding(end = Space.S1.dp)) { trailing() }
         }
 
         val countLine =

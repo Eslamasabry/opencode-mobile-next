@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.log
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -303,6 +304,7 @@ public fun KitLogPanel(
                                 style = style,
                                 softWrap = wrap,
                                 maxLines = if (wrap) Int.MAX_VALUE else 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }

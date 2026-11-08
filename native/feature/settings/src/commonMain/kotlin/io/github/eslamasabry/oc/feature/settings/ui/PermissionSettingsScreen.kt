@@ -69,6 +69,7 @@ internal fun PermissionSettingsContent(
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             Modifier.fillMaxSize()

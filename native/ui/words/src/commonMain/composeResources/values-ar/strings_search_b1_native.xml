@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="searchB1Web">الويب</string>
+    <string name="searchB1InsideMessages">داخل الرسائل</string>
+    <string name="searchB1AboutOptions">حول خيارات البحث</string>
+    <string name="searchB1OptionsTitle">خيارات البحث</string>
+    <string name="searchB1ChooseServer">اختر الخادم الذي تبحث فيه</string>
+    <string name="searchB1RecentConversations">المحادثات الأخيرة</string>
+    <string name="searchB1Clear">مسح</string>
+    <string name="searchB1Conversations">المحادثات</string>
+    <string name="searchB1Places">الإعدادات والصفحات</string>
+    <string name="searchB1SeeAll">عرض الكل (%1$s)</string>
+    <string name="searchB1SeeAllSpoken">عرض كل المحادثات (%1$s)</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="zero">لا محادثات</item>
+        <item quantity="one">محادثة واحدة</item>
+        <item quantity="two">محادثتان</item>
+        <item quantity="few">%1$s محادثات</item>
+        <item quantity="many">%1$s محادثة</item>
+        <item quantity="other">%1$s محادثة</item>
+    </plurals>
+</resources>

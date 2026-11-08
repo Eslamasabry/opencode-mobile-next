@@ -34,6 +34,7 @@ public fun ConnectionFormScreen(state: ConnectionFormUi, actions: ConnectionForm
             )
         },
         loading = state.phase == ConnectionFormPhase.Loading,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(Modifier.fillMaxSize()) {
             when (state.phase) {

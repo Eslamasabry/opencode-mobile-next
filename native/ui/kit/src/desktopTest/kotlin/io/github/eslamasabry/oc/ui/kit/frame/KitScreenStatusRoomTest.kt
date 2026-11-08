@@ -47,6 +47,7 @@ class KitScreenStatusRoomTest {
                                 id = "app-exit",
                                 action = KitLineAction("Keep it running", {}),
                             ),
+                        edges = KitScreenEdges.Bleed,
                     ) {
                         LazyColumn { items(40) { KitText("Row $it") } }
                     }
