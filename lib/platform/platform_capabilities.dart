@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../build_flavor.dart';
+
 /// The single place that answers "does the platform this build is running on
 /// actually have that?".
 ///
@@ -30,20 +32,30 @@ import 'package:flutter/foundation.dart';
 /// is the case a test opts into.
 @immutable
 class PlatformCapabilities {
-  const PlatformCapabilities({required this.platform, this.isWeb = false});
+  const PlatformCapabilities({
+    required this.platform,
+    this.isWeb = false,
+    this.fdroid = kFdroidBuild,
+  });
 
   /// The shipping mobile target: everything is available.
   const PlatformCapabilities.android()
     : platform = TargetPlatform.android,
-      isWeb = false;
+      isWeb = false,
+      fdroid = kFdroidBuild;
 
   /// The shipping desktop target.
   const PlatformCapabilities.linuxDesktop()
     : platform = TargetPlatform.linux,
-      isWeb = false;
+      isWeb = false,
+      fdroid = kFdroidBuild;
 
   final TargetPlatform platform;
   final bool isWeb;
+
+  /// The F-Droid build ([kFdroidBuild]): no code push and no in-app APK
+  /// update. F-Droid delivers updates itself.
+  final bool fdroid;
 
   bool get isAndroid => !isWeb && platform == TargetPlatform.android;
 
@@ -101,7 +113,7 @@ class PlatformCapabilities {
 
   /// Shorebird patches. Desktop builds are not Shorebird-released; they use
   /// the GitHub release check instead ([supportsDesktopReleaseCheck]).
-  bool get supportsCodePush => isAndroid;
+  bool get supportsCodePush => isAndroid && !fdroid;
 
   /// The GitHub release-tag check that stands in for code push where
   /// Shorebird cannot reach. Deliberately the complement of
@@ -116,9 +128,9 @@ class PlatformCapabilities {
   bool get supportsUsbHostBridge => isAndroid;
 
   /// Scanning the QR that `opencode2 pair` prints: the camera permission, the
-  /// `oc/camera` channel, and the `mobile_scanner` preview.
+  /// `oc/camera` channel, and the camera preview.
   ///
-  /// Android only. `mobile_scanner` ships no Linux implementation, and a
+  /// Android only. The `camera` plugin has no Linux implementation here, and a
   /// desktop user reading a QR off the same machine that printed it would be
   /// pointing a webcam at their own screen — pasting is simply better there.
   /// Desktop therefore renders no scan affordance at all rather than one that
@@ -129,10 +141,11 @@ class PlatformCapabilities {
   bool operator ==(Object other) =>
       other is PlatformCapabilities &&
       other.platform == platform &&
-      other.isWeb == isWeb;
+      other.isWeb == isWeb &&
+      other.fdroid == fdroid;
 
   @override
-  int get hashCode => Object.hash(platform, isWeb);
+  int get hashCode => Object.hash(platform, isWeb, fdroid);
 
   @override
   String toString() => 'PlatformCapabilities($platform, isWeb: $isWeb)';

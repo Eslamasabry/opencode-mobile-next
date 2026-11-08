@@ -7,6 +7,26 @@ allprojects {
     }
 }
 
+// F-Droid build (see android/app/build.gradle.kts): refuse Google's proprietary
+// SDKs outright. A dependency that pulls one in fails here with its name,
+// instead of reaching the APK and F-Droid's scanner.
+if ((project.findProperty("ocFdroid") as String?) == "true") {
+    val banned = listOf("com.google.android.gms", "com.google.mlkit", "com.google.firebase")
+    allprojects {
+        configurations.configureEach {
+            resolutionStrategy.eachDependency {
+                if (banned.any { requested.group == it || requested.group.startsWith("$it.") }) {
+                    throw GradleException(
+                        "F-Droid build: ${requested.group}:${requested.name} is a proprietary SDK " +
+                            "(configuration ${this@configureEach.name} of ${project.path}). " +
+                            "Run tool/fdroid/prebuild.dart first.",
+                    )
+                }
+            }
+        }
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")

@@ -43,7 +43,7 @@ void main() {
     expect(caps.supportsHomeWidget, isFalse);
     expect(caps.supportsCodePush, isFalse);
     expect(caps.supportsUsbHostBridge, isFalse);
-    // mobile_scanner has no Linux implementation, and a desktop user would be
+    // the camera plugin has no Linux implementation, and a desktop user would be
     // pointing a webcam at the screen that printed the code. Paste is better.
     expect(caps.supportsQrPairing, isFalse);
     // Something has to tell a desktop user a new build exists.

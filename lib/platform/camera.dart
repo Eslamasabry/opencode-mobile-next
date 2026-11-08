@@ -5,7 +5,7 @@ import 'platform_capabilities.dart';
 /// The camera permission, and whether there is a camera at all.
 ///
 /// Deliberately the same shape as `lib/voice/device.dart`'s microphone seam,
-/// and for the same reason: `mobile_scanner` reports only "permission
+/// and for the same reason: the camera plugin reports only "permission
 /// denied", but Android distinguishes a denial the user can undo from one
 /// that will never prompt again, and those need different recoveries — retry
 /// versus a trip to app settings. Only the native side can tell them apart

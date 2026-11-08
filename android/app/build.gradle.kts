@@ -9,6 +9,12 @@ plugins {
 }
 
 val ocPreview = (project.findProperty("ocPreview") as String?) == "true"
+// The F-Droid build (`flutter build apk --android-project-arg=ocFdroid=true
+// --dart-define=OC_FDROID=true`, docs/release/fdroid-2026-10-31.md): no
+// self-install permission and a build that fails if a Google SDK slips in
+// (android/build.gradle.kts). A project property rather than a product flavor
+// so every other build path (release.sh, Shorebird, CI) keeps its output names.
+val ocFdroid = (project.findProperty("ocFdroid") as String?) == "true"
 // Explicit test-build opt-in only; production builds retain normal R8 rules.
 val ocStableEngineQa = (project.findProperty("ocStableEngineQa") as String?) == "true"
 // Test-only release AOT smoke entry point and separate instrumentation runner.
@@ -82,6 +88,12 @@ android {
             storeFile = keystoreProperties.getProperty("storeFile")?.let(::file)
             storePassword = keystoreProperties.getProperty("storePassword")
         }
+    }
+
+    if (ocFdroid) {
+        // F-Droid delivers updates itself and forbids apps from installing
+        // their own: the release manifest takes the permission back out.
+        sourceSets.getByName("release").manifest.srcFile("src/fdroid/AndroidManifest.xml")
     }
 
     buildTypes {

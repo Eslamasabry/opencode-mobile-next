@@ -23,7 +23,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.microphone" android:required="false"/>
     <!-- required="false" so a device with no camera can still install and
-         pair by pasting. mobile_scanner's own manifest declares both of these
+         pair by pasting. the camera plugin's own manifest declares both of these
          identically; they are repeated here because a permission the app
          requests should be readable in the app's own manifest rather than
          inherited invisibly from a plugin. -->
