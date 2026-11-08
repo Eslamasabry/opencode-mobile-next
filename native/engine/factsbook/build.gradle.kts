@@ -12,5 +12,6 @@ kotlin {
         implementation(project(":core:model"))
         implementation(project(":core:security"))
         implementation(project(":core:net"))
+        api(libs.kotlinx.datetime) // a reminder's local date-time (ReminderTiming)
     }
 }

@@ -18,6 +18,9 @@ public sealed interface FactsBookRoute : AppRoute {
             get() = RouteMotion.SlideUp
     }
 
+    /** Needs you: changes waiting for the person's OK and notes not saved yet. */
+    @Serializable public data object NeedsYou : FactsBookRoute
+
     /** Notes not saved yet: the node's queue and this phone's outbox. */
     @Serializable public data object NotSaved : FactsBookRoute
 
@@ -26,6 +29,15 @@ public sealed interface FactsBookRoute : AppRoute {
     @Serializable public data class Search(val query: String) : FactsBookRoute
 
     @Serializable public data object Areas : FactsBookRoute
+
+    @Serializable public data object Reminders : FactsBookRoute
+
+    /** Check this reminder: [id] null makes a new one; [locale] is the app's language (`en` or `ar`). */
+    @Serializable
+    public data class ReminderEdit(val id: String?, val locale: String = "en") : FactsBookRoute {
+        override val motion: RouteMotion
+            get() = RouteMotion.SlideUp
+    }
 
     /** Set up FactsBook: pair with a node by address and one-time code. */
     @Serializable public data object Connect : FactsBookRoute

@@ -137,7 +137,7 @@ public class HttpFactsBookGateway(
     private val token: String?,
     private val random: Random = Random.Default,
     private val retryDelayMs: Long = 250,
-) : FactsBookGateway {
+) : FactsBookGateway, FactsBookReminders {
     private val lane = Mutex()
 
     override fun toString(): String = "HttpFactsBookGateway"
@@ -306,11 +306,75 @@ public class HttpFactsBookGateway(
     override suspend fun reviewItems(): FbResult<List<ReviewItem>> =
         all("/v1/review", ReviewItem::read).map { items -> items.filter { it.state == ReviewState.Proposed } }
 
-    override suspend fun areas(): FbResult<List<Area>> =
-        send("GET", "/v1/areas").reading { json -> json.list("items", Area::read) }
+    override suspend fun areas(): FbResult<List<Area>> = all("/v1/areas", Area::read)
 
     override suspend fun capabilities(): FbResult<FactsBookCapabilities> =
         send("GET", "/v1/capabilities").reading(FactsBookCapabilities::read)
+
+    override suspend fun previewReminder(
+        what: String,
+        timing: ReminderTiming,
+        zone: String,
+        locale: String,
+        scheduleId: String?,
+        area: String,
+    ): FbResult<ReminderPreview> =
+        send(
+            "POST",
+            "/v1/reminders/parse",
+            body =
+                obj(
+                    "text" to JsonPrimitive(scheduleText(scheduleId ?: scheduleId(random), timing, zone)),
+                    "what" to JsonPrimitive(what.trim()),
+                    "locale" to JsonPrimitive(locale),
+                    "zone" to JsonPrimitive(zone),
+                    "area" to JsonPrimitive(area),
+                ),
+        ).reading(ReminderPreview::read)
+
+    override suspend fun createReminder(preview: ReminderPreview, urgent: Boolean, floatingConfirmed: Boolean): FbResult<MutationResult> =
+        send(
+            "POST",
+            "/v1/reminders",
+            body =
+                JsonObject(
+                    buildMap {
+                        put("preview", preview.raw)
+                        put("preview_digest", JsonPrimitive(preview.digest))
+                        put("confirmed", JsonPrimitive(true))
+                        put("urgent", JsonPrimitive(urgent))
+                        if (floatingConfirmed) put("floating_confirmed", JsonPrimitive(true))
+                    }
+                ),
+            idempotencyKey = key(),
+        ).reading(MutationResult::read)
+
+    override suspend fun reminders(): FbResult<List<Reminder>> = all("/v1/reminders", Reminder::read)
+
+    override suspend fun setReminderPaused(reminder: Reminder, paused: Boolean): FbResult<MutationResult> =
+        send(
+            "PATCH",
+            "/v1/reminders/${seg(reminder.id)}",
+            body = obj("base_rev" to JsonPrimitive(reminder.revision), "paused" to JsonPrimitive(paused)),
+            idempotencyKey = key(),
+        ).reading(MutationResult::read)
+
+    override suspend fun updateReminder(reminder: Reminder, preview: ReminderPreview, floatingConfirmed: Boolean): FbResult<MutationResult> =
+        send(
+            "PATCH",
+            "/v1/reminders/${seg(reminder.id)}",
+            body =
+                JsonObject(
+                    buildMap {
+                        put("base_rev", JsonPrimitive(reminder.revision))
+                        put("preview", preview.raw)
+                        put("preview_digest", JsonPrimitive(preview.digest))
+                        put("confirmed", JsonPrimitive(true))
+                        if (floatingConfirmed) put("floating_confirmed", JsonPrimitive(true))
+                    }
+                ),
+            idempotencyKey = key(),
+        ).reading(MutationResult::read)
 
     /** `GET /v1/info` then `POST /v1/pair`: a one-time code to a bearer token. Unauthorized calls. */
     public suspend fun pair(code: String, clientName: String, scopes: List<String>): FbResult<PairResult> =

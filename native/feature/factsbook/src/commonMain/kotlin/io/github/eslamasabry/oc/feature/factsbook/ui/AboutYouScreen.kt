@@ -115,6 +115,14 @@ private fun Places(state: AboutYouUi, actions: AboutYouActions) {
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openNeedsYou,
         )
+        if (state.showReminders) {
+            KitRow(
+                title = stringResource(Res.string.fbRemindersTitle),
+                leading = KitRowLeading.Glyph(KitIcons.clock),
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::openReminders,
+            )
+        }
         KitRow(
             title = stringResource(Res.string.fbAreasTitle),
             leading = KitRowLeading.Glyph(KitIcons.privacy),

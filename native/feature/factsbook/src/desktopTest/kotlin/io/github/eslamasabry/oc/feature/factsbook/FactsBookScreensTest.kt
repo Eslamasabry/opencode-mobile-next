@@ -45,6 +45,19 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.engine.factsbook.Reminder
+import io.github.eslamasabry.oc.engine.factsbook.ReminderSchedule
+import io.github.eslamasabry.oc.engine.factsbook.ReviewItem
+import io.github.eslamasabry.oc.engine.factsbook.ReviewState
+import io.github.eslamasabry.oc.engine.factsbook.ScheduleWhen
+import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouUi
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RemindersActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.RemindersUi
+import io.github.eslamasabry.oc.feature.factsbook.ui.NeedsYouScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.RemindersScreen
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -85,6 +98,7 @@ class FactsBookScreensTest {
         override fun reload() { calls += "reload" }
         override fun openNeedsYou() { calls += "needs" }
         override fun openAreas() { calls += "areas" }
+        override fun openReminders() { calls += "reminders" }
         override fun setUpApproval() { calls += "approval" }
         override fun kind(kind: CaptureKind) { calls += "kind $kind" }
         override fun area(slug: String?) { calls += "area $slug" }
@@ -201,5 +215,42 @@ class FactsBookScreensTest {
         } finally {
             Locale.setDefault(previous)
         }
+    }
+
+    private class Others : RemindersActions, NeedsYouActions {
+        val calls = mutableListOf<String>()
+        override fun back() { calls += "back" }
+        override fun reload() { calls += "reload" }
+        override fun add() { calls += "add" }
+        override fun edit(reminder: Reminder) { calls += "edit ${reminder.id}" }
+        override fun togglePause(reminder: Reminder) { calls += "pause ${reminder.id}" }
+        override fun dismiss() { calls += "dismiss" }
+        override fun openNotSaved() { calls += "notSaved" }
+        override fun setUpApproval() { calls += "approval" }
+    }
+
+    @Test
+    fun `B-FB-048 Reminders groups active ones, says they do not ring here and pauses by name`() = runComposeUiTest {
+        val daily = ScheduleWhen(JsonObject(mapOf("every" to JsonPrimitive("day"), "at" to JsonPrimitive("07:00"))))
+        val gym = Reminder("rem_1", "Gym", ReminderSchedule("sch_0", daily, "vault", JsonObject(emptyMap())), "en")
+        val actions = Others()
+        setContent { Themed { RemindersScreen(RemindersUi(reminders = persistentListOf(gym), loading = false), actions) } }
+        onNodeWithText("Active").assertExists()
+        onNodeWithText("Every day at 07:00", substring = true).assertExists()
+        onNodeWithText("Not sounded on this phone", substring = true).assertExists()
+        onNodeWithText("Pause “Gym”", useUnmergedTree = true).performClick()
+        onNodeWithText("Add a reminder").performClick()
+        assertEquals(listOf("pause rem_1", "add"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-049 Needs you shows the change and says why it cannot be approved yet`() = runComposeUiTest {
+        val item = ReviewItem("rvw_1", "fact_add", ReviewState.Proposed, "d", "Likes tea")
+        val actions = Others()
+        setContent { Themed { NeedsYouScreen(NeedsYouUi(review = persistentListOf(item), notSaved = 1), actions) } }
+        onNodeWithText("Likes tea").assertExists()
+        onNodeWithText("Approve").assertExists()
+        onNodeWithText("1 note not saved yet").performClick()
+        assertEquals(listOf("notSaved"), actions.calls)
     }
 }

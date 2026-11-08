@@ -111,9 +111,9 @@ public class MemorySectionViewModel(
 
     override fun addSomething(): Unit = nav.open(FactsBookRoute.Capture)
 
-    /** Changes to review and offers go to Needs you (not ported yet: About you lists them); notes to Not saved yet. */
+    /** Changes to review and offers go to Needs you; notes to Not saved yet (F: memory_section.dart). */
     override fun openNeedsYou(kind: NeedsYouKind): Unit =
-        nav.open(if (kind == NeedsYouKind.NotSaved) FactsBookRoute.NotSaved else FactsBookRoute.AboutYou)
+        nav.open(if (kind == NeedsYouKind.NotSaved) FactsBookRoute.NotSaved else FactsBookRoute.NeedsYou)
 
     override fun openThing(id: String): Unit = nav.open(FactsBookRoute.Thing(id))
 
@@ -154,6 +154,8 @@ public interface AboutYouActions {
     public fun openNeedsYou()
 
     public fun openAreas()
+
+    public fun openReminders()
 
     public fun addSomething()
 }
@@ -224,9 +226,11 @@ public class AboutYouViewModel(private val access: FactsBookAccess, private val 
 
     override fun openThing(id: String): Unit = nav.open(FactsBookRoute.Thing(id))
 
-    override fun openNeedsYou(): Unit = nav.open(FactsBookRoute.NotSaved)
+    override fun openNeedsYou(): Unit = nav.open(FactsBookRoute.NeedsYou)
 
     override fun openAreas(): Unit = nav.open(FactsBookRoute.Areas)
+
+    override fun openReminders(): Unit = nav.open(FactsBookRoute.Reminders)
 
     override fun addSomething(): Unit = nav.open(FactsBookRoute.Capture)
 }

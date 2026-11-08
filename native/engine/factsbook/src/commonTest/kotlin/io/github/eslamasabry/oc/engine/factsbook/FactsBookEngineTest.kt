@@ -196,4 +196,56 @@ class FactsBookEngineTest {
         assertEquals(3, error.retryAfterSeconds)
         assertFalse("secret words" in error.toString())
     }
+
+    @Test
+    fun `B-FB-011 areas are read page by page like every other list`() = runTest {
+        val r = rig()
+        r.engine.open(profile)
+        val area = """{"slug":"health","storage":"sensitive","review":"first","share":{"default":"none"},"brief":false,"export":false}"""
+        r.http.on("GET /v1/areas", 200, """{"items":[$area],"next_cursor":null}""")
+        val areas = r.engine.node!!.areas().valueOrNull()!!
+        assertEquals("health", areas.single().slug)
+        assertTrue(areas.single().sensitiveStorage)
+        assertEquals("200", r.http.sent.single().query["limit"])
+    }
+
+    @Test
+    fun `B-FB-012 a reminder is sent in the node's structured form and read back`() = runTest {
+        val r = rig()
+        r.engine.open(profile)
+        val timing = ReminderTiming(ReminderRepeat.Weekly, kotlinx.datetime.LocalDateTime(2000, 1, 1, 8, 5), weekdays = setOf(3, 1))
+        r.http.on(
+            "POST /v1/reminders/parse",
+            200,
+            """{"what":"Gym","zone":"vault","locale":"en","ambiguities":[],"preview_digest":"dg","schedule":{"id":"sch_0","when":{"every":"week","on":["mon","wed"],"at":"08:05"},"zone":"vault"}}""",
+        )
+        val node = r.engine.node as FactsBookReminders
+        val preview = node.previewReminder(" Gym ", timing, "vault", "en").valueOrNull()!!
+        val sent = Json.parseToJsonElement(r.http.sent.single().body!!).jsonObject
+        assertEquals("Gym", sent["what"]!!.jsonPrimitive.content)
+        val text = Json.parseToJsonElement(sent["text"]!!.jsonPrimitive.content).jsonObject
+        assertEquals(timing.toWhen(), text["when"])
+        assertTrue(text["id"]!!.jsonPrimitive.content.startsWith("sch_"))
+        assertTrue(preview.confirmable)
+        assertEquals(timing, ReminderTiming.fromWhen(preview.schedule!!.`when`))
+    }
+
+    @Test
+    fun `B-FB-013 pausing sends the revision the person saw`() = runTest {
+        val r = rig()
+        r.engine.open(profile)
+        r.http.on(
+            "GET /v1/reminders",
+            200,
+            """{"items":[{"id":"rem_1","what":"Gym","rev":4,"schedule":{"id":"sch_0","when":{"every":"day","at":"07:00"},"zone":"vault"}}]}""",
+        )
+        r.http.on("PATCH /v1/reminders/rem_1", 200, """{"status":"ok","id":"rem_1","rev":5}""")
+        val node = r.engine.node as FactsBookReminders
+        val reminder = node.reminders().valueOrNull()!!.single()
+        node.setReminderPaused(reminder, true)
+        val body = Json.parseToJsonElement(r.http.sent.last().body!!).jsonObject
+        assertEquals("4", body["base_rev"]!!.jsonPrimitive.content)
+        assertEquals("true", body["paused"]!!.jsonPrimitive.content)
+        assertTrue(r.http.sent.last().headers["Idempotency-Key"]!!.startsWith("app-"))
+    }
 }

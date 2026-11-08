@@ -11,6 +11,8 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingFilter
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingNotice
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderEditViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -146,5 +148,51 @@ class FactsBookViewModelsTest {
         vm.discard()
         assertFalse(access.secrets.values.containsKey("oc.factsbookOutbox.p1"))
         assertTrue(vm.state.first { !it.working }.entries.isEmpty())
+    }
+
+    private val preview =
+        """{"what":"Gym","zone":"vault","locale":"en","ambiguities":[],"preview_digest":"dg","schedule":{"id":"sch_0","when":{"every":"day","at":"07:00"},"zone":"vault"}}"""
+
+    private fun FakeAccess.dailyReminder() {
+        node.on(
+            "GET /v1/reminders",
+            """{"items":[{"id":"rem_1","what":"Gym","rev":4,"schedule":{"id":"sch_0","when":{"every":"day","at":"07:00"},"zone":"vault"}}]}""",
+        )
+    }
+
+    @Test
+    fun `B-FB-029 a reminder whose reading agrees is saved and the page closes`() = runTest {
+        val access = FakeAccess().apply { node.healthy(); dailyReminder() }
+        access.node.on("POST /v1/reminders/parse", preview)
+        access.node.on("PATCH /v1/reminders/rem_1", """{"status":"ok","id":"rem_1"}""")
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit("rem_1"), access, nav, FixedClock())
+        vm.state.first { it.draft != null }
+        vm.save()
+        vm.state.first { !it.working }
+        assertTrue("PATCH /v1/reminders/rem_1" in access.node.asked)
+        assertEquals(1, nav.backs)
+    }
+
+    @Test
+    fun `B-FB-030 a reminder the node reads differently is not saved`() = runTest {
+        val access = FakeAccess().apply { node.healthy(); dailyReminder() }
+        access.node.on("POST /v1/reminders/parse", preview.replace("07:00", "19:00"))
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit("rem_1"), access, nav, FixedClock())
+        vm.state.first { it.draft != null }
+        vm.save()
+        assertTrue(vm.state.first { !it.working }.mismatch)
+        assertFalse(access.node.asked.any { it.startsWith("PATCH") })
+        assertEquals(0, nav.backs)
+    }
+
+    @Test
+    fun `B-FB-031 Needs you lists the changes waiting and cannot approve without the owner signer`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        val vm = NeedsYouViewModel(access, nav)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.review.isNotEmpty() }
+        assertEquals("rvw_1", state.review.single().id)
+        assertFalse(state.canApprove)
+        assertFalse(access.node.asked.any { it.contains("/decision") })
     }
 }
