@@ -501,6 +501,21 @@ private fun Ready(
                     modifier = Modifier.testTag("git-message"),
                     onTextChanged = { onMessageEdited() },
                 )
+                // Flutter git_sheet_steps.dart: the agent already said what it did; one tap makes that the message,
+                // which can still be edited.
+                state.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+                    KitButton(
+                        stringResource(Res.string.gitWriteItForMe),
+                        {
+                            message.edit { replace(0, length, summary) }
+                            onMessageEdited()
+                        },
+                        role = KitButtonRole.Tertiary,
+                        icon = KitIcons.sparkle,
+                        enabled = enabled,
+                        modifier = Modifier.testTag("git-save-write-for-me"),
+                    )
+                }
                 val known = files.filterNot { it.isConflicted }.map { it.path }.toSet()
                 val count = state.selected.count { it in known }
                 val saveEnabled =

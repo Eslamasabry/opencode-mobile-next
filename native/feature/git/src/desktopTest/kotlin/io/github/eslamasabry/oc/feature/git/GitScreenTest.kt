@@ -132,6 +132,29 @@ class GitScreenTest {
         )
 
     @Test
+    fun `WALK-1108-G1 Write it for me fills the message with the agent's summary and Save uses it`() = runComposeUiTest {
+        setContent {
+            Screen(
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    selected = persistentSetOf("src/app.kt"),
+                    signIn = GitHubSignIn.SignedOut(),
+                    summary = "Added a combo counter and screen shake.",
+                )
+            )
+        }
+        onNodeWithTag("git-save-write-for-me").performScrollTo().performClick()
+        onNodeWithTag("git-save").performScrollTo().performClick()
+        assertEquals("commit Added a combo counter and screen shake.", calls.last())
+    }
+
+    @Test
+    fun `WALK-1108-G1 without a summary there is no Write it for me`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), selected = persistentSetOf("src/app.kt"), signIn = GitHubSignIn.SignedOut())) }
+        onNodeWithText("Write it for me").assertDoesNotExist()
+    }
+
+    @Test
     fun `B-NAV-022 a server that cannot run commands says so in plain words`() = runComposeUiTest {
         setContent { Screen(GitUi(view = GitPageView.Unavailable(GitUnavailableReason.ServerCannotRunCommands), signIn = GitHubSignIn.SignedOut())) }
         onNodeWithText("This server can’t run Git for the app. Use Git on that computer instead.").assertExists()

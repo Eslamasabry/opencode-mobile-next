@@ -89,6 +89,8 @@ public data class GitUi(
     /** Bumped when a write finished: the screen clears its message field once. */
     val generation: Int = 0,
     val repair: GitRepairUi = GitRepairUi(),
+    /** The agent's own summary of its last turn: "Write it for me" fills the message with it. Null: not offered. */
+    val summary: String? = null,
 ) {
     val snapshot: GitSnapshot?
         get() = (view as? GitPageView.Ready)?.snapshot
