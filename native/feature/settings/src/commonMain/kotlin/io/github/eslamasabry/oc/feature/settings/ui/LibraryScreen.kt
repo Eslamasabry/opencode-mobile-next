@@ -1019,7 +1019,6 @@ private fun MethodSheet(
             }
         }
         if (missing) KitNotice(stringResource(Res.string.nlibRequired))
-        problem?.let { KitNotice(mcpProblemWords(it)) }
         state.inventory.notice?.let { KitNotice(noticeLabel(it)) }
     }
 }
@@ -1402,6 +1401,7 @@ private fun AddMcpSheet(
             role = KitButtonRole.Tertiary,
         )
         if (missing) KitNotice(stringResource(Res.string.nlibRequired))
+        problem?.let { KitNotice(mcpProblemWords(it)) }
         state.inventory.notice?.let { KitNotice(noticeLabel(it)) }
     }
 }
