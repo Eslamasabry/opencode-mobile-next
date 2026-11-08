@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneOp
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.consoleOrganizationSwitchConfirm
 import io.github.eslamasabry.oc.ui.words.res.e7SetupOpenAppSettings
 import io.github.eslamasabry.oc.ui.words.res.inAppServerOwnershipRecoveryBody
 import io.github.eslamasabry.oc.ui.words.res.keepRunningAutostartDetail
@@ -32,6 +33,9 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningLockNubia
 import io.github.eslamasabry.oc.ui.words.res.keepRunningLockOther
 import io.github.eslamasabry.oc.ui.words.res.keepRunningLockSamsung
 import io.github.eslamasabry.oc.ui.words.res.keepRunningLockTitle
+import io.github.eslamasabry.oc.ui.words.res.kitCapServerOc2Offer
+import io.github.eslamasabry.oc.ui.words.res.kitCapServerOc2Title
+import io.github.eslamasabry.oc.ui.words.res.openCode1UnsupportedTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardShowProgress
 import io.github.eslamasabry.oc.ui.words.res.phoneServerPortBusy
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRestartFailed
@@ -43,6 +47,7 @@ import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryCount
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryFailed
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryMoving
 import io.github.eslamasabry.oc.ui.words.res.r40PhoneMemory
+import io.github.eslamasabry.oc.ui.words.res.setupRuntimeTwo
 import io.github.eslamasabry.oc.ui.words.res.sharedFoldersTitle
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindAiTeam
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindClaudeCode
@@ -111,6 +116,7 @@ internal fun AnswerHeadline.words(): String =
             AnswerHeadline.Restarting -> Res.string.thisPhoneAnswerRestarting
             AnswerHeadline.StartFailed -> Res.string.thisPhoneAnswerStartFailed
             AnswerHeadline.Recovery -> Res.string.thisPhoneAnswerRecovery
+            AnswerHeadline.NeedsOpenCode2 -> Res.string.openCode1UnsupportedTitle
         }
     )
 
@@ -148,23 +154,31 @@ internal fun AnswerLine.words(): String =
                 else -> stringResource(Res.string.r40PhoneHistoryMoving)
             }
         is AnswerLine.Because -> headline.words()
+        AnswerLine.OpenCode2Offer -> stringResource(Res.string.kitCapServerOc2Offer)
     }
 
 @Composable
 internal fun PhoneAct.words(): String =
-    stringResource(
-        when (this) {
-            PhoneAct.SetUp -> Res.string.thisPhoneSetUp
-            PhoneAct.SetUpAgain -> Res.string.thisPhoneInstallAgain
-            PhoneAct.Start -> Res.string.thisPhoneStart
-            PhoneAct.StartAgain -> Res.string.thisPhoneStartAgain
-            PhoneAct.RestartNow -> Res.string.thisPhoneAnswerRestartNow
-            PhoneAct.OpenAppSettings -> Res.string.e7SetupOpenAppSettings
-            PhoneAct.ShowProgress -> Res.string.phoneServerCardShowProgress
-            PhoneAct.ExportProjects -> Res.string.thisPhoneExportProjects
-            PhoneAct.SharedFolders -> Res.string.sharedFoldersTitle
-        }
-    )
+    if (this == PhoneAct.SwitchToOpenCode2)
+        stringResource(
+            Res.string.consoleOrganizationSwitchConfirm,
+            stringResource(Res.string.setupRuntimeTwo),
+        )
+    else
+        stringResource(
+            when (this) {
+                PhoneAct.SetUp -> Res.string.thisPhoneSetUp
+                PhoneAct.SetUpAgain -> Res.string.thisPhoneInstallAgain
+                PhoneAct.Start -> Res.string.thisPhoneStart
+                PhoneAct.StartAgain -> Res.string.thisPhoneStartAgain
+                PhoneAct.RestartNow -> Res.string.thisPhoneAnswerRestartNow
+                PhoneAct.OpenAppSettings -> Res.string.e7SetupOpenAppSettings
+                PhoneAct.ShowProgress -> Res.string.phoneServerCardShowProgress
+                PhoneAct.ExportProjects -> Res.string.thisPhoneExportProjects
+                PhoneAct.SharedFolders -> Res.string.sharedFoldersTitle
+                PhoneAct.SwitchToOpenCode2 -> Res.string.kitCapServerOc2Title
+            }
+        )
 
 @Composable
 internal fun PhoneOp.failedWords(): String =

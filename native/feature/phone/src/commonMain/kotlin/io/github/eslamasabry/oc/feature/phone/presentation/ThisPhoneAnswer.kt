@@ -146,6 +146,9 @@ public enum class AnswerHeadline {
     Restarting,
     StartFailed,
     Recovery,
+
+    /** This phone's server still has to move to OpenCode 2 ("Update this server"). */
+    NeedsOpenCode2,
 }
 
 /** The line under the answer. */
@@ -172,6 +175,9 @@ public sealed interface AnswerLine {
 
     /** Why it is restarting by itself (the Android or self stop that preceded it). */
     public data class Because(val headline: AnswerHeadline) : AnswerLine
+
+    /** "This needs OpenCode 2. Switch this phone's server to it?" */
+    public data object OpenCode2Offer : AnswerLine
 }
 
 /** The answer's one act (the filled button at the thumb). Each names its object in the words. */
@@ -185,6 +191,9 @@ public enum class PhoneAct {
     ShowProgress,
     ExportProjects,
     SharedFolders,
+
+    /** Opens the move to OpenCode 2 ("Switch to OpenCode 2"). */
+    SwitchToOpenCode2,
 }
 
 public data class ThisPhoneAnswer(
@@ -227,6 +236,15 @@ public object ThisPhoneAnswers {
         stopping: Boolean = false,
     ): ThisPhoneAnswer {
         if (stopping) return ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Stopping)
+        // An installed OpenCode 1 cannot start in this app: the one useful act is the move (Flutter's
+        // kitCapServerOc2Offer). Without Linux the setup journey moves it in its finish instead.
+        if (facts.needsOpenCode2Move && facts.status?.installed == true && !facts.starting)
+            return ThisPhoneAnswer(
+                AnswerTone.NeedsYou,
+                AnswerHeadline.NeedsOpenCode2,
+                AnswerLine.OpenCode2Offer,
+                PhoneAct.SwitchToOpenCode2,
+            )
         val failedStart = facts.startProblem
         if (failedStart == StartProblem.ComponentRecovery) return recovery()
         val busyPort = facts.startBusyPort

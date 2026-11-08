@@ -172,6 +172,7 @@ public class ThisPhoneModel(
             PhoneAct.ShowProgress -> nav.open(PhonePage.SetupProgress)
             PhoneAct.ExportProjects -> nav.open(PhonePage.ExportProjects)
             PhoneAct.SharedFolders -> nav.open(PhonePage.SharedFolders)
+            PhoneAct.SwitchToOpenCode2 -> nav.open(PhonePage.MoveToOpenCode2)
             PhoneAct.Start,
             PhoneAct.StartAgain,
             PhoneAct.RestartNow -> run(PhoneOp.Start) { source.start() }
