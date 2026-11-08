@@ -34,6 +34,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -75,6 +76,8 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitInsertedPicture
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitPictureReceiver
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStep
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
@@ -154,6 +157,7 @@ import org.jetbrains.compose.resources.stringResource
 public class BasicComposerHost(
     private val voices: Set<KitComposerVoice>,
     private val editors: Set<ComposerPromptEditor> = emptySet(),
+    private val pictures: Set<ComposerInsertedPictures> = emptySet(),
 ) : ComposerHost {
     override val hasPromptEditor: Boolean
         get() = editors.isNotEmpty()
@@ -181,6 +185,7 @@ public class BasicComposerHost(
             history = history,
             refreshHistory = vm::loadHistory,
             promptEditor = editors.firstOrNull(),
+            insertedPictures = pictures.firstOrNull(),
         )
     }
 }
@@ -207,6 +212,7 @@ public fun BasicComposer(
     history: ComposerHistoryUi = ComposerHistoryUi(),
     refreshHistory: (() -> Unit)? = null,
     promptEditor: ComposerPromptEditor? = null,
+    insertedPictures: ComposerInsertedPictures? = null,
 ) {
     if (state.readOnly != null) {
         Column(modifier) {
@@ -868,6 +874,22 @@ public fun BasicComposer(
         ) {
             chrome.rowChips()
         }
+        // S24-CHAT story 5: a picture the keyboard inserts (a GIF, a sticker, the clipboard chip) joins
+        // the draft like a picked photo; only where this agent takes pictures.
+        val takePicture: ((KitInsertedPicture) -> Unit)? =
+            insertedPictures
+                ?.takeIf { state.attachmentsSupported }
+                ?.let { reader ->
+                    { picture ->
+                        scope.launch {
+                            when (val read = reader.read(picture)) {
+                                is Outcome.Ok -> read.value.firstOrNull()?.let { actions.attachInserted(it.mime, it.bytes) }
+                                is Outcome.Failed -> actions.insertFailed(read.failure)
+                            }
+                        }
+                    }
+                }
+        KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
         // B8: Stop beside the plus while words wait for the run: the words take the whole width above them.
         KitComposerRowFit(words, leadingTargets = if (stopLeads) 2 else 1, stack = stopLeads) { stacked ->
             KitComposerBox(
@@ -1044,6 +1066,7 @@ public fun BasicComposer(
                         )
                 },
             )
+        }
         }
     }
     ModelSheet(

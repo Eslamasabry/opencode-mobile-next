@@ -133,6 +133,12 @@ public interface BasicComposerActions {
     /** Photos, camera or clipboard picture, where the platform offers them. */
     public fun attach(kind: AttachKind) {}
 
+    /** S24-CHAT story 5: a picture the keyboard inserted into the field joins the draft. */
+    public fun attachInserted(mime: String?, bytes: ByteArray) {}
+
+    /** The platform could not read an inserted picture (too large, unreadable): said on the draft's line. */
+    public fun insertFailed(failure: Failure) {}
+
     /** After a camera refusal: the app's Android settings page (E05-S01). */
     public fun openCameraSettings() {}
 }
@@ -508,14 +514,38 @@ public class BasicComposerViewModel(
     }
 
     override fun attach(kind: AttachKind) {
-        val w = world ?: return
         val source = attachSources.firstOrNull { kind in it.kinds } ?: return
+        attachWith(kind) { current -> source.attach(kind, current, conversation) }
+    }
+
+    override fun insertFailed(failure: Failure) {
+        attachmentFailure.value = failure
+    }
+
+    override fun attachInserted(mime: String?, bytes: ByteArray) {
+        if (bytes.isEmpty()) return
+        // Flutter: a text-only agent says so instead of half-attaching the picture.
+        if (world?.capabilities?.value?.promptAttachments == false) {
+            attachmentFailure.value = Failure.Unavailable(FeatureId("promptAttachments"))
+            return
+        }
+        attachWith(null) { current ->
+            attachSources.firstNotNullOfOrNull { it.attachInserted(mime, bytes, current) }
+                ?: Outcome.Failed(Failure.Unavailable(FeatureId("insertedPictures")))
+        }
+    }
+
+    private fun attachWith(
+        kind: AttachKind?,
+        pick: suspend (List<PromptAttachment>) -> Outcome<List<PromptAttachment>>,
+    ) {
+        val w = world ?: return
         if (pickingFile.value || committingFiles.value) return
         pickingFile.value = true
         val generation = w.draftGeneration
         viewModelScope.launch {
             try {
-                when (val picked = source.attach(kind, w.draft.value.attachments, conversation)) {
+                when (val picked = pick(w.draft.value.attachments)) {
                     is Outcome.Ok -> {
                         if (picked.value.isEmpty()) {
                             // A cancel changes nothing; an empty clipboard says so in plain words.
