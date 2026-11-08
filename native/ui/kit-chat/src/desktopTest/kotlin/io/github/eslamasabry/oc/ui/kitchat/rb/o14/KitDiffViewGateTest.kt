@@ -8,13 +8,16 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFile
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPosition
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFileStatus
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffLine
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffLineKind
@@ -27,12 +30,12 @@ import kotlin.test.Test
  * Every scene of test/goldens/kit/kit_diff_view_golden_test.dart: the diff filling a pushed page on `ground`
  * (kitGalleryShot, so [FlutterGoldenGate.Frame.Screen]), at 412x915 and 1280x800, plus the unified view at text 2.0.
  *
- * Mismatch: native [KitDiffView] draws one [DiffFile]; the Dart view takes the file list and draws its file header,
- * the phone's file picker and (wide) the file list pane. Each shot draws the file the Dart view opens (`initialFile`,
- * else the first) on its own.
+ * Mismatch: native [KitDiffView] draws one [DiffFile]; the Dart view takes the file list. Each shot draws the file the
+ * Dart view opens (`initialFile`, else the first) with its [KitDiffPosition] ("· 1 of 2", "Change 1 of 5"); the wide
+ * file list pane (1280x800) is not drawn.
  *
  * Mismatch: native has no "unlimited" full view: a full (reader) view is `maxLines > 12`, so the scenes without
- * `maxLines` pass [FULL]. Its line list is capped at 560 dp high instead of filling the page.
+ * `maxLines` pass [FULL]. In a bounded page the lines fill it, as in Dart.
  *
  * Mismatch: native has no `showKitDiff` (the Dart full-screen diff sheet); the matrix measures [KitDiffView] alone.
  *
@@ -149,7 +152,7 @@ class KitDiffViewGateTest {
         ).joinToString("\n")
 
     /** The Dart `_page`: the view filling the page body on `ground` (the gate's Screen frame paints the ground). */
-    private fun page(file: DiffFile, maxLines: Int = FULL, actions: Boolean = false): @Composable () -> Unit = {
+    private fun page(file: DiffFile, maxLines: Int = FULL, actions: Boolean = false, position: KitDiffPosition? = null): @Composable () -> Unit = {
         Box(Modifier.fillMaxSize()) {
             KitDiffView(
                 file,
@@ -159,11 +162,15 @@ class KitDiffViewGateTest {
                 modifier = Modifier.fillMaxWidth(),
                 onComment = if (actions) ({ _ -> }) else null, // Dart `readOnly: false` with onComment
                 onAddToPrompt = if (actions) ({ _ -> }) else null, // and onAddToPrompt: the selecting scene only
+                position = position,
             )
         }
     }
 
-    private val unified: @Composable () -> Unit get() = page(files()[0])
+    /** greeting.dart, the first of two files: four changes of the five across both (README.md has one). */
+    private val pairPosition = KitDiffPosition(fileIndex = 0, fileCount = 2, changeOffset = 0, changeTotal = 5)
+
+    private val unified: @Composable () -> Unit get() = page(files()[0], position = pairPosition)
 
     private fun shots(state: String, act: (ComposeUiTest.() -> Unit)? = null, content: @Composable () -> Unit) {
         for (suffix in listOf("", "_1280x800")) {
@@ -196,22 +203,20 @@ class KitDiffViewGateTest {
      * range from the gutter: a tap on new line 3, then on new line 5. Each of those rows is context, so its old number
      * cell comes first and the new one second.
      *
-     * Mismatch: native has no drag selection on the lines; the gutter taps stand in for it. The selection bar is
-     * native's (count, Copy lines, Comment, Add to prompt, Clear selection), not Dart's menu.
+     * Mismatch: native has no drag selection on the lines; the gutter taps stand in for it.
      */
     @Test fun selecting() {
         shots("selecting", act = {
-            onAllNodes(hasText(" 3") and hasClickAction())[1].performClick()
+            onAllNodes(hasText(" 3") and SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions))[1].performTouchInput { click() }
             waitForIdle()
-            onAllNodes(hasText(" 5") and hasClickAction())[1].performClick()
-        }, content = page(files()[0], actions = true))
+            onAllNodes(hasText(" 5") and SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions))[1].performTouchInput { click() }
+        }, content = page(files()[0], actions = true, position = pairPosition))
     }
 
     /**
      * F: test/goldens/kit/kit_diff_view_golden_test.dart:142 (`initialFile: 1`, the binary file open).
      *
-     * Mismatch: native draws nothing for a binary file (Dart: "Binary file · not shown"), and has no "Renamed from"
-     * line (Dart shows it in the wide file list and the phone's picker).
+     * Mismatch: no "Renamed from" line (Dart shows it in the wide file list and the phone's picker).
      */
     @Test fun binary_renamed() {
         val renamed =
@@ -224,30 +229,43 @@ class KitDiffViewGateTest {
                 oldPath = "lib/ui/card.dart",
             )
         val binary = DiffFile(path = "assets/logo.png", segments = persistentListOf(), added = 0, removed = 0, binary = true)
-        shots("binary_renamed", content = page(listOf(renamed, binary)[1]))
+        shots("binary_renamed", content = page(listOf(renamed, binary)[1], position = KitDiffPosition(fileIndex = 1, fileCount = 2, changeTotal = 0)))
     }
 
     /**
      * F: test/goldens/kit/kit_diff_view_golden_test.dart:172 (3,200 added lines, `maxLines: 400`, `onOpenAll`).
      *
-     * Mismatch: native has no "Showing 400 of 3200 lines" notice and no Open all action; it only cuts at 400 lines.
      */
     @Test fun too_big() {
         val strings = (1..3200).joinToString("\n") { "const s$it = 'string $it';" } // F: test/goldens/kit/kit_diff_view_golden_test.dart:178
-        shots("too_big", content = page(DiffModel.fromBeforeAfter("lib/generated/strings.dart", null, strings), maxLines = 400))
+        shots("too_big") {
+            Box(Modifier.fillMaxSize()) {
+                KitDiffView(
+                    DiffModel.fromBeforeAfter("lib/generated/strings.dart", null, strings),
+                    maxLines = 400,
+                    hunkLabel = { _, _, start, end -> "Lines $start–$end" },
+                    gapLabel = { hidden -> if (hidden == 1) "… 1 line" else "… $hidden lines" },
+                    modifier = Modifier.fillMaxWidth(),
+                    onOpenAll = {},
+                )
+            }
+        }
     }
 
     /**
-     * Mismatch: native [KitDiffView] has no loading, empty or error state (Dart: a loading placeholder;
-     * KitStateView "No changes" with the checks icon; KitStateView.error "Couldn't load the changes" with the body
-     * "The server stopped answering." and Try again). Each shot draws the view of an empty file, which is what the
-     * native part shows with no lines.
+     * F: test/goldens/kit/kit_diff_view_golden_test.dart: `loading: true`; no files ("No changes", the checks glyph);
+     * `error: 'The server stopped answering.'` with Try again.
      */
     @Test fun loading_empty_error() {
-        val none = DiffModel.fromBeforeAfter("", "", "")
-        shots("loading", content = page(none))
-        shots("empty", content = page(none))
-        shots("error", content = page(none))
+        val none = DiffFile(path = "", segments = persistentListOf(), added = 0, removed = 0)
+        val labels: Pair<(Int, Int, Int, Int) -> String, (Int) -> String> = Pair({ _, _, s, e -> "Lines $s–$e" }, { "… $it lines" })
+        shots("empty") { Box(Modifier.fillMaxSize()) { KitDiffView(none, FULL, labels.first, labels.second, Modifier.fillMaxWidth()) } }
+        shots("error") {
+            Box(Modifier.fillMaxSize()) {
+                KitDiffView(none, FULL, labels.first, labels.second, Modifier.fillMaxWidth(), error = "The server stopped answering.", onRetry = {})
+            }
+        }
+        shots("loading") { Box(Modifier.fillMaxSize()) { KitDiffView(none, FULL, labels.first, labels.second, Modifier.fillMaxWidth(), loading = true) } }
     }
 
     @Test fun matrix() {
