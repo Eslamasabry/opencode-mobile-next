@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.feature.servers.rb.o45
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
@@ -25,7 +26,7 @@ class HostSetupSheetTest {
     private fun WindowRoot(content: @Composable () -> Unit) =
         KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
             CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
-                KitSheetHost { KitScreen { content() } }
+                KitSheetHost { KitScreen (edges = KitScreenEdges.Bleed) { content() } }
             }
         }
 

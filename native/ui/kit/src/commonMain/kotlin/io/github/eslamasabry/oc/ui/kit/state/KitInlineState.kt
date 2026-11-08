@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.foundation.layout.*
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,9 +57,9 @@ public fun KitInlineState(
                     .kitMaxWidth(CapRole.State, CapAlign.Start)
                     .fillMaxWidth()
                     .padding(
-                        start = tokens.gutter.dp,
+                        start = kitPageGutter(),
                         top = tokens.gutter.dp,
-                        end = tokens.gutter.dp,
+                        end = kitPageGutter(),
                         bottom = Space.S2.dp,
                     )
         }

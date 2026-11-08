@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
 import androidx.compose.foundation.shape.CircleShape
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
@@ -151,7 +152,7 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
  */
 @Composable
 private fun SignalKey(label: String, icon: ImageVector, onClick: () -> Unit) {
-    val tokens = LocalKitTokens.current
+    val pageGutter = kitPageGutter()
     val palette = SignalPalette.forRoles(LocalKitRoles.current)
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
@@ -170,7 +171,7 @@ private fun SignalKey(label: String, icon: ImageVector, onClick: () -> Unit) {
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val wordsColor = Color(palette.inkKeyWords.v)
     BoxWithConstraints {
-        val cap: Dp = maxWidth - (tokens.gutter * 2).dp // F: lib/ui/kit/kit_floating_action.dart:75
+        val cap: Dp = maxWidth - pageGutter * 2 // F: lib/ui/kit/kit_floating_action.dart:75
         Row(
             Modifier
                 .widthIn(max = cap)
@@ -220,7 +221,7 @@ public fun KitFloatingAction(
             label = label,
             icon = icon,
             onClick = onClick ?: {},
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = tokens.gutter.dp, bottom = bottom),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = kitPageGutter(), bottom = bottom),
             visible = onClick != null,
         )
     }

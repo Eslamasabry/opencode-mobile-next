@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.image
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -295,6 +296,7 @@ public fun KitImageGallery(
                     }
                 }
             },
+            edges = KitScreenEdges.Bleed,
         ) {
             val pictureLabel = stringResource(Res.string.kitGalleryPictureLabel, index + 1, total, picture.name)
             Box(

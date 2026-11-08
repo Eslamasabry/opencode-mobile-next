@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.voice.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
             )
         },
         width = KitScreenWidth.Reading,
+        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(
             Modifier.testTag("help-tips"),

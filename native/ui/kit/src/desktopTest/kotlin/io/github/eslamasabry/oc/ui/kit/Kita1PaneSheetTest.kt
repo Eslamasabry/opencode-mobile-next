@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -59,7 +60,7 @@ class Kita1PaneSheetTest {
                                     }
                                 },
                                 detail = {
-                                    KitScreen(page = true) {
+                                    KitScreen(page = true, edges = KitScreenEdges.Bleed) {
                                         KitTappable(
                                             { calls++ },
                                             Modifier.testTag("detail-button"),

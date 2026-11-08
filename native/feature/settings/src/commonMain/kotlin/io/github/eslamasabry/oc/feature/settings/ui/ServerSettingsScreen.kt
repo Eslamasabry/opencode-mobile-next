@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -100,6 +101,7 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                 state.checking ||
                 state.working ||
                 state.modelWorking,
+        edges = KitScreenEdges.Bleed,
     ) {
         Column(
             // P-007: rows, groups and labels carry the page gutter themselves; only the free parts get it

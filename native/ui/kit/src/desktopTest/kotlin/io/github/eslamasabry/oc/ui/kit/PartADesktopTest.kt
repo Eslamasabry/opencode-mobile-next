@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -278,9 +279,11 @@ class PartADesktopTest {
             Themed {
                 KitStatusScope(conditions) {
                     InWindow(412, 915) {
-                        KitScreen(topBar = { KitTopBar(w.conversations) }, status = KitStatus(KitStatusKind.Update, "update ready")) {
+                        KitScreen(topBar = { KitTopBar(w.conversations) }, status = KitStatus(KitStatusKind.Update, "update ready"),
+                            edges = KitScreenEdges.Bleed,
+                        ) {
                             // A tab body inside the shell's screen: it contributes, it does not draw.
-                            KitScreen(status = tabStatus) { KitText("tab") }
+                            KitScreen(status = tabStatus, edges = KitScreenEdges.Bleed) { KitText("tab") }
                         }
                     }
                 }

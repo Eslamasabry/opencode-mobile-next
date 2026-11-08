@@ -550,7 +550,7 @@
     <string name="kitTurnLiveSeconds">%1$d s</string>
     <string name="e7WorkspaceYesterday">Yesterday</string>
     <string name="kitComposerRailRetry">Try again</string>
-    <string name="addServerCleartextWarning">This private network or Tailscale address uses plain HTTP. Your password and code travel unencrypted at the HTTP layer. Use it only on a private network you trust or through Tailscale; it is risky on public Wi-Fi.</string>
+    <string name="addServerCleartextWarning">This address uses plain HTTP, so your password and code are sent without encryption. Use it only on a private network you trust or through Tailscale, never on public Wi-Fi.</string>
     <string name="storageAccessAllow">Allow access to files</string>
     <string name="phoneScanGit">Git</string>
     <string name="chatsHomeAllProjects">All projects</string>

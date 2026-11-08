@@ -212,7 +212,7 @@ internal fun ViewerCodeBody(
                             (i + 1).toString(),
                             Modifier.width(gutterWidth),
                             style = mono.copy(color = colors.text3, textAlign = TextAlign.End),
-                            maxLines = 1,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                             softWrap = false,
                         )
                         Spacer(Modifier.width(Space.S2.dp))

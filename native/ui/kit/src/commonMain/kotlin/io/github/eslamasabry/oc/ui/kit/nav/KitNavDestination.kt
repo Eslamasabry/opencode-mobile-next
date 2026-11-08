@@ -120,7 +120,7 @@ internal fun NavNeedsYouBadge(count: Int, modifier: Modifier = Modifier) {
             BasicText(
                 if (count > 99) "99+" else count.toString(),
                 style = base.copy(color = colors.onAttentionFill, fontSize = target.sp, lineHeight = (target * 1.4f).sp),
-                maxLines = 1,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
     }
