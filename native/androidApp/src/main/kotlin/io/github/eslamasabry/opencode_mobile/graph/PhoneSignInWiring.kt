@@ -100,7 +100,10 @@ class NativePhoneSignIn(
     ): PhoneSignInController {
         val key = owner to agent
         val existing = controllers[key]
-        if (existing != null && !existing.retiring) {
+        if (existing != null && !existing.retiring && !existing.left) {
+            // A second screen on the same live sign-in (the first one's ViewModel is not cleared
+            // yet): it shares the controller, which retires only when the last screen leaves.
+            existing.screens++
             existing.leaveTo = onLeave
             return existing
         }
@@ -115,8 +118,10 @@ class NativePhoneSignIn(
             CoroutineScope(main.coroutineContext + SupervisorJob(main.coroutineContext[Job]))
         val controller =
             LivePhoneSignIn(owner, agent, scope, onLeave) { leaving ->
-                leaving.retiring = true
-                main.launch { drainRetired(key, leaving) }
+                if (--leaving.screens <= 0) {
+                    leaving.retiring = true
+                    main.launch { drainRetired(key, leaving) }
+                }
             }
         controllers[key] = controller
         return controller
@@ -506,6 +511,12 @@ class NativePhoneSignIn(
         /** A retired drain is running (main thread), so a retry does not start a second one. */
         var draining = false
 
+        /** Screens showing this sign-in; it retires when the last one leaves (main thread). */
+        var screens = 1
+
+        /** The person left it (Back); a new visit starts a new sign-in instead of sharing it. */
+        var left = false
+
         /** The current screen's way out (a second screen on the same sign-in takes it over). */
         var leaveTo: () -> Unit = onLeave
         private val foreground = PhoneForeground(scope)
@@ -596,7 +607,10 @@ class NativePhoneSignIn(
 
         override fun startAgain(): Unit = presenter.startAgain()
 
-        override fun leave(): Unit = presenter.leave()
+        override fun leave() {
+            left = true
+            presenter.leave()
+        }
     }
 
     private inner class PhoneForeground(private val scope: CoroutineScope) : SignInForeground {
