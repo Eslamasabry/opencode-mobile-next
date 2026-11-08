@@ -166,6 +166,15 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
 import io.github.eslamasabry.oc.ui.words.res.chatUiTimeline
 import io.github.eslamasabry.oc.ui.words.res.commandDestination
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
+import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
+import io.github.eslamasabry.oc.ui.words.res.connectionTryNow
+import io.github.eslamasabry.oc.ui.words.res.connectionTryingAgainIn
+import io.github.eslamasabry.oc.ui.words.res.connectionTryingAgainNow
+import io.github.eslamasabry.oc.ui.words.res.workServerNotAnsweringPhone
+import io.github.eslamasabry.oc.ui.words.res.workServerRestart
+import io.github.eslamasabry.oc.ui.words.res.workServerRestartBody
+import io.github.eslamasabry.oc.ui.words.res.workServerRestartTitle
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveQuestion
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
@@ -853,6 +862,7 @@ public fun ChatScreen(
                             ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
                             is ChatConfirm.UndoFrom -> actions.confirmUndo()
                             ChatConfirm.Compact -> actions.confirmCompact()
+                            ChatConfirm.RestartPhoneServer -> actions.confirmRestartPhoneServer()
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
                             is ChatConfirm.PhoneFile,
                             is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
@@ -1010,6 +1020,12 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 kind = KitConfirmKind.Discard,
                 body = stringResource(Res.string.draftLeaveMessage),
             )
+        ChatConfirm.RestartPhoneServer ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.workServerRestartTitle),
+                confirmLabel = stringResource(Res.string.workServerRestart),
+                body = stringResource(Res.string.workServerRestartBody),
+            )
         ChatConfirm.Compact ->
             KitConfirmSpec(
                 title = stringResource(Res.string.chatUiCompactConfirmTitle),
@@ -1068,30 +1084,74 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
     }
 
 /**
+ * S24-CHAT story 1 (Flutter `connectionKitStatus`): while the link tries again by itself the line
+ * says when ("trying again in 12 s") and offers Try now; this phone's server can be restarted from
+ * More. With no try scheduled, Restart (this phone) or Retry is the action.
+ */
+@Composable
+private fun connectionLine(line: ChatStatusUi, actions: ChatActions): KitStatus {
+    val offline = line.kind == ChatStatusKind.Offline
+    val seconds = line.retryInSeconds
+    val message =
+        stringResource(
+            when {
+                !offline && seconds != null -> Res.string.connectionReconnectingQuiet
+                !offline -> Res.string.chatUiOpenCodeIsReconnectingTryAgainShortly
+                line.canRestart -> Res.string.workServerNotAnsweringPhone
+                else -> Res.string.chatUiNotConnectedToTheServerRightNow
+            }
+        )
+    val restart =
+        if (line.canRestart)
+            KitLineAction(
+                stringResource(Res.string.connectionRestartPhoneServer),
+                actions::restartPhoneServer,
+                testTag = "chat-connection-restart",
+            )
+        else null
+    val id = "chat-status-${line.id}"
+    if (seconds != null)
+        return KitStatus(
+            KitStatusKind.Connection,
+            message,
+            id = id,
+            supporting =
+                if (seconds <= 0) stringResource(Res.string.connectionTryingAgainNow)
+                else stringResource(Res.string.connectionTryingAgainIn, seconds),
+            action =
+                KitLineAction(
+                    stringResource(Res.string.connectionTryNow),
+                    actions::tryLinkNow,
+                    testTag = "chat-connection-try-now",
+                ),
+            more = listOfNotNull(restart),
+        )
+    // Already reconnecting with no schedule: waiting is the way out, so nothing is offered.
+    if (!offline) return KitStatus(KitStatusKind.Connection, message, id = id)
+    val retry =
+        KitLineAction(
+            stringResource(Res.string.commonRetry),
+            actions::retryLoad,
+            testTag = "chat-offline-retry",
+        )
+    return KitStatus(
+        KitStatusKind.Connection,
+        message,
+        id = id,
+        action = restart ?: retry,
+        more = if (restart != null) listOf(retry) else emptyList(),
+    )
+}
+
+/**
  * The one status line's words (plan 09 §6.5). Only a finished action's failure may be dismissed (it
  * changes nothing).
  */
 @Composable
 private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
     when (line.kind) {
-        ChatStatusKind.Offline ->
-            KitStatus(
-                KitStatusKind.Connection,
-                stringResource(Res.string.chatUiNotConnectedToTheServerRightNow),
-                id = "chat-status-${line.id}",
-                action =
-                    KitLineAction(
-                        stringResource(Res.string.commonRetry),
-                        actions::retryLoad,
-                        testTag = "chat-offline-retry",
-                    ),
-            )
-        ChatStatusKind.Connecting ->
-            KitStatus(
-                KitStatusKind.Connection,
-                stringResource(Res.string.chatUiOpenCodeIsReconnectingTryAgainShortly),
-                id = "chat-status-${line.id}",
-            )
+        ChatStatusKind.Offline,
+        ChatStatusKind.Connecting -> connectionLine(line, actions)
         ChatStatusKind.SendFailed ->
             KitStatus(
                 KitStatusKind.Info,

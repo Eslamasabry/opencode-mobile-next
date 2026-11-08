@@ -56,10 +56,11 @@ public object StatusPick {
         rows: List<TranscriptRow>,
         actionFailure: Failure?,
         linkRefused: Boolean = false,
+        retry: LinkRetryFacts = LinkRetryFacts.None,
     ): ChatStatusUi? {
         when (link) {
-            ChatLink.Offline -> return ChatStatusUi(CONNECTION, ChatStatusKind.Offline)
-            ChatLink.Connecting -> return ChatStatusUi(CONNECTION, ChatStatusKind.Connecting)
+            ChatLink.Offline -> return retry.line(CONNECTION, ChatStatusKind.Offline)
+            ChatLink.Connecting -> return retry.line(CONNECTION, ChatStatusKind.Connecting)
             ChatLink.Live -> Unit
         }
         // The newest bubble speaks for the sends; an older failure stays on its own bubble.
@@ -474,3 +475,24 @@ public fun TranscriptRow.targetKind(): TargetKind? =
         is BlockRow -> TargetKind.Reply
         else -> if (kind == RowKind.Prompt) TargetKind.Prompt else null
     }
+
+/**
+ * S24-CHAT story 1 (Flutter `connectionKitStatus`): the link's retry schedule and whether its
+ * server runs on this phone, as the connection line reads them at [nowMs].
+ */
+public data class LinkRetryFacts(
+    val retryAtMs: Long? = null,
+    val nowMs: Long = 0,
+    val onThisPhone: Boolean = false,
+) {
+    /** Whole seconds left, rounded up (Flutter `(left.inMilliseconds / 1000).ceil()`); never below 0. */
+    public val secondsLeft: Int?
+        get() = retryAtMs?.let { at -> ((at - nowMs).coerceAtLeast(0) + 999).div(1000).toInt() }
+
+    public fun line(id: String, kind: ChatStatusKind): ChatStatusUi =
+        ChatStatusUi(id, kind, retryInSeconds = secondsLeft, canRestart = onThisPhone)
+
+    public companion object {
+        public val None: LinkRetryFacts = LinkRetryFacts()
+    }
+}

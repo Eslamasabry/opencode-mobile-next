@@ -125,6 +125,7 @@ public class GraphChatWorlds(
         emptySet(),
     private val readRecorders: Set<SessionReadRecorder> = emptySet(),
     private val readSharing: Set<ChatReadSharing> = emptySet(),
+    private val phoneServers: Set<ChatPhoneServer> = emptySet(),
 ) : ChatWorlds {
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -155,6 +156,7 @@ public class GraphChatWorlds(
                     clock,
                     readRecorders.singleOrNull(),
                     readSharing.singleOrNull(),
+                    phoneServers.singleOrNull(),
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -195,6 +197,7 @@ internal class GraphChatWorld(
     private val clock: kotlin.time.Clock? = null,
     private val readRecorder: SessionReadRecorder? = null,
     private val readSharing: ChatReadSharing? = null,
+    private val phoneServer: ChatPhoneServer? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -210,6 +213,7 @@ internal class GraphChatWorld(
     private val mutableTitle = MutableStateFlow<String?>(null)
     private val mutableCaps = MutableStateFlow(ServerCapabilities())
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
+    private val mutableRetryAt = MutableStateFlow<Long?>(null)
     private val mutablePending = MutableStateFlow<ImmutableList<PendingSend>>(persistentListOf())
     private val mutableDraft = MutableStateFlow(DraftFacts(ready = draftSession == null))
     private val mutableHistoryFailure = MutableStateFlow<Failure?>(null)
@@ -261,6 +265,18 @@ internal class GraphChatWorld(
     override val title: StateFlow<String?> = mutableTitle.asStateFlow()
     override val capabilities: StateFlow<ServerCapabilities> = mutableCaps.asStateFlow()
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
+    override val linkRetryAtMs: StateFlow<Long?> = mutableRetryAt.asStateFlow()
+
+    override fun tryLinkNow() {
+        currentAttached()?.gateway?.events?.retryNow()
+    }
+
+    override val serverOnThisPhone: Boolean
+        get() = phoneServer?.runsHere(ref.profileId) == true
+
+    override suspend fun restartPhoneServer(): Outcome<Unit> =
+        phoneServer?.takeIf { it.runsHere(ref.profileId) }?.restart(ref.profileId)
+            ?: Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
     override val pending: StateFlow<ImmutableList<PendingSend>> = mutablePending.asStateFlow()
     override val draft: StateFlow<DraftFacts> = mutableDraft.asStateFlow()
     override val models: StateFlow<ComposerModels> = mutableModels.asStateFlow()
@@ -935,6 +951,7 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     gateway.events.status.collect {
                         mutableLink.value = linkOf(it)
+                        mutableRetryAt.value = retryAtOf(it)
                         feedKeeper.link(mutableLink.value)
                         publishVoiceConversation()
                     }
@@ -2390,6 +2407,14 @@ internal class GraphChatWorld(
             }
         }
     }
+
+    /** The stream's own schedule (a real timer, kept while that try is in flight). */
+    private fun retryAtOf(s: StreamStatus): Long? =
+        when (s) {
+            is StreamStatus.Reconnecting -> s.nextAttemptAtMs
+            is StreamStatus.Disconnected -> s.nextAttemptAtMs
+            else -> null
+        }
 
     private fun linkOf(s: StreamStatus): ChatLink =
         when (s) {

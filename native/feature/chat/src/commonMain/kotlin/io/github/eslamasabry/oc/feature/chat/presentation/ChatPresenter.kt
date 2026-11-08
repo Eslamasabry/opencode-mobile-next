@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
+import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
@@ -31,12 +33,14 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -96,6 +100,7 @@ internal data class ChatInputs(
     val link: ChatLink,
     val pending: ImmutableList<PendingSend>,
     val draft: DraftFacts,
+    val retry: LinkRetryFacts = LinkRetryFacts.None,
 )
 
 /**
@@ -172,6 +177,7 @@ public class ChatPresenter(
                 }
                 .combine(world.pending) { f, p -> f to p }
                 .combine(world.draft) { (f, p), d -> ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d) }
+                .combine(retryFacts()) { i, r -> i.copy(retry = r) }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
                 syncRead()
@@ -201,7 +207,26 @@ public class ChatPresenter(
             world.link.value,
             world.pending.value,
             world.draft.value,
+            retryNow(world.linkRetryAtMs.value),
         )
+
+    /** The retry schedule at the clock's present (no countdown without a clock). */
+    private fun retryNow(at: Long?): LinkRetryFacts =
+        LinkRetryFacts(
+            retryAtMs = at.takeIf { clock != null },
+            nowMs = clock?.now()?.toEpochMilliseconds() ?: 0,
+            onThisPhone = world.serverOnThisPhone,
+        )
+
+    /** S24-CHAT: ticks once a second only while a retry is scheduled (Flutter's `_Ticker`). */
+    private fun retryFacts(): Flow<LinkRetryFacts> {
+        val c = clock ?: return world.linkRetryAtMs.map { retryNow(it) }
+        return world.linkRetryAtMs.latest { at ->
+            factTicks(c, flowOf(at != null)).map { now ->
+                LinkRetryFacts(at, now, world.serverOnThisPhone)
+            }
+        }
+    }
 
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
@@ -243,7 +268,7 @@ public class ChatPresenter(
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =
-                (if (kept != null) ChatStatusUi(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused)
+                (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
                             RECEIPT_STATUS,
@@ -373,6 +398,25 @@ public class ChatPresenter(
 
     override fun retryLoad() {
         launcher.launch { world.reload() }
+    }
+
+    override fun tryLinkNow() {
+        world.tryLinkNow()
+        if (world.load.value is ChatLoad.Failed) retryLoad()
+    }
+
+    override fun restartPhoneServer() {
+        if (!world.serverOnThisPhone) return
+        local.update { it.copy(confirm = ChatConfirm.RestartPhoneServer) }
+    }
+
+    override fun confirmRestartPhoneServer() {
+        if (local.value.confirm !is ChatConfirm.RestartPhoneServer) return
+        local.update { it.copy(confirm = null) }
+        launcher.launch {
+            val result = world.restartPhoneServer()
+            if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
+        }
     }
 
     override fun reportProblem() {

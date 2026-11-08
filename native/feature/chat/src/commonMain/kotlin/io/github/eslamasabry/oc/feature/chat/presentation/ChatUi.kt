@@ -111,6 +111,13 @@ public data class ChatStatusUi(
     val failure: Failure? = null,
     val localId: Long? = null,
     val receiptResult: ReceiptCheckResult? = null,
+    /**
+     * S24-CHAT (Flutter `countdownLine`): whole seconds until the link tries again by itself; 0 =
+     * "trying again now"; null = no try is scheduled. Only on the connection lines.
+     */
+    val retryInSeconds: Int? = null,
+    /** This conversation's server runs on this phone: the line offers Restart (after a confirm). */
+    val canRestart: Boolean = false,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
@@ -273,6 +280,12 @@ public sealed interface ChatConfirm {
 
     /** Flutter `compact` in the session menu: "Shorten this conversation?" before it runs. */
     public data object Compact : ChatConfirm
+
+    /**
+     * Flutter `confirmPhoneServerRestart`: "Restart OpenCode on this phone?" (a running turn stops;
+     * conversations are kept).
+     */
+    public data object RestartPhoneServer : ChatConfirm
 }
 
 /**
@@ -376,6 +389,14 @@ public interface ChatActions {
 
     /** The person said yes to "Shorten this conversation?". */
     public fun confirmCompact() {}
+
+    /** Flutter "Try now" on the connection line: try the link at once, and read again if needed. */
+    public fun tryLinkNow() {}
+
+    /** Flutter "Restart OpenCode" on the connection line: asks first ([ChatConfirm.RestartPhoneServer]). */
+    public fun restartPhoneServer() {}
+
+    public fun confirmRestartPhoneServer() {}
 
     /**
      * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.
