@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
+import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,18 @@ public data class SetupJourneyUi(
     val confirmStop: String? = null,
     val confirmRemoveVoice: Boolean = false,
     val storageUnopened: Boolean = false,
+    /** The Ready step can make the first project (Flutter phone_setup_ready_screen.dart). */
+    val canMakeProject: Boolean = false,
+    /** The Ready step's name field; it starts as Flutter's suggestion. */
+    val projectName: String = FirstProjectName.SUGGESTED,
+    val nameProblem: FirstProjectNameProblem? = null,
+    val creatingProject: Boolean = false,
+    /** The last Create and open did not finish: which step, and why. */
+    val projectFailure: Pair<FirstProjectStep, Failure>? = null,
+    /** The network the setup downloads over, for the ring's cost line. */
+    val transport: SetupTransport = SetupTransport.Unknown,
+    /** Notifications are allowed: "Safe to leave. We'll let you know when it's ready." */
+    val canNotify: Boolean = false,
 ) {
     val install: List<io.github.eslamasabry.oc.engine.runtime.setup.SetupComponent>
         get() = options?.let { SetupSelection.install(it, chosen, adding) }.orEmpty()
@@ -98,6 +111,15 @@ public interface SetupJourneyActions {
 
     /** Node.js cannot run on this phone (#117): send the failure as a problem report. */
     public fun reportFailure() {}
+
+    /** The Ready step's name field changed. */
+    public fun projectName(name: String) {}
+
+    /** "Create and open": the folder, then its first conversation. */
+    public fun createProject() {}
+
+    /** "Open a folder instead": the project picker, for a folder that exists. */
+    public fun openFolderInstead() {}
 }
 
 /**
@@ -109,11 +131,15 @@ public class SetupJourneyViewModel(
     @Assisted private val route: PhoneSetupRoute,
     private val source: SetupJourneySource,
     private val nav: AppNavigator,
+    private val firstProject: FirstProject = NoFirstProject(),
+    private val ringFacts: SetupRingFacts = NoSetupRingFacts(),
 ) : ViewModel(), SetupJourneyActions {
     private val customizing = route is PhoneSetupRoute.Customize
     private val adding = (route as? PhoneSetupRoute.Customize)?.adding == true
     private val mutable =
-        MutableStateFlow(SetupJourneyUi(customizing = customizing, adding = adding))
+        MutableStateFlow(
+            SetupJourneyUi(customizing = customizing, adding = adding, canMakeProject = !customizing && firstProject.available())
+        )
     public val state: StateFlow<SetupJourneyUi> = mutable.asStateFlow()
     private var reads = 0
     private var loadedOnce = false
@@ -121,7 +147,10 @@ public class SetupJourneyViewModel(
     init {
         viewModelScope.launch {
             source.progress.collect { progress ->
-                mutable.update { it.copy(progress = progress, details = source.details(progress)) }
+                mutable.update { it.copy(progress = progress, details = source.details(progress), canNotify = ringFacts.canNotify()) }
+                // Flutter `_readNetwork`: what Android answers now, read again as the setup moves on.
+                val transport = ringFacts.transport()
+                mutable.update { it.copy(transport = transport) }
             }
         }
         viewModelScope.launch {
@@ -287,6 +316,38 @@ public class SetupJourneyViewModel(
 
     override fun reportFailure() {
         nav.open(SettingsRoute.ReportProblem)
+    }
+
+    override fun projectName(name: String) {
+        if (!state.value.creatingProject) mutable.update { it.copy(projectName = name, nameProblem = null, projectFailure = null) }
+    }
+
+    override fun createProject() {
+        val s = state.value
+        if (!s.canMakeProject || s.creatingProject || s.progress.state != SetupState.Done) return
+        val problem = FirstProjectName.problem(s.projectName)
+        if (problem != null) return mutable.update { it.copy(nameProblem = problem) }
+        mutable.update { it.copy(creatingProject = true, nameProblem = null, projectFailure = null) }
+        viewModelScope.launch {
+            val made = firstProject.create(s.projectName.trim())
+            if (made is Outcome.Failed)
+                return@launch mutable.update { it.copy(creatingProject = false, projectFailure = FirstProjectStep.Create to made.failure) }
+            val opened = firstProject.open((made as Outcome.Ok).value)
+            mutable.update {
+                it.copy(creatingProject = false, projectFailure = (opened as? Outcome.Failed)?.let { f -> FirstProjectStep.Open to f.failure })
+            }
+            if (opened is Outcome.Ok) {
+                // Straight into the new project's first conversation, the setup closed beneath it.
+                nav.back()
+                nav.open(opened.value)
+            }
+        }
+    }
+
+    override fun openFolderInstead() {
+        if (state.value.creatingProject) return
+        nav.back()
+        nav.open(ProjectsRoute.Picker())
     }
 
     @AssistedFactory

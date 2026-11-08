@@ -25,6 +25,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.RingCostPart
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupRingCost
+import androidx.compose.foundation.layout.Arrangement
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.FirstProjectStep
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.FirstProjectNameProblem
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -566,8 +574,12 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         }
     val note =
         when (progress.state) {
+            // Flutter: the promise of a notification only when the app may post one.
             SetupState.Running,
-            SetupState.Idle -> stringResource(Res.string.phoneSetupRingSafeToLeaveQuiet)
+            SetupState.Idle ->
+                stringResource(
+                    if (state.canNotify) Res.string.phoneSetupRingSafeToLeave else Res.string.phoneSetupRingSafeToLeaveQuiet
+                )
             SetupState.Failed -> journeyFailure(state)
             SetupState.Interrupted,
             SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
@@ -625,36 +637,45 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                                 }
                             },
                     )
-                    if (eta != null) {
+                    val running = progress.state == SetupState.Running || progress.state == SetupState.Idle
+                    val costParts =
+                        if (!running) emptyList()
+                        else
+                            SetupRingCost.parts(
+                                eta,
+                                lastStep = rows.none { it.state == ComponentState.Pending },
+                                downloading = caption != null,
+                                transport = state.transport,
+                            )
+                    if (costParts.isNotEmpty()) {
                         Spacer(Modifier.height(Space.S6.dp))
+                        // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:284 (_costLine)
                         val cost =
-                            if (
-                                eta < 60 && rows.none { it.state == ComponentState.Pending }
-                            ) // F: lib/ui/screens/phone_setup/phone_setup_progress_screen.dart:300
-                             stringResource(Res.string.phoneSetupRingUnderMinute)
-                            else {
-                                val minutes =
-                                    (eta / 60.0)
-                                        .roundToInt()
-                                        .coerceAtLeast(
-                                            1
-                                        ) // NV: seconds to nearest whole minute, as Flutter's cost
-                                          // line
-                                org.jetbrains.compose.resources.pluralStringResource(
-                                    Res.plurals.phoneSetupRingMinutesLeft,
-                                    minutes,
-                                    minutes,
-                                )
-                            }
+                            costParts
+                                .map { part ->
+                                    when (part) {
+                                        RingCostPart.UnderMinute -> stringResource(Res.string.phoneSetupRingUnderMinute)
+                                        is RingCostPart.Minutes ->
+                                            org.jetbrains.compose.resources.pluralStringResource(
+                                                Res.plurals.phoneSetupRingMinutesLeft,
+                                                part.minutes,
+                                                part.minutes,
+                                            )
+                                        RingCostPart.Wifi -> stringResource(Res.string.phoneSetupRingWifi)
+                                        RingCostPart.MobileData -> stringResource(Res.string.phoneSetupRingMobileData)
+                                    }
+                                }
+                                .joinToString(" · ")
                         KitText(
                             cost,
+                            Modifier.testTag("phone-setup-progress-cost"),
                             role = TypeRole.RowTitle,
                             tone = TextTone.Secondary,
                             textAlign = TextAlign.Center,
                         )
                     }
                     if (note != null) {
-                        Spacer(Modifier.height(if (eta == null) Space.S6.dp else Space.S2.dp))
+                        Spacer(Modifier.height(if (costParts.isEmpty()) Space.S6.dp else Space.S2.dp))
                         KitText(
                             note,
                             Modifier.widthIn(max = 320.dp),
@@ -787,8 +808,77 @@ private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
             fullWidth = true,
             modifier = Modifier.testTag("setup-progress-continue"),
         )
+        state.progress.state == SetupState.Done && state.canMakeProject -> ReadyProject(state, actions)
         state.progress.state == SetupState.Done ->
             KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done, fullWidth = true)
+    }
+}
+
+/**
+ * The Ready step (Flutter phone_setup_ready_screen.dart): "Name your first project", one name field starting as
+ * "my-app", Create and open, and the quiet "Open a folder instead". A refused name says why under the field.
+ */
+@Composable
+private fun ReadyProject(state: SetupJourneyUi, actions: SetupJourneyActions) {
+    val name = androidx.compose.foundation.text.input.rememberTextFieldState(state.projectName)
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        KitText(stringResource(Res.string.phoneSetupReadyNameTitle), role = TypeRole.Title)
+        KitField(
+            name,
+            stringResource(Res.string.phoneSetupReadyNameLabel),
+            Modifier.testTag("phone-setup-ready-name"),
+            kind = KitFieldKind.Path,
+            helper = stringResource(Res.string.phoneSetupReadyNameHelp),
+            error =
+                state.nameProblem?.let {
+                    stringResource(
+                        when (it) {
+                            FirstProjectNameProblem.Empty -> Res.string.phoneSetupReadyNameEmpty
+                            FirstProjectNameProblem.OneFolder -> Res.string.phoneSetupReadyNameOneFolder
+                            FirstProjectNameProblem.Invalid -> Res.string.phoneSetupReadyNameInvalid
+                        }
+                    )
+                },
+            imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+            enabled = KitEnabled.of(!state.creatingProject, stringResource(Res.string.phoneSetupReadyCreating)),
+            onSubmit = actions::createProject,
+            onTextChanged = actions::projectName,
+        )
+        state.projectFailure?.let { (step, failure) ->
+            val why =
+                stringResource(
+                    when {
+                        failure is io.github.eslamasabry.oc.core.common.Failure.TimedOut -> Res.string.productErrorTimedOut
+                        io.github.eslamasabry.oc.ui.kit.state.KitErrorKind.of(failure) ==
+                            io.github.eslamasabry.oc.ui.kit.state.KitErrorKind.Network -> Res.string.phoneSetupErrorNoInternet
+                        else -> Res.string.productErrorUnknown
+                    }
+                )
+            KitErrorNotice(
+                stringResource(
+                    if (step == FirstProjectStep.Create) Res.string.phoneSetupReadyCreateFailed else Res.string.phoneSetupReadyOpenFailed,
+                    why,
+                ),
+                Modifier.testTag("phone-setup-ready-failed"),
+                failure = failure,
+            )
+        }
+        KitActionBlock(
+            primary =
+                KitAction(
+                    stringResource(Res.string.phoneSetupReadyCreateOpen),
+                    actions::createProject,
+                    working = state.creatingProject,
+                ),
+            tertiary =
+                listOf(
+                    KitAction(
+                        stringResource(Res.string.phoneSetupReadyOpenFolderInstead),
+                        actions::openFolderInstead,
+                        enabled = KitEnabled.of(!state.creatingProject, stringResource(Res.string.phoneSetupReadyCreating)),
+                    )
+                ),
+        )
     }
 }
 
