@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -603,6 +604,12 @@ public fun BasicComposer(
         val conversationRow: (@Composable (close: () -> Unit) -> Unit)? =
             if (voice == null) null
             else ({ close -> voice.Options(voiceField, Modifier.fillMaxWidth(), close) })
+        // F: chat_composer_region.dart:102-112 `_modelSettingLabel`: the model's name, else "Server default" once the
+        // server said so; nothing under "Model" while neither is known.
+        val sheetModelWords =
+            (state.models.selected?.label
+                    ?: stringResource(Res.string.composerPreviewModelDefault).takeIf { state.models.usesDefault })
+                ?.let { modelLabel(it, state.models.variant, state.models.agent) }
         ComposerToolsSheet(
             visible = toolsOpen,
             onDismiss = { toolsOpen = false },
@@ -643,6 +650,31 @@ public fun BasicComposer(
                             },
                     clearText = clearWords.takeIf { words.isNotEmpty() },
                     conversation = conversationRow,
+                    modelWords = sheetModelWords,
+                    chooseModel = {
+                        // B3: the keyboard never stays open over the picker.
+                        focusManager.clearFocus()
+                        modelsOpen = true
+                    },
+                    settings = chrome.toolsSettings,
+                    projectFile =
+                        if (state.filesAvailable) {
+                            {
+                                // The field's own "@" list names the project's files (Flutter `_PromptTool.projectFile`
+                                // picks one and inserts its mention the same way).
+                                val text = field.text.toString()
+                                val lead = if (text.isEmpty() || text.last().isWhitespace()) "@" else " @"
+                                val next = text + lead
+                                field.edit {
+                                    replace(0, length, next)
+                                    placeCursorAtEnd()
+                                }
+                                editor.userEditSerial += 1
+                                editor.lastReported = next
+                                actions.draftChanged(next)
+                                focus.requestFocus()
+                            }
+                        } else null,
                 ),
         )
         voice?.Panel(voiceField, Modifier.fillMaxWidth())

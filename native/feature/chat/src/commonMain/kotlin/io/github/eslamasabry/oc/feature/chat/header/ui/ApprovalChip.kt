@@ -16,6 +16,9 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -27,8 +30,11 @@ import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingBody
 import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeEverythingTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeMenuLabel
+import io.github.eslamasabry.oc.ui.words.res.approvalModeSettings
 import io.github.eslamasabry.oc.ui.words.res.chatChipAutoApproveOn
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderApprovalSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprove
+import io.github.eslamasabry.oc.ui.words.res.composerSettingApprovalDetail
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import org.jetbrains.compose.resources.stringResource
 
@@ -101,6 +107,35 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
                 onDismiss = actions::dismissApprovalFailure,
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
+        },
+    )
+}
+
+/**
+ * The approval rows at the top of the composer's "Prompt tools" sheet (Flutter `_composerSettings`,
+ * chat_composer_region.dart:134-160): Auto-approve as a switch (on while an automatic mode answers, approvals_sheet.dart
+ * `_AutoApproveSwitchRow`), then "Approval settings…", which closes the sheet and opens the three modes. Nothing where
+ * the server never asks.
+ */
+@Composable
+public fun ApprovalToolsRows(slot: ApprovalChipSlot, close: () -> Unit) {
+    val state = slot.state
+    if (!state.offered) return
+    KitSwitchRow(
+        title = stringResource(Res.string.chatStripAutoApprove),
+        checked = state.choice != ApprovalChoice.Ask,
+        modifier = Modifier.testTag("composer-setting-approval"),
+        supporting = stringResource(Res.string.composerSettingApprovalDetail),
+        leading = KitRowLeading.Glyph(KitIcons.shield),
+        onCheckedChange = { on -> slot.actions.chooseApproval(if (on) ApprovalChoice.Auto else ApprovalChoice.Ask) },
+    )
+    KitRow(
+        title = stringResource(Res.string.approvalModeSettings),
+        modifier = Modifier.testTag("composer-setting-approval-settings"),
+        leading = KitRowLeading.Glyph(KitIcons.permissions),
+        onClick = {
+            close()
+            slot.actions.openApprovalMenu()
         },
     )
 }

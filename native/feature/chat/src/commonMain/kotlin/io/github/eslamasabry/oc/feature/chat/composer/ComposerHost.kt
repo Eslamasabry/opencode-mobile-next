@@ -66,6 +66,11 @@ public class ComposerChrome(
      * Never a new bar.
      */
     public val rowChips: @Composable () -> Unit = {},
+    /**
+     * This conversation's own settings another part puts at the top of the "Prompt tools" sheet, under the model
+     * (Flutter `_composerSettings`: Auto-approve, Approval settings…); [close] closes the sheet.
+     */
+    public val toolsSettings: @Composable (close: () -> Unit) -> Unit = {},
     public val freeModel: () -> Boolean = { false },
     public val agentName: () -> String = { "OpenCode" },
     /** An error card's "Choose another model" asks the composer to open its model list once. */

@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalToolsRows
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
@@ -377,6 +378,7 @@ public fun ChatScreen(
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
                 rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
+                toolsSettings = { close -> headerState?.approval?.let { ApprovalToolsRows(it, close) } },
                 freeModel = { headerState?.state?.freeModel == true },
                 agentName = { headerState?.state?.agentName ?: "OpenCode" },
                 openCommands =

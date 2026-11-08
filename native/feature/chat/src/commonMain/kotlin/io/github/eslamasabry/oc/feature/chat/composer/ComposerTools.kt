@@ -27,12 +27,15 @@ import io.github.eslamasabry.oc.ui.words.res.composerClearTextSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
 import io.github.eslamasabry.oc.ui.words.res.composerReuseSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerReuseTitle
+import io.github.eslamasabry.oc.ui.words.res.composerSettingModel
 import io.github.eslamasabry.oc.ui.words.res.composerToolCommandsTitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolSavedSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolsAgentPicturesOnly
 import io.github.eslamasabry.oc.ui.words.res.composerToolsMore
 import io.github.eslamasabry.oc.ui.words.res.composerToolsTextOnly
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.mentionToolSupporting
+import io.github.eslamasabry.oc.ui.words.res.mentionToolTitle
 import io.github.eslamasabry.oc.ui.words.res.photoCameraAction
 import io.github.eslamasabry.oc.ui.words.res.photoLibraryAction
 import io.github.eslamasabry.oc.ui.words.res.photoLibraryDescription
@@ -90,6 +93,13 @@ internal class ComposerToolsChoices(
     val clearText: (() -> Unit)?,
     /** The voice slot's own "Voice conversation" row (`KitComposerVoice.Options`); it closes the list itself. */
     val conversation: (@Composable (close: () -> Unit) -> Unit)?,
+    /** The model's words ("Server default", a model's name) and its picker: the sheet's first row. */
+    val modelWords: String? = null,
+    val chooseModel: (() -> Unit)? = null,
+    /** The chat's own settings under the model (Auto-approve, Approval settings…); they close the list themselves. */
+    val settings: (@Composable (close: () -> Unit) -> Unit)? = null,
+    /** "File from the project": starts an `@` mention in the field (the project's file list follows). */
+    val projectFile: (() -> Unit)? = null,
 )
 
 /**
@@ -119,7 +129,35 @@ internal fun ComposerToolsSheet(visible: Boolean, choices: ComposerToolsChoices,
 private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, close: () -> Unit) {
     val state = choices.state
     val blocked = choices.blockedReason
+    // F: composer_tools.dart:129-146: the conversation's own settings first, in a group of their own.
+    val chooseModel = choices.chooseModel
+    if (chooseModel != null || choices.settings != null)
+        KitRowGroup {
+            chooseModel?.let { choose ->
+                KitRow(
+                    title = stringResource(Res.string.composerSettingModel),
+                    supporting = choices.modelWords?.takeIf { it.isNotEmpty() },
+                    supportingMaxLines = 2,
+                    leading = KitRowLeading.Glyph(KitIcons.model),
+                    onClick = { run(choose) },
+                    modifier = Modifier.testTag("composer-setting-model"),
+                )
+            }
+            choices.settings?.invoke(close)
+        }
     KitRowGroup {
+        // F: composer_tools.dart:150-158: pointing at a project file uploads nothing, so it stays live while a
+        // reply runs.
+        choices.projectFile?.let { mention ->
+            KitRow(
+                title = stringResource(Res.string.mentionToolTitle),
+                supporting = stringResource(Res.string.mentionToolSupporting),
+                supportingMaxLines = 2,
+                leading = KitRowLeading.Glyph(KitIcons.fileText),
+                onClick = { run(mention) },
+                modifier = Modifier.testTag("composer-tool-project-file"),
+            )
+        }
         if (TrayItem.File !in choices.inTray) {
             val attach = choices.attach
             if (state.attachmentsSupported && !state.imagesOnly && attach != null)
