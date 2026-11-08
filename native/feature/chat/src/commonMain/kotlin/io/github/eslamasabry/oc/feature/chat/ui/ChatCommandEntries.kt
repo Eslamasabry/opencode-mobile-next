@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.header.ui.rememberTranscriptActs
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPlace
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
@@ -111,7 +112,6 @@ internal fun rememberChatCommandEntries(
     header: ChatHeaderSlot? = null,
     onContext: (() -> Unit)? = null,
     onEditor: (() -> Unit)? = null,
-    onExport: (() -> Unit)? = null,
 ): List<ChatCommandEntry> {
     val navigate = stringResource(Res.string.chatUiNavigate)
     val current = stringResource(Res.string.chatUiCurrentSession)
@@ -178,6 +178,7 @@ internal fun rememberChatCommandEntries(
             note = stringResource(Res.string.sessionNoteTitle) to stringResource(Res.string.commandSheetNoteDescription),
             approvals = stringResource(Res.string.approvalsUiMenu) to stringResource(Res.string.commandSheetApprovalsDescription),
         )
+    val transcript = header?.let { rememberTranscriptActs(it.actions) }
     val hasPrompt = state.rows.any { it is io.github.eslamasabry.oc.engine.transcript.state.PromptRow }
     return buildList {
         add(
@@ -227,10 +228,10 @@ internal fun rememberChatCommandEntries(
             add(more.entry("unshare", more.unshare, current, KitIcons.unlink, emptyList(), choose(HeaderAction.Unshare)))
         if (HeaderAction.Fork in menu && hasPrompt)
             add(more.entry("fork", more.fork, current, KitIcons.swap, emptyList(), choose(HeaderAction.Fork)))
-        if (HeaderAction.CopyTranscript in menu)
-            add(more.entry("copy", more.copy, current, KitIcons.copy, emptyList(), choose(HeaderAction.CopyTranscript)))
-        if (onExport != null)
-            add(more.entry("export", more.export, current, KitIcons.download, emptyList(), onExport))
+        if (HeaderAction.CopyTranscript in menu && transcript != null)
+            add(more.entry("copy", more.copy, current, KitIcons.copy, emptyList(), transcript.copy))
+        if (HeaderAction.ExportTranscript in menu && transcript != null)
+            add(more.entry("export", more.export, current, KitIcons.download, emptyList(), transcript.export))
         header?.noteActions?.let { note ->
             add(more.entry("note", more.note, current, KitIcons.edit, emptyList(), note::openNote))
         }

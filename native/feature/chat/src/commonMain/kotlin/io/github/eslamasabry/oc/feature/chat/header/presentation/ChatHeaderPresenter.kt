@@ -41,6 +41,7 @@ internal data class HeaderLocal(
     val working: HeaderAction? = null,
     val failure: HeaderFailure? = null,
     val clip: HeaderClip? = null,
+    val saved: Long? = null,
     val renaming: String? = null,
     /**
      * A rename the server acknowledged before its event arrived: shown until the server says
@@ -90,6 +91,7 @@ public class ChatHeaderPresenter(
     private val agentHandoffs:
         io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? =
         null,
+    private val export: io.github.eslamasabry.oc.feature.chat.header.world.TranscriptExport? = null,
 ) : ChatHeaderActions, ChatAgentHandoffActions {
     private val local = MutableStateFlow(HeaderLocal())
     private var nextId = 1L
@@ -239,7 +241,12 @@ public class ChatHeaderPresenter(
             serverName = facts.serverName,
             projectName = project,
             menu =
-                HeaderRules.menu(caps, shared = facts.shareUrl != null, directory = facts.directory)
+                HeaderRules.menu(
+                        caps,
+                        shared = facts.shareUrl != null,
+                        directory = facts.directory,
+                        canExport = export != null,
+                    )
                     .filter {
                         world.readOnly.value == null ||
                             it in
@@ -257,6 +264,7 @@ public class ChatHeaderPresenter(
             working = l.working,
             failure = l.failure,
             clip = l.clip,
+            saved = l.saved,
             renaming = l.renaming,
             agentName =
                 if (caps.hostAgentProviders)
@@ -356,6 +364,7 @@ public class ChatHeaderPresenter(
                 if (world.models.value.choices.isEmpty()) loadModels()
             }
             HeaderAction.CopyTranscript -> Unit // needs the person's words: [copyTranscript]
+            HeaderAction.ExportTranscript -> Unit // needs the person's words: [exportTranscript]
             HeaderAction.Share -> {
                 if (world.capabilities.value.sessionShare && local.value.working == null) {
                     local.update { it.copy(confirm = HeaderConfirm.Share) }
@@ -419,6 +428,38 @@ public class ChatHeaderPresenter(
     }
 
     /** Copy transcript with the person's own words for the headings. */
+    override fun exportTranscript(words: TranscriptWords, mask: (String) -> String) {
+        val saver = export ?: return
+        local.update { it.copy(menuOpen = false) }
+        val text = transcriptText(words, mask)
+        val sid = world.ref.sessionId.raw
+        // Flutter's name: `opencode-<first 8 of the session id>.md`.
+        val name = "opencode-${sid.take(8)}.md"
+        run(HeaderAction.ExportTranscript) {
+            when (val saved = saver.saveMarkdown(name, text)) {
+                is Outcome.Ok -> {
+                    if (saved.value) local.update { it.copy(saved = nextId++) }
+                    Outcome.Ok(Unit)
+                }
+                is Outcome.Failed -> saved
+            }
+        }
+    }
+
+    private fun transcriptText(words: TranscriptWords, mask: (String) -> String): String {
+        val messages = (world as? TurnFeedSource)?.turnFeed?.value?.ledger?.messages.orEmpty()
+        return if (messages.isNotEmpty())
+            TranscriptCopy.markdownOf(titleNow(), messages, words, world.hasOlder.value, mask)
+        else
+            TranscriptCopy.markdown(
+                title = titleNow(),
+                rows = world.transcript.value.rows,
+                words = words,
+                partial = world.hasOlder.value,
+                mask = mask,
+            )
+    }
+
     override fun copyTranscript(words: TranscriptWords, mask: (String) -> String) {
         local.update { it.copy(menuOpen = false) }
         // E15-S06: every piece, the person's own prompts included, goes through the app's one redactor; whether it

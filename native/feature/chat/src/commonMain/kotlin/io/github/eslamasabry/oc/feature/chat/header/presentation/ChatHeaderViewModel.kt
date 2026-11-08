@@ -42,6 +42,7 @@ public class ChatHeaderViewModel(
     clock: Clock,
     handoffs: Set<io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoffs> =
         emptySet(),
+    exports: Set<io.github.eslamasabry.oc.feature.chat.header.world.TranscriptExport> = emptySet(),
 ) : ViewModel(), ChatHeaderActions, ChatAgentHandoffActions, ApprovalChipActions {
     private val world = worlds.open(route.ref)
     private val port = ports.open(route.ref)
@@ -55,6 +56,7 @@ public class ChatHeaderViewModel(
             freeNoteStores.singleOrNull(),
             handoffSources.singleOrNull(),
             handoffs.singleOrNull()?.open(route.ref),
+            exports.singleOrNull(),
         )
     private val approvals =
         ApprovalPresenter(
@@ -101,6 +103,9 @@ public class ChatHeaderViewModel(
 
     override fun copyTranscript(words: TranscriptWords, mask: (String) -> String): Unit =
         presenter.copyTranscript(words, mask)
+
+    override fun exportTranscript(words: TranscriptWords, mask: (String) -> String): Unit =
+        presenter.exportTranscript(words, mask)
 
     override fun renameRequested(): Unit = presenter.renameRequested()
 
