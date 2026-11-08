@@ -35,17 +35,14 @@ public data class SettingsUi(
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
     val capabilities: ServerCapabilitiesUi? = null,
-    /** Report a problem's preview; null until the page opens. */
+    /** Help › Report a problem (R1); null until the page opens. */
     val report: ReportUi? = null,
-    /** B-190: Help › Send a problem report's stage; null while the page is closed. */
-    val sendReport: SendReportUi? = null,
     /** B-190: About's "Report code"; null in a build without the vendor. */
     val reportCode: String? = null,
     val reportDescription: String = "",
     val phraseChips: Boolean = true,
     val focusedRow: SettingsRowId? = null,
     val focusedAnchor: String? = null,
-    val crash: CrashUi? = null,
     val localModels: LocalModelStorageFacts? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
@@ -320,20 +317,10 @@ public enum class SettingsNote {
     ConsentNotSaved,
     TestNotSent,
     UpdateFailed,
-    ReportCopied,
     LicenseCopied,
     LicenseCopyFailed,
-    ShareFailed,
-}
-
-/** Report a problem's preview (B-SEC-060: the exact safe text that is shared). */
-public sealed interface ReportUi {
-    public data object Loading : ReportUi
-
-    public data class Ready(val text: String) : ReportUi
-
-    /** The report could not be built: a plain line and Try again, never the reason's text. */
-    public data object Failed : ReportUi
+    /** Report a problem › Post publicly on GitHub: the form could not be opened. */
+    GitHubFailed,
 }
 
 /** A built-in walkthrough step. Strings and glyphs are resolved only by the screen. */

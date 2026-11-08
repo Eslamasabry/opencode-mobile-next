@@ -94,8 +94,6 @@ class SettingsReachTest {
                 phraseChips = true,
                 transcriptDisplay = true,
                 opens = null,
-                // B-190: a build with the telemetry vendor (Send a problem report).
-                problemReport = true,
             )
         assertEquals(SettingsRowId.entries.toSet(), SettingsStructure.searchable(all).toSet())
     }

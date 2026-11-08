@@ -88,27 +88,19 @@ public interface UpdateSettings {
 }
 
 /**
- * Report a problem (plan 07 I18, B-SEC-041): the report is generated lines and already-redacted
- * entries only, never raw exception text, server addresses or credentials. Nothing leaves the phone
- * until the person copies or shares it.
+ * Report a problem's public path and the clipboard (plan 07 I18, B-SEC-041): the GitHub issue form, built by the host
+ * with no address, name or credential, and opened through the external-link policy; nothing is filed until the person
+ * submits it there.
  */
 public interface DiagnosticsExport {
-    /** The report exactly as it will be copied or shared. */
-    public suspend fun report(): Outcome<String>
-
-    /** The same preview with the person's in-memory description. */
-    public suspend fun report(description: String): Outcome<String> = report()
-
     /** Drops the in-memory attachment when the report page closes. */
     public fun endReport() {}
 
-    /** Opens the reviewed draft in the issue form; does not submit it. */
+    /** Opens the issue form with the person's [description]; does not submit it. */
     public suspend fun send(description: String): Outcome<Unit> =
         Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Device())
 
     public suspend fun copy(text: String): Outcome<Unit>
-
-    public suspend fun share(text: String): Outcome<Unit>
 }
 
 /**

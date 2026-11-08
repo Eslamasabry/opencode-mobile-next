@@ -342,6 +342,12 @@ internal class AndroidHealthPlatform(
 
     override val declaredBuildKind: String? = null
 
+    override val appBuild: String
+        get() = buildInfo.versionCode.toString()
+
+    override val osRelease: String
+        get() = Build.VERSION.RELEASE.orEmpty()
+
     override fun coldStartMs(): Long? = coldStart()
 
     @Suppress("TooGenericExceptionCaught")

@@ -23,7 +23,7 @@ class VerbatimCopyReviewTest {
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/header/KitChatHeaderParts.kt" to
                 (1 to "KitClipboardEffect: the chat header masks everything but the person's own prompts first"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt" to
-                (1 to "the problem report text, already built from scrubbed diagnostics facts"),
+                (1 to "DiagnosticsExport.copy: the bundled voice licence text (an app asset), never server text"),
             // Dart twin: lib/ui/kit/kit_terminal_view.dart `_KitTerminalOscHost` (redact: false, reviewed in
             // test/redaction_test.dart). Masking here would corrupt a copy the person's own program made on purpose.
             "android/terminal/src/main/kotlin/io/github/eslamasabry/oc/android/terminal/TerminalSurfaceHost.kt" to
@@ -36,13 +36,10 @@ class VerbatimCopyReviewTest {
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/DiagnosticsAttentionWiring.kt" to
                 (2 to "the problem report, built by ProblemReports.scrub with events masked by redact and opaqueTokens; " +
                     "the crash share sheet sends the CrashReportBuilder preview the person saw"),
-            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/CrashWiring.kt" to
-                (1 to "shares the crash report preview the person consented to, built from scrubbed crash evidence"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/MigrationWiring.kt" to
                 (1 to "shares the app's own category-only update report (app, step id, failure class; no path or value)"),
             "android/platform/src/main/kotlin/io/github/eslamasabry/oc/android/platform/AndroidShareService.kt" to
-                (1 to "shareText: its one caller (SettingsWiring.sendText) passes the scrubbed problem report or the " +
-                    "app's own share message"),
+                (1 to "shareText: its one caller (SettingsWiring.sendText) passes the app's own share message"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/HandoffDraftWiring.kt" to
                 (1 to "handoff markdown from HandoffRecordBuilder, which masks every piece with redact and opaqueTokens"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/IncomingShare.kt" to
@@ -61,8 +58,6 @@ class VerbatimCopyReviewTest {
                 (1 to "the person's own terminal selection or transcript (Dart kit_terminal_view.dart, verbatim there too)"),
             "feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/tools/ui/ToolsScreen.kt" to
                 (1 to "the tool parameter schema after KitRedact.text"),
-            "feature/diagnostics/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/diagnostics/ui/KeptScreen.kt" to
-                (2 to "Diagnostics.reportText and PerfTrace.reportText, both built from fields scrubbed when stored"),
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffView.kt" to
                 (1 to "selected lines of the person's own diff (Dart kit_diff_view.dart, verbatim there too)"),
             "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/log/KitLogPanel.kt" to

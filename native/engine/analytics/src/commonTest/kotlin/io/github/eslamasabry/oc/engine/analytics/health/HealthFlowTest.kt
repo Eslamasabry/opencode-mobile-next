@@ -78,6 +78,21 @@ class HealthFlowTest {
     }
 
     @Test
+    fun `B-190-034 a failed connect or send is counted on this phone for a problem report, with nothing agreed`() = runTest {
+        val vendor = RecordingVendor()
+        val flow = live(vendor, usage = false, crashes = false)
+        flow.connAttempt("computer", ok = false, elapsedMs = 12_000, failure = Failure.TimedOut())
+        flow.connAttempt("computer", ok = true, elapsedMs = 300)
+        flow.sendResult("fail", Failure.Rejected(401))
+        flow.sendResult("ok", firstReplyMs = 900)
+        assertEquals(
+            listOf(ReportProblem("timeout", 1), ReportProblem("auth", 1)),
+            ProblemTally.count(AppTelemetry.current.ring.lines()),
+        )
+        assertTrue(vendor.events.isEmpty() && vendor.reports.isEmpty(), "counting sends nothing")
+    }
+
+    @Test
     fun `B-190-023 each flow produces its event and its trace with fixed attributes`() = runTest {
         val vendor = RecordingVendor()
         val flow = live(vendor)

@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
@@ -45,6 +47,8 @@ internal fun TranscriptDetail(
     reply: ReplyActions?,
     onCompactAgain: (() -> Unit)?,
     onOpenSession: ((String) -> Unit)?,
+    /** A thought the agent is still writing: its line reads "Thinking…" (Flutter `_Reasoning.working`). */
+    thinking: Boolean = false,
 ) {
     val part = detail.part
     val key = detail.key
@@ -139,19 +143,32 @@ internal fun TranscriptDetail(
             folds.open.remove(key)
             folds.open[defaultKey] = reasoningExpanded
         }
-        val thoughtTitle = plain.lineSequence().first().trim()
+        // Flutter `_Reasoning` (transcript_rows.dart:651-723): the line is the thought's first line ("Thinking…" while
+        // it is still being written) and the body is the thought in the secondary size and tone. The opened body starts
+        // after that first line, so an opened thought never says its first line twice (owner, 2026-11-09: grey line,
+        // then the same words again in white).
+        val firstLine = plain.lineSequence().first { it.isNotBlank() }.trim()
+        val thoughtTitle = if (thinking) stringResource(Res.string.kitMessageThinking) else firstLine
+        val body = if (thinking) part.text else thoughtBody(part.text)
         val open = folds.open[key] ?: reasoningExpanded
+        val bodyPart: @Composable () -> Unit = { DetailMarkdown(key, body, reply, thought = true) }
         // On an opened work line's rail a thought is one line like every step: a dot, its words, no chevron (Flutter
-        // `_Fold` on a timeline); anywhere else it keeps its row with the kit's chevron.
-        if (kitOnStepRail())
+        // `_Fold` on a timeline); anywhere else it keeps its row with the kit's chevron. A one-line thought has nothing
+        // more to open: it is its line alone.
+        if (body.isBlank())
+            if (kitOnStepRail())
+                KitStepSentence(Modifier.testTag("assistant-reasoning-block")) {
+                    KitText(thoughtTitle, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                }
+            else KitQuietLine(thoughtTitle, Modifier.testTag("assistant-reasoning-block"))
+        else if (kitOnStepRail())
             KitStepFold(
                 title = thoughtTitle,
                 expanded = open,
                 onToggle = { folds.open[key] = !open },
                 modifier = Modifier.testTag("assistant-reasoning-block"),
-            ) {
-                DetailMarkdown(key, part.text, reply)
-            }
+                body = bodyPart,
+            )
         else
             KitExpandRow(
                 // The whole first line, cut by the layout with an ellipsis (a character count cut words in half).
@@ -161,7 +178,7 @@ internal fun TranscriptDetail(
                 onExpandedChange = { folds.open[key] = it },
                 modifier = Modifier.testTag("assistant-reasoning-block"),
             ) {
-                DetailMarkdown(key, part.text, reply)
+                bodyPart()
             }
         return
     }
@@ -274,9 +291,22 @@ private fun ExpandNotice(
 }
 
 @Composable
-private fun DetailMarkdown(key: String, text: String, reply: ReplyActions?) {
+private fun DetailMarkdown(key: String, text: String, reply: ReplyActions?, thought: Boolean = false) {
     val blocks = remember(key, text) { KitMdSource.blocks(key, text, streaming = false) }
-    KitMarkdown(blocks, reply?.markdown ?: KitMarkdownActions(onLink = {}))
+    // F: transcript_turns.dart:246-257 a thought is prose in the secondary size and tone, never the reply's ink.
+    KitMarkdown(
+        blocks,
+        reply?.markdown ?: KitMarkdownActions(onLink = {}),
+        role = if (thought) TypeRole.Secondary else TypeRole.Body,
+    )
+}
+
+/** A thought without its first line (that line is the fold's title), leading blank lines dropped. */
+internal fun thoughtBody(text: String): String {
+    val lines = text.trim().lines()
+    val first = lines.indexOfFirst { it.isNotBlank() }
+    if (first < 0) return ""
+    return lines.drop(first + 1).joinToString("\n").trim()
 }
 
 @Composable

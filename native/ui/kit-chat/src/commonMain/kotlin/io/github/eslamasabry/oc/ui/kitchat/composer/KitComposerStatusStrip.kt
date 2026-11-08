@@ -5,7 +5,16 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -65,9 +74,22 @@ public fun KitComposerStatusStrip(
                 }
             }
         }
-        stop?.let {
-            Spacer(Modifier.width(Space.S2.dp))
-            it()
+        // F: kit_composer_status_strip.dart:101-112 the Stop fades in and out at the trailing edge (KitSwap); the line
+        // keeps its place. Off is instant. The leaving Stop stays drawn while it fades.
+        val held = remember { arrayOfNulls<@Composable () -> Unit>(1) }
+        if (stop != null) held[0] = stop
+        val motion = KitMotion.state
+        val specs = KitMotion.specs
+        AnimatedVisibility(
+            visible = stop != null,
+            enter = if (motion.reduced) EnterTransition.None else fadeIn(specs.quick()) + expandHorizontally(specs.quick()),
+            exit = if (motion.reduced) ExitTransition.None else fadeOut(specs.quick()) + shrinkHorizontally(specs.quick()),
+            label = "composer-stop",
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.width(Space.S2.dp))
+                (stop ?: held[0])?.invoke()
+            }
         }
     }
 }

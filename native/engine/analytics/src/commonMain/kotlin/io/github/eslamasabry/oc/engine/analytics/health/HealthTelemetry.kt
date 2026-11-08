@@ -60,6 +60,14 @@ public interface HealthPlatform {
 
     /** The declared build kind (`ci`, `local`), or null to say store or sideload from the installer. */
     public val declaredBuildKind: String?
+
+    /** This app's build number (`57`), for the problem report. */
+    public val appBuild: String
+        get() = ""
+
+    /** Android's release (`15`), for the problem report. */
+    public val osRelease: String
+        get() = ""
 }
 
 /** Where the newest reported process end is kept (`oc.telemetry.lastExitAt`, Flutter's key). */

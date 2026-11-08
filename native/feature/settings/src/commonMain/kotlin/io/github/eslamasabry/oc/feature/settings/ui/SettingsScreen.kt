@@ -40,7 +40,6 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
-import io.github.eslamasabry.oc.ui.words.res.sendReportTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
@@ -300,21 +299,7 @@ public fun SettingsScreen(
             ) {
                 state.localModels?.let { LocalModelsBody(it, actions) }
             }
-        SettingsPage.ReportProblem ->
-            SettingsFrame(
-                stringResource(Res.string.kitReportProblem),
-                back,
-                state,
-                actions,
-                modifier,
-            ) {
-                ReportBody(state.report, actions, state.reportDescription)
-                state.crash?.let { CrashBody(it, actions) }
-            }
-        SettingsPage.SendProblemReport ->
-            SettingsFrame(stringResource(Res.string.sendReportTitle), back, state, actions, modifier) {
-                SendProblemReportBody(state.sendReport, actions, onDone = back)
-            }
+        SettingsPage.ReportProblem -> ReportProblemPage(state, actions, back, modifier)
         is SettingsPage.QuietTime ->
             SettingsFrame(
                 stringResource(

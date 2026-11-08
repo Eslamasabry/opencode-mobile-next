@@ -44,6 +44,6 @@ class ScreenGutterGateTest {
         val BLEED = Regex("""\bedges\s*=\s*KitScreenEdges\.Bleed\b""")
 
         /** The screens marked Bleed when the frame took the gutter (2026-11-09). Lower it as screens move over. */
-        const val BLEED_CEILING = 124
+        const val BLEED_CEILING = 123
     }
 }

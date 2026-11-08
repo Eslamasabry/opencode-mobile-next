@@ -59,6 +59,7 @@ class CountsArePluralsTest {
         // percent (20)
         "account40PercentUsed" to PERCENT, "agentAccountPercentUsed" to PERCENT, "agentCardProgressValue" to PERCENT,
         "e7VoiceUiDownloadPercent" to PERCENT, "languagePickerPartlyTranslated" to PERCENT,
+        "voiceDownloadProgressPercent" to PERCENT,
         "m40PlansAlertAt" to PERCENT, "m40PlansLeft" to PERCENT, "m40UsageSameAsOthers" to PERCENT,
         "phoneSetupStartProgressHeadline" to PERCENT,
         "setupProgressViewPercent" to PERCENT, "stateContextUsage" to PERCENT, "statePlansThreshold" to PERCENT,
@@ -139,6 +140,8 @@ class CountsArePluralsTest {
         "navProjectChangesCount" to LABEL, "servicesExit" to LABEL, "terminal40Details" to LABEL,
         // no noun to agree with (48)
         "agentElsewhereCounts" to NO_NOUN, "agentProjectLineChanges" to NO_NOUN, "chatsFilterRunningCount" to NO_NOUN,
+        // The Running chip's tally ("Running · 2"), as chatsFilterRunningCount.
+        "chatsHomeRunningCount" to NO_NOUN,
         "chatsReturnBriefMore" to NO_NOUN, "e7SharedDetail726" to NO_NOUN, "e7SharedDetail754" to NO_NOUN,
         "e7SharedDetail755" to NO_NOUN, "e7SharedDetail756" to NO_NOUN, "fbMemoryFromFactsBook" to NO_NOUN,
         "fbNeedsYouWaiting" to NO_NOUN, "fbRuleWeek" to NO_NOUN, "folderBrowserHintMore" to NO_NOUN,

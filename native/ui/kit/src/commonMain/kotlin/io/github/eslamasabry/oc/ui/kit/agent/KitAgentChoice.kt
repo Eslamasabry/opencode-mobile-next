@@ -213,15 +213,27 @@ private fun Words(text: String, role: TypeRole, tone: TextTone, maxLines: Int, i
     }
 }
 
-/** The agent's monochrome mark scaled to fill [box], or the terminal glyph while it has none. */
+/**
+ * The agent's monochrome mark scaled to fill [box], or the terminal glyph while it has none. With [monogram], an agent
+ * whose mark is missing (no slug, or a load that found none) shows that letter on a neutral face instead: never an empty
+ * box (owner 2026-11-08). While the mark is still loading the box stays empty, so a real mark never flashes a letter.
+ */
 @Composable
-private fun AgentMark(slug: String, tint: Color, box: Dp) {
+internal fun AgentMark(slug: String, tint: Color, box: Dp, monogram: String? = null) {
     val loader = LocalKitLogoLoader.current
     val platform = LocalKitPlatform.current
     var svg by remember(slug, loader) { mutableStateOf<String?>(null) }
-    if (slug.isNotEmpty()) LaunchedEffect(slug, loader) { svg = KitProviderLogoRules.load(loader, slug, agent = true) }
+    var looked by remember(slug, loader) { mutableStateOf(slug.isEmpty()) }
+    if (slug.isNotEmpty()) LaunchedEffect(slug, loader) {
+        svg = KitProviderLogoRules.load(loader, slug, agent = true)
+        looked = true
+    }
     val pixels = with(LocalDensity.current) { box.roundToPx() }.coerceIn(1, 256) // NV: the platform SVG decoder's pixel range (KitPlatform.svgPainter)
     val painter = remember(svg, platform, pixels) { svg?.let { platform.svgPainter(it, pixels) } }
+    if (monogram != null && painter == null && looked) {
+        AgentMonogram(monogram, box)
+        return
+    }
     val shown = painter ?: if (slug.isEmpty()) rememberVectorPainter(KitIcons.terminal) else null
     // Dart KitIcon.mark: the picture is 0.84 of its square, centred; FittedBox scales that square to the box.
     val drawn = box * 0.84f // F: lib/ui/kit/kit_icon.dart:252
@@ -229,6 +241,21 @@ private fun AgentMark(slug: String, tint: Color, box: Dp) {
         if (shown != null) Image(shown, null, Modifier.size(if (painter != null) drawn else box), colorFilter = ColorFilter.tint(tint))
     }
 }
+
+/**
+ * The first letter of [name], large and bare in the mark's place (the stand-in for an agent with no bundled logo): no
+ * box behind it, as no mark has one (owner 2026-11-08).
+ */
+@Composable
+private fun AgentMonogram(name: String, box: Dp) {
+    Box(Modifier.size(box), contentAlignment = Alignment.Center) {
+        KitText(agentMonogram(name), role = TypeRole.LargeTitle, tone = TextTone.Secondary, maxLines = 1)
+    }
+}
+
+/** The monogram's letter: the first letter or digit of the name, upper-cased; "?" for a name with none. */
+internal fun agentMonogram(name: String): String =
+    name.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "?"
 
 /** A filled accent badge with the check that lands from slightly smaller when the card is chosen. */
 @Composable

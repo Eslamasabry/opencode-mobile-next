@@ -7,6 +7,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -19,6 +22,7 @@ import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
+import io.github.eslamasabry.oc.feature.agents.hub.AgentsTab
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
@@ -111,30 +115,42 @@ class AgentsScreenTest {
         runComposeUiTest {
             setContent { Screen(AgentsUi(), Recorder()) }
             onNodeWithText("Agents run on the built-in server").assertExists()
-            onNodeWithText("Add a computer").assertExists()
+            onNodeWithText("On computers").assertExists()
         }
 
     @Test
-    fun `B-NAV-030 a computer row offers a visible start and agents check`() = runComposeUiTest {
+    fun `B-AGENT-190 with no computer connected, adding one is the first thing on the computers tab`() = runComposeUiTest {
+        val actions = Recorder()
+        setContent { Screen(AgentsUi(tab = AgentsTab.Computers), actions) }
+        onNodeWithText("Use Claude Code or Pi on a computer that runs Paseo.").assertExists()
+        onNode(hasText("Add a computer") and hasClickAction()).performClick()
+        assertEquals(listOf("add-open"), actions.calls)
+    }
+
+    @Test
+    fun `B-NAV-030 a computer's ready agents are tiles that each start a conversation there`() = runComposeUiTest {
         val actions = Recorder()
         setContent {
             Screen(
-                AgentsUi(computers = persistentListOf(desk), ready = persistentMapOf(desk.id to persistentListOf("Claude Code"))),
+                AgentsUi(
+                    computers = persistentListOf(desk),
+                    ready = persistentMapOf(desk.id to persistentListOf("Claude Code")),
+                    tab = AgentsTab.Computers,
+                ),
                 actions,
             )
         }
         onNodeWithText("Desk").assertExists()
-        onNodeWithText("Ready on that computer: Claude Code.", substring = true).assertExists()
-        onNodeWithText("Start conversation").performClick()
-        onNodeWithText("Check agents").performClick()
-        assertEquals(listOf("new:p1", "agents:p1"), actions.calls)
+        onNodeWithText("Use Claude Code or Pi", substring = true).assertDoesNotExist()
+        onNode(hasContentDescription("New chat with Claude Code") and hasClickAction()).performClick()
+        assertEquals(listOf("new:p1"), actions.calls)
     }
 
     @Test
     fun `B-PROTO-070 the add form checks before saving and names the ready agents`() = runComposeUiTest {
         val actions = Recorder()
         setContent {
-            Screen(AgentsUi(adding = true, check = ComputerCheck.Ready("0.8.0", persistentListOf("Claude Code", "Pi"))), actions)
+            Screen(AgentsUi(adding = true, tab = AgentsTab.Computers, check = ComputerCheck.Ready("0.8.0", persistentListOf("Claude Code", "Pi"))), actions)
         }
         onNodeWithText("Ready on that computer: Claude Code, Pi.").assertExists()
         // The form is taller than the test window: scroll each button into view, as a person would.
@@ -161,9 +177,9 @@ class AgentsScreenTest {
     @Test
     fun `B-L10N agents screen reads in Arabic`() = runComposeUiTest {
         Locale.setDefault(Locale.forLanguageTag("ar"))
-        setContent { Screen(AgentsUi(), Recorder(), "ar") }
+        setContent { Screen(AgentsUi(tab = AgentsTab.Computers), Recorder(), "ar") }
         onNodeWithText("إضافة حاسوب").assertExists()
-        onNodeWithText("على حواسيبك").assertExists()
+        onNodeWithText("على الحواسيب").assertExists()
     }
 }
 

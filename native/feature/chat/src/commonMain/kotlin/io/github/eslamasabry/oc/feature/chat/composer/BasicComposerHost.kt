@@ -89,14 +89,14 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerRowFit
 import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStop
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopAfterStep
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopState
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitInsertedPicture
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitPictureReceiver
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStep
 import io.github.eslamasabry.oc.ui.words.res.tipSendLater
 import io.github.eslamasabry.oc.ui.words.res.tipStopAfterStep
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTrayAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -848,11 +848,10 @@ public fun BasicComposer(
                 }
             }
         }
-        // B8 (QA wave 1): while a reply runs with words typed, Stop and "Add to this turn" sit on their own row
-        // under a full-width field, so the message box never shrinks to a sliver. Otherwise the box is Flutter's
-        // one row: the plus, the words, then the mic, Send, or the ringed Stop while a reply runs. With words typed
-        // during a run, Send stays at the end (they join the turn) and Stop moves beside the plus, away from the
-        // thumb (Flutter `_stopLeads`).
+        // Flutter's composer (kit_composer.dart:421-435, kit_composer_status_strip.dart:30-160; owner, 30 Oct 2026):
+        // the box is one row — the plus, the words, then the mic or Send — whether or not a reply runs. Stop is not
+        // in the box: it is the "Stop" chip at the trailing end of the chips strip above it, for the whole running
+        // turn, with no ring (the glowing border is the running sign; owner, 2026-11-09).
         val waitingRequest = chrome.requestWaiting()
         val stopShown = busy || waitingRequest
         val typed = field.text.isNotBlank() || state.draft.attachments.isNotEmpty()
@@ -869,9 +868,8 @@ public fun BasicComposer(
         // the
         // button never changes under a finger.
         val voiceActive = voice?.isActive(voiceField) == true
-        val inlineAtStart = remember(voiceActive) { typed || stopShown }
-        val inlineMic = if (voiceActive) inlineAtStart else typed || stopShown
-        val primaryIsStop = inlineMic && stopShown && !(typed && !waitingRequest)
+        val inlineAtStart = remember(voiceActive) { typed }
+        val inlineMic = if (voiceActive) inlineAtStart else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
         val stopsFirst = SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
@@ -911,36 +909,37 @@ public fun BasicComposer(
             blocked = chrome.requestWaiting(),
             afterMs = ComposerTipRules.STOP_TIP_AFTER_MS,
         )
-        var stopMenu by remember { mutableStateOf(false) }
-        if (afterStep == null && stopMenu) stopMenu = false
+        // The chip carries its own hold menu ("Stop after this step") and screen-reader action, and the 800 ms guard
+        // after a send (a double tap on Send never stops the turn).
         val stopPart: @Composable () -> Unit = {
-            KitMenu(
-                expanded = stopMenu,
-                items =
-                    listOfNotNull(
-                        afterStep?.let { run ->
-                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; stopTipUsed(); run() })
-                        }
-                    ),
-                onDismissRequest = { stopMenu = false },
-            ) {
-                ComposerTip(TeachingIds.StopAfterStep, stringResource(Res.string.tipStopAfterStep)) {
-                    KitComposerStopRing(
+            ComposerTip(TeachingIds.StopAfterStep, stringResource(Res.string.tipStopAfterStep)) {
+                Box(Modifier.testTag("chat-stop-button")) {
+                    KitComposerStop(
                         label = stopLabel,
-                        onClick = chrome.onStop,
-                        stopping = chrome.stopping(),
-                        onLongClick = afterStep?.let { { stopMenu = true } },
-                        onLongClickLabel = afterStepLabel,
-                        modifier = Modifier.testTag("chat-stop-button"),
+                        targetLabel = stopLabel,
+                        onStop = chrome.onStop,
+                        state =
+                            when {
+                                chrome.stopping() -> KitStopState.Working
+                                chrome.stuck() -> KitStopState.Stuck
+                                else -> KitStopState.Running
+                            },
+                        stopAfterStep =
+                            afterStep?.let { run ->
+                                KitStopAfterStep(afterStepLabel) {
+                                    stopTipUsed()
+                                    run()
+                                }
+                            },
+                        afterStepButton = false,
                     )
                 }
             }
         }
         // F1 (scoreboard 2026-11-07), Flutter's layout (chat_composer_region.dart:44-77, kit_composer.dart:796-808):
         // the approval and model chips ride one strip ABOVE the message box (approval at the start, the model at
-        // the end), and the box is one row (plus, the words, mic or Send) until the words outgrow it. Stop keeps
-        // the native Send/Stop morph on the round target.
-        val stopLeads = stopShown && typed && !waitingRequest
+        // the end, Stop after it while a reply runs), and the box is one row (plus, the words, mic or Send) until the
+        // words outgrow it.
         // S28 story 15: hold Send is taught while words wait, no reply runs and Send offers Send later.
         val sendTipUsed = rememberTipUsed(TeachingIds.SendLater)
         OfferComposerTip(
@@ -951,6 +950,7 @@ public fun BasicComposer(
         KitComposerStatusStrip(
             hasChips = true,
             modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
+            stop = if (stopShown) stopPart else null,
             model = {
                 val chipWords = modelWords(state, chrome)
                 val modelName = stringResource(Res.string.composerPreviewModelButton)
@@ -991,8 +991,7 @@ public fun BasicComposer(
                     }
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
-        // B8: Stop beside the plus while words wait for the run: the words take the whole width above them.
-        KitComposerRowFit(words, leadingTargets = if (stopLeads) 2 else 1, stack = stopLeads) { stacked ->
+        KitComposerRowFit(words, leadingTargets = 1, stack = false) { stacked ->
             KitComposerBox(
                 running = busy && !waitingRequest,
                 stacked = stacked,
@@ -1128,11 +1127,8 @@ public fun BasicComposer(
                         open = addOpen && trayItems.isNotEmpty(),
                         modifier = Modifier.testTag("chat-attach-button"),
                     )
-                    if (stopLeads) stopPart()
                 },
                 trailing = {
-                    if (primaryIsStop) stopPart()
-                    else
                         KitComposerPrimaryAction(
                             // Without voice the empty box shows a disabled Send, never an empty slot
                             // (Flutter kit_composer.dart:434 `_Trailing.sendDisabled`).

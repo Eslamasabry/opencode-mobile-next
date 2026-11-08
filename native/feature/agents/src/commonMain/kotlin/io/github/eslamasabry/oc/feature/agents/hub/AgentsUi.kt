@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agents.hub
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.agents.account.AccountPanelState
@@ -46,15 +47,40 @@ public data class AgentsUi(
     val previousVersionFailed: Boolean = false,
     val previousVersionRestored: Boolean = false,
     val helperOffered: Boolean = false,
+    /** The page is connecting phone agents on its own (an agent is installed); never a button. */
+    val helperConnecting: Boolean = false,
+    /** Only a real failed connection: never set while no agent is installed. */
     val helperConnectFailed: Boolean = false,
+    val helperConnectFailure: Failure? = null,
     val helperConnected: Boolean = false,
+    /** Which tab of the page shows: this phone's agents or the computers'. */
+    val tab: AgentsTab = AgentsTab.Phone,
+    /** A pull to refresh is running. */
+    val refreshing: Boolean = false,
+    /** Computers whose agents could not be read on the last try. */
+    val unreadComputers: kotlinx.collections.immutable.ImmutableSet<ProfileId> = kotlinx.collections.immutable.persistentSetOf(),
+    /** The agent whose sheet is open (its actions: install, sign in, sign out, earlier version, remove). */
+    val sheetAgent: String? = null,
     val resettingSignIns: Boolean = false,
     val resetFailed: Boolean = false,
     val signingOutAgent: PhoneAgentRow? = null,
     val signOutFailed: String? = null,
 )
 
+public enum class AgentsTab {
+    Phone,
+    Computers,
+}
+
 public interface AgentsActions {
+    public fun selectTab(tab: AgentsTab) {}
+
+    /** Pull to refresh: this phone's agents, and on the computers tab every computer's agents. */
+    public fun pullRefresh() {}
+
+    /** A new conversation with the phone's agents (a ready tile's New chat). */
+    public fun newPhoneConversation() {}
+
     public fun back()
 
     public fun openAccount(id: ProfileId) {}
@@ -122,7 +148,12 @@ public interface AgentsActions {
 
     public fun confirmPreviousVersion() {}
 
+    /** "Try again" after a failed connection; the page connects on its own otherwise. */
     public fun connectPhoneHelper() {}
+
+    public fun openAgent(id: String) {}
+
+    public fun closeAgent() {}
 
     public fun requestSignInReset() {}
 
