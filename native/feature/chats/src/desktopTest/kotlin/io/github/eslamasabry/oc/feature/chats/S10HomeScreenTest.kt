@@ -22,6 +22,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -110,16 +113,15 @@ class S10HomeScreenTest {
         }
 
     @Test
-    fun `E20-S24 the rows under the list lie on the page, not on a panel, in a panelled look`() =
+    fun `E20-S24 the rows lie on the page, not on a panel, in a panelled look`() =
         runDesktopComposeUiTest(360, 1200) {
             home(mixed(), style = Style.Soft)
             val image = onRoot().captureToImage().toAwtImage()
-            val projects = onNode(hasText("Projects")).getBoundsInRoot()
+            val last = onNode(hasContentDescriptionContaining("Write the notes")).getBoundsInRoot()
             val ground = image.getRGB(2, 2)
-            // Mid-screen, just under the Projects row's top edge (clear of its tile, words and chevron): inside where
-            // the old panel was drawn.
-            val y = projects.top.value.toInt() + 3
-            assertEquals(ground, image.getRGB(180, y), "the Projects row sits on a panel of its own")
+            // Near the right edge, just under the last row's top edge (clear of its words): no panel behind it.
+            val y = last.top.value.toInt() + 3
+            assertEquals(ground, image.getRGB(350, y), "the last row sits on a panel of its own")
         }
 
     @Test
@@ -127,40 +129,38 @@ class S10HomeScreenTest {
         runDesktopComposeUiTest(360, 640) {
             home(mixed(extra = 12))
             val list = SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo)
-            onNode(list).performScrollToNode(hasText("Usage"))
+            val lastTitle = "Older conversation 11"
+            onNode(list).performScrollToNode(hasContentDescriptionContaining(lastTitle))
+            onNode(list).performTouchInput { swipeUp() }
             waitForIdle()
-            val usage = onNode(hasText("Usage")).getBoundsInRoot()
+            val last = onNode(hasContentDescriptionContaining(lastTitle)).getBoundsInRoot()
             val root = onRoot().getBoundsInRoot()
             // The round button: 56 dp, 12 dp above the bottom edge. The row ends at least 16 dp above its top.
             val buttonTop = root.bottom - 12.dp - 56.dp
-            assertTrue(usage.bottom <= buttonTop - 16.dp, "Usage ends at ${usage.bottom}, the button at $buttonTop")
+            assertTrue(last.bottom <= buttonTop - 16.dp, "the last row ends at ${last.bottom}, the button at $buttonTop")
         }
 
     @Test
-    fun `B-CHATS-161 a live row says Working 34m instead of its time and keeps Needs you on another`() =
+    fun `B-CHATS-161 a live row says Working 34m instead of the plain state word and keeps Needs you on another`() =
         runDesktopComposeUiTest(360, 900) {
             home(mixed())
-            onNodeWithText("Working 34m", useUnmergedTree = true).assertExists()
-            val liveMarks = onAllNodesWithTag("kit-conversation-live", useUnmergedTree = true).fetchSemanticsNodes()
-            assertEquals(1, liveMarks.size)
-            // The heading's "Needs you" and the asking row's own mark, before its branch.
-            onNodeWithText("Needs you\u00a0· \u2068main\u2069", useUnmergedTree = true).assertExists()
-            // The live row is heard with its run length and without a second "Working".
+            // Flutter's row (KitFeedItem): the title, then one meta line led by the state word.
             val live = onNode(hasContentDescriptionContaining("Fix the reconnect loop")).fetchSemanticsNode()
             val words = live.config[SemanticsProperties.ContentDescription].single()
             assertTrue("Working 34m" in words && words.split("Working").size == 2, words)
+            val asking = onNode(hasContentDescriptionContaining("Theme packs")).fetchSemanticsNode()
+            assertTrue("Needs you" in asking.config[SemanticsProperties.ContentDescription].single())
         }
 
     @Test
-    fun `B-CHATS-161 rows show the project's tile, the branch where there is git, and no agent mark for one agent`() =
+    fun `B-CHATS-161 rows are Flutter's title and meta line, with no project tile, branch or agent for one agent`() =
         runDesktopComposeUiTest(360, 900) {
             home(mixed())
-            assertTrue(onAllNodesWithTag("kit-project-tile", useUnmergedTree = true).fetchSemanticsNodes().size >= 4)
+            // F: lib/ui/screens/chats/chats_home_screen.dart:900-933: KitFeedItem has no tile and no branch.
+            assertEquals(0, onAllNodesWithTag("kit-project-tile", useUnmergedTree = true).fetchSemanticsNodes().size)
             val git = onNode(hasContentDescriptionContaining("Theme packs")).fetchSemanticsNode()
-            assertTrue("main" in git.config[SemanticsProperties.ContentDescription].single())
-            val plain = onNode(hasContentDescriptionContaining("Write the notes")).fetchSemanticsNode()
-            val plainWords = plain.config[SemanticsProperties.ContentDescription].single()
-            assertTrue("main" !in plainWords, "a folder without git shows no branch")
+            val gitWords = git.config[SemanticsProperties.ContentDescription].single()
+            assertTrue("web" in gitWords && "main" !in gitWords, gitWords)
             // One agent kind: no row names an agent.
             assertEquals(0, onAllNodes(hasContentDescriptionContaining("OpenCode")).fetchSemanticsNodes().size)
         }
@@ -174,22 +174,15 @@ class S10HomeScreenTest {
         }
 
     @Test
-    fun `B-CHATS-162 the Usage row names the tightest limit and opens Usage`() =
+    fun `B-CHATS-162 the list ends with its conversations, as Flutter's home does, with no place rows after it`() =
         runDesktopComposeUiTest(360, 1200) {
-            val actions = RecordingChatsActions()
-            home(mixed().copy(usage = HomeUsageLimit("Claude Code", 34)), actions)
-            onNodeWithText("\u2068Claude Code\u2069 · 34% left", useUnmergedTree = true).assertExists()
-            onNode(hasText("Usage")).performClick()
-            assertEquals(listOf("usage"), actions.calls)
-        }
-
-    @Test
-    fun `B-CHATS-162 without usage data the row says only Usage`() =
-        runDesktopComposeUiTest(360, 1200) {
-            home(mixed())
-            onNodeWithText("Usage").assertExists()
-            val left = onAllNodesWithText("left", substring = true, useUnmergedTree = true).fetchSemanticsNodes()
-            assertEquals(0, left.size)
+            home(mixed().copy(usage = HomeUsageLimit("Claude Code", 34)))
+            // Owner order 2026-11-08: Flutter's home has no All conversations, Projects, Activity or Usage rows; those
+            // places are reached from Search and Settings.
+            listOf("Show all conversations", "Projects", "Activity", "Usage").forEach {
+                onAllNodesWithText(it).assertCountEquals(0)
+            }
+            assertEquals(0, onAllNodesWithText("left", substring = true, useUnmergedTree = true).fetchSemanticsNodes().size)
         }
 
     private fun hasContentDescriptionContaining(text: String) =

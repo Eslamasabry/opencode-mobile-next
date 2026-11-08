@@ -59,9 +59,6 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
 import io.github.eslamasabry.oc.ui.words.res.sessionOpenRelated
 import io.github.eslamasabry.oc.ui.words.res.sessionCopyHandoff
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
-import io.github.eslamasabry.oc.ui.kit.row.KitConversation
-import io.github.eslamasabry.oc.ui.kit.row.KitConversationRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowLive
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -353,7 +350,15 @@ public fun ChatsScreen(
                     }
                     if (earlier.isNotEmpty()) {
                         item(key = "earlier") {
-                            Box(kitItemMotion()) { KitSectionLabel(stringResource(Res.string.chatsHomeEarlier)) }
+                            // F: lib/ui/kit/kit_section_label.dart:28-31: a section after another one keeps the
+                            // section gap above its label. In a lazy item the label cannot see what is above it
+                            // (it is first in its own box), so the gap is asked for here.
+                            Box(kitItemMotion()) {
+                                KitSectionLabel(
+                                    stringResource(Res.string.chatsHomeEarlier),
+                                    gapBefore = if (today.isNotEmpty()) LocalKitTokens.current.sectionGap.dp else 0.dp,
+                                )
+                            }
                         }
                         items(earlier, key = { it.key }) {
                             Column(kitItemMotion()) {
@@ -362,8 +367,6 @@ public fun ChatsScreen(
                             }
                         }
                     }
-                    // The other places the old ⋯ menu hid, as plain rows after the list (obvious options first).
-                    item(key = "more-places") { Box(kitItemMotion()) { MorePlaces(actions, state.usage) } }
                 }
             }
 
@@ -526,13 +529,20 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions, state: ChatsUi) {
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 /**
- * The hairline between two conversation rows, on the 16 dp page edge where the row's words start (B-161 rows close
- * with the agent's mark instead of leading with it); past the agent tile in the Signal look, whose rows still lead
- * with one.
+ * The line between two conversation rows (Today, Earlier and the return brief), on the 16 dp page edge where the row's
+ * words start; past the agent tile in the Signal look, whose rows still lead with one.
+ *
+ * B-173 (twin of Flutter #129): Flutter's home groups pass `prominentDividers: true`
+ * (lib/ui/screens/chats/chats_home_screen.dart:824), so KitSliverRowGroup draws `KitDivider.prominent(inset: inset,
+ * endInset: reach)` (lib/ui/kit/kit_sliver_row_group.dart:148-150): 1 dp (`KitLayout.prominentRule`) in the theme's
+ * tertiary ink at 30 % (`roles.text3`, alpha 0.3) unless the style draws its own rule (Brutal's ink keeps it; Soft still
+ * draws none). That line reads on OLED dark screens, where the hairline does not.
  */
 @Composable
 private fun RowDivider(state: ChatsUi) {
     val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
+    // TODO(B-173): switch to the kit's prominent divider once the s21-kit builder lands it in :ui:kit, keeping the inset:
+    //  KitDivider(inset = <same inset>, prominent = true)  (Flutter KitDivider.prominent). Until then this is the hairline.
     io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(
         inset =
             if (signal && state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
@@ -574,47 +584,30 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
             ?: row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) }
     val liveLabel = liveRunWords()
     val feedItem: @Composable () -> Unit = {
-        if (signal)
-            KitFeedItem(
-                title = title,
-                project = row.project,
-                // The agent's tile only says something when the list holds more than one agent (Flutter rows have none).
-                agent = agent,
-                server = row.server,
-                live = needsAttention,
-                onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
-                onLongClickLabel = stringResource(Res.string.chatsRowActions),
-                state = KitRowState(status?.takeUnless { row.running != null }, tone),
-                time = time,
-                done = row.status == RowStatus.Done,
-                growKey = row.ref,
-                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
-                pinned = state != null && row.key in state.pinned,
-            )
-        else
-            // B-161: project tile and name with the time (or "Working 34m" while a run is live), the title, then the
-            // state word, branch and server; the agent's mark closes the row only when the list mixes agents.
-            KitConversationRow(
-                KitConversation(
-                    title = title,
-                    project = row.project,
-                    time = time,
-                    state = KitRowState(status, tone),
-                    branch = row.branch,
-                    server = row.server,
-                    live =
-                        if (row.status == RowStatus.Running)
-                            KitRowLive(row.running?.sinceMs, state?.nowMs?.takeIf { it > 0 } ?: row.observedAtMs, liveLabel)
-                        else null,
-                    agent = agent,
-                    done = row.status == RowStatus.Done,
-                    pinned = state != null && row.key in state.pinned,
-                    growKey = row.ref,
+        // F: lib/ui/screens/chats/chats_home_screen.dart:900-933: every look draws Flutter's KitFeedItem, the title and
+        // one meta line ("Needs you · alpha · 2 min ago"); the agent leads that line only when the list mixes agents.
+        // A live run says how long it has been working in place of the plain state word.
+        KitFeedItem(
+            title = title,
+            project = row.project,
+            agent = agent,
+            server = row.server,
+            live = needsAttention,
+            onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
+            onLongClickLabel = stringResource(Res.string.chatsRowActions),
+            state =
+                KitRowState(
+                    if (row.status == RowStatus.Running && !signal && row.running != null)
+                        liveLabel(row.running.sinceMs?.let { since -> (state?.nowMs?.takeIf { it > 0 } ?: row.observedAtMs) - since })
+                    else status?.takeUnless { signal && row.running != null },
+                    tone,
                 ),
-                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
-                onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
-                onLongClickLabel = stringResource(Res.string.chatsRowActions),
-            )
+            time = time,
+            done = row.status == RowStatus.Done,
+            growKey = row.ref,
+            onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+            pinned = state != null && row.key in state.pinned,
+        )
     }
     KitMenu(
         expanded = menuOpen,

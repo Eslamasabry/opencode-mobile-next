@@ -96,10 +96,10 @@ class ChatsScreenTest {
             }
             onNodeWithContentDescription("On this phone, Connected, Switch server").performClick()
             assertTrue("servers" in actions.calls)
-            // No overflow: the places it held are rows after the list.
+            // No overflow, and (owner order 2026-11-08, as Flutter's home) no place rows after the list either: All
+            // conversations is reached from Search.
             onAllNodesWithContentDescription("More").assertCountEquals(0)
-            onNodeWithText("Show all conversations").performClick()
-            assertTrue("all" in actions.calls)
+            onAllNodesWithText("Show all conversations").assertCountEquals(0)
         }
 
     @Test
