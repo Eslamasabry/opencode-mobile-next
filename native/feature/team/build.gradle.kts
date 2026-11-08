@@ -6,6 +6,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:team"))
+        implementation(project(":ui:kit-chat")) // the person's notes in a task's conversation (KitPromptBubble)
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests

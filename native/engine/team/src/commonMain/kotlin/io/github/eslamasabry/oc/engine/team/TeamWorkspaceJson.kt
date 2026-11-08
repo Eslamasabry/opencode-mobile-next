@@ -153,6 +153,21 @@ public object TeamWorkspaceJson {
             steps = j.int("steps", 0),
             tokens = j.long("tokens"),
             fixRounds = j.int("fixRounds", 0),
+            messages =
+                j.list("messages").maps().map { TeamMessage(it.str("id"), it.str("actor", "person"), it.str("text"), it.str("at")) },
+            findings =
+                j.list("findings").maps().map {
+                    TeamFinding(
+                        it.str("id"),
+                        it.str("severity", "major"),
+                        it.str("criterion"),
+                        it.str("location"),
+                        it.str("text"),
+                        it.str("status", "open"),
+                    )
+                },
+            criterionResults =
+                j.list("criterionResults").maps().map { TeamCriterionResult(it.str("criterion"), it.str("status", "unmet")) },
         )
 
     private fun server(j: Map<*, *>): TeamServer =

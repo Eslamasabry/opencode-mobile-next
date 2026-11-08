@@ -17,4 +17,8 @@ public sealed interface TeamRoute : AppRoute {
     /** One project's board (Dart `TeamProjectBoard`); [milestone] opens it filtered to one milestone. */
     @Serializable
     public data class Board(val profileId: ProfileId, val projectId: String, val milestone: String? = null) : TeamRoute
+
+    /** One task's conversation (Dart `TeamProjectConversation`): watching a worker, answering it, messaging it. */
+    @Serializable
+    public data class Task(val profileId: ProfileId, val projectId: String, val taskId: String) : TeamRoute
 }

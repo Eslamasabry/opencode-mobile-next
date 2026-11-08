@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.team
 
 import io.github.eslamasabry.oc.engine.team.TeamBudget
+import io.github.eslamasabry.oc.engine.team.TeamCriterionResult
+import io.github.eslamasabry.oc.engine.team.TeamFinding
+import io.github.eslamasabry.oc.engine.team.TeamMessage
 import io.github.eslamasabry.oc.engine.team.TeamMilestone
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProject
@@ -20,6 +23,7 @@ import io.github.eslamasabry.oc.feature.team.presentation.HomeRow
 import io.github.eslamasabry.oc.feature.team.presentation.MilestoneStatus
 import io.github.eslamasabry.oc.feature.team.presentation.NeedsYouAnswer
 import io.github.eslamasabry.oc.feature.team.presentation.StatusWord
+import io.github.eslamasabry.oc.feature.team.presentation.TaskSpeaker
 import io.github.eslamasabry.oc.feature.team.presentation.TaskMark
 import io.github.eslamasabry.oc.feature.team.presentation.TeamMark
 import io.github.eslamasabry.oc.feature.team.presentation.TeamPresent
@@ -190,5 +194,37 @@ class TeamPresentTest {
         assertEquals("Pay", view.needsYou[0].milestoneText)
         val home = TeamPresent.home(TeamState(TeamPhase.Ready, workspace = team(merged.copy(status = "interrupted"))), NOW)
         assertEquals("interrupted:shop", home.rows.first().key)
+    }
+
+    @Test
+    fun `B-TEAM-029 a task's conversation shows its lines, its asks, results and findings`() {
+        val p =
+            shop().let { p ->
+                p.copy(
+                    tasks =
+                        p.tasks.map {
+                            if (it.id != "t2") it
+                            else
+                                it.copy(
+                                    messages =
+                                        listOf(
+                                            TeamMessage("1", "person", "Use Stripe"),
+                                            TeamMessage("2", "team", "Build the form"),
+                                            TeamMessage("3", "frontend", "Form ready"),
+                                        ),
+                                    findings = listOf(TeamFinding("f", "minor", text = "Label missing", status = "fixed")),
+                                    criterionResults = listOf(TeamCriterionResult("pays", "met")),
+                                )
+                        }
+                )
+            }
+        val ui = TeamPresent.task(TeamState(TeamPhase.Ready, workspace = team(p)), "shop", "t2", NOW)
+        val t = ui.task!!
+        assertEquals(listOf(TaskSpeaker.Person, TaskSpeaker.Instructions, TaskSpeaker.Worker), t.lines.map { it.speaker })
+        assertEquals(listOf("q1"), t.asks.map { it.id })
+        assertEquals("Frontend", t.roleName)
+        assertEquals(false, t.findings.single().open)
+        assertEquals("met", t.criteria.single().status)
+        assertNull(TeamPresent.task(TeamState(TeamPhase.Ready, workspace = team(p)), "shop", "gone", NOW).task)
     }
 }

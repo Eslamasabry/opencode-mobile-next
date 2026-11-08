@@ -12,13 +12,15 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamProjectViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.TeamTaskViewModel
 import io.github.eslamasabry.oc.feature.team.ui.TeamBoardScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamHomeScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamProjectScreen
+import io.github.eslamasabry.oc.feature.team.ui.TeamTaskScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 
-/** The AI Team destinations: the team page, one project, its board. */
+/** The AI Team destinations: the team page, one project, its board, one task's conversation. */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class TeamEntries : EntryInstaller {
@@ -37,6 +39,11 @@ public class TeamEntries : EntryInstaller {
             val vm = assistedMetroViewModel<TeamBoardViewModel, TeamBoardViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             TeamBoardScreen(state, vm)
+        }
+        entry<TeamRoute.Task> { route ->
+            val vm = assistedMetroViewModel<TeamTaskViewModel, TeamTaskViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            TeamTaskScreen(state, vm)
         }
     }
 }

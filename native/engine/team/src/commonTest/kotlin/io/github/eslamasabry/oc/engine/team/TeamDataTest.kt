@@ -59,7 +59,10 @@ class TeamDataTest {
                    "settings":{"mode":"parallel","maxLanes":2,"budget":{"daily":5}},
                    "specDraft":{"goal":"Sell","milestones":[{"id":"m1","title":"Cart","criteria":["adds"]}]},
                    "phases":[{"id":"ph1","milestoneId":"m1"}],
-                   "tasks":[{"id":"t1","title":"Cart API","phaseId":"ph1","status":"running","dependsOn":["t0"],"steps":2},
+                   "tasks":[{"id":"t1","title":"Cart API","phaseId":"ph1","status":"running","dependsOn":["t0"],"steps":2,
+                             "messages":[{"id":"m1","actor":"person","text":"Use Postgres","at":"2026-11-02T07:00:00Z"},{"id":"m2"}],
+                             "findings":[{"id":"f1","text":"No index"}],
+                             "criterionResults":[{"criterion":"adds","status":"met"}]},
                             {"id":"t2"}],
                    "requests":[{"id":"r1","title":"Which DB?","taskId":"t1"},{"id":"r2","answered":true}],
                    "spentToday":1.5,"usageReported":true}]}
@@ -74,6 +77,12 @@ class TeamDataTest {
         assertEquals(5.0, project.settings.budget.daily)
         assertEquals("Cart", project.specDraft.milestones.single().title)
         assertEquals(listOf("t0"), project.tasks.first().dependsOn)
+        val first = project.tasks.first()
+        assertEquals("Use Postgres", first.messages.first().text)
+        assertEquals("person", first.messages[1].actor) // Dart's default actor
+        assertEquals("open", first.findings.single().status)
+        assertEquals("major", first.findings.single().severity)
+        assertEquals("met", first.criterionResults.single().status)
         // Dart defaults for a bare task.
         assertEquals("queued", project.tasks[1].status)
         assertEquals("frontend", project.tasks[1].roleId)

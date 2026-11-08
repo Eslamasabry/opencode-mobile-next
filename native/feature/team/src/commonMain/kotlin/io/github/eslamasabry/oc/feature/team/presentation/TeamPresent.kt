@@ -197,4 +197,45 @@ public object TeamPresent {
             column = column,
         )
     }
+
+    public fun task(state: TeamState, projectId: String, taskId: String, nowMs: Long): TeamTaskUi {
+        val workspace = state.workspace
+        val p = workspace?.project(projectId)
+        val t = p?.tasks?.firstOrNull { it.id == taskId }
+        val view =
+            if (workspace == null || p == null || t == null) null
+            else
+                TaskView(
+                    id = t.id,
+                    title = t.title,
+                    roleName = workspace.roles.firstOrNull { it.id == t.roleId }?.name,
+                    serverName = workspace.servers.firstOrNull { it.id == t.serverId }?.name,
+                    status = t.status,
+                    queued = t.status == "queued",
+                    lines =
+                        t.messages
+                            .map { m ->
+                                TaskLineUi(
+                                    m.id,
+                                    when (m.actor) {
+                                        "person" -> TaskSpeaker.Person
+                                        "team" -> TaskSpeaker.Instructions
+                                        else -> TaskSpeaker.Worker
+                                    },
+                                    m.text,
+                                    TeamRules.epochMs(m.at),
+                                )
+                            }
+                            .toImmutableList(),
+                    asks =
+                        p.openRequests
+                            .filter { it.taskId == t.id }
+                            .map { TaskAskUi(it.id, it.title, it.kind, TeamRules.epochMs(it.createdAt)) }
+                            .toImmutableList(),
+                    criteria = t.criterionResults.map { CriterionUi(it.criterion, it.status) }.toImmutableList(),
+                    findings =
+                        t.findings.map { FindingUi(it.id, it.severity, it.text, it.location, it.status == "open") }.toImmutableList(),
+                )
+        return TeamTaskUi(state.phase, view, state.stale, state.busy, state.refusal != null, nowMs)
+    }
 }

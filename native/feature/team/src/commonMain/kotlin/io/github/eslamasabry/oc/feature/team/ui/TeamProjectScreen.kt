@@ -231,7 +231,7 @@ private fun Overview(p: ProjectView, state: TeamProjectUi, actions: TeamProjectA
             item(key = "lanes") {
                 KitSectionLabel(stringResource(Res.string.teamProjectLanesTitle, p.busy, p.laneTotal))
             }
-            items(p.lanes, key = { "lane:${it.taskId}" }) { Lane(it, state.stale, state.nowMs) }
+            items(p.lanes, key = { "lane:${it.taskId}" }) { Lane(it, state.stale, state.nowMs) { actions.openTask(it.taskId) } }
             item(key = "laneNote") {
                 val note =
                     if (p.singleLane) stringResource(Res.string.teamProjectLaneNoteSingle)
@@ -303,7 +303,7 @@ private fun Goal(goal: GoalUi, nowMs: Long) {
 
 /** Dart `_laneLine` and the lane row (`KitStatusMark` working/waiting). */
 @Composable
-private fun Lane(lane: LaneUi, stale: Boolean, nowMs: Long) {
+private fun Lane(lane: LaneUi, stale: Boolean, nowMs: Long, open: () -> Unit) {
     val line =
         when {
             stale -> "${lane.serverName} · ${stringResource(Res.string.teamProjectTaskStale)}"
@@ -322,5 +322,7 @@ private fun Lane(lane: LaneUi, stale: Boolean, nowMs: Long) {
         state =
             if (lane.running && !stale) KitRowState(stringResource(Res.string.teamProjectWorking), KitRowStateTone.Running)
             else null,
+        trailing = KitRowTrailing.Chevron,
+        onClick = open,
     )
 }

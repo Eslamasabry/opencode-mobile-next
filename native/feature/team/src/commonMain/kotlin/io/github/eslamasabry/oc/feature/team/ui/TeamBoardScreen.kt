@@ -47,7 +47,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * One project's board (Dart `TeamProjectBoard`): Board or Dependencies, filtered by milestone, repo and server; the
- * board opens on the first lane with work. Opening a task's conversation arrives with the team conversation slice.
+ * board opens on the first lane with work; a card opens its task's conversation.
  */
 @Composable
 public fun TeamBoardScreen(state: TeamBoardUi, actions: TeamBoardActions) {
@@ -89,7 +89,7 @@ public fun TeamBoardScreen(state: TeamBoardUi, actions: TeamBoardActions) {
         when {
             state.phase == TeamPhase.Loading -> Unit
             !ready -> KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectSelect))
-            state.graph -> Graph(state)
+            state.graph -> Graph(state, actions)
             else -> Lanes(state, actions)
         }
     }
@@ -129,14 +129,14 @@ private fun Lanes(state: TeamBoardUi, actions: TeamBoardActions) {
             cards =
                 state.cards
                     .filter { it.column == columns[index] }
-                    .map { card -> KitBoardCard(card.id) { KitTaskCard(card.title, card.mark.kit(), onOpen = {}) } },
+                    .map { card -> KitBoardCard(card.id) { KitTaskCard(card.title, card.mark.kit(), onOpen = { actions.openTask(card.id) }) } },
             empty = { KitStateView(KitStateKind.Empty, noTasks, size = KitStateSize.Inline) },
         )
     }
 }
 
 @Composable
-private fun Graph(state: TeamBoardUi) {
+private fun Graph(state: TeamBoardUi, actions: TeamBoardActions) {
     val nodes =
         state.cards.map { card ->
             KitWorkGraphNode(
@@ -155,6 +155,6 @@ private fun Graph(state: TeamBoardUi) {
             )
         }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S2.dp)) {
-        KitWorkGraph(nodes = nodes, onOpen = {}, emptyText = stringResource(Res.string.teamProjectNoTasks))
+        KitWorkGraph(nodes = nodes, onOpen = actions::openTask, emptyText = stringResource(Res.string.teamProjectNoTasks))
     }
 }

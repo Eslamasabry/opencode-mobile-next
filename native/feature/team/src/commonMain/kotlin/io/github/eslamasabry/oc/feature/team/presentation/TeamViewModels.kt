@@ -131,6 +131,10 @@ public class TeamProjectViewModel(
         engine.clearRefusal(profile)
     }
 
+    override fun openTask(taskId: String) {
+        nav.open(TeamRoute.Task(route.profileId, route.projectId, taskId))
+    }
+
     override fun back(): Unit = nav.back()
 
     override fun openBoard(milestone: String?) {
@@ -189,10 +193,67 @@ public class TeamBoardViewModel(
         filters.update { it.copy(column = column) }
     }
 
+    override fun openTask(taskId: String) {
+        nav.open(TeamRoute.Task(route.profileId, route.projectId, taskId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
     public fun interface Factory : ManualViewModelAssistedFactory {
         public fun create(@Assisted route: TeamRoute.Board): TeamBoardViewModel
+    }
+}
+
+/** One task's conversation (Dart `TeamProjectConversation`). */
+@AssistedInject
+public class TeamTaskViewModel(
+    @Assisted private val route: TeamRoute.Task,
+    private val engine: TeamEngine,
+    private val nav: AppNavigator,
+    private val clock: kotlin.time.Clock,
+) : ViewModel(), TeamTaskActions {
+    private val profile = route.profileId.raw
+
+    public val state: StateFlow<TeamTaskUi> =
+        engine
+            .polled(profile) { clock.now().toEpochMilliseconds() }
+            .map { (state, now) -> TeamPresent.task(state, route.projectId, route.taskId, now) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), TeamTaskUi())
+
+    private fun send(build: (TeamProject) -> TeamCommand) {
+        val project = engine.state(profile).value.workspace?.project(route.projectId) ?: return
+        viewModelScope.launch { engine.execute(profile, build(project)) }
+    }
+
+    override fun back(): Unit = nav.back()
+
+    override fun answer(requestId: String, text: String) {
+        if (text.isBlank()) return
+        send { TeamCommand.answer(it, requestId, text.trim()) }
+    }
+
+    override fun resume() {
+        send { TeamCommand.resumeTask(it, route.taskId) }
+    }
+
+    override fun message(text: String) {
+        if (text.isBlank()) return
+        send { TeamCommand.message(it, route.taskId, text.trim()) }
+    }
+
+    override fun retry() {
+        viewModelScope.launch { engine.refresh(profile) }
+    }
+
+    override fun dismissRefusal() {
+        engine.clearRefusal(profile)
+    }
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: TeamRoute.Task): TeamTaskViewModel
     }
 }

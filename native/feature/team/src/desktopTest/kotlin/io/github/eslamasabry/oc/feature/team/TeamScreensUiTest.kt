@@ -24,9 +24,11 @@ import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardActions
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeActions
 import io.github.eslamasabry.oc.feature.team.presentation.TeamPresent
 import io.github.eslamasabry.oc.feature.team.presentation.TeamProjectActions
+import io.github.eslamasabry.oc.feature.team.presentation.TeamTaskActions
 import io.github.eslamasabry.oc.feature.team.ui.TeamBoardScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamHomeScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamProjectScreen
+import io.github.eslamasabry.oc.feature.team.ui.TeamTaskScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -57,6 +59,10 @@ class TeamScreensUiTest {
 
         override fun retry() {
             calls += "retry"
+        }
+
+        override fun openTask(taskId: String) {
+            calls += "task $taskId"
         }
 
         override fun resumeProject(projectId: String) {
@@ -207,5 +213,37 @@ class TeamScreensUiTest {
         setContent { Themed { TeamHomeScreen(TeamPresent.home(state, NOW), actions) } }
         onNodeWithText("Shop: work was interrupted, tap to resume").performClick()
         assertEquals(listOf("resumeProject shop"), actions.calls)
+    }
+
+    private class TaskRecorder : TeamTaskActions {
+        val calls = mutableListOf<String>()
+
+        override fun back() {}
+
+        override fun answer(requestId: String, text: String) {
+            calls += "answer $requestId $text"
+        }
+
+        override fun resume() {}
+
+        override fun message(text: String) {
+            calls += "message $text"
+        }
+
+        override fun retry() {}
+
+        override fun dismissRefusal() {}
+    }
+
+    @Test
+    fun `B-TEAM-049 a task's conversation shows the ask and messages the worker`() = runComposeUiTest {
+        val actions = TaskRecorder()
+        setContent { Themed { TeamTaskScreen(TeamPresent.task(ready, "shop", "t2", NOW), actions) } }
+        onNodeWithText("Pay form").assertIsDisplayed()
+        onNodeWithText("Which card provider?").assertExists()
+        onNodeWithText("Message the team…").performClick()
+        onNode(hasSetTextAction()).performTextInput("Hello")
+        onAllNodesWithText("Send answer").onLast().performClick()
+        assertEquals(listOf("message Hello"), actions.calls)
     }
 }

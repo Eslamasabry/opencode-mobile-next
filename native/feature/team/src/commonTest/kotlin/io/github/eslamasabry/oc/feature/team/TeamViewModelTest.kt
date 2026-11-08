@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.feature.team.presentation.BoardColumn
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamProjectViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.TeamTaskViewModel
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
@@ -187,5 +188,22 @@ class TeamViewModelTest {
             vm.dismissRefusal()
             runCurrent()
             assertEquals(false, vm.state.value.refused)
+        }
+
+    @Test
+    fun `B-TEAM-036 a lane, a card and a message reach the task and its worker`() =
+        runTest(dispatcher) {
+            val nav = Nav()
+            val host = Host(Outcome.Ok(team(shop())))
+            val engine = TeamEngine(host)
+            TeamProjectViewModel(TeamRoute.Project(pid, "shop"), engine, nav, clock).openTask("t2")
+            TeamBoardViewModel(TeamRoute.Board(pid, "shop"), engine, nav, clock).openTask("t5")
+            assertEquals(listOf<AppRoute>(TeamRoute.Task(pid, "shop", "t2"), TeamRoute.Task(pid, "shop", "t5")), nav.opened)
+            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "shop", "t2"), engine, nav, clock)
+            watch(vm.state)
+            runCurrent()
+            vm.message("  try the sandbox key ")
+            runCurrent()
+            assertEquals(TeamCommand("messageTask", "shop", 0, targetId = "t2", text = "try the sandbox key"), host.commands.single())
         }
 }

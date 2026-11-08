@@ -75,6 +75,22 @@ public data class TeamProjectPhase(
     val accepted: Boolean = false,
 )
 
+/** One line of a task's conversation (Dart `TeamMessage`); [actor] is `person`, `team` (instructions) or a role. */
+public data class TeamMessage(val id: String = "", val actor: String = "person", val text: String = "", val at: String = "")
+
+/** A review finding on a task (Dart `TeamFinding`). */
+public data class TeamFinding(
+    val id: String = "",
+    val severity: String = "major",
+    val criterion: String = "",
+    val location: String = "",
+    val text: String = "",
+    val status: String = "open",
+)
+
+/** How a task met one acceptance criterion (Dart `TeamCriterionResult`): met, unmet or not applicable. */
+public data class TeamCriterionResult(val criterion: String = "", val status: String = "unmet")
+
 /** Dart `TeamTask`. [status] is the engine's word: queued, running, review, verified, waiting, failed, … */
 public data class TeamTask(
     val id: String = "",
@@ -92,6 +108,9 @@ public data class TeamTask(
     val steps: Int = 0,
     val tokens: Long = 0,
     val fixRounds: Int = 0,
+    val messages: List<TeamMessage> = emptyList(),
+    val findings: List<TeamFinding> = emptyList(),
+    val criterionResults: List<TeamCriterionResult> = emptyList(),
 ) {
     /** Dart `finished`: merged or done. */
     public val finished: Boolean

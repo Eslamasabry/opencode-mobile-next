@@ -57,6 +57,10 @@ public data class TeamCommand(
         public fun resumeTask(project: TeamProject, taskId: String): TeamCommand =
             TeamCommand("resumeTask", project.id, project.revision, targetId = taskId)
 
+        /** Dart `messageTask`: the person's note to the task's worker. */
+        public fun message(project: TeamProject, taskId: String, text: String): TeamCommand =
+            TeamCommand("messageTask", project.id, project.revision, targetId = taskId, text = text)
+
         public fun project(project: TeamProject, action: String): TeamCommand =
             TeamCommand(action, project.id, project.revision)
     }

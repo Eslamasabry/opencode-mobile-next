@@ -205,6 +205,9 @@ public interface TeamProjectActions {
     public fun cancelStop() {}
 
     public fun dismissRefusal() {}
+
+    /** A lane row: the task's conversation. */
+    public fun openTask(taskId: String) {}
 }
 
 // ---- the board (Dart TeamProjectBoard)
@@ -251,4 +254,58 @@ public interface TeamBoardActions {
     public fun filterServer(id: String?)
 
     public fun selectColumn(column: BoardColumn)
+
+    /** A card or graph node: the task's conversation. */
+    public fun openTask(taskId: String) {}
+}
+
+// ---- one task (Dart TeamProjectConversation)
+
+/** Who wrote a conversation line: the person, the team's instructions, or the worker. */
+public enum class TaskSpeaker { Person, Instructions, Worker }
+
+public data class TaskLineUi(val id: String, val speaker: TaskSpeaker, val text: String, val atMs: Long?)
+
+public data class TaskAskUi(val id: String, val title: String, val kind: String, val createdAtMs: Long?)
+
+public data class CriterionUi(val criterion: String, val status: String)
+
+public data class FindingUi(val id: String, val severity: String, val text: String, val location: String, val open: Boolean)
+
+public data class TaskView(
+    val id: String,
+    val title: String,
+    val roleName: String?,
+    val serverName: String?,
+    val status: String,
+    val queued: Boolean,
+    val lines: ImmutableList<TaskLineUi>,
+    val asks: ImmutableList<TaskAskUi>,
+    val criteria: ImmutableList<CriterionUi>,
+    val findings: ImmutableList<FindingUi>,
+)
+
+public data class TeamTaskUi(
+    val phase: TeamPhase = TeamPhase.Loading,
+    /** Null once read when the task is gone (Dart `teamProjectTaskMissing`). */
+    val task: TaskView? = null,
+    val stale: Boolean = false,
+    val busy: Boolean = false,
+    val refused: Boolean = false,
+    val nowMs: Long = 0,
+)
+
+public interface TeamTaskActions {
+    public fun back()
+
+    public fun answer(requestId: String, text: String)
+
+    public fun resume()
+
+    /** Dart `messageTask`. */
+    public fun message(text: String)
+
+    public fun retry()
+
+    public fun dismissRefusal()
 }
