@@ -44075,5 +44075,10 @@
   "phoneSetupStageCompat": "Trying again in compatibility mode",
   "@phoneSetupStageCompat": {
     "description": "Setup stage when a program crashed and the app runs the step again more carefully"
+  },
+  "chatsHomeRunningCount": "Running · {count}",
+  "@chatsHomeRunningCount": {
+    "description": "Chats home: the Running filter chip with how many conversations are running",
+    "placeholders": {"count": {"type": "int"}}
   }
 }

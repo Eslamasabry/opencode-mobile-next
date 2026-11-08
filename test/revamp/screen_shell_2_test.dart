@@ -116,7 +116,8 @@ void main() {
       expect(find.byType(KitNavRail), findsNothing);
       expect(find.byKey(const ValueKey('home-shell-tab-files')), findsNothing);
       expect(find.byKey(const ValueKey('home-shell-settings')), findsOneWidget);
-      // The server pill says the state in words, not only by colour.
+      // The server pill carries "connected" by its green dot and its spoken
+      // label; the word is shown only when the connection is not healthy.
       expect(
         find.byKey(const ValueKey('server-switcher-button')),
         findsOneWidget,
@@ -126,7 +127,13 @@ void main() {
           of: find.byKey(const ValueKey('server-switcher-button')),
           matching: find.textContaining('Connected'),
         ),
-        findsOneWidget,
+        findsNothing,
+      );
+      expect(
+        tester.getSemantics(
+          find.byKey(const ValueKey('server-switcher-button')),
+        ),
+        matchesSemantics(label: contains('Connected, Switch server')),
       );
       // Search opens the same launcher as Ctrl/Cmd+K.
       await tester.tap(find.byKey(const ValueKey('home-shell-search')));

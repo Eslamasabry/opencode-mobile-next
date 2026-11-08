@@ -384,11 +384,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // (Codex, Paseo today); reaching for it then explains why
     // ([_explainProjectUnavailable]).
     final hasProjectTools = ProjectHub.isAvailable(conn.capabilities);
+    final perform = AppShortcutScope.performOf(context);
+    final switchingTo = phoneRuntimeSwitchTarget(conn, _starter);
+    final phase = conn.connectionStatus.phase;
+    final opening = widget.opening;
+    final (statusWord, statusTone) = opening != null
+        ? (opening.status, opening.tone)
+        : switchingTo != null
+        ? (l10n.shellServerSwitching, AppStatusTone.progress)
+        : _serverStatus(phase, l10n);
+    ChatsHomeControls chatsControls() => ChatsHomeControls(
+      server: _serverName(conn, switchingTo: switchingTo),
+      status: statusWord,
+      tone: statusTone,
+      onServer: opening?.onServer ?? () => unawaited(_openServerSwitcher(conn)),
+      onSearch: perform == null
+          ? null
+          : () => perform(const OpenCommandPaletteIntent()),
+      onSettings: () => unawaited(_openSettingsPage()),
+    );
     final tabs = <Widget>[
       ChatsHomeScreen(
         key: ValueKey('home-shell-chats-$_chatsRequest'),
         initialFilter: _chatsFilter,
         opening: widget.opening,
+        // A phone has no bar: Chats draws the title, search, Settings and
+        // the connection pill itself.
+        controls: phone && !sidebar ? chatsControls() : null,
       ),
       if (hasProjectTools && !phone)
         ProjectHub(
@@ -432,17 +454,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ];
     final selected = destinations.indexWhere((entry) => entry.id == activeTab);
 
-    final perform = AppShortcutScope.performOf(context);
-    // A switch between this phone's OpenCode versions names where it goes,
-    // as progress, never the version being left as offline.
-    final switchingTo = phoneRuntimeSwitchTarget(conn, _starter);
-    final phase = conn.connectionStatus.phase;
-    final opening = widget.opening;
-    final (statusWord, statusTone) = opening != null
-        ? (opening.status, opening.tone)
-        : switchingTo != null
-        ? (l10n.shellServerSwitching, AppStatusTone.progress)
-        : _serverStatus(phase, l10n);
     // One indicator (owner, 2026-10-08): while the pill already shows
     // progress (a switch, connecting, reconnecting), the status line under
     // it would say the same thing with a second spinner. The line comes back
@@ -474,14 +485,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       settingsKey: const ValueKey('home-shell-settings'),
     );
 
+    // A phone's Conversations draws its own top (title row + chip row).
+    final ownsTop = phone && !sidebar;
     final content = KitScreen(
       // Compact and medium: the top controls; the rail names the
       // destination. The PC sidebar holds the controls and highlights the
       // destination, so the pane has no bar at all: it starts with the
       // destination's own header (Chats' title, visual language
       // Desktop.png), never a title repeating the sidebar (slice-R14).
-      topBar: sidebar ? null : KitTopBar.shell(controls: controls),
-      page: sidebar,
+      topBar: sidebar || ownsTop ? null : KitTopBar.shell(controls: controls),
+      page: sidebar || ownsTop,
       bodySays: pillSaysConnection
           ? const {KitStatusKind.connection}
           : const <KitStatusKind>{},

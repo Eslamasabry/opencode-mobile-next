@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'kit_divider.dart';
 import 'kit_frost.dart';
 import 'kit_max_width.dart';
 import 'kit_tokens.dart';
@@ -19,9 +20,14 @@ import 'kit_tokens.dart';
 ///
 /// States: none - a layout line; each chip carries its own selected look.
 class KitFilterChips extends StatefulWidget {
-  const KitFilterChips({super.key, required this.chips});
+  const KitFilterChips({super.key, required this.chips, this.lead});
 
   final List<Widget> chips;
+
+  /// A control that is not a filter (the server switcher) held fixed at the
+  /// start of the line, then a short vertical divider. It never scrolls and
+  /// is capped at 55% of the line; only [chips] scroll and fade, beside it.
+  final Widget? lead;
 
   /// How wide an edge's fade is: the gutter plus 32 dp, enough to show a
   /// word fading rather than cut.
@@ -71,13 +77,16 @@ class _KitFilterChipsState extends State<KitFilterChips> {
     // (KitFrost.lineInsetOf): the chips scroll and fade inside the pane,
     // never across its edge. Their start stays on the gutter.
     final inset = KitFrost.lineInsetOf(context).clamp(0.0, tokens.gutter);
+    final lead = widget.lead;
     final line = NotificationListener<ScrollMetricsNotification>(
       onNotification: (n) => _onMetrics(n.metrics),
       child: NotificationListener<ScrollUpdateNotification>(
         onNotification: (n) => _onMetrics(n.metrics),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.symmetric(horizontal: tokens.gutter - inset),
+          padding: lead == null
+              ? EdgeInsets.symmetric(horizontal: tokens.gutter - inset)
+              : EdgeInsetsDirectional.only(end: tokens.gutter - inset),
           child: Row(
             children: [
               for (var i = 0; i < chips.length; i++) ...[
@@ -97,28 +106,50 @@ class _KitFilterChipsState extends State<KitFilterChips> {
     final fadeLeft = rtl ? _moreAfter : _moreBefore;
     final fadeRight = rtl ? _moreBefore : _moreAfter;
     final fade = KitFilterChips.fadeWidth(tokens);
+    final scrolling = ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) {
+        final edge = bounds.width <= 0
+            ? 0.0
+            : (fade / bounds.width).clamp(0.0, 0.5);
+        // A mask: only the alpha counts (dstIn), so any opaque role works.
+        final solid = tokens.roles.ground.withValues(alpha: 1);
+        final clear = solid.withValues(alpha: 0);
+        return LinearGradient(
+          colors: [
+            fadeLeft ? clear : solid,
+            solid,
+            solid,
+            fadeRight ? clear : solid,
+          ],
+          stops: [0, edge, 1 - edge, 1],
+        ).createShader(bounds);
+      },
+      child: line,
+    );
+    if (lead == null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: inset),
+        child: scrolling,
+      );
+    }
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: inset),
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (bounds) {
-          final edge = bounds.width <= 0
-              ? 0.0
-              : (fade / bounds.width).clamp(0.0, 0.5);
-          // A mask: only the alpha counts (dstIn), so any opaque role works.
-          final solid = tokens.roles.ground.withValues(alpha: 1);
-          final clear = solid.withValues(alpha: 0);
-          return LinearGradient(
-            colors: [
-              fadeLeft ? clear : solid,
-              solid,
-              solid,
-              fadeRight ? clear : solid,
+      padding: EdgeInsetsDirectional.only(start: tokens.gutter, end: inset),
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth * .55),
+              child: lead,
+            ),
+            SizedBox(width: tokens.space2),
+            if (chips.isNotEmpty) ...[
+              SizedBox(height: 24, child: const KitDivider.vertical()),
+              SizedBox(width: tokens.space2),
             ],
-            stops: [0, edge, 1 - edge, 1],
-          ).createShader(bounds);
-        },
-        child: line,
+            Expanded(child: scrolling),
+          ],
+        ),
       ),
     );
   }

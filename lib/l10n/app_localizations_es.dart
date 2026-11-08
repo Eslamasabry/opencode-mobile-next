@@ -36396,4 +36396,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'Reintentando en modo de compatibilidad';
+
+  @override
+  String chatsHomeRunningCount(int count) {
+    return 'Running · $count';
+  }
 }

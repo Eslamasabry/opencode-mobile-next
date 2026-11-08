@@ -10971,5 +10971,6 @@
   "agentPersonaAntigravityNeeds": "حساب Google؛ سجّل الدخول في المتصفح",
   "agentsAntigravitySignInIntro": "يعرض Antigravity رابط تسجيل الدخول في الطرفية. افتحه في المتصفح وسجّل الدخول باستخدام Google، ثم الصق الرمز الذي يعرضه المتصفح في الطرفية.",
   "agentsGeminiMigrationNote": "إذا طلب منك Gemini CLI استخدام Antigravity، ارجع إلى الوكلاء وثبّت Antigravity (agy). تبقى محادثات Gemini هنا.",
-  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق"
+  "phoneSetupStageCompat": "جارٍ المحاولة مجددًا في وضع التوافق",
+  "chatsHomeRunningCount": "قيد العمل · {count}"
 }

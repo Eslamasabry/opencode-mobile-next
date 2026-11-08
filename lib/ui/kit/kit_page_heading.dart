@@ -39,6 +39,7 @@ class KitPageHeading extends StatelessWidget {
     this.titleKey,
     this.lineKey,
     this.lineTapKey,
+    this.actions = const [],
   }) : assert(
          onLineTap == null || (lineTapLabel ?? '') != '',
          'KitPageHeading: a switcher line needs a lineTapLabel',
@@ -57,6 +58,11 @@ class KitPageHeading extends StatelessWidget {
   /// The line says what waits on the person: amber, and it opens.
   final bool lineNeedsYou;
   final Key? titleKey, lineKey, lineTapKey;
+
+  /// Plain icon buttons (48 dp, no ring) at the end of the title's line,
+  /// vertically centred on its first line: search and Settings on the
+  /// Conversations home. They mirror with the reading direction.
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) =>
@@ -112,28 +118,39 @@ class KitPageHeading extends StatelessWidget {
               ),
       );
     }
+    final heading = Semantics(
+      header: true,
+      namesRoute: namesRoute,
+      child: KitText(
+        title,
+        key: titleKey,
+        role: KitTextRole.largeTitle,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
     return Padding(
       // A step of air under the bar (or a wide window's toolbar hairline).
       padding: EdgeInsetsDirectional.only(
         start: tokens.gutter,
-        end: tokens.gutter,
+        // Icon buttons carry their own 12 dp of air: their glyphs sit on the
+        // gutter's line.
+        end: actions.isEmpty ? tokens.gutter : tokens.gutter - 12,
         top: tokens.space2,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Semantics(
-            header: true,
-            namesRoute: namesRoute,
-            child: KitText(
-              title,
-              key: titleKey,
-              role: KitTextRole.largeTitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          if (actions.isEmpty)
+            heading
+          else
+            Row(
+              children: [
+                Expanded(child: heading),
+                ...actions,
+              ],
             ),
-          ),
           ?quiet,
         ],
       ),

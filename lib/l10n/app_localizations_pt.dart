@@ -36042,4 +36042,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'Trying again in compatibility mode';
+
+  @override
+  String chatsHomeRunningCount(int count) {
+    return 'Running · $count';
+  }
 }

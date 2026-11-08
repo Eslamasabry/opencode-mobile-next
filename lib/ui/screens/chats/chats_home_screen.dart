@@ -11,6 +11,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../state/factsbook/factsbook_flag.dart';
 import '../../../state/session_inventory_cache.dart' show SessionPreview;
 import '../../app_iconography.dart';
+import '../../app_theme.dart' show AppStatusTone;
 import '../../kit/kit.dart';
 import '../../widgets/session_title.dart';
 import '../agents/agent_notices.dart';
@@ -31,8 +32,19 @@ import 'new_chat_screen.dart';
 /// new value arriving later replaces the filter. "Needs you" is not a filter
 /// any more: its chip opens the Inbox (vision, 2026-10-20). The server pill and search belong to the shell's
 /// own bar; this screen draws none.
+///
+/// On a phone (no navigation rail, no bar) the screen owns the top: the
+/// title with search and Settings as plain icon buttons, then the
+/// connection pill beside the filters. [controls] is non-null only then.
 class ChatsHomeScreen extends ConsumerStatefulWidget {
-  const ChatsHomeScreen({super.key, this.initialFilter, this.opening});
+  const ChatsHomeScreen({
+    super.key,
+    this.initialFilter,
+    this.opening,
+    this.controls,
+  });
+
+  final ChatsHomeControls? controls;
 
   final ChatFeedFilter? initialFilter;
 
@@ -42,6 +54,29 @@ class ChatsHomeScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<ChatsHomeScreen> createState() => _ChatsHomeScreenState();
+}
+
+/// What the phone's Conversations top needs from the shell: the connection
+/// pill (the server switcher, same sheet) and the two icon buttons.
+class ChatsHomeControls {
+  const ChatsHomeControls({
+    required this.server,
+    required this.status,
+    required this.tone,
+    required this.onServer,
+    this.onSearch,
+    this.onSettings,
+  });
+
+  final String server;
+
+  /// "Connected", "Offline", "Connecting…": spoken always, shown only when
+  /// the connection is not healthy.
+  final String status;
+  final AppStatusTone tone;
+  final VoidCallback onServer;
+  final VoidCallback? onSearch;
+  final VoidCallback? onSettings;
 }
 
 final _noChanges = ValueNotifier<int>(0);
@@ -358,6 +393,9 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         .where((connection) => !connection.unreachable)
         .length;
     final needsCount = host.inboxCount;
+    final runningCount = snapshot.items
+        .where((item) => item.status == ChatStatus.running)
+        .length;
 
     // The one project a server that cannot list across projects shows.
     final onlyName =
@@ -392,6 +430,24 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           // across projects and servers. It counts what the Inbox lists.
           child: KitPageHeading(
             title: l10n.chatsHomeTitle,
+            actions: [
+              if (widget.controls?.onSearch case final onSearch?)
+                KitIconButton(
+                  key: const ValueKey('home-shell-search'),
+                  icon: AppIconography.search,
+                  tooltip: l10n.kitTopBarSearch,
+                  onPressed: onSearch,
+                ),
+              if (widget.controls?.onSettings case final onSettings?)
+                KitIconButton(
+                  key: const ValueKey('home-shell-settings'),
+                  icon: AppIconography.settingsGear,
+                  tooltip: l10n.librarySettingsTitle,
+                  motion: KitIconMotion.turn,
+                  onPressed: onSettings,
+                ),
+            ],
+            title2: null,
             line: needsCount > 0 ? _needsYouWords(l10n, needsCount) : null,
             lineNeedsYou: true,
             onLineTap: needsCount > 0
@@ -407,54 +463,79 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       // Nothing to filter on a list that holds nothing yet: the calm state
       // alone (vision 2026-10-20). A filter that emptied the list keeps its
       // chips, so it can be changed back.
-      if (!nothingAtAll)
+      if (!nothingAtAll || widget.controls != null)
         KitFilterChips(
-          chips: [
-            KitChip.summary(
-              key: const ValueKey('chats-filter-project'),
-              label: _filter.otherFolders
-                  ? l10n.chatsHomeOtherFolders
-                  : projectName == null
-                  ? l10n.chatsHomeAllProjects
-                  : KitBidi.auto(projectName),
-              expanded: false,
-              tone: projectName == null && !_filter.otherFolders
-                  ? KitChipTone.neutral
-                  : KitChipTone.active,
-              // Projects are known once the server answers.
-              onPressed: standIn ? () {} : () => unawaited(_pickProject(host)),
-            ),
-            // Which connections' conversations show, once there is more than
-            // one (Termux beside the in-app Ubuntu, the agents).
-            if (listSources != null && liveConnections > 1)
-              KitChip.summary(
-                key: const ValueKey('chats-filter-sources'),
-                label: shownConnections == connections.length
-                    ? l10n.chatsSourcesAll
-                    : l10n.chatsSourcesSome(
-                        shownConnections,
-                        connections.length,
-                      ),
-                expanded: false,
-                tone: shownConnections == connections.length
-                    ? KitChipTone.neutral
-                    : KitChipTone.active,
-                onPressed: () => unawaited(
-                  showChatsSourcesSheet(
-                    context,
-                    sources: listSources,
-                    nameOf: (source) =>
-                        host.connectionName(context, source.id, source.name),
-                  ),
+          lead: widget.controls == null
+              ? null
+              : KitStatusPill(
+                  pillKey: const ValueKey('server-switcher-button'),
+                  label: KitBidi.auto(widget.controls!.server),
+                  semanticsLabel: [
+                    KitBidi.auto(widget.controls!.server),
+                    widget.controls!.status,
+                    l10n.kitTopBarSwitchServer,
+                  ].join(', '),
+                  tone: widget.controls!.tone,
+                  word: widget.controls!.tone == AppStatusTone.ok
+                      ? null
+                      : widget.controls!.status,
+                  onPressed: widget.controls!.onServer,
                 ),
-              ),
-            KitFilterChip(
-              key: const ValueKey('chats-filter-running'),
-              label: l10n.chatsHomeRunning,
-              selected: _filter.running,
-              onPressed: _toggleRunning,
-            ),
-          ],
+          chips: nothingAtAll
+              ? const []
+              : [
+                  KitChip.summary(
+                    key: const ValueKey('chats-filter-project'),
+                    label: _filter.otherFolders
+                        ? l10n.chatsHomeOtherFolders
+                        : projectName == null
+                        ? l10n.chatsHomeAllProjects
+                        : KitBidi.auto(projectName),
+                    expanded: false,
+                    tone: projectName == null && !_filter.otherFolders
+                        ? KitChipTone.neutral
+                        : KitChipTone.active,
+                    // Projects are known once the server answers.
+                    onPressed: standIn
+                        ? () {}
+                        : () => unawaited(_pickProject(host)),
+                  ),
+                  // Which connections' conversations show, once there is more than
+                  // one (Termux beside the in-app Ubuntu, the agents).
+                  if (listSources != null && liveConnections > 1)
+                    KitChip.summary(
+                      key: const ValueKey('chats-filter-sources'),
+                      label: shownConnections == connections.length
+                          ? l10n.chatsSourcesAll
+                          : l10n.chatsSourcesSome(
+                              shownConnections,
+                              connections.length,
+                            ),
+                      expanded: false,
+                      tone: shownConnections == connections.length
+                          ? KitChipTone.neutral
+                          : KitChipTone.active,
+                      onPressed: () => unawaited(
+                        showChatsSourcesSheet(
+                          context,
+                          sources: listSources,
+                          nameOf: (source) => host.connectionName(
+                            context,
+                            source.id,
+                            source.name,
+                          ),
+                        ),
+                      ),
+                    ),
+                  KitFilterChip(
+                    key: const ValueKey('chats-filter-running'),
+                    label: runningCount > 0
+                        ? l10n.chatsHomeRunningCount(runningCount)
+                        : l10n.chatsHomeRunning,
+                    selected: _filter.running,
+                    onPressed: _toggleRunning,
+                  ),
+                ],
         ),
     ];
 
@@ -814,7 +895,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     // The notices above it are not a section to separate from: the first
     // label keeps the zero gap it had when they sat in the fixed header.
     Widget section(
-      String label,
+      String? label,
       List<ChatFeedItem> group, {
       bool first = false,
     }) => KitSliverRowGroup(
@@ -857,7 +938,12 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         if (todays.isNotEmpty)
           section(l10n.chatsHomeToday, todays, first: true),
         if (earlier.isNotEmpty)
-          section(l10n.chatsHomeEarlier, earlier, first: todays.isEmpty),
+          section(
+            // Alone, "Earlier" divides nothing: no label.
+            todays.isEmpty ? null : l10n.chatsHomeEarlier,
+            earlier,
+            first: todays.isEmpty,
+          ),
         SliverToBoxAdapter(child: SizedBox(height: end)),
       ],
     );

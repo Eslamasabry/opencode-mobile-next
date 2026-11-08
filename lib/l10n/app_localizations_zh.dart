@@ -34140,4 +34140,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => '正在以兼容模式重试';
+
+  @override
+  String chatsHomeRunningCount(int count) {
+    return 'Running · $count';
+  }
 }

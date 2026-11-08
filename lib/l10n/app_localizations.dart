@@ -56645,6 +56645,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trying again in compatibility mode'**
   String get phoneSetupStageCompat;
+
+  /// Chats home: the Running filter chip with how many conversations are running
+  ///
+  /// In en, this message translates to:
+  /// **'Running · {count}'**
+  String chatsHomeRunningCount(int count);
 }
 
 class _AppLocalizationsDelegate

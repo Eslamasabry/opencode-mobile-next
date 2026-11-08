@@ -36105,4 +36105,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneSetupStageCompat => 'جارٍ المحاولة مجددًا في وضع التوافق';
+
+  @override
+  String chatsHomeRunningCount(int count) {
+    return 'قيد العمل · $count';
+  }
 }

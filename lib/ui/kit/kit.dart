@@ -253,6 +253,7 @@ export 'style/kit_signal.dart'
         kitSignalTies;
 export 'kit_filter_chip.dart';
 export 'kit_filter_chips.dart';
+export 'kit_status_pill.dart';
 export 'kit_fine_tune_panel.dart';
 export 'kit_floating_action.dart';
 export 'kit_status_tag.dart';
