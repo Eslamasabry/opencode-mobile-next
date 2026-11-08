@@ -40,8 +40,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}
-  cancel-in-progress: true
+  group: native-ci-${{ github.ref }}-${{ inputs.lane || 'push' }}-${{ inputs.tasks != '' }}-${{ inputs.apk_only == true }}
+  # native/next runs queue (the batcher is the only dispatcher); every other branch still cancels its older run
+  cancel-in-progress: ${{ github.ref != 'refs/heads/native/next' }}
 
 env:
   # Runners have 4 CPUs and 16 GB. Gradle daemon 6g + Kotlin in-process (gradle.properties) + test forks.
@@ -76,10 +77,14 @@ jobs:
         run: |
           mode=all; tasks=""; count=4
           if [ "$LANE" = fast ]; then
-            if ! git rev-parse --verify -q "origin/$BASE^{commit}" >/dev/null; then
-              git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+            # base is a branch name, or a commit sha (the native/next batcher passes the last green sha)
+            if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else
+              ref="origin/$BASE"
+              if ! git rev-parse --verify -q "$ref^{commit}" >/dev/null; then
+                git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" || true
+              fi
             fi
-            out="$(tool/ci/fast_tasks.sh "origin/$BASE" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
+            out="$(tool/ci/fast_tasks.sh "$ref" 2> "$RUNNER_TEMP/why.txt")" || out=ALL
             cat "$RUNNER_TEMP/why.txt"
             if [ "$out" != ALL ]; then
               mode=list; tasks="$(printf '%s\n' "$out" | tr '\n' ' ')"; n=$(printf '%s\n' "$out" | grep -c . || true)
@@ -349,6 +354,8 @@ jobs:
         env:
           BASE: ${{ inputs.base || 'native/screens-merge41' }}
         run: |
+          # a sha base (native/next batcher) has no runs of its own: compare with the newest native/next run instead
+          if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then BASE=native/next; fi
           mkdir -p reports base
           gh run download "${{ github.run_id }}" -p 'report-*' -D reports || true
           for id in $(gh run list --workflow native-ci.yml --branch "$BASE" --status completed --limit 10 --json databaseId -q '.[].databaseId'); do
