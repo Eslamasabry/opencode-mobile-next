@@ -393,9 +393,8 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                         // Flutter `review-all-viewed`: every file seen with comments written, the way back is offered.
                         if (state.allViewed && state.drafts > 0)
                             KitNotice(
-                                pluralStringResource(Res.plurals.reviewSendComments, state.drafts, state.drafts),
+                                stringResource(Res.string.reviewWorkspaceAllViewedTitle),
                                 Modifier.testTag("review-all-viewed"),
-                                title = stringResource(Res.string.reviewWorkspaceAllViewedTitle),
                                 tone = StatusTone.Ok,
                                 actions =
                                     listOf(

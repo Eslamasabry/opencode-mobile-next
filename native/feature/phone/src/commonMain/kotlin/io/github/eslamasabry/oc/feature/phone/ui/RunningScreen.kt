@@ -212,8 +212,8 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 state.groups.forEach { group ->
                     KitRowGroup(
                         Modifier.testTag("running-group-${group.id}"),
-                        label = groupLabel(group),
-                        note = groupFacts(group).ifEmpty { null },
+                        // Flutter puts the group's figures on its heading line, so heat shows where it comes from.
+                        label = listOf(groupLabel(group), groupFacts(group)).filter { it.isNotEmpty() }.joinToString(" · "),
                         leadingTiles = group.kind != RunningGroupKind.LeftBehind,
                     ) {
                         group.rows.forEach {
