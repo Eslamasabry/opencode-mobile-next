@@ -26,6 +26,8 @@ public class ProjectServer(
     /** Capability to open shared folders on this phone for this connection. */
     public val phoneFolders: Boolean = false,
     public val attention: StateFlow<ElsewhereSnapshot>? = null,
+    /** B-182: the connection's own state, for "Connected" / "Connecting" / "Not connected". Null = answering. */
+    public val status: StateFlow<io.github.eslamasabry.oc.core.model.StreamStatus>? = null,
 )
 
 /** The live connections and the active one. The app binds the real one (ProjectsWiring). */

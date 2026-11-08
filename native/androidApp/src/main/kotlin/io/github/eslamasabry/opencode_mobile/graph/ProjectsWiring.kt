@@ -119,6 +119,7 @@ class LiveProjectServers(
                             graph.profile.backend == BackendKind.OpenCode2 &&
                                 ManagedLocalServer.isBuiltin(graph.profile.origin.toString()),
                         attention = trackers[id]?.state,
+                        status = graph.session.status,
                     )
                 }
             }

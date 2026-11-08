@@ -9,8 +9,11 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import dev.zacsweers.metrox.viewmodel.metroViewModel
+import io.github.eslamasabry.oc.feature.projects.presentation.OpenProjectViewModel
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageViewModel
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerViewModel
+import io.github.eslamasabry.oc.feature.projects.ui.OpenProjectScreen
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectPageScreen
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectsPickerScreen
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -38,6 +41,11 @@ public class ProjectsEntries(
                 }
             val state by vm.state.collectAsStateWithLifecycle()
             chatEnvironment.Provide { ProjectsPickerScreen(state, vm) }
+        }
+        entry<ProjectsRoute.Open> {
+            val vm = metroViewModel<OpenProjectViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            chatEnvironment.Provide { OpenProjectScreen(state, vm) }
         }
         entry<ProjectsRoute.Project> { route ->
             val vm =

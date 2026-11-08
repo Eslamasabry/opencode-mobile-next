@@ -16,6 +16,12 @@ public sealed interface ProjectsRoute : AppRoute {
      */
     @Serializable public data class Picker(val profile: ProfileId? = null) : ProjectsRoute
 
+    /**
+     * B-182 "Open a project" from the home's project chip: where the project is (each connected server), that
+     * server's projects, then its folders, with New folder, Clone a repository and Type a path.
+     */
+    @Serializable public data object Open : ProjectsRoute
+
     /** One project: New conversation here, its conversations, and "In other projects". */
     @Serializable
     public data class Project(
