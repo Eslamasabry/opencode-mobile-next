@@ -56,7 +56,7 @@ public fun KitStack(modifier: Modifier = Modifier, content: @Composable ColumnSc
  * Marks this node a container of the enclosing [KitStack]: when another container ends right where this one starts,
  * it takes [KIT_CONTAINER_GAP_DP] above. Settles one frame after the first layout.
  */
-public fun Modifier.kitContainer(): Modifier = composed {
+public fun Modifier.kitContainer(spaced: Boolean = true): Modifier = composed {
     val tracker = LocalKitStack.current ?: return@composed this
     val id = remember(tracker) { tracker.next++ }
     var pad by remember { mutableStateOf(0f) }
@@ -67,6 +67,7 @@ public fun Modifier.kitContainer(): Modifier = composed {
             val top = c.positionInRoot().y
             val bottom = top + c.size.height
             tracker.spans[id] = top to bottom
+            if (!spaced) return@onGloballyPositioned
             val flush = tracker.spans.any { (other, s) -> other != id && s.second <= top + 1f && top - s.second < 1f && s.second >= top - 1f }
             val wanted = if (flush) with(density) { KIT_CONTAINER_GAP_DP.dp.toPx() } else 0f
             // Sticky: once padded the node sits a gap below its neighbour, which is not flush any more.
