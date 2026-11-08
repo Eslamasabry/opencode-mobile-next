@@ -184,6 +184,32 @@ class LiquidEdgeTest {
         assertEquals(setOf("menu", "sheet"), LiquidEdge.grant(claims + menu))
     }
 
+    // ---- adaptive ink
+
+    @Test
+    fun `B-KIT-003 a pane flips to dark ink over bright content and back to light over dark, with hysteresis`() {
+        assertEquals(LiquidInk.Dark, LiquidInkRule.next(LiquidInk.Light, .80f))
+        assertEquals(LiquidInk.Light, LiquidInkRule.next(LiquidInk.Dark, .20f))
+        // Mid-grey content keeps whatever ink the pane has: no flicker as it scrolls past.
+        assertEquals(LiquidInk.Light, LiquidInkRule.next(LiquidInk.Light, .55f))
+        assertEquals(LiquidInk.Dark, LiquidInkRule.next(LiquidInk.Dark, .50f))
+        assertTrue(LiquidInkRule.TO_DARK - LiquidInkRule.TO_LIGHT >= .15f)
+        assertEquals(LiquidInk.Light, LiquidInkRule.of(dark = true))
+        assertEquals(LiquidInk.Dark, LiquidInkRule.of(dark = false))
+        assertTrue(LiquidInkRule.FLIP_MS in 150..200)
+    }
+
+    @Test
+    fun `B-KIT-003 the sample's mean luminance and variance tell bright, dark and busy content apart`() {
+        val white = IntArray(64) { 0xFFFFFFFF.toInt() }
+        val black = IntArray(64) { 0xFF000000.toInt() }
+        val stripes = IntArray(64) { if (it % 2 == 0) 0xFFFFFFFF.toInt() else 0xFF000000.toInt() }
+        assertEquals(1f, LiquidInkRule.measure(white).first, 1e-3f)
+        assertEquals(0f, LiquidInkRule.measure(black).first, 1e-3f)
+        assertTrue(LiquidInkRule.measure(white).second < LiquidInkRule.BUSY)
+        assertTrue(LiquidInkRule.measure(stripes).second > LiquidInkRule.BUSY, "black-and-white stripes are busy")
+    }
+
     private fun Argb.solid(): Argb = Argb(v or (0xFF shl 24))
 
     private fun hueGap(a: Double, b: Double): Double {
