@@ -177,15 +177,22 @@ private fun PhoneFrame(name: String, content: @Composable () -> Unit) {
     val layer = rememberGraphicsLayer()
     val drawn = remember { Channel<Unit>(Channel.CONFLATED) }
     LaunchedEffect(name) {
+        var last = 0
         drawn.receiveAsFlow().collect {
             delay(120) // let a burst of frames settle
             val image = layer.toImageBitmap().toAwtImage()
-            withContext(Dispatchers.IO) {
-                val tmp = File(shots, ".$name.png.tmp")
-                ImageIO.write(image, "png", tmp)
-                tmp.copyTo(File(shots, "latest.png"), overwrite = true)
-                tmp.renameTo(File(shots, "$name.png"))
+            // Only a changed picture is written, at most about once a second (a pulsing dot redraws all the time).
+            val hash = image.getRGB(0, 0, image.width, image.height, null, 0, image.width).contentHashCode()
+            if (hash != last) {
+                last = hash
+                withContext(Dispatchers.IO) {
+                    val tmp = File(shots, ".$name.png.tmp")
+                    ImageIO.write(image, "png", tmp)
+                    tmp.copyTo(File(shots, "latest.png"), overwrite = true)
+                    tmp.renameTo(File(shots, "$name.png"))
+                }
             }
+            delay(880)
         }
     }
     Box(
