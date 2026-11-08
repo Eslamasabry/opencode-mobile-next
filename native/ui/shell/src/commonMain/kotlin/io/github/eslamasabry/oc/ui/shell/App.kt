@@ -1,5 +1,19 @@
 package io.github.eslamasabry.oc.ui.shell
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.shell.nav.ShellDestination
+import io.github.eslamasabry.oc.ui.shell.nav.ShellRailFrame
+import io.github.eslamasabry.oc.ui.shell.nav.ShellShortcut
+import io.github.eslamasabry.oc.ui.shell.nav.ShellShortcuts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -24,7 +38,6 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusScope
-import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.RouteSaving
@@ -95,19 +108,53 @@ public fun NavShell(
     val conditions = deps.statusSources.mapNotNull { it.status() }
     KitStatusScope(conditions) {
         // N-55: a hardware key nothing on the page used never presses a button or turns into Back.
-        ShellKeyPark(onChat = { backStack.lastOrNull() is ChatRoute }) {
-            // App-wide questions get their own modal host above every route (each KitScreen hosts
-            // its own modals inside); with none contributed the tree is unchanged.
-            if (deps.overlays.isEmpty()) {
-                ShellNav(backStack, gate, scale, deps, provider)
-            } else {
-                KitSheetHost(Modifier.fillMaxSize()) {
-                    ShellNav(backStack, gate, scale, deps, provider)
-                    deps.overlays.forEach { it.Content() }
+        // s28: the shell's Ctrl/⌘ shortcuts (F: shortcuts.dart), with or without a field focused; outside the
+        // focus park so a parked focus still reaches them.
+        Box(
+            Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                val shortcut =
+                    ShellShortcuts.of(
+                        event.key,
+                        event.isCtrlPressed,
+                        event.isMetaPressed,
+                        event.isAltPressed,
+                        event.isShiftPressed,
+                    ) ?: return@onPreviewKeyEvent false
+                ShellShortcuts.perform(shortcut, deps.navigator, backStack.lastOrNull() as? AppRoute)
+                true
+            }
+        ) {
+            ShellKeyPark(onChat = { backStack.lastOrNull() is ChatRoute }) {
+                // App-wide questions get their own modal host above every route (each KitScreen hosts
+                // its own modals inside); with none contributed the tree is unchanged.
+                if (deps.overlays.isEmpty()) {
+                    ShellWide(backStack, deps) { ShellNav(backStack, gate, scale, deps, provider) }
+                } else {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ShellWide(backStack, deps) { ShellNav(backStack, gate, scale, deps, provider) }
+                        deps.overlays.forEach { it.Content() }
+                    }
                 }
             }
         }
     }
+}
+
+/** s28: from medium, the rail beside the shell's destinations (Conversations, Settings); a phone is unchanged. */
+@Composable
+private fun ShellWide(backStack: List<NavKey>, deps: ShellDependencies, content: @Composable () -> Unit) {
+    val top = backStack.lastOrNull() as? AppRoute
+    ShellRailFrame(
+        top = top,
+        onSelect = { destination ->
+            when (destination) {
+                ShellDestination.Chats -> ShellShortcuts.perform(ShellShortcut.Chats, deps.navigator, top)
+                ShellDestination.Settings -> ShellShortcuts.openSettings(deps.navigator, top)
+            }
+        },
+        content = content,
+    )
 }
 
 @Composable
