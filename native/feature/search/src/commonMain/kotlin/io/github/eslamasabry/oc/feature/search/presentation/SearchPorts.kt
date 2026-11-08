@@ -51,6 +51,8 @@ public data class SearchGoToFacts(
     val hasShell: Boolean = true,
     val projectDirectory: String? = null,
     val projectRef: ConversationRef? = null,
+    /** This server has an AI Team set up (Flutter `scope.hasTeam`). */
+    val hasTeam: Boolean = false,
 )
 
 /** The visible text of one message (text parts only; no tool output, no files). */

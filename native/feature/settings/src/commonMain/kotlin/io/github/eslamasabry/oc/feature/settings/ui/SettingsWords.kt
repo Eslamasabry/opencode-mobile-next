@@ -18,6 +18,8 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.a2aTitle
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.discoverTeamAliases
+import io.github.eslamasabry.oc.ui.words.res.teamSettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailInstaller
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailNetwork
@@ -198,6 +200,7 @@ internal fun rowKey(row: SettingsRowId): StringResource =
         SettingsRowId.Usage -> Res.string.settingsHubGroupUsage
         SettingsRowId.Tools -> Res.string.settingsHubToolsRow
         SettingsRowId.Agents -> Res.string.settingsV3AgentsOnPhone
+        SettingsRowId.AiTeam -> Res.string.teamUiHomeTitle
         SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
         SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
         SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
@@ -255,8 +258,10 @@ internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
                 Res.string.a2aTitle,
                 Res.string.settingsHubSearchExternalAgentsAliases,
             )
-        SettingsRowId.Agents ->
-            listOf(Res.string.agentsSectionTitle, Res.string.teamUiHomeTitle, Res.string.a2aTitle)
+        SettingsRowId.Agents -> listOf(Res.string.agentsSectionTitle, Res.string.a2aTitle)
+        // F: hub_rows.dart:147-159 (discoverTeamAliases, teamSettingsTitle, teamUiPluginsTitle).
+        SettingsRowId.AiTeam ->
+            listOf(Res.string.discoverTeamAliases, Res.string.teamSettingsTitle, Res.string.teamUiPluginsTitle)
         SettingsRowId.ShowReasoning ->
             listOf(
                 Res.string.settingsHubSearchReasoningAliases,

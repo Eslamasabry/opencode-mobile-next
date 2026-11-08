@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.AboutFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
@@ -131,6 +132,7 @@ internal fun ColumnScope.AboutBody(
     actions: SettingsActions,
     voiceLicenses: Boolean = false,
     updates: UpdateFacts? = null,
+    memory: MemoryPreviewUi? = null,
 ) {
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     val knownBuild = about.version.isNotBlank() && about.build.isNotBlank()
@@ -210,6 +212,30 @@ internal fun ColumnScope.AboutBody(
         if (voiceLicenses) {
             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
             VoiceLicenseRows(actions)
+        }
+        // The developer switch (F: about_screen.dart _DeveloperGroup): off by default; Chats home's Memory section
+        // shows while it is on.
+        if (memory != null) {
+            Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+            KitRowGroup(label = stringResource(Res.string.fbDeveloperTitle), leadingTiles = true) {
+                KitSwitchRow(
+                    title = stringResource(Res.string.fbDeveloperFactsBook),
+                    checked = memory.on,
+                    supporting = stringResource(Res.string.fbDeveloperFactsBookDetail),
+                    leading = KitRowLeading.Glyph(KitIcons.database),
+                    onCheckedChange = actions::onMemoryPreview,
+                )
+                if (memory.on && memory.phoneNode) {
+                    KitRow(
+                        title = stringResource(Res.string.fbNodeRow),
+                        supporting = stringResource(Res.string.fbNodeRowDetail),
+                        supportingMaxLines = 3,
+                        leading = KitRowLeading.Glyph(KitIcons.phone),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { actions.onOutside(SettingsOutside.MemoryOnPhone) },
+                    )
+                }
+            }
         }
     }
 }

@@ -93,8 +93,9 @@ public object SearchIndex {
                 add("settings-providers", SearchPlace.Providers, ProvidersRoute(profile))
             if (caps.setupConfigRead)
                 add("inside-server-ai-setup", SearchPlace.AiSetup, ServersRoute.Setup(profile))
-            if (platform.builtinLinux && caps.phoneTeamExecution)
-                add("ai-team", SearchPlace.Agents, AgentsRoute.Home)
+            // F: search_index/places.dart:206 (`hasTeam`): the team page, not the phone's agents.
+            if (facts.hasTeam || (platform.builtinLinux && caps.phoneTeamExecution))
+                add("ai-team", SearchPlace.Agents, TeamRoute.Home(profile))
             if (caps.profileAttentionPolling)
                 add(
                     "inside-notifications-servers",

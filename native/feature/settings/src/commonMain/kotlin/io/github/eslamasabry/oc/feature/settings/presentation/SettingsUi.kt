@@ -24,6 +24,8 @@ public data class SettingsUi(
     val notifications: NotificationFacts? = null,
     val updates: UpdateFacts? = null,
     val about: AboutFacts = AboutFacts(),
+    /** About › Developer; null hides the group. */
+    val memoryPreview: MemoryPreviewUi? = null,
     val whatsNew: WhatsNewUi? = null,
     val privacy: PrivacyUi? = null,
     val localData: LocalDataUi? = null,
@@ -244,6 +246,9 @@ public data class UpdateFacts(
     val checksOn: Boolean = true,
     val state: UpdateState = UpdateState.NeverChecked,
 )
+
+/** About › Developer: the Memory (preview) switch, and "Use memory on this phone" while it is on. */
+public data class MemoryPreviewUi(val on: Boolean, val phoneNode: Boolean)
 
 public data class AboutFacts(
     val version: String = "",

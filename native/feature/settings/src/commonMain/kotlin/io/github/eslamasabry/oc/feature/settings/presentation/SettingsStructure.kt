@@ -18,6 +18,8 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Usage("settings-usage", SettingsGroupId.Agent),
     Tools("settings-tools", SettingsGroupId.Agent),
     Agents("settings-agents", SettingsGroupId.Agent),
+    /** Flutter Settings › Agents › AI Team (`settings-ai-team`): the team page of the connected server. */
+    AiTeam("settings-ai-team", SettingsGroupId.Agent),
     ShowReasoning("settings-show-reasoning", SettingsGroupId.Conversations),
     ShowTimestamps("settings-show-timestamps", SettingsGroupId.Conversations),
     PhraseChips("settings-phrase-chips", SettingsGroupId.Conversations),
@@ -142,6 +144,9 @@ public object SettingsStructure {
                             SettingsDoor.Outside(SettingsOutside.Tools).takeIf { connected }
                         SettingsRowId.Agents ->
                             SettingsDoor.Outside(SettingsOutside.Agents).takeIf { p.builtinLinux }
+                        // F: agents_permissions_screens.dart:48 (shown with a server): the page says what is there.
+                        SettingsRowId.AiTeam ->
+                            SettingsDoor.Outside(SettingsOutside.AiTeam).takeIf { connected }
                         SettingsRowId.ShowReasoning ->
                             SettingsDoor.Switch(reasoning).takeIf { facts.transcriptDisplay }
                         SettingsRowId.ShowTimestamps ->

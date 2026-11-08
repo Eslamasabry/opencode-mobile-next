@@ -62,6 +62,7 @@ public class SettingsPresenter(
     private val localData: LocalDataSettings? = null,
     private val reporting: Reporting? = null,
     private val crashOffer: CrashOfferSetting? = null,
+    private val memoryPreview: MemoryPreviewSetting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -72,6 +73,7 @@ public class SettingsPresenter(
         val consentSaving: Boolean = false,
         val crashReports: Boolean? = null,
         val offerCrashReports: Boolean? = null,
+        val memoryPreview: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
         val crash: CrashUi? = null,
@@ -332,6 +334,7 @@ public class SettingsPresenter(
                 },
             updates = e.updates,
             about = about,
+            memoryPreview = memoryPreview?.let { MemoryPreviewUi(l.memoryPreview ?: it.enabled(), it.phoneNode) },
             whatsNew = whatsNew(l, f),
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving, l.crashReports ?: reporting?.reportingConsent?.value, l.offerCrashReports ?: crashOffer?.enabled()) },
             localData =
@@ -835,6 +838,14 @@ public class SettingsPresenter(
         val port = reporting ?: return
         port.setReportingConsent(on)
         local.update { it.copy(crashReports = port.reportingConsent.value) }
+    }
+
+    override fun onMemoryPreview(on: Boolean) {
+        val port = memoryPreview ?: return
+        local.update { it.copy(memoryPreview = on) }
+        scope.launch {
+            if (!port.setEnabled(on)) local.update { it.copy(memoryPreview = !on, note = SettingsNote.ChoiceNotSaved) }
+        }
     }
 
     override fun onOfferCrashReports(on: Boolean) {

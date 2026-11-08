@@ -108,6 +108,9 @@ public enum class SettingsOutside {
     Updates,
     KeptPrompts,
     ReadState,
+    // s26: the AI Team page (Flutter Settings › Agents › AI Team) and FactsBook on this phone (About › Developer).
+    AiTeam,
+    MemoryOnPhone,
 }
 
 /** Opens a place another feature owns. */

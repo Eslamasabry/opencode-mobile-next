@@ -94,6 +94,9 @@ class SearchUsageServers(
 
     fun managedOnPhone(profile: ProfileId): Boolean =
         registryRef.live.value[profile]?.profile?.managedOnPhone == true
+
+    /** The server has an AI Team set up (Flutter `scope.hasTeam`: `controller.orchestration != null`). */
+    suspend fun hasTeam(profile: ProfileId): Boolean = stores.profiles.profile(profile)?.profile?.orchestration != null
 }
 
 private fun stale(): Outcome<Nothing> = Failure.Refused(RefusalReason.StaleScope).failed()
@@ -180,6 +183,7 @@ class AndroidConversationSearch(
             platform = platform,
             managedOnPhone = shared.managedOnPhone(profile),
             hasShell = true,
+            hasTeam = shared.hasTeam(profile),
             projectDirectory = location ?: projectSession?.directory,
             projectRef = projectSession?.let { ConversationRef(profile, it.id) },
         )

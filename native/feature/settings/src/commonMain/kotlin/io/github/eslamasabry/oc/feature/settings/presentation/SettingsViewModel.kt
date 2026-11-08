@@ -35,6 +35,10 @@ public interface SettingsHost {
     public val crashOffer: CrashOfferSetting?
         get() = null
 
+    /** s26: About › Developer's "Memory (preview)"; null where the build has no FactsBook. */
+    public val memoryPreview: MemoryPreviewSetting?
+        get() = null
+
     public val facts: StateFlow<SettingsFacts>
     public val choices: PersonalChoices
     public val openers: SettingsOpeners
@@ -102,6 +106,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             localData = host.localData,
             reporting = host.reporting,
             crashOffer = host.crashOffer,
+            memoryPreview = host.memoryPreview,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

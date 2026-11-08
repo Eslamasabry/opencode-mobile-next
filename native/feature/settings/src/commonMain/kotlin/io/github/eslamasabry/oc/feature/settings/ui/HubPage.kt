@@ -195,6 +195,7 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.Usage -> KitIcons.usage
         SettingsRowId.Tools -> KitIcons.tools
         SettingsRowId.Agents -> KitIcons.agent
+        SettingsRowId.AiTeam -> KitIcons.kanban
         SettingsRowId.ShowReasoning -> KitIcons.idea
         SettingsRowId.ShowTimestamps -> KitIcons.clock
         SettingsRowId.PhraseChips -> KitIcons.chat

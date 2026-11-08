@@ -58,6 +58,9 @@ class SettingsRowsWiringTest {
                 SettingsOutside.UsageAlerts,
                 SettingsOutside.QuietHours,
                 SettingsOutside.Notices,
+                // s26: Settings › Agents › AI Team and About › Developer › Use memory on this phone.
+                SettingsOutside.AiTeam,
+                SettingsOutside.MemoryOnPhone,
             )
         assertEquals(emptyList<SettingsOutside>(), flutterPlaces.filterNot { it in SETTINGS_OPENS })
         assertTrue(SETTINGS_OPENS.none { it in SETTINGS_NOT_NATIVE_YET })

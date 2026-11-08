@@ -31,6 +31,9 @@ public interface SettingsActions {
 
     public fun onShowHiddenPhrases() {}
 
+    /** About › Developer: Memory (preview) on or off. */
+    public fun onMemoryPreview(on: Boolean) {}
+
     public fun onAskDiscard(kind: LocalDataKind) {}
 
     public fun onConfirmDiscard() {}

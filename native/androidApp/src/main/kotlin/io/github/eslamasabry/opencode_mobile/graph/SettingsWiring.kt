@@ -224,6 +224,7 @@ class AndroidSettingsHost(
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
     private val migrationMemory: NativeSettingsMemory,
     private val continuity: AppTelemetryContinuity,
+    private val factsBook: io.github.eslamasabry.oc.feature.factsbook.presentation.FactsBookAccess,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -392,6 +393,12 @@ class AndroidSettingsHost(
                 }
             }
             SettingsOutside.Agents -> nav.open(AgentsRoute.Home)
+            // s26: the connected server's AI Team page (F: openTeamSetup); the page says what is there.
+            SettingsOutside.AiTeam ->
+                (connectedTarget() ?: stores.profiles.activeId.value)?.let {
+                    nav.open(io.github.eslamasabry.oc.ui.routes.TeamRoute.Home(it))
+                }
+            SettingsOutside.MemoryOnPhone -> nav.open(io.github.eslamasabry.oc.ui.routes.FactsBookRoute.PhoneNode)
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew -> nav.open(SettingsRoute.WhatsNew)
             SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
@@ -462,6 +469,20 @@ class AndroidSettingsHost(
     override val updates: UpdateSettings? = updateSettings
     override val crashOffer: io.github.eslamasabry.oc.feature.settings.presentation.CrashOfferSetting =
         continuity.runtime
+
+    /** s26: About › Developer's Memory (preview), the same `oc.dev.factsbook` switch Flutter writes. */
+    override val memoryPreview: io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewSetting =
+        object : io.github.eslamasabry.oc.feature.settings.presentation.MemoryPreviewSetting {
+            override fun enabled(): Boolean = factsBook.enabled.value
+
+            override suspend fun setEnabled(on: Boolean): Boolean {
+                factsBook.setEnabled(on)
+                return factsBook.enabled.value == on
+            }
+
+            override val phoneNode: Boolean
+                get() = factsBook.phoneNode.supported
+        }
     override val about: AboutFacts =
         AboutFacts(
             version = buildInfo.versionName,
@@ -659,6 +680,8 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
         SettingsOutside.Usage,
         SettingsOutside.UsageAlerts,
         SettingsOutside.Agents,
+        SettingsOutside.AiTeam,
+        SettingsOutside.MemoryOnPhone,
         SettingsOutside.DefaultShell,
         SettingsOutside.Permissions,
         SettingsOutside.QuietHours,

@@ -201,7 +201,7 @@ public fun SettingsScreen(
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
-                AboutBody(state.about, actions, state.voiceLicenses, state.updates)
+                AboutBody(state.about, actions, state.voiceLicenses, state.updates, state.memoryPreview)
             }
         is SettingsPage.VoiceLicense -> VoiceLicenseScreen(page.id, state, actions)
         SettingsPage.PrivacyPolicy ->
