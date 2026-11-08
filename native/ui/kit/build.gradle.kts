@@ -23,6 +23,7 @@ kotlin {
             project(":ui:design")
         ) // tokens appear in kit signatures (KitHaptic, TypeRole, TextTone, KitShapeId)
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
+        implementation(libs.kyant.backdrop) // liquid glass under the Glass style (effects/KitLiquidGlass.kt)
         implementation(
             libs.navigationevent.compose
         ) // S1-KITA2: the topmost sheet or dialog owns Back (plan 06 §7.4)

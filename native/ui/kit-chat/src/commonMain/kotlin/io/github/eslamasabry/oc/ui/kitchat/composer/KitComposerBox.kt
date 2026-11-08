@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
 import androidx.compose.foundation.layout.widthIn
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
@@ -153,10 +156,13 @@ public fun KitComposerBox(
                     )
                 )
         val hairline = io.github.eslamasabry.oc.ui.kit.foundation.kitHairline()
+        // Glass: on the chat's overlaid bottom block the box is liquid glass over the transcript scrolling behind it
+        // (Android 13+, where not held); null keeps the style's own face.
+        val liquid = LocalKitLiquidChrome.current
         Column(
             Modifier.fillMaxWidth()
                 .then(shadow)
-                .then(look.modifier)
+                .then(liquid?.let { Modifier.kitLiquidPane(LiquidRole.Composer, it, look.shape) } ?: look.modifier)
                 .then(
                     if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier
                 )

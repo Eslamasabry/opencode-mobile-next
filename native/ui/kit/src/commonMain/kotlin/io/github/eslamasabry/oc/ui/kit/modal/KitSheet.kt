@@ -88,6 +88,13 @@ import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidOverModal
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidPage
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPageBackdrop
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -252,14 +259,16 @@ public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
 @Composable
 public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val state = remember { KitSheetHostState() }
+    // Liquid glass: the page as the sheets and menus over it see it, recorded only while one of them is liquid.
+    val page = rememberKitLiquidSource()
     Box(modifier) {
-        CompositionLocalProvider(LocalKitSheetHost provides state) {
+        CompositionLocalProvider(LocalKitSheetHost provides state, LocalKitLiquidPage provides page) {
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
             // its accessibility nodes while a modal owns the window, including its exit.
             Box(
-                if (state.isShowing || state.isDialogShowing) Modifier.clearAndSetSemantics {}
-                else Modifier
+                (if (state.isShowing || state.isDialogShowing) Modifier.clearAndSetSemantics {}
+                else Modifier).kitLiquidSource(page)
             ) {
                 content()
             }
@@ -268,9 +277,11 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                     .then(if (state.isDialogShowing) Modifier.clearAndSetSemantics {} else Modifier)
             ) {
                 // A sheet's own bar never claims the title of the page that grew from a row.
-                CompositionLocalProvider(LocalKitGrowTitle provides null) { SheetLayer(state) }
+                CompositionLocalProvider(LocalKitGrowTitle provides null, LocalKitLiquidOverModal provides true) { SheetLayer(state) }
             }
-            Box(Modifier.zIndex(2f)) { CompositionLocalProvider(LocalKitGrowTitle provides null) { DialogLayer(state) } }
+            Box(Modifier.zIndex(2f)) {
+                CompositionLocalProvider(LocalKitGrowTitle provides null, LocalKitLiquidOverModal provides true) { DialogLayer(state) }
+            }
         }
     }
 }
@@ -545,9 +556,12 @@ private fun SheetPanel(
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    // Glass: the sheet is a frosted pane (opaque over the page whenever nothing blurs); every other
-    // style keeps surface2.
-    val face = kitGlassSheet(shape, colors.surface2) ?: Modifier.background(colors.surface2)
+    // Glass: the sheet is liquid glass over the page (Android 13+, not held), else a frosted pane (opaque over the page
+    // whenever nothing blurs); every other style keeps surface2.
+    val liquid = kitLiquidPageBackdrop()
+    val face =
+        liquid?.let { Modifier.kitLiquidPane(LiquidRole.Sheet, it, shape.shape()) }
+            ?: kitGlassSheet(shape, colors.surface2) ?: Modifier.background(colors.surface2)
     Column(
         modifier
             .then(face)

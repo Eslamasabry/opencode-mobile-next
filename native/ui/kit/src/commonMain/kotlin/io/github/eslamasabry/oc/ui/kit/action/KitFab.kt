@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
+import androidx.compose.foundation.shape.CircleShape
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidBackdrop
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
+import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -86,6 +91,12 @@ public fun KitFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     visible: Boolean = true,
+    /**
+     * What scrolls behind the button (the list it floats over, recorded by
+     * [io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource]). Given, Glass draws the button as a drop of accent
+     * liquid glass over it (Android 13+, where not held); every other style ignores it.
+     */
+    backdrop: KitFrostState? = null,
 ) {
     val reduced = KitMotion.state.reduced
     val specs = KitMotion.specs
@@ -96,13 +107,13 @@ public fun KitFab(
         enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
         exit = if (reduced) ExitTransition.None else fadeOut(specs.enter()),
     ) {
-        if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick) else RoundFace(label, icon, onClick)
+        if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick) else RoundFace(label, icon, onClick, backdrop)
     }
 }
 
 /** The round face (kit_floating_action.dart:136-176): a stadium in the accent, from the style resolver. */
 @Composable
-private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit) {
+private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, backdrop: KitFrostState? = null) {
     val colors = LocalKitColors.current
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
@@ -118,11 +129,13 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit) {
             )
         )
     val words = look.words ?: colors.onAccent // F: lib/ui/kit/kit_floating_action.dart:168-173
+    // Glass: accent liquid glass over what the button floats over; null keeps the style's own face.
+    val liquid = kitLiquidBackdrop(backdrop)
     Box(
         Modifier
             .size(KIT_FAB_SIZE.dp)
             .kitTappable(onClick = onClick, shape = KitShapeId.Circle, ink = TextTone.OnAccent, interactionSource = interactions)
-            .then(look.modifier)
+            .then(liquid?.let { Modifier.kitLiquidPane(LiquidRole.Action, it, CircleShape) } ?: look.modifier)
             .semantics { contentDescription = label }
             .testTag("kit-fab"),
         contentAlignment = Alignment.Center,

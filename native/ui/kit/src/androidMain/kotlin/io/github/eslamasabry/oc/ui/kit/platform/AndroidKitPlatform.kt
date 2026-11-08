@@ -121,6 +121,8 @@ public class AndroidKitPlatform(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) AndroidFrost.effect(spec, density)
         else null
 
+    override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
     override val liveShaders: LiveShaderCompiler? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             LiveShaderCompiler(AndroidLiveShader::compile)

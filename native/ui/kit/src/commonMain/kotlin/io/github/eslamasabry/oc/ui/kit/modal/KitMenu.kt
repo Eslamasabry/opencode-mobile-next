@@ -68,6 +68,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMenuBackdrop
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -312,9 +315,12 @@ public fun KitMenuPanel(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Panel.shape()
-    // Glass: a frosted pane with its soft rims; every other style keeps surface2 and its hairline.
+    // Glass: liquid glass over the page (Android 13+, not held), else a frosted pane with its soft rims; every other
+    // style keeps surface2 and its hairline.
+    val liquid = kitLiquidMenuBackdrop()
     val menuFace =
-        kitGlassSheet(KitShapeId.Panel, colors.surface2)
+        liquid?.let { Modifier.kitLiquidPane(LiquidRole.Menu, it, shape) }
+            ?: kitGlassSheet(KitShapeId.Panel, colors.surface2)
             ?: Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
     Column(
         modifier

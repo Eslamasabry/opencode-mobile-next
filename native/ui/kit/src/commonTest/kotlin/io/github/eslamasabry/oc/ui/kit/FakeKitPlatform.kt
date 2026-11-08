@@ -17,7 +17,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * Plan 06 §6's `FakeKitPlatform` (it moves to `:ui:testing` when that module exists): fixed signals, records haptics,
  * and draws frost through the common `BlurEffect` when [frost] is true.
  */
-class FakeKitPlatform(signals: KitSystemSignals = KitSystemSignals(), private val frost: Boolean = false) : KitPlatform {
+class FakeKitPlatform(
+    signals: KitSystemSignals = KitSystemSignals(),
+    private val frost: Boolean = false,
+    /** The platform can draw liquid glass (Android 13+). */
+    override val liquidGlass: Boolean = false,
+) : KitPlatform {
     val haptics: MutableList<KitHaptic> = mutableListOf()
     override val name: String = "fake"
     override val family: KitPlatformFamily = KitPlatformFamily.Desktop

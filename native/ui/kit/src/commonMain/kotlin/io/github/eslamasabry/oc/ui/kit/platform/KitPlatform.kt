@@ -109,6 +109,13 @@ public interface KitPlatform {
      */
     public val liveShaders: LiveShaderCompiler?
         get() = null
+
+    /**
+     * Whether Glass's floating parts can be liquid glass here: the refraction runs on runtime shaders (Android 13+).
+     * Android 8–12 and desktop keep today's frost or solid faces (`LiquidGlass.holdOf`, hold Platform).
+     */
+    public val liquidGlass: Boolean
+        get() = false
 }
 
 /**
