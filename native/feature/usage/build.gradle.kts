@@ -8,6 +8,8 @@ kotlin {
         ) // Calendar ranges in the device's own time zone (B-PROTO-122).
         // KitLimitBar (pace marker) and KitTrendLine (cost chart), B-159/B-160.
         implementation(project(":ui:kit-content"))
+        // LocalKitRedactor: the Details "Account" value passes the app's one redactor (Flutter PR #136).
+        implementation(project(":ui:kit-chat"))
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(project(":ui:gate")) // order 50 renders the usage page against Flutter's goldens

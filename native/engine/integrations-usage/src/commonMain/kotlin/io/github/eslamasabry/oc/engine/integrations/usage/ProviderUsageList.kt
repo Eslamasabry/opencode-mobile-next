@@ -23,6 +23,13 @@ public data class ProviderUsageReading(
     val windows: List<ProviderUsageWindowReading>,
     /** The daemon reported this provider as not signed in: no numbers, only the way in (the widget offers Sign in). */
     val needsSignIn: Boolean = false,
+    /** The plan's own name (`Google AI Pro`), cleaned and capped; null when the reader names none. */
+    val planLabel: String? = null,
+    /**
+     * Which account the plan belongs to: the reader's opaque reference or the signed-in email (Flutter PR #136),
+     * cleaned and capped at 64 characters. Never a token.
+     */
+    val accountRef: String? = null,
 )
 
 /** The payload was not a provider list. Carries no payload text. */
@@ -72,6 +79,13 @@ public fun usageWindowSeconds(id: String): Long? =
         else -> null
     }
 
+/** The reader's account field (`account`, `email` or `accountRef`), as Flutter `parseProviderUsageList` reads it. */
+private fun accountOf(raw: Map<*, *>): String? =
+    cleanUsageText(raw["account"] ?: raw["email"] ?: raw["accountRef"], ACCOUNT_LENGTH)
+
+private const val ACCOUNT_LENGTH = 64
+private const val PLAN_LENGTH = 32
+
 private fun windowPriority(w: ProviderUsageWindowReading): Int =
     when (w.durationSeconds) {
         18_000L -> 0
@@ -117,6 +131,7 @@ public fun parseProviderUsageList(payload: Any?, now: Instant, maxProviders: Int
                     fetchedAt = (time(raw["fetchedAt"]) ?: listFetched ?: now).coerceAtMost(now),
                     windows = emptyList(),
                     needsSignIn = true,
+                    accountRef = accountOf(raw),
                 )
             continue
         }
@@ -150,6 +165,8 @@ public fun parseProviderUsageList(payload: Any?, now: Instant, maxProviders: Int
                 displayName = cleanUsageText(raw["displayName"], 24) ?: id,
                 fetchedAt = fetched,
                 windows = windows.take(maxWindows),
+                planLabel = cleanUsageText(raw["planLabel"], PLAN_LENGTH),
+                accountRef = accountOf(raw),
             )
         if (readings.size >= maxProviders) break
     }

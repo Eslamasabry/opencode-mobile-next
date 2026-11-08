@@ -228,7 +228,9 @@ public class UsageSubscriptionsEngine(
                         reading.hasNumbers &&
                         old.fetchedAt > reading.fetchedAt
                 ) {
-                    slot[reading.providerId] = old.copy(problem = null, checkedAt = now)
+                    // Flutter PR #136: the newer read may name the account the cached one lacked.
+                    slot[reading.providerId] =
+                        old.copy(problem = null, checkedAt = now, accountRef = old.accountRef ?: reading.accountRef)
                     touched += reading.connectionId
                     continue
                 }

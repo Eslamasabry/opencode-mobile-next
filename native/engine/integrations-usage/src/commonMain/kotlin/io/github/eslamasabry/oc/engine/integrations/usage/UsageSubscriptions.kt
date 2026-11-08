@@ -196,7 +196,7 @@ public data class UsageReading(
     val status: UsageReadingStatus,
     val fetchedAt: Instant,
     val windows: List<UsageWindow> = emptyList(),
-    /** Opaque account hash from the reader; never an email or token. */
+    /** Which account: an opaque hash from the reader, or the email the agent's own CLI printed. Never a token. */
     val accountRef: String? = null,
     val plan: String? = null,
     val method: SignInMethod = SignInMethod.Unknown,
