@@ -27,7 +27,9 @@ import io.github.eslamasabry.oc.feature.usage.presentation.UsageReport
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageServer
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageTokens
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageUi
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.usage.ui.LimitsContent
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.feature.usage.ui.UsageContent
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -191,7 +193,11 @@ class UsageGoldensTest {
 
     @Test
     fun `B-159 limits - headline windows, compact model limits, no-limits provider and stale age`() =
-        scene("limits", 1_500) { LimitsContent(LimitsFixtures.state(), noLimitActions) }
+        scene("limits", 1_500) {
+            CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                LimitsContent(LimitsFixtures.state(), noLimitActions)
+            }
+        }
 
     @Test
     fun `B-160 cost - 7 day segment, total, daily chart and provider split`() =

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.usage.presentation
 
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
+import io.github.eslamasabry.oc.engine.integrations.usage.cleanUsageText
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
@@ -146,10 +147,45 @@ public data class LimitAccountUi(
     val fetchedAt: UsageStamp? = null,
     /** True when the numbers are old enough (or offline, or past a reset) that their age must show. */
     val stale: Boolean,
+    /** Which account the plan belongs to, for Details (Flutter PR #136); null when nothing is known or was read. */
+    val account: LimitAccountRef? = null,
 ) {
     /** The account answered but reports no windows at all: the view says so and shows no numbers. */
     public val reportsNothing: Boolean
         get() = groups.isEmpty()
+}
+
+/** The Details "Account" row (Flutter `usage_subscription_screen.dart`, PR #136). */
+public sealed interface LimitAccountRef {
+    /** A readable account (the signed-in email): shown and copyable. */
+    public data class Named(val text: String) : LimitAccountRef
+
+    /** An opaque reference (a hash): the plan's account is known, but there is nothing to show. */
+    public data object Known : LimitAccountRef
+
+    /** The numbers were read, but no account was named. */
+    public data object Unknown : LimitAccountRef
+}
+
+private val opaqueHash = Regex("^[a-f0-9]{64}$")
+private val hexOnly = Regex("^[a-f0-9]+$")
+private const val ACCOUNT_LENGTH = 64
+
+/** Flutter `_isDisplayableAccount`: an email, or any reference that is not a bare hash. */
+internal fun isDisplayableAccount(ref: String?): Boolean {
+    if (ref.isNullOrEmpty() || ref.length <= 2 || opaqueHash.matches(ref)) return false
+    return '@' in ref || !hexOnly.matches(ref)
+}
+
+/** The Details row for [ref]: named when readable, "Yes" for an opaque one, "No" once read without one. */
+internal fun limitAccountRef(ref: String?, read: Boolean): LimitAccountRef? {
+    val text = ref?.takeIf(::isDisplayableAccount)?.let { cleanUsageText(it, ACCOUNT_LENGTH) }
+    return when {
+        text != null -> LimitAccountRef.Named(text)
+        ref != null -> LimitAccountRef.Known
+        read -> LimitAccountRef.Unknown
+        else -> null
+    }
 }
 
 /** A pay-as-you-go key: it has no plan limits to show. */
@@ -232,6 +268,7 @@ private fun account(s: UsageSubscription, nowMs: Long, zone: String?): LimitAcco
         fetchedAtMs = fetched,
         fetchedAt = fetched?.let { at -> zone?.let { UsageCalendar.stamp(at, it) } },
         stale = stale,
+        account = limitAccountRef(s.accountRef, read = fetched != null),
     )
 }
 

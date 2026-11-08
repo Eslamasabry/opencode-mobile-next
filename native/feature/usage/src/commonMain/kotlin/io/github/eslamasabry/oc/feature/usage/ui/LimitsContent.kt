@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
 import io.github.eslamasabry.oc.engine.usage.UsageStamp
+import io.github.eslamasabry.oc.feature.usage.presentation.LimitAccountRef
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitAccountUi
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitGroupUi
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitPace
@@ -42,7 +43,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsAboutPace
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsAhead
@@ -80,6 +83,9 @@ import io.github.eslamasabry.oc.ui.words.res.s9LimitsResetsUnderMinute
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsThisPhone
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsWeek
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsWithinPace
+import io.github.eslamasabry.oc.ui.words.res.usageDetailAccount
+import io.github.eslamasabry.oc.ui.words.res.usageNo
+import io.github.eslamasabry.oc.ui.words.res.usageYes
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -253,11 +259,30 @@ private fun Details(account: LimitAccountUi) {
         }
         account.fetchedAt?.let { add(stringResource(Res.string.s9LimitsReadAt, stamp(it))) }
     }
-    if (notes.isEmpty()) return
+    // Flutter PR #136: the signed-in account, copyable when readable; "Yes" / "No" otherwise.
+    val redactor = LocalKitRedactor.current
+    val values =
+        account.account?.let { ref ->
+            val shown =
+                when (ref) {
+                    is LimitAccountRef.Named -> ref.text
+                    LimitAccountRef.Known -> stringResource(Res.string.usageYes)
+                    LimitAccountRef.Unknown -> stringResource(Res.string.usageNo)
+                }
+            listOf(
+                KitTechnicalValue(
+                    stringResource(Res.string.usageDetailAccount),
+                    redactor.details(shown),
+                    copyable = ref is LimitAccountRef.Named,
+                )
+            )
+        }.orEmpty()
+    if (notes.isEmpty() && values.isEmpty()) return
     KitDetailsFold(
         stringResource(Res.string.s9LimitsDetails),
         stringResource(Res.string.s9LimitsCopyDetails),
         notes = notes,
+        values = values,
     )
 }
 

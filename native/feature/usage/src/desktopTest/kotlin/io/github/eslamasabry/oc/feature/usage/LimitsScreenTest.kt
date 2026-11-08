@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -24,7 +28,9 @@ import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindow
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitsActions
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitsUi
 import io.github.eslamasabry.oc.feature.usage.presentation.limitsUi
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.usage.ui.LimitsContent
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -66,7 +72,9 @@ class LimitsScreenTest {
             localeTag = locale,
             stillFrame = true,
         ) {
-            Box(Modifier.width(360.dp).height(1_400.dp)) { LimitsContent(state, actions) }
+            CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                Box(Modifier.width(360.dp).height(1_400.dp)) { LimitsContent(state, actions) }
+            }
         }
     }
 
@@ -120,6 +128,43 @@ class LimitsScreenTest {
         onNodeWithText("5-hour window resets at 2026-11-07 15:00").assertDoesNotExist()
         onAllNodesWithText("Details")[0].performClick()
         onNodeWithText("5-hour window resets at 2026-11-07 15:00").assertExists()
+    }
+
+    private fun withAccount(ref: String?): LimitsUi {
+        val agy =
+            UsageSubscription(
+                key = "antigravity|${ref ?: "conn:phone"}",
+                providerId = "antigravity",
+                displayName = "Antigravity",
+                state = SubscriptionState.Ok,
+                planLabel = "Google AI Pro",
+                accountRef = ref,
+                windows = listOf(UsageWindow("5h", 20.0, 18_000, null)),
+                fetchedAt = Instant.fromEpochMilliseconds(LimitsFixtures.now - 60_000),
+            )
+        return limitsUi(UsageSnapshot(subscriptions = listOf(agy), loaded = true), false, LimitsFixtures.now, "UTC")
+    }
+
+    @Test
+    fun `B-183 Details names the signed-in account email and copies it`() = runComposeUiTest {
+        setContent { Screen(withAccount("altaf.alu@gmail.com"), Actions()) }
+        onNodeWithText("altaf.alu@gmail.com").assertDoesNotExist()
+        onNodeWithText("Details").performClick()
+        onNodeWithText("Account").assertExists()
+        onNodeWithText("altaf.alu@gmail.com").assertExists()
+        onNodeWithTag("kit-details-copy-all").assertExists()
+    }
+
+    @Test
+    fun `B-183 an opaque account hash still reads as Yes, and no account as No`() = runComposeUiTest {
+        var state by mutableStateOf(withAccount("a".repeat(64)))
+        setContent { Screen(state, Actions()) }
+        onNodeWithText("Details").performClick()
+        onNodeWithText("Yes, an account is known").assertExists()
+        onNodeWithText("a".repeat(64)).assertDoesNotExist()
+        state = withAccount(null)
+        waitForIdle()
+        onNodeWithText("No account known").assertExists()
     }
 
     @Test

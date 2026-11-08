@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageSubscription
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindow
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
+import io.github.eslamasabry.oc.feature.usage.presentation.LimitAccountRef
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitMath
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitPace
 import io.github.eslamasabry.oc.feature.usage.presentation.LimitsPhase
@@ -181,5 +182,44 @@ class LimitsUiTest {
         val account = ui.accounts.single()
         assertNull(account.fetchedAt)
         assertNull(account.groups.single().windows.single().resetsAt)
+    }
+
+    private fun accountOf(ref: String?, read: Boolean = true) =
+        limitsUi(
+            UsageSnapshot(
+                subscriptions =
+                    listOf(
+                        UsageSubscription(
+                            key = "antigravity|x",
+                            providerId = "antigravity",
+                            displayName = "Antigravity",
+                            state = SubscriptionState.Ok,
+                            accountRef = ref,
+                            fetchedAt = if (read) Instant.fromEpochMilliseconds(now - minute) else null,
+                        )
+                    ),
+                loaded = true,
+            ),
+            refreshing = false,
+            nowMs = now,
+        ).accounts.single().account
+
+    @Test
+    fun `B-183 a readable account is named, an opaque hash reads as known, none reads as not known`() {
+        assertEquals(LimitAccountRef.Named("altaf.alu@gmail.com"), accountOf("altaf.alu@gmail.com"))
+        assertEquals(LimitAccountRef.Named("work-account"), accountOf("work-account"))
+        assertEquals(LimitAccountRef.Known, accountOf("0123456789abcdef".repeat(4)))
+        assertEquals(LimitAccountRef.Known, accountOf("deadbeef"), "a bare hex reference is not shown")
+        assertEquals(LimitAccountRef.Known, accountOf("ab"), "too short to mean anything")
+        assertEquals(LimitAccountRef.Unknown, accountOf(null))
+        assertNull(accountOf(null, read = false), "nothing read and nothing known: no row")
+        assertEquals(LimitAccountRef.Named("a@b.co"), accountOf("a@b.co", read = false), "a known account shows unread")
+    }
+
+    @Test
+    fun `B-183 the shown account is cleaned of control characters and capped`() {
+        assertEquals(LimitAccountRef.Named("me @corp.io"), accountOf("me\u202e@corp.io"))
+        val long = accountOf("x".repeat(100) + "@corp.io") as LimitAccountRef.Named
+        assertEquals(64, long.text.length)
     }
 }
