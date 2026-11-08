@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.chats
 
 import kotlin.math.abs
 import androidx.compose.ui.test.onRoot
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasSetTextAction
@@ -102,6 +104,42 @@ class ChatsScreenTest {
             // conversations is reached from Search.
             onAllNodesWithContentDescription("More").assertCountEquals(0)
             onAllNodesWithText("Show all conversations").assertCountEquals(0)
+        }
+
+    private fun refreshAction(test: androidx.compose.ui.test.ComposeUiTest) =
+        test.onAllNodes(
+            androidx.compose.ui.test.SemanticsMatcher("offers Refresh") { node ->
+                node.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.CustomActions).orEmpty().any {
+                    it.label == "Refresh"
+                }
+            }
+        )
+
+    @Test
+    fun `PARITY-B-217 the home list reads itself again on a pull, and not while its server still opens`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            var state by androidx.compose.runtime.mutableStateOf(ui(*rows))
+            setContent { Themed { ChatsScreen(state, actions) } }
+            val refresh =
+                refreshAction(this).fetchSemanticsNodes().single().config[
+                    androidx.compose.ui.semantics.SemanticsActions.CustomActions
+                ].first { it.label == "Refresh" }
+            runOnIdle { refresh.action() }
+            assertEquals(listOf("refresh"), actions.calls.filter { it == "refresh" })
+            state =
+                ui(*rows).copy(
+                    home =
+                        ChatsHomeExtraState(
+                            opening =
+                                io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
+                                    io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Connecting,
+                                    "Home PC",
+                                )
+                        )
+                )
+            waitForIdle()
+            refreshAction(this).assertCountEquals(0)
         }
 
     @Test

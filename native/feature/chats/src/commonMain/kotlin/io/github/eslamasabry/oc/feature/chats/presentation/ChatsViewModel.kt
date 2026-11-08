@@ -103,6 +103,9 @@ public class ChatsViewModel(
 
     private val switching = MutableStateFlow(Switching())
 
+    /** A pull to refresh in flight (one at a time). */
+    private val refreshing = MutableStateFlow(false)
+
     public val state: StateFlow<ChatsUi> =
         combine(
                 combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
@@ -164,6 +167,7 @@ public class ChatsViewModel(
             // G4: the project sheet's kind glyphs and "Git" pills.
             .combine(home.projectFacts) { base, facts -> base.copy(projectFacts = facts.toImmutableMap()) }
             // The pill's switcher: every saved server, what it is doing now, and the switch in flight.
+            .combine(refreshing) { base, now -> base.copy(refreshing = now) }
             .combine(switching) { base, now ->
                 base.copy(
                     switcher =
@@ -251,6 +255,21 @@ public class ChatsViewModel(
                 (answers.value.first - permission.requestId) to
                     (result as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
             feed.refresh()
+        }
+    }
+
+    // F: lib/ui/screens/chats/chats_home_screen.dart:536: the list's pull reads every source again; not while the
+    // server is still opening (the saved titles there are refreshed by the server answering).
+    override fun refreshList() {
+        if (refreshing.value || state.value.home.opening != null) return
+        refreshing.value = true
+        viewModelScope.launch {
+            try {
+                // A source that fails says so in its own line, as after any read.
+                feed.refresh()
+            } finally {
+                refreshing.value = false
+            }
         }
     }
 

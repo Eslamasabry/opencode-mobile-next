@@ -378,4 +378,31 @@ class ChatsViewModelTest {
         assertEquals(listOf<AppRoute>(ServersRoute.Edit()), nav.routes)
         assertEquals(null, vm.state.value.sheet)
     }
+
+    @Test
+    fun `PARITY-B-217 a pull reads the list again once, and says so until the read is back`() = runTest {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        var reads = 0
+        val feed =
+            object : ConversationsFeed {
+                override val snapshot = MutableStateFlow(ChatFeedSnapshot(persistentListOf(item("s1"))))
+
+                override suspend fun refresh(): Outcome<Unit> {
+                    reads++
+                    gate.await()
+                    return Unit.ok()
+                }
+            }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.refreshList()
+        assertTrue(vm.state.value.refreshing)
+        // A second pull while the first reads is the same read.
+        vm.refreshList()
+        assertEquals(1, reads)
+        gate.complete(Unit)
+        assertFalse(vm.state.value.refreshing)
+        vm.refreshList()
+        assertEquals(2, reads)
+    }
 }

@@ -208,6 +208,8 @@ public data class ChatsUi(
     val usage: HomeUsageLimit? = null,
     /** The server switcher's rows, and the switch in flight (F: lib/ui/widgets/server_switcher_sheet.dart). */
     val switcher: ServerSwitcherUi = ServerSwitcherUi(),
+    /** A pull to refresh is reading the list again. */
+    val refreshing: Boolean = false,
 ) {
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
@@ -254,6 +256,9 @@ public interface ChatsActions {
     public fun rowAct(row: ConversationRowUi, act: RowAct) {}
 
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
+
+    /** Pull to refresh: read every source of the list again (Flutter KitRefresh → refreshChatFeed). */
+    public fun refreshList() {}
     public fun openInbox() {}
 
     public fun openConversation(ref: ConversationRef)

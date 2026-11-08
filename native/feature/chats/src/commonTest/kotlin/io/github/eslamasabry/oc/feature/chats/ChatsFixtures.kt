@@ -128,6 +128,10 @@ internal class RecordingChatsActions : ChatsActions {
         calls += "servers"
     }
 
+    override fun refreshList() {
+        calls += "refresh"
+    }
+
     override fun openServerSwitcher() {
         calls += "switcher"
     }
