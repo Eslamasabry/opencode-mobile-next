@@ -10,11 +10,12 @@ RC1 is the first build that meets all seven gates. Each gate is measured, not ju
 | # | Gate | Measure | Now |
 |---|---|---|---|
 | G1 | Builds clean | `assemblePreviewBenchmark` + `assembleSwitchRelease` build; every desktopTest source set compiles; unit tests green | app builds (merge 22); tests not yet run as a whole |
-| G2 | Looks like Flutter | Daily path (home, chat, composer, sheets, settings hub): every Flutter golden rendered, ≥ 90 % pass. All screens: ≥ 75 % of goldens rendered and passing | 7.5 % overall (scoreboard at 89ec49e55, before today's chat merge) |
+| G2 | Looks like Flutter | Judged by eye, not pixels (owner 2026-11-08): each daily-path screen (home, chat, composer, sheets, settings) side by side with Flutter, verdict match or a list of visible differences; no visible difference left on the daily path | 7.5 % overall (scoreboard at 89ec49e55, before today's chat merge) |
 | G3 | Aligned | Alignment gate: 0 new findings; baseline shrinks | 133 baselined, gate live |
 | G4 | Moves like native | 90/120 Hz on the owner phone; janky frames < 5 %, p99 < 20 ms scrolling chat and home; row→chat transform, animated lists, sheet physics, send morph in | 1.5 % janky at 60 Hz (owner phone 11-07); motion lead building |
 | G5 | Keeps data | Upgrade gate Flutter 2.1.4 → native: 29/29 (items 2.1.4 or the emulator can't seed are NOT RUN with a reason) | 21/29 + harness fix for grants |
 | G6 | Release shape | Switch build 3.0.0 / versionCode ≥ 10010, R8 + ABI splits, identity gate passes with the owner key | release work merged (merge 22), not yet run with the key |
+| G8 | Required features | Native twins of #125 (Antigravity quota) and #126 (in-app updater); security B-175 (launch token) and B-177 (cleartext only for private addresses) — owner 2026-11-08 | builders s22-twins, s22-security |
 | G7 | Owner walk | Owner uses it on the phone and says yes | not yet |
 
 Out of RC1 (later, owner decides): Glass and school galleries (order 34-37), AI Team screens, pull requests from the
@@ -36,6 +37,7 @@ phone (B-158), Play Store.
 - [ ] T11 Alignment gate: no new findings on the head (G3).
 - [ ] T12 Release shape: build the switch release (3.0.0 / 10010, R8, ABI splits) and run the identity gate with the test key; owner key only with the owner present (G6).
 - [ ] T13 Flutter 2.1.5: suite result, release compile, owner yes to publish.
+- [ ] T15 G8: merge s22-twins and s22-security; verify the updater and launch-token on the phone.
 - [ ] T14 RC1: final build, tracker/backlog updated, owner walk (G7).
 
 ## Rules for builders (no stepping on each other)
