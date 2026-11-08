@@ -204,8 +204,9 @@ internal fun rowKey(row: SettingsRowId): StringResource =
         SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
         SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
         SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
-        SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
-        SettingsRowId.Voice -> Res.string.settingsHubVoice
+        // Flutter's row titles (`default_shell_row.dart`, `settings-voice`): "Shell for commands", "Voice typing".
+        SettingsRowId.DefaultShell -> Res.string.settingsV3Shell
+        SettingsRowId.Voice -> Res.string.settingsV3VoiceTyping
         SettingsRowId.Permissions -> Res.string.settingsV3Permissions
         SettingsRowId.Notifications -> Res.string.settingsV3Notifications
         SettingsRowId.Background -> Res.string.settingsV3Background
@@ -277,9 +278,9 @@ internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
         SettingsRowId.PhraseChips ->
             listOf(Res.string.nativePhraseChipsAliases, Res.string.settingsPhraseChipsSupporting)
         SettingsRowId.DefaultShell ->
-            listOf(Res.string.settingsV3Shell, Res.string.settingsHubSearchShellAliases)
+            listOf(Res.string.e7SettingsUi35, Res.string.settingsHubSearchShellAliases)
         SettingsRowId.Voice ->
-            listOf(Res.string.settingsV3VoiceTyping, Res.string.settingsHubSearchVoiceAliases)
+            listOf(Res.string.settingsHubVoice, Res.string.settingsHubSearchVoiceAliases)
         SettingsRowId.Permissions ->
             listOf(
                 Res.string.automationTitle,
