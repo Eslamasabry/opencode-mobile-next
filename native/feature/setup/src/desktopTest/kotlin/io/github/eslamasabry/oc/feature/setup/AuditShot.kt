@@ -23,6 +23,9 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import androidx.compose.runtime.CompositionLocalProvider as CLP
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -85,7 +88,7 @@ internal object Audit {
                                     localeTag = v.locale,
                                     stillFrame = true,
                                 ) {
-                                    Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content(v.dark) }
+                                    Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { CLP(LocalKitRedactor provides Redactor()) { content(v.dark) } }
                                 }
                             }
                         }
