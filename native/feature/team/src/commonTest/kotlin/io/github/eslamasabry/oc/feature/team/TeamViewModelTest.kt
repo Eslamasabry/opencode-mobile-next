@@ -4,6 +4,8 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.team.TeamCommand
+import io.github.eslamasabry.oc.engine.team.TeamCommandResult
 import io.github.eslamasabry.oc.engine.team.TeamConfig
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamHost
@@ -14,6 +16,7 @@ import io.github.eslamasabry.oc.engine.team.TeamWorkspace
 import io.github.eslamasabry.oc.feature.team.presentation.BoardColumn
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.TeamProjectViewModel
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
@@ -50,6 +53,19 @@ class TeamViewModelTest {
         override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamWorkspace> {
             reads++
             return answer
+        }
+
+        val commands = mutableListOf<TeamCommand>()
+        var commandAnswer = TeamCommandResult(accepted = true)
+
+        override suspend fun command(
+            profileId: String,
+            config: TeamConfig,
+            command: TeamCommand,
+            body: Map<String, Any?>,
+        ): Outcome<TeamCommandResult> {
+            commands += command
+            return Outcome.Ok(commandAnswer)
         }
     }
 
@@ -135,5 +151,41 @@ class TeamViewModelTest {
             vm.showGraph(true)
             runCurrent()
             assertEquals(true, vm.state.value.graph)
+        }
+
+    @Test
+    fun `B-TEAM-034 an answer goes to the engine with the project's current revision, and Stop asks first`() =
+        runTest(dispatcher) {
+            val host = Host(Outcome.Ok(team(shop().copy(revision = 41))))
+            val vm = TeamProjectViewModel(TeamRoute.Project(pid, "shop"), TeamEngine(host), Nav(), clock)
+            watch(vm.state)
+            runCurrent()
+            vm.answer("q1", "  Stripe ")
+            runCurrent()
+            assertEquals(listOf(TeamCommand("answerRequest", "shop", 41, targetId = "q1", text = "Stripe")), host.commands)
+            vm.askStop()
+            runCurrent()
+            assertEquals(true, vm.state.value.confirmStop)
+            assertEquals(1, host.commands.size)
+            vm.confirmStop()
+            runCurrent()
+            assertEquals("stopProject", host.commands.last().action)
+            assertEquals(false, vm.state.value.confirmStop)
+        }
+
+    @Test
+    fun `B-TEAM-035 a refused command says so until dismissed`() =
+        runTest(dispatcher) {
+            val host = Host(Outcome.Ok(team(shop())))
+            host.commandAnswer = TeamCommandResult(accepted = false, code = "staleRevision")
+            val vm = TeamProjectViewModel(TeamRoute.Project(pid, "shop"), TeamEngine(host), Nav(), clock)
+            watch(vm.state)
+            runCurrent()
+            vm.pause()
+            runCurrent()
+            assertEquals(true, vm.state.value.refused)
+            vm.dismissRefusal()
+            runCurrent()
+            assertEquals(false, vm.state.value.refused)
         }
 }

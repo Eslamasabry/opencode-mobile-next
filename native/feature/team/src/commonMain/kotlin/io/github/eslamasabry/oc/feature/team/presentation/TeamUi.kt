@@ -10,6 +10,12 @@ import kotlinx.collections.immutable.persistentListOf
 public sealed interface HomeRow {
     public val key: String
 
+    /** Dart `teamProjectInterruptedRow`: the work was interrupted; a tap resumes the project. */
+    public data class Interrupted(val projectId: String, val name: String) : HomeRow {
+        override val key: String
+            get() = "interrupted:$projectId"
+    }
+
     /** A request the team is waiting on (Dart `KitRow(title: request.title, supporting: p.name)`). */
     public data class Request(val projectId: String, val requestId: String, val title: String, val projectName: String) :
         HomeRow {
@@ -53,6 +59,9 @@ public interface TeamHomeActions {
     /** A request row: its project, where the request is shown with its answer. */
     public fun openRequest(projectId: String, requestId: String)
 
+    /** The interrupted row: resume the project (Dart `resumeProject`). */
+    public fun resumeProject(projectId: String)
+
     public fun retry()
 }
 
@@ -68,7 +77,24 @@ public data class NeedsYouUi(
     val serverName: String?,
     /** How many tasks wait on the asking task. */
     val blocks: Int,
-)
+    val taskId: String = "",
+    /** For a milestone ask: the milestone, its title and criteria (the confirm's body). */
+    val milestoneId: String = "",
+    val milestoneText: String = "",
+) {
+    /** What the card's button does here; null for asks answered in editors that arrive later (spec, plan, budget). */
+    public val answer: NeedsYouAnswer?
+        get() =
+            when (kind) {
+                "question", "permission" -> NeedsYouAnswer.Text
+                "milestone" -> if (milestoneId.isEmpty()) null else NeedsYouAnswer.AcceptMilestone
+                "interrupted" -> NeedsYouAnswer.Resume
+                else -> null
+            }
+}
+
+/** The needs-you card's one action (Dart `_answer` for the kinds native answers in place). */
+public enum class NeedsYouAnswer { Text, AcceptMilestone, Resume }
 
 /** What a milestone row's status says (Dart overview). */
 public sealed interface MilestoneStatus {
@@ -91,6 +117,8 @@ public data class MilestoneUi(
     /** The progress bar, while started and not accepted. */
     val completed: Int?,
     val total: Int?,
+    /** Every task merged and every phase accepted: Dart offers "Accept milestone" under the row. */
+    val canAccept: Boolean = false,
 )
 
 /** A lane row: a running task or one ready for a free lane. */
@@ -126,6 +154,15 @@ public data class ProjectView(
     val singleLane: Boolean,
     val demo: Boolean,
     val taskCount: Int,
+    /** The project menu (Dart overview `menu`). */
+    val menu: ProjectMenu = ProjectMenu(),
+)
+
+/** Which project menu items show (Dart overview: Resume for interrupted, Pause/Resume while open, Stop always). */
+public data class ProjectMenu(
+    val resumeInterrupted: Boolean = false,
+    val pause: Boolean = false,
+    val resume: Boolean = false,
 )
 
 public data class TeamProjectUi(
@@ -134,6 +171,12 @@ public data class TeamProjectUi(
     val project: ProjectView? = null,
     val stale: Boolean = false,
     val nowMs: Long = 0,
+    /** A command is on its way: every action waits. */
+    val busy: Boolean = false,
+    /** The last command was refused (Dart `errorCode` → `teamProjectError`). */
+    val refused: Boolean = false,
+    /** Stop asks first (Dart `showKitConfirm` kind stop). */
+    val confirmStop: Boolean = false,
 )
 
 public interface TeamProjectActions {
@@ -143,6 +186,25 @@ public interface TeamProjectActions {
     public fun openBoard(milestone: String? = null)
 
     public fun retry()
+
+    public fun answer(requestId: String, text: String) {}
+
+    public fun acceptMilestone(milestoneId: String) {}
+
+    public fun resumeTask(taskId: String) {}
+
+    /** `pauseProject`, `resumeProject` (paused or interrupted). */
+    public fun pause() {}
+
+    public fun resume() {}
+
+    public fun askStop() {}
+
+    public fun confirmStop() {}
+
+    public fun cancelStop() {}
+
+    public fun dismissRefusal() {}
 }
 
 // ---- the board (Dart TeamProjectBoard)

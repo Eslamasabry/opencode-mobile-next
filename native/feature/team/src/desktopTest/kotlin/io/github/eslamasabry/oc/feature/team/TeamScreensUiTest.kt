@@ -8,7 +8,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -52,6 +57,22 @@ class TeamScreensUiTest {
 
         override fun retry() {
             calls += "retry"
+        }
+
+        override fun resumeProject(projectId: String) {
+            calls += "resumeProject $projectId"
+        }
+
+        override fun answer(requestId: String, text: String) {
+            calls += "answer $requestId $text"
+        }
+
+        override fun askStop() {
+            calls += "askStop"
+        }
+
+        override fun acceptMilestone(milestoneId: String) {
+            calls += "accept $milestoneId"
         }
 
         override fun openBoard(milestone: String?) {
@@ -156,5 +177,35 @@ class TeamScreensUiTest {
         } finally {
             Locale.setDefault(previous)
         }
+    }
+
+    @Test
+    fun `B-TEAM-046 Answer asks for the answer and sends it`() = runComposeUiTest {
+        val actions = Recorder()
+        setContent { Themed { TeamProjectScreen(TeamPresent.project(ready, "shop", NOW), actions) } }
+        onNodeWithText("Answer").performClick()
+        onNodeWithText("Your answer").assertExists()
+        onNode(hasSetTextAction()).performTextInput("Stripe")
+        onAllNodesWithText("Answer").onLast().performClick()
+        assertEquals(listOf("answer q1 Stripe"), actions.calls)
+    }
+
+    @Test
+    fun `B-TEAM-047 the project menu stops the project only after asking`() = runComposeUiTest {
+        val actions = Recorder()
+        setContent { Themed { TeamProjectScreen(TeamPresent.project(ready, "shop", NOW), actions) } }
+        onNodeWithContentDescription("Project menu").performClick()
+        onNodeWithText("Pause project").assertExists()
+        onNodeWithText("Stop project").performClick()
+        assertEquals(listOf("askStop"), actions.calls)
+    }
+
+    @Test
+    fun `B-TEAM-048 an interrupted project offers to resume from the team page`() = runComposeUiTest {
+        val actions = Recorder()
+        val state = TeamState(TeamPhase.Ready, workspace = team(shop().copy(status = "interrupted", requests = emptyList())))
+        setContent { Themed { TeamHomeScreen(TeamPresent.home(state, NOW), actions) } }
+        onNodeWithText("Shop: work was interrupted, tap to resume").performClick()
+        assertEquals(listOf("resumeProject shop"), actions.calls)
     }
 }

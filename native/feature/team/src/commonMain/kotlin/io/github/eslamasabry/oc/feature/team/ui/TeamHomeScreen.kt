@@ -93,6 +93,11 @@ private fun Projects(state: TeamHomeUi, actions: TeamHomeActions) {
         }
         items(state.rows, key = { it.key }) { row ->
             when (row) {
+                is HomeRow.Interrupted ->
+                    KitRow(
+                        title = stringResource(Res.string.teamProjectInterruptedRow, row.name),
+                        onClick = { actions.resumeProject(row.projectId) },
+                    )
                 is HomeRow.Request ->
                     KitRow(
                         title = row.title,

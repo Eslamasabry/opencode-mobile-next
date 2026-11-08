@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.feature.team.presentation.BoardColumn
 import io.github.eslamasabry.oc.feature.team.presentation.Headline
 import io.github.eslamasabry.oc.feature.team.presentation.HomeRow
 import io.github.eslamasabry.oc.feature.team.presentation.MilestoneStatus
+import io.github.eslamasabry.oc.feature.team.presentation.NeedsYouAnswer
 import io.github.eslamasabry.oc.feature.team.presentation.StatusWord
 import io.github.eslamasabry.oc.feature.team.presentation.TaskMark
 import io.github.eslamasabry.oc.feature.team.presentation.TeamMark
@@ -161,5 +162,33 @@ class TeamPresentTest {
         assertEquals("$5", TeamRules.money(5.0))
         assertEquals("$1.50", TeamRules.money(1.5))
         assertEquals("$0.05", TeamRules.money(0.05))
+    }
+
+    @Test
+    fun `B-TEAM-028 the menu, milestone accept and ask answers follow Dart's overview`() {
+        val merged =
+            shop().copy(
+                status = "paused",
+                tasks = shop().tasks.map { if (it.phaseId == "ph2") it.copy(status = "merged") else it },
+                phases = listOf(TeamProjectPhase("ph1", "m1", accepted = true), TeamProjectPhase("ph2", "m2", accepted = true)),
+                requests =
+                    listOf(
+                        TeamRequest("a", "milestone", "Accept Pay?", phaseId = "m2"),
+                        TeamRequest("b", "spec", "Approve the spec"),
+                        TeamRequest("c", "interrupted", "Resume Pay", taskId = "t2"),
+                    ),
+            )
+        val view = TeamPresent.project(TeamState(TeamPhase.Ready, workspace = team(merged)), "shop", NOW).project!!
+        assertEquals(true, view.milestones[1].canAccept)
+        assertEquals(false, view.milestones[0].canAccept) // already accepted
+        assertEquals(true, view.menu.resume)
+        assertEquals(false, view.menu.pause)
+        assertEquals(
+            listOf(NeedsYouAnswer.AcceptMilestone, null, NeedsYouAnswer.Resume),
+            view.needsYou.map { it.answer },
+        )
+        assertEquals("Pay", view.needsYou[0].milestoneText)
+        val home = TeamPresent.home(TeamState(TeamPhase.Ready, workspace = team(merged.copy(status = "interrupted"))), NOW)
+        assertEquals("interrupted:shop", home.rows.first().key)
     }
 }

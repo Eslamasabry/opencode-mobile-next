@@ -31,7 +31,9 @@ public object TeamPresent {
     public fun home(state: TeamState, nowMs: Long): TeamHomeUi {
         val rows =
             TeamRules.ordered(state.workspace).flatMap { p ->
-                p.openRequests.map { HomeRow.Request(p.id, it.id, it.title, p.name) } + projectRow(p, state.stale, nowMs)
+                listOfNotNull(HomeRow.Interrupted(p.id, p.name).takeIf { p.status == "interrupted" }) +
+                    p.openRequests.map { HomeRow.Request(p.id, it.id, it.title, p.name) } +
+                    projectRow(p, state.stale, nowMs)
             }
         return TeamHomeUi(
             phase = state.phase,
@@ -60,7 +62,14 @@ public object TeamPresent {
     public fun project(state: TeamState, projectId: String, nowMs: Long): TeamProjectUi {
         val workspace = state.workspace
         val p = workspace?.project(projectId)
-        return TeamProjectUi(state.phase, p?.let { view(workspace, it, nowMs) }, state.stale, nowMs)
+        return TeamProjectUi(
+            phase = state.phase,
+            project = p?.let { view(workspace, it, nowMs) },
+            stale = state.stale,
+            nowMs = nowMs,
+            busy = state.busy,
+            refused = state.refusal != null,
+        )
     }
 
     private fun view(workspace: TeamWorkspace, p: TeamProject, nowMs: Long): ProjectView {
@@ -75,6 +84,12 @@ public object TeamPresent {
                     roleName = task?.let { role(it.roleId) },
                     serverName = task?.let { t -> workspace.servers.firstOrNull { it.id == t.serverId }?.name },
                     blocks = task?.let { t -> p.tasks.count { t.id in it.dependsOn } } ?: 0,
+                    taskId = r.taskId,
+                    milestoneId = p.specDraft.milestones.firstOrNull { it.id == r.phaseId }?.id.orEmpty(),
+                    milestoneText =
+                        p.specDraft.milestones.firstOrNull { it.id == r.phaseId }?.let { m ->
+                            (listOf(m.title) + m.criteria).joinToString("\n")
+                        }.orEmpty(),
                 )
             }
         val milestones = p.specDraft.milestones
@@ -104,6 +119,9 @@ public object TeamPresent {
                         },
                     completed = complete.takeIf { showBar },
                     total = tasks.size.takeIf { showBar },
+                    canAccept =
+                        !m.accepted && tasks.isNotEmpty() && tasks.all { it.status == "merged" } &&
+                            p.phases.filter { it.milestoneId == m.id }.all { it.accepted },
                 )
             }
         val (busy, waiting) = TeamRules.lanes(p)
@@ -137,6 +155,14 @@ public object TeamPresent {
             singleLane = p.settings.mode == "single",
             demo = p.simulated,
             taskCount = p.tasks.size,
+            menu =
+                (p.status != "stopped" && p.status != "done").let { open ->
+                    ProjectMenu(
+                        resumeInterrupted = p.status == "interrupted",
+                        pause = open && p.status != "paused" && p.status != "interrupted",
+                        resume = open && p.status == "paused",
+                    )
+                },
         )
     }
 

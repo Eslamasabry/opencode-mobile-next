@@ -9,7 +9,9 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.engine.team.TeamCommand
 import io.github.eslamasabry.oc.engine.team.TeamEngine
+import io.github.eslamasabry.oc.engine.team.TeamProject
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +52,11 @@ public class TeamHomeViewModel(
         nav.open(TeamRoute.Project(route.profileId, projectId))
     }
 
+    override fun resumeProject(projectId: String) {
+        val project = engine.state(profile).value.workspace?.project(projectId) ?: return
+        viewModelScope.launch { engine.execute(profile, TeamCommand.project(project, "resumeProject")) }
+    }
+
     override fun retry() {
         viewModelScope.launch { engine.refresh(profile) }
     }
@@ -72,11 +79,57 @@ public class TeamProjectViewModel(
 ) : ViewModel(), TeamProjectActions {
     private val profile = route.profileId.raw
 
+    private val confirmingStop = MutableStateFlow(false)
+
     public val state: StateFlow<TeamProjectUi> =
-        engine
-            .polled(profile) { clock.now().toEpochMilliseconds() }
-            .map { (state, now) -> TeamPresent.project(state, route.projectId, now) }
+        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, confirmingStop) { (state, now), stop ->
+                TeamPresent.project(state, route.projectId, now).copy(confirmStop = stop)
+            }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), TeamProjectUi())
+
+    /** Sends a command built from the project as the engine last showed it (its current revision). */
+    private fun send(build: (TeamProject) -> TeamCommand) {
+        val project = engine.state(profile).value.workspace?.project(route.projectId) ?: return
+        viewModelScope.launch { engine.execute(profile, build(project)) }
+    }
+
+    override fun answer(requestId: String, text: String) {
+        if (text.isBlank()) return
+        send { TeamCommand.answer(it, requestId, text.trim()) }
+    }
+
+    override fun acceptMilestone(milestoneId: String) {
+        send { TeamCommand.acceptMilestone(it, milestoneId) }
+    }
+
+    override fun resumeTask(taskId: String) {
+        send { TeamCommand.resumeTask(it, taskId) }
+    }
+
+    override fun pause() {
+        send { TeamCommand.project(it, "pauseProject") }
+    }
+
+    override fun resume() {
+        send { TeamCommand.project(it, "resumeProject") }
+    }
+
+    override fun askStop() {
+        confirmingStop.value = true
+    }
+
+    override fun cancelStop() {
+        confirmingStop.value = false
+    }
+
+    override fun confirmStop() {
+        confirmingStop.value = false
+        send { TeamCommand.project(it, "stopProject") }
+    }
+
+    override fun dismissRefusal() {
+        engine.clearRefusal(profile)
+    }
 
     override fun back(): Unit = nav.back()
 
