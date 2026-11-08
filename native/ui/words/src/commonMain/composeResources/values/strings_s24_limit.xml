@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The "Approaching limit" strip at the top of the composer box (owner 2026-11-08). -->
+    <string name="composerLimitApproaching">Approaching limit</string>
+    <string name="composerLimitReached">Limit reached</string>
+    <string name="composerLimitResetsInHoursMinutes">Resets in %1$d h %2$d min</string>
+    <string name="composerLimitResetsInHours">Resets in %1$d h</string>
+    <string name="composerLimitResetsInMinutes">Resets in %1$d min</string>
+    <!-- %1$s is a weekday ("Friday"), %2$s a time ("5:00 AM"). -->
+    <string name="composerLimitResetsOnDay">Resets %1$s at %2$s</string>
+    <!-- %1$s is a full local date and time. -->
+    <string name="composerLimitResetsOnDate">Resets %1$s</string>
+    <string name="composerLimitViewUsage">View usage</string>
+    <string name="composerLimitDismiss">Dismiss</string>
+    <string name="composerLimitMonday">Monday</string>
+    <string name="composerLimitTuesday">Tuesday</string>
+    <string name="composerLimitWednesday">Wednesday</string>
+    <string name="composerLimitThursday">Thursday</string>
+    <string name="composerLimitFriday">Friday</string>
+    <string name="composerLimitSaturday">Saturday</string>
+    <string name="composerLimitSunday">Sunday</string>
+    <!-- A 12-hour clock: %1$s is "5:00", %2$s is AM or PM, kept on one line by a no-break space. -->
+    <string name="composerLimitClock12">%1$s&#160;%2$s</string>
+    <string name="composerLimitAm">AM</string>
+    <string name="composerLimitPm">PM</string>
+</resources>

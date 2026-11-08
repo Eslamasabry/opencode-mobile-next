@@ -71,7 +71,8 @@ class CountsArePluralsTest {
         "agentAccountWindowMinutes" to COMPOUND, "usage_widget_window_days" to COMPOUND,
         "usage_widget_window_hours" to COMPOUND,
         // unit abbreviation (74)
-        "chatStuckHours" to UNIT, "chatStuckMinutes" to UNIT, "connCheckSpeedOk" to UNIT,
+        "chatStuckHours" to UNIT, "chatStuckMinutes" to UNIT,
+        "composerLimitResetsInHours" to UNIT, "composerLimitResetsInHoursMinutes" to UNIT, "composerLimitResetsInMinutes" to UNIT, "connCheckSpeedOk" to UNIT,
         "connectionTryingAgainIn" to UNIT, "continueWithRecordSize" to UNIT, "e7SetupElapsedMinutes" to UNIT,
         "e7SetupElapsedSeconds" to UNIT, "e7VoiceUiMemory" to UNIT, "e7WorkspaceDaysAgo" to UNIT,
         "e7WorkspaceHoursAgo" to UNIT, "e7WorkspaceMinutesAgo" to UNIT, "keptSvcLogRetry" to UNIT,
