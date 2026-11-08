@@ -34199,4 +34199,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String chatSendFailureSignInAgain(String agent) {
     return '$agent needs you to sign in again';
   }
+
+  @override
+  String get teamRefusalServerRestarted =>
+      'OpenCode restarted while this step was running, so it was cut off.';
+
+  @override
+  String get teamRefusalServerRestartedNext =>
+      'Resume to send that step again. It picks up from the work already done.';
+
+  @override
+  String get teamRefusalRestartResend =>
+      'OpenCode restarted while this step was running. The team is sending it again.';
+
+  @override
+  String get teamRefusalRestartResendNext =>
+      'Nothing to do. Work already done is kept.';
 }

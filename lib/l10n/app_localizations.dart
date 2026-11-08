@@ -53779,6 +53779,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{agent} needs you to sign in again'**
   String chatSendFailureSignInAgain(String agent);
+
+  /// Plain reason for engine code serverRestarted: the phone's OpenCode restarted or crashed during a team step
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode restarted while this step was running, so it was cut off.'**
+  String get teamRefusalServerRestarted;
+
+  /// Way forward for engine code serverRestarted
+  ///
+  /// In en, this message translates to:
+  /// **'Resume to send that step again. It picks up from the work already done.'**
+  String get teamRefusalServerRestartedNext;
+
+  /// Plain line for engine code restartResend: the engine resends the cut-off step by itself
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode restarted while this step was running. The team is sending it again.'**
+  String get teamRefusalRestartResend;
+
+  /// Way forward for engine code restartResend
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to do. Work already done is kept.'**
+  String get teamRefusalRestartResendNext;
 }
 
 class _AppLocalizationsDelegate

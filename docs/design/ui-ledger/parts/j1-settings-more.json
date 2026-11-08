@@ -2495,6 +2495,10 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/send_problem_report.dart",
+      "reason": "A sheet opened from Settings > Help (openSendProblemReport), not a page: it shows the redacted report and its Send button; no separate surface in the page map."
+    },
+    {
       "file": "lib/feedback/bug_report.dart",
       "reason": "No surface: openBugReport() builds a prefilled GitHub issue URL and launches it externally (clipboard fallback + snackbar). Referenced as targetWidget \"openBugReport\" by more-report-bug-tile, about-report-bug and the about tab alpha buttons; also called from lib/ui/widgets/product_states.dart:250."
     },

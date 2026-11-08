@@ -32437,4 +32437,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String chatSendFailureSignInAgain(String agent) {
     return '$agent needs you to sign in again';
   }
+
+  @override
+  String get teamRefusalServerRestarted => '此步骤运行时 OpenCode 重启了，因此被中断。';
+
+  @override
+  String get teamRefusalServerRestartedNext => '请继续以重新发送此步骤。它会从已完成的工作接着做。';
+
+  @override
+  String get teamRefusalRestartResend => '此步骤运行时 OpenCode 重启了。团队正在重新发送它。';
+
+  @override
+  String get teamRefusalRestartResendNext => '无需操作。已完成的工作会保留。';
 }

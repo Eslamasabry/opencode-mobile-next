@@ -1,5 +1,5 @@
 {
- "generatedFrom": "31f0a70bbb4fa80e1c1f20bdd69c9cfa1f5b670b",
+ "generatedFrom": "0b6444c441408625194ee1da9fdf7c9ff9e421a0",
  "pages": [
   {
    "id": "system",
@@ -38566,6 +38566,11 @@
    "file": "lib/ui/screens/scheduling/schedule_routes.dart",
    "reason": "Capability-gated navigation and revalidated conversation routing; the destination screens are registered above.",
    "part": "scheduled-prompts"
+  },
+  {
+   "file": "lib/ui/screens/send_problem_report.dart",
+   "reason": "A sheet opened from Settings > Help (openSendProblemReport), not a page: it shows the redacted report and its Send button; no separate surface in the page map.",
+   "part": "j1-settings-more"
   },
   {
    "file": "lib/ui/screens/servers/profile_editor.dart",
