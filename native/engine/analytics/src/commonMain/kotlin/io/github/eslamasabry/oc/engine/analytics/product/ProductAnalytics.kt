@@ -5,88 +5,9 @@ import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.flow.StateFlow
-
-/**
- * The vendor side of product analytics (Flutter 2.1.5 `FirebaseAnalyticsAdapter`): Google Analytics for Firebase in
- * `:androidApp`, nothing anywhere else. It receives only events [ProductAnalytics] already checked against
- * [productSchema], and only while consent is on, except [setCollectionEnabled].
- */
-public interface ProductEventSink {
-    /** Starts or stops vendor collection. Never resets anything: the install id must survive the Flutter update. */
-    public fun setCollectionEnabled(enabled: Boolean)
-
-    /**
-     * The person turned the switch off: reset what the vendor kept on the phone (its random install id), so turning
-     * it on again later starts afresh (PRIVACY.md).
-     */
-    public fun forget()
-
-    public fun event(name: String, props: Map<String, String>)
-}
-
-/** The build without a Firebase config: drops everything. */
-public object NoOpProductEventSink : ProductEventSink {
-    override fun setCollectionEnabled(enabled: Boolean): Unit = Unit
-
-    override fun forget(): Unit = Unit
-
-    override fun event(name: String, props: Map<String, String>): Unit = Unit
-}
-
-/**
- * Product analytics over one [ProductEventSink], under the same switch as crash reports ([consent], the
- * Settings › Privacy and data switch). Never throws, never blocks. Nothing reaches the sink while [consent] is off or
- * the build has no vendor ([available] false).
- */
-public class ProductAnalytics(
-    private val sink: ProductEventSink,
-    private val consent: StateFlow<Boolean>,
-    /** Whether a vendor is built into this build at all (the Firebase config was present). */
-    public val available: Boolean,
-) {
-    init {
-        if (available) safely { sink.setCollectionEnabled(consent.value) }
-    }
-
-    /**
-     * Applies a changed answer to the vendor; the caller has already stored it. [chosenNow] is true for the person's
-     * own answer (the switch, the question) and false when the stored Flutter answer is adopted at start: only the
-     * person's "off" resets the vendor's install id. Flutter's answer is carried over without a reset, so the
-     * Analytics app-instance id survives the update.
-     */
-    public fun applyConsent(granted: Boolean, chosenNow: Boolean) {
-        if (!available) return
-        safely { sink.setCollectionEnabled(granted) }
-        if (chosenNow && !granted) safely { sink.forget() }
-    }
-
-    /** One event; dropped unless the person agreed, and reduced to what [productSchema] lists. */
-    public fun track(event: ProductEvent, props: Map<String, Any?> = emptyMap()) {
-        if (!available || !consent.value) return
-        val safe = cleanProductProps(event, props) ?: return
-        safely { sink.event(event.wire, safe) }
-    }
-
-    /** `feature_used` for one use of [feature]. */
-    public fun feature(feature: ProductFeature) {
-        track(ProductEvent.FeatureUsed, mapOf("feature" to feature))
-    }
-
-    /** `screen_view` for the page a route names; only its kind word is kept. */
-    public fun screen(route: String) {
-        track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.of(route)))
-    }
-
-    @Suppress("TooGenericExceptionCaught")
-    private inline fun safely(block: () -> Unit) {
-        try {
-            block()
-        } catch (_: Throwable) {
-            // Analytics must never be the reason the app fails.
-        }
-    }
-}
+import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
+import io.github.eslamasabry.oc.engine.analytics.health.JankMeter
+import io.github.eslamasabry.oc.engine.analytics.health.Telemetry
 
 /**
  * Flutter 2.1.5 `AnalyticsLifecycle`: `app_open` cold once per process and warm after each return from the
@@ -94,7 +15,7 @@ public class ProductAnalytics(
  * newer version than last time. Inert while consent is off, like every other event.
  */
 @OptIn(ExperimentalAtomicApi::class)
-public class ProductLifecycle(private val analytics: ProductAnalytics, private val clock: Clock) {
+public class ProductLifecycle(private val analytics: Telemetry, private val clock: Clock) {
     private val away = AtomicBoolean(false)
     private val since = AtomicLong(clock.now().toEpochMilliseconds())
 
@@ -103,14 +24,21 @@ public class ProductLifecycle(private val analytics: ProductAnalytics, private v
      * now, or null when it is unchanged.
      */
     public fun coldStart(currentVersion: String, previousVersion: String?): String? {
+        analytics.breadcrumb("app.start")
         analytics.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
         if (previousVersion == currentVersion) return null
-        if (previousVersion != null) analytics.track(ProductEvent.UpdateInstalled)
+        if (previousVersion != null) {
+            analytics.track(ProductEvent.UpdateInstalled)
+            HealthFlow { analytics }.updateResult(kind = "in_app", result = "installed")
+        }
         return currentVersion
     }
 
-    public fun onBackground() {
+    /** The app went to the background; [jank] ends its session first, as Flutter does. */
+    public fun onBackground(jank: JankMeter? = null) {
         if (!away.compareAndSet(expectedValue = false, newValue = true)) return
+        analytics.breadcrumb("app.background")
+        jank?.endSession()
         val elapsed = (clock.now().toEpochMilliseconds() - since.load()).coerceAtLeast(0).milliseconds
         analytics.track(ProductEvent.SessionLength, mapOf("minutes" to ProductBuckets.sessionMinutesOf(elapsed)))
     }
@@ -118,6 +46,7 @@ public class ProductLifecycle(private val analytics: ProductAnalytics, private v
     public fun onForeground() {
         if (!away.compareAndSet(expectedValue = true, newValue = false)) return
         since.store(clock.now().toEpochMilliseconds())
+        analytics.breadcrumb("app.foreground")
         analytics.track(ProductEvent.AppOpen, mapOf("kind" to "warm"))
     }
 }

@@ -54,7 +54,8 @@ class OcApplication : Application(), GraphOwner {
         // 1. B-SEC-043, as the Flutter OcApplication: the category-only handler goes in before
         // anything else can crash; it stores nothing until crash capture is turned on.
         // Crash reports go through the vendor-neutral Reporting layer (consent + redaction) before any vendor sees them.
-        reporting = Telemetry.init(this, previewFlavor = BuildConfig.FLAVOR == "preview")
+        // B-180/B-190: off in every flavour until the person agrees; the stored answers are adopted after the gate.
+        reporting = Telemetry.init(this)
         try {
             NativeCrashStore(filesDir).install { category, frames ->
                 reporting.reportCrash(category, frames)
@@ -64,7 +65,8 @@ class OcApplication : Application(), GraphOwner {
         AppLog.install(
             RedactingWriter(
                 redactor,
-                listOf(DiagnosticsLogSink),
+                // B-190: the app's own log ring for "Send a problem report".
+                listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1

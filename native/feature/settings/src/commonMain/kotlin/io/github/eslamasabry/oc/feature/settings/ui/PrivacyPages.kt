@@ -104,8 +104,8 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
 @Composable
 internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: SettingsActions) {
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-    // Nothing in this build sends usage events yet (they arrive with the native analytics wave): say so.
-    if (privacy.collect?.sending != SendingState.Sending) {
+    // A build without the telemetry vendor sends nothing: say so (with it, the switches below really send).
+    if (privacy.collect?.sending != SendingState.Sending && !privacy.vendorSends) {
         KitNotice(
             stringResource(Res.string.collectUsageNotSentYet),
             gutter.testTag("collect-not-sent"),
