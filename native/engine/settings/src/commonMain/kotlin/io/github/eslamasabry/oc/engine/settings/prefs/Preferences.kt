@@ -129,6 +129,7 @@ public class Preferences(
         PreferenceChange.ResetAppearance -> effectEdits(current.effects, Effects.Defaults) + mapOf(
             K.APPEARANCE to AppearanceChoice.Dark.wire, K.THEME_PACK to ThemePack.OpenCode.wire,
             K.ACCENT to null, K.TEXT_SIZE to TextSize.Normal.wire, K.FROST to FrostStrength.Balanced.wire,
+            K.GLASS_EDGES to null,
         )
         is PreferenceChange.Appearance -> mapOf(K.APPEARANCE to change.value.wire)
         is PreferenceChange.Theme -> mapOf(K.THEME_PACK to change.value.wire)
@@ -136,6 +137,8 @@ public class Preferences(
         is PreferenceChange.Text -> mapOf(K.TEXT_SIZE to change.value.wire)
         is PreferenceChange.Accent -> mapOf(K.ACCENT to change.id?.takeIf { it.isNotEmpty() })
         is PreferenceChange.Frost -> mapOf(K.FROST to change.value.wire)
+        // Liquid is the default: choosing it removes the key.
+        is PreferenceChange.Edges -> mapOf(K.GLASS_EDGES to change.value.wire.takeIf { change.value != GlassEdges.Liquid })
         is PreferenceChange.ReasoningExpanded -> mapOf(K.REASONING to change.value)
         is PreferenceChange.TimestampsVisible -> mapOf(K.TIMESTAMPS to change.value)
         is PreferenceChange.SetEffects -> effectEdits(current.effects, change.value)
@@ -212,6 +215,7 @@ public class Preferences(
                 textSize = wireOf<TextSize>(raw(K.TEXT_SIZE)) ?: TextSize.Normal,
                 accent = (raw(K.ACCENT) as? String)?.takeIf { it.isNotEmpty() },
                 frost = wireOf<FrostStrength>(raw(K.FROST)) ?: FrostStrength.Balanced,
+                glassEdges = wireOf<GlassEdges>(raw(K.GLASS_EDGES)) ?: GlassEdges.Liquid,
                 reasoningExpanded = bool(K.REASONING, false),
                 timestampsVisible = bool(K.TIMESTAMPS, false),
             )

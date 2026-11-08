@@ -10,9 +10,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -20,9 +23,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -39,8 +44,10 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
@@ -50,14 +57,19 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.backdrop.shadow.Shadow
-import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
-import io.github.eslamasabry.oc.ui.design.effects.LiquidConditions
-import io.github.eslamasabry.oc.ui.design.effects.LiquidGlass
+import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
+import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
+import io.github.eslamasabry.oc.ui.design.effects.LiquidClaim
+import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.design.effects.RimLight
+import io.github.eslamasabry.oc.ui.design.style.GlassSpec
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
+import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassStackRoot
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -67,45 +79,47 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /*
- * Liquid glass under the Glass style (owner, 2026-11-08), drawn by Kyant0/AndroidLiquidGlass ("backdrop", Apache-2.0).
- * The floating parts (the bars, the composer, sheets, menus, the floating + and pills) are panes of glass over the
- * content behind them: the content, recorded once per frame by a source, is pressed together in contrast, blurred a
- * little and bent at the rim with a little dispersion, then laid under the theme's tint (thick enough that the words
- * keep 4.5:1 over any content: [LiquidGlass.tintAlpha]) and a light rim.
+ * Glass's liquid edges (docs/designs/liquid-glass.md; owner 2026-11-08 "go full blown glass"), drawn by
+ * Kyant0/AndroidLiquidGlass ("backdrop" 2.0.1, Apache-2.0). One entry point, [kitLiquidFace]: a floating part asks for
+ * its liquid face and gets a modifier, or null, and then keeps exactly the face it draws today. Null whenever:
+ * - FrostPolicy holds the edges (Saver, reduced motion, high contrast, a style other than Glass, frost Off, "Glass
+ *   edges: Frosted", or no runtime shaders: Android below 13, desktop for now);
+ * - the window's budget gives the part no room ([LiquidEdge.grant]; the lowest drop to frost first);
+ * - the part's shape is not a rounded kit shape (the lens bends rounded rectangles only).
  *
- * Every other style, and Glass wherever liquid glass is held ([LiquidGlass.holdOf]: Saver, reduced motion, high
- * contrast, Android below 13, frost off), draws exactly what it drew before: every entry point here returns null or the
- * modifier unchanged, and the caller keeps its own face.
+ * The face: the content behind (a source's recording) pressed together in contrast, blurred a little, bent only inside a
+ * rim of min(12 dp, 20 % of the shorter side) with no depth effect and no dispersion, under today's Glass tint and words
+ * plate thickened by GlassFinish ([LiquidEdge.face]), with a soft rim light tinted from the accent ([RimLight]).
  *
- * Sources: a feature's [KitFrostState] (what scrolls behind the chat's chrome, a list under its floating +) through
- * [kitLiquidBackdrop], or a kit-owned [KitLiquidSource] (the page under a sheet or a menu, a page under its bar) that
- * records only while a liquid pane uses it, so nothing is recorded for glass nobody shows. A pane never draws a source
- * it lies inside: the sources are the siblings under the panes, never their ancestors.
+ * Sources: a feature's [KitFrostState] (the transcript behind the chat's chrome, a list under its +), or a kit-owned
+ * [KitLiquidSource] (the page under a sheet or a menu, a page body under its bar) that records only while a granted pane
+ * uses it. A pane never lies inside the source it draws.
  */
 
-/** Liquid glass's conditions as the kit reads them now. */
+/** Liquid edges' conditions as the kit reads them now: FrostPolicy's, with the platform's lens. */
 @Composable
-internal fun kitLiquidConditions(): LiquidConditions {
+internal fun kitLiquidOn(): Boolean {
     val platform = LocalKitPlatform.current
     val signals by platform.signals.collectAsState()
     val appearance = LocalKitAppearance.current
-    return LiquidConditions(
-        style = LocalKitStyle.current.style,
-        runtimeShaders = platform.liquidGlass,
-        saver = appearance.saver,
-        reducedMotion = LocalKitMotion.current.reduced,
-        highContrast = signals.highContrast,
-        frostOff = appearance.frost == FrostStrength.Off,
-    )
+    val conditions =
+        FrostConditions(
+            saver = appearance.saver,
+            reducedMotion = LocalKitMotion.current.reduced,
+            highContrast = signals.highContrast,
+            styleAllows = LocalKitStyle.current.style == Style.Glass,
+            lensSupported = platform.liquidGlass,
+        )
+    return FrostPolicy.liquidEdges(conditions, appearance.frost, appearance.glassEdges)
 }
 
-/** Whether the floating parts are liquid glass here and now. */
+/** Whether Glass's floating parts may be liquid glass here and now (before the window's budget). */
 @Composable
-public fun kitLiquidGlassOn(): Boolean = LiquidGlass.isLiquid(kitLiquidConditions())
+public fun kitLiquidGlassOn(): Boolean = kitLiquidOn()
 
 /**
- * What a kit part records for liquid panes over it (the page under a sheet, a page's body under its bar). It records
- * only while a pane uses it ([users] > 0); at rest, and under every other style, it only draws its content.
+ * What a kit part records for liquid panes over it (the page under a sheet, a page body under its bar): only while a
+ * granted pane uses it; at rest, and under every other style, it only draws its content.
  */
 @Stable
 public class KitLiquidSource internal constructor(internal val layer: GraphicsLayer) {
@@ -123,108 +137,200 @@ public fun rememberKitLiquidSource(): KitLiquidSource {
 public fun Modifier.kitLiquidSource(source: KitLiquidSource): Modifier = this then LiquidSourceElement(source)
 
 /**
- * A feature's scroll content recorded for the liquid panes over it (the conversations list under its floating +):
- * [kitFrostSource] while liquid glass is on, nothing otherwise, so every other style draws exactly as before.
+ * A feature's scroll content recorded for the liquid panes over it (the conversations list under its +): the content
+ * recorded by [kitFrostSource] while liquid glass may be drawn, nothing otherwise, so other styles draw exactly as before.
  */
 @Composable
-public fun Modifier.kitGlassSource(state: KitFrostState): Modifier = if (kitLiquidGlassOn()) kitFrostSource(state) else this
+public fun Modifier.kitGlassSource(state: KitFrostState): Modifier = if (kitLiquidOn()) kitFrostSource(state) else this
 
 /** The page under the window's sheets and menus (provided by `KitSheetHost`). */
 internal val LocalKitLiquidPage: ProvidableCompositionLocal<KitLiquidSource?> = staticCompositionLocalOf { null }
 
-/** What scrolls behind a page's overlaid bar and bottom block (provided by `KitScreen` to those two slots only). */
-public val LocalKitLiquidChrome: ProvidableCompositionLocal<Backdrop?> = staticCompositionLocalOf { null }
-
-/** A liquid backdrop over [state], or null where liquid glass is held (or no source is given). */
-@Composable
-public fun kitLiquidBackdrop(state: KitFrostState?): Backdrop? {
-    if (state == null || !kitLiquidGlassOn()) return null
-    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
-    val picture = LocalKitGlassBackdrop.current
-    return remember(state, ground, picture) { FrostStateBackdrop(state, ground, picture) }
-}
-
-/** A liquid backdrop over [source] that keeps [source] recording while the caller is composed; null where held. */
-@Composable
-internal fun kitLiquidBackdrop(source: KitLiquidSource?): Backdrop? {
-    val on = source != null && kitLiquidGlassOn()
-    if (source != null) {
-        DisposableEffect(source, on) {
-            if (on) source.users++
-            onDispose { if (on) source.users-- }
-        }
-    }
-    if (!on || source == null) return null
-    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
-    val picture = LocalKitGlassBackdrop.current
-    return remember(source, ground, picture) { LiquidSourceBackdrop(source, ground, picture) }
-}
-
-/** The page under this sheet or menu as a liquid backdrop, or null (held, or no host records one). */
-@Composable
-internal fun kitLiquidPageBackdrop(): Backdrop? = kitLiquidBackdrop(LocalKitLiquidPage.current)
+/**
+ * What scrolls behind a page's bar and bottom block (the chat's transcript recording), provided by `KitScreen` to those
+ * two slots in both of its layouts, so the composer never flips between liquid and frost when a status line, the
+ * loading line or Find moves the page into its stacked layout.
+ */
+public val LocalKitLiquidChrome: ProvidableCompositionLocal<KitFrostState?> = staticCompositionLocalOf { null }
 
 /**
- * True inside a sheet or a dialog (set by `KitSheetHost`). The page source does not hold the sheet itself, so a menu
- * opened there would show the page through the sheet: it keeps its frosted Glass face instead. Glass is not stacked
- * on glass.
+ * True inside a sheet or a dialog (set by `KitSheetHost`). The page recording does not hold the sheet, so a menu opened
+ * there would show the page through the sheet: it keeps its frosted face. Glass is not stacked on glass.
  */
 internal val LocalKitLiquidOverModal: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
-/** A menu's liquid backdrop: the page, unless the menu opens over a sheet or a dialog. */
+/** One window's liquid surfaces and who of them is drawn liquid (provided by `KitSheetHost`; none: no cap). */
+@Stable
+internal class KitLiquidBudget {
+    internal val claims = mutableStateListOf<LiquidClaim<Any>>()
+    private var next = 0
+    internal val granted by derivedStateOf { LiquidEdge.grant(claims.toList()) }
+
+    internal fun order(): Int = next++
+}
+
+internal val LocalKitLiquidBudget: ProvidableCompositionLocal<KitLiquidBudget?> = staticCompositionLocalOf { null }
+
+/** [source] as the budget counts it: a kit recording costs one, a feature's recording nothing. */
+private fun costed(source: Any?): Any? = source as? KitLiquidSource
+
+/** Asks the window's budget for [role]'s liquid face over [source]; true when granted (always, without a budget). */
 @Composable
-internal fun kitLiquidMenuBackdrop(): Backdrop? = kitLiquidBackdrop(LocalKitLiquidPage.current.takeIf { !LocalKitLiquidOverModal.current })
+private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boolean {
+    val budget = LocalKitLiquidBudget.current ?: return asking
+    val key = remember { Any() }
+    val order = remember(budget) { budget.order() }
+    DisposableEffect(budget, role, source, asking) {
+        val claim = LiquidClaim(key, role, costed(source), order)
+        if (asking) budget.claims += claim
+        onDispose { budget.claims.remove(claim) }
+    }
+    return asking && key in budget.granted
+}
 
 /**
- * [role]'s liquid pane over [backdrop], shaped [shape]: the backdrop pressed together, blurred, bent at the rim with a
- * little dispersion, under the theme's tint and a light rim, with the role's soft shadow. Glass panes inside it sit on
- * it ([kitGlassStackRoot]) instead of frosting again. The modifier clips its content to [shape].
+ * [role]'s liquid face over [source] (a feature's recording, or null), shaped [shape]; null keeps the part's own face.
+ * [transform] is how far a transform the library cannot follow has run (a sheet's predictive-back shrink, a menu's
+ * grow-in; 0 at rest, 1 fully): the lens and its rim light fade into plain frost as it rises, so nothing misaligns.
  */
 @Composable
-public fun Modifier.kitLiquidPane(role: LiquidRole, backdrop: Backdrop, shape: Shape): Modifier {
-    val roles = LocalKitRoles.current
-    val recipe = remember(role, roles.dark) { LiquidGlass.recipe(role, roles.dark) }
-    val tint = remember(roles, role, recipe) {
-        val alpha = LiquidGlass.tintAlpha(roles, role, recipe)
-        Color(LiquidGlass.tintOf(roles, role).withAlpha(alpha).v)
+public fun kitLiquidFace(role: LiquidRole, source: KitFrostState?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
+    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
+    val picture = LocalKitGlassBackdrop.current
+    val backdrop = remember(source, ground, picture) { source?.let { FrostStateBackdrop(it, ground, picture) } }
+    return liquidFace(role, source, backdrop, shape, transform)
+}
+
+/** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
+@Composable
+internal fun kitLiquidFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
+    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
+    val picture = LocalKitGlassBackdrop.current
+    val backdrop = remember(source, ground, picture) { source?.let { LiquidSourceBackdrop(it, ground, picture) } }
+    return liquidFace(role, source, backdrop, shape, transform)
+}
+
+/** A menu's liquid face over the page, unless it opens over a sheet or a dialog. */
+@Composable
+internal fun kitLiquidMenuFace(shape: Shape, transform: () -> Float): Modifier? =
+    kitLiquidFace(LiquidRole.Menu, LocalKitLiquidPage.current.takeIf { !LocalKitLiquidOverModal.current }, shape, transform)
+
+/** A sheet's liquid face over the page. */
+@Composable
+internal fun kitLiquidSheetFace(shape: Shape, transform: () -> Float): Modifier? =
+    kitLiquidFace(LiquidRole.Sheet, LocalKitLiquidPage.current, shape, transform)
+
+private val NoTransform: () -> Float = { 0f }
+
+/**
+ * Whether [shape] can carry the lens: the kit's rounded shapes are rounded rectangles (`RoundedCornerShape`, the circle
+ * and the stadium included). A square kit shape (an end side sheet, Sharp corners' boxes) keeps its frosted face.
+ */
+internal fun liquidShapeOk(shape: Shape): Boolean = shape is CornerBasedShape
+
+/** How far a transform the library cannot follow has run, as [kitLiquidFace]'s `transform` takes it. */
+internal object LiquidMotion {
+    /** The predictive back gesture's progress (0–1) as the face's way into frost: all frost by a quarter of the way. */
+    fun shrinkFraction(back: Float): Float = (back / BACK_TO_FROST).coerceIn(0f, 1f)
+
+    /** A grow-in from [from] scale (a menu's 0.9) at [scale] now: 1 at its start, 0 once it has grown. */
+    fun growFraction(scale: Float, from: Float): Float = if (from >= 1f) 0f else ((1f - scale) / (1f - from)).coerceIn(0f, 1f)
+
+    const val BACK_TO_FROST: Float = .25f
+}
+
+@Composable
+private fun liquidFace(role: LiquidRole, source: Any?, backdrop: Backdrop?, shape: Shape, transform: () -> Float): Modifier? {
+    val on = kitLiquidOn() && backdrop != null
+    val shaped = liquidShapeOk(shape)
+    // Only rounded kit shapes reach the lens; a square one falls back quietly, anything else is a kit bug.
+    kitAssert(!on || shaped || shape === RectangleShape) { "kitLiquidFace: $role's shape is not a rounded kit shape ($shape)" }
+    val granted = kitLiquidClaim(role, source, on && shaped)
+    val users = source as? KitLiquidSource
+    if (users != null) {
+        DisposableEffect(users, granted) {
+            if (granted) users.users++
+            onDispose { if (granted) users.users-- }
+        }
     }
-    val lensShape = remember(shape) { shape as? CornerBasedShape ?: RoundedCornerShape(0.dp) }
-    val rim = Color.White.copy(alpha = recipe.rimAlpha)
+    if (!granted || backdrop == null) return null
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, transform)
+}
+
+@Composable
+private fun Modifier.liquidPane(role: LiquidRole, backdrop: Backdrop, shape: CornerBasedShape, transform: () -> Float): Modifier {
+    val roles = LocalKitRoles.current
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val recipe = remember(role, roles.dark) { LiquidEdge.recipe(role, roles.dark) }
+    val face = remember(roles, role) { LiquidEdge.face(roles, role) }
+    val fill = face.fill?.let { Color(it.v) } ?: Color.Transparent
+    val fillStart = face.fillStart?.let { Color(it.v) } ?: fill
+    val rim = remember(roles) { Color(RimLight.of(roles).v) }
+    val rimBlend = if (roles.dark) BlendMode.Plus else BlendMode.SrcOver
     val shadow = Color.Black.copy(alpha = recipe.shadowAlpha)
+    val latest by rememberUpdatedState(transform)
     return this
         .drawBackdrop(
             backdrop = backdrop,
-            shape = { lensShape },
+            shape = { shape },
             effects = {
+                val t = latest().coerceIn(0f, 1f)
                 colorControls(brightness = recipe.brightness, contrast = recipe.contrast, saturation = recipe.saturation)
-                blur(recipe.blurDp.dp.toPx())
-                // The lens bends at most half the pane's short side in from the rim (before the first layout the size
-                // is not known yet; the effects run again once it is).
-                val height = recipe.refractionHeightDp.dp.toPx()
-                val half = if (size.isSpecified) size.minDimension / 2f else height
-                lens(minOf(height, half), recipe.refractionAmountDp.dp.toPx(), depthEffect = recipe.depth, chromaticAberration = recipe.dispersion)
+                // Into frost while a transform runs: the blur grows to the Glass float frost and the lens lets go.
+                blur((recipe.blurDp + (GlassSpec.FLOAT_FROST - recipe.blurDp) * t).dp.toPx())
+                if (size.isSpecified && t < 1f) {
+                    val rimPx = LiquidEdge.rimPx(size.minDimension, density)
+                    lens(rimPx, recipe.refractionDp.dp.toPx() * (1f - t))
+                }
             },
-            highlight = { Highlight(width = recipe.rimWidthDp.dp, style = HighlightStyle.Default(color = rim)) },
+            highlight = {
+                val t = latest().coerceIn(0f, 1f)
+                Highlight(
+                    width = RIM_LIGHT_DP.dp,
+                    blurRadius = RIM_LIGHT_DP.dp,
+                    alpha = (1f - t),
+                    style = HighlightStyle.Default(color = rim.copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT), blendMode = rimBlend),
+                )
+            },
             shadow = if (recipe.shadowAlpha > 0f) ({ Shadow(radius = 24.dp, color = shadow) }) else null,
-            onDrawSurface = { drawRect(tint) },
+            onDrawSurface = {
+                if (fillStart == fill) {
+                    drawRect(fill)
+                } else {
+                    val start = Offset(if (rtl) size.width else 0f, 0f)
+                    val end = Offset(if (rtl) 0f else size.width, size.height)
+                    // Today's Glass tint, lit at its top start and plain from 70 % of the way across.
+                    drawRect(Brush.linearGradient(0f to fillStart, .7f to fill, start = start, end = end))
+                }
+            },
         )
         .kitGlassStackRoot()
 }
 
+/** The rim light's width (and its soft blur), in dp: a soft line, never a hairline. */
+internal const val RIM_LIGHT_DP: Float = 1.5f
+
+/** The rim light's strength over a dark theme (added light) and a light one (laid over). */
+internal const val RIM_ALPHA_DARK: Float = .55f
+internal const val RIM_ALPHA_LIGHT: Float = .60f
+
 /**
- * A bar's liquid pane, behind the bar's own content (call it first inside the bar's box): a floating capsule
+ * A bar's liquid face, behind the bar's own content (call it first inside the bar's box): a floating capsule
  * [LIQUID_BAR_INSET_X] in from the bar's sides and [LIQUID_BAR_INSET_Y] from its top and bottom, its ends rounded by at
  * most [LIQUID_BAR_RADIUS]. The bar's content keeps its own place: only its ground becomes glass.
  */
 @Composable
-public fun BoxScope.KitLiquidBarPane(backdrop: Backdrop) {
+internal fun BoxScope.KitLiquidBarPane(face: Modifier) {
     Box(
         Modifier.matchParentSize()
             .padding(horizontal = LIQUID_BAR_INSET_X.dp, vertical = LIQUID_BAR_INSET_Y.dp)
-            .kitLiquidPane(LiquidRole.Bar, backdrop, RoundedCornerShape(LIQUID_BAR_RADIUS.dp))
+            .then(face)
             .testTag("kit-liquid-bar")
     )
 }
+
+/** The bar capsule's shape. */
+internal val LiquidBarShape: CornerBasedShape = RoundedCornerShape(26.dp)
 
 /** How far a bar's capsule sits in from the bar's sides, in dp. */
 public const val LIQUID_BAR_INSET_X: Int = 6
@@ -236,11 +342,11 @@ public const val LIQUID_BAR_INSET_Y: Int = 4
 public const val LIQUID_BAR_RADIUS: Int = 26
 
 /**
- * The edge where a page's content meets the overlaid bar ([top]) or bottom block under liquid glass: no band of ground,
- * only a soft fade of it towards the screen's edge, so what scrolls past the floating glass fades rather than cuts.
+ * The edge where a page's content meets its floating bar ([top]) or bottom block: no band of ground, only a soft fade
+ * of it towards the screen's edge, so what scrolls past the glass fades rather than cuts.
  */
 @Composable
-public fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
+internal fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     return drawBehind {
         val stops =
@@ -250,23 +356,24 @@ public fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
     }
 }
 
+/** How much of the ground the edge fade reaches at the screen's edge. */
+internal const val EDGE_FADE_ALPHA: Float = .82f
+
 /**
  * A page's body run up under its bar by [barPx] (the bar floats over it): measured that much taller and placed that
- * much higher, while it still takes only its own room in the page, so nothing below it moves.
+ * much higher, while it takes only its own room in the page, so nothing below it moves.
  */
-internal fun Modifier.kitRunUnderBar(barPx: Int): Modifier =
+internal fun Modifier.kitRunUnderBar(barPx: () -> Int): Modifier =
     layout { measurable, constraints ->
-        if (barPx <= 0 || !constraints.hasBoundedHeight) {
+        val px = barPx()
+        if (px <= 0 || !constraints.hasBoundedHeight) {
             val p = measurable.measure(constraints)
             return@layout layout(p.width, p.height) { p.place(0, 0) }
         }
-        val tall = constraints.maxHeight + barPx
-        val p = measurable.measure(constraints.copy(minHeight = (constraints.minHeight + barPx).coerceAtMost(tall), maxHeight = tall))
-        layout(p.width, (p.height - barPx).coerceAtLeast(0)) { p.place(0, -barPx) }
+        val tall = constraints.maxHeight + px
+        val p = measurable.measure(constraints.copy(minHeight = (constraints.minHeight + px).coerceAtMost(tall), maxHeight = tall))
+        layout(p.width, (p.height - px).coerceAtLeast(0)) { p.place(0, -px) }
     }
-
-/** How much of the ground the edge fade reaches at the screen's edge. */
-internal const val EDGE_FADE_ALPHA: Float = .82f
 
 /** Paints the page's ground (and the live picture, where one is drawn) under a source's recording. */
 private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?, at: LayoutCoordinates) {
@@ -279,11 +386,7 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
 }
 
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
-private class FrostStateBackdrop(
-    val state: KitFrostState,
-    val ground: Color,
-    val picture: KitGlassBackdrop?,
-) : Backdrop {
+private class FrostStateBackdrop(val state: KitFrostState, val ground: Color, val picture: KitGlassBackdrop?) : Backdrop {
     override val isCoordinatesDependent: Boolean = true
 
     override fun DrawScope.drawBackdrop(density: Density, coordinates: LayoutCoordinates?, layerBlock: (GraphicsLayerScope.() -> Unit)?) {
@@ -294,12 +397,11 @@ private class FrostStateBackdrop(
     }
 }
 
-/** A [KitLiquidSource] seen from a pane, in its window or in a popup's (a menu): placed by screen position there. */
-private class LiquidSourceBackdrop(
-    val source: KitLiquidSource,
-    val ground: Color,
-    val picture: KitGlassBackdrop?,
-) : Backdrop {
+/**
+ * A [KitLiquidSource] seen from a pane: in its own window by the layout's own mapping, from a popup's window (a menu) by
+ * screen position, which both windows share.
+ */
+private class LiquidSourceBackdrop(val source: KitLiquidSource, val ground: Color, val picture: KitGlassBackdrop?) : Backdrop {
     override val isCoordinatesDependent: Boolean = true
 
     override fun DrawScope.drawBackdrop(density: Density, coordinates: LayoutCoordinates?, layerBlock: (GraphicsLayerScope.() -> Unit)?) {

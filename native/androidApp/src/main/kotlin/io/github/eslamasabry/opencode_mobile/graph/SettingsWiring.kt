@@ -278,6 +278,7 @@ class AndroidSettingsHost(
                     usageStatistics = live != null,
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
+                    liquidGlass = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
                     diagnostics = true,
                     configurationInspection = configAvailable,
                     localModelStorage = true,

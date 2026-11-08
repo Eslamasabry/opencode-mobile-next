@@ -88,11 +88,12 @@ import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
-import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBudget
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidMotion
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidBudget
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidOverModal
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidPage
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPageBackdrop
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSheetFace
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
@@ -261,8 +262,10 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
     val state = remember { KitSheetHostState() }
     // Liquid glass: the page as the sheets and menus over it see it, recorded only while one of them is liquid.
     val page = rememberKitLiquidSource()
+    // One budget per window: the floating parts that may be liquid at once, and which drop to frost first.
+    val budget = remember { KitLiquidBudget() }
     Box(modifier) {
-        CompositionLocalProvider(LocalKitSheetHost provides state, LocalKitLiquidPage provides page) {
+        CompositionLocalProvider(LocalKitSheetHost provides state, LocalKitLiquidPage provides page, LocalKitLiquidBudget provides budget) {
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
             // its accessibility nodes while a modal owns the window, including its exit.
@@ -451,6 +454,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                             shape = KitShapeId.Sheet,
                             drag = drag,
                             stillShown = { state.shown.targetState },
+                            shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
                 }
@@ -480,6 +484,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .clip(KitShapeId.Dialog.shape()),
                             handle = false,
                             shape = KitShapeId.Dialog,
+                            shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
                 }
@@ -498,6 +503,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .predictiveShrink(back, TransformOrigin(1f, 0.5f)),
                             handle = false,
                             shape = KitShapeId.Square,
+                            shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
                 }
@@ -553,14 +559,15 @@ private fun SheetPanel(
     shape: KitShapeId,
     drag: SheetDrag? = null,
     stillShown: () -> Boolean = { true },
+    /** How far the predictive back gesture has shrunk the panel (0–1): liquid glass eases into frost meanwhile. */
+    shrink: () -> Float = { 0f },
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     // Glass: the sheet is liquid glass over the page (Android 13+, not held), else a frosted pane (opaque over the page
     // whenever nothing blurs); every other style keeps surface2.
-    val liquid = kitLiquidPageBackdrop()
     val face =
-        liquid?.let { Modifier.kitLiquidPane(LiquidRole.Sheet, it, shape.shape()) }
+        kitLiquidSheetFace(shape.shape(), shrink)
             ?: kitGlassSheet(shape, colors.surface2) ?: Modifier.background(colors.surface2)
     Column(
         modifier

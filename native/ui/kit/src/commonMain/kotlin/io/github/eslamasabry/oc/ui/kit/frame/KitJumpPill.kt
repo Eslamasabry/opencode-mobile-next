@@ -1,8 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidBackdrop
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
@@ -198,11 +197,11 @@ private fun VeiledPillFace(label: String, onClick: () -> Unit, modifier: Modifie
         contentAlignment = Alignment.Center,
     ) {
         // Glass: a drop of liquid glass over the transcript (Android 13+, not held); else the veil.
-        val liquid = kitLiquidBackdrop(backdrop)
+        val liquid = kitLiquidFace(LiquidRole.Pill, backdrop, shape)
         Row(
             Modifier.heightIn(min = JUMP_PILL_FACE_DP.dp)
                 .then(
-                    liquid?.let { Modifier.kitLiquidPane(LiquidRole.Floating, it, shape) }
+                    liquid
                         ?: Modifier.kitBackdropVeil(backdrop, veil, colors.surface3, shape).border(1.dp, colors.hairline, shape)
                 )
                 .padding(horizontal = Space.S3.dp)

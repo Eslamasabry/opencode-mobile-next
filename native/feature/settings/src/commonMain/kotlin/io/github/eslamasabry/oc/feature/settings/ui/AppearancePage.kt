@@ -61,6 +61,12 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAskShape
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskStyle
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskTheme
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCorners
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdges
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesMotionOff
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesNeedsAndroid13
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesNote
+import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
+import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneReset
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAutoNote
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverHoldsStyle
@@ -357,6 +363,29 @@ private fun ColumnScope.AppearanceControls(
                 modifier = Modifier.testTag("appearance-spacing"),
                 enabled = held,
                 onChange = actions::onSpacing,
+            )
+        }
+        // Glass only: its floating parts bend what lies behind them (liquid) or blur it (frosted).
+        if (ui.style == SurfaceStyle.Glass) {
+            AppearanceKnobLabel(stringResource(Res.string.appearanceGlassEdges))
+            Box(gutter) {
+                KitSegmented(
+                    segments = GlassEdges.entries.map { KitSegment(it, glassEdgesWords(it)) },
+                    selected = ui.glassEdges,
+                    semanticsLabel = stringResource(Res.string.appearanceGlassEdges),
+                    modifier = Modifier.testTag("appearance-glass-edges"),
+                    enabled = held,
+                    onChange = actions::onGlassEdges,
+                )
+            }
+            KitGroupNote(
+                stringResource(
+                    when (ui.glassEdgesHold) {
+                        EdgeHold.Platform -> Res.string.appearanceGlassEdgesNeedsAndroid13
+                        EdgeHold.Motion -> Res.string.appearanceGlassEdgesMotionOff
+                        else -> Res.string.appearanceGlassEdgesNote
+                    }
+                )
             )
         }
         val defaults = StyleResolver.spec(Style.valueOf(ui.style.name)).tokens.defaults

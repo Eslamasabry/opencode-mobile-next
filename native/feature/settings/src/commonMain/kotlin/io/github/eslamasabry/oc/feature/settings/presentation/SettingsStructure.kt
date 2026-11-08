@@ -76,6 +76,8 @@ public data class SettingsFacts(
     val dynamicColour: Boolean = false,
     /** The phone's "Remove animations" is on: nothing moves whatever Motion says. */
     val systemMotionOff: Boolean = false,
+    /** Glass's liquid edges can be drawn here (Android 13+: the lens runs on runtime shaders). */
+    val liquidGlass: Boolean = false,
     /**
      * The host can build and hand over the diagnostics report: Report a problem opens its page
      * here.

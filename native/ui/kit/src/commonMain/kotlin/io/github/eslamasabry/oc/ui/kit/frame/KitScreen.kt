@@ -58,13 +58,17 @@ import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidBarShape
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidEdgeFade
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidGlassOn
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.effects.kitRunUnderBar
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.zIndex
@@ -183,9 +187,10 @@ public fun KitScreen(
             // under it as Glass does, so it adds no fade room either: the newest line rests on the list's own padding.
             val veil = if (frost != null && !kitChromeIsGlass()) rememberKitChromeVeil() else null
             val faded = !kitChromeIsGlass() && veil == null
-            // Liquid glass (Glass only, where it is not held): the bar and the composer float as glass over what
-            // scrolls behind them; null keeps today's ground, veil or frost.
-            val liquid = kitLiquidBackdrop(frost)
+            // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
+            // over what scrolls behind them; a null face keeps today's ground, veil or frost.
+            val liquid = frost != null && kitLiquidGlassOn()
+            val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape) else null
             val padding =
                 with(density) {
                     PaddingValues(
@@ -207,9 +212,9 @@ public fun KitScreen(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .onSizeChanged { topPx = it.height }
-                            .then(if (liquid != null) Modifier.kitLiquidEdgeFade(top = true) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
+                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
                     ) {
-                        if (liquid != null) KitLiquidBarPane(liquid)
+                        if (barFace != null) KitLiquidBarPane(barFace)
                         it()
                     }
                 }
@@ -220,7 +225,7 @@ public fun KitScreen(
                             .onSizeChanged { bottomPx = it.height }
                             .then(
                                 when {
-                                    liquid != null -> Modifier.kitLiquidEdgeFade(top = false)
+                                    liquid -> Modifier.kitLiquidEdgeFade(top = false)
                                     veil != null && frost != null -> Modifier.kitChromeVeil(veil, frost)
                                     else -> Modifier.kitChromeGround(FrostRole.Composer, frost)
                                 }
@@ -231,17 +236,31 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitChromeVeil provides veil, LocalKitLiquidChrome provides liquid) { it() }
+                        CompositionLocalProvider(LocalKitChromeVeil provides veil, LocalKitLiquidChrome provides frost) { it() }
                     }
                 }
             }
         } else {
-            // Liquid glass: with nothing between the bar and a scrolling header, the body runs up under the bar (the
-            // header keeps its place below it) and the bar floats as glass over what scrolls there. Null: today's bar.
+            // Liquid glass. A chat (it records its transcript) keeps its liquid bar and composer here too, so a status
+            // line, the loading line or Find never flips them to frost. A page with a scrolling header runs its body up
+            // under the bar (the header keeps its place below it) and the bar floats as glass over what scrolls there;
+            // while a status line or Find sits between them the body eases back below the bar, never jumping.
             val under = rememberKitLiquidSource()
-            val liquid =
-                kitLiquidBackdrop(under.takeIf { topPart != null && line == null && search == null && header != null })
+            val runs = frost == null && topPart != null && header != null && kitLiquidGlassOn()
+            val barFace =
+                when {
+                    topPart == null -> null
+                    frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
+                    runs -> kitLiquidFace(LiquidRole.Bar, under, LiquidBarShape)
+                    else -> null
+                }
             var barPx by remember { mutableIntStateOf(0) }
+            val runTarget = if (runs && line == null && search == null) barPx else 0
+            val runPx by androidx.compose.animation.core.animateIntAsState(
+                runTarget,
+                if (KitMotion.state.reduced) androidx.compose.animation.core.snap<Int>() else KitMotion.specs.enter<Int>(),
+                label = "kit.screen.under-bar",
+            )
             Column(
                 Modifier.fillMaxSize()
                     .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
@@ -253,9 +272,15 @@ public fun KitScreen(
                             WindowInsets.safeDrawing.only(
                                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                             )
-                        ).then(if (liquid != null) Modifier.zIndex(1f).onSizeChanged { barPx = it.height }.kitLiquidEdgeFade(top = true) else Modifier)
+                        ).then(
+                            when {
+                                runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
+                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                else -> Modifier
+                            }
+                        )
                     ) {
-                        if (liquid != null) KitLiquidBarPane(liquid)
+                        if (barFace != null) KitLiquidBarPane(barFace)
                         topPart()
                     }
                 }
@@ -269,7 +294,7 @@ public fun KitScreen(
                     )
                 Column(
                     Modifier.fillMaxWidth().weight(1f)
-                        .then(if (liquid != null) Modifier.kitRunUnderBar(barPx).kitLiquidSource(under) else Modifier)
+                        .then(if (runs) Modifier.kitRunUnderBar { runPx }.kitLiquidSource(under) else Modifier)
                         .kitMaxWidth(cap).fillMaxWidth()
                 ) {
                     search?.let {
@@ -283,9 +308,9 @@ public fun KitScreen(
                     // P-006: the header (a page heading, its chips) is the body's first part and scrolls away with it;
                     // the loading line and the body follow it. Without one, the body starts here.
                     if (header != null) {
-                        val barDp = with(LocalDensity.current) { barPx.toDp() }
+                        val runDp = with(LocalDensity.current) { runPx.toDp() }
                         val shownHeader: @Composable ColumnScope.() -> Unit =
-                            if (liquid == null) header else ({ Spacer(Modifier.height(barDp)); header() })
+                            if (!runs) header else ({ Spacer(Modifier.height(runDp)); header() })
                         KitScrollingHeaderFrame(shownHeader, Modifier.fillMaxWidth().weight(1f)) {
                             KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
                             Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
@@ -312,7 +337,7 @@ public fun KitScreen(
                             // width between the gutters (the page's primary is full width).
                             propagateMinConstraints = true,
                         ) {
-                            it()
+                            CompositionLocalProvider(LocalKitLiquidChrome provides frost) { it() }
                         }
                     }
                 }

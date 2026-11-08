@@ -38,6 +38,8 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAccentSilver
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentTeal
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesFrosted
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesLiquid
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceGroupBackground
@@ -459,6 +461,15 @@ internal fun cornersWords(corners: Corners): String =
             Corners.Round -> Res.string.appearanceFineTuneCornersRound
             Corners.Soft -> Res.string.appearanceFineTuneCornersSoft
             Corners.Sharp -> Res.string.appearanceFineTuneCornersSharp
+        }
+    )
+
+@Composable
+internal fun glassEdgesWords(edges: io.github.eslamasabry.oc.ui.design.effects.GlassEdges): String =
+    stringResource(
+        when (edges) {
+            io.github.eslamasabry.oc.ui.design.effects.GlassEdges.Liquid -> Res.string.appearanceGlassEdgesLiquid
+            io.github.eslamasabry.oc.ui.design.effects.GlassEdges.Frosted -> Res.string.appearanceGlassEdgesFrosted
         }
     )
 

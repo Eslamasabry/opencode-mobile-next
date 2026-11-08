@@ -68,9 +68,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
-import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMenuBackdrop
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPane
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidMotion
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMenuFace
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -296,6 +295,7 @@ private fun MenuPopup(
                     item.onSelect()
                     if (item.dismissal == KitMenuDismissal.AfterSelect) onDismissRequest()
                 },
+                grow = { LiquidMotion.growFraction(scale, MENU_FROM_SCALE) },
             )
         }
     }
@@ -311,15 +311,16 @@ public fun KitMenuPanel(
     modifier: Modifier = Modifier,
     title: String? = null,
     onChoose: (KitMenuItem) -> Unit,
+    /** How far the panel's grow-in has still to run (0 at rest, 1 at its start): liquid glass is frost meanwhile. */
+    grow: () -> Float = { 0f },
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Panel.shape()
     // Glass: liquid glass over the page (Android 13+, not held), else a frosted pane with its soft rims; every other
     // style keeps surface2 and its hairline.
-    val liquid = kitLiquidMenuBackdrop()
     val menuFace =
-        liquid?.let { Modifier.kitLiquidPane(LiquidRole.Menu, it, shape) }
+        kitLiquidMenuFace(shape, grow)
             ?: kitGlassSheet(KitShapeId.Panel, colors.surface2)
             ?: Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
     Column(
