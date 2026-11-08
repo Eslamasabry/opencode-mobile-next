@@ -103,7 +103,26 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             when (state.step) {
-                OpenProjectStep.Servers -> item(key = "servers") { Servers(state, actions) }
+                OpenProjectStep.Servers -> {
+                    // Flutter's start page: the projects opened before come first, a tap opens one.
+                    if (state.recent.isNotEmpty())
+                        item(key = "recent") {
+                            KitRowGroup(label = stringResource(Res.string.folderBrowserOpenedBefore), leadingTiles = true) {
+                                state.recent.forEach { recent ->
+                                    KitRow(
+                                        title = recent.name,
+                                        supporting = listOfNotNull(recent.serverName, recent.path).joinToString(" · "),
+                                        supportingMaxLines = 2,
+                                        leading = KitRowLeading.Glyph(KitIcons.history),
+                                        trailing = KitRowTrailing.Chevron,
+                                        modifier = Modifier.testTag("open-recent-${recent.profile.raw}-${recent.path}"),
+                                        onClick = { actions.openRecent(recent.profile, recent.path) },
+                                    )
+                                }
+                            }
+                        }
+                    item(key = "servers") { Servers(state, actions) }
+                }
                 OpenProjectStep.Projects,
                 OpenProjectStep.Folder -> {
                     if (state.step == OpenProjectStep.Projects && state.openedBefore.isNotEmpty())

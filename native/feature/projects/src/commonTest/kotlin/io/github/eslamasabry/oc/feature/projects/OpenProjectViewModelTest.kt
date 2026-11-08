@@ -408,4 +408,37 @@ class OpenProjectViewModelTest {
         vm.finishPath("/")
         assertEquals(2, nav.routes.size)
     }
+
+    @Test
+    fun `WALK-1108-P1 the first page lists the projects opened before, first, and a tap opens one`() = runTest {
+        val opened = SessionOpenedFolders()
+        opened.remember(pcId, "/srv/old")
+        opened.remember(pcId, "/srv/app")
+        val nav = Nav()
+        val vm = OpenProjectViewModel(nav, Servers(listOf(computer())), opened)
+        val first = vm.state.value
+        assertEquals(OpenProjectStep.Servers, first.step)
+        // Most recent first; one server, so no server name on the rows.
+        assertEquals(listOf("/srv/app", "/srv/old"), first.recent.map { it.path })
+        assertEquals(listOf("app", "old"), first.recent.map { it.name })
+        assertTrue(first.recent.all { it.serverName == null })
+        vm.openRecent(pcId, "/srv/app")
+        assertEquals(listOf<AppRoute>(ProjectsRoute.Project(pcId, "/srv/app")), nav.routes)
+    }
+
+    @Test
+    fun `WALK-1108-P1 with two servers each recent project names its server, and a gone server opens nothing`() = runTest {
+        val opened = SessionOpenedFolders()
+        opened.remember(pcId, "/srv/app")
+        opened.remember(phoneId, "/root/projects/notes")
+        val phone = ProjectServer(phoneId, "This phone", Located(), Ops())
+        val nav = Nav()
+        val vm = OpenProjectViewModel(nav, Servers(listOf(computer(), phone)), opened)
+        assertEquals(
+            listOf("studio-pc" to "/srv/app", "This phone" to "/root/projects/notes"),
+            vm.state.value.recent.map { it.serverName to it.path },
+        )
+        vm.openRecent(ProfileId("gone"), "/srv/app")
+        assertTrue(nav.routes.isEmpty())
+    }
 }

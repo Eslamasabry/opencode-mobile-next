@@ -39,6 +39,17 @@ public data class OpenFolderUi(
     val known: Boolean = false,
 )
 
+/**
+ * One project opened before, on the first page (Flutter folder_browser.dart start page: "Opened before" comes first, a
+ * tap opens it). [serverName] is shown only when more than one server is connected.
+ */
+public data class OpenRecentUi(
+    val profile: ProfileId,
+    val name: String,
+    val path: String,
+    val serverName: String? = null,
+)
+
 /** The one dialog the flow may show over its page. */
 public enum class OpenProjectDialog { NewFolder, Clone, Path }
 
@@ -54,6 +65,8 @@ public data class OpenProjectUi(
     /** The projects ([OpenProjectStep.Projects]) or the folders inside [path] ([OpenProjectStep.Folder]). */
     val folders: ImmutableList<OpenFolderUi> = persistentListOf(),
     val openedBefore: ImmutableList<OpenFolderUi> = persistentListOf(),
+    /** [OpenProjectStep.Servers]: the projects opened before on every connected server, before the servers. */
+    val recent: ImmutableList<OpenRecentUi> = persistentListOf(),
     val loading: Boolean = false,
     /** The listing has run longer than a moment: "Still reading this folder". */
     val slow: Boolean = false,
@@ -84,6 +97,9 @@ public interface OpenProjectActions {
 
     /** Opens [path] at once (an "Opened before" row). */
     public fun openFolder(path: String)
+
+    /** Opens a project opened before on [profile], from the first page. */
+    public fun openRecent(profile: ProfileId, path: String) {}
 
     public fun retry()
 

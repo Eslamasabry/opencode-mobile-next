@@ -79,6 +79,7 @@ public class OpenProjectViewModel(
                     mutable.update { ui ->
                         ui.copy(
                             serversLoading = false,
+                            recent = recentAcross(live),
                             servers =
                                 live
                                     .mapIndexed { i, s ->
@@ -122,8 +123,30 @@ public class OpenProjectViewModel(
         chosen = null
         root = null
         mutable.update {
-            OpenProjectUi(servers = it.servers, serversLoading = it.serversLoading)
+            OpenProjectUi(servers = it.servers, serversLoading = it.serversLoading, recent = recentAcross(servers))
         }
+    }
+
+    /**
+     * Flutter shows the projects opened before first. Each server keeps its own list, most recent first; with several
+     * servers they follow in the servers' order, the first [ProjectRules.OPENED_BEFORE] in all, each naming its server.
+     */
+    private fun recentAcross(live: List<ProjectServer>): kotlinx.collections.immutable.ImmutableList<OpenRecentUi> =
+        live
+            .flatMap { server ->
+                ProjectRules.openedBefore(opened.recent(server.profile)).map { dir ->
+                    OpenRecentUi(server.profile, ProjectRules.name(dir), dir, server.name.takeIf { live.size > 1 })
+                }
+            }
+            .take(ProjectRules.OPENED_BEFORE)
+            .toImmutableList()
+
+    override fun openRecent(profile: ProfileId, path: String) {
+        if (servers.none { it.profile == profile }) return
+        val normal = ProjectRules.normalize(path)
+        if (ProjectRules.pathProblem(normal) != null) return
+        generation++
+        nav.open(ProjectsRoute.Project(profile, normal))
     }
 
     override fun chooseServer(profile: ProfileId) {
