@@ -193,6 +193,9 @@ public class ComposerVoicePresenter(
      * change, and cancelling puts it back. Null when nothing is being dictated into the field.
      */
     private var previewBase: Triple<String, Int, Int>? = null
+
+    /** What the box held when the current note appeared; other words dismiss the note (Flutter `_composerNoteTyped`). */
+    private var noteTyped: String? = null
     private val visit = TipVisit()
     private val tourVisit = TipVisit()
     private var teachingAttached = false
@@ -710,6 +713,13 @@ public class ComposerVoicePresenter(
      * send.
      */
     public fun fieldChanged(text: String) {
+        // Flutter `_composerNoteFollowsEdits`: the note stays beside the box until the next words; typing them
+        // (anything other than what the box held when the note appeared) dismisses it.
+        val typed = noteTyped
+        if (typed != null && text != typed && mutable.value.note != null) {
+            noteTyped = null
+            mutable.update { it.copy(note = null) }
+        }
         val counted = countdown ?: return
         if (text != counted.text) clearCountdown()
     }
@@ -717,6 +727,7 @@ public class ComposerVoicePresenter(
     // ---- notes and places ----
 
     public fun dismissNote() {
+        noteTyped = null
         mutable.update { it.copy(note = null) }
     }
 
@@ -940,6 +951,7 @@ public class ComposerVoicePresenter(
                 note = note,
             )
         }
+        noteTyped = if (note != null) field?.text() else null
     }
 
     private fun startTicking() {

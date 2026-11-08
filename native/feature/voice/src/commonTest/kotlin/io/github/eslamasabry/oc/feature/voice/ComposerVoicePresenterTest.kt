@@ -362,4 +362,46 @@ class ComposerVoicePresenterTest {
         assertTrue(rig.field.sent.isEmpty())
         assertTrue(rig.dictation.hosts.isNotEmpty())
     }
+
+    // S31 story 4: the note under the box (here "Stopped after a pause") stayed until "Not now", well past 30 s.
+    // Flutter keeps the composer note only until the next words: typing anything new dismisses it, and the words
+    // the note came with do not.
+    @Test
+    fun `B-MEDIA-050 a voice note stays until new words are typed, as Flutter's composer note`() = runTest {
+        val rig = Rig(this, autoSend = true)
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("run the tests")
+        runCurrent()
+        rig.dictation.state.value = VoiceState.Done("run the tests", VoiceEnd.Silence)
+        runCurrent()
+        assertEquals(VoiceNote.StoppedAfterPause, rig.presenter.state.value.note)
+        // The box reporting the words the note came with keeps it.
+        rig.presenter.fieldChanged(rig.field.value)
+        advanceTimeBy(60_000)
+        runCurrent()
+        assertEquals(VoiceNote.StoppedAfterPause, rig.presenter.state.value.note)
+        // The next words dismiss it.
+        rig.field.value = "run the tests now"
+        rig.presenter.fieldChanged(rig.field.value)
+        assertNull(rig.presenter.state.value.note)
+    }
+
+    @Test
+    fun `B-MEDIA-051 Nothing was heard goes away once the person types instead`() = runTest {
+        val rig = Rig(this)
+        rig.field.value = "draft"
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("")
+        runCurrent()
+        rig.dictation.state.value = VoiceState.Done("", VoiceEnd.Person)
+        runCurrent()
+        assertEquals(VoiceNote.NothingHeard, rig.presenter.state.value.note)
+        rig.field.value = "draft!"
+        rig.presenter.fieldChanged(rig.field.value)
+        assertNull(rig.presenter.state.value.note)
+    }
 }
