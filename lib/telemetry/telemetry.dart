@@ -344,11 +344,15 @@ class TelemetryService extends ChangeNotifier implements Telemetry {
     _usage = usage;
     _crashes = crashes;
     await _store.write(usage: usage, crashes: crashes);
+    if (_available) {
+      try {
+        await _adapter.setCollection(usage: usage, crashes: crashes);
+      } catch (_) {}
+    }
+    // Listeners send things that need collection to be on already: the
+    // vendor drops an event or property sent before it was enabled (found on
+    // the emulator: app_start and the device properties were lost).
     notifyListeners();
-    if (!_available) return;
-    try {
-      await _adapter.setCollection(usage: usage, crashes: crashes);
-    } catch (_) {}
   }
 
   bool get _crashLive => _crashes && _available;

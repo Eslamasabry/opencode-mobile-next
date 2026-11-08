@@ -34532,6 +34532,26 @@
      "destructive": false
     }
    ]
+  },
+  {
+   "id": "send-problem-report",
+   "title": "Send a problem report",
+   "kind": "sheet",
+   "area": "settings",
+   "file": "lib/ui/screens/send_problem_report.dart",
+   "widget": "showSendProblemReport",
+   "presentedBy": [],
+   "line": 76,
+   "purpose": "Help > Send a problem report: shows the redacted last log lines, crash keys and device context for the person to read, then Send or Cancel; after sending shows the report code to copy (health-and-diagnostics.md section E).",
+   "reachedFrom": [
+    {
+     "page": "about",
+     "element": null,
+     "note": "Help/About entry; page-level edge"
+    }
+   ],
+   "gates": [],
+   "elements": []
   }
  ],
  "navigation": {
