@@ -876,4 +876,10 @@
     <string name="backgroundBatterySettingsInstead">لم يعرض Android سؤاله، لذا فُتحت إعدادات البطارية بدلًا منه. اضبط هذا التطبيق على «غير مقيّد» هناك.</string>
     <string name="privacyPagesSummary">الخوادم والمزوّدون والصوت والملفات والتحديثات</string>
     <string name="manageSpaceKeptAllComputers">تبقى حواسيبك وكل ما رفعته إلى git</string>
+    <string name="appearanceGlassEdges">حواف الزجاج</string>
+    <string name="appearanceGlassEdgesLiquid">سائلة</string>
+    <string name="appearanceGlassEdgesFrosted">مصنفرة</string>
+    <string name="appearanceGlassEdgesNote">السائلة تثني ما يمرّ خلف الأشرطة وصندوق الرسالة والألواح والقوائم. المصنفرة تطمسه.</string>
+    <string name="appearanceGlassEdgesNeedsAndroid13">الحواف السائلة تحتاج Android 13. يعرضها هذا الهاتف مصنفرة.</string>
+    <string name="appearanceGlassEdgesMotionOff">تبقى الحواف مصنفرة ما دامت الحركة متوقفة.</string>
 </resources>

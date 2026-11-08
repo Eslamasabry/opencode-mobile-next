@@ -785,4 +785,10 @@
     <string name="backgroundBatterySettingsInstead">Android didn't show its question, so its battery settings opened instead. Set this app to Unrestricted there.</string>
     <string name="privacyPagesSummary">Servers, providers, voice, files, and updates</string>
     <string name="manageSpaceKeptAllComputers">Your computers and anything pushed to git stay</string>
+    <string name="appearanceGlassEdges">Glass edges</string>
+    <string name="appearanceGlassEdgesLiquid">Liquid</string>
+    <string name="appearanceGlassEdgesFrosted">Frosted</string>
+    <string name="appearanceGlassEdgesNote">Liquid bends what scrolls behind the bars, the message box, sheets and menus. Frosted blurs it.</string>
+    <string name="appearanceGlassEdgesNeedsAndroid13">Liquid edges need Android 13. This phone shows them frosted.</string>
+    <string name="appearanceGlassEdgesMotionOff">Edges stay frosted while motion is off.</string>
 </resources>

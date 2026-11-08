@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import io.github.eslamasabry.oc.ui.kit.frame.KitConnectionTone
+import io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitPageHeading
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionUi
@@ -211,6 +213,8 @@ public fun ChatsScreen(
     // KitStateView.calm), so the floating + only rides over a list.
     val listed = state.phase == ChatsPhase.List
     val showFab = listed && state.home.opening == null
+    // Under Glass the floating + is liquid glass over the list (the kit records it only then).
+    val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings, icon = KitIcons.settingsGear))
@@ -265,6 +269,7 @@ public fun ChatsScreen(
         // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
         // between list items put every row 4 px lower than the one before it.
         LazyColumn(
+            modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
             contentPadding =
                 PaddingValues(
@@ -396,6 +401,7 @@ public fun ChatsScreen(
                     onClick = actions::newConversation,
                     modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
                     visible = showFab,
+                    backdrop = listGlass,
                 )
             }
             val undo = state.archiveUndo

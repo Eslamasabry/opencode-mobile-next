@@ -32,13 +32,38 @@ public enum class FrostStrength(
 /** What holds frost solid regardless of the choice (Settings says why). Dart `KitFrostHold`. */
 public enum class FrostHold { Saver, Motion, Contrast, Style }
 
-/** The conditions frost depends on. `styleAllows` is false for every Style except Glass (N-57). */
+/**
+ * The conditions frost depends on. `styleAllows` is false for every Style except Glass (N-57). [lensSupported] is the
+ * platform's runtime shaders (Android 13+; desktop not yet), which Glass's liquid edges need ([FrostPolicy.edgesHeldBy]).
+ */
 public data class FrostConditions(
     val saver: Boolean = false,
     val reducedMotion: Boolean = false,
     val highContrast: Boolean = false,
     val styleAllows: Boolean = true,
+    val lensSupported: Boolean = false,
 )
+
+/**
+ * Glass's floating edges (Fine-tune under Glass, "Glass edges", `oc.glassEdges`): liquid glass that bends the content at
+ * its rim (the default), or today's frost. Stored by [storageName]; a missing or unknown value reads [Liquid].
+ */
+public enum class GlassEdges(public val storageName: String) {
+    Liquid("liquid"),
+    Frosted("frosted"),
+    ;
+
+    public companion object {
+        public fun fromStorage(name: String?): GlassEdges = entries.firstOrNull { it.storageName == name } ?: Liquid
+    }
+}
+
+/**
+ * Why Glass's floating parts are frosted rather than liquid (Settings says why). The first four are frost's own holds
+ * ([FrostHold]); [Off] is frost strength Off, [Frosted] the person's "Glass edges" choice, [Platform] no runtime shaders
+ * ("Needs Android 13").
+ */
+public enum class EdgeHold { Saver, Motion, Contrast, Style, Off, Frosted, Platform }
 
 /** A blur to draw: sigma in dp, saturation multiplier, and the tint alpha laid over it. */
 public data class FrostSpec(val sigmaDp: Float, val saturation: Float, val tintAlpha: Float)
@@ -64,6 +89,29 @@ public object FrostPolicy {
             !c.styleAllows -> FrostHold.Style
             else -> null
         }
+
+    /**
+     * The first reason Glass's floating parts are not liquid glass, or null when they are: frost's own holds first (in
+     * [heldBy]'s order), then frost strength Off, then the person's Frosted choice, then the platform.
+     */
+    public fun edgesHeldBy(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): EdgeHold? =
+        when (heldBy(c)) {
+            FrostHold.Saver -> EdgeHold.Saver
+            FrostHold.Motion -> EdgeHold.Motion
+            FrostHold.Contrast -> EdgeHold.Contrast
+            FrostHold.Style -> EdgeHold.Style
+            null ->
+                when {
+                    strength == FrostStrength.Off -> EdgeHold.Off
+                    edges == GlassEdges.Frosted -> EdgeHold.Frosted
+                    !c.lensSupported -> EdgeHold.Platform
+                    else -> null
+                }
+        }
+
+    /** Whether Glass's floating parts are liquid glass under [c]; every hold keeps today's frost, solid or own face. */
+    public fun liquidEdges(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): Boolean =
+        edgesHeldBy(c, strength, edges) == null
 
     /** The spec to draw at full strength, or null for a solid surface (Dart `strengthFor` + `_backdrop` at t = 1). */
     public fun spec(role: FrostRole, strength: FrostStrength, dark: Boolean, c: FrostConditions): FrostSpec? {

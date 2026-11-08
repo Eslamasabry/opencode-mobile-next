@@ -78,6 +78,9 @@ public enum class FrostStrength(override val wire: String) : WireNamed {
     Off("off"), Weak("weak"), Balanced("balanced"), Strong("strong"),
 }
 
+/** Glass's floating edges (`oc.glassEdges`): missing or unknown reads [Liquid]; device-wide, never swept. */
+public enum class GlassEdges(override val wire: String) : WireNamed { Liquid("liquid"), Frosted("frosted") }
+
 /**
  * The person's Fine-tune choices; null = the style's default. Only Corners and Spacing exist: each style keeps its
  * own depth and edges, and the stored `oc.effectsDepth` / `oc.effectsEdges` are never read (plan 06 §5.2).
@@ -126,6 +129,7 @@ public data class DevicePreferences(
     /** The Accent swatch id; null matches the theme. */
     val accent: String? = null,
     val frost: FrostStrength = FrostStrength.Balanced,
+    val glassEdges: GlassEdges = GlassEdges.Liquid,
     val reasoningExpanded: Boolean = false,
     val timestampsVisible: Boolean = false,
 ) {
@@ -153,6 +157,8 @@ public sealed interface PreferenceChange {
     public data class Accent(val id: String?) : PreferenceChange
 
     public data class Frost(val value: FrostStrength) : PreferenceChange
+
+    public data class Edges(val value: GlassEdges) : PreferenceChange
 
     public data class ReasoningExpanded(val value: Boolean) : PreferenceChange
 

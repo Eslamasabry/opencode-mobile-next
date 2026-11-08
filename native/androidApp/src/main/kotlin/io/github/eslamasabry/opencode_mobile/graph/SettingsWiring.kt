@@ -276,6 +276,7 @@ class AndroidSettingsHost(
                     serverCapabilities = capabilities,
                     usageStatistics = live != null,
                     systemMotionOff = scale == 0f,
+                    liquidGlass = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
                     configurationInspection = configAvailable,
                 )
             }

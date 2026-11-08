@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.effects.kitWordsPlate
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.DisableSelection
@@ -59,7 +60,8 @@ public fun KitText(
     }
     // Titles may end in "…" when cut to a few lines; other roles never do (native/docs/kit/LAYOUT-RULES.md §6).
     val titleCut = if (role in TITLE_ROLES) Modifier.kitMayTruncate("title") else Modifier
-    val modifier = modifier.kitMaxWidth(CapRole.Reading, align).then(titleCut)
+    // Glass's liquid panes: the words lie on their plate (draws nothing anywhere else).
+    val modifier = modifier.kitMaxWidth(CapRole.Reading, align).then(titleCut).kitWordsPlate()
     // A title cut to a few lines must end in "…": the layout marks a cut only inside a line, never at a hard line
     // break, so a cut title's line breaks read as spaces.
     val text = if (maxLines != Int.MAX_VALUE && role in TITLE_ROLES) kitTitleLine(text) else text

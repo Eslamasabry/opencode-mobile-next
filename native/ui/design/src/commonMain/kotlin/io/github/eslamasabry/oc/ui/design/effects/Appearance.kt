@@ -46,6 +46,8 @@ public data class KitAppearance(
     val style: Style = Style.Solid,
     /** `oc.effectsCorners` / `oc.effectsDensity`: null = the style's own (B-KIT-017). */
     val fineTune: FineTuneChoice = FineTuneChoice.None,
+    /** `oc.glassEdges` (Fine-tune under Glass, "Glass edges"): Liquid by default; Frosted keeps today's frost. */
+    val glassEdges: GlassEdges = GlassEdges.Liquid,
     val activityGlow: Boolean = true,
     val softGlow: Boolean = false,
     val celebrations: Boolean = true,
