@@ -32374,4 +32374,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reportCodeCopy => 'Copy report code';
+
+  @override
+  String chatSendFailureSignInAgain(String agent) {
+    return '$agent needs you to sign in again';
+  }
 }
