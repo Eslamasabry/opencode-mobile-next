@@ -19,6 +19,10 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatStuckCommand
+import io.github.eslamasabry.oc.ui.words.res.chatStuckHours
+import io.github.eslamasabry.oc.ui.words.res.chatStuckMinutes
+import io.github.eslamasabry.oc.ui.words.res.chatStuckUnnamed
 import io.github.eslamasabry.oc.ui.words.res.activeContextShell
 import io.github.eslamasabry.oc.ui.words.res.activeContextSkill
 import io.github.eslamasabry.oc.ui.words.res.aiteamComponentStageTook
@@ -318,6 +322,15 @@ internal fun liveNoticeWords(n: LiveNoticeUi): String =
                 TurnStallNotice.ConnectionUnchecked -> stringResource(Res.string.chatStallConnectionUnchecked)
             }
         LiveNoticeUi.Compacting -> stringResource(Res.string.chatUiCompactingConversation)
+        // S28 story 14 (Flutter `_stuckWords`): "2 h 29 min · may be stuck".
+        is LiveNoticeUi.StuckCommand -> {
+            val minutes = (n.runningMs / 60_000L).toInt()
+            val time =
+                if (minutes < 60) stringResource(Res.string.chatStuckMinutes, minutes)
+                else stringResource(Res.string.chatStuckHours, minutes / 60, minutes % 60)
+            if (n.command == null) stringResource(Res.string.chatStuckUnnamed, time)
+            else stringResource(Res.string.chatStuckCommand, time)
+        }
     }
 
 /** B-CHAT-007/008: "build.sh · 3 min" per task, or "2 tasks still running in the background". */

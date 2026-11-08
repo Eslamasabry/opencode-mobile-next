@@ -9,6 +9,16 @@ import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
  * error is for an uncertain send only, never for a normal send that is still on its way.
  */
 public object SendFieldRules {
+    /** S28 story 14: how long "Stop and send" waits for the stop to land before it gives up (nothing is sent). */
+    public const val STOP_AND_SEND_WAIT_MS: Long = 15_000
+
+    /**
+     * S28 story 14 (Flutter `_stopsBeforeSend`): Send becomes "Stop and send" while a reply runs on a server that
+     * does not steer and the reply looks hung (a command past the limit): the turn is stopped first, then the words
+     * go. A server that steers keeps its own Send ("Add to this turn").
+     */
+    public fun stopsBeforeSend(busy: Boolean, steers: Boolean, stuck: Boolean): Boolean = busy && !steers && stuck
+
     /** What to do with words that left the field at the tap while their send is followed. */
     public enum class AfterSend {
         /** The send is still on its way: the field stays empty. */

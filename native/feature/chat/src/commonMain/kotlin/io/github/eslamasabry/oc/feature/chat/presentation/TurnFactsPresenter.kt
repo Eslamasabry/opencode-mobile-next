@@ -75,6 +75,12 @@ public sealed interface LiveNoticeUi {
 
     /** B-CHAT-116: the conversation is being shortened right now. */
     public data object Compacting : LiveNoticeUi
+
+    /**
+     * S28 story 14: a foreground command has run past [StuckCommandRules.STUCK_AFTER_MS]; [command] is its short
+     * name (null when the call names none), [runningMs] how long it has run.
+     */
+    public data class StuckCommand(val command: String?, val runningMs: Long) : LiveNoticeUi
 }
 
 /**
@@ -223,6 +229,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
             return LiveNoticeUi.Retry(retryBannerFacts(r.attempt, r.nextAtMs, r.tag, nowMs))
         }
         if (compacting) return LiveNoticeUi.Compacting
+        StuckCommandRules.of(work, nowMs)?.let { return it }
         // B-CHAT-118: silence per turn, reset by progress, suppressed while a request waits or a
         // step runs.
         stall.begin(sessionKey, feed.runStartedAtMs ?: nowMs)

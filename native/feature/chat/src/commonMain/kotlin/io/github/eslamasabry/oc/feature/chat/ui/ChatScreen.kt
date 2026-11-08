@@ -321,6 +321,7 @@ public fun ChatScreen(
     val requestState by rememberUpdatedState(requests)
     val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
+    val factsState by rememberUpdatedState(facts)
     val words = rememberChatWords()
     val stopNote = stringResource(Res.string.chatStopAfterStepPrompt)
     val listWords =
@@ -403,6 +404,8 @@ public fun ChatScreen(
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
+                // S28 story 14: the live line's stuck-command notice also turns Send into "Stop and send".
+                stuck = { factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.StuckCommand },
                 stopAfterStep = {
                     if (latest.live?.canStopAfterStep == true) { { actions.stopAfterStep(stopNote) } }
                     else null

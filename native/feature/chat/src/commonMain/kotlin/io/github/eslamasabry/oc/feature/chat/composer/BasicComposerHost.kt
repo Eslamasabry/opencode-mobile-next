@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitStopAndSendPill
+import io.github.eslamasabry.oc.ui.words.res.kitComposerStopAndSend
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.snapshotFlow
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
 import io.github.eslamasabry.oc.feature.chat.ui.ComposerTip
 import io.github.eslamasabry.oc.feature.chat.ui.ComposerTipRules
@@ -832,6 +837,19 @@ public fun BasicComposer(
         val inlineAtStart = remember(voiceActive) { typed || stopShown }
         val inlineMic = if (voiceActive) inlineAtStart else typed || stopShown
         val primaryIsStop = inlineMic && stopShown && !(typed && !waitingRequest)
+        // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
+        // the words go once it has stopped, and nothing goes if it does not stop.
+        val stopsFirst = SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
+        val stopAndSend: () -> Unit = {
+            scope.launch {
+                chrome.onStop()
+                val stopped =
+                    withTimeoutOrNull(SendFieldRules.STOP_AND_SEND_WAIT_MS) {
+                        snapshotFlow { chrome.busy() }.first { !it }
+                    }
+                if (stopped != null) send()
+            }
+        }
         val sendLabel =
             stringResource(
                 when {
@@ -1086,6 +1104,13 @@ public fun BasicComposer(
                             hasMessage = inlineMic || voice == null,
                             mic = { voice?.Mic(voiceField, Modifier) },
                             send = {
+                                if (stopsFirst && typed && sendReady)
+                                    KitStopAndSendPill(
+                                        label = stringResource(Res.string.kitComposerStopAndSend),
+                                        onClick = stopAndSend,
+                                        modifier = Modifier.testTag("chat-stop-and-send"),
+                                    )
+                                else
                                 ComposerTip(TeachingIds.SendLater, stringResource(Res.string.tipSendLater)) {
                                 KitComposerSend(
                                     label = sendLabel,
