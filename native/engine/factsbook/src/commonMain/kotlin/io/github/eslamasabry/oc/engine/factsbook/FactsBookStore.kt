@@ -97,6 +97,16 @@ public class FactsBookStore(
 
     public suspend fun hasOwnerSeed(profileId: String): Boolean = secrets.read(ownerKey(profileId)).orNull() != null
 
+    /**
+     * The owner key's seed, made on first use from [secureBytes] (F: FactsBookStore.ownerSeed). A damaged seed is
+     * replaced and the console enrols the new key. Null when the secret store cannot keep it.
+     */
+    public suspend fun ownerSeed(profileId: String, secureBytes: (Int) -> ByteArray): ByteArray? {
+        secrets.read(ownerKey(profileId)).orNull()?.let(::bytesOfHex)?.takeIf { it.size == 32 }?.let { return it }
+        val seed = secureBytes(32)
+        return if (secrets.write(ownerKey(profileId), hexOf(seed)) is Outcome.Ok) seed else null
+    }
+
     public suspend fun readOutbox(profileId: String): String? = secrets.read(outboxKey(profileId)).orNull()
 
     public suspend fun writeOutbox(profileId: String, value: String?): Boolean =

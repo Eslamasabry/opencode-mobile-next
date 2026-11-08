@@ -56,6 +56,20 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.RemindersActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.RemindersUi
 import io.github.eslamasabry.oc.feature.factsbook.ui.NeedsYouScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.RemindersScreen
+import io.github.eslamasabry.oc.engine.factsbook.BriefSettings
+import io.github.eslamasabry.oc.engine.factsbook.ControlVerification
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookLink
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookSettings
+import io.github.eslamasabry.oc.engine.factsbook.ModuleState
+import io.github.eslamasabry.oc.engine.factsbook.ModuleStatus
+import io.github.eslamasabry.oc.engine.factsbook.NodeStatus
+import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsUi
+import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusUi
+import io.github.eslamasabry.oc.feature.factsbook.ui.SettingsScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.StatusScreen
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
@@ -110,6 +124,12 @@ class FactsBookScreensTest {
         override fun askDiscard(entry: CouldNotSaveEntry) { calls += "ask ${entry.id}" }
         override fun discard() { calls += "discard" }
         override fun cancelDiscard() { calls += "cancel" }
+        override fun openTriggers() { calls += "triggers" }
+        override fun openStatus() { calls += "status" }
+        override fun openSettings() { calls += "settings" }
+        override fun share(area: Area, on: Boolean) { calls += "share ${area.slug} $on" }
+        override fun confirmShare() { calls += "confirmShare" }
+        override fun cancelShare() { calls += "cancelShare" }
     }
 
     private val sara =
@@ -227,6 +247,11 @@ class FactsBookScreensTest {
         override fun dismiss() { calls += "dismiss" }
         override fun openNotSaved() { calls += "notSaved" }
         override fun setUpApproval() { calls += "approval" }
+        override fun refresh() { calls += "refresh" }
+        override fun approve(item: ReviewItem) { calls += "approve ${item.id}" }
+        override fun reject(item: ReviewItem) { calls += "reject ${item.id}" }
+        override fun skip(item: ReviewItem) { calls += "skip ${item.id}" }
+        override fun approveEdited(item: ReviewItem, text: String) { calls += "edit ${item.id} $text" }
     }
 
     @Test
@@ -252,5 +277,113 @@ class FactsBookScreensTest {
         onNodeWithText("Approve").assertExists()
         onNodeWithText("1 note not saved yet").performClick()
         assertEquals(listOf("notSaved"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-050 with approval set up each change is approved or rejected by name and a tap offers Change and Skip`() =
+        runComposeUiTest {
+            val item = ReviewItem("rvw_1", "fact_add", ReviewState.Proposed, "d", "Likes tea", area = "health", risk = listOf("health"))
+            val actions = Others()
+            setContent {
+                Themed { NeedsYouScreen(NeedsYouUi(review = persistentListOf(item), canApprove = true, notice = CareNotice.Stale), actions) }
+            }
+            onNodeWithText("That changed after it was proposed", substring = true).assertExists()
+            onNodeWithText("Set up approval first", substring = true).assertDoesNotExist()
+            onNodeWithText("Approve").performClick()
+            onNodeWithText("Reject").performClick()
+            onNodeWithText("Likes tea").performClick()
+            onNodeWithText("Skip “Likes tea”").performClick()
+            assertEquals(listOf("approve rvw_1", "reject rvw_1", "skip rvw_1"), actions.calls)
+        }
+
+    @Test
+    fun `B-FB-051 Areas changes sharing with the switch and asks before opening the locked folder`() = runComposeUiTest {
+        val money = Area("money", sensitiveStorage = false, reviewFirst = true, share = AreaShare(), brief = false, export = false, notify = "generic")
+        val health = money.copy(slug = "health", sensitiveStorage = true)
+        val actions = Recorder()
+        setContent {
+            Themed { AreasScreen(AreasUi(areas = persistentListOf(money, health), loading = false, canApprove = true, confirmShare = health), actions) }
+        }
+        onNodeWithText("Set up approval first", substring = true).assertDoesNotExist()
+        onNodeWithText("Let others read Health?").assertExists()
+        onNodeWithText("Let them read").performClick()
+        assertEquals(listOf("confirmShare"), actions.calls)
+    }
+
+    private class Pages : StatusActions, SettingsActions {
+        val calls = mutableListOf<String>()
+        override fun back() { calls += "back" }
+        override fun reload() { calls += "reload" }
+        override fun setUpApproval() { calls += "approval" }
+        override fun askDisconnect() { calls += "askDisconnect" }
+        override fun disconnect() { calls += "disconnect" }
+        override fun cancelDisconnect() { calls += "cancel" }
+        override fun setBriefCap(cap: Long) { calls += "cap $cap" }
+        override fun usePhoneZone() { calls += "zone" }
+        override fun openAreas() { calls += "areas" }
+        override fun openTriggers() { calls += "triggers" }
+        override fun dismiss() { calls += "dismiss" }
+    }
+
+    @Test
+    fun `B-FB-052 Status says everything works only with a verified history and asks before Disconnect`() = runComposeUiTest {
+        val status =
+            NodeStatus(
+                modules = mapOf("storage" to ModuleStatus(ModuleState.Ok), "replication" to ModuleStatus(ModuleState.Ok)),
+                generatedAt = t0,
+            )
+        val link = FactsBookLink("http://127.0.0.1:8787", "cli_01", "v", "fp", "n", listOf("read"))
+        val actions = Pages()
+        setContent {
+            Themed {
+                StatusScreen(
+                    StatusUi(
+                        status = status,
+                        control = ControlVerification(true, true, true, true, forked = false),
+                        loading = false,
+                        canApprove = true,
+                        link = link,
+                        nowMs = t0.toEpochMilliseconds(),
+                        confirmDisconnect = true,
+                    ),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Everything is working", useUnmergedTree = true).assertExists()
+        onNodeWithText("Disconnect this phone's memory?").assertExists()
+        onNodeWithText("Disconnect this phone's memory").performClick()
+        assertEquals(listOf("disconnect"), actions.calls)
+    }
+
+    @Test
+    fun `B-FB-053 Status names a history that does not check out as something to look at`() = runComposeUiTest {
+        val status = NodeStatus(modules = mapOf("storage" to ModuleStatus(ModuleState.Ok)), generatedAt = t0)
+        setContent {
+            Themed {
+                StatusScreen(
+                    StatusUi(status = status, control = ControlVerification(true, false, true, true, false), loading = false, nowMs = t0.toEpochMilliseconds()),
+                    Pages(),
+                )
+            }
+        }
+        onNodeWithText("1 thing needs a look").assertExists()
+        onNodeWithText("Signed history").assertExists()
+        onNodeWithText("Approve changes from this phone").assertExists()
+    }
+
+    @Test
+    fun `B-FB-054 Settings offers this phone's time zone when it differs and shows the brief`() = runComposeUiTest {
+        val settings =
+            FactsBookSettings(3, "Africa/Cairo", 15, BriefSettings(5, "08:00", "22:00-07:00"), JsonObject(emptyMap()))
+        val actions = Pages()
+        setContent {
+            Themed { SettingsScreen(SettingsUi(settings = settings, loading = false, canApprove = true, phoneZone = "Europe/London"), actions) }
+        }
+        onNodeWithText("Items a day").assertExists()
+        onNodeWithText("15 minutes").assertExists()
+        onNodeWithText("Use this phone's time zone").performClick()
+        onNodeWithText("Areas", substring = true, useUnmergedTree = true).assertExists()
+        assertEquals(listOf("zone"), actions.calls)
     }
 }

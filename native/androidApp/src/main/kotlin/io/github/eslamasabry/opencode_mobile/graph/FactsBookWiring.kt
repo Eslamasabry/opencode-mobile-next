@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -9,13 +10,16 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.net.HttpClientFactory
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookDeviceCheck
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookSigning
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookHttp
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookOutboxStore
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookStore
 import io.github.eslamasabry.oc.engine.factsbook.HttpFactsBookGateway
 import io.github.eslamasabry.oc.engine.factsbook.NetFactsBookHttp
 import io.github.eslamasabry.oc.feature.factsbook.presentation.FactsBookAccess
+import java.security.SecureRandom
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,8 +36,13 @@ import kotlinx.coroutines.launch
 object FactsBookWiring {
     @Provides
     @SingleIn(AppScope::class)
-    fun factsBookAccess(stores: PreviewStores, http: HttpClientFactory, appScope: AppCoroutineScope, clock: Clock): FactsBookAccess =
-        AppFactsBookAccess(stores, http, appScope, clock)
+    fun factsBookAccess(
+        stores: PreviewStores,
+        http: HttpClientFactory,
+        appScope: AppCoroutineScope,
+        clock: Clock,
+        app: Application,
+    ): FactsBookAccess = AppFactsBookAccess(stores, http, appScope, clock, AndroidFactsBookDeviceCheck(app, clock))
 }
 
 private class AppFactsBookAccess(
@@ -41,7 +50,10 @@ private class AppFactsBookAccess(
     private val http: HttpClientFactory,
     appScope: AppCoroutineScope,
     clock: Clock,
+    deviceCheck: FactsBookDeviceCheck,
 ) : FactsBookAccess {
+    private val secure = SecureRandom()
+
     private val store = FactsBookStore(stores.prefs, stores.secrets, stores.lanes.app) { stores.lanes.forProfile(ProfileId(it)) }
 
     /** One client per base URL, reused while the pairing stays the same. */
@@ -56,7 +68,7 @@ private class AppFactsBookAccess(
     override val engine: FactsBookEngine =
         FactsBookEngine(
             store,
-            gatewayFor = { link, token -> HttpFactsBookGateway(httpFor(link.baseUrl), token) },
+            gatewayFor = { link, token, signer -> HttpFactsBookGateway(httpFor(link.baseUrl), token, owner = signer) },
             outboxFor = { id ->
                 object : FactsBookOutboxStore {
                     override suspend fun read(): String? = store.readOutbox(id)
@@ -65,6 +77,7 @@ private class AppFactsBookAccess(
                 }
             },
             clock = clock,
+            signing = FactsBookSigning({ n -> ByteArray(n).also(secure::nextBytes) }, deviceCheck),
         )
 
     private val profile = MutableStateFlow<String?>(null)

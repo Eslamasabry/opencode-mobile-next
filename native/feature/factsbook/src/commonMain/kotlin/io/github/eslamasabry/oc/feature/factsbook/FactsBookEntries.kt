@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.SearchViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.RemindersViewModel
@@ -29,6 +31,8 @@ import io.github.eslamasabry.oc.feature.factsbook.ui.CaptureScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.ConnectScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.NotSavedScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.SearchScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.SettingsScreen
+import io.github.eslamasabry.oc.feature.factsbook.ui.StatusScreen
 import io.github.eslamasabry.oc.feature.factsbook.ui.ThingScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
@@ -87,6 +91,16 @@ public class FactsBookEntries : EntryInstaller {
             val vm = metroViewModel<ConnectViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
             ConnectScreen(state, vm)
+        }
+        entry<FactsBookRoute.Status> {
+            val vm = metroViewModel<StatusViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            StatusScreen(state, vm)
+        }
+        entry<FactsBookRoute.Settings> {
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            SettingsScreen(state, vm)
         }
     }
 }

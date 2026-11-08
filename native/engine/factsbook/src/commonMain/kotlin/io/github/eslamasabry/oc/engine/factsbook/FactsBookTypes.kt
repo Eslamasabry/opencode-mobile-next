@@ -268,6 +268,15 @@ public data class AreaShare(
             if (json == null) AreaShare()
             else AreaShare(json.str("default") == "read", json.strings("allow"), json.strings("deny"))
     }
+
+    public fun toJson(): JsonObject =
+        JsonObject(
+            mapOf(
+                "default" to JsonPrimitive(if (readByDefault) "read" else "none"),
+                "allow" to JsonArray(allow.map(::JsonPrimitive)),
+                "deny" to JsonArray(deny.map(::JsonPrimitive)),
+            )
+        )
 }
 
 /** `Area`: a built-in area with its rules (the contract has no call to create one). */
@@ -295,6 +304,20 @@ public data class Area(
                 notify = json.str("notify") ?: "generic",
             )
     }
+
+    /** The area as `PATCH /v1/areas/{slug}` takes it. */
+    public fun toJson(): JsonObject =
+        JsonObject(
+            mapOf(
+                "slug" to JsonPrimitive(slug),
+                "storage" to JsonPrimitive(if (sensitiveStorage) "sensitive" else "normal"),
+                "review" to JsonPrimitive(if (reviewFirst) "first" else "auto_safe_only"),
+                "share" to share.toJson(),
+                "brief" to JsonPrimitive(brief),
+                "export" to JsonPrimitive(export),
+                "notify" to JsonPrimitive(notify),
+            )
+        )
 }
 
 /** `CouldntSave.reason_code` (closed list), plus the phone's own refusal when its queue is full. */
@@ -448,6 +471,13 @@ public data class ReviewItem(
     val text: String?,
     val area: String = "",
     val sensitive: Boolean = false,
+    /** `{entity id: revision}`: bound into the signed decision. */
+    val preconditions: Map<String, Long> = emptyMap(),
+    /** The operation bundle approval would apply, as received (an edit sends it back with the new text). */
+    val proposal: JsonObject = JsonObject(emptyMap()),
+    val evidence: List<Evidence> = emptyList(),
+    /** `money`, `health`, `id`, `contradiction`, `low_confidence`. */
+    val risk: List<String> = emptyList(),
 ) {
     internal companion object {
         fun read(json: JsonObject): ReviewItem =
@@ -459,8 +489,48 @@ public data class ReviewItem(
                 text = json.obj("proposal")?.str("text"),
                 area = json.str("area").orEmpty(),
                 sensitive = json.str("sens") == "sensitive",
+                preconditions =
+                    json.obj("preconditions")?.mapNotNull { (k, v) -> (v as? JsonPrimitive)?.let { p -> (p.longOrNull ?: p.doubleOrNull?.toLong())?.let { k to it } } }?.toMap()
+                        .orEmpty(),
+                proposal = json.obj("proposal") ?: JsonObject(emptyMap()),
+                evidence = json.list("evidence", Evidence::read),
+                risk = json.strings("risk"),
             )
     }
+}
+
+/** What the person decides on a proposal (`Decision.decision`). */
+public enum class ReviewDecision(public val wire: String) { Approve("approve"), Edit("edit"), Reject("reject"), Skip("skip") }
+
+/** `Brief`: the daily brief's settings. */
+public data class BriefSettings(val capPerDay: Long, val time: String, val quietHours: String)
+
+/** `Settings` (`GET /v1/config`, admin). [raw] is sent back whole, so a change touches only what the person changed. */
+public data class FactsBookSettings(val revision: Long, val vaultZone: String, val lockTimeoutMinutes: Long, val brief: BriefSettings, val raw: JsonObject) {
+    public fun withBriefCap(cap: Long): JsonObject {
+        val brief = raw.obj("brief") ?: JsonObject(emptyMap())
+        return JsonObject(raw + ("brief" to JsonObject(brief + ("cap_per_day" to JsonPrimitive(cap)))))
+    }
+
+    public fun withHomeZone(zone: String): JsonObject = JsonObject(raw + ("vault_zone" to JsonPrimitive(zone)))
+
+    internal companion object {
+        fun read(json: JsonObject): FactsBookSettings {
+            val brief = json.obj("brief") ?: throw FactsBookShapeError("brief")
+            return FactsBookSettings(
+                revision = json.long("rev") ?: throw FactsBookShapeError("rev"),
+                vaultZone = json.need("vault_zone"),
+                lockTimeoutMinutes = json.long("lock_timeout_minutes") ?: throw FactsBookShapeError("lock_timeout_minutes"),
+                brief = BriefSettings(brief.long("cap_per_day") ?: throw FactsBookShapeError("cap_per_day"), brief.need("time"), brief.need("quiet_hours")),
+                raw = json,
+            )
+        }
+    }
+}
+
+/** `GET /v1/inbox/{id}/export`: an unsaved capture as the encrypted object the node hands back, for the person to keep. */
+public class CaptureExport(public val text: String, public val item: String) {
+    override fun toString(): String = "CaptureExport(item=$item)"
 }
 
 /** One event of an outbox batch: a capture made while the node could not be reached, with its own key. */

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.JsonObject
 
 public enum class FactsBookLoad { Idle, Loading, Ready, Failed }
 
@@ -33,7 +34,7 @@ public data class FactsBookState(
     val profileId: String? = null,
     val link: FactsBookLink? = null,
     val paired: Boolean = false,
-    /** An owner device id is set: this phone could sign approvals (signing is not ported yet). */
+    /** An owner device id is set and the owner key is kept: this phone signs approvals. */
     val canApprove: Boolean = false,
     val load: FactsBookLoad = FactsBookLoad.Idle,
     val status: NodeStatus? = null,
@@ -69,11 +70,13 @@ public data class FactsBookState(
  */
 public class FactsBookEngine(
     private val store: FactsBookStore,
-    /** Builds the gateway of a pairing (the real one over a trust-gated client; a fake in tests). */
-    private val gatewayFor: (FactsBookLink, String?) -> FactsBookGateway,
+    /** Builds the gateway of a pairing (the real one over a trust-gated client; a fake in tests), with its signer. */
+    private val gatewayFor: (FactsBookLink, String?, OwnerSigner?) -> FactsBookGateway,
     private val outboxFor: (String) -> FactsBookOutboxStore,
     private val clock: Clock,
     private val random: Random = Random.Default,
+    /** The secure random source and the screen lock owner signatures need. */
+    private val signing: FactsBookSigning,
 ) {
     private val lane = Mutex()
     private val mutable = MutableStateFlow(FactsBookState())
@@ -103,14 +106,19 @@ public class FactsBookEngine(
         val token = link?.let { store.token(profileId) }
         val box = FactsBookOutbox(outboxFor(profileId), clock).also { it.load() }
         outbox = box
-        gateway = if (link != null && token != null) gatewayFor(link, token) else null
+        val device = link?.ownerDeviceId
+        val signer =
+            if (link != null && token != null && device != null) {
+                store.ownerSeed(profileId, signing.secureBytes)?.let { OwnerSigner(it, device, link, signing) { clock.now() } }
+            } else null
+        gateway = if (link != null && token != null) gatewayFor(link, token, signer) else null
         mutable.value =
             FactsBookState(
                 loaded = true,
                 profileId = profileId,
                 link = link,
                 paired = gateway != null,
-                canApprove = gateway != null && link?.ownerDeviceId != null,
+                canApprove = gateway != null && signer != null,
                 pending = box.entries.map(OutboxEntry::asEntry),
             )
     }
@@ -248,6 +256,34 @@ public class FactsBookEngine(
             refreshLocked()
             FbResult.Ok(Unit)
         }
+
+    /**
+     * Approve, edit, reject or skip a proposal (F: FactsBookController.decide), signed by the owner key. A changed one
+     * fails as stale and the list is read again either way, so the fresh item shows.
+     */
+    public suspend fun decide(item: ReviewItem, decision: ReviewDecision, edited: JsonObject? = null): FbResult<MutationResult> =
+        lane.withLock {
+            val node = gateway ?: return@withLock FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))
+            val result = node.decideReview(item, decision, edited)
+            if (result is FbResult.Ok || result.errorOrNull()?.stale == true) refreshLocked()
+            result
+        }
+
+    /** The owner key's public half as hex, for the console's `--owner-key`. The key is made on first use. */
+    public suspend fun ownerPublicKeyHex(): String? {
+        val profileId = state.value.profileId ?: return null
+        return store.ownerSeed(profileId, signing.secureBytes)?.let { hexOf(Ed25519.publicKey(it)) }
+    }
+
+    /**
+     * Checks the node's signed control history against the fingerprint pinned at pairing. A node that will not show
+     * it (no admin scope) answers an error: the page then says "not checked", never "verified".
+     */
+    public suspend fun verifyControl(): FbResult<ControlVerification> {
+        val node = gateway ?: return FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))
+        val pin = state.value.link?.rootFingerprint ?: return FbResult.Err(FactsBookError("not_found"))
+        return node.control().map { ControlVerifier.verify(it, pin) }
+    }
 
     /** Forgets the node on this phone: the token, the owner key and the pairing. The node's data and the outbox stay. */
     public suspend fun disconnect(): Unit =

@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.data.secret.SecretStore
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookHttp
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookOutboxStore
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookSigning
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookStore
 import io.github.eslamasabry.oc.engine.factsbook.FbHttpResult
 import io.github.eslamasabry.oc.engine.factsbook.HttpFactsBookGateway
@@ -114,6 +115,8 @@ internal const val THINGS: String =
 internal const val LINK: String =
     """{"url":"http://127.0.0.1:8787","client":"cli_01","vault":"v","fingerprint":"fp","node":"n","scopes":["read","write"]}"""
 
+internal val OWNER_LINK: String = LINK.dropLast(1) + ""","owner_device":"dev_1"}"""
+
 internal class FixedClock(private val at: Instant = Instant.parse("2026-11-08T10:00:00Z")) : Clock {
     override fun now(): Instant = at
 }
@@ -129,7 +132,11 @@ internal class Nav : AppNavigator {
 
     override fun openChat(ref: ConversationRef, focusComposer: Boolean) {}
 
-    override fun land() {}
+    var lands = 0
+
+    override fun land() {
+        lands++
+    }
 
     override fun replaceRoot(root: AppRoute) {}
 
@@ -142,17 +149,19 @@ internal class Nav : AppNavigator {
 internal class FakeAccess(
     paired: Boolean = true,
     on: Boolean = true,
+    /** The pairing names an owner device: this phone signs approvals. */
+    owner: Boolean = false,
     val node: FakeNode = FakeNode(),
     val secrets: MemorySecrets = MemorySecrets(if (paired) mapOf("oc.factsbook.p1" to "t") else emptyMap()),
 ) : FactsBookAccess {
-    val kv = MemoryKv(if (paired) mapOf("oc.factsbookNode.p1" to PrefValue.Str(LINK)) else emptyMap())
+    val kv = MemoryKv(if (paired) mapOf("oc.factsbookNode.p1" to PrefValue.Str(if (owner) OWNER_LINK else LINK)) else emptyMap())
     private val store = FactsBookStore(kv, secrets, WriterLane("app"))
     val pairNode = FakeNode()
 
     override val engine: FactsBookEngine =
         FactsBookEngine(
             store,
-            gatewayFor = { _, token -> HttpFactsBookGateway(node, token, Random(1), retryDelayMs = 1) },
+            gatewayFor = { _, token, signer -> HttpFactsBookGateway(node, token, Random(1), retryDelayMs = 1, owner = signer) },
             outboxFor = { id ->
                 object : FactsBookOutboxStore {
                     override suspend fun read(): String? = store.readOutbox(id)
@@ -162,6 +171,7 @@ internal class FakeAccess(
             },
             clock = FixedClock(),
             random = Random(2),
+            signing = FactsBookSigning({ n -> ByteArray(n) { (it + 7).toByte() } }),
         )
     override val activeProfileId: MutableStateFlow<String?> = MutableStateFlow("p1")
     override val enabled: MutableStateFlow<Boolean> = MutableStateFlow(on)

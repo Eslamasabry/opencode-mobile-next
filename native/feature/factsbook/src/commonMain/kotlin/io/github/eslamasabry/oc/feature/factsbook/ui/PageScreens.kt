@@ -107,10 +107,11 @@ private fun ErrorState(error: io.github.eslamasabry.oc.engine.factsbook.FactsBoo
 @Composable
 public fun AreasScreen(state: AreasUi, actions: AreasActions) {
     val title = stringResource(Res.string.fbAreasTitle)
+    KitSheetHost(Modifier.fillMaxSize()) {
     KitScreen(
         topBar = { BackBar(title, actions::back) },
         width = KitScreenWidth.Reading,
-        loading = state.loading && state.areas != null,
+        loading = (state.loading && state.areas != null) || state.working.isNotEmpty(),
         loadingLabel = title,
     ) {
         val areas = state.areas
@@ -137,6 +138,16 @@ public fun AreasScreen(state: AreasUi, actions: AreasActions) {
                             )
                         }
                     }
+                    state.failure?.let { failure ->
+                        item("failure") {
+                            KitNotice(
+                                message = failureWords(failure),
+                                modifier = Modifier.padding(horizontal = gutter(), vertical = Space.S3.dp),
+                                tone = StatusTone.Attention,
+                                dismiss = KitLineAction(stringResource(Res.string.fbDismiss), actions::dismiss),
+                            )
+                        }
+                    }
                     areas.forEach { area ->
                         item(area.slug) {
                             KitRowGroup(label = areaName(area.slug)) {
@@ -145,9 +156,12 @@ public fun AreasScreen(state: AreasUi, actions: AreasActions) {
                                     checked = area.share.readByDefault,
                                     supporting = stringResource(Res.string.fbAreasOthersReadDetail),
                                     enabled =
-                                        if (state.canApprove) KitEnabled.Enabled
-                                        else KitEnabled.Disabled(stringResource(Res.string.fbCareNeedsOwnerShort)),
-                                    onCheckedChange = {},
+                                        when {
+                                            !state.canApprove -> KitEnabled.Disabled(stringResource(Res.string.fbCareNeedsOwnerShort))
+                                            area.slug in state.working -> KitEnabled.Disabled(stringResource(Res.string.fbAreasOthersRead))
+                                            else -> KitEnabled.Enabled
+                                        },
+                                    onCheckedChange = { on -> actions.share(area, on) },
                                 )
                                 KitRow(
                                     title =
@@ -165,6 +179,21 @@ public fun AreasScreen(state: AreasUi, actions: AreasActions) {
                     item("fixed") { KitGroupNote(stringResource(Res.string.fbAreasFixed)) }
                 }
         }
+    }
+    val confirm = state.confirmShare
+    KitConfirm(
+        spec =
+            confirm?.let {
+                KitConfirmSpec(
+                    title = stringResource(Res.string.fbAreasShareConfirmTitle, areaName(it.slug)),
+                    confirmLabel = stringResource(Res.string.fbAreasShareConfirm),
+                    kind = KitConfirmKind.Destructive,
+                    body = stringResource(Res.string.fbAreasShareConfirmBody),
+                )
+            },
+        onConfirm = actions::confirmShare,
+        onCancel = actions::cancelShare,
+    )
     }
 }
 
@@ -559,17 +588,29 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
             item("form") {
                 Column(Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                     KitText(stringResource(Res.string.fbConnectIntro), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    KitField(address, stringResource(Res.string.fbConnectAddress), placeholder = stringResource(Res.string.fbConnectAddressHint))
+                    KitField(code, stringResource(Res.string.fbConnectCode), helper = stringResource(Res.string.fbConnectCodeHelp))
                     state.error?.let { error ->
+                        // A refused code reads as "that code did not work", whatever the node calls it.
+                        val refused = error.code == "forbidden_scope" || error.code == "unauthorized"
                         KitNotice(
-                            failureWords(error),
+                            if (refused) stringResource(Res.string.fbErrorPairCode) else failureWords(error),
                             title = stringResource(Res.string.fbConnectFailedTitle),
                             tone = StatusTone.Attention,
                         )
                     }
-                    KitField(address, stringResource(Res.string.fbConnectAddress), placeholder = stringResource(Res.string.fbConnectAddressHint))
-                    KitField(code, stringResource(Res.string.fbConnectCode), helper = stringResource(Res.string.fbConnectCodeHelp))
                     KitSectionLabel(stringResource(Res.string.fbConnectOwnerTitle))
                     KitText(stringResource(Res.string.fbConnectOwnerBody), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    state.ownerKey?.takeIf { it.isNotEmpty() }?.let { key ->
+                        KitRowGroup {
+                            KitRow(
+                                title = stringResource(Res.string.fbConnectOwnerKey),
+                                supporting = key,
+                                supportingMaxLines = 3,
+                                trailing = KitRowTrailing.Copy(key, stringResource(Res.string.fbConnectOwnerKey)),
+                            )
+                        }
+                    }
                     KitField(owner, stringResource(Res.string.fbConnectOwnerId))
                 }
             }

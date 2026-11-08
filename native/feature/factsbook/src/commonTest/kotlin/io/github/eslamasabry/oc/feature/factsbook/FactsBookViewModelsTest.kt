@@ -13,6 +13,9 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingNotice
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderEditViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsViewModel
+import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusViewModel
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -186,7 +189,7 @@ class FactsBookViewModelsTest {
     }
 
     @Test
-    fun `B-FB-031 Needs you lists the changes waiting and cannot approve without the owner signer`() = runTest {
+    fun `B-FB-031 Needs you lists the changes waiting and cannot approve without an owner device`() = runTest {
         val access = FakeAccess().apply { node.healthy() }
         val vm = NeedsYouViewModel(access, nav)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
@@ -194,5 +197,69 @@ class FactsBookViewModelsTest {
         assertEquals("rvw_1", state.review.single().id)
         assertFalse(state.canApprove)
         assertFalse(access.node.asked.any { it.contains("/decision") })
+    }
+
+    @Test
+    fun `B-FB-035 an approval on Needs you is signed, sent once and says it was approved`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy() }
+        access.node.on("POST /v1/review/rvw_1/decision", """{"status":"ok","id":"rvw_1"}""")
+        val vm = NeedsYouViewModel(access, nav)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val state = vm.state.first { it.review.isNotEmpty() && it.canApprove }
+        vm.approve(state.review.single())
+        vm.state.first { it.notice == CareNotice.Approved }
+        assertEquals(1, access.node.asked.count { it == "POST /v1/review/rvw_1/decision" })
+    }
+
+    @Test
+    fun `B-FB-036 a change approved elsewhere first says it changed and nothing else`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy() }
+        access.node.on("POST /v1/review/rvw_1/decision", """{"error":{"code":"stale_approval"}}""", status = 409)
+        val vm = NeedsYouViewModel(access, nav)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val item = vm.state.first { it.review.isNotEmpty() && it.canApprove }.review.single()
+        vm.approveEdited(item, "  Likes green tea ")
+        val after = vm.state.first { it.notice != null || it.failure != null }
+        assertEquals(CareNotice.Stale, after.notice)
+        assertNull(after.failure)
+    }
+
+    @Test
+    fun `B-FB-037 Status reads the node, says the history is not checked without one, and Disconnect lands home`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy() }
+        val vm = StatusViewModel(access, nav, FixedClock())
+        val state = vm.state.first { !it.loading }
+        assertTrue(state.status != null)
+        assertNull(state.control) // the fake node will not show /v1/control: "not checked", never "verified"
+        assertTrue(state.canApprove)
+        vm.askDisconnect()
+        assertTrue(vm.state.value.confirmDisconnect)
+        vm.disconnect()
+        vm.state.first { !it.confirmDisconnect }
+        assertFalse(access.engine.state.value.paired)
+        assertFalse(access.secrets.values.containsKey("oc.factsbook.p1"))
+        assertEquals(1, nav.lands)
+    }
+
+    @Test
+    fun `B-FB-038 Settings changes the brief cap and the home zone only with approval, against the revision seen`() = runTest {
+        val access = FakeAccess(owner = true)
+        access.node.on(
+            "GET /v1/config",
+            """{"rev":7,"vault_zone":"Africa/Cairo","lock_timeout_minutes":15,"brief":{"cap_per_day":5,"time":"08:00","quiet_hours":"22:00-07:00"}}""",
+        )
+        access.node.on("PATCH /v1/config", """{"status":"ok","id":"config","rev":8}""")
+        val vm = SettingsViewModel(access, nav)
+        vm.state.first { it.settings != null }
+        vm.setBriefCap(3)
+        vm.state.first { !it.saving }
+        assertEquals(1, access.node.asked.count { it == "PATCH /v1/config" })
+
+        val unowned = FakeAccess(owner = false)
+        unowned.node.answers.putAll(access.node.answers)
+        val off = SettingsViewModel(unowned, nav)
+        off.state.first { it.settings != null }
+        off.setBriefCap(3)
+        assertFalse(unowned.node.asked.any { it == "PATCH /v1/config" })
     }
 }

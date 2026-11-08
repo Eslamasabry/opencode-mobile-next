@@ -157,6 +157,12 @@ public interface AboutYouActions {
 
     public fun openReminders()
 
+    public fun openTriggers()
+
+    public fun openStatus()
+
+    public fun openSettings()
+
     public fun addSomething()
 }
 
@@ -231,6 +237,12 @@ public class AboutYouViewModel(private val access: FactsBookAccess, private val 
     override fun openAreas(): Unit = nav.open(FactsBookRoute.Areas)
 
     override fun openReminders(): Unit = nav.open(FactsBookRoute.Reminders)
+
+    override fun openTriggers(): Unit = nav.open(FactsBookRoute.Triggers)
+
+    override fun openStatus(): Unit = nav.open(FactsBookRoute.Status)
+
+    override fun openSettings(): Unit = nav.open(FactsBookRoute.Settings)
 
     override fun addSomething(): Unit = nav.open(FactsBookRoute.Capture)
 }
