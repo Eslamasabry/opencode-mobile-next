@@ -66,8 +66,8 @@ class ChatsGateTest {
             phase = ChatsPhase.List,
             needsYou = 2,
             running = 1,
-            today = persistentListOf(login, database, dark, build),
-            earlier = persistentListOf(rename, release),
+            rightNow = persistentListOf(login, database, dark),
+            recent = persistentListOf(build, rename, release),
             allCount = 6,
             nowMs = NOW,
             projectChoices = projects,
@@ -109,8 +109,8 @@ class ChatsGateTest {
     private fun runningState() =
         mixedState().copy(
             filters = ChatsFilters(running = true),
-            today = persistentListOf(dark),
-            earlier = persistentListOf(),
+            rightNow = persistentListOf(dark),
+            recent = persistentListOf(),
         )
     @Test fun running() { shot("chats_home_running", runningState()) }
     @Test fun runningWide() { shot("chats_home_running_1280x800", runningState()) }
@@ -121,7 +121,7 @@ class ChatsGateTest {
     private val homeNotes = row("h", "Home notes", "Home", RowStatus.None, 4 * DAY, directory = "/root")
     private fun sheetState() =
         mixedState().copy(
-            earlier = persistentListOf(rename, release, scratch, homeNotes),
+            recent = persistentListOf(build, rename, release, scratch, homeNotes),
             allCount = 8,
             otherFoldersCount = 2,
             sheet = ChatsHomeSheet.Projects,
@@ -138,8 +138,8 @@ class ChatsGateTest {
         mixedState().copy(
             phase = ChatsPhase.NoMatch,
             filters = ChatsFilters(projectDirectory = "/root/projects/alpha", running = true),
-            today = persistentListOf(),
-            earlier = persistentListOf(),
+            rightNow = persistentListOf(),
+            recent = persistentListOf(),
         )
     @Test fun noMatch() { shot("chats_home_nomatch", noMatchState()) }
     @Test fun noMatchWide() { shot("chats_home_nomatch_1280x800", noMatchState()) }

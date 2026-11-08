@@ -2,7 +2,6 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.ActivityManager
 import android.app.Application
-import android.content.Intent
 import android.os.Build
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
@@ -17,9 +16,6 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.crash.*
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
-import io.github.eslamasabry.oc.feature.settings.presentation.CrashSettings
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.secCrashReportHeader
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
@@ -28,12 +24,7 @@ import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.compose.resources.getString
 
 @ContributesTo(AppScope::class)
 interface CrashAccessors {
@@ -52,7 +43,7 @@ class AppCrashDiagnostics(
     private val clock: Clock,
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
-) : CrashSettings {
+) {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private lateinit var directory: File
     private lateinit var native: NativeCrashStore
@@ -85,117 +76,11 @@ class AppCrashDiagnostics(
             scope = scope,
             dispatchers = dispatchers,
         )
-    private val mutable = MutableStateFlow<CrashDiagnosticsState?>(null)
-    override val state: StateFlow<CrashDiagnosticsState?> = mutable.asStateFlow()
-    private val reports =
-        CrashReportBuilder(
-            { startup.ready.await() },
-            { getString(Res.string.secCrashReportHeader) },
-        ) { preview ->
-            withContext(dispatchers.main) {
-                val current = startup.current.value?.state?.value
-                // A consent change while switching to the main dispatcher cannot send stale
-                // evidence.
-                if (current == null || !preview.matches(current))
-                    Outcome.Failed(Failure.StorageRefused())
-                else
-                    attempt({ Failure.Device() }) {
-                        val send =
-                            Intent(Intent.ACTION_SEND)
-                                .setType("text/plain")
-                                .putExtra(Intent.EXTRA_TEXT, preview.text)
-                        app.startActivity(
-                            Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        )
-                    }
-            }
-        }
 
+    /** Opens the crash evidence store off the main thread; the uncaught handler is installed earlier. */
     fun start() {
         startup.start()
-        scope.launch {
-            startup.current.collect { controller ->
-                if (controller == null) mutable.value = null
-                else launch { controller.state.collect { mutable.value = it } }
-            }
-        }
     }
-
-    override suspend fun history():
-        io.github.eslamasabry.oc.feature.settings.presentation.DeviceExitHistory =
-        withContext(dispatchers.io) {
-            var unavailable = false
-            val appExits =
-                when (val result = attempt({ Failure.Device() }) { exits() }) {
-                    is Outcome.Ok ->
-                        result.value
-                            .sortedByDescending { it.timestampMs }
-                            .take(10)
-                            .map {
-                                io.github.eslamasabry.oc.feature.settings.presentation.DeviceExit(
-                                    it.at.toString(),
-                                    it.reason,
-                                )
-                            }
-                    is Outcome.Failed -> {
-                        unavailable = true
-                        emptyList()
-                    }
-                }
-            val helpers =
-                when (
-                    val result =
-                        attempt({ Failure.Device() }) {
-                            val services =
-                                io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(app)
-                                    .performance()["services"]
-                                    as? Map<*, *>
-                            services
-                                .orEmpty()
-                                .entries
-                                .filter { (key, _) ->
-                                    key is String && key.startsWith("agent-host.")
-                                }
-                                .mapNotNull { (_, value) ->
-                                    val data = value as? Map<*, *> ?: return@mapNotNull null
-                                    val at = data["lastExitAtMs"] as? Long ?: return@mapNotNull null
-                                    val code =
-                                        data["lastExitCode"] as? Int ?: return@mapNotNull null
-                                    if (at <= 0) null
-                                    else
-                                        io.github.eslamasabry.oc.feature.settings.presentation
-                                            .DeviceExit(
-                                                kotlin.time.Instant.fromEpochMilliseconds(at)
-                                                    .toString(),
-                                                code,
-                                            )
-                                }
-                                .sortedByDescending { it.at }
-                                .take(10)
-                        }
-                ) {
-                    is Outcome.Ok -> result.value
-                    is Outcome.Failed -> {
-                        unavailable = true
-                        emptyList()
-                    }
-                }
-            io.github.eslamasabry.oc.feature.settings.presentation.DeviceExitHistory(
-                appExits,
-                helpers,
-                unavailable,
-            )
-        }
-
-    override suspend fun setEnabled(on: Boolean): Boolean =
-        startup.ready.await()?.setEnabled(on) ?: false
-
-    override suspend fun clear(): Boolean = startup.ready.await()?.clear() ?: false
-
-    override suspend fun preview(): CrashReportResult = reports.preview()
-
-    override suspend fun share(preview: CrashReportPreview): CrashReportError? =
-        reports.share(preview)
 
     private fun ensureDirectory() {
         // This is the app-private files root, shared with the adopted Flutter crash store.

@@ -10,7 +10,7 @@ import kotlinx.coroutines.test.runTest
 
 /**
  * B-190 "Send a problem report" (section E): the redaction the person's preview and the sent text go through, ported
- * from Flutter 2.1.5's `health_telemetry_test.dart` group "send a problem report", and the collector's contents.
+ * from Flutter 2.1.5's `health_telemetry_test.dart` group "send a problem report", and the R1 report's contents.
  */
 class ReportRedactionTest {
     private val secret = "sk-ant-REDACTME" + "x".repeat(24)
@@ -56,44 +56,79 @@ class ReportRedactionTest {
     }
 
     @Test
-    fun `B-190-032 the report holds the last 500 log lines, keys and exits, already redacted`() = runTest {
-        val vendor = RecordingVendor()
-        val service = TelemetryService(vendor, available = true, scope = this)
-        service.start(TelemetryConsent(crashes = true), NoStore, MemoryTelemetryReportStore())
-        service.setHealthKeys(mapOf("build_kind" to "store"))
-        for (i in 0 until 700) service.ring.add("line $i")
-        service.ring.add("opened http://10.0.0.5:4096/x and /home/me/secret")
-        val platform =
-            object : HealthPlatform {
-                override suspend fun deviceContext(): HealthDeviceContext? = null
-
-                override suspend fun exits(limit: Int): List<HealthExit> = listOf(HealthExit(4, 90_000))
-
-                override fun coldStartMs(): Long? = null
-
-                override val appVersion: String = "3.0.0"
-                override val declaredBuildKind: String? = null
-            }
-        val text =
-            ProblemReportCollector(
+    fun `B-190-032 the report holds the words, the last unexpected close, app, phone, connection and problem kinds only`() =
+        runTest {
+            val vendor = RecordingVendor()
+            val service = TelemetryService(vendor, available = true, scope = this)
+            service.start(TelemetryConsent(), NoStore, MemoryTelemetryReportStore())
+            for (i in 0 until 50) service.ring.add("line $i opened http://10.0.0.5:4096/x and /home/me/secret")
+            ProblemTally.note(service.ring, "timeout")
+            ProblemTally.note(service.ring, "auth")
+            ProblemTally.note(service.ring, "timeout")
+            ProblemTally.note(service.ring, "not-a-kind")
+            val made = Instant.parse("2026-11-08T12:00:00Z")
+            val platform = Platform(listOf(HealthExit(4, made.toEpochMilliseconds() - 60_000)))
+            val collector =
+                ProblemReportCollector(
                     service,
                     ReportRedaction(Redactor()),
                     platform = platform,
+                    connection = { ReportConnection("OpenCode", "2.1.1 on my-box.tail1234.ts.net") },
                     clock = object : kotlin.time.Clock {
-                        override fun now(): Instant = Instant.parse("2026-11-08T12:00:00Z")
+                        override fun now(): Instant = made
                     },
                 )
-                .build()
-        assertTrue("Made: 2026-11-08 12:00:00 UTC" in text, text.take(200))
-        assertTrue("build_kind=store" in text)
-        assertTrue("1970-01-01 00:01:30 UTC crash" in text)
-        assertTrue("Log (last 500 lines)" in text)
-        assertTrue("line 699" in text)
-        assertFalse("line 100\n" in text)
-        assertFalse("10.0.0.5" in text)
-        assertFalse("/home/me" in text)
-        assertTrue(text.lines().count { it.startsWith("  ") } < 520)
-        assertTrue(vendor.reports.isEmpty(), "building the preview sends nothing")
+            val report = collector.build().withWords(collector.words("It closed at https://my-box.ts.net:4096 with $secret"))
+            assertEquals(ReportClose("crash", made.toEpochMilliseconds() - 60_000), report.lastClose)
+            assertEquals(ReportConnection("OpenCode", "2.1.1"), report.connection)
+            assertEquals(listOf(ReportProblem("timeout", 2), ReportProblem("auth", 1)), report.problems)
+            val text = report.text
+            assertTrue("Last time the app closed: crash, 2026-11-08 11:59:00 UTC" in text, text)
+            assertTrue("App: OpenCode Mobile 3.0.0 (57)" in text, text)
+            assertTrue("Phone: Android 15" in text, text)
+            assertTrue("Connection: OpenCode 2.1.1 · address taken out" in text, text)
+            assertTrue("Recent problems: timeout ×2, auth ×1" in text, text)
+            assertTrue("It closed at" in text)
+            for (gone in listOf("my-box", "tail1234", "REDACTME", "10.0.0.5", "/home/me", "line 1", "not-a-kind")) {
+                assertFalse(gone in text, "$gone survived:\n$text")
+            }
+            assertTrue(vendor.reports.isEmpty(), "building the report sends nothing")
+        }
+
+    @Test
+    fun `B-190-033 a normal end, an update or an old crash is not the last unexpected close`() = runTest {
+        val service = TelemetryService(RecordingVendor(), available = true, scope = this)
+        val made = Instant.parse("2026-11-08T12:00:00Z")
+        val clock = object : kotlin.time.Clock {
+            override fun now(): Instant = made
+        }
+        for (exit in
+            listOf(
+                HealthExit(1, made.toEpochMilliseconds() - 1_000),
+                HealthExit(16, made.toEpochMilliseconds() - 1_000),
+                HealthExit(4, made.toEpochMilliseconds() - ProblemReportCollector.CLOSE_MAX_AGE_MS - 1),
+            )) {
+            val report = ProblemReportCollector(service, ReportRedaction(Redactor()), platform = Platform(listOf(exit)), clock = clock).build()
+            assertEquals(null, report.lastClose, "$exit")
+            assertFalse("Last time the app closed" in report.text)
+        }
+        val none = ProblemReportCollector(service, ReportRedaction(Redactor()), clock = clock).build()
+        assertTrue("Connection: not connected" in none.text)
+        assertTrue("Recent problems: none" in none.text)
+        assertTrue("(not described)" in none.text)
+    }
+
+    private class Platform(private val exitList: List<HealthExit>) : HealthPlatform {
+        override suspend fun deviceContext(): HealthDeviceContext? = null
+
+        override suspend fun exits(limit: Int): List<HealthExit> = exitList.take(limit)
+
+        override fun coldStartMs(): Long? = null
+
+        override val appVersion: String = "3.0.0"
+        override val declaredBuildKind: String? = null
+        override val appBuild: String = "57"
+        override val osRelease: String = "15"
     }
 
     private object NoStore : TelemetryConsentStore {

@@ -22,7 +22,6 @@ import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.feature.settings.presentation.AppearanceUi
 import io.github.eslamasabry.oc.feature.settings.presentation.GroupUi
 import io.github.eslamasabry.oc.feature.settings.presentation.HubUi
-import io.github.eslamasabry.oc.feature.settings.presentation.ReportUi
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLine
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLocalFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsActions
@@ -222,44 +221,6 @@ class S8PolishGoldensTest {
         ) {
             SettingsScreen(serverGroup, RecordingActions())
         }
-
-    private val report =
-        SettingsUi(
-            stack = persistentListOf(SettingsPage.Hub, SettingsPage.ReportProblem),
-            report =
-                ReportUi.Ready(
-                    "The app closed unexpectedly\n\n(not described)\n\nEnvironment\nApp: 3.0.0+10002\n" +
-                        "Platform: Android 16 (API 36)\n\nDiagnostics\n" +
-                        "[2026-11-07 10:00:00Z] androidExit · android.exit\nCrash reason=4 subReason=-1 status=0"
-                ),
-        )
-
-    @Test
-    fun `P-022 Report a problem keeps the raw report in a closed Details fold`() =
-        each(
-            "report",
-            check = { v ->
-                if (v.locale == "en") {
-                    onNodeWithTag("report-text", useUnmergedTree = true).assertDoesNotExist()
-                    onNodeWithText("The app closed unexpectedly").assertExists()
-                    // The hint wraps under the field instead of being cut in it.
-                    onNodeWithText("What you did, what you expected, what you got instead").assertExists()
-                }
-            },
-        ) {
-            SettingsScreen(report, RecordingActions())
-        }
-
-    @Test
-    fun `P-022 the Details fold opens to the exact report`() {
-        Locale.setDefault(Locale.ENGLISH)
-        runComposeUiTest {
-            setContent { SettingsThemed { SettingsScreen(report, RecordingActions()) } }
-            onNodeWithTag("report-details").performClick()
-            waitForIdle()
-            onNodeWithTag("report-text", useUnmergedTree = true).assertExists()
-        }
-    }
 
     private val colours =
         SettingsUi(

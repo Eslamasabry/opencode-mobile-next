@@ -168,6 +168,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Compile the app (previewBenchmark), and every module's tests on the full lane
         env:
           LANE: ${{ needs.plan.outputs.lane }}
@@ -221,6 +228,13 @@ jobs:
       - uses: ./.github/actions/native-setup
         with:
           goldens: ${{ needs.plan.outputs.lane == 'full' && 'true' || 'false' }}
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Output directory the LooksCapture tests hard-code
         # Several LooksCapture helpers mkdirs() /home/eslam/wt/lane-looks/looks-out/screens; the runner user cannot create /home/eslam.
         if: ${{ needs.plan.outputs.lane == 'full' }}
@@ -289,6 +303,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Re-record the desktop goldens on this runner
         # Every module that wires oc.goldens.record. -PrunQuarantined records quarantined pictures too.
         run: |
@@ -334,6 +355,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - name: Preview signing key (pre-release builds only; owner-approved 2026-11-08)
         env:
           KEYSTORE_B64: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 }}
@@ -413,6 +441,13 @@ jobs:
           # Self-hosted keeps the build/ trees and the vendored AAR between runs (the warm start); hosted starts clean anyway.
           clean: ${{ runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
+      - name: Stop this workspace's Gradle daemon when the run is cancelled
+        if: ${{ cancelled() && runner.environment == 'self-hosted' }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          for p in $(pgrep -f GradleDaemon || true); do
+            if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
+          done
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
       - name: Custom report
         if: always()

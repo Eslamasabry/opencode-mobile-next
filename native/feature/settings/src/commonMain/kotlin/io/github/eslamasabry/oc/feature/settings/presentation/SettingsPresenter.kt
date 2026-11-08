@@ -57,7 +57,6 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
-    private val crashes: CrashSettings? = null,
     private val phrases: PhraseSettings? = null,
     private val appearanceGuide: AppearanceGuideMemory? = null,
     private val exitWhatsNew: () -> Unit = {},
@@ -70,7 +69,7 @@ public class SettingsPresenter(
     private val memoryPreview: MemoryPreviewSetting? = null,
     /** s28: Flutter 2.1.5's two stored answers (usage and app health, crash reports). */
     private val healthConsent: HealthConsentSetting? = null,
-    /** B-190: Help › Send a problem report and About's report code; null in a build that cannot send. */
+    /** R1: Report a problem's report, its Send report and About's report code. */
     private val problemReport: ProblemReportSender? = null,
 ) : SettingsActions {
     private data class Local(
@@ -86,9 +85,7 @@ public class SettingsPresenter(
         val memoryPreview: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
-        val sendReport: SendReportUi? = null,
         val reportCode: String? = null,
-        val crash: CrashUi? = null,
         val focusedRow: SettingsRowId? = null,
         val focusedAnchor: String? = null,
         val phraseChips: Boolean = true,
@@ -180,73 +177,6 @@ public class SettingsPresenter(
             scope.launch {
                 port.enabled.collect { enabled -> local.update { it.copy(phraseChips = enabled) } }
             }
-        }
-        crashes?.let { port ->
-            scope.launch {
-                port.state.collect { evidence ->
-                    local.update { current ->
-                        val valid:
-                            io.github.eslamasabry.oc.engine.diagnostics.crash.CrashReportPreview? =
-                            null
-                        current.copy(
-                            crash =
-                                CrashUi(
-                                    current.crash?.history,
-                                    evidence?.available == true,
-                                    evidence?.enabled == true,
-                                    evidence?.records?.size ?: 0,
-                                    valid,
-                                    if (evidence?.storageFailed == true)
-                                        io.github.eslamasabry.oc.engine.diagnostics.crash
-                                            .CrashReportError
-                                            .StorageFailed
-                                    else null,
-                                )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    override fun onRefreshExitHistory() {
-        val port = crashes ?: return
-        scope.launch {
-            val history = port.history()
-            local.update { it.copy(crash = (it.crash ?: CrashUi()).copy(history = history)) }
-        }
-    }
-
-    override fun onCrashCapture(on: Boolean) {
-        val port = crashes ?: return
-        scope.launch {
-            if (!port.setEnabled(on)) local.update { it.copy(note = SettingsNote.ConsentNotSaved) }
-        }
-    }
-
-    override fun onClearCrashes() {
-        val port = crashes ?: return
-        scope.launch {
-            if (!port.clear()) local.update { it.copy(note = SettingsNote.ChoiceNotSaved) }
-        }
-    }
-
-    override fun onPreviewCrashes() {
-        val port = crashes ?: return
-        scope.launch {
-            val result = port.preview()
-            local.update {
-                it.copy(crash = it.crash?.copy(preview = result.preview, error = result.error))
-            }
-        }
-    }
-
-    override fun onShareCrashes() {
-        val port = crashes ?: return
-        val preview = local.value.crash?.preview ?: return
-        scope.launch {
-            val error = port.share(preview)
-            local.update { it.copy(crash = it.crash?.copy(error = error)) }
         }
     }
 
@@ -387,12 +317,10 @@ public class SettingsPresenter(
                 },
             report = l.report,
             reportDescription = l.reportDescription,
-            sendReport = l.sendReport,
             reportCode = l.reportCode,
             phraseChips = l.phraseChips,
             focusedRow = l.focusedRow,
             focusedAnchor = l.focusedAnchor,
-            crash = l.crash,
             localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
             note = l.note,
             voiceLicenses = licenses != null,
@@ -604,7 +532,6 @@ public class SettingsPresenter(
             else it.copy(stack = (it.stack + page).toImmutableList())
         }
         if (page == SettingsPage.ReportProblem) loadReport()
-        if (page == SettingsPage.SendProblemReport) collectProblemReport()
         if (page == SettingsPage.About) loadReportCode()
         if (page == SettingsPage.Storage) onRefreshLocalModels()
         if (
@@ -674,10 +601,6 @@ public class SettingsPresenter(
             }
             l.stack.size > 1 -> {
                 if (l.stack.last() == SettingsPage.ReportProblem) closeReport()
-                if (l.stack.last() == SettingsPage.SendProblemReport) {
-                    problemGeneration++
-                    local.update { it.copy(sendReport = null) }
-                }
                 local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
                 updates?.setPageOpen(local.value.stack.last() == SettingsPage.Updates)
                 true
@@ -969,97 +892,80 @@ public class SettingsPresenter(
 
     override fun onReportDescription(text: String) {
         if (text == local.value.reportDescription) return
-        local.update { it.copy(reportDescription = text) }
-        loadReport()
+        val words = problemReport?.words(text)
+        local.update {
+            it.copy(
+                reportDescription = text,
+                report =
+                    it.report?.let { report ->
+                        report.copy(
+                            content = words?.let { w -> report.content?.withWords(w) } ?: report.content,
+                            stage = if (report.stage == ReportStage.Failed) ReportStage.Writing else report.stage,
+                        )
+                    },
+            )
+        }
     }
 
-    override fun onSendReport() {
+    override fun onShowIncluded(open: Boolean) {
+        local.update { it.copy(report = it.report?.copy(showIncluded = open)) }
+    }
+
+    override fun onAskPostPublicly() {
+        local.update { it.copy(report = it.report?.copy(confirmPublic = true)) }
+    }
+
+    override fun onPostPublicly(post: Boolean) {
+        local.update { it.copy(report = it.report?.copy(confirmPublic = false)) }
+        if (!post) return
         val port = diagnostics ?: return
-        if (local.value.report !is ReportUi.Ready) return
         val description = local.value.reportDescription
-        run(SettingsNote.ShareFailed) { port.send(description) }
+        run(SettingsNote.GitHubFailed) { port.send(description) }
     }
 
-    override fun onRetryReport() {
-        loadReport()
-    }
-
-    override fun onCopyReport() {
-        val port = diagnostics ?: return
-        val text = (local.value.report as? ReportUi.Ready)?.text ?: return
-        scope.launch {
-            val note =
-                if (port.copy(text) is Outcome.Ok) SettingsNote.ReportCopied
-                else SettingsNote.ShareFailed
-            local.update { it.copy(note = note) }
-        }
-    }
-
-    override fun onShareReport() {
-        val port = diagnostics ?: return
-        val text = (local.value.report as? ReportUi.Ready)?.text ?: return
-        run(SettingsNote.ShareFailed) { port.share(text) }
-    }
-
-    /** Builds the preview once per visit; a newer request wins over a slower older one. */
-    private fun loadReport() {
-        val port = diagnostics ?: return
-        val generation = ++reportGeneration
-        val description = local.value.reportDescription
-        local.update { it.copy(report = ReportUi.Loading) }
-        scope.launch {
-            val built =
-                when (val result = port.report(description)) {
-                    is Outcome.Ok -> ReportUi.Ready(result.value)
-                    is Outcome.Failed -> ReportUi.Failed
-                }
-            if (generation == reportGeneration) local.update { it.copy(report = built) }
-        }
-    }
-
-    private var reportGeneration = 0L
-
-    // ---- B-190: Send a problem report ----
-
-    private var problemGeneration = 0L
-
-    /** Builds and redacts the report; nothing is sent by opening the page. */
-    private fun collectProblemReport() {
-        val port = problemReport ?: return
-        val generation = ++problemGeneration
-        local.update { it.copy(sendReport = SendReportUi.Collecting) }
-        scope.launch {
-            val text = runCatching { port.build() }.getOrNull() ?: return@launch
-            if (generation == problemGeneration) local.update { it.copy(sendReport = SendReportUi.Preview(text)) }
-        }
-    }
-
+    /**
+     * Report a problem › Send report: sends exactly the report "What's included" lists, once, then shows its code.
+     * Opening the page, typing and leaving send nothing.
+     */
     override fun onSendProblemReport() {
         val port = problemReport ?: return
-        val text =
-            when (val now = local.value.sendReport) {
-                is SendReportUi.Preview -> now.text
-                is SendReportUi.Failed -> now.text
-                else -> return
-            }
-        val generation = problemGeneration
-        local.update { it.copy(sendReport = SendReportUi.Sending(text)) }
+        val now = local.value.report ?: return
+        val content = now.content ?: return
+        if (!now.canSend || now.stage == ReportStage.Sending || now.stage is ReportStage.Sent) return
+        val generation = reportGeneration
+        local.update { it.copy(report = it.report?.copy(stage = ReportStage.Sending, showIncluded = false)) }
         scope.launch {
-            val code = runCatching { port.send(text) }.getOrNull()
-            if (generation != problemGeneration) return@launch
+            val code = port.send(content.text)
+            if (generation != reportGeneration) return@launch
             local.update {
                 it.copy(
-                    sendReport = if (code == null) SendReportUi.Failed(text) else SendReportUi.Sent(text, code),
+                    report = it.report?.copy(stage = if (code == null) ReportStage.Failed else ReportStage.Sent(code)),
                     reportCode = code ?: it.reportCode,
                 )
             }
         }
     }
 
+    /** Reads the report's facts once per visit; a newer visit wins over a slower older one. */
+    private fun loadReport() {
+        val port = problemReport
+        val generation = ++reportGeneration
+        local.update { it.copy(report = ReportUi(canSend = port?.canSend == true)) }
+        port ?: return
+        scope.launch {
+            val content = port.build().withWords(port.words(local.value.reportDescription))
+            if (generation == reportGeneration) {
+                local.update { it.copy(report = it.report?.copy(content = content)) }
+            }
+        }
+    }
+
+    private var reportGeneration = 0L
+
     private fun loadReportCode() {
         val port = problemReport ?: return
         scope.launch {
-            val code = runCatching { port.reportCode() }.getOrNull()
+            val code = port.reportCode()
             local.update { it.copy(reportCode = code) }
         }
     }

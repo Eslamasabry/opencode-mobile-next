@@ -167,10 +167,11 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
                     2.dp.toPx(),
                 )
             }
-        else KitToolGlyph(view.kind, if (running) colors.live else colors.text2, if (running) size * .7f else size * .9f)
-        if (running)
-            KitStepLight(KitStepLightState.Working, colors.live, size, animate = !motion.reduced)
-        else if (finishedFromRunning && transition.value < 1f && view.status != KitToolStatus.Done)
+        // A lone running step: Flutter's `KitStepTimeline.alone`, the glyph in the accent with the light round it (no
+        // rail above or below); the glyph keeps one size so nothing jumps when it starts or ends.
+        else if (running) KitStepTile(view.kind.icon(), KitStepNodeLook.Running, size)
+        else KitToolGlyph(view.kind, colors.text2, size * GLYPH_SHARE)
+        if (!running && finishedFromRunning && transition.value < 1f && view.status != KitToolStatus.Done)
             Canvas(Modifier.size(size)) {
                 drawRoundRect(
                     if (view.status == KitToolStatus.Stopped) colors.accent else colors.text2,
