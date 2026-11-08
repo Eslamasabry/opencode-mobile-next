@@ -50,13 +50,14 @@ for bf in */*/build.gradle.kts androidApp/build.gradle.kts desktopApp/build.grad
 done
 [ "${#sel[@]}" -le "$max" ] || all "${#sel[@]} modules selected (limit $max)"
 
-# Keep only modules that have a desktop-test task (same discovery as shard_tasks.sh), and always the repo gates.
+# Keep only modules that have a desktop-test task (same discovery as shard_tasks.sh). :quality (Konsist, ~9 minutes)
+# runs only when it changed or depends on a changed module; otherwise it belongs to the full lane.
 mapfile -t known < <(tool/ci/shard_tasks.sh 0 1)
 out=()
 for t in "${known[@]}"; do
   m=${t%:*}
-  if [ -n "${sel[$m]:-}" ] || [ "$m" = ":quality" ]; then out+=("$t"); fi
+  if [ -n "${sel[$m]:-}" ]; then out+=("$t"); fi
 done
 echo "fast_tasks: changed: $(printf '%s ' "${!hit[@]}")" >&2
-echo "fast_tasks: selected ${#out[@]} test tasks (from ${#sel[@]} modules plus :quality)" >&2
+echo "fast_tasks: selected ${#out[@]} test tasks (from ${#sel[@]} modules)" >&2
 printf '%s\n' "${out[@]}"
