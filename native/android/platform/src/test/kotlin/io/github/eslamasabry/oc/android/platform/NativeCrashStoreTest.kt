@@ -169,18 +169,26 @@ class NativeCrashStoreTest {
     }
 
     @Test
-    fun `B-SEC-043 the handler hands Android only a scrubbed error and still records the category`() {
+    fun `B-SEC-043 the handler hands Android the crash's classes and frames without a message and records the category`() {
         consent()
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         var forwarded: Throwable? = null
         Thread.setDefaultUncaughtExceptionHandler { _, e -> forwarded = e }
         try {
             val handler = store.install()
-            handler.uncaughtException(Thread.currentThread(), IOException("Bearer fake-token"))
+            val crash = IOException("Bearer fake-token", IllegalStateException("password=fake-secret"))
+            handler.uncaughtException(Thread.currentThread(), crash)
             val seen = forwarded!!
-            assertEquals("Native application error", seen.message)
-            assertEquals(0, seen.stackTrace.size)
-            assertNull(seen.cause)
+            // 2026-11-08: a cause-less "Native application error" with no frames hid every crash's real stack.
+            assertEquals(IOException::class.java, seen.javaClass)
+            assertNull(seen.message)
+            assertEquals(crash.stackTrace.toList(), seen.stackTrace.toList())
+            val cause = seen.cause!!
+            assertEquals(IllegalStateException::class.java, cause.javaClass)
+            assertNull(cause.message)
+            assertEquals(crash.cause!!.stackTrace.toList(), cause.stackTrace.toList())
+            val printed = seen.stackTraceToString()
+            assertFalse("fake-token" in printed || "fake-secret" in printed, printed)
             assertEquals(CrashKind.InputOutput, records.latest()!!.kind)
             assertFalse("fake-token" in record.readText())
         } finally {
