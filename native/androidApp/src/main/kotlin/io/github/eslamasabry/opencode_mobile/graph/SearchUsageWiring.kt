@@ -32,6 +32,14 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchGoToFacts
 import io.github.eslamasabry.oc.feature.search.presentation.SearchMatch
 import io.github.eslamasabry.oc.feature.search.presentation.SearchMessage
 import io.github.eslamasabry.oc.feature.search.presentation.SearchServer
+import io.github.eslamasabry.oc.feature.search.presentation.SearchActivity
+import io.github.eslamasabry.oc.feature.search.presentation.SearchProject
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRecentConversation
+import io.github.eslamasabry.oc.feature.search.presentation.SearchResults
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRowStatus
+import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
+import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
+import kotlinx.coroutines.flow.distinctUntilChanged
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageDay
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageModel
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageProject
@@ -110,6 +118,7 @@ class AndroidConversationSearch(
     private val shared: SearchUsageServers,
     appScope: AppCoroutineScope,
     private val platform: io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities,
+    private val feed: io.github.eslamasabry.oc.feature.chats.presentation.ConversationsFeed,
 ) : ConversationSearchSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -301,6 +310,49 @@ class AndroidConversationSearch(
                     .ok()
         }
     }
+
+    /**
+     * Search B1's live picture of one server, from the home's own merged feed: its newest top-level conversations
+     * (agent mark, state, last change), the projects they live in (most recently active first) and how many wait.
+     */
+    override fun activity(profile: ProfileId): Flow<SearchActivity> =
+        feed.snapshot
+            .map { snapshot ->
+                val top = snapshot.items.filter { it.profileId == profile && !it.isSubagent }
+                val recent =
+                    top.sortedByDescending { it.lastActivityMs }.take(SearchResults.RECENT).map { item ->
+                        SearchRecentConversation(
+                            ref = item.ref,
+                            title = item.title,
+                            project = item.projectName.takeIf { it.isNotBlank() },
+                            updatedMs = item.lastActivityMs.takeIf { it > 0 },
+                            agentMark = AgentPersona.of(item.agentId).markSlug,
+                            agentName = item.agentLabel,
+                            status =
+                                when {
+                                    item.status == ChatStatus.NeedsYou || item.permission != null -> SearchRowStatus.NeedsYou
+                                    item.status == ChatStatus.Running -> SearchRowStatus.Working
+                                    item.status == ChatStatus.Failed -> SearchRowStatus.Failed
+                                    else -> SearchRowStatus.None
+                                },
+                        )
+                    }
+                val projects =
+                    top.filter { !it.directory.isNullOrBlank() }
+                        .groupBy { requireNotNull(it.directory) }
+                        .map { (directory, items) ->
+                            val name = items.first().projectName.ifBlank { SearchMatch.projectName(directory) ?: directory }
+                            SearchProject(name, directory, items.size) to items.maxOf { it.lastActivityMs }
+                        }
+                        .sortedByDescending { it.second }
+                        .map { it.first }
+                SearchActivity(
+                    recent.toImmutableList(),
+                    projects.toImmutableList(),
+                    needsYou = top.count { it.status == ChatStatus.NeedsYou || it.permission != null },
+                )
+            }
+            .distinctUntilChanged()
 
     private fun row(session: Session, directory: String?): SearchConversation =
         SearchConversation(session.id, session.title, directory, session.time?.updatedMs)

@@ -25,6 +25,19 @@ import io.github.eslamasabry.oc.feature.search.presentation.SearchPhase
 import io.github.eslamasabry.oc.feature.search.presentation.SearchServer
 import io.github.eslamasabry.oc.feature.search.presentation.SearchUi
 import io.github.eslamasabry.oc.feature.search.ui.SearchScreen
+import io.github.eslamasabry.oc.feature.search.ui.SearchWebOption
+import io.github.eslamasabry.oc.feature.search.presentation.SearchActivity
+import io.github.eslamasabry.oc.feature.search.presentation.SearchIndex
+import io.github.eslamasabry.oc.feature.search.presentation.SearchIndexEntry
+import io.github.eslamasabry.oc.feature.search.presentation.SearchProject
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRecentConversation
+import io.github.eslamasabry.oc.feature.search.presentation.SearchRowStatus
+import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.onAllNodesWithTag
+import kotlinx.collections.immutable.toImmutableList
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -104,17 +117,29 @@ class SearchScreenTest {
         override fun goTo(row: GoToRow) {
             calls += "goto:${row.place ?: row.ref?.sessionId?.raw}"
         }
+
+        override fun openProject(project: SearchProject) {
+            calls += "project:${project.directory}"
+        }
+
+        override fun openRecent(conversation: SearchRecentConversation) {
+            calls += "recent:${conversation.ref.sessionId.raw}"
+        }
+
+        override fun openDestination(entry: SearchIndexEntry) {
+            calls += "place:${entry.place}"
+        }
     }
 
     @Composable
-    private fun Screen(state: SearchUi, actions: SearchActions, locale: String = "en") {
+    private fun Screen(state: SearchUi, actions: SearchActions, locale: String = "en", web: SearchWebOption? = null) {
         KitTheme(
             platform = DesktopKitPlatform(),
             appearance = KitAppearance(motion = MotionLevel.Off),
             localeTag = locale,
             stillFrame = true,
         ) {
-            Box(Modifier.width(412.dp)) { SearchScreen(state, actions) }
+            Box(Modifier.width(412.dp)) { SearchScreen(state, actions, web = web) }
         }
     }
 
@@ -127,10 +152,108 @@ class SearchScreenTest {
         assertTrue(onAllNodesWithText("Search conversations").fetchSemanticsNodes().isNotEmpty())
         onNodeWithText("Recent searches").assertExists()
         onNodeWithContentDescription("deploy").assertExists() // the kit chip speaks its label as one node
-        onNodeWithText("Also search inside recent conversations").assertExists()
-        onNodeWithText("Clear recent searches").performClick()
+        onNodeWithContentDescription("Inside messages").assertExists()
+        onNodeWithContentDescription("Clear recent searches").performClick()
         assertEquals(listOf("clear"), actions.calls)
     }
+
+    @Test
+    fun `SCREENS-NAV-34 B1 the option chips toggle Web and Inside messages, say whether they are on, and the info explains both`() =
+        runComposeUiTest {
+            val actions = Actions()
+            var webOpen = false
+            var state by mutableStateOf(SearchUi(servers = servers, server = home))
+            setContent { Screen(state, actions, web = SearchWebOption(webOpen) { webOpen = !webOpen; actions.calls += "web" }) }
+            onNodeWithContentDescription("Inside messages").assertIsNotSelected().performClick()
+            assertEquals(listOf("inside:true"), actions.calls)
+            state = state.copy(content = ContentPhase.Done)
+            onNodeWithContentDescription("Inside messages").assertIsSelected().performClick()
+            assertEquals(listOf("inside:true", "inside:false"), actions.calls)
+            onNodeWithContentDescription("Web").assertIsNotSelected().performClick()
+            assertEquals("web", actions.calls.last())
+            onNodeWithContentDescription("About search options").performClick()
+            waitForIdle()
+            onNodeWithText("Search options").assertExists()
+            onNodeWithText("Reads the newest messages of your 20 most recent conversations on this server.").assertExists()
+            onNodeWithText("Search with this server’s provider. Searches stay out of conversation history.").assertExists()
+        }
+
+    @Test
+    fun `SCREENS-NAV-34 B1 an empty field offers the places with the waiting count, then recent conversations`() = runComposeUiTest {
+        val actions = Actions()
+        val ref = ConversationRef(home, SessionId("r1"))
+        val activity =
+            SearchActivity(
+                persistentListOf(SearchRecentConversation(ref, "Explain this project", "new", null, "", null, SearchRowStatus.Working)),
+                needsYou = 1,
+            )
+        setContent { Screen(SearchUi(servers = servers, server = home, activity = activity), actions) }
+        onNodeWithText("Needs you").assertExists()
+        onNodeWithText("Settings").assertExists()
+        onNodeWithText("Servers").assertExists()
+        onNodeWithText("Recent conversations").assertExists()
+        onNodeWithText("Working", substring = true).assertExists()
+        onNodeWithText("Needs you").performClick()
+        onNodeWithText("Explain this project").performClick()
+        assertEquals(listOf("goto:NeedsYou", "recent:r1"), actions.calls)
+    }
+
+    @Test
+    fun `SCREENS-NAV-34 B1 typing groups results into Conversations with See all, Projects and Settings and pages`() = runComposeUiTest {
+        val actions = Actions()
+        val hits = (1..4).map { SearchHitUi(ConversationRef(home, SessionId("s$it")), "App task $it", "shop") }
+        val state =
+            SearchUi(
+                query = "app",
+                servers = servers,
+                server = home,
+                phase = SearchPhase.Results,
+                titleHits = hits.toImmutableList(),
+                activity = SearchActivity(projects = persistentListOf(SearchProject("app-store", "/src/app-store", 3))),
+                destinations = SearchIndex.appEntries(PlatformCapabilities.desktop(), hasShell = true).toImmutableList(),
+            )
+        setContent { Screen(state, actions) }
+        onNodeWithText("Conversations").assertExists()
+        onNodeWithText("App task 3").assertExists()
+        onNodeWithText("App task 4").assertDoesNotExist()
+        onNodeWithContentDescription("See all 4 conversations").performClick()
+        onNodeWithText("App task 4").assertExists()
+        onNodeWithText("Projects").assertExists()
+        onNodeWithText("Home · 3 conversations").assertExists()
+        onNodeWithText("Settings and pages").assertExists()
+        onNodeWithText("Appearance").assertExists()
+        onNodeWithText("app-store").performClick()
+        onNodeWithText("Appearance").performClick()
+        assertEquals(listOf("project:/src/app-store", "place:Appearance"), actions.calls)
+    }
+
+    @Test
+    fun `SCREENS-NAV-34 B1 a conversation result marks the typed words in the accent ink and shows the matching message`() =
+        runComposeUiTest {
+            var accent = androidx.compose.ui.graphics.Color.Unspecified
+            val hit =
+                SearchHitUi(ConversationRef(home, SessionId("s1")), "Debug build", "app", snippet = "install the Debian image first", messageId = "m1")
+            setContent {
+                accent = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.accent
+                Screen(
+                    SearchUi(
+                        query = "deb",
+                        servers = servers,
+                        server = home,
+                        phase = SearchPhase.Results,
+                        contentHits = persistentListOf(hit),
+                        content = ContentPhase.Done,
+                    ),
+                    Actions(),
+                )
+            }
+            val title = onAllNodesWithTag("kit-row-title", useUnmergedTree = true).fetchSemanticsNodes()
+                .map { it.config[SemanticsProperties.Text].single() }
+                .single { it.text == "Debug build" }
+            assertEquals(listOf(0 to 3), title.spanStyles.map { it.start to it.end })
+            assertEquals(accent, title.spanStyles.single().item.color)
+            onNodeWithText("Reply: ⁨install the Debian image first⁩").assertExists()
+        }
 
     @Test
     fun `SCREENS-NAV-34 results list titles first, then the matching words inside conversations, and open on tap`() =
@@ -160,8 +283,7 @@ class SearchScreenTest {
                     actions,
                 )
             }
-            onNodeWithText("Titles").assertExists()
-            onNodeWithText("Inside conversations").assertExists()
+            onNodeWithText("Conversations").assertExists()
             onNodeWithText("You:", substring = true).assertExists()
             onNodeWithText("Fix login").performClick()
             assertEquals(listOf("open:s1"), actions.calls)
@@ -207,9 +329,10 @@ class SearchScreenTest {
     @Test
     fun `B-L10N-010 the search screen reads in Arabic`() = runComposeUiTest {
         Locale.setDefault(Locale.forLanguageTag("ar"))
-        setContent { Screen(SearchUi(servers = servers, server = home), Actions(), "ar") }
-        assertTrue(onAllNodesWithText("البحث في المحادثات").fetchSemanticsNodes().isNotEmpty())
+        setContent { Screen(SearchUi(servers = servers, server = home, recent = persistentListOf("نشر")), Actions(), "ar") }
+        assertTrue(onAllNodesWithText("ابحث في المحادثات").fetchSemanticsNodes().isNotEmpty())
         onNodeWithText("عمليات البحث الأخيرة").assertExists()
+        onNodeWithContentDescription("داخل الرسائل").assertExists()
     }
 
     @Test

@@ -49,6 +49,8 @@ public fun KitText(
     pageTitle: Boolean = false,
     sectionLabel: Boolean = false,
     tabular: Boolean = false,
+    /** Search's matched words: each word of it is drawn in the accent ink ([kitHighlighted]); null = plain. */
+    highlight: String? = null,
 ) {
     // pageTitle / sectionLabel are role hints; the head typography resolves the role alone.
     val base = LocalKitTypography.current.style(role)
@@ -72,8 +74,10 @@ public fun KitText(
             textAlign = textAlign ?: TextAlign.Start,
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
         )
+    val marked = if (highlight.isNullOrBlank()) null else io.github.eslamasabry.oc.ui.kit.text.kitHighlighted(text, highlight)
     if (kind == KitTextKind.Reading) {
-        BasicText(text, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        if (marked != null) BasicText(marked, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        else BasicText(text, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
         return
     }
     // Frame text, the Flutter way: min(platform size at the current scale, 1.3 × spec), per role size. Compose text
@@ -90,7 +94,8 @@ public fun KitText(
             letterSpacing = (style.letterSpacing.value * k).sp,
         )
     CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
-        BasicText(text, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        if (marked != null) BasicText(marked, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        else BasicText(text, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
     }
 }
 

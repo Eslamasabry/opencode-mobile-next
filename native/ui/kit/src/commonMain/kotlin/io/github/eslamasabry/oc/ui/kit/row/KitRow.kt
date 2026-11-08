@@ -144,6 +144,8 @@ public fun KitRow(
     menu: List<KitMenuItem> = emptyList(),
     leadingTone: TextTone? = null,
     padding: PaddingValues? = null,
+    /** Search's matched words, marked in the title and the supporting line in the accent ink ([KitHighlight]). */
+    highlight: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -160,6 +162,7 @@ public fun KitRow(
         titleMaxLines = titleMaxLines, titleAccent = titleAccent, padding = padding,
         unavailable = unavailable,
         leadingTone = leadingTone,
+        highlight = highlight,
     )
     }
     if (menu.isEmpty()) body()
@@ -222,6 +225,7 @@ private fun RowBody(
     unavailable: Boolean = false,
     leadingTone: TextTone? = null,
     padding: PaddingValues? = null,
+    highlight: String? = null,
 ) {
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
@@ -311,6 +315,13 @@ private fun RowBody(
                     )
                 }
             }
+            leading is KitRowLeading.Logo && leading.bare -> {
+                // A bare mark (Search's rows): the agent's or provider's mark at the list icon size, no tile behind it.
+                val icon = (io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Large.dp * minOf(scale, TextScalePolicy.ICON_CAP)).dp
+                Box(lead.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo(leading.id, leading.name, leading.agent, Modifier.size(icon), markSize = icon)
+                }
+            }
             leading != null -> Box(lead) { RowLeadingTile(leading, dim = !enabled || unavailable, selected = selected) }
             state != null -> Box(lead) { RowStateMark(state.tone) }
         }
@@ -348,6 +359,7 @@ private fun RowBody(
                             role = TypeRole.RowTitle,
                             tone = if (!enabled || unavailable) TextTone.Tertiary else if (titleAccent) TextTone.Accent else TextTone.Primary,
                             maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale, titleMaxLines),
+                            highlight = highlight,
                             // Flutter lays a row title out in the ambient direction, so an Arabic title in an English
                             // list starts on the reading edge (kit_sheet_default: "العربية"); never at the row's end.
                             textAlign = if (LocalLayoutDirection.current == LayoutDirection.Ltr) TextAlign.Left else TextAlign.Right,
@@ -398,6 +410,7 @@ private fun RowBody(
                                     role = TypeRole.Secondary,
                                     tone = TextTone.Secondary,
                                     maxLines = 1,
+                                    highlight = highlight,
                                 )
                             }
                         }
@@ -409,6 +422,7 @@ private fun RowBody(
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
                                 maxLines = if (!enabled || unavailable) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
+                                highlight = highlight.takeIf { enabled && !unavailable },
                             )
                         }
                     }
