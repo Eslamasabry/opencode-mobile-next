@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import android.app.Activity
 import android.app.Application
 import android.content.Context
@@ -824,8 +825,7 @@ internal constructor(
                     profiles.profiles.value.any {
                         val row = it.profile
                         !row.usesAgentSocket &&
-                            io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
-                                .isBuiltin(row.baseUrl) &&
+                            ManagedLocalServer.isBuiltin(row.baseUrl) &&
                             (row.requiresOpenCode2Migration || row.openCode2HistoryPending)
                     },
             )
