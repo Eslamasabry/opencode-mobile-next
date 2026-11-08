@@ -303,6 +303,9 @@ public class PictureUi(
     public val name: String,
     public val bytes: ByteArray?,
     public val failed: Boolean,
+    /** S24-CHAT story 3: every server picture of the conversation, to swipe between; [index] is this one. */
+    public val gallery: List<GalleryPicture> = emptyList(),
+    public val index: Int = 0,
 )
 
 /**

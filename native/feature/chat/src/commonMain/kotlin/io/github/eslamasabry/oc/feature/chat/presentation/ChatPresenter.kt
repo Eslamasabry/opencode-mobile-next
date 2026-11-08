@@ -980,7 +980,10 @@ public class ChatPresenter(
 
     override fun openPicture(path: String, name: String) {
         val id = nextId++
-        local.update { it.copy(picture = PictureUi(id, name, bytes = null, failed = false)) }
+        val (gallery, index) = ConversationPictures.around(world.transcript.value.rows, path, name)
+        local.update {
+            it.copy(picture = PictureUi(id, name, bytes = null, failed = false, gallery, index))
+        }
         launcher.launch {
             val read = world.readPicture(path)
             local.update {
@@ -993,6 +996,8 @@ public class ChatPresenter(
                                 name,
                                 (read as? Outcome.Ok)?.value,
                                 failed = read !is Outcome.Ok,
+                                gallery,
+                                index,
                             )
                     )
             }

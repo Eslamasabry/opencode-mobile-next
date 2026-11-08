@@ -439,6 +439,13 @@ public fun BasicComposer(
             actions.draftChanged(words)
         }
     }
+    // S24-CHAT story 3: a picture the viewer sent joins the draft like a pasted one.
+    val sentPicture = chrome.pendingPicture()
+    LaunchedEffect(sentPicture?.id) {
+        val picture = sentPicture ?: return@LaunchedEffect
+        actions.attachInserted(pictureMime(picture.name), picture.bytes)
+        chrome.pictureDone(picture.id)
+    }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var toolsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val trayItems =
@@ -1200,3 +1207,13 @@ private class DraftEditorState {
     var lastReported: String? = null
     var userEditSerial: Long = 0
 }
+
+/** The type a picture's name says (the intake checks the bytes again); PNG when it says none. */
+internal fun pictureMime(name: String): String =
+    when (name.substringAfterLast('.', "").lowercase()) {
+        "jpg", "jpeg" -> "image/jpeg"
+        "gif" -> "image/gif"
+        "webp" -> "image/webp"
+        "bmp" -> "image/bmp"
+        else -> "image/png"
+    }

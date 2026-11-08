@@ -34,6 +34,10 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
+import io.github.eslamasabry.oc.feature.chat.composer.PictureRequest
+import io.github.eslamasabry.oc.ui.kit.content.image.KitGalleryPicture
+import io.github.eslamasabry.oc.ui.kit.content.image.KitImageGallery
+import io.github.eslamasabry.oc.ui.kit.content.image.KitPngEncoder
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
@@ -267,6 +271,8 @@ public fun ChatScreen(
     demoMode: Boolean = false,
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
+    /** S24-CHAT story 3: with an encoder the viewer is the swipeable gallery with Edit and Send. */
+    encodePng: KitPngEncoder? = null,
     formWaiting: Boolean = false,
     formSlot: (@Composable (Modifier) -> Unit)? = null,
     monitoredForm: (@Composable () -> Unit)? = null,
@@ -298,6 +304,8 @@ public fun ChatScreen(
     var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
     var editorRequest by remember(state.ref) { mutableStateOf<Long?>(null) }
+    var sentPicture by remember(state.ref) { mutableStateOf<PictureRequest?>(null) }
+    var pictureSeq by remember(state.ref) { mutableStateOf(0L) }
     var codeReader by remember(state.ref) { mutableStateOf<KitMdBlock.Code?>(null) }
     val folds = rememberTranscriptFolds()
     var contextOpen by remember { mutableStateOf(false) }
@@ -414,6 +422,8 @@ public fun ChatScreen(
                 laterShown = actions::laterShown,
                 modelPickerRequest = { modelPicker },
                 editorRequest = { editorRequest },
+                pendingPicture = { sentPicture },
+                pictureDone = { id -> if (sentPicture?.id == id) sentPicture = null },
                 editorDone = { id -> if (editorRequest == id) editorRequest = null },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
             )
@@ -868,7 +878,29 @@ public fun ChatScreen(
                 }
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
-                PictureSheet(state.picture, actions)
+                val shown = state.picture
+                if (shown != null && encodePng != null && shown.gallery.isNotEmpty()) {
+                    // S24-CHAT story 3 (Flutter `chat_gallery.dart`): every server picture of the
+                    // conversation, a swipe apart; Edit marks one up, Send puts it in the draft.
+                    val pages =
+                        remember(shown.id) {
+                            shown.gallery.map { g ->
+                                KitGalleryPicture(g.path, g.name) { actions.readPicture(g.path) }
+                            }
+                        }
+                    KitImageGallery(
+                        pictures = pages,
+                        onClose = actions::closePicture,
+                        encodePng = encodePng,
+                        modifier = Modifier.fillMaxSize().testTag("chat-picture-gallery"),
+                        initialIndex = shown.index,
+                        onSend = { bytes, name, _ ->
+                            pictureSeq += 1
+                            sentPicture = PictureRequest(pictureSeq, name, bytes)
+                            true
+                        },
+                    )
+                } else PictureSheet(shown, actions)
                 CodeReaderSheet(codeReader, actions) { codeReader = null }
                 ChatTimelineSheet(state.timeline, actions, facts.nowMs)
                 KitConfirm(

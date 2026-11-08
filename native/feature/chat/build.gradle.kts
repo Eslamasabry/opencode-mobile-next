@@ -23,6 +23,7 @@ kotlin {
         ) // ← engines this feature reads (public API only)
         implementation(project(":engine:transcript"))
         implementation(project(":ui:kit-chat"))
+        implementation(project(":ui:kit-content")) // S24-CHAT: the picture gallery and markup
         implementation(
             project(":engine:requests")
         ) // S2-REQ: the request slot (permissions, one-question asks)

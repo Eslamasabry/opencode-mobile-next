@@ -73,6 +73,9 @@ public class ComposerChrome(
     /** S24-CHAT story 4: the commands launcher's `/editor` asks the composer to open its editor once. */
     public val editorRequest: () -> Long? = { null },
     public val editorDone: (id: Long) -> Unit = {},
+    /** S24-CHAT story 3: the picture viewer's Send puts a picture in the draft once, then acknowledges. */
+    public val pendingPicture: () -> PictureRequest? = { null },
+    public val pictureDone: (id: Long) -> Unit = {},
     /**
      * Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER).
      * Never a new bar.
@@ -115,3 +118,6 @@ public class ComposerTypingTarget {
     /** True when the message field took focus. */
     public fun focus(): Boolean = focus?.invoke() ?: false
 }
+
+/** A picture the viewer hands the composer (its bytes, as shown or as marked up). */
+public class PictureRequest(public val id: Long, public val name: String, public val bytes: ByteArray)
