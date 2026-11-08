@@ -94,6 +94,7 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                                 ),
                                 actions::toggleHidden,
                                 testTag = "open-toggle-hidden",
+                                icon = KitIcons.hidden,
                             )
                         )
                     else emptyList(),
