@@ -281,18 +281,26 @@ class UsageSubscriptionsController extends ChangeNotifier {
         if (!known.contains(reading.connectionId)) continue;
         final slot = _cache.putIfAbsent(reading.connectionId, () => {});
         final old = slot[reading.providerId];
+        final resolvedAccount = reading.accountRef ?? old?.accountRef;
         // The older of two numbers never replaces the newer.
         if (old != null &&
             old.hasNumbers &&
             old.problem == null &&
             reading.hasNumbers &&
             old.fetchedAt.isAfter(reading.fetchedAt)) {
+          if (old.accountRef == null && resolvedAccount != null) {
+            slot[reading.providerId] = old.copyWith(
+              accountRef: resolvedAccount,
+              checkedAt: now,
+            );
+            touched.add(reading.connectionId);
+          }
           continue;
         }
         slot[reading.providerId] = reading.copyWith(
           clearProblem: true,
           checkedAt: now,
-          accountRef: reading.accountRef ?? old?.accountRef,
+          accountRef: resolvedAccount,
         );
         touched.add(reading.connectionId);
       }

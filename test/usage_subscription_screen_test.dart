@@ -250,6 +250,30 @@ void main() {
     expect(find.textContaining('a' * 8), findsNothing);
   });
 
+  usageTestWidgets(
+    'Details: shows logged-in account email when accountRef is a readable email',
+    (tester) async {
+      final h = await usageHarness(
+        connections: const [usageInApp, usagePc],
+        result: UsageSourceResult(
+          readings: [
+            usageReading(
+              'antigravity',
+              'inapp',
+              account: 'altaf.alu@gmail.com',
+            ),
+          ],
+        ),
+      );
+      await _open(tester, h, key: 'antigravity|altaf.alu@gmail.com');
+      await tester.ensureVisible(usageKey('usage-sub-details'));
+      await tester.tap(find.text(_en.usageDetails));
+      await tester.pumpAndSettle();
+      expect(find.text(_en.usageDetailAccount), findsOneWidget);
+      expect(find.text('altaf.alu@gmail.com'), findsOneWidget);
+    },
+  );
+
   usageTestWidgets('a plan that vanished says so instead of showing nothing', (
     tester,
   ) async {

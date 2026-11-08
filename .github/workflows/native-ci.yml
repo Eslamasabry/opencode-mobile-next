@@ -1,0 +1,157 @@
+# Fast CI for the native Kotlin/Compose app under native/: compile, desktop tests (sharded) and an
+# unsigned-by-us APK (the benchmark build type is debug-signed, no secrets). Commits carry [skip ci],
+# so the usual path is workflow_dispatch (only works once this file is on the default branch) or a push
+# to native/screens-merge* / native/ci-* branches. Phone APKs stay signed locally.
+name: Native CI
+run-name: Native CI · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tasks:
+        description: Optional Gradle tasks (e.g. ":ui:kit:desktopTest"); when set, only these run instead of the shards
+        type: string
+        default: ""
+      apk_only:
+        description: Build only the preview APK (signed with the preview key), skip compile and test shards
+        type: boolean
+        default: false
+  push:
+    branches:
+      - "native/screens-merge*"
+      - "native/ci-*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Runners have 4 CPUs and 16 GB. Gradle daemon 6g + Kotlin in-process (gradle.properties) + test forks.
+  GRADLE_FLAGS: --continue --stacktrace
+  OC_GOLDEN_HOST: "0"
+
+defaults:
+  run:
+    working-directory: native
+
+jobs:
+  compile:
+    name: compile
+    if: ${{ inputs.tasks == '' && !inputs.apk_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/native-setup
+      - name: Compile app (previewBenchmark) and every module's tests
+        run: ./gradlew :androidApp:compilePreviewBenchmarkKotlin compileAllTests $GRADLE_FLAGS
+
+  test:
+    name: desktop tests ${{ matrix.shard }}/4
+    if: ${{ inputs.tasks == '' && !inputs.apk_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/native-setup
+        with:
+          goldens: "true"
+      - name: Pick this shard's modules
+        id: pick
+        run: |
+          tasks="$(tool/ci/shard_tasks.sh ${{ matrix.shard }} 4 | tr '\n' ' ')"
+          echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
+          echo "$tasks" | tr ' ' '\n' | sed 's/^/  /'
+      - name: Run desktop tests
+        run: ./gradlew ${{ steps.pick.outputs.tasks }} $GRADLE_FLAGS
+      - name: Summarise results
+        if: always()
+        run: |
+          python3 -I - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          mods = {}
+          for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
+              mod = p.split('/build/')[0]
+              t = f = 0
+              for tc in ET.parse(p).getroot().iter('testcase'):
+                  t += 1
+                  if tc.find('failure') is not None or tc.find('error') is not None:
+                      f += 1; print(f'FAILED {mod} :: {tc.get("classname")} > {tc.get("name")}', file=__import__('sys').stderr)
+              a = mods.setdefault(mod, [0, 0]); a[0] += t; a[1] += f
+          print('| module | tests | failed |\n|---|---|---|')
+          for m, (t, f) in sorted(mods.items()): print(f'| {m} | {t} | {f} |')
+          PY
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports-${{ matrix.shard }}
+          path: |
+            native/**/build/reports/tests/
+            native/**/build/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  apk:
+    name: apk
+    if: ${{ inputs.tasks == '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/native-setup
+      - name: Preview signing key (pre-release builds only; owner-approved 2026-11-08)
+        env:
+          KEYSTORE_B64: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            mkdir -p "$RUNNER_TEMP/android-home"
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/android-home/debug.keystore"
+            echo "ANDROID_USER_HOME=$RUNNER_TEMP/android-home" >> "$GITHUB_ENV"
+            echo "preview key installed"
+          else
+            echo "no preview key secret: the APK is signed with the runner's own debug key"
+          fi
+      - name: Build previewBenchmark APK (preview-signed, lintVital skipped)
+        run: |
+          cat > "$RUNNER_TEMP/no-lint-vital.init.gradle" <<'EOT'
+          allprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }
+          EOT
+          ./gradlew :androidApp:assemblePreviewBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
+      - name: Check the APK signer
+        env:
+          HAS_KEY: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 != '' }}
+        run: |
+          apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk | head -1)
+          bt="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          signer=$("$bt/apksigner" verify --print-certs "$apk" | grep -m1 'SHA-256' | awk '{print $NF}')
+          echo "signer ${signer:0:8}"
+          if [ "$HAS_KEY" = "true" ] && [ "${signer:0:8}" != "12de0107" ]; then
+            echo "::error::APK is not signed with the preview key"; exit 1
+          fi
+      - name: Upload APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-previewBenchmark-apk
+          path: native/androidApp/build/outputs/apk/**/*.apk
+          retention-days: 7
+          if-no-files-found: error
+
+  custom:
+    name: custom tasks
+    if: ${{ inputs.tasks != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/native-setup
+      - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
