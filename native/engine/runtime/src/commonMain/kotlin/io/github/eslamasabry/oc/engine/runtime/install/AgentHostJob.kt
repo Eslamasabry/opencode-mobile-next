@@ -177,9 +177,9 @@ public object AgentHostJob {
 
 /** Port of lib/builtin/agents/paseo_scripts.dart's pinned Node for the private agent user (`/home/oc/.local/node`). */
 public object AgentNode {
-    public const val VERSION: String = "v24.21.0"
-    public const val ARM64_SHA256: String = "724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5"
-    public const val X64_SHA256: String = "6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff"
+    public const val VERSION: String = "v24.22.2"
+    public const val ARM64_SHA256: String = "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2"
+    public const val X64_SHA256: String = "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9"
 
     private const val REQUIRE_AGENT_USER: String = """[ "${'$'}(id -u)" = 1000 ] && [ "${'$'}HOME" = /home/oc ] || {
   echo '[oc] Agent setup needs its private Linux user' >&2

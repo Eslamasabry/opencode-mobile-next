@@ -41,7 +41,7 @@ class ClaudeInstallScriptTest {
                     "${isolatedScript()}\n",
             )
             assertEquals(23, result.exitCode, result.stderr)
-            assertTrue("/2.1.316/linux-${expected.first}/claude" in result.stdout, result.stdout)
+            assertTrue("/2.1.319/linux-${expected.first}/claude" in result.stdout, result.stdout)
             assertTrue(expected.second in result.stdout)
             assertFalse(File("${temp.path}/bin/claude").exists())
         }
@@ -135,7 +135,7 @@ class ClaudeInstallScriptTest {
             .replace("\$x64Sha256", ClaudeScripts.X64_SHA256)
             .replace("\u0001", "$")
         assertEquals(evaluated, ClaudeScripts.install)
-        // The pinned version and hashes follow this branch's lib/ (Claude Code 2.1.316); the 2.1.4 release still pins
+        // The pinned version and hashes follow this branch's lib/ (Claude Code 2.1.319); the 2.1.4 release still pins
         // 2.1.294. Which pin ships is the agents owner's call, not this text check's.
         val pins = File(repoRoot, "lib/builtin/setup/claude_scripts.dart").readText()
         assertTrue("static const version = '${ClaudeScripts.VERSION}'" in pins)

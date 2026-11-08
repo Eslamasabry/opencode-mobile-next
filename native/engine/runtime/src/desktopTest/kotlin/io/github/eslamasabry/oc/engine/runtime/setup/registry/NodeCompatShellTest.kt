@@ -55,7 +55,7 @@ class NodeCompatShellTest {
               both) { [ ${'$'}armcap = 1 ] && [ ${'$'}single = 1 ]; } || kill -SEGV ${'$'}${'$'} ;;
               never) kill -SEGV ${'$'}${'$'} ;;
             esac
-            for a in "${'$'}@"; do [ "${'$'}a" = --version ] && echo v24.21.0; done
+            for a in "${'$'}@"; do [ "${'$'}a" = --version ] && echo v24.22.2; done
             exit 0
             """.trimIndent() + "\n"
         )
@@ -111,7 +111,7 @@ class NodeCompatShellTest {
         assertEquals("OPENSSL_armcap=0\n", env.readText())
         assertFalse(Files.isSymbolicLink(link.toPath()))
         val wrapped = viaLink()
-        assertEquals(0 to "v24.21.0\n", wrapped.exitCode to wrapped.output)
+        assertEquals(0 to "v24.22.2\n", wrapped.exitCode to wrapped.output)
     }
 
     @Test
@@ -136,7 +136,7 @@ class NodeCompatShellTest {
         assertEquals(0, run.exitCode, run.output)
         assertEquals("both\n", state.readText())
         assertEquals("OPENSSL_armcap=0\nUV_THREADPOOL_SIZE=1\n", env.readText())
-        assertEquals("v24.21.0\n", viaLink().output)
+        assertEquals("v24.22.2\n", viaLink().output)
     }
 
     @Test

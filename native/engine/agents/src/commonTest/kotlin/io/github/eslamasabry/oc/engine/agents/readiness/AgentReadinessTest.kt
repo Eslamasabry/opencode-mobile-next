@@ -293,10 +293,10 @@ class AgentReadinessTest {
 
     @Test
     fun `B-LINUX-132 an automatic update replaces the phone check action and keeps others`() {
-        val check = row(runtime(qualified = false)).withAutoUpdate(AgentAutoUpdate.Updating, "2.1.316")
+        val check = row(runtime(qualified = false)).withAutoUpdate(AgentAutoUpdate.Updating, "2.1.319")
         assertNull(check.fixAction)
         assertEquals(AgentAutoUpdate.Updating, check.autoUpdate)
-        assertEquals("2.1.316", check.autoUpdateVersion)
+        assertEquals("2.1.319", check.autoUpdateVersion)
         val signIn = row(runtime(phase = AgentSignInPhase.SignedOut)).withAutoUpdate(AgentAutoUpdate.WaitingWifi)
         assertEquals(AgentFixAction.SignIn, signIn.fixAction)
         assertTrue(row(runtime().copy(behindPin = true)).behindPin)

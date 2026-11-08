@@ -369,7 +369,7 @@ with tarfile.open(sys.argv[1], 'w:bz2') as t:
     fun `B-LINUX-123 npm bundle wrapper keeps siblings under the pinned private Node`() {
         val node = File("${guest.home}/.local/node/bin/node")
         node.parentFile.mkdirs()
-        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.21.0; else exec /bin/sh \"\$@\"; fi\n")
+        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n")
         run(listOf("chmod", "700", node.path))
         archive(
             """import io, sys, tarfile

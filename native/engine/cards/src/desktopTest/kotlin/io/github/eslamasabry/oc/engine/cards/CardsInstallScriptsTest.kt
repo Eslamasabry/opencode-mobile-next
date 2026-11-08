@@ -86,7 +86,7 @@ def check(*args, **kwargs):
         return subprocess.CompletedProcess(args, 1, b'')
     output = b'{"jsonrpc":"2.0","id":1,"result":{}}\n'
     if argv == [data['cli'], '--version']:
-        output = ('${if (wrongVersion) "0.0.0" else "2.1.316"} (Claude Code)\n').encode()
+        output = ('${if (wrongVersion) "0.0.0" else "2.1.319"} (Claude Code)\n').encode()
     elif argv == [data['node'], '--version']:
         output = (data['nodeVersion']+'\n').encode()
     elif argv == [data['cli'], 'mcp', 'list']:

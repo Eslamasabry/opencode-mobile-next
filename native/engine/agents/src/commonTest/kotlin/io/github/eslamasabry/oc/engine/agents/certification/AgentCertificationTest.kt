@@ -72,7 +72,7 @@ class AgentCertificationTest {
 
     @Test
     fun `B-AGENT-009 bundled Claude evidence qualifies arm64 and x64 with exact helper`() {
-        assertEquals("2.1.316", claude.recipe!!.version)
+        assertEquals("2.1.319", claude.recipe!!.version)
         for (arch in AgentArchitecture.entries) {
             assertOpen(AgentCertification.bundled.capabilitiesFor(claude, arch, "0.9.2"), arch.wire)
         }

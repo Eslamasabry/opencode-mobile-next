@@ -173,8 +173,8 @@
     <ID>MaxLineLength:AgentAuthTest.kt$LegacySignInStatusTest$fun</ID>
     <ID>MaxLineLength:AgentAuthTest.kt$TestClock$private</ID>
     <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$AgentArtifact(url = "https://example.test/agent-1.0.0", sha256 = "a".repeat(64), format = format, archiveMember = member)</ID>
-    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals("6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff", pins.node.sha256[AgentArchitecture.X64])</ID>
-    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals("724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5", pins.node.sha256[AgentArchitecture.Arm64])</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals("361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9", pins.node.sha256[AgentArchitecture.X64])</ID>
+    <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals("95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2", pins.node.sha256[AgentArchitecture.Arm64])</ID>
     <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertEquals(AgentArtifactFormat.NpmTarGz, catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format)</ID>
     <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertFailsWith&lt;IllegalArgumentException&gt; { AgentInstallRecipe(" ", "agent", mapOf(AgentArchitecture.Arm64 to artifact())) }</ID>
     <ID>MaxLineLength:AgentCatalogTest.kt$AgentCatalogTest$assertFailsWith&lt;IllegalArgumentException&gt; { AgentInstallRecipe("1.0.0", "Agent", mapOf(AgentArchitecture.Arm64 to artifact())) }</ID>
@@ -235,8 +235,8 @@
     <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$/** Throws on a malformed file: the bundled pins are build input, so a bad file is a bug, never a runtime state. */</ID>
     <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$private fun JsonObject.str(key: String): String</ID>
     <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$requireNotNull(AgentArchitecture.fromWire(arch)) { "Unknown architecture." } to artifact(a.jsonObject)</ID>
-    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-arm/cli_linux_arm64.tar.gz"</ID>
-    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.0-5269980577660928/linux-x64/cli_linux_x64.tar.gz"</ID>
+    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz"</ID>
+    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz"</ID>
     <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList(), pins.paseoTestedVersions)</ID>
     <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)</ID>
     <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line</ID>
@@ -438,11 +438,11 @@
     <ID>MaxLineLength:PhoneGate.kt$PhoneGate$val root = AgentJson.parseOrNull(prefs.string(AgentKeys.agentPhoneGate(owner))) as? JsonObject ?: return emptyMap()</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$JsonObject(mapOf("fingerprint" to JsonPrimitive(AgentJson.encodeStrings(fp.toList())), "architecture" to JsonPrimitive(arch)))</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals("[\"a\\\"b\",\"\\\\\",\"\\n\\t\\u0001\",\"é/\",null]", AgentJson.encodeStrings(listOf("a\"b", "\\", "\n\t\u0001", "é/", null)))</ID>
-    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.21.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.11.2", pins.paseo.packageLockSha256, "v22.0.0"), claude, pins))</ID>
-    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.21.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(JsonObject(mapOf("fingerprint" to JsonPrimitive("broken"))), claude, pins))</ID>
-    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.11.2", pins.paseo.packageLockSha256, "v24.21.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.11.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
     <ID>MaxLineLength:ProjectFolderName.kt$ProjectFolderName$if (value == "." || value == ".." || '/' in value || '\\' in value) return ProjectFolderNameProblem.NotSingleSegment</ID>
     <ID>MaxLineLength:RunningFamily.kt$RunningFamily$add(RunningAgentEntry(s, s.id in busy, self, if (self) RunningAgentRelation.Current else RunningAgentRelation.Sibling))</ID>
     <ID>MaxLineLength:RunningFamily.kt$RunningFamily$val siblings = sessions.values.filter { parentId != null &amp;&amp; it.parentId == parentId }.sortedBy { it.createdMillis }</ID>

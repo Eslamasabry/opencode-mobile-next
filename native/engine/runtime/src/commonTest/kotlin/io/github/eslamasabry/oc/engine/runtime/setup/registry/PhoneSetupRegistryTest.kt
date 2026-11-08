@@ -79,10 +79,10 @@ class PhoneSetupRegistryTest {
     @Test
     fun `B-LINUX-200 the registry's Node component downloads the pinned artifact per ABI and only the pinned Node passes its check`() {
         val node = all.single { it.id == SetupComponentIds.NODE }
-        assertTrue(node.checkScript.contains("[ \"\$(node --version)\" = 'v24.21.0' ]"))
-        assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;"))
-        assertTrue(node.installScript.contains("x86_64|amd64) node_arch=x64; node_sha=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff ;;"))
-        assertTrue(node.installScript.contains("oc_stage 'Downloading Node.js 24.21.0'\n"))
+        assertTrue(node.checkScript.contains("[ \"\$(node --version)\" = 'v24.22.2' ]"))
+        assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2 ;;"))
+        assertTrue(node.installScript.contains("x86_64|amd64) node_arch=x64; node_sha=361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9 ;;"))
+        assertTrue(node.installScript.contains("oc_stage 'Downloading Node.js 24.22.2'\n"))
         assertTrue(
             node.installScript.contains(
                 "oc_download \"https://nodejs.org/dist/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz\" \\\n" +
@@ -115,7 +115,7 @@ class PhoneSetupRegistryTest {
         host.checks["linux"] = true to "24.04"
         host.checks["essentials"] = true to "2.43.0"
         host.checks["python"] = true to "3.12.3"
-        host.checks["node"] = true to "24.21.0"
+        host.checks["node"] = true to "24.22.2"
         val prelude = SetupPrelude.withSetupPrelude("")
         val engine =
             SetupEngine(
@@ -131,7 +131,7 @@ class PhoneSetupRegistryTest {
         engine.run(PhoneSetupRegistry.defaultSelection(registry.components(SetupJobParams.firstSetup)), SetupJobParams.firstSetup)
         assertEquals(all.map { it.id }, host.ids())
         assertEquals(listOf(true, true, true, true, false, false), host.started.last().components.map { it.skipped })
-        assertEquals("24.21.0", host.spec("node").version)
+        assertEquals("24.22.2", host.spec("node").version)
         val opencode = host.spec("opencode")
         assertTrue(opencode.script!!.startsWith(prelude))
         assertTrue(opencode.script!!.endsWith(all.single { it.id == "opencode" }.installScript))
