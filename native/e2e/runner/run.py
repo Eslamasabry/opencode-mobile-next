@@ -206,8 +206,12 @@ class HookContext:
             if snapshot:
                 self.adb(["emu", "avd", "snapshot", "save", snapshot], timeout=600)
             self.root()
+            # Force-stop cancels the app's alarms, so they are counted first (run 5: 2.1.4's armed daily alarm read 0).
+            alarms = device_state.parse_alarm_count(self.adb(["shell", "dumpsys", "alarm"]), self.app_id)
             self.adb(["shell", "am", "force-stop", self.app_id])
-            write_state(pathlib.Path(state_dir) / "before.json", device_state.capture(self.adb, self.app_id))
+            before = device_state.capture(self.adb, self.app_id)
+            before["alarms"] = alarms
+            write_state(pathlib.Path(state_dir) / "before.json", before)
         install_apk(self.adb, apk, self.args.expect_signer)
         return {"installed": True}
 

@@ -3,6 +3,12 @@
 # and an empty list (the phone's first project) has no "All projects".
 appId: ${APP_ID}
 ---
+# A freshly launched 2.1.4 can take seconds to draw Conversations on a loaded host; Back pressed meanwhile leaves the
+# app (run 4b, after the terminal section's relaunch). Give it time first.
+- extendedWaitUntil:
+    visible: ${'(?s).+, ' + output.s.kitTopBarSwitchServer}  # literal-ok: the top bar, from strings
+    timeout: 8000
+    optional: true
 - repeat:
     times: 6
     while:

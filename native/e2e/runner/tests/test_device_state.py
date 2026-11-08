@@ -94,6 +94,12 @@ class ParserTest(unittest.TestCase):
     def test_B_MIGR_013_alarms_of_the_app_are_counted(self):
         self.assertEqual(2, ds.parse_alarm_count(ALARM_DUMP, PKG))
 
+    def test_B_153_an_api_35_alarm_record_with_when_elapsed_is_counted(self):
+        # Recorded on emulator-5584 (API 35) after Part A: 2.1.4's armed scheduled prompt.
+        dump = ("    RTC_WAKEUP #23: Alarm{c17a457 type 0 origWhen 1794114000000 whenElapsed 20278803 "
+                f"{PKG}}}\n      tag=*walarm*:{PKG}.SCHEDULED_PROMPT\n")
+        self.assertEqual(1, ds.parse_alarm_count(dump, PKG))
+
     def test_B_MIGR_013_appops_keep_the_mode_and_drop_times(self):
         out = "SCHEDULE_EXACT_ALARM: allow; time=+1h ago\nRUN_IN_BACKGROUND: ignore\nRECORD_AUDIO (uid): allow\n"
         self.assertEqual({"SCHEDULE_EXACT_ALARM": "allow", "RUN_IN_BACKGROUND": "ignore", "RECORD_AUDIO": "allow"},

@@ -1,0 +1,22 @@
+# Native, in a conversation: open More actions > Go to. The chat may still be settling after it opens, and a tap
+# that lands before the menu or the group is ready is lost (run 4), so each step waits and More is tapped again once
+# if its menu did not open.
+appId: ${APP_ID}
+---
+- waitForAnimationToEnd
+- tapOn: ${output.s.kitTopBarMore}
+- extendedWaitUntil:
+    visible: ${output.s.sessionMenuGoTo}
+    timeout: 5000
+    optional: true
+- runFlow:
+    when:
+      notVisible: ${output.s.sessionMenuGoTo}
+    commands:
+      - tapOn: ${output.s.kitTopBarMore}
+- extendedWaitUntil:
+    visible: ${output.s.sessionMenuGoTo}
+    timeout: 10000
+- waitForAnimationToEnd
+- tapOn: ${output.s.sessionMenuGoTo}
+- waitForAnimationToEnd
