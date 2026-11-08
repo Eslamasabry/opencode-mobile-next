@@ -5,6 +5,7 @@ package io.github.eslamasabry.oc.ui.kit.effects
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -140,10 +141,17 @@ class KitLiquidGlassTest {
 
     @Test
     fun `B-KIT-037 every other style, and Glass wherever liquid is held, draws pixel for pixel as before`() = runComposeUiTest {
+        // The same scene twice in one frame, on a platform without the lens and on one with it: every pixel must match.
         var appearance by mutableStateOf(KitAppearance())
-        var platform by mutableStateOf(FakeKitPlatform(liquidGlass = false))
         setContent {
-            KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) { Scene(loading = false) }
+            Row {
+                Box(Modifier.testTag("without")) {
+                    KitTheme(appearance = appearance, platform = FakeKitPlatform(liquidGlass = false), localeTag = "en", stillFrame = true) { Scene(loading = false) }
+                }
+                Box(Modifier.testTag("with")) {
+                    KitTheme(appearance = appearance, platform = FakeKitPlatform(liquidGlass = true), localeTag = "en", stillFrame = true) { Scene(loading = false) }
+                }
+            }
         }
         val cases =
             Style.entries.filter { it != Style.Glass }.flatMap { s ->
@@ -155,16 +163,13 @@ class KitLiquidGlassTest {
             )
         for (case in cases) {
             appearance = case
-            platform = FakeKitPlatform(liquidGlass = false)
             waitForIdle()
-            val before = onRoot().captureToImage().toPixelMap()
-            platform = FakeKitPlatform(liquidGlass = true)
-            waitForIdle()
-            val after = onRoot().captureToImage().toPixelMap()
-            assertEquals(before.width, after.width)
+            val without = onNodeWithTag("without").captureToImage().toPixelMap()
+            val with = onNodeWithTag("with").captureToImage().toPixelMap()
+            assertEquals(without.width, with.width)
             var differ = 0
-            for (y in 0 until before.height) for (x in 0 until before.width) if (before[x, y] != after[x, y]) differ++
-            assertEquals(0, differ, "${case.style} ${case.mode} motion=${case.motion} edges=${case.glassEdges}: pixels changed")
+            for (y in 0 until without.height) for (x in 0 until without.width) if (without[x, y] != with[x, y]) differ++
+            assertEquals(0, differ, "${case.style} ${case.mode} motion=${case.motion} edges=${case.glassEdges}: $differ pixels changed")
         }
     }
 }
