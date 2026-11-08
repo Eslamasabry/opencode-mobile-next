@@ -47,3 +47,21 @@ Under the Glass style the floating parts are liquid glass over the content behin
   worked).
 - Proof server: OpenCode 2.2.6, isolated data dir, throwaway project; the code chat was generated with GLM-5.3-Flash, the
   sunset chat was imported (a generated image plus a reply with coloured code).
+
+## Renders in this folder (one phone screen each)
+
+| Screen | Today's Glass | Liquid | Solid |
+|---|---|---|---|
+| Chat over the sunset image and coloured code, dark | chat-today-glass-dark | chat-liquid-dark (build 5da4b5d4c, before the 18:55 fixes) | chat-solid-dark |
+| Same, light | chat-today-glass-light | chat-liquid-light (build 5da4b5d4c) | chat-solid-light |
+| Conversations list scrolled under the bar | list-today-glass-{dark,light} | list-liquid-dark, list-liquid-light (b5c31190c: shows the light-ink sampling bug, fixed in 44fd4873a) | list-solid-{dark,light} |
+| Model sheet | sheet-today-glass-{dark,light} | sheet-liquid-dark | sheet-solid-{dark,light} |
+| Chat menu | menu-today-glass-{dark,light} | menu-liquid-dark | menu-solid-{dark,light} |
+| Settings › Appearance › Glass edges | | settings-glass-edges-dark | |
+| Library calibration (Backdrop Catalog 2.0.1, same emulator) | calibration-catalog-{bottom-tabs,buttons,dialog} | | |
+
+"Today's Glass" is the same APK with Glass edges: Frosted, which draws today's frost path exactly (pixel-equal test).
+
+Still to render on the latest build (44fd4873a / ba77ad857): liquid chat/list/sheet/menu in dark and light, the ink
+flip (a pane over the white band of the sunset image versus over dark code), the scrolling video, and the frame-time
+comparison. Idle check on the first build: 0 frames rendered over 5 s with the liquid list on screen.
