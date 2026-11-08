@@ -49,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowTitle
 import io.github.eslamasabry.oc.ui.kit.theme.KitColors
