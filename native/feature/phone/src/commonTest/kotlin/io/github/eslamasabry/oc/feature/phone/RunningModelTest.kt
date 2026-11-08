@@ -62,6 +62,56 @@ class RunningModelTest {
         }
 
     @Test
+    fun `B-LINUX-145 Stop all left behind asks once naming each, then stops only those it named`() =
+        runTest {
+            val stray =
+                listOf(
+                    PhoneProcess(pid = 30, parentPid = 1, name = "node", leftBehind = true),
+                    PhoneProcess(pid = 31, parentPid = 1, name = "esbuild", leftBehind = true),
+                    // Left behind but protected: never a target.
+                    PhoneProcess(pid = 32, parentPid = 1, name = "OpenCode", leftBehind = true, role = ProcessRole.ServerRoot),
+                )
+            val rig = Rig(this, reading.copy(processes = processes + stray).ok(), FakeChildLimit())
+            rig.model.shown(true)
+            runCurrent()
+            assertEquals(listOf(30, 31), rig.model.state.value.leftBehind.map { it.pid })
+            rig.model.askStopLeftBehind()
+            assertEquals(listOf("node", "esbuild"), rig.model.state.value.confirmStopLeftBehind?.map { it.name })
+            assertTrue(rig.source.stopped.isEmpty())
+            // A new one appears after the question was asked: it is not stopped by this answer.
+            rig.source.reading =
+                reading.copy(processes = processes + stray + PhoneProcess(pid = 33, parentPid = 1, name = "vite", leftBehind = true)).ok()
+            rig.model.confirmStopLeftBehind()
+            runCurrent()
+            assertEquals(listOf(30, 31), rig.source.stopped)
+            assertEquals(2, rig.model.state.value.stoppedCount)
+            assertNull(rig.model.state.value.stopping)
+            assertFalse(rig.model.state.value.stopFailed)
+        }
+
+    @Test
+    fun `B-LINUX-145 Stop all left behind is not offered with nothing left behind, and a failed stop says so`() =
+        runTest {
+            val rig = rig()
+            assertTrue(rig.model.state.value.leftBehind.isEmpty())
+            rig.model.askStopLeftBehind()
+            assertNull(rig.model.state.value.confirmStopLeftBehind)
+
+            val stray = PhoneProcess(pid = 30, parentPid = 1, name = "node", leftBehind = true)
+            rig.source.reading = reading.copy(processes = processes + stray).ok()
+            rig.model.retry()
+            runCurrent()
+            rig.source.stopAnswer = refused
+            rig.model.askStopLeftBehind()
+            rig.model.confirmStopLeftBehind()
+            runCurrent()
+            assertTrue(rig.model.state.value.stopFailed)
+            assertEquals(0, rig.model.state.value.stoppedCount)
+            rig.model.dismiss()
+            assertNull(rig.model.state.value.stoppedCount)
+        }
+
+    @Test
     fun `B-LINUX-145 Android's process warning starts at 28`() =
         runTest {
             val rig = rig()

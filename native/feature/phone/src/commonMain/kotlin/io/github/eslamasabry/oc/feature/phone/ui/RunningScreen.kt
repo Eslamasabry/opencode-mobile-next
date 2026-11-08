@@ -175,6 +175,17 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                         ),
                 )
             }
+            state.stoppedCount?.let { stopped ->
+                KitNotice(
+                    message = pluralStringResource(Res.plurals.runningPhoneStopped, stopped, stopped),
+                    tone = StatusTone.Neutral,
+                    dismiss =
+                        KitLineAction(
+                            stringResource(Res.string.workspaceDismissNotice),
+                            actions::dismiss,
+                        ),
+                )
+            }
             if (!state.loading && !state.loadFailed && state.rows.isEmpty()) {
                 KitInlineState(
                     title = stringResource(Res.string.runningPhoneEmpty),
@@ -200,7 +211,50 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
             } else if (!state.loadFailed) {
                 KitGroupNote(stringResource(Res.string.termuxProcsAutoRefresh))
             }
+            // Flutter: the one bulk stop, last, while something is left behind.
+            val leftBehind = state.leftBehind.size
+            if (leftBehind > 0)
+                KitRowGroup {
+                    KitRow(
+                        title =
+                            pluralStringResource(
+                                Res.plurals.runningPhoneStopAllLeftBehind,
+                                leftBehind,
+                                leftBehind,
+                            ),
+                        supporting = stringResource(Res.string.runningPhoneStopAllDetail),
+                        titleMaxLines = 2,
+                        supportingMaxLines = 2,
+                        leading = KitRowLeading.Glyph(KitIcons.stop),
+                        enabled = state.stopping == null,
+                        disabledReason = stringResource(Res.string.termuxProcsStopping),
+                        onClick = actions::askStopLeftBehind,
+                    )
+                }
         }
+        val all = state.confirmStopLeftBehind
+        KitConfirm(
+            spec =
+                all?.let { rows ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.runningPhoneStopAllTitle),
+                        confirmLabel =
+                            pluralStringResource(
+                                Res.plurals.runningPhoneStopAllLeftBehind,
+                                rows.size,
+                                rows.size,
+                            ),
+                        kind = KitConfirmKind.Stop,
+                        body =
+                            stringResource(
+                                Res.string.runningPhoneStopAllBody,
+                                rows.joinToString(", ") { it.name },
+                            ),
+                    )
+                },
+            onConfirm = actions::confirmStopLeftBehind,
+            onCancel = actions::dismiss,
+        )
         val asked = state.confirmStop
         KitConfirm(
             spec =
