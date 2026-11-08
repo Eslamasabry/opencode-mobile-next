@@ -330,6 +330,8 @@ dependencies {
             ":android:terminal",
             ":engine:integrations-quota",
             ":engine:setupassist",
+            ":engine:factsbook", // s23-factsbook: FactsBook memory pages
+            ":feature:factsbook",
         )
         .forEach { implementation(project(it)) }
     implementation(platform(libs.firebase.bom))
