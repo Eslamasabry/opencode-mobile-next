@@ -203,15 +203,15 @@ class ChatsViewModelTest {
                         item("b", "/work/web", at = 1),
                     )
                 )
-            assertEquals(listOf("a"), vm.state.value.today.map { it.ref.sessionId.raw })
-            assertEquals(listOf("b"), vm.state.value.earlier.map { it.ref.sessionId.raw })
+            assertEquals(listOf("a"), vm.state.value.rightNow.map { it.ref.sessionId.raw })
+            assertEquals(listOf("b"), vm.state.value.recent.map { it.ref.sessionId.raw })
             vm.toggleRunning()
-            assertEquals(emptyList(), vm.state.value.earlier)
+            assertEquals(emptyList(), vm.state.value.recent)
             vm.toggleRunning()
             vm.chooseProject("/work/web")
             assertEquals(
                 listOf("b"),
-                (vm.state.value.today + vm.state.value.earlier).map { it.ref.sessionId.raw },
+                (vm.state.value.rightNow + vm.state.value.recent).map { it.ref.sessionId.raw },
             )
             vm.chooseProject("/work/web")
             vm.search("zzz")
@@ -220,7 +220,7 @@ class ChatsViewModelTest {
                 vm.state.value.phase,
             )
             vm.clearFilters()
-            assertEquals(2, (vm.state.value.today + vm.state.value.earlier).size)
+            assertEquals(2, (vm.state.value.rightNow + vm.state.value.recent).size)
 
             val shown = ReturnBrief.None.copy(hiddenUnreviewed = 1)
             briefs.brief.value = shown
@@ -305,7 +305,7 @@ class ChatsViewModelTest {
         vm.showBriefOverflow(vm.state.value.brief!!)
         assertEquals(
             listOf("s1", "s2"),
-            (vm.state.value.today + vm.state.value.earlier).map { it.ref.sessionId.raw },
+            (vm.state.value.rightNow + vm.state.value.recent).map { it.ref.sessionId.raw },
         )
         assertTrue(briefs.dismissed.isEmpty())
     }
@@ -457,7 +457,7 @@ class ChatsViewModelTest {
     fun `PARITY-B-224 a row's waiting permission offers Always allow, which asks first and then answers Always`() = runTest {
         val (vm, answers) = asking(grants = true)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
-        val row = vm.state.value.today.single()
+        val row = vm.state.value.rightNow.single()
         assertTrue(row.key in vm.state.value.alwaysAllowable)
         vm.askAlwaysAllow(row)
         assertEquals(row, vm.state.value.confirmAlways)
@@ -478,7 +478,7 @@ class ChatsViewModelTest {
     fun `PARITY-B-224 a server that keeps no grants offers no Always allow`() = runTest {
         val (vm, answers) = asking(grants = false)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
-        val row = vm.state.value.today.single()
+        val row = vm.state.value.rightNow.single()
         assertFalse(row.key in vm.state.value.alwaysAllowable)
         vm.askAlwaysAllow(row)
         vm.confirmAlwaysAllow()

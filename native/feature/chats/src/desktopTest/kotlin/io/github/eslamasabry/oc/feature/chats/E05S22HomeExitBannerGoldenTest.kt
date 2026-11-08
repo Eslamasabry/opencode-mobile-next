@@ -77,7 +77,7 @@ class E05S22HomeExitBannerGoldenTest {
     private val state =
         ChatsUi(
             phase = ChatsPhase.List,
-            today =
+            recent =
                 persistentListOf(
                     ConversationRowUi(
                         "login",

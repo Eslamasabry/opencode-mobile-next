@@ -55,7 +55,7 @@ public object HomeRows {
 
     /** The folders whose branch the rows want. */
     public fun places(ui: ChatsUi): Set<BranchPlace> =
-        (ui.today + ui.earlier + ui.brief?.rows.orEmpty())
+        (ui.rightNow + ui.recent + ui.brief?.rows.orEmpty())
             .mapNotNullTo(linkedSetOf()) { row -> row.directory?.let { BranchPlace(row.ref.profileId, it) } }
 
     /** [ui] with each row's branch from [branches] (none for a folder without one). */
@@ -64,8 +64,8 @@ public object HomeRows {
         fun ConversationRowUi.branched(): ConversationRowUi =
             copy(branch = directory?.let { branches[BranchPlace(ref.profileId, it)] }?.trim()?.takeIf { it.isNotEmpty() })
         return ui.copy(
-            today = ui.today.map { it.branched() }.toImmutableList(),
-            earlier = ui.earlier.map { it.branched() }.toImmutableList(),
+            rightNow = ui.rightNow.map { it.branched() }.toImmutableList(),
+            recent = ui.recent.map { it.branched() }.toImmutableList(),
             brief = ui.brief?.let { b -> b.copy(rows = b.rows.map { it.branched() }.toImmutableList()) },
         )
     }
