@@ -53,7 +53,7 @@ class Oc2CloneRepositoryTest {
             listOf(
                 "--upload-pack=touch /tmp/x" to "app",
                 "https://example.test/a b" to "app",
-                "https://example.test/a\n" to "app",
+                "https://example.test/a\nb" to "app",
                 "https://example.test/a" to "../up",
                 "https://example.test/a" to "a/b",
                 "" to "app",
