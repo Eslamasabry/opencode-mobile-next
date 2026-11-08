@@ -31,7 +31,7 @@ Future<void> offerPhoneFile(
       action: KitAction(
         key: const ValueKey('phone-file-copy-path'),
         label: l10n.readerUiCopyPath,
-        onPressed: () => KitCopy.copy(context, path, redact: false),
+        onPressed: () => KitCopy.copy(context, path),
       ),
       alertKey: const ValueKey('phone-file-where'),
     );

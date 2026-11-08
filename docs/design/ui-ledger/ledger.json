@@ -1,5 +1,5 @@
 {
- "generatedFrom": "a5c31416dedb5639762edc92e7d2b7fa1e487f8b",
+ "generatedFrom": "31f0a70bbb4fa80e1c1f20bdd69c9cfa1f5b670b",
  "pages": [
   {
    "id": "system",
@@ -34532,26 +34532,6 @@
      "destructive": false
     }
    ]
-  },
-  {
-   "id": "send-problem-report",
-   "title": "Send a problem report",
-   "kind": "sheet",
-   "area": "settings",
-   "file": "lib/ui/screens/send_problem_report.dart",
-   "widget": "showSendProblemReport",
-   "presentedBy": [],
-   "line": 76,
-   "purpose": "Help > Send a problem report: shows the redacted last log lines, crash keys and device context for the person to read, then Send or Cancel; after sending shows the report code to copy (health-and-diagnostics.md section E).",
-   "reachedFrom": [
-    {
-     "page": "about",
-     "element": null,
-     "note": "Help/About entry; page-level edge"
-    }
-   ],
-   "gates": [],
-   "elements": []
   }
  ],
  "navigation": {
@@ -38235,6 +38215,11 @@
   {
    "file": "lib/ui/screens/chat/chat_page_cache.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): what one build of the page reads, kept between builds; draws nothing, no separate surface.",
+   "part": "b1-chat-screen"
+  },
+  {
+   "file": "lib/ui/screens/chat/chat_path_link.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "b1-chat-screen"
   },
   {

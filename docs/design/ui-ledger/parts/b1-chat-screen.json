@@ -923,6 +923,10 @@
       "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },
     {
+      "file": "lib/ui/screens/chat/chat_path_link.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
       "file": "lib/ui/screens/chat/chat_files.dart",
       "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },

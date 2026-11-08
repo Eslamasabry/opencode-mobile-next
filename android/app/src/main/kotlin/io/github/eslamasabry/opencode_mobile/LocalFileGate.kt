@@ -14,13 +14,17 @@ import java.io.File
 internal object LocalFileGate {
     fun allowed(sharedRoot: File, path: String?): File? {
         if (path.isNullOrEmpty()) return null
-        val root = try { sharedRoot.canonicalFile } catch (_: java.io.IOException) { return null }
-        val file = try { File(path).canonicalFile } catch (_: java.io.IOException) { return null }
-        if (!file.isFile) return null
-        val inside = file.toPath().startsWith(root.toPath()) && file.toPath() != root.toPath()
-        if (!inside) return null
-        val first = root.toPath().relativize(file.toPath()).getName(0).toString()
-        if (first == "Android") return null
-        return file
+        val root = canonicalOrNull(sharedRoot)
+        val file = canonicalOrNull(File(path))
+        return if (root != null && file != null && isShared(root, file)) file else null
+    }
+
+    private fun canonicalOrNull(file: File): File? =
+        try { file.canonicalFile } catch (_: java.io.IOException) { null }
+
+    private fun isShared(root: File, file: File): Boolean {
+        val inside = file.isFile && file.toPath().startsWith(root.toPath()) &&
+            file.toPath() != root.toPath()
+        return inside && root.toPath().relativize(file.toPath()).getName(0).toString() != "Android"
     }
 }
