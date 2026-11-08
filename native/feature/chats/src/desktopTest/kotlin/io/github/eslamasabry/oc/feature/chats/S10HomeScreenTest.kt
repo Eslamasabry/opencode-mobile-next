@@ -131,20 +131,23 @@ class S10HomeScreenTest {
     }
 
     @Test
-    fun `E20-S24 P-107 the last row scrolls clear of the New conversation button with 16 dp to spare`() =
+    fun `A1-HOME-17 P-107 at the list's end All conversations shares the New conversation button's line, never under it`() =
         runDesktopComposeUiTest(360, 640) {
             home(mixed(extra = 12))
             val list = SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo)
-            // A1: the list ends with All conversations under the five Recent rows.
             val lastTitle = "All conversations"
             onNode(list).performScrollToNode(hasContentDescriptionContaining(lastTitle))
             onNode(list).performTouchInput { swipeUp() }
             waitForIdle()
             val last = onNode(hasContentDescriptionContaining(lastTitle)).getBoundsInRoot()
             val root = onRoot().getBoundsInRoot()
-            // The round button: 56 dp, 12 dp above the bottom edge. The row ends at least 16 dp above its top.
+            // The round button: 56 dp, on the 16 dp gutter, 12 dp above the bottom edge.
             val buttonTop = root.bottom - 12.dp - 56.dp
-            assertTrue(last.bottom <= buttonTop - 16.dp, "the last row ends at ${last.bottom}, the button at $buttonTop")
+            val buttonStart = root.right - 16.dp - 56.dp
+            assertTrue(last.right <= buttonStart - 12.dp, "the row ends at ${last.right}, the button starts at $buttonStart")
+            val rowMiddle = (last.top + last.bottom) / 2
+            val buttonMiddle = buttonTop + 28.dp
+            assertTrue((rowMiddle - buttonMiddle).value in -2f..2f, "row middle $rowMiddle, button middle $buttonMiddle")
         }
 
     @Test

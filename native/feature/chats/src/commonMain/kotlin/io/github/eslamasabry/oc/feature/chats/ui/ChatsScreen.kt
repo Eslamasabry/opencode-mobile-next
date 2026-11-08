@@ -73,6 +73,7 @@ import io.github.eslamasabry.oc.ui.kit.KitScreen
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
 import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE
+import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_SIZE
 import io.github.eslamasabry.oc.ui.kit.action.KitFab
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
@@ -260,8 +261,13 @@ public fun ChatsScreen(
             contentPadding =
                 PaddingValues(
                     bottom =
-                        if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp
-                        else Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                        when {
+                            (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null -> 0.dp
+                            // A1: the list ends with All conversations beside the floating +, on its line (the + keeps
+                            // S3 from the bottom; the row stops short of it), so nothing scrolls under the button.
+                            showFab && state.phase == ChatsPhase.List -> Space.S3.dp
+                            else -> Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
+                        }
                 ),
         ) {
             state.home.opening?.let { opening ->
@@ -350,7 +356,8 @@ public fun ChatsScreen(
                             Box(kitItemMotion()) {
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRightNow),
-                                    gapBefore = if (above) sectionGap else null,
+                                    // A step of air under the chips, as above Recent, so the first label is not pressed up.
+                                    gapBefore = if (above) sectionGap else Space.S4.dp,
                                 ) {
                                     rightNow.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
                                 }
@@ -361,7 +368,7 @@ public fun ChatsScreen(
                             Box(kitItemMotion()) {
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRecent),
-                                    gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else null,
+                                    gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
                                 ) {
                                     recent.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
                                 }
@@ -369,7 +376,11 @@ public fun ChatsScreen(
                         }
                     item(key = "all-conversations") {
                         Box(kitItemMotion()) {
-                            KitRowPanel(Modifier.padding(top = Space.S5.dp), leadingMarks = false) {
+                            // Short of the floating + (its 56 dp and a S3 gap), so the two share the list's last line.
+                            KitRowPanel(
+                                Modifier.padding(top = Space.S5.dp, end = (KIT_FAB_SIZE + Space.S3).dp),
+                                leadingMarks = false,
+                            ) {
                                 KitPanelLinkRow(
                                     label = stringResource(Res.string.chats_all_title),
                                     count = Numbers.format(state.allCount),
