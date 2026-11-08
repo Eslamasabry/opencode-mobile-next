@@ -12,6 +12,10 @@ on:
         description: Optional Gradle tasks (e.g. ":ui:kit:desktopTest"); when set, only these run instead of the shards
         type: string
         default: ""
+      apk_only:
+        description: Build only the preview APK (signed with the preview key), skip compile and test shards
+        type: boolean
+        default: false
   push:
     branches:
       - "native/screens-merge*"
@@ -36,7 +40,7 @@ defaults:
 jobs:
   compile:
     name: compile
-    if: ${{ inputs.tasks == '' }}
+    if: ${{ inputs.tasks == '' && !inputs.apk_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -47,7 +51,7 @@ jobs:
 
   test:
     name: desktop tests ${{ matrix.shard }}/4
-    if: ${{ inputs.tasks == '' }}
+    if: ${{ inputs.tasks == '' && !inputs.apk_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -105,12 +109,35 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/native-setup
-      - name: Build previewBenchmark APK (debug-signed, lintVital skipped)
+      - name: Preview signing key (pre-release builds only; owner-approved 2026-11-08)
+        env:
+          KEYSTORE_B64: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            mkdir -p "$RUNNER_TEMP/android-home"
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/android-home/debug.keystore"
+            echo "ANDROID_USER_HOME=$RUNNER_TEMP/android-home" >> "$GITHUB_ENV"
+            echo "preview key installed"
+          else
+            echo "no preview key secret: the APK is signed with the runner's own debug key"
+          fi
+      - name: Build previewBenchmark APK (preview-signed, lintVital skipped)
         run: |
           cat > "$RUNNER_TEMP/no-lint-vital.init.gradle" <<'EOT'
           allprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }
           EOT
           ./gradlew :androidApp:assemblePreviewBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
+      - name: Check the APK signer
+        env:
+          HAS_KEY: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 != '' }}
+        run: |
+          apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk | head -1)
+          bt="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          signer=$("$bt/apksigner" verify --print-certs "$apk" | grep -m1 'SHA-256' | awk '{print $NF}')
+          echo "signer ${signer:0:8}"
+          if [ "$HAS_KEY" = "true" ] && [ "${signer:0:8}" != "12de0107" ]; then
+            echo "::error::APK is not signed with the preview key"; exit 1
+          fi
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
