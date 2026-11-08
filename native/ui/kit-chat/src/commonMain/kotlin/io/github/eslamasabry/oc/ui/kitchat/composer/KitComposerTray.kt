@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -133,14 +134,16 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            // A round matte disc (Solid's control face), the glyph at the card-mark size.
+            // A round matte disc (Solid's control face), the glyph at the card-mark size. Glass: a bare, larger glyph
+            // straight on the message box's glass, no disc (owner 2026-11-08).
+            val glass = LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass
             Box(
-                Modifier.size(tokens.minTarget.dp).background(colors.surface3, CircleShape),
+                Modifier.size(tokens.minTarget.dp).then(if (glass) Modifier else Modifier.background(colors.surface3, CircleShape)),
                 contentAlignment = Alignment.Center,
             ) {
                 KitIcon(
                     action.icon,
-                    size = KitIconSize.Medium,
+                    size = if (glass) KitIconSize.Fab else KitIconSize.Medium,
                     tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
                 )
             }

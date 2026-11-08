@@ -119,6 +119,18 @@ public fun KitChip(
     }
     val ink = if (tone == KitChipTone.Neutral) semanticInk else Color(RoleDerivation.readableOn(Argb(semanticInk.toArgb()), (if (tint != null) listOf(tint) else listOf(c.surface2, c.surface3)).map { Argb(it.toArgb()) }, 4.7, Argb(c.text1.toArgb())).v) // F: lib/ui/kit/kit_chip.dart:239
     val words = if (selected == true || glassActive) look.words ?: ink else ink
+    // On the chat's overlaid bottom block (the chips over the message box) a Glass chip is a small drop of liquid glass
+    // over the transcript, as the jump pill is; chosen or on, it leans to the accent (owner 2026-11-08). Null keeps the
+    // chip's own face.
+    val liquid =
+        io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome.current?.let { chrome ->
+            io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace(
+                io.github.eslamasabry.oc.ui.design.effects.LiquidRole.Pill,
+                chrome,
+                look.shape,
+                chosen = selected == true || glassActive,
+            )
+        }
     val baseStyle = LocalKitTypography.current.style(TypeRole.Secondary)
     val style = baseStyle.copy(color = words, fontWeight = if (!adaptiveModel && (kind == KitChipKind.Plain || track)) FontWeight.SemiBold else baseStyle.fontWeight)
     val formatted = count?.let { Numbers.format(it) }
@@ -157,7 +169,7 @@ public fun KitChip(
         val narrow = adaptiveModel && constraints.hasBoundedWidth && !fits(label) && (prefix == label || !fits("$prefix…"))
         val modelPairFits = iconSize * 2 + Space.S1.dp * 2 <= maxWidth // F: lib/ui/kit/chat/kit_composer_chips.dart:504-506
         Row(
-            Modifier.onSizeChanged { faceSize = it }.heightIn(min = minHeight).then(look.modifier)
+            Modifier.onSizeChanged { faceSize = it }.heightIn(min = minHeight).then(liquid ?: look.modifier)
                 .drawWithContent {
                     drawContent()
                     if (bodyFocus || removeFocus) {

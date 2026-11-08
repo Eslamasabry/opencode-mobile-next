@@ -93,7 +93,7 @@ public object LiquidEdge {
 
     /**
      * The recipe for [role] in a [dark] or light theme. The panes are clear glass (a thin tint: 0.18–0.34), bent hard in
-     * a wide rim so the content visibly curves at the edges; the + and the pills are drops (depth, lens to the middle).
+     * a wide rim so the content visibly curves at the edges; the + is a drop (depth, lens to the middle), the pills calm.
      * The words read on the face itself: [face] thickens the tint only as far as they need ([faceTint]).
      */
     public fun recipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
@@ -107,7 +107,9 @@ public object LiquidEdge {
             LiquidRole.Composer -> r(7f, 34f, .16f, .20f, .32f)
             LiquidRole.Sheet -> r(if (dark) 6f else 8f, 44f, 0f, .30f, .40f, rimMax = 30f)
             LiquidRole.Menu -> r(if (dark) 4f else 6f, 36f, .18f, .28f, .38f, rimMax = 26f)
-            LiquidRole.Pill, LiquidRole.Status -> r(1f, 22f, .16f, .18f, .28f, rimMax = 40f, share = .5f, depth = true)
+            // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
+            // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
+            LiquidRole.Pill, LiquidRole.Status -> r(2f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
             LiquidRole.Action -> r(1f, 26f, .22f, .55f, .62f, rimMax = 40f, share = .5f, depth = true)
         }
     }

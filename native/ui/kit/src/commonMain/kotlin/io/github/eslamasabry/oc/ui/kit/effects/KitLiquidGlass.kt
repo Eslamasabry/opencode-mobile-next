@@ -205,11 +205,18 @@ private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boo
  * grow-in; 0 at rest, 1 fully): the lens and its rim light fade into plain frost as it rises, so nothing misaligns.
  */
 @Composable
-public fun kitLiquidFace(role: LiquidRole, source: KitFrostState?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
+public fun kitLiquidFace(
+    role: LiquidRole,
+    source: KitFrostState?,
+    shape: Shape,
+    transform: () -> Float = NoTransform,
+    /** A chosen or "on" part (an active chip): its glass leans to the accent, as Glass's chosen panes do. */
+    chosen: Boolean = false,
+): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
-    return liquidFace(role, source, backdrop, shape, transform)
+    return liquidFace(role, source, backdrop, shape, transform, chosen)
 }
 
 /** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
@@ -251,7 +258,7 @@ internal object LiquidMotion {
 }
 
 @Composable
-private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdrop?, shape: Shape, transform: () -> Float): Modifier? {
+private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdrop?, shape: Shape, transform: () -> Float, chosen: Boolean = false): Modifier? {
     val on = kitLiquidOn() && backdrop != null
     val shaped = liquidShapeOk(shape)
     // Only rounded kit shapes reach the lens; a square one falls back quietly, anything else is a kit bug.
@@ -265,7 +272,7 @@ private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdr
         }
     }
     if (!granted || backdrop == null) return null
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, transform, liquidFlipFor(source, role))
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, transform, liquidFlipFor(source, role), chosen)
 }
 
 /**
@@ -280,7 +287,14 @@ internal fun liquidFlipFor(source: Any?, role: LiquidRole): LiquidFlip? =
     }
 
 @Composable
-private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float, shared: LiquidFlip?): Modifier {
+private fun Modifier.liquidPane(
+    role: LiquidRole,
+    backdrop: KitLiquidBackdrop,
+    shape: CornerBasedShape,
+    transform: () -> Float,
+    shared: LiquidFlip?,
+    chosen: Boolean,
+): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
     val roles = LocalKitRoles.current
@@ -288,20 +302,25 @@ private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, s
     val appearance = LocalKitAppearance.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
             val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
             val face = LiquidEdge.face(roles, role)
             val otherFace = LiquidEdge.face(other, role)
-            val fill = face.fill?.let { Color(it.v) } ?: Color.Transparent
+            // A chosen part's glass leans to the accent and holds a little more (GlassSpec's chosen tint and lift).
+            fun lean(c: Color, dark: Boolean): Color =
+                if (!chosen) c
+                else androidx.compose.ui.graphics.lerp(c.copy(alpha = 1f), Color(roles.accent.v).copy(alpha = 1f), if (dark) GlassSpec.CHOSEN_TINT_DARK else GlassSpec.CHOSEN_TINT_LIGHT)
+                    .copy(alpha = minOf(1f, c.alpha + GlassSpec.CHOSEN_LIFT))
+            val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, roles.dark)
             val recipe = LiquidEdge.recipe(role, roles.dark)
             val rim = LiquidRim.Light
             KitLiquidPaneSpec(
                 recipe = recipe,
                 fill = fill,
-                fillStart = face.fillStart?.let { Color(it.v) } ?: fill,
+                fillStart = face.fillStart?.let { lean(Color(it.v), roles.dark) } ?: fill,
                 rtl = rtl,
                 rim = rim.copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT),
                 rimAdds = roles.dark,
@@ -310,8 +329,8 @@ private fun Modifier.liquidPane(role: LiquidRole, backdrop: KitLiquidBackdrop, s
                 frostBlurDp = GlassSpec.FLOAT_FROST,
                 sheen = Color(face.sheen.v),
                 specular = rim.copy(alpha = if (roles.dark) SPECULAR_ALPHA_DARK else SPECULAR_ALPHA_LIGHT),
-                flipFill = otherFace.fill?.let { Color(it.v) } ?: fill,
-                flipFillStart = (otherFace.fillStart ?: otherFace.fill)?.let { Color(it.v) } ?: fill,
+                flipFill = otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                flipFillStart = (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipSheen = Color(otherFace.sheen.v),
                 flip = flip,
             )
