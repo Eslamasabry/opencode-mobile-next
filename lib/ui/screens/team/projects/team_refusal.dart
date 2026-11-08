@@ -170,6 +170,14 @@ final Map<String, (_Say, _Say)> _known = {
     (l) => l.teamRefusalAppStopped,
     (l) => l.teamRefusalAppStoppedNext,
   ),
+  'serverRestarted': (
+    (l) => l.teamRefusalServerRestarted,
+    (l) => l.teamRefusalServerRestartedNext,
+  ),
+  'restartResend': (
+    (l) => l.teamRefusalRestartResend,
+    (l) => l.teamRefusalRestartResendNext,
+  ),
   'chatBusy': ((l) => l.teamRefusalChatBusy, (l) => l.teamRefusalChatBusyNext),
   'budgetReached': (
     (l) => l.teamRefusalBudgetReached,

@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
@@ -13,17 +11,18 @@ import 'kit_layout.dart';
 import 'kit_motion.dart';
 import 'kit_notice.dart';
 import 'kit_progress.dart';
+import 'kit_scanner_camera.dart';
 import 'kit_since.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
 /// Where the frames come from (KitScanner.md). The default is the device
-/// camera through mobile_scanner, QR only; tests and galleries pass a fake.
-/// The package's types never leave this file.
+/// camera through the `camera` plugin, QR only; tests and galleries pass a fake.
+/// The plugin's types never leave kit_scanner_camera.dart.
 abstract class KitScannerCamera {
   /// The back camera, QR codes only, each code reported once per sighting
-  /// (mobile_scanner's DetectionSpeed.noDuplicates).
-  factory KitScannerCamera.qr() = _MobileScannerCamera;
+  /// (the same code in a row is not repeated).
+  factory KitScannerCamera.qr() => qrCamera();
 
   /// Opens the camera. Throws [KitScannerFailure] when it cannot.
   Future<void> start();
@@ -486,73 +485,4 @@ class _Viewfinder extends CustomPainter {
       old.thickness != thickness ||
       old.gutter != gutter ||
       old.margin != margin;
-}
-
-/// The device camera through mobile_scanner. The controller is made on
-/// first use, so building the part on a machine without a camera touches
-/// no platform code until [start], which then fails honestly.
-class _MobileScannerCamera implements KitScannerCamera {
-  _MobileScannerCamera();
-
-  MobileScannerController? _controller;
-
-  MobileScannerController get _scanner =>
-      _controller ??= MobileScannerController(
-        autoStart: false,
-        // Only QR carries pairing codes; narrowing the formats keeps the
-        // decoder from spending frames on barcodes that would be refused.
-        formats: const [BarcodeFormat.qrCode],
-        detectionSpeed: DetectionSpeed.noDuplicates,
-      );
-
-  static bool get _hasCameraCode =>
-      kIsWeb ||
-      switch (defaultTargetPlatform) {
-        TargetPlatform.android ||
-        TargetPlatform.iOS ||
-        TargetPlatform.macOS => true,
-        _ => false,
-      };
-
-  @override
-  Future<void> start() async {
-    if (!_hasCameraCode) throw const KitScannerFailure();
-    try {
-      await _scanner.start();
-    } on MobileScannerException catch (error) {
-      throw KitScannerFailure(
-        error.errorDetails?.message ?? error.errorCode.name,
-      );
-    }
-  }
-
-  @override
-  Future<void> stop() async {
-    final controller = _controller;
-    if (controller == null) return;
-    try {
-      await controller.stop();
-    } on MobileScannerException {
-      // Already stopped or never started: nothing to release.
-    }
-  }
-
-  @override
-  Future<void> dispose() async {
-    await _controller?.dispose();
-    _controller = null;
-  }
-
-  @override
-  Stream<String> get codes => _scanner.barcodes
-      .expand((capture) => capture.barcodes)
-      .map((barcode) => barcode.rawValue ?? '')
-      .where((raw) => raw.isNotEmpty);
-
-  @override
-  Widget preview(BuildContext context) => MobileScanner(
-    controller: _scanner,
-    useAppLifecycleState: false,
-    placeholderBuilder: (_) => const SizedBox.shrink(),
-  );
 }

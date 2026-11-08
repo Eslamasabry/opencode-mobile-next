@@ -368,7 +368,8 @@ List<Widget> _planFailed(
   final resumable =
       state?.stage == 'interrupted' &&
       (code == 'restartNeedsReconciliation' ||
-          code == 'pauseNeedsReconciliation') &&
+          code == 'pauseNeedsReconciliation' ||
+          code == 'serverRestarted') &&
       TeamExecutionGate.allows(c, TeamExecutionNeed.resume);
   return [
     KitNotice(

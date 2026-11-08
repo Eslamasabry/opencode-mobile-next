@@ -48,29 +48,15 @@ dependencies:
   cryptography: 2.9.0
   local_auth: 3.0.2
   image_picker: 1.2.3
-  # Scanning the QR that `opencode2 pair` prints. Pinned exactly, because it
-  # registers a platform plugin and ships native camera code.
-  # 7.4.2 passes a clean Android release build on the pinned Flutter/AGP
-  # toolchain and no longer triggers Flutter's mobile_scanner KGP warning.
-  # Reproduction evidence: docs/qa/codex-net-2026-09-27/README.md.
-  #
-  # Why this package: it is the maintained Flutter barcode scanner (160/160
-  # pub points, ~1.3M downloads a month, publisher steenbakker.dev), it is
-  # BSD-3-Clause, and on Android it wraps CameraX + ML Kit rather than a
-  # bundled decoder of its own. The alternatives are unmaintained forks of
-  # long-dead qr_code_scanner.
-  #
-  # Known costs, stated rather than hidden:
-  #  * It defaults to the *bundled* ML Kit barcode model
-  #    (com.google.mlkit:barcode-scanning), not the Play-Services download.
-  #    That grows the APK, and buys scanning that works with no Play Services
-  #    and no first-run download. See THIRD_PARTY_NOTICES.md.
-  #  * It declares iOS, macOS and web implementations we never build, and no
-  #    Linux one at all. Harmless because the scanner is gated behind
-  #    `platformCapabilities.supportsQrPairing` (Android only) and desktop
-  #    never constructs a controller — but the Linux bundle does resolve a
-  #    package it cannot use, exactly as record and file_picker already do.
-  mobile_scanner: 7.4.2
+  # Scanning the QR that `opencode2 pair` prints: the camera frames come from
+  # the Flutter team's `camera` (androidx CameraX on Android, BSD-3-Clause,
+  # no Google Play services) and are decoded by `zxing2`, a pure-Dart port of
+  # ZXing (Apache-2.0). This replaced mobile_scanner 7.4.2 (2026-10-31): that
+  # package bundles the Google ML Kit barcode model, which cost about 3 MB in
+  # the arm64 APK and which F-Droid cannot ship. The decoder is
+  # lib/ui/kit/kit_qr_decoder.dart. Both pinned exactly.
+  camera: 0.12.2
+  zxing2: 0.2.4
   path_provider: 2.1.6
   # Encoding the session handoff QR (backlog F4-S2). Pure Dart, no platform
   # plugin, no native code and no transitive dependencies; the modules are

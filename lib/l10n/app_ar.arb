@@ -10478,5 +10478,9 @@
   "sendReportDone": "تم",
   "reportCodeLabel": "رمز التقرير",
   "reportCodeCopy": "نسخ رمز التقرير",
-  "chatSendFailureSignInAgain": "يحتاج {agent} إلى تسجيل دخولك مرة أخرى"
+  "chatSendFailureSignInAgain": "يحتاج {agent} إلى تسجيل دخولك مرة أخرى",
+  "teamRefusalServerRestarted": "أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة، فانقطعت.",
+  "teamRefusalServerRestartedNext": "استأنف لإرسال هذه الخطوة مرة أخرى. ستكمل من العمل المنجز.",
+  "teamRefusalRestartResend": "أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة. يرسلها الفريق مرة أخرى.",
+  "teamRefusalRestartResendNext": "لا شيء مطلوب منك. العمل المنجز محفوظ."
 }

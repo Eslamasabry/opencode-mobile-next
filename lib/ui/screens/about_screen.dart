@@ -85,7 +85,7 @@ class _AboutScreenState extends State<AboutScreen> {
   bool _tipsReset = false;
 
   bool get _canCheckUpdates =>
-      widget.updateService != null || platformCapabilities.isAndroid;
+      widget.updateService != null || platformCapabilities.supportsCodePush;
 
   @override
   void initState() {
