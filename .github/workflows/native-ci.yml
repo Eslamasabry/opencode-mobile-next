@@ -86,7 +86,9 @@ jobs:
               count=$(( n > 18 ? 3 : (n > 6 ? 2 : 1) ))
             fi
           fi
-          shards="$(python3 -c "import json,sys; print(json.dumps(list(range(int(sys.argv[1])))))" "$count")"
+          # The fast lane runs :quality (Konsist, the slowest single task) alone in the last shard.
+          total=$count; [ "$LANE" = fast ] && total=$(( count + 1 ))
+          shards="$(python3 -c "import json,sys; print(json.dumps(list(range(int(sys.argv[1])))))" "$total")"
           { echo "lane=$LANE"; echo "mode=$mode"; echo "count=$count"; echo "shards=$shards"; echo "tasks=$tasks"; } >> "$GITHUB_OUTPUT"
           {
             echo "### Plan: lane \`$LANE\`, base \`$BASE\`"
@@ -163,7 +165,11 @@ jobs:
         id: pick
         run: |
           if [ "$MODE" = list ]; then all="$(printf '%s\n' $LIST)"; else all="$(tool/ci/shard_tasks.sh 0 1)"; fi
-          tasks="$(printf '%s\n' "$all" | awk -v i=${{ matrix.shard }} -v n="$COUNT" 'NF && (c++ % n) == i' | tr '\n' ' ')"
+          if [ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then
+            tasks=":quality:test"
+          else
+            tasks="$(printf '%s\n' "$all" | grep -v '^:quality:test$' | awk -v i=${{ matrix.shard }} -v n="$COUNT" 'NF && (c++ % n) == i' | tr '\n' ' ')"
+          fi
           echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
           echo "$tasks" | tr ' ' '\n' | sed 's/^/  /'
       - name: Run desktop tests
