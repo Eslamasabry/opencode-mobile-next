@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -137,6 +138,7 @@ public fun TeamEditorScreen(state: TeamEditorUi, actions: TeamEditorActions) {
                 KitConfirmSpec(
                     title = stringResource(Res.string.teamProjectEditorReloadConfirmTitle),
                     confirmLabel = stringResource(Res.string.teamProjectEditorReload),
+                    kind = KitConfirmKind.Discard,
                     body = stringResource(Res.string.teamProjectEditorDiscardDraft),
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 ),

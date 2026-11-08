@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -482,6 +483,7 @@ private fun MissingDialog(state: OpenProjectUi, actions: OpenProjectActions) {
                 KitConfirmSpec(
                     title = stringResource(Res.string.projectFolderMissingTitle),
                     confirmLabel = stringResource(Res.string.projectFolderCreateIt),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.projectFolderMissing),
                     icon = KitIcons.folderAdd,
                     details =

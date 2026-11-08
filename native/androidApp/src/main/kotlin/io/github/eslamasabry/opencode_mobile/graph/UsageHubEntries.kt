@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.feature.usage.ui.UsageContent
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.nav.KitTab
 import io.github.eslamasabry.oc.ui.kit.nav.KitTabSwitcher
@@ -215,6 +216,7 @@ class UsageHubEntries(
                             title = stringResource(Res.string.hub40ContinueOn, target.name),
                             body = stringResource(Res.string.hub40ContinueBody),
                             confirmLabel = stringResource(Res.string.hub40Continue),
+                            kind = KitConfirmKind.Neutral,
                             cancelLabel = stringResource(Res.string.kitTopBarBack),
                         )
                     else null,

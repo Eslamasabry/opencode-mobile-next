@@ -182,6 +182,7 @@ public fun ConnectionFormScreen(state: ConnectionFormUi, actions: ConnectionForm
                         KitConfirmSpec(
                             stringResource(Res.string.monitor40LinkQuestion),
                             stringResource(Res.string.monitor40OpenLink),
+                            kind = KitConfirmKind.Neutral,
                             body = state.linkHost,
                         )
                     else -> null

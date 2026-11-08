@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
 import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
@@ -105,6 +106,7 @@ public fun ComputerScreen(state: ComputerUi, actions: ComputerActions) {
                 KitConfirmSpec(
                     title = stringResource(Res.string.hostUpdateConfirmTitle),
                     confirmLabel = stringResource(Res.string.hostUpdateConfirmAction),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.hostUpdateConfirmBody, state.name),
                     consequenceItems =
                         listOf(

@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
 import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
 import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
@@ -363,6 +364,7 @@ private fun ContinueHereDialog(state: AllConversationsUi, actions: ChatsAllActio
                         stringResource(
                             if (it.failed) Res.string.kitTryAgain else Res.string.e7SharedMoveSession
                         ),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.globalSessionsMoveBody, title, from, to),
                     consequenceItems =
                         listOfNotNull(

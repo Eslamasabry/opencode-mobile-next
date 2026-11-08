@@ -139,7 +139,7 @@ public fun SchedulesScreen(state: SchedulesUi, actions: SchedulesActions) {
                                     )
                                 } ?: words.deleteTitle,
                         confirmLabel = words.delete,
-                        kind = KitConfirmKind.Neutral,
+                        kind = KitConfirmKind.Destructive,
                         body = words.deleteBody,
                         cancelLabel = words.cancel,
                     )

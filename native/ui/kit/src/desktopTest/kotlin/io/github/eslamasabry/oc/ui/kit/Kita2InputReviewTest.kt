@@ -8,8 +8,10 @@ import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -37,7 +39,7 @@ class Kita2InputReviewTest {
     }
 
     @Test
-    fun `B-KIT-016 KITA2-7 blank validation blocks button and IME submission`() = runComposeUiTest {
+    fun `B-KIT-016 KITA2-7 blank validation blocks button and IME submission, its reason said once`() = runComposeUiTest {
         val results = mutableListOf<String?>()
         setContent {
             Theme {
@@ -54,10 +56,14 @@ class Kita2InputReviewTest {
                 }
             }
         }
+        onAllNodesWithText("Required").assertCountEquals(0) // nothing typed yet: no reason shown
         onNode(hasSetTextAction()).performTextReplacement("")
-        onNodeWithText("Save").assertIsNotEnabled().performClick()
+        onNodeWithText("Save").performClick()
         onNode(hasSetTextAction()).performImeAction()
         assertTrue(results.isEmpty())
+        // C06 (audit 2026-11-09): the reason shows once, under the field, never again under the button.
+        onAllNodesWithText("Required", useUnmergedTree = true).assertCountEquals(1)
+        onAllNodesWithTag("kit-action-reason", useUnmergedTree = true).assertCountEquals(0)
         onNode(hasSetTextAction()).performTextReplacement("Valid")
         onNode(hasSetTextAction()).performImeAction()
         assertEquals(listOf<String?>("Valid"), results)

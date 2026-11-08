@@ -74,6 +74,7 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                         state.facts?.name.orEmpty(),
                     ),
                 confirmLabel = stringResource(Res.string.server40Disconnect),
+                kind = KitConfirmKind.Destructive,
                 body = stringResource(Res.string.server40DisconnectBody),
             )
         else null,

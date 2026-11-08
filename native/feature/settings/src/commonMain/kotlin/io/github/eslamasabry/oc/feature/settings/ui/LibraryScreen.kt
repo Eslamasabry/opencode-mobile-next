@@ -426,6 +426,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                 KitConfirmSpec(
                     title = stringResource(Res.string.nlibBrowserQuestion),
                     confirmLabel = stringResource(Res.string.nlibBrowser),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.nlibBrowserBody),
                     consequences = listOf(it.host),
                 )
@@ -1262,12 +1263,14 @@ private fun McpSheet(server: McpServerInfo, state: LibraryUi, actions: LibraryAc
             KitConfirmSpec(
                 stringResource(Res.string.nlibMcpRemoveQuestion),
                 stringResource(Res.string.nlibMcpRemove),
+                kind = KitConfirmKind.Destructive,
                 body = stringResource(Res.string.nlibMcpRemoveHelp),
             )
         else if (disconnect)
             KitConfirmSpec(
                 stringResource(Res.string.nlibDisconnectQuestion),
                 stringResource(Res.string.nlibMcpDisconnect),
+                kind = KitConfirmKind.Destructive,
             )
         else null,
         {
@@ -1411,6 +1414,7 @@ private fun forgetSpec() =
     KitConfirmSpec(
         stringResource(Res.string.nlibForgetQuestion),
         stringResource(Res.string.nlibForget),
+        kind = KitConfirmKind.Destructive,
         body = stringResource(Res.string.nlibForgetHelp),
     )
 

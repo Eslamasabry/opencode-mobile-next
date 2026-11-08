@@ -48,6 +48,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -238,6 +239,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                 KitConfirmSpec(
                     title = stringResource(Res.string.chatFeelOpenLinkTitle),
                     confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.chatFeelOpenLinkBody, it),
                 )
             },
@@ -338,6 +340,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                                 if (install) Res.string.phoneFileInstallAction
                                 else Res.string.phoneFileOpenAction
                             ),
+                        kind = KitConfirmKind.Neutral,
                     )
                 },
             onConfirm = {

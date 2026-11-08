@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -38,10 +37,7 @@ import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
-import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -51,11 +47,9 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBottomInset
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -140,7 +134,7 @@ public object StateViewRules {
 private const val CALM_LIFT: Float = .1f // F: lib/ui/kit/kit_state_view.dart:438
 
 /**
- * A whole state (Dart `KitStateView`; plan 06 §7.6): an icon tile, a title that says the state now, at most two short
+ * A whole state (Dart `KitStateView`; plan 06 §7.6): a bare glyph (no tile), a title that says the state now, at most two short
  * [body] sentences, an optional [progress], then the actions in the one hierarchy. There is no free-text error
  * parameter: an [KitStateKind.Error] takes the [failure] (its sentence comes from the screen, mapped through
  * `:ui:words`, as [body]) and adds the kit's ways out — Try again ([onRetry]), Switch server ([onSwitchServer]) for
@@ -261,19 +255,12 @@ public fun KitStateView(
         else -> KitPartGlyphs.Ring
     }
     val gap = if (page) Space.S5 else Space.S3
-    val tileSize = if (page) FlutterKitTokens.MARK_SIZE else tokens.iconTile
-    val tileRadius = if (page) FlutterKitTokens.MARK_RADIUS else FlutterKitTokens.ICON_TILE_RADIUS
     val glyphSize = if (page) FlutterKitTokens.MARK_ICON_SIZE else tokens.smallIcon
 
     val column: @Composable () -> Unit = {
         Column(Modifier.fillMaxWidth().testTag("kit-state-view").semantics { liveRegion = LiveRegionMode.Polite }) {
-            // The tile is made for the person's Style like every other tile (KitSurface.tile's control surface).
-            val look = kitSurfaceLook(
-                KitSurfaceInput(SurfaceRole.Control, KitShapeId.Tile, SurfaceLevel.Surface3, ownFill = colors.surface3, radius = tileRadius.dp),
-            )
-            Box(Modifier.size(tileSize.dp).then(look.modifier).testTag("kit-state-icon"), contentAlignment = Alignment.Center) {
-                KitGlyph(glyph, tint, glyphSize.dp)
-            }
+            // The bare glyph on the title's rail: no tile, box or circle behind it (audit 2026-11-09 C01).
+            KitGlyph(glyph, tint, glyphSize.dp, Modifier.testTag("kit-state-icon"))
             Spacer(Modifier.height(gap.dp))
             KitText(title, Modifier.semantics { heading() }, role = if (page) TypeRole.Title else TypeRole.Headline)
             shownBody?.let {

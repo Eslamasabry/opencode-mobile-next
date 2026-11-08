@@ -10,21 +10,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceTile
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import androidx.compose.ui.platform.testTag
 
 /** Whether the surrounding screen supplies spacing or the state owns its list insets. */
 public enum class KitInlineStateLayout {
@@ -64,18 +60,10 @@ public fun KitInlineState(
         }
     Column(contentModifier, horizontalAlignment = Alignment.Start) {
         when (layout) {
-            KitInlineStateLayout.Embedded ->
-                KitSurface(
-                    level = SurfaceLevel.Surface3,
-                    shape = KitShapeId.Tile,
-                    padding = KitSurfacePadding.None,
-                    clip = false,
-                ) {
-                    Box(Modifier.size(tokens.iconTile.dp), contentAlignment = Alignment.Center) {
-                        KitIcon(icon, size = KitIconSize.Small)
-                    }
-                }
-            KitInlineStateLayout.List -> KitSurfaceTile(icon, tone = TextTone.Secondary)
+            // The bare glyph on the title's rail: no tile behind it (audit 2026-11-09 C01).
+            KitInlineStateLayout.Embedded -> KitIcon(icon, Modifier.testTag("kit-state-icon"), size = KitIconSize.Small)
+            KitInlineStateLayout.List ->
+                KitIcon(icon, Modifier.testTag("kit-state-icon"), size = KitIconSize.Small, tone = TextTone.Secondary)
         }
         Spacer(Modifier.height(Space.S3.dp))
         KitText(title, Modifier.semantics { heading() }, role = TypeRole.Headline)

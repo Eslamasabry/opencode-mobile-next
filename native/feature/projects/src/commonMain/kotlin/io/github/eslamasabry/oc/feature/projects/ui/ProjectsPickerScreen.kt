@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
@@ -449,6 +450,7 @@ private fun MissingFolderDialog(state: ProjectsPickerUi, actions: ProjectsPicker
                 KitConfirmSpec(
                     title = stringResource(Res.string.projectFolderMissingTitle),
                     confirmLabel = stringResource(Res.string.projectFolderCreateIt),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.projectFolderMissing),
                     icon = KitIcons.folderAdd,
                     details =

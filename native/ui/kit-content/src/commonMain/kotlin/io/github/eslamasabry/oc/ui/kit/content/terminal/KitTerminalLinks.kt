@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -141,6 +142,7 @@ public fun KitTerminalLinkSheet(flow: KitTerminalLinkFlow) {
                             it.host,
                         ),
                     confirmLabel = stringResource(Res.string.terminalLinkOpen),
+                    kind = if (it.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
                 )
             },
         onConfirm = flow::confirm,

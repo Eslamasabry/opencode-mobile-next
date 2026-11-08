@@ -563,7 +563,8 @@ private fun PhoneConfirmation(
                         KitConfirmSpec(
                             title = stringResource(Res.string.thisPhoneRestartTitle),
                             confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
-                            kind = KitConfirmKind.Neutral,
+                            // A restart ends a running reply: then it is a stop, with Keep running as the way back.
+                            kind = if (asked.replyRunning) KitConfirmKind.Stop else KitConfirmKind.Neutral,
                             body =
                                 if (asked.replyRunning)
                                     stringResource(Res.string.thisPhoneRestartBusy)
@@ -573,6 +574,7 @@ private fun PhoneConfirmation(
                         KitConfirmSpec(
                             title = stringResource(Res.string.thisPhoneUpdateTitle, OPENCODE),
                             confirmLabel = stringResource(Res.string.thisPhoneUpdate),
+                            kind = KitConfirmKind.Neutral,
                             body = stringResource(Res.string.thisPhoneUpdateBody, asked.version),
                             consequences = listOf(stringResource(Res.string.thisPhoneUpdateKept)),
                         )

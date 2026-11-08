@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
@@ -190,6 +191,7 @@ public fun ChatFormSlot(
                         title = stringResource(Res.string.stateFormDeclineTitle),
                         body = stringResource(Res.string.stateFormDeclineBody),
                         confirmLabel = stringResource(Res.string.stateFormDecline),
+                        kind = KitConfirmKind.Destructive,
                         cancelLabel = stringResource(Res.string.stateFormKeepEditing),
                     )
                 else null,

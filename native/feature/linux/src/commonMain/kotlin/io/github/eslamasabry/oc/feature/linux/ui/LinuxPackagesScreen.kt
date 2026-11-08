@@ -234,6 +234,7 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
                     KitConfirmSpec(
                         title = stringResource(Res.string.linuxMgrPkgInstallTitle, names(asked.names)),
                         confirmLabel = stringResource(Res.string.linuxMgrPkgInstallLabel, names(asked.names)),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.linuxMgrPkgInstallBody),
                     )
                 is PackagesConfirm.Remove ->
@@ -249,6 +250,7 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
                     KitConfirmSpec(
                         title = stringResource(Res.string.linuxMgrPkgUpdateTitle),
                         confirmLabel = stringResource(Res.string.linuxMgrPkgUpdate),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.linuxMgrPkgUpdateBody),
                     )
                 is PackagesConfirm.StopJob -> {

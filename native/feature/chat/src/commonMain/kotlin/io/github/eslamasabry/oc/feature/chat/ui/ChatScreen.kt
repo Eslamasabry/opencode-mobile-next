@@ -1145,12 +1145,14 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
             KitConfirmSpec(
                 title = stringResource(Res.string.workServerRestartTitle),
                 confirmLabel = stringResource(Res.string.workServerRestart),
+                kind = KitConfirmKind.Stop,
                 body = stringResource(Res.string.workServerRestartBody),
             )
         ChatConfirm.Compact ->
             KitConfirmSpec(
                 title = stringResource(Res.string.chatUiCompactConfirmTitle),
                 confirmLabel = stringResource(Res.string.chatUiCompactConfirmAction),
+                kind = KitConfirmKind.Neutral,
                 body = stringResource(Res.string.chatUiCompactConfirmBody),
             )
         is ChatConfirm.UndoFrom ->
@@ -1166,12 +1168,14 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 KitConfirmSpec(
                     title = stringResource(Res.string.phoneFileInstallTitle, name),
                     confirmLabel = stringResource(Res.string.phoneFileInstallAction),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.phoneFileInstallBody),
                 )
             else
                 KitConfirmSpec(
                     title = stringResource(Res.string.phoneFileOpenTitle, name),
                     confirmLabel = stringResource(Res.string.phoneFileOpenAction),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.phoneFileOpenBody),
                 )
         }
@@ -1180,12 +1184,14 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 title =
                     pluralStringResource(Res.plurals.b169AskTitle, confirm.steps, confirm.steps, confirm.modelLabel),
                 confirmLabel = stringResource(Res.string.b169AskSend),
+                kind = KitConfirmKind.Neutral,
             )
         is ChatConfirm.PhoneFileAccess ->
             KitConfirmSpec(
                 title = stringResource(Res.string.phoneSharedAccessTitle),
                 body = stringResource(Res.string.phoneSharedAccessBody),
                 confirmLabel = stringResource(Res.string.commonRetry),
+                kind = KitConfirmKind.Neutral,
             )
         is ChatConfirm.OpenLink ->
             KitConfirmSpec(

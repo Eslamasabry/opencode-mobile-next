@@ -208,6 +208,7 @@ private fun confirmSpec(t: TaskView, ask: TaskConfirm?): KitConfirmSpec? =
             KitConfirmSpec(
                 title = stringResource(Res.string.teamProjectMergeConfirmTitle),
                 confirmLabel = stringResource(Res.string.teamProjectMergeNext),
+                kind = KitConfirmKind.Neutral,
                 body = stringResource(Res.string.teamProjectMergeConfirmBody),
                 cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 consequences = listOf(stringResource(Res.string.teamProjectMergeEffectMain)),
@@ -216,6 +217,7 @@ private fun confirmSpec(t: TaskView, ask: TaskConfirm?): KitConfirmSpec? =
             KitConfirmSpec(
                 title = stringResource(Res.string.teamProjectTaskPromoteConfirmTitle),
                 confirmLabel = stringResource(Res.string.teamProjectTaskPromote),
+                kind = KitConfirmKind.Neutral,
                 body = stringResource(Res.string.teamProjectTaskPromoteBody),
                 cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 consequences = listOfNotNull(t.promote?.let { "${it.repoName}: ${it.mainCommit} → ${it.devCommit}" }),

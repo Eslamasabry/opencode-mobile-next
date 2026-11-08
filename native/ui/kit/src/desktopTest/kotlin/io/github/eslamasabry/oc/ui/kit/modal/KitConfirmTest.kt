@@ -25,6 +25,7 @@ class KitConfirmTest {
             title = "Move fox?",
             body = "The conversation moves to the notes project.",
             confirmLabel = "Move fox",
+            kind = KitConfirmKind.Neutral,
             consequenceItems = listOf(
                 KitConsequence("Its 3 changed files move with it", KitConsequenceMark.Neutral),
                 KitConsequence("Its agent keeps its model", KitConsequenceMark.Neutral),

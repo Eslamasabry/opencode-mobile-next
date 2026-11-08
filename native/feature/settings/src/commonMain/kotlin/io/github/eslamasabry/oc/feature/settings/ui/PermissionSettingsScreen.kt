@@ -169,6 +169,7 @@ internal fun PermissionSettingsContent(
                         KitConfirmSpec(
                             stringResource(Res.string.consentAlwaysAgainTitle),
                             stringResource(Res.string.consentAlwaysAgainConfirm),
+                            kind = KitConfirmKind.Neutral,
                             body = stringResource(Res.string.consentAlwaysAgainBody),
                         )
                     kind != null ->
@@ -191,6 +192,7 @@ internal fun PermissionSettingsContent(
                                         Res.string.consentNeedsYouAllow
                                 }
                             ),
+                            kind = KitConfirmKind.Neutral,
                             body =
                                 stringResource(
                                     when (kind) {
