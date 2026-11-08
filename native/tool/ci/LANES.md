@@ -64,3 +64,31 @@ Always FAIL, never noise (`tool/ci/summary.py`, `tool/ci/test_report.py` reading
 
 Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
 `known_failures.txt`, or is quarantined. `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
+
+## Self-hosted runner (`oc-native`)
+
+Native CI runs on an always-warm machine instead of cold GitHub-hosted runners (a new branch there starts with an empty
+Gradle cache, about 18 min for the fast lane and 9 min for an APK).
+
+- Machine: the second PC `desktop-in65ssc` (WSL2 Ubuntu, 12 GB for WSL). Three runner instances `wsl-oc-1..3` (user systemd
+  units `oc-runner-N`, linger on) in `~/actions-runner-N`, labels `self-hosted, linux, x64, oc-native`. They share one
+  persistent Gradle home `~/gradle-home-oc` on WSL's ext4 (daemon, build cache and configuration cache on, `-Xmx4g`), JDK 21
+  (JDK 17 comes from Gradle toolchains) and `~/Android/Sdk`. Settings are in the runner `.env` files and
+  `~/gradle-home-oc/gradle.properties`.
+- Staying up: a Windows scheduled task `OcWslKeepalive` (at logon) holds a WSL session, and `.wslconfig` has `vmIdleTimeout=-1`.
+- Routing: the `runner` job in `native-ci.yml` picks the runners for every other job. Self-hosted is chosen only when ALL hold:
+  the event is `workflow_dispatch` or `push`, the repository is this one, the branch is `native/next`, `native/screens-merge*`
+  or `master`, the `runner` input is not `github`, and an `oc-native` runner is online. Everything else (every work branch)
+  runs on `ubuntu-latest`. Dispatch with `-f runner=github` to force hosted.
+- Offline check: the `runner` job lists runners with the secret `RUNNER_STATUS_TOKEN` (a fine-grained token with repository
+  Administration: read) when it exists. Without it the workflow token cannot list runners, so the job assumes the runner is up;
+  check it yourself before dispatching: `gh api repos/Eslamasabry/opencode-mobile-next/actions/runners --jq '.runners[]|[.name,.status,.busy]'`.
+- Security (the repository is public): no workflow uses `pull_request` or `pull_request_target` with the self-hosted labels
+  (only the `runner` job's guard above ever selects them), fork pull requests cannot start jobs on it, and the repository
+  setting "approval for fork pull request workflows" is `all_external_contributors`. Anyone with write access can run code on
+  the machine through a branch workflow, so keep collaborators to the owner and agents. Never put the machine's secrets in
+  `_work`; jobs only get the repository secrets they name.
+- Gradle daemon: `RUNNER_TRACKING_ID` is set empty so the warm daemon survives the end of a job. A cancelled job kills the
+  daemon that has files open in its workspace (workflow step), and the next job on that workspace does the same before it builds.
+- One runner takes one job at a time, so a run's compile, test shards and APK jobs queue behind each other; keep work branches on
+  the hosted runners so `native/next` never waits.
