@@ -117,6 +117,9 @@ public interface SettingsActions {
     /** The Privacy switch "Send crash reports to the developer". */
     public fun onCrashReports(on: Boolean) {}
 
+    /** Privacy › Usage and app health (Flutter 2.1.5): the stored `usage` answer. */
+    public fun onUsage(on: Boolean) {}
+
     /** The Privacy switch "Offer crash reports" (Flutter 2.1.5 E02-S91): only whether a crash is offered. */
     public fun onOfferCrashReports(on: Boolean) {}
 

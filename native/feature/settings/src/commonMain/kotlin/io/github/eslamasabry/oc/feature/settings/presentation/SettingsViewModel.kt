@@ -74,6 +74,10 @@ public interface SettingsHost {
     /** Crash and error reports to the developer (vendor-neutral layer); null hides the switch. */
     public val reporting: Reporting?
         get() = null
+
+    /** s28: Flutter 2.1.5's stored answers (usage and app health, crash reports); null hides the usage switch. */
+    public val healthConsent: HealthConsentSetting?
+        get() = null
 }
 
 /**
@@ -107,6 +111,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             reporting = host.reporting,
             crashOffer = host.crashOffer,
             memoryPreview = host.memoryPreview,
+            healthConsent = host.healthConsent,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

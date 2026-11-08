@@ -1,0 +1,35 @@
+<resources>
+    <!-- s28-app: Settings › Privacy and data and What we collect, as Flutter 2.1.5 (docs/telemetry/health-and-diagnostics.md). -->
+    <string name="telemetryUsageTitle">Usage and app health</string>
+    <string name="telemetryUsageDetail">Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone’s memory, free storage, CPU and WebView version. Only fixed words and ranges, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.</string>
+    <string name="telemetryCrashesTitle">Crash reports</string>
+    <string name="telemetryCrashesDetail">Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app’s code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.</string>
+    <string name="collectTitle">What we collect</string>
+    <string name="collectRowSummary">Both switches start off. See exactly what each one sends.</string>
+    <string name="collectUsageNotSentYet">This version does not send usage and app health yet. Your answer is kept and used once it does.</string>
+    <string name="collectRules">Only fixed words and number ranges are sent, never free text. Turning a switch off deletes what was not sent yet.</string>
+    <string name="collectUsageLabel">With Usage and app health</string>
+    <string name="collectCrashesLabel">With Crash reports</string>
+    <string name="collectReportLabel">Only when you send a problem report</string>
+    <string name="collectNeverLabel">Never sent</string>
+    <string name="collectConnect">Whether connecting to a server worked, the kind of failure and how long it took</string>
+    <string name="collectDrop">Why a connection dropped and whether it came back</string>
+    <string name="collectSend">Whether sending a message worked or waited in the queue, and how soon the first reply came</string>
+    <string name="collectStall">Where a long wait happened (a tool, an approval) and for how long</string>
+    <string name="collectQueue">How many queued messages were sent or failed</string>
+    <string name="collectPhoneSetup">How far setup on this phone got, how long each step took and the kind of failure</string>
+    <string name="collectAgents">Whether an agent started, and the kind of failure</string>
+    <string name="collectBackground">Why the background service stopped</string>
+    <string name="collectUpdates">Whether an update installed, and the kind of failure</string>
+    <string name="collectPages">Which kinds of pages and features you use, setup steps, the first reply and how long a visit lasts</string>
+    <string name="collectStart">How fast the app starts</string>
+    <string name="collectSmooth">How smooth pages are, and the screen’s refresh rate</string>
+    <string name="collectMemory">Memory warnings from Android</string>
+    <string name="collectDevice">Ranges for your phone’s memory and free storage, its processor type and WebView version, whether notifications are allowed, and the kind and version of server you use</string>
+    <string name="collectCrashKind">The kind of error and where in the app’s code it happened, never its message</string>
+    <string name="collectExit">Why Android ended the app last time (for example a crash, a freeze or low memory)</string>
+    <string name="collectSteps">Your last 30 steps, as short words such as chat.send</string>
+    <string name="collectCrashKeys">The app version, how it was installed, the kind of server, whether this phone’s server is running, how many connections are open and the server version</string>
+    <string name="collectReport">The last 500 lines of the app’s own log, with keys, addresses and paths blanked. You see all of it and choose Send or Cancel.</string>
+    <string name="collectNever">Your prompts and replies, file names or paths, web addresses, host names, IP addresses, error message text, keys or tokens, the advertising ID or the Android ID</string>
+</resources>

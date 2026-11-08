@@ -61,7 +61,9 @@ class SettingsGroupTest {
         onNodeWithTag("settings-group-ThisApp").assertIsSelected()
         onNodeWithTag("settings-appearance").performClick()
         onNodeWithTag("settings-group-Server").performClick()
-        assertEquals(listOf("row:Appearance", "open:Group(id=Server)"), actions.calls)
+        // s28: the chosen group replaces the one shown (Flutter only switches the selection), so Back never walks
+        // through groups seen before.
+        assertEquals(listOf("row:Appearance", "back", "open:Group(id=Server)"), actions.calls)
     }
 
     @Test

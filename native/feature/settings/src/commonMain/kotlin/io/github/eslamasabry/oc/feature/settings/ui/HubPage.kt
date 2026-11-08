@@ -36,6 +36,9 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
+import io.github.eslamasabry.oc.ui.words.res.settingsHubDetailEmpty
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -73,15 +76,88 @@ internal fun HubPage(
     modifier: Modifier,
     onExit: (() -> Unit)?,
 ) {
-    SettingsFrame(
-        title = settingsTitle(),
-        onBack = onExit,
-        state = state,
-        actions = actions,
-        modifier = modifier,
-    ) {
-        HubBody(state, actions)
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val window = LocalKitWindow.current
+        // F: settings_screen.dart:459: from expanded the hub is the list pane and the detail says to choose a group.
+        if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
+            // The first group fills the detail until another is chosen; with no group, "Choose a group".
+            val first = state.firstGroup
+            SettingsPanes(
+                if (first != null) state.copy(group = first) else state,
+                actions,
+                selected = first?.let { SettingsPage.Group(it.id) },
+                onExit = onExit,
+                pushed = false,
+            )
+        } else {
+            SettingsFrame(
+                title = settingsTitle(),
+                onBack = onExit,
+                state = state,
+                actions = actions,
+            ) {
+                HubBody(state, actions)
+            }
+        }
     }
+}
+
+/**
+ * Settings on a wide window (F: lib/ui/screens/settings_screen.dart:459 `KitScreen.twoPane`): the search and the
+ * five groups in the list pane, the chosen group's rows in the detail pane, "Choose a group of settings" while none
+ * is chosen. The two panes are Settings' root: Back only when the host can leave Settings.
+ */
+@Composable
+private fun SettingsPanes(
+    state: SettingsUi,
+    actions: SettingsActions,
+    selected: SettingsPage.Group?,
+    onExit: (() -> Unit)?,
+    pushed: Boolean = true,
+) {
+    KitPaneScreen(
+        topBar = {
+            KitTopBar(
+                title = settingsTitle(),
+                exit = if (onExit != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = onExit,
+                backBesideTitle = true,
+            )
+        },
+        list = {
+            Column(
+                Modifier.fillMaxSize()
+                    .testTag("settings-list-pane")
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = Space.S2.dp, bottom = Space.S6.dp)
+            ) {
+                HubBody(state, actions, selected = selected?.id, selectedPushed = pushed)
+            }
+        },
+        detail =
+            selected?.let { page ->
+                {
+                    Column(
+                        Modifier.fillMaxSize()
+                            .testTag("settings-detail-pane")
+                            .verticalScroll(rememberScrollState())
+                            // F: lib/ui/screens/settings/settings_group_page.dart:399-401
+                            .padding(top = Space.S5.dp, bottom = Space.S6.dp)
+                    ) {
+                        GroupBody(state, actions, page)
+                    }
+                }
+            },
+        emptyDetail = {
+            KitStateView(
+                KitStateKind.Calm,
+                stringResource(Res.string.settingsHubDetailEmpty),
+                Modifier.testTag("settings-detail-empty"),
+                icon = KitIcons.search,
+            )
+        },
+    )
 }
 
 @Composable
@@ -89,6 +165,8 @@ private fun ColumnScope.HubBody(
     state: SettingsUi,
     actions: SettingsActions,
     selected: SettingsGroupId? = null,
+    /** The selected group is a page on the stack (chosen), not the wide hub's first-group default. */
+    selectedPushed: Boolean = false,
 ) {
     val hub = state.hub
     val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
@@ -130,7 +208,13 @@ private fun ColumnScope.HubBody(
                     supporting =
                         if (group == SettingsGroupId.Server) hubServerLine(state) else null,
                     trailing = if (large) KitRowTrailing.None else KitRowTrailing.Chevron,
-                    onClick = { actions.onOpen(SettingsPage.Group(group)) },
+                    onClick = {
+                        // Wide: the chosen group replaces the one shown; the one shown stays as it is.
+                        if (group != selected) {
+                            if (selected != null && selectedPushed) actions.onBack()
+                            actions.onOpen(SettingsPage.Group(group))
+                        }
+                    },
                 )
             }
         }
@@ -235,39 +319,7 @@ internal fun GroupPage(
     BoxWithConstraints(modifier.fillMaxSize()) {
         val window = LocalKitWindow.current
         if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
-            KitPaneScreen(
-                topBar = {
-                    // The two panes are Settings' root, like the phone hub: Back only when the host can leave
-                    // Settings (Flutter's wide hub has no back arrow of its own, settings_hub_loaded_1280x800).
-                    KitTopBar(
-                        title = settingsTitle(),
-                        exit = if (onExit != null) KitTopBarExit.Back else KitTopBarExit.None,
-                        exitLabel = stringResource(Res.string.kitTopBarBack),
-                        onExit = onExit,
-                        backBesideTitle = true,
-                    )
-                },
-                list = {
-                    Column(
-                        Modifier.fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(top = Space.S2.dp, bottom = Space.S6.dp)
-                    ) {
-                        HubBody(state, actions, selected = page.id)
-                    }
-                },
-                detail = {
-                    Column(
-                        Modifier.fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            // F: lib/ui/screens/settings/settings_group_page.dart:399-401
-                            .padding(top = Space.S5.dp, bottom = Space.S6.dp)
-                    ) {
-                        GroupBody(state, actions, page)
-                    }
-                },
-                emptyDetail = {},
-            )
+            SettingsPanes(state, actions, selected = page, onExit = onExit)
         } else {
             SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions) {
                 GroupBody(state, actions, page)

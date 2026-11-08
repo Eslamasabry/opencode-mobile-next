@@ -118,15 +118,32 @@ class AppTelemetryContinuity(
     private val scope = CoroutineScope(appScope.coroutineContext)
     val runtime: TelemetryContinuity =
         TelemetryContinuity(TelemetryAnswers(stores.prefs, stores.lanes.app), reporting, Telemetry.vendorAvailable, clock)
+    /** s28: Flutter 2.1.5's split answers (usage and app health, crash reports). */
+    val health: HealthConsentStore = HealthConsentStore(stores.prefs, stores.lanes.app, Telemetry.vendorAvailable)
     private var started = false
+
+    /** The first-start question: "Share both" turns on both answers (F: telemetry_consent.dart:49). */
+    fun answer(share: Boolean) {
+        runtime.answer(share)
+        if (share) scope.launch { health.write(io.github.eslamasabry.oc.feature.settings.presentation.HealthAnswers(true, true)) }
+    }
 
     fun start() {
         if (started) return
         started = true
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
+            // Carried over once before the question is decided, so an old answer is never asked again.
+            health.migrate()
             runtime.adopt()
-            launch { reporting.reportingConsent.drop(1).collect { runtime.mirror(it) } }
+            // The split keys win over the old single one once they exist.
+            health.storedCrashes()?.let { if (it != reporting.reportingConsent.value) reporting.setReportingConsent(it) }
+            launch {
+                reporting.reportingConsent.drop(1).collect {
+                    runtime.mirror(it)
+                    health.mirrorCrashes(it)
+                }
+            }
             runtime.considerCrash(exits.launchReport())
         }
     }
@@ -154,8 +171,8 @@ class TelemetryConsentOverlay(private val continuity: AppTelemetryContinuity) : 
                             ),
                         cancelLabel = stringResource(Res.string.telemetryConsentNotNow),
                     ),
-            onConfirm = { continuity.runtime.answer(true) },
-            onCancel = { continuity.runtime.answer(false) },
+            onConfirm = { continuity.answer(true) },
+            onCancel = { continuity.answer(false) },
         )
     }
 }

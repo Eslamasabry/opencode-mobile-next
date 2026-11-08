@@ -1,0 +1,34 @@
+<resources>
+    <string name="telemetryUsageTitle">الاستخدام وصحة التطبيق</string>
+    <string name="telemetryUsageDetail">يرسل أعداداً مجهولة إلى Google Analytics for Firebase: أنواع الصفحات والميزات التي تستخدمها، وهل ينجح الاتصال والإرسال والإعداد والوكلاء والخدمة الخلفية والتحديثات، وسرعة بدء التطبيق وسلاسة الصفحات، وتنبيهات الذاكرة، ونطاقات لذاكرة هاتفك والمساحة الحرة والمعالج وإصدار WebView. كلمات ونطاقات ثابتة فقط، مع معرّف تثبيت عشوائي وطراز هاتفك وإصدار أندرويد. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلانات.</string>
+    <string name="telemetryCrashesTitle">تقارير الأعطال</string>
+    <string name="telemetryCrashesDetail">يرسل تقارير الأعطال إلى Google Firebase Crashlytics: نوع الخطأ ومكانه في شيفرة التطبيق دون نصّ رسالته، وآخر خطواتك ككلمات قصيرة، وسبب إنهاء أندرويد للتطبيق آخر مرة. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلانات.</string>
+    <string name="collectTitle">ما الذي نجمعه</string>
+    <string name="collectRowSummary">المفتاحان مطفآن في البداية. اطّلع على ما يرسله كل منهما بالضبط.</string>
+    <string name="collectUsageNotSentYet">هذا الإصدار لا يرسل الاستخدام وصحة التطبيق بعد. نحتفظ بإجابتك ونعمل بها حين يبدأ الإرسال.</string>
+    <string name="collectRules">لا يُرسل إلا كلمات ثابتة ونطاقات أرقام، ولا يُرسل نصّ حرّ أبداً. إطفاء المفتاح يحذف ما لم يُرسل بعد.</string>
+    <string name="collectUsageLabel">مع الاستخدام وصحة التطبيق</string>
+    <string name="collectCrashesLabel">مع تقارير الأعطال</string>
+    <string name="collectReportLabel">فقط حين ترسل تقريراً عن مشكلة</string>
+    <string name="collectNeverLabel">لا يُرسل أبداً</string>
+    <string name="collectConnect">هل نجح الاتصال بالخادم، ونوع الفشل، والمدة التي استغرقها</string>
+    <string name="collectDrop">سبب انقطاع الاتصال وهل عاد</string>
+    <string name="collectSend">هل نجح إرسال الرسالة أو انتظرت في الطابور، ومتى وصل أول رد</string>
+    <string name="collectStall">أين حدث انتظار طويل (أداة أو موافقة) وكم دام</string>
+    <string name="collectQueue">كم رسالة من الطابور أُرسلت أو فشلت</string>
+    <string name="collectPhoneSetup">إلى أين وصل الإعداد على هذا الهاتف، ومدة كل خطوة، ونوع الفشل</string>
+    <string name="collectAgents">هل بدأ الوكيل، ونوع الفشل</string>
+    <string name="collectBackground">سبب توقف الخدمة الخلفية</string>
+    <string name="collectUpdates">هل ثُبّت التحديث، ونوع الفشل</string>
+    <string name="collectPages">أنواع الصفحات والميزات التي تستخدمها، وخطوات الإعداد، وأول رد، ومدة الزيارة</string>
+    <string name="collectStart">سرعة بدء التطبيق</string>
+    <string name="collectSmooth">سلاسة الصفحات، ومعدل تحديث الشاشة</string>
+    <string name="collectMemory">تنبيهات الذاكرة من أندرويد</string>
+    <string name="collectDevice">نطاقات لذاكرة هاتفك ومساحته الحرة، ونوع معالجه وإصدار WebView، وهل الإشعارات مسموحة، ونوع الخادم الذي تستخدمه وإصداره</string>
+    <string name="collectCrashKind">نوع الخطأ ومكانه في شيفرة التطبيق، دون نصّ رسالته أبداً</string>
+    <string name="collectExit">سبب إنهاء أندرويد للتطبيق آخر مرة (مثل عطل أو تجمّد أو نقص الذاكرة)</string>
+    <string name="collectSteps">آخر 30 خطوة قمت بها، ككلمات قصيرة مثل chat.send</string>
+    <string name="collectCrashKeys">إصدار التطبيق، وطريقة تثبيته، ونوع الخادم، وهل خادم هذا الهاتف يعمل، وعدد الاتصالات المفتوحة، وإصدار الخادم</string>
+    <string name="collectReport">آخر 500 سطر من سجل التطبيق نفسه، مع إخفاء المفاتيح والعناوين والمسارات. ترى كل شيء ثم تختار إرسال أو إلغاء.</string>
+    <string name="collectNever">طلباتك والردود، وأسماء الملفات أو مساراتها، وعناوين الويب، وأسماء الخوادم، وعناوين IP، ونصّ رسائل الأخطاء، والمفاتيح أو الرموز، والمعرّف الإعلاني، ومعرّف أندرويد</string>
+</resources>

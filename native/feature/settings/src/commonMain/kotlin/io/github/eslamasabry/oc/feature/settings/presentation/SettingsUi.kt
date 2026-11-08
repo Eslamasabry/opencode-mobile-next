@@ -45,6 +45,13 @@ public data class SettingsUi(
     val note: SettingsNote? = null,
     val voiceLicenses: Boolean = false,
     val license: LicenseUi? = null,
+    /** Help › Guide: which of its doors this build and phone offer. */
+    val guide: GuideUi = GuideUi(),
+    /**
+     * The hub's first group with its rows: a wide window shows it in the detail pane until another is chosen
+     * (F: settings_screen.dart:390 `groups.firstOrNull`). Not a page: a phone never draws it.
+     */
+    val firstGroup: GroupUi? = null,
 ) {
     val page: SettingsPage
         get() = stack.last()
@@ -256,15 +263,43 @@ public data class AboutFacts(
     val whatsNew: Boolean = true,
     /** The open-source notices page exists in this build. */
     val notices: Boolean = true,
+    /** The application id (Flutter About › Details "Package id"); blank hides the fold. */
+    val packageId: String = "",
+    /** The signing certificate's SHA-256 as upper-case hex; null where the platform has none. */
+    val signer: String? = null,
+    /**
+     * A hardware keyboard can reach the app (a desktop, or a phone or tablet with a keyboard): About
+     * lists the keyboard shortcuts (F: about_screen.dart:301, `desktopInteractions`).
+     */
+    val keyboardShortcuts: Boolean = false,
+    /** The accelerator's modifier word: "Ctrl", or "⌘" on a Mac. */
+    val shortcutModifier: String = "Ctrl",
+)
+
+/** Help › Guide's doors (F: guide_screen.dart:40-140). Each is shown only where it leads somewhere. */
+public data class GuideUi(
+    /** Step 2 says "Scan the QR or paste the code" (the phone has a camera scanner). */
+    val canScan: Boolean = false,
+    /** Step 2's "Add server" button opens the add flow itself. */
+    val addServer: Boolean = false,
+    /** "Run it on this phone" opens phone setup (built-in Linux). */
+    val phonePath: Boolean = false,
+    /** "Try the demo" opens the offline demo. */
+    val demo: Boolean = false,
+    /** Passwords live in the Android Keystore here (the security note names it). */
+    val androidKeystore: Boolean = false,
 )
 
 public data class PrivacyUi(
-    val collect: WhatWeCollect,
+    /** The analytics engine's own view (sending state); null where the host binds no analytics engine. */
+    val collect: WhatWeCollect?,
     val saving: Boolean = false,
     /** The crash-report switch; null while this build has no way to send one. */
     val crashReports: Boolean? = null,
     /** "Offer crash reports" (Flutter 2.1.5); null where the build has no crash offer. */
     val offerCrashReports: Boolean? = null,
+    /** Flutter 2.1.5's "Usage and app health" answer; null where the build has no such switch. */
+    val usage: Boolean? = null,
 )
 
 public enum class SettingsNote {
