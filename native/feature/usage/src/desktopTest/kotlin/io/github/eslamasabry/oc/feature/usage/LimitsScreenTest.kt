@@ -148,11 +148,11 @@ class LimitsScreenTest {
     @Test
     fun `B-183 Details names the signed-in account email and copies it`() = runComposeUiTest {
         setContent { Screen(withAccount("altaf.alu@gmail.com"), Actions()) }
-        onNodeWithText("altaf.alu@gmail.com").assertDoesNotExist()
+        onNodeWithText("altaf.alu@gmail.com", useUnmergedTree = true).assertDoesNotExist()
         onNodeWithText("Details").performClick()
-        onNodeWithText("Account").assertExists()
-        onNodeWithText("altaf.alu@gmail.com").assertExists()
-        onNodeWithTag("kit-details-copy-all").assertExists()
+        onNodeWithText("Account", useUnmergedTree = true).assertExists()
+        onNodeWithText("altaf.alu@gmail.com", useUnmergedTree = true).assertExists()
+        onNodeWithTag("kit-details-copy-0", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -160,11 +160,14 @@ class LimitsScreenTest {
         var state by mutableStateOf(withAccount("a".repeat(64)))
         setContent { Screen(state, Actions()) }
         onNodeWithText("Details").performClick()
-        onNodeWithText("Yes, an account is known").assertExists()
-        onNodeWithText("a".repeat(64)).assertDoesNotExist()
+        onNodeWithText("Yes, an account is known", useUnmergedTree = true).assertExists()
+        onNodeWithText("a".repeat(64), useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithTag("kit-details-copy-0", useUnmergedTree = true).assertDoesNotExist()
+        // No account means another plan key, so the fold starts closed again.
         state = withAccount(null)
         waitForIdle()
-        onNodeWithText("No account known").assertExists()
+        onNodeWithText("Details").performClick()
+        onNodeWithText("No account known", useUnmergedTree = true).assertExists()
     }
 
     @Test
