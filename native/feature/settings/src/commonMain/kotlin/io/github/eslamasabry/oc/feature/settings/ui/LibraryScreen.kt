@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.code.*
 import io.github.eslamasabry.oc.ui.kitchat.markdown.*
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.*
@@ -110,7 +111,10 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     val failedEmptyList =
                         (state.tab == LibraryTab.Skills && inventory.skills.isEmpty()) ||
                             (state.tab == LibraryTab.References && inventory.references.isEmpty())
-                    if (failedEmptyList) {
+                    // Commands that never loaded say so under their search, as Flutter's Commands screen does.
+                    val failedCommands = state.tab == LibraryTab.Commands && inventory.commands.isEmpty()
+                    if (failedCommands) Unit
+                    else if (failedEmptyList) {
                         KitInlineStateView(
                             title =
                                 stringResource(
@@ -172,7 +176,27 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                 modifier = Modifier.testTag("library-command-search"),
                             )
                         }
-                        KitRowGroup(label = stringResource(Res.string.e7LibraryServerCommands)) {
+                        if (
+                            selectedSection in inventory.failedSections && inventory.commands.isEmpty()
+                        ) {
+                            // F: lib/ui/widgets/command_sheet.dart:400-420: the failure row under the search, with
+                            // Try again (screen_library_4_golden_test.dart:231-246).
+                            // Flutter's KitNotice.error: the server's own words go under the title there; the
+                            // native failure carries none, so the title says it alone.
+                            KitNotice(
+                                stringResource(Res.string.commandsScreenLoadFailed),
+                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                                    .padding(top = Space.S3.dp),
+                                tone = StatusTone.Failure,
+                                actions =
+                                    listOf(
+                                        KitLineAction(
+                                            stringResource(Res.string.refreshRetry),
+                                            actions::refresh,
+                                        )
+                                    ),
+                            )
+                        } else KitRowGroup(label = stringResource(Res.string.e7LibraryServerCommands)) {
                             rows.forEach { command ->
                                 KitRow(
                                     libraryCommandTitle(command),

@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.feature.settings.RecordingActions
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.design.color.PackId
+import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -111,7 +112,10 @@ class SettingsScreensGateTest {
             stack = persistentListOf(SettingsPage.Appearance),
             appearance =
                 AppearanceUi(
-                    packs = listOf(PackId.Opencode, PackId.Nord).toImmutableList(),
+                    // What the presenter lists before "See all": Flutter's eight picks of 31 themes
+                    // (appearance_screen.dart:48-57, :933).
+                    packs = Packs.mostUsed.toImmutableList(),
+                    seeAllCount = PackId.entries.size,
                     guide = AppearanceGuideRecord(done = done),
                     // All ten questions: "10 quick questions, all optional" (settings_appearance_guided_solid_home).
                     questions = AppearanceQuestion.entries.toImmutableList(),

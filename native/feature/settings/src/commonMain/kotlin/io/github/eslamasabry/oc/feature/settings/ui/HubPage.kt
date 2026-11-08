@@ -188,7 +188,7 @@ private fun hubServerLine(state: SettingsUi): String {
 /** Each row's Phosphor glyph (the Flutter Settings icons). */
 private fun rowGlyph(row: SettingsRowId) =
     when (row) {
-        SettingsRowId.Servers -> KitIcons.server
+        SettingsRowId.Servers -> KitIcons.database // F: lib/ui/search/search_index/hub_rows.dart:31
         SettingsRowId.ThisPhone -> KitIcons.phone
         SettingsRowId.ModelAndMode -> KitIcons.model
         SettingsRowId.Providers -> KitIcons.cloud
@@ -229,17 +229,21 @@ internal fun GroupPage(
     actions: SettingsActions,
     page: SettingsPage.Group,
     modifier: Modifier,
+    onExit: (() -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier.fillMaxSize()) {
         val window = LocalKitWindow.current
         if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
             KitPaneScreen(
                 topBar = {
+                    // The two panes are Settings' root, like the phone hub: Back only when the host can leave
+                    // Settings (Flutter's wide hub has no back arrow of its own, settings_hub_loaded_1280x800).
                     KitTopBar(
                         title = settingsTitle(),
-                        exit = KitTopBarExit.Back,
+                        exit = if (onExit != null) KitTopBarExit.Back else KitTopBarExit.None,
                         exitLabel = stringResource(Res.string.kitTopBarBack),
-                        onExit = { actions.onBack() },
+                        onExit = onExit,
+                        backBesideTitle = true,
                     )
                 },
                 list = {

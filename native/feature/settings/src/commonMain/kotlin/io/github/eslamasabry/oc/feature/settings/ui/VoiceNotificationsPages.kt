@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
@@ -120,6 +121,9 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
  */
 @Composable
 internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions) {
+    // Flutter's KitSwitchRow is a KitRow: 64 dp with two lines (lib/ui/kit/kit_row.dart:502-506). The kit's icon
+    // switch row asks for the one-line 56, so the two-line minimum is asked here (kit change reported).
+    val twoLine = Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
     var checkInOpen by remember { mutableStateOf(false) }
     val defaultCheckIn = 30 // F: lib/domain/profile_monitor.dart:31
     if (checkInOpen)
@@ -180,6 +184,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             checked = n.finishedWork,
             supporting = stringResource(Res.string.notifyFinishedRunsDetail),
             enabled = enabled,
+            modifier = twoLine,
             onCheckedChange = { actions.onNotification(NotificationChange.FinishedWork(it)) },
         )
         KitIconSwitchRow(
@@ -188,6 +193,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             checked = n.questions,
             supporting = stringResource(Res.string.notifyRequestsDetail),
             enabled = enabled,
+            modifier = twoLine,
             onCheckedChange = { actions.onNotification(NotificationChange.Questions(it)) },
         )
         KitIconSwitchRow(
@@ -195,6 +201,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             icon = KitIcons.clock,
             checked = n.checkInMinutes != null,
             supporting = stringResource(Res.string.monitorCheckInDetail),
+            modifier = twoLine,
             onCheckedChange = {
                 actions.onNotification(
                     NotificationChange.CheckIn(
@@ -234,6 +241,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             icon = KitIcons.darkMode,
             checked = quiet != null,
             supporting = stringResource(Res.string.notifyQuietDetail),
+            modifier = twoLine,
             onCheckedChange = actions::onQuietHours,
         )
         if (quiet != null) {
@@ -253,6 +261,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             )
         }
     }
+    SectionGap()
     KitRowGroup(leadingTiles = true, label = stringResource(Res.string.notifySectionServers)) {
         n.profiles.forEach { profile ->
             KitIconSwitchRow(
@@ -264,6 +273,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
                     if (profile.supported) KitEnabled.Enabled
                     else
                         KitEnabled.Disabled(stringResource(Res.string.e7ProjectMonitorUnsupported)),
+                modifier = twoLine,
                 onCheckedChange = {
                     actions.onNotification(NotificationChange.ProfileWatch(profile.id, it))
                 },
@@ -291,10 +301,12 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             icon = KitIcons.network,
             checked = n.wifiOnly,
             supporting = stringResource(Res.string.monitorWifiDetail),
+            modifier = twoLine,
             onCheckedChange = { actions.onNotification(NotificationChange.WifiOnly(it)) },
         )
     }
     n.background?.let { bg ->
+        SectionGap()
         KitRowGroup(
             leadingTiles = true,
             label = stringResource(Res.string.notifySectionBackground),
@@ -341,3 +353,13 @@ internal fun quietText(q: QuietHours): String = "${clock(q.start)}–${clock(q.e
 
 internal fun clock(minutes: Int): String =
     "${(minutes / 60).toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}"
+
+/**
+ * The space between two labelled sections: Flutter's `SizedBox(height: tokens.sectionGap)`
+ * (lib/ui/screens/settings/notifications_settings_screen.dart:644-646), less the page column's own
+ * step that already sits between them.
+ */
+@Composable
+private fun SectionGap() {
+    Spacer(Modifier.height((LocalKitTokens.current.sectionGap - Space.S2).dp))
+}

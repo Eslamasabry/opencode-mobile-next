@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -17,6 +18,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.LiveStrength
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.color.Accents
+import io.github.eslamasabry.oc.ui.design.color.Packs
+import io.github.eslamasabry.oc.ui.design.color.withPartner
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
@@ -37,8 +40,8 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.choice.KitSliderStep
 import io.github.eslamasabry.oc.ui.kit.choice.KitStepSlider
 import io.github.eslamasabry.oc.ui.kit.choice.KitStyleOptionCard
-import io.github.eslamasabry.oc.ui.kit.choice.KitSwatch
-import io.github.eslamasabry.oc.ui.kit.choice.KitSwatchGrid
+import io.github.eslamasabry.oc.ui.kit.choice.KitAccentRow
+import io.github.eslamasabry.oc.ui.kit.choice.KitAccentSwatch
 import io.github.eslamasabry.oc.ui.kit.choice.KitThemeOptionCard
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -66,7 +69,6 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSaverNote
 import io.github.eslamasabry.oc.ui.words.res.appearanceSeeAllThemes
 import io.github.eslamasabry.oc.ui.words.res.appearanceShapeSpacing
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionSystemOff
-import io.github.eslamasabry.oc.ui.words.res.kitSwatchInUse
 import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
@@ -249,12 +251,18 @@ private fun ColumnScope.AppearanceControls(
             }
         }
         if (ui.seeAllCount > 0) {
-            KitButton(
-                stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
-                actions::onSeeAllPacks,
-                gutter.padding(top = Space.S3.dp).testTag("appearance-see-all"),
-                role = KitButtonRole.Secondary,
-            )
+            // Flutter's "See all" fills the column under the grid (lib/ui/screens/settings/
+            // appearance_screen.dart:783-786, :933); the gutter sits outside the button so the kit's own
+            // control cap does not shorten it.
+            Box(Modifier.fillMaxWidth().padding(top = Space.S3.dp).then(gutter)) {
+                KitButton(
+                    stringResource(Res.string.appearanceSeeAllThemes, ui.seeAllCount),
+                    actions::onSeeAllPacks,
+                    Modifier.testTag("appearance-see-all"),
+                    role = KitButtonRole.Secondary,
+                    fullWidth = true,
+                )
+            }
         }
     }
     if (question == null || question == AppearanceQuestion.AccentColour) {
@@ -265,32 +273,22 @@ private fun ColumnScope.AppearanceControls(
             top,
         )
         Box(gutter) {
+            // Flutter's Accent: KitAccentRow.grid, "Match" first in the theme's own accent, then every swatch with its
+            // name, four to a row, each guarded for this theme (lib/ui/screens/settings/appearance_screen.dart:946-962).
             val dark = LocalKitColors.current.dark
-            val inUse = stringResource(Res.string.kitSwatchInUse)
-            val match = stringResource(Res.string.appearanceAccentMatchShort)
-            KitSwatchGrid(
-                label = stringResource(Res.string.appearanceAskAccent),
-                inUseLabel = inUse,
-                modifier = Modifier.testTag("appearance-accent"),
+            val own = Packs.of(ui.pack).palette(dark).roles
+            KitAccentRow(
+                semanticsLabel = stringResource(Res.string.appearanceAskAccent),
+                matchLabel = stringResource(Res.string.appearanceAccentMatchShort),
+                themeAccent = Color(own.accent.v),
                 swatches =
-                    listOf(
-                        KitSwatch(
-                            "match",
-                            match,
-                            null,
-                            ui.accent == null,
-                            onPressed = { actions.onAccent(null) },
-                        )
-                    ) +
-                        Accents.swatches.map { sw ->
-                            KitSwatch(
-                                sw.id,
-                                accentWords(sw.id),
-                                Color(sw.of(dark).v),
-                                ui.accent == sw.id,
-                                onPressed = { actions.onAccent(sw.id) },
-                            )
-                        },
+                    Accents.swatches.map { sw ->
+                        KitAccentSwatch(sw.id, Color(own.withPartner(sw.of(dark)).partner.v), accentWords(sw.id))
+                    },
+                selected = ui.accent,
+                onChanged = actions::onAccent,
+                modifier = Modifier.testTag("appearance-accent"),
+                grid = true,
             )
         }
         KitGroupNote(stringResource(Res.string.appearanceAccentMatchNote, packName(ui.pack)))
@@ -395,9 +393,19 @@ private fun ColumnScope.AppearanceControls(
                 KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsBackground))
             else KitEnabled.Enabled
         val scale = LocalDensity.current.fontScale
+        // Flutter lists Off and its picks until "See all" opens every look; the chosen look always shows (the one
+        // page in the last place, so the rows stay full) (GLASS_REF appearance_screen.dart:1113-1126, :1155-1160).
+        var allLooks by rememberSaveable { mutableStateOf(false) }
+        val picks = LOOK_PICKS.filter(LiveLooks::draws).let { if (onePage) it.take(5) else it }
+        val chosen = ui.liveLook?.takeIf(LiveLooks::draws)
+        val looks =
+            if (allLooks) LiveLooks.offered
+            else
+                picks.filter { !onePage || chosen == null || chosen in picks || it != picks.last() } +
+                    listOfNotNull(chosen?.takeIf { it !in picks })
         Box(gutter) {
             AppearanceGrid(
-                listOf(null) + LiveLooks.offered,
+                listOf(null) + looks,
                 3, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
                 (136 + 44 * scale).dp, // FG: lib/ui/screens/settings/appearance_screen.dart:1055
             ) { look ->
@@ -409,6 +417,17 @@ private fun ColumnScope.AppearanceControls(
                     modifier = Modifier.fillMaxSize().testTag("appearance-look-${look ?: "off"}"),
                     enabled = held.isEnabled,
                     disabledReason = held.reason,
+                )
+            }
+        }
+        if (!allLooks) {
+            Box(Modifier.fillMaxWidth().padding(top = Space.S3.dp).then(gutter)) {
+                KitButton(
+                    stringResource(Res.string.appearanceSeeAllLooks, LiveLooks.offered.size),
+                    { allLooks = true },
+                    Modifier.testTag("appearance-see-all-looks"),
+                    role = KitButtonRole.Secondary,
+                    fullWidth = true,
                 )
             }
         }
@@ -570,6 +589,9 @@ private fun AppearanceQuestionHeading(title: String, top: Dp = Space.S6.dp) {
     )
 }
 
+/** Flutter's `_lookPicks`, in its order (GLASS_REF lib/ui/screens/settings/appearance_screen.dart:58-66). */
+private val LOOK_PICKS = listOf("aurora", "mesh", "dotRipple", "lightRays", "bokeh", "silk", "topo")
+
 @Composable
 private fun <T> AppearanceGrid(
     choices: List<T>,
@@ -585,7 +607,8 @@ private fun <T> AppearanceGrid(
                         Modifier.weight(1f)
                             .then(if (cellHeight != null) Modifier.height(cellHeight) else Modifier)
                     ) {
-                        row.getOrNull(index)?.let { cell(it) }
+                        // By index, not getOrNull: a null choice (the Look picker's Off) is a cell too.
+                        if (index < row.size) cell(row[index])
                     }
                 }
             }
@@ -601,7 +624,7 @@ private fun motionIcon(level: MotionLevel) =
     }
 
 @Composable
-private fun strengthWords(strength: LiveStrength): String =
+internal fun strengthWords(strength: LiveStrength): String =
     stringResource(
         when (strength) {
             LiveStrength.Subtle -> Res.string.liveIntensitySubtle

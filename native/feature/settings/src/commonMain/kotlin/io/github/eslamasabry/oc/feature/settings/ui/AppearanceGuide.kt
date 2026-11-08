@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -23,6 +24,9 @@ import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.words.res.appearanceStrengthNoLook
+import io.github.eslamasabry.oc.ui.words.res.appearanceLookOff
+import io.github.eslamasabry.oc.ui.kit.live.LiveLooks
 
 /**
  * Visible group and question chips: every gesture-free path stays available during and after the
@@ -77,6 +81,7 @@ internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: Settin
             }
         }
     } else {
+        val picked = pickedOn(ui)
         KitGuideRail(
             items =
                 questions
@@ -87,7 +92,9 @@ internal fun ColumnScope.AppearanceGuideHeader(ui: AppearanceUi, actions: Settin
                             appearanceQuestionWords(item),
                             appearanceQuestionValue(ui, item),
                             done = item != question && item in record.seen,
-                            next = item == next,
+                            // Flutter rings the next question only once something was picked on this one
+                            // (appearance_screen.dart:280, :569).
+                            next = picked && item == next,
                             held = ui.heldBySaver && item.heldBySaver,
                         )
                     },
@@ -140,7 +147,19 @@ internal fun AppearanceGuideNext(ui: AppearanceUi, actions: SettingsActions) {
                     else appearanceGroupWords(next.group),
                 )
         }
-    KitGuideNextBar(count, label, actions::onAppearanceNext, ready = question == null)
+    // Ready on the overview; on a question once something was picked there (appearance_screen.dart:623).
+    KitGuideNextBar(count, label, actions::onAppearanceNext, ready = question == null || pickedOn(ui))
+}
+
+/**
+ * Flutter's `_picked`: the person chose something since this question opened. Kept by the view, as in Flutter
+ * (a view-local flag reset by `_open`): the choices as they were when the question opened, against the choices now.
+ */
+@Composable
+private fun pickedOn(ui: AppearanceUi): Boolean {
+    val question = ui.question ?: return false
+    val opened = remember(question) { ui.copy(guide = null) }
+    return ui.copy(guide = null) != opened
 }
 
 @Composable
@@ -163,8 +182,18 @@ private fun appearanceGroupValue(ui: AppearanceUi, group: AppearanceGroup): Stri
                     }
                 ),
             )
-        // No Background group is offered until its questions are exposed by presentation.
-        AppearanceGroup.Background -> ""
+        // F: lib/ui/screens/settings/appearance_screen.dart:499-507
+        AppearanceGroup.Background ->
+            when {
+                ui.heldBySaver -> stringResource(Res.string.appearanceOffInSaver)
+                ui.liveLook != null ->
+                    stringResource(
+                        Res.string.appearanceGroupPair,
+                        stringResource(LiveLooks.label(ui.liveLook)),
+                        strengthWords(ui.liveStrength),
+                    )
+                else -> stringResource(Res.string.appearanceLookOff)
+            }
     }
 
 @Composable
@@ -186,8 +215,13 @@ private fun appearanceQuestionValue(ui: AppearanceUi, question: AppearanceQuesti
             )
         AppearanceQuestion.Text -> textSizeWords(ui.textSize)
         AppearanceQuestion.Motion -> motionWords(if (ui.heldBySaver) MotionLevel.Off else ui.motion)
-        AppearanceQuestion.Look,
-        AppearanceQuestion.Strength,
+        // F: lib/ui/screens/settings/appearance_screen.dart:466-473
+        AppearanceQuestion.Look ->
+            ui.liveLook?.let { stringResource(LiveLooks.label(it)) }
+                ?: stringResource(Res.string.appearanceLookOff)
+        AppearanceQuestion.Strength ->
+            if (ui.liveLook != null) strengthWords(ui.liveStrength)
+            else stringResource(Res.string.appearanceStrengthNoLook)
         AppearanceQuestion.Glow -> ""
     }
 }
