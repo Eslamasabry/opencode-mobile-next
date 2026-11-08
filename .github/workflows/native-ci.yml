@@ -41,11 +41,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: |
-            native
-            .github
-            docs
       - uses: ./.github/actions/native-setup
       - name: Compile app (previewBenchmark) and every module's tests
         run: ./gradlew :androidApp:compilePreviewBenchmarkKotlin compileAllTests $GRADLE_FLAGS
@@ -61,11 +56,6 @@ jobs:
         shard: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: |
-            native
-            .github
-            docs
       - uses: ./.github/actions/native-setup
       - name: Pick this shard's modules
         id: pick
@@ -110,11 +100,6 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: |
-            native
-            .github
-            docs
       - uses: ./.github/actions/native-setup
       - name: Build previewBenchmark APK (debug-signed, lintVital skipped)
         run: |
@@ -137,10 +122,5 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: |
-            native
-            .github
-            docs
       - uses: ./.github/actions/native-setup
       - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
