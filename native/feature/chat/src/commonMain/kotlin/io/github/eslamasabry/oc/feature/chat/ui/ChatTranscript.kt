@@ -201,6 +201,8 @@ internal class ReplyActions(
     val openAccountLabel: String? = null,
     val compactLabel: String? = null,
     val onOpenProviders: () -> Unit = {},
+    /** S28 story 6: a finished shell step's "Run this command again" (null = this server runs no shell here). */
+    val onRerunCommand: ((String) -> Unit)? = null,
 )
 
 /**

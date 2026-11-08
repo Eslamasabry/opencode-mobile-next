@@ -822,6 +822,10 @@ public fun ChatScreen(
                                                     modelPicker = (modelPicker ?: 0L) + 1L
                                                 },
                                                 onOpenCode = { codeReader = it },
+                                                onRerunCommand =
+                                                    if (workModel != null && state.capabilities.shell && !demoMode)
+                                                        workModel::openShellDialog
+                                                    else null,
                                             ),
                                         onOpenFile = { file -> openArtifact(actions, file) },
                                         onAllFiles = actions::openFiles,
@@ -1284,6 +1288,7 @@ internal fun rememberReplyActions(
     canCompact: Boolean = false,
     onChooseModel: () -> Unit = {},
     onOpenCode: (KitMdBlock.Code) -> Unit = {},
+    onRerunCommand: ((String) -> Unit)? = null,
 ): ReplyActions {
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
@@ -1319,6 +1324,7 @@ internal fun rememberReplyActions(
         compactLabel,
         openFullCode,
         onOpenCode,
+        onRerunCommand,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -1369,6 +1375,7 @@ internal fun rememberReplyActions(
             openAccountLabel = openAccount,
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
+            onRerunCommand = onRerunCommand,
         )
     }
 }
