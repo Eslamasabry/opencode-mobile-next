@@ -1,6 +1,7 @@
 plugins { id("oc.android.library") }
 
 android {
+    testOptions { unitTests.isIncludeAndroidResources = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -17,4 +18,7 @@ dependencies {
     implementation("com.github.termux.termux-app:terminal-view:v0.118.3") {
         exclude(group = "com.github.termux.termux-app", module = "terminal-emulator")
     }
+    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.junit4)
+    testImplementation(libs.robolectric)
 }

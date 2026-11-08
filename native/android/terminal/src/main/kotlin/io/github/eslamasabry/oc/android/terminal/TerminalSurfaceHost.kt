@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.view.MotionEvent
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TextStyle
@@ -22,6 +23,10 @@ internal open class TerminalSurfaceHost(context: Context, protected val terminal
     private var palette: TerminalPalette? = null
 
     init {
+        // Termux's TerminalView leaves focus to its layout XML (the Termux app sets both flags there). Built in code
+        // it takes neither focus nor the keyboard: a tap never connected the IME and keys never reached the process.
+        terminal.isFocusable = true
+        terminal.isFocusableInTouchMode = true
         addView(
             terminal,
             LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
@@ -82,6 +87,18 @@ internal open class TerminalSurfaceHost(context: Context, protected val terminal
         open(url)
         return true
     }
+}
+
+/**
+ * A tap on the grid: the grid takes focus (so a hardware keyboard and the IME's input connection reach it) and the
+ * on-screen keyboard comes up. An explicit tap asks for the keyboard outright, so it also shows when the phone has a
+ * hardware keyboard attached.
+ */
+internal fun showTerminalKeyboard(view: android.view.View) {
+    if (!view.isFocusable) return
+    view.requestFocus()
+    (view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
+        ?.showSoftInput(view, 0)
 }
 
 /**
