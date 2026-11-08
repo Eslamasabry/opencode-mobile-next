@@ -27,7 +27,7 @@ kotlin {
 // Order 49 compares the agents screens against the frozen Flutter scenes (the test-only :ui:gate module).
 kotlin.sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }
 
-// Agents page review renders (AgentsBentoRenders): written, never compared, when the goldens lane records
+// Agents page review renders (AgentsBentoRendersTest): written, never compared, when the goldens lane records
 // (`-Poc.recordGoldens=true`), on the runner.
 tasks.withType<Test>().configureEach {
     systemProperty(

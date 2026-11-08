@@ -48,7 +48,7 @@ import kotlinx.collections.immutable.persistentListOf
  * CI goldens lane records (so the runner's fonts draw them), and skipped otherwise.
  */
 @OptIn(ExperimentalTestApi::class)
-class AgentsBentoRenders {
+class AgentsBentoRendersTest {
     /**
      * Not a check: the review renders. Runs only when `AGENTS_BENTO_RENDER_DIR` names a folder, and writes one phone
      * screen per image (412 x 915 dp at 2.625) of the page with one agent in each state, in Solid and Glass, light and
