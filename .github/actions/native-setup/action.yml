@@ -15,6 +15,15 @@ runs:
       run: |
         yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "platform-tools" >/dev/null
+    - name: Gradle memory for a 4 CPU / 16 GB runner
+      shell: bash
+      run: |
+        mkdir -p ~/.gradle
+        cat >> ~/.gradle/gradle.properties <<'EOP'
+        org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8
+        org.gradle.workers.max=4
+        oc.test.forks=2
+        EOP
     - name: Gradle (cached)
       uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       with:

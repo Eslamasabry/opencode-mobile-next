@@ -26,9 +26,7 @@ concurrency:
 
 env:
   # Runners have 4 CPUs and 16 GB. Gradle daemon 6g + Kotlin in-process (gradle.properties) + test forks.
-  GRADLE_FLAGS: >-
-    -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8"
-    -Dorg.gradle.workers.max=4 -Poc.test.forks=2 --continue --stacktrace
+  GRADLE_FLAGS: --continue --stacktrace
   OC_GOLDEN_HOST: "0"
 
 defaults:
