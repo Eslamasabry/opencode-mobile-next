@@ -23,7 +23,7 @@ import kotlin.test.Test
 class ChatsGateTest {
     private val actions = RecordingChatsActions()
 
-    private fun row(id: String, title: String, project: String, status: RowStatus, minutesAgo: Long) =
+    private fun row(id: String, title: String, project: String, status: RowStatus, minutesAgo: Long, directory: String = "/root/projects/$project") =
         ConversationRowUi(
             id,
             ConversationRef(ProfileId("p1"), SessionId(id)),
@@ -31,7 +31,7 @@ class ChatsGateTest {
             project,
             status,
             updatedAtMs = NOW - minutesAgo * MINUTE,
-            directory = "/root/projects/$project",
+            directory = directory,
         )
 
     private val login = row("a", "Fix the login bug", "alpha", RowStatus.NeedsYou, 2)
@@ -83,9 +83,17 @@ class ChatsGateTest {
     @Test fun running() { shot("chats_home_running", runningState()) }
     @Test fun runningWide() { shot("chats_home_running_1280x800", runningState()) }
 
-    // G4: the project sheet over the list, with the Other folders row (scratch and home notes: 8 in all).
+    // G4: the project sheet over the list, with the Other folders row: Flutter's scene adds a scratch idea in /tmp and
+    // home notes in /root (test/goldens/chats_home_golden_test.dart:97-116), which the list behind the sheet shows too, in the feed's order (as the golden lists them).
+    private val scratch = row("g", "Scratch idea", "tmp", RowStatus.None, 2 * DAY, directory = "/tmp/scratch")
+    private val homeNotes = row("h", "Home notes", "Home", RowStatus.None, 4 * DAY, directory = "/root")
     private fun sheetState() =
-        mixedState().copy(allCount = 8, otherFoldersCount = 2, sheet = ChatsHomeSheet.Projects)
+        mixedState().copy(
+            earlier = persistentListOf(rename, release, scratch, homeNotes),
+            allCount = 8,
+            otherFoldersCount = 2,
+            sheet = ChatsHomeSheet.Projects,
+        )
     @Test fun projectSheet() { shot("chats_home_sheet", sheetState()) }
     @Test fun projectSheetWide() { shot("chats_home_sheet_1280x800", sheetState()) }
 
