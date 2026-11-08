@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.feature.agents.signin.RecordingClipboard
 import io.github.eslamasabry.oc.feature.agents.signin.RecordingLinks
 import io.github.eslamasabry.oc.feature.agents.signin.SignInAdmission
 import io.github.eslamasabry.oc.feature.agents.signin.SignInCommand
+import io.github.eslamasabry.oc.feature.agents.signin.SignInStartStep
 import io.github.eslamasabry.oc.feature.agents.signin.TerminalEvent
 import io.github.eslamasabry.oc.feature.agents.signin.TerminalTarget
 import io.github.eslamasabry.oc.feature.agents.signin.TestLoop
@@ -257,6 +258,59 @@ class SignInTerminalPresenterTest {
             assertEquals(SignInStep.Failed, ui.step)
             assertEquals("sign-in-start", ui.failureCode)
             assertFalse("private" in ui.toString())
+        }
+
+    @Test
+    fun `a failed start says where it stopped and keeps the technical text for Details`() =
+        loop.run {
+            host.failAt =
+                SignInStartStep.Connect to
+                    io.github.eslamasabry.oc.core.common.Failure.Network(
+                        io.github.eslamasabry.oc.core.common.NetworkWhy.Refused,
+                    )
+            val screen = presenter()
+            loop.pump()
+            val ui = screen.state.value
+            assertEquals(SignInStep.Failed, ui.step)
+            assertEquals(SignInStartStep.Connect, ui.startStep)
+            assertEquals("sign-in-start · connect\nNetwork (Refused)", ui.failureDetails)
+        }
+
+    @Test
+    fun `Start again after a failed start clears the old reason and opens a new terminal`() =
+        loop.run {
+            host.failAt =
+                SignInStartStep.Terminal to io.github.eslamasabry.oc.core.common.Failure.Server(500)
+            val screen = presenter()
+            loop.pump()
+            assertEquals(SignInStep.Failed, screen.state.value.step)
+            host.failAt = null
+            screen.startAgain()
+            loop.pump()
+            val ui = screen.state.value
+            assertEquals(SignInStep.Running, ui.step)
+            assertNull(ui.startStep)
+            assertNull(ui.failureDetails)
+            assertEquals(2, host.targets.size)
+        }
+
+    @Test
+    fun `Paste writes the clipboard's code into the running sign-in, trimmed, and nothing once it ended`() =
+        loop.run {
+            val screen = presenter()
+            loop.pump()
+            val terminal = host.terminals.single()
+            screen.paste("  4/0AbCdEf-GhIj_KlMn\n")
+            loop.pump()
+            assertEquals(listOf("4/0AbCdEf-GhIj_KlMn"), terminal.written)
+            screen.paste("   ")
+            loop.pump()
+            assertEquals(1, terminal.written.size)
+            terminal.eventsFlow.emit(TerminalEvent.Exited(0))
+            loop.pump()
+            screen.paste("late")
+            loop.pump()
+            assertEquals(1, terminal.written.size)
         }
 
     @Test
