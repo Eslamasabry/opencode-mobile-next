@@ -338,6 +338,7 @@ class PaseoUsageSource implements UsageSource {
               connectionId: id,
               status: UsageReadingStatus.notSignedIn,
               fetchedAt: reading.fetchedAt,
+              accountRef: reading.accountRef,
               method: SignInMethod.plan,
             ),
           );
@@ -352,6 +353,8 @@ class PaseoUsageSource implements UsageSource {
                 ? UsageReadingStatus.noLimits
                 : UsageReadingStatus.ok,
             fetchedAt: reading.fetchedAt,
+            plan: reading.planLabel,
+            accountRef: reading.accountRef,
             method: SignInMethod.plan,
             windows: [
               for (final w in reading.windows)

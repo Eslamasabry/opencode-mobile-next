@@ -44,9 +44,35 @@ class AntigravityQuotaClient {
   /// installed. Paths are fixed strings (the profile id is checked above).
   static String cliScript({String? profileId}) {
     final candidates = candidateCliPaths(profileId: profileId).join(' ');
+    final pId = (profileId != null && _safeId.hasMatch(profileId))
+        ? profileId
+        : '';
     return 'for b in $candidates; do '
-        'if [ -x "\$b" ]; then HOME="\${b%/.local/bin/agy}" exec "\$b" -p /usage --output-format json; fi; '
+        'if [ -x "\$b" ]; then '
+        'HOME="\${b%/.local/bin/agy}"; '
+        'f="\$HOME/.gemini/antigravity-cli/antigravity-oauth-token"; '
+        'if [ ! -f "\$f" ] && [ -n "$pId" ]; then f="/home/oc/.oc-profiles/$pId/.gemini/antigravity-cli/antigravity-oauth-token"; fi; '
+        'if [ ! -f "\$f" ]; then for o in /home/oc/.oc-profiles/*/.gemini/antigravity-cli/antigravity-oauth-token; do if [ -f "\$o" ]; then f="\$o"; break; fi; done; fi; '
+        'e=\$(grep -o \'"id_token_email"[[:space:]]*:[[:space:]]*"[^"]*"\' "\$f" 2>/dev/null | cut -d\'"\' -f4); '
+        'if [ -z "\$e" ]; then e=\$(grep -o \'"email"[[:space:]]*:[[:space:]]*"[^"]*"\' "\$f" 2>/dev/null | cut -d\'"\' -f4); fi; '
+        'if [ -n "\$e" ]; then echo "ACCOUNT_EMAIL:\$e"; fi; '
+        'exec "\$b" -p /usage --output-format json; '
+        'fi; '
         'done; exit 127';
+  }
+
+  static final RegExp _accountPattern =
+      RegExp(r'^ACCOUNT_EMAIL:([^\r\n]+)', multiLine: true);
+
+  static String? _accountIn(String output) {
+    final match = _accountPattern.firstMatch(output);
+    if (match != null) {
+      final email = match.group(1)?.trim();
+      if (email != null && email.isNotEmpty) {
+        return cleanUsageText(email, 64);
+      }
+    }
+    return null;
   }
 
   /// The CLI's quota readings, or an empty list when the CLI is missing, not
@@ -67,7 +93,12 @@ class AntigravityQuotaClient {
       if (res.exitCode != 0) return const [];
       final body = _jsonObjectIn(res.output);
       if (body == null) return const [];
-      final readings = parseCliJson(body, currentNow: currentNow);
+      final accountEmail = _accountIn(res.output);
+      final readings = parseCliJson(
+        body,
+        currentNow: currentNow,
+        accountEmail: accountEmail,
+      );
       if (readings.isNotEmpty) _cachedReadings = readings;
       return readings;
     } catch (_) {
@@ -92,6 +123,7 @@ class AntigravityQuotaClient {
     Map<String, dynamic> data, {
     DateTime? currentNow,
     String? planLabel,
+    String? accountEmail,
   }) {
     final now = currentNow ?? DateTime.now().toUtc();
     final readings = <ProviderUsageReading>[];
@@ -101,6 +133,18 @@ class AntigravityQuotaClient {
     if (cmdData is! Map) return readings;
     final groups = cmdData['groups'];
     if (groups is! List) return readings;
+
+    final resolvedEmail = accountEmail ??
+        cleanUsageText(
+          cmdData['account'] ??
+              cmdData['email'] ??
+              cmdData['user'] ??
+              command['account'] ??
+              command['email'] ??
+              data['account'] ??
+              data['email'],
+          64,
+        );
 
     for (final group in groups) {
       if (group is! Map) continue;
@@ -199,6 +243,7 @@ class AntigravityQuotaClient {
             fetchedAt: now,
             windows: windows,
             planLabel: planLabel ?? 'Google AI Pro',
+            accountRef: resolvedEmail,
             needsSignIn: false,
           ),
         );

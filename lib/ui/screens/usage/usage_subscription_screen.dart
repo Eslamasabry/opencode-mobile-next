@@ -517,8 +517,12 @@ class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
                       if (fetched != null)
                         KitTechnicalValue(
                           l10n.usageDetailAccount,
-                          s.accountRef == null ? l10n.usageNo : l10n.usageYes,
-                          copyable: false,
+                          s.accountRef == null
+                              ? l10n.usageNo
+                              : (_isDisplayableAccount(s.accountRef)
+                                  ? s.accountRef!
+                                  : l10n.usageYes),
+                          copyable: _isDisplayableAccount(s.accountRef),
                         ),
                       for (final c in computers)
                         if (usage.readerProblemFor(c.id) case final problem?)
@@ -547,4 +551,11 @@ class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
       },
     );
   }
+}
+
+final _opaqueHashPattern = RegExp(r'^[a-f0-9]{64}$');
+bool _isDisplayableAccount(String? ref) {
+  if (ref == null || ref.isEmpty) return false;
+  if (ref.length <= 2 || _opaqueHashPattern.hasMatch(ref)) return false;
+  return ref.contains('@') || !RegExp(r'^[a-f0-9]+$').hasMatch(ref);
 }
