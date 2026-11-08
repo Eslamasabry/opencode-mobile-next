@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
+import io.github.eslamasabry.oc.feature.chat.ui.ComposerTip
+import io.github.eslamasabry.oc.feature.chat.ui.ComposerTipRules
+import io.github.eslamasabry.oc.feature.chat.ui.OfferComposerTip
+import io.github.eslamasabry.oc.feature.chat.ui.rememberTipUsed
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -80,6 +85,8 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStopRing
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitInsertedPicture
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitPictureReceiver
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStep
+import io.github.eslamasabry.oc.ui.words.res.tipSendLater
+import io.github.eslamasabry.oc.ui.words.res.tipStopAfterStep
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
@@ -843,6 +850,14 @@ public fun BasicComposer(
         // server steers the running turn; a tap still stops at once.
         val afterStep = chrome.stopAfterStep()
         val afterStepLabel = stringResource(Res.string.chatStopAfterStep)
+        // S28 story 15: hold Stop is taught once a reply has run for a while and the hold offers something.
+        val stopTipUsed = rememberTipUsed(TeachingIds.StopAfterStep)
+        OfferComposerTip(
+            TeachingIds.StopAfterStep,
+            due = ComposerTipRules.stopTipDue(busy, afterStep != null),
+            blocked = chrome.requestWaiting(),
+            afterMs = ComposerTipRules.STOP_TIP_AFTER_MS,
+        )
         var stopMenu by remember { mutableStateOf(false) }
         if (afterStep == null && stopMenu) stopMenu = false
         val stopPart: @Composable () -> Unit = {
@@ -851,19 +866,21 @@ public fun BasicComposer(
                 items =
                     listOfNotNull(
                         afterStep?.let { run ->
-                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; run() })
+                            KitMenuItem(afterStepLabel, onSelect = { stopMenu = false; stopTipUsed(); run() })
                         }
                     ),
                 onDismissRequest = { stopMenu = false },
             ) {
-                KitComposerStopRing(
-                    label = stopLabel,
-                    onClick = chrome.onStop,
-                    stopping = chrome.stopping(),
-                    onLongClick = afterStep?.let { { stopMenu = true } },
-                    onLongClickLabel = afterStepLabel,
-                    modifier = Modifier.testTag("chat-stop-button"),
-                )
+                ComposerTip(TeachingIds.StopAfterStep, stringResource(Res.string.tipStopAfterStep)) {
+                    KitComposerStopRing(
+                        label = stopLabel,
+                        onClick = chrome.onStop,
+                        stopping = chrome.stopping(),
+                        onLongClick = afterStep?.let { { stopMenu = true } },
+                        onLongClickLabel = afterStepLabel,
+                        modifier = Modifier.testTag("chat-stop-button"),
+                    )
+                }
             }
         }
         // F1 (scoreboard 2026-11-07), Flutter's layout (chat_composer_region.dart:44-77, kit_composer.dart:796-808):
@@ -871,6 +888,13 @@ public fun BasicComposer(
         // the end), and the box is one row (plus, the words, mic or Send) until the words outgrow it. Stop keeps
         // the native Send/Stop morph on the round target.
         val stopLeads = stopShown && typed && !waitingRequest
+        // S28 story 15: hold Send is taught while words wait, no reply runs and Send offers Send later.
+        val sendTipUsed = rememberTipUsed(TeachingIds.SendLater)
+        OfferComposerTip(
+            TeachingIds.SendLater,
+            due = ComposerTipRules.sendTipDue(typed, busy, chrome.sendLater != null && sendReady),
+            blocked = waitingRequest,
+        )
         KitComposerStatusStrip(
             hasChips = true,
             modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
@@ -1062,6 +1086,7 @@ public fun BasicComposer(
                             hasMessage = inlineMic || voice == null,
                             mic = { voice?.Mic(voiceField, Modifier) },
                             send = {
+                                ComposerTip(TeachingIds.SendLater, stringResource(Res.string.tipSendLater)) {
                                 KitComposerSend(
                                     label = sendLabel,
                                     onClick = send,
@@ -1081,12 +1106,14 @@ public fun BasicComposer(
                                                 {
                                                     // N-44: the keyboard goes first (the wheel stays in sight).
                                                     focusManager.clearFocus()
+                                                    sendTipUsed()
                                                     later(field.text.toString())
                                                 }
                                             },
                                     onLongClickLabel = stringResource(Res.string.tipSendLaterTitle),
                                     modifier = Modifier.testTag("chat-send-button"),
                                 )
+                                }
                             },
                         )
                 },
