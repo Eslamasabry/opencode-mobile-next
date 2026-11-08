@@ -9,12 +9,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
@@ -89,7 +101,39 @@ internal class KitThemeCover(internal val layer: GraphicsLayer) {
 
     /** True while the old screen still covers part of the new one. */
     internal val fading: Boolean get() = shot != null
+
+    /** The parts kept out of the fade while [KitThemeCoverHole.open], and the cover's own place to find them from. */
+    internal val holes: MutableList<KitThemeCoverHole> = mutableStateListOf()
+    internal var coords: LayoutCoordinates? = null
+
+    /** The open holes' outlines in the cover's pixels, or null when there is none. */
+    internal fun holePath(direction: LayoutDirection, density: Density): Path? {
+        val own = coords?.takeIf { it.isAttached } ?: return null
+        var path: Path? = null
+        for (hole in holes) {
+            val at = hole.coords?.takeIf { hole.open && it.isAttached } ?: continue
+            val box = own.localBoundingBoxOf(at, clipBounds = false)
+            val one = Path().apply { addOutline(hole.shape.createOutline(box.size, direction, density)) }
+            (path ?: Path().also { path = it }).addPath(one, box.topLeft)
+        }
+        return path
+    }
 }
+
+/**
+ * A part that runs its own theme-switch motion (the mode control, s33): while [open], the theme cover's old picture is
+ * not drawn over it, so the part shows the new theme at once under its own motion instead of the old and new themes
+ * blended (the grey wash the owner saw mid-fade). [coords] is the part's place, [shape] its outline.
+ */
+@Stable
+internal class KitThemeCoverHole {
+    var open: Boolean by mutableStateOf(false)
+    var coords: LayoutCoordinates? = null
+    var shape: Shape = RectangleShape
+}
+
+/** The theme's cover, for parts that keep themselves out of its fade ([KitThemeCoverHole]); null outside a theme. */
+internal val LocalKitThemeCover = staticCompositionLocalOf<KitThemeCover?> { null }
 
 /** The colours shown now and the cover that fades the old screen out. */
 internal class KitThemeFadeFrame(val colors: KitColors, val cover: KitThemeCover)
@@ -139,15 +183,22 @@ internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFa
  * Draws the theme's content through [cover]'s layer (so the last frame can be captured) and the fading old screen
  * over it. The cover is drawn inside the layer, so a capture taken mid-fade holds what was really on screen.
  */
-internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier = drawWithContent {
-    val content = this
-    cover.layer.record {
-        content.drawContent()
+internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier =
+    onPlaced { cover.coords = it }.drawWithContent {
+        val content = this
         val shot = cover.shot
-        if (shot != null) drawImage(shot, alpha = cover.alpha.value.coerceIn(0f, 1f))
+        // Worked out here, not inside record: the recording scope's density is the content's (a cycle).
+        val holes = if (shot != null) cover.holePath(layoutDirection, Density(density, fontScale)) else null
+        cover.layer.record {
+            content.drawContent()
+            if (shot != null) {
+                val alpha = cover.alpha.value.coerceIn(0f, 1f)
+                if (holes == null) drawImage(shot, alpha = alpha)
+                else clipPath(holes, ClipOp.Difference) { drawImage(shot, alpha = alpha) }
+            }
+        }
+        drawLayer(cover.layer)
     }
-    drawLayer(cover.layer)
-}
 
 /**
  * The theme-change frame meter (theme-switch-premium Step 0): after each faded theme change it holds how long the frame

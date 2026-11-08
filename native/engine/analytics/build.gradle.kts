@@ -4,7 +4,9 @@ plugins { id("oc.kmp.library") }
 // every engine may emit into it once ModuleRules.engineOrder lists it (catalog request in docs/native/units/S1-ANALYTICS.md).
 kotlin {
     sourceSets.commonMain.dependencies {
-        implementation(project(":core:common"))
+        api(project(":core:common"))
+        // B-190: the problem report starts from the app's own Redactor (KitRedact in Flutter).
+        api(project(":core:security"))
         // B-180: Flutter 2.1.5's consent and crash-offer answers are read in place from the adopted prefs store.
         api(project(":core:data"))
     }

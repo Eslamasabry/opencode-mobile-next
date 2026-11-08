@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.delivery
 
+import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
 import io.github.eslamasabry.oc.engine.analytics.NoReporting
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.core.common.AppLog
@@ -561,6 +562,8 @@ public class PromptDelivery(
         if (!accepted) {
             failure = (r as? Outcome.Failed)?.failure
             reportNotAccepted(bubble, failure, reachedWire)
+            // B-190: the kind of failure only; an accepted send is counted when its first reply comes.
+            HealthFlow().sendResult("fail", failure)
             if (
                 reachedWire &&
                     bubble.reviewId != null &&
@@ -725,6 +728,7 @@ public class PromptDelivery(
             is Outcome.Ok ->
                 when (queued.value) {
                     null -> {
+                        HealthFlow().sendResult("queued")
                         emit { SendOutcome.Queued(it, request.ref, id) }
                         LocalSendId(id).ok()
                     }

@@ -70,6 +70,8 @@ public class SettingsPresenter(
     private val memoryPreview: MemoryPreviewSetting? = null,
     /** s28: Flutter 2.1.5's two stored answers (usage and app health, crash reports). */
     private val healthConsent: HealthConsentSetting? = null,
+    /** B-190: Help › Send a problem report and About's report code; null in a build that cannot send. */
+    private val problemReport: ProblemReportSender? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -84,6 +86,8 @@ public class SettingsPresenter(
         val memoryPreview: Boolean? = null,
         val report: ReportUi? = null,
         val reportDescription: String = "",
+        val sendReport: SendReportUi? = null,
+        val reportCode: String? = null,
         val crash: CrashUi? = null,
         val focusedRow: SettingsRowId? = null,
         val focusedAnchor: String? = null,
@@ -355,6 +359,7 @@ public class SettingsPresenter(
                             l.crashReports ?: reporting?.reportingConsent?.value ?: health?.crashes,
                             l.offerCrashReports ?: crashOffer?.enabled(),
                             usage = health?.usage,
+                            vendorSends = healthConsent?.available == true,
                         )
                     },
             localData =
@@ -382,6 +387,8 @@ public class SettingsPresenter(
                 },
             report = l.report,
             reportDescription = l.reportDescription,
+            sendReport = l.sendReport,
+            reportCode = l.reportCode,
             phraseChips = l.phraseChips,
             focusedRow = l.focusedRow,
             focusedAnchor = l.focusedAnchor,
@@ -597,6 +604,8 @@ public class SettingsPresenter(
             else it.copy(stack = (it.stack + page).toImmutableList())
         }
         if (page == SettingsPage.ReportProblem) loadReport()
+        if (page == SettingsPage.SendProblemReport) collectProblemReport()
+        if (page == SettingsPage.About) loadReportCode()
         if (page == SettingsPage.Storage) onRefreshLocalModels()
         if (
             page == SettingsPage.Notifications ||
@@ -665,6 +674,10 @@ public class SettingsPresenter(
             }
             l.stack.size > 1 -> {
                 if (l.stack.last() == SettingsPage.ReportProblem) closeReport()
+                if (l.stack.last() == SettingsPage.SendProblemReport) {
+                    problemGeneration++
+                    local.update { it.copy(sendReport = null) }
+                }
                 local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
                 updates?.setPageOpen(local.value.stack.last() == SettingsPage.Updates)
                 true
@@ -1005,6 +1018,51 @@ public class SettingsPresenter(
     }
 
     private var reportGeneration = 0L
+
+    // ---- B-190: Send a problem report ----
+
+    private var problemGeneration = 0L
+
+    /** Builds and redacts the report; nothing is sent by opening the page. */
+    private fun collectProblemReport() {
+        val port = problemReport ?: return
+        val generation = ++problemGeneration
+        local.update { it.copy(sendReport = SendReportUi.Collecting) }
+        scope.launch {
+            val text = runCatching { port.build() }.getOrNull() ?: return@launch
+            if (generation == problemGeneration) local.update { it.copy(sendReport = SendReportUi.Preview(text)) }
+        }
+    }
+
+    override fun onSendProblemReport() {
+        val port = problemReport ?: return
+        val text =
+            when (val now = local.value.sendReport) {
+                is SendReportUi.Preview -> now.text
+                is SendReportUi.Failed -> now.text
+                else -> return
+            }
+        val generation = problemGeneration
+        local.update { it.copy(sendReport = SendReportUi.Sending(text)) }
+        scope.launch {
+            val code = runCatching { port.send(text) }.getOrNull()
+            if (generation != problemGeneration) return@launch
+            local.update {
+                it.copy(
+                    sendReport = if (code == null) SendReportUi.Failed(text) else SendReportUi.Sent(text, code),
+                    reportCode = code ?: it.reportCode,
+                )
+            }
+        }
+    }
+
+    private fun loadReportCode() {
+        val port = problemReport ?: return
+        scope.launch {
+            val code = runCatching { port.reportCode() }.getOrNull()
+            local.update { it.copy(reportCode = code) }
+        }
+    }
 
     public fun closeReport() {
         reportGeneration++

@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.sendReportTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
@@ -204,7 +205,14 @@ public fun SettingsScreen(
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {
-                AboutBody(state.about, actions, state.voiceLicenses, state.updates, state.memoryPreview)
+                AboutBody(
+                    state.about,
+                    actions,
+                    state.voiceLicenses,
+                    state.updates,
+                    state.memoryPreview,
+                    reportCode = state.reportCode,
+                )
             }
         SettingsPage.KeyboardShortcuts ->
             SettingsFrame(
@@ -301,6 +309,10 @@ public fun SettingsScreen(
             ) {
                 ReportBody(state.report, actions, state.reportDescription)
                 state.crash?.let { CrashBody(it, actions) }
+            }
+        SettingsPage.SendProblemReport ->
+            SettingsFrame(stringResource(Res.string.sendReportTitle), back, state, actions, modifier) {
+                SendProblemReportBody(state.sendReport, actions, onDone = back)
             }
         is SettingsPage.QuietTime ->
             SettingsFrame(

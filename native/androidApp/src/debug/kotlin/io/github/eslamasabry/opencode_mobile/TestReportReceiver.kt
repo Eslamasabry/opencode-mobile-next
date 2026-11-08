@@ -13,8 +13,8 @@ import io.github.eslamasabry.opencode_mobile.telemetry.Telemetry
  */
 class TestReportReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val reporting = Telemetry.reporting
-        reporting.breadcrumb("debug test report requested")
+        val reporting = Telemetry.service
+        reporting.breadcrumb("app.foreground")
         if (intent.getStringExtra("kind") == "crash") {
             reporting.reportCrash("java.lang.IllegalStateException", listOf("io.github.eslamasabry.opencode_mobile.TestReportReceiver.onReceive:1"))
         } else {
@@ -22,7 +22,7 @@ class TestReportReceiver : BroadcastReceiver() {
         }
         Log.i(
             "OcTelemetry",
-            "test report handed to ${reporting.javaClass.simpleName}; consent=${reporting.reportingConsent.value}; vendor=${Telemetry.vendorAvailable}",
+            "test report handed to ${reporting.javaClass.simpleName}; consent=${reporting.consent}; vendor=${Telemetry.vendorAvailable}",
         )
     }
 }
