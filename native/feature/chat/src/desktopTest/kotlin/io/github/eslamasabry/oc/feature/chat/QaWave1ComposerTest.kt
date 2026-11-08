@@ -91,9 +91,9 @@ class QaWave1ComposerTest {
     @Test
     fun `B8 QA wave1 while a reply runs the message box keeps the full width`() = runComposeUiTest {
         setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(), Actions(), chrome(busy = true)) } } }
-        // Looks pass (owner pick, 2026-11-05): one message box, the words on top and the controls on the row
-        // under them. Stop is the ringed round button; with words typed during a run Send joins the turn
-        // ("Add to this turn") and Stop moves beside the plus. Neither ever shares the words' line.
+        // Flutter's composer (owner, 30 Oct 2026; 2026-11-09): Stop is the chip at the end of the strip above the
+        // box for the whole running turn, so the box keeps its one row; with words typed during a run Send joins the
+        // turn ("Add to this turn"). Neither ever squeezes the words.
         onNodeWithContentDescription("Stop", useUnmergedTree = true).assertIsDisplayed()
         onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("chat-composer-field")), useUnmergedTree = true)
             .performTextInput("Also check the docs")

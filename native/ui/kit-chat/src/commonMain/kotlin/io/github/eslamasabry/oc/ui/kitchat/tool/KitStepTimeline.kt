@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.collapse
@@ -103,6 +104,8 @@ public fun KitStepTimeline(
     val pad = maxOf(Space.S1.dp, (tokens.minTarget.dp - m.first) / 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:962
     // F: lib/ui/kit/chat/kit_step_timeline.dart:1061 where the rail's stub starts under the line's glyph
     val startY = pad + m.first / 2 + m.glyph / 2 + Space.S1.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:1061
+    // The first step's light comes down the rail from here (F: kit_step_light.dart:388-390 registry.headerStart).
+    rail.headerStart = with(LocalDensity.current) { startY.toPx() }
     var stepsTop by remember { mutableFloatStateOf(0f) }
     var stepsBottom by remember { mutableFloatStateOf(0f) }
     Column(
@@ -234,6 +237,7 @@ public fun KitStepSentence(modifier: Modifier = Modifier, content: @Composable (
         box = 24.dp * m.scale, // F: lib/ui/kit/chat/kit_step_timeline.dart:365
         top = Space.S1.dp,
         modifier = modifier,
+        half = 3.dp,
         node = { Box(Modifier.size(6.dp).background(colors.text3, CircleShape)) }, // F: lib/ui/kit/chat/kit_step_node.dart:38,66
     ) {
         Box(Modifier.padding(vertical = Space.S1.dp)) { content() }
@@ -250,11 +254,32 @@ internal class StepRail {
     var root: LayoutCoordinates? = null
     val centres = mutableStateMapOf<Any, Float>()
 
+    /** Each node's top and bottom on the rail, px from the timeline's top: the step light runs between them. */
+    val spans = mutableStateMapOf<Any, ClosedFloatingPointRange<Float>>()
+
+    /** Where the rail starts under the line's glyph, px from the timeline's top. */
+    var headerStart: Float = 0f
+
+    /** The light's rail for the node [key] (Dart `_LightPainter.paint`, kit_step_light.dart:378-401). */
+    fun light(key: Any, tail: Float): StepLightRail {
+        fun mine() = spans[key]
+        fun prevBottom(top: Float) = spans.values.filter { it.endInclusive <= top + .5f }.maxOfOrNull { it.endInclusive }
+        fun nextTop(bottom: Float) = spans.values.filter { it.start >= bottom - .5f && it != mine() }.minOfOrNull { it.start }
+        return StepLightRail(
+            above = { mine()?.let { it.start - (prevBottom(it.start) ?: headerStart) } ?: 0f },
+            below = { mine()?.let { m -> nextTop(m.endInclusive)?.let { it - m.endInclusive } ?: tail } ?: 0f },
+            last = { mine()?.let { nextTop(it.endInclusive) == null } ?: true },
+        )
+    }
+
     /** The open steps have been shown once: a step composed after this arrived while the timeline was open. */
     var settled by mutableStateOf(false)
 }
 
 internal val LocalKitStepRail = compositionLocalOf<StepRail?> { null }
+
+/** The rail the node being drawn sits on, for its step light; null off a rail (a lone step). */
+internal val LocalStepLightRail = compositionLocalOf<StepLightRail?> { null }
 
 /** The rail's measures, all from the kit's tokens and the person's text size (Dart `_Rail`). */
 internal class RailMeasures(
@@ -294,6 +319,7 @@ internal fun RailNode(
     box: Dp,
     top: Dp,
     modifier: Modifier = Modifier,
+    half: Dp? = null,
     node: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -304,7 +330,16 @@ internal fun RailNode(
     }
     val m = railMeasures()
     val key = remember { Any() }
-    DisposableEffect(rail, key) { onDispose { rail.centres.remove(key) } }
+    DisposableEffect(rail, key) {
+        onDispose {
+            rail.centres.remove(key)
+            rail.spans.remove(key)
+        }
+    }
+    val density = LocalDensity.current
+    val nodeHalf = with(density) { (half ?: m.glyph / 2).toPx() }
+    // F: kit_step_light.dart:367 the last step's light runs a 14 dp tail below its node
+    val light = remember(rail, key) { rail.light(key, with(density) { 14.dp.toPx() }) }
     val motion = KitMotion.state
     val arrives = remember { rail.settled && !motion.reduced }
     val shown = remember { Animatable(if (arrives) 0f else 1f) }
@@ -325,12 +360,15 @@ internal fun RailNode(
                 .clearAndSetSemantics {}
                 .onGloballyPositioned { c ->
                     val root = rail.root ?: return@onGloballyPositioned
-                    if (root.isAttached && c.isAttached)
-                        rail.centres[key] = root.localPositionOf(c, Offset(0f, c.size.height / 2f)).y // F: lib/ui/kit/chat/kit_step_node.dart:72
+                    if (root.isAttached && c.isAttached) {
+                        val centre = root.localPositionOf(c, Offset(0f, c.size.height / 2f)).y // F: lib/ui/kit/chat/kit_step_node.dart:72
+                        rail.centres[key] = centre
+                        rail.spans[key] = (centre - nodeHalf)..(centre + nodeHalf)
+                    }
                 },
             contentAlignment = Alignment.Center,
         ) {
-            node()
+            CompositionLocalProvider(LocalStepLightRail provides light) { node() }
         }
     }
 }
