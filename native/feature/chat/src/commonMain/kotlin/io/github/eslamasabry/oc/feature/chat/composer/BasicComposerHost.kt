@@ -643,6 +643,27 @@ public fun BasicComposer(
                             },
                     clearText = clearWords.takeIf { words.isNotEmpty() },
                     conversation = conversationRow,
+                    modelWords = modelWords(state, chrome),
+                    model = {
+                        focusManager.clearFocus()
+                        modelsOpen = true
+                    },
+                    settings = chrome.promptSettings,
+                    // F: composer_tools.dart:150-157: "File from the project" points the agent at a file; native
+                    // starts the field's "@" file search, whose matches attach the file.
+                    projectFile =
+                        if (state.filesAvailable) {
+                            {
+                                val text = field.text.toString()
+                                val at = if (text.isEmpty() || text.endsWith(' ') || text.endsWith('\n')) "@" else " @"
+                                field.edit { append(at) }
+                                editor.userEditSerial += 1
+                                val typed = field.text.toString()
+                                editor.lastReported = typed
+                                actions.draftChanged(typed)
+                                focus.requestFocus()
+                            }
+                        } else null,
                 ),
         )
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
@@ -765,22 +786,7 @@ public fun BasicComposer(
             hasChips = true,
             modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
             model = {
-                val named =
-                    modelLabel(
-                        state.models.selected?.label
-                            // QA wave 4 B13: "Server default" only once the server said so.
-                            ?: stringResource(
-                                if (state.models.usesDefault) Res.string.composerPreviewModelDefault
-                                else Res.string.composerPreviewModelButton
-                            ),
-                        state.models.variant,
-                        state.models.agent,
-                    )
-                // N-52: "DeepSeek V4.1 Flash Free · Free" said it twice.
-                val free = stringResource(Res.string.upgradeComposerFree)
-                val freeWord = free.trimStart(' ', '·').trim()
-                val chipWords =
-                    named + if (chrome.freeModel() && !named.contains(freeWord, ignoreCase = true)) free else ""
+                val chipWords = modelWords(state, chrome)
                 val modelName = stringResource(Res.string.composerPreviewModelButton)
                 val openModels = {
                     // B3: the keyboard never stays open over the picker.
@@ -1040,6 +1046,26 @@ public fun BasicComposer(
 private const val COMPOSER_STRIP_GAP = 4
 
 /** "Model · level · agent": the level and agent only when chosen (Flutter composer.dart:795). */
+/** The model's words, as the chip and the "+" sheet's Model row say them ("Server default", "Sonnet 4 · High"). */
+@Composable
+private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
+    val named =
+        modelLabel(
+            state.models.selected?.label
+                // QA wave 4 B13: "Server default" only once the server said so.
+                ?: stringResource(
+                    if (state.models.usesDefault) Res.string.composerPreviewModelDefault
+                    else Res.string.composerPreviewModelButton
+                ),
+            state.models.variant,
+            state.models.agent,
+        )
+    // N-52: "DeepSeek V4.1 Flash Free · Free" said it twice.
+    val free = stringResource(Res.string.upgradeComposerFree)
+    val freeWord = free.trimStart(' ', '·').trim()
+    return named + if (chrome.freeModel() && !named.contains(freeWord, ignoreCase = true)) free else ""
+}
+
 private fun modelLabel(model: String, level: String, agent: String?): String =
     listOfNotNull(agent?.takeIf { it.isNotEmpty() }, model, level.takeIf { it.isNotEmpty() })
         .joinToString(" · ")

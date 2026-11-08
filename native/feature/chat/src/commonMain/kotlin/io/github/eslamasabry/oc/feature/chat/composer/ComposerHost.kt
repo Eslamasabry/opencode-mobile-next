@@ -88,6 +88,12 @@ public class ComposerChrome(
      * registers how to take focus; the chat steers focus there.
      */
     public val typing: ComposerTypingTarget = ComposerTypingTarget(),
+    /**
+     * This conversation's own settings, drawn under the Model row at the top of the "+" sheet (Flutter
+     * `_composerSettings`, chat_composer_region.dart:118-180: Auto-approve, Approval settings…); [close] closes the
+     * sheet. Null = none.
+     */
+    public val promptSettings: (@Composable (close: () -> Unit) -> Unit)? = null,
 )
 
 /** N-55: how the message field takes focus, registered by the composer while it is shown. */

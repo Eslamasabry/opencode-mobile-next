@@ -27,6 +27,9 @@ import io.github.eslamasabry.oc.ui.words.res.composerClearTextSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerClearTextTitle
 import io.github.eslamasabry.oc.ui.words.res.composerReuseSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerReuseTitle
+import io.github.eslamasabry.oc.ui.words.res.composerSettingModel
+import io.github.eslamasabry.oc.ui.words.res.mentionToolSupporting
+import io.github.eslamasabry.oc.ui.words.res.mentionToolTitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolCommandsTitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolSavedSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolsAgentPicturesOnly
@@ -90,6 +93,13 @@ internal class ComposerToolsChoices(
     val clearText: (() -> Unit)?,
     /** The voice slot's own "Voice conversation" row (`KitComposerVoice.Options`); it closes the list itself. */
     val conversation: (@Composable (close: () -> Unit) -> Unit)?,
+    /** The Model row's words ("Server default") and what it opens; null hides the row. */
+    val modelWords: String? = null,
+    val model: (() -> Unit)? = null,
+    /** The chat's own settings rows under Model ([ComposerChrome.promptSettings]). */
+    val settings: (@Composable (close: () -> Unit) -> Unit)? = null,
+    /** "File from the project": points the agent at a project file; null where the server takes none. */
+    val projectFile: (() -> Unit)? = null,
 )
 
 /**
@@ -119,7 +129,33 @@ internal fun ComposerToolsSheet(visible: Boolean, choices: ComposerToolsChoices,
 private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, close: () -> Unit) {
     val state = choices.state
     val blocked = choices.blockedReason
+    // F: composer_tools.dart:129-147: this conversation's own settings first, the model, then how asks are answered.
+    val model = choices.model
+    if (model != null || choices.settings != null)
+        KitRowGroup(Modifier.testTag("composer-tools-settings")) {
+            if (model != null)
+                KitRow(
+                    title = stringResource(Res.string.composerSettingModel),
+                    supporting = choices.modelWords?.takeIf { it.isNotBlank() },
+                    supportingMaxLines = 2, // F: lib/ui/screens/chat/composer_tools.dart:119
+                    leading = KitRowLeading.Glyph(KitIcons.model),
+                    onClick = { run(model) },
+                    modifier = Modifier.testTag("composer-setting-model"),
+                )
+            choices.settings?.invoke(close)
+        }
     KitRowGroup {
+        // Pointing at a project file uploads nothing, so it stays live while a reply runs (composer_tools.dart:150).
+        choices.projectFile?.let { pick ->
+            KitRow(
+                title = stringResource(Res.string.mentionToolTitle),
+                supporting = stringResource(Res.string.mentionToolSupporting),
+                supportingMaxLines = 2, // F: lib/ui/screens/chat/composer_tools.dart:119
+                leading = KitRowLeading.Glyph(KitIcons.fileText),
+                onClick = { run(pick) },
+                modifier = Modifier.testTag("composer-tool-project-file"),
+            )
+        }
         if (TrayItem.File !in choices.inTray) {
             val attach = choices.attach
             if (state.attachmentsSupported && !state.imagesOnly && attach != null)
