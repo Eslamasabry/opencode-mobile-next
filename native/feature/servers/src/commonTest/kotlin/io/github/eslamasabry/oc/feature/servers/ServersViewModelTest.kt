@@ -271,4 +271,24 @@ class ServersViewModelTest {
             assertTrue(nav.chats.isEmpty())
             assertFalse(vm.state.value.busy)
         }
+
+    @Test
+    fun `B-PROTO-095 an OpenCode 1 server offers its guided update, which opens the update page`() = runTest {
+        val connections = Connections()
+        connections.servers.value = persistentListOf(SavedServer(id, "Laptop", "https://laptop.ts.net", connected = false))
+        connections.connectResult =
+            Outcome.Failed(Failure.Incompatible(io.github.eslamasabry.oc.core.common.IncompatibleKind.LegacyOpenCode1))
+        val nav = Navigator()
+        val vm = ServersViewModel(null, connections, nav, NoServerRows)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.connect(id)
+        assertEquals(ServerIssue.ConnectFailed, vm.state.value.issue)
+        assertEquals(id, vm.state.value.openCode1)
+        vm.openUpdateGuide(id)
+        assertEquals(io.github.eslamasabry.oc.ui.routes.SetupRoute.UpdateComputer(id), nav.top.value)
+        // Another failure is not an OpenCode 1 server: no guide.
+        connections.connectResult = Outcome.Failed(Failure.TimedOut())
+        vm.connect(id)
+        assertEquals(null, vm.state.value.openCode1)
+    }
 }

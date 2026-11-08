@@ -258,6 +258,8 @@ public data class PrivacyUi(
     val saving: Boolean = false,
     /** The crash-report switch; null while this build has no way to send one. */
     val crashReports: Boolean? = null,
+    /** "Offer crash reports" (Flutter 2.1.5); null where the build has no crash offer. */
+    val offerCrashReports: Boolean? = null,
 )
 
 public enum class SettingsNote {

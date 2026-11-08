@@ -264,7 +264,8 @@ class AppUpdateSettings(
                 PlatformRules.updateFacts(updates.state.value, build) { "" },
             )
 
-    override suspend fun checkNow(): Outcome<Unit> = updates.checkNow()
+    // Flutter About › Check for updates: a found release opens the update prompt (s22-twins sheet).
+    override suspend fun checkNow(): Outcome<Unit> = updates.checkManually()
 
     override suspend fun setChecks(on: Boolean): Outcome<Unit> = updates.setEnabled(on)
 

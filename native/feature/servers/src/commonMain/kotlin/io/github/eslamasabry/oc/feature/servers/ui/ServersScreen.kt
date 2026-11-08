@@ -112,9 +112,16 @@ public fun ServersScreen(
     ) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             state.issue?.takeIf { it != ServerIssue.Connected }?.let { issue ->
+                // s23-oc1move: a computer still on OpenCode 1 gets its guided update, not a dead end.
+                val guide = state.openCode1?.let { id ->
+                    io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                        stringResource(Res.string.openCode1UnsupportedTitle), { actions.openUpdateGuide(id) },
+                    )
+                }
                 KitErrorNotice(issueWords(issue, state.failure),
                     modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S1.dp),
-                    failure = state.failure, detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails))
+                    failure = state.failure, detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails),
+                    retry = guide)
             }
             if (empty) {
                 Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = (Space.S6 + Space.S6).dp)) {

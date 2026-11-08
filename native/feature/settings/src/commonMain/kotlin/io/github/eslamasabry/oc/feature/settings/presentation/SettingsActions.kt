@@ -114,6 +114,9 @@ public interface SettingsActions {
     /** The Privacy switch "Send crash reports to the developer". */
     public fun onCrashReports(on: Boolean) {}
 
+    /** The Privacy switch "Offer crash reports" (Flutter 2.1.5 E02-S91): only whether a crash is offered. */
+    public fun onOfferCrashReports(on: Boolean) {}
+
     public fun onNoteSeen()
 
     /** Appearance › Text size: applies at the app root at once (B-KIT-059). */

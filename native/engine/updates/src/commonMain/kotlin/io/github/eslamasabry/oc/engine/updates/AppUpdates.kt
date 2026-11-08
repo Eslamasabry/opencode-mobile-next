@@ -166,6 +166,18 @@ public class AppUpdates(
     }
 
     /**
+     * Settings › About's Check for updates (Flutter `InAppUpdateCoordinator.checkManually`): asks regardless of the
+     * clock and, when a newer release waits, opens the update prompt even if it was put off this session, since the
+     * person asked.
+     */
+    public suspend fun checkManually(): Outcome<Unit> {
+        val checked = checkNow()
+        if (checked is Outcome.Ok && s.hasPendingRelease && s.phase == UpdatePhase.Available)
+            set { it.copy(notNow = false, promptOpen = true) }
+        return checked
+    }
+
+    /**
      * Takes the one update lane: moves to [phase] only if nothing else is checking, downloading or installing, in one
      * atomic step, so two quick taps never both pass (commands run on the parallel app scope). Returns the phase it
      * replaced, or null when another command holds the lane.

@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
+import io.github.eslamasabry.opencode_mobile.graph.ContinuityAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AttentionRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.BackgroundAccessors
 import io.github.eslamasabry.oc.engine.analytics.Reporting
@@ -107,6 +108,7 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as BackgroundAccessors).background.start()
         (appGraph as AppExitAccessors).appExit.start()
         (appGraph as AppNoticesAccessors).appNotices.start()
+        (appGraph as ContinuityAccessors).telemetryContinuity.start() // s23-continuity: Flutter 2.1.5 answers, crash offer
         (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
         (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
         // B-146: send prompts queued for another saved server once it answers.

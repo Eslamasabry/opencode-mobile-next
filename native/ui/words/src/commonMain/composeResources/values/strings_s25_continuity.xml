@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Flutter 2.1.5 continuity (s23-continuity hooks): Privacy's crash rows and the one-time consent question. -->
+    <string name="crashOfferSection">Crash reports</string>
+    <string name="crashOfferSettingTitle">Offer crash reports</string>
+    <string name="crashOfferSettingDetail">After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.</string>
+    <string name="telemetryConsentTitle">Help improve OpenCode Mobile?</string>
+    <string name="telemetryConsentBody">If you agree, the app sends anonymous usage counts and crash reports to the developer through Google Firebase. You can turn this off any time in Settings › Privacy and data.</string>
+    <string name="telemetryConsentSends">Sent: which pages and features you use, how far setup gets, and crash reports, with a random install ID.</string>
+    <string name="telemetryConsentNever">Never sent: your code, conversations, files, server addresses or keys. No advertising ID.</string>
+    <string name="telemetryConsentShare">Share anonymous usage</string>
+    <string name="telemetryConsentNotNow">Not now</string>
+</resources>

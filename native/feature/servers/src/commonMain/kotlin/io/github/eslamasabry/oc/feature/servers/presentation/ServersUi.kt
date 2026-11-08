@@ -22,6 +22,8 @@ public data class ServersUi(
     val cleartextAllowed: Boolean = false,
     val issue: ServerIssue? = null,
     val failure: Failure? = null,
+    /** s23-oc1move: the saved server whose connect said it runs OpenCode 1; the notice offers its update guide. */
+    val openCode1: ProfileId? = null,
     /** App-authored validation fact only; no input or credentials are retained. */
     val addressProblem: io.github.eslamasabry.oc.engine.runtime.messages.SetupMessage.Known? = null,
     val savedGeneration: Int = 0,
@@ -114,6 +116,9 @@ public interface ServersActions {
     public fun openPlans() {}
 
     public fun openSetup(id: ProfileId) {}
+
+    /** s23-oc1move: the guided update of a computer still on OpenCode 1 (SetupRoute.UpdateComputer). */
+    public fun openUpdateGuide(id: ProfileId) {}
 
     /** STATE: the setup inspection page (SetupRoute.Home). */
     public fun openStateSetup(id: ProfileId) {}

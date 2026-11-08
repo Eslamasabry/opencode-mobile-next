@@ -70,6 +70,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerLimitStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerRowFit
 import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
@@ -158,6 +159,7 @@ public class BasicComposerHost(
     private val voices: Set<KitComposerVoice>,
     private val editors: Set<ComposerPromptEditor> = emptySet(),
     private val pictures: Set<ComposerInsertedPictures> = emptySet(),
+    private val limits: Set<ComposerLimits> = emptySet(),
 ) : ComposerHost {
     override val hasPromptEditor: Boolean
         get() = editors.isNotEmpty()
@@ -186,6 +188,7 @@ public class BasicComposerHost(
             refreshHistory = vm::loadHistory,
             promptEditor = editors.firstOrNull(),
             insertedPictures = pictures.firstOrNull(),
+            limits = limits.firstOrNull(),
         )
     }
 }
@@ -213,6 +216,7 @@ public fun BasicComposer(
     refreshHistory: (() -> Unit)? = null,
     promptEditor: ComposerPromptEditor? = null,
     insertedPictures: ComposerInsertedPictures? = null,
+    limits: ComposerLimits? = null,
 ) {
     if (state.readOnly != null) {
         Column(modifier) {
@@ -904,6 +908,7 @@ public fun BasicComposer(
                 stacked = stacked,
                 hasLeading = true,
                 above = {
+                    ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(
                         open = addOpen,
                         actions =
@@ -1217,3 +1222,25 @@ internal fun pictureMime(name: String): String =
         "bmp" -> "image/bmp"
         else -> "image/png"
     }
+
+/**
+ * B-181: the limit strip over the field, for the open conversation's provider and model. Nothing without a binding,
+ * without a chosen model, or while the readings say nothing.
+ */
+@Composable
+private fun ComposerLimitArea(limits: ComposerLimits?, state: BasicComposerUi, conversationRef: ConversationRef?) {
+    if (limits == null) return
+    val selected = state.models.selected
+    val profileId = conversationRef?.profileId?.raw
+    val target = composerLimitTarget(selected?.providerId, selected?.modelId, profileId)
+    val targets = remember(limits) { kotlinx.coroutines.flow.MutableStateFlow(target) }
+    androidx.compose.runtime.SideEffect { targets.value = target }
+    val flow = remember(limits, targets) { limits.notice(targets) }
+    val notice by flow.collectAsStateWithLifecycle(null)
+    val shown = notice
+    KitComposerLimitStrip(
+        notice = shown?.toKit(),
+        onViewUsage = { if (shown != null && profileId != null) limits.viewUsage(shown, profileId) },
+        onDismiss = { if (shown != null) limits.dismiss(shown) },
+    )
+}

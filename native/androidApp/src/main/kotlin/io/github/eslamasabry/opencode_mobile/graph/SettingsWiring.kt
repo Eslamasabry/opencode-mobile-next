@@ -223,6 +223,7 @@ class AndroidSettingsHost(
     override val localModels: AndroidLocalModelStorage,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
     private val migrationMemory: NativeSettingsMemory,
+    private val continuity: AppTelemetryContinuity,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -459,6 +460,8 @@ class AndroidSettingsHost(
     override val notifications: NotificationSettings =
         AndroidNotificationSettings(application, stores, prefs, scope)
     override val updates: UpdateSettings? = updateSettings
+    override val crashOffer: io.github.eslamasabry.oc.feature.settings.presentation.CrashOfferSetting =
+        continuity.runtime
     override val about: AboutFacts =
         AboutFacts(
             version = buildInfo.versionName,

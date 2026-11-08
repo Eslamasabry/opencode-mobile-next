@@ -35,6 +35,9 @@ import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.*
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.engine.integrations.catalog.McpAddProblem
+import io.github.eslamasabry.oc.engine.integrations.catalog.McpAddResult
+import io.github.eslamasabry.oc.feature.settings.presentation.McpAddFields
 
 /**
  * Settings and the conversation use this same server-backed library; all controls are kit parts.
@@ -1016,7 +1019,23 @@ private fun MethodSheet(
             }
         }
         if (missing) KitNotice(stringResource(Res.string.nlibRequired))
+        problem?.let { KitNotice(mcpProblemWords(it)) }
         state.inventory.notice?.let { KitNotice(noticeLabel(it)) }
+    }
+}
+
+/** Flutter's words for what the add form refused (mcp_setup_screen.dart `_pairs`, `_timeoutError`); never a value. */
+@Composable
+private fun mcpProblemWords(problem: McpAddProblem): String {
+    val label = @Composable { headers: Boolean ->
+        stringResource(if (headers) Res.string.mcpSetupHeaders else Res.string.e7LibraryEnvironmentVariables)
+    }
+    return when (problem) {
+        McpAddProblem.Name, McpAddProblem.Kind -> stringResource(Res.string.nlibRequired)
+        McpAddProblem.Timeout -> stringResource(Res.string.e7LibraryEnterAValueGreaterThanZero)
+        is McpAddProblem.PairName -> stringResource(Res.string.e7LibraryInvalidNameOnLine, label(problem.headers), "${problem.row}")
+        is McpAddProblem.PairValue -> stringResource(Res.string.e7LibraryInvalidNameOnLine, label(problem.headers), "${problem.row}")
+        is McpAddProblem.Duplicate -> stringResource(Res.string.e7LibraryDuplicateName, label(problem.headers), problem.name)
     }
 }
 
@@ -1285,9 +1304,10 @@ private fun AddMcpSheet(
     val variableName = rememberTextFieldState()
     val variableValue = remember { TextFieldState() }
     val cwd = rememberTextFieldState(prefill?.cwd.orEmpty())
-    val timeout = rememberTextFieldState(prefill?.timeoutMs?.toString().orEmpty())
+    val timeout = rememberTextFieldState(McpAddFields.secondsOf(prefill?.timeoutMs))
     var detectOAuth by remember { mutableStateOf(prefill?.detectOAuth ?: true) }
     var missing by remember { mutableStateOf(false) }
+    var problem by remember { mutableStateOf<McpAddProblem?>(null) }
     KitSheet(
         true,
         { actions.show(null) },
@@ -1298,36 +1318,30 @@ private fun AddMcpSheet(
                 stringResource(Res.string.nlibAddMcp),
                 {
                     val args = command.text.toString().lines().filter { it.isNotBlank() }
+                    problem = null
                     if (
                         name.text.isBlank() ||
                             (if (local) args.isEmpty() else url.text.isBlank()) ||
-                            variables.any { it.value.text.isBlank() } ||
-                            (timeout.text.isNotBlank() &&
-                                timeout.text.toString().toIntOrNull()?.let { it > 0 } != true)
+                            variables.any { it.value.text.isBlank() }
                     )
                         missing = true
                     else
-                        actions.addMcp(
-                            McpServerDraft(
-                                name.text.toString().trim(),
-                                if (local) McpServerKind.Local else McpServerKind.Remote,
-                                if (local) null else url.text.toString().trim(),
-                                args.toImmutableList(),
-                                cwd.text.toString().trim().ifEmpty { null },
-                                if (local) persistentMapOf()
-                                else
-                                    variables
-                                        .mapValues { it.value.text.toString() }
-                                        .toImmutableMap(),
-                                if (local)
-                                    variables
-                                        .mapValues { it.value.text.toString() }
-                                        .toImmutableMap()
-                                else persistentMapOf(),
-                                detectOAuth,
-                                timeout.text.toString().toIntOrNull(),
-                            )
-                        )
+                        when (
+                            val result =
+                                McpAddFields.draft(
+                                    name = name.text.toString(),
+                                    local = local,
+                                    url = url.text.toString(),
+                                    command = command.text.toString(),
+                                    variables = variables.map { it.key to it.value.text.toString() },
+                                    timeoutSeconds = timeout.text.toString(),
+                                    cwd = cwd.text.toString(),
+                                    detectOAuth = detectOAuth,
+                                )
+                        ) {
+                            is McpAddResult.Ready -> actions.addMcp(result.draft)
+                            is McpAddResult.Invalid -> problem = result.problem
+                        }
                 },
                 enabled,
                 working = state.working,
@@ -1362,7 +1376,7 @@ private fun AddMcpSheet(
                 detectOAuth,
                 onCheckedChange = { detectOAuth = it },
             )
-        KitField(timeout, stringResource(Res.string.nlibMcpTimeout), kind = KitFieldKind.Number)
+        KitField(timeout, stringResource(Res.string.mcpSetupTimeoutSeconds), kind = KitFieldKind.Number)
         variables.forEach { (key, field) -> KitField(field, key, kind = KitFieldKind.Secret) }
         KitField(
             variableName,

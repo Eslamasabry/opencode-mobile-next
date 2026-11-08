@@ -185,6 +185,11 @@ public fun ChatsScreen(
     replyOffer: (@Composable () -> Unit)? = null,
     root: Boolean = false,
     /**
+     * s23-factsbook: sections another feature places under the home's notes (FactsBook's Memory section while its
+     * developer switch is on; F: chats_home_screen.dart:682, 856). Each draws nothing when it has nothing to say.
+     */
+    sections: List<@Composable () -> Unit> = emptyList(),
+    /**
      * G1: the app's own bar (server pill, Search, Settings) above the page. Flutter's home draws none: "the server pill
      * and search belong to the shell's own bar" (lib/ui/screens/chats/chats_home_screen.dart:32), so the page alone,
      * as its goldens show it, is this screen with [shellBar] false. The page's ground is the same either way.
@@ -333,6 +338,8 @@ public fun ChatsScreen(
                         )
                     }
                 }
+                if (state.phase != ChatsPhase.Opening)
+                    sections.forEachIndexed { index, section -> item(key = "home-section-$index") { section() } }
                 when (state.phase) {
                     ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
                     ChatsPhase.Empty ->
@@ -584,12 +591,11 @@ private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 @Composable
 private fun RowDivider(state: ChatsUi) {
     val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
-    // TODO(B-173): switch to the kit's prominent divider once the s21-kit builder lands it in :ui:kit, keeping the inset:
-    //  KitDivider(inset = <same inset>, prominent = true)  (Flutter KitDivider.prominent). Until then this is the hairline.
     io.github.eslamasabry.oc.ui.kit.foundation.KitDivider(
         inset =
             if (signal && state.showAgents) io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Text
-            else io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Gutter
+            else io.github.eslamasabry.oc.ui.kit.foundation.KitDividerInset.Gutter,
+        prominent = true,
     )
 }
 

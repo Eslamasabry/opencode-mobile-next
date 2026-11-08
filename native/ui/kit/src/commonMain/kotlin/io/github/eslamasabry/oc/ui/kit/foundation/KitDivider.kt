@@ -22,7 +22,13 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 public enum class KitDividerInset { None, Gutter, Text }
 
-/** Flutter's decorative physical-pixel separator; insets follow the reading direction. */
+/**
+ * Flutter's decorative physical-pixel separator; insets follow the reading direction.
+ *
+ * [prominent] is Flutter's `KitDivider.prominent` (kit_divider.dart): the stronger line for lists whose rows must read
+ * apart (the conversations feed on OLED dark screens), at least 1 dp (`KitLayout.prominentRule`) in the theme's
+ * tertiary ink at 30 %, unless the style draws its own rule (Brutal's ink keeps it; Soft still draws none).
+ */
 @Composable
 public fun KitDivider(
     modifier: Modifier = Modifier,
@@ -30,6 +36,7 @@ public fun KitDivider(
     endInset: Dp? = null,
     vertical: Boolean = false,
     section: Boolean = false,
+    prominent: Boolean = false,
 ) {
     require(endInset == null || endInset >= 0.dp)
     val style = LocalKitStyle.current
@@ -41,8 +48,13 @@ public fun KitDivider(
     val row = style.spec.resolve(request)
     val look = if (section) style.spec.resolve(request.copy(selected = true)) else row
     if (section && (look == null || look == row || look.fill == null || look.fill?.alpha == 0)) return
-    val color = Color((look?.fill ?: roles.hairline).v)
-    val thickness = if (section && look != null && look.edgeWidthDp > 0f) look.edgeWidthDp else if (color.alpha > 0f) style.spec.tokens.dividerWidthDp ?: hairline else hairline
+    val ruleColor = Color((look?.fill ?: roles.hairline).v)
+    val ruled = if (section && look != null && look.edgeWidthDp > 0f) look.edgeWidthDp else if (ruleColor.alpha > 0f) style.spec.tokens.dividerWidthDp ?: hairline else hairline
+    // A style that paints no divider (Soft: transparent) keeps drawing none, as Flutter's `rule == null` does.
+    val strong = prominent && !vertical && !section && ruleColor.alpha > 0f
+    val styled = (look?.fill ?: roles.hairline) != roles.hairline
+    val color = if (strong && !styled) Color(roles.text3.v).copy(alpha = PROMINENT_ALPHA) else ruleColor
+    val thickness = if (strong) maxOf(ruled, PROMINENT_RULE_DP) else ruled
     val end = endInset ?: if (inset == KitDividerInset.None) 0.dp else tokens.gutter.dp
     val start = when (inset) {
         KitDividerInset.None -> 0.dp
@@ -61,3 +73,9 @@ public fun KitDivider(
         if (vertical) drawRect(color, size = Size(t, size.height)) else drawRect(color, size = Size(size.width, t))
     }
 }
+
+/** Flutter `KitLayout.prominentRule`. */
+private const val PROMINENT_RULE_DP = 1f
+
+/** The prominent line's share of the tertiary ink (Flutter `text3.withValues(alpha: 0.3)`). */
+private const val PROMINENT_ALPHA = 0.3f
