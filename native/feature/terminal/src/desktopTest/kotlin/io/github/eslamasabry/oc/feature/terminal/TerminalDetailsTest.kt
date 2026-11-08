@@ -15,6 +15,8 @@ import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalActions
 import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalDetails
 import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalDetailsUi
 import io.github.eslamasabry.oc.feature.terminal.ui.TerminalScreen
+import io.github.eslamasabry.oc.feature.terminal.ui.TerminalTags
+import androidx.compose.ui.test.onNodeWithTag
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlinx.collections.immutable.persistentListOf
@@ -74,8 +76,8 @@ class TerminalDetailsTest {
                 )
             }
         }
-        // A wide window shows every top-bar action; a narrow one folds them under More.
-        if (onAllNodesWithContentDescription("More").fetchSemanticsNodes().isNotEmpty()) onNodeWithContentDescription("More").performClick()
+        // Details sits in the bar's one menu at every width (Flutter terminal_surface.dart).
+        onNodeWithTag(TerminalTags.MENU).performClick()
         onAllNodesWithText("Terminal details").onFirst().performClick()
         onNodeWithText("Build details").assertExists()
         onNodeWithText("State: Ended", substring = true).assertExists()
