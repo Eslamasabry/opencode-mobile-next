@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
+import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneIntro
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneLinkLabel
@@ -298,11 +299,11 @@ public fun ChatHeaderTopBar(
                                 )
                             } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
                         onProject = onProject,
-                        // Flutter chat_top_bar.dart:180-190 shows the Git chip always ("Git" until the branch is
-                        // known). Native KitTopBarScope draws its "·" as a word of its own outside the branch's target
-                        // (Flutter kit_top_bar_scope.dart:164 keeps it inside), which the alignment gate rejects, so
-                        // "Git" waits for that :ui:kit fix (score-E.md) and only a known branch shows for now.
-                        branch = state.branch,
+                        // F: chat_top_bar.dart:180-190 shows the Git chip always: the branch, or "Git" until it
+                        // is known. Its 48 dp target also sets the subtitle line's height (kit_top_bar_scope.dart:115),
+                        // which the 13-16 px shifts of the scoreboard came from. The "·" still sits outside the
+                        // branch's target in :ui:kit KitTopBarScope (Flutter keeps it inside, kit_top_bar_scope.dart:164).
+                        branch = state.branch ?: stringResource(Res.string.gitSheetTitle),
                         onBranch = onBranch,
                     )
                 }
