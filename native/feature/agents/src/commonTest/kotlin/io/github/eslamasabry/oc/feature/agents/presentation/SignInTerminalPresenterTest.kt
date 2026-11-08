@@ -285,6 +285,7 @@ class SignInTerminalPresenterTest {
             loop.pump()
             assertEquals(SignInStep.Failed, screen.state.value.step)
             host.failAt = null
+            lease.held = true // the fake hands out one lease; a real retry reserves a new one
             screen.startAgain()
             loop.pump()
             val ui = screen.state.value
