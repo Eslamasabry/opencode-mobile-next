@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.AreasUi
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureNotice
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureUi
+import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureReminder
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectUi
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedActions
@@ -441,6 +442,18 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                     }
                 }
             }
+            if (note) {
+                item("remind") {
+                    KitRowGroup {
+                        KitSwitchRow(
+                            title = stringResource(Res.string.fbCaptureRemindToo),
+                            checked = state.remind,
+                            supporting = stringResource(Res.string.fbCaptureRemindTooDetail),
+                            onCheckedChange = actions::remind,
+                        )
+                    }
+                }
+            }
             if (state.rulesSupported && thing == null) {
                 item("rules") {
                     KitRowGroup {
@@ -458,9 +471,17 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
             if (notice != null || state.error != null) {
                 item("notice") {
                     val kept = notice == CaptureNotice.KeptOnPhone || notice == CaptureNotice.QueuedAtNode || notice == CaptureNotice.Full
+                    val reminderWords =
+                        when (val r = state.reminder) {
+                            is CaptureReminder.Made ->
+                                stringResource(Res.string.fbCaptureSavedReminder, r.timing?.let { timingWords(it) }.orEmpty())
+                            CaptureReminder.Failed -> stringResource(Res.string.fbCaptureReminderFailed)
+                            CaptureReminder.NotMade -> stringResource(Res.string.fbCaptureReminderNotMade)
+                            null -> null
+                        }
                     KitNotice(
                         message =
-                            when (notice) {
+                            listOfNotNull(when (notice) {
                                 CaptureNotice.Saved -> stringResource(Res.string.fbCaptureSaved)
                                 CaptureNotice.QueuedAtNode -> stringResource(Res.string.fbCaptureQueuedNode)
                                 CaptureNotice.KeptOnPhone -> stringResource(Res.string.fbCaptureKept)
@@ -468,7 +489,7 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                                 CaptureNotice.FactAdded -> stringResource(Res.string.fbCaptureFactAdded, thing?.let { bidiName(it.title) }.orEmpty())
                                 CaptureNotice.FactProposed -> stringResource(Res.string.fbCaptureFactProposed)
                                 null -> failureWords(state.error)
-                            },
+                            }, reminderWords).joinToString(" "),
                         modifier = Modifier.padding(horizontal = gutter(), vertical = Space.S3.dp),
                         tone = if (notice == null || kept) StatusTone.Attention else StatusTone.Ok,
                         actions = if (kept) listOf(KitLineAction(stringResource(Res.string.fbCaptureSeeNotSaved), actions::seeNotSaved)) else emptyList(),

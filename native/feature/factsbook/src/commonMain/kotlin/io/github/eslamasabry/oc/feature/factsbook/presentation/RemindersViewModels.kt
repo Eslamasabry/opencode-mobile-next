@@ -17,6 +17,9 @@ import io.github.eslamasabry.oc.engine.factsbook.FactsBookError
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookReminders
 import io.github.eslamasabry.oc.engine.factsbook.FbResult
 import io.github.eslamasabry.oc.engine.factsbook.Reminder
+import io.github.eslamasabry.oc.engine.factsbook.ReminderGuess
+import io.github.eslamasabry.oc.engine.factsbook.ReminderPreview
+import io.github.eslamasabry.oc.engine.factsbook.ReminderProposal
 import io.github.eslamasabry.oc.engine.factsbook.ReminderRepeat
 import io.github.eslamasabry.oc.engine.factsbook.ReminderTiming
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -145,10 +148,20 @@ public data class ReminderEditUi(
     val mismatch: Boolean = false,
     val needsTitle: Boolean = false,
     val cannotRing: Boolean = true,
-)
+    /** Add something's words this check started from ("You wrote: …"), or null. */
+    val wrote: String? = null,
+    /** `date` and/or `time` the words did not say: each asks to be checked. */
+    val ambiguities: ImmutableSet<String> = persistentSetOf(),
+) {
+    /** Opened from Add something: "Change what I wrote" goes back to the words. */
+    val fromCapture: Boolean get() = wrote != null
+}
 
 public interface ReminderEditActions {
     public fun back()
+
+    /** "Change what I wrote": back to Add something with nothing saved. */
+    public fun changeWritten(): Unit = back()
 
     public fun edit(draft: ReminderDraft)
 
@@ -166,9 +179,14 @@ public class ReminderEditViewModel(
     private val access: FactsBookAccess,
     private val nav: AppNavigator,
     private val clock: Clock,
+    private val checks: ReminderChecks,
 ) : ViewModel(), ReminderEditActions {
     private var saved: Reminder? = null
-    private val mutable = MutableStateFlow(ReminderEditUi(editing = route.id != null))
+    private var proposal: ReminderProposal? = null
+    /** Add something waits for one answer: checked, or nothing. */
+    private var answered = route.fromText == null
+    private val mutable =
+        MutableStateFlow(ReminderEditUi(editing = route.id != null || route.proposalId != null, wrote = route.fromText))
     public val state: StateFlow<ReminderEditUi> = mutable.asStateFlow()
 
     init {
@@ -176,6 +194,38 @@ public class ReminderEditViewModel(
             val node = access.reminderNode()
             val caps = access.engine.state.value.capabilities
             val ring = !(caps.isDisabled("phone_alarm_delivery") || !caps.supports("phone_alarm_delivery"))
+            val words = route.fromText
+            if (words != null) {
+                // A first guess from the words; the person checks every field (F: capture_screen.dart `_save`).
+                val guess = ReminderGuess.from(words, clock.now().toLocalDateTime(TimeZone.currentSystemDefault()))
+                mutable.update {
+                    it.copy(
+                        draft = ReminderDraft(guess.what, guess.timing, locale = route.locale),
+                        ambiguities = guess.ambiguities.toImmutableSet(),
+                        cannotRing = !ring,
+                    )
+                }
+                return@launch
+            }
+            if (route.proposalId != null) {
+                val triggers = access.engine.triggers
+                if (triggers.state.value.proposals.none { it.id == route.proposalId }) triggers.refresh(quiet = true)
+                val found = triggers.state.value.proposals.firstOrNull { it.id == route.proposalId }
+                val schedule = found?.preview?.schedule
+                val timing = schedule?.let { ReminderTiming.fromWhen(it.`when`) }
+                if (found == null || schedule == null || timing == null) {
+                    mutable.update { it.copy(error = FactsBookError("not_found"), cannotRing = !ring) }
+                    return@launch
+                }
+                proposal = found
+                mutable.update {
+                    it.copy(
+                        draft = ReminderDraft(found.preview.what, timing, schedule.zone, if (found.preview.locale == "ar") "ar" else "en"),
+                        cannotRing = !ring,
+                    )
+                }
+                return@launch
+            }
             if (route.id == null) {
                 // Tomorrow at 09:00, as Flutter starts a new one.
                 val tomorrow = (clock.now() + 1.days).toLocalDateTime(TimeZone.currentSystemDefault())
@@ -199,7 +249,20 @@ public class ReminderEditViewModel(
         }
     }
 
-    override fun back(): Unit = nav.back()
+    override fun back() {
+        answer(ReminderCheckResult.Cancelled)
+        nav.back()
+    }
+
+    private fun answer(result: ReminderCheckResult) {
+        if (answered) return
+        answered = true
+        checks.tell(result)
+    }
+
+    override fun onCleared() {
+        answer(ReminderCheckResult.Cancelled)
+    }
 
     override fun edit(draft: ReminderDraft): Unit = mutable.update { it.copy(draft = draft, error = null, mismatch = false, needsTitle = false) }
 
@@ -218,10 +281,11 @@ public class ReminderEditViewModel(
                 return@launch
             }
             val old = saved
+            val proposed = proposal
+            val scheduleId = old?.schedule?.id ?: proposed?.preview?.schedule?.id
+            val area = old?.area ?: proposed?.area ?: "general"
             val preview =
-                when (
-                    val r = node.previewReminder(draft.what, draft.timing, draft.zone, draft.locale, old?.schedule?.id, old?.area ?: "general")
-                ) {
+                when (val r = node.previewReminder(draft.what, draft.timing, draft.zone, draft.locale, scheduleId, area)) {
                     is FbResult.Err -> {
                         mutable.update { it.copy(working = false, error = r.error) }
                         return@launch
@@ -238,11 +302,24 @@ public class ReminderEditViewModel(
                 mutable.update { it.copy(working = false, mismatch = true) }
                 return@launch
             }
+            if (route.fromText != null) {
+                // Add something saves the note first, then this reminder (F: capture_screen.dart).
+                mutable.update { it.copy(working = false) }
+                answer(ReminderCheckResult.Checked(preview))
+                nav.back()
+                return@launch
+            }
             val floating = preview.zone == "floating"
-            val result = if (old == null) node.createReminder(preview, floatingConfirmed = floating) else node.updateReminder(old, preview, floating)
+            val result =
+                when {
+                    proposed != null -> access.engine.triggers.editProposal(proposed, preview)
+                    old == null -> node.createReminder(preview, floatingConfirmed = floating)
+                    else -> node.updateReminder(old, preview, floating)
+                }
             when (result) {
                 is FbResult.Ok -> {
                     mutable.update { it.copy(working = false) }
+                    if (proposed != null) checks.tell(ReminderCheckResult.ProposalChanged)
                     nav.back()
                 }
                 is FbResult.Err -> mutable.update { it.copy(working = false, error = result.error) }

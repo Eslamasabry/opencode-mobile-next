@@ -373,6 +373,50 @@ public data class ConversationOffer(
     }
 }
 
+/** `StartReceipt.status`: an accepted offer waits (at most 15 minutes) for this phone to say the chat started. */
+public enum class StartStatus(public val wire: String) {
+    Pending("pending"),
+    Started("started"),
+    Unknown("unknown"),
+    Cancelled("cancelled");
+
+    internal companion object {
+        fun parse(raw: String?): StartStatus = entries.firstOrNull { it.wire == raw } ?: Unknown
+    }
+}
+
+/** The one durable record of an offer's start, the same on every client. An unknown one is never tried again. */
+public data class StartReceipt(
+    val id: String,
+    val offerId: String,
+    val receiptKey: String,
+    val status: StartStatus,
+    val expiresAt: Instant? = null,
+) {
+    internal companion object {
+        fun read(json: JsonObject): StartReceipt =
+            StartReceipt(
+                id = json.need("id"),
+                offerId = json.str("offer_id").orEmpty(),
+                receiptKey = json.str("receipt_key").orEmpty(),
+                status = StartStatus.parse(json.str("status")),
+                expiresAt = json.timeOrNull("expires_at"),
+            )
+    }
+}
+
+/** What this app reports about an accepted offer's chat. */
+public enum class OfferReport(public val wire: String) {
+    /** The first message was sent (`started`, `first_message_sent: true`). */
+    FirstMessageSent("started"),
+
+    /** The person left without sending. */
+    Cancelled("cancelled"),
+
+    /** A send was tried and its result is not known; never tried again. */
+    Unknown("unknown"),
+}
+
 /** How a rule did in the last seven days, counted from its firings. */
 public data class RuleActivity(val proposed: Int = 0, val ignored: Int = 0, val offers: Int = 0)
 
@@ -403,6 +447,11 @@ public interface FactsBookTriggerCalls {
     public suspend fun offers(): FbResult<List<ConversationOffer>>
 
     public suspend fun cancelOffer(offer: ConversationOffer): FbResult<ConversationOffer>
+
+    /** "Talk about this": this phone opens the chat itself (`adapter: client_report`) and reports what became of it. */
+    public suspend fun acceptOffer(offer: ConversationOffer, receiptKey: String): FbResult<StartReceipt>
+
+    public suspend fun reportOffer(offer: ConversationOffer, receipt: StartReceipt, report: OfferReport): FbResult<StartReceipt>
 
     /**
      * `POST /v1/events`: a capture the node's rules read. The answer is metadata only. With [classifyNormal] the owner

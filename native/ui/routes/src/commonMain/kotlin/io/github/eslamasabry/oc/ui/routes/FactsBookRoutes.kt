@@ -32,9 +32,18 @@ public sealed interface FactsBookRoute : AppRoute {
 
     @Serializable public data object Reminders : FactsBookRoute
 
-    /** Check this reminder: [id] null makes a new one; [locale] is the app's language (`en` or `ar`). */
+    /**
+     * Check this reminder: [id] null makes a new one; [locale] is the app's language (`en` or `ar`). With [fromText] it
+     * is Add something's "Also remind me about it": the fields start from those words and Save hands the checked
+     * reminder back without saving it. With [proposalId] it changes a reminder a rule proposed, which stays proposed.
+     */
     @Serializable
-    public data class ReminderEdit(val id: String?, val locale: String = "en") : FactsBookRoute {
+    public data class ReminderEdit(
+        val id: String?,
+        val locale: String = "en",
+        val fromText: String? = null,
+        val proposalId: String? = null,
+    ) : FactsBookRoute {
         override val motion: RouteMotion
             get() = RouteMotion.SlideUp
     }

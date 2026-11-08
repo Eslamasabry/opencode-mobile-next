@@ -15,6 +15,14 @@ import io.github.eslamasabry.oc.engine.factsbook.ReviewDecision
 import io.github.eslamasabry.oc.engine.factsbook.ReviewItem
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.NewChatOutcome
+import io.github.eslamasabry.oc.ui.routes.NewChatReports
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookTriggers
+import io.github.eslamasabry.oc.engine.factsbook.OfferReport
+import io.github.eslamasabry.oc.engine.factsbook.StartReceipt
+import io.github.eslamasabry.oc.engine.factsbook.StartStatus
 import io.github.eslamasabry.oc.engine.factsbook.ConversationOffer
 import io.github.eslamasabry.oc.engine.factsbook.ProposalDecision
 import io.github.eslamasabry.oc.engine.factsbook.ReminderProposal
@@ -40,7 +48,21 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /** What a decision came to, worded by the screen (F: memory_care_screen.dart `_notice`). */
-public enum class CareNotice { Approved, Rejected, Skipped, Stale }
+public enum class CareNotice {
+    Approved,
+    Rejected,
+    Skipped,
+    Stale,
+
+    /** An offer changed or ran out, so it was refreshed (F: `fbOfferStale`). */
+    OfferStale,
+
+    /** The node could not confirm the chat may start, so nothing was opened (F: `fbOfferUnknown`). */
+    OfferUnknown,
+
+    /** A proposed reminder was changed; it waits for approval again (F: `fbCareProposalEdited`). */
+    ProposalEdited,
+}
 
 public data class NeedsYouUi(
     val review: ImmutableList<ReviewItem> = persistentListOf(),
@@ -62,6 +84,8 @@ public data class NeedsYouUi(
     val fromEvent: ImmutableMap<String, TriggerEvent> = persistentMapOf(),
     /** For an offer: the name of the rule that made it. */
     val offerRule: ImmutableMap<String, String> = persistentMapOf(),
+    /** The node lets a proposed reminder be changed before it is approved. */
+    val canChangeProposals: Boolean = false,
 ) {
     /** Counted once, as the Memory section counts it. */
     val waiting: Int get() = review.size + proposals.size + notSaved + offers.size
@@ -87,11 +111,20 @@ public interface NeedsYouActions {
 
     public fun decideProposal(proposal: ReminderProposal, decision: ProposalDecision)
 
+    /** Change a proposed reminder through the reminder check; it stays proposed (F: `_editProposal`). */
+    public fun changeProposal(proposal: ReminderProposal)
+
     /** "What happened to this message" for the event a rule acted on. */
     public fun whyFired(event: TriggerEvent)
 
     /** Not now: the offer is dismissed. */
     public fun notNow(offer: ConversationOffer)
+
+    /**
+     * Talk about this: a new conversation opens whose first words are [leadIn] and the offer's summary, nothing else;
+     * the node hears whether the first message was sent (F: offer_card.dart `_talk`).
+     */
+    public fun talk(offer: ConversationOffer, leadIn: String)
 
     public fun dismiss()
 }
@@ -104,8 +137,16 @@ public interface NeedsYouActions {
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class NeedsYouViewModel(private val access: FactsBookAccess, private val nav: AppNavigator, private val clock: Clock) :
-    ViewModel(), NeedsYouActions {
+public class NeedsYouViewModel(
+    private val access: FactsBookAccess,
+    private val nav: AppNavigator,
+    private val clock: Clock,
+    private val reports: NewChatReports,
+    private val checks: ReminderChecks,
+) : ViewModel(), NeedsYouActions {
+    /** Accepted offers whose chat is open, by report key: each is reported once. */
+    private val started = mutableMapOf<String, Pair<ConversationOffer, StartReceipt>>()
+
     private data class Local(
         val working: Set<String> = emptySet(),
         val notice: CareNotice? = null,
@@ -136,6 +177,7 @@ public class NeedsYouViewModel(private val access: FactsBookAccess, private val 
                     review = s.review.toImmutableList(),
                     notSaved = s.pending.count { it.state != CouldNotSaveState.Discarded },
                     canApprove = s.canApprove,
+                    canChangeProposals = s.capabilities.supports(FactsBookTriggers.PROPOSAL_EDIT),
                     working = own.working.toImmutableSet(),
                     notice = own.notice,
                     failure = own.failure,
@@ -147,6 +189,22 @@ public class NeedsYouViewModel(private val access: FactsBookAccess, private val 
 
     init {
         refresh()
+        viewModelScope.launch {
+            checks.results.collect { if (it == ReminderCheckResult.ProposalChanged) local.update { l -> l.copy(notice = CareNotice.ProposalEdited, failure = null) } }
+        }
+        viewModelScope.launch {
+            reports.reports.collect { report ->
+                val (offer, receipt) = started.remove(report.key) ?: return@collect
+                val said =
+                    when (report.outcome) {
+                        NewChatOutcome.FirstMessageSent -> OfferReport.FirstMessageSent
+                        NewChatOutcome.Left -> OfferReport.Cancelled
+                        NewChatOutcome.Unknown -> OfferReport.Unknown
+                    }
+                // Best effort: one the node does not hear lets the pending receipt run out there.
+                access.engine.triggers.reportOffer(offer, receipt, said)
+            }
+        }
     }
 
     override fun back(): Unit = nav.back()
@@ -211,11 +269,44 @@ public class NeedsYouViewModel(private val access: FactsBookAccess, private val 
         }
     }
 
+    override fun changeProposal(proposal: ReminderProposal) {
+        if (proposal.id in local.value.working || !state.value.canApprove || proposal.preview.schedule == null) return
+        nav.open(
+            FactsBookRoute.ReminderEdit(null, locale = if (proposal.preview.locale == "ar") "ar" else "en", proposalId = proposal.id)
+        )
+    }
+
     override fun whyFired(event: TriggerEvent): Unit = nav.open(FactsBookRoute.Event(event.id))
 
     override fun notNow(offer: ConversationOffer) {
         if (offer.id in local.value.working) return
         answer(offer.id) { access.engine.triggers.cancelOffer(offer) to null }
+    }
+
+    override fun talk(offer: ConversationOffer, leadIn: String) {
+        if (offer.id in local.value.working) return
+        local.update { it.copy(working = it.working + offer.id, notice = null, failure = null) }
+        viewModelScope.launch {
+            val r = access.engine.triggers.acceptOffer(offer)
+            local.update {
+                val done = it.copy(working = it.working - offer.id)
+                when (r) {
+                    is FbResult.Err -> if (r.error.stale) done.copy(notice = CareNotice.OfferStale) else done.copy(failure = r.error)
+                    // Accepting is not a start: anything but pending is said as it is and never tried again.
+                    is FbResult.Ok -> if (r.value.status != StartStatus.Pending) done.copy(notice = CareNotice.OfferUnknown) else done
+                }
+            }
+            val receipt = (r as? FbResult.Ok)?.value?.takeIf { it.status == StartStatus.Pending } ?: return@launch
+            val key = receipt.receiptKey.ifEmpty { FactsBookTriggers.receiptKeyFor(offer) }
+            started[key] = offer to receipt
+            nav.open(
+                ChatsRoute.New(
+                    profile = access.activeProfileId.value?.let(::ProfileId),
+                    initialText = FactsBookTriggers.offerChatSeed(offer, leadIn),
+                    reportKey = key,
+                )
+            )
+        }
     }
 
     /** One answer on its way for [id]; a stale one says the card changed. */

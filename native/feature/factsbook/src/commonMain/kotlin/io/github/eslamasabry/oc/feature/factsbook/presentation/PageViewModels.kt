@@ -12,6 +12,9 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookReminders
+import io.github.eslamasabry.oc.engine.factsbook.ReminderPreview
+import io.github.eslamasabry.oc.engine.factsbook.ReminderTiming
 import io.github.eslamasabry.oc.engine.factsbook.Area
 import io.github.eslamasabry.oc.engine.factsbook.CaptureExport
 import io.github.eslamasabry.oc.engine.factsbook.CaptureKind
@@ -305,6 +308,18 @@ public class AreasViewModel(private val access: FactsBookAccess, private val nav
 /** What saving came to, worded by the screen (F: capture_screen.dart). */
 public enum class CaptureNotice { Saved, QueuedAtNode, KeptOnPhone, Full, FactAdded, FactProposed }
 
+/** What became of "Also remind me about it", said after the note's own notice (F: capture_screen.dart `_save`). */
+public sealed interface CaptureReminder {
+    /** Made, for when the node read it. */
+    public data class Made(val timing: io.github.eslamasabry.oc.engine.factsbook.ReminderTiming?) : CaptureReminder
+
+    /** The note was saved; the reminder was not. */
+    public data object Failed : CaptureReminder
+
+    /** The note is kept, not saved yet, so no reminder was made. */
+    public data object NotMade : CaptureReminder
+}
+
 public data class CaptureUi(
     val kind: CaptureKind = CaptureKind.Note,
     /** Null: "Pick for me". */
@@ -325,6 +340,9 @@ public data class CaptureUi(
     val rulesOn: Int = 0,
     /** The person's choice; null follows whether any rule is on. */
     val rules: Boolean? = null,
+    /** "Also remind me about it": the reminder check runs on Save. Notes only. */
+    val remind: Boolean = false,
+    val reminder: CaptureReminder? = null,
 ) {
     /** Whether this capture goes to the rules (F: `_rulesLook`). */
     val rulesLook: Boolean get() = rulesSupported && (rules ?: (rulesOn > 0))
@@ -348,15 +366,38 @@ public interface CaptureActions {
     public fun rules(on: Boolean)
 
     public fun seeRules()
+
+    public fun remind(on: Boolean)
 }
 
 /** Add something: a note or pasted text. Never a loss: saved, held by the node, kept on the phone, or kept on screen. */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class CaptureViewModel(private val access: FactsBookAccess, private val nav: AppNavigator) : ViewModel(), CaptureActions {
+public class CaptureViewModel(
+    private val access: FactsBookAccess,
+    private val nav: AppNavigator,
+    private val checks: ReminderChecks,
+) : ViewModel(), CaptureActions {
     private val mutable = MutableStateFlow(CaptureUi())
     public val state: StateFlow<CaptureUi> = mutable.asStateFlow()
+
+    /** The words waiting for the reminder check's answer. */
+    private var waiting: String? = null
+
+    init {
+        viewModelScope.launch {
+            checks.results.collect { result ->
+                val text = waiting ?: return@collect
+                waiting = null
+                when (result) {
+                    is ReminderCheckResult.Checked -> store(text, result.preview)
+                    // "Change what I wrote": nothing is saved, the text stays.
+                    else -> mutable.update { it.copy(working = false) }
+                }
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -384,6 +425,8 @@ public class CaptureViewModel(private val access: FactsBookAccess, private val n
 
     override fun thing(id: String?): Unit = mutable.update { it.copy(thingId = id) }
 
+    override fun remind(on: Boolean): Unit = mutable.update { it.copy(remind = on) }
+
     override fun save(text: String) {
         val now = mutable.value
         if (now.working) return
@@ -391,38 +434,64 @@ public class CaptureViewModel(private val access: FactsBookAccess, private val n
             mutable.update { it.copy(needsText = true) }
             return
         }
-        mutable.update { it.copy(working = true, needsText = false, notice = null, error = null) }
-        viewModelScope.launch {
-            val thing = now.things.firstOrNull { it.id == now.thingId }.takeIf { now.kind == CaptureKind.Note }
-            if (thing != null) {
-                val r = access.node()?.addFact(thing, text.trim().replace(Regex("\\s+"), " ")) ?: unreachable
-                mutable.update {
-                    when (r) {
-                        is FbResult.Ok ->
-                            it.copy(
-                                working = false,
-                                notice = if (r.value.status == "ok") CaptureNotice.FactAdded else CaptureNotice.FactProposed,
-                                clearSeed = it.clearSeed + 1,
-                            )
-                        is FbResult.Err -> it.copy(working = false, error = r.error)
-                    }
+        mutable.update { it.copy(working = true, needsText = false, notice = null, error = null, reminder = null) }
+        if (now.remind && now.kind == CaptureKind.Note) {
+            // The reminder check runs first; its answer saves the note (F: capture_screen.dart `_save`).
+            waiting = text.trim()
+            nav.open(FactsBookRoute.ReminderEdit(null, fromText = text.trim()))
+            return
+        }
+        viewModelScope.launch { store(text, null) }
+    }
+
+    private suspend fun store(text: String, reminder: ReminderPreview?) {
+        val now = mutable.value
+        val thing = now.things.firstOrNull { it.id == now.thingId }.takeIf { now.kind == CaptureKind.Note }
+        var saved = false
+        if (thing != null) {
+            val r = access.node()?.addFact(thing, text.trim().replace(Regex("\\s+"), " ")) ?: unreachable
+            saved = r is FbResult.Ok
+            mutable.update {
+                when (r) {
+                    is FbResult.Ok ->
+                        it.copy(
+                            working = false,
+                            notice = if (r.value.status == "ok") CaptureNotice.FactAdded else CaptureNotice.FactProposed,
+                            clearSeed = it.clearSeed + 1,
+                            remind = false,
+                        )
+                    is FbResult.Err -> it.copy(working = false, error = r.error)
                 }
-                return@launch
             }
+        } else {
             access.engine.open(access.activeProfileId.value)
             val outcome = access.engine.capture(CaptureRequest(now.kind, text, now.area), rulesLook = now.rulesLook)
+            saved = outcome is CaptureOutcome.SavedAtNode
             mutable.update {
                 when (outcome) {
-                    is CaptureOutcome.SavedAtNode -> it.copy(working = false, notice = CaptureNotice.Saved, clearSeed = it.clearSeed + 1)
+                    is CaptureOutcome.SavedAtNode ->
+                        it.copy(working = false, notice = CaptureNotice.Saved, clearSeed = it.clearSeed + 1, remind = false)
                     is CaptureOutcome.QueuedAtNode ->
-                        it.copy(working = false, notice = CaptureNotice.QueuedAtNode, clearSeed = it.clearSeed + 1)
+                        it.copy(working = false, notice = CaptureNotice.QueuedAtNode, clearSeed = it.clearSeed + 1, remind = false)
                     // Kept on the phone or refused: the text stays where it was typed.
                     is CaptureOutcome.KeptOnPhone -> it.copy(working = false, notice = CaptureNotice.KeptOnPhone)
                     CaptureOutcome.RefusedFull -> it.copy(working = false, notice = CaptureNotice.Full)
                     is CaptureOutcome.Refused -> it.copy(working = false, error = outcome.error)
                 }
             }
+            if (outcome is CaptureOutcome.Refused) return
         }
+        if (reminder == null || mutable.value.error != null) return
+        val said =
+            if (!saved) CaptureReminder.NotMade
+            else
+                when (
+                    (access.engine.node as? FactsBookReminders)?.createReminder(reminder, floatingConfirmed = reminder.zone == "floating")
+                ) {
+                    is FbResult.Ok -> CaptureReminder.Made(reminder.schedule?.let { ReminderTiming.fromWhen(it.`when`) })
+                    else -> CaptureReminder.Failed
+                }
+        mutable.update { it.copy(reminder = said) }
     }
 
     override fun seeNotSaved(): Unit = nav.open(FactsBookRoute.NotSaved)

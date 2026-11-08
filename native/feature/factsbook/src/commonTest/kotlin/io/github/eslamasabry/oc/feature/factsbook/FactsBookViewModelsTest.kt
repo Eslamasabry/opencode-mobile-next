@@ -14,6 +14,9 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.ThingViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderEditViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NeedsYouViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CareNotice
+import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderChecks
+import io.github.eslamasabry.oc.feature.factsbook.presentation.ReminderCheckResult
+import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureReminder
 import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
 import io.github.eslamasabry.oc.feature.factsbook.presentation.PhoneNodeViewModel
 import io.github.eslamasabry.oc.engine.factsbook.ProposalDecision
@@ -28,6 +31,9 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.TriggersViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.SettingsViewModel
 import io.github.eslamasabry.oc.feature.factsbook.presentation.StatusViewModel
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.NewChatOutcome
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -48,6 +54,8 @@ import kotlinx.coroutines.test.setMain
 @OptIn(ExperimentalCoroutinesApi::class)
 class FactsBookViewModelsTest {
     private val nav = Nav()
+    private val reports = FakeReports()
+    private val checks = ReminderChecks()
 
     @BeforeTest
     fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -105,7 +113,7 @@ class FactsBookViewModelsTest {
     @Test
     fun `B-FB-024 a note made while the node is away stays in the editor and is kept on the phone`() = runTest {
         val access = FakeAccess().apply { node.unreachable = true }
-        val vm = CaptureViewModel(access, nav)
+        val vm = CaptureViewModel(access, nav, checks)
         vm.kind(CaptureKind.Note)
         vm.save("Call the dentist")
         val state = vm.state.first { !it.working && it.notice != null }
@@ -117,7 +125,7 @@ class FactsBookViewModelsTest {
     @Test
     fun `B-FB-025 an empty note is not saved and says why`() = runTest {
         val access = FakeAccess().apply { node.healthy() }
-        val vm = CaptureViewModel(access, nav)
+        val vm = CaptureViewModel(access, nav, checks)
         vm.save("   ")
         assertTrue(vm.state.value.needsText)
         assertFalse(access.node.asked.any { it == "POST /v1/inbox" })
@@ -181,7 +189,7 @@ class FactsBookViewModelsTest {
         val access = FakeAccess().apply { node.healthy(); dailyReminder() }
         access.node.on("POST /v1/reminders/parse", preview)
         access.node.on("PATCH /v1/reminders/rem_1", """{"status":"ok","id":"rem_1"}""")
-        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit("rem_1"), access, nav, FixedClock())
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit("rem_1"), access, nav, FixedClock(), checks)
         vm.state.first { it.draft != null }
         vm.save()
         vm.state.first { !it.working }
@@ -193,7 +201,7 @@ class FactsBookViewModelsTest {
     fun `B-FB-030 a reminder the node reads differently is not saved`() = runTest {
         val access = FakeAccess().apply { node.healthy(); dailyReminder() }
         access.node.on("POST /v1/reminders/parse", preview.replace("07:00", "19:00"))
-        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit("rem_1"), access, nav, FixedClock())
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit("rem_1"), access, nav, FixedClock(), checks)
         vm.state.first { it.draft != null }
         vm.save()
         assertTrue(vm.state.first { !it.working }.mismatch)
@@ -204,7 +212,7 @@ class FactsBookViewModelsTest {
     @Test
     fun `B-FB-031 Needs you lists the changes waiting and cannot approve without an owner device`() = runTest {
         val access = FakeAccess().apply { node.healthy() }
-        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        val vm = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.review.isNotEmpty() }
         assertEquals("rvw_1", state.review.single().id)
@@ -216,7 +224,7 @@ class FactsBookViewModelsTest {
     fun `B-FB-035 an approval on Needs you is signed, sent once and says it was approved`() = runTest {
         val access = FakeAccess(owner = true).apply { node.healthy() }
         access.node.on("POST /v1/review/rvw_1/decision", """{"status":"ok","id":"rvw_1"}""")
-        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        val vm = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.review.isNotEmpty() && it.canApprove }
         vm.approve(state.review.single())
@@ -228,7 +236,7 @@ class FactsBookViewModelsTest {
     fun `B-FB-036 a change approved elsewhere first says it changed and nothing else`() = runTest {
         val access = FakeAccess(owner = true).apply { node.healthy() }
         access.node.on("POST /v1/review/rvw_1/decision", """{"error":{"code":"stale_approval"}}""", status = 409)
-        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        val vm = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val item = vm.state.first { it.review.isNotEmpty() && it.canApprove }.review.single()
         vm.approveEdited(item, "  Likes green tea ")
@@ -335,7 +343,7 @@ class FactsBookViewModelsTest {
         val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
         access.node.on("POST /v1/reminder-proposals/rpr_1/decision", """{"status":"ok","id":"rpr_1"}""")
         access.node.on("POST /v1/offers/off_1/cancel", """{"id":"off_1","rev":2,"digest":"od","state":"cancelled","expires_at":"2026-11-09T10:00:00Z"}""")
-        val vm = NeedsYouViewModel(access, nav, FixedClock())
+        val vm = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         val state = vm.state.first { it.proposals.isNotEmpty() && it.offers.isNotEmpty() }
         assertEquals(3, state.waiting) // one change, one proposal, one offer
@@ -347,6 +355,46 @@ class FactsBookViewModelsTest {
         vm.notNow(state.offers.single())
         vm.state.first { it.working.isEmpty() && access.node.asked.contains("POST /v1/offers/off_1/cancel") }
         assertEquals(1, access.node.asked.count { it == "POST /v1/reminder-proposals/rpr_1/decision" })
+    }
+
+    @Test
+    fun `B-FB-081 Talk about this accepts the offer, opens a new chat with only its summary and reports the first message`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/offers/off_1/accept", """{"id":"st_1","offer_id":"off_1","receipt_key":"offer-k","status":"pending"}""")
+        access.node.on("POST /v1/offers/off_1/receipt", """{"id":"st_1","offer_id":"off_1","receipt_key":"offer-k","status":"started"}""")
+        val vm = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val offer = vm.state.first { it.offers.isNotEmpty() }.offers.single()
+        vm.talk(offer, "Lead in:")
+        vm.state.first { it.working.isEmpty() && nav.opened.any { r -> r is ChatsRoute.New } }
+        val chat = nav.opened.filterIsInstance<ChatsRoute.New>().single()
+        assertEquals("Lead in:\n\nA clinic visit next week", chat.initialText)
+        assertEquals("offer-k", chat.reportKey)
+        assertEquals(ProfileId("p1"), chat.profile)
+        assertEquals(0, access.node.asked.count { it == "POST /v1/offers/off_1/receipt" }, "accepting is not a start")
+        reports.report("offer-k", NewChatOutcome.FirstMessageSent)
+        vm.state.first { access.node.asked.contains("POST /v1/offers/off_1/receipt") }
+        assertEquals(1, access.node.asked.count { it == "POST /v1/offers/off_1/receipt" })
+        assertTrue(access.node.bodies[access.node.asked.indexOf("POST /v1/offers/off_1/receipt")]!!.contains("\"first_message_sent\":true"))
+        reports.report("offer-k", NewChatOutcome.Left)
+        assertEquals(1, access.node.asked.count { it == "POST /v1/offers/off_1/receipt" }, "one report per start")
+    }
+
+    @Test
+    fun `B-FB-082 an offer the node will not start opens nothing and says so, and a changed one says it was refreshed`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on("POST /v1/offers/off_1/accept", """{"id":"st_1","offer_id":"off_1","receipt_key":"offer-k","status":"unknown"}""")
+        val vm = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val offer = vm.state.first { it.offers.isNotEmpty() }.offers.single()
+        vm.talk(offer, "Lead in:")
+        assertEquals(CareNotice.OfferUnknown, vm.state.first { it.notice != null }.notice)
+        assertTrue(nav.opened.none { it is ChatsRoute.New })
+
+        access.node.on("POST /v1/offers/off_1/accept", """{"error":{"code":"stale_approval"}}""", status = 409)
+        vm.talk(offer, "Lead in:")
+        assertEquals(CareNotice.OfferStale, vm.state.first { it.notice == CareNotice.OfferStale }.notice)
+        assertTrue(nav.opened.none { it is ChatsRoute.New })
     }
 
     private val pairAnswer =
@@ -394,7 +442,7 @@ class FactsBookViewModelsTest {
         val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
         access.node.on("POST /v1/events", """{"event":{"id":"evt_9","source":{"kind":"note"},"captured_at":"2026-11-08T10:00:00Z","evidence_ref":"itm_9"}}""")
         access.node.on("POST /v1/inbox", """{"status":"saved","item_id":"itm_10"}""")
-        val vm = CaptureViewModel(access, nav)
+        val vm = CaptureViewModel(access, nav, checks)
         val ready = vm.state.first { it.rulesSupported }
         assertEquals(1, ready.rulesOn)
         assertTrue(ready.rulesLook)
@@ -406,5 +454,87 @@ class FactsBookViewModelsTest {
         vm.save("Buy milk")
         vm.state.first { it.clearSeed == 2 }
         assertTrue(access.node.asked.contains("POST /v1/inbox"))
+    }
+
+    @Test
+    fun `B-FB-084 Also remind me about it checks the reminder first, then saves the note and makes the reminder`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        access.node.on("POST /v1/inbox", """{"status":"saved","item_id":"itm_10"}""")
+        access.node.on("POST /v1/reminders", """{"status":"ok","id":"rem_9"}""")
+        val vm = CaptureViewModel(access, nav, checks)
+        vm.remind(true)
+        vm.save("Gym every day at 7")
+        assertEquals(FactsBookRoute.ReminderEdit(null, fromText = "Gym every day at 7"), nav.opened.last())
+        assertFalse(access.node.asked.contains("POST /v1/inbox"), "nothing is saved before the check")
+        val daily = kotlinx.serialization.json.Json.parseToJsonElement("""{"every":"day","at":"07:00"}""") as kotlinx.serialization.json.JsonObject
+        val checked =
+            io.github.eslamasabry.oc.engine.factsbook.ReminderPreview(
+                what = "Gym", zone = "vault", locale = "en", ambiguities = emptyList(), adjustments = emptyList(), digest = "dg",
+                raw = kotlinx.serialization.json.JsonObject(emptyMap()),
+                schedule = io.github.eslamasabry.oc.engine.factsbook.ReminderSchedule("sch_0", io.github.eslamasabry.oc.engine.factsbook.ScheduleWhen(daily), "vault", daily),
+            )
+        checks.tell(ReminderCheckResult.Checked(checked))
+        val done = vm.state.first { it.reminder != null }
+        assertEquals(CaptureNotice.Saved, done.notice)
+        assertTrue(done.reminder is CaptureReminder.Made)
+        assertFalse(done.remind)
+        assertEquals(listOf("POST /v1/inbox", "POST /v1/reminders"), access.node.asked.filter { it.startsWith("POST") })
+    }
+
+    @Test
+    fun `B-FB-084 Change what I wrote saves nothing and keeps the words`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        val vm = CaptureViewModel(access, nav, checks)
+        vm.remind(true)
+        vm.save("Call the bank")
+        checks.tell(ReminderCheckResult.Cancelled)
+        val after = vm.state.first { !it.working }
+        assertEquals(0, after.clearSeed)
+        assertNull(after.notice)
+        assertTrue(access.node.asked.none { it.startsWith("POST") })
+    }
+
+    @Test
+    fun `B-FB-085 the check from Add something starts from the words and hands the reading back without saving`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        access.node.on("POST /v1/reminders/parse", preview)
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit(null, fromText = "Gym every day at 7"), access, nav, FixedClock(), checks)
+        val shown = vm.state.first { it.draft != null }
+        assertEquals("Gym every day at 7", shown.wrote)
+        assertEquals(io.github.eslamasabry.oc.engine.factsbook.ReminderRepeat.Daily, shown.draft!!.timing.repeat)
+        assertEquals(setOf("date"), shown.ambiguities.toSet(), "the words gave a time, not a day")
+        vm.edit(shown.draft!!.copy(what = "Gym", timing = shown.draft!!.timing.copy(at = kotlinx.datetime.LocalDateTime(2000, 1, 1, 7, 0))))
+        val heard = mutableListOf<ReminderCheckResult>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { checks.results.collect { heard += it } }
+        vm.save()
+        vm.state.first { !it.working }
+        assertTrue(heard.single() is ReminderCheckResult.Checked)
+        assertFalse(access.node.asked.contains("POST /v1/reminders"), "Add something makes it after the note")
+        assertEquals(1, nav.backs)
+    }
+
+    @Test
+    fun `B-FB-086 Change on a proposed reminder checks it and replaces the proposal, which waits for approval again`() = runTest {
+        val access = FakeAccess(owner = true).apply { node.healthy(); node.triggers() }
+        access.node.on(
+            "GET /v1/reminder-proposals",
+            """{"items":[{"id":"rpr_1","rev":2,"event_id":"evt_1","firing_id":"trg_1","area":"health","digest":"dg","state":"proposed",
+              "preview":{"what":"Gym","zone":"vault","locale":"en","preview_digest":"pd","schedule":{"id":"sch_0","when":{"every":"day","at":"07:00"},"zone":"vault"}}}]}""",
+        )
+        access.node.on("POST /v1/reminders/parse", preview)
+        access.node.on("POST /v1/reminder-proposals/rpr_1/decision", """{"status":"ok","id":"rpr_1"}""")
+        val needs = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { needs.state.collect {} }
+        val proposal = needs.state.first { it.proposals.isNotEmpty() && it.canApprove }.proposals.single()
+        assertTrue(needs.state.value.canChangeProposals)
+        needs.changeProposal(proposal)
+        val route = nav.opened.last() as FactsBookRoute.ReminderEdit
+        assertEquals("rpr_1", route.proposalId)
+        val vm = ReminderEditViewModel(route, access, nav, FixedClock(), checks)
+        assertEquals("Gym", vm.state.first { it.draft != null }.draft!!.what)
+        vm.save()
+        needs.state.first { it.notice == CareNotice.ProposalEdited }
+        assertTrue(access.node.bodies[access.node.asked.indexOf("POST /v1/reminder-proposals/rpr_1/decision")]!!.contains("\"edit\""))
+        assertEquals(1, nav.backs)
     }
 }

@@ -451,6 +451,36 @@ public class HttpFactsBookGateway(
             idempotencyKey = key(),
         ).reading(ConversationOffer::read)
 
+    override suspend fun acceptOffer(offer: ConversationOffer, receiptKey: String): FbResult<StartReceipt> =
+        send(
+            "POST",
+            "/v1/offers/${seg(offer.id)}/accept",
+            body =
+                obj(
+                    "rev" to JsonPrimitive(offer.revision),
+                    "digest" to JsonPrimitive(offer.digest),
+                    "receipt_key" to JsonPrimitive(receiptKey),
+                    // This phone opens the chat itself and reports what became of it.
+                    "adapter" to JsonPrimitive("client_report"),
+                ),
+            idempotencyKey = key(),
+        ).reading(StartReceipt::read)
+
+    override suspend fun reportOffer(offer: ConversationOffer, receipt: StartReceipt, report: OfferReport): FbResult<StartReceipt> {
+        val fields =
+            listOf(
+                "start_id" to JsonPrimitive(receipt.id),
+                "receipt_key" to JsonPrimitive(receipt.receiptKey),
+                "status" to JsonPrimitive(report.wire),
+            ) + if (report == OfferReport.FirstMessageSent) listOf("first_message_sent" to JsonPrimitive(true)) else emptyList()
+        return send(
+            "POST",
+            "/v1/offers/${seg(offer.id)}/receipt",
+            body = obj(*fields.toTypedArray()),
+            idempotencyKey = key(),
+        ).reading(StartReceipt::read)
+    }
+
     override suspend fun previewReminder(
         what: String,
         timing: ReminderTiming,

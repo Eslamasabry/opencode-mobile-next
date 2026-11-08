@@ -151,6 +151,17 @@ public class FactsBookTriggers internal constructor(
 
     public suspend fun cancelOffer(offer: ConversationOffer): FbResult<ConversationOffer> = write { it.cancelOffer(offer) }
 
+    /**
+     * Accepting is not a start: the node waits for [reportOffer]. The receipt key is the same for the same offer
+     * revision, so asking again never starts twice (F: `FactsBookTriggers.acceptOffer`).
+     */
+    public suspend fun acceptOffer(offer: ConversationOffer): FbResult<StartReceipt> =
+        write { it.acceptOffer(offer, receiptKeyFor(offer)) }
+
+    /** Best effort: a report that does not arrive lets the pending receipt run out on the node. */
+    public suspend fun reportOffer(offer: ConversationOffer, receipt: StartReceipt, report: OfferReport): FbResult<StartReceipt> =
+        write { it.reportOffer(offer, receipt, report) }
+
     /** What a draft would do with [sample]. Nothing is written, so nothing is refreshed. */
     public suspend fun testDraft(draft: RuleDefinition, sample: TriggerSample): FbResult<RuleTestResult> =
         calls?.testDraft(draft, sample) ?: FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))
@@ -158,6 +169,16 @@ public class FactsBookTriggers internal constructor(
     public fun now(): Instant = clock.now()
 
     public companion object {
+        /** `offer-` and 24 letters from SHA-256 of `<id>/<digest>` (F: `receiptKeyFor`). */
+        public fun receiptKeyFor(offer: ConversationOffer): String {
+            val hex = io.github.eslamasabry.oc.core.common.dart.DartJson.sha256Hex("${offer.id}/${offer.digest}")
+            return "offer-" +
+                (0 until 24).map { i -> 'a' + (hex.substring(i * 2, i * 2 + 2).toInt(16) % 26) }.joinToString("")
+        }
+
+        /** The new chat's first words: the lead-in, then only the offer's summary (F: `offerChatSeed`). */
+        public fun offerChatSeed(offer: ConversationOffer, leadIn: String): String = "${leadIn.trim()}\n\n${offer.summary.trim()}"
+
         public const val CONVERSATION_OFFERS: String = "explicit_conversation_offers"
         public const val PROPOSAL_EDIT: String = "reminder_proposal_edit"
     }

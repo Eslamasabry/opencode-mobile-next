@@ -23,6 +23,9 @@ import io.github.eslamasabry.oc.engine.factsbook.HttpFactsBookGateway
 import io.github.eslamasabry.oc.feature.factsbook.presentation.FactsBookAccess
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.NewChatOutcome
+import io.github.eslamasabry.oc.ui.routes.NewChatReport
+import io.github.eslamasabry.oc.ui.routes.NewChatReports
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -94,6 +97,8 @@ internal class MemorySecrets(initial: Map<String, String> = emptyMap()) : Secret
 internal class FakeNode : FactsBookHttp {
     val answers = mutableMapOf<String, FbHttpResult>()
     val asked = mutableListOf<String>()
+    /** Each request's body, in order (null for none). */
+    val bodies = mutableListOf<String?>()
     var unreachable = false
 
     fun on(route: String, body: String, status: Int = 200) {
@@ -102,6 +107,7 @@ internal class FakeNode : FactsBookHttp {
 
     override suspend fun send(method: String, path: String, query: Map<String, String>, headers: Map<String, String>, body: String?): FbHttpResult {
         asked += "$method $path" + if (query.containsKey("kind")) "?kind=${query["kind"]}" else ""
+        bodies += body
         if (unreachable) return FbHttpResult.Unreachable
         return answers["$method $path"] ?: FbHttpResult.Answer(404, """{"error":{"code":"not_found"}}""")
     }
@@ -153,6 +159,16 @@ internal val OWNER_LINK: String = LINK.dropLast(1) + ""","owner_device":"dev_1"}
 
 internal class FixedClock(private val at: Instant = Instant.parse("2026-11-08T10:00:00Z")) : Clock {
     override fun now(): Instant = at
+}
+
+/** Hands each report to whoever listens now, as the app's one does. */
+internal class FakeReports : NewChatReports {
+    private val flow = MutableSharedFlow<NewChatReport>(extraBufferCapacity = 8)
+    override val reports: SharedFlow<NewChatReport> = flow
+
+    override fun report(key: String, outcome: NewChatOutcome) {
+        flow.tryEmit(NewChatReport(key, outcome))
+    }
 }
 
 internal class Nav : AppNavigator {

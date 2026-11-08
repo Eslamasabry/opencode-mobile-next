@@ -166,6 +166,7 @@ class FactsBookScreensTest {
         override fun cancelShare() { calls += "cancelShare" }
         override fun rules(on: Boolean) { calls += "rules $on" }
         override fun seeRules() { calls += "seeRules" }
+        override fun remind(on: Boolean) { calls += "remind $on" }
         override fun startNode() { calls += "startNode" }
         override fun export(entry: CouldNotSaveEntry) { calls += "export ${entry.id}" }
         override fun closeExport() { calls += "closeExport" }
@@ -296,6 +297,8 @@ class FactsBookScreensTest {
         }
         override fun whyFired(event: io.github.eslamasabry.oc.engine.factsbook.TriggerEvent) { calls += "why ${event.id}" }
         override fun notNow(offer: io.github.eslamasabry.oc.engine.factsbook.ConversationOffer) { calls += "notNow ${offer.id}" }
+        override fun talk(offer: io.github.eslamasabry.oc.engine.factsbook.ConversationOffer, leadIn: String) { calls += "talk ${offer.id} $leadIn" }
+        override fun changeProposal(proposal: io.github.eslamasabry.oc.engine.factsbook.ReminderProposal) { calls += "change ${proposal.id}" }
     }
 
     @Test
@@ -339,6 +342,28 @@ class FactsBookScreensTest {
             onNodeWithText("Skip “Likes tea”").performClick()
             assertEquals(listOf("approve rvw_1", "reject rvw_1", "skip rvw_1"), actions.calls)
         }
+
+    @Test
+    fun `B-FB-081 an offer says what opens and offers Talk about this and Not now as equals`() = runComposeUiTest {
+        val offer =
+            io.github.eslamasabry.oc.engine.factsbook.ConversationOffer(
+                "off_1", 1, "evt_1", "trg_1", "health", "A clinic visit next week", "od", "offered",
+                kotlin.time.Instant.parse("2026-11-09T10:00:00Z"),
+            )
+        val actions = Others()
+        setContent { Themed { NeedsYouScreen(NeedsYouUi(offers = persistentListOf(offer)), actions) } }
+        onNodeWithText("A clinic visit next week").assertExists()
+        onNodeWithText("It gets a short summary, not the whole message", substring = true).assertExists()
+        onNodeWithText("Talk about this").performClick()
+        onNodeWithText("Not now").performClick()
+        assertEquals(
+            listOf(
+                "talk off_1 Memory noticed something you may want to talk about. This is a short summary, not the original message:",
+                "notNow off_1",
+            ),
+            actions.calls,
+        )
+    }
 
     @Test
     fun `B-FB-051 Areas changes sharing with the switch and asks before opening the locked folder`() = runComposeUiTest {

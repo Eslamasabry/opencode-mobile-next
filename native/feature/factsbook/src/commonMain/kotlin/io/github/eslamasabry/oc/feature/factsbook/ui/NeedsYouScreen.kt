@@ -173,6 +173,17 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
                 closeLabel = stringResource(Res.string.fbDismiss),
             ) {
                 KitRowGroup {
+                    if (state.canChangeProposals && proposal.preview.schedule != null) {
+                        KitRow(
+                            title = stringResource(Res.string.fbCareEditNamed, claim),
+                            titleMaxLines = 2,
+                            leading = KitRowLeading.Glyph(KitIcons.edit),
+                            onClick = {
+                                moreProposal = null
+                                actions.changeProposal(proposal)
+                            },
+                        )
+                    }
                     KitRow(
                         title = stringResource(Res.string.fbCareSkipNamed, claim),
                         titleMaxLines = 2,
@@ -236,7 +247,7 @@ private fun Body(
         }
         if (state.notice != null || state.failure != null) {
             item("notice") {
-                val good = state.notice != null && state.notice != CareNotice.Stale
+                val good = state.notice != null && state.notice !in setOf(CareNotice.Stale, CareNotice.OfferStale, CareNotice.OfferUnknown)
                 KitNotice(
                     message =
                         when (state.notice) {
@@ -244,6 +255,9 @@ private fun Body(
                             CareNotice.Rejected -> stringResource(Res.string.fbCareRejected)
                             CareNotice.Skipped -> stringResource(Res.string.fbCareSkipped)
                             CareNotice.Stale -> stringResource(Res.string.fbCareStale)
+                            CareNotice.OfferStale -> stringResource(Res.string.fbOfferStale)
+                            CareNotice.OfferUnknown -> stringResource(Res.string.fbOfferUnknown)
+                            CareNotice.ProposalEdited -> stringResource(Res.string.fbCareProposalEdited)
                             null -> failureWords(state.failure)
                         },
                     modifier = Modifier.padding(horizontal = gutter, vertical = Space.S2.dp),
@@ -405,9 +419,8 @@ private fun ProposalCard(proposal: ReminderProposal, state: NeedsYouUi, actions:
 }
 
 /**
- * "Discuss with your agent?" (F: offer_card.dart): the offer's short summary, where it came from, and Not now. Opening
- * the chat it offers needs the new-chat seed and first-message report from :feature:chats (report: s25-hooks), so
- * Talk about this is not offered here yet.
+ * "Discuss with your agent?" (F: offer_card.dart): the offer's short summary, where it came from, and two equal answers:
+ * Talk about this opens a new conversation seeded with the summary only; Not now dismisses the offer.
  */
 @Composable
 private fun OfferCard(offer: ConversationOffer, state: NeedsYouUi, actions: NeedsYouActions, gutter: Dp) {
@@ -422,9 +435,18 @@ private fun OfferCard(offer: ConversationOffer, state: NeedsYouUi, actions: Need
                 tone = TextTone.Secondary,
             )
         }
-        KitButton(
-            KitAction(stringResource(Res.string.fbOfferNotNow), { actions.notNow(offer) }, working = offer.id in state.working),
-            role = KitButtonRole.Tertiary,
-        )
+        KitText(stringResource(Res.string.fbOfferExplain), role = TypeRole.Caption, tone = TextTone.Secondary)
+        val leadIn = stringResource(Res.string.fbOfferChatLead)
+        val working = offer.id in state.working
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            KitButton(
+                KitAction(stringResource(Res.string.fbOfferTalk), { actions.talk(offer, leadIn) }, working = working),
+                role = KitButtonRole.Secondary,
+            )
+            KitButton(
+                KitAction(stringResource(Res.string.fbOfferNotNow), { actions.notNow(offer) }, working = working),
+                role = KitButtonRole.Tertiary,
+            )
+        }
     }
 }

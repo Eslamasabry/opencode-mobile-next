@@ -239,6 +239,8 @@ public fun ReminderEditScreen(state: ReminderEditUi, actions: ReminderEditAction
                     KitActionBlock(
                         Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
                         primary = KitAction(stringResource(Res.string.fbReminderSave), actions::save, working = state.working),
+                        secondary =
+                            if (state.fromCapture) KitAction(stringResource(Res.string.fbReminderChange), actions::changeWritten) else null,
                     )
                 }),
     ) {
@@ -258,7 +260,10 @@ private fun DraftForm(draft: ReminderDraft, state: ReminderEditUi, actions: Remi
     val what = rememberTextFieldState(draft.what)
     LaunchedEffect(what) { snapshotFlow { what.text.toString() }.collect { if (it != draft.what) actions.edit(draft.copy(what = it)) } }
     Column(pad(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        state.wrote?.let { KitText(stringResource(Res.string.fbReminderWrote, bidiName(it)), role = TypeRole.Secondary, tone = TextTone.Secondary) }
         KitText(stringResource(Res.string.fbReminderHelp), role = TypeRole.Secondary, tone = TextTone.Secondary)
+        if ("date" in state.ambiguities) KitNotice(stringResource(Res.string.fbReminderAmbiguousDate))
+        if ("time" in state.ambiguities) KitNotice(stringResource(Res.string.fbReminderAmbiguousTime))
         when {
             state.mismatch -> KitNotice(stringResource(Res.string.fbReminderMismatch), tone = StatusTone.Attention)
             state.error != null -> KitNotice(failureWords(state.error), tone = StatusTone.Attention)
