@@ -52,9 +52,9 @@ Under the Glass style the floating parts are liquid glass over the content behin
 
 | Screen | Today's Glass | Liquid | Solid |
 |---|---|---|---|
-| Chat over the sunset image and coloured code, dark | chat-today-glass-dark | chat-liquid-dark (build 5da4b5d4c, before the 18:55 fixes) | chat-solid-dark |
+| Chat over the sunset image and coloured code, dark | chat-today-glass-dark | chat-liquid-dark (build b5c31190c, before the 18:55 fixes) | chat-solid-dark |
 | Same, light | chat-today-glass-light | chat-liquid-light (build 5da4b5d4c) | chat-solid-light |
-| Conversations list scrolled under the bar | list-today-glass-{dark,light} | list-liquid-dark, list-liquid-light (b5c31190c: shows the light-ink sampling bug, fixed in 44fd4873a) | list-solid-{dark,light} |
+| Conversations list scrolled under the bar | list-today-glass-{dark,light} | list-liquid-dark, list-liquid-light (both b5c31190c; the light one shows the light-ink sampling bug, fixed in 44fd4873a) | list-solid-{dark,light} |
 | Model sheet | sheet-today-glass-{dark,light} | sheet-liquid-dark | sheet-solid-{dark,light} |
 | Chat menu | menu-today-glass-{dark,light} | menu-liquid-dark | menu-solid-{dark,light} |
 | Settings › Appearance › Glass edges | | settings-glass-edges-dark | |
