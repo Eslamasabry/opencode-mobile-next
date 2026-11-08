@@ -59,7 +59,12 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
             topBar = {
                 KitTopBar(
                     title = title,
-                    subtitle = if (state.demo) stringResource(Res.string.teamProjectDemoChip) else null,
+                    subtitle =
+                        when {
+                            state.demo -> stringResource(Res.string.teamProjectDemoChip)
+                            state.phase == TeamPhase.Off -> stringResource(Res.string.teamUiRowOff)
+                            else -> null
+                        },
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = actions::back,
@@ -86,7 +91,8 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
             loadingLabel = stringResource(Res.string.teamProjectLoad),
             width = KitScreenWidth.Reading,
             bottom =
-                if (!ready || !state.canStart) null
+                if (state.phase == TeamPhase.Off) ({ TeamIntroBottom(state.intro, actions) })
+                else if (!ready || !state.canStart) null
                 else
                     ({
                         KitActionBlock(
@@ -99,7 +105,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
         ) {
             when (state.phase) {
                 TeamPhase.Loading -> Unit
-                TeamPhase.Off -> KitStateView(KitStateKind.Calm, stringResource(Res.string.phoneTeamOffTitle))
+                TeamPhase.Off -> TeamIntro(state.intro, actions)
                 TeamPhase.Computer ->
                     KitStateView(
                         KitStateKind.Missing,

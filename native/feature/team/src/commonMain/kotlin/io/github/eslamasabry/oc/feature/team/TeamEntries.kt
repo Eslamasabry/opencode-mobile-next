@@ -23,18 +23,20 @@ import io.github.eslamasabry.oc.feature.team.ui.TeamProjectScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamServersScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamTaskScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamTimelineScreen
+import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 
 /** The AI Team destinations: the team page, one project, its board, one task's conversation. */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class TeamEntries : EntryInstaller {
+public class TeamEntries(private val environment: KitChatEnvironment) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<TeamRoute.Home> { route ->
             val vm = assistedMetroViewModel<TeamHomeViewModel, TeamHomeViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
-            TeamHomeScreen(state, vm)
+            // The off page's host guide draws its commands in the kit's code block, which redacts what it shows.
+            environment.Provide { TeamHomeScreen(state, vm) }
         }
         entry<TeamRoute.Project> { route ->
             val vm = assistedMetroViewModel<TeamProjectViewModel, TeamProjectViewModel.Factory> { create(route) }

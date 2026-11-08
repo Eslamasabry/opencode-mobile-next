@@ -54,6 +54,9 @@ internal class PlaceFiles(val place: FilesPlace, private val connections: FilesC
     fun canTerminal(): Boolean =
         conversation?.let { connections.canTerminal(it) } ?: (source()?.canTerminal == true)
 
+    fun tools(): FilesProjectTools =
+        conversation?.let { connections.tools(it) } ?: (source()?.tools ?: FilesProjectTools.None)
+
     fun canSearchText(): Boolean =
         conversation?.let { connections.canSearchText(it) } ?: (source()?.canSearchText == true)
 

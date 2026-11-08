@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.feature.projects.presentation.OpenFolderUi
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenProjectActions
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenProjectStep
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenProjectUi
+import io.github.eslamasabry.oc.feature.projects.presentation.OpenRecentUi
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenServerStatus
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenServerUi
 import io.github.eslamasabry.oc.feature.projects.ui.OpenProjectScreen
@@ -152,6 +153,31 @@ class OpenProjectScreenTest {
             onNodeWithTag("open-server-pc").performClick()
             // ProfileId is a value class: the proxy sees the mangled method and the raw id.
             assertEquals(listOf("chooseServer" to listOf<Any?>("pc")), calls.map { (m, a) -> m.substringBefore('-') to a })
+        }
+
+    @Test
+    fun `WALK-1108-P1 Where is the project lists the projects opened before above the servers`() =
+        shoot(
+            "open_project_recent",
+            OpenProjectUi(
+                serversLoading = false,
+                servers = persistentListOf(OpenServerUi(pc, "studio-pc", false, OpenServerStatus.Connected)),
+                recent =
+                    persistentListOf(
+                        OpenRecentUi(pc, "app", "/srv/app"),
+                        OpenRecentUi(pc, "old", "/srv/old"),
+                    ),
+            ),
+        ) {
+            onNodeWithText("Opened before").assertExists()
+            val recentTop = onNodeWithText("app").fetchSemanticsNode().boundsInRoot.top
+            val serverTop = onNodeWithText("studio-pc").fetchSemanticsNode().boundsInRoot.top
+            kotlin.test.assertTrue(recentTop < serverTop, "recent projects come first")
+            onNodeWithTag("open-recent-pc-/srv/app").performClick()
+            assertEquals(
+                listOf("openRecent" to listOf<Any?>("pc", "/srv/app")),
+                calls.map { (m, a) -> m.substringBefore('-') to a },
+            )
         }
 
     @Test

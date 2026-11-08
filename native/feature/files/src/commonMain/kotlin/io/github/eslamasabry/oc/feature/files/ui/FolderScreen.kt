@@ -55,6 +55,10 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatStartEmptyFolder
 import io.github.eslamasabry.oc.ui.words.res.fileReload
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryProjectHealth
+import io.github.eslamasabry.oc.ui.words.res.e7LibrarySwitchProject
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryWorktrees
+import io.github.eslamasabry.oc.ui.words.res.servicesTitle
 import io.github.eslamasabry.oc.ui.words.res.filesAccessNeededBody
 import io.github.eslamasabry.oc.ui.words.res.filesAccessNeededTitle
 import io.github.eslamasabry.oc.ui.words.res.filesAddReference
@@ -192,12 +196,14 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     onExit = { backFromSearch(typed, state, actions) },
                     actions = folderBarActions(state, actions) { viewOptions = true },
                     more = { hidden ->
-                        if (hidden.isNotEmpty()) {
+                        val tools = folderToolItems(state, actions) { barMenuOpen = false }
+                        if (hidden.isNotEmpty() || tools.isNotEmpty()) {
                             val moreLabel = stringResource(Res.string.kitTopBarMore)
                             KitMenu(
                                 expanded = barMenuOpen,
+                                // Flutter's ⋯: the project's tools first, then the bar's folded actions.
                                 items =
-                                    hidden.map { action ->
+                                    tools + hidden.map { action ->
                                         KitMenuItem(
                                             action.label,
                                             {
@@ -720,6 +726,39 @@ private fun symbolKind(kind: Int): String =
             else -> Res.string.readerUiSymbolSymbol
         }
     )
+
+/**
+ * The project's other pages in the ⋯ menu (Flutter project_hub_screen.dart `_toolsMenu`): Project health, Worktrees,
+ * Development services and Switch project, each only where the server offers it.
+ */
+@Composable
+internal fun folderToolItems(state: FolderUi, actions: FolderActions, close: () -> Unit): List<KitMenuItem> =
+    buildList {
+        fun item(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, run: () -> Unit) =
+            add(
+                KitMenuItem(
+                    label,
+                    {
+                        close()
+                        run()
+                    },
+                    icon = icon,
+                )
+            )
+        val tools = state.tools
+        if (tools.health) item(
+            stringResource(Res.string.e7LibraryProjectHealth),
+            KitIcons.diagnostics,
+            actions::projectHealth,
+        )
+        if (tools.worktrees) item(stringResource(Res.string.e7LibraryWorktrees), KitIcons.branch, actions::worktrees)
+        if (tools.services) item(stringResource(Res.string.servicesTitle), KitIcons.processor, actions::devServices)
+        if (tools.switchProject) item(
+            stringResource(Res.string.e7LibrarySwitchProject),
+            KitIcons.swap,
+            actions::switchProject,
+        )
+    }
 
 /**
  * The Files bar's actions (B-097): each carries its glyph, so a phone shows icon buttons whose words

@@ -6,6 +6,8 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:team"))
+        implementation(project(":engine:connection")) // the off page: which server this is (this phone or a computer)
+        implementation(project(":engine:setupscripts")) // the computer's host guide: the pinned, checksummed commands
         implementation(project(":ui:kit-chat")) // the person's notes in a task's conversation (KitPromptBubble)
         implementation(libs.kotlinx.datetime) // the editor's late-night charging default (Dart DateTime.now().hour)
     }

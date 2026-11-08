@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
 import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.VersionControlFile
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.feature.files.presentation.ComposerMentions
 import io.github.eslamasabry.oc.feature.files.presentation.ConversationFiles
 import io.github.eslamasabry.oc.feature.files.presentation.FilesConnections
 import io.github.eslamasabry.oc.feature.files.presentation.FilesExternalLinks
+import io.github.eslamasabry.oc.feature.files.presentation.FilesProjectTools
 import io.github.eslamasabry.oc.feature.files.presentation.FilesReaderPreferences
 import io.github.eslamasabry.oc.feature.files.presentation.FilesStorageAccess
 import io.github.eslamasabry.oc.feature.files.presentation.ProjectFilesSource
@@ -191,6 +193,9 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     override fun canTerminal(ref: ConversationRef): Boolean =
         live(ref)?.capabilities?.value?.terminal == true
 
+    override fun tools(ref: ConversationRef): FilesProjectTools =
+        live(ref)?.capabilities?.value?.let(::projectTools) ?: FilesProjectTools.None
+
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null
         return ConversationFiles(gateway, ref.sessionId).directory()
@@ -220,6 +225,7 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
             gateway = files ?: UnscopedFiles,
             canBrowse = files != null && caps.fileBrowsing,
             canTerminal = caps.terminal,
+            tools = projectTools(caps),
             canSearchText = files != null && caps.textSearch,
             canSearchSymbols =
                 caps.workspaceSymbols && sameFolder(gateway.location.value.directory, directory),
@@ -348,3 +354,7 @@ public class DraftComposerMentions(private val draftStores: Set<ConversationDraf
         return session.flush()
     }
 }
+
+/** Flutter `ProjectHub.toolsFor`, from one server's capabilities. */
+internal fun projectTools(caps: ServerCapabilities): FilesProjectTools =
+    FilesProjectTools.of(caps.projectManagement, caps.worktreeBrowsing, caps.developmentServices)

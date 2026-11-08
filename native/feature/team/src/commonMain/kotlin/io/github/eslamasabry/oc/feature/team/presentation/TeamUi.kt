@@ -68,9 +68,11 @@ public data class TeamHomeUi(
     val refusal: RefusalUi? = null,
     /** A milestone being accepted asks first. */
     val accepting: AskAnswer.AcceptMilestone? = null,
+    /** [TeamPhase.Off]: how to turn the team on (Flutter team_intro_screen.dart). */
+    val intro: TeamIntroUi = TeamIntroUi(),
 )
 
-public interface TeamHomeActions {
+public interface TeamHomeActions : TeamIntroActions {
     public fun back()
 
     public fun openProject(id: String)

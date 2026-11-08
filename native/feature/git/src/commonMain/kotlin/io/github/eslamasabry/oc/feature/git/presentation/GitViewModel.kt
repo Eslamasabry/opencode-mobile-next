@@ -31,7 +31,10 @@ public class GitViewModel(
     services: GitServices,
     private val repair: GitLinkRepairService,
     private val nav: AppNavigator,
+    private val summaries: GitTurnSummary = NoGitTurnSummary(),
 ) : ViewModel(), GitActions {
+    private val summary = MutableStateFlow<String?>(null)
+
     private val repairUi = MutableStateFlow(GitRepairUi(available = repair.available(route.ref)))
     private val presenter =
         GitPresenter(services.page(route.ref), services.account(route.ref.profileId), services) {
@@ -40,7 +43,9 @@ public class GitViewModel(
         }
 
     public val state: StateFlow<GitUi> =
-        combine(presenter.states, repairUi) { base, repair -> base.copy(repair = repair) }
+        combine(presenter.states, repairUi, summary) { base, repair, said ->
+                base.copy(repair = repair, summary = said)
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(STOP_AFTER_MS),
@@ -49,6 +54,12 @@ public class GitViewModel(
 
     init {
         presenter.start()
+        readSummary()
+    }
+
+    /** Read when the page opens: the agent's last turn is what the person is about to save. */
+    private fun readSummary() {
+        viewModelScope.launch { summary.value = summaries.summary(route.ref)?.trim()?.ifEmpty { null } }
     }
 
     override fun back(): Unit = nav.back()

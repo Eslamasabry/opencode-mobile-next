@@ -30,6 +30,9 @@ public interface FilesConnections {
 
     public fun canTerminal(ref: ConversationRef): Boolean = false
 
+    /** The project tools that server offers, for the ⋯ menu (Flutter `ProjectHub.toolsFor`). */
+    public fun tools(ref: ConversationRef): FilesProjectTools = FilesProjectTools.None
+
     /**
      * The conversation's project folder on the server (for the file mention's `file:` URL); null
      * when unknown.
@@ -65,6 +68,7 @@ public class ProjectFilesSource(
     public val gateway: FileGateway,
     public val canBrowse: Boolean,
     public val canTerminal: Boolean = false,
+    public val tools: FilesProjectTools = FilesProjectTools.None,
     public val canSearchText: Boolean = false,
     public val canSearchSymbols: Boolean = false,
     public val symbols: suspend (String) -> Outcome<ImmutableList<WorkspaceSymbol>> = {
@@ -129,4 +133,31 @@ public interface ReaderSettings {
         sourceFirst: Boolean? = null,
         wrapCode: Boolean? = null,
     ): Boolean
+}
+
+/**
+ * The project's other pages the Files ⋯ menu opens (Flutter project_hub_screen.dart `_toolsMenu`), each gated on the
+ * server's capabilities as Flutter's `ProjectHub.toolsFor` gates it.
+ */
+public data class FilesProjectTools(
+    val health: Boolean = false,
+    val worktrees: Boolean = false,
+    val services: Boolean = false,
+    val switchProject: Boolean = false,
+) {
+    public companion object {
+        public val None: FilesProjectTools = FilesProjectTools()
+
+        public fun of(
+            projectManagement: Boolean,
+            worktreeBrowsing: Boolean,
+            developmentServices: Boolean,
+        ): FilesProjectTools =
+            FilesProjectTools(
+                health = projectManagement,
+                worktrees = projectManagement || worktreeBrowsing,
+                services = developmentServices,
+                switchProject = projectManagement,
+            )
+    }
 }
