@@ -80,14 +80,19 @@ class AuditClassGuardTest {
         val strip = (STRIP_DP * density.density).roundToInt()
         nodes.forEach { node ->
             val glyph: Rect = node.boundsInRoot
+            assertTrue(glyph.height > 0f && glyph.width > 0f, "'$tag' has a size: $glyph")
             val top = glyph.top.roundToInt().coerceAtLeast(0)
             val bottom = glyph.bottom.roundToInt().coerceAtMost(pixels.height)
-            listOf(
-                    (glyph.left.roundToInt() - strip) until glyph.left.roundToInt(),
-                    glyph.right.roundToInt() until (glyph.right.roundToInt() + strip),
-                )
-                .forEach { xs ->
-                    val inside = xs.filter { it in 0 until pixels.width }
+            val strips =
+                listOf(
+                        (glyph.left.roundToInt() - strip) until glyph.left.roundToInt(),
+                        glyph.right.roundToInt() until (glyph.right.roundToInt() + strip),
+                    )
+                    .map { xs -> xs.filter { it in 0 until pixels.width } }
+                    .filter { it.isNotEmpty() }
+            // A glyph flush with the window's edge has one side to look at; a plate shows on that side too.
+            assertTrue(strips.isNotEmpty(), "'$tag' at $glyph has a side inside the window")
+            strips.forEach { inside ->
                     val colours = inside.flatMap { x -> (top until bottom).map { y -> pixels[x, y] } }
                     val first = colours.first()
                     val off = colours.count { !same(it, first) }
@@ -195,6 +200,12 @@ class AuditClassGuardTest {
             KitConfirmSpec(stringResource(Res.string.nlibRemoveQuestion), stringResource(Res.string.nlibRemoveAccount), KitConfirmKind.Destructive)
             KitConfirmSpec(title = "Open this link?", confirmLabel = "Open link", kind = if (insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral)
             KitConfirmSpec(title = "Stop the server?", confirmLabel = "Stop server", kind = KitConfirmKind.Stop)
+            KitConfirmSpec(
+                title = "Revert the files?",
+                confirmLabel = "Put back",
+                // Edits made since are replaced, so that (a comma in a comment is not an argument)
+                kind = if (files.isNotEmpty()) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
+            )
             """.trimIndent()
         assertEquals(listOf(1, 6), neutralDestructiveConfirms(planted))
     }
@@ -285,6 +296,15 @@ private fun topLevelArgs(source: String, open: Int): List<String>? {
     var i = open
     var argStart = open
     while (i < source.length) {
+        // A comment's words (commas, brackets, quotes) are not code.
+        if (source.startsWith("//", i)) {
+            i = source.indexOf('\n', i).let { if (it < 0) source.length else it }
+            continue
+        }
+        if (source.startsWith("/*", i)) {
+            i = source.indexOf("*/", i + 2).let { if (it < 0) source.length else it + 2 }
+            continue
+        }
         when (val c = source[i]) {
             '"' -> {
                 i++
