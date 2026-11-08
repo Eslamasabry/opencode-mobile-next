@@ -294,7 +294,10 @@ private fun RowBody(
             ))
             .testTag("kit-row")
     Row(base, verticalAlignment = Alignment.CenterVertically) {
-        val lead = Modifier.padding(vertical = Space.S2.dp)
+        // Dart `padded`: the leading mark and the words keep space 2 above and below only on a row without its own
+        // padding; a row with its own padding lays out as given (kit_row.dart:491-498).
+        val own = padding == null
+        val lead = if (own) Modifier.padding(vertical = Space.S2.dp) else Modifier
         when {
             leading is KitRowLeading.Glyph && !leading.tile -> {
                 Box(lead.size((tokens.iconTile * minOf(scale, TextScalePolicy.ICON_CAP)).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
@@ -335,7 +338,7 @@ private fun RowBody(
             // The text never runs into what trails it: space2 before the trailing part (kit_row.dart:640).
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                 Column(
-                    Modifier.weight(1f).padding(vertical = Space.S2.dp),
+                    Modifier.weight(1f).then(if (own) Modifier.padding(vertical = Space.S2.dp) else Modifier),
                     verticalArrangement = Arrangement.spacedBy(2.dp), // F: lib/ui/kit/kit_tokens.dart:398
                 ) {
                     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
