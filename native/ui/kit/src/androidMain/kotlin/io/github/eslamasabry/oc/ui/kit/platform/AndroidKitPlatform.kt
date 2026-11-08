@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.platform
 
+import androidx.compose.ui.graphics.asAndroidBitmap
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -122,6 +123,17 @@ public class AndroidKitPlatform(
         else null
 
     override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    override fun readPixels(image: androidx.compose.ui.graphics.ImageBitmap, out: IntArray, width: Int, height: Int): Boolean {
+        val bitmap = image.asAndroidBitmap()
+        val readable =
+            if (bitmap.config == android.graphics.Bitmap.Config.HARDWARE) bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+            else bitmap
+        if (readable == null) return false
+        readable.getPixels(out, 0, width, 0, 0, minOf(width, readable.width), minOf(height, readable.height))
+        if (readable !== bitmap) readable.recycle()
+        return true
+    }
 
     override fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,

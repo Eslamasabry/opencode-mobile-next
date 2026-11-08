@@ -42,6 +42,7 @@ import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.TraversableNode
 import androidx.compose.ui.node.requireDensity
+import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -343,7 +344,8 @@ private data class PlateHostElement(val words: KitLiquidWords) : ModifierNodeEle
     }
 }
 
-private class PlateHostNode(var words: KitLiquidWords) : Modifier.Node(), TraversableNode, GlobalPositionAwareModifierNode {
+private class PlateHostNode(var words: KitLiquidWords) :
+    Modifier.Node(), TraversableNode, GlobalPositionAwareModifierNode, androidx.compose.ui.node.CompositionLocalConsumerModifierNode {
     override val traverseKey: Any get() = LiquidPlateKey
 
     /** 0: the theme's own ink and plate; 1: the flipped ones. */
@@ -363,6 +365,7 @@ private class PlateHostNode(var words: KitLiquidWords) : Modifier.Node(), Traver
     override fun onAttach() {
         ink = words.themeInk
         val backdrop = words.backdrop ?: return
+        val platform = currentValueOf(LocalKitPlatform)
         coroutineScope.launch {
             var seen = Int.MIN_VALUE
             while (isActive) {
@@ -379,7 +382,9 @@ private class PlateHostNode(var words: KitLiquidWords) : Modifier.Node(), Traver
                     scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) }
                 }
                 val pixels = IntArray(w * h)
-                layer.toImageBitmap().readPixels(pixels, 0, 0, w, h)
+                // A sample the platform could not read back (empty or clear) says nothing about the content.
+                if (!platform.readPixels(layer.toImageBitmap(), pixels, w, h)) continue
+                if (pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
                 val (mean, variance) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
@@ -425,16 +430,21 @@ private object WordsPlateElement : ModifierNodeElement<WordsPlateNode>() {
 private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
     private var host: PlateHostNode? = null
 
-    override fun onAttach() {
-        host = findNearestAncestor(LiquidPlateKey) as? PlateHostNode
-    }
-
     override fun onDetach() {
         host = null
     }
 
+    /**
+     * The pane above, looked up when drawing: a pane's host may arrive after the words (its face appears once the
+     * window's budget grants it), so a lookup at attach would miss it.
+     */
+    private fun hostNow(): PlateHostNode? {
+        host?.takeIf { it.isAttached }?.let { return it }
+        return (findNearestAncestor(LiquidPlateKey) as? PlateHostNode).also { host = it }
+    }
+
     override fun ContentDrawScope.draw() {
-        val h = host
+        val h = hostNow()
         val f = h?.flip?.value ?: 0f
         val words = h?.words
         val plate =

@@ -107,8 +107,10 @@ public object LiquidEdge {
         fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false) =
             LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, shadow, rimMax, share, depth, if (dark) tintDark else tintLight)
         return when (role) {
-            LiquidRole.Bar -> r(2f, 34f, .14f, .18f, .30f)
-            LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .32f)
+            // Bars and the message box carry words over moving text: their glass frosts it to colour and shape
+            // (never readable text behind words), while the rim still bends it.
+            LiquidRole.Bar -> r(7f, 34f, .14f, .18f, .30f)
+            LiquidRole.Composer -> r(7f, 34f, .16f, .20f, .32f)
             LiquidRole.Sheet -> r(if (dark) 6f else 8f, 44f, 0f, .30f, .40f, rimMax = 30f)
             LiquidRole.Menu -> r(if (dark) 4f else 6f, 36f, .18f, .28f, .38f, rimMax = 26f)
             LiquidRole.Pill, LiquidRole.Status -> r(1f, 22f, .16f, .18f, .28f, rimMax = 40f, share = .5f, depth = true)
@@ -204,15 +206,19 @@ public object LiquidEdge {
     public fun wordsPlate(roles: Roles, role: LiquidRole): Argb {
         if (role == LiquidRole.Action) return Argb(0)
         val (glass, _) = glassRole(role)
-        val plate = GlassSpec.plateFor(roles, glass).opaqueArgb()
+        val glassPlate = GlassSpec.plateFor(roles, glass).opaqueArgb()
         val face = face(roles, role)
         val (darkEnd, brightEnd) = backdropEnds(recipe(role, roles.dark))
         val unders = listOfNotNull(face.fill, face.fillStart).flatMap { f -> listOf(f.over(darkEnd), f.over(brightEnd)) }
         val inks = inks(roles, role)
-        fun reads(a: Float): Boolean = unders.all { u ->
+        fun reads(plate: Argb, a: Float): Boolean = unders.all { u ->
             val seen = plate.withAlpha(a).over(u)
             inks.all { (ink, target) -> wcagContrast(ink, seen) >= target - 1e-6 }
         }
+        // Glass's own plate where it can carry the words; else the Solid surface itself, which by the targets' own
+        // definition always can.
+        val plate = if (reads(glassPlate, 1f)) glassPlate else solidOf(roles, role)
+        fun reads(a: Float): Boolean = reads(plate, a)
         if (reads(0f)) return plate.withAlpha(0f)
         var lo = 0f
         var hi = 1f

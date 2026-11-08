@@ -79,7 +79,7 @@ class LiquidEdgeTest {
     fun `B-KIT-003 the lens bends in a rim of at most its share of the shorter side, the middle stays calm`() {
         val bar = LiquidEdge.recipe(LiquidRole.Bar, dark = true)
         assertEquals(bar.rimMaxDp * 3f, LiquidEdge.rimPx(400f * 3f, 3f, bar))
-        assertEquals(bar.rimShare * 56f * 3f, LiquidEdge.rimPx(56f * 3f, 3f, bar))
+        assertEquals(bar.rimShare * 40f * 3f, LiquidEdge.rimPx(40f * 3f, 3f, bar))
         assertTrue(bar.rimShare < .5f, "a bar keeps a calm middle")
         assertTrue(LiquidEdge.recipe(LiquidRole.Action, true).depth, "the + is a drop of glass")
         assertTrue(!bar.depth, "no depth effect on panes that carry words")

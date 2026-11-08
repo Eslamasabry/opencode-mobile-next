@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import io.github.eslamasabry.oc.ui.kit.effects.kitWordsPlate
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -252,7 +253,9 @@ public fun KitAskField(
                     decorator = { field ->
                         // The field is a full touch target tall, its words centred (kit_ask_field.dart:264-266).
                         Box(
-                            Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(vertical = Space.S2.dp),
+                            // On Glass's liquid message box the words (hint and text) lie on their plate.
+                            Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).padding(vertical = Space.S2.dp)
+                                .kitWordsPlate(),
                             contentAlignment = Alignment.CenterStart,
                         ) {
                             if (state.text.isEmpty()) {

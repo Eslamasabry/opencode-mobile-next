@@ -122,6 +122,15 @@ public interface KitPlatform {
      * how far a transform the lens cannot follow has run, so the lens eases into frost meanwhile. Android draws it with
      * the lens; elsewhere the pane's tint alone ([io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn]).
      */
+    /**
+     * Reads [image]'s top-left [width]×[height] pixels into [out] (ARGB); false when the platform cannot read it back.
+     * Android copies a hardware bitmap to memory first.
+     */
+    public fun readPixels(image: androidx.compose.ui.graphics.ImageBitmap, out: IntArray, width: Int, height: Int): Boolean {
+        image.readPixels(out, 0, 0, width, height)
+        return true
+    }
+
     public fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
         backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
