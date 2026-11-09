@@ -54,6 +54,10 @@ public class DesktopKitPlatform : KitPlatform {
             java.util.TimeZone.getDefault(),
         )
 
+    override fun dateOnly(atMs: Long, localeTag: String): String =
+        java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, java.util.Locale.forLanguageTag(localeTag))
+            .format(java.util.Date(atMs))
+
     override fun messageTime(createdMs: Long, nowMs: Long): String {
         val created = java.util.Date(createdMs)
         val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }

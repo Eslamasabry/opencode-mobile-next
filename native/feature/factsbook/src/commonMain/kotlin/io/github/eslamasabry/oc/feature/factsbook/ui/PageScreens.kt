@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -487,6 +488,9 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                     KitAction(
                         stringResource(Res.string.fbCaptureSave),
                         { actions.save(text.text.toString()) },
+                        enabled =
+                            if (text.text.isBlank()) KitEnabled.Disabled(stringResource(Res.string.fbCaptureNeedsText))
+                            else KitEnabled.Enabled,
                         working = state.working,
                     ),
             )
@@ -511,7 +515,6 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                         label = stringResource(if (note) Res.string.fbCaptureNoteLabel else Res.string.fbCapturePasteLabel),
                         kind = KitFieldKind.Multiline,
                         placeholder = if (note) stringResource(Res.string.fbCaptureNoteHint) else null,
-                        error = if (state.needsText) stringResource(Res.string.fbCaptureNeedsText) else null,
                     )
                 }
             }
@@ -803,14 +806,11 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
                     KitSectionLabel(stringResource(Res.string.fbConnectOwnerTitle))
                     KitText(stringResource(Res.string.fbConnectOwnerBody), role = TypeRole.Secondary, tone = TextTone.Secondary)
                     state.ownerKey?.takeIf { it.isNotEmpty() }?.let { key ->
-                        KitRowGroup {
-                            KitRow(
-                                title = stringResource(Res.string.fbConnectOwnerKey),
-                                supporting = key,
-                                supportingMaxLines = 3,
-                                trailing = KitRowTrailing.Copy(key, stringResource(Res.string.fbConnectOwnerKey)),
-                            )
-                        }
+                        KitDetailsFold(
+                            label = stringResource(Res.string.fbConnectOwnerKey),
+                            copyLabel = stringResource(Res.string.kitCopyDetails),
+                            notes = listOf(key),
+                        )
                     }
                     KitField(owner, stringResource(Res.string.fbConnectOwnerId), kind = KitFieldKind.Mono)
                 }

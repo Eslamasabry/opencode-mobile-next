@@ -47,4 +47,6 @@
     <string name="reportR1KindTooLarge">الرسالة كبيرة جدًا</string>
     <string name="reportR1KindRejected">رُفضت الرسالة</string>
     <string name="reportR1KindOther">مشكلة أخرى</string>
+    <string name="reportKeptCopyErrors">نسخ سجل الأخطاء</string>
+    <string name="reportKeptClearErrors">مسح الأخطاء</string>
 </resources>

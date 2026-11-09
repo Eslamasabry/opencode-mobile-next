@@ -31,6 +31,9 @@ public interface ChatOutside {
      */
     public fun mask(text: String): String
 
+    /** B-AGENT-189: the conversation's server is this phone's own (its agents sign in here). */
+    public fun isPhoneServer(ref: ConversationRef): Boolean = false
+
     /**
      * Puts [text] on the clipboard as given: the presenter has already [mask]ed it. False = it did not work.
      */

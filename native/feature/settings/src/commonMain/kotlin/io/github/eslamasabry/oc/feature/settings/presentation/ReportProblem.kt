@@ -22,6 +22,20 @@ public interface ProblemReportSender {
 
     /** "Report code" in Settings › About, or null without a vendor. */
     public suspend fun reportCode(): String?
+
+    /** How many errors this phone has kept (nothing is sent from here). */
+    public fun errorsKept(): Int = 0
+
+    /** The kept errors as redacted text, for Copy error log. Empty when there are none. */
+    public fun errorLogText(): String = ""
+
+    /** Clears the kept errors; false when storage refused. */
+    public suspend fun clearErrors(): Boolean = true
+
+    /** The plain-text timing report (names and timings only), for Copy timing report. Empty when nothing was measured. */
+    public fun timingReport(): String = ""
+
+    public fun clearTimings() {}
 }
 
 /** Where the person is on Report a problem. Only Send report sends; leaving the page sends nothing. */
@@ -46,4 +60,10 @@ public data class ReportUi(
     val stage: ReportStage = ReportStage.Writing,
     val showIncluded: Boolean = false,
     val confirmPublic: Boolean = false,
+    /** What this phone kept, for the "On this phone" lines (Copy error log, Clear errors, timing report). */
+    val errorsKept: Int = 0,
+    val errorLog: String = "",
+    val timingReport: String = "",
+    val confirmClearErrors: Boolean = false,
+    val clearFailed: Boolean = false,
 )

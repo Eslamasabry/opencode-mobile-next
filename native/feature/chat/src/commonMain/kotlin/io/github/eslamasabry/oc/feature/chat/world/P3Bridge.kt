@@ -106,6 +106,7 @@ internal class P3Bridge(private val sessionId: String) {
             finish = m.finish,
             errorText = m.errorText,
             errorKind = m.errorKind,
+            providerId = m.providerId,
         )
 
     private fun part(raw: CorePart): Part {
