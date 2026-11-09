@@ -261,7 +261,13 @@ private fun ServerSwitcher(state: ChatsUi, actions: ChatsActions) {
                         else -> KitRowTrailing.None
                     },
                 enabled = server.current || !busy,
-                disabledReason = if (!server.current && busy) stringResource(Res.string.serversWorking) else null,
+                // A disabled row's reason replaces its supporting line (B-KIT-051), so the server being opened says Connecting here.
+                disabledReason =
+                    when {
+                        opening && !server.current -> stringResource(Res.string.e7WorkspaceConnecting)
+                        !server.current && busy -> stringResource(Res.string.serversWorking)
+                        else -> null
+                    },
                 onClick = { actions.switchServer(server.profile) },
             )
         }

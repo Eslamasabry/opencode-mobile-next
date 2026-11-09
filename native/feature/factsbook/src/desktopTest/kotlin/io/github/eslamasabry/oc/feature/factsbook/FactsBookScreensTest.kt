@@ -349,8 +349,9 @@ class FactsBookScreensTest {
         val actions = Others()
         setContent { Themed { RemindersScreen(RemindersUi(reminders = persistentListOf(gym), loading = false), actions) } }
         onNodeWithText("Active").assertExists()
-        onNodeWithText("Every day at 07:00", substring = true).assertExists()
-        onNodeWithText("Not sounded on this phone", substring = true).assertExists()
+        // The clock follows the device's locale and zone (kitClock), so only the repeat words are fixed here.
+        onNodeWithText("Every day at ", substring = true, useUnmergedTree = true).assertExists()
+        onNodeWithText("Not sounded on this phone", substring = true, useUnmergedTree = true).assertExists()
         onNodeWithText("Pause “Gym”", useUnmergedTree = true).performClick()
         onNodeWithText("Add a reminder").performClick()
         assertEquals(listOf("pause rem_1", "add"), actions.calls)
@@ -718,7 +719,7 @@ class FactsBookScreensTest {
         onNodeWithText("Add a fact to Sara").assertExists()
         onNodeWithText("Remind me about Sara").performClick()
         assertEquals(listOf("remind"), actions.calls)
-        onNodeWithText("Likes tea").performClick()
+        onNodeWithText("Likes tea", useUnmergedTree = true).performClick()
         onNodeWithText("You told Memory this", substring = true).assertExists()
         onNodeWithText("Change this fact").assertExists()
     }
@@ -729,6 +730,6 @@ class FactsBookScreensTest {
         setContent { Themed { io.github.eslamasabry.oc.feature.factsbook.ui.ThingScreen(ui, ThingRecorder()) } }
         onNodeWithText("Add a fact to Sara").assertDoesNotExist()
         onNodeWithText("Remind me about Sara").assertDoesNotExist()
-        onNodeWithText("Likes tea").assertExists()
+        onNodeWithText("Likes tea", useUnmergedTree = true).assertExists()
     }
 }

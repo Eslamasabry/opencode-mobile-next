@@ -64,10 +64,60 @@ class StartupBenchmark {
     @Test fun startupBaselineProfile() = startup(CompilationMode.Partial(androidx.benchmark.macro.BaselineProfileMode.Require))
 }
 
-/** Generates the start-up baseline profile (cold start to the first frame of the conversations screen). */
+/**
+ * Generates the baseline profile and the startup profile (dex layout): cold start to the first frame, then a short walk
+ * through what any install shows: scroll the home, open the first few things on screen and come back. It needs no server
+ * and no saved account (the walk adapts to what is on screen: the welcome on a fresh install, the conversations on a
+ * connected one). Regenerate with `tool/qa/device-bench.sh profile <out>` then `tool/qa/apply-profile.sh <out>`.
+ */
 @RunWith(AndroidJUnit4::class)
 class StartupProfileGenerator {
     @get:Rule val rule = androidx.benchmark.macro.junit4.BaselineProfileRule()
 
-    @Test fun generate() = rule.collect(packageName = PKG, includeInStartupProfile = true) { startActivityAndWait() }
+    @Test
+    fun generate() =
+        rule.collect(packageName = PKG, includeInStartupProfile = true, maxIterations = 4, stableIterations = 2) {
+            pressHome()
+            startActivityAndWait()
+            device.waitForIdle()
+            walk()
+        }
+
+    /** The screen changes under UiAutomator while it works; a stale node only means "look again". */
+    private fun safely(block: () -> Unit) {
+        try {
+            block()
+        } catch (_: androidx.test.uiautomator.StaleObjectException) {
+        }
+    }
+
+    private fun androidx.benchmark.macro.MacrobenchmarkScope.walk() {
+        // Fling the first scrollable (home list, welcome pages), both ways.
+        repeat(2) { n ->
+            safely {
+                device.findObject(By.scrollable(true))?.fling(
+                    if (n == 0) androidx.test.uiautomator.Direction.DOWN else androidx.test.uiautomator.Direction.UP
+                )
+            }
+            device.waitForIdle()
+        }
+        // Open up to four distinct clickable things and come back; stay inside the app.
+        val seen = HashSet<String>()
+        repeat(4) {
+            safely {
+                val target =
+                    device.findObjects(By.clickable(true).pkg(PKG)).firstOrNull { o ->
+                        val key = (o.contentDescription ?: o.text ?: "") + "@" + o.visibleBounds.toShortString()
+                        o.visibleBounds.height() > 0 && seen.add(key)
+                    }
+                target?.click()
+            }
+            device.waitForIdle()
+            safely { device.findObject(By.scrollable(true))?.fling(androidx.test.uiautomator.Direction.DOWN) }
+            device.waitForIdle()
+            device.pressBack()
+            device.waitForIdle()
+            if (device.currentPackageName != PKG) startActivityAndWait()
+        }
+    }
 }

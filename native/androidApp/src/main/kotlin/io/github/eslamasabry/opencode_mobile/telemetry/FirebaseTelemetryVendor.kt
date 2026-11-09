@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.analytics.health.PerfSchema
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
@@ -184,6 +185,84 @@ private constructor(
                     )
             } catch (_: Throwable) {
                 null
+            }
+    }
+}
+
+/**
+ * Startup (gap 3): building the three Firebase singletons (Crashlytics, Analytics, Performance) cost the main thread a
+ * measurable slice of every cold start. This vendor answers at once and hands the real [FirebaseTelemetryVendor] to one
+ * background thread, which builds it on first use and then runs every call in the order it was made. A crash report is
+ * the one call the caller waits for (bounded), because the process is about to end.
+ */
+internal class DeferredFirebaseTelemetryVendor(private val context: Context) : TelemetryVendor {
+    private val lane =
+        java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+            Thread(r, "oc-telemetry").apply { isDaemon = true }
+        }
+    private val laneDispatcher = lane.asCoroutineDispatcher()
+    // Touched only on the lane thread.
+    private var real: FirebaseTelemetryVendor? = null
+    private var created = false
+
+    private fun vendor(): FirebaseTelemetryVendor? {
+        if (!created) {
+            created = true
+            real = FirebaseTelemetryVendor.create(context)
+        }
+        return real
+    }
+
+    private fun post(block: (FirebaseTelemetryVendor) -> Unit) {
+        lane.execute { vendor()?.let(block) }
+    }
+
+    override fun setCollection(usage: Boolean, crashes: Boolean) = post { it.setCollection(usage, crashes) }
+
+    override fun crash(category: String, frames: List<String>, fatal: Boolean) {
+        val done = java.util.concurrent.CountDownLatch(1)
+        lane.execute {
+            try {
+                vendor()?.crash(category, frames, fatal)
+            } finally {
+                done.countDown()
+            }
+        }
+        // The process is about to end: wait for the report, but never hang the crash.
+        done.await(CRASH_WAIT_SECONDS, TimeUnit.SECONDS)
+    }
+
+    override fun failure(name: String, keys: Map<String, String>) = post { it.failure(name, keys) }
+
+    override fun breadcrumb(name: String) = post { it.breadcrumb(name) }
+
+    override fun event(name: String, props: Map<String, String>) = post { it.event(name, props) }
+
+    override fun setKeys(keys: Map<String, String>) = post { it.setKeys(keys) }
+
+    override fun setUserProperties(properties: Map<String, String>) = post { it.setUserProperties(properties) }
+
+    override fun perfTrace(name: String, attributes: Map<String, String>, durationMs: Long) =
+        post { it.perfTrace(name, attributes, durationMs) }
+
+    override suspend fun problemReport(text: String, collecting: Boolean) {
+        withContext(laneDispatcher) { vendor()?.problemReport(text, collecting) }
+    }
+
+    override suspend fun appInstanceId(): String? = withContext(laneDispatcher) { vendor()?.appInstanceId() }
+
+    private companion object {
+        const val CRASH_WAIT_SECONDS = 3L
+    }
+
+    /** True when this build carries the Firebase config; a cheap check, no Firebase singleton is built. */
+    @Suppress("TooGenericExceptionCaught")
+    object Config {
+        fun present(context: Context): Boolean =
+            try {
+                FirebaseApp.getApps(context).isNotEmpty()
+            } catch (_: Throwable) {
+                false
             }
     }
 }
