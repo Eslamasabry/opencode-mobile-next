@@ -70,7 +70,7 @@ class AppChatsHome(
 ) : ChatsHomeExtras, HomeFeedCache {
     private val lane = dispatchers.serial("chats-home")
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
-    private val mutable = MutableStateFlow(ChatsHomeExtraState())
+    private val mutable = MutableStateFlow(ChatsHomeExtraState(known = false))
     override val snapshot: StateFlow<ChatsHomeExtraState> = mutable.asStateFlow()
     private var actionFailure: Failure? = null
     private val cachedRevisions = mutableMapOf<ProfileId, Pair<String, List<ChatFeedItem>>>()
@@ -131,7 +131,7 @@ class AppChatsHome(
                 )
             } else null
         if (opening == null) phoneWatch = null
-        mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value, known = true)
+        mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value)
         if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
     }
 

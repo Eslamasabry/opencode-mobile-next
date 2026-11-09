@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -57,8 +58,7 @@ class S10AppearanceShapeUiTest {
                     }
                 }
             setContent { SettingsThemed { SettingsScreen(shape(), actions) } }
-            onNodeWithText("Corners and spacing").assertExists()
-            onNodeWithTag("appearance-corners").assertExists()
+            onNodeWithTag("appearance-corners").performScrollTo().assertExists()
             onNodeWithText("Sharp").assertExists()
             onNodeWithText("Round").performClick()
             assertEquals(listOf(Corners.Round), picked)

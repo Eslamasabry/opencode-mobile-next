@@ -357,8 +357,11 @@ internal class ModeSwitchMotion(initial: Int) {
                 val now = withFrameMillis { it }
                 val at = ThemeSwitchRules.commitAt(now, lastCommitMs, plan)
                 val due = now + ((at - now) * scale).toLong()
-                while (withFrameMillis { it } < due) Unit
-                if (commit(shown)) lastCommitMs = at
+                // A commit due now happens on this frame; the gap to the next one is counted from the frame it really
+                // happened on (counted from the planned time, two commits could land 320 ms apart).
+                var frame = now
+                while (frame < due) frame = withFrameMillis { it }
+                if (commit(shown)) lastCommitMs = frame
             }
     }
 }
@@ -526,6 +529,7 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
     val iconPx = with(density) { iconDp.toPx() }
 
     val themeCover = LocalKitThemeCover.current
+    val startJob = remember { arrayOfNulls<kotlinx.coroutines.Job>(1) }
 
     fun tap(i: Int) {
         if (!currentSegments[i].enabled.isEnabled || i == motion.shown) return
@@ -541,14 +545,19 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
         // mode the phone is already in) they start after the frames a change would have needed to show up.
         val release = specs.release<Float>()
         val scale = motionState.debugTimeScale
-        scope.launch {
-            var frames = 0
-            while (themeCover != null && !themeCover.revealing && (themeCover.pending || frames < MODE_WAIT_FRAMES) && frames < MODE_WAIT_MOST) {
-                withFrameMillis { it }
-                frames++
+        // A newer tap replaces the start still waiting (it would have played the older target).
+        startJob[0]?.cancel()
+        val moves = plan.slide || plan.rim || plan.dust || plan.crossfade
+        startJob[0] =
+            scope.launch {
+                var frames = 0
+                // Off has nothing to time: the end state shows at once.
+                while (moves && themeCover != null && !themeCover.revealing && (themeCover.pending || frames < MODE_WAIT_FRAMES) && frames < MODE_WAIT_MOST) {
+                    withFrameMillis { it }
+                    frames++
+                }
+                motion.play(scope, i, release, scale)
             }
-            motion.play(scope, i, release, scale)
-        }
     }
 
     Box(
@@ -722,5 +731,5 @@ private fun DrawScope.drawParticles(frame: FloatArray, n: Int, radius: Float, co
 internal val LocalModeSwitchProbe = staticCompositionLocalOf<((ModeSwitchMotion) -> Unit)?> { null }
 
 /** Frames the mode control waits for a theme change to show up before moving anyway, and the most it ever waits. */
-private const val MODE_WAIT_FRAMES = 12
+internal const val MODE_WAIT_FRAMES = 12
 private const val MODE_WAIT_MOST = 40

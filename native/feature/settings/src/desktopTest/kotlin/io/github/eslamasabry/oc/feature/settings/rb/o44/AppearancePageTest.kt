@@ -50,17 +50,21 @@ class AppearancePageTest {
     }
 
     @Test
-    fun `B-KIT-017 guided theme changes the named pack without showing accent controls`() =
+    fun `B-KIT-017 the Colours tab holds mode, theme and accent, and the tour leads to the next tab`() =
         runComposeUiTest {
             val actions = RecordingActions()
             setContent {
                 SettingsThemed { SettingsScreen(appearance(AppearanceQuestion.Theme), actions) }
             }
-            onNodeWithTag("appearance-accent").assertDoesNotExist()
-            onNodeWithText("The colours of every page").assertExists()
-            onNodeWithTag("appearance-pack-Nord").performClick()
+            // Owner 2026-11-10: one page with tabs; the tour is the same page with a bar at its foot.
+            onNodeWithTag("appearance-tabs").assertExists()
+            onNodeWithTag("appearance-preview").assertExists()
+            onNodeWithTag("appearance-mode").assertExists()
+            onNodeWithTag("appearance-accent").assertExists()
+            onNodeWithTag("appearance-pack-Nord").performScrollTo().performClick()
             assertEquals(listOf("pack:Nord"), actions.calls)
-            onNodeWithText("Next: Accent").assertExists()
+            onNodeWithText("Next: Style").assertExists()
+            onNodeWithText("1 of 4").assertExists()
         }
 
     @Test
@@ -87,28 +91,30 @@ class AppearancePageTest {
         }
 
     @Test
-    fun `B-KIT-017 guided Motion shows captioned cards and selects the named preference`() =
+    fun `B-KIT-017 a question asked for opens on its tab, and Motion selects the named preference`() =
         runComposeUiTest {
             val actions = RecordingActions()
             setContent {
                 SettingsThemed { SettingsScreen(appearance(AppearanceQuestion.Motion), actions) }
             }
-            onNodeWithTag("appearance-motion").assertDoesNotExist()
-            onNodeWithTag("appearance-motion-Full").assertExists()
-            onNodeWithTag("appearance-motion-Off").assertExists()
-            onNodeWithTag("appearance-motion-Calm").performScrollTo().performClick()
+            // Text & motion is the last tab: the mode control of the first tab is not on it.
+            onNodeWithTag("appearance-mode").assertDoesNotExist()
+            onNodeWithTag("appearance-text-size").assertExists()
+            onNodeWithTag("appearance-motion").assertExists()
+            onNodeWithText("Calm").performScrollTo().performClick()
             assertEquals(listOf("motion:Calm"), actions.calls)
         }
 
     @Test
-    fun `B-KIT-017 Shape shows both knobs without the style grid`() = runComposeUiTest {
+    fun `B-KIT-017 the Style tab holds the style cards and both shape knobs`() = runComposeUiTest {
         setContent {
             SettingsThemed {
                 SettingsScreen(appearance(AppearanceQuestion.Shape), RecordingActions())
             }
         }
+        onNodeWithTag("appearance-style-Solid").assertExists()
         onNodeWithTag("appearance-corners").assertExists()
         onNodeWithTag("appearance-spacing").assertExists()
-        onNodeWithTag("appearance-style-Solid").assertDoesNotExist()
+        onNodeWithTag("appearance-mode").assertDoesNotExist()
     }
 }

@@ -151,7 +151,7 @@ class ThemeSwitchRulesTest {
             val worstSecond = commits.maxOf { start -> commits.count { it >= start && it < start + 1000 } }
             assertTrue(worstSecond <= 3, "period $period: $worstSecond commits in one second")
         }
-        assertEquals(120L, ThemeSwitchRules.commitAt(0L, null, plan), "the first tap commits after the motion starts")
+        assertEquals(0L, ThemeSwitchRules.commitAt(0L, null, plan), "the first tap commits at once; the motion waits for the new theme")
         assertEquals(0L, ThemeSwitchRules.commitAt(0L, null, ThemeSwitchRules.plan(MotionLevel.Off)), "Off: at once")
     }
 

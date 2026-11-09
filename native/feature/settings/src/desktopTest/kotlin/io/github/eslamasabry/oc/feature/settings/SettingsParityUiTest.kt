@@ -85,9 +85,10 @@ class SettingsParityUiTest {
         runComposeUiTest {
             show()
             presenter.onOpen(SettingsPage.Appearance); waitForIdle()
-            // Flutter's text-size step slider (94d86c48f): asked as "How big should text be?", the slider reads
+            // The text-size step slider sits on the Text & motion tab (owner 2026-11-10, one page with tabs); it reads
             // "Text size" with its step as its state, and a step is chosen by moving it.
-            onNodeWithText("How big should text be?").performScrollTo().assertExists()
+            onNodeWithText("Text & motion").performClick()
+            waitForIdle()
             onNodeWithContentDescription("Text size")
                 .performScrollTo()
                 .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Default"))

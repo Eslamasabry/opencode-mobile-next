@@ -58,11 +58,12 @@ public data class ChatsHomeExtraState(
     val failure: Failure? = null,
     val monitoring: ChatsMonitoringUi = ChatsMonitoringUi(),
     /**
-     * False until the saved servers have been read once. Before that the home does not know its server, so it shows
-     * neither the server pill nor the new-conversation button; drawn early, the pill arrived late and pushed the
-     * filters aside, and the button showed, hid while the server opened and showed again (owner 2026-11-10).
+     * False only while the app has not read its saved servers yet (the wiring's first value). Then the home does not
+     * know its server, so it shows neither the server pill nor the new-conversation button; drawn early, the pill
+     * arrived late and pushed the filters aside, and the button showed, hid while the server opened and showed again
+     * (owner 2026-11-10).
      */
-    val known: Boolean = false,
+    val known: Boolean = true,
 )
 
 public enum class ChatsMonitorStatus {

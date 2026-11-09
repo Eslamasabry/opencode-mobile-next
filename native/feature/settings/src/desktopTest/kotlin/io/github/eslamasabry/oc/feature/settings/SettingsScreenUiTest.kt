@@ -83,9 +83,10 @@ class SettingsScreenUiTest {
             show()
             tap("This app")
             tap("Appearance")
-            onNodeWithText("Light or dark?").assertExists()
+            onNodeWithTag("appearance-mode").assertExists()
             // A theme card reads as one control; its name is a drawn word inside it.
             onNodeWithText("Graphite", useUnmergedTree = true).assertExists()
+            tap("Text & motion")
             tap("Calm")
             assertEquals(MotionLevel.Calm, choices.value.value.motion)
             onNodeWithText("Drawings appear, nothing keeps moving and nothing celebrates").assertExists()
@@ -120,7 +121,8 @@ class SettingsScreenUiTest {
             choices = FakeChoices(PersonalPrefs(mode = AppearanceMode.Saver))
             show()
             presenter.onOpen(SettingsPage.Appearance); waitForIdle()
-            // In Saver the Style question says Saver holds it, in place of style cards that could not apply.
+            // In Saver the Style tab says Saver holds it, in place of style cards that could not apply.
+            tap("Style")
             onNodeWithText(
                 "Saver keeps cards solid and the background still, to save battery on this screen. " +
                     "Your style comes back when Saver is off."

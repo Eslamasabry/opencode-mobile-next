@@ -126,7 +126,12 @@ public fun SettingsScreen(
             }
         SettingsPage.Appearance -> {
             // The tab the page shows, shared with the tour's bar at its foot.
-            val appearanceTab = androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+            // A question asked for from outside (a search result, a tip) opens on its group's tab.
+            val asked = state.appearance.question?.group
+            val appearanceTab =
+                androidx.compose.runtime.saveable.rememberSaveable(asked) {
+                    androidx.compose.runtime.mutableIntStateOf(appearanceTabs(state.appearance).indexOf(asked).coerceAtLeast(0))
+                }
             SettingsFrame(
                 stringResource(Res.string.e7AppearanceTitle),
                 back,

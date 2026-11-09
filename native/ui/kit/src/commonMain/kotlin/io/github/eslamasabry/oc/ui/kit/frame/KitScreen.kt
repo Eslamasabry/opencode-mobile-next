@@ -314,10 +314,8 @@ public fun KitScreen(
             val frostedFace = if (topPart != null && edgesFade && barFace == null) kitFrostedBarFace(frost) else null
             val look = topEdgeLook(liquid = barFace != null, frosted = frostedFace != null)
             val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
-            // Glass: what scrolls under the bottom block shows on behind it as a soft blur of itself (KitBottomEdge.kt).
-            // A bottom block that is one pane of glass (KitReportBottomSlab) needs neither: the body stays sharp under it.
+            // A bottom block that is one pane of glass (KitReportBottomSlab): the body stays sharp under it.
             val slab = bottomState.slab && bottomPart != null
-            val bottomBlur = if (edgesFade && bottomPart != null && !slab && kitChromeIsGlass()) kitStatusEdgeBlur(BOTTOM_EDGE_BLUR_DP) else null
             // Fluid glass (KitLiquidMerge.kt): a drop leaving or joining the bar's capsule or the bottom slab is bridged
             // to it here, over the body and under the chrome. Only where the body is recorded and shaders run.
             val mergeProgram = if (edgesFade && kitChromeIsGlass() && !KitMotion.state.reduced) rememberKitLiquidMergeProgram() else null
@@ -382,13 +380,6 @@ public fun KitScreen(
                             .kitMaxWidth(cap)
                     ) { KitScreenBody(edges) { bodyPart() } }
                 }
-                if (frost != null && bottomBlur != null)
-                    KitBottomEdge(
-                        frost,
-                        fromBottom = { bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } },
-                        reachPx = with(density) { (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp.toPx() },
-                        blur = bottomBlur,
-                    )
                 if (frost != null && merge != null && mergeProgram != null) KitLiquidMergeLayer(merge, frost, mergeProgram, kitLiquidMergeBlur())
                 if (edgesFade && topPart != null && frost != null) {
                     if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = statusPx + topPx, under = under)

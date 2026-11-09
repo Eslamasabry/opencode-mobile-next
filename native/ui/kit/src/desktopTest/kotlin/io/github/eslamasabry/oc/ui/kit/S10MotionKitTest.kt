@@ -240,7 +240,7 @@ class S10MotionKitTest {
     // ---- M-019 ----
 
     @Test
-    fun `M-019 a theme change fades the old screen over the new colours, words never pass through the midpoint`() =
+    fun `M-019 a theme change opens the new colours from a point over the old screen, never blending the two`() =
         runComposeUiTest {
             var mode by mutableStateOf(AppearanceMode.Dark)
             val seen = mutableListOf<Color>()
@@ -257,15 +257,30 @@ class S10MotionKitTest {
             mode = AppearanceMode.Light
             mainClock.advanceTimeByFrame()
             mainClock.advanceTimeByFrame()
-            mainClock.advanceTimeBy(ThemeFadeMs / 2L)
+            mainClock.advanceTimeByFrame()
+            mainClock.advanceTimeBy(40)
             val light = seen.last()
-            val mid = onRoot().captureToImage().toPixelMap().let { it[it.width / 2, it.height / 2] }
-            assertTrue(mid != dark && mid != light, "half way the old screen is part-faded over the new ($mid)")
-            mainClock.advanceTimeBy(ThemeFadeMs * 2L)
+            // Owner 2026-11-10: no cross-fade (it washed the screen grey). With no touch to open from, the new theme
+            // opens from the top centre: there it shows already, the bottom corner still shows the old screen, and
+            // every pixel is one or the other.
+            val early = onRoot().captureToImage().toPixelMap()
+            assertEquals(light, early[early.width / 2, 1], "the new theme shows where the reveal starts")
+            assertEquals(dark, early[1, early.height - 2], "the far corner still shows the old screen")
+            for (x in 0 until early.width step 7) for (y in 0 until early.height step 7) {
+                val c = early[x, y]
+                assertTrue(c == dark || c == light || nearEdge(c, dark, light), "($x, $y) is neither theme: $c")
+            }
+            mainClock.advanceTimeBy(io.github.eslamasabry.oc.ui.kit.theme.ThemeFade.REVEAL_MS * 2L)
             val end = onRoot().captureToImage().toPixelMap().let { it[it.width / 2, it.height / 2] }
             assertEquals(light, end, "after the fade only the new theme shows")
             assertTrue(seen.all { it == dark || it == light }, "the live colours jump; only the picture fades")
         }
+
+    /** A pixel on the reveal's own edge is anti-aliased between the two themes; anything else must be one of them. */
+    private fun nearEdge(c: Color, a: Color, b: Color): Boolean {
+        fun between(x: Float, p: Float, q: Float) = x >= minOf(p, q) - .01f && x <= maxOf(p, q) + .01f
+        return between(c.red, a.red, b.red) && between(c.green, a.green, b.green) && between(c.blue, a.blue, b.blue)
+    }
 
     @Test
     fun `M-019 the fade's 200 ms start after its first frame, so a slow first frame does not eat them`() =

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.rb.o44
 
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.Composable
@@ -81,20 +82,17 @@ class ScoreGroupHTest {
     }
 
     @Test
-    fun `B-KIT-017 Skip the guide is an accent action row offered only before the first question`() = runComposeUiTest {
-        fun ui(seen: Boolean) =
+    fun `B-KIT-017 Skip the guide is offered while the tour runs, and Guide me again after it`() = runComposeUiTest {
+        fun ui(done: Boolean) =
             SettingsUi(
                 stack = persistentListOf(SettingsPage.Appearance),
                 appearance =
                     AppearanceUi(
-                        guide =
-                            AppearanceGuideRecord(
-                                seen = if (seen) listOf(AppearanceQuestion.Mode) else emptyList()
-                            ),
+                        guide = AppearanceGuideRecord(done = done),
                         questions = AppearanceQuestion.entries.toImmutableList(),
                     ),
             )
-        val state = mutableStateOf(ui(seen = false))
+        val state = mutableStateOf(ui(done = false))
         var skipped = 0
         val actions =
             object : SettingsActions by RecordingActions() {
@@ -103,12 +101,13 @@ class ScoreGroupHTest {
                 }
             }
         setContent { Phone { SettingsScreen(state.value, actions) } }
-        // F: lib/ui/screens/settings/appearance_screen.dart:661-670 (titleAccent: true, only while nothing is seen)
-        onNodeWithText("Skip the guide").assertExists().performClick()
+        // Owner 2026-11-10: the tour is the page with a bar at its foot; leaving it is one quiet action under the
+        // choices for as long as the tour runs.
+        onNodeWithText("Skip the guide").performScrollTo().assertExists().performClick()
         assertEquals(1, skipped)
-        // The accent colour itself is checked by the settings_appearance_guided_solid_home gate shot.
-        state.value = ui(seen = true)
+        state.value = ui(done = true)
         waitForIdle()
         onNodeWithText("Skip the guide").assertDoesNotExist()
+        onNodeWithText("Guide me again").performScrollTo().assertExists()
     }
 }

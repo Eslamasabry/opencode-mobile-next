@@ -143,48 +143,51 @@ class ThemeSwitchControlTest {
     }
 
     @Test
-    fun `TSW-012 a tap slides, plays the rim and dots, ticks once, commits once the motion runs`() = runComposeUiTest {
+    fun `TSW-012 a tap ticks once and commits at once, then slides and plays the rim and dots`() = runComposeUiTest {
         val h = Harness()
         control(h)
         val start = block()
         mainClock.autoAdvance = false
         onNodeWithText("Light", useUnmergedTree = true).performClick()
         mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
         assertEquals(listOf(KitHaptic.Select), h.platform.haptics, "one haptic tick")
+        // Owner 2026-11-10: the theme commits at the tap, so the frame that re-themes the app is over before
+        // anything moves; the control's motion starts with the new theme (or after a short wait when nothing changes).
+        assertEquals(listOf(AppearanceMode.Light), h.commits.map { it.first }, "the theme commits at the tap")
         val m = assertNotNull(h.motion)
+        repeat(WAIT_FRAMES) { mainClock.advanceTimeByFrame() }
         assertTrue(m.pos.isRunning, "the block slides")
         assertTrue(m.rim.isRunning, "the rim runs")
         assertNotNull(m.morph, "the particles are in flight")
-        mainClock.advanceTimeBy(ThemeSwitchTimings.COMMIT_MS - 40)
-        assertTrue(h.commits.isEmpty(), "the theme waits for the motion to be under way")
+        mainClock.advanceTimeBy(80)
         val mid = block()
         assertTrue(mid.left != start.left, "mid-slide the block has moved")
-        mainClock.advanceTimeBy(80)
-        assertEquals(listOf(AppearanceMode.Light), h.commits.map { it.first })
         mainClock.advanceTimeBy(ThemeSwitchTimings.IDLE_MS.toLong())
         assertTrue(!m.switching, "idle: every clock has stopped")
         assertTrue(under(block(), segment("Light")))
     }
 
     @Test
-    fun `TSW-013 a second tap mid-move retargets from where it is and commits only the last`() = runComposeUiTest {
+    fun `TSW-013 a second tap before the block has moved plays only the last target, and the last commit wins`() = runComposeUiTest {
         val h = Harness()
         control(h)
         mainClock.autoAdvance = false
-        // An injected click itself moves the test clock (~64 ms, down to up): the second one lands before the first
-        // commit at 120 ms after the first tap.
         onNodeWithText("Light", useUnmergedTree = true).performClick()
         mainClock.advanceTimeBy(10)
         val m = assertNotNull(h.motion)
         onNodeWithText("Saver", useUnmergedTree = true).performClick()
-        mainClock.advanceTimeByFrame()
-        // Dark is segment 1, Light 0, Saver 3: the block was on its way to Light and turns from there.
+        repeat(WAIT_FRAMES) { mainClock.advanceTimeByFrame() }
+        // Dark is segment 1, Light 0, Saver 3: the first tap's start was still waiting and is replaced, so the block
+        // heads for Saver from where it is, never for Light first.
         val p = m.pos.value
-        assertTrue(p < 1f && p > -0.3f, "the slide turns from where it was ($p), no jump or reset")
-        assertEquals(3f, m.pos.targetValue, "now heading for Saver")
-        assertTrue(m.rim.value < 40f, "the rim restarts on the new target")
+        assertTrue(p <= 3f && p > -0.3f, "the slide runs from where it was ($p), no jump or reset")
+        assertEquals(3f, m.pos.targetValue, "heading for Saver")
         mainClock.advanceTimeBy(ThemeSwitchTimings.IDLE_MS.toLong())
-        assertEquals(listOf(AppearanceMode.Saver), h.commits.map { it.first }, "one commit, the last: ${h.commits}")
+        assertEquals(AppearanceMode.Saver, h.commits.last().first, "the last tap wins: ${h.commits}")
+        h.commits.map { it.second }.zipWithNext().forEach { (a, b) ->
+            assertTrue(b - a >= ThemeSwitchTimings.MIN_COMMIT_GAP_MS, "commits keep their gap: ${h.commits}")
+        }
         assertTrue(under(block(), segment("Saver")))
         assertEquals(2, m.started)
     }
@@ -231,7 +234,7 @@ class ThemeSwitchControlTest {
             control(h, level = MotionLevel.Calm)
             mainClock.autoAdvance = false
             onNodeWithText("Light", useUnmergedTree = true).performClick()
-            mainClock.advanceTimeByFrame()
+            repeat(WAIT_FRAMES) { mainClock.advanceTimeByFrame() }
             val m = assertNotNull(h.motion)
             assertTrue(m.pos.isRunning, "Calm: the slide")
             assertTrue(!m.rim.isRunning && m.morph == null, "Calm: no rim, no particles")
@@ -350,14 +353,15 @@ class ThemeSwitchControlTest {
         waitForIdle()
         mainClock.autoAdvance = false
         onNodeWithText("Light", useUnmergedTree = true).performClick()
-        mainClock.advanceTimeBy(ThemeSwitchTimings.COMMIT_MS + 60)
+        mainClock.advanceTimeBy(REVEAL_EARLY_MS)
         val mid = onNodeWithTag("stage").captureToImage().toPixelMap()
         mainClock.advanceTimeBy(2000)
         val end = onNodeWithTag("stage").captureToImage().toPixelMap()
         assertEquals(AppearanceMode.Light, h.selected)
         fun gap(x: Int, y: Int) = distance(mid[x, y], end[x, y])
-        // Outside the control the old screen is still fading out: the cover runs.
-        assertTrue(gap(5, 5) > 0.3f, "$style: the ground is mid-fade (${gap(5, 5)})")
+        // The new theme opens as a circle from the tap (on Light, at the start of the track): the corner farthest
+        // from it still shows the old screen, whole.
+        assertTrue(gap(375, 115) > 0.3f, "$style: the far corner still shows the old screen (${gap(375, 115)})")
         // Inside it, the track by the last segment's edge is already the new theme's: no blend of the two, and no
         // surface fading on its own (Glass's state fade) either.
         val y = 60
@@ -365,3 +369,9 @@ class ThemeSwitchControlTest {
         assertTrue(gap(x, y) < 0.03f, "$style: the control's track shows no wash (${gap(x, y)})")
     }
 }
+
+/** Frames after a tap by which the control's own motion has started when no theme change is on its way. */
+private const val WAIT_FRAMES = io.github.eslamasabry.oc.ui.kit.choice.MODE_WAIT_FRAMES + 3
+
+/** A moment early in the reveal: the new theme has started to open, the far corner is still the old screen. */
+private const val REVEAL_EARLY_MS = 140L
