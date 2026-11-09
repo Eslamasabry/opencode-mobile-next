@@ -64,6 +64,24 @@ class CommittedFixturesTest {
     }
 
     @Test
+    fun `B-MIGR-005 the committed prefs hold every key Flutter 2_1_5 lists, with its consent and telemetry values`() {
+        val prefs = SharedPrefsFile(File(fixture, "shared_prefs"), FlutterPrefsCodec.FILE_NAME).read()!!.androidMap
+        val ledger = MiniJson.parse(File("src/test/resources/fixtures/flutter-2.1.5/settings_preferences_ledger.json").readText()) as Map<*, *>
+        val absent = ledger.keys.map { it as String }.filter { k ->
+            // Families end in a dot: the fixture holds at least one member of each.
+            prefs.keys.none { it == FlutterPrefsCodec.physicalKey(k) || (k.endsWith(".") && it.startsWith(FlutterPrefsCodec.physicalKey(k))) }
+        }
+        assertEquals(emptyList(), absent, "regenerate with ./gradlew generateFixtures")
+        fun at(key: String) = prefs[FlutterPrefsCodec.physicalKey(key)]
+        assertEquals(RawPref.Bool(true), at("oc.telemetry.usage"))
+        assertEquals(RawPref.Bool(false), at("oc.telemetry.crashes"))
+        assertEquals(RawPref.Bool(true), at("oc.telemetryConsentAsked"))
+        assertEquals(RawPref.Str("2.1.5+63"), at("oc.telemetry.lastVersion"))
+        assertEquals(RawPref.Int64(3), at("oc.telemetry.reportCounter"))
+        assertEquals(RawPref.Bool(true), at("oc.crashReports.offer"))
+    }
+
+    @Test
     fun `every committed store reads back`() {
         val shared = File(fixture, "shared_prefs")
         val prefs = SharedPrefsFile(shared, FlutterPrefsCodec.FILE_NAME).read()!!
