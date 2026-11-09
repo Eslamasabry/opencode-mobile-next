@@ -14,9 +14,11 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.integrations.quota.QuotaRequest
 import io.github.eslamasabry.oc.engine.profiles.ProfileKeys
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.engine.team.PhoneEngineAddress
-import io.github.eslamasabry.oc.engine.team.PhoneTeamPorts
-import io.github.eslamasabry.oc.engine.team.PhoneTeamTurnOn
+import io.github.eslamasabry.oc.engine.team.PhoneSetupPorts
+import io.github.eslamasabry.oc.engine.team.SetupHealth
+import io.github.eslamasabry.oc.engine.team.SetupHost
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.engine.profiles.OpaqueJson
@@ -44,8 +46,8 @@ import org.json.JSONObject
 object TeamBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>): TeamEngine =
-        TeamEngine(host, kept = kept.firstOrNull())
+    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>, clock: kotlin.time.Clock): TeamEngine =
+        TeamEngine(host, kept = kept.firstOrNull(), clock = clock)
 }
 
 /**
@@ -77,62 +79,144 @@ class AppTeamHost(
             kotlinx.coroutines.withContext(dispatchers.io) { linux.installed }
     }
 
-    /** Flutter's one-tap setup, see [PhoneTeamTurnOn]; the engine's port is Flutter's default 4098. */
-    override suspend fun turnOnPhoneTeam(profileId: String): Outcome<Unit> {
+    /** Flutter's one-tap setup, see [PhoneTeamSetup]; the engine's port is Flutter's default 4098. */
+    override fun phoneSetup(profileId: String): PhoneSetupPorts = SetupPorts(profileId)
+
+    /** Flutter `turnOffTeam` for the phone's team: the engine stops (a failure leaves the team on), then the config goes. */
+    override suspend fun turnOffPhoneTeam(profileId: String): Outcome<Unit> {
         stores.warm()
-        return PhoneTeamTurnOn(ports(profileId)).run()
+        val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
+        val stopped =
+            attempt({ Failure.Unexpected() }) {
+                kotlinx.coroutines.withContext(dispatchers.io) { linux.stopPhoneEngine(profileId) }
+            }
+        if (stopped is Outcome.Failed) return stopped
+        return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = null), SecretEdit.Keep, expected = loaded)) {
+            is Outcome.Ok -> Outcome.Ok(Unit)
+            is Outcome.Failed -> saved
+        }
     }
 
-    private fun ports(profileId: String): PhoneTeamPorts =
-        object : PhoneTeamPorts {
-            override suspend fun stopServer(): Outcome<Unit> = runtime.stopServer()
+    /** The phone as the set-up flow asks of it (Dart `BuiltinPhoneTeamSetupPorts`): the same controls This phone uses. */
+    private inner class SetupPorts(private val profileId: String) : PhoneSetupPorts {
+        /** The engine's address and token from the last start, for the probe and the save; never logged. */
+        private var started: PhoneEngineAddress? = null
 
-            override suspend fun closeTerminals(): Outcome<Unit> =
-                attempt({ Failure.Unexpected() }) {
-                    kotlinx.coroutines.withContext(dispatchers.io) {
-                        val terminal = LocalTerminal.get(app)
-                        terminal.list().forEach { runCatching { it.stop() }; terminal.remove(it.id) }
-                    }
+        override suspend fun hasServer(): Boolean = canTurnOnPhoneTeam(profileId)
+
+        override suspend fun replyRunning(): Boolean =
+            kotlinx.coroutines.withContext(dispatchers.io) { runtime.replyRunning() }
+
+        override suspend fun inspect(): SetupHost {
+            val serverRunning = (runtime.runtimeStatus() as? Outcome.Ok)?.value?.serverRunning == true
+            val (terminals, engine) =
+                kotlinx.coroutines.withContext(dispatchers.io) {
+                    // Unknown reads count as nothing running; the start reports for itself.
+                    val shells = try { LocalTerminal.get(app).list().count { it.running } } catch (_: Exception) { 0 }
+                    val restart = try { linux.phoneEngineStatus(profileId)["restartRequired"] == true } catch (_: Exception) { false }
+                    shells to restart
                 }
+            return SetupHost(serverRunning, terminals, engine)
+        }
 
-            override suspend fun startEngine(): Outcome<PhoneEngineAddress> =
-                attempt({ Failure.Unexpected() }) {
-                    kotlinx.coroutines.withContext(dispatchers.io) {
-                        val status = linux.startPhoneEngine(profileId, 4098, null)
-                        check(status["boundary"] == true)
-                        val credentials = linux.phoneEngineCredentials(profileId)
-                        PhoneEngineAddress(checkNotNull(credentials["baseUrl"]), checkNotNull(credentials["bearerToken"]))
-                    }
+        override suspend fun stopServer(): Outcome<Unit> = runtime.stopServer()
+
+        override suspend fun closeTerminals(): Outcome<Unit> =
+            attempt({ Failure.Unexpected() }) {
+                kotlinx.coroutines.withContext(dispatchers.io) {
+                    val terminal = LocalTerminal.get(app)
+                    terminal.list().forEach { runCatching { it.stop() }; terminal.remove(it.id) }
                 }
-
-            override suspend fun stopEngine() {
-                runCatching { kotlinx.coroutines.withContext(dispatchers.io) { linux.stopPhoneEngine(profileId) } }
             }
 
-            override suspend fun startServer(): Outcome<Unit> = runtime.startServer()
-
-            override suspend fun saveTeam(address: PhoneEngineAddress): Outcome<Unit> {
-                redactor.registerSecret(address.token)
-                val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
-                val written = stores.secrets.write(ProfileKeys.TEAM_ENGINE_AUTH + profileId, address.token)
-                if (written is Outcome.Failed) return written
-                val previous = TeamConfig.parse(loaded.profile.orchestration?.encoded)?.enabledAt
-                val enabledAt = previous ?: java.time.Instant.now().toString()
-                val config =
-                    OpaqueJson.parse(
-                        DartJson.encode(
-                            mapOf(
-                                "provider" to "phoneEngine", "url" to address.baseUrl, "city" to "", "hostMode" to "phone",
-                                "hostKind" to "phone", "front" to false, "enabledAt" to enabledAt,
-                            ),
-                        ),
-                    ) ?: return Outcome.Failed(Failure.Unexpected())
-                return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = config), SecretEdit.Keep, expected = loaded)) {
-                    is Outcome.Ok -> Outcome.Ok(Unit)
-                    is Outcome.Failed -> saved
+        override suspend fun startEngine(): Outcome<SetupHealth> =
+            attempt({ error ->
+                Failure.Unavailable(FeatureId("team.engine"), redactor.details(linux.phoneEngineFailureCode(error) ?: "engineFailed"))
+            }) {
+                kotlinx.coroutines.withContext(dispatchers.io) {
+                    try {
+                        val status = linux.startPhoneEngine(profileId, 4098, null)
+                        val credentials = linux.phoneEngineCredentials(profileId)
+                        val address = PhoneEngineAddress(checkNotNull(credentials["baseUrl"]), checkNotNull(credentials["bearerToken"]))
+                        check(TeamConfig.loopback(address.baseUrl) != null)
+                        redactor.registerSecret(address.token)
+                        started = address
+                        val boundary = status["boundary"] == true
+                        SetupHealth(
+                            boundary = boundary,
+                            canExecute = boundary && status["execution"] == true,
+                            restartRequired = status["restartRequired"] == true,
+                            boundaryReason = status["boundaryReason"] as? String ?: "",
+                            boundaryTier = status["boundaryTier"] as? String ?: "none",
+                        )
+                    } catch (error: Exception) {
+                        // A proof that failed is the phone not being safe, not the engine not starting.
+                        val code = linux.phoneEngineFailureCode(error)
+                        if (code != null && (code.startsWith("boundary_") || code.startsWith("attestation_"))) {
+                            SetupHealth(boundary = false, canExecute = false, boundaryReason = code)
+                        } else {
+                            throw error
+                        }
+                    }
                 }
+            }
+
+        override suspend fun stopEngine() {
+            attempt({ Failure.Unexpected() }) { kotlinx.coroutines.withContext(dispatchers.io) { linux.stopPhoneEngine(profileId) } }
+            started = null
+        }
+
+        override suspend fun probeEngine(): Outcome<SetupHealth> {
+            val address = started ?: return Outcome.Failed(Failure.Unexpected())
+            val transport = AndroidQuotaTransport(dispatchers)
+            return try {
+                attempt({ Failure.Unexpected() }) {
+                    val health = health(transport, address.baseUrl.trimEnd('/'), address.token, profileId)
+                    SetupHealth(
+                        boundary = health.boundary,
+                        canExecute = health.canExecute,
+                        boundaryReason =
+                            when {
+                                !health.boundary -> "boundary_unverified"
+                                !health.protocolVerified -> "protocolUnverified"
+                                !health.canExecute -> "notExecutable"
+                                else -> ""
+                            },
+                        boundaryTier = health.boundaryTier,
+                    )
+                }
+            } finally {
+                transport.close(true)
             }
         }
+
+        override suspend fun startServer(): Outcome<Unit> = runtime.startServer()
+
+        override suspend fun restoreServer(): Boolean = runtime.startServer() is Outcome.Ok
+
+        override suspend fun saveTeam(): Outcome<Unit> {
+            val address = started ?: return Outcome.Failed(Failure.Unexpected())
+            redactor.registerSecret(address.token)
+            val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
+            val written = stores.secrets.write(ProfileKeys.TEAM_ENGINE_AUTH + profileId, address.token)
+            if (written is Outcome.Failed) return written
+            val previous = TeamConfig.parse(loaded.profile.orchestration?.encoded)?.enabledAt
+            val enabledAt = previous ?: java.time.Instant.now().toString()
+            val config =
+                OpaqueJson.parse(
+                    DartJson.encode(
+                        mapOf(
+                            "provider" to "phoneEngine", "url" to address.baseUrl, "city" to "", "hostMode" to "phone",
+                            "hostKind" to "phone", "front" to false, "enabledAt" to enabledAt,
+                        ),
+                    ),
+                ) ?: return Outcome.Failed(Failure.Unexpected())
+            return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = config), SecretEdit.Keep, expected = loaded)) {
+                is Outcome.Ok -> Outcome.Ok(Unit)
+                is Outcome.Failed -> saved
+            }
+        }
+    }
 
     private suspend fun token(profileId: String): Outcome<String> {
         val token =

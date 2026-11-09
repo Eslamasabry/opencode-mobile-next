@@ -1540,6 +1540,12 @@ internal constructor(
      */
     suspend fun startServer(): Outcome<Unit> = startNow()
 
+    /**
+     * A reply is being written on this phone's OpenCode (Flutter `ConnectionController.replyInFlight`): the phone
+     * team's turn-on waits for it before it restarts OpenCode. Reads a preference, so call it off the main thread.
+     */
+    fun replyRunning(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true
+
     /** The phone team's turn-on stops OpenCode here (Flutter `PhoneTeamSetupPorts.stopServer`). */
     suspend fun stopServer(): Outcome<Unit> = stopNow()
 

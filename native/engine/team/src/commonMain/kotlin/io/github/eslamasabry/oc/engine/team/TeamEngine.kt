@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import kotlin.concurrent.atomics.AtomicReference
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,12 +62,18 @@ public interface TeamHost {
     public suspend fun canTurnOnPhoneTeam(profileId: String): Boolean = false
 
     /**
-     * Turns on the phone's own team for [profileId] (Flutter `openPhoneTeamSetup`): starts the bundled engine, keeps
-     * its credential in the Keystore under `oc.teamEngineAuth.<id>` and saves the profile's team config, so the next
-     * [config] answers. Never retried; a failure leaves the team off.
+     * The phone's one-tap set-up for [profileId] (Flutter `openPhoneTeamSetup`): the ports that stop OpenCode and the
+     * terminals, start the bundled engine, bring OpenCode back protected and keep the credential and the team config.
+     * Null where no wiring can (the run then ends at "add a server first").
      */
-    public suspend fun turnOnPhoneTeam(profileId: String): Outcome<Unit> =
-        Outcome.Failed(Failure.Unavailable(FeatureId("team.on")))
+    public fun phoneSetup(profileId: String): PhoneSetupPorts? = null
+
+    /**
+     * Turns the phone's team off for [profileId] (Flutter `turnOffTeam`): stops the bundled engine and clears the
+     * profile's team config, so the next [config] answers null. Keeps the profile's projects on the phone; never retried.
+     */
+    public suspend fun turnOffPhoneTeam(profileId: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("team.off")))
 }
 
 /** What the team page shows (Dart `TeamPage`'s branches). */
@@ -118,6 +126,8 @@ public class TeamEngine(
     private val host: TeamHost,
     private val kept: TeamLastKnown? = null,
     private val newRequestId: () -> String = Ids()::next,
+    /** Times the turn-on's steps; the app passes its clock, a test that does not read times needs none. */
+    private val clock: Clock = Unset,
 ) {
     private val lane = Mutex()
     private val drafts = Mutex()
@@ -226,18 +236,55 @@ public class TeamEngine(
         }
     }
 
-    /**
-     * Turns the phone's own team on for [profileId] (the off page's primary), then reads the team again, so the same
-     * page becomes the team (Flutter `TeamPage`: no hop back, no second page). On the lane, so no read overlaps it.
-     */
-    public suspend fun turnOn(profileId: String): Outcome<Unit> {
-        val done = lane.withLock { host.turnOnPhoneTeam(profileId) }
-        if (done is Outcome.Ok) refresh(profileId)
-        return done
+    private val setups = AtomicReference<PersistentMap<String, PhoneTeamSetup>>(persistentHashMapOf())
+
+    private fun setup(profileId: String): PhoneTeamSetup {
+        while (true) {
+            val current = setups.load()
+            current[profileId]?.let { return it }
+            val created = PhoneTeamSetup(host.phoneSetup(profileId) ?: NoPhoneSetup, clock)
+            if (setups.compareAndSet(current, current.put(profileId, created))) return created
+        }
     }
 
-    /** Whether [turnOn] can work for [profileId] here ([TeamHost.canTurnOnPhoneTeam]). */
+    /** The turn-on's progress for [profileId]: it outlives the page that started it, so a page opened later joins it. */
+    public fun setupState(profileId: String): StateFlow<SetupState> = setup(profileId).state
+
+    /**
+     * Runs the phone's set-up for [profileId] (the off page's primary, the phone-off page's, Team settings'), then reads
+     * the team again, so the page behind becomes the team (Flutter `TeamPage`: no hop back, no second page). A run
+     * already going is joined, not doubled. Not on the lane: a person may take minutes to answer its one question.
+     */
+    public suspend fun runSetup(profileId: String) {
+        val run = setup(profileId)
+        run.run()
+        if (run.state.value.phase == SetupPhase.Done) refresh(profileId)
+    }
+
+    /** The person's yes or no to stopping OpenCode and the terminals. */
+    public fun answerSetup(profileId: String, yes: Boolean): Unit = setup(profileId).answer(yes)
+
+    /** Forgets a finished or failed run, so the page shows its start again. */
+    public fun dismissSetup(profileId: String): Unit = setup(profileId).dismiss()
+
+    /** Whether [runSetup] can work for [profileId] here ([TeamHost.canTurnOnPhoneTeam]). */
     public suspend fun canTurnOn(profileId: String): Boolean = host.canTurnOnPhoneTeam(profileId)
+
+    /**
+     * Turns the team off for [profileId]: the engine stops, the config goes and the kept workspace is blanked, so no
+     * old team shows first next time. A failure leaves the team as it was.
+     */
+    public suspend fun turnOff(profileId: String): Outcome<Unit> {
+        val done = lane.withLock { host.turnOffPhoneTeam(profileId) }
+        if (done is Outcome.Ok) {
+            // The kept shelf has no delete: an empty workspace reads back as nothing to show.
+            kept?.keep(profileId, KeptTeam(""))
+            setup(profileId).dismiss()
+            forget(profileId)
+            refresh(profileId)
+        }
+        return done
+    }
 
     /** Clears a shown refusal (the page's notice was dismissed). */
     public fun clearRefusal(profileId: String) {
@@ -279,4 +326,35 @@ public class TeamEngine(
         /** Dart `PhoneEngineGateway.pollInterval`: how often an open team page reads again. */
         public const val POLL_MS: Long = 3_000
     }
+}
+
+/** The ports of a host that cannot set the phone's team up: the run ends at "add a server first". */
+internal object NoPhoneSetup : PhoneSetupPorts {
+    private val none = Outcome.Failed(Failure.Unavailable(FeatureId("team.on")))
+
+    override suspend fun hasServer(): Boolean = false
+
+    override suspend fun replyRunning(): Boolean = false
+
+    override suspend fun inspect(): SetupHost = SetupHost(serverRunning = false, terminals = 0, restartRequired = false)
+
+    override suspend fun stopServer(): Outcome<Unit> = none
+
+    override suspend fun closeTerminals(): Outcome<Unit> = none
+
+    override suspend fun startEngine(): Outcome<SetupHealth> = none
+
+    override suspend fun stopEngine() = Unit
+
+    override suspend fun probeEngine(): Outcome<SetupHealth> = none
+
+    override suspend fun startServer(): Outcome<Unit> = none
+
+    override suspend fun saveTeam(): Outcome<Unit> = none
+
+    override suspend fun restoreServer(): Boolean = false
+}
+
+internal object Unset : Clock {
+    override fun now(): Instant = Instant.fromEpochMilliseconds(0)
 }

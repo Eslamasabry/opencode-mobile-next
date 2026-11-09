@@ -2528,6 +2528,9 @@ class BuiltinLinux(private val context: Context) {
         return phoneEngineStatus(profile)
     }
 
+    /** The short code a phone-engine start failed with (`boundary_proof_failed`, `engine_in_use`, ...); null for any other error. */
+    fun phoneEngineFailureCode(error: Throwable): String? = (error as? PhoneEngineNative.Failure)?.code
+
     @Synchronized
     fun stopPhoneEngine(profile: String): Map<String, Any?> {
         phoneEngine.stop(profile)
