@@ -561,8 +561,11 @@ private fun AppearanceControlHeading(
     top: Dp,
 ) {
     if (onePage || question == null) {
-        // The page names the choice ("Theme", "Corners and spacing"); the tour's questions went with its steps.
-        AppearanceQuestionHeading(if (question != null) appearanceQuestionWords(question) else title, top)
+        // The page names the choice ("Theme", "Shape"); the tour's questions went with its steps. A choice named as
+        // its own tab is (Style on the Style tab) gets no second heading, only its room.
+        val words = if (question != null) appearanceQuestionWords(question) else title
+        if (question != null && words == appearanceGroupWords(question.group)) Spacer(Modifier.height(top))
+        else AppearanceQuestionHeading(words, top)
         return
     }
     val changes =
