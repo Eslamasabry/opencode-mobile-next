@@ -1,0 +1,56 @@
+# Fresh install -> "Connect to my computer" -> the runner's OpenCode 2 server (adb reverse 4321) -> Conversations.
+# Literal English copy: this runs only in native-chat-emu.yml on an en-US emulator.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Connect to my computer"
+    timeout: 120000
+- tapOn: "Connect to my computer"
+- runFlow:
+    when:
+      visible: "OpenCode on a computer"
+    commands:
+      - tapOn: "OpenCode on a computer"
+- runFlow:
+    when:
+      notVisible: "Server URL.*"
+    commands:
+      - tapOn: "Enter the address instead"
+- tapOn: "Server URL.*"
+- inputText: "http://127.0.0.1:4321"
+- hideKeyboard
+- tapOn: "Server password.*"
+- inputText: ${PW}
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Test connection"
+- tapOn: "Test connection"
+- runFlow:
+    when:
+      visible: "Use it anyway"
+    commands:
+      - tapOn: "Use it anyway"
+      - extendedWaitUntil:
+          visible: "Allow HTTP for this server"
+          timeout: 15000
+      - tapOn: "Allow HTTP for this server"
+- extendedWaitUntil:
+    visible: "OpenCode 2 · .*"
+    timeout: 45000
+- scrollUntilVisible:
+    element: "Save & connect"
+- tapOn: "Save & connect"
+- extendedWaitUntil:
+    visible: "Its conversations open next.*"
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible: "Its conversations open next.*"
+    commands:
+      - tapOn: "Open .*"
+- extendedWaitUntil:
+    visible: "Conversations"
+    timeout: 90000

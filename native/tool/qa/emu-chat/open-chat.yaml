@@ -1,0 +1,12 @@
+# Opens the seeded conversation "Crash probe" from Conversations.
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      visible: "Dismiss"
+    commands:
+      - tapOn: "Dismiss"
+- scrollUntilVisible:
+    element: "Crash probe"
+    timeout: 60000
+- tapOn: "Crash probe"

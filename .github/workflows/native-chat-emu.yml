@@ -1,0 +1,121 @@
+# Bisect of "opening a conversation crashes the emulator" (2026-11-09: qemu segfaults with "Failed to find ColorBuffer" /
+# "bad color buffer handle" from host gfxstream under -gpu swiftshader_indirect). Dispatch only. One job per suspect, in
+# parallel: each turns one drawing effect off (native/tool/qa/emu-chat/suspect.py), builds the preview debug APK for
+# x86_64, connects it on a GitHub KVM emulator (API 35, swiftshader_indirect) to an OpenCode 2 server on the runner, opens
+# a conversation, and uploads result.txt (emulator=alive|gone), logcat, the Maestro logs and screenshots.
+name: Native chat emulator
+run-name: Native chat emulator · ${{ github.ref_name }} · ${{ inputs.suspects || 'default suspects' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      suspects:
+        description: "Comma-separated suspects (suspect.py names; join two with +). none = baseline."
+        type: string
+        default: "none,frost-source,frost-chat,frost-transcript,offscreen,blur,shader,sampler"
+  # A workflow that is not on the default branch cannot be dispatched until it has run once; a push to the bisect branch
+  # runs the default suspects.
+  push:
+    branches: ["native/chat-emu-crash"]
+    paths: [".github/workflows/native-chat-emu.yml", "native/tool/qa/emu-chat/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-chat-emu-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUNNER_TRACKING_ID: ""
+
+defaults:
+  run:
+    working-directory: native
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      suspects: ${{ steps.p.outputs.suspects }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - id: p
+        env:
+          SUSPECTS: ${{ inputs.suspects || 'none,frost-source,frost-chat,frost-transcript,offscreen,blur,shader,sampler' }}
+        run: echo "suspects=$(python3 -c 'import json,os; print(json.dumps([s.strip() for s in os.environ["SUSPECTS"].split(",") if s.strip()]))')" >> "$GITHUB_OUTPUT"
+
+  chat:
+    name: chat (${{ matrix.suspect }})
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        suspect: ${{ fromJSON(needs.plan.outputs.suspects) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/native-setup
+      - name: Turn the suspect off
+        run: python3 -I tool/qa/emu-chat/suspect.py . "${{ matrix.suspect }}"
+      - name: Build the preview debug APK (x86_64)
+        run: |
+          ./gradlew :androidApp:assemblePreviewDebug -Pandroid.injected.build.abi=x86_64 --stacktrace
+          apk=$(ls androidApp/build/outputs/apk/preview/debug/*.apk | head -1)
+          aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
+          echo "APK=$GITHUB_WORKSPACE/native/$apk" >> "$GITHUB_ENV"
+          echo "PKG=$("$aapt2" dump packagename "$apk")" >> "$GITHUB_ENV"
+      - name: OpenCode 2 server with one conversation
+        run: |
+          PW=$(head -c 18 /dev/urandom | base64 | tr -d '/+=')
+          echo "::add-mask::$PW"
+          echo "PW=$PW" >> "$GITHUB_ENV"
+          npm install --silent --prefix "$RUNNER_TEMP/oc2" @opencode/cli@2.2.6
+          mkdir -p "$RUNNER_TEMP/oc2home" "$RUNNER_TEMP/proj" && cd "$RUNNER_TEMP/proj" && git init -q && echo "# demo" > README.md
+          HOME="$RUNNER_TEMP/oc2home" OPENCODE_SERVER_PASSWORD="$PW" nohup "$RUNNER_TEMP/oc2/node_modules/.bin/opencode" serve \
+            --port 4321 --hostname 127.0.0.1 > "$RUNNER_TEMP/oc2.log" 2>&1 &
+          for i in $(seq 1 60); do grep -q listening "$RUNNER_TEMP/oc2.log" && break; sleep 2; done
+          cat "$RUNNER_TEMP/oc2.log"
+          curl -fsS -u "opencode:$PW" -X POST -H 'content-type: application/json' \
+            -d "{\"title\":\"Crash probe\",\"location\":{\"directory\":\"$RUNNER_TEMP/proj\"}}" http://127.0.0.1:4321/api/session > /dev/null
+      - name: Maestro 2.12.0 (pinned)
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -fsSL -o maestro.zip https://github.com/mobile-dev-inc/maestro/releases/download/cli-2.12.0/maestro.zip
+          echo "a6044a84542f522f434c5dc3d609e60c7446d423f3ed1b2ae513f5c48663ec5e  maestro.zip" | sha256sum -c -
+          unzip -q maestro.zip && echo "$RUNNER_TEMP/maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Open a conversation on the emulator
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@69c8581131285561115a2e413eb0037446bdc2d6 # v2.35.0
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          working-directory: native
+          script: bash tool/qa/emu-chat/run.sh "$APK" "$PKG" "$GITHUB_WORKSPACE/native/build/chat-emu"
+      - name: Verdict
+        if: always()
+        run: |
+          mkdir -p build/chat-emu
+          { echo "### ${{ matrix.suspect }}"; echo '```'; cat build/chat-emu/result.txt 2>/dev/null || echo "no result"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          cat build/chat-emu/result.txt 2>/dev/null || true
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: chat-emu-${{ matrix.suspect }}
+          path: native/build/chat-emu
+          retention-days: 7
+          if-no-files-found: ignore
