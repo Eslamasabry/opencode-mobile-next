@@ -42,6 +42,9 @@ private fun Counted(name: String, content: @Composable () -> Unit = {}) {
 class ComposerTypingRecompositionTest {
     @Test
     fun `typing 20 characters recomposes the field and nothing else of the composer`() {
+        // One pass of each first, so the JVM is warm when the counted passes (whose times are printed) run.
+        typeTwentyKeys(lateRead = false)
+        typeTwentyKeys(lateRead = true)
         val late = typeTwentyKeys(lateRead = true)
         val early = typeTwentyKeys(lateRead = false)
         println("COMPOSER-TYPING-COMPARE late=$late early(old shape)=$early")
