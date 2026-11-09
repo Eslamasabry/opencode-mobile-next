@@ -560,6 +560,15 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
         transformOrigin = origin
     }
 
+/**
+ * The Glass face every modal panel shares (KitSheet's panels and KitDialogFrame's bottom and centred faces): liquid glass
+ * over the window's page source within the window's liquid budget, else the frosted pane; null in every other style, so
+ * each caller keeps its own solid face pixel for pixel. [shrink] is the predictive back gesture's way into frost.
+ */
+@Composable
+internal fun kitModalGlassFace(shape: KitShapeId, shrink: () -> Float = { 0f }): Modifier? =
+    kitLiquidSheetFace(shape.shape(), shrink) ?: kitGlassSheet(shape, LocalKitColors.current.surface2)
+
 @Composable
 private fun SheetPanel(
     entry: SheetEntry,
@@ -575,9 +584,7 @@ private fun SheetPanel(
     val tokens = LocalKitTokens.current
     // Glass: the sheet is liquid glass over the page (Android 13+, not held), else a frosted pane (opaque over the page
     // whenever nothing blurs); every other style keeps surface2.
-    val face =
-        kitLiquidSheetFace(shape.shape(), shrink)
-            ?: kitGlassSheet(shape, colors.surface2) ?: Modifier.background(colors.surface2)
+    val face = kitModalGlassFace(shape, shrink) ?: Modifier.background(colors.surface2)
     Column(
         modifier
             .then(face)

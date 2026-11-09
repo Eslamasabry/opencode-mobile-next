@@ -59,6 +59,8 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidMotion
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -187,14 +189,16 @@ internal fun DialogLayer(state: KitSheetHostState) {
                     enter = still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
                     exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
                 ) {
+                    val glass = kitModalGlassFace(KitShapeId.Sheet) { LiquidMotion.shrinkFraction(back.value()) }
                     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Sheet, KitShapeId.Sheet, SurfaceLevel.Surface2, ownFill = colors.surface2))
                     Box(
                         panel.widthIn(max = bottomCap.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin(0.5f, 1f))
-                            .then(look.modifier)
+                            .then(glass ?: look.modifier)
                             .clip(KitShapeId.Sheet.shape())
                             .navigationBarsPadding()
-                            .imePadding(),
+                            .imePadding()
+                            .padding(kitPaneInset()),
                     ) { body(true) }
                 }
             }
@@ -203,12 +207,14 @@ internal fun DialogLayer(state: KitSheetHostState) {
                 // MOT-2: a modal never scales in; it fades and rises 8 dp at Full (KitModalMotion).
                 val rise = KitModalMotion.dialogEnter()
                 AnimatedVisibility(state.dialogShown, enter = still.enter { rise }, exit = still.exit { fadeOut(specs.exit()) }) {
+                    val glass = kitModalGlassFace(KitShapeId.Dialog) { LiquidMotion.shrinkFraction(back.value()) }
                     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Dialog, SurfaceLevel.Surface2, ownFill = colors.surface2))
                     Box(
                         panel.widthIn(max = DIALOG_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin.Center)
-                            .then(look.modifier)
-                            .clip(KitShapeId.Dialog.shape()),
+                            .then(glass ?: look.modifier)
+                            .clip(KitShapeId.Dialog.shape())
+                            .padding(kitPaneInset()),
                     ) { body(false) }
                 }
             }
