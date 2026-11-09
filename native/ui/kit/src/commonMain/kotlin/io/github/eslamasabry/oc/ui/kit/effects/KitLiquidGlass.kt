@@ -533,15 +533,15 @@ internal const val RIM_LIGHT_DP: Float = 1f
  * 2026-11-08: glass edges are a neutral white light, not accent-tinted; an HCT-pulled yellow accent read as blue-teal),
  * low in a light theme where white on milk needs little.
  */
-internal const val RIM_ALPHA_DARK: Float = .36f
-internal const val RIM_ALPHA_LIGHT: Float = .55f
+internal val RIM_ALPHA_DARK: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidRimDark
+internal val RIM_ALPHA_LIGHT: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidRimLight
 
 /**
  * The specular light (the rim light's colour): a bright segment round the top-start corner and a thin glint line just
  * inside the top edge, as Glass's in-flow panes draw it (`drawGlassSpecular`). Restrained, never plastic.
  */
-internal const val SPECULAR_ALPHA_DARK: Float = .60f
-internal const val SPECULAR_ALPHA_LIGHT: Float = .85f
+internal val SPECULAR_ALPHA_DARK: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularDark
+internal val SPECULAR_ALPHA_LIGHT: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularLight
 
 /**
  * The rim light's colour on every glass edge, liquid and frosted (panes, sheets, menus): neutral white light (owner

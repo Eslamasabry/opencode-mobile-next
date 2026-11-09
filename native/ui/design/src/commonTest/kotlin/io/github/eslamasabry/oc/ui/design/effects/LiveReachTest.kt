@@ -110,4 +110,26 @@ class LiveReachTest {
         val flat = LiquidEdge.themeSpots(roles, recipe, emptyList())
         assertTrue(flat.size < every.size, "the flat ground has no picture spots")
     }
+
+    @Test
+    fun `B-KIT-LIVE-051 the frost the rows were measured under is the lightest any clear pane uses`() {
+        for (role in listOf(SurfaceRole.Content, SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Field)) {
+            assertTrue(GlassSpec.clearFrostSigma(role) >= LiveReach.FROST_SIGMA_DP, "$role blurs less than the rows assume")
+        }
+    }
+
+    @Test
+    fun `B-KIT-LIVE-052 Glass's look is clearer and glossier than the first clear panes, in one spec`() {
+        val now = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default
+        val before = io.github.eslamasabry.oc.ui.design.style.GlassLook.Frosted
+        assertTrue(now.specularDark > before.specularDark && now.specularLight >= before.specularLight, "brighter specular")
+        assertTrue(now.liquidRimDark > before.liquidRimDark && now.glintShare > before.glintShare, "brighter rim and glint")
+        assertTrue(now.sheenLight < before.sheenLight && now.litLiftLight < before.litLiftLight, "less milk in a light theme")
+        assertTrue(now.contentFrostDp <= before.contentFrostDp, "no more blur than before")
+        assertTrue(now.backdropLightGain > 0f && before.backdropLightGain == 0f, "the rim catches the picture's light")
+        // The spec is what Glass reads.
+        val roles = roles(PackId.Opencode, dark = true)
+        assertEquals(GlassSpec.specularOf(roles).alpha, GlassSpec.specularOf(roles, now).alpha)
+        assertEquals(now.contentFrostDp, GlassSpec.clearFrostSigma(SurfaceRole.Content))
+    }
 }

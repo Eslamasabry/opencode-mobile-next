@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -93,7 +94,7 @@ internal fun rememberKitGlassBackdrop(): KitGlassBackdrop = remember { KitGlassB
 internal val LocalKitGlassBackdrop: ProvidableCompositionLocal<KitGlassBackdrop?> = staticCompositionLocalOf { null }
 
 /** How much a frost lifts the saturation of the colour it blurs (1 keeps it): frosted glass glows with what is behind. */
-internal const val FROST_SATURATION: Float = 1.7f // FG: lib/ui/kit/kit_surface_look.dart:101
+internal val FROST_SATURATION: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.frostSaturation // FG: lib/ui/kit/kit_surface_look.dart:101 (1.7)
 
 /**
  * Draws [paint] (the picture only) and records it for the panes above ([KitGlassBackdrop]). It also bounds the panes'
@@ -490,13 +491,15 @@ private class GlassFrostNode(
 }
 
 /**
- * The rim catching the backdrop's light (glass-live 2026-11-09; owner: "glass not interacting with the background"): a
- * [RIM_LIGHT_BAND_DP] band just inside a pane's edge shows the live picture behind it as neutral white light, brighter
- * where the picture is brighter than the ground and nothing over the plain ground. White, never the look's colour (owner
- * 2026-11-08: neutral rims). Dark themes only; a light theme's rim is already white on milk.
+ * The rim catching the backdrop's light (glass-live 2026-11-09; owner: "glass not interacting with the background", "so
+ * frosty and not glossy"): a [RIM_LIGHT_BAND_DP] band just inside a pane's lit edges (the straight part of its top edge
+ * and of its start side, where the specular light falls) shows the live picture behind it as neutral white light,
+ * brighter where the picture is brighter than the ground and nothing over the plain ground. White, never the look's
+ * colour (owner 2026-11-08: neutral rims). Dark themes only; a light theme's rim is already white on milk.
  *
  * Cheap by design: the band's layer holds one reference to the page's one picture recording (never a copy), so the
- * picture stepping re-records nothing here; the layer is recorded again only when the pane moves or changes size.
+ * picture stepping re-records nothing here; it is drawn through two rectangle clips (a scissor, never a path mask), and
+ * recorded again only when the pane moves or changes size.
  */
 internal class BackdropRimLight {
     private var layer: GraphicsLayer? = null
@@ -505,7 +508,7 @@ internal class BackdropRimLight {
     fun draw(scope: DrawScope, context: androidx.compose.ui.graphics.GraphicsContext, picture: GraphicsLayer, shift: Offset, shape: Shape, groundLuma: Float) {
         with(scope) {
             val band = RIM_LIGHT_BAND_DP.dp.toPx()
-            if (size.width <= band * 4f || size.height <= band * 4f) return
+            if (RIM_LIGHT_GAIN <= 0f || size.width <= band * 4f || size.height <= band * 4f) return
             val l = layer ?: context.createGraphicsLayer().also { layer = it }
             if (filtered != groundLuma) {
                 l.colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(rimLightMatrix(groundLuma))
@@ -513,16 +516,23 @@ internal class BackdropRimLight {
             }
             l.alpha = RIM_LIGHT_MAX
             recordDetached(l) { translate(shift.x, shift.y) { drawLayer(picture) } }
-            val inner = shape.createOutline(androidx.compose.ui.geometry.Size(size.width - band * 2f, size.height - band * 2f), layoutDirection, this)
-            val ring =
-                Path().apply {
-                    fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
-                    addOutline(shape.createOutline(size, layoutDirection, this@with))
-                    addPath(Path().apply { addOutline(inner) }, Offset(band, band))
-                }
-            clipPath(ring) { drawLayer(l) }
+            // The corners' radius: the bands stay on the straight edges, inside the face.
+            val r = cornerOf(shape, size, this).coerceAtMost(minOf(size.width, size.height) / 2f)
+            val rtl = layoutDirection == LayoutDirection.Rtl
+            if (size.width - 2f * r > band) clipRect(r, 0f, size.width - r, band) { drawLayer(l) }
+            if (size.height - 2f * r > band) {
+                val x = if (rtl) size.width - band else 0f
+                clipRect(x, r, x + band, size.height - r) { drawLayer(l) }
+            }
         }
     }
+
+    private fun cornerOf(shape: Shape, size: androidx.compose.ui.geometry.Size, density: Density): Float =
+        when (val o = shape.createOutline(size, LayoutDirection.Ltr, density)) {
+            is androidx.compose.ui.graphics.Outline.Rounded -> maxOf(o.roundRect.topLeftCornerRadius.x, o.roundRect.topRightCornerRadius.x)
+            is androidx.compose.ui.graphics.Outline.Rectangle -> 0f
+            else -> minOf(size.width, size.height) / 4f
+        }
 
     fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
         layer?.let { context.releaseGraphicsLayer(it) }
@@ -557,13 +567,13 @@ internal fun kitRimLightGround(): Float? {
 }
 
 /** How wide the lit band inside a pane's edge is, in dp: a touch wider than the 1 dp rim, so the light reads. */
-internal const val RIM_LIGHT_BAND_DP: Float = 1.5f
+internal val RIM_LIGHT_BAND_DP: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightBandDp
 
 /** Light per unit of luma above the ground: a look at its cap (about .2 above a dark ground) lights the rim about half. */
-internal const val RIM_LIGHT_GAIN: Float = 2.6f
+internal val RIM_LIGHT_GAIN: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightGain
 
 /** The most the rim light adds (its layer's alpha). */
-internal const val RIM_LIGHT_MAX: Float = .75f
+internal val RIM_LIGHT_MAX: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightMax
 
 private const val LUMA_R: Float = .2126f
 private const val LUMA_G: Float = .7152f
