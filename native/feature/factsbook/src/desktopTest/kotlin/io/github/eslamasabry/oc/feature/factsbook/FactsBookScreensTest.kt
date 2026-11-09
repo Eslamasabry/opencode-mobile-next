@@ -349,7 +349,8 @@ class FactsBookScreensTest {
         val actions = Others()
         setContent { Themed { RemindersScreen(RemindersUi(reminders = persistentListOf(gym), loading = false), actions) } }
         onNodeWithText("Active").assertExists()
-        onNodeWithText("Every day at 07:00", substring = true, useUnmergedTree = true).assertExists()
+        // The clock follows the device's locale and zone (kitClock), so only the repeat words are fixed here.
+        onNodeWithText("Every day at ", substring = true, useUnmergedTree = true).assertExists()
         onNodeWithText("Not sounded on this phone", substring = true, useUnmergedTree = true).assertExists()
         onNodeWithText("Pause “Gym”", useUnmergedTree = true).performClick()
         onNodeWithText("Add a reminder").performClick()
