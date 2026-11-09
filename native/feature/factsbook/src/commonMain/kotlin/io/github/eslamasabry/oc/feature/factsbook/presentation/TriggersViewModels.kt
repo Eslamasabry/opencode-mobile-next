@@ -498,24 +498,30 @@ public class EventViewModel(
         viewModelScope.launch {
             access.engine.open(access.activeProfileId.value)
             val triggers = access.engine.triggers
+            // Cache-first: the lists the engine already holds (kept from the last visit) show the event at once.
+            if (triggers.state.value.eventById(route.id) != null) show(loading = true)
             // The lists carry the event; read them again so a fresh one shows.
             triggers.refresh(quiet = true)
-            val t = triggers.state.value
-            val event = t.eventById(route.id)
-            val firings = t.firingsOfEvent(route.id)
-            val made = firings.flatMap { it.outcomes }.toSet()
-            mutable.value =
-                EventUi(
-                    event = event,
-                    firings = firings.toImmutableList(),
-                    ruleNames = firings.mapNotNull { f -> t.ruleById(f.ruleId)?.let { f.id to it.definition.name } }.toMap().toImmutableMap(),
-                    proposals = t.proposals.filter { it.eventId == route.id }.toImmutableList(),
-                    offers = t.offers.filter { it.eventId == route.id }.toImmutableList(),
-                    facts = access.engine.state.value.review.filter { it.id in made && it.text != null }.toImmutableList(),
-                    loading = false,
-                    error = if (event == null) (t.error ?: FactsBookError("not_found", status = 404)) else null,
-                )
+            show(loading = false)
         }
+    }
+
+    private fun show(loading: Boolean) {
+        val t = access.engine.triggers.state.value
+        val event = t.eventById(route.id)
+        val firings = t.firingsOfEvent(route.id)
+        val made = firings.flatMap { it.outcomes }.toSet()
+        mutable.value =
+            EventUi(
+                event = event,
+                firings = firings.toImmutableList(),
+                ruleNames = firings.mapNotNull { f -> t.ruleById(f.ruleId)?.let { f.id to it.definition.name } }.toMap().toImmutableMap(),
+                proposals = t.proposals.filter { it.eventId == route.id }.toImmutableList(),
+                offers = t.offers.filter { it.eventId == route.id }.toImmutableList(),
+                facts = access.engine.state.value.review.filter { it.id in made && it.text != null }.toImmutableList(),
+                loading = loading,
+                error = if (event == null && !loading) (t.error ?: FactsBookError("not_found", status = 404)) else null,
+            )
     }
 
     @AssistedFactory

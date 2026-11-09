@@ -134,6 +134,15 @@ public class ThingViewModel(
     override fun reload() {
         mutable.update { it.copy(error = null, loading = true) }
         viewModelScope.launch {
+            access.node()
+            if (mutable.value.thing == null) {
+                // Cache-first: the thing as the node last showed it, at once; the live read replaces it below.
+                access.engine.keptRead { thing(route.id) }?.let { kept -> mutable.update { if (it.thing == null) it.copy(
+                    thing = kept,
+                    canWrite = access.engine.state.value.capabilities.supports(OWNER_REVIEW),
+                    canRemind = access.engine.state.value.capabilities.supports(FactsBookCapabilities.REMINDERS),
+                ) else it } }
+            }
             val r = access.node()?.thing(route.id) ?: unreachable
             val caps = access.engine.state.value.capabilities
             mutable.update {
@@ -323,6 +332,11 @@ public class AreasViewModel(private val access: FactsBookAccess, private val nav
     override fun reload() {
         mutable.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
+            access.node()
+            if (mutable.value.areas == null) {
+                // Cache-first: the areas as the node last listed them, at once; the live read replaces them below.
+                access.engine.keptRead { areas() }?.let { kept -> mutable.update { if (it.areas == null) it.copy(areas = kept.toImmutableList(), canApprove = access.engine.state.value.canApprove) else it } }
+            }
             val r = access.node()?.areas() ?: unreachable
             val canApprove = access.engine.state.value.canApprove
             mutable.update {
