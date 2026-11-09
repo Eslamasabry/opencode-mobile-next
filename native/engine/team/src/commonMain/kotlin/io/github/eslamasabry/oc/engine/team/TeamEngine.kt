@@ -115,6 +115,7 @@ public data class TeamState(
 public class TeamEngine(
     private val host: TeamHost,
     private val newRequestId: () -> String = Ids()::next,
+    private val kept: TeamLastKnown? = null,
 ) {
     private val lane = Mutex()
     private val drafts = Mutex()
@@ -127,7 +128,9 @@ public class TeamEngine(
         while (true) {
             val current = states.load()
             current[profileId]?.let { return it }
-            val created = MutableStateFlow(TeamState())
+            // Cache-first: the kept workspace is the first frame, drawn as the real (not stale) Ready layout.
+            val seed = kept?.peek(profileId)?.decode()
+            val created = MutableStateFlow(if (seed != null) TeamState(TeamPhase.Ready, workspace = seed) else TeamState())
             if (states.compareAndSet(current, current.put(profileId, created))) return created
         }
     }
@@ -140,6 +143,11 @@ public class TeamEngine(
         lane.withLock {
             val state = flow(profileId)
             state.update { it.copy(loading = true) }
+            if (state.value.workspace == null) {
+                kept?.read(profileId)?.decode()?.let { seed ->
+                    state.update { if (it.workspace == null) it.copy(phase = TeamPhase.Ready, workspace = seed) else it }
+                }
+            }
             val config = host.config(profileId)
             if (config == null) {
                 state.value = TeamState(TeamPhase.Off)
@@ -149,11 +157,13 @@ public class TeamEngine(
                 state.value = TeamState(TeamPhase.Computer, config)
                 return@withLock Outcome.Ok(Unit)
             }
-            val previous = state.value.workspace?.takeIf { state.value.config == config }
+            // Before the first live read the workspace is the kept one (no config yet): it stands in for the last read.
+            val fromKept = state.value.config == null && state.value.workspace != null
+            val previous = state.value.workspace?.takeIf { fromKept || state.value.config == config }
             when (val read = host.workspace(profileId, config)) {
                 is Outcome.Ok -> {
                     val fresh = read.value.workspace
-                    val next = fresh.takeIf { previous == null || it.revision >= previous.revision } ?: previous
+                    val next = fresh.takeIf { previous == null || fromKept || it.revision >= previous.revision } ?: previous
                     state.update {
                         it.copy(
                             phase = TeamPhase.Ready,
@@ -164,6 +174,7 @@ public class TeamEngine(
                             stale = false,
                         )
                     }
+                    next?.let { w -> KeptTeam.of(w)?.let { kept?.keep(profileId, it) } }
                     Outcome.Ok(Unit)
                 }
                 is Outcome.Failed -> {

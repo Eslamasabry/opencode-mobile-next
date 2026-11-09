@@ -26,6 +26,8 @@ import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.engine.runtime.terminal.KeptTerminals
 import io.github.eslamasabry.oc.engine.runtime.terminal.TerminalLastKnown
+import io.github.eslamasabry.oc.engine.team.KeptTeam
+import io.github.eslamasabry.oc.engine.team.TeamLastKnown
 import io.github.eslamasabry.oc.engine.transcript.KeptTranscript
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.detachedTranscript
@@ -152,5 +154,23 @@ class AppTerminalLastKnown(store: LastKnown, stores: PreviewStores) : TerminalLa
 
     companion object {
         val TERMINALS = CacheShelf("terminals", KeptTerminals.serializer(), maxBytes = 32 * 1024, maxEntries = 20)
+    }
+}
+
+/** The AI Team's workspace (projects, boards, tasks) last read, per profile and server; 200 KB at most. */
+@ContributesIntoSet(AppScope::class, binding = binding<TeamLastKnown>())
+@SingleIn(AppScope::class)
+@Inject
+class AppTeamLastKnown(store: LastKnown, stores: PreviewStores) : TeamLastKnown {
+    private val spaces = ProfileShelf(store, stores, TEAM)
+
+    override fun peek(profileId: String): KeptTeam? = spaces.peek(ProfileId(profileId))
+
+    override suspend fun read(profileId: String): KeptTeam? = spaces.read(ProfileId(profileId))
+
+    override suspend fun keep(profileId: String, kept: KeptTeam) = spaces.keep(ProfileId(profileId), value = kept)
+
+    companion object {
+        val TEAM = CacheShelf("team", KeptTeam.serializer(), maxBytes = 256 * 1024, maxEntries = 1)
     }
 }
