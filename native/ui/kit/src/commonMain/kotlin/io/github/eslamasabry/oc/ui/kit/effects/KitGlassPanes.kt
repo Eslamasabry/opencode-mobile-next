@@ -105,7 +105,7 @@ private fun Color.toArgbValue(): Argb =
  * radius under the Corners knob, less the inset), never Solid's opaque surface3 band. Null under every other style.
  */
 @Composable
-internal fun kitGlassChosenRow(): Modifier? {
+internal fun kitGlassChosenRow(extraInset: androidx.compose.ui.unit.Dp = 0.dp): Modifier? {
     val style = LocalKitStyle.current
     if (style.style != Style.Glass) return null
     val roles = LocalKitRoles.current
@@ -121,7 +121,11 @@ internal fun kitGlassChosenRow(): Modifier? {
         remember(roles, style, clear, spots, radius, look) {
             chosenRowFace(roles, style.knobs, clear, spots, radius, look)
         }
-    return Modifier.drawBehind { inset(CHOSEN_ROW_INSET_DP.dp.toPx()) { drawGlassFace(face) } }
+    return Modifier.drawBehind {
+        val i = CHOSEN_ROW_INSET_DP.dp.toPx()
+        val side = i + extraInset.toPx()
+        inset(side, i, side, i) { drawGlassFace(face) }
+    }
 }
 
 /** The inset of a chosen row's face from the row's edges, in dp. */
