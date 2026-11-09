@@ -436,13 +436,13 @@ internal object ModeLook {
 
 /** The chosen block: the raised step (surface 2 in light, 3 in dark) in the style's selected look, as KitSegmented. */
 @Composable
-private fun chosenBlockLook(disabled: Boolean): io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook {
+private fun chosenBlockLook(disabled: Boolean, radius: androidx.compose.ui.unit.Dp): io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook {
     val colors = LocalKitColors.current
     val step = if (colors.dark) colors.surface3 else colors.surface2
     return kitSurfaceLook(
         KitSurfaceInput(
             SurfaceRole.Control, KitShapeId.Tile, SurfaceLevel.Surface3, ownFill = step, color = step,
-            selected = true, disabled = disabled,
+            selected = true, disabled = disabled, exactRadius = radius,
         ),
     )
 }
@@ -501,7 +501,8 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
     val motionState = KitMotion.state
     val specs = KitMotion.specs
     val hairline = kitHairline()
-    val inset = (Space.S1 / 2f).dp // F: lib/ui/kit/kit_segmented.dart:629
+    val inset = SegmentedGeometry.INSET.dp // owner 2026-11-09: the block sits inset in the track
+    val (trackRadius, thumbRadius) = segmentedRadii()
     val density = LocalDensity.current
     val iconDp = (tokens.smallIcon * ModeLook.ICON_SCALE).dp
     val selectedIndex = segments.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -517,9 +518,9 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
     }
     val shownOn = segments[motion.shown].enabled.isEnabled
     val trackInput =
-        KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface1, ownFill = colors.surface1)
+        KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface1, ownFill = colors.surface1, exactRadius = trackRadius)
     val track = kitSurfaceLook(trackInput)
-    val thumb = chosenBlockLook(!shownOn)
+    val thumb = chosenBlockLook(!shownOn, thumbRadius)
     val ink = modeInk(segments.map { it.enabled.isEnabled }, shownOn, thumb.words)
     val rimKind = ThemeSwitchRules.rimFor(style)
     val iconPx = with(density) { iconDp.toPx() }
@@ -547,7 +548,7 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
                     Modifier
                 },
             )
-            .padding(hairline)
+            .testTag("kit-mode-track")
             .onGloballyPositioned { motion.origin = it.positionInRoot() },
     ) {
         // The chosen block: its place is read in placement, its rim in drawing.

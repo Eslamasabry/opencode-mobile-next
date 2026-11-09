@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -206,12 +207,19 @@ public fun KitThemeOptionCard(
         )
     val ringWidth by animateDpAsState(if (chosen) kitFocusRingWidth() else kitHairline(), KitMotion.specs.enter(), label = "theme-ring")
     val ringColor by animateColorAsState(if (chosen) frame.accent else frame.hairline, KitMotion.specs.enter(), label = "theme-ring-colour")
+    // The press clip rounds only the swatch's top corners: the name sits under the swatch at the card's bottom-start
+    // corner, and a card-shaped clip there cut the first letter of "Graphite", "Catppuccin", "Dracula" (owner 2026-11-09).
+    val cardShape = KitShapeId.Card.shape()
+    val pressClip =
+        (cardShape as? RoundedCornerShape)?.let { RoundedCornerShape(topStart = it.topStart, topEnd = it.topEnd, bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize) }
+            ?: cardShape
     KitTappable(
         onClick = onSelect,
         modifier = modifier.kitMaxWidth(CapRole.Reading).optionSemantics(label, selected),
         enabled = enabled,
         disabledReason = disabledReason,
         shape = KitShapeId.Card,
+        pressClip = pressClip,
     ) {
         Column(Modifier.fillMaxSize().clearAndSetSemantics {}) {
             Box(
