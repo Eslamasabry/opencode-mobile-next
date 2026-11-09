@@ -4,9 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,8 +46,12 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Smoothness proof (benchmark build type only; docs/native/qa/smoothness-2026-11-09): one kit page in a chosen look,
@@ -56,6 +60,19 @@ import io.github.eslamasabry.opencode_mobile.graph.appGraph
  * `scene`: `list` (a long list of Glass rows under a liquid bar, chips and a liquid +) or `chat` (a long transcript of
  * text under a liquid bar and a liquid composer). The benchmark taps Start and waits for Done.
  */
+/** Scrolls by [total] px over [ms], one step per display frame (frame-driven: no animation scale applies). */
+private suspend fun LazyListState.glide(total: Float, ms: Long) {
+    val start = withFrameNanos { it }
+    var moved = 0f
+    while (true) {
+        val now = withFrameNanos { it }
+        val t = ((now - start) / 1_000_000f / ms).coerceAtMost(1f)
+        scrollBy(total * t - moved)
+        moved = total * t
+        if (t >= 1f) break
+    }
+}
+
 class GlassProofActivity : ComponentActivity() {
     private var started by mutableStateOf(false)
     private var done by mutableStateOf(false)
@@ -72,7 +89,14 @@ class GlassProofActivity : ComponentActivity() {
                 "glass-drift" -> KitAppearance(style = Style.Glass, liveBackground = true, liveStyle = "auroraImage")
                 else -> KitAppearance(style = Style.Glass, liveBackground = true, liveStyle = "aurora")
             }
-        val platform = AndroidKitPlatform(window.decorView)
+        // Test Lab devices run with animations off; that would hold the kit's motion (and liquid glass) and end every
+        // animation at once, so the page sees the system's animator scale as 1 and scrolls by frames, not animations.
+        val android = AndroidKitPlatform(window.decorView)
+        val platform =
+            object : KitPlatform by android {
+                override val signals: StateFlow<KitSystemSignals> =
+                    MutableStateFlow(android.signals.value.copy(animatorScale = 1f, powerSave = false, severeHeat = false))
+            }
         setContent {
             appGraph.kitChatEnvironment.Provide {
                 CompositionLocalProvider(LocalKitPlatform provides platform) {
@@ -88,14 +112,14 @@ class GlassProofActivity : ComponentActivity() {
         val source = rememberKitFrostState()
         LaunchedEffect(started) {
             if (!started) return@LaunchedEffect
-            // Down and back up twice at a steady reading-scroll speed, then once more as quick flings.
+            // Down and back up twice at a steady reading-scroll speed, then four quick flick-speed passes.
             repeat(2) {
-                list.animateScrollBy(9_000f, tween(3_000, easing = LinearEasing))
-                list.animateScrollBy(-9_000f, tween(3_000, easing = LinearEasing))
+                list.glide(9_000f, 3_000)
+                list.glide(-9_000f, 3_000)
             }
             repeat(4) {
-                list.animateScrollBy(4_000f, tween(450))
-                list.animateScrollBy(-4_000f, tween(450))
+                list.glide(4_000f, 450)
+                list.glide(-4_000f, 450)
             }
             done = true
         }
