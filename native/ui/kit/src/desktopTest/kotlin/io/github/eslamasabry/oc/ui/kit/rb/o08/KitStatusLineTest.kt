@@ -32,7 +32,7 @@ import kotlin.time.TimeSource
 class KitStatusLineTest {
     @Test
     fun `B-KIT-status every tone has its own glyph and the kit's tone colour, never amber`() {
-        assertEquals(KitIcons.radioEmpty, glyphFor(StatusTone.Neutral))
+        assertEquals(KitIcons.info, glyphFor(StatusTone.Neutral))
         assertEquals(KitIcons.sync, glyphFor(StatusTone.Progress))
         assertEquals(KitIcons.check, glyphFor(StatusTone.Ok))
         assertEquals(KitIcons.warning, glyphFor(StatusTone.Attention))

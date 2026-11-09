@@ -150,8 +150,7 @@ public fun KitChoiceCard(
         if (selected) colors.accent.copy(alpha = .07f).compositeOver(colors.surface1) // F: lib/ui/kit/kit_choice_cards.dart:258
         else colors.surface1
     val edge =
-        if (selected) colors.accent
-        else lerp(colors.hairline, colors.text3, .4f) // F: lib/ui/kit/kit_choice_cards.dart:270
+        lerp(colors.hairline, colors.text3, .4f) // F: lib/ui/kit/kit_choice_cards.dart:270
     val look =
         kitSurfaceLook(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface2, ownFill = fill, selected = selected),
@@ -178,7 +177,7 @@ public fun KitChoiceCard(
             .fillMaxWidth()
             // Solid: the face and its edge are drawn outside the tap's clip, where Flutter's fractional layout puts
             // them; every other style paints its own surface below.
-            .then(if (solid) Modifier.choiceEdge(if (selected) chosenRing else kitHairline(), edge, look.shape, trim, lift, fill) else Modifier)
+            .then(if (solid) Modifier.choiceEdge(kitHairline(), edge, look.shape, trim, lift, fill) else Modifier)
             .kitSelectTap(
                 selected = selected,
                 role = Role.RadioButton,
@@ -224,10 +223,11 @@ public fun KitChoiceCard(
                                 scaleY = checkScale
                                 alpha = checkAlpha
                             }
-                            .background(colors.accent, CircleShape),
+                            ,
                         contentAlignment = Alignment.Center,
                     ) {
-                        CompositionLocalProvider(LocalKitColors provides colors.copy(text1 = colors.onAccent)) {
+                        // C04: the bare accent check, no disc behind it.
+                        CompositionLocalProvider(LocalKitColors provides colors.copy(text1 = colors.accent)) {
                             KitIcon(KitIcons.check, size = KitIconSize.Small)
                         }
                     }
