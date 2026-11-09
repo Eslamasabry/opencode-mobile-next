@@ -590,6 +590,12 @@ public interface ChatActions {
     /** Recovery for a missing/rejected provider credential; opens the visible settings path. */
     public fun openSignInSettings() {}
 
+    /** B-AGENT-189: this conversation's agent runs on this phone, so its sign-in page can open from the chat. */
+    public fun phoneAgentSignIn(): Boolean = false
+
+    /** B-AGENT-189: opens the agent's sign-in page (no code to paste when its page needs none). */
+    public fun openAgentSignIn(providerId: String) {}
+
     /** Hold Send / "Send later or repeat": opens the schedule editor for this conversation. */
     public fun sendLater(words: String) {}
 

@@ -589,6 +589,12 @@ internal class TranscriptModel(
                         errorKind = errorKind,
                         createdMs =
                             members.lastOrNull { it.info.role == Role.Assistant }?.info?.createdMs,
+                        providerId =
+                            members
+                                .lastOrNull { it.info.role == Role.Assistant }
+                                ?.info
+                                ?.providerId
+                                ?.takeIf { it.isNotBlank() },
                     )
                 )
         }
