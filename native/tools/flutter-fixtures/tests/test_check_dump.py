@@ -40,7 +40,7 @@ def make_dump(root: Path, prefs_xml: bytes = PREFS_XML, fss: bytes = b'<map><str
     for f in check_dump.OS_FILES:
         (root / f).write_text(f'Package: io.github.eslamasabry.opencode_mobile .SessionsWidgetProvider oc.session:p1:s1\n')
     m = json.loads(TEMPLATE.read_text())
-    m['build'].update(commit='a' * 40, versionCode=4612, signerSha256=check_dump.LOCAL_RELEASE_KEY)
+    m['build'].update(commit='a' * 40, versionCode=4701, signerSha256=check_dump.LOCAL_RELEASE_KEY)
     m['avd']['name'] = 'OC_E2E_API37'
     m['reviewed'].update(by='coordinator', at='2026-11-06')
     m['seeds'] = [

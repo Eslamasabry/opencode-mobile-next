@@ -4,7 +4,7 @@
     python3 -I check_dump.py <dump-dir> [--ledger <repo>/docs/native/migration/store-ledger.json]
 
 <dump-dir> is native/e2e/fixtures/flutter-2.1.4/ after seed_2_1_4.sh. Checks, without printing any value:
-  1. seed-manifest.json is filled in: release 2.1.4+62, a 40-hex commit, versionCode >= minVersionCode (above every
+  1. seed-manifest.json is filled in: release 2.1.5+63, a 40-hex commit, versionCode >= minVersionCode (above every
      owner build), the signer is the local release key, the e2e AVD (never the walk AVD) and its snapshot name, and a
      named reviewer;
   2. the dump files exist (prefs tar, prefs.json, tree listing, permissions, app-ops, shortcuts, channels);
@@ -49,11 +49,11 @@ def check(dump: Path, ledger_path: Path) -> list:
     m = json.loads((dump / 'seed-manifest.json').read_text(encoding='utf-8'))
     b, avd, rev = m.get('build', {}), m.get('avd', {}), m.get('reviewed', {})
 
-    if m.get('release') != '2.1.4+62':
-        problems.append('release is not 2.1.4+62')
+    if m.get('release') != '2.1.5+63':
+        problems.append('release is not 2.1.5+63')
     if not re.fullmatch(r'[0-9a-f]{40}', str(b.get('commit') or '')):
         problems.append('build.commit is not a full commit id')
-    vc, floor = b.get('versionCode'), b.get('minVersionCode', 4612)
+    vc, floor = b.get('versionCode'), b.get('minVersionCode', 4701)
     if not isinstance(vc, int) or vc < floor:
         problems.append(f'build.versionCode must be an integer >= {floor} (above every installed owner build)')
     if (b.get('signerSha256') or '').replace(':', '').upper() != LOCAL_RELEASE_KEY:

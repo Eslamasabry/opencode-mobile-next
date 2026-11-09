@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "status": "not seeded: fill in every null, run tools/flutter-fixtures/seed_2_1_4.sh on the PC, then check_dump.py",
- "release": "2.1.4+62",
+ "status": "not seeded: fill in every null, run tools/flutter-fixtures/seed_2_1_4.sh on the PC (targets Flutter 2.1.5+63, local-key build 4701 or higher), then check_dump.py",
+ "release": "2.1.5+63",
  "build": {
   "ref": "origin/master",
   "commit": null,
   "flutter": null,
   "versionCode": null,
-  "minVersionCode": 4612,
+  "minVersionCode": 4701,
   "signerSha256": null,
   "expectedSignerSha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
  },
