@@ -130,7 +130,7 @@ class CacheFirstUsageTest {
         val second = vm(slow, shelf)
         val frame = second.state.value
         assertEquals(UsagePhase.Ready, frame.phase)
-        assertEquals(full, frame.report)
+        assertEquals(full.copy(coversRequest = false), frame.report)
         assertTrue(frame.refreshing)
         gate.complete(Unit)
         assertEquals(2.0, second.state.value.report?.cost)
