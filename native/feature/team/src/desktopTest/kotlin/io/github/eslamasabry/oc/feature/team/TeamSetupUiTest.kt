@@ -119,11 +119,11 @@ class TeamSetupUiTest {
             SetupState(phase = SetupPhase.Running, step = SetupStep.Reply, beganAtMs = mapOf(SetupStep.Reply to 2_000L))
         setContent { Themed { TeamSetupScreen(present(state), Calls()) } }
         onNodeWithText("Turn on AI Team").assertIsDisplayed()
-        onNodeWithText("Let your current reply finish").assertExists()
-        onNodeWithText("Finishing your current reply… · 10 s so far").assertExists()
-        onNodeWithText("Stop OpenCode and close terminals").assertExists()
-        onNodeWithText("Checking this phone is safe for the team").assertExists()
-        onNodeWithText("Start OpenCode again, protected").assertExists()
+        onNodeWithText("Let your current reply finish", useUnmergedTree = true).assertExists()
+        onNodeWithText("Finishing your current reply… · 10 s so far", useUnmergedTree = true).assertExists()
+        onNodeWithText("Stop OpenCode and close terminals", useUnmergedTree = true).assertExists()
+        onNodeWithText("Checking this phone is safe for the team", useUnmergedTree = true).assertExists()
+        onNodeWithText("Start OpenCode again, protected", useUnmergedTree = true).assertExists()
     }
 
     @Test

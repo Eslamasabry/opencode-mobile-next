@@ -125,9 +125,9 @@ public data class TeamState(
 public class TeamEngine(
     private val host: TeamHost,
     private val kept: TeamLastKnown? = null,
-    private val newRequestId: () -> String = Ids()::next,
     /** Times the turn-on's steps; the app passes its clock, a test that does not read times needs none. */
     private val clock: Clock = Unset,
+    private val newRequestId: () -> String = Ids()::next,
 ) {
     private val lane = Mutex()
     private val drafts = Mutex()

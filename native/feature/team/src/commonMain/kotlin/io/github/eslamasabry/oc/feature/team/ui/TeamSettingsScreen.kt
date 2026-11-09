@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -50,102 +51,104 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsActions) {
     val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-    KitScreen(
-        topBar = {
-            KitTopBar(
-                title = stringResource(Res.string.teamSettingsTitle),
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = actions::back,
-            )
-        },
-        loading = state.phase == TeamPhase.Loading,
-        loadingLabel = stringResource(Res.string.teamProjectLoad),
-        width = KitScreenWidth.Reading,
-        edges = KitScreenEdges.Bleed,
-    ) {
-        LazyColumn(
-            Modifier.fillMaxSize().testTag("team-settings"),
-            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    KitSheetHost(Modifier.fillMaxSize()) {
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    title = stringResource(Res.string.teamSettingsTitle),
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = actions::back,
+                )
+            },
+            loading = state.phase == TeamPhase.Loading,
+            loadingLabel = stringResource(Res.string.teamProjectLoad),
+            width = KitScreenWidth.Reading,
+            edges = KitScreenEdges.Bleed,
         ) {
-            if (state.offFailed) {
-                item(key = "off-failed") {
-                    KitNotice(
-                        stringResource(Res.string.teamHomeTurnOffFailed),
-                        inset.testTag("team-settings-turn-off-failed"),
-                        dismiss = KitLineAction(stringResource(Res.string.kitConfirmCancel), actions::dismissOffFailed),
-                    )
-                }
-            }
-            item(key = "team") {
-                KitRowGroup {
-                    KitRow(
-                        title = pluralStringResource(Res.plurals.teamSettingsAgentsRow, state.roles, state.roles),
-                        supporting = stringResource(Res.string.teamSettingsAgentsHint),
-                        supportingMaxLines = 2,
-                        leading = KitRowLeading.Glyph(KitIcons.agent),
-                        trailing = KitRowTrailing.Chevron,
-                        modifier = Modifier.testTag("team-settings-agents"),
-                        onClick = actions::openAgents,
-                    )
-                }
-            }
-            item(key = "how") {
-                KitRowGroup(
-                    destructive = {
-                        KitRow(
-                            title = stringResource(Res.string.teamSettingsTurnOff),
-                            leading = KitRowLeading.Glyph(KitIcons.unlink),
-                            enabled = !state.working,
-                            modifier = Modifier.testTag("team-settings-turn-off"),
-                            onClick = actions::askTurnOff,
-                        )
-                    },
-                ) {
-                    if (state.canCheck) {
-                        KitRow(
-                            title = stringResource(Res.string.teamIntroTurnOnPhone),
-                            supporting = stringResource(Res.string.phoneTeamOffBody),
-                            supportingMaxLines = 2,
-                            leading = KitRowLeading.Glyph(KitIcons.phone),
-                            trailing = KitRowTrailing.Chevron,
-                            modifier = Modifier.testTag("team-settings-turn-on-phone"),
-                            onClick = actions::openSetup,
+            LazyColumn(
+                Modifier.fillMaxSize().testTag("team-settings"),
+                contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            ) {
+                if (state.offFailed) {
+                    item(key = "off-failed") {
+                        KitNotice(
+                            stringResource(Res.string.teamHomeTurnOffFailed),
+                            inset.testTag("team-settings-turn-off-failed"),
+                            dismiss = KitLineAction(stringResource(Res.string.kitConfirmCancel), actions::dismissOffFailed),
                         )
                     }
-                    // How fast it runs where it runs; the address, version and protection are behind it.
-                    KitRow(
-                        title = stringResource(Res.string.teamUiTechnicalDetails),
-                        supporting = stringResource(Res.string.teamUiDisclaimerPhone),
-                        supportingMaxLines = 2,
-                        leading = KitRowLeading.Glyph(KitIcons.speed),
-                        trailing = KitRowTrailing.Chevron,
-                        modifier = Modifier.testTag("team-settings-details"),
-                        onClick = actions::openDetails,
-                    )
+                }
+                item(key = "team") {
+                    KitRowGroup {
+                        KitRow(
+                            title = pluralStringResource(Res.plurals.teamSettingsAgentsRow, state.roles, state.roles),
+                            supporting = stringResource(Res.string.teamSettingsAgentsHint),
+                            supportingMaxLines = 2,
+                            leading = KitRowLeading.Glyph(KitIcons.agent),
+                            trailing = KitRowTrailing.Chevron,
+                            modifier = Modifier.testTag("team-settings-agents"),
+                            onClick = actions::openAgents,
+                        )
+                    }
+                }
+                item(key = "how") {
+                    KitRowGroup(
+                        destructive = {
+                            KitRow(
+                                title = stringResource(Res.string.teamSettingsTurnOff),
+                                leading = KitRowLeading.Glyph(KitIcons.unlink),
+                                enabled = !state.working,
+                                modifier = Modifier.testTag("team-settings-turn-off"),
+                                onClick = actions::askTurnOff,
+                            )
+                        },
+                    ) {
+                        if (state.canCheck) {
+                            KitRow(
+                                title = stringResource(Res.string.teamIntroTurnOnPhone),
+                                supporting = stringResource(Res.string.phoneTeamOffBody),
+                                supportingMaxLines = 2,
+                                leading = KitRowLeading.Glyph(KitIcons.phone),
+                                trailing = KitRowTrailing.Chevron,
+                                modifier = Modifier.testTag("team-settings-turn-on-phone"),
+                                onClick = actions::openSetup,
+                            )
+                        }
+                        // How fast it runs where it runs; the address, version and protection are behind it.
+                        KitRow(
+                            title = stringResource(Res.string.teamUiTechnicalDetails),
+                            supporting = stringResource(Res.string.teamUiDisclaimerPhone),
+                            supportingMaxLines = 2,
+                            leading = KitRowLeading.Glyph(KitIcons.speed),
+                            trailing = KitRowTrailing.Chevron,
+                            modifier = Modifier.testTag("team-settings-details"),
+                            onClick = actions::openDetails,
+                        )
+                    }
                 }
             }
         }
+        HostDetails(state, actions)
+        KitConfirm(
+            spec =
+                if (state.confirmingOff) {
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.aiteamComponentTurnOffTitle),
+                        confirmLabel = stringResource(Res.string.aiteamComponentTurnOff),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.aiteamComponentTurnOffBody),
+                        consequences = listOf(stringResource(Res.string.aiteamComponentTurnOffKept)),
+                        cancelLabel = stringResource(Res.string.teamUiKeep),
+                    )
+                } else {
+                    null
+                },
+            onConfirm = actions::confirmTurnOff,
+            onCancel = actions::cancelTurnOff,
+        )
     }
-    HostDetails(state, actions)
-    KitConfirm(
-        spec =
-            if (state.confirmingOff) {
-                KitConfirmSpec(
-                    title = stringResource(Res.string.aiteamComponentTurnOffTitle),
-                    confirmLabel = stringResource(Res.string.aiteamComponentTurnOff),
-                    kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.aiteamComponentTurnOffBody),
-                    consequences = listOf(stringResource(Res.string.aiteamComponentTurnOffKept)),
-                    cancelLabel = stringResource(Res.string.teamUiKeep),
-                )
-            } else {
-                null
-            },
-        onConfirm = actions::confirmTurnOff,
-        onCancel = actions::cancelTurnOff,
-    )
 }
 
 /** Dart `TeamHostDetailsSheet`, for the phone: where the team runs, how it behaves there, and the raw values. */

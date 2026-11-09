@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitChecklist
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
@@ -52,69 +53,71 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun TeamSetupScreen(state: TeamSetupUi, actions: TeamSetupActions) {
     val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-    KitScreen(
-        topBar = {
-            KitTopBar(
-                title = stringResource(Res.string.teamUiHomeTitle),
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = actions::back,
-            )
-        },
-        width = KitScreenWidth.Reading,
-        edges = KitScreenEdges.Bleed,
-    ) {
-        LazyColumn(
-            Modifier.fillMaxSize().testTag("team-setup"),
-            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    KitSheetHost(Modifier.fillMaxSize()) {
+        KitScreen(
+            topBar = {
+                KitTopBar(
+                    title = stringResource(Res.string.teamUiHomeTitle),
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = actions::back,
+                )
+            },
+            width = KitScreenWidth.Reading,
+            edges = KitScreenEdges.Bleed,
         ) {
-            item(key = "state") { SetupHeader(state, actions) }
-            if (state.phase == SetupPhase.Done && state.protection != null) {
-                item(key = "protection") {
-                    KitNotice(
-                        stringResource(
-                            if (state.protection == "proot") Res.string.phoneTeamProtectedProot
-                            else Res.string.phoneTeamProtectedLandlock,
-                        ),
-                        inset.testTag("team-setup-protection"),
-                        icon = KitIcons.shield,
-                    )
+            LazyColumn(
+                Modifier.fillMaxSize().testTag("team-setup"),
+                contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            ) {
+                item(key = "state") { SetupHeader(state, actions) }
+                if (state.phase == SetupPhase.Done && state.protection != null) {
+                    item(key = "protection") {
+                        KitNotice(
+                            stringResource(
+                                if (state.protection == "proot") Res.string.phoneTeamProtectedProot
+                                else Res.string.phoneTeamProtectedLandlock,
+                            ),
+                            inset.testTag("team-setup-protection"),
+                            icon = KitIcons.shield,
+                        )
+                    }
                 }
-            }
-            if (state.phase == SetupPhase.Failed && !state.calm && state.details != null) {
-                item(key = "why") {
-                    val proof = state.proof?.let { proofLine(it) }
-                    KitNotice(
-                        whyWords(state.problem, proof != null),
-                        inset.testTag("team-setup-why"),
-                        notes = listOfNotNull(proof),
-                    )
+                if (state.phase == SetupPhase.Failed && !state.calm && state.details != null) {
+                    item(key = "why") {
+                        val proof = state.proof?.let { proofLine(it) }
+                        KitNotice(
+                            whyWords(state.problem, proof != null),
+                            inset.testTag("team-setup-why"),
+                            notes = listOfNotNull(proof),
+                        )
+                    }
                 }
-            }
-            if (state.problem != SetupProblem.NoServer && state.steps.isNotEmpty()) {
-                item(key = "steps") {
-                    KitChecklist(steps(state), inset.testTag("team-setup-steps"))
+                if (state.problem != SetupProblem.NoServer && state.steps.isNotEmpty()) {
+                    item(key = "steps") {
+                        KitChecklist(steps(state), inset.testTag("team-setup-steps"))
+                    }
                 }
             }
         }
+        KitConfirm(
+            spec =
+                if (state.phase == SetupPhase.Confirming) {
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.phoneTeamStopTitle),
+                        confirmLabel = stringResource(Res.string.phoneTeamStopConfirm),
+                        kind = KitConfirmKind.Stop,
+                        body = stringResource(Res.string.phoneTeamStopBody),
+                        cancelLabel = stringResource(Res.string.phoneTeamStopCancel),
+                    )
+                } else {
+                    null
+                },
+            onConfirm = { actions.answer(true) },
+            onCancel = { actions.answer(false) },
+        )
     }
-    KitConfirm(
-        spec =
-            if (state.phase == SetupPhase.Confirming) {
-                KitConfirmSpec(
-                    title = stringResource(Res.string.phoneTeamStopTitle),
-                    confirmLabel = stringResource(Res.string.phoneTeamStopConfirm),
-                    kind = KitConfirmKind.Stop,
-                    body = stringResource(Res.string.phoneTeamStopBody),
-                    cancelLabel = stringResource(Res.string.phoneTeamStopCancel),
-                )
-            } else {
-                null
-            },
-        onConfirm = { actions.answer(true) },
-        onCancel = { actions.answer(false) },
-    )
 }
 
 @Composable

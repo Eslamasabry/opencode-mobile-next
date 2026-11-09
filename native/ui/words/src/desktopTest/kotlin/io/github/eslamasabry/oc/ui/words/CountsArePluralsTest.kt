@@ -174,6 +174,7 @@ class CountsArePluralsTest {
         "teamProjectAllTasksDone" to FROZEN_ARB, "teamProjectHeadlineDone" to FROZEN_ARB,
         "teamProjectSettingsSummaryParallel" to FROZEN_ARB, "teamProjectTimelineRepeated" to FROZEN_ARB,
         "teamUiCardAgentsSummary" to FROZEN_ARB, "termuxStorageRefusedCount" to FROZEN_ARB,
+        "phoneTeamProofSignal" to NAME, "phoneTeamProofCheckSignal" to NAME,
         )
     }
 }
