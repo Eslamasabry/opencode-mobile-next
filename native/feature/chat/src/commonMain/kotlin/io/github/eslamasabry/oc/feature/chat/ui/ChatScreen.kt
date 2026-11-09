@@ -158,6 +158,10 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
 import io.github.eslamasabry.oc.ui.words.res.workCount
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
+import io.github.eslamasabry.oc.ui.words.res.chatUiChooseOption
+import io.github.eslamasabry.oc.ui.words.res.chatUiRunOnYourComputer
+import io.github.eslamasabry.oc.ui.words.res.chatUiTodo
+import io.github.eslamasabry.oc.ui.words.res.modelChoiceDone
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
 import io.github.eslamasabry.oc.ui.words.res.chatUiUseModelAndResend
 import io.github.eslamasabry.oc.ui.words.res.b169AskSend
@@ -887,6 +891,16 @@ public fun ChatScreen(
                                                         modelPicker = (modelPicker ?: 0L) + 1L
                                                     },
                                                     onOpenCode = { codeReader = it },
+                                                    onChoice = { text ->
+                                                        // An agent choice goes after the person's words (negative ids,
+                                                        // never equal to the chat's or the prompts' own).
+                                                        commandInsertId -= 1
+                                                        commandInsert =
+                                                            io.github.eslamasabry.oc.feature.chat.composer.InsertRequest(
+                                                                commandInsertId,
+                                                                text,
+                                                            )
+                                                    },
                                                     onRerunCommand =
                                                         if (workModel != null && state.capabilities.shell && !demoMode)
                                                             workModel::openShellDialog
@@ -1400,8 +1414,13 @@ internal fun rememberReplyActions(
     canCompact: Boolean = false,
     onChooseModel: () -> Unit = {},
     onOpenCode: (KitMdBlock.Code) -> Unit = {},
+    onChoice: ((String) -> Unit)? = null,
     onRerunCommand: ((String) -> Unit)? = null,
 ): ReplyActions {
+    val chooseTemplate = stringResource(Res.string.chatUiChooseOption, "\u0000")
+    val doneWord = stringResource(Res.string.modelChoiceDone)
+    val todoWord = stringResource(Res.string.chatUiTodo)
+    val runOnComputer = stringResource(Res.string.chatUiRunOnYourComputer)
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
@@ -1436,6 +1455,11 @@ internal fun rememberReplyActions(
         compactLabel,
         openFullCode,
         onOpenCode,
+        onChoice,
+        chooseTemplate,
+        doneWord,
+        todoWord,
+        runOnComputer,
         onRerunCommand,
     ) {
         ReplyActions(
@@ -1451,6 +1475,11 @@ internal fun rememberReplyActions(
                     onCopyCode = actions::copyText,
                     moreCodeLabel = { hidden -> openFullCode.replace("\u0000", hidden.toString()) },
                     onOpenCode = onOpenCode,
+                    onChoice = onChoice,
+                    chooseLabel = { text -> chooseTemplate.replace("\u0000", text) },
+                    doneWord = doneWord,
+                    todoWord = todoWord,
+                    runOnComputerLabel = runOnComputer,
                     onPicture = { p ->
                         val url = p.url
                         val path = p.path
