@@ -14,6 +14,7 @@ import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -83,9 +84,8 @@ class ShellRestoreTest {
         val deps = ShellDependencies(navigator, setOf(installer), FakeSystemMotion(0f))
     }
 
-    @Test
-    fun `the back stack, scroll, open sheet and typed text come back after the activity is rebuilt`() = runComposeUiTest {
-        val pages = Pages()
+    /** Home scrolled down, a second page with typed text and its sheet open, then the activity is rebuilt. */
+    private fun ComposeUiTest.rebuilt(pages: Pages) {
         // StateRestorationTester is not implemented on desktop: do by hand what Android does. Save the registry, drop
         // the whole composition, and compose again from a registry built out of the saved values.
         var registry by mutableStateOf(SaveableStateRegistry(null) { true })
@@ -117,10 +117,33 @@ class ShellRestoreTest {
             generation++
         }
         waitForIdle()
+    }
 
+    @Test
+    fun `restore keeps the back stack`() = runComposeUiTest {
+        val pages = Pages()
+        rebuilt(pages)
         runOnIdle { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), pages.navigator.snapshot(), "stack after restore") }
+    }
+
+    @Test
+    fun `restore keeps the open sheet`() = runComposeUiTest {
+        val pages = Pages()
+        rebuilt(pages)
         runOnIdle { assertTrue(pages.sheetOpen, "the open sheet comes back") }
+    }
+
+    @Test
+    fun `restore keeps the typed text`() = runComposeUiTest {
+        val pages = Pages()
+        rebuilt(pages)
         runOnIdle { assertEquals("hello", pages.typed!!.text.toString(), "the typed text comes back") }
+    }
+
+    @Test
+    fun `restore keeps the list where it was scrolled`() = runComposeUiTest {
+        val pages = Pages()
+        rebuilt(pages)
         runOnIdle { pages.navigator.back() }
         waitForIdle()
         runOnIdle { assertEquals(25, pages.homeFirstVisible, "the list is where it was scrolled to") }
