@@ -28,7 +28,7 @@ needed there; their tint now follows the look too.
   31 packs × light/dark × 8 moments, blurred, farthest pixel from the ground + 15 %. A pane is thickened for that look
   only. Liquid faces read the look from the appearance (`kitLivePictureSpots`), so sheets and menus know it too.
 - **One GlassLook spec** (`ui/design/.../style/GlassLook.kt`): every blur, tint-lift and gloss number in one place for
-  the coming glass-look presets. Default: 6 dp frost, light sheen .34 → .24, specular .55/.90 → .80/1.0, glint .60 →
+  the coming glass-look presets. Default: 6 dp frost, light sheen .34 → .24, specular .55/.90 → .80/.96, glint .60 →
   .75, liquid rim .36/.55 → .46/.62.
 - **Rim catches the backdrop's light**: a 1.5 dp band on the lit edges (top, start) shows the live picture as white light,
   brighter where the picture is brighter than the ground (dark themes). One reference to the shared recording per pane;
