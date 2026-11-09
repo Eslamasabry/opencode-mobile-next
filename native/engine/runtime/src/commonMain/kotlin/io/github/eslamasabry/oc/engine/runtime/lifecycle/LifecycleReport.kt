@@ -30,7 +30,7 @@ public data class LifecycleReport(
     val dismissed: Boolean = false,
 ) {
     public val showNotice: Boolean
-        get() = !dismissed && hadServices && exitKind?.notable == true
+        get() = !dismissed && hadServices && exitKind?.announced == true
 
     public val everythingBack: Boolean
         get() = showNotice && readiness == LifecycleReadiness.Ready

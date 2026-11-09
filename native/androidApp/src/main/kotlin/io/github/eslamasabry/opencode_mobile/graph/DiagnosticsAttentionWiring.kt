@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.device.DeviceDiagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.device.DeviceExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
+import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitReason
 import io.github.eslamasabry.oc.engine.diagnostics.exit.LifecycleSource
 import io.github.eslamasabry.oc.engine.diagnostics.exit.PolicyExitHistory
 import io.github.eslamasabry.oc.engine.diagnostics.exit.RawLaunchReport
@@ -593,6 +594,8 @@ class AndroidLifecycleSource(
                 ExitRecord(
                     reason = info.reason,
                     timestampMs = info.timestamp,
+                    // Without it a force stop by sub-reason, an update and a memory trim all looked unknown.
+                    subReason = ExitReason.subReasonIn(info.toString()),
                     status = info.status,
                     importance = info.importance,
                     processName = info.processName,
