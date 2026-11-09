@@ -112,10 +112,19 @@ class ShellRestoreTest {
         waitForIdle()
         runOnIdle { assertTrue(pages.sheetOpen, "the sheet opened") }
 
+        // What the activity keeps in its own saved state (LastRoute) is the stack; a field the old composition set is
+        // cleared so a restored value cannot be a stale one.
+        val savedStack = pages.navigator.snapshot()
         runOnIdle {
+            pages.sheetOpen = false
+            pages.typed = null
+            pages.homeFirstVisible = -1
             registry = SaveableStateRegistry(registry.performSave()) { true }
             generation++
         }
+        waitForIdle()
+        // The shell is up again: the activity puts the saved stack back (a no-op when the library restored it too).
+        runOnIdle { pages.navigator.restoreStack(savedStack) }
         waitForIdle()
     }
 
