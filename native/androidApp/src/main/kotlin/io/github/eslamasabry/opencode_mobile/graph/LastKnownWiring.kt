@@ -18,10 +18,14 @@ import io.github.eslamasabry.oc.core.data.cache.CacheShelf
 import io.github.eslamasabry.oc.core.data.cache.FileLastKnown
 import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.core.data.cache.ServerMark
+import io.github.eslamasabry.oc.engine.git.GitLastKnown
+import io.github.eslamasabry.oc.engine.git.KeptGit
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
+import io.github.eslamasabry.oc.engine.runtime.terminal.KeptTerminals
+import io.github.eslamasabry.oc.engine.runtime.terminal.TerminalLastKnown
 import io.github.eslamasabry.oc.engine.transcript.KeptTranscript
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.detachedTranscript
@@ -112,5 +116,41 @@ class AppChatLastKnown(
     companion object {
         val TRANSCRIPTS = CacheShelf("transcript", KeptTranscript.serializer(), maxBytes = 512 * 1024, maxEntries = 30)
         private const val ENVELOPE = 256
+    }
+}
+
+/** The Git page's last snapshot, kept per profile and server and conversation; 20 per profile, 128 KB each at most. */
+@ContributesIntoSet(AppScope::class, binding = binding<GitLastKnown>())
+@SingleIn(AppScope::class)
+@Inject
+class AppGitLastKnown(store: LastKnown, stores: PreviewStores) : GitLastKnown {
+    private val pages = ProfileShelf(store, stores, GIT)
+
+    override fun peek(ref: ConversationRef): KeptGit? = pages.peek(ref.profileId, ref.sessionId.raw)
+
+    override suspend fun read(ref: ConversationRef): KeptGit? = pages.read(ref.profileId, ref.sessionId.raw)
+
+    override suspend fun keep(ref: ConversationRef, kept: KeptGit) = pages.keep(ref.profileId, ref.sessionId.raw, kept)
+
+    companion object {
+        val GIT = CacheShelf("git", KeptGit.serializer(), maxBytes = 128 * 1024, maxEntries = 20)
+    }
+}
+
+/** The terminal list last seen, kept per profile and server and conversation. */
+@ContributesIntoSet(AppScope::class, binding = binding<TerminalLastKnown>())
+@SingleIn(AppScope::class)
+@Inject
+class AppTerminalLastKnown(store: LastKnown, stores: PreviewStores) : TerminalLastKnown {
+    private val lists = ProfileShelf(store, stores, TERMINALS)
+
+    override fun peek(ref: ConversationRef): KeptTerminals? = lists.peek(ref.profileId, ref.sessionId.raw)
+
+    override suspend fun read(ref: ConversationRef): KeptTerminals? = lists.read(ref.profileId, ref.sessionId.raw)
+
+    override suspend fun keep(ref: ConversationRef, kept: KeptTerminals) = lists.keep(ref.profileId, ref.sessionId.raw, kept)
+
+    companion object {
+        val TERMINALS = CacheShelf("terminals", KeptTerminals.serializer(), maxBytes = 32 * 1024, maxEntries = 20)
     }
 }
