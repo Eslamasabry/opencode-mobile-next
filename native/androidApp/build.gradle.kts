@@ -1,3 +1,4 @@
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.KeyStore
@@ -716,14 +717,14 @@ abstract class GenerateLocaleConfig : DefaultTask() {
     @TaskAction
     fun run() {
         val root = words.get().asFile
-        fun names(folder: java.io.File): Set<String> =
+        fun names(folder: File): Set<String> =
             folder.listFiles().orEmpty().filter { it.name.startsWith("strings") && it.extension == "xml" }
                 .flatMap { f -> Regex("""<(?:string|plurals)\s+name="([^"]+)""").findAll(f.readText()).map { it.groupValues[1] }.toList() }.toSet()
-        val source = names(java.io.File(root, "values"))
+        val source = names(File(root, "values"))
         val tags = root.listFiles().orEmpty().filter { it.isDirectory && Regex("values-[a-z]{2,3}").matches(it.name) }
             .map { it.name.removePrefix("values-") }
-            .filter { names(java.io.File(root, "values-$it")).intersect(source).size * 100 >= 95 * source.size }.sorted()
-        val xml = java.io.File(out.get().asFile, "xml/locales_config.xml")
+            .filter { names(File(root, "values-$it")).intersect(source).size * 100 >= 95 * source.size }.sorted()
+        val xml = File(out.get().asFile, "xml/locales_config.xml")
         xml.parentFile.mkdirs()
         xml.writeText(
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Generated: languages at 95% of English or more. -->\n" +
