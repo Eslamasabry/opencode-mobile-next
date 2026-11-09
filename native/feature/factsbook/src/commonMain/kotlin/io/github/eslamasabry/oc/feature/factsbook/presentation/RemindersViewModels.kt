@@ -166,6 +166,9 @@ public interface ReminderEditActions {
     public fun edit(draft: ReminderDraft)
 
     public fun save()
+
+    /** The app's language tag: a new reminder's words are read and spoken in it (F: `Localizations.localeOf`). */
+    public fun appLanguage(tag: String) {}
 }
 
 /**
@@ -185,6 +188,11 @@ public class ReminderEditViewModel(
     private var proposal: ReminderProposal? = null
     /** Add something waits for one answer: checked, or nothing. */
     private var answered = route.fromText == null
+    /** The app's language, once the screen has said it; a new reminder starts in it. */
+    private var appLocale: String? = null
+    private val fresh = route.id == null && route.proposalId == null
+    private var edited = false
+    private fun startLocale(): String = appLocale ?: route.locale
     private val mutable =
         MutableStateFlow(ReminderEditUi(editing = route.id != null || route.proposalId != null, wrote = route.fromText))
     public val state: StateFlow<ReminderEditUi> = mutable.asStateFlow()
@@ -202,14 +210,14 @@ public class ReminderEditViewModel(
                     val tomorrow = (clock.now() + 1.days).toLocalDateTime(TimeZone.currentSystemDefault())
                     val at = LocalDateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0)
                     mutable.update {
-                        it.copy(draft = ReminderDraft(words, ReminderTiming(ReminderRepeat.Never, at), locale = route.locale), cannotRing = !ring)
+                        it.copy(draft = ReminderDraft(words, ReminderTiming(ReminderRepeat.Never, at), locale = startLocale()), cannotRing = !ring)
                     }
                     return@launch
                 }
                 val guess = ReminderGuess.from(words, clock.now().toLocalDateTime(TimeZone.currentSystemDefault()))
                 mutable.update {
                     it.copy(
-                        draft = ReminderDraft(guess.what, guess.timing, locale = route.locale),
+                        draft = ReminderDraft(guess.what, guess.timing, locale = startLocale()),
                         ambiguities = guess.ambiguities.toImmutableSet(),
                         cannotRing = !ring,
                     )
@@ -239,7 +247,7 @@ public class ReminderEditViewModel(
                 // Tomorrow at 09:00, as Flutter starts a new one.
                 val tomorrow = (clock.now() + 1.days).toLocalDateTime(TimeZone.currentSystemDefault())
                 val at = LocalDateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0)
-                mutable.update { it.copy(draft = ReminderDraft(timing = ReminderTiming(ReminderRepeat.Never, at), locale = route.locale), cannotRing = !ring) }
+                mutable.update { it.copy(draft = ReminderDraft(timing = ReminderTiming(ReminderRepeat.Never, at), locale = startLocale()), cannotRing = !ring) }
                 return@launch
             }
             val found = (node?.reminders() as? FbResult.Ok)?.value?.firstOrNull { it.id == route.id }
@@ -273,7 +281,16 @@ public class ReminderEditViewModel(
         answer(ReminderCheckResult.Cancelled)
     }
 
-    override fun edit(draft: ReminderDraft): Unit = mutable.update { it.copy(draft = draft, error = null, mismatch = false, needsTitle = false) }
+    override fun edit(draft: ReminderDraft) {
+        edited = true
+        mutable.update { it.copy(draft = draft, error = null, mismatch = false, needsTitle = false) }
+    }
+
+    override fun appLanguage(tag: String) {
+        val locale = if (tag.lowercase().startsWith("ar")) "ar" else "en"
+        appLocale = locale
+        if (fresh && !edited) mutable.update { s -> s.draft?.let { s.copy(draft = it.copy(locale = locale)) } ?: s }
+    }
 
     override fun save() {
         val draft = mutable.value.draft ?: return

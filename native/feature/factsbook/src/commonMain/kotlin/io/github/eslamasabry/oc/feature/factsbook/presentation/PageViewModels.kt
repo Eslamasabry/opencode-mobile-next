@@ -204,7 +204,8 @@ public class ThingViewModel(
                     is FbResult.Err -> it.copy(working = false, writeError = r.error)
                 }
             }
-            if (r is FbResult.Ok) reload()
+            // A write that went through, or one based on an old copy, reads the thing again (F: thing_screen.dart).
+            if (r is FbResult.Ok || (r as? FbResult.Err)?.error?.stale == true) reload()
         }
     }
 

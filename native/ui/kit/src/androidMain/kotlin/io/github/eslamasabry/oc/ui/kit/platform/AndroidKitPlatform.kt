@@ -202,6 +202,12 @@ public class AndroidKitPlatform(
         return pattern.format(java.util.Date(atMs))
     }
 
+    override fun dateOnly(atMs: Long, localeTag: String): String {
+        val locale = java.util.Locale.forLanguageTag(localeTag)
+        val date = android.text.format.DateFormat.getBestDateTimePattern(locale, "yMMMd")
+        return java.text.SimpleDateFormat(date, locale).format(java.util.Date(atMs))
+    }
+
     override fun messageTime(createdMs: Long, nowMs: Long): String {
         val created = java.util.Date(createdMs)
         val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }

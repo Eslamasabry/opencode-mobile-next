@@ -626,4 +626,33 @@ class FactsBookViewModelsTest {
         CaptureViewModel(access, nav, checks).seeNeedsYou()
         assertEquals(listOf<Any>(FactsBookRoute.NeedsYou, FactsBookRoute.NeedsYou), nav.opened.takeLast(2))
     }
+
+    @Test
+    fun `B-FB-A06 a fact change based on an old copy reads the thing again`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        access.node.on(
+            "GET /v1/things/per_01",
+            """{"id":"per_01","title":"Sara","kind":"person","rev":3,"updated_at":"2026-10-10T08:00:00Z","facts":[{"id":"f_1","thing_id":"per_01","text":"Likes tea","provenance":"told","observed_at":"2026-10-10T08:00:00Z","source":"you","rev":2}]}""",
+        )
+        access.node.on("PATCH /v1/facts/f_1", """{"error":{"code":"stale_approval"}}""", status = 409)
+        val vm = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav, checks)
+        val fact = vm.state.first { it.thing != null && !it.loading }.thing!!.facts.first()
+        val before = access.node.asked.count { it == "GET /v1/things/per_01" }
+        vm.editFact(fact, "Likes coffee")
+        vm.state.first { it.writeError != null }
+        vm.state.first { !it.loading && access.node.asked.count { a -> a == "GET /v1/things/per_01" } > before }
+        assertTrue(access.node.asked.count { it == "GET /v1/things/per_01" } > before)
+    }
+
+    @Test
+    fun `B-FB-A07 a new reminder starts in the app language once the screen says it`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit(null), access, nav, FixedClock(), checks)
+        vm.state.first { it.draft != null }
+        vm.appLanguage("ar-EG")
+        assertEquals("ar", vm.state.value.draft!!.locale)
+        vm.edit(vm.state.value.draft!!.copy(what = "x"))
+        vm.appLanguage("en")
+        assertEquals("ar", vm.state.value.draft!!.locale)
+    }
 }

@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -41,7 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitProvenance
@@ -212,18 +213,27 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
             }
         }
         val edit = editing
-        KitInputOperationDialog(
-            visible = edit != null,
-            title = stringResource(Res.string.fbCareEditTitle),
-            fieldLabel = stringResource(Res.string.fbCareEditLabel),
-            confirmLabel = stringResource(Res.string.fbCareEditSave),
-            initial = edit?.text.orEmpty(),
-            onSubmit = { text ->
-                editing = null
-                edit?.let { actions.approveEdited(it, text) }
-            },
-            onDismissRequest = { editing = null },
-        )
+        if (edit != null) {
+            // Edit what it says: a sheet with the words in a field, as Flutter (`factsbook-care-edit-sheet`).
+            val field = rememberTextFieldState(edit.text.orEmpty())
+            KitSheet(
+                visible = true,
+                onDismissRequest = { editing = null },
+                title = stringResource(Res.string.fbCareEditTitle),
+                icon = KitIcons.edit,
+                primary =
+                    KitAction(
+                        stringResource(Res.string.fbCareEditSave),
+                        {
+                            val text = field.text.toString().trim()
+                            editing = null
+                            if (text.isNotEmpty()) actions.approveEdited(edit, text)
+                        },
+                    ),
+            ) {
+                KitField(field, stringResource(Res.string.fbCareEditLabel), kind = KitFieldKind.Multiline)
+            }
+        }
     }
 }
 

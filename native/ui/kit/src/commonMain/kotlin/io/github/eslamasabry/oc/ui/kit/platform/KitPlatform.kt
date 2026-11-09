@@ -90,6 +90,9 @@ public interface KitPlatform {
     /** A full local medium date and locale-preferred short time (Flutter yMMMd + jm). */
     public fun dateTime(atMs: Long, localeTag: String): String? = null
 
+    /** A full local medium date in the app locale (Flutter yMMMd), no time. */
+    public fun dateOnly(atMs: Long, localeTag: String): String? = null
+
     /**
      * System bars (plan 06 §5.6; Dart `KitSystemBars`): a transparent status bar whose icons
      * contrast with [ground] ([darkContent] = dark icons), and no navigation-bar contrast scrim.
