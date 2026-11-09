@@ -192,7 +192,7 @@ class KitGlassLookPickerTest {
             }
         }
         mainClock.advanceTimeBy(300)
-        assertEquals(3, GlassLooks.offered.size, "Clear is cut: three looks ship")
+        assertEquals(2, GlassLooks.offered.size, "Clear and Smoked are cut: two looks ship")
         val glossy = onNodeWithTag("kit-glass-look-glossy", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val frosted = onNodeWithTag("kit-glass-look-frosted", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val smoked = onNodeWithTag("kit-glass-look-smoked", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot

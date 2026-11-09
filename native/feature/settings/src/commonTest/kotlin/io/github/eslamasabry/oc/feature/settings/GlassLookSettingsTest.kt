@@ -88,7 +88,7 @@ class GlassLookSettingsTest {
         val choices = FakeChoices(PersonalPrefs(style = SurfaceStyle.Glass, mode = AppearanceMode.Saver))
         val p = presenter(choices.value.value, choices)
         runCurrent()
-        p.onGlassLook(GlassLookId.Smoked); runCurrent()
+        p.onGlassLook(GlassLookId.Frosted); runCurrent()
         assertEquals(emptyList(), choices.writes)
     }
 
