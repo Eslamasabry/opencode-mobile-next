@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">Alat terinstal</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">Alat ponsel</string>
+    <string name="linuxToolsFreedBytes">Sekitar %1$s dapat dibebaskan.</string>
+    <string name="linuxToolsWait">Tunggu operasi ponsel saat ini selesai.</string>
+    <string name="linuxToolsInstalled">Terinstal</string>
+    <string name="linuxToolsAbsent">Belum terinstal</string>
+    <string name="linuxToolsUnknown">Tidak dapat diperiksa. Muat ulang untuk mencoba lagi.</string>
+    <string name="linuxToolsRefresh">Muat ulang alat terinstal</string>
+    <string name="linuxToolsRemovePython">Hapus alat Python</string>
+    <string name="linuxToolsRemoveQuestion">Hapus alat Python?</string>
+    <string name="linuxToolsRemoveBody">Hapus paket pip dan lingkungan virtual. Python itu sendiri, proyek, dan percakapan tetap ada.</string>
+    <string name="linuxToolsRemoved">Alat Python dihapus.</string>
+    <string name="linuxToolsDependent">Alat terinstal lain membutuhkan komponen ini.</string>
+    <string name="linuxToolsDependencyUnknown">Alat lain yang mungkin membutuhkan komponen ini tidak dapat diperiksa. Muat ulang dan coba lagi.</string>
+    <string name="linuxToolsRequired">Komponen ini diperlukan untuk alat ponsel.</string>
+    <string name="linuxToolsUnsupported">Komponen ini tidak dapat dihapus di sini.</string>
+    <string name="linuxToolsInventoryFailed">Alat terinstal tidak dapat diperiksa. Muat ulang dan coba lagi. Tidak ada yang dihapus.</string>
+    <string name="linuxToolsSetupRunning">Hentikan penyiapan atau tunggu sampai selesai sebelum menghapus alat.</string>
+    <string name="linuxToolsRemoveFailed">Alat Python tidak dapat dihapus sepenuhnya. Muat ulang alat terinstal, lalu coba lagi.</string>
+    <string name="linuxSetupStatusUnreadable">Penyiapan tersimpan tidak dapat dibaca. Lanjutkan penyiapan untuk mencoba lagi.</string>
+    <string name="linuxSetupHostMismatch">Penyiapan tersimpan ini milik lingkungan Linux yang berbeda. Mulai penyiapan untuk ponsel ini.</string>
+    <string name="linuxSetupHostRefused">Penyiapan ponsel tidak dapat dimulai dengan aman. Lanjutkan penyiapan untuk mencoba lagi.</string>
+    <string name="linuxSetupSavedFailed">Penyiapan tidak dapat disimpan. Kosongkan penyimpanan, lalu lanjutkan penyiapan.</string>
+    <string name="linuxSetupBytes">%1$s dari %2$s</string>
+    <string name="linuxSetupCheckingPart">Memeriksa alat terinstal</string>
+    <string name="linuxSetupPartPending">Menunggu</string>
+    <string name="linuxSetupPartRunning">Menginstal</string>
+    <string name="linuxSetupPartDone">Siap</string>
+    <string name="linuxSetupPartFailed">Tidak dapat selesai</string>
+</resources>

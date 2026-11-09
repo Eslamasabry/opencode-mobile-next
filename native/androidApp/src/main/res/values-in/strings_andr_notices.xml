@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andr_appExitForceStopped">OpenCode Mobile ditutup %1$s</string>
+    <string name="andr_appExitLowMemory">Android menutup OpenCode Mobile %1$s untuk mengosongkan memori</string>
+    <string name="andr_appExitCrashed">OpenCode Mobile berhenti tiba-tiba %1$s</string>
+    <string name="andr_appExitKilled">Android menghentikan OpenCode Mobile %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s. OpenCode di ponsel Anda ikut berhenti dan sedang dimulai lagi.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s. OpenCode di ponsel Anda dan AI Team ikut berhenti dan sedang dimulai lagi.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s. OpenCode di ponsel Anda ikut berhenti. Mulai lagi saat Anda siap.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. OpenCode di ponsel Anda dan AI Team ikut berhenti. Mulai lagi saat Anda siap.</string>
+    <string name="andr_appExitServerBack">%1$s. OpenCode di ponsel Anda ikut berhenti dan kini berjalan lagi.</string>
+    <string name="andr_appExitServerBackTeam">%1$s. OpenCode di ponsel Anda dan AI Team ikut berhenti; OpenCode kini berjalan lagi.</string>
+    <string name="andr_appExitAtTime">pukul %1$s</string>
+    <string name="andr_appExitOnDay">pada %1$s pukul %2$s</string>
+    <string name="andr_appExitKeepRunning">Tetap jalankan</string>
+    <string name="andr_backgroundPauseTimeLimit">Koneksi latar belakang dijeda %1$s untuk menghemat baterai.</string>
+    <string name="andr_backgroundPauseRestricted">Koneksi latar belakang dijeda: pemakaian baterai dibatasi.</string>
+    <string name="andr_backgroundPauseUserStopped">Koneksi latar belakang berhenti saat aplikasi ditutup %1$s.</string>
+    <string name="andr_backgroundPauseAppUpdated">Koneksi latar belakang berhenti saat aplikasi diperbarui %1$s.</string>
+    <string name="andr_backgroundPauseInterrupted">Koneksi latar belakang berhenti karena alasan yang tidak diketahui.</string>
+    <string name="andr_backgroundPauseDeviceRestarted">Koneksi latar belakang berhenti saat ponsel dimulai ulang.</string>
+    <string name="andr_backgroundPauseResumeShort">Lanjutkan</string>
+    <string name="andr_backgroundPauseResuming">Melanjutkan koneksi latar belakang…</string>
+    <string name="andr_backgroundPauseResumeFailed">Tidak dapat melanjutkan. Buka pengaturan Tetap berjalan.</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">Buka pengaturan Tetap berjalan</string>
+    <string name="andr_notifyDismiss">Tutup</string>
+    <string name="andr_firstRunNotifyTitle">Beri tahu saat agen memerlukan Anda?</string>
+    <string name="andr_firstRunNotifyBody">Tinggalkan aplikasi selagi agen bekerja. Anda akan mendapat notifikasi saat agen memerlukan jawaban Anda. Android menampilkan notifikasi kecil yang terus ada selama koneksi tetap aktif.</string>
+    <string name="andr_firstRunNotifyAccept">Beri tahu saya</string>
+    <string name="andr_firstRunNotifyDecline">Nanti saja</string>
+    <string name="andr_notifyPermissionRefused">Notifikasi diblokir. Izinkan notifikasi di pengaturan Android, lalu aktifkan koneksi latar belakang.</string>
+    <string name="andr_notifyEnableFailed">Koneksi latar belakang tidak dimulai. Buka pengaturan Latar belakang untuk mencoba lagi.</string>
+    <string name="andr_pauseBackground">Jeda latar belakang</string>
+    <string name="andr_notifySaveFailed">Pilihan Anda tidak dapat disimpan, jadi tidak ada yang diaktifkan. Coba lagi.</string>
+    <string name="andr_termuxRetiredNotice">Termux tidak lagi didukung. Siapkan Linux bawaan di ponsel ini, atau hubungkan ke komputer Anda. Proyek Anda di Termux masih ada; salin ke penyimpanan bersama ponsel atau kirim dengan Git untuk memindahkannya.</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">Siapkan Linux bawaan</string>
+    <string name="andr_termuxRetiredConnectComputer">Hubungkan komputer</string>
+    <string name="andr_crashOfferMessage">OpenCode Mobile tertutup tiba-tiba terakhir kali. Kirim laporan error?</string>
+    <string name="andr_crashOfferReview">Tinjau dan kirim</string>
+    <string name="andr_crashOfferNotNow">Nanti saja</string>
+</resources>

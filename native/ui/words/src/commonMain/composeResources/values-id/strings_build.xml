@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeCapabilitiesDetail">Lihat apa yang bisa dilakukan aplikasi ini dan buka pengaturannya jika tersedia.</string>
+    <string name="nativeCapabilityOpenFailed">Pengaturan ini tidak bisa dibuka. Periksa server yang dipilih lalu coba lagi.</string>
+    <string name="nativeCapabilityAddServerTitle">Hubungkan server</string>
+    <string name="nativeCapabilityAddServerDetail">Simpan alamat server yang berjalan di komputer.</string>
+    <string name="nativeCapabilityPhoneSetupTitle">Siapkan ponsel ini</string>
+    <string name="nativeCapabilityPhoneSetupDetail">Pasang lingkungan Linux dan server di ponsel ini.</string>
+    <string name="nativeCapabilityServerGenerationTitle">Gunakan OpenCode 2</string>
+    <string name="nativeCapabilityServerGenerationDetail">Siapkan generasi server yang ingin dipakai.</string>
+    <string name="nativeCapabilityAddServerCodexTitle">Hubungkan Codex</string>
+    <string name="nativeCapabilityAddServerCodexDetail">Hubungkan Codex di komputer Anda.</string>
+    <string name="nativeCapabilityAddServerPaseoTitle">Hubungkan Paseo</string>
+    <string name="nativeCapabilityAddServerPaseoDetail">Hubungkan agen di komputer Paseo Anda.</string>
+    <string name="nativeCapabilityModelSignInTitle">Masuk ke penyedia model</string>
+    <string name="nativeCapabilityModelSignInDetail">Kelola akun penyedia untuk server yang dipilih.</string>
+    <string name="nativeCapabilityTeamTurnOnTitle">Siapkan tim AI</string>
+    <string name="nativeCapabilityTeamTurnOnDetail">Buka pengaturan tim untuk proyek Anda.</string>
+    <string name="nativeCapabilityTeamHostGuideTitle">Hubungkan host tim</string>
+    <string name="nativeCapabilityTeamHostGuideDetail">Buka panduan penyiapan untuk komputer tim Anda.</string>
+    <string name="nativeCapabilityVoiceModelSetupTitle">Siapkan pengetikan suara</string>
+    <string name="nativeCapabilityVoiceModelSetupDetail">Pilih dan unduh model ucapan di perangkat.</string>
+    <string name="nativeCapabilityMcpAddTitle">Tambah alat MCP</string>
+    <string name="nativeCapabilityMcpAddDetail">Hubungkan alat ke server yang dipilih.</string>
+    <string name="nativeCapabilityProjectChooseTitle">Buka proyek</string>
+    <string name="nativeCapabilityProjectChooseDetail">Pilih folder tempat Anda ingin bekerja.</string>
+    <string name="nativeCapabilityProjectGitInitTitle">Siapkan Git proyek</string>
+    <string name="nativeCapabilityProjectGitInitDetail">Buka pengaturan Git proyek.</string>
+    <string name="nativeCapabilityAllowNotificationsTitle">Izinkan notifikasi</string>
+    <string name="nativeCapabilityAllowNotificationsDetail">Pilih hal yang boleh diberitahukan aplikasi saat Anda pergi.</string>
+    <string name="nativeCapabilityAllowBackgroundTitle">Tetap berjalan</string>
+    <string name="nativeCapabilityAllowBackgroundDetail">Buka pengaturan latar belakang dan baterai Android.</string>
+    <string name="nativeCapabilityAllowCameraTitle">Izinkan kamera</string>
+    <string name="nativeCapabilityAllowCameraDetail">Izinkan akses kamera untuk pemasangan dan foto.</string>
+    <string name="nativeCapabilityAllowMicrophoneTitle">Izinkan mikrofon</string>
+    <string name="nativeCapabilityAllowMicrophoneDetail">Izinkan akses mikrofon untuk pengetikan suara.</string>
+    <string name="nativeCapabilityTailscaleSetupTitle">Hubungkan lewat Tailscale</string>
+    <string name="nativeCapabilityTailscaleSetupDetail">Siapkan akses pribadi ke komputer Anda.</string>
+    <string name="nativeCapabilityQuotaCollectorGuideTitle">Siapkan pembacaan penggunaan</string>
+    <string name="nativeCapabilityQuotaCollectorGuideDetail">Buka pengaturan pembacaan penggunaan langganan.</string>
+    <string name="nativeCapabilityAddExternalAgentTitle">Hubungkan agen eksternal</string>
+    <string name="nativeCapabilityAddExternalAgentDetail">Hubungkan agen lewat kartu agen yang dipublikasikan.</string>
+    <string name="nativeCapabilityTeamDeferred">AI Team direncanakan setelah peralihan ke versi native. Data tim yang ada tetap di ponsel ini.</string>
+    <string name="nativeCapabilityExternalDropped">Agen dari aplikasi lain bukan bagian dari aplikasi ini. Data tersimpan Anda tetap utuh.</string>
+</resources>

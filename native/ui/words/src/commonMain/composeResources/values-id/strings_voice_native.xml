@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeSendNow">Kirim sekarang</string>
+    <string name="voiceNativeDetect">Deteksi dari ucapan</string>
+    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativePhoneEngine">Pengetikan suara memakai pengenalan ucapan bawaan ponsel Anda, jadi audio tetap di ponsel ini. Ponsel tanpa fitur itu tidak menampilkan mikrofon. Versi ini belum memakai model ucapan di bawah.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Memerlukan mesin ucapan offline, yang belum disertakan di versi ini.</string>
+    <string name="voiceNativeSettingsAction">Pengaturan suara</string>
+    <string name="voiceNativeStoppedAfterPause">Berhenti setelah jeda. Ucapan Anda ada di kotak.</string>
+    <string name="voiceNativeNoRecognizer">Ponsel ini tidak punya layanan pengenalan ucapan. Aktifkan satu di pengaturan Android, lalu coba lagi.</string>
+    <string name="voiceNativeReadAloud">Bacakan</string>
+    <string name="voiceNativePartial">Terunduh %1$s dari %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Pengenalan ucapan ponsel</string>
+</resources>

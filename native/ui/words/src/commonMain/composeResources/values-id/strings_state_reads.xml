@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateShareViewedTitle">Bagikan percakapan yang saya lihat</string>
+    <string name="stateShareViewedDetail">Beri tahu server ini balasan selesai mana yang Anda buka. Jika nonaktif, informasi ini tetap di perangkat ini.</string>
+    <string name="stateShareViewedSaving">Menyimpan pilihan privasi Anda…</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="importNativePaste">Atau tempel ekspor JSON</string>
+    <string name="importNativeReview">Tinjau JSON yang ditempel</string>
+    <string name="importNativeWorkspaceOptional">Opsional. Kosongkan untuk folder proyek.</string>
+    <string name="importNativeAttemptDone">Tutup dan buka kembali impor untuk meninjau percobaan lain. Periksa Semua percakapan dahulu jika hasilnya belum dikonfirmasi.</string>
+</resources>

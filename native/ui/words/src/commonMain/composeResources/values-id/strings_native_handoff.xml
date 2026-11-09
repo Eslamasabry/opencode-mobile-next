@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">Lanjutkan di agen baru</string>
+    <string name="nativeHandoffIntro">Pilih agen di server ini. Tinjau catatan percakapan yang disamarkan dan perintah pertama sebelum memulai. Percakapan asal tidak berubah.</string>
+    <string name="nativeHandoffPreparing">Menyiapkan catatan percakapan…</string>
+    <string name="nativeHandoffReview">Catatan ini akan disimpan di folder baru yang diabaikan dalam proyek yang sama. Kredensial disamarkan; penalaran dan isi lampiran tidak disertakan.</string>
+    <string name="nativeHandoffPrompt">Pesan pertama untuk agen baru</string>
+    <string name="nativeHandoffSend">Mulai agen baru</string>
+    <string name="nativeHandoffSending">Menyimpan catatan dan memulai percakapan baru…</string>
+    <string name="nativeHandoffSucceeded">Agen baru telah menerima catatan percakapan.</string>
+    <string name="nativeHandoffFailed">Pemindahan tidak dapat selesai. Percakapan asal tidak berubah. Periksa koneksi dan proyek, lalu buka lembar ini lagi.</string>
+    <string name="nativeHandoffUnconfirmed">Percakapan baru tidak dapat dikonfirmasi. Periksa Semua percakapan sebelum memulai yang lain: agen mungkin sudah menerimanya.</string>
+    <string name="nativeHandoffLinkFailed">Agen baru telah menerima catatan, tetapi tautan percakapan tidak dapat disimpan. Coba simpan tautan lagi; tidak ada pesan yang akan dikirim ulang.</string>
+    <string name="nativeHandoffSaveLink">Simpan tautan percakapan</string>
+</resources>

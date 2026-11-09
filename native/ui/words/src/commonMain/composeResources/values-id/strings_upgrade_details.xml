@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipMessageDetailsTitle">Detail pesan</string>
+    <string name="tipMessageDetails">Tahan pesan untuk melihat Detail, atau gunakan tombol Lainnya, untuk melihat model dan waktunya.</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">Android menghentikan aplikasi. Memeriksa lagi apa yang berjalan…</string>
+    <string name="stateLifecycleUnavailable">Android menghentikan aplikasi. Pemulihan tidak dapat diperiksa.</string>
+    <string name="stateLifecycleStopped">Android menghentikan aplikasi. OpenCode berhenti.</string>
+    <string name="stateLifecycleUnreachable">Android menghentikan aplikasi. OpenCode belum menjawab.</string>
+    <string name="stateLifecyclePartial">OpenCode menjawab. Beberapa layanan yang sebelumnya berjalan belum siap.</string>
+    <string name="stateLifecycleReady">OpenCode dan layanan yang sebelumnya berjalan menjawab kembali. Tugas yang terputus mungkin perlu perhatian Anda.</string>
+    <string name="stateStorageTitle">Penyimpanan aplikasi</string>
+    <string name="stateStorageServer">Linux dan OpenCode</string>
+    <string name="stateStoragePrivate">Akun masuk, pengaturan, dan percakapan tersimpan</string>
+    <plurals name="stateStorageProject">
+        <item quantity="other">%1$s · %2$d file · %3$d pribadi</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="other">%1$d server tersimpan</item>
+    </plurals>
+    <string name="stateStorageEmpty">Tidak ada Linux atau proyek yang disimpan di ponsel ini.</string>
+    <string name="stateStorageFailed">Penyimpanan tidak dapat diukur. Coba lagi.</string>
+    <string name="stateStorageRefresh">Ukur penyimpanan lagi</string>
+</resources>

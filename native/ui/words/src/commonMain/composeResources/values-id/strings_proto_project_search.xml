@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Alat proyek server</string>
+    <string name="protoWorking">Memproses…</string>
+    <string name="protoGitInitialized">Folder ini adalah repositori Git.</string>
+    <string name="protoWorktreeCreated">Worktree siap di folder di bawah.</string>
+    <string name="protoShellSaved">Shell bawaan disimpan.</string>
+    <string name="protoGitInitialize">Mulai Git di folder ini</string>
+    <string name="protoWorktreeName">Nama worktree baru</string>
+    <string name="protoWorktreeCreate">Buat worktree</string>
+    <string name="protoShellTitle">Shell terminal bawaan</string>
+    <string name="protoShellDefault">Gunakan bawaan server</string>
+    <string name="protoShellUnavailable">Shell ini tidak dapat digunakan di server ini.</string>
+    <string name="protoWebSearch">Cari di web</string>
+    <string name="protoWebSearchHelp">Cari dengan penyedia milik server ini. Pencarian tidak masuk ke riwayat percakapan.</string>
+    <string name="protoWebUnavailable">Pencarian web tidak tersedia di server ini.</string>
+    <string name="protoWebFailed">Pencarian web tidak dapat diselesaikan. Muat ulang daftar penyedia atau cari lagi.</string>
+    <string name="protoWebQuery">Kata kunci pencarian web</string>
+    <string name="protoWebProvider">Penyedia pencarian</string>
+    <string name="protoWebEmpty">Tidak ada hasil web.</string>
+    <string name="protoWebOpenQuestion">Buka %1$s di browser Anda?</string>
+    <string name="protoWebOpenBrowser">Buka browser</string>
+    <string name="protoWebInsecure">Tautan ini menggunakan koneksi yang tidak terenkripsi.</string>
+    <string name="protoWebLeaveApp">Ini akan membuka situs web di luar aplikasi.</string>
+    <string name="protoGitToolsFailed">Gagal. Periksa server, lalu coba lagi.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

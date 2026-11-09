@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="staleFailureTitle">Laporkan kegagalan ini?</string>
+    <string name="staleFailureBody">Ini terjadi pada %1$s. Versi %2$s mungkin sudah memperbaikinya.</string>
+    <string name="staleFailureUpdateFirst">Perbarui dulu</string>
+    <string name="staleFailureReportAnyway">Tetap laporkan</string>
+</resources>

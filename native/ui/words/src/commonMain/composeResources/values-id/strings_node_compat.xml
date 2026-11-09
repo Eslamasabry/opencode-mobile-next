@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSetupErrorNodeCannotRun">Sistem ponsel ini tidak dapat menjalankan Node.js di dalam Linux bawaan. Anda tetap bisa memakai OpenCode Mobile dengan menyambung ke komputer.</string>
+    <string name="phoneSetupNodeConnectComputer">Sambungkan komputer</string>
+    <string name="phoneSetupNodeReportFailure">Laporkan kegagalan ini</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">Pilih dari GitHub</string>
+    <string name="gitRemotePickGitHubTitle">Pilih repositori</string>
+    <string name="gitRemotePickGitHubNone">Belum ada repositori di akun GitHub ini.</string>
+    <string name="gitRemoteRepoPrivate">Privat</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">Gunakan nama repositori maksimal 100 karakter berupa huruf, angka, titik, tanda hubung, atau garis bawah.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">Nama itu sudah dipakai atau tidak tersedia di akun GitHub Anda. Coba nama lain.</string>
+    <string name="gitActionInitialize">Mulai lacak</string>
+    <string name="gitActionPublish">Buat di GitHub</string>
+    <string name="gitBusyInitialize">Memulai Git di proyek ini…</string>
+    <string name="gitBusyPublish">Membuat repositori di GitHub…</string>
+    <string name="gitDoneInitialized">Git siap di proyek ini.</string>
+    <string name="gitDoneGitHubRepositoryCreated">Repositori GitHub dibuat dan terhubung. Proyek Anda belum dikirim.</string>
+    <string name="gitInitializeProject">Mulai lacak proyek ini</string>
+    <string name="gitInitializeProjectHint">Biarkan file tetap di sini dan mulai pakai Git.</string>
+    <string name="gitPublishToGitHub">Buat repositori GitHub</string>
+    <string name="gitPublishToGitHubHint">Pilih nama dan siapa yang bisa melihatnya.</string>
+    <string name="gitPublishTitle">Buat repositori</string>
+    <string name="gitPublishName">Nama repositori</string>
+    <string name="gitPublishNameHint">Gunakan huruf, angka, titik, tanda hubung, atau garis bawah.</string>
+    <string name="gitPublishVisibility">Siapa yang bisa melihat</string>
+    <string name="gitPublishPrivate">Privat</string>
+    <string name="gitPublishPublic">Publik</string>
+    <string name="gitPublishPrivateHint">Hanya Anda dan orang yang Anda pilih yang bisa melihat repositori ini.</string>
+    <string name="gitPublishPublicHint">Siapa pun bisa melihat repositori ini.</string>
+    <string name="gitPublishButton">Buat repositori</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">Tentang versi ini</string>
+    <string name="nativeAboutProvenance">Aplikasi independen ini dibuat dengan banyak bantuan AI. Android adalah platform utama yang didukung. Versi desktop masih eksperimental dan belum diuji di perangkat keras. Laporkan yang rusak untuk membantu memperbaiki aplikasi.</string>
+    <string name="nativePhraseChipsTitle">Chip frasa</string>
+    <string name="nativePhraseChipsAliases">chip frasa frasa cepat saran kotak pesan</string>
+    <string name="nativePhraseChipsDescription">Sarankan frasa singkat yang sering Anda pakai di atas kotak pesan. Frasa yang dipelajari tetap ada di perangkat ini.</string>
+    <string name="nativeToolsRequired">Wajib</string>
+    <string name="nativeToolsOptional">Opsional</string>
+    <string name="nativeToolsParameters">Parameter</string>
+    <string name="nativeToolsNoParameters">Alat ini tidak memiliki parameter.</string>
+    <string name="nativeToolsCoding">Alat untuk model</string>
+    <string name="nativeToolsChooseModel">Pilih model untuk melihat alatnya.</string>
+    <string name="nativeCapabilitiesTitle">Yang berfungsi di sini</string>
+</resources>

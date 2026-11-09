@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxSetupStart">Siapkan Linux dan OpenCode</string>
+    <string name="linuxSetupAddPython">Tambah alat Python</string>
+    <string name="linuxSetupContinue">Lanjutkan penyiapan</string>
+    <string name="linuxSetupStop">Hentikan penyiapan</string>
+    <string name="linuxSetupStopQuestion">Hentikan penyiapan?</string>
+    <string name="linuxSetupStopBody">Alat yang sudah terinstal tetap di ponsel. Anda bisa melanjutkan penyiapan nanti.</string>
+    <string name="linuxSetupWorking">Menyiapkan alat ponsel…</string>
+    <string name="linuxSetupAddingPython">Menambahkan alat Python</string>
+    <string name="linuxSetupDone">Alat ponsel sudah siap.</string>
+    <string name="linuxSetupFailed">Penyiapan berhenti sebelum selesai. Lanjutkan penyiapan untuk memeriksa alat terinstal dan coba lagi.</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">Model default</string>
+    <string name="p12NewDefaultAgent">Agen default</string>
+    <string name="p12NewAgent">Agen</string>
+    <string name="p12NewFolder">Folder proyek</string>
+    <string name="p12NewUseFolder">Pakai folder ini</string>
+    <string name="p12NewDraftFailed">Pesan Anda tidak dapat disimpan di ponsel ini. Biarkan halaman ini terbuka dan coba lagi.</string>
+    <string name="p12NewCreationUnconfirmed">Server tidak mengonfirmasi apakah percakapan sudah dibuat. Periksa Percakapan sebelum memulai yang lain. Pesan Anda tetap tersimpan di sini.</string>
+    <string name="p12NewBoundProject">Koneksi ini memakai folder proyek yang tersimpan. Tambahkan koneksi untuk folder lain.</string>
+    <string name="p12NewDeliveryUnconfirmed">Server tidak mengonfirmasi pesan ini. Buka percakapan yang dibuat untuk memeriksanya sebelum memulai yang lain. Tulisan Anda tetap tersimpan di sini.</string>
+    <string name="p12NewOpenCreated">Buka percakapan yang dibuat</string>
+    <string name="chatsNewFolderMissing">Folder proyek ini sudah tidak ada di server. Buat lagi sebagai proyek kosong, atau pilih proyek lain.</string>
+    <string name="chatsNewFolderRemake">Buat folder lagi</string>
+    <string name="chatsNewFolderChooseAnother">Pilih proyek lain</string>
+    <string name="chatSendFolderMissing">Folder proyek ini sudah tidak ada di server, jadi pesan tidak terkirim. Mulai percakapan baru untuk membuat folder lagi atau pilih proyek lain.</string>
+</resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_label">Percakapan</string>
+    <string name="widget_description">Satu hal yang penting sekarang: yang membutuhkan Anda, yang sedang bekerja, atau percakapan terakhir Anda.</string>
+    <string name="native_team_working">Bekerja</string>
+    <string name="native_widget_now">sekarang</string>
+    <string name="native_widget_minutes">%1$sm</string>
+    <string name="native_widget_hours">%1$sj</string>
+    <string name="native_widget_days">%1$sh</string>
+    <string name="usage_widget_title">Penggunaan</string>
+    <string name="usage_widget_description">Sisa pada setiap batas paket, dan kapan direset.</string>
+    <string name="usage_widget_empty">Belum ada pembacaan batas. Buka Penggunaan untuk menghubungkan sumber.</string>
+    <string name="usage_widget_resets">Direset dalam %1$s</string>
+    <string name="usage_widget_updated">Diperbarui %1$s lalu</string>
+    <string name="usage_widget_sign_in">Masuk</string>
+    <string name="usage_widget_add_key">Tambah kunci</string>
+    <string name="usage_widget_not_signed_in">Belum masuk</string>
+    <string name="usage_widget_no_key">Belum ada kunci</string>
+    <string name="usage_widget_set_up">Siapkan</string>
+    <string name="usage_widget_cant_read">Belum bisa dibaca</string>
+    <string name="usage_widget_auth">Perlu masuk</string>
+    <string name="usage_widget_this_phone">Ponsel ini</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s \u0020sisa %2$s%%</string>
+    <string name="usage_widget_short_hours">%1$sj</string>
+    <string name="usage_widget_short_days">%1$sh</string>
+    <string name="usage_widget_short_week">Minggu</string>
+    <string name="usage_widget_short_month">Bulan</string>
+    <string name="widget_label_wide">Percakapan</string>
+    <string name="widget_label_list">Daftar percakapan</string>
+    <string name="widget_label_strip">Strip percakapan</string>
+    <string name="widget_description_wide">Yang membutuhkan Anda atau sedang bekerja sekarang, dan percakapan Anda berikutnya.</string>
+    <string name="widget_description_list">Satu hal yang penting sekarang, dan percakapan Anda yang lain di bawahnya.</string>
+    <string name="widget_description_strip">Satu hal yang penting sekarang, dalam satu baris.</string>
+    <string name="usage_widget_title_wide">Penggunaan, lebar</string>
+    <string name="usage_widget_description_wide">Sisa pada setiap batas paket, selebar dua kolom.</string>
+    <string name="widget_label_status">Status</string>
+    <string name="widget_description_status">Server Anda, Linux di ponsel ini, tugas yang berjalan, dan batas paket yang paling dekat habis.</string>
+</resources>

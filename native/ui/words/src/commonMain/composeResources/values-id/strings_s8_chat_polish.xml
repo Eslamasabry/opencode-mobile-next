@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="other">menunggu untuk mengedit %1$d file</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="other">menunggu untuk menjalankan %1$d perintah</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="other">%1$d langkah menunggu</item>
+    </plurals>
+    <string name="chatMenuContinueElsewhere">Lanjutkan di tempat lain</string>
+</resources>

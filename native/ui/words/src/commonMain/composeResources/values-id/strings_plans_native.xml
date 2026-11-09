@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Membaca pemakaian paket</string>
+    <string name="plansNativeCollectors">Baca batas paket</string>
+    <string name="plansNativeCollectorOn">Pembacaan aktif</string>
+    <string name="plansNativeCollectorOff">Pembacaan nonaktif</string>
+    <string name="plansNativeCollectorSetup">Siapkan pembacaan di ponsel ini</string>
+    <string name="plansNativeCollectorRemote">Izinkan pembacaan dari server ini</string>
+    <string name="plansNativeCollectorWorking">Memperbarui pembacaan paket</string>
+    <string name="plansNativeCollectorFailed">Pembacaan paket tidak dapat diubah. Periksa server dan coba lagi.</string>
+    <string name="plansNativeAlerts">Peringatan batas paket</string>
+    <string name="plansNativeAlertsBody">Beri peringatan saat paket yang terbaca mencapai level pilihan. Pembacaan jarak jauh tetap memerlukan izin Anda.</string>
+    <string name="plansNativeSetupQuestion">Siapkan pembacaan paket di %1$s?</string>
+    <string name="plansNativeRemoteQuestion">Izinkan pembacaan paket dari %1$s?</string>
+    <string name="plansNativeOffQuestion">Nonaktifkan pembacaan paket di %1$s?</string>
+    <string name="plansNativeSetupBody">Aplikasi memasang pembaca paketnya di dalam Ubuntu dalam aplikasi. Kredensial penyedia tetap di ponsel.</string>
+    <string name="plansNativeRemoteBody">Baca batas paket dari pengumpul yang sudah terpasang di server ini. Izin ini hanya berlaku untuk server ini dan akun penyedia yang dilaporkannya.</string>
+    <string name="plansNativeOffBody">Berhenti membaca sumber ini dan hapus izin bacanya. Info masuk penyedia tetap tersimpan.</string>
+    <string name="plansNativeSetUp">Siapkan pembacaan</string>
+    <string name="plansNativeAllow">Izinkan pembacaan</string>
+    <string name="plansNativeTurnOff">Nonaktifkan pembacaan</string>
+    <string name="plansNativeCancel">Batal</string>
+</resources>

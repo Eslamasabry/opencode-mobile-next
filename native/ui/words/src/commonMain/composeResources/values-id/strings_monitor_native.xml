@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Periksa server lain</string>
+    <string name="monitorNativeBack">Kembali</string>
+    <string name="monitorNativeForegroundOnly">Periksa server tersimpan selama halaman ini terbuka. Menutupnya menghentikan pembacaan. Ini tidak memulai server ponsel atau mengaktifkan peringatan latar belakang.</string>
+    <string name="monitorNativeCheck">Periksa sekarang</string>
+    <string name="monitorNativeChecking">Memeriksa…</string>
+    <string name="monitorNativeAllow">Izinkan pemeriksaan</string>
+    <string name="monitorNativeConsent">Izinkan aplikasi ini membaca permintaan dan status percakapan terbaru dari server tersimpan ini.</string>
+    <string name="monitorNativeUnsupported">Server tersimpan ini tidak dapat diperiksa di sini.</string>
+    <string name="monitorNativeOff">Pemeriksaan nonaktif</string>
+    <string name="monitorNativeWaiting">Belum diperiksa</string>
+    <string name="monitorNativeCurrent">Diperiksa</string>
+    <string name="monitorNativePartial">Diperiksa sebagian. Periksa lagi untuk membaca lebih banyak percakapan.</string>
+    <string name="monitorNativeUnknown">Status terbaru tidak dapat dipastikan. Pengamatan sebelumnya mungkin masih tampil.</string>
+    <string name="monitorNativePaused">Pemeriksaan dijeda</string>
+    <string name="monitorNativePending">Menunggu Anda: %1$d</string>
+    <string name="monitorNativeRunning">Berjalan: %1$d</string>
+    <string name="monitorNativeConversation">Percakapan</string>
+    <string name="monitorNativeFailed">Giliran terakhir yang diperiksa gagal</string>
+    <string name="monitorNativeEarlierFailure">Kegagalan sebelumnya; status terbaru tidak diketahui</string>
+    <string name="monitorNativeSaveFailed">Pengaturan ini tidak dapat disimpan atau dimuat. Coba lagi.</string>
+    <string name="monitorNativeEmpty">Tidak ada server tersimpan yang bisa diperiksa.</string>
+    <string name="monitorNativeRequest">Menunggu Anda</string>
+    <string name="monitorNativeEarlierRequest">Permintaan sebelumnya; status terbaru tidak diketahui</string>
+    <string name="monitorNativeReconnect">Hubungkan ke server ini atau perbarui info masuknya di Server sebelum memeriksa.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_ask_outside_write">Menulis di luar proyek ini?</string>
+    <string name="widget_ask_outside_read">Membaca di luar proyek ini?</string>
+    <string name="widget_ask_outside_run">Menjalankan perintah di luar proyek ini?</string>
+    <string name="widget_ask_directory">Bekerja di luar proyek ini?</string>
+    <string name="widget_ask_command">Jalankan perintah ini?</string>
+    <string name="widget_ask_edit">Edit file ini?</string>
+    <string name="widget_ask_read">Baca file ini?</string>
+    <string name="widget_ask_permission">Gunakan %1$s</string>
+</resources>

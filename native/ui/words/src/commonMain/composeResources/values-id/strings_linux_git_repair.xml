@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">Perbaiki file Git tertaut</string>
+    <string name="linuxGitRepairWorking">Memperbaiki file Git…</string>
+    <string name="linuxGitRepairHealthy">Git dapat membaca proyek ini. Tidak ada file objek yang perlu diperbaiki.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="other">%1$d file objek Git dipulihkan. Git dapat membaca proyek lagi.</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">Beberapa objek Git tidak dapat dipulihkan atau diverifikasi. Klon proyek lagi atau pulihkan salinan.</string>
+    <string name="linuxGitRepairNotProject">Hanya proyek Git di folder proyek ponsel ini yang dapat diperbaiki di sini.</string>
+    <string name="linuxGitRepairFailed">Ponsel tidak dapat menyelesaikan perbaikan file Git. Coba lagi.</string>
+    <string name="linuxGitRepairDetailLocal">Pulihkan objek Git terverifikasi dari salinan di dalam proyek ini. File proyek dipertahankan.</string>
+</resources>

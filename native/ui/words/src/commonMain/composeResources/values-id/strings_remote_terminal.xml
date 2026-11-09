@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="remoteTerminalTitle">Terminal</string>
+    <string name="remoteTerminalWorking">Memproses…</string>
+    <string name="remoteTerminalUnavailable">Hubungkan ke server yang mendukung terminal untuk menggunakan halaman ini.</string>
+    <string name="remoteTerminalFailed">Permintaan terminal gagal. Coba lagi.</string>
+    <string name="remoteTerminalInputUncertain">Koneksi terputus saat mengirim input. Periksa terminal sebelum mengirimnya lagi.</string>
+    <string name="remoteTerminalIntro">Perintah dijalankan di server ini. Keluar dari halaman ini hanya memutuskan tampilan; gunakan Akhiri terminal untuk menghentikan shell-nya.</string>
+    <string name="remoteTerminalCreate">Terminal baru</string>
+    <string name="remoteTerminalRefresh">Muat ulang</string>
+    <string name="remoteTerminalEmpty">Belum ada terminal.</string>
+    <string name="remoteTerminalRunning">Berjalan</string>
+    <string name="remoteTerminalEnded">Berakhir</string>
+    <string name="remoteTerminalList">Semua terminal</string>
+    <string name="remoteTerminalDisconnect">Putuskan</string>
+    <string name="remoteTerminalReconnect">Hubungkan ulang</string>
+    <string name="remoteTerminalEnd">Akhiri terminal</string>
+    <string name="remoteTerminalDisconnected">Terputus. Hubungkan ulang untuk terus membaca terminal ini.</string>
+    <string name="remoteTerminalInputOff">Hubungkan ulang untuk mengirim input terminal.</string>
+    <string name="remoteTerminalInterrupt">Hentikan (Ctrl-C)</string>
+    <string name="remoteTerminalEndInput">Akhiri input (Ctrl-D)</string>
+    <string name="remoteTerminalEscape">Escape</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">Terminal mudah dibaca</string>
+    <string name="remoteTerminalTranscript">Keluaran terminal</string>
+    <string name="remoteTerminalNoOutput">Belum ada keluaran terminal.</string>
+    <string name="remoteTerminalInput">Kirim ke terminal</string>
+    <string name="remoteTerminalSend">Kirim</string>
+    <string name="remoteTerminalEndQuestion">Akhiri terminal ini?</string>
+    <string name="remoteTerminalEndBody">Shell jarak jauh dan semua yang berjalan di dalamnya akan dihentikan.</string>
+    <string name="remoteTerminalKeep">Pertahankan terminal</string>
+    <string name="remoteTerminalOffline">Terminal terputus. Buka lagi untuk menghubungkan ulang.</string>
+    <string name="remoteTerminalSize">Ukuran terminal</string>
+    <string name="remoteTerminalRows">Baris</string>
+    <string name="remoteTerminalColumns">Kolom</string>
+    <string name="remoteTerminalApplySize">Terapkan ukuran</string>
+    <string name="remoteTerminalSizeRange">Pilih antara 1 dan 1000 baris dan kolom.</string>
+    <string name="remoteTerminalServiceUnavailable">Server ini tidak menyediakan layanan terminal.</string>
+    <string name="remoteTerminalProjectChanged">Proyek percakapan ini berubah. Kembali, lalu buka Terminal lagi.</string>
+    <string name="remoteTerminalSignInRequired">Masuk lagi ke server ini untuk menggunakan terminalnya.</string>
+    <string name="remoteTerminalServiceNoAnswer">Layanan terminal tidak merespons. Coba lagi.</string>
+</resources>

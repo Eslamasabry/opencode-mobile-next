@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Perintah tersimpan</string>
+    <string name="keptPromptsBody">Perintah yang disimpan saat server dihapus. Pulihkan ke percakapan untuk meninjaunya sebelum dikirim.</string>
+    <string name="keptPromptsEmpty">Tidak ada perintah tersimpan</string>
+    <string name="keptPromptsChoose">Pilih percakapan</string>
+    <string name="keptPromptsChooseBody">Pilih percakapan dari server yang terhubung. Ini hanya mengisi drafnya.</string>
+    <string name="keptPromptsNoTargets">Tidak ada percakapan yang terhubung</string>
+    <string name="keptPromptsNoTargetsBody">Hubungkan server tersimpan atau buka percakapan, lalu coba lagi.</string>
+    <string name="keptPromptsConnect">Hubungkan server</string>
+    <string name="keptPromptsUncertain">Perintah ini mungkin sudah terkirim. Periksa percakapan aslinya sebelum mengirim lagi.</string>
+    <string name="keptPromptsFailed">Perintah tersimpan tidak bisa dibaca atau diubah. Coba lagi.</string>
+    <string name="keptPromptsKeptFrom">Disimpan dari server yang dihapus</string>
+    <string name="keptPromptsRestoreFailed">Perintah tersimpan atau percakapan telah berubah. Buka lagi Perintah tersimpan di percakapan dan coba lagi.</string>
+    <string name="keptConversation">Percakapan</string>
+</resources>

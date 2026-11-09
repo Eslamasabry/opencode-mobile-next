@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureCertificate">Sertifikat server ini tidak dapat diverifikasi. Periksa server, lalu coba lagi.</string>
+    <string name="serverFailureIncompatible">Server ini menjalankan versi yang tidak dapat bekerja dengan aplikasi ini.</string>
+    <string name="serverFailureNetwork">Server tidak dapat dijangkau. Periksa jaringan atau alamat server, lalu coba lagi.</string>
+    <string name="serverFailureRejected">Server menolak permintaan ini. Periksa server, lalu coba lagi.</string>
+    <string name="serverFailureSecret">Aplikasi tidak dapat membaca sandi yang tersimpan. Masukkan sandi lagi.</string>
+    <string name="serverFailureServer">Server mengalami masalah. Coba lagi nanti.</string>
+    <string name="serverFailureStorage">Aplikasi tidak dapat membaca atau menyimpan koneksi ini di ponsel ini. Coba lagi.</string>
+    <string name="serverFailureTimeout">Server tidak merespons tepat waktu. Coba lagi.</string>
+    <string name="serverFailureUnreadableReply">Server membalas, tetapi aplikasi tidak dapat membaca responsnya.</string>
+    <string name="serverFailureOther">Aplikasi tidak dapat menyelesaikan koneksi ini. Coba lagi.</string>
+</resources>

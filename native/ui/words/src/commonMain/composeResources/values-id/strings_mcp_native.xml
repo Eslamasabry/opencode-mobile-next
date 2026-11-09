@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="mcpNativeTitle">Katalog konektor</string>
+    <string name="mcpNativeConsent">Jelajahi registri MCP publik. Pencarian Anda dikirim ke registri hanya setelah Anda mengaktifkannya.</string>
+    <string name="mcpNativeTurnOn">Aktifkan</string>
+    <string name="mcpNativeTurnOff">Matikan katalog</string>
+    <string name="mcpNativeRefresh">Muat ulang</string>
+    <string name="mcpNativeSearch">Cari konektor</string>
+    <string name="mcpNativeEmpty">Konektor tidak ditemukan.</string>
+    <string name="mcpNativeLoadFailed">Tidak dapat dimuat ulang. Menampilkan daftar tersimpan jika ada.</string>
+    <string name="mcpNativeUnsupported">Koneksi ini tidak dapat menambah konektor. Anda tetap bisa meninjau daftarnya.</string>
+    <string name="mcpNativeReview">Tinjau konektor</string>
+    <string name="mcpNativeRuntimeOnly">Ini menambahkan konektor ke proyek ini sampai server dimulai ulang. Tinjau alamat atau perintahnya dulu.</string>
+    <string name="mcpNativeAdd">Tambah konektor</string>
+    <string name="mcpNativeAdded">Server mencantumkan konektor ini. Ketersediaan alat belum terkonfirmasi.</string>
+    <string name="mcpNativeCheck">Periksa koneksi</string>
+    <string name="mcpNativeAddUncertain">Penambahan tidak dapat dikonfirmasi. Periksa koneksi sebelum mencoba lagi.</string>
+    <string name="mcpNativeConflict">Nama konektor itu sudah ada. Pilih nama lain.</string>
+    <string name="mcpNativeName">Nama</string>
+    <string name="mcpNativeAddress">Alamat</string>
+    <string name="mcpNativeCommand">Perintah</string>
+    <string name="mcpNativeNeedsSettings">Daftar ini memerlukan detail koneksi atau argumen perintah tambahan. Siapkan secara manual di server Anda.</string>
+    <string name="mcpNativeNotAddable">Daftar ini tidak dapat ditambahkan dari katalog.</string>
+    <string name="mcpNativeBack">Kembali</string>
+    <string name="mcpNativeSaveFailed">Preferensi katalog tidak dapat disimpan. Coba lagi.</string>
+    <string name="mcpNativeSourceChanged">Koneksi berubah. Buka katalog lagi.</string>
+    <string name="mcpNativeToolsReady">Alat konektor siap untuk giliran berikutnya.</string>
+    <string name="mcpNativeSignIn">Masuk ke konektor</string>
+    <string name="mcpNativeCode">URL kembali atau kode</string>
+    <string name="mcpNativeFinishSignIn">Selesaikan masuk</string>
+    <string name="mcpNativeCancelSignIn">Batalkan masuk</string>
+</resources>

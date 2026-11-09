@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="scheduleActionWhen">Jadwalkan untuk %1$s</string>
+    <plurals name="scheduleActionHours">
+        <item quantity="other">Jadwalkan setiap %1$d jam</item>
+    </plurals>
+</resources>

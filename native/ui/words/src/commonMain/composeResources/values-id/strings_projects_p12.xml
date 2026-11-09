@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12ProjectsTitle">Proyek</string>
+    <string name="p12OpenFolder">Buka folder di server</string>
+    <string name="p12NewProjectUnavailable">Server ini tidak dapat membuat folder dari ponsel. Buat folder di komputer itu, lalu buka di sini.</string>
+    <string name="p12PhoneFolder">Folder di ponsel ini</string>
+    <string name="p12PhoneFolderUnavailable">OpenCode di ponsel ini belum disiapkan di versi ini.</string>
+    <string name="p12ProjectsOnServer">Proyek di %1$s</string>
+    <string name="p12ProjectsLoadFailed">Proyek server ini tidak dapat dimuat.</string>
+    <string name="p12NoServerTitle">Tidak ada server terhubung</string>
+    <string name="p12NoServerBody">Hubungkan server untuk melihat proyek dan percakapannya.</string>
+    <string name="p12PathNotAbsolute">Masukkan path lengkap yang diawali /.</string>
+    <string name="p12PathBadParts">Path tidak boleh berisi “..” atau baris baru.</string>
+    <string name="p12NewHere">Percakapan baru di sini</string>
+    <string name="p12NewHereBody">Memulai percakapan yang bekerja di %1$s.</string>
+    <string name="p12ProjectConversations">Percakapan di proyek ini</string>
+    <string name="p12ProjectNoConversations">Belum ada percakapan di proyek ini.</string>
+    <string name="p12ElsewhereTitle">Di proyek lain</string>
+    <string name="p12CreateFailed">Percakapan tidak dapat dimulai.</string>
+    <string name="p12Select">Pilih</string>
+    <string name="p12SelectCancel">Batalkan pilihan</string>
+    <string name="p12Rename">Ganti nama</string>
+    <string name="p12RenameTitle">Ganti nama percakapan</string>
+    <string name="p12RenameField">Judul</string>
+    <string name="p12RenameEmpty">Judul minimal berisi satu huruf.</string>
+    <string name="p12RenameFailed">Nama percakapan tidak dapat diganti.</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="other">Hapus %1$d percakapan</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="other">Arsipkan %1$d percakapan</item>
+    </plurals>
+    <string name="p12Deleted">“%1$s” dihapus</string>
+    <string name="chatsRowArchived">“%1$s” diarsipkan</string>
+    <string name="chatsRowActions">Tindakan percakapan</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="other">%1$d percakapan dihapus</item>
+    </plurals>
+    <string name="p12DeleteFailed">Percakapan tidak dapat dihapus, jadi dikembalikan ke daftar.</string>
+    <string name="p12ArchiveUnavailable">Server ini tidak dapat mengarsipkan percakapan.</string>
+    <string name="p12ArchiveFailed">Percakapan tidak dapat diarsipkan.</string>
+    <string name="p12ArchivedFilter">Diarsipkan</string>
+    <string name="p12MoreFor">Lainnya untuk %1$s</string>
+    <string name="p12OpenChat">Buka percakapan</string>
+</resources>

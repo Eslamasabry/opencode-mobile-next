@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">Riwayat dan registri penyiapan</string>
+    <string name="stateSetupNoWrites">Penyiapan dapat diperiksa di sini. Terapkan dan Urungkan tidak tersedia karena server ini tidak punya endpoint pemulihan atomik yang terverifikasi.</string>
+    <string name="stateSetupUnsupported">Hubungkan ke server yang mendukung pemeriksaan penyiapan untuk membaca sumber konfigurasinya.</string>
+    <string name="stateSetupSaveFailed">Perubahan tidak dapat disimpan. Coba lagi.</string>
+    <string name="stateSetupReadFailed">Informasi penyiapan tidak dapat dibaca. Coba lagi.</string>
+    <string name="stateSetupOffline">Hubungkan kembali untuk memuat ulang informasi penyiapan.</string>
+    <string name="stateSetupSources">Sumber konfigurasi</string>
+    <string name="stateSetupMcp">Alat terhubung</string>
+    <string name="stateSetupRecordReview">Simpan bahwa saya sudah meninjau penyiapan ini</string>
+    <string name="stateSetupRefresh">Muat ulang penyiapan</string>
+    <string name="stateSetupHistory">Riwayat penyiapan</string>
+    <string name="stateSetupHistoryUnavailable">Riwayat tersimpan tidak tersedia. Datanya disimpan untuk pemulihan.</string>
+    <string name="stateSetupHistoryEmpty">Belum ada tinjauan penyiapan yang disimpan</string>
+    <string name="stateSetupRegistryConsent">Jelajahi registri alat publik</string>
+    <string name="stateSetupRegistryPrivacy">Nonaktif secara default. Muat ulang mengirim satu permintaan publik. Kata pencarian dikirim ke registri; kredensial server Anda tidak. Daftar tidak pernah menjalankan atau memasang apa pun.</string>
+    <string name="stateSetupRegistrySearch">Cari di registri</string>
+    <string name="stateSetupRegistryRefresh">Muat ulang registri</string>
+    <string name="stateSetupRegistrySaved">Tampilkan daftar tersimpan</string>
+    <string name="stateSetupRegistryClear">Lupakan persetujuan registri dan daftar tersimpan</string>
+    <string name="stateSetupRegistryOffline">Offline. Menampilkan daftar tersimpan.</string>
+    <string name="stateSetupRegistryFailed">Registri tidak dapat dimuat. Daftar tersimpan Anda tetap aman.</string>
+    <string name="stateSetupRegistryEmpty">Tidak ada daftar untuk ditampilkan. Muat ulang atau coba pencarian lain.</string>
+    <string name="stateSetupMcpConnected">Terhubung</string>
+    <string name="stateSetupMcpPending">Menghubungkan</string>
+    <string name="stateSetupMcpDisabled">Nonaktif</string>
+    <string name="stateSetupMcpFailed">Tidak dapat terhubung</string>
+    <string name="stateSetupMcpSignIn">Perlu masuk</string>
+    <string name="stateSetupMcpUnknown">Status tidak diketahui</string>
+    <string name="stateSetupAuditProposed">Perubahan diusulkan</string>
+    <string name="stateSetupAuditPending">Perubahan tertunda</string>
+    <string name="stateSetupAuditAccepted">Perubahan diterima</string>
+    <string name="stateSetupAuditVerified">Tinjauan terverifikasi</string>
+    <string name="stateSetupAuditUncertain">Hasil belum pasti</string>
+    <string name="stateSetupAuditRejected">Perubahan ditolak</string>
+    <string name="stateServerSchedules">Perintah terjadwal</string>
+</resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Paket dan batas</string>
+    <string name="statePlansCopy1">Kembali</string>
+    <string name="statePlansCopy2">Membaca paket Anda</string>
+    <string name="statePlansCopy3">Muat ulang</string>
+    <string name="statePlansCopy4">Memuat ulang</string>
+    <string name="statePlansCopy5">Belum ada paket yang masuk</string>
+    <string name="statePlansCopy6">Masuk ke Codex, Claude, GLM, atau MiniMax di server atau di ponsel ini untuk melihat sisanya.</string>
+    <string name="statePlansCopy7">Kunci API (tanpa batas paket)</string>
+    <string name="statePlansCopy8">Belum masuk di mana pun</string>
+    <string name="statePlansCopy9">Ponsel ini</string>
+    <string name="statePlansCopy10">Masih banyak</string>
+    <string name="statePlansCopy11">Mendekati batas</string>
+    <string name="statePlansCopy12">Batas tercapai</string>
+    <string name="statePlansCopy13">Sudah masuk, tetapi angkanya belum dapat dibaca</string>
+    <string name="statePlansCopy14">Sesi masuk telah habis</string>
+    <string name="statePlansCopy15">Belum masuk</string>
+    <string name="statePlansCopy16">Angkanya tidak dapat dibaca kali ini</string>
+    <string name="statePlansCopy17">Offline. Ini angka terakhir.</string>
+    <string name="statePlansCopy18">Tidak ada batas yang dilaporkan</string>
+    <string name="statePlansCopy19">Kunci API, tanpa batas paket</string>
+    <string name="statePlansCopy20">Masuk untuk melihat angkanya</string>
+    <string name="statePlansCopy21">Masuk di %1$s untuk melihat angkanya</string>
+    <string name="statePlansCopy22">Tambahkan kunci untuk melihat angkanya</string>
+    <string name="statePlansCopy23">Tambahkan kunci di %1$s untuk melihat angkanya</string>
+    <string name="statePlansCopy24">Atur pembacaan untuk melihat angkanya</string>
+    <string name="statePlansCopy25">Atur pembacaan di %1$s untuk melihat angkanya</string>
+    <string name="statePlansCopy26">Coba lagi</string>
+    <string name="statePlansCopy27">5 jam</string>
+    <string name="statePlansCopy28">Minggu ini</string>
+    <string name="statePlansCopy29">Bulan ini</string>
+    <string name="statePlansCopy30">Batas</string>
+    <string name="statePlansCopy31">Sisa %1$s%</string>
+    <string name="statePlansCopy32">direset sekarang</string>
+    <string name="statePlansCopy33">direset dalam %1$s mnt</string>
+    <string name="statePlansCopy34">direset dalam %1$s jam</string>
+    <string name="statePlansCopy35">direset dalam %1$s hari</string>
+    <string name="statePlansCopy36">Sudah direset sejak angka ini dibaca.</string>
+    <string name="statePlansCopy37">Paket: %1$s</string>
+    <string name="statePlansCopy38">Peringatan di %1$s% terpakai</string>
+    <string name="statePlansCopy39">offline</string>
+    <string name="statePlansCopy40">sesi masuk habis</string>
+    <string name="statePlansCopy41">belum masuk</string>
+    <string name="statePlansCopy42">angka dibaca di sini</string>
+    <string name="statePlansCopy43">sudah masuk</string>
+    <string name="statePlansCopy44">Batas paket Claude tidak dapat dibaca melalui OpenCode</string>
+    <string name="statePlansAlerts">Peringatan penggunaan</string>
+    <string name="statePlansThreshold">Peringatan di %1$d% terpakai</string>
+    <string name="statePlansResetOn">Pemberitahuan reset aktif</string>
+    <string name="statePlansResetOff">Pemberitahuan reset nonaktif</string>
+    <string name="statePlansPercent">Persen terpakai (1–100)</string>
+    <string name="statePlansSaveFailed">Tidak dapat menyimpan. Masukkan persentase dari 1 sampai 100 lalu coba lagi.</string>
+    <string name="statePlansSave">Simpan tingkat peringatan</string>
+    <string name="statePlansUseDefault">Pakai tingkat peringatan default</string>
+</resources>

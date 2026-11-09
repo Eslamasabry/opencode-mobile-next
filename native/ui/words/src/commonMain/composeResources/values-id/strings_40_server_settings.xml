@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverSettingsTitle">Pengaturan server</string>
+    <string name="serverSettingsShell">Shell bawaan</string>
+    <string name="serverSettingsFailed">Tidak dapat menyelesaikan. Coba lagi.</string>
+    <string name="serverSettingsRemove">Hapus server</string>
+    <string name="serverSettingsRemoveBody">Menghapus sambungan tersimpan ini beserta data lokalnya dari aplikasi ini. Server dan file di komputernya tetap ada.</string>
+    <string name="serverSettingsDisconnected">Tidak tersambung</string>
+    <string name="serverSettingsConnect">Sambungkan ke server ini</string>
+    <string name="serverSettingsOnServer">Perubahan di sini disimpan di %1$s dan dibagikan ke aplikasi lain yang menggunakannya.</string>
+    <string name="serverSettingsWaiting">Menunggu</string>
+    <string name="serverSettingsPassed">Lulus</string>
+    <string name="serverSettingsAttention">Perlu perhatian</string>
+    <string name="serverSettingsFailedCheck">Perlu diperbaiki</string>
+    <string name="serverSettingsSkipped">Tidak diperiksa</string>
+    <string name="serverSettingsShellUnavailable">Sambungkan ke server yang membagikan pengaturan shell untuk mengubah shell bawaannya.</string>
+    <string name="serverSettingsSaving">Menyimpan…</string>
+    <string name="serverSettingsTerminal">Terminal</string>
+    <string name="serverSettingsFiles">Jelajahi file</string>
+    <string name="serverSettingsProjects">Kelola proyek</string>
+    <string name="serverSettingsSchedules">Perintah terjadwal</string>
+    <string name="serverSettingsProviders">Penyedia model</string>
+    <string name="serverSettingsPermissions">Permintaan izin</string>
+    <string name="serverSettingsSteering">Arahkan balasan yang sedang berjalan</string>
+    <string name="serverSettingsSupported">Tersedia di server ini</string>
+    <string name="serverSettingsUnsupported">Tidak tersedia di server ini</string>
+    <string name="server40DisconnectConfirm">Putuskan dari %1$s?</string>
+    <string name="server40Disconnect">Putuskan</string>
+    <string name="server40DisconnectBody">Ini menutup sambungan di ponsel ini. Percakapan, draf, dan pesan dalam antrean tetap tersimpan.</string>
+    <string name="server40Reconnect">Sambungkan lagi</string>
+    <string name="server40AgentsNone">Tidak ada agen yang siap di komputer ini.</string>
+    <string name="server40Plugins">Plugin server</string>
+    <string name="server40ResetDone">Setelan bawaan Anda berlaku lagi di sini.</string>
+    <string name="server40ModelHelp">Pilihan ini berlaku untuk percakapan baru di server ini. Percakapan yang ada tetap memakai modelnya sendiri.</string>
+</resources>

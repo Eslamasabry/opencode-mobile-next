@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Pemeriksaan koneksi Codex</string>
+    <string name="codexNativeIntro">Jalankan perintah satu baris ini di komputer Anda. Masukkan alamatnya, path folder absolut, dan token kemampuan untuk memeriksa koneksi terautentikasi.</string>
+    <string name="codexNativeCopy">Salin perintah mulai</string>
+    <string name="codexNativeTokenHelp">Pakai path file token Anda sendiri yang absolut. Jaga kerahasiaan token. WebSocket biasa hanya diizinkan di perangkat ini; gunakan WebSocket aman untuk komputer lain.</string>
+    <string name="codexNativeAddress">Alamat WebSocket</string>
+    <string name="codexNativeDirectory">Path folder absolut</string>
+    <string name="codexNativeToken">Token kemampuan</string>
+    <string name="codexNativeWorking">Memeriksa koneksi…</string>
+    <string name="codexNativeProbe">Periksa koneksi</string>
+    <string name="codexNativeProbed">Koneksi terautentikasi menjawab pembacaan pada cakupan folder. Hasil kosong tidak memastikan folder itu ada.</string>
+    <string name="codexNativeFailed">Pemeriksaan koneksi gagal. Pastikan Codex berjalan dan coba lagi.</string>
+    <string name="codexNativeAuthFailed">Codex menolak token kemampuan. Periksa token dan coba lagi.</string>
+    <string name="codexNativeScopeFailed">Periksa alamat, path folder absolut, dan cakupan koneksi yang diizinkan.</string>
+    <string name="codexNativeVersion">Koneksi ini tidak bisa menyediakan penggunaan akun. Pembacaan akun memerlukan protokol Codex 0.153.4 yang memenuhi syarat.</string>
+    <string name="codexNativeOpen">Buka pembaca akun</string>
+    <string name="codexNativeReaderOpen">Pembaca akun terbuka. Buka Paket untuk memuat ulang batas akun. Tutup di sini setelah selesai.</string>
+    <string name="codexNativePlans">Buka Paket</string>
+    <string name="codexNativeClose">Tutup pembaca akun</string>
+    <string name="codexNativeReadOnly">Halaman ini memeriksa koneksi dan membaca penggunaan akun. Halaman ini tidak memulai percakapan, tidak memasukkan Anda, dan tidak mengirim perintah.</string>
+</resources>
