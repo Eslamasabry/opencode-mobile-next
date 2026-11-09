@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationServers
 import io.github.eslamasabry.oc.feature.chats.presentation.NoConversationServers
+import io.github.eslamasabry.oc.feature.chats.presentation.ServerName
 import io.github.eslamasabry.oc.feature.projects.presentation.NoProjectServers
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenedFolders
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
@@ -71,6 +72,7 @@ class LiveConversationServers(
     private val registry: ConnectionRegistry,
     stores: PreviewStores,
     appScope: AppCoroutineScope,
+    runtime: PreviewRuntime,
 ) : ConversationServers {
     override fun prefetch(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
         registry.graphFor(ref)?.session?.reads?.prefetch(ref.sessionId)
@@ -91,6 +93,16 @@ class LiveConversationServers(
                         graph.session.reads.missing,
                     )
                 }
+            }
+            .stateIn(appScope, SharingStarted.Eagerly, persistentListOf())
+
+    // Cache-first: the shown saved servers not connected yet draw their kept rows on All conversations.
+    override val waiting: StateFlow<ImmutableList<ServerName>> =
+        combine(registry.live, stores.profiles.profiles, stores.profiles.activeId) { live, saved, _ ->
+                saved
+                    .filter { it.id !in live && runtime.listSourceShown(it.id) }
+                    .map { ServerName(it.id, it.profile.name) }
+                    .toImmutableList()
             }
             .stateIn(appScope, SharingStarted.Eagerly, persistentListOf())
 }

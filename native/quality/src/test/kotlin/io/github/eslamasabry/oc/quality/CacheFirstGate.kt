@@ -55,7 +55,7 @@ internal object CacheFirstGate {
     }
 
     /** Pending screens (not cache-first yet). Lower it with every screen made cache-first; never raise it. */
-    const val PENDING_CEILING: Int = 33
+    const val PENDING_CEILING: Int = 25
 
     private fun f(module: String, rest: String): String =
         "feature/$module/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/${module.replace("-", "")}/$rest"
@@ -70,7 +70,7 @@ internal object CacheFirstGate {
             f("chat", "ui/ChatScreen.kt") to Review(1, Cold("CF-12")),
             f("chat", "ui/ChatStates.kt") to Review(1, Cold("CF-12")),
             f("chats", "attention/AttentionScreen.kt") to Review(1, Pending),
-            f("chats", "ui/ChatsAllScreen.kt") to Review(1, Pending),
+            f("chats", "ui/ChatsAllScreen.kt") to Review(1, Cold("CF-17")),
             f("chats", "ui/ChatsScreen.kt") to Review(1, Cold("B-HOME-CACHE-001")),
             f("chats", "ui/NewConversationScreen.kt") to Review(1, Pending),
             f("factsbook", "ui/AboutYouScreen.kt") to Review(1, Pending),
@@ -82,7 +82,7 @@ internal object CacheFirstGate {
             f("factsbook", "ui/TriggersScreens.kt") to Review(2, Pending),
             f("files", "ui/FileScreen.kt") to Review(3, Cold("CF-32")),
             f("files", "ui/FileShareSheet.kt") to Review(1, Local),
-            f("git", "ui/GitScreen.kt") to Review(1, Pending),
+            f("git", "ui/GitScreen.kt") to Review(1, Cold("CF-40")),
             f("handoff", "ui/AgentHandoffScreen.kt") to Review(1, Local),
             f("linux", "ui/KeptServicesScreen.kt") to Review(1, Local),
             f("linux", "ui/LinuxPackagesScreen.kt") to Review(1, Local),
@@ -111,12 +111,12 @@ internal object CacheFirstGate {
             f("settings", "ui/VoiceLicensesView.kt") to Review(1, Local),
             f("setup", "ui/SetupScreen.kt") to Review(1, Local),
             f("setupassistant", "ui/SetupScreen.kt") to Review(3, Local),
-            f("team", "ui/TeamBoardScreen.kt") to Review(1, Pending),
-            f("team", "ui/TeamEditorScreen.kt") to Review(1, Pending),
-            f("team", "ui/TeamHomeScreen.kt") to Review(1, Pending),
-            f("team", "ui/TeamProjectScreen.kt") to Review(1, Pending),
-            f("team", "ui/TeamTaskScreen.kt") to Review(1, Pending),
-            f("terminal", "ui/TerminalScreen.kt") to Review(1, Pending),
+            f("team", "ui/TeamBoardScreen.kt") to Review(1, Cold("CF-46")),
+            f("team", "ui/TeamEditorScreen.kt") to Review(1, Cold("CF-46")),
+            f("team", "ui/TeamHomeScreen.kt") to Review(1, Cold("CF-46")),
+            f("team", "ui/TeamProjectScreen.kt") to Review(1, Cold("CF-46")),
+            f("team", "ui/TeamTaskScreen.kt") to Review(1, Cold("CF-46")),
+            f("terminal", "ui/TerminalScreen.kt") to Review(1, Cold("CF-43")),
             f("usage", "ui/LimitsContent.kt") to Review(1, Cold("CF-39")),
             f("usage", "ui/UsageScreen.kt") to Review(1, Cold("CF-36")),
             f("voice", "ui/TeachingScreen.kt") to Review(1, Local),
