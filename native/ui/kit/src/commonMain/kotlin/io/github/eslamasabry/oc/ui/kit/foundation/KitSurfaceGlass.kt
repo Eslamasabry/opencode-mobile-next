@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -84,7 +85,27 @@ internal class KitGlassBackdrop {
 
     /** The picture's darkest and brightest spots under a pane's frost, for [io.github.eslamasabry.oc.ui.design.style.GlassFinish]. */
     internal var frostedSpots: List<Argb> by mutableStateOf(emptyList())
+
+    /**
+     * The picture blurred once per frost sigma and shared by every pane of that sigma (smoothness 2026-11-09): a pane
+     * draws its part of the one blurred copy, clipped to its shape, instead of blurring the picture again on its own.
+     * Made by the panes in the source's window, released with the source ([kitGlassBackdropSource]).
+     */
+    internal val frosted: MutableMap<Float, SharedFrost> = HashMap()
 }
+
+/**
+ * One blurred copy of the backdrop's picture at [FROST_SCALE] of its size (the blur hides the lower resolution; a
+ * quarter of the pixels to blur), kept as a reference to the picture's layer: a new frame of the picture blurs again on
+ * the GPU without anything being recorded here.
+ */
+internal class SharedFrost(val layer: GraphicsLayer) {
+    var from: GraphicsLayer? = null
+    var size: androidx.compose.ui.unit.IntSize = androidx.compose.ui.unit.IntSize.Zero
+}
+
+/** The scale the shared frost blurs the picture at. */
+internal const val FROST_SCALE: Float = .5f
 
 @Composable
 internal fun rememberKitGlassBackdrop(): KitGlassBackdrop = remember { KitGlassBackdrop() }
@@ -123,11 +144,12 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     // Reduced motion and high contrast hold the frost solid (Dart `KitFrost.heldBy`; high contrast already draws Solid).
     val held = reduced || signals.highContrast
     val sigma = decoration.frost
+    // The shared copy is blurred at FROST_SCALE of the picture's size, so the blur's radius is scaled with it.
     val effect =
         remember(sigma, density, platform, held) {
-            if (held) null else platform.frostEffect(FrostSpec(sigma, FROST_SATURATION, 0f), density)
+            if (held) null else platform.frostEffect(FrostSpec(sigma, FROST_SATURATION, 0f), density * FROST_SCALE)
         }
-    return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape())
+    return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape(), sigma)
 }
 
 /**
@@ -135,7 +157,7 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
  * no frost of their own (Dart `_KitSurfaceScope.frosted`), as they do inside a frosted pane. It draws nothing itself.
  */
 internal fun Modifier.kitGlassStackRoot(): Modifier =
-    this then GlassFrostElement(null, null, Color.Transparent, androidx.compose.ui.graphics.RectangleShape)
+    this then GlassFrostElement(null, null, Color.Transparent, androidx.compose.ui.graphics.RectangleShape, 0f)
 
 /** Whether a Glass pane over [backdrop] blurs the picture behind it here (for the legibility measure). */
 @Composable
@@ -389,6 +411,8 @@ private class BackdropSourceNode(
         own?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         if (backdrop.layer === own) backdrop.layer = null
         own = null
+        backdrop.frosted.values.forEach { requireGraphicsContext().releaseGraphicsLayer(it.layer) }
+        backdrop.frosted.clear()
     }
 
     override fun ContentDrawScope.draw() {
@@ -407,14 +431,16 @@ private data class GlassFrostElement(
     val effect: RenderEffect?,
     val ground: Color,
     val shape: Shape,
+    val sigma: Float,
 ) : ModifierNodeElement<GlassFrostNode>() {
-    override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape)
+    override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape, sigma)
 
     override fun update(node: GlassFrostNode) {
         node.backdrop = backdrop
         node.effect = effect
         node.ground = ground
         node.shape = shape
+        node.sigma = sigma
         node.invalidateDraw()
     }
 
@@ -428,11 +454,11 @@ private class GlassFrostNode(
     var effect: RenderEffect?,
     var ground: Color,
     var shape: Shape,
+    var sigma: Float,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode {
     override val traverseKey: Any get() = GlassTraverseKey
     private var coordinates: LayoutCoordinates? = null
     private var last: Offset = Offset.Unspecified
-    private var blur: GraphicsLayer? = null
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
@@ -445,10 +471,33 @@ private class GlassFrostNode(
     }
 
     override fun onDetach() {
-        blur?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
-        blur = null
         coordinates = null
         last = Offset.Unspecified
+    }
+
+    /** The picture blurred once for every pane of this sigma, made on first use and kept in step with the picture. */
+    private fun ContentDrawScope.shared(bd: KitGlassBackdrop, picture: GraphicsLayer, fx: RenderEffect): GraphicsLayer {
+        val frost = bd.frosted.getOrPut(sigma) { SharedFrost(requireGraphicsContext().createGraphicsLayer()) }
+        val layer = frost.layer
+        val full = picture.size
+        if (frost.from !== picture || frost.size != full || layer.renderEffect == null) {
+            frost.from = picture
+            frost.size = full
+            val small = androidx.compose.ui.unit.IntSize(
+                (full.width * FROST_SCALE).toInt().coerceAtLeast(1),
+                (full.height * FROST_SCALE).toInt().coerceAtLeast(1),
+            )
+            layer.renderEffect = fx
+            layer.pivotOffset = Offset.Zero
+            layer.scaleX = full.width.toFloat() / small.width
+            layer.scaleY = full.height.toFloat() / small.height
+            // A reference to the picture's layer, drawn small: each new frame of the picture is blurred again by the GPU
+            // with nothing recorded here.
+            layer.record(Density(density, fontScale), layoutDirection, small) {
+                scale(small.width.toFloat() / full.width, small.height.toFloat() / full.height, Offset.Zero) { drawLayer(picture) }
+            }
+        }
+        return layer
     }
 
     /** Inside a pane that frosts already: sit on its frost (Dart `_KitSurfaceScope.frosted`, kit_surface_look.dart:1263-1265). */
@@ -464,11 +513,9 @@ private class GlassFrostNode(
             if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
                 bd.root === c.findRootCoordinates()
             ) {
-                val layer = blur ?: requireGraphicsContext().createGraphicsLayer().also { blur = it }
-                layer.renderEffect = fx
+                val layer = shared(bd, picture, fx)
                 val shift = bd.origin - c.positionInRoot()
-                recordDetached(layer) { translate(shift.x, shift.y) { drawLayer(picture) } }
-                clipPath(Path().apply { addOutline(outline) }) { drawLayer(layer) }
+                clipPath(Path().apply { addOutline(outline) }) { translate(shift.x, shift.y) { drawLayer(layer) } }
             } else {
                 drawOutline(outline, ground)
             }
