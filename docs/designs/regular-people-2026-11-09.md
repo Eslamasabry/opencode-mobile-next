@@ -277,6 +277,52 @@ The spike makes no app changes:
 
 **Records** go in `docs/qa/presentations-spike-<date>/README.md`, with one image per slide-viewer screen (audit trail rule).
 
+**Spike results (2026-11-09).** Records, scripts and images: `docs/designs/spikes/presentations-2026-11-09/`.
+
+How it was run:
+- The `OC_API37` emulator (x86_64, 4 GB), native preview APK `bc46d2aea` (signer 12de0107). This phone was set up through the app, then driven in its Ubuntu with the app's own proot flags over `adb` as the app user.
+- Free model `opencode/big-pickle` only. This emulator's OpenCode lists only free models (11), and no paid model is available without the owner's key, so **no paid-model runs were made**.
+- A pack was built by hand: pptxgenjs 4.0.1, pdfkit 0.20.2, bidi-js, Noto Sans and Noto Sans Arabic (regular and bold), a spike `build.js`, and a draft `make-presentation` skill.
+- Each topic was run once with the §5.3 brief through `opencode2 run`, which is non-interactive: the `question` tool is cancelled there, so the model continued on its own. The real in-app wait for an answer was **not** exercised.
+- The skill was placed in the server's own config folder, `/root/.oc-opencode2/config/opencode/skills/`. **The pack install in §4.1 names `/root/.config/opencode/...`. The OpenCode 2 server started by the app uses `XDG_CONFIG_HOME=/root/.oc-opencode2/config`, so the install must link into that folder.** The skill loaded from there.
+
+| Check | Result | Evidence |
+|---|---|---|
+| (a) Outline stop | **Pass on the model's behaviour, 5 of 5.** In every run the order was: load skill, write outline, call `question`, then continue (the run mode cancelled the question). Option labels were checked in run 4 only. Not tested: the answer arriving through the app's question sheet. | Tool order in the run logs |
+| (b) Valid deck | **Pass, 5 of 5.** Every `deck.json` built on the first call. No warnings, no repair needed. | `OC_DECK` line in each run |
+| (c) Opens cleanly | **Partly.** No PowerPoint, WPS or Google Slides is on the emulator and no APK was available locally, so those three were **not tested**. As a stand-in, LibreOffice on the PC converted all 5 `.pptx` files without a repair prompt (page counts 8, 5, 5, 12, 8). That is not the bar. | `arabic-deck-pptx-libreoffice-slide3.png` |
+| (d) Arabic, PDF | **Pass, after a fix.** See below. | `arabic-deck-pdf-poppler.png` |
+| (d) Arabic, in the app's viewer | **Not verified.** The app's viewer says "This PDF page could not be displayed" for the pdfkit PDF and equally for a control PDF made by LibreOffice, so the cause is the emulator or the viewer path, not our file. Needs a re-check on a real device or an arm64 image. | `app-viewer-control-pdf-not-displayed.png` |
+| (d) Arabic, WPS | **Not tested** (no WPS). LibreOffice shows right-to-left, joined letters, but did not swap the two columns, and put "%" before "10" in one line. | same LibreOffice image |
+| (e) Speed | **Pass.** `build.js` takes 0.33 to 0.44 s wall for 5, 8 and 12 slides, with a peak of 100 to 113 MB RSS (read from `VmHWM`). Whole run, outline to deck, on the free model: 17 s, 26 s, 31 s, 42 s and 57 s. The emulator is x86 on a PC, so a phone will be slower. | `run.sh`, run logs |
+
+**Sizes (measured).**
+
+| Piece | On disk | Gzipped |
+|---|---|---|
+| pptxgenjs + pdfkit + bidi-js, as installed | 33 MB | 7.8 MB |
+| The same after `trim.sh` (no maps, browser builds, types, `.yarn`, duplicate module formats) | 12 MB | 2.4 MB |
+| Four Noto TTFs (regular and bold, Latin and Arabic) | 1.5 MB | about 0.7 MB (Guess) |
+| Whole pack archive (trimmed modules, fonts, `build.js`) | 17 MB | **3.1 MB** |
+
+So the +6 MB in §5.6 becomes about +3 MB in the APK. The `.pptx` files are 78 to 138 KB and the PDFs 19 to 35 KB.
+
+**Arabic finding (this decides D2).**
+- pdfkit 0.20.2 alone joins Arabic letters and reads right-to-left for a plain Arabic line, but it fails on real content: Arabic-Indic digits come out reversed (١٠٠ shows as ٠٠١, which is a wrong price), Latin words and "%" or brackets have no glyph in Noto Sans Arabic and draw as empty boxes, and spaces around mixed runs are lost.
+- A fix was built and checked in the spike `build.js`: bidi-js for the run order, one font per run (Arabic font for Arabic, Noto Sans for Latin, digits and brackets), words drawn one at a time, and Arabic-Indic digit runs pre-reversed. Pure Arabic, Arabic with Latin brand names (iPhone, Wi-Fi), Western digits, Arabic-Indic digits and brackets all rendered correctly in the 3-slide test deck and in the model's own 5-slide Arabic deck.
+- The fix is about 60 lines and adds 224 KB. It has been tested on one font pair and a few dozen phrases only, not on long paragraphs, and not on Farsi or Urdu.
+
+**Also found.**
+- Both the Arabic font and the PPTX need column order swapped for right-to-left (done in the PDF, not yet in the PPTX).
+- pptxgenjs sets right-to-left on the text boxes but cannot embed fonts, as §5.4 says.
+- The pptx cannot be checked in WPS or PowerPoint from here.
+
+**Verdict.**
+- (a), (b), (e): **go.** Even the free model did the outline step and built valid decks 5 of 5.
+- (d) PDF: **go with the bidi fix in `build.js`**, a known limit to test on a device.
+- (d) in the app's viewer and in WPS, and (c): **open.** They need a device and the three Office apps. Until they are checked, D2 option A stays the recommendation but is not proven.
+- **Recommendation:** go for phase 1 with D2 = A, and make the first phase 1 task a device check of the four open rows (app viewer on a real phone, WPS, PowerPoint, Google Slides) before the card and share work is built. If the app viewer cannot show pdfkit's PDF on a real phone, switch to B for the preview only.
+
 **If (a) or (b) fails on the free model:** shorten the skill to a fixed json template with two worked examples and run again. If it still fails, phase 1 ships "works best with a paid model", stated on the questions sheet.
 
 ### 5.2 Flow
