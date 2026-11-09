@@ -16,6 +16,8 @@ class VerbatimCopyReviewTest {
     /** path (from native/) → (count, why the text is the person's own or already masked). */
     private val reviewedOwnContent: Map<String, Pair<Int, String>> =
         mapOf(
+            "feature/factsbook/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/factsbook/ui/PageScreens.kt" to
+                (1 to "Not saved yet: Copy gives the person back the text they typed for FactsBook that could not be saved; it is their own content, never server text"),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitDetailsFold.kt" to
                 (1 to "Copy all of a Details fold: the fold holds Redacted details and closed categories only"),
             "feature/team/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/team/ui/TeamIntroScreen.kt" to

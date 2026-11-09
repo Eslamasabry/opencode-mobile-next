@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
@@ -25,8 +26,9 @@ import org.jetbrains.compose.resources.stringResource
 /** Local editor, sharing the composer's field (order C22 / ADR 9.2), with an explicit Use in draft decision. */
 @Composable
 internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose: () -> Unit) {
-    val original = remember(visible) { field.text.toString() }
-    val selection = remember(visible) { field.selection }
+    // Read once when the editor opens, outside observation: a key typed in the composer must not recompose this screen.
+    val original = remember(visible) { Snapshot.withoutReadObservation { field.text.toString() } }
+    val selection = remember(visible) { Snapshot.withoutReadObservation { field.selection } }
     var discard by remember(visible) { mutableStateOf(false) }
     val focus = remember(visible) { FocusRequester() }
     val close = {

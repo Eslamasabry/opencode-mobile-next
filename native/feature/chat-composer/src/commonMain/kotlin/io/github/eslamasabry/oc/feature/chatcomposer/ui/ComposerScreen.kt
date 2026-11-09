@@ -140,7 +140,7 @@ fun ComposerScreen(
     ) {
         if (state.chips.isNotEmpty()) ChipRow(state, actions, freeModel)
         KitComposerTextBox(
-            text = field.text.toString(),
+            text = { field.text.toString() },
             running = state.glow,
             wide = LocalKitWindow.current.cls.isWide,
             allowStacking = state.fieldEnabled,

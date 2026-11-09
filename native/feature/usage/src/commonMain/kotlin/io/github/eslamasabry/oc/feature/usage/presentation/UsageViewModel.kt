@@ -41,7 +41,10 @@ public class UsageViewModel(
     private val clock: Clock,
     private val nav: AppNavigator,
     private val budgetAccess: Set<UsageBudgetAccess>,
+    lastKnownPorts: Set<UsageLastKnown> = emptySet(),
 ) : ViewModel(), UsageActions {
+    private val lastKnown = lastKnownPorts.singleOrNull()
+
     private val local = MutableStateFlow(UsageUi(server = route.profile))
     public val state: StateFlow<UsageUi> = local.asStateFlow()
 
@@ -268,6 +271,10 @@ public class UsageViewModel(
         val filters = Filters(server, s.range, s.scope, query.timezone)
         // A reading for other filters (another zone included) is dropped, never relabelled.
         if (lastGood?.first != filters) lastGood = null
+        // Cache-first: the report last read for these filters draws the real page at once (memory only here).
+        val keptKey = "${s.range.name}|${(s.scope as? UsageScope.Project)?.id.orEmpty()}|${query.timezone}"
+        if (lastGood == null)
+            lastKnown?.peek(server, keptKey)?.let { lastGood = filters to it.report() }
         val kept = lastGood?.takeIf { it.first == filters }?.second
         local.update {
             it.copy(
@@ -281,6 +288,15 @@ public class UsageViewModel(
         }
         viewModelScope
             .launch {
+                if (kept == null && lastKnown != null) {
+                    // Not in memory: the stored report, unless the live answer got there first.
+                    lastKnown.read(server, keptKey)?.let { stored ->
+                        if (mine == generation && local.value.report == null) {
+                            lastGood = filters to stored.report()
+                            local.update { it.copy(phase = UsagePhase.Ready, report = stored.report()) }
+                        }
+                    }
+                }
                 val result = source.statistics(server, query)
                 if (mine != generation) return@launch
                 when (result) {
@@ -292,6 +308,7 @@ public class UsageViewModel(
                                     (s.range == UsageRange.AllTime && query.fromMs == null))
                         val answer = value.copy(coversRequest = covers)
                         lastGood = filters to answer
+                        lastKnown?.keep(server, keptKey, KeptUsageReport.of(answer))
                         // Budgets keep Flutter's stored format, which has no 24-hour, 7-day or 90-day range.
                         val owner =
                             if (s.range.hasBudgets) budgetAccess.singleOrNull()?.open(server) else null
