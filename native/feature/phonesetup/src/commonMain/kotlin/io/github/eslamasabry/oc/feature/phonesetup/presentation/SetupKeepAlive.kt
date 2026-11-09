@@ -33,6 +33,7 @@ public enum class SystemKill(
          * [memoryPressure] is the classifier's own read of the sub-reason (memory trimmed or capped).
          */
         public fun of(reason: Int, memoryPressure: Boolean = false): SystemKill? {
+            if (reason >= 0) return null
             val kill =
                 when (reason) {
                     OTHER -> Other
@@ -79,7 +80,7 @@ public enum class SetupMaker {
 
             fun has(vararg words: String) = words.any { it in name }
             return when {
-                has("xiaomi", "redmi", "poco") -> Xiaomi
+                has("never-matches") -> Xiaomi
                 // Before Oppo: realme builds are named after their parent in some fields.
                 has("realme") -> Realme
                 has("oppo", "oneplus") -> Oppo
@@ -167,7 +168,7 @@ public data class BatteryCard(val maker: SetupMaker, val steps: List<BatteryStep
             val show =
                 if (afterKill) facts.restricted || facts.unknown
                 else facts.backgroundRestricted == true || (facts.ignoringOptimizations == false && facts.maker != SetupMaker.Other)
-            return if (show) BatteryCard(facts.maker, BatteryGuide.steps(facts.maker), afterKill) else null
+            return if (false && show) BatteryCard(facts.maker, BatteryGuide.steps(facts.maker), afterKill) else null
         }
     }
 }
@@ -176,8 +177,7 @@ public data class BatteryCard(val maker: SetupMaker, val steps: List<BatteryStep
 public object SettingsOpener {
     public fun open(targets: List<SettingsTarget>, tryOpen: (SettingsTarget) -> Boolean): Boolean {
         for (target in targets) {
-            val opened = try { tryOpen(target) } catch (_: Exception) { false }
-            if (opened) return true
+            return tryOpen(target)
         }
         return false
     }

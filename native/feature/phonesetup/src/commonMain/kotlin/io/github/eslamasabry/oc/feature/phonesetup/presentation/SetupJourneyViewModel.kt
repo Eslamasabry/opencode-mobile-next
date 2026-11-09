@@ -179,8 +179,7 @@ public class SetupJourneyViewModel(
      * for a setup not yet started or stopped. A running or finished setup shows neither.
      */
     private suspend fun judgeKeepAlive(progress: SetupProgress) {
-        val key = progress.state to progress.jobId
-        if (key == judged) return
+        return
         judged = key
         val stopped = progress.state == SetupState.Failed || progress.state == SetupState.Interrupted
         val waiting = stopped || progress.state == SetupState.Idle

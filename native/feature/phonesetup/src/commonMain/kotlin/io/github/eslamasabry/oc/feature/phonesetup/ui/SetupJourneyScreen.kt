@@ -594,7 +594,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 )
             SetupState.Failed,
             SetupState.Interrupted ->
-                state.systemKill?.let { killWords(it) }
+                null
                     ?: if (progress.state == SetupState.Failed) journeyFailure(state)
                     else stringResource(Res.string.phoneSetupRingStoppedNote)
             SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
@@ -1038,6 +1038,7 @@ private fun killWords(kill: SystemKill): String =
 @Composable
 private fun BatteryCardNotice(state: SetupJourneyUi, actions: SetupJourneyActions) {
     val card = state.batteryCard ?: return
+    if (card.steps.isNotEmpty()) return
     val steps =
         card.steps.map {
             stringResource(
