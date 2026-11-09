@@ -15,10 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -29,9 +27,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kitchat.LocalKitChatWork
-import kotlinx.coroutines.withContext
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.image.rememberKitImage
 
 /**
  * P12-CHAT-FEEL: a line of pictures in a reply (B-CHAT-059, Flutter `KitMarkdownImage` tiles). Each
@@ -59,18 +55,16 @@ public fun KitPictureTiles(
                 val read = actions.readPicture
                 val path = picture.path
                 val confirmed = path != null && path in actions.confirmedPaths
-                val work = LocalKitChatWork.current
+                val drawable =
+                    confirmed && path != null && read != null && DRAWABLE.containsMatchIn(path)
+                // The kit picture pipeline: downsampled to the tile, memory and disk cached, off the main thread.
                 val bitmap by
-                    produceState<ImageBitmap?>(null, path, read, confirmed) {
-                        if (
-                            confirmed &&
-                                path != null &&
-                                read != null &&
-                                DRAWABLE.containsMatchIn(path)
-                        ) {
-                            val bytes = read(path)
-                            if (bytes != null) value = withContext(work) { decodePicture(bytes) }
-                        }
+                    rememberKitImage(
+                        key = if (drawable) "pic:$path" else null,
+                        maxEdge = TILE_EDGE,
+                        scope = actions.pictureScope,
+                    ) {
+                        read?.invoke(path!!)
                     }
                 val tile =
                     @Composable {
@@ -133,14 +127,7 @@ public fun KitPictureTiles(
 
 public const val PICTURE_TILE_TAG: String = "kit-picture-tile"
 
-private val DRAWABLE = Regex("""\.(png|jpe?g|gif|webp|bmp|wbmp)$""", RegexOption.IGNORE_CASE)
+/** The longest side a tile draws (a single picture is at most 360 dp tall, a row of them 148 dp). */
+private val TILE_EDGE = 360.dp
 
-@Suppress(
-    "TooGenericExceptionCaught"
-) // Refused bytes stay a named tile; decoder details never reach the UI.
-private fun decodePicture(bytes: ByteArray): ImageBitmap? =
-    try {
-        if (bytes.isEmpty()) null else bytes.decodeToImageBitmap()
-    } catch (_: Exception) {
-        null
-    }
+private val DRAWABLE = Regex("""\.(png|jpe?g|gif|webp|bmp|wbmp)$""", RegexOption.IGNORE_CASE)

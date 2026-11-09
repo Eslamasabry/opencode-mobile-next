@@ -33,7 +33,10 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitZoomFit
 import io.github.eslamasabry.oc.ui.words.res.kitZoomIn
 import io.github.eslamasabry.oc.ui.words.res.kitZoomOut
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import androidx.compose.runtime.produceState
+import io.github.eslamasabry.oc.ui.kit.image.KIT_VIEWER_EDGE
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -65,8 +68,15 @@ public fun KitPictureView(
         KitPictureContent.Loading -> KitText(loadingLabel, modifier, tone = TextTone.Secondary)
         KitPictureContent.Unavailable -> KitText(failedLabel, modifier, tone = TextTone.Secondary)
         is KitPictureContent.Bytes -> {
-            val bitmap: ImageBitmap? = remember(content) { decodeOrNull(content.bytes) }
-            if (bitmap == null) {
+            val work = LocalKitImageWork.current
+            val loaded by
+                produceState<Pair<Boolean, ImageBitmap?>>(false to null, content) {
+                    value = true to KitImages.loadBytes(content.bytes, KIT_VIEWER_EDGE, work)
+                }
+            val bitmap = loaded.second
+            if (!loaded.first) {
+                KitText(loadingLabel, modifier, tone = TextTone.Secondary)
+            } else if (bitmap == null) {
                 KitText(failedLabel, modifier, tone = TextTone.Secondary)
             } else {
                 ZoomableImage(bitmap, description, modifier)
@@ -141,16 +151,6 @@ private fun ZoomableImage(bitmap: ImageBitmap, description: String, modifier: Mo
         }
     }
 }
-
-@Suppress(
-    "TooGenericExceptionCaught"
-) // a decoder's refusal of server bytes is expected; it is a plain line here
-private fun decodeOrNull(bytes: ByteArray): ImageBitmap? =
-    try {
-        if (bytes.isEmpty()) null else bytes.decodeToImageBitmap()
-    } catch (_: Exception) {
-        null
-    }
 
 private const val MAX_ZOOM = 5f
 
