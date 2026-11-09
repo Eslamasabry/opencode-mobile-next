@@ -260,6 +260,19 @@ public fun ProjectPageScreen(
                     }
                 ProjectPagePhase.NoServer -> Unit
                 ProjectPagePhase.Ready -> {
+                    // Cache-first: a failed read keeps the kept rows; the problem is a notice above them.
+                    state.failure?.let { failure ->
+                        item(key = "failed") {
+                            KitErrorNotice(
+                                modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                                message = stringResource(Res.string.globalSessionsLoadFailedTitle),
+                                failure = failure,
+                                detailsLabel = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyDetails),
+                                retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry),
+                            )
+                        }
+                    }
                     item(key = "here") {
                         KitRowGroup(label = stringResource(Res.string.p12ProjectConversations)) {
                             if (state.conversations.isEmpty())
