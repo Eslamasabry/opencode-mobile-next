@@ -523,7 +523,7 @@ private fun StatusMore(more: List<KitLineAction>, moreLabel: String) {
 /** The one glyph per status (Dart `KitTokens.glyphFor`): every status has its own shape (STATE-9). */
 internal fun glyphFor(tone: StatusTone): ImageVector =
     when (tone) {
-        StatusTone.Neutral -> KitIcons.radioEmpty
+        StatusTone.Neutral -> KitIcons.info // C11: never the empty ring
         StatusTone.Progress -> KitIcons.sync
         StatusTone.Ok -> KitIcons.check
         StatusTone.Attention -> KitIcons.warning
