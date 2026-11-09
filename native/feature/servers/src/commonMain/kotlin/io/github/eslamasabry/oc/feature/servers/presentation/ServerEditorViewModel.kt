@@ -288,6 +288,7 @@ public class ServerEditorViewModel(
                     is Outcome.Failed -> {
                         resultFor = null
                         mutable.update { it.copy(failure = answer.failure, failedCheck = true) }
+                        offerCertificate(input.address, answer.failure)
                         return@launch
                     }
                     is Outcome.Ok -> {
@@ -322,8 +323,10 @@ public class ServerEditorViewModel(
                         // The primary promises Save and connect; no mutation is replayed if
                         // connecting fails.
                         when (val connected = connections.connect(saved.value)) {
-                            is Outcome.Failed ->
+                            is Outcome.Failed -> {
                                 mutable.update { it.copy(failure = connected.failure) }
+                                offerCertificate(input.address, connected.failure)
+                            }
                             is Outcome.Ok ->
                                 if (route.profile == null || route.newConversation)
                                     mutable.update { it.copy(step = ServerEditorStep.Ready) }
@@ -337,23 +340,36 @@ public class ServerEditorViewModel(
         }
     }
 
+    /**
+     * A certificate refusal on an https address opens the trust sheet by itself, so the person is never left with a
+     * dead end. It only shows the fingerprint: nothing is pinned until they tap, and a changed certificate is never
+     * re-trusted silently. An expired certificate has nothing to trust, so it gets no sheet.
+     */
+    private suspend fun offerCertificate(address: String, failure: Failure) {
+        if (failure !is Failure.Certificate || failure.why == CertificateWhy.Expired) return
+        inspectNow(address, keepFailure = true)
+    }
+
     override fun inspect(address: String) {
         if (mutable.value.inspecting || mutable.value.saving) return
+        viewModelScope.launch { inspectNow(address, keepFailure = false) }
+    }
+
+    private suspend fun inspectNow(address: String, keepFailure: Boolean) {
+        if (mutable.value.inspecting) return
         val ticket = generation
-        mutable.update { it.copy(inspecting = true, failure = null) }
-        viewModelScope.launch {
-            try {
-                when (val result = port.inspect(address)) {
-                    is Outcome.Ok ->
-                        if (ticket == generation)
-                            mutable.update { it.copy(certificate = result.value) }
-                    is Outcome.Failed ->
-                        if (ticket == generation)
-                            mutable.update { it.copy(failure = result.failure) }
-                }
-            } finally {
-                mutable.update { it.copy(inspecting = false) }
+        mutable.update { it.copy(inspecting = true, failure = if (keepFailure) it.failure else null) }
+        try {
+            when (val result = port.inspect(address)) {
+                is Outcome.Ok ->
+                    if (ticket == generation) mutable.update { it.copy(certificate = result.value) }
+                is Outcome.Failed ->
+                    // An automatic look that fails keeps the original refusal, which already says why.
+                    if (ticket == generation && !keepFailure)
+                        mutable.update { it.copy(failure = result.failure) }
             }
+        } finally {
+            mutable.update { it.copy(inspecting = false) }
         }
     }
 

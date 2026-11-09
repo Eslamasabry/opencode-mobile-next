@@ -221,7 +221,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
             if (terminal == null) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     when {
-                        state.loading -> item { KitSkeletonRows() }
+                        state.loading && state.terminals.isEmpty() -> item { KitSkeletonRows() }
                         state.failure != null && state.terminals.isEmpty() -> Unit
                         state.terminals.isEmpty() ->
                             item {

@@ -23,13 +23,27 @@ public object LiveSpots {
     public const val CAP_LIGHT: Float = .20f
     public const val CAP_DARK: Float = .30f
 
+    /** The most [of] moves the ground, as a share of the cap. */
+    public const val MAX_REACH: Float = 2f
+
     /** The kit's glow colour: the accent this far towards the text (LivePalette `GLOW_TOWARD_TEXT`). */
     private const val GLOW_TOWARD_TEXT: Float = .3f
 
-    /** The ground and the farthest a shader look can move it, along each look colour and each pair of them. */
-    public fun of(roles: Roles): List<Argb> {
+    /**
+     * The spots behind a Glass pane over the look [id] (glass-live 2026-11-09): [of] with the look's measured [LiveReach]
+     * instead of the whole cap, under the clear panes' frost ([lens] false) or the liquid lens's light blur ([lens] true).
+     * A look with no measured reach (an id the kit does not draw) keeps the whole cap.
+     */
+    public fun forLook(roles: Roles, id: String?, lens: Boolean): List<Argb> = of(roles, LiveReach.of(id, roles.dark, lens))
+
+    /**
+     * The ground and the farthest a shader look can move it, along each look colour and each pair of them: [reach] of
+     * liveOut's cap (1, the default, is the whole cap; a look that does not end in the prelude's cap may reach past it,
+     * [LiveReach]), never past the look colour itself.
+     */
+    public fun of(roles: Roles, reach: Float = 1f): List<Argb> {
         val dark = roles.dark
-        val cap = if (dark) CAP_DARK else CAP_LIGHT
+        val cap = (if (dark) CAP_DARK else CAP_LIGHT) * reach.coerceIn(0f, MAX_REACH)
         val g = rgb(roles.ground)
         val tints = listOf(roles.accent, roles.partner, lerp(roles.accent, roles.text1, GLOW_TOWARD_TEXT), roles.text1).map(::rgb)
         // How far each colour moves the ground per unit of its strength, and at most how far it can.

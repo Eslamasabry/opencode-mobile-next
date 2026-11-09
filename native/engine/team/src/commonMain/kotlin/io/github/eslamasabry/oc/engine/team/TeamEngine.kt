@@ -102,6 +102,8 @@ public data class TeamState(
     val refusedAction: String? = null,
     /** The engine's health from the last good read; null before one. */
     val health: TeamHealth? = null,
+    /** [workspace] is the one kept from an earlier run, not read yet in this one: any live read replaces it. */
+    val fromKept: Boolean = false,
 ) {
     /**
      * What the engine can run now; everything for the simulated demo, which is never gated, and before any health is
@@ -114,6 +116,7 @@ public data class TeamState(
 /** One serial lane for every profile's reads; each profile has its own state. */
 public class TeamEngine(
     private val host: TeamHost,
+    private val kept: TeamLastKnown? = null,
     private val newRequestId: () -> String = Ids()::next,
 ) {
     private val lane = Mutex()
@@ -127,7 +130,9 @@ public class TeamEngine(
         while (true) {
             val current = states.load()
             current[profileId]?.let { return it }
-            val created = MutableStateFlow(TeamState())
+            // Cache-first: the kept workspace is the first frame, drawn as the real (not stale) Ready layout.
+            val seed = kept?.peek(profileId)?.decode()
+            val created = MutableStateFlow(if (seed != null) TeamState(TeamPhase.Ready, workspace = seed, fromKept = true) else TeamState())
             if (states.compareAndSet(current, current.put(profileId, created))) return created
         }
     }
@@ -140,6 +145,11 @@ public class TeamEngine(
         lane.withLock {
             val state = flow(profileId)
             state.update { it.copy(loading = true) }
+            if (state.value.workspace == null) {
+                kept?.read(profileId)?.decode()?.let { seed ->
+                    state.update { if (it.workspace == null) it.copy(phase = TeamPhase.Ready, workspace = seed, fromKept = true) else it }
+                }
+            }
             val config = host.config(profileId)
             if (config == null) {
                 state.value = TeamState(TeamPhase.Off)
@@ -149,11 +159,14 @@ public class TeamEngine(
                 state.value = TeamState(TeamPhase.Computer, config)
                 return@withLock Outcome.Ok(Unit)
             }
-            val previous = state.value.workspace?.takeIf { state.value.config == config }
+            // Before the first live read the workspace is the kept one (no config yet): it stands in for the last read.
+            val fromKept = state.value.fromKept && state.value.workspace != null
+            val previous = state.value.workspace?.takeIf { fromKept || state.value.config == config }
             when (val read = host.workspace(profileId, config)) {
                 is Outcome.Ok -> {
-                    val fresh = read.value.workspace
-                    val next = fresh.takeIf { previous == null || it.revision >= previous.revision } ?: previous
+                    // Dart `teamWorkspace()` words the engine's raw states before any page reads them.
+                    val fresh = TeamPhonePresentation.present(read.value.workspace, read.value.health.commandActions)
+                    val next = fresh.takeIf { previous == null || fromKept || it.revision >= previous.revision } ?: previous
                     state.update {
                         it.copy(
                             phase = TeamPhase.Ready,
@@ -162,8 +175,10 @@ public class TeamEngine(
                             health = read.value.health,
                             loading = false,
                             stale = false,
+                            fromKept = false,
                         )
                     }
+                    next?.let { w -> KeptTeam.of(w)?.let { kept?.keep(profileId, it) } }
                     Outcome.Ok(Unit)
                 }
                 is Outcome.Failed -> {

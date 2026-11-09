@@ -270,6 +270,18 @@ class ProfileStoreTest {
     }
 
     @Test
+    fun `B-SEC-154 deleting a profile removes its certificate pin and leaves another profile's pin`() = runTest {
+        val h = harness()
+        val sha = "ab".repeat(32)
+        h.store.upsert(StoredProfile(id("pin-a"), "A", "https://a.example:8443"), trust = TrustInput(pin = CertificatePinRecord("https://a.example:8443", sha))).ok()
+        h.store.upsert(StoredProfile(id("pin-b"), "B", "https://b.example:8443"), trust = TrustInput(pin = CertificatePinRecord("https://b.example:8443", sha))).ok()
+        assertTrue(h.deletion().delete(id("pin-a")).ok().complete)
+        assertNull(h.string("oc.certificatePin.pin-a"))
+        assertEquals(sha, h.store.trust(id("pin-b")).pin?.leafSha256)
+        assertTrue(h.string("oc.certificatePin.pin-b") != null)
+    }
+
+    @Test
     fun `B-SEC-136 a private transport lease cannot persist its address or credential`() = runTest {
         val h = harness()
         val lease = StoredProfile(id("lease"), "Host", "http://127.0.0.1:19000", transientTransport = true)

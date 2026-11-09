@@ -266,12 +266,15 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
     val budget = remember { KitLiquidBudget() }
     // Menus open in this window, above the page, its sheet and its dialog (smoothness round 2: no popup window per menu).
     val menus = remember { KitMenuLayerState() }
+    // The page's live picture, for the sheets' and menus' liquid faces (they follow its every frame).
+    val livePicture = remember { io.github.eslamasabry.oc.ui.kit.foundation.KitLivePicture() }
     Box(modifier) {
         CompositionLocalProvider(
             LocalKitSheetHost provides state,
             LocalKitLiquidPage provides page,
             LocalKitLiquidBudget provides budget,
             LocalKitMenuLayer provides menus,
+            io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture provides livePicture,
         ) {
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove

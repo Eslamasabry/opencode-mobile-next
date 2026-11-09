@@ -35,4 +35,7 @@ public class UsageEntries : EntryInstaller {
 public interface UsageBudgetBindings {
     @dev.zacsweers.metro.Multibinds(allowEmpty = true)
     public val budgets: Set<io.github.eslamasabry.oc.feature.usage.presentation.UsageBudgetAccess>
+
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true)
+    public val lastKnown: Set<io.github.eslamasabry.oc.feature.usage.presentation.UsageLastKnown>
 }

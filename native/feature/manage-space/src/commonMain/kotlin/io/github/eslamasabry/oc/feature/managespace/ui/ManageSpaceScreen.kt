@@ -8,7 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,7 +46,8 @@ import org.jetbrains.compose.resources.stringResource
 /** Android's Manage space surface: independent of connections and the main application graph. */
 @Composable
 public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceActions) {
-    var delete by rememberSaveable { mutableStateOf(false) }
+    // A confirm for a destructive act is never restored after a process death: the person must ask again.
+    var delete by remember { mutableStateOf(false) }
     val initialFacts = state.facts
     val wait = stringResource(Res.string.manageSpaceWaitForExport)
     val enabled = if (state.busy) KitEnabled.Disabled(wait) else KitEnabled.Enabled

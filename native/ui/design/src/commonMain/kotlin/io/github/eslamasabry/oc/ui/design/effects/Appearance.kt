@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.design.effects
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.FineTuneChoice
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
@@ -46,8 +47,8 @@ public data class KitAppearance(
     val style: Style = Style.Solid,
     /** `oc.effectsCorners` / `oc.effectsDensity`: null = the style's own (B-KIT-017). */
     val fineTune: FineTuneChoice = FineTuneChoice.None,
-    /** `oc.glassEdges` (Fine-tune under Glass, "Glass edges"): Liquid by default; Frosted keeps today's frost. */
-    val glassEdges: GlassEdges = GlassEdges.Liquid,
+    /** `oc.glassLook` (the Glass look picker): Glossy by default (glass looks D4). */
+    val glassLook: GlassLookId = GlassLookId.Glossy,
     val activityGlow: Boolean = true,
     val softGlow: Boolean = false,
     val celebrations: Boolean = true,

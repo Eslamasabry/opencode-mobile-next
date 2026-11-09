@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -204,14 +206,25 @@ internal fun LiveStill(palette: LivePalette, strength: Float, modifier: Modifier
     )
 }
 
-/** The time a look reads in draw: the clock while it [animates], else the still frame's moment. */
+/**
+ * The time a look reads in draw: the clock while it [animates], else the still frame's moment. With [fps] the time steps
+ * at most that many times a second: a draw block that reads it is invalidated only when the step changes (a derived
+ * state), so a faster screen does not redraw it more often.
+ */
 @Composable
-internal fun rememberLiveTime(clock: LiveFrameClock, animates: Boolean): () -> Float =
-    remember(clock, animates) {
-        if (animates) {
-            { clock.seconds + STILL_SECONDS }
-        } else {
-            { STILL_SECONDS }
+internal fun rememberLiveTime(clock: LiveFrameClock, animates: Boolean, fps: Int = 0): () -> Float =
+    remember<() -> Float>(clock, animates, fps) {
+        when {
+            !animates -> {
+                { STILL_SECONDS }
+            }
+            fps <= 0 -> {
+                { clock.seconds + STILL_SECONDS }
+            }
+            else -> {
+                val stepped = derivedStateOf { floor(clock.seconds * fps) / fps }
+                ({ stepped.value + STILL_SECONDS })
+            }
         }
     }
 

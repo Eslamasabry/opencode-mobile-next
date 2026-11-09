@@ -59,9 +59,16 @@ class A1HomeRendersTest {
     @AfterTest
     fun restoreLocale() = Locale.setDefault(savedLocale)
 
-    private val marks = KitLogoLoader { id, _ ->
-        File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$id.svg").takeIf { it.isFile }?.readText()
-    }
+    private val marks =
+        object : KitLogoLoader {
+            private fun mark(name: String) =
+                File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$name.svg").takeIf { it.isFile }?.readText()
+
+            override suspend fun svg(id: String, agent: Boolean): String? = mark(id)
+
+            /** The brands with a bundled colour file, as the app's loader serves them. */
+            override suspend fun colorSvg(id: String): String? = if (id in setOf("claude", "gemini", "qwen", "copilot")) mark("$id-color") else null
+        }
 
     private fun feedItem(
         id: String,

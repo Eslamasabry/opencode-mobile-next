@@ -85,6 +85,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.platform.KitSecureEffect
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -260,6 +261,8 @@ public fun KitField(
                 tone = TextTone.Secondary,
                 kind = KitTextKind.Frame,
             )
+        // A secret being typed keeps the window out of recents and screenshots (B-SEC-156); a saved one shows no value.
+        KitSecureEffect(kind == KitFieldKind.Secret && secretPresence != SecretFieldPresence.Saved)
         if (kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved) {
             SavedSecretLine(onReplace = { onReplaceSecret?.invoke() })
         } else {

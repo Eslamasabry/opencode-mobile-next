@@ -29,6 +29,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
  */
 public fun interface KitLogoLoader {
     public suspend fun svg(id: String, agent: Boolean): String?
+
+    /** The agent's full-colour mark, or null when its brand has none (the monochrome [svg] then stands in). */
+    public suspend fun colorSvg(id: String): String? = null
 }
 
 public val LocalKitLogoLoader: ProvidableCompositionLocal<KitLogoLoader?> =
@@ -69,14 +72,19 @@ public fun KitProviderLogo(
     markSize: androidx.compose.ui.unit.Dp = 24.dp,
 ) {
     val source = LocalKitLogoLoader.current
-    var svg by remember(id, agent, source) { mutableStateOf<String?>(null) }
+    var providerSvg by remember(id, agent, source) { mutableStateOf<String?>(null) }
+    var providerLooked by remember(id, agent, source) { mutableStateOf(false) }
+    if (!agent) LaunchedEffect(id, source) {
+        providerSvg = KitProviderLogoRules.load(source, id, agent = false)
+        providerLooked = true
+    }
+    // An agent keeps its brand colours when it has a colour mark; otherwise (and for every provider) the mark takes the text colour.
+    val agentResult = if (agent) rememberAgentMarkArt(id) else null
+    val art = if (agent) agentResult?.first else providerSvg?.let { AgentMarkArt(it, tinted = true) }
+    val svg = art?.svg
     // C14 (audit 2026-11-09): once the source says there is no mark, the slot is given back; a row never keeps an empty
     // leading indent. While the mark loads the slot is held so the row does not jump.
-    var missing by remember(id, agent, source) { mutableStateOf(false) }
-    LaunchedEffect(id, agent, source) {
-        svg = KitProviderLogoRules.load(source, id, agent)
-        missing = svg == null
-    }
+    val missing = art == null && (if (agent) agentResult?.second == true else providerLooked)
     val context = LocalPlatformContext.current
     val request =
         remember(svg, context) {
@@ -96,7 +104,7 @@ public fun KitProviderLogo(
                 model = request,
                 contentDescription = null,
                 modifier = Modifier.size(markSize),
-                colorFilter = ColorFilter.tint(LocalKitColors.current.text1),
+                colorFilter = if (art?.tinted != false) ColorFilter.tint(LocalKitColors.current.text1) else null,
             )
     }
 }

@@ -38,4 +38,10 @@ public class ProviderLogos(private val host: ProviderLogoHost, clock: Clock) {
         val slug = ProviderMarks.agentSlug(iconKey) ?: return null
         return (attempt({ Failure.Device() }) { host.bundled(slug) } as? Outcome.Ok)?.value
     }
+
+    /** The agent's full-colour mark, or null when its brand has none (then [agentSvg] is drawn in the text colour). */
+    public suspend fun agentColorSvg(iconKey: String): String? {
+        val file = ProviderMarks.agentColorFile(iconKey) ?: return null
+        return (attempt({ Failure.Device() }) { host.bundled(file) } as? Outcome.Ok)?.value
+    }
 }

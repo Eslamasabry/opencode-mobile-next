@@ -87,6 +87,32 @@ public class Preferences(
         }
     }
 
+    /**
+     * The one-time move of `oc.glassEdges` to `oc.glassLook` (glass looks 2026-11-09), at load: `frosted` becomes the
+     * Frosted look, anything else the default (nothing written), and the old key goes, in one commit. A launch without
+     * the old key writes nothing. A refused commit leaves both as they were and the next launch tries again; meanwhile
+     * [readStored] reads the old key's choice and every look write deletes it, so no default-omitted look can ever fall
+     * back to it.
+     */
+    private val glassLookMigration = scope.launch(start = CoroutineStart.UNDISPATCHED) { migrateGlassEdges() }
+
+    /** Waits for the one-time glass look migration (tests). */
+    internal suspend fun glassLookMigrated() {
+        glassLookMigration.join()
+    }
+
+    private suspend fun migrateGlassEdges() {
+        writeLock.withLock {
+            val old = store.get(K.GLASS_EDGES) ?: return
+            val frosted = (old as? PrefValue.Str)?.value == GLASS_EDGES_FROSTED
+            val result = store.commit(lane) {
+                if (frosted && store.get(K.GLASS_LOOK) == null) put(K.GLASS_LOOK, GlassLookChoice.Frosted.wire)
+                put(K.GLASS_EDGES, null)
+            }
+            if (result is Outcome.Ok) refresh()
+        }
+    }
+
     /** Provenance for the same acknowledged snapshot as [value]: the key is stored (not a default). */
     public fun hasStored(key: String): Boolean = key in snapshot.load().stored
 
@@ -129,7 +155,7 @@ public class Preferences(
         PreferenceChange.ResetAppearance -> effectEdits(current.effects, Effects.Defaults) + mapOf(
             K.APPEARANCE to AppearanceChoice.Dark.wire, K.THEME_PACK to ThemePack.OpenCode.wire,
             K.ACCENT to null, K.TEXT_SIZE to TextSize.Normal.wire, K.FROST to FrostStrength.Balanced.wire,
-            K.GLASS_EDGES to null,
+            K.GLASS_EDGES to null, K.GLASS_LOOK to null,
         )
         is PreferenceChange.Appearance -> mapOf(K.APPEARANCE to change.value.wire)
         is PreferenceChange.Theme -> mapOf(K.THEME_PACK to change.value.wire)
@@ -137,8 +163,10 @@ public class Preferences(
         is PreferenceChange.Text -> mapOf(K.TEXT_SIZE to change.value.wire)
         is PreferenceChange.Accent -> mapOf(K.ACCENT to change.id?.takeIf { it.isNotEmpty() })
         is PreferenceChange.Frost -> mapOf(K.FROST to change.value.wire)
-        // Liquid is the default: choosing it removes the key.
-        is PreferenceChange.Edges -> mapOf(K.GLASS_EDGES to change.value.wire.takeIf { change.value != GlassEdges.Liquid })
+        // Glossy is the default: choosing it removes the key. The retired edges key goes with any look write.
+        is PreferenceChange.Look ->
+            mapOf(K.GLASS_LOOK to change.value.wire.takeIf { change.value != GlassLookChoice.Glossy }) +
+                (if (store.get(K.GLASS_EDGES) != null) mapOf(K.GLASS_EDGES to null) else emptyMap())
         is PreferenceChange.ReasoningExpanded -> mapOf(K.REASONING to change.value)
         is PreferenceChange.TimestampsVisible -> mapOf(K.TIMESTAMPS to change.value)
         is PreferenceChange.SetEffects -> effectEdits(current.effects, change.value)
@@ -167,6 +195,9 @@ public class Preferences(
     }
 
     internal companion object {
+        /** The retired `oc.glassEdges` value that carries over (as the Frosted look). */
+        const val GLASS_EDGES_FROSTED: String = "frosted"
+
         fun PrefEdit.put(key: String, value: Any?) {
             when (value) {
                 null -> remove(key)
@@ -215,7 +246,9 @@ public class Preferences(
                 textSize = wireOf<TextSize>(raw(K.TEXT_SIZE)) ?: TextSize.Normal,
                 accent = (raw(K.ACCENT) as? String)?.takeIf { it.isNotEmpty() },
                 frost = wireOf<FrostStrength>(raw(K.FROST)) ?: FrostStrength.Balanced,
-                glassEdges = wireOf<GlassEdges>(raw(K.GLASS_EDGES)) ?: GlassEdges.Liquid,
+                // The retired edges key is read only until the migration deletes it (see glassLookMigration).
+                glassLook = wireOf<GlassLookChoice>(raw(K.GLASS_LOOK))
+                    ?: if (raw(K.GLASS_EDGES) == GLASS_EDGES_FROSTED) GlassLookChoice.Frosted else GlassLookChoice.Glossy,
                 reasoningExpanded = bool(K.REASONING, false),
                 timestampsVisible = bool(K.TIMESTAMPS, false),
             )

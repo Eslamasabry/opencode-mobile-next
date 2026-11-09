@@ -207,7 +207,7 @@ public fun KitRecentRow(
 @Composable
 private fun Mark(agent: KitFeedAgent) {
     val size = KitRecentRowRules.MARK_DP.dp
-    if (agent.id.isNotBlank()) KitProviderLogo(agent.id, agent.name, agent = true, Modifier.size(size), markSize = size - 4.dp)
+    if (agent.id.isNotBlank()) KitProviderLogo(agent.id, agent.name, agent = true, Modifier.size(size), markSize = size)
     else Box(Modifier.size(size), contentAlignment = Alignment.Center) { KitGlyph(KitIcons.agent, LocalKitColors.current.text2, size - 6.dp) }
 }
 

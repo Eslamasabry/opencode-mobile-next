@@ -31,7 +31,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.decodeToImageBitmap
 
 /**
  * Reader controls shared by text, code, Markdown, SVG and tables. The source stays exact for Copy;
@@ -400,11 +399,9 @@ internal fun ViewerImage(content: KitViewerContent.Image, name: String) {
 }
 
 /** The pixel size of an encoded picture, or null when it does not decode. */
-@OptIn(org.jetbrains.compose.resources.ExperimentalResourceApi::class)
 internal fun pictureSizeOf(bytes: ByteArray): Pair<Int, Int>? =
     try {
-        val bitmap = bytes.decodeToImageBitmap()
-        if (bitmap.width > 0 && bitmap.height > 0) bitmap.width to bitmap.height else null
+        io.github.eslamasabry.oc.ui.kit.image.KitImages.sizeOf(bytes)
     } catch (_: RuntimeException) { // an undecodable picture keeps the image part's own failure state
         null
     }

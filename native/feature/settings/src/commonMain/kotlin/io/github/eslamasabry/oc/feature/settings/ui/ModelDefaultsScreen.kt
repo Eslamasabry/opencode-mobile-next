@@ -27,6 +27,7 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
     val title =
         if (state.thisPhone) stringResource(Res.string.modelDefaultsPhoneTitle)
         else stringResource(Res.string.modelDefaultsNamedTitle, state.serverName)
+    val known = state.models.isNotEmpty() || state.recommended.isNotEmpty()
     KitScreen(
         topBar = {
             KitTopBar(
@@ -37,9 +38,12 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
             )
         },
         edges = KitScreenEdges.Bleed,
+        // Cache-first: a refresh over known rows is the screen's one loading line, never a body swap.
+        loading = state.loading && known,
+        loadingLabel = stringResource(Res.string.modelDefaultsChecking),
     ) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
-            if (state.loading) KitSkeletonRows()
+            if (state.loading && !known) KitSkeletonRows()
             state.failure?.let {
                 KitErrorNotice(
                     stringResource(Res.string.modelDefaultsFailed),
@@ -47,24 +51,23 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                     retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::refresh),
                 )
             }
-            if (!state.loading) {
+            if (known || !state.loading) {
                 KitRow(
                     title = stringResource(Res.string.modelDefaultsScope),
                     supportingMaxLines = 3,
                 )
                 KitRow(
                     title = stringResource(Res.string.modelDefaultsServerChoice),
-                    enabled = !state.saving,
-                    disabledReason =
-                        if (state.saving) stringResource(Res.string.modelDefaultsSaving) else null,
+                    enabled = !state.saving && !state.loading,
+                    disabledReason = busyReason(state),
                     onClick = { actions.choose(null) },
                 )
                 if (state.recommended.isNotEmpty())
                     KitRowGroup(label = stringResource(Res.string.modelDefaultsRecommended)) {
-                        state.recommended.forEach { ModelRow(it, state.saving, actions) }
+                        state.recommended.forEach { ModelRow(it, state, actions) }
                     }
                 KitRowGroup(label = stringResource(Res.string.modelDefaultsAll)) {
-                    state.models.forEach { ModelRow(it, state.saving, actions) }
+                    state.models.forEach { ModelRow(it, state, actions) }
                 }
             }
         }
@@ -72,7 +75,7 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
 }
 
 @Composable
-private fun ModelRow(row: ModelDefaultsRow, saving: Boolean, actions: ModelDefaultsActions) {
+private fun ModelRow(row: ModelDefaultsRow, state: ModelDefaultsUi, actions: ModelDefaultsActions) {
     val reason =
         row.reason?.let {
             stringResource(
@@ -106,8 +109,17 @@ private fun ModelRow(row: ModelDefaultsRow, saving: Boolean, actions: ModelDefau
                     chevron = false,
                 )
             else KitRowTrailing.None,
-        enabled = !saving,
-        disabledReason = if (saving) stringResource(Res.string.modelDefaultsSaving) else null,
+        enabled = !state.saving && !state.loading,
+        disabledReason = busyReason(state),
         onClick = { actions.choose(row.model) },
     )
 }
+
+/** Why a choice is not open yet: saving, or the kept rows are being checked against the server. */
+@Composable
+private fun busyReason(state: ModelDefaultsUi): String? =
+    when {
+        state.saving -> stringResource(Res.string.modelDefaultsSaving)
+        state.loading -> stringResource(Res.string.modelDefaultsChecking)
+        else -> null
+    }
