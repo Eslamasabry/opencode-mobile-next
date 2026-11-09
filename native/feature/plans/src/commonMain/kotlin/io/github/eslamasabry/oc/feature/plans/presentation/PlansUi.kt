@@ -225,6 +225,8 @@ public data class PlansUi(
     val readerFailed: Boolean = false,
     val widgetSettings: io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings =
         io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings(),
+    /** Cache-first: the cards are the last-seen ones and the first live read is on its way (a quiet bar). */
+    val updating: Boolean = false,
 )
 
 public interface PlansActions {

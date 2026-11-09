@@ -67,8 +67,9 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-private fun ListFrame(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
+private fun ListFrame(title: String, onBack: () -> Unit, updating: Boolean = false, content: @Composable () -> Unit) {
     KitScreen(
+        loading = updating,
         topBar = {
             KitTopBar(
                 title = title,
@@ -121,7 +122,8 @@ private fun Failed(failure: Failure, title: String, onRetry: () -> Unit) {
 @Composable
 public fun CommandsScreen(state: CommandsUi, actions: CommandsActions) {
     val title = stringResource(Res.string.chatUiSlashCommandsAndAgents)
-    ListFrame(title, actions::back) {
+    val updating = (state.phase as? ListPhase.Shown)?.updating == true || (state.skillsLoading && state.skills.isNotEmpty())
+    ListFrame(title, actions::back, updating) {
         when (val phase = state.phase) {
             ListPhase.Loading ->
                 KitSkeletonRows(Modifier.testTag("prompts-list-loading"), count = 5)
@@ -146,7 +148,7 @@ public fun CommandsScreen(state: CommandsUi, actions: CommandsActions) {
                     }
                 }
         }
-        if (state.skillsLoading) KitSkeletonRows(count = 2)
+        if (state.skillsLoading && state.skills.isEmpty()) KitSkeletonRows(count = 2)
         state.skillsFailure?.let {
             Failed(it, stringResource(Res.string.stateSkillsTitle), actions::retry)
         }
@@ -208,7 +210,7 @@ private fun priorityWords(priority: TaskPriority): String =
 @Composable
 public fun TasksScreen(state: TasksUi, actions: TasksActions) {
     val title = stringResource(Res.string.chatUiTodos)
-    ListFrame(title, actions::back) {
+    ListFrame(title, actions::back, (state.phase as? ListPhase.Shown)?.updating == true) {
         when (val phase = state.phase) {
             ListPhase.Loading ->
                 KitSkeletonRows(Modifier.testTag("prompts-list-loading"), count = 5)
