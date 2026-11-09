@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -59,7 +58,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -690,7 +688,7 @@ private fun SheetPanel(
                                 verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                                 content = entry.body,
                             )
-                        } else androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { entry.body(this) }
+                        } else androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { io.github.eslamasabry.oc.ui.kit.row.KitStackScope { entry.body(this) } }
                     }
                 }
                 if (
@@ -743,7 +741,7 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
             )
     ) {
         entry.icon?.let { glyph ->
-            IconTile(glyph, entry.tone)
+            HeaderMark(glyph, entry.tone)
             Spacer(Modifier.height(Space.S3.dp))
         }
         Row(
@@ -808,42 +806,27 @@ private fun SheetHeader(entry: SheetEntry, handle: Boolean) {
 }
 
 /**
- * The header mark tile (`_KitIconTile`): the 44 dp square, neutral on `surface3`, attention tinted.
+ * The header mark: the bare glyph, no tile, box or circle behind it (owner rule: no icons on plates; audit 2026-11-09
+ * C01). Neutral draws in `text1`, attention in the attention colour. The glyph keeps the mark's icon size
+ * ([FlutterKitTokens.MARK_ICON_SIZE]) and starts on the title's rail. Tagged `kit-header-mark` for the guard.
  */
 @Composable
-internal fun IconTile(glyph: ImageVector, tone: KitSheetTone = KitSheetTone.Neutral) {
+internal fun HeaderMark(glyph: ImageVector, tone: KitSheetTone = KitSheetTone.Neutral) {
     val colors = LocalKitColors.current
-    val fill =
-        when (tone) {
-            KitSheetTone.Neutral -> colors.surface3
-            KitSheetTone.Attention ->
-                colors.attention
-                    .copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA)
-                    .compositeOver(colors.surface2)
-        }
     val ink = if (tone == KitSheetTone.Neutral) colors.text1 else colors.attention
-    Box(
-        Modifier.size(FlutterKitTokens.MARK_SIZE.dp)
-            .clip(RoundedCornerShape(FlutterKitTokens.MARK_RADIUS.dp))
-            .background(fill),
-        contentAlignment = Alignment.Center,
-    ) {
-        KitGlyph(glyph, ink, FlutterKitTokens.MARK_ICON_SIZE.dp)
-    }
+    KitGlyph(glyph, ink, FlutterKitTokens.MARK_ICON_SIZE.dp, Modifier.testTag(HEADER_MARK_TAG))
 }
 
-/** The confirm sheet's tile at a given [size] (KitConfirm keeps this call). */
+/** A dialog's small mark beside its title ([KitAlert]): the bare glyph at the small icon size. */
 @Composable
-internal fun IconTile(glyph: ImageVector, size: Dp) {
+internal fun HeaderMarkSmall(glyph: ImageVector) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    Box(
-        Modifier.size(size).clip(KitShapeId.Tile.shape()).background(colors.surface3),
-        contentAlignment = Alignment.Center,
-    ) {
-        KitGlyph(glyph, colors.text1, tokens.smallIcon.dp)
-    }
+    KitGlyph(glyph, colors.text1, tokens.smallIcon.dp, Modifier.testTag(HEADER_MARK_TAG))
 }
+
+/** The test tag every header mark carries ([HeaderMark], [HeaderMarkSmall]). */
+internal const val HEADER_MARK_TAG: String = "kit-header-mark"
 
 /**
  * The content kept composed (its typed text stays) but out of sight, out of focus and out of the
@@ -880,7 +863,7 @@ private fun SheetQuestion(entry: SheetEntry) {
             )
             .verticalScroll(rememberScrollState())
     ) {
-        IconTile(KitIcons.editOff)
+        HeaderMark(KitIcons.editOff)
         Spacer(Modifier.height(Space.S3.dp))
         KitText(stringResource(Res.string.kitDiscardTitle), role = TypeRole.Title)
         Spacer(Modifier.height(Space.S2.dp))

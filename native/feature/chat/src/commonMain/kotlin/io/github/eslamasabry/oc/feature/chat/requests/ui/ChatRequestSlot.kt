@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitAskLine
@@ -186,6 +187,7 @@ public fun ChatRequestSlot(
                     title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle)
                         else alwaysConfirmTitle(it.grant, request?.patterns?.firstOrNull()?.let(mask)),
                     confirmLabel = stringResource(Res.string.chatUiAlwaysAllow),
+                    kind = KitConfirmKind.Neutral,
                     // S30 story 1 (Flutter `_confirmAlways`): the body always says what the grant covers and where.
                     body = stringResource(
                         Res.string.chatRequestAlwaysScope,

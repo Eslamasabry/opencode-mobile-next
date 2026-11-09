@@ -93,6 +93,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
@@ -360,6 +361,7 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRightNow),
                                     // A step of air under the chips, as above Recent, so the first label is not pressed up.
                                     gapBefore = if (above) sectionGap else Space.S4.dp,
+                                    prominentDividers = true,
                                 ) {
                                     rightNow.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
                                 }
@@ -371,6 +373,7 @@ public fun ChatsScreen(
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
+                                    prominentDividers = true,
                                 ) {
                                     recent.forEach { row -> key(row.key) { ConversationRow(row, actions, state) } }
                                 }
@@ -608,6 +611,7 @@ private fun AlwaysAllowConfirm(row: ConversationRowUi?, actions: ChatsActions) {
                     title = stringResource(Res.string.chatRequestAlwaysConfirm, it),
                     body = stringResource(Res.string.chatRequestAlwaysScope, it, stringResource(Res.string.chatRequestAlwaysInProject)),
                     confirmLabel = stringResource(Res.string.chatUiAlwaysAllow),
+                    kind = KitConfirmKind.Neutral,
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 )
             },

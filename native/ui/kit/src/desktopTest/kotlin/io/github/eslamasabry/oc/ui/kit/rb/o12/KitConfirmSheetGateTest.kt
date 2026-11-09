@@ -47,6 +47,7 @@ class KitConfirmSheetGateTest {
             title = "Share conversation?",
             body = "Anyone with the link can read it. You can stop sharing later.",
             confirmLabel = "Share conversation",
+            kind = KitConfirmKind.Neutral,
         )
 
     private val stop =
@@ -78,6 +79,7 @@ class KitConfirmSheetGateTest {
             title = "Move fox?",
             body = "The conversation moves to the notes project.",
             confirmLabel = "Move fox",
+            kind = KitConfirmKind.Neutral,
             consequenceItems = listOf(
                 KitConsequence("Its 3 changed files move with it", KitConsequenceMark.Neutral),
                 KitConsequence("Its agent keeps its model", KitConsequenceMark.Neutral),

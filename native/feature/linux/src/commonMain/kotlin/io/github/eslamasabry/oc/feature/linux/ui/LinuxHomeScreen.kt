@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartChecking
 import io.github.eslamasabry.oc.ui.words.res.keptSvcKeepsRunning
 import io.github.eslamasabry.oc.ui.words.res.keptSvcTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -196,6 +199,10 @@ public fun LinuxHomeScreen(
                     )
             }
             val presence = state.presence
+            // C12: while Linux has not answered, say so instead of drawing an empty page under a thin progress line.
+            if (presence == null) {
+                KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.phoneSetupStartChecking))
+            }
             if (presence != null && presence != LinuxPresence.Ready) {
                 KitNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
@@ -304,6 +311,7 @@ public fun LinuxHomeScreen(
                     KitConfirmSpec(
                         title = stringResource(Res.string.linuxMgrRepairTitle),
                         confirmLabel = stringResource(Res.string.linuxMgrRepair),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.linuxMgrRepairBody),
                         consequences = listOf(stringResource(Res.string.linuxMgrRepairKept)),
                     )

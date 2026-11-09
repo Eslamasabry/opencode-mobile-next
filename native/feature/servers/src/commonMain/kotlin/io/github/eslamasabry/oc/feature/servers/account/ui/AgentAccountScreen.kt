@@ -80,6 +80,7 @@ public fun AgentAccountScreen(state: AgentAccountUi, actions: AgentAccountAction
                 KitConfirmSpec(
                     stringResource(Res.string.account40OpenQuestion, it),
                     stringResource(Res.string.account40OpenPage),
+                    kind = KitConfirmKind.Neutral,
                 )
             },
             actions::confirmOpen,

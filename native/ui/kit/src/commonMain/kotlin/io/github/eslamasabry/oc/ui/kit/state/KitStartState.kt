@@ -1,21 +1,15 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
-import androidx.compose.foundation.background
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -80,13 +74,8 @@ public fun KitStartState(
                     .padding(start = kitPageGutter(), end = kitPageGutter(), top = Space.S2.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
-                // The calm mark: the list's own glyph on a quiet accent wash, no tile box, no glow.
-                Box(
-                    Modifier.size((tokens.iconTile + Space.S2).dp)
-                        .background(colors.accent.copy(alpha = .14f).compositeOver(colors.surface1), CircleShape)
-                        .clearAndSetSemantics {},
-                    contentAlignment = Alignment.Center,
-                ) { KitGlyph(icon, colors.accent, tokens.smallIcon.dp + Space.S1.dp) }
+                // The calm mark: the list's own glyph, bare in the accent: no wash, circle or tile (audit 2026-11-09 C01).
+                KitGlyph(icon, colors.accent, tokens.smallIcon.dp + Space.S1.dp, Modifier.testTag("kit-state-icon").clearAndSetSemantics {})
                 Spacer(Modifier.height(Space.S1.dp))
                 KitText(title, Modifier.semantics { heading() }, role = TypeRole.Title)
                 body?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }

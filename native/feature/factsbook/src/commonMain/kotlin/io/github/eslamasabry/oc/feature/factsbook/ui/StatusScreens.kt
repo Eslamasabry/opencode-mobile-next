@@ -169,6 +169,7 @@ public fun StatusScreen(state: StatusUi, actions: StatusActions) {
                         title = stringResource(Res.string.fbDisconnectTitle, name),
                         confirmLabel = stringResource(Res.string.fbDisconnect, name),
                         kind = KitConfirmKind.Destructive,
+                        icon = KitIcons.unlink,
                         body = stringResource(Res.string.fbDisconnectBody),
                     ),
             onConfirm = actions::disconnect,

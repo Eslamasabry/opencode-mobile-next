@@ -130,6 +130,7 @@ public fun ChatInboxSlot(
                     KitConfirmSpec(
                         title = stringResource(Res.string.queuedResendTitle),
                         confirmLabel = stringResource(Res.string.queuedResendConfirm),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.queuedResendMessage),
                         cancelLabel = stringResource(Res.string.queuedKeepForReview),
                     )

@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -75,6 +76,8 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                         state.facts?.name.orEmpty(),
                     ),
                 confirmLabel = stringResource(Res.string.server40Disconnect),
+                kind = KitConfirmKind.Destructive,
+                icon = KitIcons.unlink,
                 body = stringResource(Res.string.server40DisconnectBody),
             )
         else null,

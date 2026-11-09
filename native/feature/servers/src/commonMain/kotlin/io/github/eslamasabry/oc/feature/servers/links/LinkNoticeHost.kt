@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitAlert
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -36,6 +37,7 @@ public fun LinkNoticeHost(notice: LinkNotice?, onAddServer: () -> Unit, onDismis
                 KitConfirmSpec(
                     title = stringResource(Res.string.handoffUiLinkAddTitle),
                     confirmLabel = stringResource(Res.string.handoffUiLinkAddServer),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.handoffUiLinkServerMissing),
                     cancelLabel = stringResource(Res.string.handoffUiLinkDismiss),
                     icon = KitIcons.add,

@@ -78,8 +78,11 @@ import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * What a confirmation guards (Dart `KitConfirmKind`). None of them is red: the confirm is the
- * strong neutral fill.
+ * What a confirmation guards (Dart `KitConfirmKind`). None of them is red: a [Stop], [Destructive] or [Discard]
+ * confirm is the strong neutral fill (the kit's destructive style); only a [Neutral] one is the accent primary.
+ * [KitConfirmSpec.kind] has no default, so every confirm says which it is (audit 2026-11-09 C10): delete, remove,
+ * clear, forget, revoke, reset, disconnect and sign out are [Destructive]; stopping running work is [Stop]; throwing
+ * away unsaved edits is [Discard].
  */
 public enum class KitConfirmKind {
     Neutral,
@@ -91,14 +94,14 @@ public enum class KitConfirmKind {
 /**
  * What to ask (Dart `showKitConfirm` arguments). [title] is a question ("Delete this server?");
  * [confirmLabel] names the act ("Delete server"), never OK / Yes / Continue / Confirm.
- * [consequences] lists what happens; [typedName], when set, must be typed exactly before the
- * confirm turns on.
+ * [kind] is required: it decides the confirm's style (see [KitConfirmKind]). [consequences] lists what happens;
+ * [typedName], when set, must be typed exactly before the confirm turns on.
  */
 @Immutable
 public data class KitConfirmSpec(
     val title: String,
     val confirmLabel: String,
-    val kind: KitConfirmKind = KitConfirmKind.Neutral,
+    val kind: KitConfirmKind,
     val body: String? = null,
     val consequences: List<String> = emptyList(),
     val typedName: String? = null,
@@ -140,7 +143,7 @@ public object ConfirmRules {
 /**
  * A confirmation as screen state (Dart `showKitConfirm`, `KitConfirmSheet`, `KitConsequences`; plan
  * 06 §7.4): shown while [spec] is non-null. A sheet on compact windows, a 480 dp dialog on wide
- * ones. The header mark tile above the question, its body, the consequences, the typed-name field
+ * ones. The bare header mark above the question, its body, the consequences, the typed-name field
  * when asked, then the confirm with a secondary Cancel (Keep running for a stop, Keep editing for a
  * discard). Back, the scrim and Cancel call [onCancel]. A stop, destructive or discard confirm
  * plays `Commit` through the kit seam. Works at 200 % text: everything scrolls and the actions
@@ -205,8 +208,9 @@ public fun KitConfirm(
                 }
             }
         ) {
+            // The bare glyph on the title's rail: no tile, box or circle behind it (audit 2026-11-09 C01).
             Box(Modifier.testTag("kit-confirm-mark")) {
-                IconTile(
+                HeaderMark(
                     shown.icon
                         ?: when (shown.kind) {
                             KitConfirmKind.Neutral -> KitIcons.info

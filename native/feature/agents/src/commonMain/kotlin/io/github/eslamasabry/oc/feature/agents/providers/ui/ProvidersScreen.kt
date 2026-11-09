@@ -169,6 +169,7 @@ public fun ProvidersScreen(state: ProvidersUi, actions: ProvidersActions) {
                             link.host,
                         ),
                     confirmLabel = stringResource(Res.string.protoProvidersOpen),
+                    kind = if (link.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
                 )
             },
             onConfirm = actions::confirmBrowser,

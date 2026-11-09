@@ -171,6 +171,14 @@ class LinuxScreensTest {
         }
 
     @Test
+    fun `C12 while Linux has not answered the page says it is checking, not blank`() =
+        runComposeUiTest {
+            setContent { Themed { LinuxHomeScreen(LinuxHomeUi(presence = null), Calls()) } }
+            onNodeWithText("Checking what's installed…").assertExists()
+            onNodeWithText("Ports").assertDoesNotExist()
+        }
+
+    @Test
     fun `B-LINUX-092 Linux that is not here is said plainly and no page is offered`() =
         runComposeUiTest {
             setContent { Themed { LinuxHomeScreen(LinuxHomeUi(presence = LinuxPresence.NotOnThisBuild), Calls()) } }

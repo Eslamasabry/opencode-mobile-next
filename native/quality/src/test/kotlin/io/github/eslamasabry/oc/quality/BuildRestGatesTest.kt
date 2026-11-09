@@ -92,6 +92,26 @@ class BuildRestGatesTest {
         assertEquals(1, BuildRestGates.widthCap("feature/x/X.kt", "Modifier.widthIn(max = 320.dp)").size)
     }
 
+    // ---- Kit spacing ----
+
+    /** Spacers set right before a container in `feature/`. The kit's stack spaces containers itself; this only goes down. */
+    private val SPACER_BEFORE_CONTAINER_CEILING = 16
+
+    @Test
+    fun `kit spacing features pick no literal dp gap and set no new spacer before a container`() {
+        assertNone(features.flatMap { (p, t) -> BuildRestGates.literalSpacer(p, t) }, "Spacer(Modifier.height(N.dp)): use Space.* or let the kit's stack space containers")
+        val before = features.flatMap { (p, t) -> BuildRestGates.spacerBeforeContainer(p, t) }
+        assertTrue(before.size <= SPACER_BEFORE_CONTAINER_CEILING, "spacers before a container: ${before.size} > $SPACER_BEFORE_CONTAINER_CEILING (the ceiling only goes down):\n" + before.joinToString("\n") { "${it.path}:${it.line}" })
+    }
+
+    @Test
+    fun `kit spacing planted literal spacers and spacers before containers are caught`() {
+        val planted = "Column {\n    Spacer(Modifier.height(12.dp))\n    KitRowGroup {\n    }\n    // Spacer(Modifier.height(9.dp))\n}"
+        assertEquals(1, BuildRestGates.literalSpacer("p.kt", planted).size)
+        assertEquals(1, BuildRestGates.spacerBeforeContainer("p.kt", planted).size)
+        assertTrue(BuildRestGates.literalSpacer("p.kt", "Spacer(Modifier.height(Space.S4.dp))").isEmpty())
+    }
+
     // ---- B-BUILD-031 ----
 
     @Test

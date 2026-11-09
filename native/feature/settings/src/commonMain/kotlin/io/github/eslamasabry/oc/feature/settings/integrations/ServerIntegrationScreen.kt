@@ -296,6 +296,7 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
                 KitConfirmSpec(
                     stringResource(Res.string.s40iOpenPageQuestion),
                     stringResource(Res.string.s40iOpenPage),
+                    kind = KitConfirmKind.Neutral,
                     body = it,
                 )
             },

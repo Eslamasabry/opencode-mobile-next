@@ -51,7 +51,7 @@ public fun readerNotices(markdown: String): String {
 public fun noticesForReading(notices: String): String {
     val lines = notices.lines()
     val body = if (lines.firstOrNull()?.startsWith("## ") == true) lines.drop(1) else lines
-    return body.joinToString("\n").trim().replace(NOTICE_LINK) { m ->
+    return unwrapNotices(body).trim().replace(NOTICE_LINK) { m ->
         val words = m.groupValues[1]
         val target = m.groupValues[2]
         if (target.startsWith("http://") || target.startsWith("https://")) "$words ($target)" else words
@@ -59,6 +59,33 @@ public fun noticesForReading(notices: String): String {
 }
 
 private val NOTICE_LINK = Regex("""\[([^\]]+)\]\(([^)\s]+)\)""")
+
+/** A line that starts its own block: a heading, a list item, a quote, a table row or a code fence. */
+private val NOTICE_BLOCK_START = Regex("""^\s*(#|[-*+]\s|\d+[.)]\s|>|\||```)""")
+
+/**
+ * The notices file is wrapped at 80 columns for reading as source; on a phone those breaks cut sentences in the middle,
+ * so a line that only continues the paragraph above joins it with a space. Code blocks keep their lines.
+ */
+internal fun unwrapNotices(lines: List<String>): String {
+    val out = StringBuilder()
+    var fenced = false
+    var previous: String? = null
+    for (line in lines) {
+        val fence = line.trimStart().startsWith("```")
+        val continues =
+            !fenced && !fence && line.isNotBlank() && previous != null && previous.isNotBlank() &&
+                !NOTICE_BLOCK_START.containsMatchIn(line) && !previous.trimStart().startsWith("#") &&
+                !previous.trimStart().startsWith("|")
+        if (continues) out.append(' ').append(line.trim()) else {
+            if (previous != null) out.append('\n')
+            out.append(line)
+        }
+        if (fence) fenced = !fenced
+        previous = line
+    }
+    return out.toString()
+}
 
 @Composable
 internal fun ColumnScope.NoticesBody() {

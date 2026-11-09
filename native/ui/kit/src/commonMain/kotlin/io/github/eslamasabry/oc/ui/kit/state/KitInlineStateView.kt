@@ -20,9 +20,11 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceTile
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
+import androidx.compose.ui.platform.testTag
 
 /**
  * Flutter KitStateView(size: inline), kit_state_view.dart:708-791,824-835. A list's empty or failed
@@ -51,7 +53,8 @@ public fun KitInlineStateView(
             ),
         horizontalAlignment = Alignment.Start,
     ) {
-        KitSurfaceTile(icon, tone = TextTone.Secondary)
+        // The bare glyph on the title's rail: no tile behind it (audit 2026-11-09 C01).
+        KitIcon(icon, Modifier.testTag("kit-state-icon"), size = KitIconSize.Small, tone = TextTone.Secondary)
         Spacer(Modifier.height(Space.S3.dp))
         KitText(title, Modifier.semantics { heading() }, role = TypeRole.Headline)
         body?.let {

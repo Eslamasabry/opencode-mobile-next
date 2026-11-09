@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -181,6 +182,7 @@ public fun TeamServersScreen(state: TeamServersUi, actions: TeamServersActions) 
                     KitConfirmSpec(
                         title = stringResource(Res.string.teamProjectRestartElsewhereConfirmTitle),
                         confirmLabel = stringResource(Res.string.teamProjectRestartElsewhere),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.teamProjectRestartElsewhereBody),
                         cancelLabel = stringResource(Res.string.teamProjectWaitForServer),
                     ),

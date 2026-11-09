@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -73,6 +74,7 @@ public fun WebSearchPanel(state: WebSearchUi, actions: WebSearchActions) {
                     KitConfirmSpec(
                         title = stringResource(Res.string.protoWebOpenQuestion, it.host),
                         confirmLabel = stringResource(Res.string.protoWebOpenBrowser),
+                        kind = if (it.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
                         body =
                             stringResource(
                                 if (it.insecure) Res.string.protoWebInsecure

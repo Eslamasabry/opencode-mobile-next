@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuDismissal
@@ -430,6 +431,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                 KitConfirmSpec(
                     title = stringResource(Res.string.storageAccessTitle),
                     confirmLabel = stringResource(Res.string.storageAccessAllow),
+                    kind = KitConfirmKind.Neutral,
                     body = stringResource(Res.string.storageAccessBody),
                     consequences =
                         listOf(

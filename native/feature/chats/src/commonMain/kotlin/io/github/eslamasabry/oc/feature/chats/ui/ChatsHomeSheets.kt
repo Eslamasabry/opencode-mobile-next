@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.frame.*
@@ -121,6 +122,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
                     title = stringResource(Res.string.monitorSwitchToTitle, watched.sourceName),
                     body = stringResource(Res.string.homeWatchedOpenBody),
                     confirmLabel = stringResource(Res.string.monitorSwitchTo, watched.sourceName),
+                    kind = KitConfirmKind.Neutral,
                 )
             },
         onConfirm = actions::confirmWatched,

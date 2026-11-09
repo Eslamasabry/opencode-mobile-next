@@ -15,6 +15,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import io.github.eslamasabry.oc.core.common.terminal.TerminalPalette
 import io.github.eslamasabry.oc.core.common.terminal.TerminalSurface
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -70,7 +71,13 @@ public object AndroidKitTerminalSlot : KitTerminalSlot {
         }
         key(platformView) {
             AndroidView(
-                factory = { _ -> hostable(platformView) },
+                factory = { _ ->
+                    hostable(platformView).also { grid ->
+                        // A hardware keyboard types into the grid as soon as it shows; the on-screen keyboard still
+                        // waits for a tap (the grid's own tap handler asks for it).
+                        grid.post { grid.requestFocus() }
+                    }
+                },
                 modifier = modifier,
                 update = { (it as? TerminalSurface)?.appearance(palette) },
             )
@@ -87,6 +94,7 @@ public object AndroidKitTerminalSlot : KitTerminalSlot {
                                 it.host,
                             ),
                         confirmLabel = stringResource(Res.string.terminalLinkOpen),
+                        kind = if (it.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
                     )
                 },
             onConfirm = {
