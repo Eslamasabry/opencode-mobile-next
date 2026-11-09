@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateStorageAppTitle">Permitir acesso aos arquivos deste celular</string>
+    <string name="stateStorageAppBody">Este projeto está no armazenamento compartilhado. Ative o acesso a todos os arquivos para o OpenCode Mobile e volte aqui.</string>
+    <string name="stateStorageAppAction">Abrir configurações de acesso a arquivos</string>
+</resources>

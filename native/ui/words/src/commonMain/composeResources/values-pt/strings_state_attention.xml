@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Atividade</string>
+    <string name="stateAttentionRefresh">Atualizar</string>
+    <string name="stateAttentionNeedsYou">Precisa de você</string>
+    <string name="stateAttentionHistory">Enquanto você estava fora</string>
+    <string name="stateAttentionIncomplete">Alguns servidores não foram verificados. As observações salvas podem estar desatualizadas.</string>
+    <string name="stateAttentionCorrupt">Não foi possível ler parte da atividade salva. Ela foi mantida neste celular.</string>
+    <string name="stateAttentionSaveFailed">Não foi possível salvar esta alteração. Atualize e tente novamente.</string>
+    <string name="stateAttentionNoneKnown">Nenhum pedido conhecido nos servidores que responderam.</string>
+    <string name="stateAttentionNone">Nenhum pedido aguardando.</string>
+    <string name="stateAttentionNoHistory">Nenhuma atividade automática para mostrar.</string>
+    <string name="stateAttentionPermission">Permissão solicitada</string>
+    <string name="stateAttentionQuestion">Pergunta aguardando</string>
+    <string name="stateAttentionForm">Formulário aguardando</string>
+    <string name="stateAttentionFailure">A conversa precisa de atenção</string>
+    <string name="stateAttentionTeam">A equipe precisa de você</string>
+    <string name="stateAttentionStale">Último conhecido</string>
+    <string name="stateAttentionAcknowledge">Dispensar atividade mostrada</string>
+    <string name="stateActReconnect">Reconectado automaticamente</string>
+    <string name="stateActRestart">Reiniciado automaticamente</string>
+    <string name="stateActHeatPause">Pausado por causa do calor</string>
+    <string name="stateActHeatStop">Parado por causa do calor</string>
+    <string name="stateActHeatResume">Retomado após esfriar</string>
+    <string name="stateActUpdate">Atualizado automaticamente</string>
+    <string name="stateActPermission">Permissão concedida automaticamente</string>
+    <string name="stateActQueued">Mensagem salva enviada</string>
+    <string name="stateActOther">Atividade automática</string>
+    <string name="stateAttentionMonitorTitle">Outros servidores</string>
+    <string name="stateAttentionMonitorCopy">Escolha quais outros servidores salvos este celular pode verificar em busca de pedidos aguardando. Isso não responde aos pedidos nem altera esses servidores.</string>
+    <string name="stateAttentionMonitorChoice">Verificar pedidos aguardando</string>
+</resources>

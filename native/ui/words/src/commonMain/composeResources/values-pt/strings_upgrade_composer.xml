@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeComposerAsk">Pergunte ao %1$s…</string>
+    <string name="upgradeComposerFree"> · Grátis</string>
+    <string name="upgradeComposerVoiceHoldTitle">Fale com o agente</string>
+    <string name="upgradeComposerVoiceHold">Segure o microfone e fale; solte para colocar suas palavras na caixa. Para uma conversa por voz, abra + e escolha Conversa por voz.</string>
+    <string name="upgradeComposerHoldDictate">Segure para ditar</string>
+</resources>

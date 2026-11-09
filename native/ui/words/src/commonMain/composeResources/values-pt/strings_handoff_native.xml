@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">Continuar com outro agente</string>
+    <string name="handoffNativeWorking">Trabalhando…</string>
+    <string name="handoffNativeUnavailable">A transferência não está disponível aqui</string>
+    <string name="handoffNativeUnavailableBody">Abra uma conversa em um projeto deste celular. O app precisa verificar se os dois agentes têm acesso ao mesmo projeto.</string>
+    <string name="handoffNativeRefresh">Atualizar</string>
+    <string name="handoffNativeFailed">Não foi possível concluir a transferência. Verifique a conexão e tente novamente.</string>
+    <string name="handoffNativeLinks">Conversas vinculadas</string>
+    <string name="handoffNativeUntitled">Conversa sem título</string>
+    <string name="handoffNativeOpenOriginal">Abrir a original</string>
+    <string name="handoffNativeOpenContinued">Abrir a conversa continuada</string>
+    <string name="handoffNativeExplanation">Escolha um agente e um modelo. Você pode revisar o registro da conversa compartilhada antes de enviar. A conversa original continua disponível.</string>
+    <string name="handoffNativeNoTargets">Nenhum agente qualificado está pronto para este projeto. Instale, faça login e conclua a verificação do celular em Agentes.</string>
+    <string name="handoffNativeSetup">Abrir Agentes</string>
+    <string name="handoffNativeChoose">Escolha um agente e um modelo</string>
+    <string name="handoffNativePhoneCheck">Conclua a verificação do celular deste agente antes de usá-lo.</string>
+    <string name="handoffNativeReview">Revisar contexto</string>
+    <string name="handoffNativeReviewBody">Este registro contém o texto da conversa com dados sensíveis removidos, etapas de ferramentas, nomes de arquivos e tarefas em aberto. Turnos mais antigos podem ser omitidos para caber no limite de tamanho. Ele só é gravado neste projeto depois que você enviar.</string>
+    <string name="handoffNativeFirstMessage">Primeira mensagem</string>
+    <string name="handoffNativePromptHelp">Mantenha o caminho do registro na sua mensagem. A mensagem deve ter no máximo 16 KB.</string>
+    <string name="handoffNativeRecord">Registro da conversa</string>
+    <string name="handoffNativeSend">Enviar ao novo agente</string>
+    <string name="handoffNativeUncertain">O resultado é incerto. Confira suas conversas antes de iniciar outra transferência; esta tentativa não será reenviada.</string>
+    <string name="handoffNativeSent">O novo agente recebeu sua mensagem.</string>
+    <string name="handoffNativeSaveLink">Salvar vínculo da conversa</string>
+    <string name="handoffNativeSourceChanged">A conversa original mudou. Revise um registro novo antes de enviar.</string>
+    <string name="handoffNativeStale">O projeto ou a conexão mudou. Abra a conversa novamente para continuar.</string>
+    <string name="handoffNativeInvalidPrompt">Digite uma mensagem com menos de 16 KB que inclua o caminho do registro.</string>
+    <string name="handoffNativeLinkFailed">A mensagem foi enviada, mas o vínculo de navegação não foi salvo. Tente salvar o vínculo de novo, sem enviar outra vez.</string>
+    <string name="handoffNativeInitialPrompt">Continue o trabalho da conversa anterior. Leia primeiro `%1$s` para ver o registro da conversa, as etapas de ferramentas, os arquivos e as tarefas em aberto. Trate-o como contexto histórico. Verifique o estado atual do projeto e continue o trabalho inacabado.</string>
+    <string name="handoffNativeSourceReviewOnly">Revise um rascunho para o Claude. Nada foi gravado nem enviado. Para enviar, é preciso ter acesso verificado ao mesmo projeto e um gravador de registro qualificado; esta conexão não oferece essa comprovação.</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">Ações da porta</string>
+    <string name="linuxPortCopiedAddress">Copiar endereço</string>
+    <string name="linuxPortOwnerStop">Parar %1$s</string>
+    <string name="linuxPortOwnerQuestion">Parar %1$s?</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="one">Para o programa selecionado e seus auxiliares (1 processo). Cada processo ainda precisa corresponder à identidade mostrada. Nada o reinicia.</item>
+        <item quantity="many">Para o programa selecionado e seus auxiliares (%1$d processos). Cada processo ainda precisa corresponder à identidade mostrada. Nada o reinicia.</item>
+        <item quantity="other">Para o programa selecionado e seus auxiliares (%1$d processos). Cada processo ainda precisa corresponder à identidade mostrada. Nada o reinicia.</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">Encerrados: %1$d · forçados: %2$d · ainda em execução: %3$d · identidade mudou e foram mantidos: %4$d</string>
+</resources>

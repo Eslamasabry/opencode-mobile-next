@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">Pastas Linux integradas</string>
+    <string name="secBuiltinFoldersBody">Navegue pelo armazenamento do projeto e pelas pastas Linux deste celular.</string>
+    <string name="secBuiltinFolderLinked">Esta pasta é um link. Escolha uma pasta real.</string>
+    <string name="secBuiltinFolderNotInstalled">Instale o Linux neste celular para navegar por estas pastas.</string>
+</resources>

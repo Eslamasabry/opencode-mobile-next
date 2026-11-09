@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Quando uma gravação termina, as palavras dela são enviadas para esta conversa. Toque em Ouvir para o próximo turno. As respostas só são faladas se você ativar isto.</string>
+    <string name="voiceConversationNativeTourSpeak">Fale e toque em Enviar para mandar o que você disse. Ouvir inicia o seu próximo turno.</string>
+    <string name="voiceConversationNativeTourReplies">Ler as respostas em voz alta pede o seu consentimento e uma voz do celular. Você pode parar a leitura a qualquer momento.</string>
+    <string name="voiceConversationNativeTourLeave">Sair do modo de voz para de ouvir e a leitura automática. Um envio incerto nunca é enviado de novo automaticamente.</string>
+    <string name="voiceConversationNativeTourDone">Entendi</string>
+    <string name="voiceConversationNativeTourNext">Avançar</string>
+    <string name="voiceConversationNativeTourReset">Mostrar as dicas novamente</string>
+    <string name="voiceConversationNativeTourResetFailed">Não foi possível redefinir as dicas. Tente novamente.</string>
+    <string name="voiceConversationNativeTourReplay">Mostre-me</string>
+    <string name="voiceConversationNativeTourLoadFailed">Não foi possível abrir as dicas. Tente novamente.</string>
+</resources>

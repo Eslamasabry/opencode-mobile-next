@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">Alterações e worktrees</string>
+    <string name="agentProjectReadFailed">Não foi possível concluir esta ação do projeto. Confira o estado mais recente antes de tentar novamente.</string>
+    <string name="agentProjectNoGit">Esta pasta não é um repositório Git.</string>
+    <string name="agentProjectBranch">Branch atual</string>
+    <string name="agentProjectBaseBranch">Branch base</string>
+    <string name="agentProjectDetached">Checkout desanexado</string>
+    <string name="agentProjectWorkingTree">Árvore de trabalho</string>
+    <string name="agentProjectBranchChanges">Desde a branch base</string>
+    <string name="agentProjectAllFiles">Todos os arquivos alterados</string>
+    <string name="agentProjectNoPatch">Este arquivo não tem patch de texto.</string>
+    <string name="agentProjectPreviousLines">200 linhas anteriores</string>
+    <string name="agentProjectNextLines">Próximas 200 linhas</string>
+    <string name="agentProjectChangedFiles">Arquivos alterados</string>
+    <string name="agentProjectNoChanges">Nenhuma alteração nesta comparação.</string>
+    <string name="agentProjectLineChanges">%1$d adicionadas · %2$d removidas</string>
+    <string name="agentProjectWorktrees">Worktrees</string>
+    <string name="agentProjectNoWorktrees">Nenhum worktree informado para este projeto.</string>
+    <string name="agentProjectReady">Pronto</string>
+    <string name="agentProjectRemove">Remover worktree</string>
+    <string name="agentProjectWorking">Aguarde esta ação terminar.</string>
+    <string name="agentProjectNewWorktree">Novo worktree com nome</string>
+    <string name="agentProjectGenerateWorktree">Criar com um nome gerado</string>
+    <string name="agentProjectRefresh">Atualizar estado do projeto</string>
+    <string name="agentProjectNameInvalid">Use de 1 a 128 letras, números, pontos, sublinhados ou hifens. Comece com uma letra ou um número e não use dois pontos seguidos.</string>
+    <string name="agentProjectWorktreeName">Nome do worktree</string>
+    <string name="agentProjectCreate">Criar worktree</string>
+    <string name="agentProjectRemoveQuestion">Remover “%1$s”?</string>
+    <string name="agentProjectRemoveBody">Arquiva o worktree e suas conversas e remove a pasta dele: %1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="one">Este worktree tem 1 arquivo alterado. Ele será removido junto com a pasta.</item>
+        <item quantity="many">Este worktree tem %1$d de arquivos alterados. Eles serão removidos junto com a pasta.</item>
+        <item quantity="other">Este worktree tem %1$d arquivos alterados. Eles serão removidos junto com a pasta.</item>
+    </plurals>
+</resources>

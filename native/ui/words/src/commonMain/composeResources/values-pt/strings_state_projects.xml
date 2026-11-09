@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Digite um nome de pasta.</string>
+    <string name="stateFolderNameSegment">Use um único nome de pasta, sem barras.</string>
+    <string name="stateFolderNameCharacters">Use letras, números, pontos, hifens ou sublinhados, começando com uma letra ou número (até 64 caracteres).</string>
+    <string name="stateFolderCreating">Criando a pasta do projeto…</string>
+</resources>

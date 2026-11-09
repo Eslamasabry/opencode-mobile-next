@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">Não foi possível carregar as mensagens mais antigas. As mensagens já carregadas continuam aqui. Tentar novamente.</string>
+    <string name="chatTranscriptTokens">%1$s tokens</string>
+    <string name="chatTranscriptCost">Custo estimado: US$ %1$s</string>
+    <string name="chatHistoryTitle">Reutilizar um pedido</string>
+    <string name="chatHistorySubtitle">Escolha palavras desta conversa ou dos seus envios recentes. Elas são adicionadas ao seu rascunho; nada é enviado.</string>
+    <string name="chatHistorySearch">Pesquisar pedidos recentes</string>
+    <string name="chatHistoryEmpty">Ainda não há pedidos recentes.</string>
+    <string name="chatHistoryLoading">Carregando pedidos recentes…</string>
+    <string name="chatHistoryLoadFailed">Não foi possível carregar os pedidos recentes. Você ainda pode usar os pedidos desta conversa.</string>
+</resources>

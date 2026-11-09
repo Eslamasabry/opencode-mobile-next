@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipTerminalLinksTitle">Links do terminal</string>
+    <string name="tipTerminalLinks">Toque em um link ou use Abrir link.</string>
+</resources>

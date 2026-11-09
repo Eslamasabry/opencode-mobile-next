@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">Armazenamento interno</string>
+    <string name="andrStorageUp">Subir uma pasta</string>
+    <string name="andrStorageUseFolder">Abrir esta pasta</string>
+    <string name="andrStorageFoldersEmpty">Não há pastas aqui.</string>
+    <string name="andrStorageFolderMissing">Esta pasta não está mais aqui. Suba um nível e escolha outra pasta.</string>
+    <string name="andrStorageFolderDenied">Permita o acesso às pastas nas configurações do Android e tente novamente.</string>
+    <string name="andrStorageFolderFailed">Não foi possível ler esta pasta. Tente novamente.</string>
+    <string name="andrStorageAccess">Permitir acesso às pastas</string>
+    <string name="andrStorageWorking">Aguarde a pasta terminar de carregar.</string>
+    <string name="andrStorageTitle">Armazenamento do celular</string>
+    <string name="andrStorageNearlyFull">O armazenamento está quase cheio: %1$s disponíveis. Libere espaço antes de instalar ferramentas ou iniciar um trabalho grande.</string>
+    <string name="andrStorageAvailable">%1$s disponíveis para este app.</string>
+    <string name="andrStorageUnknown">Não foi possível ler o espaço disponível. Tente medir de novo.</string>
+    <string name="andrStorageMeasure">Medir armazenamento e arquivos do Linux</string>
+    <string name="andrStorageMeasuring">Medindo o armazenamento…</string>
+    <string name="andrStorageHostSizes">Linux e ferramentas: %1$s · Projetos: %2$s. São tamanhos de arquivos, não todo o armazenamento do app.</string>
+    <string name="andrStorageHostUnknown">Não foi possível medir o tamanho dos arquivos do Linux. Seus arquivos foram mantidos.</string>
+    <string name="andrStorageRootHere">O armazenamento interno em si não pode ser um projeto. Abra uma pasta dentro dele.</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="one">aguardando para editar 1 arquivo</item>
+        <item quantity="many">aguardando para editar %1$d de arquivos</item>
+        <item quantity="other">aguardando para editar %1$d arquivos</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="one">aguardando para executar 1 comando</item>
+        <item quantity="many">aguardando para executar %1$d de comandos</item>
+        <item quantity="other">aguardando para executar %1$d comandos</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="one">1 etapa em espera</item>
+        <item quantity="many">%1$d de etapas em espera</item>
+        <item quantity="other">%1$d etapas em espera</item>
+    </plurals>
+    <string name="chatMenuContinueElsewhere">Continuar em outro lugar</string>
+</resources>

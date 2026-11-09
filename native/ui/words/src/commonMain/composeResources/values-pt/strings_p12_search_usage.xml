@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">Pesquisar conversas</string>
+    <string name="p12SearchField">Pesquisar conversas</string>
+    <string name="p12SearchServer">Servidor</string>
+    <string name="p12SearchRecent">Pesquisas recentes</string>
+    <string name="p12SearchRecentEmpty">Suas pesquisas neste celular aparecem aqui.</string>
+    <string name="p12SearchRecentClear">Limpar pesquisas recentes</string>
+    <string name="p12SearchRecentRemove">Remover %1$s</string>
+    <string name="p12SearchRecentFailed">Não foi possível atualizar as pesquisas recentes. A pesquisa continua funcionando.</string>
+    <string name="p12SearchInside">Pesquisar também dentro das conversas recentes</string>
+    <string name="p12SearchInsideHelp">Lê as mensagens mais novas das suas 20 conversas mais recentes neste servidor.</string>
+    <string name="p12SearchTitles">Títulos</string>
+    <string name="p12SearchInsideSection">Dentro das conversas</string>
+    <string name="p12SearchInsideReading">Lendo as conversas recentes…</string>
+    <string name="p12SearchInsideFailed">Não foi possível ler as conversas recentes. Os resultados por título continuam aparecendo.</string>
+    <string name="p12SearchFromYou">Você: %1$s</string>
+    <string name="p12SearchFromAgent">Resposta: %1$s</string>
+    <string name="p12SearchOneProject">Só o projeto atual deste servidor é pesquisado.</string>
+    <string name="p12SearchSearching">Pesquisando…</string>
+    <string name="p12SearchFailed">Não foi possível pesquisar as conversas.</string>
+    <string name="p12SearchTryAgain">Tentar novamente</string>
+    <string name="p12SearchNoServerTitle">Nenhum servidor conectado</string>
+    <string name="p12SearchNoServerBody">Conecte um servidor para pesquisar as conversas dele.</string>
+    <string name="p12SearchOpenServers">Abrir Servidores</string>
+    <string name="p12SearchConversationsWhat">conversas</string>
+    <string name="p12UsageCost">Custo estimado</string>
+    <string name="p12UsageRange">Período</string>
+    <string name="p12UsageActivity">Atividade por dia</string>
+    <string name="p12UsageDay">%1$s · %2$s etapas</string>
+    <string name="p12UsageProjectsFailed">Não foi possível listar os projetos. Todos os projetos continua funcionando.</string>
+    <string name="p12UsageNoServerBody">Conecte um servidor para ver o uso e o custo dele.</string>
+    <string name="p12UsageFailed">Não foi possível carregar o uso.</string>
+    <string name="p12UsageTryAgain">Tentar novamente</string>
+    <string name="p12UsageCounts">Atividade</string>
+    <string name="p12UsageServer">Servidor</string>
+</resources>

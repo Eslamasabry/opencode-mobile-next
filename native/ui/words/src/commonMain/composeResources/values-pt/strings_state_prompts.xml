@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Alguns rascunhos ou anexos antigos ainda não puderam ser movidos. Seu trabalho salvo foi mantido. Libere espaço, se necessário, e tente novamente.</string>
+    <string name="statePromptFilesUnavailable">Não foi possível restaurar estes arquivos aqui: %1$s. A mensagem salva foi mantida.</string>
+</resources>

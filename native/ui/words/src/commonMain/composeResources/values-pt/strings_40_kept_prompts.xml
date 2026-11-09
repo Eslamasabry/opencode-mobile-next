@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Mensagens guardadas</string>
+    <string name="keptPromptsBody">Mensagens guardadas quando um servidor foi removido. Restaure uma em uma conversa para revisá-la antes de enviar.</string>
+    <string name="keptPromptsEmpty">Nenhuma mensagem guardada</string>
+    <string name="keptPromptsChoose">Escolha uma conversa</string>
+    <string name="keptPromptsChooseBody">Escolha uma conversa de um servidor conectado. Isso só preenche o rascunho dela.</string>
+    <string name="keptPromptsNoTargets">Nenhuma conversa conectada</string>
+    <string name="keptPromptsNoTargetsBody">Conecte um servidor salvo ou abra uma conversa e tente novamente.</string>
+    <string name="keptPromptsConnect">Conectar um servidor</string>
+    <string name="keptPromptsUncertain">Esta mensagem pode já ter sido enviada. Confira a conversa original antes de enviá-la de novo.</string>
+    <string name="keptPromptsFailed">Não foi possível ler nem alterar as mensagens guardadas. Tente novamente.</string>
+    <string name="keptPromptsKeptFrom">Guardada de um servidor removido</string>
+    <string name="keptPromptsRestoreFailed">A mensagem salva ou a conversa mudou. Reabra as mensagens salvas na conversa e tente novamente.</string>
+    <string name="keptConversation">Conversa</string>
+</resources>

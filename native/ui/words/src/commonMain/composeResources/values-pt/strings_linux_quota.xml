@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Uso do plano neste celular</string>
+    <string name="linuxQuotaSetup">Configurar o uso do plano</string>
+    <string name="linuxQuotaEnabled">O uso do plano está configurado</string>
+    <string name="linuxQuotaBody">Lê os limites do Codex, GLM e MiniMax a partir dos logins que já estão neste celular. O auxiliar só roda enquanto o uso está sendo lido.</string>
+    <string name="linuxQuotaTurnOff">Desativar o uso do plano</string>
+    <string name="linuxQuotaLinuxNotReady">Configure primeiro o Linux em Este celular.</string>
+    <string name="linuxQuotaNoNode">Instale o Node nos componentes do Linux e tente novamente.</string>
+    <string name="linuxQuotaOldNode">Atualize o Node para a versão 20 ou posterior e tente novamente.</string>
+    <string name="linuxQuotaPrepareFailed">Não foi possível preparar os arquivos de uso. Tente novamente.</string>
+    <string name="linuxQuotaStartFailed">O auxiliar de uso não respondeu. Tente novamente.</string>
+    <string name="linuxQuotaRemoveFailed">Não foi possível remover o auxiliar de uso. Tente novamente.</string>
+</resources>
