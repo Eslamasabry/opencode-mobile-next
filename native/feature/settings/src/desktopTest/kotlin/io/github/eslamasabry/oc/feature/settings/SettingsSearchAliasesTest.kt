@@ -53,7 +53,8 @@ class SettingsSearchAliasesTest {
         val es = entries("es")
         assertEquals(SettingsRowId.Appearance, first("Tamaño del texto", es))
         assertEquals(SettingsRowId.Appearance, first("text size", es))
-        assertEquals(SettingsRowId.Voice, first("voice typing", es))
+        // Spanish is translated to 100% now, so its aliases are Spanish words (the row title is "Dictado por voz").
+        assertEquals(SettingsRowId.Voice, first("dictado por voz", es))
     }
 
     @Test

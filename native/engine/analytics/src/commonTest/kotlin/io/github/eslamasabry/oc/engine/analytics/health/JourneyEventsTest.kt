@@ -61,7 +61,7 @@ class JourneyEventsTest {
     @Test
     fun `B-JOURNEY-002 the fixed words of the brief are all there`() {
         assertEquals(
-            setOf("network", "storage", "permission", "download", "checksum", "killed_by_system", "timeout", "unknown"),
+            setOf("network", "storage", "apt", "permission", "download", "checksum", "killed_by_system", "timeout", "unknown"),
             HealthWords.setupFailKinds,
         )
         assertEquals(setOf("ok", "fail", "skipped", "cancelled"), HealthWords.setupResults)
