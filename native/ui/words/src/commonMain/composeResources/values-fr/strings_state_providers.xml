@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateProviderZaiGlobal">Z.AI · Monde</string>
+    <string name="stateProviderZaiChina">Z.AI · Chine</string>
+    <string name="stateProviderZaiPlanGlobal">Z.AI Coding Plan · Monde</string>
+    <string name="stateProviderZaiPlanChina">Z.AI Coding Plan · Chine</string>
+</resources>

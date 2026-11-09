@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">Lo que se ejecuta solo</string>
+    <string name="secAutomationDetail">Elige lo que este servidor puede hacer automáticamente. Una opción permite trabajo existente; no lo inicia.</string>
+    <string name="secAutomationReconnect">Reconectar</string>
+    <string name="secAutomationRetryIntake">Reintentar el trabajo entrante</string>
+    <string name="secAutomationReconcileQueuedSends">Conciliar los envíos en cola</string>
+    <string name="secAutomationRetryProviderErrors">Reintentar los errores del proveedor</string>
+    <string name="secAutomationRestartPhoneServer">Reiniciar el servidor del teléfono</string>
+    <string name="secAutomationResumeSetup">Reanudar la configuración</string>
+    <string name="secAutomationRecheckEnvironment">Revisar de nuevo el entorno</string>
+    <string name="secAutomationPollRestartHealth">Comprobar el estado tras reiniciar</string>
+    <string name="secAutomationThermalRecovery">Recuperarse tras el calor</string>
+    <string name="secAutomationReduceEffects">Reducir los efectos</string>
+    <string name="secAutomationChooseDefaults">Elegir valores predeterminados</string>
+    <string name="secAutomationDetectInstallations">Detectar instalaciones</string>
+    <string name="secAutomationPreserveDrafts">Conservar borradores</string>
+    <string name="secAutomationFollowOutput">Seguir el resultado</string>
+    <string name="secAutomationPollOpenPages">Actualizar las páginas abiertas</string>
+    <string name="secAutomationBoundedPaging">Cargar más resultados</string>
+    <string name="secAutomationRouteReadyWork">Asignar el trabajo listo</string>
+    <string name="secAutomationWakeStalledPool">Reactivar los procesos detenidos</string>
+    <string name="secAutomationRestartWorkers">Reiniciar los procesos de trabajo</string>
+    <string name="secAutomationRecycleWorkers">Renovar los procesos de trabajo</string>
+    <string name="secAutomationHoldAtProviderLimit">Esperar en los límites del proveedor</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Reintentar las respuestas sin confirmar</string>
+    <string name="secAutomationRetryTransientTask">Reintentar los fallos temporales</string>
+    <string name="secAutomationFallBackToDirectTask">Usar una tarea directa como alternativa</string>
+    <string name="secAutomationApplyCodePush">Aplicar actualizaciones de código</string>
+    <string name="secAutomationRestartDevServices">Reiniciar los servicios de desarrollo</string>
+    <string name="secAutomationStopIdleHelpers">Detener los ayudantes inactivos</string>
+    <string name="secAutomationCleanCaches">Limpiar cachés</string>
+    <string name="secAutomationUpdateWhenIdle">Actualizar cuando esté inactivo</string>
+    <string name="secAutomationMonitorOtherServers">Supervisar otros servidores</string>
+    <string name="secAutomationMonitorQuota">Supervisar el cupo</string>
+</resources>

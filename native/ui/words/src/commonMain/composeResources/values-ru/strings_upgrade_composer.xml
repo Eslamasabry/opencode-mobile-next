@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeComposerAsk">Спросить: %1$s…</string>
+    <string name="upgradeComposerFree"> · Бесплатно</string>
+    <string name="upgradeComposerVoiceHoldTitle">Поговорить с агентом</string>
+    <string name="upgradeComposerVoiceHold">Удерживайте микрофон и говорите; отпустите, чтобы текст попал в поле. Для голосового разговора откройте + и выберите «Голосовой чат».</string>
+    <string name="upgradeComposerHoldDictate">Удерживайте, чтобы продиктовать</string>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeCapabilitiesDetail">Voyez ce que l'application sait faire et ouvrez la configuration quand elle est disponible.</string>
+    <string name="nativeCapabilityOpenFailed">Impossible d'ouvrir cette configuration. Vérifiez le serveur sélectionné et réessayez.</string>
+    <string name="nativeCapabilityAddServerTitle">Connecter un serveur</string>
+    <string name="nativeCapabilityAddServerDetail">Enregistrez l'adresse d'un serveur que vous exécutez sur un ordinateur.</string>
+    <string name="nativeCapabilityPhoneSetupTitle">Configurer ce téléphone</string>
+    <string name="nativeCapabilityPhoneSetupDetail">Installez l'environnement Linux et le serveur sur ce téléphone.</string>
+    <string name="nativeCapabilityServerGenerationTitle">Utiliser OpenCode 2</string>
+    <string name="nativeCapabilityServerGenerationDetail">Configurez la génération de serveur que vous voulez utiliser.</string>
+    <string name="nativeCapabilityAddServerCodexTitle">Connecter Codex</string>
+    <string name="nativeCapabilityAddServerCodexDetail">Connectez Codex sur votre ordinateur.</string>
+    <string name="nativeCapabilityAddServerPaseoTitle">Connecter Paseo</string>
+    <string name="nativeCapabilityAddServerPaseoDetail">Connectez les agents de votre ordinateur Paseo.</string>
+    <string name="nativeCapabilityModelSignInTitle">Se connecter à un fournisseur de modèles</string>
+    <string name="nativeCapabilityModelSignInDetail">Gérez les comptes des fournisseurs pour le serveur sélectionné.</string>
+    <string name="nativeCapabilityTeamTurnOnTitle">Configurer une équipe d'IA</string>
+    <string name="nativeCapabilityTeamTurnOnDetail">Ouvrez la configuration de l'équipe pour votre projet.</string>
+    <string name="nativeCapabilityTeamHostGuideTitle">Connecter l'hôte de votre équipe</string>
+    <string name="nativeCapabilityTeamHostGuideDetail">Ouvrez le guide de configuration de l'ordinateur de votre équipe.</string>
+    <string name="nativeCapabilityVoiceModelSetupTitle">Configurer la saisie vocale</string>
+    <string name="nativeCapabilityVoiceModelSetupDetail">Choisissez et téléchargez un modèle vocal qui fonctionne sur l'appareil.</string>
+    <string name="nativeCapabilityMcpAddTitle">Ajouter un outil MCP</string>
+    <string name="nativeCapabilityMcpAddDetail">Connectez un outil au serveur sélectionné.</string>
+    <string name="nativeCapabilityProjectChooseTitle">Ouvrir un projet</string>
+    <string name="nativeCapabilityProjectChooseDetail">Choisissez le dossier dans lequel vous voulez travailler.</string>
+    <string name="nativeCapabilityProjectGitInitTitle">Configurer Git pour le projet</string>
+    <string name="nativeCapabilityProjectGitInitDetail">Ouvrez la configuration Git du projet.</string>
+    <string name="nativeCapabilityAllowNotificationsTitle">Autoriser les notifications</string>
+    <string name="nativeCapabilityAllowNotificationsDetail">Choisissez ce que l'application peut vous signaler pendant votre absence.</string>
+    <string name="nativeCapabilityAllowBackgroundTitle">Rester actif</string>
+    <string name="nativeCapabilityAllowBackgroundDetail">Ouvrez les réglages d'arrière-plan et de batterie d'Android.</string>
+    <string name="nativeCapabilityAllowCameraTitle">Autoriser l'appareil photo</string>
+    <string name="nativeCapabilityAllowCameraDetail">Autorisez l'accès à l'appareil photo pour l'association et les photos.</string>
+    <string name="nativeCapabilityAllowMicrophoneTitle">Autoriser le microphone</string>
+    <string name="nativeCapabilityAllowMicrophoneDetail">Autorisez l'accès au microphone pour la saisie vocale.</string>
+    <string name="nativeCapabilityTailscaleSetupTitle">Se connecter via Tailscale</string>
+    <string name="nativeCapabilityTailscaleSetupDetail">Configurez un accès privé à votre ordinateur.</string>
+    <string name="nativeCapabilityQuotaCollectorGuideTitle">Configurer les relevés d'utilisation</string>
+    <string name="nativeCapabilityQuotaCollectorGuideDetail">Ouvrez la configuration des relevés d'utilisation de l'abonnement.</string>
+    <string name="nativeCapabilityAddExternalAgentTitle">Connecter un agent externe</string>
+    <string name="nativeCapabilityAddExternalAgentDetail">Connectez un agent à l'aide de sa fiche d'agent publiée.</string>
+    <string name="nativeCapabilityTeamDeferred">AI Team est prévu après le passage à l'application native. Les données d'équipe existantes restent sur ce téléphone.</string>
+    <string name="nativeCapabilityExternalDropped">Les agents d'autres applications ne font pas partie de cette application. Vos données enregistrées restent telles quelles.</string>
+</resources>

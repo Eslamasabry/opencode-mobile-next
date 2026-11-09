@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Thay đổi trong lượt này</string>
+    <string name="reviewOneFileUnavailable">Chưa hoàn tác được từng tệp: máy chủ này chỉ hoàn tác được từ một lời nhắc. Dùng Hoàn tác tất cả, hoặc Hoàn tác từ đây trở đi trên một lời nhắc.</string>
+    <string name="reviewNoDiff">Máy chủ không báo các dòng đã thay đổi trong tệp này.</string>
+    <string name="reviewFileGone">Tệp này không còn nằm trong các thay đổi này nữa.</string>
+    <string name="reviewIncomplete">Không đọc được các tin nhắn cũ hơn, nên danh sách này có thể thiếu tệp.</string>
+    <string name="reviewNoChangesBody">Tác nhân không báo chỉnh sửa tệp nào ở đây.</string>
+    <string name="reviewWaiting">Một thao tác hoàn tác đang chờ bạn xem lại. Các tin nhắn sau lời nhắc của nó bị ẩn cho đến khi bạn chọn.</string>
+    <string name="reviewUndoUnknown">Hoàn tác tất cả cần lời nhắc mà các thay đổi này bắt đầu từ đó, nhưng không đọc được nó.</string>
+    <string name="reviewUndoUnavailable">Máy chủ này không hoàn tác được từ một lời nhắc.</string>
+    <string name="reviewToolEvidence">Dựa trên những gì công cụ của tác nhân báo lại. Các thay đổi do lệnh thực hiện không được liệt kê.</string>
+    <string name="reviewSendBackFailed">Không đưa được ghi chú của bạn vào tin nhắn. Thử lại.</string>
+</resources>

@@ -3,6 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -33,6 +34,14 @@ import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.detachedTranscript
 import io.github.eslamasabry.oc.engine.transcript.state.MessageWithParts
 import io.github.eslamasabry.oc.feature.chat.world.ChatLastKnown
+import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
+import io.github.eslamasabry.oc.feature.projects.presentation.KeptFolderList
+import io.github.eslamasabry.oc.feature.projects.presentation.KeptPageRows
+import io.github.eslamasabry.oc.feature.projects.presentation.KeptProjectList
+import io.github.eslamasabry.oc.feature.projects.presentation.KeptProjectPage
+import io.github.eslamasabry.oc.feature.projects.presentation.NoProjectsLastKnown
+import io.github.eslamasabry.oc.feature.projects.presentation.OpenFolderUi
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsLastKnown
 import kotlin.time.Clock
 import kotlinx.io.files.Path
 
@@ -172,5 +181,56 @@ class AppTeamLastKnown(store: LastKnown, stores: PreviewStores) : TeamLastKnown 
 
     companion object {
         val TEAM = CacheShelf("team", KeptTeam.serializer(), maxBytes = 256 * 1024, maxEntries = 1)
+    }
+}
+
+/**
+ * The projects pages' last rows (picker group, project page, open-project listings), kept per profile and server.
+ * The kept shapes live in :feature:projects (the serialization plugin is not applied in :androidApp).
+ */
+@ContributesBinding(AppScope::class, replaces = [NoProjectsLastKnown::class])
+@SingleIn(AppScope::class)
+@Inject
+class AppProjectsLastKnown(store: LastKnown, stores: PreviewStores) : ProjectsLastKnown {
+    private val projects = ProfileShelf(store, stores, PROJECTS)
+    private val pages = ProfileShelf(store, stores, PAGES)
+    private val folders = ProfileShelf(store, stores, FOLDERS)
+
+    private fun key(path: String?) = path ?: "@projects"
+
+    override fun peekProjects(profile: ProfileId): List<FolderRowUi>? = projects.peek(profile)?.toRows()
+
+    override suspend fun readProjects(profile: ProfileId): List<FolderRowUi>? = projects.read(profile)?.toRows()
+
+    override suspend fun keepProjects(profile: ProfileId, rows: List<FolderRowUi>) =
+        projects.keep(profile, value = KeptProjectList.of(rows.take(MAX_ROWS)))
+
+    override fun peekPage(profile: ProfileId, directory: String): KeptProjectPage? =
+        pages.peek(profile, directory)?.toPage(profile)
+
+    override suspend fun readPage(profile: ProfileId, directory: String): KeptProjectPage? =
+        pages.read(profile, directory)?.toPage(profile)
+
+    override suspend fun keepPage(profile: ProfileId, directory: String, page: KeptProjectPage) =
+        pages.keep(
+            profile,
+            directory,
+            KeptPageRows.of(KeptProjectPage(page.conversations.take(MAX_ROWS), page.elsewhere.take(MAX_ROWS))),
+        )
+
+    override fun peekFolders(profile: ProfileId, path: String?): List<OpenFolderUi>? =
+        folders.peek(profile, key(path))?.toFolders()
+
+    override suspend fun readFolders(profile: ProfileId, path: String?): List<OpenFolderUi>? =
+        folders.read(profile, key(path))?.toFolders()
+
+    override suspend fun keepFolders(profile: ProfileId, path: String?, folders: List<OpenFolderUi>) =
+        this.folders.keep(profile, key(path), KeptFolderList.of(folders.take(MAX_ROWS)))
+
+    companion object {
+        const val MAX_ROWS = 200
+        val PROJECTS = CacheShelf("projects", KeptProjectList.serializer(), maxBytes = 128 * 1024, maxEntries = 1)
+        val PAGES = CacheShelf("projectPage", KeptPageRows.serializer(), maxBytes = 128 * 1024, maxEntries = 40)
+        val FOLDERS = CacheShelf("folder", KeptFolderList.serializer(), maxBytes = 64 * 1024, maxEntries = 40)
     }
 }

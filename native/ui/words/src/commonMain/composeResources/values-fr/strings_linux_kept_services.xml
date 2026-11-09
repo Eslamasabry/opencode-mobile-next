@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">Services</string>
+    <string name="keptSvcFailed">Les services n’ont pas pu terminer cette action</string>
+    <string name="keptSvcFailedBody">Vérifiez que Linux est configuré, puis réessayez. Vos choix de services enregistrés sont conservés.</string>
+    <string name="keptSvcAdd">Ajouter un service</string>
+    <string name="keptSvcKeepsRunning">Un service que vous démarrez continue de fonctionner après un plantage ou à la réouverture de l’application, jusqu’à ce que vous l’arrêtiez.</string>
+    <string name="keptSvcEmpty">Aucun service pour l’instant. Ajoutez votre propre commande pour la maintenir active.</string>
+    <string name="keptSvcScreenOff">Les services peuvent se mettre en pause quand l’écran est éteint, sauf si le téléphone est en charge.</string>
+    <string name="keptSvcStartNamed">Démarrer %1$s</string>
+    <string name="keptSvcStopNamed">Arrêter %1$s</string>
+    <string name="keptSvcRestartNamed">Redémarrer %1$s</string>
+    <string name="keptSvcOpenNamed">Ouvrir %1$s</string>
+    <string name="keptSvcRemoveNamed">Supprimer %1$s</string>
+    <string name="keptSvcWorking">Finalisation de l’action sur le service…</string>
+    <string name="keptSvcCopyLog">Copier le journal</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="one">Reparti après %1$d redémarrage</item>
+        <item quantity="many">Reparti après %1$d de redémarrages</item>
+        <item quantity="other">Reparti après %1$d redémarrages</item>
+    </plurals>
+    <string name="keptSvcLogTitle">Journal du service</string>
+    <string name="keptSvcSearchLog">Rechercher dans le journal</string>
+    <string name="keptSvcLogEmpty">Aucune sortie pour l’instant.</string>
+    <string name="keptSvcRemoveQuestion">Supprimer %1$s\u00A0?</string>
+    <string name="keptSvcRemoveBody">Le service est arrêté avant la suppression de sa définition enregistrée et de ses journaux.</string>
+    <string name="keptSvcRemoveGoes">Sa commande, son réglage activé/désactivé et ses journaux sont supprimés.</string>
+    <string name="keptSvcRemoveStays">Les outils installés et les fichiers du projet restent.</string>
+    <string name="keptSvcSaveStart">Enregistrer et démarrer le service</string>
+    <string name="keptSvcName">Nom</string>
+    <string name="keptSvcNameHint">De 2 à 24 lettres minuscules, chiffres ou traits d’union\u00A0; commencez par une lettre.</string>
+    <string name="keptSvcCommand">Commande</string>
+    <string name="keptSvcDirectory">Dossier dans Linux</string>
+    <string name="keptSvcPort">Port (facultatif)</string>
+    <string name="keptSvcPortHint">Un port libre de 1024 à 65535. Laissez vide s’il n’a pas de page web.</string>
+    <string name="keptSvcBadName">Choisissez un autre nom en respectant le format ci-dessus. Les noms de services de l’application sont réservés.</string>
+    <string name="keptSvcBadCommand">Saisissez une seule ligne de commande, de 4096 caractères maximum.</string>
+    <string name="keptSvcBadDirectory">Utilisez un dossier Linux absolu, sans segments parents (..).</string>
+    <string name="keptSvcBadPort">Choisissez un port inutilisé de 1024 à 65535, en dehors des ports réservés de l’application.</string>
+    <string name="keptSvcRestart">Redémarrer après un plantage</string>
+    <string name="keptSvcRestartBody">Réessaie après un échec\u00A0; s’arrête après plusieurs plantages rapprochés.</string>
+    <string name="keptSvcLimit">Il y a déjà 16 services. Supprimez-en un avant d’en ajouter un autre.</string>
+    <string name="keptSvcPaused">En pause pendant que le téléphone chauffe</string>
+    <string name="keptSvcOff">Désactivé</string>
+    <string name="keptSvcStarting">Démarrage…</string>
+    <string name="keptSvcRunning">En cours d’exécution</string>
+    <string name="keptSvcRunningFor">En cours depuis %1$d min</string>
+    <string name="keptSvcStopping">Arrêt…</string>
+    <string name="keptSvcRetrying">Planté (code %1$d). Nouvelle tentative dans %2$d s</string>
+    <string name="keptSvcPortBusy">Le port %1$d est occupé. Nouvelle tentative bientôt.</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="one">Arrêté après des plantages répétés (%1$d redémarrage)</item>
+        <item quantity="many">Arrêté après des plantages répétés (%1$d de redémarrages)</item>
+        <item quantity="other">Arrêté après des plantages répétés (%1$d redémarrages)</item>
+    </plurals>
+    <string name="keptSvcExited">Terminé (code %1$d)</string>
+    <string name="keptSvcPortNumber">Port %1$d</string>
+    <string name="keptSvcLogStarted">Démarré</string>
+    <string name="keptSvcLogExit">Terminé (code %1$d)</string>
+    <string name="keptSvcLogRetry">Nouvelle tentative dans %1$d s</string>
+    <string name="keptSvcLogGaveUp">Arrêté après des plantages répétés</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateStorageAppTitle">Cho phép truy cập tệp của điện thoại này</string>
+    <string name="stateStorageAppBody">Dự án này nằm trong bộ nhớ dùng chung. Bật quyền Truy cập tất cả tệp cho OpenCode Mobile, rồi quay lại đây.</string>
+    <string name="stateStorageAppAction">Mở cài đặt truy cập tệp</string>
+</resources>

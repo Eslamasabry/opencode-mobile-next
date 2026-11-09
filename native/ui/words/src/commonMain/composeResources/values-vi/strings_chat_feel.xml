@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatFeelShare">Chia sẻ</string>
+    <string name="chatFeelSelectText">Chọn văn bản</string>
+    <string name="chatFeelEditAndResend">Sửa và gửi lại</string>
+    <string name="chatFeelOpenLinkTitle">Mở liên kết?</string>
+    <string name="chatFeelOpenLinkBody">Thao tác này mở %1$s bên ngoài ứng dụng.</string>
+    <string name="chatFeelOpenLinkAction">Mở</string>
+    <string name="chatFeelLinkRefused">Không thể mở liên kết này từ đây.</string>
+    <string name="chatFeelUndoTitle">Hoàn tác từ đây?</string>
+    <string name="chatFeelUndoBody">Lời nhắc này và mọi thứ sau nó sẽ được hoàn tác trên máy chủ.</string>
+    <string name="chatFeelUndoAction">Hoàn tác</string>
+    <string name="chatFeelPicture">Ảnh</string>
+    <string name="chatFeelPictureOnServer">Ảnh trên máy chủ: %1$s</string>
+    <string name="chatFeelPictureOnWeb">Ảnh từ %1$s. Chạm để mở bên ngoài ứng dụng.</string>
+    <string name="chatFeelDone">Xong</string>
+    <string name="chatFeelPictureLoading">Đang mở ảnh…</string>
+    <string name="chatFeelPictureFailed">Không thể hiển thị ảnh này ở đây.</string>
+</resources>

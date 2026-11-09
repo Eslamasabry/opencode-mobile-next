@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="one">1 vous attend</item>
+        <item quantity="many">%1$d vous attendent</item>
+        <item quantity="other">%1$d vous attendent</item>
+    </plurals>
+    <string name="notifStatusReconnectingGeneric">Reconnexion</string>
+    <string name="andr_thermalPaused">Votre téléphone est chaud : l’AI Team a été mise en pause pour qu’il refroidisse. Elle reprendra d’elle-même.</string>
+    <string name="andr_thermalStopped">Votre téléphone est très chaud : l’AI Team a été arrêtée pour le protéger. Son travail est conservé et elle redémarrera quand le téléphone aura refroidi.</string>
+    <string name="andr_thermalResumed">L’AI Team a repris : votre téléphone a refroidi.</string>
+</resources>

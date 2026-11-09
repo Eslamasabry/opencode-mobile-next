@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">Cette invite contient des fichiers ou des notes de relecture qui ne peuvent pas entrer dans le message dans cette version. Ils restent enregistrés ici.</string>
+    <string name="promptFixWordsOnly">Ajouter seulement le texte</string>
+</resources>

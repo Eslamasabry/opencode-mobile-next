@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Ganti model</string>
+    <string name="b169UsedUp">%1$s habis untuk sementara</string>
+    <string name="b169UsedUpNoName">Model ini habis untuk sementara</string>
+    <string name="b169ConnectProvider">Hubungkan penyedia…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="other">Balasan yang dihentikan sudah menjalankan %1$d langkah. Kirim lagi dengan %2$s?</item>
+    </plurals>
+    <string name="b169AskSend">Kirim</string>
+    <string name="b169AttachAgain">Lampirkan %1$s lagi untuk mengirim</string>
+    <string name="b169Free">Gratis · mungkin memakai perintah Anda</string>
+    <string name="b169TooLong">Terlalu panjang untuk model ini</string>
+    <string name="b169Suggested">Disarankan</string>
+    <string name="b169Offline">Ganti model berfungsi lagi setelah server kembali.</string>
+</resources>

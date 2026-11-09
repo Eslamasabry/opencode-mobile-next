@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Когда запись закончится, её текст будет отправлен в этот чат. Нажмите «Слушать» для следующей реплики. Ответы озвучиваются, только если вы это включите.</string>
+    <string name="voiceConversationNativeTourSpeak">Говорите, затем нажмите «Отправить», чтобы отправить сказанное. «Слушать» начинает вашу следующую реплику.</string>
+    <string name="voiceConversationNativeTourReplies">«Читать ответы вслух» запрашивает ваше согласие и голос телефона. Чтение можно остановить в любой момент.</string>
+    <string name="voiceConversationNativeTourLeave">«Выйти из голосового режима» останавливает прослушивание и автоматическое чтение. Отправка с неясным результатом никогда не повторяется автоматически.</string>
+    <string name="voiceConversationNativeTourDone">Понятно</string>
+    <string name="voiceConversationNativeTourNext">Далее</string>
+    <string name="voiceConversationNativeTourReset">Показать подсказки снова</string>
+    <string name="voiceConversationNativeTourResetFailed">Не удалось сбросить подсказки. Повторите.</string>
+    <string name="voiceConversationNativeTourReplay">Показать</string>
+    <string name="voiceConversationNativeTourLoadFailed">Не удалось открыть подсказки. Повторите.</string>
+</resources>

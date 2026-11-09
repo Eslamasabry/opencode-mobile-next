@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelUpdating">Обновляем приложение…</string>
+    <string name="widgetPanelOpenAppForUpdate">Откройте приложение, чтобы завершить обновление, затем снова попробуйте этот виджет.</string>
+    <string name="widgetPanelOpenApp">Открыть приложение</string>
+    <string name="widgetPanelOpenFailed">Не удалось открыть этот виджет. Закройте это окно и повторите.</string>
+</resources>

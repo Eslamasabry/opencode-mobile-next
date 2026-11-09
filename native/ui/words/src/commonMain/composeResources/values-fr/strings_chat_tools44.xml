@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tools44ShowAll">Afficher toute la sortie</string>
+    <string name="tools44Lines">Lignes</string>
+    <string name="tools44HiddenLines">lignes masquées</string>
+</resources>

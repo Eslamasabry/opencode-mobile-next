@@ -1,5 +1,25 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalContext
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.currentCompositionLocalContext
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.round
 import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.AnimatedVisibility
@@ -189,7 +209,10 @@ public fun KitMenu(
         anchor()
         if (MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty()) {
             if (open) last.at = MenuPlacement.anchorFor(own, pressed)
-            MenuPopup(shown, last, onDismissRequest, own)
+            // Smoothness round 2: in the window's own menu layer (KitSheetHost), never a popup window of its own (a new
+            // window per open cost 11-13 % late frames in every style). Outside a host, the popup as before.
+            val layer = LocalKitMenuLayer.current
+            if (layer != null) MenuInLayer(layer, shown, last, onDismissRequest) else MenuPopup(shown, last, onDismissRequest, own)
         }
     }
 }
@@ -203,6 +226,130 @@ private class MenuShown {
     var items: List<KitMenuItem> by mutableStateOf(emptyList())
     var title: String? by mutableStateOf(null)
     var at: IntRect = IntRect.Zero
+}
+
+/**
+ * The room a menu keeps, in px: the page's gutter from each side (a dp count used as pixels left the menu ~10 px from
+ * the screen's edge under a full-width row), and the system bars plus a step at the top and bottom (E20-S08: its last
+ * item was cut under the navigation bar), less how far its host already lies inside them ([windowTop]: the host's top
+ * in the window; [windowBottomGap]: from the host's bottom to the window's).
+ */
+@Composable
+private fun menuRoom(windowTop: Int, windowBottomGap: Int): Triple<Int, Int, Int> {
+    val density = LocalDensity.current
+    val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
+    val step = with(density) { Space.S2.dp.roundToPx() }
+    val top = (WindowInsets.systemBars.getTop(density) - windowTop).coerceAtLeast(0) + step
+    val bottom = (WindowInsets.systemBars.getBottom(density) - windowBottomGap).coerceAtLeast(0) + step
+    return Triple(gutter, top, bottom)
+}
+
+/**
+ * The window's menu layer (smoothness round 2): every menu opened inside a [KitSheetHost] is drawn here, in the app's
+ * own window above the page, its sheet and its dialog, instead of in a popup window made for each open. Each menu
+ * keeps the composition locals of the place it was opened from, as a popup does.
+ */
+@Stable
+internal class KitMenuLayerState {
+    internal val entries = mutableStateListOf<MenuLayerEntry>()
+
+    /** The layer's top-left corner in the window, px. */
+    internal var origin: IntOffset by mutableStateOf(IntOffset.Zero)
+
+    /** Open (or closing) menus in this layer (tests: none of them makes a window). */
+    val count: Int get() = entries.size
+}
+
+internal class MenuLayerEntry {
+    var locals: CompositionLocalContext? by mutableStateOf(null)
+    var content: @Composable () -> Unit by mutableStateOf({})
+}
+
+/** The menu layer of the nearest [KitSheetHost]; null outside one (a menu then opens in a popup, as before). */
+internal val LocalKitMenuLayer: ProvidableCompositionLocal<KitMenuLayerState?> = staticCompositionLocalOf { null }
+
+/** Draws the open menus of [state]; it takes no touch and draws nothing while none is open. */
+@Composable
+internal fun MenuLayer(state: KitMenuLayerState) {
+    Box(Modifier.fillMaxSize().onGloballyPositioned { state.origin = it.positionInWindow().round() }) {
+        state.entries.forEach { entry ->
+            key(entry) {
+                val locals = entry.locals
+                if (locals != null) CompositionLocalProvider(locals) { entry.content() } else entry.content()
+            }
+        }
+    }
+}
+
+/**
+ * A menu in [layer]: registered while composed (opening, open or fading out), drawn by the layer with this place's
+ * composition locals. An outside press closes it (and is taken, as a focusable popup takes it), Back closes it, and
+ * it is placed by [MenuPlacement] in the layer's own pixels.
+ */
+@Composable
+private fun MenuInLayer(
+    layer: KitMenuLayerState,
+    shown: MutableTransitionState<Boolean>,
+    last: MenuShown,
+    onDismissRequest: () -> Unit,
+) {
+    val entry = remember { MenuLayerEntry() }
+    val locals = currentCompositionLocalContext
+    val dismiss by rememberUpdatedState(onDismissRequest)
+    SideEffect {
+        entry.locals = locals
+        entry.content = { LayerMenu(layer, shown, last) { dismiss() } }
+    }
+    DisposableEffect(layer, entry) {
+        layer.entries += entry
+        onDispose { layer.entries -= entry }
+    }
+}
+
+@Composable
+private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Boolean>, last: MenuShown, onDismissRequest: () -> Unit) {
+    // A menu already fading out does not ask to close again.
+    val close = { if (shown.targetState) onDismissRequest() }
+    KitPredictiveBack(enabled = shown.targetState) { close() }
+    val windowHeight = LocalWindowInfo.current.containerSize.height
+    var layerHeight by remember { mutableStateOf(0) }
+    val origin = layer.origin
+    val (gutter, top, bottom) =
+        menuRoom(windowTop = origin.y, windowBottomGap = if (layerHeight > 0) (windowHeight - origin.y - layerHeight).coerceAtLeast(0) else 0)
+    val at = last.at
+    val anchor = IntRect(at.left - origin.x, at.top - origin.y, at.right - origin.x, at.bottom - origin.y)
+    Box(
+        Modifier.fillMaxSize()
+            .onSizeChanged { layerHeight = it.height }
+            .pointerInput(shown) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+                    close()
+                    do {
+                        val event = awaitPointerEvent()
+                        event.changes.forEach { it.consume() }
+                    } while (event.changes.any { it.pressed })
+                }
+            }
+    )
+    Layout(
+        content = {
+            // The panel takes every press on it (its padding too): only a press beside it closes the menu.
+            Box(Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }) {
+                MenuContent(shown, last, onDismissRequest, anchor, gutter, top, bottom)
+            }
+        },
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val placeables = measurables.map { it.measure(loose) }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            val window = MenuWindow(constraints.maxWidth, constraints.maxHeight, gutter, top, bottom)
+            placeables.forEach { p ->
+                p.place(MenuPlacement.offset(anchor, IntSize(p.width, p.height), layoutDirection == LayoutDirection.Rtl, window))
+            }
+        }
+    }
 }
 
 /** The menu's motion rules, pure (M-004). */
@@ -224,19 +371,7 @@ private fun MenuPopup(
 ) {
     val anchor = last.at
     val override = anchor.takeIf { it != own }
-    val items = last.items
-    val title = last.title
-    val anchorTop = anchor.top
-    val anchorBottom = anchor.bottom
-    // The window margin is the page's gutter in pixels (a dp count used as pixels left the menu ~10 px from
-    // the screen's edge under a full-width row).
-    val density = LocalDensity.current
-    val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
-    // E20-S08: the menu fits between the system bars, a step from each; a longer one scrolls (its last
-    // item was cut under the navigation bar).
-    val step = with(density) { Space.S2.dp.roundToPx() }
-    val top = WindowInsets.systemBars.getTop(density) + step
-    val bottom = WindowInsets.systemBars.getBottom(density) + step
+    val (gutter, top, bottom) = menuRoom(windowTop = 0, windowBottomGap = 0)
     val provider = remember(gutter, top, bottom, override) { MenuPosition(gutter, top, bottom, override) }
     Popup(
         popupPositionProvider = provider,
@@ -244,6 +379,30 @@ private fun MenuPopup(
         onDismissRequest = { if (shown.targetState) onDismissRequest() },
         properties = PopupProperties(focusable = true),
     ) {
+        MenuContent(shown, last, onDismissRequest, anchor, gutter, top, bottom)
+    }
+}
+
+/**
+ * The menu's panel and its motion, placed by its host (the window's menu layer, or a popup): [anchor] is the box it
+ * opens from and [gutter], [top] and [bottom] the room it keeps, all in the host's pixels, whose size the panel is
+ * measured against.
+ */
+@Composable
+private fun MenuContent(
+    shown: MutableTransitionState<Boolean>,
+    last: MenuShown,
+    onDismissRequest: () -> Unit,
+    anchor: IntRect,
+    gutter: Int,
+    top: Int,
+    bottom: Int,
+) {
+    val items = last.items
+    val title = last.title
+    val anchorTop = anchor.top
+    val anchorBottom = anchor.bottom
+    run {
         val motion = KitMotion.state
         val specs = KitMotion.specs
         val density = LocalDensity.current

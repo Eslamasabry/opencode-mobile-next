@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativePendingTitle">Menunggu dikirim</string>
+    <string name="nativePendingReview">Tinjau</string>
+    <string name="nativePendingFailed">Pengiriman ini tidak dapat diperbarui. Periksa koneksi dan coba lagi.</string>
+    <string name="nativePendingOffline">Terkirim saat kembali online</string>
+    <string name="nativePendingAdmitted">Menunggu server</string>
+    <string name="nativePendingJoining">Bergabung ke balasan yang berjalan</string>
+    <string name="nativePendingUnconfirmed">Mungkin sudah terkirim</string>
+    <string name="nativePendingEdit">Kembalikan untuk diubah</string>
+    <string name="nativePendingSteer">Gabung ke balasan ini</string>
+    <string name="nativePendingCheck">Muat ulang</string>
+    <string name="nativePendingDiscard">Buang</string>
+    <string name="nativePendingDiscardTitle">Buang pesan ini?</string>
+    <string name="nativePendingEmpty">Tidak ada pengiriman yang menunggu.</string>
+    <plurals name="nativePendingCount">
+        <item quantity="other">%1$s pesan menunggu dikirim.</item>
+    </plurals>
+</resources>

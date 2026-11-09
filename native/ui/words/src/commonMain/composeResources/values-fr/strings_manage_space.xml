@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="manageSpaceClearCacheQuestion">Vider le cache de l’application\u00A0?</string>
+</resources>

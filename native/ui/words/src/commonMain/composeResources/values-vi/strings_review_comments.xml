@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewCommentTitleLine">Nhận xét về dòng %1$s</string>
+    <string name="reviewCommentTitleLines">Nhận xét về dòng %1$s–%2$s</string>
+    <string name="reviewCommentField">Tác nhân nên thay đổi điều gì?</string>
+    <string name="reviewCommentAdd">Thêm nhận xét</string>
+    <string name="reviewCommentLine">Dòng %1$s</string>
+    <string name="reviewCommentLines">Dòng %1$s–%2$s</string>
+    <string name="reviewCommentRemovedLine">Dòng đã xóa %1$s</string>
+    <string name="reviewCommentRemovedLines">Dòng đã xóa %1$s–%2$s</string>
+    <string name="reviewCommentDraft">Chưa gửi</string>
+    <string name="reviewCommentSending">Đang gửi</string>
+    <string name="reviewCommentWaiting">Đang chờ tác nhân</string>
+    <string name="reviewCommentFixed">Đã sửa</string>
+    <string name="reviewCommentRemove">Xóa nhận xét</string>
+    <string name="reviewCommentsLabel">Nhận xét của bạn</string>
+    <string name="reviewCommentHint">Chạm vào số dòng, rồi chọn Nhận xét để nhờ tác nhân thay đổi tại đó.</string>
+    <string name="reviewCommentNotPlaced">Không xác định được các dòng đó. Hãy chọn lại các dòng.</string>
+    <string name="reviewCommentsSendFailed">Không gửi được các nhận xét. Chúng vẫn được giữ ở đây.</string>
+    <plurals name="reviewSendComments">
+        <item quantity="other">Gửi %1$d nhận xét</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="other">%1$d nhận xét đang chờ tác nhân.</item>
+    </plurals>
+    <string name="reviewGuided">Có hướng dẫn</string>
+    <string name="reviewGuidedSupporting">Tác nhân dẫn bạn qua thay đổi của nó, quan trọng nhất trước</string>
+    <string name="reviewGuideMaking">Đang nhờ tác nhân dẫn bạn qua thay đổi của nó…</string>
+    <string name="reviewGuideFallback">Lần này không tạo được hướng dẫn. Đang hiện mọi tệp.</string>
+    <string name="reviewGuideBusy">Hướng dẫn sẽ chờ đến khi tác nhân xong. Tạm thời hiện mọi tệp.</string>
+    <string name="reviewGuideAlsoChanged">Cũng đã thay đổi</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxFindProjects">Cari proyek di ponsel ini</string>
+    <string name="linuxFindProjectsBody">Cari di ruang proyek dan penyimpanan ponsel bersama. Folder tetap di tempatnya.</string>
+    <string name="linuxStopFinding">Berhenti mencari</string>
+    <string name="linuxFindProjectsDone">Selesai mencari</string>
+    <string name="linuxFindProjectsLimited">Berhenti di batas pemindaian. Ini hasil pertama.</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">Folder proyek</string>
+</resources>

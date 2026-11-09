@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">Sur ce téléphone</string>
+    <string name="agentsHubOnComputers">Sur vos ordinateurs</string>
+    <string name="agentsHubComputersEmpty">Aucun ordinateur ajouté pour l’instant. Ajoutez-en un qui exécute Paseo pour utiliser Claude Code ou Pi depuis ce téléphone.</string>
+    <string name="agentsHubAddComputer">Ajouter un ordinateur</string>
+    <string name="agentsHubCheck">Vérifier la connexion</string>
+    <string name="agentsHubCheckAgents">Vérifier les agents</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">Utilisez une adresse ws:// sur cet appareil ou votre réseau privé, ou une adresse wss://.</string>
+    <string name="agentsHubInvalidFolder">Saisissez le dossier du projet sous forme de chemin complet, par exemple /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">Ce mot de passe est inutilisable. Utilisez des lettres, des chiffres et des symboles, sans espaces.</string>
+    <string name="agentsHubAdded">Enregistré. Ses conversations apparaissent dans Conversations.</string>
+    <string name="agentsHubAddFailed">Cet ordinateur n’a pas pu être enregistré. Vérifiez les informations et réessayez.</string>
+    <string name="agentsHubAgentsFailed">Impossible de lire les agents de cet ordinateur. Vérifiez que Paseo y fonctionne.</string>
+    <string name="agentsHubStartFailed">Impossible d’y démarrer une conversation. L’ordinateur reste enregistré.</string>
+    <string name="agentsHubSignInFailed">Cet ordinateur n’a pas accepté le mot de passe.</string>
+    <string name="agentsHubNotAnswering">Cet ordinateur n’a pas répondu. Vérifiez que Paseo fonctionne et que ce téléphone peut l’atteindre.</string>
+    <string name="agentsHubNotConnected">Non connecté</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

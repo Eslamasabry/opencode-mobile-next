@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Đang đọc mức dùng gói</string>
+    <string name="plansNativeCollectors">Đọc giới hạn gói</string>
+    <string name="plansNativeCollectorOn">Đang bật việc đọc</string>
+    <string name="plansNativeCollectorOff">Đang tắt việc đọc</string>
+    <string name="plansNativeCollectorSetup">Thiết lập việc đọc trên điện thoại này</string>
+    <string name="plansNativeCollectorRemote">Cho phép đọc từ máy chủ này</string>
+    <string name="plansNativeCollectorWorking">Đang cập nhật việc đọc gói</string>
+    <string name="plansNativeCollectorFailed">Không đổi được việc đọc gói. Hãy kiểm tra máy chủ và thử lại.</string>
+    <string name="plansNativeAlerts">Cảnh báo giới hạn gói</string>
+    <string name="plansNativeAlertsBody">Báo khi một gói đọc được đạt mức đã chọn. Việc đọc từ xa vẫn cần quyền của bạn.</string>
+    <string name="plansNativeSetupQuestion">Thiết lập việc đọc gói trên %1$s?</string>
+    <string name="plansNativeRemoteQuestion">Cho phép đọc gói từ %1$s?</string>
+    <string name="plansNativeOffQuestion">Tắt việc đọc gói trên %1$s?</string>
+    <string name="plansNativeSetupBody">Ứng dụng cài bộ đọc gói bên trong Ubuntu trong ứng dụng. Thông tin đăng nhập nhà cung cấp vẫn ở trên điện thoại.</string>
+    <string name="plansNativeRemoteBody">Đọc giới hạn gói từ bộ thu đã cài sẵn trên máy chủ này. Quyền này chỉ áp dụng cho máy chủ này và các tài khoản nhà cung cấp mà nó báo cáo.</string>
+    <string name="plansNativeOffBody">Dừng đọc nguồn này và gỡ quyền đọc của nó. Các đăng nhập nhà cung cấp vẫn được giữ.</string>
+    <string name="plansNativeSetUp">Thiết lập việc đọc</string>
+    <string name="plansNativeAllow">Cho phép đọc</string>
+    <string name="plansNativeTurnOff">Tắt việc đọc</string>
+    <string name="plansNativeCancel">Hủy</string>
+</resources>

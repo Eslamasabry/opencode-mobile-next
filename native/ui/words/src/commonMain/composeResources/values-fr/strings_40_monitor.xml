@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Boîte de réception</string>
+    <string name="monitorInboxEmpty">Aucune demande ni aucun rappel de vos serveurs surveillés pour le moment.</string>
+    <string name="monitorInboxFailedRun">Une exécution demande votre attention</string>
+    <string name="monitorInboxOpening">Ouverture de la demande…</string>
+    <string name="monitorInboxSettings">Choisissez les serveurs enregistrés à surveiller dans Notifications.</string>
+    <string name="monitorInboxSwitchBody">Ouvrez la demande sur ce serveur. Le travail déjà en cours sur vos autres serveurs continue.</string>
+</resources>

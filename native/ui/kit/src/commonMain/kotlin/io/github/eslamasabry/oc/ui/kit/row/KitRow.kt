@@ -486,7 +486,7 @@ private fun RowBody(
                         Modifier.testTag("kit-row-check"),
                         size = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Small,
                         // Glass marks the chosen row in the accent: its frost, its rim and its check.
-                        tone = if (glassChosen != null) TextTone.Accent else TextTone.Primary,
+                        tone = TextTone.Accent, // C04: one check colour across the kit
                     )
                     else -> Unit
                 }
@@ -540,9 +540,9 @@ internal const val CHOSEN_ROW_TINT: Float = 0.06f
 private const val CARET_INK_END = .28125f // F: lib/ui/kit/kit_optical.dart:26
 
 /** The chosen row's plate on a flat list: surface3, card corners, inset space2 from both ends (kit_row.dart:676-686). */
-private fun Modifier.kitChosenPlate(color: androidx.compose.ui.graphics.Color): Modifier =
+internal fun Modifier.kitChosenPlate(color: androidx.compose.ui.graphics.Color, extraInset: androidx.compose.ui.unit.Dp = 0.dp): Modifier =
     drawBehind {
-        val inset = Space.S2.dp.toPx()
+        val inset = Space.S2.dp.toPx() + extraInset.toPx()
         val r = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.CARD_RADIUS.dp.toPx()
         drawRoundRect(
             color,

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">Écrire à cette conversation</string>
+    <string name="widgetActionMessage">Message</string>
+    <string name="widgetActionHint">Guidez la réponse en cours. Si cet agent ne peut pas être guidé pendant qu'il travaille, votre message suivra sa réponse.</string>
+    <string name="widgetActionSend">Envoyer le message</string>
+    <string name="widgetActionClose">Fermer</string>
+    <string name="widgetActionOpen">Ouvrir la conversation</string>
+    <string name="widgetActionAccepted">Message envoyé</string>
+    <string name="widgetActionRejected">Cette conversation n'a pas pu recevoir le message</string>
+    <string name="widgetActionUncertain">Impossible de confirmer le message</string>
+    <string name="widgetActionCheckFirst">Vérifiez la conversation avant de renvoyer.</string>
+    <string name="widgetActionOpenHint">Ouvrez la conversation pour voir sa dernière réponse.</string>
+    <string name="widgetActionSending">Envoi du message…</string>
+    <string name="widgetActionEnterMessage">Saisissez d'abord un message</string>
+    <string name="widgetPanelAllProjects">Tous les projets</string>
+    <string name="widgetPanelSave">Enregistrer les choix</string>
+    <string name="widgetPanelRecord">Saisie vocale</string>
+    <string name="widgetPanelFinishRecording">Terminer la saisie vocale</string>
+    <string name="widgetPanelListening">Écoute en cours…</string>
+</resources>

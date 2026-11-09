@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerLimitApproaching">Лимит близок</string>
+    <string name="composerLimitReached">Лимит исчерпан</string>
+    <string name="composerLimitResetsInHoursMinutes">Сброс через %1$d ч %2$d мин</string>
+    <string name="composerLimitResetsInHours">Сброс через %1$d ч</string>
+    <string name="composerLimitResetsInMinutes">Сброс через %1$d мин</string>
+    <string name="composerLimitResetsOnDay">Сброс: %1$s, %2$s</string>
+    <string name="composerLimitResetsOnDate">Сброс: %1$s</string>
+    <string name="composerLimitViewUsage">Посмотреть расход</string>
+    <string name="composerLimitDismiss">Скрыть</string>
+    <string name="composerLimitMonday">понедельник</string>
+    <string name="composerLimitTuesday">вторник</string>
+    <string name="composerLimitWednesday">среда</string>
+    <string name="composerLimitThursday">четверг</string>
+    <string name="composerLimitFriday">пятница</string>
+    <string name="composerLimitSaturday">суббота</string>
+    <string name="composerLimitSunday">воскресенье</string>
+    <string name="composerLimitClock12">%1$s %2$s</string>
+    <string name="composerLimitAm">утра</string>
+    <string name="composerLimitPm">вечера</string>
+</resources>

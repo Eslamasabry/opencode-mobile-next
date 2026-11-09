@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb44AboutCheckUpdates">Periksa pembaruan</string>
+    <string name="rb44AboutUpdateIdle">Mencari versi aplikasi yang lebih baru</string>
+    <string name="rb44AboutUpdateChecking">Memeriksa…</string>
+    <string name="rb44AboutUpdateCurrent">Anda menggunakan versi terbaru</string>
+    <string name="rb44AboutUpdateDownloading">Mengunduh pembaruan…</string>
+    <string name="rb44AboutUpdateFailed">Pembaruan tidak dapat diperiksa. Periksa koneksi, lalu coba lagi.</string>
+</resources>

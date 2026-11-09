@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateNoteTitle">Catatan percakapan</string>
+    <string name="stateNoteDescription">Catatan ini memandu balasan dalam percakapan ini. Disimpan di server ini.</string>
+    <string name="stateNoteField">Catatan untuk percakapan ini</string>
+    <string name="stateNoteSave">Simpan catatan</string>
+    <string name="stateNoteRemove">Hapus catatan</string>
+    <string name="stateNoteReload">Baca ulang catatan tersimpan</string>
+    <string name="stateNoteWorking">Menyimpan atau membaca catatan. Mohon tunggu.</string>
+    <string name="stateNoteReloadFirst">Tulis perubahan dulu. Catatan harus sudah dimuat dan muat dalam 8192 byte terenkode.</string>
+    <string name="stateNoteTooLarge">Catatan terlalu panjang. Jaga dalam 8192 byte terenkode.</string>
+    <string name="stateNoteChanged">Percakapan atau catatan tersimpannya berubah. Baca ulang sebelum menyimpan.</string>
+    <string name="stateNoteFailed">Catatan tidak dapat dibaca atau disimpan. Periksa koneksi lalu coba lagi.</string>
+    <string name="stateNoteSaved">Catatan disimpan.</string>
+    <string name="stateNoteRemoved">Catatan dihapus.</string>
+    <string name="stateNoteDiscardTitle">Buang perubahan catatan ini?</string>
+    <string name="stateNoteDiscardBody">Perubahan yang belum disimpan akan hilang. Catatan tersimpan tetap seperti semula.</string>
+    <string name="stateNoteDiscard">Buang perubahan</string>
+</resources>

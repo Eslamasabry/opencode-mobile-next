@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Некоторые старые черновики или вложения пока не удалось перенести. Ваши сохранённые данные целы. При необходимости освободите место и повторите.</string>
+    <string name="statePromptFilesUnavailable">Не удалось восстановить здесь эти файлы: %1$s. Сохранённый запрос сохранён.</string>
+</resources>

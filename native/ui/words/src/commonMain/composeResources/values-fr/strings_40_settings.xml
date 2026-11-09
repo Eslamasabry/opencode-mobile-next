@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Style par défaut</string>
+    <string name="settings40_reset_question">Réinitialiser l’apparence\u00A0?</string>
+    <string name="settings40_reset_body">Réinitialise les couleurs, le style, la forme, l’effet verre, la taille du texte, les animations et la lueur des réponses. Vos conversations, votre langue et vos choix de notifications restent inchangés.</string>
+    <string name="settings40_local_work">Travail non envoyé sur ce téléphone</string>
+    <string name="settings40_queue_title">Invites en attente</string>
+    <string name="settings40_drafts_title">Brouillons de conversation</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="one">1 élément · %2$s</item>
+        <item quantity="many">%1$d d’éléments · %2$s</item>
+        <item quantity="other">%1$d éléments · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">Impossible de lire ce stockage. Tout est conservé.</string>
+    <string name="settings40_storage_reading">Lecture du stockage local…</string>
+    <string name="settings40_discard_queue">Supprimer les invites en attente non envoyées</string>
+    <string name="settings40_discard_drafts">Supprimer les brouillons de conversation</string>
+    <string name="settings40_queue_keeps">Supprime les invites qui n’ont jamais été envoyées. Celles qui portent un marqueur d’envoi ou un accusé de commande sont conservées pour vérification.</string>
+    <string name="settings40_queue_empty">Aucune invite en attente à supprimer.</string>
+    <string name="settings40_drafts_empty">Aucun brouillon enregistré à supprimer.</string>
+    <string name="settings40_discard_working">Suppression du contenu local…</string>
+    <string name="settings40_queue_question">Supprimer les invites en attente non envoyées\u00A0?</string>
+    <string name="settings40_drafts_question">Supprimer les brouillons de conversation\u00A0?</string>
+    <string name="settings40_drafts_body">Supprime le texte enregistré et les pièces jointes des brouillons sur ce téléphone. Les conversations ouvertes sont aussi mises à jour. Un travail en cours d’envoi ou de vérification empêche la suppression. Cette action est irréversible.</string>
+    <string name="settings40_discard_failed">Impossible de terminer la suppression. Un travail en cours d’envoi, un état incertain, un stockage illisible ou une modification pendant l’enregistrement peuvent l’empêcher. Vérifiez les totaux et réessayez.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="one">1 élément supprimé.</item>
+        <item quantity="many">%1$d d’éléments supprimés.</item>
+        <item quantity="other">%1$d éléments supprimés.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="one">1 élément supprimé. Invites conservées pour vérification\u00A0: %2$d.</item>
+        <item quantity="many">%1$d d’éléments supprimés. Invites conservées pour vérification\u00A0: %2$d.</item>
+        <item quantity="other">%1$d éléments supprimés. Invites conservées pour vérification\u00A0: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="one">1 brouillon supprimé. Certaines pièces jointes n’ont pas pu être supprimées. Supprimez de nouveau les brouillons pour terminer.</item>
+        <item quantity="many">%1$d de brouillons supprimés. Certaines pièces jointes n’ont pas pu être supprimées. Supprimez de nouveau les brouillons pour terminer.</item>
+        <item quantity="other">%1$d brouillons supprimés. Certaines pièces jointes n’ont pas pu être supprimées. Supprimez de nouveau les brouillons pour terminer.</item>
+    </plurals>
+    <string name="settings40_no_answers">Aucune question sur ce serveur n’attend encore de réponse.</string>
+    <string name="settings40_answer_failed">Cette étape n’a pas abouti. Votre réponse enregistrée et les réglages Android peuvent différer. Vérifiez Notifications ou Maintien en fonctionnement, puis réessayez.</string>
+    <string name="settings40_held_action">Supprimer aussi celles-ci</string>
+    <string name="settings40_held_question">Supprimer les invites conservées pour vérification\u00A0?</string>
+    <string name="settings40_held_body">Elles ont peut-être déjà atteint le serveur. Cela les retire seulement de ce téléphone, et rien de plus n’est envoyé.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="one">1 d’entre elles a peut-être déjà atteint le serveur. La suppression la retire seulement de ce téléphone, et rien de plus n’est envoyé.</item>
+        <item quantity="many">%1$d d’entre elles ont peut-être déjà atteint le serveur. La suppression les retire seulement de ce téléphone, et rien de plus n’est envoyé.</item>
+        <item quantity="other">%1$d d’entre elles ont peut-être déjà atteint le serveur. La suppression les retire seulement de ce téléphone, et rien de plus n’est envoyé.</item>
+    </plurals>
+</resources>

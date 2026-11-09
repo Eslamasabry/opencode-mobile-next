@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Herramientas de proyecto del servidor</string>
+    <string name="protoWorking">Trabajando…</string>
+    <string name="protoGitInitialized">Esta carpeta es un repositorio de Git.</string>
+    <string name="protoWorktreeCreated">El worktree está listo en la carpeta de abajo.</string>
+    <string name="protoShellSaved">Shell predeterminado guardado.</string>
+    <string name="protoGitInitialize">Iniciar Git en esta carpeta</string>
+    <string name="protoWorktreeName">Nombre del nuevo worktree</string>
+    <string name="protoWorktreeCreate">Crear worktree</string>
+    <string name="protoShellTitle">Shell predeterminado del terminal</string>
+    <string name="protoShellDefault">Usar el predeterminado del servidor</string>
+    <string name="protoShellUnavailable">Este shell no se puede usar en este servidor.</string>
+    <string name="protoWebSearch">Buscar en la web</string>
+    <string name="protoWebSearchHelp">Busca con el proveedor de este servidor. Las búsquedas no quedan en el historial de conversaciones.</string>
+    <string name="protoWebUnavailable">La búsqueda web no está disponible en este servidor.</string>
+    <string name="protoWebFailed">No se pudo completar la búsqueda web. Vuelve a cargar la lista de proveedores o busca otra vez.</string>
+    <string name="protoWebQuery">Consulta de búsqueda web</string>
+    <string name="protoWebProvider">Proveedor de búsqueda</string>
+    <string name="protoWebEmpty">La búsqueda web no devolvió resultados.</string>
+    <string name="protoWebOpenQuestion">¿Abrir %1$s en tu navegador?</string>
+    <string name="protoWebOpenBrowser">Abrir el navegador</string>
+    <string name="protoWebInsecure">Este enlace usa una conexión sin cifrar.</string>
+    <string name="protoWebLeaveApp">Esto abre un sitio web fuera de la app.</string>
+    <string name="protoGitToolsFailed">No funcionó. Revisa el servidor e inténtalo de nuevo.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

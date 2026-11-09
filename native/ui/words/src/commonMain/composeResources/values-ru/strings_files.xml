@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesProjectRoot">Проект</string>
+    <string name="filesOpenWith">Открыть с помощью</string>
+    <string name="filesOpenWithNone">На этом телефоне нет приложения, которое может открыть этот файл.</string>
+    <string name="filesOpenWithFailed">Не удалось передать файл другому приложению. Повторите попытку.</string>
+    <string name="filesUnavailable">Этот сервер не позволяет приложению просматривать его файлы.</string>
+    <string name="filesNotConnected">Сервер этого чата не подключён. Вернитесь в чат и повторите попытку.</string>
+    <string name="filesHideHidden">Скрыть скрытые файлы</string>
+    <string name="filesOpenFailed">Не удалось открыть этот файл. Повторите попытку.</string>
+    <string name="filesMentionFailed">Не удалось добавить этот файл в сообщение. Повторите попытку.</string>
+    <string name="filesFolderLabel">Папка %1$s</string>
+    <string name="filesUp">На папку выше</string>
+    <string name="filesShareStarting">Запуск отправки…</string>
+    <string name="filesSaveFailed">Не удалось сохранить файл. Повторите попытку.</string>
+    <string name="filesReasonTooBig">Этот файл слишком велик, чтобы показать его здесь.</string>
+    <string name="filesReasonTooBigBody">Предел: 2 МБ. Откройте его на компьютере, где он лежит, или попросите агента выдать часть поменьше.</string>
+    <string name="filesReasonTooBigPhoneBody">Предел: 2 МБ. Файл на этом телефоне, поэтому его может открыть другое приложение: выберите «Открыть с помощью».</string>
+    <string name="filesReasonMissing">Этого файла больше нет.</string>
+    <string name="filesReasonMissingBody">Возможно, его переместили или удалили.</string>
+    <string name="filesReasonDenied">Этому приложению не разрешено читать этот файл.</string>
+    <string name="filesReasonDeniedBody">Проверьте, кто может читать папку, и повторите попытку.</string>
+    <string name="filesReasonNotShowable">Файл такого вида нельзя показать здесь.</string>
+    <string name="filesReasonNotShowableBody">Это не текст и не картинка. Откройте его на компьютере, где он лежит.</string>
+    <string name="filesReasonNotShowablePhoneBody">Это не текст и не картинка. Файл на этом телефоне, поэтому его может открыть другое приложение: выберите «Открыть с помощью».</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">Ferramentas instaladas</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">Ferramenta do celular</string>
+    <string name="linuxToolsFreedBytes">Cerca de %1$s podem ser liberados.</string>
+    <string name="linuxToolsWait">Aguarde o fim da operação em andamento no celular.</string>
+    <string name="linuxToolsInstalled">Instalado</string>
+    <string name="linuxToolsAbsent">Não instalado</string>
+    <string name="linuxToolsUnknown">Não foi possível verificar. Atualize para tentar de novo.</string>
+    <string name="linuxToolsRefresh">Atualizar ferramentas instaladas</string>
+    <string name="linuxToolsRemovePython">Remover ferramentas Python</string>
+    <string name="linuxToolsRemoveQuestion">Remover as ferramentas Python?</string>
+    <string name="linuxToolsRemoveBody">Remove o pip e os pacotes de ambientes virtuais. O próprio Python, os projetos e as conversas permanecem.</string>
+    <string name="linuxToolsRemoved">As ferramentas Python foram removidas.</string>
+    <string name="linuxToolsDependent">Outra ferramenta instalada precisa deste componente.</string>
+    <string name="linuxToolsDependencyUnknown">Não foi possível verificar outra ferramenta que pode precisar deste componente. Atualize e tente novamente.</string>
+    <string name="linuxToolsRequired">Este componente é necessário para as ferramentas do celular.</string>
+    <string name="linuxToolsUnsupported">Este componente não pode ser removido aqui.</string>
+    <string name="linuxToolsInventoryFailed">Não foi possível verificar as ferramentas instaladas. Atualize e tente novamente. Nada foi removido.</string>
+    <string name="linuxToolsSetupRunning">Pare a configuração ou aguarde o fim dela antes de remover ferramentas.</string>
+    <string name="linuxToolsRemoveFailed">Não foi possível remover totalmente as ferramentas Python. Atualize as ferramentas instaladas e tente novamente.</string>
+    <string name="linuxSetupStatusUnreadable">Não foi possível ler a configuração salva. Continue a configuração para tentar de novo.</string>
+    <string name="linuxSetupHostMismatch">Esta configuração salva pertence a outro ambiente Linux. Inicie a configuração para este celular.</string>
+    <string name="linuxSetupHostRefused">A configuração do celular não conseguiu iniciar com segurança. Continue a configuração para tentar de novo.</string>
+    <string name="linuxSetupSavedFailed">Não foi possível salvar a configuração. Libere armazenamento e continue a configuração.</string>
+    <string name="linuxSetupBytes">%1$s de %2$s</string>
+    <string name="linuxSetupCheckingPart">Verificando as ferramentas instaladas</string>
+    <string name="linuxSetupPartPending">Aguardando</string>
+    <string name="linuxSetupPartRunning">Instalando</string>
+    <string name="linuxSetupPartDone">Pronto</string>
+    <string name="linuxSetupPartFailed">Não foi possível concluir</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedSignIn">Провайдер модели не принял вход. Войдите у этого провайдера снова или выберите другую модель.</string>
+    <string name="chatReplyFailedModel">Эта модель недоступна. Выберите другую модель и отправьте снова.</string>
+    <string name="chatReplyFailedBusy">Провайдер модели сейчас занят. Подождите немного или выберите другую модель.</string>
+    <string name="chatReplyFailedOther">Ответ остановился из-за ошибки. Отправьте снова или выберите другую модель.</string>
+    <string name="chatReplyFailedDetails">Подробности</string>
+    <string name="chatReplyFailedCopy">Копировать подробности</string>
+    <string name="chatSendFailedOffline">Сейчас не удаётся связаться с сервером.</string>
+    <string name="chatSendFailedChanged">Во время отправки подключение изменилось. Ничего не отправлено.</string>
+    <string name="chatSendFailedRefused">Сервер не принял сообщение. Ничего не отправлено.</string>
+    <string name="chatModelsSearch">Найти модель</string>
+    <string name="chatModelsRecent">Недавние</string>
+    <string name="chatModelsCurrent">Текущая</string>
+    <string name="chatModelsNoMatch">Подходящих моделей нет</string>
+    <string name="chatsHomeNewShort">Новый чат</string>
+</resources>

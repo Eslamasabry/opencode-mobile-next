@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningDetailMemory">%1$d Mo de mémoire</string>
+    <string name="runningDetailElapsed">En cours depuis %1$d min</string>
+    <string name="runningDetailPid">Processus %1$d</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="one">Arrête aussi son processus auxiliaire. Son identité est revérifiée.</item>
+        <item quantity="many">Arrête aussi ses %1$d processus auxiliaires. Chaque identité est revérifiée.</item>
+        <item quantity="other">Arrête aussi ses %1$d processus auxiliaires. Chaque identité est revérifiée.</item>
+    </plurals>
+    <string name="runningDetailBusy">Occupé</string>
+    <string name="runningDetailIdle">Inactif</string>
+</resources>

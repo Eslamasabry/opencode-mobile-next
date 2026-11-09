@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureCertificate">Не удалось проверить сертификат этого сервера. Проверьте сервер и повторите.</string>
+    <string name="serverFailureIncompatible">На этом сервере работает версия, с которой приложение не может работать.</string>
+    <string name="serverFailureNetwork">Не удалось связаться с этим сервером. Проверьте сеть или адрес сервера и повторите.</string>
+    <string name="serverFailureRejected">Сервер отклонил этот запрос. Проверьте сервер и повторите.</string>
+    <string name="serverFailureSecret">Приложение не смогло прочитать сохранённый пароль. Введите пароль снова.</string>
+    <string name="serverFailureServer">На сервере возникла проблема. Повторите позже.</string>
+    <string name="serverFailureStorage">Приложение не смогло прочитать или сохранить это подключение на телефоне. Повторите.</string>
+    <string name="serverFailureTimeout">Сервер не ответил вовремя. Повторите.</string>
+    <string name="serverFailureUnreadableReply">Сервер ответил, но приложение не смогло прочитать ответ.</string>
+    <string name="serverFailureOther">Не удалось завершить это подключение. Повторите.</string>
+</resources>

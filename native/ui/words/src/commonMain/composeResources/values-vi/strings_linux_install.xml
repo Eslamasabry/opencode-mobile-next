@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxHostSetupTitle">Thiết lập máy tính Linux</string>
+    <string name="linuxHostSetupIntro">Sao chép một lệnh và dán vào terminal trên máy tính Ubuntu hoặc Linux của bạn. Ứng dụng không chạy lệnh thay bạn.</string>
+    <string name="linuxHostSetupSafety">Trình cài đặt kiểm tra bản tải về đã ghim trước khi cài. OpenCode chỉ lắng nghe trên máy tính này; hãy dùng USB hoặc một đường hầm đã xác thực để kết nối điện thoại.</string>
+    <string name="linuxHostSetupInstall">Cài đặt OpenCode và dịch vụ của nó</string>
+    <string name="linuxHostSetupUpdate">Cập nhật OpenCode</string>
+    <string name="linuxHostSetupStart">Khởi động dịch vụ</string>
+    <string name="linuxHostSetupStop">Dừng dịch vụ</string>
+    <string name="linuxHostSetupRestart">Khởi động lại dịch vụ</string>
+    <string name="linuxHostSetupStatus">Kiểm tra dịch vụ</string>
+    <string name="linuxHostSetupCopy">Sao chép trình cài đặt và lệnh</string>
+    <string name="linuxHostSetupCopyDetail">Bản sao gồm toàn bộ trình cài đặt đi kèm ứng dụng này, theo sau là lệnh đã chọn. Nó ghi tệp ubuntu-opencode.sh vào thư mục hiện tại. Cài đặt giữ nguyên OpenCode 2 đã có; Cập nhật không bao giờ chuyển từ OpenCode 1 hay hạ cấp phiên bản mới hơn.</string>
+    <string name="linuxHostSetupUsb">Khi điện thoại được nối qua USB, hãy chạy lệnh này trên máy tính để chuyển tiếp cổng máy chủ.</string>
+    <string name="linuxHostSetupCopyUsb">Sao chép lệnh USB</string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Installation…</string>
+    <string name="agentsHelperNotConnected">Les agents du téléphone ne sont pas connectés.</string>
+    <string name="agentsHelperNotStarted">Les agents du téléphone ne sont pas connectés\u00A0: l’assistant des agents n’a pas démarré.</string>
+    <string name="agentsHelperNoAnswer">Les agents du téléphone ne sont pas connectés\u00A0: l’assistant des agents n’a pas répondu.</string>
+    <string name="agentsHelperKeyRefused">Les agents du téléphone ne sont pas connectés\u00A0: l’assistant des agents n’a pas accepté la clé de cette application.</string>
+    <string name="agentsHelperKeyUnreadable">Les agents du téléphone ne sont pas connectés\u00A0: ce téléphone n’a pas pu lire la clé de l’assistant des agents.</string>
+    <string name="agentsHelperNoLinux">Les agents du téléphone ne sont pas connectés\u00A0: le Linux intégré de ce téléphone n’est pas configuré.</string>
+    <string name="agentsTabsLabel">Où les agents s’exécutent</string>
+    <string name="agentsTabComputers">Sur des ordinateurs</string>
+    <string name="agentsPhoneReady">Ce téléphone est prêt</string>
+    <string name="agentsPhoneReadyDetails">Ce téléphone est prêt · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Actualiser</string>
+    <string name="agentsAddComputerLine">Utilisez Claude Code ou Pi sur un ordinateur qui exécute Paseo.</string>
+    <string name="agentsComputerLooking">Recherche d’agents sur cet ordinateur…</string>
+    <string name="agentsComputerReadFailed">Les agents de cet ordinateur n’ont pas pu être lus. Tirez vers le bas pour réessayer.</string>
+    <string name="agentsNewChat">Nouvelle conversation</string>
+    <string name="agentsNewChatWith">Nouvelle conversation avec %1$s</string>
+    <string name="agentsConversationsStored">Où les conversations sont stockées</string>
+    <string name="agentsConversationsStoredOn">Où les conversations sont stockées\u00A0: %1$s</string>
+    <string name="agentsHostAccount">Compte de l’hôte\u00A0: %1$s</string>
+</resources>

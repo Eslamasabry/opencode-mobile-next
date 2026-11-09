@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">Historial y registro de configuración</string>
+    <string name="stateSetupNoWrites">Aquí se puede inspeccionar la configuración. Aplicar y Deshacer no están disponibles porque este servidor no tiene un punto de restauración atómica verificado.</string>
+    <string name="stateSetupUnsupported">Conéctate a un servidor que permita inspeccionar la configuración para leer sus fuentes de configuración.</string>
+    <string name="stateSetupSaveFailed">No se pudo guardar el cambio. Inténtalo de nuevo.</string>
+    <string name="stateSetupReadFailed">No se pudo leer la información de configuración. Inténtalo de nuevo.</string>
+    <string name="stateSetupOffline">Vuelve a conectarte para actualizar la información de configuración.</string>
+    <string name="stateSetupSources">Fuentes de configuración</string>
+    <string name="stateSetupMcp">Herramientas conectadas</string>
+    <string name="stateSetupRecordReview">Guardar que revisé esta configuración</string>
+    <string name="stateSetupRefresh">Actualizar configuración</string>
+    <string name="stateSetupHistory">Historial de configuración</string>
+    <string name="stateSetupHistoryUnavailable">El historial guardado no está disponible. Se conservó para recuperarlo.</string>
+    <string name="stateSetupHistoryEmpty">Aún no hay revisiones de configuración guardadas</string>
+    <string name="stateSetupRegistryConsent">Explorar el registro público de herramientas</string>
+    <string name="stateSetupRegistryPrivacy">Desactivado de forma predeterminada. Actualizar envía una solicitud pública. Las palabras de búsqueda van al registro; las credenciales de tu servidor no. Los listados nunca ejecutan ni instalan nada.</string>
+    <string name="stateSetupRegistrySearch">Buscar en el registro</string>
+    <string name="stateSetupRegistryRefresh">Actualizar registro</string>
+    <string name="stateSetupRegistrySaved">Mostrar listados guardados</string>
+    <string name="stateSetupRegistryClear">Olvidar el consentimiento del registro y la lista guardada</string>
+    <string name="stateSetupRegistryOffline">Sin conexión. Se muestra la lista guardada.</string>
+    <string name="stateSetupRegistryFailed">No se pudo cargar el registro. Tu lista guardada se conserva.</string>
+    <string name="stateSetupRegistryEmpty">No hay listados que mostrar. Actualiza o prueba otra búsqueda.</string>
+    <string name="stateSetupMcpConnected">Conectado</string>
+    <string name="stateSetupMcpPending">Conectando</string>
+    <string name="stateSetupMcpDisabled">Desactivado</string>
+    <string name="stateSetupMcpFailed">No se pudo conectar</string>
+    <string name="stateSetupMcpSignIn">Falta iniciar sesión</string>
+    <string name="stateSetupMcpUnknown">Estado desconocido</string>
+    <string name="stateSetupAuditProposed">Cambio propuesto</string>
+    <string name="stateSetupAuditPending">Cambio pendiente</string>
+    <string name="stateSetupAuditAccepted">Cambio aceptado</string>
+    <string name="stateSetupAuditVerified">Revisión verificada</string>
+    <string name="stateSetupAuditUncertain">Resultado incierto</string>
+    <string name="stateSetupAuditRejected">Cambio rechazado</string>
+    <string name="stateServerSchedules">Mensajes programados</string>
+</resources>

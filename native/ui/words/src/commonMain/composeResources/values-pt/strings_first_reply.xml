@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s está demorando muito mais do que deveria. Tente novamente ou use um computador.</string>
+    <string name="setupUseComputerInstead">Usar um computador</string>
+    <string name="setupActivityDownloading">Baixando arquivos</string>
+    <string name="setupActivityUnpacking">Descompactando arquivos</string>
+    <string name="setupActivityConfiguring">Configurando tudo</string>
+    <string name="setupActivityChecking">Verificando o que está instalado</string>
+    <string name="setupActivityWorking">Trabalhando</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">Ainda trabalhando. Etapas longas podem levar vários minutos.</string>
+    <string name="chatModelFailRateLimit">O modelo está ocupado agora. Troque de modelo ou tente novamente em alguns minutos.</string>
+    <string name="chatModelFailDailyLimit">O limite diário gratuito deste modelo acabou. Troque de modelo ou tente novamente amanhã.</string>
+    <string name="chatModelFailSignIn">Este modelo exige que você entre primeiro. Entre ou troque de modelo.</string>
+    <string name="chatModelFailQuota">Sua conta não tem mais crédito para este modelo. Adicione crédito ou troque de modelo.</string>
+    <string name="chatModelFailGeneric">O modelo não conseguiu responder. Troque de modelo ou tente novamente.</string>
+    <string name="chatModelFailSwitch">Trocar de modelo</string>
+    <string name="chatModelFailSignInAction">Entrar</string>
+    <string name="chatStalledOnTool">Ainda aguardando %1$s.</string>
+    <string name="chatStalledStop">Parar</string>
+</resources>

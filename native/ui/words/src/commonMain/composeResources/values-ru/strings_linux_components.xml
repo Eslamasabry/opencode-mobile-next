@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Компоненты Linux</string>
+    <string name="linuxComponentsRefresh">Проверить установленные компоненты</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">Компонент</string>
+    <string name="linuxComponentsInstalled">Установлен</string>
+    <string name="linuxComponentsDependents">Нужен для: %1$s. Сначала удалите эти компоненты.</string>
+    <string name="linuxComponentsDependencyUnknown">Не удалось проверить: %1$s. Проверьте ещё раз, прежде чем удалять этот компонент.</string>
+    <string name="linuxComponentsRequired">Нужен для сервера на этом телефоне.</string>
+    <string name="linuxComponentsUnsupported">Этот компонент нельзя удалить отдельно.</string>
+    <string name="linuxComponentsAbsent">Не установлен</string>
+    <string name="linuxComponentsUnknownPresence">Не удалось проверить установленные компоненты. Повторите.</string>
+    <string name="linuxComponentsBusy">Дождитесь окончания настройки или текущей операции.</string>
+    <string name="linuxComponentsFailed">Не удалось удалить компонент. Проверьте ещё раз и повторите.</string>
+    <string name="linuxComponentsRemove">Удалить %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">Удалить %1$s?</string>
+    <string name="linuxComponentsRemoveBody">Удаляется только этот компонент. Ваши проекты и чаты остаются. Перед удалением зависимости будут проверены ещё раз.</string>
+    <string name="linuxSetupOpenSettings">Открыть настройки приложения</string>
+    <string name="linuxSetupStepWaiting">Ожидание</string>
+    <string name="linuxSetupStepKept">Уже установлено</string>
+    <string name="linuxSetupSwitchBusy">Завершите текущую работу и ответьте на ожидающие запросы на этом телефоне, затем повторите настройку.</string>
+    <string name="linuxSetupSwitchFailed">Настройка не смогла безопасно подготовить этот телефон. Ваши сохранённые чаты и сообщения остались. Проверьте соединение и свободное место, затем повторите.</string>
+</resources>

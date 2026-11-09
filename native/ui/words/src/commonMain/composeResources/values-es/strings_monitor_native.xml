@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Revisar otros servidores</string>
+    <string name="monitorNativeBack">Atrás</string>
+    <string name="monitorNativeForegroundOnly">Revisa los servidores guardados mientras esta página está abierta. Al cerrarla se detienen las lecturas. Esto no inicia un servidor en el teléfono ni activa alertas en segundo plano.</string>
+    <string name="monitorNativeCheck">Revisar ahora</string>
+    <string name="monitorNativeChecking">Revisando…</string>
+    <string name="monitorNativeAllow">Permitir revisiones</string>
+    <string name="monitorNativeConsent">Permite que esta app lea las solicitudes y el estado reciente de las conversaciones de este servidor guardado.</string>
+    <string name="monitorNativeUnsupported">Este servidor guardado no se puede revisar aquí.</string>
+    <string name="monitorNativeOff">Las revisiones están desactivadas</string>
+    <string name="monitorNativeWaiting">Aún sin revisar</string>
+    <string name="monitorNativeCurrent">Revisado</string>
+    <string name="monitorNativePartial">Revisado en parte. Vuelve a revisar para leer más conversaciones.</string>
+    <string name="monitorNativeUnknown">No se pudo confirmar el estado más reciente. Puede que aún se muestren observaciones anteriores.</string>
+    <string name="monitorNativePaused">Revisiones en pausa</string>
+    <string name="monitorNativePending">Esperan tu respuesta: %1$d</string>
+    <string name="monitorNativeRunning">En ejecución: %1$d</string>
+    <string name="monitorNativeConversation">Conversación</string>
+    <string name="monitorNativeFailed">Falló el último turno revisado</string>
+    <string name="monitorNativeEarlierFailure">Fallo anterior; se desconoce el estado más reciente</string>
+    <string name="monitorNativeSaveFailed">No se pudieron guardar ni cargar estos ajustes. Inténtalo de nuevo.</string>
+    <string name="monitorNativeEmpty">No hay servidores guardados para revisar.</string>
+    <string name="monitorNativeRequest">Esperando tu respuesta</string>
+    <string name="monitorNativeEarlierRequest">Solicitud anterior; se desconoce el estado más reciente</string>
+    <string name="monitorNativeReconnect">Conéctate a este servidor o actualiza su inicio de sesión en Servidores antes de revisar.</string>
+</resources>

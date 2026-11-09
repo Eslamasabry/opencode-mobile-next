@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Forfaits et limites</string>
+    <string name="statePlansCopy1">Retour</string>
+    <string name="statePlansCopy2">Lecture de vos forfaits</string>
+    <string name="statePlansCopy3">Actualiser</string>
+    <string name="statePlansCopy4">Actualisation</string>
+    <string name="statePlansCopy5">Aucun forfait connecté pour l’instant</string>
+    <string name="statePlansCopy6">Connectez-vous à Codex, Claude, GLM ou MiniMax sur un serveur ou sur ce téléphone pour voir ce qu’il vous reste.</string>
+    <string name="statePlansCopy7">Clés API (sans limites de forfait)</string>
+    <string name="statePlansCopy8">Connecté nulle part</string>
+    <string name="statePlansCopy9">Ce téléphone</string>
+    <string name="statePlansCopy10">Large marge</string>
+    <string name="statePlansCopy11">Proche de la limite</string>
+    <string name="statePlansCopy12">Limite atteinte</string>
+    <string name="statePlansCopy13">Connecté, mais ses chiffres ne sont pas encore lisibles</string>
+    <string name="statePlansCopy14">La connexion a expiré</string>
+    <string name="statePlansCopy15">Non connecté</string>
+    <string name="statePlansCopy16">Les chiffres n’ont pas pu être lus cette fois</string>
+    <string name="statePlansCopy17">Hors ligne. Ce sont les derniers chiffres connus.</string>
+    <string name="statePlansCopy18">Aucune limite signalée</string>
+    <string name="statePlansCopy19">Clé API, sans limites de forfait</string>
+    <string name="statePlansCopy20">Connectez-vous pour voir les chiffres</string>
+    <string name="statePlansCopy21">Connectez-vous sur %1$s pour voir les chiffres</string>
+    <string name="statePlansCopy22">Ajoutez la clé pour voir les chiffres</string>
+    <string name="statePlansCopy23">Ajoutez la clé sur %1$s pour voir les chiffres</string>
+    <string name="statePlansCopy24">Configurez la lecture pour voir les chiffres</string>
+    <string name="statePlansCopy25">Configurez la lecture sur %1$s pour voir les chiffres</string>
+    <string name="statePlansCopy26">Réessayer</string>
+    <string name="statePlansCopy27">5 heures</string>
+    <string name="statePlansCopy28">Cette semaine</string>
+    <string name="statePlansCopy29">Ce mois-ci</string>
+    <string name="statePlansCopy30">Limite</string>
+    <string name="statePlansCopy31">%1$s% restant</string>
+    <string name="statePlansCopy32">se réinitialise maintenant</string>
+    <string name="statePlansCopy33">se réinitialise dans %1$s min</string>
+    <string name="statePlansCopy34">se réinitialise dans %1$s h</string>
+    <string name="statePlansCopy35">se réinitialise dans %1$s jours</string>
+    <string name="statePlansCopy36">Réinitialisé depuis la lecture de ces chiffres.</string>
+    <string name="statePlansCopy37">Forfait\u00A0: %1$s</string>
+    <string name="statePlansCopy38">Alerte à %1$s% utilisé</string>
+    <string name="statePlansCopy39">hors ligne</string>
+    <string name="statePlansCopy40">connexion expirée</string>
+    <string name="statePlansCopy41">non connecté</string>
+    <string name="statePlansCopy42">chiffres lus ici</string>
+    <string name="statePlansCopy43">connecté</string>
+    <string name="statePlansCopy44">Les limites du forfait de Claude ne sont pas lisibles via OpenCode</string>
+    <string name="statePlansAlerts">Alertes d’utilisation</string>
+    <string name="statePlansThreshold">Alerte à %1$d% utilisé</string>
+    <string name="statePlansResetOn">L’avis de réinitialisation est activé</string>
+    <string name="statePlansResetOff">L’avis de réinitialisation est désactivé</string>
+    <string name="statePlansPercent">Pourcentage utilisé (1–100)</string>
+    <string name="statePlansSaveFailed">Impossible d’enregistrer. Saisissez un pourcentage de 1 à 100 et réessayez.</string>
+    <string name="statePlansSave">Enregistrer le niveau d’alerte</string>
+    <string name="statePlansUseDefault">Utiliser le niveau d’alerte par défaut</string>
+</resources>

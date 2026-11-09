@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Saisissez un nom de dossier.</string>
+    <string name="stateFolderNameSegment">Utilisez un seul nom de dossier, sans barres obliques.</string>
+    <string name="stateFolderNameCharacters">Utilisez des lettres, chiffres, points, tirets ou tirets bas, en commençant par une lettre ou un chiffre (64 caractères maximum).</string>
+    <string name="stateFolderCreating">Création du dossier du projet…</string>
+</resources>

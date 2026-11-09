@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesProjectRoot">Projet</string>
+    <string name="filesOpenWith">Ouvrir avec</string>
+    <string name="filesOpenWithNone">Aucune application de ce téléphone ne peut ouvrir ce fichier.</string>
+    <string name="filesOpenWithFailed">Impossible de transmettre ce fichier à une autre application. Réessayez.</string>
+    <string name="filesUnavailable">Ce serveur ne permet pas à l’application de parcourir ses fichiers.</string>
+    <string name="filesNotConnected">Le serveur de cette conversation n’est pas connecté. Revenez à la conversation et réessayez.</string>
+    <string name="filesHideHidden">Masquer les fichiers cachés</string>
+    <string name="filesOpenFailed">Impossible d’ouvrir ce fichier. Réessayez.</string>
+    <string name="filesMentionFailed">Impossible d’ajouter ce fichier à votre message. Réessayez.</string>
+    <string name="filesFolderLabel">Dossier %1$s</string>
+    <string name="filesUp">Dossier parent</string>
+    <string name="filesShareStarting">Démarrage du partage…</string>
+    <string name="filesSaveFailed">Impossible d’enregistrer le fichier. Réessayez.</string>
+    <string name="filesReasonTooBig">Ce fichier est trop volumineux pour être affiché ici.</string>
+    <string name="filesReasonTooBigBody">La limite est de 2 Mo. Ouvrez-le sur l’ordinateur où il se trouve, ou demandez à l’agent un extrait plus petit.</string>
+    <string name="filesReasonTooBigPhoneBody">La limite est de 2 Mo. Il est sur ce téléphone, une autre application peut donc l’ouvrir\u00A0: choisissez Ouvrir avec.</string>
+    <string name="filesReasonMissing">Ce fichier n’existe plus.</string>
+    <string name="filesReasonMissingBody">Il a peut-être été déplacé ou supprimé.</string>
+    <string name="filesReasonDenied">Cette application n’a pas le droit de lire ce fichier.</string>
+    <string name="filesReasonDeniedBody">Vérifiez qui peut lire le dossier, puis réessayez.</string>
+    <string name="filesReasonNotShowable">Ce type de fichier ne peut pas être affiché ici.</string>
+    <string name="filesReasonNotShowableBody">Ce n’est ni du texte ni une image. Ouvrez-le sur l’ordinateur où il se trouve.</string>
+    <string name="filesReasonNotShowablePhoneBody">Ce n’est ni du texte ni une image. Il est sur ce téléphone, une autre application peut donc l’ouvrir\u00A0: choisissez Ouvrir avec.</string>
+</resources>

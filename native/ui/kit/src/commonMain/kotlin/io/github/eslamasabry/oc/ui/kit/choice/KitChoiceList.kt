@@ -46,6 +46,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.row.kitChosenPlate
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitChoiceCurrent
@@ -243,7 +245,11 @@ public fun KitChoiceRow(
         modifier
             .fillMaxWidth()
             .bleedSideways(bleed)
-            .background(fill)
+            // C04: the chosen wash is the row group's own plate on a flat list (as KitRow's), a band elsewhere.
+            .then(
+                if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(fill, bleed)
+                else Modifier.background(fill),
+            )
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)
             .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)

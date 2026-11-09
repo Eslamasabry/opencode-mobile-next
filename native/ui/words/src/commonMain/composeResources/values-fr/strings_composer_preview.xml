@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">Modèle</string>
+    <string name="composerPreviewModelDefault">Valeur par défaut du serveur</string>
+    <string name="composerPreviewModelDefaultHint">Le modèle par défaut du serveur</string>
+    <string name="composerPreviewModelsTitle">Choisir un modèle</string>
+    <string name="composerPreviewModelsLoading">Chargement des modèles…</string>
+    <string name="composerPreviewModelsEmpty">Aucun modèle n’est disponible pour le moment.</string>
+    <string name="composerPreviewModelsFailed">Impossible de charger la liste des modèles.</string>
+    <string name="composerPreviewModelsRetry">Réessayer</string>
+    <string name="composerPreviewModelsClose">Fermer</string>
+    <string name="composerPreviewAttachFile">Joindre un fichier</string>
+    <string name="composerPreviewAttachNoPicker">Cet appareil ne peut pas joindre de fichiers ici.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">Ce modèle n’accepte pas les fichiers. Choisissez-en un qui les accepte.</string>
+    <string name="composerPreviewAttachmentRemove">Retirer</string>
+    <string name="composerPreviewAttachmentFailed">Impossible de joindre le fichier.</string>
+    <string name="composerPreviewAttachmentTooLarge">Ce fichier est trop volumineux pour être joint.</string>
+    <string name="composerPreviewAttachmentUnsupported">Ce type de fichier ne peut pas être joint.</string>
+    <string name="composerPreviewAttachmentStorage">Impossible d’enregistrer le fichier sur cet appareil.</string>
+    <string name="composerPreviewAttachmentDismiss">Ignorer</string>
+    <string name="composerPreviewAttachmentRetry">Réessayer</string>
+</resources>

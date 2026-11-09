@@ -151,10 +151,15 @@ object Drift {
                     else -> f(Kind.SHAPE, loc.locale, name, v.file)
                 }
             }
-            for (name in have.keys) if (name !in exp && claimed(name)) f(Kind.STALE, loc.locale, name, have.getValue(name).file)
+            // A language the Flutter ARB never translated may still translate the English key: that is the translation
+            // pipeline's job, not a leftover. Only a name no source produces in any language is stale.
+            val inTemplate = conv.locales.firstOrNull { it.locale == inputs.template }
+                ?.let { t -> (t.files.values.flatten() + conv.nativeOs[t.locale].orEmpty()).mapTo(HashSet()) { it.name } }.orEmpty()
+            for (name in have.keys) if (name !in exp && name !in inTemplate && claimed(name)) f(Kind.STALE, loc.locale, name, have.getValue(name).file)
         }
         for (locale in xml.keys) if (locale !in expected) {
-            for (name in xml.getValue(locale).keys) if (claimed(name)) f(Kind.STALE, locale, name, "no app_$locale.arb")
+            val templateNames = expected[inputs.template].orEmpty().keys
+            for (name in xml.getValue(locale).keys) if (name !in templateNames && claimed(name)) f(Kind.STALE, locale, name, "no app_$locale.arb")
         }
 
         // 4. The XML on its own.

@@ -75,10 +75,7 @@ private constructor(
             val screen = props["screen"] ?: return
             analytics.logEvent(
                 FirebaseAnalytics.Event.SCREEN_VIEW,
-                Bundle().apply {
-                    putString(FirebaseAnalytics.Param.SCREEN_NAME, screen)
-                    putString(FirebaseAnalytics.Param.SCREEN_CLASS, screen)
-                },
+                Bundle().apply { screenViewParams(screen).forEach { (k, v) -> putString(k, v) } },
             )
         } else {
             analytics.logEvent(name, Bundle().apply { props.forEach { (k, v) -> putString(k, v) } })
@@ -266,3 +263,11 @@ internal class DeferredFirebaseTelemetryVendor(private val context: Context) : T
             }
     }
 }
+
+/**
+ * The params of a `screen_view`: Analytics' own screen name and class, and the registered custom dimension `screen`.
+ * Flutter 2.1.5 sent only the first two, so GA's `screen` column was blank on ~1,477 events; the word is the page
+ * kind from the closed list, never a route argument.
+ */
+internal fun screenViewParams(screen: String): Map<String, String> =
+    mapOf("screen_name" to screen, "screen_class" to screen, "screen" to screen)

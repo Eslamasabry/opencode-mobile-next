@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">Alertas</string>
+    <string name="m40UsageWidget">Widget da tela inicial</string>
+    <string name="m40UsageReadFrom">Ler o uso</string>
+    <string name="m40UsageAdd">Adicionar uma assinatura</string>
+    <string name="m40UsageSaveFailed">Não foi possível salvar essa alteração. Tente novamente.</string>
+    <string name="m40UsageAlertsWatch">Acompanhar meus planos</string>
+    <string name="m40UsageAlertsEvery">Acompanhar todas as assinaturas cujos limites podem ser lidos.</string>
+    <string name="m40UsageTellMe">Avisar quando</string>
+    <string name="m40UsageReset">Um plano esgotado estiver disponível de novo</string>
+    <string name="m40UsageDifferent">Diferente para estes planos</string>
+    <string name="m40UsageWhen">Quando me avisar</string>
+    <string name="m40UsageQuiet">Horário silencioso</string>
+    <string name="m40UsageQuietShared">O mesmo horário silencioso das outras notificações.</string>
+    <string name="m40UsageQuietStart">Início</string>
+    <string name="m40UsageQuietEnd">Fim</string>
+    <string name="m40UsageQuietAllDay">Estes horários silenciam os alertas o dia todo.</string>
+    <string name="m40UsageWifi">Somente no Wi-Fi</string>
+    <string name="m40UsageNothingToWatch">Ainda não há planos legíveis para acompanhar.</string>
+    <string name="m40UsageDownTo">Quando um plano chegar a</string>
+    <string name="m40UsageSameAsOthers">Igual aos outros: %1$d% restante</string>
+    <string name="m40UsageWidgetPlans">Planos no widget</string>
+    <string name="m40UsageWidgetSetup">Mostrar planos que precisam de configuração</string>
+    <string name="m40UsageWidgetWindows">Períodos a mostrar</string>
+    <string name="m40UsageBoth">5 horas e esta semana</string>
+    <string name="m40UsageReaderGone">Esta conexão salva não está mais disponível.</string>
+    <string name="m40UsageReadPhoneBody">Configure um leitor no Ubuntu do app para ler os limites dos seus planos com login feito. As chaves dos provedores ficam no host.</string>
+    <string name="m40UsageReadComputerBody">Permita uma verificação curta, somente de leitura, por este servidor quando o uso for atualizado. Ela procura limites de planos com login feito neste computador. Você pode desativar aqui.</string>
+    <string name="m40UsageWhatRuns">O que roda no computador</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e [verificação]</string>
+    <string name="m40UsageReadPrivacy">A verificação lê os logins dos provedores localmente e devolve apenas os limites dos planos e uma referência opaca da conta. Chaves e tokens nunca voltam ao app.</string>
+    <string name="m40UsageCopying">Copiando o leitor</string>
+    <string name="m40UsageCheckingSignIns">Verificando logins</string>
+    <string name="m40UsageStarting">Iniciando o leitor</string>
+    <string name="m40UsageReading">Lendo os limites dos planos</string>
+    <string name="m40UsageChecking">Verificando a conexão</string>
+    <string name="m40UsageNeedsNode">Este computador precisa do Node 20 ou mais recente para ler os limites dos planos.</string>
+    <string name="m40UsageLinuxNotReady">Configure primeiro o Ubuntu do app e tente novamente.</string>
+    <string name="m40UsageServerTooOld">Atualize este servidor para ler o uso por um terminal de comandos.</string>
+    <string name="m40UsagePrepareFailed">Não foi possível preparar o leitor. Tente novamente.</string>
+    <string name="m40UsageStartFailed">O leitor não iniciou. Tente novamente.</string>
+    <string name="m40UsageRemoveFailed">Não foi possível remover o leitor. Tente novamente.</string>
+    <string name="m40UsageUnreachable">Não foi possível acessar este computador. Confira a conexão e tente novamente.</string>
+    <string name="m40UsageNoAnswer">A verificação não devolveu uma resposta legível. Tente novamente.</string>
+    <string name="m40UsageFoundNone">A verificação não encontrou planos com login feito cujos limites possa ler.</string>
+    <string name="m40UsageFound">Encontrado: %1$s</string>
+    <string name="m40UsageReadNow">Ler agora</string>
+    <string name="m40UsageTurnOn">Ativar a leitura</string>
+    <string name="m40UsageTurnOff">Desativar a leitura</string>
+    <string name="m40UsageThreshold">Nível de alerta para este plano</string>
+    <string name="m40UsageResetHelp">Avisar quando este plano estiver disponível de novo.</string>
+    <string name="m40UsageReadOff">Desativar a leitura a partir de %1$s</string>
+    <string name="m40UsageChooseSignIn">Escolha onde iniciar sessão</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Periksa server tersimpan lainnya selagi aplikasi ini terbuka, atau selagi koneksi latar belakang berjalan. Setiap server memerlukan izin Anda. Pemantauan tidak pernah mengaktifkan koneksi latar belakang.</string>
+    <string name="andrMonitorEnabled">Periksa server ini</string>
+    <string name="andrMonitorOff">Mati. Tidak ada pemeriksaan latar belakang.</string>
+    <string name="andrMonitorWaiting">Menunggu pemeriksaan berikutnya. Informasi sebelumnya mungkin sudah usang.</string>
+    <string name="andrMonitorChecking">Sedang memeriksa. Informasi sebelumnya mungkin sudah usang.</string>
+    <string name="andrMonitorCurrent">Terbaru setelah pemeriksaan terakhir.</string>
+    <string name="andrMonitorUnavailable">Tidak dapat memeriksa. Buka server ini untuk melihat aktivitas terbarunya.</string>
+    <string name="andrMonitorWifi">Menunggu Wi-Fi.</string>
+    <string name="andrMonitorPaused">Dijeda selagi aplikasi dan koneksi latar belakang berhenti.</string>
+    <string name="andrMonitorSaveFailed">Pilihan ini tidak dapat disimpan. Coba lagi.</string>
+    <string name="andrMonitorCheckIn">Ingatkan saya tentang balasan yang lama</string>
+    <string name="andrMonitorCheckInDetail">Satu pengingat setelah sebuah percakapan terlihat bekerja selama waktu ini. Pemeriksaan yang gagal tidak dihitung sebagai pekerjaan.</string>
+    <string name="andrMonitorMinutes">%1$s menit</string>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">Percakapan terkait</string>
+    <string name="r40RelationsRefresh">Muat ulang percakapan terkait</string>
+    <string name="r40RelationsStale">Lokasi percakapan ini berubah. Kembali lalu buka ulang percakapan terkait.</string>
+    <string name="r40RelationsFailure">Tidak dapat menyelesaikan. Coba lagi, atau kembali lalu buka ulang percakapan terkait.</string>
+    <string name="r40RelationsParent">Dimulai dari</string>
+    <string name="r40RelationsEmpty">Belum ada percakapan subagen</string>
+    <string name="r40RelationsEmptyBody">Pekerjaan yang didelegasikan muncul di sini tanpa tercampur dengan percakapan Anda.</string>
+    <string name="r40RelationsChildren">Percakapan subagen · %1$s</string>
+    <string name="r40RelationsUntitled">Percakapan tanpa judul</string>
+    <string name="r40RelationsNeedsYou">Butuh Anda · Buka untuk menjawab</string>
+    <string name="r40RelationsWorking">Bekerja</string>
+    <string name="r40RelationsIdle">Siaga</string>
+    <string name="r40RelationsDone">Selesai</string>
+    <string name="r40RelationsCurrent">Percakapan ini</string>
+    <string name="r40RelationsPinned">Disematkan</string>
+    <string name="r40RelationsActions">Tindakan</string>
+    <string name="r40RelationsOpening">Memproses…</string>
+    <string name="r40RelationsOpen">Buka percakapan</string>
+    <string name="r40RelationsResume">Lanjutkan di komputer</string>
+    <string name="r40RelationsPin">Sematkan percakapan</string>
+    <string name="r40RelationsUnpin">Lepas sematan percakapan</string>
+    <string name="r40RelationsStop">Hentikan subagen</string>
+    <string name="r40RelationsStopTitle">Hentikan %1$s?</string>
+    <string name="r40RelationsStopBody">Ini menghentikan pekerjaannya saat ini. Percakapan dan pekerjaan yang sudah selesai tetap ada.</string>
+    <string name="r40RelationsKeepRunning">Tetap berjalan</string>
+    <string name="r40RelationsResumeBody">Jalankan perintah ini di komputer yang menjalankan server ini, di proyek yang sama. Menyalin tidak mengirim apa pun.</string>
+    <string name="r40RelationsCopy">Salin perintah</string>
+    <string name="r40RelationsJustNow">Baru saja</string>
+    <string name="r40RelationsMinutes">%1$s mnt lalu</string>
+    <string name="r40RelationsHours">%1$s jam lalu</string>
+    <string name="r40RelationsDays">%1$s hr lalu</string>
+</resources>

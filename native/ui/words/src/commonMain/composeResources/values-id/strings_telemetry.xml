@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryCrashReportsTitle">Kirim laporan error ke pengembang (Google Firebase)</string>
+    <string name="telemetryCrashReportsBody">Saat aplikasi mogok atau suatu langkah gagal, aplikasi mengirim jenis masalah, versi aplikasi dan Android, serta daftar singkat lokasi kode. Pesan, file, alamat, dan kunci Anda tidak pernah dikirim.</string>
+    <string name="telemetryConsentChoose">Pilih</string>
+    <string name="telemetryConsentSave">Simpan pilihan saya</string>
+    <string name="sendReportTitle">Kirim laporan masalah</string>
+    <string name="sendReportRowDetail">Tinjau log yang telah disamarkan, lalu kirim</string>
+    <string name="sendReportSubtitle">Inilah seluruh isi laporan. Tidak ada yang dikirim sampai Anda mengetuk Kirim.</string>
+    <string name="sendReportSend">Kirim</string>
+    <string name="sendReportCollecting">Mengumpulkan laporan…</string>
+    <string name="sendReportSentTitle">Laporan terkirim</string>
+    <string name="sendReportSentBody">Sertakan kode laporan ini jika Anda membuka isu di GitHub, agar pengembang dapat menemukan laporan Anda.</string>
+    <string name="sendReportFailed">Laporan tidak dapat dikirim. Periksa koneksi, lalu coba lagi.</string>
+    <string name="sendReportDone">Selesai</string>
+    <string name="reportCodeLabel">Kode laporan</string>
+    <string name="reportCodeCopy">Salin kode laporan</string>
+</resources>

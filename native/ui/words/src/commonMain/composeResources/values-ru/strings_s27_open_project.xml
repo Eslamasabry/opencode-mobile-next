@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">Где находится проект?</string>
+    <string name="openProjectWhereBody">Выберите телефон или компьютер, где он лежит.</string>
+    <string name="openProjectStatusConnected">Подключён</string>
+    <string name="openProjectStatusConnecting">Подключение</string>
+    <string name="openProjectStatusNotConnected">Не подключён</string>
+    <string name="openProjectTypePath">Ввести путь</string>
+    <string name="openProjectTypePathBody">Открыть папку по полному пути</string>
+    <string name="openProjectNewFolder">Новая папка</string>
+    <string name="openProjectNewFolderBody">Создать папку в %1$s и открыть её</string>
+    <string name="openProjectCloneBody">Скопировать репозиторий в %1$s и открыть его</string>
+    <string name="openProjectCloneFailed">Не удалось скопировать репозиторий. Проверьте его адрес и то, что сервер может до него добраться.</string>
+    <string name="openProjectSlowBody">Сервер отвечает дольше обычного.</string>
+    <string name="openProjectProjectsEmptyBody">Клонируйте репозиторий или создайте новую папку, чтобы начать.</string>
+    <string name="openProjectServerNotConnected">Этот сервер сейчас не подключён. Повторите, когда он подключится.</string>
+</resources>

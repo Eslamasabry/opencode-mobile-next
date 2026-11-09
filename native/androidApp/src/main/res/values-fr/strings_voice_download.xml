@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voice_download_title">Configuration vocale</string>
+    <string name="voice_download_downloading">Téléchargement du pack vocal</string>
+    <string name="voice_download_verifying">Préparation de la saisie vocale</string>
+    <string name="voice_download_complete">La saisie vocale est prête</string>
+    <string name="voice_download_failed">La configuration vocale a échoué. Ouvrez l\u0027application pour réessayer.</string>
+</resources>

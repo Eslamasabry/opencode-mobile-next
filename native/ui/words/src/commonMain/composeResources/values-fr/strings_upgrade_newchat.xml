@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgNewChatKept">Vos mots et vos choix sont conservés. Réessayez, ou modifiez-les d'abord.</string>
+    <string name="upgNewChatEdit">Modifier</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">Agent et modèle</string>
+    <string name="upgNewChatAgents">Qui s'en occupe</string>
+    <string name="upgNewChatModeHint">Planifier en discute d'abord. Construire effectue les modifications.</string>
+    <string name="upgNewChatModeOnlyFor">Construire et Planifier sont réservés à %1$s.</string>
+    <string name="upgNewChatModel">Modèle</string>
+    <string name="upgNewChatModelsSearch">Rechercher un modèle</string>
+    <string name="upgNewChatBackToAgents">Retour aux agents</string>
+    <string name="upgNewChatDone">Terminé</string>
+    <string name="upgNewChatModelsNone">Ce serveur n'a pas d'autre modèle.</string>
+</resources>

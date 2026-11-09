@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">Pakai di percakapan baru</string>
+    <string name="migrationSkillReady">Keterampilan siap di percakapan baru. Agen belum berjalan.</string>
+    <string name="migrationSkillChanged">Koneksi berubah. Percakapan yang sudah dibuat dipertahankan.</string>
+    <string name="migrationSkillInvalid">Keterampilan ini tidak punya pengenal yang didukung. Muat ulang daftar keterampilan.</string>
+    <string name="migrationSkillUncertain">Permintaan mungkin sudah sampai ke server. Percakapan yang sudah dibuat dipertahankan. Periksa sebelum mencoba lagi.</string>
+    <string name="migrationSkillOpen">Buka percakapan</string>
+</resources>

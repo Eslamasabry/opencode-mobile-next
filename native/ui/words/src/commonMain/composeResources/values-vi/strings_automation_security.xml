@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">Những gì tự chạy</string>
+    <string name="secAutomationDetail">Chọn những gì máy chủ này được tự động làm. Một lựa chọn cho phép công việc có sẵn; nó không bắt đầu công việc.</string>
+    <string name="secAutomationReconnect">Kết nối lại</string>
+    <string name="secAutomationRetryIntake">Thử lại công việc đến</string>
+    <string name="secAutomationReconcileQueuedSends">Đối chiếu các tin đang chờ gửi</string>
+    <string name="secAutomationRetryProviderErrors">Thử lại khi nhà cung cấp lỗi</string>
+    <string name="secAutomationRestartPhoneServer">Khởi động lại máy chủ trên điện thoại</string>
+    <string name="secAutomationResumeSetup">Tiếp tục thiết lập</string>
+    <string name="secAutomationRecheckEnvironment">Kiểm tra lại môi trường</string>
+    <string name="secAutomationPollRestartHealth">Kiểm tra tình trạng sau khi khởi động lại</string>
+    <string name="secAutomationThermalRecovery">Phục hồi sau khi máy nóng</string>
+    <string name="secAutomationReduceEffects">Giảm hiệu ứng</string>
+    <string name="secAutomationChooseDefaults">Chọn mặc định</string>
+    <string name="secAutomationDetectInstallations">Dò các bản cài đặt</string>
+    <string name="secAutomationPreserveDrafts">Giữ bản nháp</string>
+    <string name="secAutomationFollowOutput">Theo dõi kết quả</string>
+    <string name="secAutomationPollOpenPages">Làm mới các trang đang mở</string>
+    <string name="secAutomationBoundedPaging">Tải thêm kết quả</string>
+    <string name="secAutomationRouteReadyWork">Chuyển công việc sẵn sàng</string>
+    <string name="secAutomationWakeStalledPool">Đánh thức các worker bị kẹt</string>
+    <string name="secAutomationRestartWorkers">Khởi động lại worker</string>
+    <string name="secAutomationRecycleWorkers">Làm mới worker</string>
+    <string name="secAutomationHoldAtProviderLimit">Chờ khi nhà cung cấp đạt giới hạn</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Thử lại các câu trả lời chưa xác nhận</string>
+    <string name="secAutomationRetryTransientTask">Thử lại các lỗi tạm thời</string>
+    <string name="secAutomationFallBackToDirectTask">Dùng tác vụ trực tiếp dự phòng</string>
+    <string name="secAutomationApplyCodePush">Áp dụng bản cập nhật mã</string>
+    <string name="secAutomationRestartDevServices">Khởi động lại dịch vụ phát triển</string>
+    <string name="secAutomationStopIdleHelpers">Dừng trình hỗ trợ đang nhàn rỗi</string>
+    <string name="secAutomationCleanCaches">Dọn bộ nhớ đệm</string>
+    <string name="secAutomationUpdateWhenIdle">Cập nhật khi nhàn rỗi</string>
+    <string name="secAutomationMonitorOtherServers">Theo dõi các máy chủ khác</string>
+    <string name="secAutomationMonitorQuota">Theo dõi hạn mức</string>
+</resources>

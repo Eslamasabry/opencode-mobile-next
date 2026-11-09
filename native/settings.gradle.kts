@@ -109,3 +109,17 @@ for (layer in layerFolders) {
 listOf("androidApp", "desktopApp", "quality", "benchmark")
     .filter { settingsDir.resolve("$it/build.gradle.kts").isFile }
     .forEach { include(":$it") }
+
+// Vendored forks of published libraries (third_party/<name>/README.md: what changed and why, the upstream licence). Each
+// takes the place of the artifact it forks wherever that artifact resolves, so the modules allowed to declare it
+// (ExternalRules) keep declaring it and get the fork; no module depends on the folder directly.
+include(":third_party:backdrop")
+gradle.beforeProject {
+    configurations.configureEach {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("io.github.kyant0:backdrop"))
+                .using(project(":third_party:backdrop"))
+                .because("Kyant0 backdrop 2.0.1 with the half-resolution liquid layer (third_party/backdrop/README.md)")
+        }
+    }
+}

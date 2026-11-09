@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">O que roda sozinho</string>
+    <string name="secAutomationDetail">Escolha o que este servidor pode fazer automaticamente. Uma escolha permite trabalho existente; ela não o inicia.</string>
+    <string name="secAutomationReconnect">Reconectar</string>
+    <string name="secAutomationRetryIntake">Tentar de novo o trabalho recebido</string>
+    <string name="secAutomationReconcileQueuedSends">Conciliar envios na fila</string>
+    <string name="secAutomationRetryProviderErrors">Tentar de novo após erros do provedor</string>
+    <string name="secAutomationRestartPhoneServer">Reiniciar o servidor do celular</string>
+    <string name="secAutomationResumeSetup">Retomar a configuração</string>
+    <string name="secAutomationRecheckEnvironment">Verificar o ambiente de novo</string>
+    <string name="secAutomationPollRestartHealth">Verificar a saúde após reinício</string>
+    <string name="secAutomationThermalRecovery">Recuperar após aquecimento</string>
+    <string name="secAutomationReduceEffects">Reduzir efeitos</string>
+    <string name="secAutomationChooseDefaults">Escolher padrões</string>
+    <string name="secAutomationDetectInstallations">Detectar instalações</string>
+    <string name="secAutomationPreserveDrafts">Preservar rascunhos</string>
+    <string name="secAutomationFollowOutput">Acompanhar a saída</string>
+    <string name="secAutomationPollOpenPages">Atualizar páginas abertas</string>
+    <string name="secAutomationBoundedPaging">Carregar mais resultados</string>
+    <string name="secAutomationRouteReadyWork">Direcionar trabalho pronto</string>
+    <string name="secAutomationWakeStalledPool">Acordar executores parados</string>
+    <string name="secAutomationRestartWorkers">Reiniciar executores</string>
+    <string name="secAutomationRecycleWorkers">Reciclar executores</string>
+    <string name="secAutomationHoldAtProviderLimit">Esperar nos limites do provedor</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Tentar de novo respostas não confirmadas</string>
+    <string name="secAutomationRetryTransientTask">Tentar de novo após falhas temporárias</string>
+    <string name="secAutomationFallBackToDirectTask">Usar uma tarefa direta como alternativa</string>
+    <string name="secAutomationApplyCodePush">Aplicar atualizações de código</string>
+    <string name="secAutomationRestartDevServices">Reiniciar serviços de desenvolvimento</string>
+    <string name="secAutomationStopIdleHelpers">Parar assistentes ociosos</string>
+    <string name="secAutomationCleanCaches">Limpar caches</string>
+    <string name="secAutomationUpdateWhenIdle">Atualizar quando ocioso</string>
+    <string name="secAutomationMonitorOtherServers">Monitorar outros servidores</string>
+    <string name="secAutomationMonitorQuota">Monitorar a cota</string>
+</resources>

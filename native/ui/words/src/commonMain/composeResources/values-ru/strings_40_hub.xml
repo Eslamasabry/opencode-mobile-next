@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Эта запись об использовании изменилась. Обновите «Тарифы», чтобы увидеть текущие аккаунты.</string>
+    <string name="hub40ContinueOn">Продолжить в %1$s?</string>
+    <string name="hub40ContinueBody">Этот ярлык просит открыть сохранённое подключение для входа у поставщика. Пока вы не продолжите, ничего не отправляется.</string>
+    <string name="hub40Continue">Продолжить</string>
+</resources>

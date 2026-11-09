@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">Descargando el dictado por voz</string>
+    <string name="r40SetupVoiceVerifying">Comprobando los archivos del dictado por voz</string>
+    <string name="r40SetupRequired">Obligatorio</string>
+    <string name="r40SetupWorking">Espera a que termine la acción actual.</string>
+    <string name="r40SetupTotals">%1$s · unos %2$s min</string>
+    <string name="r40SetupCouldNotCheck">No se pudieron comprobar las herramientas instaladas ni la configuración. Inténtalo de nuevo.</string>
+    <string name="r40SetupRetry">Inténtalo de nuevo</string>
+    <string name="r40SetupActionFailed">No se completó. Inténtalo de nuevo.</string>
+    <string name="r40SetupCheckDevice">Resuelve los requisitos del teléfono de arriba antes de empezar.</string>
+    <string name="r40SetupStorageUnopened">No se pudieron abrir los ajustes de almacenamiento. Libera espacio desde los ajustes del teléfono e inténtalo de nuevo.</string>
+    <string name="r40SetupRemoveVoiceTitle">¿Quitar el dictado por voz?</string>
+    <string name="r40SetupRemoveVoiceBody">Esto quita de esta app los modelos de voz descargados. Tus conversaciones se conservan. Puedes descargar el dictado por voz de nuevo más tarde.</string>
+    <string name="r40SetupRemoveVoice">Quitar el dictado por voz</string>
+    <string name="r40SetupKeepVoice">Conservar el dictado por voz</string>
+    <string name="r40SetupRemoveVoiceFailed">No se pudo quitar el dictado por voz. Termina cualquier grabación o descarga en curso e inténtalo de nuevo.</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">Listo</string>
+    <string name="r40SetupComponentInstalled">Ya está instalado</string>
+    <string name="r40SetupComponentChecking">Comprobando…</string>
+    <string name="r40SetupComponentRunning">Instalando…</string>
+    <string name="r40SetupComponentFailed">No se completó</string>
+    <string name="r40SetupComponentPending">En espera</string>
+    <string name="r40WelcomePhone">En este teléfono</string>
+    <string name="r40WelcomePhoneBody">Usa OpenCode aquí. No necesitas una computadora.</string>
+    <string name="r40WelcomeComputer">En mi computadora</string>
+    <string name="r40WelcomeComputerBody">Conéctate a una computadora donde OpenCode esté en ejecución.</string>
+    <string name="r40WelcomeRunning">La configuración va al %1$s%</string>
+    <string name="r40WelcomeStopped">La configuración se detuvo en %1$s%</string>
+    <string name="r40WelcomeSetupBody">Descarga un espacio de trabajo Linux privado y las herramientas que OpenCode necesita. Elige qué instalar antes de empezar.</string>
+    <string name="r40WelcomeViewProgress">Ver el avance de la configuración</string>
+</resources>

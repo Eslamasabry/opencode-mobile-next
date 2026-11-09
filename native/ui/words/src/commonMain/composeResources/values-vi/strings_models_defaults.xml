@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="modelDefaultsPhoneTitle">Cuộc trò chuyện mới trên điện thoại này</string>
+    <string name="modelDefaultsNamedTitle">Cuộc trò chuyện mới trên %1$s</string>
+    <string name="modelDefaultsScope">Dùng cho các cuộc trò chuyện mới. Mỗi cuộc trò chuyện giữ lựa chọn riêng của nó.</string>
+    <string name="modelDefaultsServerChoice">Dùng mặc định của máy chủ</string>
+    <string name="modelDefaultsRecommended">Lựa chọn gợi ý</string>
+    <string name="modelDefaultsAll">Tất cả mô hình khả dụng</string>
+    <string name="modelDefaultsFailed">Không đọc hoặc lưu được lựa chọn mô hình.</string>
+    <string name="modelDefaultsInUse">Đang dùng</string>
+    <string name="modelDefaultsDefault">Mặc định của máy chủ</string>
+    <string name="modelDefaultsRecent">Lựa chọn gần đây</string>
+    <string name="modelDefaultsCheapest">Giá thấp nhất</string>
+    <string name="modelDefaultsFree">Miễn phí</string>
+    <string name="modelDefaultsPrice">Đầu vào $%1$s · Đầu ra $%2$s mỗi triệu token</string>
+    <string name="modelDefaultsSelected">Đã chọn</string>
+    <string name="modelDefaultsSaving">Đang lưu lựa chọn mô hình</string>
+</resources>

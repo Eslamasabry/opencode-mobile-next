@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_live_channel">Koneksi pengodean langsung</string>
+    <string name="notify_live_description">Tampil saat OpenCode menjaga percakapan server tetap aktif di latar belakang</string>
+    <string name="notify_coding_requests_channel">Permintaan pengodean</string>
+    <string name="notify_coding_requests_description">Pemberitahuan saat OpenCode butuh izin atau masukan</string>
+    <string name="notify_coding_requests_quiet_channel">Permintaan pengodean (jam tenang)</string>
+    <string name="notify_coding_requests_quiet_description">Permintaan yang masuk saat jam tenang, tanpa suara</string>
+    <string name="notify_coding_status_channel">Pembaruan percakapan pengodean</string>
+    <string name="notify_coding_status_description">Pemberitahuan saat percakapan OpenCode di latar belakang selesai</string>
+    <string name="notify_team_progress_channel">Progres AI Team</string>
+    <string name="notify_team_progress_description">Satu baris tenang saat AI Team bekerja</string>
+    <string name="notify_setup_channel">Penyiapan</string>
+    <string name="notify_phone_server_channel">OpenCode di ponsel ini</string>
+    <string name="notify_phone_server_description">Tampil saat server ponsel atau mesin proyek berjalan</string>
+    <string name="notify_schedule_channel">Perintah terjadwal</string>
+    <string name="notify_voice_setup">Penyiapan suara</string>
+    <string name="notify_alert_permission_title">Izinkan %1$s untuk lanjut?</string>
+    <string name="notify_alert_question_title">%1$s punya pertanyaan untuk Anda</string>
+    <string name="notify_alert_complete_title">Selesai: %1$s</string>
+    <string name="notify_alert_error_title">Berhenti: %1$s</string>
+    <string name="notify_alert_stopped_any">Sebuah percakapan berhenti</string>
+    <string name="notify_ask_run">Jalankan %1$s?</string>
+    <string name="notify_ask_edit">Ubah %1$s?</string>
+    <string name="notify_ask_read">Baca %1$s?</string>
+    <string name="notify_ask_folder">Bekerja di %1$s?</string>
+    <string name="notify_public_needs_you">Ada permintaan yang butuh Anda</string>
+    <string name="notify_public_finished">Sebuah percakapan selesai</string>
+    <string name="notify_status_public_stopped">OpenCode · percakapan berhenti</string>
+    <string name="notify_test_title">Notifikasi aktif</string>
+    <string name="notify_test_body">Pertanyaan dan pekerjaan yang selesai akan muncul seperti ini.</string>
+    <string name="notify_alert_quota_title">Pemakaian penyedia mencapai batas Anda</string>
+    <string name="notify_alert_quota_body">Buka untuk melihat pemakaian saat ini.</string>
+    <string name="notify_alert_quota_reset_title">%1$s sudah pulih</string>
+    <string name="notify_alert_quota_reset_generic_title">Batas pemakaian telah direset</string>
+    <string name="notify_alert_quota_reset_body">Buka untuk melihat sisanya.</string>
+    <string name="notify_alert_checkin_title">%1$s masih bekerja</string>
+    <string name="notify_alert_checkin_body">Buka percakapan untuk memeriksa.</string>
+    <string name="notify_alert_reason_auth">Penyedia menolak kunci. Masuk lagi untuk melanjutkan.</string>
+    <string name="notify_alert_reason_context">Percakapan terlalu panjang untuk model.</string>
+    <string name="notify_alert_reason_length">Balasan mencapai batas panjang.</string>
+    <string name="notify_alert_reason_filter">Penyedia memblokir balasan.</string>
+    <string name="notify_alert_reason_model">Model itu tidak tersedia. Pilih model lain untuk melanjutkan.</string>
+    <string name="notify_alert_reason_other">Terjadi masalah.</string>
+    <string name="notify_allow_once">Izinkan sekali</string>
+    <string name="notify_reject">Tolak</string>
+    <string name="notify_open">Buka</string>
+    <string name="notify_status_action_open">Buka</string>
+    <string name="notify_status_action_stop_reply">Hentikan balasan</string>
+    <string name="notify_status_action_start">Mulai</string>
+    <string name="notify_status_action_new_chat">Percakapan baru</string>
+    <string name="notify_status_action_stop_opencode">Hentikan OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · siap</string>
+    <string name="notify_status_public_paused">OpenCode · dijeda</string>
+    <plurals name="notify_chip_running">
+        <item quantity="other">%1$s berjalan</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="other">%1$s butuh Anda</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="other">%s butuh Anda</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="other">%s percakapan selesai</item>
+    </plurals>
+    <string name="notify_answer_in_app">Buka OpenCode untuk menjawab</string>
+    <string name="notify_reply_watch_title">Masih mengerjakan balasan Anda</string>
+    <string name="notify_status_public_working">OpenCode · bekerja</string>
+</resources>

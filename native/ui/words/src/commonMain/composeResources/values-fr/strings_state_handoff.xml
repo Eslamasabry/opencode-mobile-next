@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">Conversations liées</string>
+    <string name="stateHandoffWorking">En cours…</string>
+    <string name="stateHandoffFailed">Impossible d’ouvrir les conversations liées. Réessayez.</string>
+    <string name="stateHandoffTransferFailed">Ce transfert n’a pas été confirmé. Fermez cette feuille et vérifiez vos conversations avant de lancer un autre transfert.</string>
+    <string name="stateHandoffReviewNote">Relisez cet enregistrement de conversation masqué et la première invite avant de continuer. Le contenu des pièces jointes et le raisonnement privé sont exclus.</string>
+    <string name="stateHandoffRecord">Enregistrement de la conversation</string>
+    <string name="stateHandoffPrompt">Première invite</string>
+    <string name="stateHandoffRetryLink">Enregistrer de nouveau le lien</string>
+    <string name="stateHandoffContinue">Démarrer la conversation liée</string>
+    <string name="stateHandoffLinked">Conversations liées</string>
+    <string name="stateHandoffNoLinks">Cette conversation n’a aucun lien enregistré.</string>
+    <string name="stateHandoffNew">Continuer dans une nouvelle conversation</string>
+    <string name="stateHandoffNewNote">Choisissez un modèle sur cette connexion. Votre projet reste le même, et vous relisez le transfert avant tout envoi.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="other">%1$d cần bạn</item>
+    </plurals>
+    <string name="notifStatusReconnectingGeneric">Đang kết nối lại</string>
+    <string name="andr_thermalPaused">Điện thoại đang nóng — đã tạm dừng AI Team để hạ nhiệt. AI Team sẽ tự chạy lại.</string>
+    <string name="andr_thermalStopped">Điện thoại rất nóng — đã dừng AI Team để bảo vệ máy. Công việc vẫn được giữ và sẽ chạy lại khi máy nguội.</string>
+    <string name="andr_thermalResumed">Đã chạy lại AI Team — điện thoại đã nguội.</string>
+</resources>

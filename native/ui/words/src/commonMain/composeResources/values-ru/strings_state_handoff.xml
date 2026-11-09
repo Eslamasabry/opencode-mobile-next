@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">Связанные чаты</string>
+    <string name="stateHandoffWorking">Выполняется…</string>
+    <string name="stateHandoffFailed">Не удалось открыть связанные чаты. Повторите.</string>
+    <string name="stateHandoffTransferFailed">Перенос не подтверждён. Закройте это окно и проверьте свои чаты, прежде чем начинать новый перенос.</string>
+    <string name="stateHandoffReviewNote">Просмотрите эту скрытую запись чата и первый запрос, прежде чем продолжить. Содержимое вложений и внутренние рассуждения не включены.</string>
+    <string name="stateHandoffRecord">Запись чата</string>
+    <string name="stateHandoffPrompt">Первый запрос</string>
+    <string name="stateHandoffRetryLink">Сохранить ссылку ещё раз</string>
+    <string name="stateHandoffContinue">Начать связанный чат</string>
+    <string name="stateHandoffLinked">Связанные чаты</string>
+    <string name="stateHandoffNoLinks">У этого чата нет сохранённых ссылок.</string>
+    <string name="stateHandoffNew">Продолжить в новом чате</string>
+    <string name="stateHandoffNewNote">Выберите модель для этого подключения. Проект останется прежним, а передачу вы просмотрите до отправки.</string>
+</resources>

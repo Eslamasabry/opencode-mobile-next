@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateStorageAppTitle">Izinkan akses ke file ponsel ini</string>
+    <string name="stateStorageAppBody">Proyek ini ada di penyimpanan bersama. Aktifkan akses Semua file untuk OpenCode Mobile, lalu kembali ke sini.</string>
+    <string name="stateStorageAppAction">Buka pengaturan akses file</string>
+</resources>

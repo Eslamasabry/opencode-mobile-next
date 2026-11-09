@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeSendNow">Envoyer maintenant</string>
+    <string name="voiceNativeDetect">Détecter à partir de la voix</string>
+    <string name="voiceNativeSizeMb">%1$d Mo</string>
+    <string name="voiceNativePhoneEngine">La saisie vocale utilise la reconnaissance vocale propre à votre téléphone, donc l'audio reste sur ce téléphone. Les téléphones qui n'en ont pas n'affichent pas le micro. Cette version n'utilise pas encore les modèles vocaux ci-dessous.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Nécessite le moteur vocal hors ligne, que cette version n'inclut pas encore.</string>
+    <string name="voiceNativeSettingsAction">Paramètres vocaux</string>
+    <string name="voiceNativeStoppedAfterPause">Arrêté après une pause. Vos mots sont dans la zone de saisie.</string>
+    <string name="voiceNativeNoRecognizer">Ce téléphone n'a aucun service de reconnaissance vocale. Activez-en un dans les paramètres d'Android, puis réessayez.</string>
+    <string name="voiceNativeReadAloud">Lire à voix haute</string>
+    <string name="voiceNativePartial">%1$s téléchargés sur %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Reconnaissance vocale du téléphone</string>
+</resources>

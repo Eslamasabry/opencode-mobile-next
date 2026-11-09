@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Proveedores y herramientas</string>
+    <string name="intBack">Atrás</string>
+    <string name="intRefresh">Actualizar</string>
+    <string name="intServers">Servidor</string>
+    <string name="intNoServer">Primero conéctate a un servidor</string>
+    <string name="intProviders">Proveedores</string>
+    <string name="intConnected">Sesión iniciada</string>
+    <string name="intNotConnected">Sin iniciar sesión</string>
+    <string name="intKey">Clave de API</string>
+    <string name="intSaveKey">Guardar la clave en el servidor</string>
+    <string name="intKeyPage">Obtener una clave de API</string>
+    <string name="intOpenSignIn">Abrir la página de inicio de sesión</string>
+    <string name="intCode">Código o URL de retorno</string>
+    <string name="intCompleteSignIn">Terminar de iniciar sesión</string>
+    <string name="intSignInHelp">Termina en tu navegador y luego pega aquí su código o la URL de retorno.</string>
+    <string name="intConnectors">Conectores</string>
+    <string name="intConnectorConnected">Conectado</string>
+    <string name="intConnectorNotConnected">Requiere atención</string>
+    <string name="intConnectorName">Nombre del conector</string>
+    <string name="intConnectorUrl">Dirección HTTPS</string>
+    <string name="intHeaderName">Nombre del encabezado (opcional)</string>
+    <string name="intHeaderValue">Valor del encabezado</string>
+    <string name="intSaveConnector">Agregar conector</string>
+    <string name="intHeaderHelp">Los valores de los encabezados son secretos. Solo se envían a este servidor y nunca aparecen en los diagnósticos.</string>
+    <string name="intSkills">Escribir una habilidad</string>
+    <string name="intRequirements">¿Qué debe hacer la habilidad?</string>
+    <string name="intDraftHelp">El agente redactará un SKILL.md en una conversación nueva para que lo revises. No se le pedirá que lo instale ni que cambie archivos.</string>
+    <string name="intAskDraft">Pedir un borrador al agente</string>
+    <string name="intOpenDraft">Abrir la conversación del borrador</string>
+    <string name="intSaved">Guardado en el servidor.</string>
+    <string name="intFailed">No se pudo terminar. Actualiza antes de intentarlo de nuevo.</string>
+    <string name="intUnsupported">Este servidor no admite esta acción.</string>
+    <string name="intChanged">La conexión cambió. Abre esta página de nuevo.</string>
+    <string name="intInvalid">Revisa los campos obligatorios e inténtalo de nuevo.</string>
+    <string name="intDraftSent">Se envió la solicitud del borrador. Abre la conversación para seguirla.</string>
+    <string name="intDraftUncertain">Puede que la solicitud haya llegado. Revisa la conversación antes de enviarla otra vez.</string>
+    <string name="intOpenQuestion">¿Abrir esta página?</string>
+    <string name="intOpen">Abrir página</string>
+    <string name="intInsecure">Esta dirección no está cifrada.</string>
+    <string name="intConnectorReady">Conectado para el próximo mensaje.</string>
+    <string name="intConnectorUnknown">Conectado. No se ha confirmado la detección de herramientas.</string>
+    <string name="intConnectorAuth">Este conector requiere que inicies sesión.</string>
+    <string name="intConnecting">Conectando</string>
+    <string name="intConnectorSignIn">Iniciar sesión en este conector</string>
+    <string name="intConnectorCancelSignIn">Cancelar el inicio de sesión</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Bandeja de entrada</string>
+    <string name="monitorInboxEmpty">Ahora no hay solicitudes ni recordatorios de los servidores que vigilas.</string>
+    <string name="monitorInboxFailedRun">Una ejecución necesita atención</string>
+    <string name="monitorInboxOpening">Abriendo la solicitud…</string>
+    <string name="monitorInboxSettings">Elige qué servidores guardados vigilar en Notificaciones.</string>
+    <string name="monitorInboxSwitchBody">Abre la solicitud en este servidor. El trabajo que ya se ejecuta en tus otros servidores continúa.</string>
+</resources>

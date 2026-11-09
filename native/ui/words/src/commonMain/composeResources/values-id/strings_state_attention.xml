@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Aktivitas</string>
+    <string name="stateAttentionRefresh">Muat ulang</string>
+    <string name="stateAttentionNeedsYou">Perlu Anda</string>
+    <string name="stateAttentionHistory">Saat Anda pergi</string>
+    <string name="stateAttentionIncomplete">Beberapa server belum diperiksa. Pengamatan tersimpan mungkin sudah usang.</string>
+    <string name="stateAttentionCorrupt">Beberapa aktivitas tersimpan tidak dapat dibaca. Datanya tetap disimpan di ponsel ini.</string>
+    <string name="stateAttentionSaveFailed">Perubahan ini tidak dapat disimpan. Muat ulang lalu coba lagi.</string>
+    <string name="stateAttentionNoneKnown">Tidak ada permintaan yang diketahui dari server yang menjawab.</string>
+    <string name="stateAttentionNone">Tidak ada permintaan yang menunggu.</string>
+    <string name="stateAttentionNoHistory">Tidak ada aktivitas otomatis untuk ditampilkan.</string>
+    <string name="stateAttentionPermission">Izin diminta</string>
+    <string name="stateAttentionQuestion">Pertanyaan menunggu</string>
+    <string name="stateAttentionForm">Formulir menunggu</string>
+    <string name="stateAttentionFailure">Percakapan perlu dicek</string>
+    <string name="stateAttentionTeam">Tim membutuhkan Anda</string>
+    <string name="stateAttentionStale">Terakhir diketahui</string>
+    <string name="stateAttentionAcknowledge">Tutup aktivitas yang ditampilkan</string>
+    <string name="stateActReconnect">Tersambung kembali otomatis</string>
+    <string name="stateActRestart">Dimulai ulang otomatis</string>
+    <string name="stateActHeatPause">Dijeda karena panas</string>
+    <string name="stateActHeatStop">Dihentikan karena panas</string>
+    <string name="stateActHeatResume">Dilanjutkan setelah dingin</string>
+    <string name="stateActUpdate">Diperbarui otomatis</string>
+    <string name="stateActPermission">Izin diberikan otomatis</string>
+    <string name="stateActQueued">Pesan tersimpan terkirim</string>
+    <string name="stateActOther">Aktivitas otomatis</string>
+    <string name="stateAttentionMonitorTitle">Server lain</string>
+    <string name="stateAttentionMonitorCopy">Pilih server tersimpan lain yang boleh diperiksa ponsel ini untuk permintaan yang menunggu. Ini tidak menjawab permintaan atau mengubah server tersebut.</string>
+    <string name="stateAttentionMonitorChoice">Periksa permintaan yang menunggu</string>
+</resources>

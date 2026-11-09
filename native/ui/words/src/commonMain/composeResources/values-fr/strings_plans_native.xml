@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Lecture de l’utilisation des offres</string>
+    <string name="plansNativeCollectors">Lire les limites des offres</string>
+    <string name="plansNativeCollectorOn">Lecture activée</string>
+    <string name="plansNativeCollectorOff">Lecture désactivée</string>
+    <string name="plansNativeCollectorSetup">Configurer la lecture sur ce téléphone</string>
+    <string name="plansNativeCollectorRemote">Autoriser la lecture depuis ce serveur</string>
+    <string name="plansNativeCollectorWorking">Mise à jour de la lecture des offres</string>
+    <string name="plansNativeCollectorFailed">La lecture des offres n’a pas pu être modifiée. Vérifiez le serveur et réessayez.</string>
+    <string name="plansNativeAlerts">Alertes de limite d’offre</string>
+    <string name="plansNativeAlertsBody">Alerter lorsqu’une offre lisible atteint le niveau choisi. La lecture à distance demande toujours votre autorisation.</string>
+    <string name="plansNativeSetupQuestion">Configurer la lecture des offres sur %1$s\u00A0?</string>
+    <string name="plansNativeRemoteQuestion">Autoriser la lecture des offres depuis %1$s\u00A0?</string>
+    <string name="plansNativeOffQuestion">Désactiver la lecture des offres sur %1$s\u00A0?</string>
+    <string name="plansNativeSetupBody">L’application installe son lecteur d’offres dans l’Ubuntu intégré à l’application. Les identifiants des fournisseurs restent sur le téléphone.</string>
+    <string name="plansNativeRemoteBody">Lire les limites des offres depuis le collecteur déjà installé sur ce serveur. Cette autorisation ne concerne que ce serveur et les comptes de fournisseurs qu’il signale.</string>
+    <string name="plansNativeOffBody">Arrêter de lire cette source et retirer son autorisation de lecture. Les connexions aux fournisseurs sont conservées.</string>
+    <string name="plansNativeSetUp">Configurer la lecture</string>
+    <string name="plansNativeAllow">Autoriser la lecture</string>
+    <string name="plansNativeTurnOff">Désactiver la lecture</string>
+    <string name="plansNativeCancel">Annuler</string>
+</resources>

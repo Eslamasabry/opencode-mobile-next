@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelUpdating">Đang cập nhật ứng dụng của bạn…</string>
+    <string name="widgetPanelOpenAppForUpdate">Mở ứng dụng để hoàn tất cập nhật, rồi thử lại tiện ích này.</string>
+    <string name="widgetPanelOpenApp">Mở ứng dụng</string>
+    <string name="widgetPanelOpenFailed">Không mở được tiện ích này. Hãy đóng cửa sổ này và thử lại.</string>
+</resources>

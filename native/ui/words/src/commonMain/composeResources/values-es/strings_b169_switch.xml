@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Cambiar de modelo</string>
+    <string name="b169UsedUp">%1$s se agotó por ahora</string>
+    <string name="b169UsedUpNoName">Este modelo se agotó por ahora</string>
+    <string name="b169ConnectProvider">Conectar un proveedor…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="one">La respuesta detenida ya ejecutó %1$d paso. ¿Enviar de nuevo con %2$s?</item>
+        <item quantity="many">La respuesta detenida ya ejecutó %1$d pasos. ¿Enviar de nuevo con %2$s?</item>
+        <item quantity="other">La respuesta detenida ya ejecutó %1$d pasos. ¿Enviar de nuevo con %2$s?</item>
+    </plurals>
+    <string name="b169AskSend">Enviar</string>
+    <string name="b169AttachAgain">Adjunta %1$s de nuevo para enviar</string>
+    <string name="b169Free">Gratis · puede usar tus mensajes</string>
+    <string name="b169TooLong">Demasiado largo para este modelo</string>
+    <string name="b169Suggested">Sugerido</string>
+    <string name="b169Offline">Cambiar de modelo vuelve a funcionar cuando el servidor regrese.</string>
+</resources>

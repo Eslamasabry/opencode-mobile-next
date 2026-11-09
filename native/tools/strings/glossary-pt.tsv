@@ -1,0 +1,68 @@
+# Glossary for pt. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Este celular|Este telefone|este celular
+term	\b[Cc]onversations?\b	conversa
+term	\bTry again\b	Tentar novamente|tente|novamente|de novo|outra vez
+term	\bSettings\b	Configura[cç][oõ]es
+term	\bServers?\b	servidor
+term	\bProjects?\b	projeto
+term	\b(?<!Claude )Agents?\b	agente
+term	^Files$	arquivos
+term	^Cancel$	Cancelar
+term	^Offline$	Offline|Sem conex[aã]o
+term	^Disconnect$	Desconectar
+term	^Allow$	Permitir
+term	^Deny$	Negar|Recusar
+term	^Delete$	Excluir|Apagar
+term	^Search$	Pesquisar|Buscar|busca|pesquisa
+term	^Refresh$	Atualizar
+term	^Model$	modelo
+forbid	(?s)^(?!.*(?:inici|encerr|autentic|credenc|login|entrar|acess|conta)).*\bsess[aã]o\b|\bsess[oõ]es\b	say conversa, not sessão (sign-in wording is fine)
+forbid	\bchats?\b(?!\.)	say conversa, not chat
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

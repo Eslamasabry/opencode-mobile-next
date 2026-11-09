@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">Его владелец остановлен</string>
+    <string name="runningOrphanCpuWithoutOwner">Занят, а чата, который его ждёт, нет</string>
+    <string name="linuxStorageScanRunning">Измеряется: %1$s</string>
+    <string name="linuxStorageScanDone">Хранилище измерено</string>
+    <string name="linuxStorageScanIdle">Сканирование не идёт</string>
+    <string name="linuxStorageScanLog">Сканирование хранилища</string>
+</resources>

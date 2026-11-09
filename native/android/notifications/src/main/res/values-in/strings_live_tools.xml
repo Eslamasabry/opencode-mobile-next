@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_tool_command">Menjalankan perintah…</string>
+    <string name="notify_tool_edit">Mengedit file…</string>
+    <string name="notify_tool_read">Membaca file…</string>
+    <string name="notify_tool_search">Mencari file…</string>
+    <string name="notify_tool_web">Menjelajahi web…</string>
+    <string name="notify_tool_subagent">Menjalankan subagen…</string>
+    <string name="notify_tool_plan">Merencanakan…</string>
+    <string name="notify_tool_working">Bekerja…</string>
+    <string name="notify_tool_card">Menampilkan kartu…</string>
+    <string name="notify_tool_backgroundtask">Memeriksa tugas latar belakang…</string>
+    <string name="notify_tool_other">Menjalankan %1$s…</string>
+</resources>

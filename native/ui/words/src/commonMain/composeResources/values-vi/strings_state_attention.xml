@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Hoạt động</string>
+    <string name="stateAttentionRefresh">Làm mới</string>
+    <string name="stateAttentionNeedsYou">Cần bạn</string>
+    <string name="stateAttentionHistory">Trong lúc bạn vắng mặt</string>
+    <string name="stateAttentionIncomplete">Một số máy chủ chưa được kiểm tra. Các ghi nhận đã lưu có thể đã cũ.</string>
+    <string name="stateAttentionCorrupt">Không đọc được một số hoạt động đã lưu. Chúng vẫn được giữ trên điện thoại này.</string>
+    <string name="stateAttentionSaveFailed">Không lưu được thay đổi này. Hãy làm mới rồi thử lại.</string>
+    <string name="stateAttentionNoneKnown">Không có yêu cầu nào từ các máy chủ đã phản hồi.</string>
+    <string name="stateAttentionNone">Không có yêu cầu nào đang chờ.</string>
+    <string name="stateAttentionNoHistory">Không có hoạt động tự động nào để hiển thị.</string>
+    <string name="stateAttentionPermission">Có yêu cầu cấp quyền</string>
+    <string name="stateAttentionQuestion">Có câu hỏi đang chờ</string>
+    <string name="stateAttentionForm">Có biểu mẫu đang chờ</string>
+    <string name="stateAttentionFailure">Cuộc trò chuyện cần được xem</string>
+    <string name="stateAttentionTeam">Nhóm cần bạn</string>
+    <string name="stateAttentionStale">Lần cuối biết</string>
+    <string name="stateAttentionAcknowledge">Bỏ qua hoạt động đang hiển thị</string>
+    <string name="stateActReconnect">Đã tự động kết nối lại</string>
+    <string name="stateActRestart">Đã tự động khởi động lại</string>
+    <string name="stateActHeatPause">Đã tạm dừng vì nóng</string>
+    <string name="stateActHeatStop">Đã dừng vì nóng</string>
+    <string name="stateActHeatResume">Đã tiếp tục sau khi nguội</string>
+    <string name="stateActUpdate">Đã tự động cập nhật</string>
+    <string name="stateActPermission">Quyền đã được tự động cho phép</string>
+    <string name="stateActQueued">Đã gửi tin nhắn đã lưu</string>
+    <string name="stateActOther">Hoạt động tự động</string>
+    <string name="stateAttentionMonitorTitle">Các máy chủ khác</string>
+    <string name="stateAttentionMonitorCopy">Chọn những máy chủ đã lưu khác mà điện thoại này được phép kiểm tra các yêu cầu đang chờ. Việc này không trả lời yêu cầu hay thay đổi các máy chủ đó.</string>
+    <string name="stateAttentionMonitorChoice">Kiểm tra các yêu cầu đang chờ</string>
+</resources>

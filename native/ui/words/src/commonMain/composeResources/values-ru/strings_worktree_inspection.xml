@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="worktreeInspectionTitle">Просмотр копии</string>
+    <string name="worktreeInspectionExactScope">Изменения и чаты читаются для конкретного проекта, папки и рабочего пространства.</string>
+    <string name="worktreeInspectionReadFailed">Не удалось просмотреть эту копию. Её состояние неизвестно.</string>
+    <string name="worktreeInspectionWorkspace">Рабочее пространство: %1$s</string>
+    <string name="worktreeInspectionHostScope">На этом сервере</string>
+    <string name="worktreeInspectionConversations">Чаты в этой копии</string>
+    <string name="worktreeInspectionNoPageMatches">На этой странице нет подходящих чатов. Загрузите ещё, чтобы продолжить поиск.</string>
+    <string name="worktreeInspectionNoConversations">В этой копии нет подходящих чатов.</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Вид</string>
+    <string name="filesSearchNames">Имена файлов</string>
+    <string name="filesRowActions">Действия</string>
+    <string name="filesChangeDeleted">Удалён</string>
+    <string name="filesChangeAdded">Добавлен</string>
+    <string name="filesChangeModified">Изменён</string>
+    <string name="filesWrapCode">Переносить строки</string>
+    <string name="filesUnwrapCode">Прокручивать строки вбок</string>
+    <string name="filesShowPreview">Просмотр</string>
+    <string name="filesMoreActions">Другие действия с файлом</string>
+    <string name="filesAttachFailed">Не удалось прикрепить этот файл. Повторите.</string>
+    <string name="filesPreferencesFailed">Не удалось сохранить этот выбор. Повторите.</string>
+    <string name="filesLinkRefused">Эту ссылку нельзя открыть безопасно.</string>
+    <string name="filesOpenLinkQuestion">Открыть %1$s?</string>
+    <string name="filesOpenLinkBody">Ссылка откроется за пределами приложения.</string>
+    <string name="filesOpenLink">Открыть ссылку</string>
+    <string name="filesAttachmentReady">Файл прикреплён. Вернитесь в чат и добавьте комментарий.</string>
+    <string name="filesScopedEmpty">Это папка, к которой открыт доступ у сервера этого чата. Проверьте доступ к папке и обновите.</string>
+    <string name="filesStorageFailed">Доступ к папке не изменён. Повторите.</string>
+    <string name="filesStorageRestart">Доступ к папке сохранён. Перезапустите сервер на этом телефоне и обновите.</string>
+    <string name="filesOpenPhone">Открыть «Этот телефон»</string>
+    <string name="filesReviewStorage">Проверить общие папки</string>
+    <string name="filesSelectedStorageBody">Разрешите доступ к папке этого проекта или проверьте общие папки. Доступ ко всему хранилищу остаётся выключенным, пока вы не включите его там.</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Masukkan nama folder.</string>
+    <string name="stateFolderNameSegment">Pakai satu nama folder tanpa garis miring.</string>
+    <string name="stateFolderNameCharacters">Pakai huruf, angka, titik, tanda hubung, atau garis bawah, diawali huruf atau angka (maksimal 64 karakter).</string>
+    <string name="stateFolderCreating">Membuat folder proyek…</string>
+</resources>

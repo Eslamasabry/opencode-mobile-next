@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">Acciones del puerto</string>
+    <string name="linuxPortCopiedAddress">Copiar dirección</string>
+    <string name="linuxPortOwnerStop">Detener %1$s</string>
+    <string name="linuxPortOwnerQuestion">¿Detener %1$s?</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="one">Detiene el programa seleccionado y sus auxiliares (1 proceso). Cada proceso debe seguir coincidiendo con la identidad mostrada. Nada lo reinicia.</item>
+        <item quantity="many">Detiene el programa seleccionado y sus auxiliares (%1$d de procesos). Cada proceso debe seguir coincidiendo con la identidad mostrada. Nada lo reinicia.</item>
+        <item quantity="other">Detiene el programa seleccionado y sus auxiliares (%1$d procesos). Cada proceso debe seguir coincidiendo con la identidad mostrada. Nada lo reinicia.</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">Terminados: %1$d · forzados: %2$d · aún en ejecución: %3$d · identidad cambiada y conservados: %4$d</string>
+</resources>

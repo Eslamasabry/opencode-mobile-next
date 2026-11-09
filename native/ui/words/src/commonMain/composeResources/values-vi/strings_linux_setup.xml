@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxSetupStart">Thiết lập Linux và OpenCode</string>
+    <string name="linuxSetupAddPython">Thêm công cụ Python</string>
+    <string name="linuxSetupContinue">Tiếp tục thiết lập</string>
+    <string name="linuxSetupStop">Dừng thiết lập</string>
+    <string name="linuxSetupStopQuestion">Dừng thiết lập?</string>
+    <string name="linuxSetupStopBody">Các công cụ đã cài vẫn ở lại trên điện thoại. Bạn có thể tiếp tục thiết lập sau.</string>
+    <string name="linuxSetupWorking">Đang thiết lập công cụ cho điện thoại…</string>
+    <string name="linuxSetupAddingPython">Đang thêm công cụ Python</string>
+    <string name="linuxSetupDone">Công cụ cho điện thoại đã sẵn sàng.</string>
+    <string name="linuxSetupFailed">Thiết lập đã dừng trước khi xong. Hãy tiếp tục thiết lập để kiểm tra các công cụ đã cài và thử lại.</string>
+</resources>

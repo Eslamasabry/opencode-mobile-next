@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateShareViewedTitle">Compartilhar quais conversas eu vi</string>
+    <string name="stateShareViewedDetail">Informe a este servidor quais respostas concluídas você abriu. Desativado, essa informação fica neste dispositivo.</string>
+    <string name="stateShareViewedSaving">Salvando sua escolha de privacidade…</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="other">đang chờ sửa %1$d tệp</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="other">đang chờ chạy %1$d lệnh</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="other">%1$d bước đang chờ</item>
+    </plurals>
+    <string name="chatMenuContinueElsewhere">Tiếp tục ở nơi khác</string>
+</resources>

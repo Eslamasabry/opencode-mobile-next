@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="editor40Edit">Ubah server</string>
+    <string name="editor40Loading">Membaca server tersimpan…</string>
+    <string name="editor40Kind">Apa yang berjalan di komputer Anda?</string>
+    <string name="editor40Folder">Folder proyek</string>
+    <string name="editor40Token">Token atau kata sandi</string>
+    <string name="editor40More">Opsi lainnya</string>
+    <string name="editor40OtherCommands">Tampilkan perintah lain</string>
+    <string name="editor40Check">Periksa sambungan</string>
+    <string name="editor40CancelCheck">Batalkan pemeriksaan</string>
+    <string name="editor40Slow">Server membutuhkan waktu lama. Anda bisa membatalkan pemeriksaan ini dan terus mengubah.</string>
+    <string name="editor40SaveConnect">Simpan dan sambungkan</string>
+    <string name="editor40SaveAnyway">Tetap simpan</string>
+    <string name="editor40SavedFailed">Server tersimpan, tetapi tidak tersambung. Periksa alamat dan data masuk, lalu coba lagi.</string>
+    <string name="editor40Checked">Sambungan diperiksa · %1$s</string>
+    <string name="editor40Ready">Server Anda tersambung. Percakapan Anda tetap ada di server.</string>
+    <string name="editor40Open">Buka percakapan</string>
+    <string name="editor40DiscardTitle">Buang perubahan ini?</string>
+    <string name="editor40Discard">Buang perubahan</string>
+    <string name="editor40DiscardBody">Perubahan yang Anda ketik belum disimpan.</string>
+    <string name="editor40HttpTitle">Gunakan sambungan tanpa enkripsi?</string>
+    <string name="editor40UseAddress">Gunakan alamat ini</string>
+    <string name="editor40HttpBody">Kata sandi dan percakapan Anda dapat dibaca orang lain di jaringan ini. Lebih baik gunakan HTTPS atau jaringan Tailscale pribadi. Pilihan ini hanya berlaku untuk alamat yang persis sama.</string>
+    <string name="editor40Inspect">Periksa sertifikat</string>
+    <string name="editor40Pinned">Sertifikat tersimpan untuk alamat ini. Sertifikat yang berubah akan menghentikan sambungan.</string>
+    <string name="editor40CertificateTitle">Percayai sertifikat ini?</string>
+    <string name="editor40TrustCertificate">Percayai sertifikat ini</string>
+    <string name="editor40CertificateBody">Bandingkan sidik jari SHA-256 ini dengan pemilik server lewat saluran tepercaya lain. Sertifikat yang berbeda akan menghentikan sambungan.</string>
+    <string name="editor40CertificateDates">Berlaku dari %1$s hingga %2$s (UTC)</string>
+    <string name="editor40TailscaleBody">Sambungkan kedua perangkat ke jaringan Tailscale yang sama. Gunakan alamat 100.x komputer atau nama .ts.net-nya. Tetap gunakan kata sandi server sendiri: Tailscale tidak menggantinya.</string>
+    <string name="editor40EnterAddress">Masukkan alamat komputer</string>
+    <string name="permissions40Title">Tindakan yang selalu diizinkan</string>
+    <string name="permissions40Intro">Tindakan yang boleh dijalankan agen di proyek ini tanpa bertanya. Cabut tindakan agar ditanyakan lagi lain kali.</string>
+    <string name="permissions40RevokeTitle">Cabut tindakan yang selalu diizinkan ini?</string>
+    <string name="permissions40Revoke">Cabut akses</string>
+    <string name="permissions40RevokeBody">Agen akan bertanya sebelum menjalankan tindakan ini lagi. Tindakan yang sedang berjalan tidak dihentikan.</string>
+    <string name="permissions40AllResources">Semua sumber daya yang cocok</string>
+    <string name="permissions40Loading">Membaca tindakan yang diizinkan…</string>
+    <string name="permissions40Failed">Tidak dapat membaca atau mengubah tindakan yang diizinkan. Periksa sambungan dan coba lagi.</string>
+    <string name="permissions40Empty">Tidak ada tindakan yang selalu diizinkan di proyek ini. Agen akan bertanya saat butuh izin.</string>
+    <string name="permissions40Revoked">Dicabut: %1$s. Agen akan bertanya lain kali.</string>
+    <string name="permissions40Dismiss">Tutup</string>
+    <string name="permissions40Refresh">Muat ulang tindakan yang diizinkan</string>
+    <string name="editor40TailscaleInstalled">Tailscale sudah terinstal. Buka, masuk, lalu aktifkan VPN-nya. Aplikasi ini tidak dapat memeriksa proses masuk VPN Anda.</string>
+    <string name="editor40TailscaleMissing">Instal dulu aplikasi Tailscale resmi di ponsel ini.</string>
+    <string name="editor40TailscaleUnknown">Tidak dapat memeriksa aplikasi Tailscale. Periksa lagi saat sudah tersedia.</string>
+    <string name="editor40TailscaleOpen">Buka Tailscale</string>
+    <string name="editor40TailscaleInstall">Dapatkan Tailscale</string>
+    <string name="editor40TailscaleRefresh">Periksa Tailscale lagi</string>
+    <plurals name="rows40Waiting">
+        <item quantity="other">%1$d butuh Anda</item>
+    </plurals>
+    <string name="rows40Working">%1$d bekerja</string>
+    <string name="rows40Secret">Masukkan lagi data masuk tersimpan</string>
+    <plurals name="rows40Queued">
+        <item quantity="other">%1$d perintah menunggu</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="other">Pindahkan %1$d perintah yang menunggu ke %2$s</item>
+    </plurals>
+    <string name="rows40Schedules">Perintah terjadwal</string>
+    <string name="queue40Title">Pindahkan perintah yang menunggu</string>
+    <string name="queue40Loading">Membaca perintah yang menunggu dan percakapan tujuan…</string>
+    <string name="queue40Failed">Tidak ada yang dipindahkan. Sambungan atau perintah yang menunggu berubah, atau penyimpanan menolak perubahan. Muat ulang dan tinjau pilihan lagi.</string>
+    <string name="queue40Intro">Pindahkan perintah yang menunggu dari %1$s ke %2$s. Tidak ada yang dikirim di sini. Kata sandi dan kunci dalam teksnya disembunyikan sebelum dipindahkan.</string>
+    <string name="queue40Empty">Tidak ada perintah yang menunggu di server ini.</string>
+    <string name="queue40Attachment">Perintah dengan lampiran</string>
+    <string name="queue40Uncertain">Ini mungkin sudah terkirim. Tinjau di server aslinya.</string>
+    <string name="queue40ServerFile">Lampiran ini hanya dapat dibuka di server aslinya.</string>
+    <string name="queue40Mentions">Menyembunyikan rahasia akan mengubah sebutan agen pada perintah ini. Ubah dulu di server aslinya.</string>
+    <string name="queue40Sending">Perintah ini sedang dikirim. Tunggu hasilnya.</string>
+    <string name="queue40CannotMove">Perintah ini harus tetap di server aslinya.</string>
+    <string name="queue40Destination">Percakapan tujuan</string>
+    <string name="queue40NewConversation">Mulai percakapan baru</string>
+    <string name="queue40Untitled">Percakapan tanpa judul</string>
+    <plurals name="queue40Move">
+        <item quantity="other">Pindahkan %1$d perintah ke %2$s</item>
+    </plurals>
+    <string name="queue40Select">Pilih minimal satu perintah yang dapat dipindahkan.</string>
+    <plurals name="queue40Moved">
+        <item quantity="other">%1$d perintah dipindahkan. Tetap di server asli: %2$d. Memakai pilihan model atau agen tujuan: %3$d. Tidak ada yang dikirim.</item>
+    </plurals>
+    <string name="queue40Undo">Urungkan pemindahan</string>
+    <string name="queue40Open">Buka percakapan tujuan</string>
+    <plurals name="queue40Undone">
+        <item quantity="other">%1$d perintah yang masih menunggu dikembalikan. Perintah yang sudah dikirim tetap di tempatnya.</item>
+    </plurals>
+    <string name="queue40Refresh">Muat ulang perintah yang menunggu</string>
+    <string name="remove40Title">Hapus server ini</string>
+    <string name="remove40ConfirmTitle">Hapus %1$s?</string>
+    <string name="remove40Body">Ini menghapus sambungan tersimpan dan data lokal aplikasi ini. Percakapan di server tidak dihapus.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="other">%1$d perintah yang menunggu akan dihapus dari ponsel ini.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="other">%1$d perintah yang menunggu akan disimpan di Perintah tersimpan.</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="other">%1$d di antaranya mungkin sudah terkirim; juga dihapus dari ponsel ini.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="other">%1$d draf percakapan tersimpan akan dihapus.</item>
+    </plurals>
+    <string name="remove40Active">Sambungan saat ini akan ditutup. Anda akan kembali ke server tersimpan.</string>
+    <string name="remove40ServerKeeps">Server tetap menyimpan percakapan dan filenya.</string>
+    <string name="remove40Loading">Memeriksa apa yang disimpan ponsel ini untuk server…</string>
+    <string name="remove40Failed">Tidak dapat menyelesaikan penghapusan server ini. Server mungkin terputus dan sebagian pembersihan lokal mungkin sudah selesai. Server tersimpan Anda tetap ada selama pembersihan atau peninjauan pengiriman yang diperlukan belum selesai.</string>
+    <string name="remove40DeleteQueue">Hapus juga perintah yang menunggu</string>
+    <string name="remove40DeleteQueueHelp">Biarkan nonaktif untuk menyimpan teks dan lampirannya di Perintah tersimpan.</string>
+    <string name="remove40Refresh">Tinjau lagi data tersimpan</string>
+    <string name="queue40UndoFailed">Tidak dapat mengurungkan pemindahan. Tinjau percakapan tujuan sebelum mencoba lagi; perintah yang sudah mulai dikirim tetap di sana.</string>
+    <string name="editor40SaveChanges">Simpan perubahan</string>
+    <string name="editor40Stale">Server tersimpan ini atau data masuknya berubah. Tutup halaman ini dan buka server lagi sebelum mencoba.</string>
+    <string name="editor40Deleted">Server ini telah dihapus. Tutup halaman ini untuk kembali ke server tersimpan.</string>
+</resources>

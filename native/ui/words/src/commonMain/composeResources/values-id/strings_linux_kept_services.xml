@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">Layanan</string>
+    <string name="keptSvcFailed">Layanan tidak dapat menyelesaikannya</string>
+    <string name="keptSvcFailedBody">Pastikan Linux sudah disiapkan, lalu coba lagi. Pilihan layanan tersimpan Anda dipertahankan.</string>
+    <string name="keptSvcAdd">Tambah layanan</string>
+    <string name="keptSvcKeepsRunning">Layanan yang Anda mulai terus berjalan setelah crash atau saat aplikasi dibuka lagi, sampai Anda menghentikannya.</string>
+    <string name="keptSvcEmpty">Belum ada layanan. Tambahkan perintah Anda sendiri agar terus berjalan.</string>
+    <string name="keptSvcScreenOff">Layanan mungkin berhenti sementara saat layar mati kecuali ponsel sedang diisi daya.</string>
+    <string name="keptSvcStartNamed">Mulai %1$s</string>
+    <string name="keptSvcStopNamed">Hentikan %1$s</string>
+    <string name="keptSvcRestartNamed">Mulai ulang %1$s</string>
+    <string name="keptSvcOpenNamed">Buka %1$s</string>
+    <string name="keptSvcRemoveNamed">Hapus %1$s</string>
+    <string name="keptSvcWorking">Menyelesaikan tindakan layanan…</string>
+    <string name="keptSvcCopyLog">Salin log</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="other">Kembali setelah %1$d kali dimulai ulang</item>
+    </plurals>
+    <string name="keptSvcLogTitle">Log layanan</string>
+    <string name="keptSvcSearchLog">Cari di log</string>
+    <string name="keptSvcLogEmpty">Belum ada keluaran.</string>
+    <string name="keptSvcRemoveQuestion">Hapus %1$s?</string>
+    <string name="keptSvcRemoveBody">Layanan dihentikan sebelum definisi tersimpan dan lognya dihapus.</string>
+    <string name="keptSvcRemoveGoes">Perintah, pilihan aktif/nonaktif, dan lognya dihapus.</string>
+    <string name="keptSvcRemoveStays">Alat terinstal dan file proyek tetap ada.</string>
+    <string name="keptSvcSaveStart">Simpan dan mulai layanan</string>
+    <string name="keptSvcName">Nama</string>
+    <string name="keptSvcNameHint">2–24 huruf kecil, angka, atau tanda hubung; diawali huruf.</string>
+    <string name="keptSvcCommand">Perintah</string>
+    <string name="keptSvcDirectory">Folder di dalam Linux</string>
+    <string name="keptSvcPort">Port (opsional)</string>
+    <string name="keptSvcPortHint">Port bebas dari 1024 sampai 65535. Kosongkan jika tidak punya halaman web.</string>
+    <string name="keptSvcBadName">Pilih nama lain dengan format di atas. Nama layanan aplikasi dicadangkan.</string>
+    <string name="keptSvcBadCommand">Masukkan satu baris perintah, maksimal 4096 karakter.</string>
+    <string name="keptSvcBadDirectory">Gunakan folder Linux absolut, tanpa segmen induk (..).</string>
+    <string name="keptSvcBadPort">Pilih port yang belum dipakai dari 1024 sampai 65535, di luar port yang dicadangkan aplikasi.</string>
+    <string name="keptSvcRestart">Mulai ulang setelah crash</string>
+    <string name="keptSvcRestartBody">Coba lagi setelah gagal; berhenti setelah beberapa kali crash cepat berturut-turut.</string>
+    <string name="keptSvcLimit">Sudah ada 16 layanan. Hapus satu sebelum menambah yang lain.</string>
+    <string name="keptSvcPaused">Dijeda saat ponsel panas</string>
+    <string name="keptSvcOff">Mati</string>
+    <string name="keptSvcStarting">Memulai…</string>
+    <string name="keptSvcRunning">Berjalan</string>
+    <string name="keptSvcRunningFor">Berjalan selama %1$d mnt</string>
+    <string name="keptSvcStopping">Menghentikan…</string>
+    <string name="keptSvcRetrying">Crash (kode %1$d). Mencoba lagi dalam %2$d dtk</string>
+    <string name="keptSvcPortBusy">Port %1$d sedang dipakai. Segera mencoba lagi.</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="other">Berhenti setelah crash berulang (%1$d kali dimulai ulang)</item>
+    </plurals>
+    <string name="keptSvcExited">Selesai (kode %1$d)</string>
+    <string name="keptSvcPortNumber">Port %1$d</string>
+    <string name="keptSvcLogStarted">Dimulai</string>
+    <string name="keptSvcLogExit">Berakhir (kode %1$d)</string>
+    <string name="keptSvcLogRetry">Mencoba lagi dalam %1$d dtk</string>
+    <string name="keptSvcLogGaveUp">Berhenti setelah crash berulang</string>
+</resources>

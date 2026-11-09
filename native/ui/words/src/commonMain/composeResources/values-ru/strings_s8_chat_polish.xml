@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="one">ожидает правки %1$d файла</item>
+        <item quantity="few">ожидает правки %1$d файлов</item>
+        <item quantity="many">ожидает правки %1$d файлов</item>
+        <item quantity="other">ожидает правки %1$d файла</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="one">ожидает запуска %1$d команды</item>
+        <item quantity="few">ожидает запуска %1$d команд</item>
+        <item quantity="many">ожидает запуска %1$d команд</item>
+        <item quantity="other">ожидает запуска %1$d команды</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="one">%1$d шаг ждёт</item>
+        <item quantity="few">%1$d шага ждут</item>
+        <item quantity="many">%1$d шагов ждут</item>
+        <item quantity="other">%1$d шага ждут</item>
+    </plurals>
+    <string name="chatMenuContinueElsewhere">Продолжить в другом месте</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="invitation40Question">Sudah ditanyakan 3 kali. Selalu izinkan tindakan yang sama ini?</string>
+    <string name="invitation40KeepAsking">Tetap tanyakan</string>
+    <string name="invitation40SaveFailed">Pilihan ini tidak dapat disimpan. Permintaan masih menunggu; Anda bisa menjawabnya satu kali.</string>
+</resources>

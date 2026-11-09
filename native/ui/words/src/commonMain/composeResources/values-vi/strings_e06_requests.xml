@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatRequestNoLongerNeeded">Không cần nữa</string>
+    <string name="chatRequestNoLongerNeededWhy">Lượt chạy đã dừng nên chưa gửi gì.</string>
+    <string name="chatRequestCardLabel">Yêu cầu %1$s trên %2$s: %3$s</string>
+</resources>

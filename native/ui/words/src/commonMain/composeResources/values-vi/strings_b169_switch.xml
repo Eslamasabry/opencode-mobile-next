@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Đổi mô hình</string>
+    <string name="b169UsedUp">%1$s tạm hết lượt dùng</string>
+    <string name="b169UsedUpNoName">Mô hình này tạm hết lượt dùng</string>
+    <string name="b169ConnectProvider">Kết nối nhà cung cấp…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="other">Phản hồi bị dừng đã chạy %1$d bước. Gửi lại bằng %2$s?</item>
+    </plurals>
+    <string name="b169AskSend">Gửi</string>
+    <string name="b169AttachAgain">Đính kèm lại %1$s để gửi</string>
+    <string name="b169Free">Miễn phí · có thể dùng lời nhắc của bạn</string>
+    <string name="b169TooLong">Quá dài cho mô hình này</string>
+    <string name="b169Suggested">Gợi ý</string>
+    <string name="b169Offline">Đổi mô hình hoạt động lại khi máy chủ trở lại.</string>
+</resources>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="editor40Edit">Modifier le serveur</string>
+    <string name="editor40Loading">Lecture du serveur enregistré…</string>
+    <string name="editor40Kind">Qu’est-ce qui tourne sur votre ordinateur\u00A0?</string>
+    <string name="editor40Folder">Dossier du projet</string>
+    <string name="editor40Token">Jeton ou mot de passe</string>
+    <string name="editor40More">Plus d’options</string>
+    <string name="editor40OtherCommands">Afficher d’autres commandes</string>
+    <string name="editor40Check">Vérifier la connexion</string>
+    <string name="editor40CancelCheck">Annuler la vérification</string>
+    <string name="editor40Slow">Le serveur met du temps à répondre. Vous pouvez annuler cette vérification et continuer à modifier.</string>
+    <string name="editor40SaveConnect">Enregistrer et se connecter</string>
+    <string name="editor40SaveAnyway">Enregistrer quand même</string>
+    <string name="editor40SavedFailed">Le serveur est enregistré, mais la connexion a échoué. Vérifiez l’adresse et les identifiants, puis réessayez.</string>
+    <string name="editor40Checked">Connexion vérifiée · %1$s</string>
+    <string name="editor40Ready">Votre serveur est connecté. Vos conversations restent sur le serveur.</string>
+    <string name="editor40Open">Ouvrir les conversations</string>
+    <string name="editor40DiscardTitle">Abandonner ces modifications\u00A0?</string>
+    <string name="editor40Discard">Abandonner les modifications</string>
+    <string name="editor40DiscardBody">Les modifications saisies n’ont pas été enregistrées.</string>
+    <string name="editor40HttpTitle">Utiliser une connexion non chiffrée\u00A0?</string>
+    <string name="editor40UseAddress">Utiliser cette adresse</string>
+    <string name="editor40HttpBody">Votre mot de passe et vos conversations peuvent être lus par d’autres personnes sur ce réseau. Préférez HTTPS ou un réseau Tailscale privé. Ce choix ne vaut que pour cette adresse exacte.</string>
+    <string name="editor40Inspect">Examiner le certificat</string>
+    <string name="editor40Pinned">Un certificat est enregistré pour cette adresse. Si le certificat change, la connexion est interrompue.</string>
+    <string name="editor40CertificateTitle">Faire confiance à ce certificat\u00A0?</string>
+    <string name="editor40TrustCertificate">Faire confiance à ce certificat</string>
+    <string name="editor40CertificateBody">Comparez cette empreinte SHA-256 avec le propriétaire du serveur par un autre canal de confiance. Un certificat différent interrompra la connexion.</string>
+    <string name="editor40CertificateDates">Valide du %1$s au %2$s (UTC)</string>
+    <string name="editor40TailscaleBody">Connectez les deux appareils au même réseau Tailscale. Utilisez l’adresse 100.x de l’ordinateur ou son nom .ts.net. Gardez le mot de passe propre au serveur\u00A0: Tailscale ne le remplace pas.</string>
+    <string name="editor40EnterAddress">Saisissez l’adresse de l’ordinateur</string>
+    <string name="permissions40Title">Actions toujours autorisées</string>
+    <string name="permissions40Intro">Actions que l’agent peut exécuter dans ce projet sans demander. Révoquez une action pour qu’il demande de nouveau la prochaine fois.</string>
+    <string name="permissions40RevokeTitle">Révoquer cette action toujours autorisée\u00A0?</string>
+    <string name="permissions40Revoke">Révoquer l’accès</string>
+    <string name="permissions40RevokeBody">L’agent demandera avant d’exécuter de nouveau cette action. Une action en cours n’est pas arrêtée.</string>
+    <string name="permissions40AllResources">Toutes les ressources correspondantes</string>
+    <string name="permissions40Loading">Lecture des actions autorisées…</string>
+    <string name="permissions40Failed">Impossible de lire ou de modifier les actions autorisées. Vérifiez la connexion et réessayez.</string>
+    <string name="permissions40Empty">Aucune action toujours autorisée dans ce projet. L’agent demandera l’autorisation quand il en aura besoin.</string>
+    <string name="permissions40Revoked">Révoquée\u00A0: %1$s. L’agent demandera la prochaine fois.</string>
+    <string name="permissions40Dismiss">Fermer</string>
+    <string name="permissions40Refresh">Actualiser les actions autorisées</string>
+    <string name="editor40TailscaleInstalled">Tailscale est installé. Ouvrez-le, connectez-vous et activez son VPN. Cette application ne peut pas vérifier votre connexion VPN.</string>
+    <string name="editor40TailscaleMissing">Installez d’abord l’application Tailscale officielle sur ce téléphone.</string>
+    <string name="editor40TailscaleUnknown">Impossible de vérifier l’application Tailscale. Vérifiez de nouveau quand elle sera disponible.</string>
+    <string name="editor40TailscaleOpen">Ouvrir Tailscale</string>
+    <string name="editor40TailscaleInstall">Obtenir Tailscale</string>
+    <string name="editor40TailscaleRefresh">Revérifier Tailscale</string>
+    <plurals name="rows40Waiting">
+        <item quantity="one">1 a besoin de vous</item>
+        <item quantity="many">%1$d ont besoin de vous</item>
+        <item quantity="other">%1$d ont besoin de vous</item>
+    </plurals>
+    <string name="rows40Working">%1$d en cours</string>
+    <string name="rows40Secret">Saisissez de nouveau l’identifiant enregistré</string>
+    <plurals name="rows40Queued">
+        <item quantity="one">1 invite en attente</item>
+        <item quantity="many">%1$d d’invites en attente</item>
+        <item quantity="other">%1$d invites en attente</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="one">Déplacer 1 invite en attente vers %2$s</item>
+        <item quantity="many">Déplacer %1$d d’invites en attente vers %2$s</item>
+        <item quantity="other">Déplacer %1$d invites en attente vers %2$s</item>
+    </plurals>
+    <string name="rows40Schedules">Invites programmées</string>
+    <string name="queue40Title">Déplacer les invites en attente</string>
+    <string name="queue40Loading">Lecture des invites en attente et des conversations de destination…</string>
+    <string name="queue40Failed">Rien n’a été déplacé. La connexion ou les invites en attente ont changé, ou le stockage a refusé la modification. Actualisez et vérifiez de nouveau la sélection.</string>
+    <string name="queue40Intro">Déplacez les invites en attente de %1$s vers %2$s. Rien n’est envoyé ici. Les mots de passe et clés contenus dans leur texte sont masqués avant le déplacement.</string>
+    <string name="queue40Empty">Aucune invite en attente sur ce serveur.</string>
+    <string name="queue40Attachment">Invite avec une pièce jointe</string>
+    <string name="queue40Uncertain">Elle a peut-être déjà été envoyée. Vérifiez-la sur son serveur d’origine.</string>
+    <string name="queue40ServerFile">Cette pièce jointe ne peut être ouverte que sur le serveur d’origine.</string>
+    <string name="queue40Mentions">Masquer un secret modifierait les mentions d’agent de cette invite. Modifiez-la d’abord sur le serveur d’origine.</string>
+    <string name="queue40Sending">Cette invite est en cours d’envoi. Attendez le résultat.</string>
+    <string name="queue40CannotMove">Cette invite doit rester sur son serveur d’origine.</string>
+    <string name="queue40Destination">Conversation de destination</string>
+    <string name="queue40NewConversation">Démarrer une nouvelle conversation</string>
+    <string name="queue40Untitled">Conversation sans titre</string>
+    <plurals name="queue40Move">
+        <item quantity="one">Déplacer 1 invite vers %2$s</item>
+        <item quantity="many">Déplacer %1$d d’invites vers %2$s</item>
+        <item quantity="other">Déplacer %1$d invites vers %2$s</item>
+    </plurals>
+    <string name="queue40Select">Choisissez au moins une invite déplaçable.</string>
+    <plurals name="queue40Moved">
+        <item quantity="one">1 invite déplacée. Restées sur le serveur d’origine\u00A0: %2$d. Utilisant le modèle ou l’agent de la destination\u00A0: %3$d. Rien n’a été envoyé.</item>
+        <item quantity="many">%1$d d’invites déplacées. Restées sur le serveur d’origine\u00A0: %2$d. Utilisant le modèle ou l’agent de la destination\u00A0: %3$d. Rien n’a été envoyé.</item>
+        <item quantity="other">%1$d invites déplacées. Restées sur le serveur d’origine\u00A0: %2$d. Utilisant le modèle ou l’agent de la destination\u00A0: %3$d. Rien n’a été envoyé.</item>
+    </plurals>
+    <string name="queue40Undo">Annuler le déplacement</string>
+    <string name="queue40Open">Ouvrir la conversation de destination</string>
+    <plurals name="queue40Undone">
+        <item quantity="one">1 invite encore en attente a été remise. Les invites déjà en cours d’envoi sont restées où elles étaient.</item>
+        <item quantity="many">%1$d d’invites encore en attente ont été remises. Les invites déjà en cours d’envoi sont restées où elles étaient.</item>
+        <item quantity="other">%1$d invites encore en attente ont été remises. Les invites déjà en cours d’envoi sont restées où elles étaient.</item>
+    </plurals>
+    <string name="queue40Refresh">Actualiser les invites en attente</string>
+    <string name="remove40Title">Supprimer ce serveur</string>
+    <string name="remove40ConfirmTitle">Supprimer %1$s\u00A0?</string>
+    <string name="remove40Body">Cela supprime la connexion enregistrée de cette application et ses données locales. Les conversations ne sont pas supprimées du serveur.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="one">1 invite en attente sera supprimée de ce téléphone.</item>
+        <item quantity="many">%1$d d’invites en attente seront supprimées de ce téléphone.</item>
+        <item quantity="other">%1$d invites en attente seront supprimées de ce téléphone.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="one">1 invite en attente sera conservée dans Invites enregistrées.</item>
+        <item quantity="many">%1$d d’invites en attente seront conservées dans Invites enregistrées.</item>
+        <item quantity="other">%1$d invites en attente seront conservées dans Invites enregistrées.</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="one">1 d’entre elles a peut-être déjà été envoyée\u00A0; elle est aussi supprimée de ce téléphone.</item>
+        <item quantity="many">%1$d d’entre elles ont peut-être déjà été envoyées\u00A0; elles sont aussi supprimées de ce téléphone.</item>
+        <item quantity="other">%1$d d’entre elles ont peut-être déjà été envoyées\u00A0; elles sont aussi supprimées de ce téléphone.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="one">1 brouillon de conversation enregistré sera supprimé.</item>
+        <item quantity="many">%1$d de brouillons de conversation enregistrés seront supprimés.</item>
+        <item quantity="other">%1$d brouillons de conversation enregistrés seront supprimés.</item>
+    </plurals>
+    <string name="remove40Active">La connexion actuelle sera fermée. Vous reviendrez à vos serveurs enregistrés.</string>
+    <string name="remove40ServerKeeps">Le serveur conserve ses conversations et ses fichiers.</string>
+    <string name="remove40Loading">Vérification de ce que ce téléphone conserve pour le serveur…</string>
+    <string name="remove40Failed">Impossible de terminer la suppression de ce serveur. Il est peut-être déconnecté et une partie du nettoyage local a pu être effectuée. Votre serveur enregistré est conservé tant qu’un nettoyage ou une vérification d’envoi nécessaire n’est pas terminé.</string>
+    <string name="remove40DeleteQueue">Supprimer aussi les invites en attente</string>
+    <string name="remove40DeleteQueueHelp">Laissez désactivé pour conserver leur texte et leurs pièces jointes dans Invites enregistrées.</string>
+    <string name="remove40Refresh">Vérifier de nouveau les données enregistrées</string>
+    <string name="queue40UndoFailed">Impossible d’annuler le déplacement. Vérifiez la conversation de destination avant de réessayer\u00A0; les invites dont l’envoi a déjà commencé y restent.</string>
+    <string name="editor40SaveChanges">Enregistrer les modifications</string>
+    <string name="editor40Stale">Ce serveur enregistré ou sa connexion a changé. Fermez cette page et rouvrez le serveur avant de réessayer.</string>
+    <string name="editor40Deleted">Ce serveur a été supprimé. Fermez cette page pour revenir à vos serveurs enregistrés.</string>
+</resources>

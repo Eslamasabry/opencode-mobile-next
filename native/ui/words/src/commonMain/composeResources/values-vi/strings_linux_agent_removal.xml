@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentPayloadRefresh">Làm mới các tác nhân trên điện thoại</string>
+    <string name="linuxAgentPayloadRemove">Gỡ %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">Gỡ %1$s khỏi điện thoại này?</string>
+    <string name="linuxAgentPayloadRemoveBody">Xóa chương trình đã tải về và các bản tải dở dang. Tài khoản, cuộc trò chuyện và công cụ dùng chung của bạn vẫn ở lại trên điện thoại này.</string>
+    <plurals name="linuxAgentPayloadRemoved">
+        <item quantity="other">Đã gỡ chương trình. Giải phóng %1$d byte.</item>
+    </plurals>
+    <string name="linuxAgentPayloadBusy">Tác nhân hoặc một thiết lập khác trên điện thoại đang chạy. Hãy dừng nó rồi thử lại.</string>
+    <string name="linuxAgentPayloadUnsafe">Các tệp này không khớp với bản cài đặt do ứng dụng quản lý. Chưa có gì bị xóa.</string>
+    <string name="linuxAgentPayloadUnconfirmed">Không xác nhận được việc gỡ bỏ. Hãy làm mới danh sách trước khi thử lại.</string>
+    <string name="linuxAgentPayloadUnavailable">Không thể đọc hoặc xóa các tệp tác nhân trên điện thoại. Hãy làm mới và thử lại.</string>
+</resources>

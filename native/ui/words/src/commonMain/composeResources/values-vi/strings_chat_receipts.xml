@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReceiptCheckAgain">Làm mới</string>
+    <string name="chatReceiptChecking">Đang kiểm tra tin nhắn của bạn đã đến chưa…</string>
+    <string name="chatReceiptLastChecked">Kiểm tra lần cuối: %1$s.</string>
+</resources>

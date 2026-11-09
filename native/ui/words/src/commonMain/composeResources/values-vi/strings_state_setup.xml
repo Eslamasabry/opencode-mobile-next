@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">Lịch sử thiết lập và danh mục</string>
+    <string name="stateSetupNoWrites">Bạn có thể xem thiết lập tại đây. Không thể Áp dụng và Hoàn tác vì máy chủ này không có điểm khôi phục nguyên tử đã được xác minh.</string>
+    <string name="stateSetupUnsupported">Kết nối với máy chủ hỗ trợ xem thiết lập để đọc các nguồn cấu hình của máy chủ đó.</string>
+    <string name="stateSetupSaveFailed">Không thể lưu thay đổi. Thử lại.</string>
+    <string name="stateSetupReadFailed">Không thể đọc thông tin thiết lập. Thử lại.</string>
+    <string name="stateSetupOffline">Kết nối lại để làm mới thông tin thiết lập.</string>
+    <string name="stateSetupSources">Nguồn cấu hình</string>
+    <string name="stateSetupMcp">Công cụ đã kết nối</string>
+    <string name="stateSetupRecordReview">Lưu rằng tôi đã xem thiết lập này</string>
+    <string name="stateSetupRefresh">Làm mới thiết lập</string>
+    <string name="stateSetupHistory">Lịch sử thiết lập</string>
+    <string name="stateSetupHistoryUnavailable">Không có lịch sử đã lưu. Lịch sử được giữ lại để khôi phục.</string>
+    <string name="stateSetupHistoryEmpty">Chưa lưu lần xem thiết lập nào</string>
+    <string name="stateSetupRegistryConsent">Duyệt danh mục công cụ công khai</string>
+    <string name="stateSetupRegistryPrivacy">Mặc định tắt. Làm mới sẽ gửi một yêu cầu công khai. Từ khóa tìm kiếm được gửi tới danh mục; thông tin đăng nhập máy chủ của bạn thì không. Các mục trong danh mục không bao giờ tự chạy hay tự cài đặt gì.</string>
+    <string name="stateSetupRegistrySearch">Tìm trong danh mục</string>
+    <string name="stateSetupRegistryRefresh">Làm mới danh mục</string>
+    <string name="stateSetupRegistrySaved">Hiện các mục đã lưu</string>
+    <string name="stateSetupRegistryClear">Xóa sự đồng ý danh mục và danh sách đã lưu</string>
+    <string name="stateSetupRegistryOffline">Ngoại tuyến. Đang hiện danh sách đã lưu.</string>
+    <string name="stateSetupRegistryFailed">Không thể tải danh mục. Danh sách đã lưu của bạn vẫn được giữ.</string>
+    <string name="stateSetupRegistryEmpty">Không có mục nào để hiện. Làm mới hoặc thử tìm kiếm khác.</string>
+    <string name="stateSetupMcpConnected">Đã kết nối</string>
+    <string name="stateSetupMcpPending">Đang kết nối</string>
+    <string name="stateSetupMcpDisabled">Tắt</string>
+    <string name="stateSetupMcpFailed">Không thể kết nối</string>
+    <string name="stateSetupMcpSignIn">Cần đăng nhập</string>
+    <string name="stateSetupMcpUnknown">Chưa rõ trạng thái</string>
+    <string name="stateSetupAuditProposed">Đã đề xuất thay đổi</string>
+    <string name="stateSetupAuditPending">Thay đổi đang chờ</string>
+    <string name="stateSetupAuditAccepted">Đã chấp nhận thay đổi</string>
+    <string name="stateSetupAuditVerified">Đã xác minh lần xem</string>
+    <string name="stateSetupAuditUncertain">Kết quả chưa chắc chắn</string>
+    <string name="stateSetupAuditRejected">Đã từ chối thay đổi</string>
+    <string name="stateServerSchedules">Lời nhắc theo lịch</string>
+</resources>

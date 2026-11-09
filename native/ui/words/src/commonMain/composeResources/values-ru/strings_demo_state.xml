@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">Попробовать без сети</string>
+    <string name="stateDemoTitle">Демо без сети</string>
+    <string name="stateDemoDisclosure">Имитация чата. Сервер, файлы и сохранённые настройки не меняются. При выходе демо забывается.</string>
+    <string name="stateDemoPrompt">Сделай приветствие дружелюбнее.</string>
+    <string name="stateDemoReply">Это имитация ответа. Пример приветствия может измениться с «Hello» на «Welcome aboard!». Разрешите имитацию правки ниже или запретите её. Настоящий файл записан не будет.</string>
+    <string name="stateDemoAllowed">Вы разрешили имитацию правки. Теперь в примере «Welcome aboard!». Настоящие файлы не изменены.</string>
+    <string name="stateDemoDenied">Вы запретили имитацию правки. В примере по-прежнему «Hello». Настоящие файлы не изменены.</string>
+    <string name="stateDemoAllow">Разрешить имитацию правки</string>
+    <string name="stateDemoDeny">Запретить имитацию правки</string>
+    <string name="stateDemoReset">Сбросить демо</string>
+    <string name="stateDemoLeave">Выйти из демо</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">Serveurs</string>
+    <string name="serversNewTitle">Nouvelle conversation</string>
+    <string name="serversSaved">Serveurs enregistrés</string>
+    <string name="serversEmpty">Ajoutez un serveur OpenCode 2 pour démarrer une conversation.</string>
+    <string name="serversAdd">Ajouter un serveur</string>
+    <string name="serversName">Nom</string>
+    <string name="serversAddress">Adresse du serveur</string>
+    <string name="serversUsername">Nom d'utilisateur</string>
+    <string name="serversPassword">Mot de passe</string>
+    <string name="serversCleartext">Autoriser le HTTP pour cette adresse</string>
+    <string name="serversCleartextHelp">Le HTTP ne chiffre ni votre mot de passe ni vos conversations. Utilisez-le uniquement sur un réseau de confiance.</string>
+    <string name="serversCleartextRequired">Confirmez le HTTP pour cette adresse avant de vous connecter.</string>
+    <string name="serversConnect">Se connecter</string>
+    <string name="serversConnected">Connecté</string>
+    <string name="serversCreate">Démarrer la conversation</string>
+    <string name="serversSave">Enregistrer et se connecter</string>
+    <string name="serversRemove">Supprimer le serveur</string>
+    <string name="serversCancel">Annuler</string>
+    <string name="serversRemoveConfirm">Supprimer %1$s et ses informations de connexion enregistrées de cette app\u00A0?</string>
+    <string name="serversWorking">Patientez pendant l'action en cours.</string>
+    <string name="serversInvalidAddress">Saisissez une adresse de serveur.</string>
+    <string name="serversSaveFailed">Impossible d'enregistrer ce serveur. Vérifiez l'adresse et réessayez.</string>
+    <string name="serversConnectFailed">Impossible de se connecter. Vérifiez l'adresse du serveur et le réseau, puis réessayez.</string>
+    <string name="serversCreateFailed">Impossible de démarrer une conversation. Votre serveur reste enregistré.</string>
+    <string name="serversRemoveFailed">Impossible de supprimer ce serveur. Ses informations enregistrées n'ont pas changé.</string>
+    <string name="serversSignInFailed">Le serveur n'a pas accepté ces identifiants de connexion. Vérifiez le nom d'utilisateur et le mot de passe.</string>
+    <string name="serverHttpsRequired">Cette adresse est sur l'internet public, elle nécessite donc HTTPS. Le HTTP simple enverrait votre mot de passe sans chiffrement. Modifiez l'adresse pour qu'elle commence par https://, ou accédez au serveur via Tailscale ou votre propre réseau.</string>
+</resources>

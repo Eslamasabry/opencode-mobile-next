@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="invitation40Question">Perguntado 3 vezes. Sempre permitir esta mesma ação?</string>
+    <string name="invitation40KeepAsking">Continuar perguntando</string>
+    <string name="invitation40SaveFailed">Não foi possível salvar esta escolha. O pedido continua aguardando; você pode respondê-lo só desta vez.</string>
+</resources>

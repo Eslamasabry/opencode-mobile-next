@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">Cari di jaringan saya</string>
+    <string name="upgradeFindBody">Cari OpenCode di komputer pada Wi-Fi ini.</string>
+    <string name="upgradeFindReason">Untuk menemukan komputer Anda, aplikasi memeriksa perangkat di jaringan Wi-Fi Anda. Tidak ada kata sandi yang dikirim dan hanya alamat terdekat yang ditanyai.</string>
+    <string name="upgradeFindScanning">Mencari di Wi-Fi ini…</string>
+    <string name="upgradeFindStop">Berhenti</string>
+    <string name="upgradeFindSearchAgain">Cari lagi</string>
+    <string name="upgradeFindResultsLabel">Komputer yang ditemukan di jaringan Anda</string>
+    <string name="upgradeFindNeedsPassword">Perlu kata sandi</string>
+    <string name="upgradeFindVersion">Versi %1$s</string>
+    <string name="upgradeFindPickLabel">Gunakan %1$s</string>
+    <string name="upgradeFindEmptyTitle">Tidak ada yang ditemukan</string>
+    <string name="upgradeFindEmptyBody">Jalankan OpenCode di komputer Anda dengan `opencode serve --mdns`, pastikan keduanya di Wi-Fi yang sama, atau masukkan alamat sendiri.</string>
+    <string name="upgradeFindEnterAddress">Masukkan alamat</string>
+    <string name="upgradeFindDeniedBody">Tanpa akses ke jaringan lokal Anda, aplikasi tidak dapat mencari komputer Anda. Anda dapat mengizinkannya lalu mencoba lagi, atau memasukkan alamat sendiri.</string>
+    <string name="upgradeFindAllow">Izinkan dan cari</string>
+    <string name="upgradeFindBlockedBody">Akses jaringan lokal dimatikan untuk aplikasi ini. Aktifkan di pengaturan aplikasi, atau masukkan alamat sendiri.</string>
+    <string name="upgradeFindOpenSettings">Buka pengaturan aplikasi</string>
+</resources>

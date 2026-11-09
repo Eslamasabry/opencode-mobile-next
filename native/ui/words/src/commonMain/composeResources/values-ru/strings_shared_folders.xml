@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">Общее хранилище</string>
+    <string name="sharedFoldersSelected">Linux видит только открытые вами папки проектов и Download › OpenCode. Доступ к файлам Android позволяет приложению читать эти папки, но не открывает Linux всё ваше хранилище.</string>
+    <string name="sharedFoldersAll">Открыть Linux всё общее хранилище</string>
+    <string name="sharedFoldersAllDetail">Использовать прежний доступ к хранилищу вместо выбранных папок проектов. Изменения применятся при следующем запуске сервера на телефоне.</string>
+    <string name="sharedFoldersAllRisk">Агенты, работающие в Linux, смогут читать и изменять файлы за пределами открытых вами проектов.</string>
+    <string name="sharedFoldersProtection">Защита ограничивает Linux выбранными папками проектов.</string>
+    <string name="sharedFoldersRestart">Доступ к папкам сохранён. Когда закончите работу, перезапустите сервер на телефоне в разделе «Этот телефон», затем обновите «Файлы». Ни один сервер не остановлен.</string>
+    <string name="sharedFoldersFailed">Не удалось прочитать или сохранить доступ к папкам. Повторите.</string>
+    <string name="sharedFoldersAndroid">Доступ к файлам Android</string>
+    <string name="sharedFoldersAndroidDetail">Разрешайте доступ, когда открываете проекты в общем хранилище.</string>
+    <string name="sharedFoldersGranted">Разрешено. Linux по-прежнему следует выбору папок ниже.</string>
+    <string name="sharedFoldersWorking">Обновление доступа к папкам…</string>
+</resources>

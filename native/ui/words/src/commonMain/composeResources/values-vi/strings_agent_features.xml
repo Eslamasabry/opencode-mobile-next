@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentFeaturesTitle">Cài đặt tác nhân</string>
+    <string name="agentFeaturesEmpty">Tác nhân này không có cài đặt bổ sung.</string>
+    <string name="agentFeaturesFailed">Không tải được cài đặt tác nhân</string>
+</resources>

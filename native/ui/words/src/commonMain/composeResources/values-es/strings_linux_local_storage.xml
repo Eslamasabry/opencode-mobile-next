@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">Explorar proyectos del teléfono</string>
+    <string name="linuxLocalProjectsDetail">Explora carpetas con el servidor detenido, incluidos los proyectos que se conservan al quitar Linux.</string>
+    <string name="linuxLocalParent">Subir una carpeta</string>
+    <string name="linuxLocalClose">Cerrar carpetas</string>
+    <string name="linuxLocalGit">Proyecto de Git</string>
+    <string name="linuxLocalFolder">Carpeta</string>
+    <string name="linuxLocalReading">Leyendo carpetas…</string>
+    <string name="linuxLocalFolderFailed">No se puede leer esta carpeta. Quizá se movió, se quitó o es un enlace.</string>
+    <string name="linuxLocalEmpty">No hay carpetas aquí.</string>
+    <string name="linuxLocalMeasure">Calcular las opciones para quitar Linux</string>
+    <string name="linuxLocalRemoveKeep">Quitar Linux y conservar proyectos</string>
+    <string name="linuxLocalRemoveAll">Quitar Linux y proyectos</string>
+    <string name="linuxLocalFreed">Libera %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">¿Quitar Linux y conservar los proyectos?</string>
+    <string name="linuxLocalRemoveAllQuestion">¿Quitar Linux y todos los proyectos del teléfono?</string>
+    <string name="linuxLocalRemoveKeepBody">Detiene los programas del teléfono y quita Linux, las herramientas instaladas, los inicios de sesión y el historial del servidor local. Los archivos de tus proyectos siguen disponibles para explorar. Libera %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Detiene los programas del teléfono y quita Linux, las herramientas instaladas, los inicios de sesión, el historial del servidor local y todos los archivos de proyectos conservados en el teléfono. No se puede deshacer. Libera %1$s.</string>
+    <string name="linuxLocalStorageFailed">El teléfono no pudo terminar de leer ni de quitar el almacenamiento de Linux. Cierra las tareas del teléfono e inténtalo de nuevo.</string>
+    <string name="linuxLocalRemoved">Almacenamiento de Linux quitado.</string>
+    <string name="linuxLocalCreate">Crear un proyecto en el teléfono</string>
+    <string name="linuxLocalCreatePath">Ruta absoluta de la carpeta del proyecto</string>
+    <string name="linuxLocalInvalidPath">Escribe una ruta absoluta de carpeta sin saltos al directorio superior ni saltos de línea.</string>
+</resources>

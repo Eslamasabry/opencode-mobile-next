@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Modifications de cet échange</string>
+    <string name="reviewOneFileUnavailable">Annuler un fichier à la fois n’est pas encore possible\u00A0: ce serveur ne peut annuler qu’à partir d’une invite. Utilisez Tout annuler ou Annuler à partir d’ici sur une invite.</string>
+    <string name="reviewNoDiff">Le serveur n’a pas indiqué les lignes modifiées dans ce fichier.</string>
+    <string name="reviewFileGone">Ce fichier ne figure plus dans ces modifications.</string>
+    <string name="reviewIncomplete">Les anciens messages n’ont pas pu être lus, il se peut donc que des fichiers manquent dans cette liste.</string>
+    <string name="reviewNoChangesBody">L’agent n’a signalé aucune modification de fichier ici.</string>
+    <string name="reviewWaiting">Une annulation attend votre relecture. Les messages après son invite sont masqués jusqu’à votre choix.</string>
+    <string name="reviewUndoUnknown">Tout annuler nécessite l’invite d’où partent ces modifications, et elle n’a pas pu être lue.</string>
+    <string name="reviewUndoUnavailable">Ce serveur ne peut pas annuler à partir d’une invite.</string>
+    <string name="reviewToolEvidence">D’après ce que les outils de l’agent ont signalé. Les modifications faites par des commandes ne sont pas listées.</string>
+    <string name="reviewSendBackFailed">Impossible d’ajouter votre note au message. Réessayez.</string>
+</resources>

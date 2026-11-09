@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">Enviar mensagem a esta conversa</string>
+    <string name="widgetActionMessage">Mensagem</string>
+    <string name="widgetActionHint">Oriente a resposta atual. Se este agente não aceitar orientação enquanto trabalha, sua mensagem segue depois da resposta dele.</string>
+    <string name="widgetActionSend">Enviar mensagem</string>
+    <string name="widgetActionClose">Fechar</string>
+    <string name="widgetActionOpen">Abrir conversa</string>
+    <string name="widgetActionAccepted">Mensagem enviada</string>
+    <string name="widgetActionRejected">Esta conversa não pôde receber a mensagem</string>
+    <string name="widgetActionUncertain">Não foi possível confirmar a mensagem</string>
+    <string name="widgetActionCheckFirst">Confira a conversa antes de enviar de novo.</string>
+    <string name="widgetActionOpenHint">Abra a conversa para ver a resposta mais recente.</string>
+    <string name="widgetActionSending">Enviando mensagem…</string>
+    <string name="widgetActionEnterMessage">Digite uma mensagem primeiro</string>
+    <string name="widgetPanelAllProjects">Todos os projetos</string>
+    <string name="widgetPanelSave">Salvar escolhas</string>
+    <string name="widgetPanelRecord">Digitação por voz</string>
+    <string name="widgetPanelFinishRecording">Concluir a digitação por voz</string>
+    <string name="widgetPanelListening">Ouvindo…</string>
+</resources>

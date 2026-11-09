@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="configInspectionTitle">Cấu hình máy chủ</string>
+    <string name="configInspectionExplanation">Xem các nguồn cấu hình của máy chủ theo thứ tự ưu tiên. Khóa, mã thông báo, giá trị môi trường, tiêu đề, lệnh và lời nhắc đều được ẩn. Trang này không thay đổi gì.</string>
+    <string name="configInspectionUnavailable">Không tải được cấu hình của máy chủ. Hãy kết nối lại và thử lại.</string>
+    <string name="configInspectionRefresh">Làm mới cấu hình</string>
+</resources>

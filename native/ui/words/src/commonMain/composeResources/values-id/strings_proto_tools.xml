@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">Alat</string>
+    <string name="protoToolsRefresh">Muat ulang</string>
+    <string name="protoToolsPlugins">Plugin</string>
+    <string name="protoToolsSkills">Keterampilan</string>
+    <string name="protoToolsMcp">Server MCP</string>
+    <string name="protoToolsLoadFailed">Daftar ini tidak dapat dimuat. Coba Muat ulang.</string>
+    <string name="protoToolsUnavailable">Alat tidak tersedia di koneksi ini. Hubungkan ke server yang mendukungnya.</string>
+    <string name="protoToolsEmpty">Belum ada apa pun di sini.</string>
+    <string name="protoToolsUnnamedPlugin">Plugin tanpa nama</string>
+    <string name="protoToolsSkillNeedsChat">Buka Alat dari sebuah percakapan untuk menambahkan keterampilan ke dalamnya.</string>
+    <string name="protoToolsSkillReview">Tambahkan keterampilan ini ke percakapan saat ini. Pilih apakah agen perlu melanjutkan sekarang.</string>
+    <string name="protoToolsResume">Lanjutkan percakapan sekarang</string>
+    <string name="protoToolsActivate">Tambah keterampilan</string>
+    <string name="protoToolsDisconnect">Putuskan %1$s</string>
+    <string name="protoToolsAddMcp">Tambah server MCP</string>
+    <string name="protoToolsRuntimeScope">Server ditambahkan untuk proyek saat ini hingga server dimulai ulang. Nama yang sudah ada tidak akan diganti.</string>
+    <string name="protoToolsName">Nama server</string>
+    <string name="protoToolsLocal">Jalankan perintah lokal</string>
+    <string name="protoToolsCommand">Perintah dan argumen, satu per baris</string>
+    <string name="protoToolsUrl">Alamat HTTP atau HTTPS</string>
+    <string name="protoToolsAdd">Tambah server</string>
+    <string name="protoToolsChanged">Koneksi atau proyek ini berubah. Muat ulang sebelum mencoba lagi.</string>
+    <string name="protoToolsInvalidDraft">Periksa nama server serta alamat atau perintahnya, lalu coba lagi.</string>
+    <string name="protoToolsAddFailed">Server tidak dapat ditambahkan. Muat ulang daftar sebelum mencoba lagi.</string>
+    <string name="protoToolsDisconnectFailed">Koneksi tidak dapat dipastikan. Muat ulang daftar sebelum mencoba lagi.</string>
+    <string name="protoToolsActivateFailed">Keterampilan tidak dapat ditambahkan. Pastikan keterampilan itu masih tersedia.</string>
+    <string name="protoToolsStaged">Selesaikan atau batalkan pemulihan yang tertunda sebelum menambahkan keterampilan.</string>
+    <string name="protoToolsUncertain">Server mungkin sudah menerima tindakan ini. Periksa percakapan sebelum mencoba lagi.</string>
+    <string name="protoToolsDone">Selesai.</string>
+    <string name="protoToolsActive">Aktif</string>
+    <string name="protoToolsFailed">Perlu perhatian</string>
+    <string name="protoToolsUnknown">Status tidak diketahui</string>
+    <string name="protoToolsBuiltin">Bawaan</string>
+    <string name="protoToolsPackage">Paket</string>
+    <string name="protoToolsLocalSource">Lokal</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">Sumber tidak diketahui</string>
+    <string name="protoToolsConnected">Terhubung</string>
+    <string name="protoToolsDisabled">Dimatikan</string>
+    <string name="protoToolsSignIn">Perlu masuk</string>
+    <string name="protoToolsDisconnected">Terputus</string>
+    <string name="protoToolsConnecting">Menghubungkan</string>
+    <string name="protoWorktreeInvalid">Masukkan nama worktree 1–120 karakter, tanpa karakter kontrol.</string>
+    <string name="protoWebInvalid">Masukkan pencarian web 1–1000 karakter.</string>
+    <string name="protoToolsProviders">Penyedia</string>
+    <string name="protoToolsConnect">Hubungkan %1$s</string>
+</resources>

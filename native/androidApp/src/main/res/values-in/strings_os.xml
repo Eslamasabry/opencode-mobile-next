@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="other">%1$d butuh Anda</item>
+    </plurals>
+    <string name="notifStatusReconnectingGeneric">Menyambung kembali</string>
+    <string name="andr_thermalPaused">Ponsel panas — AI Team dijeda agar mendingin. Akan lanjut sendiri.</string>
+    <string name="andr_thermalStopped">Ponsel sangat panas — AI Team dihentikan untuk melindunginya. Pekerjaannya tersimpan dan akan dimulai lagi setelah ponsel dingin.</string>
+    <string name="andr_thermalResumed">AI Team dilanjutkan — ponsel sudah dingin.</string>
+</resources>

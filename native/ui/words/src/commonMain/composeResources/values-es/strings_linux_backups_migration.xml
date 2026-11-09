@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">Los archivos de inicio de sesión conocidos y los ajustes de entorno guardados de los servicios se quedan en este teléfono. Se incluyen los comandos personalizados de los servicios; revísalos antes de compartir una copia de seguridad.</string>
+    <string name="linuxBackupServiceAccountsNative">Los servicios con ajustes de entorno guardados se respaldan apagados. Después de restaurar, configura de nuevo su cuenta y su entorno antes de iniciarlos.</string>
+</resources>

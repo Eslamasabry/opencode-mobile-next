@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">Предпросмотр здесь недоступен</string>
+    <string name="rb23_devPreviewUnsupportedBody">Это устройство не может показать страницу внутри приложения. Откройте её в браузере.</string>
+</resources>

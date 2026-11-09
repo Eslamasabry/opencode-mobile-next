@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Instalando…</string>
+    <string name="agentsHelperNotConnected">Os agentes do celular não estão conectados.</string>
+    <string name="agentsHelperNotStarted">Os agentes do celular não estão conectados: o assistente dos agentes não iniciou.</string>
+    <string name="agentsHelperNoAnswer">Os agentes do celular não estão conectados: o assistente dos agentes não respondeu.</string>
+    <string name="agentsHelperKeyRefused">Os agentes do celular não estão conectados: o assistente dos agentes não aceitou a chave deste app.</string>
+    <string name="agentsHelperKeyUnreadable">Os agentes do celular não estão conectados: este celular não conseguiu ler a chave do assistente dos agentes.</string>
+    <string name="agentsHelperNoLinux">Os agentes do celular não estão conectados: o Linux integrado deste celular não está configurado.</string>
+    <string name="agentsTabsLabel">Onde os agentes rodam</string>
+    <string name="agentsTabComputers">Em computadores</string>
+    <string name="agentsPhoneReady">Este celular está pronto</string>
+    <string name="agentsPhoneReadyDetails">Este celular está pronto · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Atualizar</string>
+    <string name="agentsAddComputerLine">Use o Claude Code ou o Pi em um computador que rode o Paseo.</string>
+    <string name="agentsComputerLooking">Procurando agentes neste computador…</string>
+    <string name="agentsComputerReadFailed">Não foi possível ler os agentes deste computador. Puxe para baixo para tentar de novo.</string>
+    <string name="agentsNewChat">Nova conversa</string>
+    <string name="agentsNewChatWith">Nova conversa com %1$s</string>
+    <string name="agentsConversationsStored">Onde as conversas ficam guardadas</string>
+    <string name="agentsConversationsStoredOn">Onde as conversas ficam guardadas: %1$s</string>
+    <string name="agentsHostAccount">Conta do host: %1$s</string>
+</resources>

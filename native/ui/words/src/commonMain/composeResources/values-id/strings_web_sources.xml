@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">URL ini sudah ada di daftar tinjauan Anda.</string>
+    <string name="webSourcesFullNative">Anda dapat meninjau hingga 10 sumber. Hapus satu sebelum menambah yang lain.</string>
+    <string name="webSourcesChooseNative">Pilih setidaknya satu sumber yang telah ditinjau.</string>
+</resources>

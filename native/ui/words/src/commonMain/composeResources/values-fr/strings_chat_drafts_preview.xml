@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">Ouverture de votre brouillon enregistré…</string>
+    <string name="chatDraftAlreadySent">Ce texte a peut-être déjà été envoyé. Vérifiez la conversation avant de le renvoyer.</string>
+    <string name="chatDraftRepeatTitle">Envoyer de nouveau ce texte\u00A0?</string>
+    <string name="chatDraftRepeatAction">Renvoyer</string>
+    <string name="chatDraftRepeatBody">Ce texte figure déjà dans la conversation. Ne le renvoyez que si vous voulez une nouvelle réponse.</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Exibir</string>
+    <string name="filesSearchNames">Nomes de arquivos</string>
+    <string name="filesRowActions">Ações</string>
+    <string name="filesChangeDeleted">Excluído</string>
+    <string name="filesChangeAdded">Adicionado</string>
+    <string name="filesChangeModified">Alterado</string>
+    <string name="filesWrapCode">Quebrar linhas</string>
+    <string name="filesUnwrapCode">Rolar linhas para o lado</string>
+    <string name="filesShowPreview">Prévia</string>
+    <string name="filesMoreActions">Mais ações do arquivo</string>
+    <string name="filesAttachFailed">Não foi possível anexar este arquivo. Tente novamente.</string>
+    <string name="filesPreferencesFailed">Não foi possível salvar esta opção de exibição. Tente novamente.</string>
+    <string name="filesLinkRefused">Este link não pode ser aberto com segurança.</string>
+    <string name="filesOpenLinkQuestion">Abrir %1$s?</string>
+    <string name="filesOpenLinkBody">Este link abre fora do app.</string>
+    <string name="filesOpenLink">Abrir link</string>
+    <string name="filesAttachmentReady">Arquivo anexado. Volte para a conversa para adicionar seu comentário.</string>
+    <string name="filesScopedEmpty">Esta é a pasta compartilhada pelo servidor desta conversa. Verifique o acesso a pastas e atualize.</string>
+    <string name="filesStorageFailed">O acesso à pasta não foi alterado. Tente novamente.</string>
+    <string name="filesStorageRestart">O acesso à pasta foi salvo. Reinicie o servidor deste celular e atualize.</string>
+    <string name="filesOpenPhone">Abrir Este celular</string>
+    <string name="filesReviewStorage">Revisar pastas compartilhadas</string>
+    <string name="filesSelectedStorageBody">Permita esta pasta do projeto ou revise as pastas compartilhadas. O acesso a um volume de armazenamento inteiro fica desativado, a menos que você o ative lá.</string>
+</resources>

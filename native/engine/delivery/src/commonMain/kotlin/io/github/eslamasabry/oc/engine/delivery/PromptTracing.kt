@@ -17,7 +17,26 @@ public interface PromptTracing {
         sent(sessionId)
     }
 
+    /** As [sent], with what the analytics journey counts: the chat's agent mode and whether files ride along. */
+    public fun sent(sessionId: String, onPhone: Boolean, agent: String?, hasAttachment: Boolean) {
+        sent(sessionId, onPhone)
+    }
+
     public fun accepted(sessionId: String, error: Boolean)
+
+    /** One tool call of the turn, by part id (a call's later updates repeat the id). */
+    public fun tool(sessionId: String, partId: String) {}
+
+    /** The person pressed Stop for this session. */
+    public fun stopped(sessionId: String) {}
+
+    /** The live stream of a connection dropped or came back; [onPhone] says which kind of server. */
+    public fun stream(onPhone: Boolean, connected: Boolean) {}
+
+    /** The turn ended in error; [kind] is the message error's kind name and [tag] its symbolic tag (never its text). [reason] is the server's own words, for the receiver to classify and drop; it is never stored or sent. */
+    public fun error(sessionId: String, kind: String?, tag: String?, reason: String?) {
+        error(sessionId)
+    }
 
     public fun message(sessionId: String, messageId: String, assistant: Boolean)
 

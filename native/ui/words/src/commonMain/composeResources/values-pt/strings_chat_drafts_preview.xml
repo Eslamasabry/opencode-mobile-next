@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">Abrindo seu rascunho salvo…</string>
+    <string name="chatDraftAlreadySent">Este texto pode já ter sido enviado. Confira a conversa antes de enviá-lo novamente.</string>
+    <string name="chatDraftRepeatTitle">Enviar este texto novamente?</string>
+    <string name="chatDraftRepeatAction">Enviar novamente</string>
+    <string name="chatDraftRepeatBody">Este texto já está na conversa. Envie novamente só se quiser uma nova resposta.</string>
+</resources>

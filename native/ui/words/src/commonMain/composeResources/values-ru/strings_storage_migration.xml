@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationStorageTitle">Хранилище</string>
+    <string name="migrationStorageAssistant">Модель ассистента на этом телефоне</string>
+    <string name="migrationStorageDelete">Удалить модель</string>
+    <string name="migrationStorageDeleteTitle">Удалить модель ассистента?</string>
+    <string name="migrationStorageDeleteBody">Сохранённая модель и незавершённые загрузки будут удалены с этого телефона, освободится %1$s.</string>
+    <string name="migrationStorageEmpty">На этом телефоне нет модели ассистента</string>
+    <string name="localModelSaveFailed">Не удалось изменить сохранённую модель. Повторите.</string>
+</resources>

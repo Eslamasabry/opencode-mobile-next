@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversInspectSetup">Periksa penyiapan</string>
+    <string name="serversPairingAnswered">Server merespons. Periksa status atau proses masuknya sebelum menghubungkan.</string>
+    <string name="serversRemoteTerminal">Terminal</string>
+</resources>

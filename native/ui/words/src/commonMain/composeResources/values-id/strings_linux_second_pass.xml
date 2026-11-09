@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">Pemiliknya telah berhenti</string>
+    <string name="runningOrphanCpuWithoutOwner">Sibuk tanpa percakapan yang menunggunya</string>
+    <string name="linuxStorageScanRunning">Mengukur %1$s</string>
+    <string name="linuxStorageScanDone">Penyimpanan selesai diukur</string>
+    <string name="linuxStorageScanIdle">Tidak ada pemindaian berjalan</string>
+    <string name="linuxStorageScanLog">Pemindaian penyimpanan</string>
+</resources>

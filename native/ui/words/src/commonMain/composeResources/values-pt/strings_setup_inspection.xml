@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">Ver configuração</string>
+    <string name="setupInspectReadOnly">Esta tela lê a configuração e o estado das ferramentas. Aplicar e Desfazer não estão disponíveis porque este servidor não consegue restaurar alterações de configuração com segurança.</string>
+    <string name="setupInspectFailed">Não foi possível carregar as informações de configuração. Reconecte ao servidor e tente novamente.</string>
+    <string name="setupInspectRefresh">Atualizar configuração</string>
+    <string name="setupInspectLoading">Lendo a configuração…</string>
+    <string name="setupInspectConfig">Origens da configuração</string>
+    <string name="setupInspectNoSources">Nenhuma origem de configuração foi informada.</string>
+    <string name="setupInspectMcp">Conexões de ferramentas</string>
+    <string name="setupInspectNoMcp">Nenhuma conexão de ferramenta foi informada.</string>
+    <string name="setupMcpConnected">Conectado</string>
+    <string name="setupMcpPending">Conectando</string>
+    <string name="setupMcpDisabled">Desativado</string>
+    <string name="setupMcpFailed">Falha na conexão</string>
+    <string name="setupMcpSignIn">Login necessário</string>
+    <string name="setupMcpUnknown">Status desconhecido</string>
+    <string name="setupRegistryTitle">Registro público de ferramentas</string>
+    <string name="setupRegistryConsent">Explorar o registro público</string>
+    <string name="setupRegistryPrivacy">Atualizar consulta o registro público de MCP sem credenciais do servidor. Os termos pesquisados são enviados ao registro e nunca são salvos.</string>
+    <string name="setupRegistryDisabled">A exploração está desativada. Ative para carregar as listagens quando escolher Atualizar.</string>
+    <string name="setupRegistryLoading">Carregando listagens públicas…</string>
+    <string name="setupRegistryOffline">Você está offline. Mostrando as listagens salvas.</string>
+    <string name="setupRegistryError">Não foi possível carregar o registro público. Mostrando as listagens salvas.</string>
+    <string name="setupRegistryEmpty">Nenhuma listagem carregada. Atualize ou pesquise no registro.</string>
+    <string name="setupRegistryReadOnly">As listagens são apenas informativas. Configure as ferramentas manualmente no seu servidor; esta página nunca executa comandos do registro nem abre os links listados.</string>
+    <string name="setupRegistrySearch">Pesquisar listagens</string>
+    <string name="setupRegistryRefresh">Atualizar listagens</string>
+    <string name="setupRegistrySaved">Mostrar listagens salvas</string>
+    <string name="setupInspectUnsupported">A visualização da configuração não está disponível neste servidor.</string>
+    <string name="setupMigrationRequired">Trazendo suas conversas anteriores…</string>
+    <string name="setupMigrationProgress">Trazendo suas conversas anteriores (%1$d de %2$d)…</string>
+    <string name="setupMigrationError">O servidor não conseguiu terminar de trazer suas conversas anteriores. Seus dados originais continuam neste celular, intactos.</string>
+    <string name="setupMigrationUnavailable">O servidor não conseguiu informar o status das suas conversas anteriores. Atualize para tentar novamente.</string>
+</resources>

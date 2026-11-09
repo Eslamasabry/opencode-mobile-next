@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Đọc giới hạn gói</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Đã bật việc đọc. Chạm để tắt và xóa các số liệu này.</string>
+    <string name="plansCollectorDisabled">Đọc từ bộ thu đã cài trên máy chủ này</string>
+    <string name="plansCollectorQuestion">Đọc giới hạn %1$s từ máy chủ này?</string>
+    <string name="plansCollectorAllow">Tin cậy bộ thu và đọc</string>
+    <string name="plansCollectorTrust">Chỉ tiếp tục nếu bạn tin cậy bộ thu hạn mức đã cài trên %1$s. Bộ thu nhận thông tin đăng nhập đã lưu của máy chủ này tại một địa chỉ hạn mức cố định. Các yêu cầu không theo chuyển hướng. Bạn có thể tắt việc đọc tại đây. Khi đổi địa chỉ hoặc đăng nhập, cần cấp quyền lại.</string>
+    <string name="plansCollectorFailed">Không lưu được lựa chọn này. Hãy kết nối lại với máy chủ rồi thử lại.</string>
+    <string name="plansPaseoDisabled">Đọc mức dùng từ máy chủ Paseo này</string>
+    <string name="plansPaseoQuestion">Đọc mức dùng gói từ Paseo?</string>
+    <string name="plansPaseoTrust">Đọc giới hạn gói do %1$s báo cáo khi ứng dụng này đang hiển thị. Tắt mục này sẽ xóa các số liệu tiện ích đã lưu. Không có bộ đọc nền nào được khởi động.</string>
+    <string name="plansBuiltinReader">Bộ đọc mức dùng trên điện thoại</string>
+    <string name="plansBuiltinDisabled">Thiết lập bộ đọc mức dùng bên trong Ubuntu của điện thoại này</string>
+    <string name="plansBuiltinQuestion">Đọc giới hạn gói trên điện thoại này?</string>
+    <string name="plansBuiltinTrust">Cài bộ đọc mức dùng đi kèm vào %1$s và đọc các đăng nhập nhà cung cấp đã lưu ở đó. Mã đọc của nó được giữ trong bộ nhớ an toàn và tệp riêng. Việc thu thập Claude vẫn chưa khả dụng. Tắt mục này sẽ dừng dịch vụ của nó và xóa các số liệu tiện ích.</string>
+</resources>

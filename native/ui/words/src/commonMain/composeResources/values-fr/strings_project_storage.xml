@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="projectStorageMeasureFailed">Impossible de mesurer les fichiers stockés. Réessayez.</string>
+    <string name="projectStorageDeleteFailed">Android n’a pas pu effacer les données de l’application. Réessayez.</string>
+</resources>

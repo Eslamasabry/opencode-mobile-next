@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">Épingler la conversation</string>
+    <string name="stateUnpin">Désépingler la conversation</string>
+    <string name="statePinFailed">Impossible d’enregistrer l’épingle. Réessayez.</string>
+    <string name="stateContextUsage">Dernier contexte\u00A0: %1$d%</string>
+    <string name="stateSavedPreview">Liste enregistrée. Connectez-vous pour ouvrir cette conversation.</string>
+</resources>

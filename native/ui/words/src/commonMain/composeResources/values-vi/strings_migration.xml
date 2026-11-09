@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Đang mở…</string>
+    <string name="migration_updating">Đang cập nhật ứng dụng của bạn…</string>
+    <string name="migration_still_updating">Vẫn đang cập nhật. Lần khởi động đầu tiên sau khi cập nhật có thể lâu hơn một chút.</string>
+    <string name="migration_try_again">Thử chuyển lại dữ liệu của bạn</string>
+    <string name="migration_reenter_title">Một vài thông tin đăng nhập cần bạn nhập lại</string>
+    <string name="migration_reenter_body">Bản cập nhật không đọc được những thông tin đăng nhập đã lưu này. Mọi thứ khác đã được chuyển sang.</string>
+    <string name="migration_reenter_row_password">%1$s · Nhập mật khẩu</string>
+    <string name="migration_reenter_row_token">%1$s · Nhập token</string>
+    <string name="migration_reenter_row_github">%1$s · Đăng nhập lại GitHub</string>
+    <string name="migration_reenter_row_byo">%1$s · Thiết lập lại</string>
+    <string name="migration_reenter_unnamed">Một máy chủ đã lưu</string>
+    <string name="migration_reenter_later">Đăng nhập vào những mục này sau</string>
+    <string name="migration_reenter_field_password">Mật khẩu cho %1$s</string>
+    <string name="migration_reenter_field_token">Token cho %1$s</string>
+    <string name="migration_reenter_save">Lưu</string>
+    <string name="migration_reenter_save_failed">Không lưu được trên điện thoại này. Hãy thử lại.</string>
+    <string name="migration_reenter_back">Quay lại danh sách</string>
+    <string name="migration_reenter_github_where">Để đăng nhập lại GitHub cho %1$s, hãy mở một cuộc trò chuyện của nó, rồi vào Git.</string>
+    <string name="migration_reenter_open_chats">Mở cuộc trò chuyện</string>
+    <string name="migration_reenter_byo_absent">Phiên bản này chưa hỗ trợ thiết lập lại %1$s. Thông tin đã lưu của nó vẫn ở lại trên điện thoại này.</string>
+    <string name="migration_failed_title">Bản cập nhật chưa chuyển xong dữ liệu của bạn</string>
+    <string name="migration_failed_body">Chưa có gì bị xóa. Dữ liệu của bạn từ trước khi cập nhật vẫn an toàn trên điện thoại này.</string>
+    <string name="migration_restore_row">Khôi phục dữ liệu từ trước khi cập nhật</string>
+    <string name="migration_restore_confirm">Việc này trả cài đặt và máy chủ của bạn về như trước khi cập nhật. Các thay đổi kể từ đó được giữ trong một bản sao.</string>
+    <string name="migration_restore_confirm_title">Khôi phục dữ liệu cũ hơn?</string>
+    <string name="migration_restore_confirm_action">Khôi phục dữ liệu từ trước khi cập nhật</string>
+    <string name="migration_start_fresh_row">Bắt đầu lại từ đầu (giữ một bản sao dữ liệu cũ)</string>
+    <string name="migration_start_fresh_confirm">Bạn sẽ bắt đầu mà không có máy chủ nào đã lưu và với cài đặt mặc định. Một bản sao dữ liệu cũ của bạn vẫn ở lại trên điện thoại này.</string>
+    <string name="migration_start_fresh_confirm_title">Bắt đầu lại từ đầu?</string>
+    <string name="migration_start_fresh_confirm_action">Bắt đầu lại và giữ một bản sao</string>
+    <string name="migration_report_row">Báo cáo sự cố</string>
+    <string name="migration_details">Chi tiết · %1$s</string>
+    <string name="migration_space_title">Điện thoại của bạn sắp đầy</string>
+    <string name="migration_space_body">Bản cập nhật cần %1$s dung lượng trống để giữ một bản sao an toàn cho dữ liệu của bạn. Hãy giải phóng dung lượng rồi thử lại.</string>
+    <string name="migration_save_failed_title">Không lưu được trên điện thoại này</string>
+    <string name="migration_open_storage_row">Mở cài đặt bộ nhớ</string>
+    <string name="migration_close">Đóng</string>
+    <string name="migration_deferred_notice">Phiên bản này chưa có: %1$s. Những gì bạn đã lưu cho chúng vẫn ở lại trên điện thoại này, không bị đụng đến.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Bộ nhớ</string>
+    <string name="migration_deferred_gemma">mô hình AI trên điện thoại</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Bỏ qua ghi chú về các tính năng chưa có trong phiên bản này</string>
+</resources>

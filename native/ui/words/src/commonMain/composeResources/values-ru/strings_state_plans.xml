@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Тарифы и лимиты</string>
+    <string name="statePlansCopy1">Назад</string>
+    <string name="statePlansCopy2">Чтение ваших тарифов</string>
+    <string name="statePlansCopy3">Обновить</string>
+    <string name="statePlansCopy4">Обновление</string>
+    <string name="statePlansCopy5">Пока нет тарифов с входом</string>
+    <string name="statePlansCopy6">Войдите в Codex, Claude, GLM или MiniMax на сервере или на этом телефоне, чтобы увидеть остаток.</string>
+    <string name="statePlansCopy7">Ключи API (без лимитов тарифа)</string>
+    <string name="statePlansCopy8">Нигде не выполнен вход</string>
+    <string name="statePlansCopy9">Этот телефон</string>
+    <string name="statePlansCopy10">Остаток большой</string>
+    <string name="statePlansCopy11">Лимит близок</string>
+    <string name="statePlansCopy12">Лимит исчерпан</string>
+    <string name="statePlansCopy13">Вход выполнен, но цифры пока не удаётся прочитать</string>
+    <string name="statePlansCopy14">Срок входа истёк</string>
+    <string name="statePlansCopy15">Вход не выполнен</string>
+    <string name="statePlansCopy16">В этот раз не удалось прочитать цифры</string>
+    <string name="statePlansCopy17">Не в сети. Показаны последние цифры.</string>
+    <string name="statePlansCopy18">Лимиты не сообщаются</string>
+    <string name="statePlansCopy19">Ключ API, без лимитов тарифа</string>
+    <string name="statePlansCopy20">Войдите, чтобы увидеть цифры</string>
+    <string name="statePlansCopy21">Войдите на %1$s, чтобы увидеть цифры</string>
+    <string name="statePlansCopy22">Добавьте ключ, чтобы увидеть цифры</string>
+    <string name="statePlansCopy23">Добавьте ключ на %1$s, чтобы увидеть цифры</string>
+    <string name="statePlansCopy24">Настройте чтение, чтобы увидеть цифры</string>
+    <string name="statePlansCopy25">Настройте чтение на %1$s, чтобы увидеть цифры</string>
+    <string name="statePlansCopy26">Повторить</string>
+    <string name="statePlansCopy27">5 часов</string>
+    <string name="statePlansCopy28">Эта неделя</string>
+    <string name="statePlansCopy29">Этот месяц</string>
+    <string name="statePlansCopy30">Лимит</string>
+    <string name="statePlansCopy31">Осталось %1$s%</string>
+    <string name="statePlansCopy32">сброс сейчас</string>
+    <string name="statePlansCopy33">сброс через %1$s мин</string>
+    <string name="statePlansCopy34">сброс через %1$s ч</string>
+    <string name="statePlansCopy35">сброс через %1$s дн.</string>
+    <string name="statePlansCopy36">С момента чтения этих цифр лимит уже сброшен.</string>
+    <string name="statePlansCopy37">Тариф: %1$s</string>
+    <string name="statePlansCopy38">Оповещение при использовании %1$s%</string>
+    <string name="statePlansCopy39">не в сети</string>
+    <string name="statePlansCopy40">срок входа истёк</string>
+    <string name="statePlansCopy41">вход не выполнен</string>
+    <string name="statePlansCopy42">цифры прочитаны здесь</string>
+    <string name="statePlansCopy43">вход выполнен</string>
+    <string name="statePlansCopy44">Лимиты тарифа Claude нельзя прочитать через OpenCode</string>
+    <string name="statePlansAlerts">Оповещения об использовании</string>
+    <string name="statePlansThreshold">Оповещение при использовании %1$d%</string>
+    <string name="statePlansResetOn">Уведомление о сбросе включено</string>
+    <string name="statePlansResetOff">Уведомление о сбросе выключено</string>
+    <string name="statePlansPercent">Использовано, % (1–100)</string>
+    <string name="statePlansSaveFailed">Не удалось сохранить. Введите процент от 1 до 100 и повторите.</string>
+    <string name="statePlansSave">Сохранить уровень оповещения</string>
+    <string name="statePlansUseDefault">Использовать уровень оповещения по умолчанию</string>
+</resources>

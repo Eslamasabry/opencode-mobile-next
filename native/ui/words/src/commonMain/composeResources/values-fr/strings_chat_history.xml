@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">Impossible de charger les anciens messages. Les messages déjà chargés sont toujours là. Réessayez.</string>
+    <string name="chatTranscriptTokens">%1$s jetons</string>
+    <string name="chatTranscriptCost">Coût estimé : %1$s $</string>
+    <string name="chatHistoryTitle">Réutiliser une invite</string>
+    <string name="chatHistorySubtitle">Choisissez des mots de cette conversation ou de vos envois récents. Ils sont ajoutés à votre brouillon ; rien n’est envoyé.</string>
+    <string name="chatHistorySearch">Rechercher dans les invites récentes</string>
+    <string name="chatHistoryEmpty">Aucune invite récente pour l’instant.</string>
+    <string name="chatHistoryLoading">Chargement des invites récentes…</string>
+    <string name="chatHistoryLoadFailed">Impossible de charger les invites récentes. Vous pouvez toujours utiliser celles de cette conversation.</string>
+</resources>

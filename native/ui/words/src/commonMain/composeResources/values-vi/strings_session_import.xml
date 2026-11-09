@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="importNativePaste">Hoặc dán bản xuất JSON</string>
+    <string name="importNativeReview">Xem lại JSON đã dán</string>
+    <string name="importNativeWorkspaceOptional">Không bắt buộc. Để trống để dùng thư mục dự án.</string>
+    <string name="importNativeAttemptDone">Hãy đóng và mở lại phần nhập để xem một lần thử khác. Nếu kết quả chưa được xác nhận, hãy kiểm tra Tất cả cuộc trò chuyện trước.</string>
+</resources>

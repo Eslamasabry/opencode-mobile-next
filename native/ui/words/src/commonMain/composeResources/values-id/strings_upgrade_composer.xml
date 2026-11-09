@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeComposerAsk">Tanya %1$s…</string>
+    <string name="upgradeComposerFree"> · Gratis</string>
+    <string name="upgradeComposerVoiceHoldTitle">Bicara dengan agen</string>
+    <string name="upgradeComposerVoiceHold">Tahan mikrofon dan bicara; lepas untuk memasukkan ucapan Anda ke kotak. Untuk percakapan suara, buka + lalu pilih Percakapan suara.</string>
+    <string name="upgradeComposerHoldDictate">Tahan untuk mendikte</string>
+</resources>

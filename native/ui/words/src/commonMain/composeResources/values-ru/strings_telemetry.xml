@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryCrashReportsTitle">Отправлять отчёты о сбоях разработчику (Google Firebase)</string>
+    <string name="telemetryCrashReportsBody">Когда приложение вылетает или шаг не удаётся, оно отправляет тип проблемы, версии приложения и Android и короткий список мест в коде. Ваши сообщения, файлы, адреса и ключи никогда не отправляются.</string>
+    <string name="telemetryConsentChoose">Выбрать</string>
+    <string name="telemetryConsentSave">Сохранить мой выбор</string>
+    <string name="sendReportTitle">Отправить отчёт о проблеме</string>
+    <string name="sendReportRowDetail">Проверьте очищенный журнал и отправьте его</string>
+    <string name="sendReportSubtitle">Это всё, что содержит отчёт. Ничего не отправляется, пока вы не нажмёте «Отправить».</string>
+    <string name="sendReportSend">Отправить</string>
+    <string name="sendReportCollecting">Собираем отчёт…</string>
+    <string name="sendReportSentTitle">Отчёт отправлен</string>
+    <string name="sendReportSentBody">Укажите этот код отчёта, если создадите обращение на GitHub, чтобы разработчик мог найти ваш отчёт.</string>
+    <string name="sendReportFailed">Не удалось отправить отчёт. Проверьте подключение и повторите.</string>
+    <string name="sendReportDone">Готово</string>
+    <string name="reportCodeLabel">Код отчёта</string>
+    <string name="reportCodeCopy">Скопировать код отчёта</string>
+</resources>

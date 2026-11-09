@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Инструменты проекта на сервере</string>
+    <string name="protoWorking">Выполняется…</string>
+    <string name="protoGitInitialized">Эта папка — репозиторий Git.</string>
+    <string name="protoWorktreeCreated">Рабочая копия готова в папке ниже.</string>
+    <string name="protoShellSaved">Оболочка по умолчанию сохранена.</string>
+    <string name="protoGitInitialize">Создать репозиторий Git в этой папке</string>
+    <string name="protoWorktreeName">Имя новой рабочей копии</string>
+    <string name="protoWorktreeCreate">Создать рабочую копию</string>
+    <string name="protoShellTitle">Оболочка терминала по умолчанию</string>
+    <string name="protoShellDefault">Использовать оболочку сервера по умолчанию</string>
+    <string name="protoShellUnavailable">Эту оболочку нельзя использовать на этом сервере.</string>
+    <string name="protoWebSearch">Поиск в интернете</string>
+    <string name="protoWebSearchHelp">Поиск через поставщика этого сервера. Запросы не попадают в историю чатов.</string>
+    <string name="protoWebUnavailable">Поиск в интернете недоступен на этом сервере.</string>
+    <string name="protoWebFailed">Не удалось выполнить поиск в интернете. Обновите список поставщиков или повторите поиск.</string>
+    <string name="protoWebQuery">Запрос для поиска в интернете</string>
+    <string name="protoWebProvider">Поставщик поиска</string>
+    <string name="protoWebEmpty">Поиск в интернете ничего не вернул.</string>
+    <string name="protoWebOpenQuestion">Открыть %1$s в браузере?</string>
+    <string name="protoWebOpenBrowser">Открыть браузер</string>
+    <string name="protoWebInsecure">Эта ссылка использует незащищённое соединение.</string>
+    <string name="protoWebLeaveApp">Сайт откроется за пределами приложения.</string>
+    <string name="protoGitToolsFailed">Не получилось. Проверьте сервер и повторите.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">Outils installés</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">Outil du téléphone</string>
+    <string name="linuxToolsFreedBytes">Environ %1$s peuvent être libérés.</string>
+    <string name="linuxToolsWait">Attendez la fin de l’opération en cours sur le téléphone.</string>
+    <string name="linuxToolsInstalled">Installé</string>
+    <string name="linuxToolsAbsent">Non installé</string>
+    <string name="linuxToolsUnknown">Vérification impossible. Actualisez pour réessayer.</string>
+    <string name="linuxToolsRefresh">Actualiser les outils installés</string>
+    <string name="linuxToolsRemovePython">Supprimer les outils Python</string>
+    <string name="linuxToolsRemoveQuestion">Supprimer les outils Python\u00A0?</string>
+    <string name="linuxToolsRemoveBody">Supprime pip et les paquets des environnements virtuels. Python lui-même, les projets et les conversations restent.</string>
+    <string name="linuxToolsRemoved">Les outils Python ont été supprimés.</string>
+    <string name="linuxToolsDependent">Un autre outil installé a besoin de ce composant.</string>
+    <string name="linuxToolsDependencyUnknown">Impossible de vérifier un autre outil qui pourrait avoir besoin de ce composant. Actualisez et réessayez.</string>
+    <string name="linuxToolsRequired">Ce composant est requis pour les outils du téléphone.</string>
+    <string name="linuxToolsUnsupported">Ce composant ne peut pas être supprimé ici.</string>
+    <string name="linuxToolsInventoryFailed">Les outils installés n’ont pas pu être vérifiés. Actualisez et réessayez. Rien n’a été supprimé.</string>
+    <string name="linuxToolsSetupRunning">Arrêtez la configuration ou attendez qu’elle se termine avant de supprimer des outils.</string>
+    <string name="linuxToolsRemoveFailed">Les outils Python n’ont pas pu être entièrement supprimés. Actualisez les outils installés, puis réessayez.</string>
+    <string name="linuxSetupStatusUnreadable">La configuration enregistrée n’a pas pu être lue. Poursuivez la configuration pour réessayer.</string>
+    <string name="linuxSetupHostMismatch">Cette configuration enregistrée appartient à un autre environnement Linux. Lancez plutôt la configuration pour ce téléphone.</string>
+    <string name="linuxSetupHostRefused">La configuration du téléphone n’a pas pu démarrer en toute sécurité. Poursuivez la configuration pour réessayer.</string>
+    <string name="linuxSetupSavedFailed">La configuration n’a pas pu être enregistrée. Libérez de l’espace de stockage, puis poursuivez la configuration.</string>
+    <string name="linuxSetupBytes">%1$s sur %2$s</string>
+    <string name="linuxSetupCheckingPart">Vérification des outils installés</string>
+    <string name="linuxSetupPartPending">En attente</string>
+    <string name="linuxSetupPartRunning">Installation</string>
+    <string name="linuxSetupPartDone">Prêt</string>
+    <string name="linuxSetupPartFailed">Échec avant la fin</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerLimitApproaching">Sắp đạt giới hạn</string>
+    <string name="composerLimitReached">Đã đạt giới hạn</string>
+    <string name="composerLimitResetsInHoursMinutes">Đặt lại sau %1$d giờ %2$d phút</string>
+    <string name="composerLimitResetsInHours">Đặt lại sau %1$d giờ</string>
+    <string name="composerLimitResetsInMinutes">Đặt lại sau %1$d phút</string>
+    <string name="composerLimitResetsOnDay">Đặt lại %1$s lúc %2$s</string>
+    <string name="composerLimitResetsOnDate">Đặt lại %1$s</string>
+    <string name="composerLimitViewUsage">Xem mức sử dụng</string>
+    <string name="composerLimitDismiss">Đóng</string>
+    <string name="composerLimitMonday">Thứ Hai</string>
+    <string name="composerLimitTuesday">Thứ Ba</string>
+    <string name="composerLimitWednesday">Thứ Tư</string>
+    <string name="composerLimitThursday">Thứ Năm</string>
+    <string name="composerLimitFriday">Thứ Sáu</string>
+    <string name="composerLimitSaturday">Thứ Bảy</string>
+    <string name="composerLimitSunday">Chủ nhật</string>
+    <string name="composerLimitClock12">%1$s\u00A0%2$s</string>
+    <string name="composerLimitAm">SA</string>
+    <string name="composerLimitPm">CH</string>
+</resources>

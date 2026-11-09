@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">Không có bản xem trước ở đây</string>
+    <string name="rb23_devPreviewUnsupportedBody">Thiết bị này không hiển thị được trang bên trong ứng dụng. Hãy mở nó trong trình duyệt.</string>
+</resources>

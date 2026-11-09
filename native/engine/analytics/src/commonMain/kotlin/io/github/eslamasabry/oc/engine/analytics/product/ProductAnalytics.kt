@@ -6,6 +6,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
+import io.github.eslamasabry.oc.engine.analytics.health.HealthRanges
 import io.github.eslamasabry.oc.engine.analytics.health.JankMeter
 import io.github.eslamasabry.oc.engine.analytics.health.Telemetry
 
@@ -40,7 +41,7 @@ public class ProductLifecycle(private val analytics: Telemetry, private val cloc
         analytics.breadcrumb("app.background")
         jank?.endSession()
         val elapsed = (clock.now().toEpochMilliseconds() - since.load()).coerceAtLeast(0).milliseconds
-        analytics.track(ProductEvent.SessionLength, mapOf("minutes" to ProductBuckets.sessionMinutesOf(elapsed)))
+        analytics.track(ProductEvent.SessionLength, mapOf("minutes_range" to HealthRanges.sessionMinutesOf(elapsed.inWholeMilliseconds)))
     }
 
     public fun onForeground() {

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Suy nghĩ</string>
+    <string name="composerFullThinkingDefault">Mặc định</string>
+    <string name="composerFullAgent">Tác nhân</string>
+    <string name="composerFullModels">Mô hình</string>
+    <string name="composerFullModelChangeFailed">Không thể xác nhận lựa chọn mô hình. Kiểm tra lựa chọn của bạn và thử lại.</string>
+    <string name="composerFullAttach">Đính kèm</string>
+    <string name="composerFullAddTitle">Thêm vào lời nhắc</string>
+    <string name="composerFullPhotoLibrary">Thư viện ảnh</string>
+    <string name="composerFullTakePhoto">Chụp ảnh</string>
+    <string name="composerFullPasteImage">Dán ảnh từ bộ nhớ tạm</string>
+    <string name="composerFullPasteEmpty">Bộ nhớ tạm không có ảnh nào.</string>
+    <string name="composerFullDraftFull">Hãy bỏ bớt một tệp đính kèm trước. Một bản nháp chứa tối đa 5 tệp và tổng cộng 20 MB.</string>
+    <string name="composerFullPhotoDenied">Quyền truy cập ảnh đã bị từ chối. Hãy cho phép dùng máy ảnh hoặc ảnh trong cài đặt ứng dụng của Android, rồi thử lại.</string>
+    <string name="composerFullStale">Cuộc trò chuyện đã thay đổi trong lúc bạn chọn. Thử lại.</string>
+    <string name="composerFullCommands">Lệnh</string>
+    <string name="composerFullFiles">Tệp trong dự án</string>
+    <string name="composerFullAttachmentsLocal">Tệp đính kèm được lưu cùng bản nháp này trên thiết bị này.</string>
+    <string name="composerFullSteerHint">Chỉnh hướng khi tác nhân đang làm…</string>
+</resources>

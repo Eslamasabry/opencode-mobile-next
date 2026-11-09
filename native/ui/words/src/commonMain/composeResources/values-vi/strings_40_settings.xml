@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Mặc định của kiểu</string>
+    <string name="settings40_reset_question">Đặt lại Giao diện?</string>
+    <string name="settings40_reset_body">Đặt lại màu sắc, kiểu, hình dạng, hiệu ứng kính, cỡ chữ, chuyển động và ánh sáng phản hồi. Các cuộc trò chuyện, ngôn ngữ và lựa chọn thông báo của bạn vẫn giữ nguyên.</string>
+    <string name="settings40_local_work">Nội dung chưa gửi trên điện thoại này</string>
+    <string name="settings40_queue_title">Lời nhắc đang chờ gửi</string>
+    <string name="settings40_drafts_title">Bản nháp cuộc trò chuyện</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="other">%1$d mục · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">Không đọc được bộ nhớ này. Mọi thứ vẫn được giữ.</string>
+    <string name="settings40_storage_reading">Đang đọc bộ nhớ cục bộ…</string>
+    <string name="settings40_discard_queue">Xóa các lời nhắc chưa gửi đang chờ</string>
+    <string name="settings40_discard_drafts">Xóa bản nháp cuộc trò chuyện</string>
+    <string name="settings40_queue_keeps">Xóa các lời nhắc chưa từng được gửi. Lời nhắc có dấu gửi hoặc biên nhận lệnh sẽ được giữ lại để xem xét.</string>
+    <string name="settings40_queue_empty">Không có lời nhắc đang chờ nào để xóa.</string>
+    <string name="settings40_drafts_empty">Không có bản nháp đã lưu nào để xóa.</string>
+    <string name="settings40_discard_working">Đang xóa nội dung cục bộ…</string>
+    <string name="settings40_queue_question">Xóa các lời nhắc chưa gửi đang chờ?</string>
+    <string name="settings40_drafts_question">Xóa bản nháp cuộc trò chuyện?</string>
+    <string name="settings40_drafts_body">Xóa nội dung đã lưu và tệp đính kèm của bản nháp trên điện thoại này. Các cuộc trò chuyện đang mở cũng được cập nhật. Nội dung đang được gửi hoặc kiểm tra sẽ không bị xóa. Không thể hoàn tác.</string>
+    <string name="settings40_discard_failed">Không xóa xong. Nội dung đang gửi, nội dung chưa rõ kết quả, bộ nhớ không đọc được hoặc thay đổi trong lúc lưu có thể ngăn việc xóa. Hãy kiểm tra số lượng và thử lại.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="other">Đã xóa %1$d mục.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="other">Đã xóa %1$d mục. Lời nhắc được giữ lại để xem xét: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="other">Đã xóa %1$d bản nháp. Một số tệp đính kèm chưa xóa được. Hãy thử xóa bản nháp lần nữa để hoàn tất.</item>
+    </plurals>
+    <string name="settings40_no_answers">Chưa có câu hỏi nào trên máy chủ này cần trả lời.</string>
+    <string name="settings40_answer_failed">Bước này chưa hoàn tất. Câu trả lời đã lưu và cài đặt Android có thể không khớp nhau. Hãy kiểm tra Thông báo hoặc Giữ chạy, rồi thử lại.</string>
+    <string name="settings40_held_action">Xóa cả những lời nhắc này</string>
+    <string name="settings40_held_question">Xóa các lời nhắc được giữ lại để xem xét?</string>
+    <string name="settings40_held_body">Chúng có thể đã đến máy chủ. Việc này chỉ xóa chúng khỏi điện thoại này, và không gửi thêm gì.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="other">%1$d lời nhắc trong số đó có thể đã đến máy chủ. Việc xóa chỉ gỡ chúng khỏi điện thoại này, và không gửi thêm gì.</item>
+    </plurals>
+</resources>

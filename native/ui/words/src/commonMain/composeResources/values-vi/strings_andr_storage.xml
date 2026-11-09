@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">Bộ nhớ trong</string>
+    <string name="andrStorageUp">Lên một thư mục</string>
+    <string name="andrStorageUseFolder">Mở thư mục này</string>
+    <string name="andrStorageFoldersEmpty">Ở đây không có thư mục nào.</string>
+    <string name="andrStorageFolderMissing">Thư mục này không còn ở đây. Hãy lên một cấp và chọn thư mục khác.</string>
+    <string name="andrStorageFolderDenied">Hãy cho phép truy cập thư mục trong cài đặt Android, rồi thử lại.</string>
+    <string name="andrStorageFolderFailed">Không đọc được thư mục này. Hãy thử lại.</string>
+    <string name="andrStorageAccess">Cho phép truy cập thư mục</string>
+    <string name="andrStorageWorking">Hãy chờ thư mục tải xong.</string>
+    <string name="andrStorageTitle">Bộ nhớ điện thoại</string>
+    <string name="andrStorageNearlyFull">Bộ nhớ gần đầy: còn trống %1$s. Hãy giải phóng bớt dung lượng trước khi cài công cụ hoặc bắt đầu một việc lớn.</string>
+    <string name="andrStorageAvailable">Ứng dụng này còn dùng được %1$s.</string>
+    <string name="andrStorageUnknown">Không đọc được dung lượng còn trống. Hãy thử đo lại.</string>
+    <string name="andrStorageMeasure">Đo bộ nhớ và tệp Linux</string>
+    <string name="andrStorageMeasuring">Đang đo bộ nhớ…</string>
+    <string name="andrStorageHostSizes">Linux và công cụ: %1$s · Dự án: %2$s. Đây là kích thước tệp, không phải toàn bộ bộ nhớ của ứng dụng.</string>
+    <string name="andrStorageHostUnknown">Không đo được kích thước tệp Linux. Các tệp của bạn vẫn được giữ.</string>
+    <string name="andrStorageRootHere">Bản thân bộ nhớ trong không thể là một dự án. Hãy mở một thư mục bên trong.</string>
+</resources>

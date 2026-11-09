@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">В этом запросе есть файлы или заметки проверки, которые в этой версии нельзя добавить в сообщение. Они остаются сохранёнными здесь.</string>
+    <string name="promptFixWordsOnly">Добавить только текст</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentInstall">Cài đặt hoặc cập nhật %1$s</string>
+    <string name="linuxAgentInstalling">Đang cài đặt %1$s</string>
+    <string name="linuxAgentInstallBackground">Quá trình cài đặt vẫn tiếp tục chạy nền. Chạm Làm mới để xem tiến độ mới nhất.</string>
+    <string name="linuxAgentInstallCancel">Hủy cài đặt</string>
+    <string name="linuxAgentInstallBusy">Một thiết lập khác đang chạy. Hãy chờ nó xong hoặc hủy nó trước.</string>
+    <string name="linuxAgentInstallSpace">Không đủ dung lượng trống cho bản tải về này và các tệp cài đặt. Hãy giải phóng bớt bộ nhớ rồi thử lại.</string>
+    <string name="linuxAgentInstallUnavailable">Hiện không thể cài tác nhân này trên điện thoại này.</string>
+    <string name="linuxAgentInstallDone">Đã cài đặt %1$s. Vẫn cần đăng nhập và kiểm tra tương thích với điện thoại trước khi dùng.</string>
+    <string name="linuxAgentInstallFailed">Không thể cài đặt %1$s. Chạm Cài đặt hoặc cập nhật để thử lại.</string>
+    <string name="linuxAgentInstallInterrupted">Việc cài đặt %1$s đã bị gián đoạn. Chạm Cài đặt hoặc cập nhật để thử lại an toàn.</string>
+</resources>

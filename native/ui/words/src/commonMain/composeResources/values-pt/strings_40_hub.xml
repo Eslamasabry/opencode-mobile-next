@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Essa entrada de uso mudou. Atualize Planos para ver as contas atuais.</string>
+    <string name="hub40ContinueOn">Continuar em %1$s?</string>
+    <string name="hub40ContinueBody">Este atalho pede para abrir a conexão salva para fazer login no provedor. Nada é enviado até você continuar.</string>
+    <string name="hub40Continue">Continuar</string>
+</resources>

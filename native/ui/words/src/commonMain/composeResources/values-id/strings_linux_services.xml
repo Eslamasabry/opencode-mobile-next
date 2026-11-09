@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">Program pengembangan</string>
+    <string name="linuxDevProgramsNote">Program yang ditemukan di Linux ponsel ini. Pilih program untuk membaca file keluarannya.</string>
+    <string name="linuxDevScanFailed">Program pengembangan tidak dapat diperiksa</string>
+    <string name="linuxDevProgram">Program %1$d</string>
+    <string name="linuxDevPorts">Port: %1$s</string>
+    <string name="linuxDevReadLog">Baca log</string>
+    <string name="linuxDevNoLog">Tidak ada file keluaran yang dapat dibaca</string>
+    <string name="linuxDevLog">Log program</string>
+    <string name="linuxDevLogLoading">Membaca keluaran terbaru…</string>
+    <string name="linuxDevLogFailed">Keluaran program tidak dapat dibaca.</string>
+    <string name="linuxDevLogEmpty">Belum ada keluaran.</string>
+    <string name="linuxDevStop">Hentikan</string>
+    <string name="linuxDevStopTitle">Hentikan program ini?</string>
+    <string name="linuxDevStopBody">Hentikan proses %1$d di ponsel ini. Perintahnya diperiksa lagi sebelum dihentikan.</string>
+    <string name="linuxSvcTitle">Layanan pengembangan</string>
+    <string name="linuxSvcFailed">Tindakan belum selesai</string>
+    <string name="linuxSvcUnconfirmed">Koneksi saat ini atau kepemilikan perintah tidak dapat dikonfirmasi. Muat ulang sebelum mencoba lagi.</string>
+    <string name="linuxSvcCorrupt">Perintah tersimpan tidak dapat dibaca. Data tersimpan dibiarkan tidak berubah.</string>
+    <string name="linuxSvcUnsupported">Koneksi ini tidak dapat mengendalikan layanan pengembangan. Anda tetap bisa menyimpan perintah untuk nanti.</string>
+    <string name="linuxSvcAdd">Tambah perintah</string>
+    <string name="linuxSvcRefresh">Muat ulang</string>
+    <string name="linuxSvcSaved">Perintah tersimpan</string>
+    <string name="linuxSvcSavedNote">Menyimpan perintah tidak pernah menjalankannya. Hanya proses yang dimulai dari sini yang bisa dikendalikan lewat perintah tersimpannya.</string>
+    <string name="linuxSvcEmpty">Tidak ada perintah tersimpan di proyek ini.</string>
+    <string name="linuxSvcNotStarted">Belum dimulai</string>
+    <string name="linuxSvcRunning">Berjalan</string>
+    <string name="linuxSvcStopped">Dihentikan</string>
+    <string name="linuxSvcUnknown">Proses belum terkonfirmasi</string>
+    <string name="linuxSvcDetected">Ditemukan berjalan</string>
+    <string name="linuxSvcStart">Mulai</string>
+    <string name="linuxSvcRestart">Mulai ulang</string>
+    <string name="linuxSvcReport">Laporan kegagalan</string>
+    <string name="linuxSvcForget">Lupakan proses</string>
+    <string name="linuxSvcRemove">Hapus perintah</string>
+    <string name="linuxSvcName">Nama</string>
+    <string name="linuxSvcNext">Berikutnya</string>
+    <string name="linuxSvcCommand">Perintah</string>
+    <string name="linuxSvcSave">Simpan perintah</string>
+    <string name="linuxSvcInvalidName">Masukkan nama 1–80 karakter.</string>
+    <string name="linuxSvcInvalidCommand">Masukkan perintah 1–4096 karakter.</string>
+    <string name="linuxSvcRemoveTitle">Hapus perintah ini?</string>
+    <string name="linuxSvcForgetTitle">Lupakan proses ini?</string>
+    <string name="linuxSvcStopBody">Program terpilih akan dihentikan hanya setelah identitasnya saat ini dikonfirmasi.</string>
+    <string name="linuxSvcRemoveBody">Hapus perintah tersimpan ini dan tanda terima lokalnya. Ini tidak pernah menghentikan program yang sedang berjalan.</string>
+    <string name="linuxSvcForgetBody">Lupakan tanda terima yang tidak pasti di ponsel ini. Ini tidak menghentikan program; periksa daftar yang berjalan sebelum memulai salinan lain.</string>
+</resources>

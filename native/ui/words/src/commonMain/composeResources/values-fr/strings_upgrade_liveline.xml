@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="one">Lecture de 1 fichier</item>
+        <item quantity="many">Lecture de %1$d fichiers</item>
+        <item quantity="other">Lecture de %1$d fichiers</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="one">Recherche dans le projet</item>
+        <item quantity="many">Recherche dans le projet, %1$d recherches</item>
+        <item quantity="other">Recherche dans le projet, %1$d recherches</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="one">Exploration de 1 dossier</item>
+        <item quantity="many">Exploration de %1$d dossiers</item>
+        <item quantity="other">Exploration de %1$d dossiers</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="one">Modification de 1 fichier</item>
+        <item quantity="many">Modification de %1$d fichiers</item>
+        <item quantity="other">Modification de %1$d fichiers</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="one">Récupération de 1 page</item>
+        <item quantity="many">Récupération de %1$d pages</item>
+        <item quantity="other">Récupération de %1$d pages</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="one">Transmission de 1 tâche</item>
+        <item quantity="many">Transmission de %1$d tâches</item>
+        <item quantity="other">Transmission de %1$d tâches</item>
+    </plurals>
+    <string name="liveStepRunning">Exécution de %1$s</string>
+    <string name="liveStepRunningCommand">Exécution d'une commande</string>
+    <string name="liveFailedStillWorking">L'agent travaille encore. Vous n'avez encore rien à faire.</string>
+    <string name="liveFailedStopped">L'agent s'est arrêté. Envoyez un message pour lui demander de continuer.</string>
+</resources>

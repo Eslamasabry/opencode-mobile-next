@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">Quebrar linhas de código</string>
+    <string name="stateReaderNoWrap">Manter o código em uma linha</string>
+    <string name="stateReaderSaveFailed">Não foi possível salvar a opção de exibição. Tente novamente.</string>
+    <string name="stateUsageBudgets">Orçamentos pessoais de consumo</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

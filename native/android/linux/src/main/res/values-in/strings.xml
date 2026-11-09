@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="other">%1$d perlu Anda</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="other">%1$d berjalan</item>
+    </plurals>
+    <string name="native_live_channel">Koneksi pengodean langsung</string>
+    <string name="native_live_description">Ditampilkan saat OpenCode menjaga percakapan server tetap aktif di latar belakang</string>
+    <string name="native_phone_server_body">Agen Anda tetap bekerja saat Anda memakai aplikasi lain.</string>
+    <string name="native_phone_server_channel">OpenCode di ponsel ini</string>
+    <string name="native_phone_server_description">Ditampilkan saat server ponsel atau mesin proyek berjalan</string>
+    <string name="native_setup_channel">Penyiapan</string>
+    <string name="native_status_action_new_chat">Percakapan baru</string>
+    <string name="native_status_action_open">Buka</string>
+    <string name="native_status_action_start">Mulai</string>
+    <string name="native_status_action_stop_opencode">Hentikan OpenCode</string>
+    <string name="native_status_action_stop_reply">Hentikan balasan</string>
+    <string name="native_status_on_this_phone">di ponsel ini</string>
+    <string name="native_status_paused_android_body">Android menghentikan pekerjaan latar belakang setelah 6 jam sehari. Buka OpenCode untuk melanjutkan.</string>
+    <string name="native_status_paused_android_title">Dijeda · Batas latar belakang Android</string>
+    <string name="native_status_paused_idle_body">Ketuk untuk memulai OpenCode lagi</string>
+    <string name="native_status_paused_idle_title">Dijeda · tidak ada yang berjalan</string>
+    <string name="native_status_public_paused">OpenCode · dijeda</string>
+    <string name="native_status_public_ready">OpenCode · siap</string>
+    <string name="native_status_ready_body">Siap kapan pun Anda siap</string>
+    <string name="native_status_ready_title">Siap · tidak ada yang berjalan</string>
+</resources>

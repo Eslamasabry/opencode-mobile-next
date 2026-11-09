@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">Explorar projetos do celular</string>
+    <string name="linuxLocalProjectsDetail">Explore as pastas com o servidor parado, inclusive os projetos mantidos após remover o Linux.</string>
+    <string name="linuxLocalParent">Subir uma pasta</string>
+    <string name="linuxLocalClose">Fechar pastas</string>
+    <string name="linuxLocalGit">Projeto Git</string>
+    <string name="linuxLocalFolder">Pasta</string>
+    <string name="linuxLocalReading">Lendo pastas…</string>
+    <string name="linuxLocalFolderFailed">Não é possível ler esta pasta. Ela pode ter sido movida, removida ou ser um link.</string>
+    <string name="linuxLocalEmpty">Nenhuma pasta aqui.</string>
+    <string name="linuxLocalMeasure">Calcular as opções de remoção do Linux</string>
+    <string name="linuxLocalRemoveKeep">Remover o Linux e manter os projetos</string>
+    <string name="linuxLocalRemoveAll">Remover o Linux e os projetos</string>
+    <string name="linuxLocalFreed">Libera %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">Remover o Linux e manter os projetos?</string>
+    <string name="linuxLocalRemoveAllQuestion">Remover o Linux e todos os projetos do celular?</string>
+    <string name="linuxLocalRemoveKeepBody">Para os programas do celular e remove o Linux, as ferramentas instaladas, os logins e o histórico do servidor local. Os arquivos dos seus projetos continuam disponíveis para explorar. Libera %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Para os programas do celular e remove o Linux, as ferramentas instaladas, os logins, o histórico do servidor local e todos os arquivos de projetos mantidos no celular. Isso não pode ser desfeito. Libera %1$s.</string>
+    <string name="linuxLocalStorageFailed">O celular não conseguiu concluir a leitura ou a remoção do armazenamento do Linux. Feche as tarefas do celular e tente novamente.</string>
+    <string name="linuxLocalRemoved">Armazenamento do Linux removido.</string>
+    <string name="linuxLocalCreate">Criar um projeto no celular</string>
+    <string name="linuxLocalCreatePath">Caminho absoluto da pasta do projeto</string>
+    <string name="linuxLocalInvalidPath">Digite um caminho de pasta absoluto, sem navegação para pastas superiores nem quebras de linha.</string>
+</resources>

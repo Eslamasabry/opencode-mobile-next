@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">Предыдущая недавняя модель</string>
+    <string name="chatCycleNext">Следующая недавняя модель</string>
+    <string name="chatHomeAllow">Разрешить один раз</string>
+    <string name="chatHomeReject">Отклонить</string>
+    <string name="chatHomeAnswerFailed">Не удалось отправить ответ. Откройте чат и проверьте.</string>
+    <string name="chatHomeRunning">Выполняется</string>
+    <string name="chatHomeMinutes">%1$s мин</string>
+    <string name="chatQueueMoveTitle">Перенести запрос из очереди</string>
+    <string name="chatQueueMoveEmpty">В этом чате нет неотправленных запросов в очереди.</string>
+    <string name="chatQueueMoveChoosePrompt">Выберите запрос</string>
+    <string name="chatQueueMoveChooseServer">Выберите сервер назначения</string>
+    <string name="chatQueueMoveChooseDestination">Перенести в чат</string>
+    <string name="chatQueueMoveFailure">Не удалось перенести запрос. Ничего не отправлено.</string>
+    <string name="chatQueueMoveMore">Другие чаты</string>
+    <string name="chatQueueMoveSelectionNote">Запрос останется в очереди. Модель или агент, которых нет в месте назначения, будут убраны.</string>
+    <string name="chatPhraseHide">Скрыть: %1$s</string>
+    <string name="chatHomeSeconds">%1$s с</string>
+</resources>

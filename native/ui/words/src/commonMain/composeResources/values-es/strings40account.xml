@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Cuenta de Codex</string>
+    <string name="account40ScopeLost">Este servidor cambió. Vuelve a Servidores y abre la cuenta del servidor conectado.</string>
+    <string name="account40Refresh">Actualizar cuenta</string>
+    <string name="account40Loading">Revisando la cuenta del host</string>
+    <string name="account40Unavailable">Panel de cuenta no disponible</string>
+    <string name="account40ReadFailed">No se pudo leer la cuenta</string>
+    <string name="account40Disconnected">Conexión interrumpida</string>
+    <string name="account40Connected">Sesión iniciada en el host</string>
+    <string name="account40SignedOut">Listo para iniciar sesión</string>
+    <string name="account40InProgress">Inicio de sesión en curso</string>
+    <string name="account40NeedsAttention">El inicio de sesión necesita atención</string>
+    <string name="account40NoAuth">El host no requiere iniciar sesión</string>
+    <string name="account40ApiKey">Clave de API</string>
+    <string name="account40HostAuth">Autenticación del host</string>
+    <string name="account40HostNote">El entorno oficial conserva el inicio de sesión. Los cambios en la cuenta afectan a todos los servidores guardados que usan este host.</string>
+    <string name="account40UnsupportedDetail">Este panel está verificado con Codex 0.153.4. Es posible que el entorno conectado no admita estas funciones de cuenta.</string>
+    <string name="account40ReconnectDetail">Se borraron los datos de la cuenta y el código de inicio de sesión. Vuelve a conectarte para actualizar. El inicio de sesión no se reiniciará automáticamente.</string>
+    <string name="account40SignIn">Iniciar sesión con ChatGPT</string>
+    <string name="account40SignInNote">Inicia sesión con tu cuenta de ChatGPT. Terminas en el navegador; esta app nunca ve tu contraseña.</string>
+    <string name="account40Limits">Límites de uso</string>
+    <string name="account40LimitsUnavailable">Los límites de uso no están disponibles para esta cuenta o este host.</string>
+    <string name="account40Usage">Uso de tokens</string>
+    <string name="account40UsageUnavailable">El uso de tokens no está disponible para esta cuenta o este host.</string>
+    <string name="account40LifetimeTokens">Tokens en total</string>
+    <string name="account40PeakTokens">Máximo diario de tokens</string>
+    <string name="account40UsageNote">El host informa estos valores. Los valores faltantes son desconocidos, no cero. La cantidad de tokens no es una factura ni lo que te queda de mensajes.</string>
+    <string name="account40Updated">Última revisión: %1$s</string>
+    <string name="account40Starting">Solicitando un código de inicio de sesión</string>
+    <string name="account40Waiting">Termina de iniciar sesión en tu navegador</string>
+    <string name="account40Cancelling">Cancelando el inicio de sesión</string>
+    <string name="account40Cancelled">Inicio de sesión cancelado</string>
+    <string name="account40LoginFailed">No se completó el inicio de sesión. Revisa el host e inténtalo de nuevo.</string>
+    <string name="account40LoginUncertain">El host no pudo confirmar el inicio de sesión ni la cancelación. Puede que siga esperando. Revisa el entorno oficial del host antes de empezar de nuevo.</string>
+    <string name="account40LoginCompleted">Inicio de sesión completado. Revisando la cuenta.</string>
+    <string name="account40CodeHint">Ingresa este código de un solo uso en la página oficial de inicio de sesión. Mantenlo en privado.</string>
+    <string name="account40OpenSignIn">Abrir el inicio de sesión oficial</string>
+    <string name="account40Cancel">Cancelar inicio de sesión</string>
+    <string name="account40Allowance">Cuota informada</string>
+    <string name="account40PercentUsed">%1$d% usado</string>
+    <string name="account40WindowUnknown">Duración del período no disponible</string>
+    <string name="account40WindowMinutes">Período de %1$d minutos</string>
+    <string name="account40WindowHours">Período de %1$d horas</string>
+    <string name="account40WindowDays">Período de %1$d días</string>
+    <string name="account40ResetUnknown">Hora de restablecimiento no disponible</string>
+    <string name="account40ScopeLostTitle">Este servidor cambió</string>
+    <string name="account40BackToServers">Volver a Servidores</string>
+    <string name="account40NotConnected">Conéctate a este servidor para ver su cuenta de Codex.</string>
+    <string name="account40SignInMethod">Sesión iniciada con</string>
+    <string name="account40PlanTitle">Plan</string>
+    <string name="account40CopyCode">Copiar código de inicio de sesión</string>
+    <string name="account40LimitReached">Llegaste a un límite de Codex. %1$s</string>
+    <string name="account40ResetDue">Se restablece en cualquier momento</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">Se restablece en 1 día</item>
+        <item quantity="many">Se restablece en %1$d días</item>
+        <item quantity="other">Se restablece en %1$d días</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">Se restablece en 1 h</item>
+        <item quantity="many">Se restablece en %1$d h</item>
+        <item quantity="other">Se restablece en %1$d h</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">Se restablece en 1 min</item>
+        <item quantity="many">Se restablece en %1$d min</item>
+        <item quantity="other">Se restablece en %1$d min</item>
+    </plurals>
+    <string name="account40Back">Atrás</string>
+    <string name="account40Details">Detalles</string>
+    <string name="account40CopyDetails">Copiar detalles</string>
+    <string name="account40Copied">Código copiado</string>
+    <string name="account40OpenQuestion">¿Abrir la página oficial de inicio de sesión en %1$s?</string>
+    <string name="account40OpenPage">Abrir página de inicio de sesión</string>
+    <string name="account40OpenFailed">No se pudo abrir la página de inicio de sesión ni el portapapeles.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

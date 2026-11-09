@@ -322,7 +322,7 @@ private fun Modifier.liquidPane(
     val picture = kitLivePictureSpots()
     val look = kitGlassLook()
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture, look) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture, look, platform.liquidResolution) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
@@ -364,6 +364,7 @@ private fun Modifier.liquidPane(
                 flip = flip,
                 keepRim = keepRim,
                 glintShare = look.spec.glintShare,
+                resolution = liquidResolutionOf(recipe, platform.liquidResolution),
             )
         }
     val words = kitLiquidWords(backdrop, flip)

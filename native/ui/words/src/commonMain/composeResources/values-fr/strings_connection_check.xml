@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">Vérifier la connexion</string>
+    <string name="connectionCheckTitle">Vérification de la connexion</string>
+    <string name="connectionCheckAgain">Actualiser</string>
+    <string name="connectionCheckAddress">Adresse</string>
+    <string name="connectionCheckSignIn">Connexion</string>
+    <string name="connectionCheckVersion">Version du serveur</string>
+    <string name="connectionCheckLive">Mises à jour en direct</string>
+    <string name="connectionCheckSpeed">Temps de réponse</string>
+    <string name="connectionCheckWaiting">En attente</string>
+    <string name="connectionCheckRunning">Vérification…</string>
+    <string name="connectionCheckPassed">Réussie</string>
+    <string name="connectionCheckVersionValue">Version %1$s</string>
+    <string name="connectionCheckMillis">%1$s ms</string>
+    <string name="connectionCheckUnreachable">Impossible d’atteindre le serveur. Vérifiez l’adresse et que le serveur est en cours d’exécution.</string>
+    <string name="connectionCheckNotServer">Cette adresse n’a pas répondu comme un serveur pris en charge. Vérifiez l’adresse.</string>
+    <string name="connectionCheckNeedsPassword">Saisissez à nouveau le mot de passe ou le jeton du serveur enregistré, puis réessayez.</string>
+    <string name="connectionCheckPasswordRejected">Le serveur a refusé la connexion enregistrée. Mettez à jour le mot de passe ou le jeton.</string>
+    <string name="connectionCheckUnsupported">Cette version du serveur n’est pas prise en charge. Mettez le serveur à jour.</string>
+    <string name="connectionCheckNotReady">Le serveur a répondu mais n’est pas prêt. Patientez un instant et vérifiez à nouveau.</string>
+    <string name="connectionCheckStreamUnchecked">Connectez ce serveur pour vérifier les mises à jour en direct.</string>
+    <string name="connectionCheckStreamConnecting">La connexion en direct se rétablit encore. Vérifiez à nouveau dans un instant.</string>
+    <string name="connectionCheckStreamDown">La connexion en direct existante est coupée. Reconnectez ce serveur.</string>
+    <string name="connectionCheckSlow">%1$s ms — le serveur répond lentement. Vérifiez le réseau ou la charge du serveur.</string>
+    <string name="connectionCheckSkipped">Non vérifié, car une étape précédente demande votre attention.</string>
+    <string name="connectionCheckTrust">Examinez la confiance accordée à la connexion de ce serveur avant de vérifier à nouveau.</string>
+    <string name="connectionCheckChanged">Le serveur enregistré a changé. Fermez cette vérification et rouvrez-la.</string>
+</resources>

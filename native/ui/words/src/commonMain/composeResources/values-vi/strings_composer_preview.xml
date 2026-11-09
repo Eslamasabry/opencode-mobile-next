@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">Mô hình</string>
+    <string name="composerPreviewModelDefault">Mặc định của máy chủ</string>
+    <string name="composerPreviewModelDefaultHint">Mô hình mặc định của chính máy chủ</string>
+    <string name="composerPreviewModelsTitle">Chọn mô hình</string>
+    <string name="composerPreviewModelsLoading">Đang tải mô hình…</string>
+    <string name="composerPreviewModelsEmpty">Hiện không có mô hình nào.</string>
+    <string name="composerPreviewModelsFailed">Không thể tải danh sách mô hình.</string>
+    <string name="composerPreviewModelsRetry">Thử lại</string>
+    <string name="composerPreviewModelsClose">Đóng</string>
+    <string name="composerPreviewAttachFile">Đính kèm tệp</string>
+    <string name="composerPreviewAttachNoPicker">Thiết bị này không thể đính kèm tệp ở đây.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">Mô hình này không nhận tệp. Hãy chọn mô hình có nhận.</string>
+    <string name="composerPreviewAttachmentRemove">Bỏ</string>
+    <string name="composerPreviewAttachmentFailed">Không thể đính kèm tệp.</string>
+    <string name="composerPreviewAttachmentTooLarge">Tệp này quá lớn để đính kèm.</string>
+    <string name="composerPreviewAttachmentUnsupported">Không thể đính kèm loại tệp này.</string>
+    <string name="composerPreviewAttachmentStorage">Không thể lưu tệp trên thiết bị này.</string>
+    <string name="composerPreviewAttachmentDismiss">Đóng</string>
+    <string name="composerPreviewAttachmentRetry">Thử lại</string>
+</resources>

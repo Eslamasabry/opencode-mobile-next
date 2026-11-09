@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">Historique et registre de la configuration</string>
+    <string name="stateSetupNoWrites">Vous pouvez consulter la configuration ici. Appliquer et Annuler sont indisponibles, car ce serveur n’a pas de point de restauration atomique vérifié.</string>
+    <string name="stateSetupUnsupported">Connectez-vous à un serveur qui permet de consulter la configuration pour lire ses sources de configuration.</string>
+    <string name="stateSetupSaveFailed">Impossible d’enregistrer la modification. Réessayez.</string>
+    <string name="stateSetupReadFailed">Impossible de lire les informations de configuration. Réessayez.</string>
+    <string name="stateSetupOffline">Reconnectez-vous pour actualiser les informations de configuration.</string>
+    <string name="stateSetupSources">Sources de configuration</string>
+    <string name="stateSetupMcp">Outils connectés</string>
+    <string name="stateSetupRecordReview">Enregistrer que j’ai vérifié cette configuration</string>
+    <string name="stateSetupRefresh">Actualiser la configuration</string>
+    <string name="stateSetupHistory">Historique de la configuration</string>
+    <string name="stateSetupHistoryUnavailable">L’historique enregistré est indisponible. Il a été conservé pour une récupération.</string>
+    <string name="stateSetupHistoryEmpty">Aucune vérification de configuration enregistrée</string>
+    <string name="stateSetupRegistryConsent">Parcourir le registre public d’outils</string>
+    <string name="stateSetupRegistryPrivacy">Désactivé par défaut. L’actualisation envoie une seule requête publique. Les mots recherchés vont au registre\u00A0; les identifiants de votre serveur, non. Les fiches n’exécutent ni n’installent jamais rien.</string>
+    <string name="stateSetupRegistrySearch">Rechercher dans le registre</string>
+    <string name="stateSetupRegistryRefresh">Actualiser le registre</string>
+    <string name="stateSetupRegistrySaved">Afficher les fiches enregistrées</string>
+    <string name="stateSetupRegistryClear">Oublier l’accord pour le registre et la liste enregistrée</string>
+    <string name="stateSetupRegistryOffline">Hors ligne. Affichage de la liste enregistrée.</string>
+    <string name="stateSetupRegistryFailed">Impossible de charger le registre. Votre liste enregistrée est conservée.</string>
+    <string name="stateSetupRegistryEmpty">Aucune fiche à afficher. Actualisez ou essayez une autre recherche.</string>
+    <string name="stateSetupMcpConnected">Connecté</string>
+    <string name="stateSetupMcpPending">Connexion en cours</string>
+    <string name="stateSetupMcpDisabled">Désactivé</string>
+    <string name="stateSetupMcpFailed">Connexion impossible</string>
+    <string name="stateSetupMcpSignIn">Connexion requise</string>
+    <string name="stateSetupMcpUnknown">État inconnu</string>
+    <string name="stateSetupAuditProposed">Modification proposée</string>
+    <string name="stateSetupAuditPending">Modification en attente</string>
+    <string name="stateSetupAuditAccepted">Modification acceptée</string>
+    <string name="stateSetupAuditVerified">Vérification confirmée</string>
+    <string name="stateSetupAuditUncertain">Résultat incertain</string>
+    <string name="stateSetupAuditRejected">Modification refusée</string>
+    <string name="stateServerSchedules">Messages programmés</string>
+</resources>

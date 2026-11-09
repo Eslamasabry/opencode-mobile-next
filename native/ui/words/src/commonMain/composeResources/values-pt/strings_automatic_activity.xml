@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">Parar o servidor reiniciado</string>
+    <string name="activityUndoing">Parando o servidor reiniciado…</string>
+    <string name="activityUndone">Reinício desfeito.</string>
+    <string name="activityUndoFailed">Não foi possível desfazer.</string>
+    <string name="activityUndoUnconfirmed">O resultado de desfazer é desconhecido. Não será tentado de novo.</string>
+    <string name="activityUndoUnavailable">Desfazer indisponível.</string>
+</resources>

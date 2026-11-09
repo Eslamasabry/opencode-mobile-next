@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">Di mana proyeknya?</string>
+    <string name="openProjectWhereBody">Pilih ponsel atau komputer yang menyimpannya.</string>
+    <string name="openProjectStatusConnected">Terhubung</string>
+    <string name="openProjectStatusConnecting">Menghubungkan</string>
+    <string name="openProjectStatusNotConnected">Belum terhubung</string>
+    <string name="openProjectTypePath">Ketik path</string>
+    <string name="openProjectTypePathBody">Buka folder dengan path lengkapnya</string>
+    <string name="openProjectNewFolder">Folder baru</string>
+    <string name="openProjectNewFolderBody">Buat folder di %1$s lalu buka</string>
+    <string name="openProjectCloneBody">Salin repositori ke %1$s lalu buka</string>
+    <string name="openProjectCloneFailed">Repositori tidak dapat disalin. Periksa alamatnya dan pastikan server dapat menjangkaunya.</string>
+    <string name="openProjectSlowBody">Server membutuhkan waktu lebih lama dari biasanya untuk merespons.</string>
+    <string name="openProjectProjectsEmptyBody">Clone repositori atau buat folder baru untuk memulai.</string>
+    <string name="openProjectServerNotConnected">Server ini sedang tidak terhubung. Coba lagi setelah terhubung.</string>
+</resources>

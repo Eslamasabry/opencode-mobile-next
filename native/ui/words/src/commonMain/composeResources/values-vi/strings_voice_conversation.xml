@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Khi ghi âm xong, lời nói của bạn được gửi vào cuộc trò chuyện này. Nhấn Nghe để bắt đầu lượt tiếp theo. Câu trả lời chỉ được đọc to khi bạn bật tính năng này.</string>
+    <string name="voiceConversationNativeTourSpeak">Hãy nói, rồi nhấn Gửi để gửi điều bạn vừa nói. Nghe sẽ bắt đầu lượt tiếp theo của bạn.</string>
+    <string name="voiceConversationNativeTourReplies">Đọc to câu trả lời sẽ xin phép bạn và cần một giọng đọc trên điện thoại. Bạn có thể dừng đọc bất cứ lúc nào.</string>
+    <string name="voiceConversationNativeTourLeave">Thoát chế độ giọng nói sẽ dừng nghe và dừng tự động đọc. Lần gửi chưa chắc chắn sẽ không bao giờ tự động gửi lại.</string>
+    <string name="voiceConversationNativeTourDone">Đã hiểu</string>
+    <string name="voiceConversationNativeTourNext">Tiếp</string>
+    <string name="voiceConversationNativeTourReset">Hiện lại các mẹo</string>
+    <string name="voiceConversationNativeTourResetFailed">Không đặt lại được các mẹo. Hãy thử lại.</string>
+    <string name="voiceConversationNativeTourReplay">Chỉ cho tôi</string>
+    <string name="voiceConversationNativeTourLoadFailed">Không mở được các mẹo. Hãy thử lại.</string>
+</resources>

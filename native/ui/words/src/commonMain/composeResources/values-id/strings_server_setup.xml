@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secSetupTitle">Penyiapan server</string>
+    <string name="secSetupReadOnly">Periksa konfigurasi server Anda dan siapkan usulan lokal. Menerapkan dan membatalkan membutuhkan endpoint pemulihan atomik yang tidak tersedia di server ini. Tidak ada yang berubah di server Anda.</string>
+    <string name="secSetupFailed">Penyiapan tidak dapat dimuat. Sambungkan ulang ke server ini dan coba lagi.</string>
+    <string name="secSetupRefresh">Muat ulang penyiapan server</string>
+    <string name="secSetupConfig">Konfigurasi dengan nilai pribadi disembunyikan</string>
+    <string name="secSetupGuided">Penyiapan terpandu di perangkat ini</string>
+    <string name="secSetupReview">Tinjau usulan</string>
+    <string name="secSetupInvalid">Isi kolom yang diminta tanpa kredensial. Periksa model, perintah, dan alamat, lalu coba lagi.</string>
+    <string name="secSetupInputs">Isi semua nilai yang diminta tanpa kredensial. URL tidak boleh berisi kata sandi, query, atau fragmen. Belum ada perubahan yang diusulkan.</string>
+    <string name="secSetupUnsupported">Alur ini membutuhkan alat masuk atau konfigurasi server yang terpisah. Tidak tersedia di penyiapan terpandu.</string>
+    <string name="secSetupProposed">Usulan lokal siap ditinjau. Belum ada yang diterapkan. Usulan konektor dimulai dalam keadaan nonaktif.</string>
+    <string name="secSetupRegistry">Jelajahi registri konektor publik</string>
+    <string name="secSetupRegistryConsent">Nonaktif secara bawaan. Mengaktifkannya hanya menyimpan pilihan Anda tanpa mengambil data. Muat ulang menghubungi registri MCP publik tanpa kredensial server.</string>
+    <string name="secSetupSearch">Cari daftar publik</string>
+    <string name="secSetupRegistryRefresh">Muat ulang daftar publik</string>
+    <string name="secSetupRegistryDisabled">Akses registri publik nonaktif.</string>
+    <string name="secSetupRegistryOffline">Anda sedang offline. Menampilkan daftar tersimpan.</string>
+    <string name="secSetupRegistryFailed">Registri publik tidak dapat dimuat. Coba lagi nanti atau siapkan secara manual.</string>
+    <string name="secSetupRegistryEmpty">Tidak ada daftar publik untuk ditampilkan.</string>
+    <string name="secSetupRegistryReady">Daftar konektor publik</string>
+    <string name="secSetupRegistryRemote">Endpoint HTTPS tersedia. Tinjau detailnya sebelum menyiapkannya di server Anda.</string>
+    <string name="secSetupRegistryDetails">Daftar ini membutuhkan detail koneksi. Siapkan secara manual.</string>
+    <string name="secSetupRegistryCommand">Pemasangan paket membutuhkan perintah yang sudah ditinjau di server Anda. Siapkan secara manual.</string>
+    <string name="secSetupRegistryNoEndpoint">Daftar ini tidak memiliki endpoint HTTPS yang didukung. Siapkan secara manual.</string>
+    <string name="secSetupChooseModel">Pilih model</string>
+    <string name="secSetupDefaultAgent">Agen bawaan</string>
+    <string name="secSetupPermission">Aturan izin</string>
+    <string name="secSetupRemoteMcp">Konektor jarak jauh</string>
+    <string name="secSetupLocalMcp">Konektor lokal</string>
+    <string name="secSetupRemoveMcp">Hapus konektor</string>
+    <string name="secSetupProvider">Masuk ke penyedia</string>
+    <string name="secSetupAgent">Atur agen</string>
+    <string name="secSetupCommand">Atur perintah</string>
+    <string name="secSetupModelField">Model (penyedia/model)</string>
+    <string name="secSetupAgentField">Nama agen yang ada</string>
+    <string name="secSetupToolField">Nama alat</string>
+    <string name="secSetupEffectField">Izin (ask, allow, atau deny)</string>
+    <string name="secSetupUrlField">Alamat konektor HTTPS atau loopback</string>
+    <string name="secSetupCommandField">Argumen perintah sebagai daftar JSON, tanpa kredensial</string>
+    <string name="secSetupNameField">Nama konektor</string>
+    <string name="secHostOfficialInstall">Paket resmi OpenCode 2</string>
+    <string name="secHostPinnedFront">Perintah depan AI Team yang sudah diperiksa</string>
+    <string name="secHostPinnedFrontHelp">Jalankan ini di komputer Anda setelah menyiapkan supervisor Gas City. Ganti you@example.com dengan identitas Tailscale Anda yang diizinkan. Unduhan dikunci ke satu commit penuh dan diperiksa sebelum diberi nama atau dijalankan.</string>
+</resources>

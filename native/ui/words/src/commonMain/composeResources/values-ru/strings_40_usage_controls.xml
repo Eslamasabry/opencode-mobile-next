@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">Оповещения</string>
+    <string name="m40UsageWidget">Виджет на главном экране</string>
+    <string name="m40UsageReadFrom">Считывать расход</string>
+    <string name="m40UsageAdd">Добавить подписку</string>
+    <string name="m40UsageSaveFailed">Не удалось сохранить это изменение. Повторите.</string>
+    <string name="m40UsageAlertsWatch">Следить за моими тарифами</string>
+    <string name="m40UsageAlertsEvery">Следить за каждой подпиской, лимиты которой можно прочитать.</string>
+    <string name="m40UsageTellMe">Сообщать, когда</string>
+    <string name="m40UsageReset">Исчерпанный тариф снова доступен</string>
+    <string name="m40UsageDifferent">Свои значения для этих тарифов</string>
+    <string name="m40UsageWhen">Когда уведомлять</string>
+    <string name="m40UsageQuiet">Тихие часы</string>
+    <string name="m40UsageQuietShared">Те же тихие часы, что и для других уведомлений.</string>
+    <string name="m40UsageQuietStart">Начало</string>
+    <string name="m40UsageQuietEnd">Конец</string>
+    <string name="m40UsageQuietAllDay">В эти часы оповещения отключены на весь день.</string>
+    <string name="m40UsageWifi">Только по Wi-Fi</string>
+    <string name="m40UsageNothingToWatch">Пока нет тарифов, за которыми можно следить.</string>
+    <string name="m40UsageDownTo">Когда у тарифа останется</string>
+    <string name="m40UsageSameAsOthers">Как у остальных: осталось %1$d%</string>
+    <string name="m40UsageWidgetPlans">Тарифы на виджете</string>
+    <string name="m40UsageWidgetSetup">Показывать тарифы, которым нужна настройка</string>
+    <string name="m40UsageWidgetWindows">Периоды для показа</string>
+    <string name="m40UsageBoth">5 часов и эта неделя</string>
+    <string name="m40UsageReaderGone">Это сохранённое подключение больше недоступно.</string>
+    <string name="m40UsageReadPhoneBody">Настройте считыватель в Ubuntu в приложении, чтобы читать лимиты тарифов, в которые вы вошли. Ключи поставщиков остаются на хосте.</string>
+    <string name="m40UsageReadComputerBody">Разрешите короткую проверку только для чтения через этот сервер при обновлении расхода. Она ищет на этом компьютере лимиты тарифов, в которые выполнен вход. Здесь её можно отключить.</string>
+    <string name="m40UsageWhatRuns">Что запускается на компьютере</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">Проверка локально читает данные входа поставщиков и возвращает только лимиты тарифов и непрозрачную ссылку на аккаунт. Ключи и токены в приложение не возвращаются.</string>
+    <string name="m40UsageCopying">Копирование считывателя</string>
+    <string name="m40UsageCheckingSignIns">Проверка входов</string>
+    <string name="m40UsageStarting">Запуск считывателя</string>
+    <string name="m40UsageReading">Чтение лимитов тарифов</string>
+    <string name="m40UsageChecking">Проверка подключения</string>
+    <string name="m40UsageNeedsNode">Чтобы читать лимиты тарифов, на этом компьютере нужен Node 20 или новее.</string>
+    <string name="m40UsageLinuxNotReady">Сначала настройте Ubuntu в приложении, затем повторите.</string>
+    <string name="m40UsageServerTooOld">Обновите этот сервер, чтобы читать расход через командный терминал.</string>
+    <string name="m40UsagePrepareFailed">Не удалось подготовить считыватель. Повторите.</string>
+    <string name="m40UsageStartFailed">Считыватель не запустился. Повторите.</string>
+    <string name="m40UsageRemoveFailed">Не удалось удалить считыватель. Повторите.</string>
+    <string name="m40UsageUnreachable">Не удалось связаться с этим компьютером. Проверьте подключение и повторите.</string>
+    <string name="m40UsageNoAnswer">Проверка не вернула читаемого ответа. Повторите.</string>
+    <string name="m40UsageFoundNone">Проверка не нашла тарифов с выполненным входом, лимиты которых можно прочитать.</string>
+    <string name="m40UsageFound">Найдено: %1$s</string>
+    <string name="m40UsageReadNow">Считать сейчас</string>
+    <string name="m40UsageTurnOn">Включить считывание</string>
+    <string name="m40UsageTurnOff">Отключить считывание</string>
+    <string name="m40UsageThreshold">Уровень оповещения для этого тарифа</string>
+    <string name="m40UsageResetHelp">Сообщить, когда этот тариф снова станет доступен.</string>
+    <string name="m40UsageReadOff">Отключить считывание с %1$s</string>
+    <string name="m40UsageChooseSignIn">Выберите, где войти</string>
+</resources>

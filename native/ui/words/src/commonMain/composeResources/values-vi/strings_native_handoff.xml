@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">Tiếp tục trong một tác nhân mới</string>
+    <string name="nativeHandoffIntro">Chọn một tác nhân trên máy chủ này. Xem lại bản ghi cuộc trò chuyện đã che và lời nhắc đầu tiên trước khi bắt đầu. Cuộc trò chuyện gốc không thay đổi.</string>
+    <string name="nativeHandoffPreparing">Đang chuẩn bị bản ghi cuộc trò chuyện…</string>
+    <string name="nativeHandoffReview">Bản ghi này sẽ được lưu trong một thư mục mới được bỏ qua trong cùng dự án. Thông tin đăng nhập đã được che; lập luận và nội dung tệp đính kèm không được đưa vào.</string>
+    <string name="nativeHandoffPrompt">Tin nhắn đầu tiên gửi tác nhân mới</string>
+    <string name="nativeHandoffSend">Bắt đầu tác nhân mới</string>
+    <string name="nativeHandoffSending">Đang lưu bản ghi và bắt đầu cuộc trò chuyện mới…</string>
+    <string name="nativeHandoffSucceeded">Tác nhân mới đã nhận bản ghi cuộc trò chuyện.</string>
+    <string name="nativeHandoffFailed">Không thể hoàn tất việc chuyển. Cuộc trò chuyện gốc không thay đổi. Hãy kiểm tra kết nối và dự án, rồi mở lại bảng này.</string>
+    <string name="nativeHandoffUnconfirmed">Không xác nhận được cuộc trò chuyện mới. Hãy xem Tất cả cuộc trò chuyện trước khi bắt đầu cuộc khác: có thể tác nhân đã nhận được.</string>
+    <string name="nativeHandoffLinkFailed">Tác nhân mới đã nhận bản ghi, nhưng không lưu được liên kết cuộc trò chuyện. Hãy thử lưu lại liên kết; sẽ không gửi lại tin nhắn nào.</string>
+    <string name="nativeHandoffSaveLink">Lưu liên kết cuộc trò chuyện</string>
+</resources>

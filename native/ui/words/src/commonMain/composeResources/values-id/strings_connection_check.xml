@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">Periksa koneksi</string>
+    <string name="connectionCheckTitle">Pemeriksaan koneksi</string>
+    <string name="connectionCheckAgain">Muat ulang</string>
+    <string name="connectionCheckAddress">Alamat</string>
+    <string name="connectionCheckSignIn">Login</string>
+    <string name="connectionCheckVersion">Versi server</string>
+    <string name="connectionCheckLive">Pembaruan langsung</string>
+    <string name="connectionCheckSpeed">Waktu respons</string>
+    <string name="connectionCheckWaiting">Menunggu</string>
+    <string name="connectionCheckRunning">Memeriksa…</string>
+    <string name="connectionCheckPassed">Lolos</string>
+    <string name="connectionCheckVersionValue">Versi %1$s</string>
+    <string name="connectionCheckMillis">%1$s md</string>
+    <string name="connectionCheckUnreachable">Server tidak terjangkau. Periksa alamat dan pastikan server berjalan.</string>
+    <string name="connectionCheckNotServer">Alamat ini tidak menjawab sebagai server yang didukung. Periksa alamatnya.</string>
+    <string name="connectionCheckNeedsPassword">Masukkan lagi kata sandi atau token server tersimpan, lalu coba lagi.</string>
+    <string name="connectionCheckPasswordRejected">Server menolak data masuk yang tersimpan. Perbarui kata sandi atau token.</string>
+    <string name="connectionCheckUnsupported">Versi server ini tidak didukung. Perbarui server.</string>
+    <string name="connectionCheckNotReady">Server menjawab tetapi belum siap. Tunggu sebentar dan periksa lagi.</string>
+    <string name="connectionCheckStreamUnchecked">Sambungkan server ini untuk memeriksa pembaruan langsung.</string>
+    <string name="connectionCheckStreamConnecting">Koneksi langsung masih menyambung kembali. Periksa lagi sebentar lagi.</string>
+    <string name="connectionCheckStreamDown">Koneksi langsung yang ada terputus. Sambungkan kembali server ini.</string>
+    <string name="connectionCheckSlow">%1$s md — server merespons lambat. Periksa jaringan atau beban server.</string>
+    <string name="connectionCheckSkipped">Tidak diperiksa karena langkah sebelumnya perlu diperhatikan.</string>
+    <string name="connectionCheckTrust">Tinjau kepercayaan koneksi server ini sebelum memeriksa lagi.</string>
+    <string name="connectionCheckChanged">Server tersimpan berubah. Tutup pemeriksaan ini dan buka lagi.</string>
+</resources>

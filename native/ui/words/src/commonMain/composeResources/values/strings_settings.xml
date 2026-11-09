@@ -479,6 +479,9 @@
     <string name="e7LocaleUiSpanish">Español</string>
     <string name="e7LocaleUiPortuguese">Português (Brasil)</string>
     <string name="e7LocaleUiRussian">Русский</string>
+    <string name="e7LocaleUiVietnamese">Tiếng Việt</string>
+    <string name="e7LocaleUiIndonesian">Bahasa Indonesia</string>
+    <string name="e7LocaleUiFrench">Français</string>
     <string name="serverSettingsRemoveTitle">Remove %1$s</string>
     <string name="serverSettingsRecheckAgents">Check for agents again</string>
     <string name="serverSettingsRecheckAgentsDetail">Use it after signing in to an agent on that computer.</string>

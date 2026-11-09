@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryCrashReportsTitle">Enviar informes de fallos al desarrollador (Google Firebase)</string>
+    <string name="telemetryCrashReportsBody">Cuando la app falla o un paso no funciona, envía el tipo de problema, la versión de la app y de Android, y una lista corta de ubicaciones del código. Nunca envía tus mensajes, archivos, direcciones ni claves.</string>
+    <string name="telemetryConsentChoose">Elegir</string>
+    <string name="telemetryConsentSave">Guardar mis opciones</string>
+    <string name="sendReportTitle">Enviar un informe del problema</string>
+    <string name="sendReportRowDetail">Revisa un registro con datos ocultos y luego envíalo</string>
+    <string name="sendReportSubtitle">Esto es todo lo que contiene el informe. No se envía nada hasta que toques Enviar.</string>
+    <string name="sendReportSend">Enviar</string>
+    <string name="sendReportCollecting">Reuniendo el informe…</string>
+    <string name="sendReportSentTitle">Informe enviado</string>
+    <string name="sendReportSentBody">Indica este código de informe si abres una incidencia en GitHub, para que el desarrollador encuentre tu informe.</string>
+    <string name="sendReportFailed">No se pudo enviar el informe. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="sendReportDone">Listo</string>
+    <string name="reportCodeLabel">Código del informe</string>
+    <string name="reportCodeCopy">Copiar código del informe</string>
+</resources>

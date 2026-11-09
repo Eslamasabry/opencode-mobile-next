@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Tampilan</string>
+    <string name="filesSearchNames">Nama file</string>
+    <string name="filesRowActions">Tindakan</string>
+    <string name="filesChangeDeleted">Dihapus</string>
+    <string name="filesChangeAdded">Ditambahkan</string>
+    <string name="filesChangeModified">Diubah</string>
+    <string name="filesWrapCode">Bungkus baris</string>
+    <string name="filesUnwrapCode">Gulir baris ke samping</string>
+    <string name="filesShowPreview">Pratinjau</string>
+    <string name="filesMoreActions">Tindakan file lainnya</string>
+    <string name="filesAttachFailed">File ini tidak dapat dilampirkan. Coba lagi.</string>
+    <string name="filesPreferencesFailed">Pilihan tampilan ini tidak dapat disimpan. Coba lagi.</string>
+    <string name="filesLinkRefused">Tautan ini tidak dapat dibuka dengan aman.</string>
+    <string name="filesOpenLinkQuestion">Buka %1$s?</string>
+    <string name="filesOpenLinkBody">Tautan ini dibuka di luar aplikasi.</string>
+    <string name="filesOpenLink">Buka tautan</string>
+    <string name="filesAttachmentReady">File terlampir. Kembali ke percakapan untuk menambahkan komentar Anda.</string>
+    <string name="filesScopedEmpty">Ini folder yang dibagikan oleh server percakapan ini. Periksa akses foldernya, lalu muat ulang.</string>
+    <string name="filesStorageFailed">Akses folder tidak diubah. Coba lagi.</string>
+    <string name="filesStorageRestart">Akses folder tersimpan. Mulai ulang server ponsel ini, lalu muat ulang.</string>
+    <string name="filesOpenPhone">Buka Ponsel ini</string>
+    <string name="filesReviewStorage">Tinjau folder yang dibagikan</string>
+    <string name="filesSelectedStorageBody">Izinkan folder proyek ini, atau tinjau folder yang dibagikan. Akses ke seluruh penyimpanan tetap nonaktif kecuali Anda mengaktifkannya di sana.</string>
+</resources>

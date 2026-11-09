@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Размышление</string>
+    <string name="composerFullThinkingDefault">По умолчанию</string>
+    <string name="composerFullAgent">Агент</string>
+    <string name="composerFullModels">Модели</string>
+    <string name="composerFullModelChangeFailed">Не удалось подтвердить выбор модели. Проверьте выбор и повторите попытку.</string>
+    <string name="composerFullAttach">Прикрепить</string>
+    <string name="composerFullAddTitle">Добавить к запросу</string>
+    <string name="composerFullPhotoLibrary">Библиотека фото</string>
+    <string name="composerFullTakePhoto">Сделать фото</string>
+    <string name="composerFullPasteImage">Вставить изображение из буфера обмена</string>
+    <string name="composerFullPasteEmpty">В буфере обмена нет изображения.</string>
+    <string name="composerFullDraftFull">Сначала уберите вложение. В черновике может быть до 5 файлов общим объёмом до 20 МБ.</string>
+    <string name="composerFullPhotoDenied">Доступ к фото запрещён. Разрешите доступ к камере или фото в настройках приложения Android и повторите попытку.</string>
+    <string name="composerFullStale">Пока вы выбирали, чат изменился. Повторите попытку.</string>
+    <string name="composerFullCommands">Команды</string>
+    <string name="composerFullFiles">Файлы проекта</string>
+    <string name="composerFullAttachmentsLocal">Вложения сохраняются вместе с этим черновиком на этом устройстве.</string>
+    <string name="composerFullSteerHint">Направляйте, пока он работает…</string>
+</resources>

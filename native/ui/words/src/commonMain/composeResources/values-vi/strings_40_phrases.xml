@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phraseSuggestionsInsert">Chèn: %1$s</string>
+    <string name="phraseSuggestionsOptions">Tùy chọn cho %1$s</string>
+    <string name="phraseSuggestionsChangeFailed">Không ẩn được cụm từ này. Hãy mở lại menu của nó và thử lại.</string>
+</resources>

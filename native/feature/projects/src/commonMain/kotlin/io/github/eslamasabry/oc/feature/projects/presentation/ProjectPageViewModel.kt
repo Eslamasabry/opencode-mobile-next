@@ -49,6 +49,7 @@ public class ProjectPageViewModel(
     private val isolatedHosts: Set<IsolatedTaskHost> = emptySet(),
     private val signals: ProjectSignalsHost = NoProjectSignalsHost(),
     private val storageAccess: Set<SharedStorageAccess> = emptySet(),
+    private val lastKnown: ProjectsLastKnown = NoProjectsLastKnown(),
 ) : ViewModel(), ProjectPageActions {
     private val directory = ProjectRules.normalize(route.directory)
     private val mutable = MutableStateFlow(ProjectPageUi(directory, ProjectRules.name(directory)))
@@ -59,6 +60,9 @@ public class ProjectPageViewModel(
     private var running: Set<SessionId> = emptySet()
     private var cursor: String? = null
     private var generation = 0
+
+    /** True once this page's rows came from the server (not only from the last-known store). */
+    private var liveRead = false
     private var adopted = false
     private var isolatedGeneration = 0
     private var taskOpened = false
@@ -187,9 +191,17 @@ public class ProjectPageViewModel(
             mutable.update { it.copy(phase = ProjectPagePhase.NoServer) }
             return
         }
+        liveRead = false
+        // Cache-first: the rows this page last drew come back at once; the skeleton is for a first-ever open only.
+        val kept = lastKnown.peekPage(route.profile, directory)
+        val showing = kept != null || state.value.phase == ProjectPagePhase.Ready
         mutable.update {
             it.copy(
-                phase = ProjectPagePhase.Opening,
+                phase = if (showing) ProjectPagePhase.Ready else ProjectPagePhase.Opening,
+                conversations =
+                    kept?.conversations?.toImmutableList() ?: if (showing) it.conversations
+                    else it.conversations,
+                elsewhere = kept?.elsewhere?.toImmutableList() ?: it.elsewhere,
                 serverName = live.name,
                 failure = null,
                 storageBlock = SharedStorageBlock.None,
@@ -198,6 +210,18 @@ public class ProjectPageViewModel(
                 loadingMore = false,
             )
         }
+        if (kept == null && !showing)
+            viewModelScope.launch {
+                val read = lastKnown.readPage(route.profile, directory) ?: return@launch
+                if (run != generation || liveRead || state.value.phase != ProjectPagePhase.Opening) return@launch
+                mutable.update {
+                    it.copy(
+                        phase = ProjectPagePhase.Ready,
+                        conversations = read.conversations.toImmutableList(),
+                        elsewhere = read.elsewhere.toImmutableList(),
+                    )
+                }
+            }
         viewModelScope.launch {
             if (!checkStorage(live, run)) return@launch
             val page = live.gateway.sessionPage()
@@ -221,12 +245,12 @@ public class ProjectPageViewModel(
             if (!isCurrent(live, run)) return@launch
             when (page) {
                 is Outcome.Failed ->
-                    mutable.update {
-                        it.copy(phase = ProjectPagePhase.Failed, failure = page.failure)
-                    }
+                    // Kept rows stay; the failure is a notice above them (cache-first).
+                    mutable.update { it.copy(phase = failedPhase(it), failure = page.failure) }
                 is Outcome.Ok -> {
                     opened.remember(route.profile, directory)
                     if (!isCurrent(live, run)) return@launch
+                    liveRead = true
                     sessions = page.value.items
                     cursor = page.value.nextCursor
                     running =
@@ -236,10 +260,20 @@ public class ProjectPageViewModel(
                             ?.keys
                             .orEmpty()
                     publish(ProjectPagePhase.Ready)
+                    lastKnown.keepPage(
+                        route.profile,
+                        directory,
+                        KeptProjectPage(state.value.conversations, state.value.elsewhere),
+                    )
                 }
             }
         }
     }
+
+    /** A failed read keeps the rows already drawn (kept ones included); only an empty page becomes the failed state. */
+    private fun failedPhase(ui: ProjectPageUi): ProjectPagePhase =
+        if (ui.conversations.isNotEmpty() || ui.elsewhere.isNotEmpty()) ProjectPagePhase.Ready
+        else ProjectPagePhase.Failed
 
     private fun isCurrent(live: ProjectServer, run: Int): Boolean =
         run == generation &&
@@ -255,7 +289,7 @@ public class ProjectPageViewModel(
             is Outcome.Failed -> {
                 mutable.update {
                     it.copy(
-                        phase = ProjectPagePhase.Failed,
+                        phase = failedPhase(it),
                         storageBlock = SharedStorageBlock.None,
                         failure = result.failure,
                         creating = false,
@@ -391,7 +425,8 @@ public class ProjectPageViewModel(
                     if (!isCurrent(live, run)) return@launch
                     sessions = listOf(made.value) + sessions
                     mutable.update { it.copy(creating = false) }
-                    publish(ProjectPagePhase.Ready)
+                    // Rows still only kept: publishing the one new session would drop them until the read lands.
+                    if (liveRead) publish(ProjectPagePhase.Ready)
                     // The saved model default is best-effort: the chat exists on the server
                     // already, so it always opens (Flutter never blocks a new chat on the model).
                     signals.applyNewChatDefault(live, made.value.id)

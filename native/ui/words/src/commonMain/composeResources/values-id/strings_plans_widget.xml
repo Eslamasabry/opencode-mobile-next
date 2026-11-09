@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansWidgetSettings">Widget pemakaian</string>
+    <string name="plansWidgetSetupRows">Tampilkan paket yang perlu disiapkan</string>
+    <string name="plansWidgetBoth">Tampilkan kedua jendela</string>
+    <string name="plansWidgetFiveHour">Tampilkan jendela lima jam</string>
+    <string name="plansWidgetWeekly">Tampilkan jendela mingguan</string>
+    <string name="plansWidgetSelected">Dipilih</string>
+    <string name="plansWidgetVisible">Tampilkan paket ini di widget</string>
+</resources>

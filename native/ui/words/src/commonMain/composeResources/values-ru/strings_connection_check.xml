@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">Проверить подключение</string>
+    <string name="connectionCheckTitle">Проверка подключения</string>
+    <string name="connectionCheckAgain">Обновить</string>
+    <string name="connectionCheckAddress">Адрес</string>
+    <string name="connectionCheckSignIn">Вход</string>
+    <string name="connectionCheckVersion">Версия сервера</string>
+    <string name="connectionCheckLive">Обновления в реальном времени</string>
+    <string name="connectionCheckSpeed">Время ответа</string>
+    <string name="connectionCheckWaiting">Ожидание</string>
+    <string name="connectionCheckRunning">Проверка…</string>
+    <string name="connectionCheckPassed">Пройдено</string>
+    <string name="connectionCheckVersionValue">Версия %1$s</string>
+    <string name="connectionCheckMillis">%1$s мс</string>
+    <string name="connectionCheckUnreachable">Не удалось связаться с сервером. Проверьте адрес и убедитесь, что сервер запущен.</string>
+    <string name="connectionCheckNotServer">Этот адрес не ответил как поддерживаемый сервер. Проверьте адрес.</string>
+    <string name="connectionCheckNeedsPassword">Введите пароль или токен сохранённого сервера ещё раз и повторите.</string>
+    <string name="connectionCheckPasswordRejected">Сервер отклонил сохранённые данные для входа. Обновите пароль или токен.</string>
+    <string name="connectionCheckUnsupported">Эта версия сервера не поддерживается. Обновите сервер.</string>
+    <string name="connectionCheckNotReady">Сервер ответил, но ещё не готов. Подождите немного и проверьте снова.</string>
+    <string name="connectionCheckStreamUnchecked">Подключитесь к этому серверу, чтобы проверить обновления в реальном времени.</string>
+    <string name="connectionCheckStreamConnecting">Соединение для обновлений всё ещё восстанавливается. Проверьте снова чуть позже.</string>
+    <string name="connectionCheckStreamDown">Текущее соединение для обновлений разорвано. Подключитесь к этому серверу заново.</string>
+    <string name="connectionCheckSlow">%1$s мс — сервер отвечает медленно. Проверьте сеть или нагрузку на сервер.</string>
+    <string name="connectionCheckSkipped">Не проверено, потому что предыдущий шаг требует внимания.</string>
+    <string name="connectionCheckTrust">Проверьте доверие к подключению этого сервера, прежде чем проверять снова.</string>
+    <string name="connectionCheckChanged">Сохранённый сервер изменился. Закройте эту проверку и откройте её снова.</string>
+</resources>

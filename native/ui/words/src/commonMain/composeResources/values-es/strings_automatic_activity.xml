@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">Detener el servidor reiniciado</string>
+    <string name="activityUndoing">Deteniendo el servidor reiniciado…</string>
+    <string name="activityUndone">Reinicio deshecho.</string>
+    <string name="activityUndoFailed">No se pudo deshacer.</string>
+    <string name="activityUndoUnconfirmed">Se desconoce el resultado de deshacer. No se volverá a intentar.</string>
+    <string name="activityUndoUnavailable">Deshacer no está disponible.</string>
+</resources>

@@ -124,6 +124,10 @@ public class AndroidKitPlatform(
 
     override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
+    // Half the pixels per side for a frosted liquid pane's backdrop, blur and lens (smoothness round 2: Glass inside a
+    // 120 Hz frame on a Galaxy S24); the vendored library (third_party/backdrop) scales the layer back up.
+    override val liquidResolution: Float = .5f
+
     override fun readPixels(image: androidx.compose.ui.graphics.ImageBitmap, out: IntArray, width: Int, height: Int): Boolean {
         val bitmap = image.asAndroidBitmap()
         val readable =

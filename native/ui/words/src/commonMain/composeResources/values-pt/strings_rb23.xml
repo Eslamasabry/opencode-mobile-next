@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">A prévia não está disponível aqui</string>
+    <string name="rb23_devPreviewUnsupportedBody">Este dispositivo não consegue mostrar a página dentro do app. Abra-a em um navegador.</string>
+</resources>

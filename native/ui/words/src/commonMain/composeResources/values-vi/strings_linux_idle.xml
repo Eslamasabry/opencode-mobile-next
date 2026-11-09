@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxIdleTitle">Dừng máy chủ khi rảnh</string>
+    <string name="linuxIdleDetail">Tiết kiệm tài nguyên điện thoại sau khi công việc xong. Tiếp tục dùng lại cùng máy chủ khi bạn cần.</string>
+    <string name="linuxIdleMinutes">Thời gian rảnh (phút)</string>
+    <plurals name="linuxIdleMinutesValue">
+        <item quantity="other">%1$d phút</item>
+    </plurals>
+    <string name="linuxIdleInvalid">Nhập một số nguyên từ 1 đến 60.</string>
+    <string name="linuxIdleFailed">Điện thoại không đọc hoặc thay đổi được trạng thái rảnh. Hãy mở lại trang này để thử lại.</string>
+    <string name="linuxIdleResume">Tiếp tục máy chủ điện thoại đang rảnh</string>
+    <string name="linuxIdleSave">Lưu thời gian rảnh</string>
+    <string name="linuxIdleWorking">Đang cập nhật trạng thái rảnh…</string>
+</resources>

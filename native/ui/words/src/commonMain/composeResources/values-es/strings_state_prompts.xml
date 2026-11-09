@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Algunos borradores o adjuntos anteriores aún no se pudieron mover. Tu trabajo guardado se conserva. Libera espacio si hace falta y vuelve a intentarlo.</string>
+    <string name="statePromptFilesUnavailable">Estos archivos no se pudieron restaurar aquí: %1$s. El mensaje guardado se conserva.</string>
+</resources>

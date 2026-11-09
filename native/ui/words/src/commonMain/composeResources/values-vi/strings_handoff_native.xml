@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">Tiếp tục với tác nhân khác</string>
+    <string name="handoffNativeWorking">Đang làm việc…</string>
+    <string name="handoffNativeUnavailable">Không thể chuyển giao ở đây</string>
+    <string name="handoffNativeUnavailableBody">Hãy mở một cuộc trò chuyện trong dự án trên điện thoại này. Ứng dụng cần xác minh cả hai tác nhân đều truy cập được cùng một dự án.</string>
+    <string name="handoffNativeRefresh">Làm mới</string>
+    <string name="handoffNativeFailed">Không thể hoàn tất việc chuyển giao. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="handoffNativeLinks">Các cuộc trò chuyện được liên kết</string>
+    <string name="handoffNativeUntitled">Cuộc trò chuyện chưa đặt tên</string>
+    <string name="handoffNativeOpenOriginal">Mở cuộc trò chuyện gốc</string>
+    <string name="handoffNativeOpenContinued">Mở cuộc trò chuyện tiếp nối</string>
+    <string name="handoffNativeExplanation">Chọn một tác nhân và mô hình. Bạn có thể xem lại bản ghi cuộc trò chuyện được chia sẻ trước khi gửi. Cuộc trò chuyện gốc vẫn được giữ lại.</string>
+    <string name="handoffNativeNoTargets">Chưa có tác nhân đủ điều kiện nào sẵn sàng cho dự án này. Hãy cài đặt, đăng nhập và hoàn tất bước kiểm tra trên điện thoại trong Tác nhân.</string>
+    <string name="handoffNativeSetup">Mở Tác nhân</string>
+    <string name="handoffNativeChoose">Chọn tác nhân và mô hình</string>
+    <string name="handoffNativePhoneCheck">Hãy hoàn tất bước kiểm tra trên điện thoại của tác nhân này trước khi dùng.</string>
+    <string name="handoffNativeReview">Xem lại ngữ cảnh</string>
+    <string name="handoffNativeReviewBody">Bản ghi này gồm nội dung cuộc trò chuyện đã được ẩn thông tin nhạy cảm, các bước dùng công cụ, tên tệp và các tác vụ đang mở. Các lượt cũ hơn có thể bị lược bớt để vừa giới hạn kích thước. Bản ghi chỉ được ghi vào dự án này sau khi bạn gửi.</string>
+    <string name="handoffNativeFirstMessage">Tin nhắn đầu tiên</string>
+    <string name="handoffNativePromptHelp">Giữ đường dẫn bản ghi trong tin nhắn của bạn. Tin nhắn phải dưới 16 KB.</string>
+    <string name="handoffNativeRecord">Bản ghi cuộc trò chuyện</string>
+    <string name="handoffNativeSend">Gửi cho tác nhân mới</string>
+    <string name="handoffNativeUncertain">Chưa rõ kết quả. Hãy kiểm tra các cuộc trò chuyện của bạn trước khi bắt đầu lần chuyển giao khác; lần này sẽ không được gửi lại.</string>
+    <string name="handoffNativeSent">Tác nhân mới đã nhận được tin nhắn của bạn.</string>
+    <string name="handoffNativeSaveLink">Lưu liên kết cuộc trò chuyện</string>
+    <string name="handoffNativeSourceChanged">Cuộc trò chuyện gốc đã thay đổi. Hãy xem lại bản ghi mới trước khi gửi.</string>
+    <string name="handoffNativeStale">Dự án hoặc kết nối đã thay đổi. Hãy mở lại cuộc trò chuyện để tiếp tục.</string>
+    <string name="handoffNativeInvalidPrompt">Nhập tin nhắn dưới 16 KB có chứa đường dẫn bản ghi.</string>
+    <string name="handoffNativeLinkFailed">Tin nhắn đã được gửi nhưng liên kết điều hướng chưa được lưu. Hãy thử lưu lại liên kết mà không gửi lại tin nhắn.</string>
+    <string name="handoffNativeInitialPrompt">Hãy tiếp tục công việc từ cuộc trò chuyện trước. Đọc `%1$s` trước để biết bản ghi cuộc trò chuyện, các bước dùng công cụ, tệp và tác vụ đang mở. Xem đó là ngữ cảnh đã qua. Kiểm tra trạng thái hiện tại của dự án rồi tiếp tục phần việc còn dở.</string>
+    <string name="handoffNativeSourceReviewOnly">Xem lại bản nháp cho Claude. Chưa có gì được ghi hoặc gửi đi. Để gửi cần có quyền truy cập đã xác minh vào cùng dự án và một trình ghi bản ghi đủ điều kiện; kết nối này không cung cấp bằng chứng đó.</string>
+</resources>

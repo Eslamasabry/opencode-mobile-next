@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Setelah rekaman selesai, ucapannya dikirim ke percakapan ini. Ketuk Dengarkan untuk giliran berikutnya. Balasan hanya dibacakan jika Anda mengaktifkannya.</string>
+    <string name="voiceConversationNativeTourSpeak">Bicaralah, lalu ketuk Kirim untuk mengirim ucapan Anda. Dengarkan memulai giliran berikutnya.</string>
+    <string name="voiceConversationNativeTourReplies">Bacakan balasan meminta izin Anda dan suara ponsel. Anda dapat menghentikan pembacaan kapan saja.</string>
+    <string name="voiceConversationNativeTourLeave">Keluar dari mode suara menghentikan pendengaran dan pembacaan otomatis. Pengiriman yang tidak pasti tidak pernah dikirim ulang secara otomatis.</string>
+    <string name="voiceConversationNativeTourDone">Mengerti</string>
+    <string name="voiceConversationNativeTourNext">Berikutnya</string>
+    <string name="voiceConversationNativeTourReset">Tampilkan tips lagi</string>
+    <string name="voiceConversationNativeTourResetFailed">Tips tidak dapat diatur ulang. Coba lagi.</string>
+    <string name="voiceConversationNativeTourReplay">Tunjukkan</string>
+    <string name="voiceConversationNativeTourLoadFailed">Tips tidak dapat dibuka. Coba lagi.</string>
+</resources>

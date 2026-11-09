@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Ferramentas de projeto do servidor</string>
+    <string name="protoWorking">Trabalhando…</string>
+    <string name="protoGitInitialized">Esta pasta é um repositório Git.</string>
+    <string name="protoWorktreeCreated">O worktree está pronto na pasta abaixo.</string>
+    <string name="protoShellSaved">Shell padrão salvo.</string>
+    <string name="protoGitInitialize">Iniciar o Git nesta pasta</string>
+    <string name="protoWorktreeName">Nome do novo worktree</string>
+    <string name="protoWorktreeCreate">Criar worktree</string>
+    <string name="protoShellTitle">Shell padrão do terminal</string>
+    <string name="protoShellDefault">Usar o padrão do servidor</string>
+    <string name="protoShellUnavailable">Este shell não pode ser usado neste servidor.</string>
+    <string name="protoWebSearch">Pesquisar na web</string>
+    <string name="protoWebSearchHelp">Pesquisa pelo provedor deste servidor. As pesquisas não entram no histórico da conversa.</string>
+    <string name="protoWebUnavailable">A pesquisa na web não está disponível neste servidor.</string>
+    <string name="protoWebFailed">Não foi possível concluir a pesquisa na web. Atualize a lista de provedores ou pesquise novamente.</string>
+    <string name="protoWebQuery">Termo de pesquisa na web</string>
+    <string name="protoWebProvider">Provedor de pesquisa</string>
+    <string name="protoWebEmpty">Nenhum resultado da web foi retornado.</string>
+    <string name="protoWebOpenQuestion">Abrir %1$s no navegador?</string>
+    <string name="protoWebOpenBrowser">Abrir navegador</string>
+    <string name="protoWebInsecure">Este link usa uma conexão sem criptografia.</string>
+    <string name="protoWebLeaveApp">Isso abre um site fora do app.</string>
+    <string name="protoGitToolsFailed">Não deu certo. Confira o servidor e tente novamente.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_label">Чат</string>
+    <string name="widget_description">Самое важное сейчас: что ждёт вас, что в работе или ваш последний чат.</string>
+    <string name="native_team_working">В работе</string>
+    <string name="native_widget_now">сейчас</string>
+    <string name="native_widget_minutes">%1$s мин</string>
+    <string name="native_widget_hours">%1$s ч</string>
+    <string name="native_widget_days">%1$s д</string>
+    <string name="usage_widget_title">Расход</string>
+    <string name="usage_widget_description">Сколько осталось до лимита каждого тарифа и когда он сбросится.</string>
+    <string name="usage_widget_empty">Показаний лимитов пока нет. Откройте «Расход», чтобы подключить источник.</string>
+    <string name="usage_widget_resets">Сброс через %1$s</string>
+    <string name="usage_widget_updated">Обновлено %1$s назад</string>
+    <string name="usage_widget_sign_in">Войти</string>
+    <string name="usage_widget_add_key">Добавить ключ</string>
+    <string name="usage_widget_not_signed_in">Вход не выполнен</string>
+    <string name="usage_widget_no_key">Ключ не добавлен</string>
+    <string name="usage_widget_set_up">Настроить</string>
+    <string name="usage_widget_cant_read">Пока не прочитать</string>
+    <string name="usage_widget_auth">Нужно войти</string>
+    <string name="usage_widget_this_phone">Этот телефон</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s \u0020осталось %2$s%%</string>
+    <string name="usage_widget_short_hours">%1$s ч</string>
+    <string name="usage_widget_short_days">%1$s д</string>
+    <string name="usage_widget_short_week">Неделя</string>
+    <string name="usage_widget_short_month">Месяц</string>
+    <string name="widget_label_wide">Чаты</string>
+    <string name="widget_label_list">Список чатов</string>
+    <string name="widget_label_strip">Полоса чата</string>
+    <string name="widget_description_wide">Что ждёт вас или в работе сейчас, и ваши ближайшие чаты.</string>
+    <string name="widget_description_list">Самое важное сейчас, а под ним ваши остальные чаты.</string>
+    <string name="widget_description_strip">Самое важное сейчас, в одной строке.</string>
+    <string name="usage_widget_title_wide">Расход, широкий</string>
+    <string name="usage_widget_description_wide">Сколько осталось до лимита каждого тарифа, в два столбца.</string>
+    <string name="widget_label_status">Состояние</string>
+    <string name="widget_description_status">Ваши серверы, Linux на этом телефоне, выполняемые задачи и лимит тарифа, который скоро закончится.</string>
+</resources>

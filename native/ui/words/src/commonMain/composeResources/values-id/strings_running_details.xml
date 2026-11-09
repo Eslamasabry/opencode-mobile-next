@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningDetailMemory">Memori %1$d MB</string>
+    <string name="runningDetailElapsed">Berjalan selama %1$d mnt</string>
+    <string name="runningDetailPid">Proses %1$d</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="other">Juga menghentikan %1$d proses pendukungnya. Identitas masing-masing diperiksa lagi.</item>
+    </plurals>
+    <string name="runningDetailBusy">Sibuk</string>
+    <string name="runningDetailIdle">Siaga</string>
+</resources>

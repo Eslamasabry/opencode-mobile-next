@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">Conexão em segundo plano pausada %1$s para economizar bateria.</string>
+    <string name="background_pause_restricted">Conexão em segundo plano pausada: o uso da bateria está restrito.</string>
+    <string name="background_pause_user_stopped">A conexão em segundo plano parou quando o app foi fechado %1$s.</string>
+    <string name="background_pause_app_updated">A conexão em segundo plano parou quando o app foi atualizado %1$s.</string>
+    <string name="background_pause_interrupted">A conexão em segundo plano parou por um motivo desconhecido.</string>
+    <string name="background_pause_device_restarted">A conexão em segundo plano parou quando o celular foi reiniciado.</string>
+    <string name="background_pause_resume">Retomar a conexão em segundo plano</string>
+    <string name="background_pause_resume_short">Retomar</string>
+    <string name="background_pause_resuming">Retomando a conexão em segundo plano…</string>
+    <string name="background_pause_resume_failed">Não foi possível retomar. Abra as configurações de Manter em execução.</string>
+    <string name="background_pause_open_keep_running">Abrir configurações de Manter em execução</string>
+    <string name="background_pause_resumed">Conexão em segundo plano retomada.</string>
+    <string name="background_error_notifications_required">É necessário permitir o acesso às notificações.</string>
+    <string name="background_error_could_not_change">O Android não conseguiu alterar o modo de segundo plano.</string>
+    <string name="background_error_android_app_only">O modo ao vivo em segundo plano está disponível no app para Android.</string>
+</resources>

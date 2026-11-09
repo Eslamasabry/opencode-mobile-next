@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorServerUnavailable">Server ini tidak dapat diperiksa. Buka percakapan untuk meninjau permintaan.</string>
+    <string name="monitorServerWaiting">Menunggu pemeriksaan berikutnya.</string>
+    <string name="monitorServerCurrent">Permintaan sudah diperiksa.</string>
+    <string name="monitorServerPaused">Pemeriksaan dijeda. Buka aplikasi atau lanjutkan koneksi latar belakang.</string>
+    <string name="monitorServerWifiRequired">Menunggu Wi-Fi.</string>
+</resources>

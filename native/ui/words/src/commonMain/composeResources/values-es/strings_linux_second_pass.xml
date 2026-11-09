@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">Quien lo inició se detuvo</string>
+    <string name="runningOrphanCpuWithoutOwner">Ocupado sin ninguna conversación que lo espere</string>
+    <string name="linuxStorageScanRunning">Midiendo %1$s</string>
+    <string name="linuxStorageScanDone">Almacenamiento medido</string>
+    <string name="linuxStorageScanIdle">No hay ninguna medición en curso</string>
+    <string name="linuxStorageScanLog">Medición del almacenamiento</string>
+</resources>
