@@ -61,7 +61,11 @@ class AppAttentionState(
     private val clock: Clock,
     private val scope: AppCoroutineScope,
     private val dispatchers: AppDispatchers,
+    kept: Set<AttentionLastKnown> = emptySet(),
 ) : AttentionHistory {
+    private val shelf = kept.firstOrNull()
+    private var lastKept: KeptAttention? = null
+    private var seededOnly = false
     private val mutableState = MutableStateFlow(AttentionUi())
     override val state: StateFlow<AttentionUi> = mutableState.asStateFlow()
     private var started = false
@@ -83,6 +87,15 @@ class AppAttentionState(
             if (stores.warm() !is Outcome.Ok) {
                 mutableState.value = AttentionUi(loading = false, incomplete = true)
                 return@launch
+            }
+            // Cache-first: draw the rows last seen for the selected profile until the live feed answers.
+            stores.profiles.activeId.value?.let { active ->
+                val seeded = shelf?.read(active.raw)
+                if (seeded != null && mutableState.value.loading) {
+                    lastKept = seeded
+                    seededOnly = true
+                    mutableState.value = seeded.toUi()
+                }
             }
             combine(connections.live, stores.profiles.profiles, stores.profiles.activeId) {
                     live,
@@ -499,7 +512,7 @@ class AppAttentionState(
                 .sortedByDescending { it.first }
                 .map { it.second }
                 .toImmutableList()
-        mutableState.value =
+        val ui =
             AttentionUi(
                 loading = false,
                 requests =
@@ -537,6 +550,22 @@ class AppAttentionState(
                         }
                         .toImmutableList(),
             )
+        // Until a complete read arrives the rows last seen stay; the live feed replaces them in place.
+        val seeded = lastKept
+        if (seededOnly && ui.incomplete && seeded != null) return
+        seededOnly = false
+        mutableState.value = ui
+        keepLast(selected, ui)
+    }
+
+    /** Keeps a complete read for the selected profile; a partial or unchanged one is skipped. */
+    private fun keepLast(selected: ProfileId?, ui: AttentionUi) {
+        val store = shelf ?: return
+        val profile = selected ?: return
+        val kept = KeptAttention.of(ui) ?: return
+        if (kept == lastKept) return
+        lastKept = kept
+        scope.launch(dispatchers.io) { store.keep(profile.raw, kept) }
     }
 }
 
