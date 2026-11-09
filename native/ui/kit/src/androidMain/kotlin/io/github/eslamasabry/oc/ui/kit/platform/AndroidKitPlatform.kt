@@ -139,6 +139,30 @@ public class AndroidKitPlatform(
         return true
     }
 
+    override suspend fun captureWindow(): androidx.compose.ui.graphics.ImageBitmap? {
+        val w = window ?: return null
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return null
+        val decor = w.peekDecorView() ?: return null
+        if (decor.width <= 0 || decor.height <= 0) return null
+        val bitmap = Bitmap.createBitmap(decor.width, decor.height, Bitmap.Config.ARGB_8888)
+        val ok =
+            kotlinx.coroutines.suspendCancellableCoroutine<Boolean> { done ->
+                try {
+                    android.view.PixelCopy.request(w, bitmap, { result ->
+                        if (done.isActive) done.resumeWith(Result.success(result == android.view.PixelCopy.SUCCESS))
+                    }, Handler(Looper.getMainLooper()))
+                } catch (_: IllegalArgumentException) {
+                    // The window has no surface right now (it is going away).
+                    if (done.isActive) done.resumeWith(Result.success(false))
+                }
+            }
+        if (!ok) {
+            bitmap.recycle()
+            return null
+        }
+        return bitmap.asImageBitmap()
+    }
+
     override fun backdropSampler(): KitBackdropSampler? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) AndroidBackdropSampler() else null
 

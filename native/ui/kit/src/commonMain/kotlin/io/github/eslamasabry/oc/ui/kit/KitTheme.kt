@@ -133,7 +133,7 @@ public fun KitTheme(
         )
     // P-029, M-019: a theme change fades the old screen's picture out over the new colours in 200 ms; the parts'
     // own moves keep running underneath.
-    val fade = rememberKitThemeFade(targetColors, fades = level != MotionLevel.Off && !stillFrame)
+    val fade = rememberKitThemeFade(targetColors, roles, fades = level != MotionLevel.Off && !stillFrame, captureWindow = platform::captureWindow)
     val colors = fade.colors
     val motion = remember(level, stillFrame) { KitMotionState(level, stillFrame) }
     val direction = if (isRtl(localeTag)) LayoutDirection.Rtl else LayoutDirection.Ltr
@@ -165,7 +165,7 @@ public fun KitTheme(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides effectiveAppearance,
         LocalKitStyle provides styleState,
-        LocalKitRoles provides roles,
+        LocalKitRoles provides fade.roles,
         LocalKitLocaleTag provides localeTag,
         LocalKitColors provides colors,
         LocalKitThemeCover provides fade.cover,

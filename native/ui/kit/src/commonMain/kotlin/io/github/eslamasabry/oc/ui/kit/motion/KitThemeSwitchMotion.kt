@@ -6,8 +6,12 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 
 /** The beat table of a theme switch (theme-switch-premium, Choreography), in ms after the tap. */
 public object ThemeSwitchTimings {
-    /** The theme commits once the motion is visibly under way, so its recomposition does not land on the start. */
-    public const val COMMIT_MS: Long = 120
+    /**
+     * The theme commits at the tap (owner 2026-11-10: committing 120 ms in put the frame that re-themes the whole app
+     * in the middle of the slide, where it stuttered). The control's own motion starts when the new theme starts to
+     * open ([io.github.eslamasabry.oc.ui.kit.theme.ThemeFade.REVEAL_MS]), after that frame.
+     */
+    public const val COMMIT_MS: Long = 0
 
     /** The rim's run round the edge, then its glow settling. */
     public const val RIM_TRAVEL_MS: Int = 450

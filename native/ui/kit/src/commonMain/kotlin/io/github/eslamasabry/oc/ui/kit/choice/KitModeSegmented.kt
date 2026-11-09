@@ -525,15 +525,29 @@ private fun <T> ModeRow(segments: List<KitModeSegment<T>>, selected: T, onChange
     val rimKind = ThemeSwitchRules.rimFor(style)
     val iconPx = with(density) { iconDp.toPx() }
 
+    val themeCover = LocalKitThemeCover.current
+
     fun tap(i: Int) {
         if (!currentSegments[i].enabled.isEnabled || i == motion.shown) return
         haptics(KitHaptic.Select)
         val plan = ThemeSwitchRules.plan(if (motionState.stillFrame) MotionLevel.Off else motionState.level)
         motion.begin(i, plan, currentSegments.map { it.icon }, iconPx)
-        motion.play(scope, i, specs.release(), motionState.debugTimeScale)
         motion.scheduleCommit(scope, motionState.debugTimeScale) { shown ->
             val target = currentSegments[shown].value
             (target != currentSelected).also { if (it) currentOnChange(target) }
+        }
+        // The slide, the rim and the icons start when the new theme starts to open from this control, so the frame
+        // that re-themes the app is behind them and they run on a quiet clock. When nothing re-themes (Auto to the
+        // mode the phone is already in) they start after the frames a change would have needed to show up.
+        val release = specs.release<Float>()
+        val scale = motionState.debugTimeScale
+        scope.launch {
+            var frames = 0
+            while (themeCover != null && !themeCover.revealing && (themeCover.pending || frames < MODE_WAIT_FRAMES) && frames < MODE_WAIT_MOST) {
+                withFrameMillis { it }
+                frames++
+            }
+            motion.play(scope, i, release, scale)
         }
     }
 
@@ -706,3 +720,7 @@ private fun DrawScope.drawParticles(frame: FloatArray, n: Int, radius: Float, co
 
 /** Tests only: hands each mode control's motion state to the test. */
 internal val LocalModeSwitchProbe = staticCompositionLocalOf<((ModeSwitchMotion) -> Unit)?> { null }
+
+/** Frames the mode control waits for a theme change to show up before moving anyway, and the most it ever waits. */
+private const val MODE_WAIT_FRAMES = 12
+private const val MODE_WAIT_MOST = 40

@@ -149,6 +149,13 @@ public interface KitPlatform {
      */
     public fun backdropSampler(): KitBackdropSampler? = null
 
+    /**
+     * A picture of the app's window exactly as it is on screen now, in window pixels: glass, shaders and system-drawn
+     * effects included (a layer's own snapshot leaves glass panes out, which made them flip early in a theme change).
+     * Null where the platform cannot take one; the caller then falls back to its own snapshot.
+     */
+    public suspend fun captureWindow(): androidx.compose.ui.graphics.ImageBitmap? = null
+
     public fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
         backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,

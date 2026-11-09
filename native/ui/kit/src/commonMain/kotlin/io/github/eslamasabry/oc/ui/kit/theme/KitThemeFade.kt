@@ -1,5 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.theme
 
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
@@ -46,6 +54,14 @@ import kotlinx.coroutines.launch
 public object ThemeFade {
     /** Flutter's theme change (`kThemeAnimationDuration`). */
     public const val MS: Int = 200
+
+    /**
+     * The reveal (owner 2026-11-10: the cross-fade "great idea, bad and janky implementation"; it passed through a
+     * grey wash and stuttered on the frame that re-themes the app). The new theme now opens as a circle from where
+     * the finger came down, over this long, and only once that heavy frame has been drawn under the still picture
+     * of the old screen.
+     */
+    public const val REVEAL_MS: Int = 560
 
     /** The colours [t] of the way from [from] to [to] (0 … 1); dark-or-light follows the nearer end. */
     public fun lerp(from: KitColors, to: KitColors, t: Float): KitColors =
@@ -96,8 +112,20 @@ internal class KitThemeCover(internal val layer: GraphicsLayer) {
     /** The old screen while it fades out; null at rest. */
     internal var shot: ImageBitmap? by mutableStateOf(null)
 
-    /** The old screen's opacity over the new one: 1 → 0 over [ThemeFade.MS]. */
+    /** How much of the old screen is left: 1 (all of it) → 0 as the new theme opens over [ThemeFade.REVEAL_MS]. */
     internal val alpha: Animatable<Float, AnimationVector1D> = Animatable(0f)
+
+    /** True when [shot] is a picture of the whole window: it is then drawn at the cover's place in the window. */
+    internal var shotInWindow: Boolean = false
+
+    /** Where the last finger came down, in the cover's pixels: the new theme opens from there. */
+    internal var origin: Offset? = null
+
+    /** A theme change is on its way (the old screen is being captured or still covers everything). */
+    internal var pending: Boolean by mutableStateOf(false)
+
+    /** The new theme has started to open: the heavy first frame in the new colours is behind us. */
+    internal var revealing: Boolean by mutableStateOf(false)
 
     /** True while the old screen still covers part of the new one. */
     internal val fading: Boolean get() = shot != null
@@ -136,7 +164,7 @@ internal class KitThemeCoverHole {
 internal val LocalKitThemeCover = staticCompositionLocalOf<KitThemeCover?> { null }
 
 /** The colours shown now and the cover that fades the old screen out. */
-internal class KitThemeFadeFrame(val colors: KitColors, val cover: KitThemeCover)
+internal class KitThemeFadeFrame(val colors: KitColors, val roles: Roles, val cover: KitThemeCover)
 
 /**
  * Follows [target]: the screen as it is now is captured, the new colours apply at once underneath, and the capture
@@ -144,39 +172,69 @@ internal class KitThemeFadeFrame(val colors: KitColors, val cover: KitThemeCover
  * frames). A change during a fade captures what is on screen then (the half-faded cover included), never jumping back.
  */
 @Composable
-internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFadeFrame {
+internal fun rememberKitThemeFade(
+    target: KitColors,
+    /**
+     * The roles [target] was made from. They are shown from the same frame as the colours: glass parts read the roles,
+     * and with the roles a frame ahead they turned to the new theme while the old screen was still being captured.
+     */
+    targetRoles: Roles,
+    fades: Boolean,
+    /** The window as it is on screen (glass included), or null to use the theme layer's own snapshot. */
+    captureWindow: (suspend () -> ImageBitmap?)? = null,
+): KitThemeFadeFrame {
     val layer = rememberGraphicsLayer()
     val cover = remember(layer) { KitThemeCover(layer) }
     val shown = remember { mutableStateOf(target) }
+    val shownRoles = remember { mutableStateOf(targetRoles) }
     LaunchedEffect(target, fades) {
         if (!fades) {
             cover.shot = null
             shown.value = target
+            shownRoles.value = targetRoles
             return@LaunchedEffect
         }
-        if (target == shown.value) return@LaunchedEffect
+        if (target == shown.value) {
+            shownRoles.value = targetRoles
+            return@LaunchedEffect
+        }
         // Nothing drawn yet (the first frame): nothing to fade from.
         if (layer.size.width == 0 || layer.size.height == 0) {
             shown.value = target
+            shownRoles.value = targetRoles
             return@LaunchedEffect
         }
-        // The layer still holds the last frame drawn, in the old colours.
-        val shot = layer.toImageBitmap()
-        cover.alpha.snapTo(1f)
-        cover.shot = shot
-        shown.value = target
-        // P-116: the first frame in the new colours recomposes the parts that read them (it measured ~95 ms on the
-        // emulator when every part recomposed); the fade's clock starts once that frame is under way, so all of MS is
-        // seen as motion. The gap to the next frame is that frame's cost, kept for KitThemeMetrics.
-        val first = withFrameNanos { it }
-        coroutineScope {
-            launch { KitThemeMetrics.record((withFrameNanos { it } - first) / NANOS_PER_MS) }
-            cover.alpha.animateTo(0f, tween(ThemeFade.MS, easing = LinearEasing))
+        try {
+            cover.pending = true
+            cover.revealing = false
+            // The window as it is on screen, glass and all; where the platform has none, the layer's last frame.
+            val window = captureWindow?.invoke()
+            cover.shotInWindow = window != null
+            val shot = window ?: layer.toImageBitmap()
+            cover.alpha.snapTo(1f)
+            cover.shot = shot
+            shown.value = target
+            shownRoles.value = targetRoles
+            // P-116: the first frame in the new colours recomposes every part that reads them (~80-95 ms measured).
+            // It is drawn under the still picture of the old screen, which hides it whole; the reveal's clock starts
+            // on the frame after it, so none of the motion is spent on that frame. Its cost is kept for
+            // KitThemeMetrics.
+            val first = withFrameNanos { it }
+            val second = withFrameNanos { it }
+            KitThemeMetrics.record((second - first) / NANOS_PER_MS)
+            cover.revealing = true
+            cover.alpha.animateTo(0f, tween(ThemeFade.REVEAL_MS, easing = RevealEasing))
+        } finally {
+            // A newer change (or leaving) cancels this one: what is shown still has to be the target's own pair.
+            shown.value = target
+            shownRoles.value = targetRoles
+            cover.shot = null
+            cover.pending = false
+            cover.revealing = false
         }
-        cover.shot = null
     }
     // Motion Off and still frames show the new colours on the same frame.
-    return KitThemeFadeFrame(if (fades) shown.value else target, cover)
+    return KitThemeFadeFrame(if (fades) shown.value else target, if (fades) shownRoles.value else targetRoles, cover)
 }
 
 /**
@@ -184,21 +242,40 @@ internal fun rememberKitThemeFade(target: KitColors, fades: Boolean): KitThemeFa
  * over it. The cover is drawn inside the layer, so a capture taken mid-fade holds what was really on screen.
  */
 internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier =
-    onPlaced { cover.coords = it }.drawWithContent {
-        val content = this
-        val shot = cover.shot
-        // Worked out here, not inside record: the recording scope's density is the content's (a cycle).
-        val holes = if (shot != null) cover.holePath(layoutDirection, Density(density, fontScale)) else null
-        cover.layer.record {
-            content.drawContent()
-            if (shot != null) {
-                val alpha = cover.alpha.value.coerceIn(0f, 1f)
-                if (holes == null) drawImage(shot, alpha = alpha)
-                else clipPath(holes, ClipOp.Difference) { drawImage(shot, alpha = alpha) }
-            }
+    onPlaced { cover.coords = it }
+        // Where a finger comes down is where the next theme change opens from; nothing is taken from the touch.
+        .pointerInput(cover) {
+            awaitEachGesture { cover.origin = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial).position }
         }
-        drawLayer(cover.layer)
-    }
+        .drawWithContent {
+            val content = this
+            val shot = cover.shot
+            // Worked out here, not inside record: the recording scope's density is the content's (a cycle).
+            val holes = if (shot != null) cover.holePath(layoutDirection, Density(density, fontScale)) else null
+            cover.layer.record {
+                content.drawContent()
+                if (shot != null) {
+                    // The old screen stays whole outside a circle that grows from the touch to the farthest corner;
+                    // inside it the new theme shows, as do the parts that run their own switch (the holes).
+                    val left = cover.alpha.value.coerceIn(0f, 1f)
+                    val centre = cover.origin ?: Offset(size.width / 2f, 0f)
+                    val reach = maxOf(
+                        (centre - Offset.Zero).getDistance(),
+                        (centre - Offset(size.width, 0f)).getDistance(),
+                        (centre - Offset(0f, size.height)).getDistance(),
+                        (centre - Offset(size.width, size.height)).getDistance(),
+                    )
+                    val open = Path().apply { addOval(Rect(centre, reach * (1f - left))) }
+                    if (holes != null) open.addPath(holes)
+                    val at = if (cover.shotInWindow) cover.coords?.takeIf { it.isAttached }?.positionInWindow() ?: Offset.Zero else Offset.Zero
+                    clipPath(open, ClipOp.Difference) { drawImage(shot, topLeft = Offset(-at.x, -at.y)) }
+                }
+            }
+            drawLayer(cover.layer)
+        }
+
+/** The reveal's curve: it leaves the control at once (no wait inside it), sweeps the screen and settles. */
+private val RevealEasing = CubicBezierEasing(0f, 0f, .2f, 1f)
 
 /**
  * The theme-change frame meter (theme-switch-premium Step 0): after each faded theme change it holds how long the frame
