@@ -748,7 +748,7 @@
         <item quantity="many">%1$d إيداعًا للدفع</item>
         <item quantity="other">%1$d إيداع للدفع</item>
     </plurals>
-    <string name="gitAhead__eq0">لا توجد إيداعات للدفع</string>
+    <string name="gitAhead__eq0">%1$d إيداعات للدفع</string>
     <string name="gitAhead__eq1">إيداع واحد للدفع</string>
     <string name="gitOperationMerge">عملية merge لم تكتمل</string>
     <string name="gitOperationRebase">عملية rebase لم تكتمل</string>
@@ -976,7 +976,7 @@
     </plurals>
     <string name="filesMenuChanges__eq0">التغييرات</string>
     <string name="filesMenuChanges__eq1">التغييرات · ملف واحد</string>
-    <string name="filesMenuChanges__eq2">التغييرات · ملفان</string>
+    <string name="filesMenuChanges__eq2">التغييرات · %1$d ملفات</string>
     <string name="filesProjectSwitchLabel">المشروع %1$s. تبديل المشروع</string>
     <string name="devPreviewDetails">تفاصيل المعاينة</string>
     <string name="devPreviewShowDetails">عرض التفاصيل</string>

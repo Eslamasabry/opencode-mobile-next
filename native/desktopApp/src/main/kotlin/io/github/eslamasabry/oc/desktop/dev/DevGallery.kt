@@ -57,6 +57,20 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
+import io.github.eslamasabry.oc.ui.design.color.PackId
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
+import io.github.eslamasabry.oc.ui.design.style.GlassLooks
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.choice.KitGlassLookOption
+import io.github.eslamasabry.oc.ui.kit.choice.KitGlassLookPicker
+import io.github.eslamasabry.oc.ui.kit.choice.KitThemeOptionCard
+import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -94,7 +108,7 @@ import kotlinx.coroutines.withContext
  * picture. Fake data only: it never connects anywhere except the Shell scene, which is the real desktop app.
  * Not part of the desktop product: the desktop app's main class stays MainKt.
  */
-private enum class Scene { Conversations, ChatParts, Shell }
+private enum class Scene { Conversations, ChatParts, Glass, Shell }
 
 private val shots: File =
     File(System.getenv("OC_HOT_SHOTS") ?: "${System.getProperty("user.home")}/.cache/oc-dev-loop/shots")
@@ -119,15 +133,21 @@ private fun Gallery(initial: Scene, redactor: Redactor, graph: () -> DesktopAppG
     var dark by remember { mutableStateOf(System.getenv("OC_HOT_DARK") == "1") }
     var arabic by remember { mutableStateOf(false) }
     var big by remember { mutableStateOf(false) }
+    var look by remember { mutableStateOf(GlassLookId.Glossy) }
     Column(Modifier.fillMaxSize().background(Color(0xFF202124))) {
         Row(Modifier.fillMaxWidth().padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Scene.entries.forEach { s -> Chip(s.name, scene == s) { scene = s } }
             Chip(if (dark) "Dark" else "Light", dark) { dark = !dark }
             Chip("AR", arabic) { arabic = !arabic }
             Chip("1.3x", big) { big = !big }
+            if (scene == Scene.Glass) {
+                val looks = GlassLooks.offered
+                Chip(look.storageName, true) { look = looks[(looks.indexOf(look) + 1) % looks.size] }
+            }
         }
         val platform = remember { DesktopKitPlatform() }
-        val shotName = "${scene.name.lowercase()}-${if (dark) "dark" else "light"}"
+        val shotName =
+            "${scene.name.lowercase()}${if (scene == Scene.Glass) "-" + look.storageName else ""}-${if (dark) "dark" else "light"}"
         Box(Modifier.padding(start = 8.dp, top = 4.dp)) {
             PhoneFrame(shotName) {
                 val density = Density(LocalDensity.current.density, if (big) 1.3f else 1f)
@@ -135,6 +155,23 @@ private fun Gallery(initial: Scene, redactor: Redactor, graph: () -> DesktopAppG
                     if (scene == Scene.Shell) {
                         val g = remember { graph() }
                         g.kitChatEnvironment.Provide { App(g.shell, platform, g.metroViewModelFactory) }
+                    } else if (scene == Scene.Glass) {
+                        CompositionLocalProvider(LocalKitPlatform provides platform) {
+                            KitTheme(
+                                appearance =
+                                    KitAppearance(
+                                        mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light,
+                                        style = Style.Glass,
+                                        glassLook = look,
+                                        liveBackground = true,
+                                        liveStyle = "auroraImage",
+                                    ),
+                                platform = platform,
+                                localeTag = if (arabic) "ar" else "en",
+                            ) {
+                                GlassLookScene(look) { look = it }
+                            }
+                        }
                     } else {
                         CompositionLocalProvider(LocalKitPlatform provides platform) {
                             KitTheme(
@@ -148,7 +185,7 @@ private fun Gallery(initial: Scene, redactor: Redactor, graph: () -> DesktopAppG
                                         when (scene) {
                                             Scene.Conversations -> ConversationsScene()
                                             Scene.ChatParts -> ChatPartsScene()
-                                            Scene.Shell -> Unit
+                                            Scene.Glass, Scene.Shell -> Unit
                                         }
                                     }
                                 }
@@ -248,6 +285,47 @@ private fun ConversationsScene() {
         ChatsState.build(feed, ReturnBrief.None, ChatsFilters(), now - 6 * hour, true, now)
     }
     ChatsScreen(ui, noActions<ChatsActions>())
+}
+
+// --- Glass: Settings › Appearance under Glass with the Glass look sheet open (the owner's 2026-11-09 screens).
+
+@Composable
+private fun GlassLookScene(look: GlassLookId, onLook: (GlassLookId) -> Unit) {
+    val words =
+        mapOf(
+            GlassLookId.Glossy to ("Glossy" to "Bright shine, bends at the edges"),
+            GlassLookId.Clear to ("Clear" to "See-through, light shine"),
+            GlassLookId.Frosted to ("Frosted" to "Soft blur, easiest to read"),
+            GlassLookId.Smoked to ("Smoked" to "Dark tinted glass on bars and buttons"),
+        )
+    KitSheetHost {
+        KitLiveBackground(Modifier.fillMaxSize()) {
+            Column(Modifier.padding(top = 48.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                KitText("Appearance", Modifier.padding(horizontal = 16.dp), role = TypeRole.LargeTitle)
+                listOf(
+                    listOf(PackId.Opencode, PackId.Nord, PackId.Catppuccin),
+                    listOf(PackId.Dracula, PackId.TokyoNight, PackId.Gruvbox),
+                ).forEach { packs ->
+                    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        packs.forEach { p -> KitThemeOptionCard(p, p.name, p == PackId.Opencode, {}, Modifier.weight(1f)) }
+                    }
+                }
+                KitRowGroup {
+                    KitRow("Style", supporting = "Glass", onClick = {})
+                    KitRow("Glass look", supporting = words.getValue(look).first, onClick = {})
+                    KitRow("Accent colour", supporting = "Match", onClick = {})
+                }
+            }
+        }
+        KitSheet(visible = true, onDismissRequest = {}, title = "Glass look", closeLabel = "Close") {
+            KitGlassLookPicker(
+                options = GlassLooks.offered.map { KitGlassLookOption(it, words.getValue(it).first, words.getValue(it).second) },
+                selected = look,
+                onSelect = onLook,
+                disclosure = "The previews use bright colours so the differences show. The page behind shows your real background.",
+            )
+        }
+    }
 }
 
 // --- Chat parts: the transcript parts of ui/kit-chat ChatScenes (code, tool steps, permission card, inline diff).

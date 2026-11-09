@@ -171,7 +171,7 @@
         <item quantity="other">بقيت %1$d دقيقة تقريبًا</item>
     </plurals>
     <string name="setupProgressViewMinutesLeft__eq1">بقيت دقيقة تقريبًا</string>
-    <string name="setupProgressViewMinutesLeft__eq2">بقيت دقيقتان تقريبًا</string>
+    <string name="setupProgressViewMinutesLeft__eq2">بقي نحو %1$d د</string>
     <string name="setupProgressViewUnderMinute">أقل من دقيقة</string>
     <string name="setupProgressViewDone">اكتمل كل شيء</string>
     <string name="setupProgressViewFailedTitle">لم يكتمل الإعداد</string>
@@ -218,7 +218,7 @@
         <item quantity="other">نحو %1$d دقيقة</item>
     </plurals>
     <string name="phoneSetupStartStepsTime__eq1">نحو دقيقة</string>
-    <string name="phoneSetupStartStepsTime__eq2">نحو دقيقتين</string>
+    <string name="phoneSetupStartStepsTime__eq2">نحو %1$d د</string>
     <plurals name="phoneSetupStartAboutMinutes">
         <item quantity="zero">نحو %1$d دقيقة</item>
         <item quantity="one">نحو دقيقة</item>
@@ -228,7 +228,7 @@
         <item quantity="other">نحو %1$d دقيقة</item>
     </plurals>
     <string name="phoneSetupStartAboutMinutes__eq1">نحو دقيقة</string>
-    <string name="phoneSetupStartAboutMinutes__eq2">نحو دقيقتين</string>
+    <string name="phoneSetupStartAboutMinutes__eq2">نحو %1$d دقائق</string>
     <string name="phoneSetupStartSetUp">ابدأ الإعداد</string>
     <string name="phoneSetupStartIncludes">يشمل %1$s.</string>
     <string name="phoneSetupStartCustomize">تخصيص</string>
@@ -306,9 +306,9 @@
         <item quantity="many">%1$d دقيقة تقريبًا متبقية</item>
         <item quantity="other">%1$d دقيقة تقريبًا متبقية</item>
     </plurals>
-    <string name="phoneSetupRingMinutesLeft__eq0">أقل من دقيقة متبقية</string>
+    <string name="phoneSetupRingMinutesLeft__eq0">متبقٍ نحو %1$d د</string>
     <string name="phoneSetupRingMinutesLeft__eq1">دقيقة واحدة تقريبًا متبقية</string>
-    <string name="phoneSetupRingMinutesLeft__eq2">دقيقتان تقريبًا متبقيتان</string>
+    <string name="phoneSetupRingMinutesLeft__eq2">متبقٍ نحو %1$d د</string>
     <string name="phoneSetupRingUnderMinute">أقل من دقيقة متبقية</string>
     <string name="phoneSetupRingWifi">Wi-Fi</string>
     <string name="phoneSetupRingMobileData">بيانات الجوال</string>

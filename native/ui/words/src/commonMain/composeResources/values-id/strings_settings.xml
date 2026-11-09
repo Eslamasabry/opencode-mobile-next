@@ -763,10 +763,4 @@
     <string name="backgroundBatterySettingsInstead">Android tidak menampilkan pertanyaannya, jadi pengaturan baterainya dibuka. Setel aplikasi ini ke Tidak dibatasi di sana.</string>
     <string name="privacyPagesSummary">Server, penyedia, suara, file, dan pembaruan</string>
     <string name="manageSpaceKeptAllComputers">Komputer Anda dan semua yang di-push ke git tetap ada</string>
-    <string name="appearanceGlassEdges">Tepi kaca</string>
-    <string name="appearanceGlassEdgesLiquid">Cair</string>
-    <string name="appearanceGlassEdgesFrosted">Buram</string>
-    <string name="appearanceGlassEdgesNote">Cair membelokkan apa yang bergulir di belakang bilah, kotak pesan, sheet, dan menu. Buram mengaburkannya.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">Tepi cair membutuhkan Android 13. Ponsel ini menampilkannya dalam mode buram.</string>
-    <string name="appearanceGlassEdgesMotionOff">Tepi tetap buram selama gerakan nonaktif.</string>
 </resources>

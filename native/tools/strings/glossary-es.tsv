@@ -66,3 +66,15 @@ allow	Android
 allow	Linux
 allow	Git
 allow	git
+allow	Error
+allow	Constructor
+allow	Enum
+allow	Variable
+allow	Plan
+allow	Build
+allow	English
+allow	Portugu
+allow	Espa
+allow	Brasil
+allow	min
+allow	plan

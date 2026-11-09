@@ -204,7 +204,7 @@
     <string name="fbCareClassPromotion">Un dato para un área más estricta</string>
     <string name="fbCareRiskMoney">Dinero</string>
     <string name="fbCareRiskHealth">Salud</string>
-    <string name="fbCareRiskId">Identificación</string>
+    <string name="fbCareRiskId">Identidad</string>
     <string name="fbCareRiskContradiction">Contradice algo que le dijiste</string>
     <string name="fbCareRiskLowConfidence">No está seguro</string>
     <string name="fbConnectTitle">Conectar con mi servidor</string>
@@ -355,7 +355,7 @@
     <string name="fbAreaNameHome">Hogar</string>
     <string name="fbAreaNameTravel">Viajes</string>
     <string name="fbAreaNameUnsorted">Sin clasificar</string>
-    <string name="fbAreaNameId">Identificación</string>
+    <string name="fbAreaNameId">Identidad</string>
     <string name="fbModuleIndex">Índice de búsqueda</string>
     <string name="fbModuleMembership">Dispositivos</string>
     <string name="fbTriggersTitle">Cuando llega algo nuevo</string>

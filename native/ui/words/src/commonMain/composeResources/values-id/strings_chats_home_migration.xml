@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="homeOpeningConnecting">Menyambung ke %1$s</string>
     <string name="homeOpeningFailed">%1$s tidak menjawab</string>
-    <string name="homeOpeningSavedTitles">Ini judul percakapan yang tersimpan terakhir kali. Percakapan terbuka setelah server menjawab.</string>
-    <string name="homeOpeningStarting">Memulai ponsel ini…</string>
-    <string name="homeOpeningWaiting">Percakapan Anda tampil di sini setelah server menjawab.</string>
     <string name="homeOpeningFailedBody">Pastikan server menyala dan ponsel ini bisa menjangkaunya, lalu coba lagi.</string>
     <string name="homeWatchedServers">Server yang dipantau</string>
     <string name="homeInboxCount">Kotak masuk · %1$s</string>

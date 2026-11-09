@@ -43,7 +43,7 @@ public object GlassSpec : StyleSpec {
     public const val PANE_FROST: Float = 20f // FG: lib/ui/kit/style/kit_style_glass.dart:96
 
     /** The blur behind a floating piece or a sheet. */
-    public const val FLOAT_FROST: Float = 26f // FG: lib/ui/kit/style/kit_style_glass.dart:100
+    public const val FLOAT_FROST: Float = 16f // FG: lib/ui/kit/style/kit_style_glass.dart:100
 
     /**
      * Clear panes (owner 2026-11-08, option 1: "keep liquid for floating pieces only, and make the in-flow Glass panes

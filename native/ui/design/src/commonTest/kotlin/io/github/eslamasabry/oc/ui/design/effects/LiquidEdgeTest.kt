@@ -54,7 +54,7 @@ class LiquidEdgeTest {
         assertEquals(GlassLookId.Glossy, GlassLookId.fromStorage(null))
         assertEquals(GlassLookId.Glossy, GlassLookId.fromStorage("melted"))
         assertEquals(GlassLookId.Frosted, GlassLookId.fromStorage("frosted"))
-        assertEquals(GlassLookId.Smoked, GlassLookId.fromStorage("smoked"))
+        assertEquals(GlassLookId.Glossy, GlassLookId.fromStorage("smoked"), "Smoked is dropped: a stored Smoked reads as Glossy")
     }
 
     @Test

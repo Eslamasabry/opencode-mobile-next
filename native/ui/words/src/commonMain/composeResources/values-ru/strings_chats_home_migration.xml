@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="homeOpeningConnecting">Подключение к %1$s</string>
     <string name="homeOpeningFailed">%1$s не отвечает</string>
-    <string name="homeOpeningSavedTitles">Это названия чатов, сохранённые в прошлый раз. Они откроются, когда сервер ответит.</string>
-    <string name="homeOpeningStarting">Запуск на этом телефоне…</string>
-    <string name="homeOpeningWaiting">Ваши чаты появятся здесь, как только он ответит.</string>
     <string name="homeOpeningFailedBody">Убедитесь, что сервер включён и этот телефон может до него достучаться, затем повторите.</string>
     <string name="homeWatchedServers">Отслеживаемые серверы</string>
     <string name="homeInboxCount">Входящие · %1$s</string>

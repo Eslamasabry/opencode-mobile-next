@@ -54,7 +54,7 @@
     <string name="e7ModelUiDeprecated">متقادم</string>
     <string name="e7ModelUiPreview">تجريبي</string>
     <string name="e7ModelUiFavoritesFailed">تعذّر حفظ المفضّلة. حاول مجددًا.</string>
-    <string name="e7ModelUiUseModelMode">استخدام النموذج والوضع</string>
+    <string name="e7ModelUiUseModelMode">استخدام %1$s · %2$s</string>
     <string name="e7ModelUiUseSession">استخدام في هذه المحادثة</string>
     <string name="e7ModelUiUseNewSessions">استخدام في المحادثات الجديدة</string>
     <string name="e7ModelUiDefault">الافتراضي</string>

@@ -103,7 +103,7 @@
     <string name="e7SetupConfirmUpdate">Atualizar o OpenCode gerenciado?</string>
     <string name="e7SetupInstallServiceDetail">Instalador oficial mais um serviço de usuário do systemd que sobrevive a terminais fechados e a reinicializações.</string>
     <string name="e7SetupUpdateHost">Atualizar o OpenCode no computador host</string>
-    <string name="e7SetupKeepAfterLogout">Manter em execução após sair da sessão</string>
+    <string name="e7SetupKeepAfterLogout">Manter em execução após encerrar a sessão</string>
     <string name="e7SetupRestartServer">Reiniciar o servidor</string>
     <string name="e7SetupResumeSetup">Tentar novamente — retoma de onde a configuração parou</string>
     <string name="e7SetupHidePassword">Ocultar a senha do servidor</string>

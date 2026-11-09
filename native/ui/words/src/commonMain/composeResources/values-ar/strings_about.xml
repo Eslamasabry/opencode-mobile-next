@@ -134,7 +134,7 @@
         <item quantity="other">حذف %1$d تقرير عطل محفوظ</item>
     </plurals>
     <string name="crashReportsDelete__eq1">حذف تقرير عطل محفوظ واحد</string>
-    <string name="crashReportsDelete__eq2">حذف تقريرَي عطل محفوظَين</string>
+    <string name="crashReportsDelete__eq2">حذف %1$d من تقارير الأعطال المحفوظة</string>
     <string name="crashReportsDeleteTitle">هل تريد حذف تقارير الأعطال المحفوظة؟</string>
     <string name="crashReportsDeleteBody">يحذف تقارير الأعطال المحفوظة. يبقى حفظ تقارير الأعطال مفعّلًا.</string>
     <string name="crashReportsDeleteConfirm">حذف تقارير الأعطال</string>
@@ -148,7 +148,7 @@
         <item quantity="other">تشغيل هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</item>
     </plurals>
     <string name="crashReportsOnClears__eq1">تشغيل هذا الخيار يمسح الخطأ المحفوظ أعلاه.</string>
-    <string name="crashReportsOnClears__eq2">تشغيل هذا الخيار يمسح الخطأين المحفوظين أعلاه.</string>
+    <string name="crashReportsOnClears__eq2">تشغيل هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</string>
     <string name="crashReportsOffDeletes">إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة.</string>
     <plurals name="crashReportsOffDeletesAndClears">
         <item quantity="zero">إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</item>
@@ -159,7 +159,7 @@
         <item quantity="other">إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</item>
     </plurals>
     <string name="crashReportsOffDeletesAndClears__eq1">إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الخطأ المحفوظ أعلاه.</string>
-    <string name="crashReportsOffDeletesAndClears__eq2">إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الخطأين المحفوظين أعلاه.</string>
+    <string name="crashReportsOffDeletesAndClears__eq2">إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</string>
     <plurals name="crashReportsOffClears">
         <item quantity="zero">إيقاف هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</item>
         <item quantity="one">إيقاف هذا الخيار يمسح الخطأ المحفوظ أعلاه.</item>
@@ -169,7 +169,7 @@
         <item quantity="other">إيقاف هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</item>
     </plurals>
     <string name="crashReportsOffClears__eq1">إيقاف هذا الخيار يمسح الخطأ المحفوظ أعلاه.</string>
-    <string name="crashReportsOffClears__eq2">إيقاف هذا الخيار يمسح الخطأين المحفوظين أعلاه.</string>
+    <string name="crashReportsOffClears__eq2">إيقاف هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها %1$d.</string>
     <plurals name="crashReportsDeleteBodyWithErrors">
         <item quantity="zero">يحذف تقارير الأعطال ويمسح الأخطاء المحفوظة أعلاه وعددها %1$d. يبقى حفظ تقارير الأعطال مفعّلًا.</item>
         <item quantity="one">يحذف تقارير الأعطال ويمسح الخطأ المحفوظ أعلاه. يبقى حفظ تقارير الأعطال مفعّلًا.</item>
@@ -179,7 +179,7 @@
         <item quantity="other">يحذف تقارير الأعطال ويمسح الأخطاء المحفوظة أعلاه وعددها %1$d. يبقى حفظ تقارير الأعطال مفعّلًا.</item>
     </plurals>
     <string name="crashReportsDeleteBodyWithErrors__eq1">يحذف تقارير الأعطال ويمسح الخطأ المحفوظ أعلاه. يبقى حفظ تقارير الأعطال مفعّلًا.</string>
-    <string name="crashReportsDeleteBodyWithErrors__eq2">يحذف تقارير الأعطال ويمسح الخطأين المحفوظين أعلاه. يبقى حفظ تقارير الأعطال مفعّلًا.</string>
+    <string name="crashReportsDeleteBodyWithErrors__eq2">يحذف تقارير الأعطال ويمسح الأخطاء المحفوظة أعلاه وعددها %1$d. يبقى حفظ تقارير الأعطال مفعّلًا.</string>
     <string name="crashReportsClearedToo">تُحذف تقارير الأعطال المحفوظة أيضًا.</string>
     <string name="diagnosticsExitHistoryTitle">آخر مرات إغلاق التطبيق</string>
     <string name="diagnosticsExitHistoryNote">يسجّل Android كل مرة يُغلق فيها التطبيق. لا يُرسل شيء من هنا تلقائيًا.</string>
@@ -207,7 +207,7 @@
         <item quantity="other">%1$d تقرير · %2$s</item>
     </plurals>
     <string name="diagnosticsReportSize__eq1">تقرير واحد · %2$s</string>
-    <string name="diagnosticsReportSize__eq2">تقريران · %2$s</string>
+    <string name="diagnosticsReportSize__eq2">%1$d تقارير · %2$s</string>
     <string name="diagnosticsReportShare">مشاركة التقرير</string>
     <string name="diagnosticsReportStale">تغيّرت التفاصيل المحفوظة. راجع التقرير الجديد قبل المشاركة.</string>
     <string name="diagnosticsReportShareFailed">تعذّر فتح المشاركة. حاول مرة أخرى.</string>
@@ -224,7 +224,7 @@
         <item quantity="other">%1$d مرة إغلاق اعتيادية (تحديثات، أو أغلقته أنت)</item>
     </plurals>
     <string name="diagnosticsExitRoutine__eq1">إغلاق اعتيادي واحد (تحديثات، أو أغلقته أنت)</string>
-    <string name="diagnosticsExitRoutine__eq2">إغلاقان اعتياديان (تحديثات، أو أغلقته أنت)</string>
+    <string name="diagnosticsExitRoutine__eq2">%1$d عمليات إغلاق اعتيادية (تحديثات، أو أغلقته أنت)</string>
     <plurals name="diagnosticsExitShowAll">
         <item quantity="zero">عرض الكل (%1$d)</item>
         <item quantity="one">عرض الكل (1)</item>

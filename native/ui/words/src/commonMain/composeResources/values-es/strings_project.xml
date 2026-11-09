@@ -733,7 +733,7 @@
     <string name="gitChangeTypeChanged">Tipo cambiado</string>
     <string name="gitChangeUntracked">Nuevo</string>
     <string name="gitChangeConflicted">Conflicto</string>
-    <string name="gitActionPull">Descargar cambios</string>
+    <string name="gitActionPull">Traer cambios</string>
     <string name="gitActionPush">Subir</string>
     <string name="gitActionCommit">Confirmar</string>
     <string name="gitActionSwitchBranch">Cambiar de rama</string>

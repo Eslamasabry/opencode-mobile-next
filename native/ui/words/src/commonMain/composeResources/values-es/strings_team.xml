@@ -595,7 +595,7 @@
     <string name="teamBoardTitle">Tablero</string>
     <string name="teamBoardOpenTooltip">Tablero</string>
     <string name="teamBoardColumnBacklog">Pendientes</string>
-    <string name="teamBoardColumnReady">Listas para empezar</string>
+    <string name="teamBoardColumnReady">Listas</string>
     <string name="teamBoardColumnWorking">En curso</string>
     <string name="teamBoardColumnReview">En revisión</string>
     <string name="teamBoardColumnDone">Hechas</string>
@@ -1028,7 +1028,7 @@
     <string name="teamProjectRepoFilter">Repositorio</string>
     <string name="teamProjectServerFilter">Servidor</string>
     <string name="teamProjectBacklog">Pendientes</string>
-    <string name="teamProjectReady">Listas para empezar</string>
+    <string name="teamProjectReady">Listas</string>
     <string name="teamProjectWorking">En curso</string>
     <string name="teamProjectReview">En revisión</string>
     <string name="teamProjectDone">Hechas</string>

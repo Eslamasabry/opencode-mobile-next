@@ -833,10 +833,4 @@
     <string name="backgroundBatterySettingsInstead">Android не показал свой вопрос, поэтому вместо него открылись настройки батареи. Выберите там для этого приложения «Без ограничений».</string>
     <string name="privacyPagesSummary">Серверы, поставщики, голос, файлы и обновления</string>
     <string name="manageSpaceKeptAllComputers">Ваши компьютеры и всё, что отправлено в git, останется</string>
-    <string name="appearanceGlassEdges">Края стекла</string>
-    <string name="appearanceGlassEdgesLiquid">Жидкие</string>
-    <string name="appearanceGlassEdgesFrosted">Матовые</string>
-    <string name="appearanceGlassEdgesNote">Жидкие края преломляют то, что прокручивается за панелями, полем ввода, шторками и меню. Матовые размывают это.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">Жидкие края требуют Android 13. На этом телефоне они показываются матовыми.</string>
-    <string name="appearanceGlassEdgesMotionOff">Пока анимация выключена, края остаются матовыми.</string>
 </resources>
