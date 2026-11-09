@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">Connexion en arrière-plan suspendue %1$s pour économiser la batterie.</string>
+    <string name="background_pause_restricted">Connexion en arrière-plan suspendue\u00A0: l’utilisation de la batterie est restreinte.</string>
+    <string name="background_pause_user_stopped">La connexion en arrière-plan s’est arrêtée à la fermeture de l’application %1$s.</string>
+    <string name="background_pause_app_updated">La connexion en arrière-plan s’est arrêtée lors de la mise à jour de l’application %1$s.</string>
+    <string name="background_pause_interrupted">La connexion en arrière-plan s’est arrêtée pour une raison inconnue.</string>
+    <string name="background_pause_device_restarted">La connexion en arrière-plan s’est arrêtée au redémarrage du téléphone.</string>
+    <string name="background_pause_resume">Reprendre la connexion en arrière-plan</string>
+    <string name="background_pause_resume_short">Reprendre</string>
+    <string name="background_pause_resuming">Reprise de la connexion en arrière-plan…</string>
+    <string name="background_pause_resume_failed">Reprise impossible. Ouvrez les paramètres «\u00A0Rester actif\u00A0».</string>
+    <string name="background_pause_open_keep_running">Ouvrir les paramètres «\u00A0Rester actif\u00A0»</string>
+    <string name="background_pause_resumed">Connexion en arrière-plan reprise.</string>
+    <string name="background_error_notifications_required">L’accès aux notifications est requis.</string>
+    <string name="background_error_could_not_change">Android n’a pas pu changer le mode arrière-plan.</string>
+    <string name="background_error_android_app_only">Le mode en direct en arrière-plan est disponible dans l’application Android.</string>
+</resources>

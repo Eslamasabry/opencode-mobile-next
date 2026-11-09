@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Se connecter à %1$s</string>
+    <string name="m40AuthBack">Retour</string>
+    <string name="m40AuthWorking">En cours…</string>
+    <string name="m40AuthPlaces">Où souhaitez-vous vous connecter\u00A0?</string>
+    <string name="m40AuthBest">L’utilisation peut être lue ici.</string>
+    <string name="m40AuthServer">La connexion est enregistrée sur ce serveur.</string>
+    <string name="m40AuthPhone">Ce téléphone</string>
+    <string name="m40AuthMethods">Choisissez comment vous connecter</string>
+    <string name="m40AuthNoPlace">Aucun endroit où se connecter</string>
+    <string name="m40AuthNoPlaceBody">Ajoutez un serveur OpenCode ou installez l’agent de ce fournisseur sur ce téléphone.</string>
+    <string name="m40AuthUnavailable">La connexion n’est pas disponible ici</string>
+    <string name="m40AuthUnavailableBody">Cette connexion ne propose pas de méthode de connexion prise en charge pour ce fournisseur.</string>
+    <string name="m40AuthKey">Clé API</string>
+    <string name="m40AuthKeyHelp">Votre clé est envoyée à cette connexion et enregistrée là-bas.</string>
+    <string name="m40AuthSaveKey">Enregistrer la clé</string>
+    <string name="m40AuthContinue">Continuer</string>
+    <string name="m40AuthEnterValue">Saisissez une valeur.</string>
+    <string name="m40AuthSelectValue">Choisissez une option.</string>
+    <string name="m40AuthOpenPage">Ouvrir la page de connexion</string>
+    <string name="m40AuthAskPage">Ouvrir %1$s dans votre navigateur\u00A0?</string>
+    <string name="m40AuthOpenBrowser">Ouvrir dans le navigateur</string>
+    <string name="m40AuthCheck">Vérifier la connexion</string>
+    <string name="m40AuthWaiting">Terminez la connexion, puis vérifiez ici.</string>
+    <string name="m40AuthCommandWaiting">La connexion est en cours d’exécution. Vérifiez ici quand elle sera terminée.</string>
+    <string name="m40AuthCode">Code de connexion ou URL de rappel</string>
+    <string name="m40AuthFinish">Terminer la connexion</string>
+    <string name="m40AuthDone">Terminé</string>
+    <string name="m40AuthComplete">Connecté</string>
+    <string name="m40AuthCompleteBody">La liste des forfaits a été actualisée.</string>
+    <string name="m40AuthFailed">Impossible de terminer cette étape. Réessayez.</string>
+    <string name="m40AuthReenter">Saisissez de nouveau le mot de passe de ce serveur dans Serveurs, puis revenez ici.</string>
+    <string name="m40AuthDetails">Détails</string>
+    <string name="m40AuthCopyDetails">Copier les détails</string>
+    <string name="m40AuthDeviceCode">Utilisez le code %1$s sur la page de connexion.</string>
+    <string name="m40AuthCopyCode">Copier le code</string>
+    <string name="m40AuthCopied">Code copié</string>
+    <string name="m40AuthBrowserHint">Cette méthode doit se terminer dans un navigateur sur la machine qui exécute ce serveur.</string>
+    <string name="m40AuthDeviceHint">Connectez-vous avec le code de l’appareil.</string>
+    <string name="m40AuthAccountHint">Connectez-vous avec votre compte chez le fournisseur.</string>
+    <string name="m40AuthCommandHint">La connexion exécute cette étape\u00A0; le téléphone n’exécute aucune commande.</string>
+    <string name="m40AuthPhoneHint">Utilisez l’agent installé de ce fournisseur sur ce téléphone.</string>
+</resources>

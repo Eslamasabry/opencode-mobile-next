@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">Durées de vie des services</string>
+    <string name="linuxLifetimeRefresh">Vérifier les durées de vie des services</string>
+    <string name="linuxLifetimeReading">Lecture des durées de vie des services…</string>
+    <string name="linuxLifetimeRunning">En cours d’exécution</string>
+    <string name="linuxLifetimeStopped">Arrêté</string>
+    <string name="linuxLifetimeUptime">Exécution actuelle\u00A0: %1$d ms</string>
+    <string name="linuxLifetimeLastUptime">Exécution précédente\u00A0: %1$d ms</string>
+    <string name="linuxLifetimeExit">Dernière sortie\u00A0: %1$d</string>
+    <string name="linuxLifetimeRestarts">Redémarrages\u00A0: %1$d</string>
+    <string name="linuxLifetimeUnknown">Cause de l’arrêt inconnue</string>
+    <string name="linuxLifetimeExited">Le programme s’est arrêté</string>
+    <string name="linuxLifetimeKilled">Manque de mémoire ou limite de processus d’Android</string>
+    <string name="linuxLifetimeFailed">Les durées de vie des services n’ont pas pu être lues.</string>
+    <string name="linuxLifetimeEmpty">Aucune observation de durée de vie de service n’est disponible.</string>
+</resources>

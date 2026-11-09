@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxHostSetupTitle">Configurer un ordinateur Linux</string>
+    <string name="linuxHostSetupIntro">Copiez une commande et collez-la dans un terminal de votre ordinateur Ubuntu ou Linux. L’application ne l’exécute pas pour vous.</string>
+    <string name="linuxHostSetupSafety">L’installateur vérifie le téléchargement épinglé avant de l’installer. OpenCode n’écoute que sur cet ordinateur\u00A0; utilisez l’USB ou un tunnel authentifié pour y connecter votre téléphone.</string>
+    <string name="linuxHostSetupInstall">Installer OpenCode et son service</string>
+    <string name="linuxHostSetupUpdate">Mettre à jour OpenCode</string>
+    <string name="linuxHostSetupStart">Démarrer le service</string>
+    <string name="linuxHostSetupStop">Arrêter le service</string>
+    <string name="linuxHostSetupRestart">Redémarrer le service</string>
+    <string name="linuxHostSetupStatus">Vérifier le service</string>
+    <string name="linuxHostSetupCopy">Copier l’installateur et la commande</string>
+    <string name="linuxHostSetupCopyDetail">La copie inclut l’installateur complet fourni avec cette application, suivi de la commande choisie. Elle écrit ubuntu-opencode.sh dans le dossier courant. L’installation conserve un OpenCode 2 existant\u00A0; la mise à jour ne migre jamais OpenCode 1 et ne rétrograde jamais une version plus récente.</string>
+    <string name="linuxHostSetupUsb">Le téléphone étant connecté en USB, exécutez ceci sur l’ordinateur pour rediriger le port du serveur.</string>
+    <string name="linuxHostSetupCopyUsb">Copier la commande USB</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Vérification de la connexion Codex</string>
+    <string name="codexNativeIntro">Exécutez cette commande d’une seule ligne sur votre ordinateur. Saisissez son adresse, un chemin de dossier absolu et le jeton d’accès pour vérifier la connexion authentifiée.</string>
+    <string name="codexNativeCopy">Copier la commande de démarrage</string>
+    <string name="codexNativeTokenHelp">Utilisez le chemin absolu de votre propre fichier de jeton. Gardez le jeton privé. Un WebSocket simple n’est autorisé que sur cet appareil\u00A0; utilisez un WebSocket sécurisé pour un autre ordinateur.</string>
+    <string name="codexNativeAddress">Adresse WebSocket</string>
+    <string name="codexNativeDirectory">Chemin de dossier absolu</string>
+    <string name="codexNativeToken">Jeton d’accès</string>
+    <string name="codexNativeWorking">Vérification de la connexion…</string>
+    <string name="codexNativeProbe">Vérifier la connexion</string>
+    <string name="codexNativeProbed">La connexion authentifiée a répondu à une lecture limitée au dossier. Un résultat vide ne confirme pas que le dossier existe.</string>
+    <string name="codexNativeFailed">La vérification de la connexion a échoué. Vérifiez que Codex est en cours d’exécution et réessayez.</string>
+    <string name="codexNativeAuthFailed">Codex a refusé le jeton d’accès. Vérifiez-le et réessayez.</string>
+    <string name="codexNativeScopeFailed">Vérifiez l’adresse, le chemin de dossier absolu et la portée de connexion autorisée.</string>
+    <string name="codexNativeVersion">Cette connexion ne peut pas fournir l’utilisation du compte. La lecture du compte nécessite le protocole Codex 0.153.4 qualifié.</string>
+    <string name="codexNativeOpen">Ouvrir le lecteur de compte</string>
+    <string name="codexNativeReaderOpen">Le lecteur de compte est ouvert. Ouvrez Forfaits pour actualiser les limites du compte. Fermez-le ici une fois terminé.</string>
+    <string name="codexNativePlans">Ouvrir Forfaits</string>
+    <string name="codexNativeClose">Fermer le lecteur de compte</string>
+    <string name="codexNativeReadOnly">Cette page vérifie la connexion et lit l’utilisation du compte. Elle ne démarre pas de conversation, ne vous connecte pas et n’envoie aucun message.</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxFindProjects">Rechercher des projets sur ce téléphone</string>
+    <string name="linuxFindProjectsBody">Cherche dans l’espace des projets et dans le stockage partagé du téléphone. Les dossiers restent où ils sont.</string>
+    <string name="linuxStopFinding">Arrêter la recherche</string>
+    <string name="linuxFindProjectsDone">Recherche terminée</string>
+    <string name="linuxFindProjectsLimited">Arrêté à la limite d’analyse. Voici les premiers résultats.</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">Dossier de projet</string>
+</resources>

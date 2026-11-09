@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">Outil\u00A0: %1$s</string>
+    <string name="approvalToolTerminal">Commande de terminal</string>
+    <string name="approvalToolEdit">Modification de fichier</string>
+    <string name="approvalToolRead">Lecture de fichier</string>
+    <string name="approvalToolWeb">Requête web</string>
+    <string name="approvalToolOutside">En dehors de ce projet</string>
+    <string name="approvalToolOther">Autre outil</string>
+    <string name="approvalCopyAsk">Copier ce qu'il demande d'exécuter</string>
+    <string name="approvalCopied">Copié</string>
+    <string name="approvalAllow">Autoriser</string>
+    <string name="approvalAlwaysAllowExact">Toujours autoriser %1$s</string>
+    <string name="approvalDeny">Refuser</string>
+    <string name="approvalReplyLabel">Indiquez-lui quoi faire à la place</string>
+    <string name="approvalReplySend">Refuser et envoyer</string>
+    <string name="approvalReplyJustDeny">Refuser seulement</string>
+    <string name="approvalReplyBack">Retour</string>
+    <string name="approvalReplyEmpty">Écrivez ce qu'il doit faire à la place, ou choisissez Refuser seulement.</string>
+    <string name="approvalAllowedWhat">Autorisé\u00A0: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Toujours autorisé\u00A0: %1$s</string>
+    <string name="approvalDenied">Refusé</string>
+    <string name="approvalDeniedInstead">Refusé, il doit faire ceci à la place\u00A0: %1$s</string>
+</resources>

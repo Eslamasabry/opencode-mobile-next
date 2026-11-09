@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxExitForceStop">L’application a été fermée pendant que OpenCode fonctionnait</string>
+    <string name="linuxExitMemory">Android a fermé l’application pour libérer de la mémoire</string>
+    <string name="linuxExitMemoryLimit">Android a fermé l’application car elle a atteint sa limite de mémoire</string>
+    <string name="linuxExitCrash">L’application a planté pendant que OpenCode fonctionnait</string>
+    <string name="linuxExitKilled">Android a arrêté l’application pendant que OpenCode fonctionnait</string>
+    <string name="linuxExitRestored">OpenCode fonctionne de nouveau.</string>
+    <string name="linuxExitCheckStatus">Vérifiez l’état actuel du serveur ci-dessous.</string>
+    <string name="linuxExitPolicyOff">Le redémarrage automatique est désactivé. Vous pouvez démarrer OpenCode quand vous le souhaitez.</string>
+</resources>

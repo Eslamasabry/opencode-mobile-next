@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">Continuer avec un nouvel agent</string>
+    <string name="nativeHandoffIntro">Choisissez un agent sur ce serveur. Relisez l’historique masqué de la conversation et la première invite avant de démarrer. La conversation d’origine reste inchangée.</string>
+    <string name="nativeHandoffPreparing">Préparation de l’historique de la conversation…</string>
+    <string name="nativeHandoffReview">Cet historique sera enregistré dans un nouveau dossier ignoré du même projet. Les identifiants sont masqués\u00A0; le raisonnement et le contenu des pièces jointes sont exclus.</string>
+    <string name="nativeHandoffPrompt">Premier message au nouvel agent</string>
+    <string name="nativeHandoffSend">Démarrer le nouvel agent</string>
+    <string name="nativeHandoffSending">Enregistrement de l’historique et démarrage de la nouvelle conversation…</string>
+    <string name="nativeHandoffSucceeded">Le nouvel agent a reçu l’historique de la conversation.</string>
+    <string name="nativeHandoffFailed">Le transfert n’a pas pu se terminer. La conversation d’origine est inchangée. Vérifiez la connexion et le projet, puis rouvrez cette feuille.</string>
+    <string name="nativeHandoffUnconfirmed">La nouvelle conversation n’a pas pu être confirmée. Consultez Toutes les conversations avant d’en démarrer une autre\u00A0: l’agent l’a peut-être reçue.</string>
+    <string name="nativeHandoffLinkFailed">Le nouvel agent a reçu l’historique, mais le lien vers la conversation n’a pas pu être enregistré. Réessayez d’enregistrer le lien\u00A0; aucun message ne sera renvoyé.</string>
+    <string name="nativeHandoffSaveLink">Enregistrer le lien de la conversation</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Lire les limites des offres</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Lecture activée. Touchez pour la désactiver et effacer ces chiffres.</string>
+    <string name="plansCollectorDisabled">Lire depuis le collecteur installé sur ce serveur</string>
+    <string name="plansCollectorQuestion">Lire les limites de %1$s depuis ce serveur\u00A0?</string>
+    <string name="plansCollectorAllow">Faire confiance au collecteur et lire</string>
+    <string name="plansCollectorTrust">Ne continuez que si vous faites confiance au collecteur de quota installé sur %1$s. Il reçoit l’identifiant de connexion enregistré de ce serveur à une adresse de quota fixe. Les requêtes ne suivent pas les redirections. Vous pouvez désactiver la lecture ici. Modifier l’adresse ou la connexion exige une nouvelle autorisation.</string>
+    <string name="plansCollectorFailed">Ce choix n’a pas pu être enregistré. Reconnectez-vous au serveur et réessayez.</string>
+    <string name="plansPaseoDisabled">Lire l’utilisation depuis ce serveur Paseo</string>
+    <string name="plansPaseoQuestion">Lire l’utilisation des offres depuis Paseo\u00A0?</string>
+    <string name="plansPaseoTrust">Lire les limites d’offre signalées par %1$s tant que cette application est visible. La désactivation efface les chiffres enregistrés pour le widget. Aucun lecteur en arrière-plan n’est démarré.</string>
+    <string name="plansBuiltinReader">Lecteur d’utilisation sur le téléphone</string>
+    <string name="plansBuiltinDisabled">Configurer le lecteur d’utilisation dans l’Ubuntu de ce téléphone</string>
+    <string name="plansBuiltinQuestion">Lire les limites des offres sur ce téléphone\u00A0?</string>
+    <string name="plansBuiltinTrust">Installer le lecteur d’utilisation fourni dans %1$s et lire les connexions aux fournisseurs enregistrées à cet endroit. Son jeton de lecture reste dans le stockage sécurisé et les fichiers privés. La collecte pour Claude reste indisponible. La désactivation arrête son service et efface les chiffres de son widget.</string>
+</resources>

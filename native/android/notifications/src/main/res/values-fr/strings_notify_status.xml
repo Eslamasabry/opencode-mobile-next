@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_status_working">En cours…</string>
+    <string name="notify_status_still_working">%1$s travaille toujours</string>
+    <string name="notify_status_chats_working">%1$s conversations en cours</string>
+    <string name="notify_status_more">+%1$s de plus</string>
+    <string name="notify_status_waiting_count">%1$s en attente</string>
+    <string name="notify_status_tasks_progress">%1$s tâches sur %2$s</string>
+    <string name="notify_status_minutes">%1$s min</string>
+    <string name="notify_status_hours">%1$s h</string>
+    <string name="notify_status_waiting_provider">En attente · limite %1$s</string>
+    <string name="notify_status_waiting_generic">En attente · le fournisseur est occupé</string>
+    <string name="notify_status_tries_again_at">Nouvel essai à %1$s</string>
+    <string name="notify_status_tries_again_soon">Nouvel essai bientôt</string>
+    <string name="notify_status_paused_android_title">En pause · limite d’Android en arrière-plan</string>
+    <string name="notify_status_paused_android_body">Android arrête le travail en arrière-plan après 6 heures par jour. Ouvrez OpenCode pour continuer.</string>
+    <string name="notify_status_paused_hot_title">En pause · le téléphone est chaud</string>
+    <string name="notify_status_paused_hot_body">Reprise dès qu’il a refroidi</string>
+    <string name="notify_status_paused_idle_title">En pause · rien n’était en cours</string>
+    <string name="notify_status_paused_idle_body">Touchez pour relancer OpenCode</string>
+    <string name="notify_status_reconnecting_title">Reconnexion à %1$s</string>
+    <string name="notify_status_reconnecting_generic">Reconnexion</string>
+    <string name="notify_status_reconnecting_body">En attente de la connexion</string>
+    <string name="notify_status_ready_title">Prêt · rien en cours</string>
+    <string name="notify_status_ready_body">Prêt quand vous l’êtes</string>
+    <string name="notify_status_last_reply">Dernière réponse il y a %1$s</string>
+    <string name="notify_status_last_reply_now">Dernière réponse à l’instant</string>
+    <string name="notify_status_setup_title">Configuration · %1$s sur %2$s</string>
+    <string name="notify_status_on_server">sur %1$s</string>
+    <string name="notify_status_on_this_phone">sur ce téléphone</string>
+    <string name="notify_status_lock_working">%1$s en cours</string>
+    <string name="notify_status_lock_waiting">En attente</string>
+    <string name="notify_status_lock_paused">En pause</string>
+    <string name="notify_status_lock_reconnecting">Reconnexion</string>
+    <string name="notify_status_lock_ready">Prêt</string>
+    <string name="notify_status_lock_setup">Configuration</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="one">%1$s vous attend</item>
+        <item quantity="many">%1$s vous attendent</item>
+        <item quantity="other">%1$s vous attendent</item>
+    </plurals>
+</resources>

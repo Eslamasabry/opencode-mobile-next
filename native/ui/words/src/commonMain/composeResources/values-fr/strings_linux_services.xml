@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">Programmes de développement</string>
+    <string name="linuxDevProgramsNote">Programmes trouvés dans le Linux de ce téléphone. Sélectionnez un programme pour lire son fichier de sortie.</string>
+    <string name="linuxDevScanFailed">Impossible de vérifier les programmes de développement</string>
+    <string name="linuxDevProgram">Programme %1$d</string>
+    <string name="linuxDevPorts">Ports\u00A0: %1$s</string>
+    <string name="linuxDevReadLog">Lire le journal</string>
+    <string name="linuxDevNoLog">Aucun fichier de sortie lisible</string>
+    <string name="linuxDevLog">Journal du programme</string>
+    <string name="linuxDevLogLoading">Lecture de la dernière sortie…</string>
+    <string name="linuxDevLogFailed">La sortie du programme n’a pas pu être lue.</string>
+    <string name="linuxDevLogEmpty">Aucune sortie pour l’instant.</string>
+    <string name="linuxDevStop">Arrêter</string>
+    <string name="linuxDevStopTitle">Arrêter ce programme\u00A0?</string>
+    <string name="linuxDevStopBody">Arrête le processus %1$d sur ce téléphone. Sa commande est vérifiée de nouveau avant l’arrêt.</string>
+    <string name="linuxSvcTitle">Services de développement</string>
+    <string name="linuxSvcFailed">L’action n’a pas abouti</string>
+    <string name="linuxSvcUnconfirmed">La connexion actuelle ou la propriété de la commande n’ont pas pu être confirmées. Actualisez avant de réessayer.</string>
+    <string name="linuxSvcCorrupt">Les commandes enregistrées n’ont pas pu être lues. Les données enregistrées sont conservées telles quelles.</string>
+    <string name="linuxSvcUnsupported">Cette connexion ne peut pas contrôler les services de développement. Vous pouvez quand même enregistrer des commandes pour plus tard.</string>
+    <string name="linuxSvcAdd">Ajouter une commande</string>
+    <string name="linuxSvcRefresh">Actualiser</string>
+    <string name="linuxSvcSaved">Commandes enregistrées</string>
+    <string name="linuxSvcSavedNote">Enregistrer une commande ne la démarre jamais. Seule une exécution lancée ici peut être contrôlée depuis sa commande enregistrée.</string>
+    <string name="linuxSvcEmpty">Aucune commande enregistrée dans ce projet.</string>
+    <string name="linuxSvcNotStarted">Non démarré</string>
+    <string name="linuxSvcRunning">En cours d’exécution</string>
+    <string name="linuxSvcStopped">Arrêté</string>
+    <string name="linuxSvcUnknown">Exécution non confirmée</string>
+    <string name="linuxSvcDetected">Trouvé en cours d’exécution</string>
+    <string name="linuxSvcStart">Démarrer</string>
+    <string name="linuxSvcRestart">Redémarrer</string>
+    <string name="linuxSvcReport">Rapport d’échec</string>
+    <string name="linuxSvcForget">Oublier l’exécution</string>
+    <string name="linuxSvcRemove">Supprimer la commande</string>
+    <string name="linuxSvcName">Nom</string>
+    <string name="linuxSvcNext">Suivant</string>
+    <string name="linuxSvcCommand">Commande</string>
+    <string name="linuxSvcSave">Enregistrer la commande</string>
+    <string name="linuxSvcInvalidName">Saisissez un nom de 1 à 80 caractères.</string>
+    <string name="linuxSvcInvalidCommand">Saisissez une commande de 1 à 4096 caractères.</string>
+    <string name="linuxSvcRemoveTitle">Supprimer cette commande\u00A0?</string>
+    <string name="linuxSvcForgetTitle">Oublier cette exécution\u00A0?</string>
+    <string name="linuxSvcStopBody">Le programme sélectionné ne sera arrêté qu’une fois son identité actuelle confirmée.</string>
+    <string name="linuxSvcRemoveBody">Supprime cette commande enregistrée et son reçu local. Cela n’arrête jamais un programme en cours d’exécution.</string>
+    <string name="linuxSvcForgetBody">Oublie le reçu incertain sur ce téléphone. Cela n’arrête pas le programme\u00A0; vérifiez la liste des programmes en cours avant d’en démarrer une autre copie.</string>
+</resources>

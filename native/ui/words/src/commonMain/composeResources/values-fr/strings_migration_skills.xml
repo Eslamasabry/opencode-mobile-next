@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">Utiliser dans une nouvelle conversation</string>
+    <string name="migrationSkillReady">La compétence est prête dans une nouvelle conversation. L’agent n’a pas été lancé.</string>
+    <string name="migrationSkillChanged">La connexion a changé. Toute conversation déjà créée a été conservée.</string>
+    <string name="migrationSkillInvalid">Cette compétence n’a pas d’identifiant pris en charge. Actualisez la liste des compétences.</string>
+    <string name="migrationSkillUncertain">La demande a peut-être atteint le serveur. Toute conversation déjà créée a été conservée. Vérifiez-la avant de réessayer.</string>
+    <string name="migrationSkillOpen">Ouvrir la conversation</string>
+</resources>

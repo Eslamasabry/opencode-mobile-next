@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">Compétences</string>
+    <string name="stateSkillsUse">Utiliser dans cette conversation</string>
+    <string name="stateSkillsDone">Compétence ajoutée à cette conversation.</string>
+    <string name="stateSkillsChanged">La conversation ou le dossier a changé. Rouvrez la liste.</string>
+    <string name="stateSkillsBusy">Une compétence est déjà en cours d’ajout. Attendez la fin.</string>
+    <string name="stateSkillsStaged">Terminez ou annulez l’annulation en attente avant d’ajouter une compétence.</string>
+    <string name="stateSkillsUnsupported">Ce serveur ne peut pas ajouter de compétences aux conversations.</string>
+    <string name="stateSkillsUncertain">Le résultat n’a pas pu être confirmé. Actualisez avant de réessayer.</string>
+</resources>

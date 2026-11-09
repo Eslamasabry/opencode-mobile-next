@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentFeaturesTitle">Réglages de l’agent</string>
+    <string name="agentFeaturesEmpty">Cet agent n’a aucun réglage supplémentaire.</string>
+    <string name="agentFeaturesFailed">Impossible de charger les réglages de l’agent</string>
+</resources>

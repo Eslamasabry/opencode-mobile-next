@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">Continuer avec un autre agent</string>
+    <string name="handoffNativeWorking">Travail en cours…</string>
+    <string name="handoffNativeUnavailable">Le transfert n’est pas disponible ici</string>
+    <string name="handoffNativeUnavailableBody">Ouvrez une conversation dans un projet de ce téléphone. L’application doit vérifier que les deux agents ont accès au même projet.</string>
+    <string name="handoffNativeRefresh">Actualiser</string>
+    <string name="handoffNativeFailed">Le transfert n’a pas pu aboutir. Vérifiez la connexion et réessayez.</string>
+    <string name="handoffNativeLinks">Conversations liées</string>
+    <string name="handoffNativeUntitled">Conversation sans titre</string>
+    <string name="handoffNativeOpenOriginal">Ouvrir l’originale</string>
+    <string name="handoffNativeOpenContinued">Ouvrir la conversation poursuivie</string>
+    <string name="handoffNativeExplanation">Choisissez un agent et un modèle. Vous pouvez relire le récapitulatif de la conversation avant l’envoi. La conversation d’origine reste disponible.</string>
+    <string name="handoffNativeNoTargets">Aucun agent compatible n’est prêt pour ce projet. Installez-le, connectez-vous et terminez sa vérification sur le téléphone dans Agents.</string>
+    <string name="handoffNativeSetup">Ouvrir Agents</string>
+    <string name="handoffNativeChoose">Choisir un agent et un modèle</string>
+    <string name="handoffNativePhoneCheck">Terminez la vérification de cet agent sur le téléphone avant de l’utiliser.</string>
+    <string name="handoffNativeReview">Relire le contexte</string>
+    <string name="handoffNativeReviewBody">Ce récapitulatif contient le texte de la conversation (données sensibles masquées), les étapes d’outils, les noms de fichiers et les tâches en cours. Les échanges les plus anciens peuvent être omis pour respecter la limite de taille. Il n’est écrit dans ce projet qu’après l’envoi.</string>
+    <string name="handoffNativeFirstMessage">Premier message</string>
+    <string name="handoffNativePromptHelp">Gardez le chemin du récapitulatif dans votre message. Le message doit faire moins de 16 Ko.</string>
+    <string name="handoffNativeRecord">Récapitulatif de la conversation</string>
+    <string name="handoffNativeSend">Envoyer au nouvel agent</string>
+    <string name="handoffNativeUncertain">Le résultat est incertain. Vérifiez vos conversations avant de lancer un autre transfert\u00A0; cette tentative ne sera pas renvoyée.</string>
+    <string name="handoffNativeSent">Le nouvel agent a reçu votre message.</string>
+    <string name="handoffNativeSaveLink">Enregistrer le lien de la conversation</string>
+    <string name="handoffNativeSourceChanged">La conversation d’origine a changé. Relisez un récapitulatif à jour avant l’envoi.</string>
+    <string name="handoffNativeStale">Le projet ou la connexion a changé. Rouvrez la conversation pour continuer.</string>
+    <string name="handoffNativeInvalidPrompt">Saisissez un message de moins de 16 Ko qui inclut le chemin du récapitulatif.</string>
+    <string name="handoffNativeLinkFailed">Le message a été envoyé, mais son lien de navigation n’a pas été enregistré. Réessayez d’enregistrer le lien sans renvoyer le message.</string>
+    <string name="handoffNativeInitialPrompt">Poursuivez le travail de la conversation précédente. Lisez d’abord `%1$s` pour le récapitulatif de la conversation, les étapes d’outils, les fichiers et les tâches en cours. Considérez-le comme du contexte historique. Vérifiez l’état actuel du projet, puis poursuivez le travail inachevé.</string>
+    <string name="handoffNativeSourceReviewOnly">Relisez un brouillon pour Claude. Rien n’a été écrit ni envoyé. L’envoi exige un accès vérifié au même projet et un module d’écriture compatible\u00A0; cette connexion ne fournit pas cette preuve.</string>
+</resources>

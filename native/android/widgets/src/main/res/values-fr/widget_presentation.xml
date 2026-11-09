@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_ask_outside_write">Écrire en dehors de ce projet\u00A0?</string>
+    <string name="widget_ask_outside_read">Lire en dehors de ce projet\u00A0?</string>
+    <string name="widget_ask_outside_run">Exécuter une commande en dehors de ce projet\u00A0?</string>
+    <string name="widget_ask_directory">Travailler en dehors de ce projet\u00A0?</string>
+    <string name="widget_ask_command">Exécuter cette commande\u00A0?</string>
+    <string name="widget_ask_edit">Modifier ce fichier\u00A0?</string>
+    <string name="widget_ask_read">Lire ce fichier\u00A0?</string>
+    <string name="widget_ask_permission">Utiliser %1$s</string>
+</resources>

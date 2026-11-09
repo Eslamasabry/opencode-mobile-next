@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Fournisseurs et outils</string>
+    <string name="intBack">Retour</string>
+    <string name="intRefresh">Actualiser</string>
+    <string name="intServers">Serveur</string>
+    <string name="intNoServer">Connectez-vous d’abord à un serveur</string>
+    <string name="intProviders">Fournisseurs</string>
+    <string name="intConnected">Connecté</string>
+    <string name="intNotConnected">Non connecté</string>
+    <string name="intKey">Clé API</string>
+    <string name="intSaveKey">Enregistrer la clé sur le serveur</string>
+    <string name="intKeyPage">Obtenir une clé API</string>
+    <string name="intOpenSignIn">Ouvrir la page de connexion</string>
+    <string name="intCode">Code ou URL de rappel</string>
+    <string name="intCompleteSignIn">Terminer la connexion</string>
+    <string name="intSignInHelp">Terminez dans votre navigateur, puis collez ici son code ou l’URL de rappel.</string>
+    <string name="intConnectors">Connecteurs</string>
+    <string name="intConnectorConnected">Connecté</string>
+    <string name="intConnectorNotConnected">À vérifier</string>
+    <string name="intConnectorName">Nom du connecteur</string>
+    <string name="intConnectorUrl">Adresse HTTPS</string>
+    <string name="intHeaderName">Nom de l’en-tête (facultatif)</string>
+    <string name="intHeaderValue">Valeur de l’en-tête</string>
+    <string name="intSaveConnector">Ajouter le connecteur</string>
+    <string name="intHeaderHelp">Les valeurs d’en-tête sont secrètes. Elles sont envoyées uniquement à ce serveur et jamais affichées dans les diagnostics.</string>
+    <string name="intSkills">Rédiger une compétence</string>
+    <string name="intRequirements">Que doit faire la compétence\u00A0?</string>
+    <string name="intDraftHelp">L’agent rédigera un SKILL.md dans une nouvelle conversation pour relecture. Il ne lui sera pas demandé de l’installer ni de modifier des fichiers.</string>
+    <string name="intAskDraft">Demander un brouillon à l’agent</string>
+    <string name="intOpenDraft">Ouvrir la conversation du brouillon</string>
+    <string name="intSaved">Enregistré sur le serveur.</string>
+    <string name="intFailed">L’opération n’a pas abouti. Actualisez avant de réessayer.</string>
+    <string name="intUnsupported">Ce serveur ne prend pas en charge cette action.</string>
+    <string name="intChanged">La connexion a changé. Rouvrez cette page.</string>
+    <string name="intInvalid">Vérifiez les champs obligatoires et réessayez.</string>
+    <string name="intDraftSent">La demande de brouillon a été envoyée. Ouvrez la conversation pour la suivre.</string>
+    <string name="intDraftUncertain">La demande est peut-être arrivée. Vérifiez la conversation avant de renvoyer.</string>
+    <string name="intOpenQuestion">Ouvrir cette page\u00A0?</string>
+    <string name="intOpen">Ouvrir la page</string>
+    <string name="intInsecure">Cette adresse n’est pas chiffrée.</string>
+    <string name="intConnectorReady">Connecté pour le prochain message.</string>
+    <string name="intConnectorUnknown">Connecté. La détection des outils n’a pas été confirmée.</string>
+    <string name="intConnectorAuth">Ce connecteur nécessite que vous vous connectiez.</string>
+    <string name="intConnecting">Connexion en cours</string>
+    <string name="intConnectorSignIn">Se connecter à ce connecteur</string>
+    <string name="intConnectorCancelSignIn">Annuler la connexion</string>
+</resources>

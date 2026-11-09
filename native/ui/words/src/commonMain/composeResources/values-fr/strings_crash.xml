@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Preuves de plantage enregistrées</string>
+    <string name="secCrashCapture">Conserver les catégories de plantage sur ce téléphone</string>
+    <string name="secCrashPrivacy">Désactivé par défaut. Enregistre uniquement les catégories d’erreur et les heures, jamais les messages, les traces ni les conversations.</string>
+    <string name="secCrashClear">Effacer les preuves enregistrées</string>
+    <string name="secCrashPreview">Aperçu du rapport de plantage</string>
+    <string name="secCrashEmpty">Aucune preuve de plantage n’a été enregistrée.</string>
+    <string name="secCrashDisabled">Activez la capture des plantages pour conserver les prochaines catégories d’erreur.</string>
+    <string name="secCrashStale">Les preuves ont changé. Affichez à nouveau l’aperçu du rapport avant de le partager.</string>
+    <string name="secCrashBusy">Une feuille de partage est déjà en cours d’ouverture.</string>
+    <string name="secCrashUnavailable">Les preuves de plantage sont indisponibles. Réessayez.</string>
+    <string name="secCrashShareUnavailable">Le partage est indisponible. Réessayez.</string>
+    <string name="secAppExits">Arrêts de l’application Android</string>
+    <string name="secHelperExits">Arrêts de l’assistant de l’agent</string>
+    <string name="secHistoryRefresh">Actualiser l’historique des arrêts</string>
+    <string name="secHistoryEmpty">Aucun arrêt récent n’a été enregistré.</string>
+    <string name="secHistoryUnavailable">L’historique des arrêts est indisponible.</string>
+    <string name="secHistoryEntry">%1$s · code %2$d</string>
+    <string name="secCrashReportHeader">Rapport de plantage d’OpenCode Mobile\nCatégories d’erreur et heures capturées uniquement.\nAucun message, aucune trace ni aucune conversation n’est inclus.\n\n</string>
+</resources>

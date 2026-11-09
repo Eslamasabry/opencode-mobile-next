@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">Outils de conversation</string>
+    <string name="sessionTransferWait">Finalisation de cette action…</string>
+    <string name="sessionTransferExport">Enregistrer une copie complète</string>
+    <string name="sessionTransferRedact">Masquer les valeurs privées</string>
+    <string name="sessionTransferRedactBody">Le serveur remplace les valeurs sensibles dans la copie exportée.</string>
+    <string name="sessionTransferSave">Enregistrer le fichier JSON</string>
+    <string name="sessionTransferImport">Importer une conversation</string>
+    <string name="sessionTransferChoose">Choisir un fichier JSON</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="one">1 enregistrement de message</item>
+        <item quantity="many">%1$d enregistrements de messages</item>
+        <item quantity="other">%1$d enregistrements de messages</item>
+    </plurals>
+    <string name="sessionTransferRedacted">Cette copie contient des valeurs masquées. L'importation conserve ces espaces réservés.</string>
+    <string name="sessionTransferDestination">Importer dans ce dossier du serveur</string>
+    <string name="sessionTransferDestinationRequired">Choisissez d'abord un dossier de destination.</string>
+    <string name="sessionTransferImportAction">Importer la conversation examinée</string>
+    <string name="sessionTransferNote">Note de la conversation</string>
+    <string name="sessionTransferLoadNote">Lire la note actuelle</string>
+    <string name="sessionTransferSaveNote">Enregistrer la note</string>
+    <string name="sessionTransferRemoveNote">Supprimer la note</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="one">La note doit tenir dans 1 octet encodé. Raccourcissez-la et réessayez.</item>
+        <item quantity="many">La note doit tenir dans %1$d octets encodés. Raccourcissez-la et réessayez.</item>
+        <item quantity="other">La note doit tenir dans %1$d octets encodés. Raccourcissez-la et réessayez.</item>
+    </plurals>
+    <string name="sessionTransferSaved">Conversation enregistrée.</string>
+    <string name="sessionTransferImported">Conversation importée.</string>
+    <string name="sessionTransferNoteSaved">Note enregistrée.</string>
+    <string name="sessionTransferNoteRemoved">Note supprimée.</string>
+    <string name="sessionTransferInvalid">Choisissez un export JSON OpenCode valide.</string>
+    <string name="sessionTransferLarge">Choisissez un export de moins de 128 Mio.</string>
+    <string name="sessionTransferChanged">La connexion au serveur a changé. Rouvrez ces outils avant de continuer.</string>
+    <string name="sessionTransferSignIn">Le serveur a refusé l'accès. Vérifiez votre connexion au serveur et réessayez.</string>
+    <string name="sessionTransferConflict">Une conversation avec cette identité existe déjà. Choisissez une autre destination ou examinez-la sur le serveur.</string>
+    <string name="sessionTransferUnsupported">Ce serveur ne propose pas le transfert de conversations.</string>
+    <string name="sessionTransferFailed">Impossible de terminer cette action. Vérifiez la connexion et réessayez.</string>
+    <string name="sessionTransferReference">Référencer un dossier du serveur</string>
+    <string name="sessionTransferReferencePath">Chemin complet du dossier sur ce serveur</string>
+    <string name="sessionTransferReferenceBody">Ajoute une référence de dossier à votre prochaine invite. Le dossier reste sur le serveur.</string>
+    <string name="sessionTransferReferenceAdd">Ajouter la référence du dossier</string>
+    <string name="sessionTransferReferenceRequired">Saisissez d'abord le chemin du dossier du serveur.</string>
+    <string name="sessionTransferReferenceAdded">Référence de dossier ajoutée à votre brouillon.</string>
+    <string name="sessionTransferReferenceInvalid">Saisissez un chemin de dossier absolu sur le serveur.</string>
+</resources>

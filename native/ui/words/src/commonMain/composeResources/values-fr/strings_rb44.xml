@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb44AboutCheckUpdates">Rechercher des mises à jour</string>
+    <string name="rb44AboutUpdateIdle">Cherche une version plus récente de cette application</string>
+    <string name="rb44AboutUpdateChecking">Vérification…</string>
+    <string name="rb44AboutUpdateCurrent">Vous avez la dernière version</string>
+    <string name="rb44AboutUpdateDownloading">Téléchargement de la mise à jour…</string>
+    <string name="rb44AboutUpdateFailed">Impossible de rechercher les mises à jour. Vérifiez votre connexion et réessayez.</string>
+</resources>

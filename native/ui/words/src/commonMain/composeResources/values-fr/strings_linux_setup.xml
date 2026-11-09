@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxSetupStart">Configurer Linux et OpenCode</string>
+    <string name="linuxSetupAddPython">Ajouter les outils Python</string>
+    <string name="linuxSetupContinue">Poursuivre la configuration</string>
+    <string name="linuxSetupStop">Arrêter la configuration</string>
+    <string name="linuxSetupStopQuestion">Arrêter la configuration\u00A0?</string>
+    <string name="linuxSetupStopBody">Les outils installés restent sur le téléphone. Vous pourrez poursuivre la configuration plus tard.</string>
+    <string name="linuxSetupWorking">Configuration des outils du téléphone…</string>
+    <string name="linuxSetupAddingPython">Ajout des outils Python</string>
+    <string name="linuxSetupDone">Les outils du téléphone sont prêts.</string>
+    <string name="linuxSetupFailed">La configuration s’est arrêtée avant la fin. Poursuivez-la pour vérifier les outils installés et réessayer.</string>
+</resources>
