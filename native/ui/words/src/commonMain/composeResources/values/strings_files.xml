@@ -24,4 +24,5 @@
     <string name="filesReasonNotShowable">This kind of file can't be shown here.</string>
     <string name="filesReasonNotShowableBody">It isn't text or a picture. Open it on the computer where it lives.</string>
     <string name="filesReasonNotShowablePhoneBody">It isn't text or a picture. It is on this phone, so another app can open it: choose Open with.</string>
+    <string name="filesShowingSaved">Showing what was saved. The server can't be reached right now.</string>
 </resources>

@@ -125,7 +125,7 @@ class SetupTimedOutScreenTest {
                 quietSeconds = 45,
             )
         run(ui(running), Actions()) {
-            onNodeWithText("Unpacking files · \u21662:05\u2069").assertExists()
+            onNodeWithText("Unpacking files · \u20662:05\u2069").assertExists()
             onNodeWithText("Still working. Long steps can take several minutes.").assertExists()
         }
     }
