@@ -89,7 +89,12 @@ public class FactsBookTriggers internal constructor(
     /** A proposal's reminder can be changed before it is confirmed. */
     public val proposalEditSupported: Boolean get() = capabilities().supports(PROPOSAL_EDIT)
 
-    public val templates: List<TriggerTemplateId> get() = TriggerTemplateId.offered
+    /** The templates a rule may use, in the order the editor lists them: the node's own list when it gives one. */
+    public val templates: List<TriggerTemplateId>
+        get() {
+            val listed = capabilities().triggerTemplates
+            return TriggerTemplateId.offered.filter { listed.isEmpty() || it.wire in listed }
+        }
 
     private val calls: FactsBookTriggerCalls? get() = node() as? FactsBookTriggerCalls
 

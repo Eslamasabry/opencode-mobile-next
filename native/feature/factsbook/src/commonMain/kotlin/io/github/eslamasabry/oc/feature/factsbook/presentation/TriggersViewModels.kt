@@ -74,6 +74,8 @@ public data class TriggersUi(
     val notice: TriggersNotice? = null,
     val failure: FactsBookError? = null,
     val error: FactsBookError? = null,
+    /** A pull-to-refresh is running. */
+    val refreshing: Boolean = false,
 )
 
 public interface TriggersActions {
@@ -104,7 +106,12 @@ public interface TriggersActions {
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 public class TriggersViewModel(private val access: FactsBookAccess, private val nav: AppNavigator, private val clock: Clock) :
     ViewModel(), TriggersActions {
-    private data class Local(val working: Set<String> = emptySet(), val notice: TriggersNotice? = null, val failure: FactsBookError? = null)
+    private data class Local(
+        val working: Set<String> = emptySet(),
+        val notice: TriggersNotice? = null,
+        val failure: FactsBookError? = null,
+        val refreshing: Boolean = false,
+    )
 
     private val local = MutableStateFlow(Local())
     private val triggers get() = access.engine.triggers
@@ -122,6 +129,7 @@ public class TriggersViewModel(private val access: FactsBookAccess, private val 
                     notice = own.notice,
                     failure = own.failure,
                     error = t.error,
+                    refreshing = own.refreshing,
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TriggersUi())
@@ -133,9 +141,11 @@ public class TriggersViewModel(private val access: FactsBookAccess, private val 
     override fun back(): Unit = nav.back()
 
     override fun refresh() {
+        local.update { it.copy(refreshing = true) }
         viewModelScope.launch {
             access.engine.open(access.activeProfileId.value)
             triggers.refresh()
+            local.update { it.copy(refreshing = false) }
         }
     }
 
@@ -303,7 +313,16 @@ public class RuleEditorViewModel(
             val s = access.engine.state.value
             mutable.update {
                 val form = rule?.let(RuleForm::of) ?: it.form
-                checked(it.copy(form = form, formSeed = it.formSeed + 1, saved = rule, canApprove = s.canApprove, offersSupported = triggers.offersSupported))
+                checked(
+                    it.copy(
+                        form = form,
+                        formSeed = it.formSeed + 1,
+                        saved = rule,
+                        canApprove = s.canApprove,
+                        offersSupported = triggers.offersSupported,
+                        templates = (triggers.templates + form.template).distinct().toImmutableList(),
+                    )
+                )
             }
             val areas = (access.engine.node?.areas() as? FbResult.Ok)?.value?.filter { !it.sensitiveStorage }?.map { it.slug }
             if (!areas.isNullOrEmpty()) mutable.update { it.copy(areas = (areas + it.form.area).distinct().toImmutableList()) }

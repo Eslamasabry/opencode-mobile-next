@@ -175,9 +175,14 @@ public fun KitChip(
         val plainStyle = style.copy(color = c.text2, fontWeight = baseStyle.fontWeight)
         Row(
             modifier.kitMaxWidth(CapRole.Chip).heightIn(min = minHeight).testTag("kit-chip-plain")
-                .clearAndSetSemantics {
-                    contentDescription = accessible
-                    if (liveRegion) this.liveRegion = LiveRegionMode.Polite
+                // The words stay a Text node (screens and tests find a fact by its words); only a spoken form that differs
+                // from the words replaces them for the screen reader.
+                .let { m ->
+                    if (accessible == label) m.semantics(mergeDescendants = true) { if (liveRegion) this.liveRegion = LiveRegionMode.Polite }
+                    else m.clearAndSetSemantics {
+                        contentDescription = accessible
+                        if (liveRegion) this.liveRegion = LiveRegionMode.Polite
+                    }
                 },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),

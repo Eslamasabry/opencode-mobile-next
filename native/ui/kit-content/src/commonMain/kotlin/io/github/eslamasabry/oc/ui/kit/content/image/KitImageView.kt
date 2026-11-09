@@ -58,7 +58,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitImageUnavailable
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.image.KIT_VIEWER_EDGE
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -123,12 +125,14 @@ private sealed interface Loaded {
 @Composable
 private fun rememberLoaded(source: KitImageSource): Loaded {
     val key: Any = if (source is KitImageSource.Loader) source.key else source
+    val work = LocalKitImageWork.current
     val result by produceState<Loaded>(Loaded.Loading, key) {
         value =
             try {
                 Loaded.Ready(
                     when (source) {
-                        is KitImageSource.Memory -> source.bytes.decodeToImageBitmap()
+                        is KitImageSource.Memory ->
+                            KitImages.loadBytes(source.bytes, KIT_VIEWER_EDGE, work) ?: error("undecodable")
                         is KitImageSource.Loader -> source.load()
                     },
                 )

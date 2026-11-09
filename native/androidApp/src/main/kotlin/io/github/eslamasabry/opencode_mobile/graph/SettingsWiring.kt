@@ -225,6 +225,8 @@ class AndroidSettingsHost(
     private val continuity: AppTelemetryContinuity,
     private val factsBook: io.github.eslamasabry.oc.feature.factsbook.presentation.FactsBookAccess,
     private val telemetryHealth: AppTelemetryHealth,
+    // Report a problem › On this phone: the kept errors and timings (nothing here sends anything).
+    private val kept: io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -491,6 +493,17 @@ class AndroidSettingsHost(
                 if (Telemetry.vendorAvailable) telemetry.sendProblemReport(text) else null
 
             override suspend fun reportCode(): String? = telemetry.reportCode()
+
+            override fun errorsKept(): Int = kept.errorsKept.value
+
+            override fun errorLogText(): String = if (kept.errorsKept.value > 0) kept.errorLogText() else ""
+
+            override suspend fun clearErrors(): Boolean =
+                kept.clearErrors() is io.github.eslamasabry.oc.core.common.Outcome.Ok
+
+            override fun timingReport(): String = if (kept.performanceSteps().isEmpty()) "" else kept.performanceReport()
+
+            override fun clearTimings() = kept.clearPerformance()
         }
 
     /** The server in use, by kind and version only: never its name or address. */

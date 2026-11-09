@@ -47,4 +47,6 @@
     <string name="reportR1KindTooLarge">Message too large</string>
     <string name="reportR1KindRejected">Message refused</string>
     <string name="reportR1KindOther">Other problem</string>
+    <string name="reportKeptCopyErrors">Copy error log</string>
+    <string name="reportKeptClearErrors">Clear errors</string>
 </resources>

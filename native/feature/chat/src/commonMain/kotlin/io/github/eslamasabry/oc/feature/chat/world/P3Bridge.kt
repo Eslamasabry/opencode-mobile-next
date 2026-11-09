@@ -106,6 +106,7 @@ internal class P3Bridge(private val sessionId: String) {
             finish = m.finish,
             errorText = m.errorText,
             errorKind = m.errorKind,
+            providerId = m.providerId,
         )
 
     private fun part(raw: CorePart): Part {
@@ -124,6 +125,9 @@ internal class P3Bridge(private val sessionId: String) {
             toolStatus = p.tool?.status?.let(::tool),
             synthetic = p.synthetic,
             ended = p.ended,
+            mime = p.mime,
+            filename = p.filename,
+            url = if (p.type == CorePartType.File) p.url else null,
             searchText =
                 listOfNotNull(
                         p.toolName,

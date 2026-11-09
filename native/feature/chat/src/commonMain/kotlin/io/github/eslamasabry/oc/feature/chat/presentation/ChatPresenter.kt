@@ -210,7 +210,7 @@ public class ChatPresenter(
             .onEach { live -> if (live) loadBackgroundSupport() }
             .launchIn(scope)
         // S28 story 3: the undone line follows the session as well.
-        val extra = feed.combine(world.undone) { f, u -> f to u }
+        val extra = feed.combine(world.undone) { f, u -> f to u }.combine(world.parent) { x, _ -> x }
         return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
                 present(i, l, h)
             }
@@ -266,6 +266,7 @@ public class ChatPresenter(
             retryAtMs = at.takeIf { clock != null },
             nowMs = clock?.now()?.toEpochMilliseconds() ?: 0,
             onThisPhone = world.serverOnThisPhone,
+            stopped = world.linkStopped.value,
         )
 
     /** S24-CHAT: ticks once a second only while a retry is scheduled (Flutter's `_Ticker`). */
@@ -273,7 +274,7 @@ public class ChatPresenter(
         val c = clock ?: return world.linkRetryAtMs.map { retryNow(it) }
         return world.linkRetryAtMs.latest { at ->
             factTicks(c, flowOf(at != null)).map { now ->
-                LinkRetryFacts(at, now, world.serverOnThisPhone)
+                LinkRetryFacts(at, now, world.serverOnThisPhone, world.linkStopped.value)
             }
         }
     }
@@ -284,7 +285,8 @@ public class ChatPresenter(
         // screen with one offline line (Try again retries the load) instead of replacing them with an error.
         if (i.load == ChatLoad.Live && i.transcript.rows.isNotEmpty()) lastLive = i.transcript
         i.title?.let { lastTitle = it }
-        val kept = if (i.load is ChatLoad.Failed) lastLive else null
+        // Cache-first: rows kept from a past visit count as last-known too (the world holds them while it cannot load).
+        val kept = if (i.load is ChatLoad.Failed) lastLive ?: i.transcript.takeIf { it.rows.isNotEmpty() } else null
         val t = kept ?: i.transcript
         val cursor = TranscriptFind.keep(hits, l.findKey, l.findCursor)
         val hit = hits.getOrNull(cursor)
@@ -326,10 +328,12 @@ public class ChatPresenter(
                             receiptResult = it,
                         )
                     }
-                    ?: undoneLine(world.undone.value),
+                    ?: undoneLine(world.undone.value)
+                    ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
             phase =
                 when (val load = i.load) {
-                    ChatLoad.Loading -> ChatPhase.Loading
+                    // Cache-first: known rows draw the real transcript while the live read is on its way.
+                    ChatLoad.Loading -> if (t.rows.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
@@ -1195,6 +1199,8 @@ public class ChatPresenter(
         local.update { it.copy(select = null) }
     }
 
+    override val pictureScope: String get() = world.ref.profileId.raw
+
     override suspend fun readPicture(path: String): ByteArray? =
         (world.readPicture(path) as? Outcome.Ok)?.value
 
@@ -1364,4 +1370,5 @@ private val PICTURE_NAME = Regex("\\.(png|jpe?g|gif|webp|bmp)$", RegexOption.IGN
 private const val RECEIPT_STATUS: String = "chat-receipt-check"
 private const val STAGED_UNDO_STATUS: String = "staged-revert"
 private const val UNDONE_STATUS: String = "undone"
+private const val SUBAGENT_STATUS: String = "subagent"
 private const val KEPT_OFFLINE_STATUS: String = "chat-kept-offline"

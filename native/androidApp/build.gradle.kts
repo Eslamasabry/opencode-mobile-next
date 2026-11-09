@@ -426,6 +426,8 @@ dependencies {
     implementation(libs.androidx.fragment)
     // P3 stream proof screen (benchmark build type only)
     listOf(":feature:chat", ":ui:kit-chat").forEach { "benchmarkImplementation"(project(it)) }
+    // Memory hygiene (audit gap 5): leak detection in the dev-flavour debug build only, never in release, preview or
+    // switch. Apache-2.0, no network. Its provider installs itself; StrictMode joins in src/devDebug.
     "benchmarkImplementation"(libs.compose.foundation)
     "benchmarkImplementation"(libs.kotlinx.serialization.json)
 }
@@ -700,4 +702,11 @@ val verifyProductionLineage by tasks.registering {
 
 tasks.configureEach {
     if (name.startsWith("package") && name.endsWith("Release")) dependsOn(verifyProductionLineage)
+}
+
+// LeakCanary (audit gap 5): the dev-flavour debug variant only, never release, preview or switch. The variant's
+// configuration appears after the flavours are resolved, so the dependency is added when it does.
+val leakCanary = "com.squareup.leakcanary:leakcanary-android:${libs.versions.leakcanary.get()}"
+configurations.matching { it.name == "devDebugImplementation" }.configureEach {
+    project.dependencies.add(name, leakCanary)
 }

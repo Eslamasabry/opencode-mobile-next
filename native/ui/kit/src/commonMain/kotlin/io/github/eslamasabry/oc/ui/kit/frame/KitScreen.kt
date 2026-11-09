@@ -40,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -54,10 +56,6 @@ import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
-import io.github.eslamasabry.oc.ui.kit.foundation.ChromeVeil
-import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitChromeVeil
-import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropVeil
-import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
@@ -65,7 +63,6 @@ import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
 import io.github.eslamasabry.oc.ui.kit.effects.LiquidBarShape
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidEdgeFade
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidGlassOn
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
@@ -105,8 +102,12 @@ private fun Modifier.kitStatusRoom(): Modifier =
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     }
 
-/** Optional host inset source; null uses the platform's safe drawing area and keyboard. */
-internal val LocalKitScreenInsets = compositionLocalOf<WindowInsets?> { null }
+/**
+ * Optional host inset source; null uses the platform's safe drawing area and keyboard. A scene or preview off the phone
+ * (desktop renders, tests) provides the system bars it stands in for.
+ */
+public val LocalKitScreenInsets: androidx.compose.runtime.ProvidableCompositionLocal<WindowInsets?> =
+    compositionLocalOf { null }
 
 private val LocalChromePadding = compositionLocalOf { PaddingValues() }
 
@@ -281,41 +282,97 @@ public fun KitScreen(
             var topPx by remember { mutableIntStateOf(0) }
             var bottomPx by remember { mutableIntStateOf(0) }
             val density = LocalDensity.current
-            // B-102: the body's room includes the chrome's ground fade, so at rest the last line sits above the
-            // composer's 16 dp fade (and the first under the bar's 12 dp one) instead of being cut by it.
-            // E20-S30: a veiled bottom block (every style but Glass, when the body records itself) lets the body scroll
-            // under it as Glass does, so it adds no fade room either: the newest line rests on the list's own padding.
-            val veil = if (frost != null && !kitChromeIsGlass()) rememberKitChromeVeil() else null
-            val faded = !kitChromeIsGlass() && veil == null
+            // Owner 2026-11-09 ("a rough line just below Jump to latest", "that dark gradient below the notifications
+            // bar", "an opaque slab under the composer"): a page that records its body (a chat) lays no band of ground
+            // behind its bottom block in any style. Its body's content fades out above it instead (kitScrollEdges), so
+            // the page's ground or live picture shows on, unbroken, down to the navigation bar. The liquid and frosted
+            // faces still see the whole recording.
+            val edgesFade = frost != null
+            // B-102: a page that records nothing keeps its ground and the fade above its bottom block; the body's room
+            // includes that fade, so at rest the last line sits above it (and the first under the bar's 12 dp one).
+            val faded = !edgesFade && !kitChromeIsGlass()
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
-            // over what scrolls behind them; a null face keeps today's ground, veil or frost.
-            val liquid = frost != null && kitLiquidGlassOn()
+            // over what scrolls behind them; a null face keeps today's ground.
             val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape) else null
+            // Owner's pick 2026-11-09 (chat edge, option A): a page that records its body runs it edge to edge, under
+            // the status bar and the bar; at rest its content starts below them (KitTopEdge.kt).
+            val frostedFace = if (topPart != null && edgesFade && barFace == null) kitFrostedBarFace(frost) else null
+            val look = topEdgeLook(liquid = barFace != null, frosted = frostedFace != null)
+            val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
+            val scroll = remember { KitScreenScroll() }
+            val under = kitUnderTop(scroll)
+            val insetTop = if (framed) insets.getTop(density) else 0
+            val insetBottom = if (framed) insets.getBottom(density) else 0
+            // The status bar the body runs under (0 for a page that keeps the old frame).
+            val statusPx = if (edgesFade) insetTop else 0
             val padding =
                 with(density) {
                     PaddingValues(
-                        // E20-S13: the header always lies on its opaque ground with its fade, Glass included.
-                        top = topPx.toDp() + if (topPart != null) HEADER_FADE_DP.dp else 0.dp,
-                        // Liquid: the newest line rests above the scroll edge fade, never inside it.
-                        bottom = bottomPx.toDp() + if ((faded || liquid) && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
+                        // A: the body's content rests below the status bar and the bar. E20-S13: a page that records
+                        // nothing keeps its content clear of the bar, fading in over 12 dp under it.
+                        top =
+                            if (edgesFade) (statusPx + topPx).toDp()
+                            else topPx.toDp() + if (topPart != null) HEADER_FADE_DP.dp else 0.dp,
+                        // E20-S30: a chat's newest line rests on the list's own padding, right above the bottom block;
+                        // the content fades out from 8 dp above the block over its top 16 dp.
+                        bottom = bottomPx.toDp() + if (faded && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
                     )
                 }
+            // Glass dissolves the body into the status edge's blur along the same curve the edge draws it with.
+            val reach = with(density) { STATUS_EDGE_REACH_DP.dp.toPx() }
+            val glassTop = edgesFade && topPart != null && look != KitTopEdgeLook.Ground && statusPx > 0
             Box(
                 Modifier.fillMaxSize()
-                    .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
+                    .then(
+                        when {
+                            !framed -> Modifier
+                            edgesFade -> Modifier.windowInsetsPadding(insets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+                            else -> Modifier.windowInsetsPadding(insets)
+                        }
+                    )
                     .testTag("kit-screen")
             ) {
-                CompositionLocalProvider(LocalChromePadding provides padding) {
-                    Box(Modifier.fillMaxSize().kitMaxWidth(cap)) { KitScreenBody(edges) { bodyPart() } }
+                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll) {
+                    Box(
+                        Modifier.fillMaxSize()
+                            .then(
+                                if (!edgesFade) Modifier
+                                else
+                                    Modifier.kitScrollEdges(
+                                        clearAbove = if (glassTop) ({ statusEdgeSolid(statusPx.toFloat()) }) else null,
+                                        topReach = HEADER_FADE_DP.dp,
+                                        // From 8 dp above the block (inside the list's own 16 dp padding, so the
+                                        // newest line at rest and the jump pill stay whole) over its top 16 dp.
+                                        fadeFromBottom =
+                                            if (bottomPart == null) null
+                                            else ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } }),
+                                        bottomReach = (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
+                                        topReachPx = { statusPx + reach - statusEdgeSolid(statusPx.toFloat()) },
+                                    )
+                            )
+                            .kitMaxWidth(cap)
+                    ) { KitScreenBody(edges) { bodyPart() } }
+                }
+                if (edgesFade && topPart != null && frost != null) {
+                    if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = statusPx + topPx, under = under)
+                    else KitStatusEdge(frost, statusPx, under = under, blur = statusBlur)
                 }
                 topPart?.let {
                     Box(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
+                            .then(if (statusPx > 0) Modifier.padding(top = with(density) { statusPx.toDp() }) else Modifier)
                             .onSizeChanged { topPx = it.height }
-                            .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar, frost)) else Modifier.kitChromeGround(FrostRole.ChatHeader, frost))
+                            .then(
+                                when {
+                                    barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
+                                    edgesFade -> Modifier
+                                    else -> Modifier.kitChromeGround(FrostRole.ChatHeader, frost, reach = insetTop)
+                                }
+                            )
                     ) {
                         if (barFace != null) KitLiquidBarPane(barFace)
+                        else if (frostedFace != null) KitLiquidBarPane(frostedFace)
                         it()
                     }
                 }
@@ -325,13 +382,8 @@ public fun KitScreen(
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
                             .then(
-                                when {
-                                    // Glass: no band behind the chips over the message box (owner 2026-11-08): the
-                                    // transcript scrolls clean behind the glass chips and the glass message box.
-                                    liquid -> Modifier
-                                    veil != null && frost != null -> Modifier.kitChromeVeil(veil, frost)
-                                    else -> Modifier.kitChromeGround(FrostRole.Composer, frost)
-                                }
+                                if (edgesFade) Modifier
+                                else Modifier.kitChromeGround(FrostRole.Composer, frost, reach = insetBottom)
                             )
                             .padding(
                                 horizontal = LocalKitTokens.current.gutter.dp,
@@ -339,7 +391,7 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitChromeVeil provides veil, LocalKitLiquidChrome provides frost) { it() }
+                        CompositionLocalProvider(LocalKitLiquidChrome provides frost) { it() }
                     }
                 }
             }
@@ -349,6 +401,7 @@ public fun KitScreen(
             // under the bar (the header keeps its place below it) and the bar floats as glass over what scrolls there;
             // while a status line or Find sits between them the body eases back below the bar, never jumping.
             val under = rememberKitLiquidSource()
+            val density = LocalDensity.current
             val runs = frost == null && topPart != null && header != null && kitLiquidGlassOn()
             val barFace =
                 when {
@@ -358,7 +411,16 @@ public fun KitScreen(
                     else -> null
                 }
             var barPx by remember { mutableIntStateOf(0) }
-            val runTarget = if (runs && line == null && search == null) barPx else 0
+            // Chat edge A, kept consistent on every page that scrolls under its bar (owner 2026-11-09): the body runs
+            // on up under the status bar too, where it dissolves into a blur of itself (KitTopEdge.kt).
+            val statusRun = if (runs && framed) insets.getTop(density) else 0
+            val runTarget = if (runs && line == null && search == null) barPx + statusRun else 0
+            val headerState = remember { KitScrollingHeaderState() }
+            val topScroll = remember(headerState) { KitScreenScroll().also { it.reporter = { headerState.offset < 0f } } }
+            val headerUnder = kitUnderTop(topScroll)
+            val edgeLayers = rememberStatusEdgeLayers()
+            val statusBlur = if (runs && statusRun > 0) kitStatusEdgeBlur() else null
+            val reachPx = with(density) { STATUS_EDGE_REACH_DP.dp.toPx() }
             val runPx by androidx.compose.animation.core.animateIntAsState(
                 runTarget,
                 if (KitMotion.state.reduced) androidx.compose.animation.core.snap<Int>() else KitMotion.specs.enter<Int>(),
@@ -378,7 +440,7 @@ public fun KitScreen(
                         ).then(
                             when {
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
-                                    .then(if (barFace != null) Modifier.kitLiquidEdgeFade(top = true).then(kitLiquidWordsHost(LiquidRole.Bar, under)) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                    .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, under) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
                                 barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
                                 else -> Modifier
                             }
@@ -398,7 +460,35 @@ public fun KitScreen(
                     )
                 Column(
                     Modifier.fillMaxWidth().weight(1f)
-                        .then(if (runs) Modifier.kitRunUnderBar { runPx }.kitLiquidSource(under) else Modifier)
+                        .then(
+                            if (!runs) Modifier
+                            else
+                                Modifier.kitRunUnderBar { runPx }
+                                    // Chat edge A: the body shows on behind the glass bar (the bar's glass bends it)
+                                    // and, under the status bar, dissolves into a blur of itself with a dim while the
+                                    // header has scrolled under; both ease with the run.
+                                    .then(
+                                        if (barFace == null || statusRun <= 0) Modifier
+                                        else
+                                            Modifier.drawWithContent {
+                                                drawContent()
+                                                val k = runShare(runPx, barPx + statusRun)
+                                                if (k > 0f)
+                                                    drawStatusEdge(edgeLayers, statusRun.toFloat(), statusBlur, headerUnder() * k, alpha = k) {
+                                                        drawLayer(under.layer)
+                                                    }
+                                            }
+                                                .kitScrollEdges(
+                                                    clearAbove = { statusEdgeSolid(statusRun.toFloat()) },
+                                                    topReach = HEADER_FADE_DP.dp,
+                                                    fadeFromBottom = null,
+                                                    bottomReach = 0.dp,
+                                                    strength = { runShare(runPx, barPx + statusRun) },
+                                                    topReachPx = { statusRun + reachPx - statusEdgeSolid(statusRun.toFloat()) },
+                                                )
+                                    )
+                                    .kitLiquidSource(under)
+                        )
                         .kitMaxWidth(cap).fillMaxWidth()
                 ) {
                     search?.let {
@@ -416,12 +506,25 @@ public fun KitScreen(
                     // hides (Flutter's RefreshIndicator wraps the whole CustomScrollView, header sliver included).
                     // Liquid glass: a body that runs up under the bar keeps its header below the bar with a spacer
                     // that eases with the run; refresh still wraps the whole header frame.
+                    // A chat stacked under a status line, the loading line or Find: its transcript fades in under
+                    // what sits above it and out above the bottom block, never cut across.
+                    val stackedEdges =
+                        if (frost == null) Modifier
+                        else
+                            Modifier.kitScrollEdges(
+                                clearAbove = { 0f },
+                                topReach = HEADER_FADE_DP.dp,
+                                fadeFromBottom =
+                                    if (bottomPart == null) null
+                                    else ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } }),
+                                bottomReach = COMPOSER_FADE_DP.dp,
+                            )
                     val scrolling: @Composable (Modifier) -> Unit = { m ->
                         if (header != null) {
                             val runDp = with(LocalDensity.current) { runPx.toDp() }
                             val shownHeader: @Composable ColumnScope.() -> Unit =
                                 if (!runs) header else ({ Spacer(Modifier.height(runDp)); header() })
-                            KitScrollingHeaderFrame(shownHeader, m) {
+                            KitScrollingHeaderFrame(shownHeader, m, headerState) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
                                 Box(Modifier.fillMaxWidth().weight(1f)) { KitScreenBody(edges) { bodyPart() } }
                             }
@@ -429,7 +532,9 @@ public fun KitScreen(
                             // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
                             Column(m) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                                Box(Modifier.fillMaxWidth().weight(1f)) { KitScreenBody(edges) { bodyPart() } }
+                                Box(Modifier.fillMaxWidth().weight(1f).then(stackedEdges)) {
+                                    KitScreenBody(edges) { bodyPart() }
+                                }
                             }
                         }
                     }
@@ -674,21 +779,17 @@ private fun Panes(
     }
 }
 
+/** How far a body has run up under its chrome, 0–1 (eases the status edge in and out with the run). */
+private fun runShare(runPx: Int, fullPx: Int): Float = if (fullPx > 0) (runPx.toFloat() / fullPx).coerceIn(0f, 1f) else 0f
+
 /** How far the composer's ground fades up into the body (B-102: the body keeps this much room too). */
 internal const val COMPOSER_FADE_DP = 16
 
+/** How far above a chat's bottom block its transcript starts to fade out (within the list's own padding). */
+internal const val EDGE_LEAD_DP = 8
+
 /** How far the chat header's ground fades down into the body. */
 internal const val HEADER_FADE_DP = 12
-
-/**
- * E20-S30: the bottom block as a translucent veil over the body that scrolls under it: the body blurred (API 31+, at
- * half resolution) under the page's ground at the veil's alpha, with a hairline along its top. No ground band, no fade.
- */
-@Composable
-private fun Modifier.kitChromeVeil(veil: ChromeVeil, frost: KitFrostState): Modifier {
-    val colors = LocalKitColors.current
-    return kitBackdropVeil(frost, veil, colors.ground, topEdge = colors.hairline)
-}
 
 /** Glass frosts what scrolls behind the chrome instead of fading it, so it adds no fade room. */
 @Composable
@@ -702,7 +803,7 @@ private fun kitChromeIsGlass(): Boolean =
  * either is never cut in half.
  */
 @Composable
-private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Modifier {
+private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?, reach: Int = 0): Modifier {
     val ground = LocalKitColors.current.ground
     // A short ground fade where the transcript meets the chrome: above the composer and, so text never slides under
     // the header with a hard cut, below the header. Glass frosts what scrolls behind instead.
@@ -743,7 +844,18 @@ private fun Modifier.kitChromeGround(role: FrostRole, frost: KitFrostState?): Mo
                 }
             else -> Modifier
         }
+    // The ground runs on through the system bar beside it ([reach] px: the status bar above the header, the navigation
+    // bar under the bottom block), so its only edge is the screen's own, never a line under the status bar.
+    val opaque = ground.copy(alpha = 1f)
+    val bar =
+        if (reach <= 0 || (frost != null && !header)) Modifier
+        else
+            Modifier.drawBehind {
+                val y = if (header) -reach.toFloat() else size.height
+                drawRect(opaque, Offset(0f, y), androidx.compose.ui.geometry.Size(size.width, reach.toFloat()))
+            }
     return then(fade)
+        .then(bar)
         .then(
             if (frost != null && !header) Modifier.kitFrost(role, frost)
             else Modifier.background(ground.copy(alpha = 1f))

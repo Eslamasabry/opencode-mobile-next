@@ -50,18 +50,23 @@ public fun KitTopBarScope(
 
 @Composable
 private fun ScopeWord(words: String, label: String, action: (() -> Unit)?) {
-    val body: @Composable () -> Unit = {
+    val body: @Composable (Modifier) -> Unit = { place ->
         KitText(
             words,
-            Modifier.padding(horizontal = Space.S1.dp).semantics { contentDescription = label },
+            place.padding(horizontal = Space.S1.dp).semantics { contentDescription = label },
             role = TypeRole.Secondary,
             tone = TextTone.Secondary,
             kind = KitTextKind.Frame,
             maxLines = 1,
         )
     }
-    if (action == null) body()
-    else KitTappable(onClick = action, onClickLabel = label, shape = KitShapeId.Button) { body() }
+    // A short word ("Git") sits at the start of its 48 dp target, not centred in it: centred, the dot before it hung
+    // off the project and a gap opened before the word (owner 2026-11-09, "new · This phone ·   Git").
+    if (action == null) body(Modifier)
+    else
+        KitTappable(onClick = action, onClickLabel = label, shape = KitShapeId.Button) {
+            body(Modifier.align(androidx.compose.ui.Alignment.CenterStart))
+        }
 }
 
 /** Keeps the distinguishing port visible before truncating a long host name. */

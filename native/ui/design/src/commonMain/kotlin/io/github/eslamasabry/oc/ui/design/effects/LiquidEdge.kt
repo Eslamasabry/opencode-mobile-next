@@ -78,6 +78,9 @@ public object LiquidEdge {
      */
     public const val BUDGET: Int = 5
 
+    /** What sheets and menus may hold on top of [BUDGET]: a menu over a sheet, both over the one page they record. */
+    public const val MODAL_BUDGET: Int = 3
+
     /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
     public const val SATURATION: Float = 1.45f
 
@@ -176,7 +179,7 @@ public object LiquidEdge {
      * [SurfaceDecoration.sheen]; no rims and no top glow (the rim light replaces them). The + is its accent at the
      * recipe's tint. A pane whose words flip to the other theme's ink draws the other theme's face with them.
      */
-    public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero): SurfaceDecoration {
+    public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero, picture: List<Argb>? = null): SurfaceDecoration {
         val recipe = recipe(role, roles.dark)
         if (role == LiquidRole.Action) {
             // The + is accent glass, as thin as its glyph allows: 3:1 over either end of any backdrop.
@@ -188,7 +191,7 @@ public object LiquidEdge {
             while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
             return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
         }
-        val t = faceTint(roles, role)
+        val t = faceTint(roles, role, picture)
         return SurfaceDecoration(radii = radii, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen)
     }
 
@@ -210,7 +213,7 @@ public object LiquidEdge {
      * their targets ([inks]) on the face over what it floats over ([themeSpots]), with and without the sheen. As GlassFinish does for a pane: where Glass's own tint cannot carry them its lit corner goes, then the Solid
      * surface the pane stands for takes its place ([solidOf]), and last the sheen goes. Quieter, never less legible.
      */
-    public fun faceTint(roles: Roles, role: LiquidRole): FaceTint {
+    public fun faceTint(roles: Roles, role: LiquidRole, picture: List<Argb>? = null): FaceTint {
         val recipe = recipe(role, roles.dark)
         val (base, lit) = tintOf(roles, role)
         val thin =
@@ -223,7 +226,7 @@ public object LiquidEdge {
             )
         // The same measure as Glass's in-flow panes: a dark face deepens with the ground's smoke, a light one with its
         // own milk, the gloss goes first where it costs, then the Solid surface itself.
-        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(roles, recipe), inks(roles, role))
+        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(roles, recipe, picture), inks(roles, role))
         val fill = d.fill ?: base
         return FaceTint(fill, d.fillStart ?: fill, d.sheen)
     }
@@ -244,21 +247,33 @@ public object LiquidEdge {
      * (a photo, a white page in a screenshot) flips the words and the face to the other theme's ([LiquidInkRule]), whose
      * face is measured the same way. Not every colour a picture can hold: that would need a plate, and the owner removed
      * the plate (2026-11-08); the strictly worst case is reported by [bandContrast].
+     *
+     * [picture] is what the page's live background can put behind the content, when the kit knows it (glass-live
+     * 2026-11-09): nothing over the flat ground, the frosted aurora's spots, or a shader look's own spots under the lens
+     * ([LiveSpots.forLook]). Null (not known) measures every picture the app draws: the frosted aurora and the farthest
+     * any shader look reaches under the lens ([LiveReach.most]).
      */
-    public fun themeSpots(roles: Roles, recipe: LiquidRecipe): List<Argb> {
+    public fun themeSpots(roles: Roles, recipe: LiquidRecipe, picture: List<Argb>? = null): List<Argb> {
         val ground = roles.ground.opaqueArgb()
+        val pictured =
+            picture
+                ?: (AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
+                    // A shader look behind the content (owner 2026-11-09: the glass now shows it): the farthest any
+                    // look reaches under the lens (LiveReach, measured).
+                    LiveSpots.of(roles, LiveReach.most(roles.dark, lens = true)))
         val content =
             listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)) +
-                AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
-                // A shader look behind the content (owner 2026-11-09: the glass now shows it).
-                LiveSpots.of(roles) +
+                pictured +
                 listOf(lerp(ground, roles.text1.opaqueArgb(), BLURRED_INK), lerp(ground, roles.accent.opaqueArgb(), ACCENT_WASH))
         return content.map { filtered(it, recipe) }
     }
 
-    /** How much of the ink a line of words keeps once the glass has blurred it (7 dp over 14 sp words: ink covers a
-     * fifth of a line's box). */
-    public const val BLURRED_INK: Float = .20f
+    /**
+     * How much of the ink a line of words keeps once the glass has blurred it. Measured (ChatEdgeATest, 2026-11-09):
+     * a paragraph of the transcript's Body text under the bar's 7 dp blur keeps .28 at its densest; the transcript now
+     * scrolls on under the bar (chat edge A), so the bar's words are held over that, with a little room.
+     */
+    public const val BLURRED_INK: Float = .30f
 
     /** An accent-filled part (a chip, a link run) behind the glass, blurred into the ground. */
     public const val ACCENT_WASH: Float = .25f
@@ -310,13 +325,20 @@ public object LiquidEdge {
     }
 
     /**
-     * Which of the window's liquid [claims] are drawn as liquid glass, within [budget]: highest [LiquidRole.rank]
-     * first; a claim fits when its pane (1) and its source (1, if no granted claim already pays for that source; null =
-     * a feature recording, free) fit what is left. A sheet or a menu no longer drops the glass under it: the page it
-     * bends is recorded as it is, the chrome's own glass included, so the chrome stays liquid (owner 2026-11-08). A
+     * Which of the window's liquid [claims] are drawn as liquid glass. The page's parts (bars, composer, +, pills) share
+     * [budget]: highest [LiquidRole.rank] first; a claim fits when its pane (1) and its source (1, if no granted claim
+     * already pays for that source; null = a feature recording, free) fit what is left. A sheet or a menu has its own
+     * allowance ([MODAL_BUDGET]) and never takes a slot from the page: opening one changes no face under it, so nothing
+     * flips to frost and back, or rebuilds its glass, while it opens and closes (owner 2026-11-08: "opening a glass
+     * overlay kills all other glass surfaces"; smoothness 2026-11-09: a reply's menu janked as two chips flipped). A
      * claim left out is not solid: it is drawn as frost of the same shape ([faceOf]).
      */
     public fun <K> grant(claims: List<LiquidClaim<K>>, budget: Int = BUDGET): Set<K> {
+        val (modal, page) = claims.partition { it.role.modal }
+        return fill(page, budget) + fill(modal, MODAL_BUDGET)
+    }
+
+    private fun <K> fill(claims: List<LiquidClaim<K>>, budget: Int): Set<K> {
         val granted = LinkedHashSet<K>()
         val paid = HashSet<Any>()
         var left = budget

@@ -14,6 +14,9 @@ public interface ConversationPreviews {
 
     public fun read(server: ConversationServer): List<Session>
 
+    /** Cache-first: the kept rows of a saved server that is not connected yet (checked against its saved place). */
+    public fun read(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId): List<Session> = emptyList()
+
     public suspend fun save(
         server: ConversationServer,
         scope: String,

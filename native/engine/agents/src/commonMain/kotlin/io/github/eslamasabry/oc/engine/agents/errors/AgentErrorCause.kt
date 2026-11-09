@@ -98,6 +98,18 @@ public object AgentErrorText {
     )
     private val ERRNO_PREFIX = Regex("^(E[A-Z]{3,}|[A-Za-z]+Error)\\s*:\\s*")
 
+    // Flutter `AgentRunFailure.signInExpired` (#137): a sign-in the agent had and can no longer use.
+    private val SIGN_IN_EXPIRED = ci(
+        "(?:oauth|auth|login|sign.?in)? ?(?:session|token|credentials?)" +
+            " (?:has |have )?(?:expired|been revoked)|could not be refreshed|failed to refresh",
+    )
+
+    /**
+     * B-AGENT-189 (#137): the agent's earlier sign-in ran out ("OAuth session expired and could not be refreshed"),
+     * so the words are "sign in again", not "sign in".
+     */
+    public fun signInExpired(raw: String): Boolean = SIGN_IN_EXPIRED.containsMatchIn(raw)
+
     /** The recognised cause of [raw], or null (blank or unrecognised: a typed or generic fallback applies). */
     public fun classify(raw: String): AgentErrorCause? {
         if (raw.isBlank()) return null
