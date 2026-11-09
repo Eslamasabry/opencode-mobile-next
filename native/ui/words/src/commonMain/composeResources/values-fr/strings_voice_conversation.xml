@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Quand un enregistrement se termine, ses mots sont envoyés à cette conversation. Touchez Écouter pour le tour suivant. Les réponses ne sont lues à voix haute que si vous l'activez.</string>
+    <string name="voiceConversationNativeTourSpeak">Parlez, puis touchez Envoyer pour envoyer ce que vous avez dit. Écouter démarre votre tour suivant.</string>
+    <string name="voiceConversationNativeTourReplies">Lire les réponses à voix haute demande votre accord et une voix du téléphone. Vous pouvez arrêter la lecture à tout moment.</string>
+    <string name="voiceConversationNativeTourLeave">Quitter le mode vocal arrête l'écoute et la lecture automatique. Un envoi incertain n'est jamais renvoyé automatiquement.</string>
+    <string name="voiceConversationNativeTourDone">Compris</string>
+    <string name="voiceConversationNativeTourNext">Suivant</string>
+    <string name="voiceConversationNativeTourReset">Afficher à nouveau les astuces</string>
+    <string name="voiceConversationNativeTourResetFailed">Impossible de réinitialiser les astuces. Réessayez.</string>
+    <string name="voiceConversationNativeTourReplay">Montrez-moi</string>
+    <string name="voiceConversationNativeTourLoadFailed">Impossible d'ouvrir les astuces. Réessayez.</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">Membuka draf tersimpan Anda…</string>
+    <string name="chatDraftAlreadySent">Teks ini mungkin sudah terkirim. Periksa percakapan sebelum mengirimnya lagi.</string>
+    <string name="chatDraftRepeatTitle">Kirim teks ini lagi?</string>
+    <string name="chatDraftRepeatAction">Kirim lagi</string>
+    <string name="chatDraftRepeatBody">Teks ini sudah ada di percakapan. Kirim lagi hanya jika Anda ingin balasan baru.</string>
+</resources>

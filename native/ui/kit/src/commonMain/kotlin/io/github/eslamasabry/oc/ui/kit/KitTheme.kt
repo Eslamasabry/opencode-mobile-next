@@ -158,7 +158,10 @@ public fun KitTheme(
                 )
         }
     platform.SystemBars(darkContent = !colors.dark, ground = colors.ground)
+    // One live background for every page under this root (smoothness round 2): one clock, one picture per page size.
+    val live = io.github.eslamasabry.oc.ui.kit.live.rememberKitLiveShare()
     CompositionLocalProvider(
+        io.github.eslamasabry.oc.ui.kit.live.LocalKitLiveShare provides live,
         LocalKitPlatform provides platform,
         LocalKitAppearance provides effectiveAppearance,
         LocalKitStyle provides styleState,

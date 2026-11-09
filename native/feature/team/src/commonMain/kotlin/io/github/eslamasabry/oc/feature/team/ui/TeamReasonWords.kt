@@ -45,6 +45,8 @@ private fun Reason.res(): Pair<StringResource, StringResource> =
         Reason.NeedsAnswer -> Res.string.teamRefusalNeedsAnswer to Res.string.teamRefusalNeedsAnswerNext
         Reason.RecoveryReview -> Res.string.teamRefusalRecoveryReview to Res.string.teamRefusalRecoveryReviewNext
         Reason.AppStopped -> Res.string.teamRefusalAppStopped to Res.string.teamRefusalAppStoppedNext
+        Reason.ServerRestarted -> Res.string.teamRefusalServerRestarted to Res.string.teamRefusalServerRestartedNext
+        Reason.RestartResend -> Res.string.teamRefusalRestartResend to Res.string.teamRefusalRestartResendNext
         Reason.ChatBusy -> Res.string.teamRefusalChatBusy to Res.string.teamRefusalChatBusyNext
         Reason.BudgetReached -> Res.string.teamRefusalBudgetReached to Res.string.teamRefusalBudgetReachedNext
     }

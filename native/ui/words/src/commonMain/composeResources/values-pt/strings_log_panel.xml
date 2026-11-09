@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">Buscar no registro</string>
+    <string name="p12LogFollow">Acompanhar</string>
+    <string name="p12LogPause">Pausar</string>
+    <string name="p12LogCopy">Copiar tudo</string>
+    <string name="p12LogWrap">Quebrar linhas</string>
+    <plurals name="p12LogMatches">
+        <item quantity="one">%1$d de %2$d linha encontrada</item>
+        <item quantity="many">%1$d de %2$d linhas encontradas</item>
+        <item quantity="other">%1$d de %2$d linhas encontradas</item>
+    </plurals>
+    <string name="p12LogPrevious">Resultado anterior</string>
+    <string name="p12LogNext">Próximo resultado</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Certains anciens brouillons ou pièces jointes n’ont pas encore pu être déplacés. Votre travail enregistré est conservé. Libérez de l’espace si besoin, puis réessayez.</string>
+    <string name="statePromptFilesUnavailable">Ces fichiers n’ont pas pu être restaurés ici\u00A0: %1$s. L’invite enregistrée est conservée.</string>
+</resources>

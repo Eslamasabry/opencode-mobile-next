@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitor40FormTitle">Trả lời yêu cầu này</string>
+    <string name="monitor40FormGone">Yêu cầu này đã thay đổi hoặc không còn nữa. Hãy mở lại từ hộp thư.</string>
+    <string name="monitor40FormSent">Đã gửi câu trả lời của bạn.</string>
+    <string name="monitor40FormElsewhere">Yêu cầu này đã được trả lời ở nơi khác.</string>
+    <string name="monitor40FormHeld">Câu trả lời của bạn sắp được gửi.</string>
+    <string name="monitor40Undo">Hoàn tác</string>
+    <string name="monitor40FormFailed">Không gửi được câu trả lời của bạn.</string>
+    <string name="monitor40Other">Lựa chọn khác</string>
+    <string name="monitor40OpenLink">Mở trang</string>
+    <string name="monitor40Send">Gửi câu trả lời</string>
+    <string name="monitor40Decline">Từ chối yêu cầu</string>
+    <string name="monitor40FixFields">Kiểm tra các câu trả lời được đánh dấu trước khi gửi.</string>
+    <string name="monitor40NotConfirmed">Chưa được xác nhận</string>
+    <string name="monitor40Sending">Đang gửi câu trả lời của bạn</string>
+    <string name="monitor40DeclineQuestion">Từ chối yêu cầu này?</string>
+    <string name="monitor40DeclineBody">Yêu cầu sẽ đóng mà không có câu trả lời của bạn.</string>
+    <string name="monitor40LinkQuestion">Mở trang này?</string>
+    <string name="monitor40Required">Nhập câu trả lời.</string>
+    <string name="monitor40Number">Nhập một số.</string>
+    <string name="monitor40Integer">Nhập một số nguyên.</string>
+    <string name="monitor40NotOffered">Chọn một câu trả lời có sẵn hoặc nhập giá trị mà biểu mẫu chấp nhận.</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="other">Nhập ít nhất %1$d ký tự.</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="other">Dùng tối đa %1$d ký tự.</item>
+    </plurals>
+    <string name="monitor40Range">Nhập giá trị trong phạm vi cho phép: %1$s đến %2$s.</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="other">Chọn ít nhất %1$d câu trả lời.</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="other">Chọn tối đa %1$d câu trả lời.</item>
+    </plurals>
+    <string name="monitor40QuestionCount">Câu hỏi: %1$d</string>
+    <string name="monitor40Answer">Trả lời</string>
+</resources>

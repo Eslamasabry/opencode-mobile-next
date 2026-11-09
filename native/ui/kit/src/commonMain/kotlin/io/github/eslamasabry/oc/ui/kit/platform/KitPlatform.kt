@@ -121,6 +121,14 @@ public interface KitPlatform {
         get() = false
 
     /**
+     * The share of a liquid pane's pixels (per side) its blurred, bent backdrop is drawn at before it is scaled up to the
+     * pane (smoothness 2026-11-09: Glass over 120 Hz). The rim light, the specular and the tint stay at full resolution.
+     * Only panes whose frost hides the lower resolution take it ([io.github.eslamasabry.oc.ui.kit.effects.liquidResolutionOf]).
+     */
+    public val liquidResolution: Float
+        get() = 1f
+
+    /**
      * Draws one liquid glass pane over [backdrop], shaped [shape], as [spec] says; [transform] (0 at rest, 1 fully) is
      * how far a transform the lens cannot follow has run, so the lens eases into frost meanwhile. Android draws it with
      * the lens; elsewhere the pane's tint alone ([io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn]).
@@ -133,6 +141,13 @@ public interface KitPlatform {
         image.readPixels(out, 0, 0, width, height)
         return true
     }
+
+    /**
+     * A new ink sampler for one liquid pane ([KitBackdropSampler]), kept for the pane's life; null where the platform has
+     * none, and the pane then reads a snapshot through [readPixels]. Android keeps one small render target per pane and
+     * never holds the UI thread on the GPU.
+     */
+    public fun backdropSampler(): KitBackdropSampler? = null
 
     public fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,

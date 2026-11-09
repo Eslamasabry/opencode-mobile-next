@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="other">Membaca %1$d file</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="other">Menelusuri proyek, %1$d pencarian</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="other">Menelusuri %1$d folder</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="other">Mengedit %1$d file</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="other">Mengambil %1$d halaman</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="other">Menyerahkan %1$d tugas</item>
+    </plurals>
+    <string name="liveStepRunning">Menjalankan %1$s</string>
+    <string name="liveStepRunningCommand">Menjalankan perintah</string>
+    <string name="liveFailedStillWorking">Agen masih bekerja. Anda belum perlu melakukan apa pun.</string>
+    <string name="liveFailedStopped">Agen berhenti. Kirim pesan agar agen melanjutkan.</string>
+</resources>

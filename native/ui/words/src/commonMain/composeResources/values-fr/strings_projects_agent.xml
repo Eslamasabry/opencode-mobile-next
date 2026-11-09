@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">Modifications et arbres de travail</string>
+    <string name="agentProjectReadFailed">Impossible de terminer cette action sur le projet. Vérifiez son état actuel avant de réessayer.</string>
+    <string name="agentProjectNoGit">Ce dossier n’est pas un dépôt Git.</string>
+    <string name="agentProjectBranch">Branche actuelle</string>
+    <string name="agentProjectBaseBranch">Branche de base</string>
+    <string name="agentProjectDetached">Extraction détachée</string>
+    <string name="agentProjectWorkingTree">Arbre de travail</string>
+    <string name="agentProjectBranchChanges">Depuis la branche de base</string>
+    <string name="agentProjectAllFiles">Tous les fichiers modifiés</string>
+    <string name="agentProjectNoPatch">Ce fichier n’a pas de correctif texte.</string>
+    <string name="agentProjectPreviousLines">200 lignes précédentes</string>
+    <string name="agentProjectNextLines">200 lignes suivantes</string>
+    <string name="agentProjectChangedFiles">Fichiers modifiés</string>
+    <string name="agentProjectNoChanges">Aucune modification dans cette comparaison.</string>
+    <string name="agentProjectLineChanges">%1$d ajoutées · %2$d supprimées</string>
+    <string name="agentProjectWorktrees">Arbres de travail</string>
+    <string name="agentProjectNoWorktrees">Aucun arbre de travail signalé pour ce projet.</string>
+    <string name="agentProjectReady">Prêt</string>
+    <string name="agentProjectRemove">Retirer l’arbre de travail</string>
+    <string name="agentProjectWorking">Attendez la fin de cette action.</string>
+    <string name="agentProjectNewWorktree">Nouvel arbre de travail nommé</string>
+    <string name="agentProjectGenerateWorktree">Créer avec un nom généré</string>
+    <string name="agentProjectRefresh">Actualiser l’état du projet</string>
+    <string name="agentProjectNameInvalid">Utilisez de 1 à 128 lettres, chiffres, points, tirets bas ou traits d’union. Commencez par une lettre ou un chiffre et n’utilisez pas deux points de suite.</string>
+    <string name="agentProjectWorktreeName">Nom de l’arbre de travail</string>
+    <string name="agentProjectCreate">Créer l’arbre de travail</string>
+    <string name="agentProjectRemoveQuestion">Retirer «\u00A0%1$s\u00A0»\u00A0?</string>
+    <string name="agentProjectRemoveBody">Archive l’arbre de travail et ses conversations, et supprime son dossier\u00A0: %1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="one">Cet arbre de travail contient 1 fichier modifié. Il sera supprimé avec le dossier.</item>
+        <item quantity="many">Cet arbre de travail contient %1$d fichiers modifiés. Ils seront supprimés avec le dossier.</item>
+        <item quantity="other">Cet arbre de travail contient %1$d fichiers modifiés. Ils seront supprimés avec le dossier.</item>
+    </plurals>
+</resources>

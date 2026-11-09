@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatFeelShare">Поделиться</string>
+    <string name="chatFeelSelectText">Выделить текст</string>
+    <string name="chatFeelEditAndResend">Изменить и отправить снова</string>
+    <string name="chatFeelOpenLinkTitle">Открыть ссылку?</string>
+    <string name="chatFeelOpenLinkBody">%1$s откроется за пределами приложения.</string>
+    <string name="chatFeelOpenLinkAction">Открыть</string>
+    <string name="chatFeelLinkRefused">Эту ссылку нельзя открыть отсюда.</string>
+    <string name="chatFeelUndoTitle">Отменить всё с этого места?</string>
+    <string name="chatFeelUndoBody">Этот запрос и всё после него будут отменены на сервере.</string>
+    <string name="chatFeelUndoAction">Отменить</string>
+    <string name="chatFeelPicture">Изображение</string>
+    <string name="chatFeelPictureOnServer">Изображение на сервере: %1$s</string>
+    <string name="chatFeelPictureOnWeb">Изображение с сайта %1$s. Нажмите, чтобы открыть его за пределами приложения.</string>
+    <string name="chatFeelDone">Готово</string>
+    <string name="chatFeelPictureLoading">Открываем изображение…</string>
+    <string name="chatFeelPictureFailed">Это изображение нельзя показать здесь.</string>
+</resources>

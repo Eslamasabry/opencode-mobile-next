@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Abrindo…</string>
+    <string name="migration_updating">Atualizando seu app…</string>
+    <string name="migration_still_updating">Ainda atualizando. A primeira abertura após uma atualização pode demorar um pouco mais.</string>
+    <string name="migration_try_again">Tentar mover seus dados de novo</string>
+    <string name="migration_reenter_title">Alguns logins precisam de você de novo</string>
+    <string name="migration_reenter_body">A atualização não conseguiu ler estes logins salvos. Todo o resto foi transferido.</string>
+    <string name="migration_reenter_row_password">%1$s · Digitar senha</string>
+    <string name="migration_reenter_row_token">%1$s · Digitar token</string>
+    <string name="migration_reenter_row_github">%1$s · Fazer login no GitHub novamente</string>
+    <string name="migration_reenter_row_byo">%1$s · Configurar novamente</string>
+    <string name="migration_reenter_unnamed">Um servidor salvo</string>
+    <string name="migration_reenter_later">Fazer login nestes depois</string>
+    <string name="migration_reenter_field_password">Senha de %1$s</string>
+    <string name="migration_reenter_field_token">Token de %1$s</string>
+    <string name="migration_reenter_save">Salvar</string>
+    <string name="migration_reenter_save_failed">Não foi possível salvar neste celular. Tente novamente.</string>
+    <string name="migration_reenter_back">Voltar para a lista</string>
+    <string name="migration_reenter_github_where">Para fazer login no GitHub novamente em %1$s, abra uma das conversas dele e depois Git.</string>
+    <string name="migration_reenter_open_chats">Abrir conversas</string>
+    <string name="migration_reenter_byo_absent">Configurar %1$s novamente ainda não está disponível nesta versão. Os detalhes salvos continuam neste celular.</string>
+    <string name="migration_failed_title">A atualização não conseguiu terminar de mover seus dados</string>
+    <string name="migration_failed_body">Nada foi excluído. Seus dados de antes da atualização estão seguros neste celular.</string>
+    <string name="migration_restore_row">Restaurar os dados de antes da atualização</string>
+    <string name="migration_restore_confirm">Isto restaura suas configurações e servidores como eram antes da atualização. As alterações feitas desde então ficam guardadas em uma cópia.</string>
+    <string name="migration_restore_confirm_title">Restaurar dados antigos?</string>
+    <string name="migration_restore_confirm_action">Restaurar os dados de antes da atualização</string>
+    <string name="migration_start_fresh_row">Começar do zero (mantém uma cópia dos seus dados antigos)</string>
+    <string name="migration_start_fresh_confirm">Você começará sem servidores salvos e com as configurações padrão. Uma cópia dos seus dados antigos continua neste celular.</string>
+    <string name="migration_start_fresh_confirm_title">Começar do zero?</string>
+    <string name="migration_start_fresh_confirm_action">Começar do zero e manter uma cópia</string>
+    <string name="migration_report_row">Relatar um problema</string>
+    <string name="migration_details">Detalhes · %1$s</string>
+    <string name="migration_space_title">Seu celular está quase cheio</string>
+    <string name="migration_space_body">A atualização precisa de %1$s de espaço livre para guardar uma cópia de segurança dos seus dados. Libere espaço e tente novamente.</string>
+    <string name="migration_save_failed_title">Não foi possível salvar neste celular</string>
+    <string name="migration_open_storage_row">Abrir configurações de armazenamento</string>
+    <string name="migration_close">Fechar</string>
+    <string name="migration_deferred_notice">Ainda não disponível nesta versão: %1$s. O que você salvou sobre eles continua neste celular, intacto.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Memória</string>
+    <string name="migration_deferred_gemma">o modelo de IA do celular</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Dispensar o aviso sobre recursos que não estão nesta versão</string>
+</resources>

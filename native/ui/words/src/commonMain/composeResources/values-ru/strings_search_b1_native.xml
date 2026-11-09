@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="searchB1Web">Интернет</string>
+    <string name="searchB1InsideMessages">В сообщениях</string>
+    <string name="searchB1AboutOptions">О параметрах поиска</string>
+    <string name="searchB1OptionsTitle">Параметры поиска</string>
+    <string name="searchB1ChooseServer">Выберите сервер для поиска</string>
+    <string name="searchB1RecentConversations">Недавние чаты</string>
+    <string name="searchB1Clear">Очистить</string>
+    <string name="searchB1Conversations">Чаты</string>
+    <string name="searchB1Places">Настройки и страницы</string>
+    <string name="searchB1SeeAll">Показать все: %1$s</string>
+    <string name="searchB1SeeAllSpoken">Показать все чаты: %1$s</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="one">%1$s чат</item>
+        <item quantity="few">%1$s чата</item>
+        <item quantity="many">%1$s чатов</item>
+        <item quantity="other">%1$s чата</item>
+    </plurals>
+</resources>

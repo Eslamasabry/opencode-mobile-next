@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxHostSetupTitle">Siapkan komputer Linux</string>
+    <string name="linuxHostSetupIntro">Salin perintah dan tempel ke terminal di komputer Ubuntu atau Linux Anda. Aplikasi tidak menjalankannya untuk Anda.</string>
+    <string name="linuxHostSetupSafety">Penginstal memeriksa unduhan yang disematkan sebelum memasangnya. OpenCode hanya mendengarkan di komputer ini; gunakan USB atau terowongan terautentikasi untuk menghubungkan ponsel.</string>
+    <string name="linuxHostSetupInstall">Instal OpenCode dan layanannya</string>
+    <string name="linuxHostSetupUpdate">Perbarui OpenCode</string>
+    <string name="linuxHostSetupStart">Mulai layanan</string>
+    <string name="linuxHostSetupStop">Hentikan layanan</string>
+    <string name="linuxHostSetupRestart">Mulai ulang layanan</string>
+    <string name="linuxHostSetupStatus">Periksa layanan</string>
+    <string name="linuxHostSetupCopy">Salin penginstal dan perintah</string>
+    <string name="linuxHostSetupCopyDetail">Salinan mencakup penginstal lengkap yang dibundel dengan aplikasi ini, diikuti perintah terpilih. Ini menulis ubuntu-opencode.sh di folder saat ini. Instal mempertahankan OpenCode 2 yang sudah ada; Perbarui tidak pernah memigrasikan OpenCode 1 atau menurunkan versi yang lebih baru.</string>
+    <string name="linuxHostSetupUsb">Dengan ponsel tersambung lewat USB, jalankan ini di komputer untuk meneruskan port server.</string>
+    <string name="linuxHostSetupCopyUsb">Salin perintah USB</string>
+</resources>

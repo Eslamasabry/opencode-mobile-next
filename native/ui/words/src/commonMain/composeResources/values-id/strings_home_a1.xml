@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatsHomeRightNow">Saat ini</string>
+    <string name="chatsHomeRecent">Terbaru</string>
+    <string name="chatsHomeAsksToRun">Meminta menjalankan: %1$s</string>
+</resources>

@@ -100,6 +100,12 @@ internal class HomePreviews(
     /** Row key → its last message's line. */
     val texts: StateFlow<Map<String, String>> = mutable.asStateFlow()
 
+    /** The lines saved with the cached rows stand until the live read says otherwise, so a row never loses its line. */
+    fun seed(rows: List<ChatFeedItem>) {
+        val saved = rows.filter { it.preview.isNotBlank() }.associate { it.identity to it.preview }
+        if (saved.isNotEmpty()) mutable.update { saved + it }
+    }
+
     /** The rows the home shows now; reads what is missing or stale. */
     fun want(items: List<ChatFeedItem>) {
         val now = nowMs()

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="scheduleActionWhen">Programmer pour %1$s</string>
+    <plurals name="scheduleActionHours">
+        <item quantity="one">Programmer toutes les heures</item>
+        <item quantity="many">Programmer toutes les %1$d d’heures</item>
+        <item quantity="other">Programmer toutes les %1$d heures</item>
+    </plurals>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">Ajustar las líneas de código</string>
+    <string name="stateReaderNoWrap">Mantener el código en una sola línea</string>
+    <string name="stateReaderSaveFailed">No se pudo guardar la opción de visualización. Inténtalo de nuevo.</string>
+    <string name="stateUsageBudgets">Presupuestos personales de consumo</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

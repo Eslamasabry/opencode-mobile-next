@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversInspectSetup">Kiểm tra thiết lập</string>
+    <string name="serversPairingAnswered">Máy chủ đã phản hồi. Kiểm tra thông tin đăng nhập hoặc trạng thái của nó trước khi kết nối.</string>
+    <string name="serversRemoteTerminal">Terminal</string>
+</resources>

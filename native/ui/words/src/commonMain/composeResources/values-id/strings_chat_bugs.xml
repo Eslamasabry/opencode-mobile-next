@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedSignIn">Penyedia model tidak menerima proses masuk. Masuk lagi ke penyedia itu, atau pilih model lain.</string>
+    <string name="chatReplyFailedModel">Model ini tidak tersedia. Pilih model lain lalu kirim lagi.</string>
+    <string name="chatReplyFailedBusy">Penyedia model sedang sibuk. Tunggu sebentar, atau pilih model lain.</string>
+    <string name="chatReplyFailedOther">Balasan berhenti karena ada masalah. Kirim lagi, atau pilih model lain.</string>
+    <string name="chatReplyFailedDetails">Detail</string>
+    <string name="chatReplyFailedCopy">Salin detail</string>
+    <string name="chatSendFailedOffline">Server tidak dapat dijangkau saat ini.</string>
+    <string name="chatSendFailedChanged">Koneksi berubah saat mengirim. Tidak ada yang terkirim.</string>
+    <string name="chatSendFailedRefused">Server tidak menerima pesan. Tidak ada yang terkirim.</string>
+    <string name="chatModelsSearch">Cari model</string>
+    <string name="chatModelsRecent">Terbaru</string>
+    <string name="chatModelsCurrent">Saat ini</string>
+    <string name="chatModelsNoMatch">Tidak ada model yang cocok</string>
+    <string name="chatsHomeNewShort">Percakapan baru</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Se connecter</string>
+    <string name="shortcut_connect_long">Choisissez un serveur auquel vous connecter</string>
+    <string name="shortcut_new_task_short">Nouvelle conversation</string>
+    <string name="shortcut_new_task_long">Démarrez une nouvelle conversation sur le serveur actuel</string>
+</resources>

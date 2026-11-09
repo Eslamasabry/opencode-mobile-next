@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="worktreeInspectionTitle">Periksa salinan</string>
+    <string name="worktreeInspectionExactScope">Perubahan dan percakapan dibaca untuk proyek, folder, dan ruang kerja yang tepat.</string>
+    <string name="worktreeInspectionReadFailed">Salinan ini tidak dapat diperiksa. Statusnya tidak diketahui.</string>
+    <string name="worktreeInspectionWorkspace">Ruang kerja: %1$s</string>
+    <string name="worktreeInspectionHostScope">Di server ini</string>
+    <string name="worktreeInspectionConversations">Percakapan di salinan ini</string>
+    <string name="worktreeInspectionNoPageMatches">Tidak ada percakapan yang cocok di halaman ini. Muat lebih banyak untuk terus mencari.</string>
+    <string name="worktreeInspectionNoConversations">Tidak ada percakapan yang cocok di salinan ini.</string>
+</resources>

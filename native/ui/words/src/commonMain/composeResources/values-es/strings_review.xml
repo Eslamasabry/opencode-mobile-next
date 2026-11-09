@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Cambios de este turno</string>
+    <string name="reviewOneFileUnavailable">Deshacer un archivo a la vez aún no está disponible: este servidor solo puede deshacer desde un mensaje. Usa Deshacer todo, o Deshacer desde aquí en un mensaje.</string>
+    <string name="reviewNoDiff">El servidor no informó qué líneas cambiaron en este archivo.</string>
+    <string name="reviewFileGone">Este archivo ya no está en estos cambios.</string>
+    <string name="reviewIncomplete">No se pudieron leer los mensajes más antiguos, así que a esta lista pueden faltarle archivos.</string>
+    <string name="reviewNoChangesBody">El agente no informó ediciones de archivos aquí.</string>
+    <string name="reviewWaiting">Hay un deshacer esperando tu revisión. Los mensajes posteriores a su mensaje quedan ocultos hasta que elijas.</string>
+    <string name="reviewUndoUnknown">Deshacer todo necesita el mensaje del que partieron estos cambios, y no se pudo leer.</string>
+    <string name="reviewUndoUnavailable">Este servidor no puede deshacer desde un mensaje.</string>
+    <string name="reviewToolEvidence">Según lo que informaron las herramientas del agente. No se listan los cambios hechos con comandos.</string>
+    <string name="reviewSendBackFailed">No se pudo poner tu nota en el mensaje. Inténtalo de nuevo.</string>
+</resources>

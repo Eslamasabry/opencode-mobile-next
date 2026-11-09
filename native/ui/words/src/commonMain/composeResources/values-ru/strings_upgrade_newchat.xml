@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgNewChatKept">Ваш текст и выбор сохранены. Повторите попытку или сначала измените их.</string>
+    <string name="upgNewChatEdit">Изменить</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">Агент и модель</string>
+    <string name="upgNewChatAgents">Кто будет работать</string>
+    <string name="upgNewChatModeHint">«План» сначала обсуждает задачу. «Сборка» вносит изменения.</string>
+    <string name="upgNewChatModeOnlyFor">«Сборка» и «План» доступны для агента %1$s.</string>
+    <string name="upgNewChatModel">Модель</string>
+    <string name="upgNewChatModelsSearch">Поиск моделей</string>
+    <string name="upgNewChatBackToAgents">Назад к агентам</string>
+    <string name="upgNewChatDone">Готово</string>
+    <string name="upgNewChatModelsNone">На этом сервере нет других моделей.</string>
+</resources>

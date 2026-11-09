@@ -22,7 +22,22 @@ class FakeKitPlatform(
     private val frost: Boolean = false,
     /** The platform can draw liquid glass (Android 13+). */
     override val liquidGlass: Boolean = false,
+    /** The share of a frosted liquid pane's pixels its backdrop is drawn at (Android: half). */
+    override val liquidResolution: Float = 1f,
 ) : KitPlatform {
+    /** Every liquid pane this platform was asked to draw, in order (the spec it was given). */
+    val liquidSpecs: MutableList<io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec> = mutableListOf()
+
+    override fun liquidPane(
+        spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
+        backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
+        shape: androidx.compose.foundation.shape.CornerBasedShape,
+        transform: () -> Float,
+    ): androidx.compose.ui.Modifier {
+        liquidSpecs += spec
+        return io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape)
+    }
+
     val haptics: MutableList<KitHaptic> = mutableListOf()
     override val name: String = "fake"
     override val family: KitPlatformFamily = KitPlatformFamily.Desktop

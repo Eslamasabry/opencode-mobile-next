@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">Perintah tersimpan</string>
+    <string name="composerKeptRestoreRefused">Perintah ini tidak bisa dipulihkan. Perintah ini masih ada di Perintah tersimpan. Buka lagi untuk memulihkannya.</string>
+    <string name="composerKeptMissingFiles">File ini tidak bisa dipulihkan: %1$s. Perintah tersimpannya tidak berubah.</string>
+</resources>

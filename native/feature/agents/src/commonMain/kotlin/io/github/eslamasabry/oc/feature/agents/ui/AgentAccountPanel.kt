@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agents.ui
 
+import io.github.eslamasabry.oc.ui.kit.platform.KitSecureContent
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -277,6 +278,7 @@ internal fun AgentAccountPanel(
                                     role = KitTextRole.Supporting,
                                 )
                                 Spacer(Modifier.height(Space.S3.dp))
+                                KitSecureContent {
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                     KitSelectable(
                                         Modifier.weight(1f).clearAndSetSemantics {
@@ -289,6 +291,7 @@ internal fun AgentAccountPanel(
                                         text = { code.userCode },
                                         label = stringResource(Res.string.agentAccountCopyCode),
                                     )
+                                }
                                 }
                                 Spacer(Modifier.height(Space.S3.dp))
                                 KitButton(

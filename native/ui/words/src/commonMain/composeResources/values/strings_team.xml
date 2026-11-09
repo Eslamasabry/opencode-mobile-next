@@ -1699,4 +1699,8 @@
     <string name="teamVoiceApprovePlan">Start building %1$s</string>
     <string name="teamVoiceAcceptPhase">Accept %1$s</string>
     <string name="teamVoicePutOnMain">Put %1$s on main</string>
+    <string name="teamRefusalServerRestarted">OpenCode restarted while this step was running, so it was cut off.</string>
+    <string name="teamRefusalServerRestartedNext">Resume to send that step again. It picks up from the work already done.</string>
+    <string name="teamRefusalRestartResend">OpenCode restarted while this step was running. The team is sending it again.</string>
+    <string name="teamRefusalRestartResendNext">Nothing to do. Work already done is kept.</string>
 </resources>

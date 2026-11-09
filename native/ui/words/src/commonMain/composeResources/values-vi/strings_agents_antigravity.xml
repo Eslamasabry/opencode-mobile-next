@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">Antigravity trong terminal của bạn</string>
+    <string name="agentPersonaAntigravityAbout">Cách làm việc với các tác nhân Antigravity ưu tiên terminal của Google.</string>
+    <string name="agentPersonaAntigravityNeeds">Một tài khoản Google; đăng nhập trong trình duyệt</string>
+    <string name="agentsAntigravitySignInIntro">Antigravity cho bạn một liên kết đăng nhập trong terminal. Hãy mở nó trong trình duyệt và đăng nhập bằng Google, rồi dán mã từ trình duyệt vào terminal.</string>
+    <string name="agentsGeminiMigrationNote">Nếu Gemini CLI yêu cầu bạn dùng Antigravity, hãy quay lại Tác nhân và cài Antigravity (agy). Các cuộc trò chuyện Gemini của bạn vẫn ở đây.</string>
+</resources>

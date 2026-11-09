@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxIdleTitle">Hentikan server saat menganggur</string>
+    <string name="linuxIdleDetail">Menghemat sumber daya ponsel setelah pekerjaan selesai. Lanjutkan server yang sama saat dibutuhkan.</string>
+    <string name="linuxIdleMinutes">Waktu menganggur dalam menit</string>
+    <plurals name="linuxIdleMinutesValue">
+        <item quantity="other">%1$d menit</item>
+    </plurals>
+    <string name="linuxIdleInvalid">Masukkan bilangan bulat dari 1 sampai 60.</string>
+    <string name="linuxIdleFailed">Ponsel tidak dapat membaca atau mengubah status menganggurnya. Buka halaman ini lagi untuk mencoba ulang.</string>
+    <string name="linuxIdleResume">Lanjutkan server ponsel yang menganggur</string>
+    <string name="linuxIdleSave">Simpan waktu menganggur</string>
+    <string name="linuxIdleWorking">Memperbarui status menganggur…</string>
+</resources>

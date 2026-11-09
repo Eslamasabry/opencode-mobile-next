@@ -335,30 +335,35 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
 private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     KitRowGroup(label = stringResource(Res.string.p12ProjectsOnServer, state.serverName)) {
         val failure = state.projectsFailure
+        // Cache-first: a failure never swaps the rows out; it is a notice above the kept ones.
+        if (failure != null)
+            KitErrorNotice(
+                message = stringResource(Res.string.p12ProjectsLoadFailed),
+                failure = failure,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry),
+            )
         when {
+            state.projects.isNotEmpty() -> ProjectRows(state, actions)
             state.projectsLoading -> KitSkeletonRows(count = 3)
-            failure != null ->
-                KitErrorNotice(
-                    message = stringResource(Res.string.p12ProjectsLoadFailed),
-                    failure = failure,
-                    detailsLabel = stringResource(Res.string.kitDetails),
-                    copyLabel = stringResource(Res.string.kitCopyDetails),
-                    retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry),
-                )
-            state.projects.isEmpty() ->
+            failure != null -> Unit
+            else ->
                 KitStateView(
                     kind = KitStateKind.Empty,
                     title = stringResource(Res.string.e7ProjectProjectsEmpty),
                     body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
                 )
-            else -> {
-                // N-42: same-named projects lead with the shortest parent path that tells them apart.
-                val hints = ProjectRules.sameNameHints(state.projects.map { it.directory to it.name })
-                state.projects.forEach {
-                    ProjectRow(it, actions, state.canRename, tail = hints[ProjectRules.normalize(it.directory)])
-                }
-            }
         }
+    }
+}
+
+@Composable
+private fun ProjectRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    // N-42: same-named projects lead with the shortest parent path that tells them apart.
+    val hints = ProjectRules.sameNameHints(state.projects.map { it.directory to it.name })
+    state.projects.forEach {
+        ProjectRow(it, actions, state.canRename, tail = hints[ProjectRules.normalize(it.directory)])
     }
 }
 

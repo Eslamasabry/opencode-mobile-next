@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">На этом телефоне</string>
+    <string name="agentsHubOnComputers">На ваших компьютерах</string>
+    <string name="agentsHubComputersEmpty">Компьютеры ещё не добавлены. Добавьте компьютер с Paseo, чтобы пользоваться Claude Code или Pi с этого телефона.</string>
+    <string name="agentsHubAddComputer">Добавить компьютер</string>
+    <string name="agentsHubCheck">Проверить подключение</string>
+    <string name="agentsHubCheckAgents">Проверить агентов</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">Укажите адрес ws:// на этом устройстве или в вашей частной сети либо адрес wss://.</string>
+    <string name="agentsHubInvalidFolder">Укажите папку проекта полным путём, например /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">Этот пароль использовать нельзя. Используйте буквы, цифры и символы без пробелов.</string>
+    <string name="agentsHubAdded">Сохранено. Его чаты появятся в разделе «Чаты».</string>
+    <string name="agentsHubAddFailed">Не удалось сохранить этот компьютер. Проверьте данные и повторите попытку.</string>
+    <string name="agentsHubAgentsFailed">Не удалось прочитать список агентов на этом компьютере. Убедитесь, что там запущен Paseo.</string>
+    <string name="agentsHubStartFailed">Не удалось начать чат на этом компьютере. Сам компьютер остался сохранённым.</string>
+    <string name="agentsHubSignInFailed">Этот компьютер не принял пароль.</string>
+    <string name="agentsHubNotAnswering">Этот компьютер не ответил. Убедитесь, что Paseo запущен и телефон может до него добраться.</string>
+    <string name="agentsHubNotConnected">Нет подключения</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

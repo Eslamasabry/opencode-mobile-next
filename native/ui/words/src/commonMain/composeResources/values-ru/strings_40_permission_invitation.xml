@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="invitation40Question">Вас спросили 3 раза. Всегда разрешать это же действие?</string>
+    <string name="invitation40KeepAsking">Продолжать спрашивать</string>
+    <string name="invitation40SaveFailed">Не удалось сохранить этот выбор. Запрос всё ещё ждёт; вы можете ответить на него один раз.</string>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">Buscar en mi red</string>
+    <string name="upgradeFindBody">Busca OpenCode en las computadoras de este Wi-Fi.</string>
+    <string name="upgradeFindReason">Para encontrar tu computadora, la app revisa los dispositivos de tu red Wi-Fi. No envía ninguna contraseña y solo consulta direcciones cercanas.</string>
+    <string name="upgradeFindScanning">Buscando en este Wi-Fi…</string>
+    <string name="upgradeFindStop">Detener</string>
+    <string name="upgradeFindSearchAgain">Buscar de nuevo</string>
+    <string name="upgradeFindResultsLabel">Computadoras encontradas en tu red</string>
+    <string name="upgradeFindNeedsPassword">Requiere contraseña</string>
+    <string name="upgradeFindVersion">Versión %1$s</string>
+    <string name="upgradeFindPickLabel">Usar %1$s</string>
+    <string name="upgradeFindEmptyTitle">No se encontró nada</string>
+    <string name="upgradeFindEmptyBody">Inicia OpenCode en tu computadora con `opencode serve --mdns`, comprueba que ambos estén en el mismo Wi-Fi, o escribe la dirección tú mismo.</string>
+    <string name="upgradeFindEnterAddress">Escribir la dirección</string>
+    <string name="upgradeFindDeniedBody">Sin acceso a tu red local, la app no puede buscar tu computadora. Puedes permitirlo e intentarlo de nuevo, o escribir la dirección tú mismo.</string>
+    <string name="upgradeFindAllow">Permitir y buscar</string>
+    <string name="upgradeFindBlockedBody">El acceso a la red local está desactivado para esta app. Actívalo en los ajustes de la app, o escribe la dirección tú mismo.</string>
+    <string name="upgradeFindOpenSettings">Abrir ajustes de la app</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Affichage</string>
+    <string name="filesSearchNames">Noms de fichiers</string>
+    <string name="filesRowActions">Actions</string>
+    <string name="filesChangeDeleted">Supprimé</string>
+    <string name="filesChangeAdded">Ajouté</string>
+    <string name="filesChangeModified">Modifié</string>
+    <string name="filesWrapCode">Renvoyer à la ligne</string>
+    <string name="filesUnwrapCode">Faire défiler les lignes sur le côté</string>
+    <string name="filesShowPreview">Aperçu</string>
+    <string name="filesMoreActions">Autres actions sur le fichier</string>
+    <string name="filesAttachFailed">Impossible de joindre ce fichier. Réessayez.</string>
+    <string name="filesPreferencesFailed">Impossible d’enregistrer ce choix d’affichage. Réessayez.</string>
+    <string name="filesLinkRefused">Ce lien ne peut pas être ouvert en toute sécurité.</string>
+    <string name="filesOpenLinkQuestion">Ouvrir %1$s\u00A0?</string>
+    <string name="filesOpenLinkBody">Ce lien s’ouvre en dehors de l’application.</string>
+    <string name="filesOpenLink">Ouvrir le lien</string>
+    <string name="filesAttachmentReady">Fichier joint. Revenez à la conversation pour ajouter votre commentaire.</string>
+    <string name="filesScopedEmpty">Voici le dossier partagé par le serveur de cette conversation. Vérifiez l’accès à ce dossier, puis actualisez.</string>
+    <string name="filesStorageFailed">L’accès au dossier n’a pas été modifié. Réessayez.</string>
+    <string name="filesStorageRestart">L’accès au dossier est enregistré. Redémarrez le serveur de ce téléphone, puis actualisez.</string>
+    <string name="filesOpenPhone">Ouvrir Ce téléphone</string>
+    <string name="filesReviewStorage">Vérifier les dossiers partagés</string>
+    <string name="filesSelectedStorageBody">Autorisez ce dossier de projet ou vérifiez les dossiers partagés. L’accès à un volume de stockage entier reste désactivé tant que vous ne l’activez pas là.</string>
+</resources>

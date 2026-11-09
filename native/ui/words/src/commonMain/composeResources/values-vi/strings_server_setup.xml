@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secSetupTitle">Thiết lập máy chủ</string>
+    <string name="secSetupReadOnly">Xem cấu hình máy chủ của bạn và chuẩn bị các đề xuất cục bộ. Việc áp dụng và hoàn tác cần một điểm cuối khôi phục nguyên tử mà máy chủ này không có. Không có gì ở đây thay đổi máy chủ của bạn.</string>
+    <string name="secSetupFailed">Không tải được phần thiết lập. Hãy kết nối lại với máy chủ này và thử lại.</string>
+    <string name="secSetupRefresh">Làm mới thiết lập máy chủ</string>
+    <string name="secSetupConfig">Cấu hình, các giá trị riêng tư đã được ẩn</string>
+    <string name="secSetupGuided">Thiết lập có hướng dẫn trên thiết bị này</string>
+    <string name="secSetupReview">Xem lại đề xuất</string>
+    <string name="secSetupInvalid">Chỉ dùng các trường được yêu cầu, không nhập thông tin xác thực. Kiểm tra mô hình, lệnh và địa chỉ rồi thử lại.</string>
+    <string name="secSetupInputs">Nhập đủ các giá trị được yêu cầu, không kèm thông tin xác thực. URL không được chứa mật khẩu, truy vấn hay đoạn mã băm. Chưa có thay đổi nào được đề xuất.</string>
+    <string name="secSetupUnsupported">Quy trình này cần công cụ đăng nhập hoặc cấu hình máy chủ riêng. Thiết lập có hướng dẫn không hỗ trợ.</string>
+    <string name="secSetupProposed">Đề xuất cục bộ đã sẵn sàng để xem lại. Chưa có gì được áp dụng. Các đề xuất trình kết nối sẽ bắt đầu ở trạng thái tắt.</string>
+    <string name="secSetupRegistry">Duyệt danh bạ trình kết nối công khai</string>
+    <string name="secSetupRegistryConsent">Mặc định là tắt. Bật chỉ lưu lựa chọn của bạn, không tải gì. Làm mới sẽ liên hệ danh bạ MCP công khai mà không gửi thông tin xác thực của máy chủ.</string>
+    <string name="secSetupSearch">Tìm trong danh sách công khai</string>
+    <string name="secSetupRegistryRefresh">Làm mới danh sách công khai</string>
+    <string name="secSetupRegistryDisabled">Truy cập danh bạ công khai đang tắt.</string>
+    <string name="secSetupRegistryOffline">Bạn đang ngoại tuyến. Đang hiện các danh sách đã lưu.</string>
+    <string name="secSetupRegistryFailed">Không tải được danh bạ công khai. Hãy thử lại sau hoặc thiết lập thủ công.</string>
+    <string name="secSetupRegistryEmpty">Không có danh sách công khai nào để hiện.</string>
+    <string name="secSetupRegistryReady">Danh sách trình kết nối công khai</string>
+    <string name="secSetupRegistryRemote">Có một điểm cuối HTTPS được liệt kê. Hãy xem kỹ chi tiết trước khi thiết lập trên máy chủ của bạn.</string>
+    <string name="secSetupRegistryDetails">Mục này cần thông tin kết nối. Hãy thiết lập thủ công.</string>
+    <string name="secSetupRegistryCommand">Cài đặt gói cần một lệnh đã được xem xét trên máy chủ của bạn. Hãy thiết lập thủ công.</string>
+    <string name="secSetupRegistryNoEndpoint">Mục này không có điểm cuối HTTPS được hỗ trợ. Hãy thiết lập thủ công.</string>
+    <string name="secSetupChooseModel">Chọn mô hình</string>
+    <string name="secSetupDefaultAgent">Tác nhân mặc định</string>
+    <string name="secSetupPermission">Quy tắc quyền</string>
+    <string name="secSetupRemoteMcp">Trình kết nối từ xa</string>
+    <string name="secSetupLocalMcp">Trình kết nối cục bộ</string>
+    <string name="secSetupRemoveMcp">Xóa trình kết nối</string>
+    <string name="secSetupProvider">Đăng nhập nhà cung cấp</string>
+    <string name="secSetupAgent">Cấu hình tác nhân</string>
+    <string name="secSetupCommand">Cấu hình lệnh</string>
+    <string name="secSetupModelField">Mô hình (nhà cung cấp/mô hình)</string>
+    <string name="secSetupAgentField">Tên tác nhân hiện có</string>
+    <string name="secSetupToolField">Tên công cụ</string>
+    <string name="secSetupEffectField">Quyền (ask, allow hoặc deny)</string>
+    <string name="secSetupUrlField">Địa chỉ trình kết nối HTTPS hoặc loopback</string>
+    <string name="secSetupCommandField">Đối số lệnh dạng danh sách JSON, không kèm thông tin xác thực</string>
+    <string name="secSetupNameField">Tên trình kết nối</string>
+    <string name="secHostOfficialInstall">Gói OpenCode 2 chính thức</string>
+    <string name="secHostPinnedFront">Lệnh front AI Team đã kiểm tra</string>
+    <string name="secHostPinnedFrontHelp">Chạy lệnh này trên máy tính của bạn sau khi thiết lập bộ giám sát Gas City. Thay you@example.com bằng danh tính Tailscale được phép của bạn. Bản tải xuống được ghim vào một commit đầy đủ và được kiểm tra trước khi được đặt tên hoặc chạy.</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">Pruébalo sin conexión</string>
+    <string name="stateDemoTitle">Demostración sin conexión</string>
+    <string name="stateDemoDisclosure">Simulación. No se cambia ningún servidor, archivo ni ajuste guardado. Al salir se olvida esta demostración.</string>
+    <string name="stateDemoPrompt">Haz que el mensaje de bienvenida sea más amistoso.</string>
+    <string name="stateDemoReply">Esta es una respuesta simulada. El mensaje de bienvenida de ejemplo puede cambiar de “Hola” a “¡Bienvenido a bordo!”. Permite la edición simulada de abajo o recházala. No se escribirá ningún archivo real.</string>
+    <string name="stateDemoAllowed">Permitiste la edición simulada. El ejemplo ahora dice “¡Bienvenido a bordo!”. No se cambió ningún archivo real.</string>
+    <string name="stateDemoDenied">Rechazaste la edición simulada. El ejemplo sigue diciendo “Hola”. No se cambió ningún archivo real.</string>
+    <string name="stateDemoAllow">Permitir edición simulada</string>
+    <string name="stateDemoDeny">Rechazar edición simulada</string>
+    <string name="stateDemoReset">Reiniciar demostración</string>
+    <string name="stateDemoLeave">Salir de la demostración</string>
+</resources>

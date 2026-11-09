@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">Una máquina en tu red privada</string>
+    <string name="hostSecIntro">Inspecciona su identidad SSH, prepara la clave pública de este teléfono o recupera una máquina guardada.</string>
+    <string name="hostSecBundleMissing">La instalación de un host nuevo no está disponible hasta que se publique un paquete de host de OpenCode 2 revisado. Estos comandos de preparación solo se ejecutan cuando los copias y los ejecutas en tu máquina.</string>
+    <string name="hostSecWorking">Trabajando…</string>
+    <string name="hostSecRefresh">Actualizar máquinas guardadas</string>
+    <string name="hostSecSaved">Máquinas guardadas</string>
+    <string name="hostSecAddress">Cuenta SSH y dirección de la tailnet (usuario@host)</string>
+    <string name="hostSecPort">Puerto SSH</string>
+    <string name="hostSecInspect">Inspeccionar la identidad de la máquina</string>
+    <string name="hostSecTrustHelp">Compara esta huella en una conexión independiente a la máquina con ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. Continúa solo si coincide exactamente.</string>
+    <string name="hostSecTrust">La huella coincide: preparar clave pública</string>
+    <string name="hostSecPublicHelp">Esta clave pública se puede copiar sin riesgo. La clave privada se queda en el Android Keystore. La instalación y el registro siguen necesitando el paquete de host revisado.</string>
+    <string name="hostSecCopy">Copiar comando</string>
+    <string name="hostSecResume">Verificar conexión guardada</string>
+    <string name="hostSecVerified">La identidad SSH fijada y la identidad del supervisor guardada se verificaron por el túnel privado.</string>
+    <string name="hostSecNotConnected">No hay ninguna conexión de host verificada abierta.</string>
+    <string name="hostSecRevoke">Revocar este teléfono y quitar</string>
+    <string name="hostSecForget">Olvidar los datos locales del host</string>
+    <string name="hostSecRemoveConfirm">Quitar</string>
+    <string name="hostSecRevokeHelp">La app debe confirmar la revocación con el host fijado antes de borrar el acceso local. Si la revocación falla, los datos guardados se conservan para reintentar. Lo que se ejecuta en la máquina sigue funcionando.</string>
+    <string name="hostSecForgetHelp">Quita el túnel local, la clave y los datos de host guardados de este teléfono. Esto no revoca el acceso remoto ni detiene lo que se ejecuta en la máquina.</string>
+    <string name="hostSecTargetFailure">Usa una dirección de máquina de tu red Tailscale y una cuenta y puerto SSH válidos. Se rechazan las rutas DNS públicas, locales y mixtas.</string>
+    <string name="hostSecIdentityFailure">La identidad de la máquina cambió. No se adoptó nada. Verifica la máquina por otro medio antes de intentarlo de nuevo.</string>
+    <string name="hostSecRevokeFailure">No se pudo confirmar la revocación del acceso. El acceso guardado se conserva para que puedas reintentar.</string>
+    <string name="hostSecStorageFailure">No se pudieron leer ni cambiar los datos del host de forma segura. Conserva la máquina guardada e inténtalo de nuevo.</string>
+    <string name="hostSecFailure">No se pudo terminar la operación privada del host. Revisa la configuración de Linux del teléfono y la red privada, y vuelve a intentarlo.</string>
+    <string name="hostSecStepTailnet">Conecta ambos dispositivos a tu Tailscale. Estas comprobaciones muestran el estado y las direcciones; no prueban que pertenezcas a la VPN. El DNS se resuelve una vez, cada respuesta debe estar dentro de los rangos de la tailnet, y SSH usa la dirección numérica validada con una clave fijada.</string>
+    <string name="hostSecStepAccount">Usa una cuenta de Ubuntu 24.04 aparte, sin acceso root. Revisa primero estas herramientas. La configuración comprueba el sistema, el UID sin privilegios, la arquitectura, Python y el administrador de servicios del usuario; no instala paquetes con sudo.</string>
+    <string name="hostSecStepNetwork">Mantén abierta una conexión de rescate. Reemplaza MACHINE_TAILSCALE_IP por la dirección numérica real y quita las entradas ListenAddress públicas o comodín. Estos comandos de propietario cambian todo el demonio SSH. El instalador solo lee los sockets que realmente escuchan en el puerto SSH elegido y rechaza los oyentes públicos, comodín o de una red local común; no cambia el cortafuegos ni los enlaces de SSH. Verifica por separado cualquier otro puerto SSH.</string>
+    <string name="hostSecStepLinger">Ejecuta una vez el primer comando con acceso de administrador. El instalador lee Linger y exige yes, y luego comprueba que systemctl --user funcione. Nunca activa linger por sí mismo ni pide una contraseña de sudo.</string>
+    <string name="hostSecStepPolicy">Mantén abierta una conexión de administrador. Reemplaza PHONE_TAILSCALE_IP y MACHINE_TAILSCALE_IP por las direcciones numéricas reales. Valida antes de recargar. Las directivas SSH anteriores pueden anular este archivo. El instalador comprueba el reenvío TCP local, el reenvío inverso y de sockets desactivados, la ausencia de dispositivos de túnel, UseDNS no, DisableForwarding no, el inicio con clave pública y la ruta estándar de authorized_keys. Leer la configuración no prueba que el demonio en ejecución la haya cargado; verifica tú la recarga.</string>
+    <string name="hostSecStepIdentity">Compara esta salida con la app en una conexión independiente a la máquina antes de confiar en ella. La app calcula la huella Ed25519 SHA256 y bloquea cambios de identidad posteriores.</string>
+    <string name="hostSecRevokeQuestion">¿Revocar este teléfono y quitar el host?</string>
+    <string name="hostSecForgetQuestion">¿Olvidar los datos locales del host?</string>
+</resources>

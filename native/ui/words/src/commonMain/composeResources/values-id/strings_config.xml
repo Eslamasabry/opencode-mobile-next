@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="configInspectionTitle">Konfigurasi server</string>
+    <string name="configInspectionExplanation">Baca sumber konfigurasi server menurut urutan prioritas. Kunci, token, nilai lingkungan, header, perintah, dan prompt disembunyikan. Halaman ini tidak mengubah apa pun.</string>
+    <string name="configInspectionUnavailable">Konfigurasi server tidak bisa dimuat. Sambungkan kembali dan coba lagi.</string>
+    <string name="configInspectionRefresh">Muat ulang konfigurasi</string>
+</resources>

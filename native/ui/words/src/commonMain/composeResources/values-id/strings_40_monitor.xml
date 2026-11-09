@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Kotak masuk</string>
+    <string name="monitorInboxEmpty">Saat ini tidak ada permintaan atau pengingat dari server yang Anda pantau.</string>
+    <string name="monitorInboxFailedRun">Satu proses perlu perhatian</string>
+    <string name="monitorInboxOpening">Membuka permintaan…</string>
+    <string name="monitorInboxSettings">Pilih server tersimpan mana yang dipantau di Notifikasi.</string>
+    <string name="monitorInboxSwitchBody">Buka permintaan di server ini. Pekerjaan yang sudah berjalan di server Anda yang lain tetap berlanjut.</string>
+</resources>

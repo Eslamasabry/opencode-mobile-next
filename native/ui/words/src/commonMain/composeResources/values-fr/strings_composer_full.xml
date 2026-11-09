@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Réflexion</string>
+    <string name="composerFullThinkingDefault">Par défaut</string>
+    <string name="composerFullAgent">Agent</string>
+    <string name="composerFullModels">Modèles</string>
+    <string name="composerFullModelChangeFailed">Impossible de confirmer le choix du modèle. Vérifiez votre sélection et réessayez.</string>
+    <string name="composerFullAttach">Joindre</string>
+    <string name="composerFullAddTitle">Ajouter à l’invite</string>
+    <string name="composerFullPhotoLibrary">Photothèque</string>
+    <string name="composerFullTakePhoto">Prendre une photo</string>
+    <string name="composerFullPasteImage">Coller l’image du presse-papiers</string>
+    <string name="composerFullPasteEmpty">Il n’y a aucune image dans le presse-papiers.</string>
+    <string name="composerFullDraftFull">Retirez d’abord une pièce jointe. Un brouillon accepte jusqu’à 5 fichiers et 20 Mo au total.</string>
+    <string name="composerFullPhotoDenied">L’accès aux photos a été refusé. Autorisez l’accès à l’appareil photo ou aux photos dans les paramètres Android de l’application, puis réessayez.</string>
+    <string name="composerFullStale">La conversation a changé pendant votre choix. Réessayez.</string>
+    <string name="composerFullCommands">Commandes</string>
+    <string name="composerFullFiles">Fichiers du projet</string>
+    <string name="composerFullAttachmentsLocal">Les pièces jointes sont enregistrées avec ce brouillon sur cet appareil.</string>
+    <string name="composerFullSteerHint">Guidez pendant qu’il travaille…</string>
+</resources>

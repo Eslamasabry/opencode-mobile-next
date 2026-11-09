@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">Folder Linux bawaan</string>
+    <string name="secBuiltinFoldersBody">Jelajahi penyimpanan proyek dan folder Linux di ponsel ini.</string>
+    <string name="secBuiltinFolderLinked">Folder ini berupa tautan. Pilih folder yang sebenarnya.</string>
+    <string name="secBuiltinFolderNotInstalled">Instal Linux di ponsel ini untuk menjelajahi folder tersebut.</string>
+</resources>

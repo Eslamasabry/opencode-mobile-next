@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="previewQrLeaveTitle">Mở liên kết này trong trình duyệt?</string>
+    <string name="previewQrPortLabel">Số cổng</string>
+    <string name="previewQrPortHelp">Hoặc nhập cổng mà máy chủ phát triển đang lắng nghe.</string>
+    <string name="previewQrPortInvalid">Nhập cổng từ 1 đến 65535.</string>
+    <string name="previewQrPortOpen">Mở cổng</string>
+    <string name="previewQrPairFilled">Đã điền từ mã ghép nối. Hãy kiểm tra rồi lưu.</string>
+    <string name="previewQrLinkFilled">Đã điền địa chỉ từ liên kết. Hãy thêm mật khẩu rồi lưu.</string>
+    <string name="previewQrScanRejected">Mã QR đó không phải mã ghép nối. Hãy hướng camera vào mã mà opencode2 pair in ra.</string>
+    <string name="previewQrPairingCodeLabel">Mã ghép nối</string>
+</resources>

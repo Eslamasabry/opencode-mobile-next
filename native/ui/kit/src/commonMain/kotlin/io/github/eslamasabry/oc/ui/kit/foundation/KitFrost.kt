@@ -31,6 +31,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
@@ -63,8 +64,11 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 public class KitFrostState internal constructor(internal val layer: GraphicsLayer) {
     internal var sourceOrigin: Offset = Offset.Zero
 
-    /** Counts the recordings (not state: read by liquid panes' samplers, never by a draw). */
-    internal var version: Int = 0
+    /**
+     * Counts the recordings. Snapshot state (glass-live 2026-11-09): a liquid pane's draw reads it, so the pane draws
+     * again after the content behind it moved (a scroll under the bar); the source bumps it without observing it.
+     */
+    internal var version: Int by androidx.compose.runtime.mutableIntStateOf(0)
 
     /** Each liquid role's ink flip over this content, shared by the pane's face and the words beside it (a bar). */
     internal val liquidFlips: MutableMap<Any, io.github.eslamasabry.oc.ui.kit.effects.LiquidFlip> = HashMap()
@@ -83,7 +87,7 @@ public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
     this.onGloballyPositioned { state.sourceOrigin = it.positionInRoot() }
         .drawWithContent {
             state.layer.record { this@drawWithContent.drawContent() }
-            state.version++
+            androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { state.version++ }
             drawLayer(state.layer)
         }
 

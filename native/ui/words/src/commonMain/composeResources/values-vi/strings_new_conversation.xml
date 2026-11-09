@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">Mô hình mặc định</string>
+    <string name="p12NewDefaultAgent">Tác nhân mặc định</string>
+    <string name="p12NewAgent">Tác nhân</string>
+    <string name="p12NewFolder">Thư mục dự án</string>
+    <string name="p12NewUseFolder">Dùng thư mục này</string>
+    <string name="p12NewDraftFailed">Không thể lưu tin nhắn của bạn trên điện thoại này. Hãy giữ trang này mở và thử lại.</string>
+    <string name="p12NewCreationUnconfirmed">Máy chủ chưa xác nhận cuộc trò chuyện đã được tạo hay chưa. Hãy xem Cuộc trò chuyện trước khi bắt đầu cuộc khác. Tin nhắn của bạn vẫn được lưu ở đây.</string>
+    <string name="p12NewBoundProject">Kết nối này dùng thư mục dự án đã lưu của nó. Hãy thêm một kết nối khác cho thư mục khác.</string>
+    <string name="p12NewDeliveryUnconfirmed">Máy chủ chưa xác nhận tin nhắn này. Hãy mở cuộc trò chuyện đã tạo để kiểm tra trước khi bắt đầu cuộc khác. Nội dung của bạn vẫn được lưu ở đây.</string>
+    <string name="p12NewOpenCreated">Mở cuộc trò chuyện đã tạo</string>
+    <string name="chatsNewFolderMissing">Thư mục của dự án này không còn trên máy chủ. Hãy tạo lại thành dự án trống, hoặc chọn dự án khác.</string>
+    <string name="chatsNewFolderRemake">Tạo lại thư mục</string>
+    <string name="chatsNewFolderChooseAnother">Chọn dự án khác</string>
+    <string name="chatSendFolderMissing">Thư mục của dự án này không còn trên máy chủ nên tin nhắn chưa được gửi. Hãy bắt đầu cuộc trò chuyện mới để tạo lại thư mục hoặc chọn dự án khác.</string>
+</resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andr_appExitForceStopped">OpenCode Mobile a été fermé %1$s</string>
+    <string name="andr_appExitLowMemory">Android a fermé OpenCode Mobile %1$s pour libérer de la mémoire</string>
+    <string name="andr_appExitCrashed">OpenCode Mobile s’est arrêté de façon inattendue %1$s</string>
+    <string name="andr_appExitKilled">Android a arrêté OpenCode Mobile %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s. L’OpenCode de votre téléphone s’est arrêté avec lui\u00A0; il redémarre.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s. L’OpenCode de votre téléphone et l’AI Team se sont arrêtés avec lui\u00A0; ils redémarrent.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s. L’OpenCode de votre téléphone s’est arrêté avec lui. Relancez-le quand vous voulez.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. L’OpenCode de votre téléphone et l’AI Team se sont arrêtés avec lui. Relancez-les quand vous voulez.</string>
+    <string name="andr_appExitServerBack">%1$s. L’OpenCode de votre téléphone s’est arrêté avec lui et fonctionne de nouveau.</string>
+    <string name="andr_appExitServerBackTeam">%1$s. L’OpenCode de votre téléphone et l’AI Team se sont arrêtés avec lui\u00A0; OpenCode fonctionne de nouveau.</string>
+    <string name="andr_appExitAtTime">à %1$s</string>
+    <string name="andr_appExitOnDay">le %1$s à %2$s</string>
+    <string name="andr_appExitKeepRunning">Le garder actif</string>
+    <string name="andr_backgroundPauseTimeLimit">Connexion en arrière-plan suspendue %1$s pour économiser la batterie.</string>
+    <string name="andr_backgroundPauseRestricted">Connexion en arrière-plan suspendue\u00A0: l’utilisation de la batterie est restreinte.</string>
+    <string name="andr_backgroundPauseUserStopped">La connexion en arrière-plan s’est arrêtée à la fermeture de l’application %1$s.</string>
+    <string name="andr_backgroundPauseAppUpdated">La connexion en arrière-plan s’est arrêtée lors de la mise à jour de l’application %1$s.</string>
+    <string name="andr_backgroundPauseInterrupted">La connexion en arrière-plan s’est arrêtée pour une raison inconnue.</string>
+    <string name="andr_backgroundPauseDeviceRestarted">La connexion en arrière-plan s’est arrêtée au redémarrage du téléphone.</string>
+    <string name="andr_backgroundPauseResumeShort">Reprendre</string>
+    <string name="andr_backgroundPauseResuming">Reprise de la connexion en arrière-plan…</string>
+    <string name="andr_backgroundPauseResumeFailed">Reprise impossible. Ouvrez les paramètres «\u00A0Rester actif\u00A0».</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">Ouvrir les paramètres «\u00A0Rester actif\u00A0»</string>
+    <string name="andr_notifyDismiss">Ignorer</string>
+    <string name="andr_firstRunNotifyTitle">Vous prévenir quand l’agent a besoin de vous\u00A0?</string>
+    <string name="andr_firstRunNotifyBody">Quittez l’application pendant que l’agent travaille. Vous recevez une notification quand il attend votre réponse. Android affiche une petite notification permanente tant que la connexion est maintenue.</string>
+    <string name="andr_firstRunNotifyAccept">Me prévenir</string>
+    <string name="andr_firstRunNotifyDecline">Pas maintenant</string>
+    <string name="andr_notifyPermissionRefused">Les notifications sont bloquées. Autorisez-les dans les paramètres d’Android, puis activez la connexion en arrière-plan.</string>
+    <string name="andr_notifyEnableFailed">La connexion en arrière-plan n’a pas démarré. Ouvrez les paramètres d’arrière-plan pour réessayer.</string>
+    <string name="andr_pauseBackground">Suspendre l’arrière-plan</string>
+    <string name="andr_notifySaveFailed">Votre choix n’a pas pu être enregistré\u00A0; rien n’a été activé. Réessayez.</string>
+    <string name="andr_termuxRetiredNotice">Termux n’est plus pris en charge. Configurez Linux intégré sur ce téléphone, ou connectez-vous à votre ordinateur. Vos projets dans Termux sont toujours là\u00A0; copiez-les dans le stockage partagé du téléphone ou envoyez-les avec Git pour les récupérer.</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">Configurer Linux intégré</string>
+    <string name="andr_termuxRetiredConnectComputer">Connecter un ordinateur</string>
+    <string name="andr_crashOfferMessage">OpenCode Mobile s’est fermé de façon inattendue la dernière fois. Envoyer un rapport de plantage\u00A0?</string>
+    <string name="andr_crashOfferReview">Vérifier et envoyer</string>
+    <string name="andr_crashOfferNotNow">Pas maintenant</string>
+</resources>

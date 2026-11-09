@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Opsional</string>
+    <string name="reportR1Included">Yang disertakan</string>
+    <string name="reportR1IncludedLine">Detail aplikasi dan ponsel. Sandi, kunci, dan alamat server dihapus.</string>
+    <string name="reportR1IncludedCrash">Detail aplikasi dan ponsel, serta crash pada %1$s. Sandi, kunci, dan alamat server dihapus.</string>
+    <string name="reportR1IncludedFreeze">Detail aplikasi dan ponsel, serta aplikasi macet pada %1$s. Sandi, kunci, dan alamat server dihapus.</string>
+    <string name="reportR1IncludedClose">Detail aplikasi dan ponsel, serta aplikasi tertutup pada %1$s. Sandi, kunci, dan alamat server dihapus.</string>
+    <string name="reportR1IncludedOpen">Tampilkan yang disertakan</string>
+    <string name="reportR1Send">Kirim laporan</string>
+    <string name="reportR1CopyText">Salin teks</string>
+    <string name="reportR1PostGitHub">Posting secara publik di GitHub</string>
+    <string name="reportR1NoSend">Versi ini tidak dapat mengirim laporan. Salin teksnya, atau posting di GitHub.</string>
+    <string name="reportR1SheetSubtitle">Inilah yang persis akan dikirim.</string>
+    <string name="reportR1Words">Tulisan Anda</string>
+    <string name="reportR1NoWords">Tidak ada tulisan</string>
+    <string name="reportR1LastClose">Terakhir kali aplikasi tertutup</string>
+    <string name="reportR1Crashed">Tertutup tiba-tiba · %1$s</string>
+    <string name="reportR1Froze">Berhenti merespons · %1$s</string>
+    <string name="reportR1ClosedForMemory">Ditutup Android untuk mengosongkan memori · %1$s</string>
+    <string name="reportR1App">Aplikasi</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Ponsel</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">Memori %1$s GB</string>
+    <string name="reportR1Connection">Koneksi</string>
+    <string name="reportR1AddressOut">%1$s · alamat dihapus</string>
+    <string name="reportR1NotConnected">Belum terhubung</string>
+    <string name="reportR1Problems">Masalah terbaru</string>
+    <string name="reportR1NoProblems">Tidak ada</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Tidak pernah dikirim: percakapan, file, sandi, kunci, dan alamat server Anda.</string>
+    <string name="reportR1SentBody">Terima kasih. Jika Anda menghubungi kami soal masalah ini, sebutkan kode ini agar kami dapat menemukan laporan Anda.</string>
+    <string name="reportR1PublicTitle">Posting laporan ini secara publik?</string>
+    <string name="reportR1PublicBody">Siapa pun dapat membaca isu GitHub. Formulir terbuka dengan tulisan Anda dan detail aplikasi, dan tidak ada yang diposting sampai Anda mengirimnya di sana.</string>
+    <string name="reportR1PublicConfirm">Buka GitHub</string>
+    <string name="reportR1GitHubFailed">GitHub tidak dapat dibuka. Coba lagi.</string>
+    <string name="reportR1KindTimeout">Waktu habis</string>
+    <string name="reportR1KindAuth">Proses masuk ditolak</string>
+    <string name="reportR1KindTls">Sertifikat tidak tepercaya</string>
+    <string name="reportR1KindServer">Kesalahan server</string>
+    <string name="reportR1KindProtocol">Balasan server tak terduga</string>
+    <string name="reportR1KindDns">Alamat tidak ditemukan</string>
+    <string name="reportR1KindRefused">Koneksi ditolak</string>
+    <string name="reportR1KindOffline">Tidak ada jaringan</string>
+    <string name="reportR1KindTooLarge">Pesan terlalu besar</string>
+    <string name="reportR1KindRejected">Pesan ditolak</string>
+    <string name="reportR1KindOther">Masalah lain</string>
+    <string name="reportKeptCopyErrors">Salin log kesalahan</string>
+    <string name="reportKeptClearErrors">Hapus kesalahan</string>
+</resources>

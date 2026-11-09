@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorServerUnavailable">Không kiểm tra được máy chủ này. Hãy mở cuộc trò chuyện để xem các yêu cầu.</string>
+    <string name="monitorServerWaiting">Đang chờ lần kiểm tra tiếp theo.</string>
+    <string name="monitorServerCurrent">Đã kiểm tra các yêu cầu.</string>
+    <string name="monitorServerPaused">Đã tạm dừng kiểm tra. Hãy mở ứng dụng hoặc tiếp tục kết nối nền.</string>
+    <string name="monitorServerWifiRequired">Đang chờ Wi-Fi.</string>
+</resources>

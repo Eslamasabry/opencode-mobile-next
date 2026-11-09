@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_tool_command">Đang chạy một lệnh…</string>
+    <string name="notify_tool_edit">Đang sửa tệp…</string>
+    <string name="notify_tool_read">Đang đọc tệp…</string>
+    <string name="notify_tool_search">Đang tìm trong tệp…</string>
+    <string name="notify_tool_web">Đang duyệt web…</string>
+    <string name="notify_tool_subagent">Đang chạy một tác nhân phụ…</string>
+    <string name="notify_tool_plan">Đang lên kế hoạch…</string>
+    <string name="notify_tool_working">Đang làm việc…</string>
+    <string name="notify_tool_card">Đang hiện một thẻ…</string>
+    <string name="notify_tool_backgroundtask">Đang kiểm tra một tác vụ nền…</string>
+    <string name="notify_tool_other">Đang chạy %1$s…</string>
+</resources>

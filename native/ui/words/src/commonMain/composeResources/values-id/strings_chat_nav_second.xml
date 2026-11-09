@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">Model terbaru sebelumnya</string>
+    <string name="chatCycleNext">Model terbaru berikutnya</string>
+    <string name="chatHomeAllow">Izinkan sekali</string>
+    <string name="chatHomeReject">Tolak</string>
+    <string name="chatHomeAnswerFailed">Jawaban tidak terkirim. Buka percakapan untuk memeriksanya.</string>
+    <string name="chatHomeRunning">Berjalan</string>
+    <string name="chatHomeMinutes">%1$s mnt</string>
+    <string name="chatQueueMoveTitle">Pindahkan perintah dalam antrean</string>
+    <string name="chatQueueMoveEmpty">Tidak ada perintah antrean yang belum terkirim di percakapan ini.</string>
+    <string name="chatQueueMoveChoosePrompt">Pilih perintah</string>
+    <string name="chatQueueMoveChooseServer">Pilih server tujuannya</string>
+    <string name="chatQueueMoveChooseDestination">Pindahkan ke percakapan</string>
+    <string name="chatQueueMoveFailure">Perintah tidak bisa dipindahkan. Tidak ada yang terkirim.</string>
+    <string name="chatQueueMoveMore">Percakapan lainnya</string>
+    <string name="chatQueueMoveSelectionNote">Perintah tetap dalam antrean. Model atau agen yang tidak tersedia di tujuan akan dihapus.</string>
+    <string name="chatPhraseHide">Sembunyikan %1$s</string>
+    <string name="chatHomeSeconds">%1$s dtk</string>
+</resources>

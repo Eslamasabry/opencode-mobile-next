@@ -179,6 +179,24 @@ internal class TranscriptModel(
         }
     }
 
+    /**
+     * Cache-first: the newest [limit] messages as they read now (streamed text and reasoning folded in), oldest
+     * first, so a conversation's last page can be kept and drawn at once next time it opens.
+     */
+    fun kept(limit: Int): List<MessageWithParts> =
+        messages.values.toList().takeLast(limit).map { m ->
+            MessageWithParts(
+                m.info,
+                m.parts.values.map { pe ->
+                    when (pe.part.type) {
+                        PartType.Text -> pe.blocks?.text?.toString()?.let { pe.part.copy(text = it) } ?: pe.part
+                        PartType.Reasoning -> pe.raw?.toString()?.let { pe.part.copy(text = it) } ?: pe.part
+                        else -> pe.part
+                    }
+                },
+            )
+        }
+
     /** A history page (oldest first). Loaded parts never animate. */
     fun loadHistory(page: List<MessageWithParts>, beforeVersion: Long = Long.MAX_VALUE) {
         for (m in page) {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationStorageTitle">Penyimpanan</string>
+    <string name="migrationStorageAssistant">Model asisten di ponsel ini</string>
+    <string name="migrationStorageDelete">Hapus model</string>
+    <string name="migrationStorageDeleteTitle">Hapus model asisten?</string>
+    <string name="migrationStorageDeleteBody">Ini menghapus model tersimpan dan unduhan yang belum selesai dari ponsel ini, sehingga membebaskan %1$s.</string>
+    <string name="migrationStorageEmpty">Tidak ada model asisten yang disimpan di ponsel ini</string>
+    <string name="localModelSaveFailed">Tidak dapat mengubah model tersimpan. Coba lagi.</string>
+</resources>

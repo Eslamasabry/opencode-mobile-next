@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">Invites planifiées</string>
+    <string name="oc_schedule_title">Invite planifiée</string>
+    <string name="oc_schedule_running">Exécution de votre invite planifiée…</string>
+    <string name="oc_schedule_ran">Envoyée. La réponse est dans la conversation.</string>
+    <string name="oc_schedule_finished">Terminé. Touchez pour lire la réponse.</string>
+    <string name="oc_schedule_skipped">Ignorée cette fois. Touchez pour voir pourquoi.</string>
+    <string name="oc_schedule_failed">Non terminée. Touchez pour voir pourquoi.</string>
+    <string name="oc_schedule_why_needs_you">Elle attend votre réponse. Ouvrez la conversation pour continuer.</string>
+    <string name="oc_schedule_why_sign_in">Le serveur a demandé de se connecter à nouveau.</string>
+    <string name="oc_schedule_why_agent">L’agent s’est arrêté sur une erreur.</string>
+    <string name="oc_schedule_why_timeout">Elle n’a pas été terminée à temps. Elle n’a pas été renvoyée.</string>
+    <string name="oc_schedule_why_unavailable">Impossible de joindre le serveur.</string>
+    <string name="oc_schedule_digest_title">Invites planifiées ce matin</string>
+    <string name="oc_schedule_digest_body">%1$d avec réponse, %2$d non terminées, %3$d ignorées</string>
+    <string name="oc_schedule_open">Ouvrir</string>
+</resources>

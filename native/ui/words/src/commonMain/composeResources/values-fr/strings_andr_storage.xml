@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">Stockage interne</string>
+    <string name="andrStorageUp">Dossier parent</string>
+    <string name="andrStorageUseFolder">Ouvrir ce dossier</string>
+    <string name="andrStorageFoldersEmpty">Il n’y a aucun dossier ici.</string>
+    <string name="andrStorageFolderMissing">Ce dossier n’est plus là. Remontez et choisissez un autre dossier.</string>
+    <string name="andrStorageFolderDenied">Autorisez l’accès aux dossiers dans les paramètres d’Android, puis réessayez.</string>
+    <string name="andrStorageFolderFailed">Impossible de lire ce dossier. Réessayez.</string>
+    <string name="andrStorageAccess">Autoriser l’accès aux dossiers</string>
+    <string name="andrStorageWorking">Attendez la fin du chargement du dossier.</string>
+    <string name="andrStorageTitle">Stockage du téléphone</string>
+    <string name="andrStorageNearlyFull">Le stockage est presque plein\u00A0: %1$s disponibles. Libérez de l’espace avant d’installer des outils ou de lancer une grosse tâche.</string>
+    <string name="andrStorageAvailable">%1$s disponibles pour cette application.</string>
+    <string name="andrStorageUnknown">L’espace disponible n’a pas pu être lu. Essayez de mesurer de nouveau.</string>
+    <string name="andrStorageMeasure">Mesurer le stockage et les fichiers Linux</string>
+    <string name="andrStorageMeasuring">Mesure du stockage…</string>
+    <string name="andrStorageHostSizes">Linux et outils\u00A0: %1$s · Projets\u00A0: %2$s. Ce sont des tailles de fichiers, pas tout le stockage de l’application.</string>
+    <string name="andrStorageHostUnknown">La taille des fichiers Linux n’a pas pu être mesurée. Vos fichiers sont conservés.</string>
+    <string name="andrStorageRootHere">Le stockage interne lui-même ne peut pas être un projet. Ouvrez un dossier à l’intérieur.</string>
+</resources>

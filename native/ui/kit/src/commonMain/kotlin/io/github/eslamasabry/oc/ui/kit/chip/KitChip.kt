@@ -165,26 +165,30 @@ public fun KitChip(
     // C03 (audit 2026-11-09): a chip nobody can tap states a fact, and a fact is never a tinted capsule. It is a small
     // dot (only when the tone carries meaning) and a plain word, set on the row's own surface.
     if (onClick == null && onRemove == null && selected == null && glyph == null && !adaptiveModel) {
+        // One rule for every status word in the kit: a dot in the status colour (grey when neutral or done), then the
+        // word in plain secondary text.
         val dotInk = when (tone) {
             KitChipTone.Attention -> c.attention
             KitChipTone.Active -> c.accent
-            KitChipTone.Neutral -> null
+            KitChipTone.Neutral -> c.text3
         }
-        val plainStyle = style.copy(
-            color = if (tone == KitChipTone.Attention) c.text1 else c.text2,
-            fontWeight = baseStyle.fontWeight,
-        )
+        val plainStyle = style.copy(color = c.text2, fontWeight = baseStyle.fontWeight)
         Row(
             modifier.kitMaxWidth(CapRole.Chip).heightIn(min = minHeight).testTag("kit-chip-plain")
-                .clearAndSetSemantics {
-                    contentDescription = accessible
-                    if (liveRegion) this.liveRegion = LiveRegionMode.Polite
+                // The words stay a Text node (screens and tests find a fact by its words); only a spoken form that differs
+                // from the words replaces them for the screen reader.
+                .let { m ->
+                    if (accessible == label) m.semantics(mergeDescendants = true) { if (liveRegion) this.liveRegion = LiveRegionMode.Polite }
+                    else m.clearAndSetSemantics {
+                        contentDescription = accessible
+                        if (liveRegion) this.liveRegion = LiveRegionMode.Polite
+                    }
                 },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
             if (icon != null) KitGlyph(icon, c.text2, iconSize)
-            else if (dotInk != null) Box(Modifier.size(Space.S2.dp).background(dotInk, androidx.compose.foundation.shape.CircleShape).testTag("kit-chip-dot"))
+            else Box(Modifier.size(Space.S2.dp).background(dotInk, androidx.compose.foundation.shape.CircleShape).testTag("kit-status-dot"))
             BasicText(text, Modifier.weight(1f, fill = false).testTag("kit-chip-label"), style = plainStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         return

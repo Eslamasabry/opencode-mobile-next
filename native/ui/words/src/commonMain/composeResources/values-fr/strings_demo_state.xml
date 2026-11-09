@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">Essayer hors ligne</string>
+    <string name="stateDemoTitle">Démo hors ligne</string>
+    <string name="stateDemoDisclosure">Conversation simulée. Aucun serveur, fichier ni réglage enregistré n’est modifié. Quitter efface cette démo.</string>
+    <string name="stateDemoPrompt">Rends le message de bienvenue plus chaleureux.</string>
+    <string name="stateDemoReply">Ceci est une réponse simulée. Le message de bienvenue d’exemple peut passer de «\u00A0Bonjour\u00A0» à «\u00A0Bienvenue à bord\u00A0!\u00A0». Autorisez la modification simulée ci-dessous, ou refusez-la. Aucun vrai fichier ne sera écrit.</string>
+    <string name="stateDemoAllowed">Vous avez autorisé la modification simulée. L’exemple affiche maintenant «\u00A0Bienvenue à bord\u00A0!\u00A0». Aucun vrai fichier n’a été modifié.</string>
+    <string name="stateDemoDenied">Vous avez refusé la modification simulée. L’exemple affiche toujours «\u00A0Bonjour\u00A0». Aucun vrai fichier n’a été modifié.</string>
+    <string name="stateDemoAllow">Autoriser la modification simulée</string>
+    <string name="stateDemoDeny">Refuser la modification simulée</string>
+    <string name="stateDemoReset">Réinitialiser la démo</string>
+    <string name="stateDemoLeave">Quitter la démo</string>
+</resources>

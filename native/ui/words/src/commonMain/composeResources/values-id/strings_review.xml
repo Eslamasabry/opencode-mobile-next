@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Perubahan pada giliran ini</string>
+    <string name="reviewOneFileUnavailable">Membatalkan satu file per satu belum tersedia: server ini hanya dapat membatalkan dari sebuah perintah. Gunakan Batalkan semua, atau Batalkan dari sini pada sebuah perintah.</string>
+    <string name="reviewNoDiff">Server tidak melaporkan baris yang berubah di file ini.</string>
+    <string name="reviewFileGone">File ini tidak lagi termasuk dalam perubahan ini.</string>
+    <string name="reviewIncomplete">Pesan lama tidak dapat dibaca, sehingga daftar ini mungkin kekurangan file.</string>
+    <string name="reviewNoChangesBody">Agen tidak melaporkan perubahan file di sini.</string>
+    <string name="reviewWaiting">Pembatalan menunggu tinjauan Anda. Pesan setelah perintahnya disembunyikan sampai Anda memilih.</string>
+    <string name="reviewUndoUnknown">Batalkan semua memerlukan perintah awal perubahan ini, dan perintah itu tidak dapat dibaca.</string>
+    <string name="reviewUndoUnavailable">Server ini tidak dapat membatalkan dari sebuah perintah.</string>
+    <string name="reviewToolEvidence">Berdasarkan laporan alat agen. Perubahan lewat perintah tidak dicantumkan.</string>
+    <string name="reviewSendBackFailed">Catatan Anda tidak dapat dimasukkan ke pesan. Coba lagi.</string>
+</resources>

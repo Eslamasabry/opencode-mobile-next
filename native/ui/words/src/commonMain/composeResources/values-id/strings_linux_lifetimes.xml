@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">Masa hidup layanan</string>
+    <string name="linuxLifetimeRefresh">Periksa masa hidup layanan</string>
+    <string name="linuxLifetimeReading">Membaca masa hidup layanan…</string>
+    <string name="linuxLifetimeRunning">Berjalan</string>
+    <string name="linuxLifetimeStopped">Tidak berjalan</string>
+    <string name="linuxLifetimeUptime">Proses saat ini: %1$d md</string>
+    <string name="linuxLifetimeLastUptime">Proses sebelumnya: %1$d md</string>
+    <string name="linuxLifetimeExit">Keluar terakhir: %1$d</string>
+    <string name="linuxLifetimeRestarts">Mulai ulang: %1$d</string>
+    <string name="linuxLifetimeUnknown">Penyebab berhenti tidak diketahui</string>
+    <string name="linuxLifetimeExited">Program selesai</string>
+    <string name="linuxLifetimeKilled">Tekanan memori atau batas proses Android</string>
+    <string name="linuxLifetimeFailed">Masa hidup layanan tidak dapat dibaca.</string>
+    <string name="linuxLifetimeEmpty">Belum ada pengamatan masa hidup layanan.</string>
+</resources>

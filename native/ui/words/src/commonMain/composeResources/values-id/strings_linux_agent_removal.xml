@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentPayloadRefresh">Muat ulang agen ponsel</string>
+    <string name="linuxAgentPayloadRemove">Hapus %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">Hapus %1$s dari ponsel ini?</string>
+    <string name="linuxAgentPayloadRemoveBody">Menghapus program yang diunduh dan unduhan yang belum selesai. Akun, percakapan, dan alat bersama Anda tetap di ponsel ini.</string>
+    <plurals name="linuxAgentPayloadRemoved">
+        <item quantity="other">Program dihapus. %1$d byte dibebaskan.</item>
+    </plurals>
+    <string name="linuxAgentPayloadBusy">Agen atau penyiapan ponsel lain sedang berjalan. Hentikan, lalu coba lagi.</string>
+    <string name="linuxAgentPayloadUnsafe">File ini tidak cocok dengan instalasi milik aplikasi. Tidak ada yang dihapus.</string>
+    <string name="linuxAgentPayloadUnconfirmed">Penghapusan tidak dapat dikonfirmasi. Muat ulang daftar sebelum mencoba lagi.</string>
+    <string name="linuxAgentPayloadUnavailable">File agen ponsel tidak dapat dibaca atau dihapus. Muat ulang dan coba lagi.</string>
+</resources>

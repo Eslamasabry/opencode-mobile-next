@@ -26,11 +26,12 @@ public class GitServices(
     private val opener: ExternalLinkOpener,
     private val scope: CoroutineScope,
     private val nowMs: () -> Long,
+    private val kept: GitLastKnown? = null,
 ) {
     private val accounts = HashMap<ProfileId, GitHubAccount>()
 
     public fun page(ref: ConversationRef): GitPage =
-        GitPage(ref, workspaces, account(ref.profileId))
+        GitPage(ref, workspaces, account(ref.profileId), kept)
 
     public fun account(profile: ProfileId): GitHubAccount =
         accounts.getOrPut(profile) { GitHubAccount(profile, tokens, flow, scope, nowMs) }

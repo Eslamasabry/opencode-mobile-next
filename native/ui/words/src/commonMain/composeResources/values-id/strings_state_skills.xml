@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">Keterampilan</string>
+    <string name="stateSkillsUse">Pakai di percakapan ini</string>
+    <string name="stateSkillsDone">Keterampilan ditambahkan ke percakapan ini.</string>
+    <string name="stateSkillsChanged">Percakapan atau folder berubah. Buka daftar lagi.</string>
+    <string name="stateSkillsBusy">Sebuah keterampilan sedang ditambahkan. Tunggu sampai selesai.</string>
+    <string name="stateSkillsStaged">Selesaikan atau batalkan urungkan yang tertunda sebelum menambah keterampilan.</string>
+    <string name="stateSkillsUnsupported">Server ini tidak dapat menambahkan keterampilan ke percakapan.</string>
+    <string name="stateSkillsUncertain">Hasil tidak dapat dikonfirmasi. Muat ulang sebelum mencoba lagi.</string>
+</resources>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Compte Codex</string>
+    <string name="account40ScopeLost">Ce serveur a changé. Revenez à Serveurs et ouvrez le compte du serveur connecté.</string>
+    <string name="account40Refresh">Actualiser le compte</string>
+    <string name="account40Loading">Vérification du compte de l’hôte</string>
+    <string name="account40Unavailable">Panneau du compte indisponible</string>
+    <string name="account40ReadFailed">Impossible de lire le compte</string>
+    <string name="account40Disconnected">Connexion interrompue</string>
+    <string name="account40Connected">Connecté sur l’hôte</string>
+    <string name="account40SignedOut">Prêt à se connecter</string>
+    <string name="account40InProgress">Connexion en cours</string>
+    <string name="account40NeedsAttention">La connexion demande votre attention</string>
+    <string name="account40NoAuth">L’hôte n’exige pas de connexion</string>
+    <string name="account40ApiKey">Clé API</string>
+    <string name="account40HostAuth">Authentification de l’hôte</string>
+    <string name="account40HostNote">L’environnement officiel conserve la connexion. Les changements de compte concernent tous les serveurs enregistrés reliés à cet hôte.</string>
+    <string name="account40UnsupportedDetail">Ce panneau est vérifié avec Codex 0.153.4. L’environnement connecté peut ne pas prendre en charge ces méthodes de compte.</string>
+    <string name="account40ReconnectDetail">Les données du compte et le code de connexion ont été effacés. Reconnectez-vous pour actualiser. La connexion ne redémarrera pas automatiquement.</string>
+    <string name="account40SignIn">Se connecter avec ChatGPT</string>
+    <string name="account40SignInNote">Connectez-vous avec votre compte ChatGPT. Vous terminez dans le navigateur\u00A0; cette appli ne voit jamais votre mot de passe.</string>
+    <string name="account40Limits">Limites d’utilisation</string>
+    <string name="account40LimitsUnavailable">Les limites d’utilisation sont indisponibles pour ce compte ou cet hôte.</string>
+    <string name="account40Usage">Utilisation des jetons</string>
+    <string name="account40UsageUnavailable">L’utilisation des jetons est indisponible pour ce compte ou cet hôte.</string>
+    <string name="account40LifetimeTokens">Jetons depuis le début</string>
+    <string name="account40PeakTokens">Pic quotidien de jetons</string>
+    <string name="account40UsageNote">Les valeurs sont fournies par l’hôte. Une valeur manquante est inconnue, pas nulle. Le nombre de jetons n’est ni une facture ni le quota de messages restant.</string>
+    <string name="account40Updated">Dernière vérification\u00A0: %1$s</string>
+    <string name="account40Starting">Demande d’un code de connexion</string>
+    <string name="account40Waiting">Terminez la connexion dans votre navigateur</string>
+    <string name="account40Cancelling">Annulation de la connexion</string>
+    <string name="account40Cancelled">Connexion annulée</string>
+    <string name="account40LoginFailed">La connexion n’a pas abouti. Vérifiez l’hôte et réessayez.</string>
+    <string name="account40LoginUncertain">L’hôte n’a pas pu confirmer la connexion ni l’annulation. Il attend peut-être encore. Vérifiez l’environnement officiel de l’hôte avant de recommencer.</string>
+    <string name="account40LoginCompleted">Connexion terminée. Vérification du compte.</string>
+    <string name="account40CodeHint">Saisissez ce code à usage unique sur la page de connexion officielle. Gardez-le confidentiel.</string>
+    <string name="account40OpenSignIn">Ouvrir la connexion officielle</string>
+    <string name="account40Cancel">Annuler la connexion</string>
+    <string name="account40Allowance">Quota indiqué</string>
+    <string name="account40PercentUsed">%1$d\u00A0% utilisé</string>
+    <string name="account40WindowUnknown">Durée de la période indisponible</string>
+    <string name="account40WindowMinutes">Période de %1$d minutes</string>
+    <string name="account40WindowHours">Période de %1$d heures</string>
+    <string name="account40WindowDays">Période de %1$d jours</string>
+    <string name="account40ResetUnknown">Heure de réinitialisation indisponible</string>
+    <string name="account40ScopeLostTitle">Ce serveur a changé</string>
+    <string name="account40BackToServers">Retour aux serveurs</string>
+    <string name="account40NotConnected">Connectez-vous à ce serveur pour voir son compte Codex.</string>
+    <string name="account40SignInMethod">Connecté avec</string>
+    <string name="account40PlanTitle">Forfait</string>
+    <string name="account40CopyCode">Copier le code de connexion</string>
+    <string name="account40LimitReached">Vous avez atteint une limite Codex. %1$s</string>
+    <string name="account40ResetDue">Réinitialisation imminente</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">Réinitialisation dans 1 jour</item>
+        <item quantity="many">Réinitialisation dans %1$d jours</item>
+        <item quantity="other">Réinitialisation dans %1$d jours</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">Réinitialisation dans 1 h</item>
+        <item quantity="many">Réinitialisation dans %1$d h</item>
+        <item quantity="other">Réinitialisation dans %1$d h</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">Réinitialisation dans 1 min</item>
+        <item quantity="many">Réinitialisation dans %1$d min</item>
+        <item quantity="other">Réinitialisation dans %1$d min</item>
+    </plurals>
+    <string name="account40Back">Retour</string>
+    <string name="account40Details">Détails</string>
+    <string name="account40CopyDetails">Copier les détails</string>
+    <string name="account40Copied">Code copié</string>
+    <string name="account40OpenQuestion">Ouvrir la page de connexion officielle sur %1$s\u00A0?</string>
+    <string name="account40OpenPage">Ouvrir la page de connexion</string>
+    <string name="account40OpenFailed">Impossible d’ouvrir la page de connexion ou le presse-papiers.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

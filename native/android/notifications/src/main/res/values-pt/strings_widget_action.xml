@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_widget_action">Enviando a ação do seu widget</string>
+    <string name="notify_widget_action_description">Conferindo a conversa e o pedido exatos.</string>
+</resources>

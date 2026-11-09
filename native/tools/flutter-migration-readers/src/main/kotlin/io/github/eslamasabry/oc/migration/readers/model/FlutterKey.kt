@@ -240,6 +240,19 @@ public enum class FlutterKey(
     WidgetUsageSubs("oc.widgetUsageSubs", IdForm.Exact, ExpectedType.Str, KeyScope.Shared, IdKind.None, ":engine:attention", Handling.AK),
     WithdrawnPrompts("oc.withdrawnPrompts.", IdForm.Suffix, ExpectedType.StrList, KeyScope.Profile, IdKind.Profile, ":engine:connection", Handling.A),
 
+    // ---- A.1b keys Flutter 2.1.5+63 added (Dart writers; the owner's phone runs this release) ----
+    BuiltinNodeCompatDevice("oc.builtin.nodeCompat.device", IdForm.Exact, ExpectedType.Str, KeyScope.App, IdKind.None, "Linux (deferred)", Handling.D),
+    CrashReportsLastOffered("oc.crashReports.lastOffered", IdForm.Exact, ExpectedType.Int64, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    CrashReportsOffer("oc.crashReports.offer", IdForm.Exact, ExpectedType.Bool, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryCrashReports("oc.telemetry.crashReports", IdForm.Exact, ExpectedType.Bool, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryCrashes("oc.telemetry.crashes", IdForm.Exact, ExpectedType.Bool, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryInstallCode("oc.telemetry.installCode", IdForm.Exact, ExpectedType.Str, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryLastExitAt("oc.telemetry.lastExitAt", IdForm.Exact, ExpectedType.Int64, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryLastVersion("oc.telemetry.lastVersion", IdForm.Exact, ExpectedType.Str, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryReportCounter("oc.telemetry.reportCounter", IdForm.Exact, ExpectedType.Int64, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryUsage("oc.telemetry.usage", IdForm.Exact, ExpectedType.Bool, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+    TelemetryConsentAsked("oc.telemetryConsentAsked", IdForm.Exact, ExpectedType.Bool, KeyScope.App, IdKind.None, ":engine:analytics", Handling.AK),
+
     // ---- A.2 keys written only by Kotlin (same file) ----
     WidgetStyle("oc.widgetStyle.", IdForm.Suffix, ExpectedType.Str, KeyScope.Profile, IdKind.Owner, ":android:widgets", Handling.AK),
     WidgetActions("oc.widgetActions.", IdForm.Suffix, ExpectedType.Str, KeyScope.Profile, IdKind.Profile, ":android:widgets", Handling.AK),

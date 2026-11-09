@@ -285,7 +285,8 @@ public class ChatPresenter(
         // screen with one offline line (Try again retries the load) instead of replacing them with an error.
         if (i.load == ChatLoad.Live && i.transcript.rows.isNotEmpty()) lastLive = i.transcript
         i.title?.let { lastTitle = it }
-        val kept = if (i.load is ChatLoad.Failed) lastLive else null
+        // Cache-first: rows kept from a past visit count as last-known too (the world holds them while it cannot load).
+        val kept = if (i.load is ChatLoad.Failed) lastLive ?: i.transcript.takeIf { it.rows.isNotEmpty() } else null
         val t = kept ?: i.transcript
         val cursor = TranscriptFind.keep(hits, l.findKey, l.findCursor)
         val hit = hits.getOrNull(cursor)
@@ -331,7 +332,8 @@ public class ChatPresenter(
                     ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
             phase =
                 when (val load = i.load) {
-                    ChatLoad.Loading -> ChatPhase.Loading
+                    // Cache-first: known rows draw the real transcript while the live read is on its way.
+                    ChatLoad.Loading -> if (t.rows.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
@@ -1196,6 +1198,8 @@ public class ChatPresenter(
     override fun closeSelection() {
         local.update { it.copy(select = null) }
     }
+
+    override val pictureScope: String get() = world.ref.profileId.raw
 
     override suspend fun readPicture(path: String): ByteArray? =
         (world.readPicture(path) as? Outcome.Ok)?.value

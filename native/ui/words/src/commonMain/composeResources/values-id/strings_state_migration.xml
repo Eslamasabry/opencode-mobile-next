@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAppearanceOverview">Semua pilihan tampilan</string>
+    <string name="stateAppearanceChangedLast">Terakhir diubah: %1$s</string>
+</resources>

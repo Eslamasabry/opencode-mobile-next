@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Nhập tên thư mục.</string>
+    <string name="stateFolderNameSegment">Dùng một tên thư mục duy nhất, không có dấu gạch chéo.</string>
+    <string name="stateFolderNameCharacters">Dùng chữ cái, chữ số, dấu chấm, dấu gạch ngang hoặc dấu gạch dưới, bắt đầu bằng chữ cái hoặc chữ số (tối đa 64 ký tự).</string>
+    <string name="stateFolderCreating">Đang tạo thư mục dự án…</string>
+</resources>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Conta do Codex</string>
+    <string name="account40ScopeLost">Este servidor mudou. Volte a Servidores e abra a conta do servidor conectado.</string>
+    <string name="account40Refresh">Atualizar conta</string>
+    <string name="account40Loading">Verificando a conta no servidor</string>
+    <string name="account40Unavailable">Painel da conta indisponível</string>
+    <string name="account40ReadFailed">Não foi possível ler a conta</string>
+    <string name="account40Disconnected">Conexão interrompida</string>
+    <string name="account40Connected">Login feito no servidor</string>
+    <string name="account40SignedOut">Pronto para fazer login</string>
+    <string name="account40InProgress">Login em andamento</string>
+    <string name="account40NeedsAttention">O login precisa de atenção</string>
+    <string name="account40NoAuth">O servidor não exige login</string>
+    <string name="account40ApiKey">Chave de API</string>
+    <string name="account40HostAuth">Autenticação do servidor</string>
+    <string name="account40HostNote">O ambiente oficial guarda o login. Mudanças na conta afetam todos os servidores salvos conectados a este host.</string>
+    <string name="account40UnsupportedDetail">Este painel foi verificado com o Codex 0.153.4. O ambiente conectado pode não aceitar estes métodos de conta.</string>
+    <string name="account40ReconnectDetail">Os dados da conta e o código de login foram apagados. Reconecte para atualizar. O login não será reiniciado automaticamente.</string>
+    <string name="account40SignIn">Fazer login com o ChatGPT</string>
+    <string name="account40SignInNote">Faça login com sua conta do ChatGPT. Você termina no navegador; este app nunca vê sua senha.</string>
+    <string name="account40Limits">Limites de uso</string>
+    <string name="account40LimitsUnavailable">Os limites de uso não estão disponíveis para esta conta ou este servidor.</string>
+    <string name="account40Usage">Uso de tokens</string>
+    <string name="account40UsageUnavailable">O uso de tokens não está disponível para esta conta ou este servidor.</string>
+    <string name="account40LifetimeTokens">Tokens no total</string>
+    <string name="account40PeakTokens">Pico diário de tokens</string>
+    <string name="account40UsageNote">Os valores são informados pelo servidor. Valores ausentes são desconhecidos, não zero. A contagem de tokens não é uma cobrança nem o que resta da sua cota de mensagens.</string>
+    <string name="account40Updated">Última verificação %1$s</string>
+    <string name="account40Starting">Pedindo um código de login</string>
+    <string name="account40Waiting">Conclua o login no navegador</string>
+    <string name="account40Cancelling">Cancelando o login</string>
+    <string name="account40Cancelled">Login cancelado</string>
+    <string name="account40LoginFailed">O login não foi concluído. Verifique o servidor e tente novamente.</string>
+    <string name="account40LoginUncertain">O servidor não conseguiu confirmar o login nem o cancelamento. Ele pode ainda estar esperando. Verifique o ambiente oficial do servidor antes de começar de novo.</string>
+    <string name="account40LoginCompleted">Login concluído. Verificando a conta.</string>
+    <string name="account40CodeHint">Digite este código de uso único na página oficial de login. Mantenha-o em sigilo.</string>
+    <string name="account40OpenSignIn">Abrir o login oficial</string>
+    <string name="account40Cancel">Cancelar login</string>
+    <string name="account40Allowance">Cota informada</string>
+    <string name="account40PercentUsed">%1$d% usado</string>
+    <string name="account40WindowUnknown">Duração da janela indisponível</string>
+    <string name="account40WindowMinutes">Janela de %1$d minutos</string>
+    <string name="account40WindowHours">Janela de %1$d horas</string>
+    <string name="account40WindowDays">Janela de %1$d dias</string>
+    <string name="account40ResetUnknown">Horário de reinício indisponível</string>
+    <string name="account40ScopeLostTitle">Este servidor mudou</string>
+    <string name="account40BackToServers">Voltar a Servidores</string>
+    <string name="account40NotConnected">Conecte-se a este servidor para ver a conta do Codex.</string>
+    <string name="account40SignInMethod">Login feito com</string>
+    <string name="account40PlanTitle">Plano</string>
+    <string name="account40CopyCode">Copiar código de login</string>
+    <string name="account40LimitReached">Você atingiu um limite do Codex. %1$s</string>
+    <string name="account40ResetDue">Reinicia a qualquer momento</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">Reinicia em 1 dia</item>
+        <item quantity="many">Reinicia em %1$d dias</item>
+        <item quantity="other">Reinicia em %1$d dias</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">Reinicia em 1 h</item>
+        <item quantity="many">Reinicia em %1$d h</item>
+        <item quantity="other">Reinicia em %1$d h</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">Reinicia em 1 min</item>
+        <item quantity="many">Reinicia em %1$d min</item>
+        <item quantity="other">Reinicia em %1$d min</item>
+    </plurals>
+    <string name="account40Back">Voltar</string>
+    <string name="account40Details">Detalhes</string>
+    <string name="account40CopyDetails">Copiar detalhes</string>
+    <string name="account40Copied">Código copiado</string>
+    <string name="account40OpenQuestion">Abrir a página oficial de login em %1$s?</string>
+    <string name="account40OpenPage">Abrir página de login</string>
+    <string name="account40OpenFailed">Não foi possível abrir a página de login nem a área de transferência.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

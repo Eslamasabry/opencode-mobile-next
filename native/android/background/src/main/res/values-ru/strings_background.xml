@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">Фоновое подключение приостановлено %1$s для экономии заряда.</string>
+    <string name="background_pause_restricted">Фоновое подключение приостановлено: расход заряда ограничен.</string>
+    <string name="background_pause_user_stopped">Фоновое подключение остановлено при закрытии приложения %1$s.</string>
+    <string name="background_pause_app_updated">Фоновое подключение остановлено при обновлении приложения %1$s.</string>
+    <string name="background_pause_interrupted">Фоновое подключение остановлено по неизвестной причине.</string>
+    <string name="background_pause_device_restarted">Фоновое подключение остановлено при перезапуске телефона.</string>
+    <string name="background_pause_resume">Возобновить фоновое подключение</string>
+    <string name="background_pause_resume_short">Возобновить</string>
+    <string name="background_pause_resuming">Возобновляем фоновое подключение…</string>
+    <string name="background_pause_resume_failed">Не удалось возобновить. Откройте настройки работы в фоне.</string>
+    <string name="background_pause_open_keep_running">Открыть настройки работы в фоне</string>
+    <string name="background_pause_resumed">Фоновое подключение возобновлено.</string>
+    <string name="background_error_notifications_required">Нужен доступ к уведомлениям.</string>
+    <string name="background_error_could_not_change">Android не смог изменить фоновый режим.</string>
+    <string name="background_error_android_app_only">Фоновый режим доступен в приложении для Android.</string>
+</resources>

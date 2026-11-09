@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_live_channel">Connexion de codage en direct</string>
+    <string name="notify_live_description">Affichée tant qu’OpenCode garde une connexion au serveur active en arrière-plan</string>
+    <string name="notify_coding_requests_channel">Demandes de codage</string>
+    <string name="notify_coding_requests_description">Alertes lorsqu’OpenCode a besoin d’une autorisation ou d’une réponse</string>
+    <string name="notify_coding_requests_quiet_channel">Demandes de codage (heures calmes)</string>
+    <string name="notify_coding_requests_quiet_description">Demandes reçues pendant les heures calmes, sans son</string>
+    <string name="notify_coding_status_channel">Mises à jour des conversations de codage</string>
+    <string name="notify_coding_status_description">Alertes lorsqu’une conversation OpenCode en arrière-plan se termine</string>
+    <string name="notify_team_progress_channel">Avancement de l’AI Team</string>
+    <string name="notify_team_progress_description">Une ligne discrète pendant que l’AI Team travaille</string>
+    <string name="notify_setup_channel">Configuration</string>
+    <string name="notify_phone_server_channel">OpenCode sur ce téléphone</string>
+    <string name="notify_phone_server_description">Affichée tant que le serveur du téléphone ou le moteur de projet fonctionne</string>
+    <string name="notify_schedule_channel">Invites planifiées</string>
+    <string name="notify_voice_setup">Configuration de la voix</string>
+    <string name="notify_alert_permission_title">Autoriser %1$s à continuer ?</string>
+    <string name="notify_alert_question_title">%1$s a une question pour vous</string>
+    <string name="notify_alert_complete_title">Terminé : %1$s</string>
+    <string name="notify_alert_error_title">Arrêté : %1$s</string>
+    <string name="notify_alert_stopped_any">Une conversation s’est arrêtée</string>
+    <string name="notify_ask_run">Exécuter %1$s ?</string>
+    <string name="notify_ask_edit">Modifier %1$s ?</string>
+    <string name="notify_ask_read">Lire %1$s ?</string>
+    <string name="notify_ask_folder">Travailler dans %1$s ?</string>
+    <string name="notify_public_needs_you">Une demande vous attend</string>
+    <string name="notify_public_finished">Une conversation est terminée</string>
+    <string name="notify_status_public_stopped">OpenCode · une conversation arrêtée</string>
+    <string name="notify_test_title">Les notifications sont activées</string>
+    <string name="notify_test_body">Les questions et le travail terminé arriveront ainsi.</string>
+    <string name="notify_alert_quota_title">L’utilisation du fournisseur a atteint votre seuil</string>
+    <string name="notify_alert_quota_body">Ouvrez pour voir l’utilisation actuelle.</string>
+    <string name="notify_alert_quota_reset_title">%1$s est de retour</string>
+    <string name="notify_alert_quota_reset_generic_title">Une limite d’utilisation a été réinitialisée</string>
+    <string name="notify_alert_quota_reset_body">Ouvrez pour voir ce qu’il vous reste.</string>
+    <string name="notify_alert_checkin_title">%1$s travaille toujours</string>
+    <string name="notify_alert_checkin_body">Ouvrez la conversation pour prendre des nouvelles.</string>
+    <string name="notify_alert_reason_auth">Le fournisseur a refusé la clé. Reconnectez-vous pour continuer.</string>
+    <string name="notify_alert_reason_context">La conversation est trop longue pour le modèle.</string>
+    <string name="notify_alert_reason_length">La réponse a atteint sa limite de longueur.</string>
+    <string name="notify_alert_reason_filter">Le fournisseur a bloqué la réponse.</string>
+    <string name="notify_alert_reason_model">Ce modèle n’est pas disponible. Choisissez-en un autre pour continuer.</string>
+    <string name="notify_alert_reason_other">Un problème est survenu.</string>
+    <string name="notify_allow_once">Autoriser une fois</string>
+    <string name="notify_reject">Refuser</string>
+    <string name="notify_open">Ouvrir</string>
+    <string name="notify_status_action_open">Ouvrir</string>
+    <string name="notify_status_action_stop_reply">Arrêter la réponse</string>
+    <string name="notify_status_action_start">Démarrer</string>
+    <string name="notify_status_action_new_chat">Nouvelle conversation</string>
+    <string name="notify_status_action_stop_opencode">Arrêter OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · prêt</string>
+    <string name="notify_status_public_paused">OpenCode · en pause</string>
+    <plurals name="notify_chip_running">
+        <item quantity="one">%1$s en cours</item>
+        <item quantity="many">%1$s en cours</item>
+        <item quantity="other">%1$s en cours</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="one">%1$s vous attend</item>
+        <item quantity="many">%1$s vous attendent</item>
+        <item quantity="other">%1$s vous attendent</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="one">%s vous attend</item>
+        <item quantity="many">%s vous attendent</item>
+        <item quantity="other">%s vous attendent</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="one">%s conversation terminée</item>
+        <item quantity="many">%s conversations terminées</item>
+        <item quantity="other">%s conversations terminées</item>
+    </plurals>
+    <string name="notify_answer_in_app">Ouvrez OpenCode pour répondre</string>
+    <string name="notify_reply_watch_title">Votre réponse est toujours en cours</string>
+    <string name="notify_status_public_working">OpenCode · au travail</string>
+</resources>

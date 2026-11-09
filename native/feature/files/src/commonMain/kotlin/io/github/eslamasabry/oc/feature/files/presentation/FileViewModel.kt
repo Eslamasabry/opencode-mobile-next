@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
 import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
+import io.github.eslamasabry.oc.core.model.FileContent
 import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.files.FileData
 import io.github.eslamasabry.oc.engine.files.FileHandoff
@@ -137,6 +138,8 @@ public data class FileUi(
      * attachment, no conversation review.
      */
     val inConversation: Boolean = true,
+    /** The text is the last one read and the server could not be reached to refresh it (status slot). */
+    val offline: Boolean = false,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -228,7 +231,10 @@ public class FileViewModel(
     private val preferences: Set<FilesReaderPreferences>,
     private val storageAccess: Set<SharedStorageAccess> = emptySet(),
     private val phoneFiles: Set<PhoneFiles> = emptySet(),
+    lastKnownPorts: Set<FilesLastKnown> = emptySet(),
 ) : ViewModel(), FileActions {
+    private val lastKnown = lastKnownPorts.singleOrNull()
+    private val keptKey = route.place.keptKey(FilePaths.normalize(route.path))
     override fun openLink(url: String) {
         val host = links.host(url)
         local.update {
@@ -284,6 +290,7 @@ public class FileViewModel(
 
     init {
         check(storageAccess.size <= 1) { "multiple shared-storage hosts" }
+        seedFromKept()
         load()
         viewModelScope.launch {
             share.state.collect { running ->
@@ -320,11 +327,53 @@ public class FileViewModel(
 
     override fun retry(): Unit = load()
 
+    /** Cache-first: the last text read draws the real viewer at once; the live read replaces it in place. */
+    private fun seedFromKept() {
+        val port = lastKnown ?: return
+        val profile = route.place.profileId
+        val peeked = port.peekFile(profile, keptKey)
+        if (peeked != null) {
+            showKept(peeked)
+            return
+        }
+        viewModelScope.launch {
+            val kept = port.readFile(profile, keptKey) ?: return@launch
+            if (local.value.phase == FilePhase.Loading) showKept(kept)
+        }
+    }
+
+    private fun showKept(kept: KeptFile) {
+        val shown =
+            FilePreview.data(
+                FilePaths.normalize(route.path),
+                FileContent(kept.text, "text", null, kept.mime),
+            ) ?: return
+        data = shown
+        local.update {
+            it.copy(
+                phase = FilePhase.Ready,
+                body = visualBody(shown, FilePreview.body(shown, route.line)),
+                sizeBytes = shown.bytes.size.toLong(),
+                failure = null,
+            )
+        }
+    }
+
+    /** The text to keep: only a plain text file, small enough for the store. */
+    private fun keptOf(data: FileData, body: FileBody): KeptFile? {
+        val textual = body is FileBody.Text || body is FileBody.Code || body is FileBody.Markdown
+        if (!textual || data.bytes.size > MAX_KEPT_BYTES) return null
+        val text = FilePreview.strictText(data.bytes) ?: return null
+        return KeptFile(text, data.mime)
+    }
+
     private fun load() {
         val mine = ++loads
         val identity = files.identity()
         val gateway = files.gateway()
+        val showing = local.value.phase == FilePhase.Ready && local.value.body != null
         when {
+            gateway == null && showing -> local.update { it.copy(offline = true) }
             gateway == null ->
                 local.update { it.copy(phase = FilePhase.NotConnected, failure = null) }
             !files.canBrowse() ->
@@ -332,7 +381,7 @@ public class FileViewModel(
             else -> {
                 local.update {
                     it.copy(
-                        phase = FilePhase.Loading,
+                        phase = if (showing) FilePhase.Ready else FilePhase.Loading,
                         failure = null,
                         requestingStorage = false,
                         asking = false,
@@ -362,12 +411,20 @@ public class FileViewModel(
                     when (opened) {
                         is Outcome.Failed ->
                             local.update {
-                                it.copy(phase = FilePhase.Failed, failure = opened.failure)
+                                if (showing) it.copy(offline = true)
+                                else it.copy(phase = FilePhase.Failed, failure = opened.failure)
                             }
                         is Outcome.Ok -> {
                             data = opened.value.data
+                            lastKnown?.let { port ->
+                                val profile = route.place.profileId
+                                val kept = keptOf(opened.value.data, opened.value.body)
+                                // Not text any more (or too big): nothing stays kept for this path.
+                                if (kept != null) launch { port.keepFile(profile, keptKey, kept) }
+                            }
                             local.update {
                                 it.copy(
+                                    offline = false,
                                     phase = FilePhase.Ready,
                                     body = visualBody(opened.value.data, opened.value.body),
                                     sizeBytes = opened.value.data.bytes.size.toLong(),
@@ -831,6 +888,7 @@ public class FileViewModel(
     }
 
     private companion object {
+        const val MAX_KEPT_BYTES = 256 * 1024
         const val PDF_WIDTH_PX = 1440
         const val PDF_WINDOW = 3
         const val PDF_BUDGET_BYTES = 24L * 1024 * 1024

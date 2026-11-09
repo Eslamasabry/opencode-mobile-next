@@ -37,49 +37,95 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
     io.github.eslamasabry.oc.engine.delivery.PromptTracing {
     private val timeline = io.github.eslamasabry.oc.engine.diagnostics.perf.PromptTimeline(trace)
 
-    /** B-190: `send_result` ok with the first reply's time and the `send_first_reply` trace (consent-gated). */
-    private val firstReply =
-        io.github.eslamasabry.oc.engine.analytics.health.FirstReplyMeter({ android.os.SystemClock.elapsedRealtime() })
+    /**
+     * B-190: the chat journey (`send_result`, `chat_turn`, `turn_stall`, `first_reply`), built by the telemetry start-up
+     * once the stored answers are adopted; before that, and with consent off, nothing is kept or sent.
+     */
+    private val journey: io.github.eslamasabry.oc.engine.analytics.health.ChatJourney?
+        get() = io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.chatOrNull
 
     override fun sent(sessionId: String) = timeline.sent(sessionId)
 
     override fun sent(sessionId: String, onPhone: Boolean) {
         timeline.sent(sessionId)
-        firstReply.sent(sessionId, onPhone)
+        journey?.sent(sessionId, onPhone)
+    }
+
+    override fun sent(sessionId: String, onPhone: Boolean, agent: String?, hasAttachment: Boolean) {
+        timeline.sent(sessionId)
+        journey?.sent(
+            sessionId,
+            onPhone,
+            io.github.eslamasabry.oc.engine.analytics.health.PromptTraits(agent, hasAttachment),
+        )
+    }
+
+    override fun tool(sessionId: String, partId: String) {
+        journey?.tool(sessionId, partId)
+    }
+
+    override fun stopped(sessionId: String) {
+        journey?.stopped(sessionId)
+    }
+
+    override fun stream(onPhone: Boolean, connected: Boolean) {
+        journey?.stream(onPhone, connected)
+    }
+
+    override fun error(sessionId: String, kind: String?, tag: String?, reason: String?) {
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
+        journey?.ended(sessionId, turnErrorWord(kind, tag, reason))
     }
 
     override fun accepted(sessionId: String, error: Boolean) {
         timeline.accepted(sessionId, error)
-        firstReply.accepted(sessionId, error)
+        journey?.accepted(sessionId, error)
     }
 
     override fun message(sessionId: String, messageId: String, assistant: Boolean) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Message(sessionId, messageId, assistant))
-        firstReply.message(sessionId, messageId, assistant)
+        journey?.message(sessionId, messageId, assistant)
     }
 
     override fun part(sessionId: String, messageId: String, kind: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Part(sessionId, messageId, kind))
-        firstReply.part(sessionId, messageId, kind)
+        journey?.part(sessionId, messageId, kind)
     }
 
     override fun delta(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Delta(sessionId))
-        firstReply.delta(sessionId)
+        journey?.delta(sessionId)
     }
 
     override fun busy(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Busy(sessionId))
-        firstReply.busy(sessionId)
+        journey?.busy(sessionId)
     }
 
     override fun idle(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Idle(sessionId))
-        firstReply.ended(sessionId)
+        journey?.ended(sessionId)
     }
 
     override fun error(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
-        firstReply.ended(sessionId)
+        journey?.ended(sessionId, "server")
     }
+}
+
+/**
+ * The closed word for a failed turn: the server's own words are classified (rate limit, no credit, sign-in, model not
+ * offered, provider connection) and dropped; only the word goes on. Falls back to the error kind and symbolic tag.
+ */
+internal fun turnErrorWord(kind: String?, tag: String?, reason: String?): String {
+    val word =
+        when (io.github.eslamasabry.oc.engine.transcript.turnfacts.classifyAgentRunFailure(reason)) {
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.SignIn -> "provider_auth"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.NoCredit -> "free_limit"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.Busy -> "rate_limit"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.ModelUnavailable -> "model_not_found"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.ConnectionLost -> "provider_connection"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.Unknown -> null
+        }
+    return word ?: io.github.eslamasabry.oc.engine.analytics.health.ChatJourney.errorKindWord(kind, tag)
 }

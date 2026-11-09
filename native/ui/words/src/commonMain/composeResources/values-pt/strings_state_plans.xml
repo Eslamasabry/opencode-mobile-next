@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Planos e limites</string>
+    <string name="statePlansCopy1">Voltar</string>
+    <string name="statePlansCopy2">Lendo seus planos</string>
+    <string name="statePlansCopy3">Atualizar</string>
+    <string name="statePlansCopy4">Atualizando</string>
+    <string name="statePlansCopy5">Nenhum plano com login ainda</string>
+    <string name="statePlansCopy6">Inicie sessão no Codex, Claude, GLM ou MiniMax em um servidor ou neste celular para ver o que resta.</string>
+    <string name="statePlansCopy7">Chaves de API (sem limites de plano)</string>
+    <string name="statePlansCopy8">Sem login em nenhum lugar</string>
+    <string name="statePlansCopy9">Este celular</string>
+    <string name="statePlansCopy10">Ainda sobra bastante</string>
+    <string name="statePlansCopy11">Chegando perto do limite</string>
+    <string name="statePlansCopy12">Limite atingido</string>
+    <string name="statePlansCopy13">Login feito, mas os números ainda não podem ser lidos</string>
+    <string name="statePlansCopy14">O login expirou</string>
+    <string name="statePlansCopy15">Sem login</string>
+    <string name="statePlansCopy16">Não foi possível ler os números desta vez</string>
+    <string name="statePlansCopy17">Sem conexão. Estes são os últimos números.</string>
+    <string name="statePlansCopy18">Nenhum limite informado</string>
+    <string name="statePlansCopy19">Chave de API, sem limites de plano</string>
+    <string name="statePlansCopy20">Inicie sessão para ver os números</string>
+    <string name="statePlansCopy21">Inicie sessão em %1$s para ver os números</string>
+    <string name="statePlansCopy22">Adicione a chave para ver os números</string>
+    <string name="statePlansCopy23">Adicione a chave em %1$s para ver os números</string>
+    <string name="statePlansCopy24">Configure a leitura para ver os números</string>
+    <string name="statePlansCopy25">Configure a leitura em %1$s para ver os números</string>
+    <string name="statePlansCopy26">Tentar novamente</string>
+    <string name="statePlansCopy27">5 horas</string>
+    <string name="statePlansCopy28">Esta semana</string>
+    <string name="statePlansCopy29">Este mês</string>
+    <string name="statePlansCopy30">Limite</string>
+    <string name="statePlansCopy31">%1$s% restante</string>
+    <string name="statePlansCopy32">renova agora</string>
+    <string name="statePlansCopy33">renova em %1$s min</string>
+    <string name="statePlansCopy34">renova em %1$s h</string>
+    <string name="statePlansCopy35">renova em %1$s dias</string>
+    <string name="statePlansCopy36">Ele foi renovado desde que estes números foram lidos.</string>
+    <string name="statePlansCopy37">Plano: %1$s</string>
+    <string name="statePlansCopy38">Alerta com %1$s% usado</string>
+    <string name="statePlansCopy39">offline</string>
+    <string name="statePlansCopy40">login expirado</string>
+    <string name="statePlansCopy41">sem login</string>
+    <string name="statePlansCopy42">números lidos aqui</string>
+    <string name="statePlansCopy43">com login</string>
+    <string name="statePlansCopy44">Os limites do plano do Claude não podem ser lidos pelo OpenCode</string>
+    <string name="statePlansAlerts">Alertas de uso</string>
+    <string name="statePlansThreshold">Alerta com %1$d% usado</string>
+    <string name="statePlansResetOn">Aviso de renovação ativado</string>
+    <string name="statePlansResetOff">Aviso de renovação desativado</string>
+    <string name="statePlansPercent">Porcentagem usada (1–100)</string>
+    <string name="statePlansSaveFailed">Não foi possível salvar. Digite uma porcentagem de 1 a 100 e tente novamente.</string>
+    <string name="statePlansSave">Salvar nível de alerta</string>
+    <string name="statePlansUseDefault">Usar o nível de alerta padrão</string>
+</resources>

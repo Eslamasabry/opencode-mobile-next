@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">Известные файлы входа и сохранённые настройки окружения служб остаются на этом телефоне. Пользовательские команды служб включены; проверьте их, прежде чем делиться резервной копией.</string>
+    <string name="linuxBackupServiceAccountsNative">Службы с сохранёнными настройками окружения сохраняются в копии выключенными. После восстановления снова настройте их аккаунт и окружение, прежде чем запускать.</string>
+</resources>

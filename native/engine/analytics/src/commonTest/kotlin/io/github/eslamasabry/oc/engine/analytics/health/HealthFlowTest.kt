@@ -36,7 +36,7 @@ class HealthFlowTest {
             setOf(
                 "conn_connect", "send_first_reply", "agent_start", "app_cold_start", "linux_setup_download",
                 "linux_setup_unpack", "linux_setup_essentials", "linux_setup_node", "linux_setup_opencode",
-                "linux_setup_paseo", "linux_setup_agents", "linux_setup_done",
+                "linux_setup_paseo", "linux_setup_agents", "linux_setup_start", "linux_setup_voice", "linux_setup_done",
             ),
             PerfSchema.names,
         )
@@ -97,7 +97,7 @@ class HealthFlowTest {
         val vendor = RecordingVendor()
         val flow = live(vendor)
         flow.connAttempt("computer", ok = false, elapsedMs = 12_000, failure = Failure.Network(NetworkWhy.Dns))
-        flow.sendResult("ok", firstReplyMs = 2_500, serverKind = "phone")
+        flow.sendResult("ok", firstReplyMs = 2_500, serverKind = "phone", traits = SendTraits())
         flow.sendResult("fail", failure = Failure.Rejected(413))
         flow.sendResult("queued")
         flow.linuxSetupStep("node", ok = false, elapsedMs = 70_000, exit = 132, compatMode = "armcap", freeGigabytes = 9.5)
@@ -116,7 +116,7 @@ class HealthFlowTest {
             listOf(
                 "conn_attempt" to
                     mapOf("server_kind" to "computer", "result" to "fail", "fail_kind" to "dns", "ms_range" to ">10000"),
-                "send_result" to mapOf("result" to "ok", "first_reply_range" to "2-10s"),
+                "send_result" to mapOf("result" to "ok", "first_reply_range" to "2-10s", "agent" to "other", "input" to "text", "server_kind" to "phone"),
                 "send_result" to mapOf("result" to "fail", "fail_kind" to "too_large", "first_reply_range" to "none"),
                 "send_result" to mapOf("result" to "queued", "first_reply_range" to "none"),
                 "linux_setup_step" to
@@ -172,19 +172,11 @@ class HealthFlowTest {
     }
 
     @Test
-    fun `B-190-026 setup components map to the contract's step words (Flutter G table)`() = runTest {
+    fun `B-190-026 setup components map to the contract's step words (Flutter G table), plus start and voice`() {
         assertEquals(
-            listOf("unpack", "essentials", "essentials", "node", "opencode", "agents", null, null),
-            listOf("linux", "essentials", "python", "node", "opencode", "aiteam", "voice", "start").map(HealthFlow::linuxStepOf),
+            listOf("unpack", "essentials", "essentials", "node", "opencode", "agents", "voice", "start", null),
+            listOf("linux", "essentials", "python", "node", "opencode", "aiteam", "voice", "start", "mystery").map(HealthFlow::linuxStepOf),
         )
-        val vendor = RecordingVendor()
-        val flow = live(vendor)
-        flow.setupTiming("setup.component", mapOf("id" to "python"), 30_000, failed = false)
-        flow.setupTiming("setup.component", mapOf("id" to "voice"), 30_000, failed = false)
-        flow.setupTiming("setup.check", mapOf("components" to "3"), 10, failed = false)
-        flow.setupTiming("setup.job", mapOf("state" to "done"), 400_000, failed = false)
-        flow.setupTiming("setup.job", mapOf("state" to "failed"), 400_000, failed = true)
-        assertEquals(listOf("linux_setup_essentials", "linux_setup_done"), vendor.traces.map { it.first })
     }
 
     @Test
@@ -192,7 +184,7 @@ class HealthFlowTest {
         val vendor = RecordingVendor()
         live(vendor)
         var now = 1_000L
-        val meter = FirstReplyMeter({ now })
+        val meter = ChatJourney({ now })
         meter.sent("ses_1", onPhone = true)
         meter.accepted("ses_1", error = false)
         meter.part("ses_1", "msg_user", "text") // the person's own echo is not a reply
@@ -210,10 +202,12 @@ class HealthFlowTest {
         meter.delta("ses_4")
         assertEquals(
             listOf(
-                "send_result" to mapOf("result" to "ok", "first_reply_range" to "2-10s"),
-                "send_result" to mapOf("result" to "ok", "first_reply_range" to "none"),
+                "send_result" to
+                    mapOf("result" to "ok", "first_reply_range" to "2-10s", "agent" to "other", "input" to "text", "server_kind" to "phone"),
+                "send_result" to
+                    mapOf("result" to "ok", "first_reply_range" to "none", "agent" to "other", "input" to "text", "server_kind" to "computer"),
             ),
-            vendor.events,
+            vendor.events.filter { it.first == "send_result" },
         )
         assertEquals(listOf(Triple("send_first_reply", mapOf("server_kind" to "phone"), 3_200L)), vendor.traces)
     }

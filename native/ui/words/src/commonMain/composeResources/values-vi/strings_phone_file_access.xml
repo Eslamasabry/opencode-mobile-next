@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSharedAccessTitle">Bạn đã cho phép truy cập tệp của điện thoại này chưa?</string>
+    <string name="phoneSharedAccessBody">Hãy cho phép truy cập trong phần cài đặt của Android, rồi thử mở lại tệp.</string>
+</resources>

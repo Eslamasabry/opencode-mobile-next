@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="remoteTerminalTitle">Терминал</string>
+    <string name="remoteTerminalWorking">Выполняется…</string>
+    <string name="remoteTerminalUnavailable">Чтобы пользоваться этой страницей, подключитесь к серверу с поддержкой терминалов.</string>
+    <string name="remoteTerminalFailed">Запрос к терминалу не удался. Повторите.</string>
+    <string name="remoteTerminalInputUncertain">Соединение прервалось при отправке ввода. Проверьте терминал, прежде чем отправлять снова.</string>
+    <string name="remoteTerminalIntro">Команды выполняются на этом сервере. При выходе с этой страницы просмотр отключается; чтобы остановить оболочку, нажмите «Завершить терминал».</string>
+    <string name="remoteTerminalCreate">Новый терминал</string>
+    <string name="remoteTerminalRefresh">Обновить</string>
+    <string name="remoteTerminalEmpty">Терминалов пока нет.</string>
+    <string name="remoteTerminalRunning">Работает</string>
+    <string name="remoteTerminalEnded">Завершён</string>
+    <string name="remoteTerminalList">Все терминалы</string>
+    <string name="remoteTerminalDisconnect">Отключить</string>
+    <string name="remoteTerminalReconnect">Подключить снова</string>
+    <string name="remoteTerminalEnd">Завершить терминал</string>
+    <string name="remoteTerminalDisconnected">Отключено. Подключитесь снова, чтобы продолжить читать этот терминал.</string>
+    <string name="remoteTerminalInputOff">Подключитесь снова, чтобы отправлять ввод в терминал.</string>
+    <string name="remoteTerminalInterrupt">Прервать (Ctrl-C)</string>
+    <string name="remoteTerminalEndInput">Закончить ввод (Ctrl-D)</string>
+    <string name="remoteTerminalEscape">Escape</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">Терминал для чтения</string>
+    <string name="remoteTerminalTranscript">Вывод терминала</string>
+    <string name="remoteTerminalNoOutput">Вывода терминала пока нет.</string>
+    <string name="remoteTerminalInput">Отправить в терминал</string>
+    <string name="remoteTerminalSend">Отправить</string>
+    <string name="remoteTerminalEndQuestion">Завершить этот терминал?</string>
+    <string name="remoteTerminalEndBody">Удалённая оболочка и всё, что в ней запущено, будут остановлены.</string>
+    <string name="remoteTerminalKeep">Оставить терминал</string>
+    <string name="remoteTerminalOffline">Терминал отключён. Откройте его снова, чтобы подключиться.</string>
+    <string name="remoteTerminalSize">Размер терминала</string>
+    <string name="remoteTerminalRows">Строки</string>
+    <string name="remoteTerminalColumns">Столбцы</string>
+    <string name="remoteTerminalApplySize">Применить размер</string>
+    <string name="remoteTerminalSizeRange">Выберите от 1 до 1000 строк и столбцов.</string>
+    <string name="remoteTerminalServiceUnavailable">Этот сервер не предоставляет службу терминала.</string>
+    <string name="remoteTerminalProjectChanged">Проект этого чата изменился. Вернитесь и откройте терминал снова.</string>
+    <string name="remoteTerminalSignInRequired">Войдите на этот сервер снова, чтобы пользоваться его терминалом.</string>
+    <string name="remoteTerminalServiceNoAnswer">Служба терминала не ответила. Повторите.</string>
+</resources>

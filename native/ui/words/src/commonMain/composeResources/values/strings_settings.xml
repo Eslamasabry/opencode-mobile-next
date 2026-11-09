@@ -479,6 +479,9 @@
     <string name="e7LocaleUiSpanish">Español</string>
     <string name="e7LocaleUiPortuguese">Português (Brasil)</string>
     <string name="e7LocaleUiRussian">Русский</string>
+    <string name="e7LocaleUiVietnamese">Tiếng Việt</string>
+    <string name="e7LocaleUiIndonesian">Bahasa Indonesia</string>
+    <string name="e7LocaleUiFrench">Français</string>
     <string name="serverSettingsRemoveTitle">Remove %1$s</string>
     <string name="serverSettingsRecheckAgents">Check for agents again</string>
     <string name="serverSettingsRecheckAgentsDetail">Use it after signing in to an agent on that computer.</string>
@@ -785,10 +788,20 @@
     <string name="backgroundBatterySettingsInstead">Android didn't show its question, so its battery settings opened instead. Set this app to Unrestricted there.</string>
     <string name="privacyPagesSummary">Servers, providers, voice, files, and updates</string>
     <string name="manageSpaceKeptAllComputers">Your computers and anything pushed to git stay</string>
-    <string name="appearanceGlassEdges">Glass edges</string>
-    <string name="appearanceGlassEdgesLiquid">Liquid</string>
-    <string name="appearanceGlassEdgesFrosted">Frosted</string>
-    <string name="appearanceGlassEdgesNote">Liquid bends what scrolls behind the bars, the message box, sheets and menus. Frosted blurs it.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">Liquid edges need Android 13. This phone shows them frosted.</string>
-    <string name="appearanceGlassEdgesMotionOff">Edges stay frosted while motion is off.</string>
+    <string name="appearanceGlassLook">Glass look</string>
+    <string name="appearanceGlassLookPick">Choose a glass look</string>
+    <string name="appearanceGlassLookGlossy">Glossy</string>
+    <string name="appearanceGlassLookGlossyLine">Bright shine, bends at the edges</string>
+    <string name="appearanceGlassLookClear">Clear</string>
+    <string name="appearanceGlassLookClearLine">See-through, light shine</string>
+    <string name="appearanceGlassLookFrosted">Frosted</string>
+    <string name="appearanceGlassLookFrostedLine">Soft blur, easiest to read</string>
+    <string name="appearanceGlassLookSmoked">Smoked</string>
+    <string name="appearanceGlassLookSmokedLine">Dark tinted glass on bars and buttons</string>
+    <string name="appearanceGlassLookDisclosure">The previews use bright colours so the differences show. The page behind shows your real background.</string>
+    <string name="appearanceGlassLookFrostedLighter">Frosted now uses lighter cards, so more of your background shows through.</string>
+    <string name="appearanceGlassLookHeldMotion">Glass looks pause while motion is off. Turn motion back on to choose one.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">Bending edges need Android 13. This phone shows them blurred, in every look.</string>
+    <string name="appearanceGlassCardHint">Tap Glass again to choose its look.</string>
+    <string name="appearanceGlassCardLook">Glass · %1$s</string>
 </resources>

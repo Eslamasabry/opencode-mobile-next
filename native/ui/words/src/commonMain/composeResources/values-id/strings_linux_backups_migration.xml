@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">File masuk yang dikenal dan pengaturan lingkungan layanan tersimpan tetap di ponsel ini. Perintah layanan khusus ikut disertakan; tinjau sebelum membagikan cadangan.</string>
+    <string name="linuxBackupServiceAccountsNative">Layanan dengan pengaturan lingkungan tersimpan dicadangkan dalam keadaan mati. Setelah dipulihkan, siapkan ulang akun dan lingkungannya sebelum memulainya.</string>
+</resources>

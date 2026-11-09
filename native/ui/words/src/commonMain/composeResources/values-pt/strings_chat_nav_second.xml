@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">Modelo recente anterior</string>
+    <string name="chatCycleNext">Próximo modelo recente</string>
+    <string name="chatHomeAllow">Permitir uma vez</string>
+    <string name="chatHomeReject">Recusar</string>
+    <string name="chatHomeAnswerFailed">Não foi possível enviar sua resposta. Abra a conversa para conferir.</string>
+    <string name="chatHomeRunning">Em execução</string>
+    <string name="chatHomeMinutes">%1$s min</string>
+    <string name="chatQueueMoveTitle">Mover um pedido da fila</string>
+    <string name="chatQueueMoveEmpty">Nenhum pedido na fila sem enviar nesta conversa.</string>
+    <string name="chatQueueMoveChoosePrompt">Escolha um pedido</string>
+    <string name="chatQueueMoveChooseServer">Escolha o servidor de destino</string>
+    <string name="chatQueueMoveChooseDestination">Mover para uma conversa</string>
+    <string name="chatQueueMoveFailure">Não foi possível mover o pedido. Nada foi enviado.</string>
+    <string name="chatQueueMoveMore">Mais conversas</string>
+    <string name="chatQueueMoveSelectionNote">O pedido continua na fila. Um modelo ou agente que o destino não oferece é removido.</string>
+    <string name="chatPhraseHide">Ocultar %1$s</string>
+    <string name="chatHomeSeconds">%1$s s</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgNewChatKept">Lời nhắc và lựa chọn của bạn được giữ lại. Hãy thử lại, hoặc sửa chúng trước.</string>
+    <string name="upgNewChatEdit">Sửa</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">Tác nhân và mô hình</string>
+    <string name="upgNewChatAgents">Ai sẽ làm việc này</string>
+    <string name="upgNewChatModeHint">Lập kế hoạch là trao đổi trước. Xây dựng là thực hiện thay đổi.</string>
+    <string name="upgNewChatModeOnlyFor">Xây dựng và Lập kế hoạch dành cho %1$s.</string>
+    <string name="upgNewChatModel">Mô hình</string>
+    <string name="upgNewChatModelsSearch">Tìm mô hình</string>
+    <string name="upgNewChatBackToAgents">Quay lại tác nhân</string>
+    <string name="upgNewChatDone">Xong</string>
+    <string name="upgNewChatModelsNone">Máy chủ này không có mô hình nào khác.</string>
+</resources>

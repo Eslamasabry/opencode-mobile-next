@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalGraphicsContext
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
@@ -21,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -65,30 +68,57 @@ internal fun LiveShaderLayer(
  * records nothing. Null where the platform has no runtime shaders.
  */
 @Composable
-internal fun rememberLiveShaderBackdrop(look: LiveLook, strength: Float, time: () -> Float): (DrawScope.() -> Unit)? {
+internal fun rememberLiveShaderBackdrop(
+    look: LiveLook,
+    strength: Float,
+    time: () -> Float,
+    /** The theme root's shared pictures: pages of one size draw one reduced shader layer between them, once a frame. */
+    pictures: io.github.eslamasabry.oc.ui.kit.foundation.KitGlassPictures? = null,
+): (DrawScope.() -> Unit)? {
     val platform = LocalKitPlatform.current
     val program = remember(look, platform) { platform.liveShaders?.compile(LiveShaderLib.PRELUDE + look.shader) } ?: return null
     val palette = rememberLivePalette()
     val density = LocalDensity.current.density
-    val reduced = rememberGraphicsLayer()
-    return remember<DrawScope.() -> Unit>(program, palette, strength, density, reduced, time, look) {
+    val own = rememberGraphicsLayer()
+    val context = LocalGraphicsContext.current
+    return remember<DrawScope.() -> Unit>(program, palette, strength, density, own, time, look, pictures, context) {
         {
             drawRect(palette.ground)
             val sw = max(1, (size.width * RENDER_SCALE).roundToInt())
             val sh = max(1, (size.height * RENDER_SCALE).roundToInt())
-            reduced.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-            reduced.pivotOffset = Offset.Zero
-            reduced.scaleX = size.width / sw
-            reduced.scaleY = size.height / sh
-            reduced.record(Density(density), LayoutDirection.Ltr, IntSize(sw, sh)) {
-                program.setSize(sw.toFloat(), sh.toFloat(), density * RENDER_SCALE)
-                program.setFrame(look, time(), strength, palette)
-                drawRect(program.brush)
+            val shared = pictures?.at(IntSize(size.width.toInt(), size.height.toInt()))
+            val reduced = if (shared != null) shared.shader ?: context.createGraphicsLayer().also { shared.shader = it } else own
+            val t = time()
+            // Every input of this frame's pixels: a page that finds the shared layer already recorded from the same
+            // inputs this frame draws it as it is; any change (look, time, strength, theme, size) records it again.
+            val key = ShaderFrame(look, t, strength, palette, sw, sh, density)
+            if (shared == null || shared.shaderKey != key) {
+                reduced.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
+                reduced.pivotOffset = Offset.Zero
+                reduced.scaleX = size.width / sw
+                reduced.scaleY = size.height / sh
+                reduced.record(Density(density), LayoutDirection.Ltr, IntSize(sw, sh)) {
+                    program.setSize(sw.toFloat(), sh.toFloat(), density * RENDER_SCALE)
+                    program.setFrame(look, t, strength, palette)
+                    drawRect(program.brush)
+                }
+                shared?.shaderKey = key
             }
             drawLayer(reduced)
         }
     }
 }
+
+/** Everything one frame of a shader look is drawn from (see [rememberLiveShaderBackdrop]). */
+private data class ShaderFrame(
+    val look: LiveLook,
+    val time: Float,
+    val strength: Float,
+    val palette: LivePalette,
+    val width: Int,
+    val height: Int,
+    val density: Float,
+)
 
 /** The drawn size in render pixels and render pixels per dp; [setFrame] sends them with the frame. */
 internal fun LiveUniforms.setSize(width: Float, height: Float, density: Float) {
@@ -176,14 +206,25 @@ internal fun LiveStill(palette: LivePalette, strength: Float, modifier: Modifier
     )
 }
 
-/** The time a look reads in draw: the clock while it [animates], else the still frame's moment. */
+/**
+ * The time a look reads in draw: the clock while it [animates], else the still frame's moment. With [fps] the time steps
+ * at most that many times a second: a draw block that reads it is invalidated only when the step changes (a derived
+ * state), so a faster screen does not redraw it more often.
+ */
 @Composable
-internal fun rememberLiveTime(clock: LiveFrameClock, animates: Boolean): () -> Float =
-    remember(clock, animates) {
-        if (animates) {
-            { clock.seconds + STILL_SECONDS }
-        } else {
-            { STILL_SECONDS }
+internal fun rememberLiveTime(clock: LiveFrameClock, animates: Boolean, fps: Int = 0): () -> Float =
+    remember<() -> Float>(clock, animates, fps) {
+        when {
+            !animates -> {
+                { STILL_SECONDS }
+            }
+            fps <= 0 -> {
+                { clock.seconds + STILL_SECONDS }
+            }
+            else -> {
+                val stepped = derivedStateOf { floor(clock.seconds * fps) / fps }
+                ({ stepped.value + STILL_SECONDS })
+            }
         }
     }
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">Kiểm tra kết nối</string>
+    <string name="connectionCheckTitle">Kiểm tra kết nối</string>
+    <string name="connectionCheckAgain">Làm mới</string>
+    <string name="connectionCheckAddress">Địa chỉ</string>
+    <string name="connectionCheckSignIn">Đăng nhập</string>
+    <string name="connectionCheckVersion">Phiên bản máy chủ</string>
+    <string name="connectionCheckLive">Cập nhật trực tiếp</string>
+    <string name="connectionCheckSpeed">Thời gian phản hồi</string>
+    <string name="connectionCheckWaiting">Đang chờ</string>
+    <string name="connectionCheckRunning">Đang kiểm tra…</string>
+    <string name="connectionCheckPassed">Đạt</string>
+    <string name="connectionCheckVersionValue">Phiên bản %1$s</string>
+    <string name="connectionCheckMillis">%1$s ms</string>
+    <string name="connectionCheckUnreachable">Không kết nối được với máy chủ. Hãy kiểm tra địa chỉ và xem máy chủ có đang chạy không.</string>
+    <string name="connectionCheckNotServer">Địa chỉ này không phản hồi như một máy chủ được hỗ trợ. Hãy kiểm tra địa chỉ.</string>
+    <string name="connectionCheckNeedsPassword">Hãy nhập lại mật khẩu hoặc mã thông báo của máy chủ đã lưu, rồi thử lại.</string>
+    <string name="connectionCheckPasswordRejected">Máy chủ từ chối thông tin đăng nhập đã lưu. Hãy cập nhật mật khẩu hoặc mã thông báo.</string>
+    <string name="connectionCheckUnsupported">Phiên bản máy chủ này không được hỗ trợ. Hãy cập nhật máy chủ.</string>
+    <string name="connectionCheckNotReady">Máy chủ có phản hồi nhưng chưa sẵn sàng. Hãy chờ một lát rồi kiểm tra lại.</string>
+    <string name="connectionCheckStreamUnchecked">Hãy kết nối máy chủ này để kiểm tra cập nhật trực tiếp.</string>
+    <string name="connectionCheckStreamConnecting">Kết nối trực tiếp vẫn đang kết nối lại. Hãy kiểm tra lại sau ít phút.</string>
+    <string name="connectionCheckStreamDown">Kết nối trực tiếp hiện tại đã mất. Hãy kết nối lại máy chủ này.</string>
+    <string name="connectionCheckSlow">%1$s ms — máy chủ phản hồi chậm. Hãy kiểm tra mạng hoặc tải của máy chủ.</string>
+    <string name="connectionCheckSkipped">Chưa kiểm tra vì bước trước đó cần bạn xử lý.</string>
+    <string name="connectionCheckTrust">Hãy xem lại độ tin cậy của kết nối máy chủ này trước khi kiểm tra lại.</string>
+    <string name="connectionCheckChanged">Máy chủ đã lưu đã thay đổi. Hãy đóng bước kiểm tra này và mở lại.</string>
+</resources>

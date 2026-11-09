@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="navProjectChangesCount">Thay đổi · %1$d</string>
+    <string name="navProjectDevServer">Máy chủ phát triển đang chạy · Cổng %1$d</string>
+</resources>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Provedores e ferramentas</string>
+    <string name="intBack">Voltar</string>
+    <string name="intRefresh">Atualizar</string>
+    <string name="intServers">Servidor</string>
+    <string name="intNoServer">Conecte-se a um servidor primeiro</string>
+    <string name="intProviders">Provedores</string>
+    <string name="intConnected">Com login</string>
+    <string name="intNotConnected">Sem login</string>
+    <string name="intKey">Chave de API</string>
+    <string name="intSaveKey">Salvar chave no servidor</string>
+    <string name="intKeyPage">Obter uma chave de API</string>
+    <string name="intOpenSignIn">Abrir página de login</string>
+    <string name="intCode">Código ou URL de retorno</string>
+    <string name="intCompleteSignIn">Concluir login</string>
+    <string name="intSignInHelp">Conclua no navegador e cole aqui o código ou a URL de retorno.</string>
+    <string name="intConnectors">Conectores</string>
+    <string name="intConnectorConnected">Conectado</string>
+    <string name="intConnectorNotConnected">Precisa de atenção</string>
+    <string name="intConnectorName">Nome do conector</string>
+    <string name="intConnectorUrl">Endereço HTTPS</string>
+    <string name="intHeaderName">Nome do cabeçalho (opcional)</string>
+    <string name="intHeaderValue">Valor do cabeçalho</string>
+    <string name="intSaveConnector">Adicionar conector</string>
+    <string name="intHeaderHelp">Os valores de cabeçalho são segredos. Eles são enviados somente a este servidor e nunca aparecem nos diagnósticos.</string>
+    <string name="intSkills">Escrever uma habilidade</string>
+    <string name="intRequirements">O que a habilidade deve fazer?</string>
+    <string name="intDraftHelp">O agente vai redigir um SKILL.md em uma nova conversa para você revisar. Ele não será solicitado a instalá-lo nem a alterar arquivos.</string>
+    <string name="intAskDraft">Pedir um rascunho ao agente</string>
+    <string name="intOpenDraft">Abrir a conversa do rascunho</string>
+    <string name="intSaved">Salvo no servidor.</string>
+    <string name="intFailed">Não foi possível concluir. Atualize antes de tentar de novo.</string>
+    <string name="intUnsupported">Este servidor não oferece suporte a esta ação.</string>
+    <string name="intChanged">A conexão mudou. Abra esta página de novo.</string>
+    <string name="intInvalid">Confira os campos obrigatórios e tente novamente.</string>
+    <string name="intDraftSent">O pedido de rascunho foi enviado. Abra a conversa para acompanhar.</string>
+    <string name="intDraftUncertain">O pedido pode ter chegado. Confira a conversa antes de enviar de novo.</string>
+    <string name="intOpenQuestion">Abrir esta página?</string>
+    <string name="intOpen">Abrir página</string>
+    <string name="intInsecure">Este endereço não é criptografado.</string>
+    <string name="intConnectorReady">Conectado para a próxima mensagem.</string>
+    <string name="intConnectorUnknown">Conectado. A descoberta de ferramentas não foi confirmada.</string>
+    <string name="intConnectorAuth">Este conector exige que você faça login.</string>
+    <string name="intConnecting">Conectando</string>
+    <string name="intConnectorSignIn">Fazer login neste conector</string>
+    <string name="intConnectorCancelSignIn">Cancelar login</string>
+</resources>

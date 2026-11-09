@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxExitForceStop">Ứng dụng đã bị đóng khi OpenCode đang chạy</string>
+    <string name="linuxExitMemory">Android đã đóng ứng dụng để giải phóng bộ nhớ</string>
+    <string name="linuxExitMemoryLimit">Android đã đóng ứng dụng vì chạm giới hạn bộ nhớ</string>
+    <string name="linuxExitCrash">Ứng dụng đã gặp sự cố khi OpenCode đang chạy</string>
+    <string name="linuxExitKilled">Android đã dừng ứng dụng khi OpenCode đang chạy</string>
+    <string name="linuxExitRestored">OpenCode đang chạy trở lại.</string>
+    <string name="linuxExitCheckStatus">Hãy xem trạng thái máy chủ hiện tại bên dưới.</string>
+    <string name="linuxExitPolicyOff">Tự động khởi động lại đang tắt. Bạn có thể khởi động OpenCode khi sẵn sàng.</string>
+</resources>

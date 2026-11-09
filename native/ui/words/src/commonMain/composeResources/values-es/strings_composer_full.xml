@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Razonamiento</string>
+    <string name="composerFullThinkingDefault">Predeterminado</string>
+    <string name="composerFullAgent">Agente</string>
+    <string name="composerFullModels">Modelos</string>
+    <string name="composerFullModelChangeFailed">No se pudo confirmar el modelo elegido. Revisa tu selección e inténtalo de nuevo.</string>
+    <string name="composerFullAttach">Adjuntar</string>
+    <string name="composerFullAddTitle">Agregar al mensaje</string>
+    <string name="composerFullPhotoLibrary">Galería de fotos</string>
+    <string name="composerFullTakePhoto">Tomar foto</string>
+    <string name="composerFullPasteImage">Pegar imagen del portapapeles</string>
+    <string name="composerFullPasteEmpty">No hay ninguna imagen en el portapapeles.</string>
+    <string name="composerFullDraftFull">Quita primero un adjunto. Un borrador admite hasta 5 archivos y 20 MB en total.</string>
+    <string name="composerFullPhotoDenied">Se denegó el acceso a las fotos. Para permitir el acceso a la cámara o a las fotos, ve a los ajustes de la app en Android e inténtalo de nuevo.</string>
+    <string name="composerFullStale">La conversación cambió mientras elegías. Inténtalo de nuevo.</string>
+    <string name="composerFullCommands">Comandos</string>
+    <string name="composerFullFiles">Archivos del proyecto</string>
+    <string name="composerFullAttachmentsLocal">Los adjuntos se guardan con este borrador en este dispositivo.</string>
+    <string name="composerFullSteerHint">Guía mientras trabaja…</string>
+</resources>

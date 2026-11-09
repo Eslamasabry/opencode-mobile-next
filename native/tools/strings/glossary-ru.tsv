@@ -1,0 +1,67 @@
+# Glossary for ru. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Этот телефон|этом телефоне|этого телефона|этому телефону|этим телефоном
+term	\b[Cc]onversations?\b	чат|разговор|беседа|беседы|беседе|бесед
+term	\bTry again\b	Повторить|Повторите|ещё раз|еще раз
+term	\bSettings\b	Настройки
+term	\bServers?\b	сервер
+term	\bProjects?\b	проект
+term	\b(?<!Claude )Agents?\b	агент
+term	^Files$	файл
+term	^Cancel$	Отмена|Отменить
+term	^Offline$	Не в сети|без сети|офлайн
+term	^Disconnect$	Отключить
+term	^Allow$	Разрешить
+term	^Deny$	Запретить|Отклонить
+term	^Delete$	Удалить
+term	^Search$	Поиск|Найти|поиск
+term	^Refresh$	Обновить
+term	^Model$	модел
+forbid	\bсессии?\b|\bсессию\b|\bсессий\b	say чат or разговор, not сессия
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

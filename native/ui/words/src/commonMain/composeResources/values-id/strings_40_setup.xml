@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">Mengunduh pengetikan suara</string>
+    <string name="r40SetupVoiceVerifying">Memeriksa file pengetikan suara</string>
+    <string name="r40SetupRequired">Wajib</string>
+    <string name="r40SetupWorking">Harap tunggu aksi yang sedang berjalan.</string>
+    <string name="r40SetupTotals">%1$s · sekitar %2$s mnt</string>
+    <string name="r40SetupCouldNotCheck">Alat terpasang atau penyiapan tidak bisa diperiksa. Coba lagi.</string>
+    <string name="r40SetupRetry">Coba lagi</string>
+    <string name="r40SetupActionFailed">Belum selesai. Coba lagi.</string>
+    <string name="r40SetupCheckDevice">Atasi persyaratan ponsel di atas sebelum memulai.</string>
+    <string name="r40SetupStorageUnopened">Pengaturan penyimpanan tidak bisa dibuka. Kosongkan ruang di pengaturan ponsel, lalu coba lagi.</string>
+    <string name="r40SetupRemoveVoiceTitle">Hapus pengetikan suara?</string>
+    <string name="r40SetupRemoveVoiceBody">Model ucapan yang diunduh akan dihapus dari aplikasi ini. Percakapan Anda tetap ada. Anda bisa mengunduh pengetikan suara lagi nanti.</string>
+    <string name="r40SetupRemoveVoice">Hapus pengetikan suara</string>
+    <string name="r40SetupKeepVoice">Simpan pengetikan suara</string>
+    <string name="r40SetupRemoveVoiceFailed">Pengetikan suara tidak bisa dihapus. Selesaikan perekaman atau unduhan yang aktif, lalu coba lagi.</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">Selesai</string>
+    <string name="r40SetupComponentInstalled">Sudah terpasang</string>
+    <string name="r40SetupComponentChecking">Memeriksa…</string>
+    <string name="r40SetupComponentRunning">Memasang…</string>
+    <string name="r40SetupComponentFailed">Belum selesai</string>
+    <string name="r40SetupComponentPending">Menunggu</string>
+    <string name="r40WelcomePhone">Di ponsel ini</string>
+    <string name="r40WelcomePhoneBody">Jalankan OpenCode di sini. Tanpa komputer.</string>
+    <string name="r40WelcomeComputer">Di komputer saya</string>
+    <string name="r40WelcomeComputerBody">Sambungkan ke komputer yang menjalankan OpenCode.</string>
+    <string name="r40WelcomeRunning">Penyiapan selesai %1$s%</string>
+    <string name="r40WelcomeStopped">Penyiapan berhenti di %1$s%</string>
+    <string name="r40WelcomeSetupBody">Mengunduh ruang kerja Linux pribadi dan alat yang dibutuhkan OpenCode. Pilih yang akan dipasang sebelum memulai.</string>
+    <string name="r40WelcomeViewProgress">Lihat kemajuan penyiapan</string>
+</resources>

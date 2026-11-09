@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Facultatif</string>
+    <string name="reportR1Included">Ce qui est inclus</string>
+    <string name="reportR1IncludedLine">Détails de l’application et du téléphone. Les mots de passe, les clés et les adresses de serveur sont retirés.</string>
+    <string name="reportR1IncludedCrash">Détails de l’application et du téléphone, et le plantage à %1$s. Les mots de passe, les clés et les adresses de serveur sont retirés.</string>
+    <string name="reportR1IncludedFreeze">Détails de l’application et du téléphone, et le blocage à %1$s. Les mots de passe, les clés et les adresses de serveur sont retirés.</string>
+    <string name="reportR1IncludedClose">Détails de l’application et du téléphone, et la fermeture à %1$s. Les mots de passe, les clés et les adresses de serveur sont retirés.</string>
+    <string name="reportR1IncludedOpen">Afficher ce qui est inclus</string>
+    <string name="reportR1Send">Envoyer le rapport</string>
+    <string name="reportR1CopyText">Copier le texte</string>
+    <string name="reportR1PostGitHub">Publier publiquement sur GitHub</string>
+    <string name="reportR1NoSend">Cette version ne peut pas envoyer de rapports. Copiez le texte ou publiez-le sur GitHub.</string>
+    <string name="reportR1SheetSubtitle">Voici exactement ce qui sera envoyé.</string>
+    <string name="reportR1Words">Vos mots</string>
+    <string name="reportR1NoWords">Rien d’écrit</string>
+    <string name="reportR1LastClose">Dernière fermeture de l’application</string>
+    <string name="reportR1Crashed">Fermée de façon inattendue · %1$s</string>
+    <string name="reportR1Froze">A cessé de répondre · %1$s</string>
+    <string name="reportR1ClosedForMemory">Fermée par Android pour libérer de la mémoire · %1$s</string>
+    <string name="reportR1App">Application</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Téléphone</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">%1$s Go de mémoire</string>
+    <string name="reportR1Connection">Connexion</string>
+    <string name="reportR1AddressOut">%1$s · adresse retirée</string>
+    <string name="reportR1NotConnected">Non connecté</string>
+    <string name="reportR1Problems">Problèmes récents</string>
+    <string name="reportR1NoProblems">Aucun</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Jamais envoyés\u00A0: vos conversations, fichiers, mots de passe, clés et adresses de serveur.</string>
+    <string name="reportR1SentBody">Merci. Si vous nous écrivez au sujet de ce problème, indiquez ce code pour que nous retrouvions votre rapport.</string>
+    <string name="reportR1PublicTitle">Publier ce rapport publiquement\u00A0?</string>
+    <string name="reportR1PublicBody">Tout le monde peut lire les tickets GitHub. Le formulaire s’ouvre avec vos mots et les détails de l’application, et rien n’est publié tant que vous ne l’envoyez pas là-bas.</string>
+    <string name="reportR1PublicConfirm">Ouvrir GitHub</string>
+    <string name="reportR1GitHubFailed">Impossible d’ouvrir GitHub. Réessayez.</string>
+    <string name="reportR1KindTimeout">Délai dépassé</string>
+    <string name="reportR1KindAuth">Connexion refusée</string>
+    <string name="reportR1KindTls">Certificat non approuvé</string>
+    <string name="reportR1KindServer">Erreur du serveur</string>
+    <string name="reportR1KindProtocol">Réponse inattendue du serveur</string>
+    <string name="reportR1KindDns">Adresse introuvable</string>
+    <string name="reportR1KindRefused">Connexion refusée</string>
+    <string name="reportR1KindOffline">Aucun réseau</string>
+    <string name="reportR1KindTooLarge">Message trop volumineux</string>
+    <string name="reportR1KindRejected">Message refusé</string>
+    <string name="reportR1KindOther">Autre problème</string>
+    <string name="reportKeptCopyErrors">Copier le journal des erreurs</string>
+    <string name="reportKeptClearErrors">Effacer les erreurs</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="native44AllModels">Semua model (%1$s)</string>
+    <plurals name="native44MoreModels">
+        <item quantity="other">Tampilkan %1$s model lainnya</item>
+    </plurals>
+    <string name="native44Context">Konteks %1$s</string>
+    <string name="native44Output">Batas keluaran %1$s</string>
+    <string name="native44Price">Masukan $%1$s · keluaran $%2$s per juta token</string>
+    <string name="native44ModelShortcuts">Ganti model</string>
+    <string name="native44CopyFailed">ID model tidak dapat disalin. Coba lagi.</string>
+</resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andr_appExitForceStopped">OpenCode Mobile se cerró %1$s</string>
+    <string name="andr_appExitLowMemory">Android cerró OpenCode Mobile %1$s para liberar memoria</string>
+    <string name="andr_appExitCrashed">OpenCode Mobile se detuvo de forma inesperada %1$s</string>
+    <string name="andr_appExitKilled">Android detuvo OpenCode Mobile %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s. El OpenCode de tu teléfono se detuvo con ella y se está iniciando de nuevo.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s. El OpenCode de tu teléfono y el AI Team se detuvieron con ella y se están iniciando de nuevo.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s. El OpenCode de tu teléfono se detuvo con ella. Inícialo de nuevo cuando quieras.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. El OpenCode de tu teléfono y el AI Team se detuvieron con ella. Inícialos de nuevo cuando quieras.</string>
+    <string name="andr_appExitServerBack">%1$s. El OpenCode de tu teléfono se detuvo con ella y ya está funcionando de nuevo.</string>
+    <string name="andr_appExitServerBackTeam">%1$s. El OpenCode de tu teléfono y el AI Team se detuvieron con ella; OpenCode ya está funcionando de nuevo.</string>
+    <string name="andr_appExitAtTime">a las %1$s</string>
+    <string name="andr_appExitOnDay">el %1$s a las %2$s</string>
+    <string name="andr_appExitKeepRunning">Mantener en ejecución</string>
+    <string name="andr_backgroundPauseTimeLimit">La conexión en segundo plano se pausó %1$s para ahorrar batería.</string>
+    <string name="andr_backgroundPauseRestricted">Conexión en segundo plano pausada: el uso de batería está restringido.</string>
+    <string name="andr_backgroundPauseUserStopped">La conexión en segundo plano se detuvo cuando se cerró la app %1$s.</string>
+    <string name="andr_backgroundPauseAppUpdated">La conexión en segundo plano se detuvo cuando se actualizó la app %1$s.</string>
+    <string name="andr_backgroundPauseInterrupted">La conexión en segundo plano se detuvo por un motivo desconocido.</string>
+    <string name="andr_backgroundPauseDeviceRestarted">La conexión en segundo plano se detuvo cuando se reinició el teléfono.</string>
+    <string name="andr_backgroundPauseResumeShort">Reanudar</string>
+    <string name="andr_backgroundPauseResuming">Reanudando la conexión en segundo plano…</string>
+    <string name="andr_backgroundPauseResumeFailed">No se pudo reanudar. Abre los ajustes de Mantener en ejecución.</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">Abrir ajustes de Mantener en ejecución</string>
+    <string name="andr_notifyDismiss">Descartar</string>
+    <string name="andr_firstRunNotifyTitle">¿Avisarte cuando el agente te necesite?</string>
+    <string name="andr_firstRunNotifyBody">Sal de la app mientras el agente trabaja. Recibirás una notificación cuando necesite tu respuesta. Android muestra una pequeña notificación permanente mientras siga conectado.</string>
+    <string name="andr_firstRunNotifyAccept">Avisarme</string>
+    <string name="andr_firstRunNotifyDecline">Ahora no</string>
+    <string name="andr_notifyPermissionRefused">Las notificaciones están bloqueadas. Permítelas en los ajustes de Android y luego activa la conexión en segundo plano.</string>
+    <string name="andr_notifyEnableFailed">La conexión en segundo plano no se inició. Abre los ajustes de segundo plano para intentarlo de nuevo.</string>
+    <string name="andr_pauseBackground">Pausar segundo plano</string>
+    <string name="andr_notifySaveFailed">No se pudo guardar tu elección, así que no se activó nada. Inténtalo de nuevo.</string>
+    <string name="andr_termuxRetiredNotice">Termux ya no es compatible. Configura Linux integrado en este teléfono o conéctate a tu computadora. Tus proyectos en Termux siguen ahí; cópialos al almacenamiento compartido del teléfono o súbelos con Git para traerlos.</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">Configurar Linux integrado</string>
+    <string name="andr_termuxRetiredConnectComputer">Conectar una computadora</string>
+    <string name="andr_crashOfferMessage">OpenCode Mobile se cerró de forma inesperada la última vez. ¿Enviar un informe del fallo?</string>
+    <string name="andr_crashOfferReview">Revisar y enviar</string>
+    <string name="andr_crashOfferNotNow">Ahora no</string>
+</resources>

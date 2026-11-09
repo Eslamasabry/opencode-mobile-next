@@ -24,6 +24,10 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.engine.analytics.health.AppJourneys
+import io.github.eslamasabry.oc.engine.analytics.health.ApprovalMeter
+import io.github.eslamasabry.oc.engine.analytics.health.ChatJourney
+import io.github.eslamasabry.oc.engine.analytics.health.SetupJourney
 import io.github.eslamasabry.oc.engine.analytics.health.HealthDeviceContext
 import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
 import io.github.eslamasabry.oc.engine.analytics.health.HealthExit
@@ -35,6 +39,7 @@ import io.github.eslamasabry.oc.engine.analytics.product.ProductLifecycle
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistory
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
@@ -112,6 +117,7 @@ class AppTelemetryHealth(
             val version = "${buildInfo.versionName}+${buildInfo.versionCode}"
             lifecycle.coldStart(version, answers.lastVersion())?.let { answers.setLastVersion(it) }
         }
+        startJourneys()
         followScreens(health)
         followConnections(health)
         // agent_start and its trace, from the agent host's create call (the protocol module knows no telemetry).
@@ -123,6 +129,46 @@ class AppTelemetryHealth(
             combine(telemetry.usage, resumed.asFlow()) { usage, activity -> if (usage) activity else null }
                 .distinctUntilChanged()
                 .collect { activity -> withContext(Dispatchers.Main) { attachFrames(activity) } }
+        }
+    }
+
+    // ---- journeys: setup funnel, chat journey, approvals ----
+
+    private fun startJourneys() {
+        val answers = TelemetryAnswers(stores.prefs, stores.lanes.app)
+        val elapsed = { SystemClock.elapsedRealtime() }
+        val wall = { clock.now().toEpochMilliseconds() }
+        val chat = ChatJourney(elapsed, HealthFlow(), PrefsFirstReply(answers, scope))
+        val approvals = ApprovalMeter(elapsed, HealthFlow()) { AppJourneys.chatOrNull }
+        val setup =
+            SetupJourney(
+                now = wall,
+                memory = PrefsSetupMemory(answers, scope),
+                freeGigabytes = {
+                    runCatching { StatFs(application.filesDir.path).availableBytes / 1_073_741_824.0 }.getOrNull()
+                },
+            )
+        AppJourneys.install(chat, approvals, setup)
+        setup.coldStart()
+        // Quiet turns and dropped streams are noticed on a slow tick, not per event.
+        scope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(JOURNEY_TICK_MS)
+                chat.checkStalls()
+            }
+        }
+        // Each live connection's pending approvals and questions.
+        scope.launch {
+            val watched = HashSet<String>()
+            registry.value.live.collect { live ->
+                for ((id, graph) in live) {
+                    if (!watched.add(id.raw)) continue
+                    val engine = (graph as? ChatGraphAccessors)?.chatRequests?.engine ?: continue
+                    val feed = ApprovalFeed(approvals.asSink())
+                    scope.launch { engine.pending.collect { feed.update(pendingFacts(it)) } }
+                }
+                watched.retainAll(live.keys.map { it.raw }.toSet())
+            }
         }
     }
 
@@ -183,6 +229,7 @@ class AppTelemetryHealth(
                     val since = SystemClock.uptimeMillis()
                     onNextFrame(activity) { health?.warmStart(SystemClock.uptimeMillis() - since) }
                     lifecycle.onForeground()
+                    AppJourneys.setupOrNull?.onForeground()
                 }
             }
 
@@ -203,7 +250,10 @@ class AppTelemetryHealth(
 
             override fun onActivityStopped(activity: Activity) {
                 startedActivities = (startedActivities - 1).coerceAtLeast(0)
-                if (startedActivities == 0) lifecycle.onBackground(health?.jank)
+                if (startedActivities == 0) {
+                    lifecycle.onBackground(health?.jank)
+                    AppJourneys.setupOrNull?.onBackground()
+                }
             }
 
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
@@ -294,6 +344,9 @@ class AppTelemetryHealth(
         get() = health
 
     companion object {
+        /** How often quiet turns and dropped streams are looked at. */
+        private const val JOURNEY_TICK_MS = 30_000L
+
         /** The contract's `agent_start.fail_kind` for an agent host failure. */
         fun agentFailKind(failure: PaseoFailureKind?): String =
             when (failure) {

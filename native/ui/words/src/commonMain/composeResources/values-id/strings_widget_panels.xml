@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="usageWidgetIntro">Menampilkan sisa jatah paket Anda di widget Penggunaan layar utama. Diperbarui selama aplikasi berjalan.</string>
+    <string name="usageEmptyTitle">Belum ada langganan</string>
+    <string name="usageOnConnection">di %1$s</string>
+    <string name="usageWidgetSettingsShow">Tampilkan paket ini</string>
+    <string name="usageWidgetSettingsWindows">Tampilkan 5 jam, mingguan, atau keduanya</string>
+    <string name="usageWidgetWindowBoth">Keduanya</string>
+    <string name="usageWidgetWindowFiveHour">5 jam</string>
+    <string name="usageWidgetWindowWeekly">Mingguan</string>
+    <string name="usageWidgetSettingsSetup">Tampilkan baris yang perlu disiapkan</string>
+    <string name="usageWidgetSettingsSetupHelp">Baris masuk, tambah kunci, dan penyiapan</string>
+    <string name="widgetV2ConfigureTitle">Gaya widget</string>
+    <string name="widgetProjectTitle">Tampilkan percakapan dari</string>
+    <string name="widgetProjectUnavailable">Pilihan ini tidak dapat disimpan. Coba lagi.</string>
+    <string name="widgetV2AccentWallpaper">Wallpaper</string>
+    <string name="widgetV2AccentApp">Tema aplikasi</string>
+    <string name="widgetV2AccentGreen">Hijau</string>
+    <string name="widgetV2AccentTeal">Teal</string>
+    <string name="widgetV2AccentBlue">Biru</string>
+    <string name="widgetV2AccentAmber">Amber</string>
+    <string name="widgetV2SaveStyle">Simpan gaya</string>
+    <string name="widgetV2SteerTitle">Tambahkan ke giliran ini</string>
+    <string name="widgetV2AfterReplyTitle">Kirim setelah balasan ini</string>
+    <string name="widgetV2VoiceTitle">Pesan baru</string>
+    <string name="widgetV2MessageHint">Tulis pesan</string>
+    <string name="widgetV2Send">Kirim</string>
+    <string name="widgetV2StaleRequest">Percakapan berubah. Pesan Anda masih ada di sini.</string>
+    <string name="widgetV2Unavailable">Koneksi latar belakang tidak tersedia. Pesan Anda masih ada di sini.</string>
+    <string name="widgetV2Unsupported">Koneksi ini tidak dapat melakukannya.</string>
+    <string name="widgetV2Uncertain">Kami tidak dapat memastikan apakah pesan ini terkirim. Periksa percakapan sebelum mengirim lagi.</string>
+    <string name="widgetV2InvalidRequest">Tulis pesan sebelum mengirim.</string>
+    <string name="widgetV2UnknownBehavior">Menunggu detail percakapan…</string>
+    <string name="widgetV2StyleStale">Widget ini berubah. Tutup ini dan coba lagi.</string>
+    <string name="widgetV2StyleUnavailable">Gaya tidak dapat disimpan. Coba lagi.</string>
+    <string name="widgetV2DictationUnavailable">Dikte tidak tersedia saat ini. Anda dapat mengetik.</string>
+    <string name="widgetV2RestartUnavailable">Percakapan ini hanya dapat diubah dari dalam aplikasi.</string>
+</resources>

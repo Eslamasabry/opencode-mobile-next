@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">Rechercher sur mon réseau</string>
+    <string name="upgradeFindBody">Chercher OpenCode sur les ordinateurs de ce réseau Wi-Fi.</string>
+    <string name="upgradeFindReason">Pour trouver votre ordinateur, l'application examine les appareils de votre réseau Wi-Fi. Elle n'envoie aucun mot de passe et n'interroge que les adresses proches.</string>
+    <string name="upgradeFindScanning">Recherche sur ce réseau Wi-Fi…</string>
+    <string name="upgradeFindStop">Arrêter</string>
+    <string name="upgradeFindSearchAgain">Rechercher à nouveau</string>
+    <string name="upgradeFindResultsLabel">Ordinateurs trouvés sur votre réseau</string>
+    <string name="upgradeFindNeedsPassword">Mot de passe requis</string>
+    <string name="upgradeFindVersion">Version %1$s</string>
+    <string name="upgradeFindPickLabel">Utiliser %1$s</string>
+    <string name="upgradeFindEmptyTitle">Aucun résultat</string>
+    <string name="upgradeFindEmptyBody">Démarrez OpenCode sur votre ordinateur avec `opencode serve --mdns`, vérifiez que les deux sont sur le même réseau Wi-Fi, ou saisissez vous-même l'adresse.</string>
+    <string name="upgradeFindEnterAddress">Saisir l'adresse</string>
+    <string name="upgradeFindDeniedBody">Sans accès à votre réseau local, l'application ne peut pas chercher votre ordinateur. Vous pouvez l'autoriser et réessayer, ou saisir vous-même l'adresse.</string>
+    <string name="upgradeFindAllow">Autoriser et rechercher</string>
+    <string name="upgradeFindBlockedBody">L'accès au réseau local est désactivé pour cette application. Activez-le dans les paramètres de l'application, ou saisissez vous-même l'adresse.</string>
+    <string name="upgradeFindOpenSettings">Ouvrir les paramètres de l'application</string>
+</resources>

@@ -25,4 +25,16 @@
     <string name="widgetV2StyleUnavailable">No se pudo guardar el estilo. Inténtalo de nuevo.</string>
     <string name="widgetV2DictationUnavailable">El dictado no está disponible ahora. Puedes escribir.</string>
     <string name="widgetV2RestartUnavailable">Esta conversación solo se puede cambiar desde la app.</string>
+    <string name="usageWidgetIntro">Muestra lo que queda de tus planes en el widget de Uso de la pantalla de inicio. Se actualiza mientras la app está abierta.</string>
+    <string name="usageEmptyTitle">Aún no hay suscripciones</string>
+    <string name="usageOnConnection">en %1$s</string>
+    <string name="usageWidgetSettingsShow">Mostrar estos planes</string>
+    <string name="usageWidgetSettingsWindows">Mostrar 5 horas, semanal o ambos</string>
+    <string name="usageWidgetWindowBoth">Ambos</string>
+    <string name="usageWidgetWindowFiveHour">5 horas</string>
+    <string name="usageWidgetWindowWeekly">Semanal</string>
+    <string name="usageWidgetSettingsSetup">Mostrar las filas que necesitan configuración</string>
+    <string name="usageWidgetSettingsSetupHelp">Filas de iniciar sesión, agregar clave y configurar</string>
+    <string name="widgetProjectTitle">Mostrar conversaciones de</string>
+    <string name="widgetProjectUnavailable">No se pudo guardar esta opción. Inténtalo de nuevo.</string>
 </resources>

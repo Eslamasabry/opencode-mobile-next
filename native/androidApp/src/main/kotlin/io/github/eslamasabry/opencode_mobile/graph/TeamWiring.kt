@@ -14,6 +14,14 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.integrations.quota.QuotaRequest
 import io.github.eslamasabry.oc.engine.profiles.ProfileKeys
+import io.github.eslamasabry.oc.engine.team.PhoneEngineAddress
+import io.github.eslamasabry.oc.engine.team.PhoneTeamPorts
+import io.github.eslamasabry.oc.engine.team.PhoneTeamTurnOn
+import io.github.eslamasabry.oc.engine.profiles.SecretEdit
+import io.github.eslamasabry.oc.engine.profiles.StoredProfile
+import io.github.eslamasabry.oc.engine.profiles.OpaqueJson
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.LocalTerminal
 import io.github.eslamasabry.oc.engine.team.TeamCommand
 import io.github.eslamasabry.oc.engine.team.TeamCommandResult
 import io.github.eslamasabry.oc.engine.team.TeamConfig
@@ -23,6 +31,7 @@ import io.github.eslamasabry.oc.engine.team.TeamHost
 import io.github.eslamasabry.oc.engine.team.TeamRead
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.engine.team.TeamLastKnown
 import io.github.eslamasabry.oc.engine.team.TeamWorkspaceJson
 import kotlinx.collections.immutable.persistentMapOf
 import okhttp3.MediaType.Companion.toMediaType
@@ -35,7 +44,8 @@ import org.json.JSONObject
 object TeamBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun engine(host: AppTeamHost): TeamEngine = TeamEngine(host)
+    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>): TeamEngine =
+        TeamEngine(host, kept = kept.firstOrNull())
 }
 
 /**
@@ -46,6 +56,8 @@ object TeamBindings {
 @SingleIn(AppScope::class)
 @Inject
 class AppTeamHost(
+    private val app: android.app.Application,
+    private val runtime: BuiltinRuntime,
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val redactor: Redactor,
@@ -54,6 +66,73 @@ class AppTeamHost(
         stores.warm()
         return TeamConfig.parse(stores.profiles.profile(ProfileId(profileId))?.profile?.orchestration?.encoded)
     }
+
+    private val linux by lazy { BuiltinLinux.get(app) }
+
+    /** Flutter `openPhoneTeamSetup` can run here: this is the phone's own OpenCode and the engine is bundled. */
+    override suspend fun canTurnOnPhoneTeam(profileId: String): Boolean {
+        stores.warm()
+        val profile = stores.profiles.profile(ProfileId(profileId))?.profile ?: return false
+        return BuiltinSetupFinisher.managesServerUrl(profile.baseUrl) &&
+            kotlinx.coroutines.withContext(dispatchers.io) { linux.installed }
+    }
+
+    /** Flutter's one-tap setup, see [PhoneTeamTurnOn]; the engine's port is Flutter's default 4098. */
+    override suspend fun turnOnPhoneTeam(profileId: String): Outcome<Unit> {
+        stores.warm()
+        return PhoneTeamTurnOn(ports(profileId)).run()
+    }
+
+    private fun ports(profileId: String): PhoneTeamPorts =
+        object : PhoneTeamPorts {
+            override suspend fun stopServer(): Outcome<Unit> = runtime.stopServer()
+
+            override suspend fun closeTerminals(): Outcome<Unit> =
+                attempt({ Failure.Unexpected() }) {
+                    kotlinx.coroutines.withContext(dispatchers.io) {
+                        val terminal = LocalTerminal.get(app)
+                        terminal.list().forEach { runCatching { it.stop() }; terminal.remove(it.id) }
+                    }
+                }
+
+            override suspend fun startEngine(): Outcome<PhoneEngineAddress> =
+                attempt({ Failure.Unexpected() }) {
+                    kotlinx.coroutines.withContext(dispatchers.io) {
+                        val status = linux.startPhoneEngine(profileId, 4098, null)
+                        check(status["boundary"] == true)
+                        val credentials = linux.phoneEngineCredentials(profileId)
+                        PhoneEngineAddress(checkNotNull(credentials["baseUrl"]), checkNotNull(credentials["bearerToken"]))
+                    }
+                }
+
+            override suspend fun stopEngine() {
+                runCatching { kotlinx.coroutines.withContext(dispatchers.io) { linux.stopPhoneEngine(profileId) } }
+            }
+
+            override suspend fun startServer(): Outcome<Unit> = runtime.startServer()
+
+            override suspend fun saveTeam(address: PhoneEngineAddress): Outcome<Unit> {
+                redactor.registerSecret(address.token)
+                val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
+                val written = stores.secrets.write(ProfileKeys.TEAM_ENGINE_AUTH + profileId, address.token)
+                if (written is Outcome.Failed) return written
+                val previous = TeamConfig.parse(loaded.profile.orchestration?.encoded)?.enabledAt
+                val enabledAt = previous ?: java.time.Instant.now().toString()
+                val config =
+                    OpaqueJson.parse(
+                        DartJson.encode(
+                            mapOf(
+                                "provider" to "phoneEngine", "url" to address.baseUrl, "city" to "", "hostMode" to "phone",
+                                "hostKind" to "phone", "front" to false, "enabledAt" to enabledAt,
+                            ),
+                        ),
+                    ) ?: return Outcome.Failed(Failure.Unexpected())
+                return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = config), SecretEdit.Keep, expected = loaded)) {
+                    is Outcome.Ok -> Outcome.Ok(Unit)
+                    is Outcome.Failed -> saved
+                }
+            }
+        }
 
     private suspend fun token(profileId: String): Outcome<String> {
         val token =

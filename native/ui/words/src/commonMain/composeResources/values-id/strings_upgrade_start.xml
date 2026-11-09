@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeStartSending">Mengirim…</string>
+    <string name="upgradeStartFailed">Pesan Anda tersimpan. Coba lagi saat Anda siap.</string>
+</resources>

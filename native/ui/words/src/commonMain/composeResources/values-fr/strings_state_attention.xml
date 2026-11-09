@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Activité</string>
+    <string name="stateAttentionRefresh">Actualiser</string>
+    <string name="stateAttentionNeedsYou">Besoin de vous</string>
+    <string name="stateAttentionHistory">Pendant votre absence</string>
+    <string name="stateAttentionIncomplete">Certains serveurs n’ont pas été vérifiés. Les observations enregistrées peuvent être périmées.</string>
+    <string name="stateAttentionCorrupt">Une partie de l’activité enregistrée n’a pas pu être lue. Elle a été conservée sur ce téléphone.</string>
+    <string name="stateAttentionSaveFailed">Impossible d’enregistrer cette modification. Actualisez et réessayez.</string>
+    <string name="stateAttentionNoneKnown">Aucune demande connue parmi les serveurs qui ont répondu.</string>
+    <string name="stateAttentionNone">Aucune demande en attente.</string>
+    <string name="stateAttentionNoHistory">Aucune activité automatique à afficher.</string>
+    <string name="stateAttentionPermission">Autorisation demandée</string>
+    <string name="stateAttentionQuestion">Question en attente</string>
+    <string name="stateAttentionForm">Formulaire en attente</string>
+    <string name="stateAttentionFailure">Conversation à vérifier</string>
+    <string name="stateAttentionTeam">L’équipe a besoin de vous</string>
+    <string name="stateAttentionStale">Dernier état connu</string>
+    <string name="stateAttentionAcknowledge">Ignorer l’activité affichée</string>
+    <string name="stateActReconnect">Reconnecté automatiquement</string>
+    <string name="stateActRestart">Redémarré automatiquement</string>
+    <string name="stateActHeatPause">Mis en pause à cause de la chaleur</string>
+    <string name="stateActHeatStop">Arrêté à cause de la chaleur</string>
+    <string name="stateActHeatResume">Repris après refroidissement</string>
+    <string name="stateActUpdate">Mis à jour automatiquement</string>
+    <string name="stateActPermission">Autorisation accordée automatiquement</string>
+    <string name="stateActQueued">Message enregistré envoyé</string>
+    <string name="stateActOther">Activité automatique</string>
+    <string name="stateAttentionMonitorTitle">Autres serveurs</string>
+    <string name="stateAttentionMonitorCopy">Choisissez quels autres serveurs enregistrés ce téléphone peut vérifier pour détecter des demandes en attente. Cela ne répond à aucune demande et ne modifie pas ces serveurs.</string>
+    <string name="stateAttentionMonitorChoice">Vérifier les demandes en attente</string>
+</resources>

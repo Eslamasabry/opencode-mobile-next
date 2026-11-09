@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesProjectRoot">Proyek</string>
+    <string name="filesOpenWith">Buka dengan</string>
+    <string name="filesOpenWithNone">Tidak ada aplikasi di ponsel ini yang bisa membuka file ini.</string>
+    <string name="filesOpenWithFailed">Tidak dapat menyerahkan file ini ke aplikasi lain. Coba lagi.</string>
+    <string name="filesUnavailable">Server ini tidak mengizinkan aplikasi menjelajahi file-nya.</string>
+    <string name="filesNotConnected">Server untuk percakapan ini tidak terhubung. Kembali ke percakapan dan coba lagi.</string>
+    <string name="filesHideHidden">Sembunyikan file tersembunyi</string>
+    <string name="filesOpenFailed">Tidak dapat membuka file ini. Coba lagi.</string>
+    <string name="filesMentionFailed">Tidak dapat menambahkan file ini ke pesan Anda. Coba lagi.</string>
+    <string name="filesFolderLabel">Folder %1$s</string>
+    <string name="filesUp">Naik satu folder</string>
+    <string name="filesShareStarting">Memulai berbagi…</string>
+    <string name="filesSaveFailed">Tidak dapat menyimpan file. Coba lagi.</string>
+    <string name="filesReasonTooBig">File ini terlalu besar untuk ditampilkan di sini.</string>
+    <string name="filesReasonTooBigBody">Batasnya 2 MB. Buka di komputer tempat file berada, atau minta agen untuk potongan yang lebih kecil.</string>
+    <string name="filesReasonTooBigPhoneBody">Batasnya 2 MB. File ada di ponsel ini, jadi aplikasi lain bisa membukanya: pilih Buka dengan.</string>
+    <string name="filesReasonMissing">File itu sudah tidak ada.</string>
+    <string name="filesReasonMissingBody">Mungkin sudah dipindahkan atau dihapus.</string>
+    <string name="filesReasonDenied">Aplikasi ini tidak diizinkan membaca file itu.</string>
+    <string name="filesReasonDeniedBody">Periksa siapa yang dapat membaca folder itu, lalu coba lagi.</string>
+    <string name="filesReasonNotShowable">Jenis file ini tidak dapat ditampilkan di sini.</string>
+    <string name="filesReasonNotShowableBody">Bukan teks atau gambar. Buka di komputer tempat file berada.</string>
+    <string name="filesReasonNotShowablePhoneBody">Bukan teks atau gambar. File ada di ponsel ini, jadi aplikasi lain bisa membukanya: pilih Buka dengan.</string>
+</resources>

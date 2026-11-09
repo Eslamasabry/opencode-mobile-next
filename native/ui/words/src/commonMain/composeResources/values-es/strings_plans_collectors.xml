@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Leer límites del plan</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Lectura activada. Toca para desactivarla y borrar estas cifras.</string>
+    <string name="plansCollectorDisabled">Leer desde el recolector instalado en este servidor</string>
+    <string name="plansCollectorQuestion">¿Leer los límites de %1$s desde este servidor?</string>
+    <string name="plansCollectorAllow">Confiar en el recolector y leer</string>
+    <string name="plansCollectorTrust">Continúa solo si confías en el recolector de cuota instalado en %1$s. Recibe la credencial de inicio de sesión guardada de este servidor en una dirección de cuota fija. Las solicitudes no siguen redirecciones. Puedes desactivar la lectura aquí. Si cambia la dirección o el inicio de sesión, se pedirá permiso de nuevo.</string>
+    <string name="plansCollectorFailed">No se pudo guardar esta elección. Vuelve a conectarte al servidor e inténtalo de nuevo.</string>
+    <string name="plansPaseoDisabled">Leer el uso desde este servidor Paseo</string>
+    <string name="plansPaseoQuestion">¿Leer el uso del plan desde Paseo?</string>
+    <string name="plansPaseoTrust">Lee los límites del plan informados por %1$s mientras esta app está visible. Al desactivarlo se borran las cifras guardadas del widget. No se inicia ningún lector en segundo plano.</string>
+    <string name="plansBuiltinReader">Lector de uso en el teléfono</string>
+    <string name="plansBuiltinDisabled">Configura el lector de uso dentro del Ubuntu de este teléfono</string>
+    <string name="plansBuiltinQuestion">¿Leer los límites del plan en este teléfono?</string>
+    <string name="plansBuiltinTrust">Instala el lector de uso incluido en %1$s y lee los inicios de sesión de proveedores guardados allí. Su token de lectura se queda en el almacenamiento seguro y en archivos privados. La recolección de Claude sigue sin estar disponible. Al desactivarlo se detiene su servicio y se borran las cifras de su widget.</string>
+</resources>

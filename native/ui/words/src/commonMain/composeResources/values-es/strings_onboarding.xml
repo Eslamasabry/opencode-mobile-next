@@ -281,4 +281,29 @@
     <string name="welcomePhoneContinue">Seguir configurando</string>
     <string name="welcomePhoneReady">Instalado y listo</string>
     <string name="welcomePhoneOpen">Empezar en este teléfono</string>
+    <string name="setupTerminalTitle">Salida de la configuración</string>
+    <string name="phoneSetupRingDownloading">Descargando %1$s</string>
+    <string name="phoneSetupRingUnpacking">Descomprimiendo %1$s</string>
+    <string name="phoneSetupRingInstalling">Instalando %1$s</string>
+    <string name="phoneSetupRingChecking">Comprobando este teléfono</string>
+    <string name="phoneSetupRingPausedTitle">La configuración está en pausa</string>
+    <string name="phoneSetupRingInterruptedTitle">La configuración se interrumpió</string>
+    <string name="phoneSetupRingStoppedNote">Los pasos terminados se conservan y las descargas continúan donde se quedaron.</string>
+    <plurals name="phoneSetupRingMinutesLeft">
+        <item quantity="one">Falta aprox. 1 min</item>
+        <item quantity="many">Faltan aprox. %1$d min</item>
+        <item quantity="other">Faltan aprox. %1$d min</item>
+    </plurals>
+    <string name="phoneSetupRingMinutesLeft__eq0">Faltan aprox. %1$d min</string>
+    <string name="phoneSetupRingMinutesLeft__eq1">Falta aprox. 1 min</string>
+    <string name="phoneSetupRingMinutesLeft__eq2">Faltan aprox. %1$d min</string>
+    <string name="phoneSetupRingUnderMinute">Falta menos de un minuto</string>
+    <string name="phoneSetupRingWifi">Wi-Fi</string>
+    <string name="phoneSetupRingMobileData">Datos móviles</string>
+    <string name="phoneSetupRingSafeToLeave">Puedes salir. Te avisaremos cuando esté listo.</string>
+    <string name="phoneSetupRingSafeToLeaveQuiet">Puedes salir. La configuración sigue en segundo plano.</string>
+    <string name="phoneSetupRingPause">Pausar la configuración</string>
+    <string name="phoneSetupRingDetailsTitle">Detalles de la configuración</string>
+    <string name="browserTransportFailure">El navegador no pudo comunicarse con el servidor. Revisa la dirección y que el servidor esté en ejecución. Un servidor de otro origen debe permitir el origen de esta página (CORS), y una página cargada por https no puede usar un servidor http:// o ws://.</string>
+    <string name="browserProbeTimeout">La conexión tardó demasiado. Revisa la dirección y que el servidor sea accesible desde este navegador.</string>
 </resources>

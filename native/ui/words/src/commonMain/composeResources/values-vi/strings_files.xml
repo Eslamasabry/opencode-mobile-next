@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesProjectRoot">Dự án</string>
+    <string name="filesOpenWith">Mở bằng</string>
+    <string name="filesOpenWithNone">Không có ứng dụng nào trên điện thoại này mở được tệp này.</string>
+    <string name="filesOpenWithFailed">Không chuyển được tệp này cho ứng dụng khác. Hãy thử lại.</string>
+    <string name="filesUnavailable">Máy chủ này không cho ứng dụng duyệt tệp của nó.</string>
+    <string name="filesNotConnected">Máy chủ của cuộc trò chuyện này chưa được kết nối. Hãy quay lại cuộc trò chuyện và thử lại.</string>
+    <string name="filesHideHidden">Ẩn tệp ẩn</string>
+    <string name="filesOpenFailed">Không mở được tệp này. Hãy thử lại.</string>
+    <string name="filesMentionFailed">Không thêm được tệp này vào tin nhắn của bạn. Hãy thử lại.</string>
+    <string name="filesFolderLabel">Thư mục %1$s</string>
+    <string name="filesUp">Lên một thư mục</string>
+    <string name="filesShareStarting">Đang bắt đầu chia sẻ…</string>
+    <string name="filesSaveFailed">Không lưu được tệp. Hãy thử lại.</string>
+    <string name="filesReasonTooBig">Tệp này quá lớn để hiện ở đây.</string>
+    <string name="filesReasonTooBigBody">Giới hạn là 2 MB. Hãy mở nó trên máy tính chứa tệp, hoặc nhờ tác nhân đưa một phần nhỏ hơn.</string>
+    <string name="filesReasonTooBigPhoneBody">Giới hạn là 2 MB. Tệp nằm trên điện thoại này nên ứng dụng khác có thể mở: hãy chọn Mở bằng.</string>
+    <string name="filesReasonMissing">Tệp đó không còn ở đó nữa.</string>
+    <string name="filesReasonMissingBody">Có thể nó đã bị di chuyển hoặc xóa.</string>
+    <string name="filesReasonDenied">Ứng dụng này không được phép đọc tệp đó.</string>
+    <string name="filesReasonDeniedBody">Hãy kiểm tra ai có thể đọc thư mục, rồi thử lại.</string>
+    <string name="filesReasonNotShowable">Loại tệp này không thể hiện ở đây.</string>
+    <string name="filesReasonNotShowableBody">Nó không phải văn bản hay hình ảnh. Hãy mở nó trên máy tính chứa tệp.</string>
+    <string name="filesReasonNotShowablePhoneBody">Nó không phải văn bản hay hình ảnh. Tệp nằm trên điện thoại này nên ứng dụng khác có thể mở: hãy chọn Mở bằng.</string>
+</resources>

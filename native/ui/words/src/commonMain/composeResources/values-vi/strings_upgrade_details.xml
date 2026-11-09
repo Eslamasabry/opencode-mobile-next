@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipMessageDetailsTitle">Chi tiết tin nhắn</string>
+    <string name="tipMessageDetails">Giữ một tin nhắn để chọn Chi tiết, hoặc dùng nút Thêm của nó, để xem mô hình và thời gian.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeStartOpenProject">Mở một dự án</string>
+    <string name="homeStartOpenProjectDetail">Bắt đầu dự án mới hoặc chọn một thư mục</string>
+    <string name="homeStartConnectDetail">Chạy tác nhân trên máy tính của riêng bạn</string>
+    <string name="homeStartDemo">Xem tác nhân làm được gì</string>
+    <string name="homeStartDemoDetail">Một ví dụ ngắn, không cần thiết lập</string>
+    <string name="homeProjectSheetNew">Dự án mới</string>
+    <string name="homeProjectSheetNewDetail">Tạo một thư mục trong các dự án của bạn, kèm Git</string>
+    <string name="homeProjectSheetByPath">Chọn thư mục theo đường dẫn</string>
+</resources>

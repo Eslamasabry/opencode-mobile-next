@@ -34,7 +34,7 @@ class PredictiveBackManifestTest {
         )
         assertEquals(
             "true",
-            application("androidApp/src/test/resources/flutter-2.1.4/AndroidManifest.xml")
+            application("androidApp/src/test/resources/flutter-2.1.5/AndroidManifest.xml")
                 .getAttributeNS(android, "enableOnBackInvokedCallback"),
             "the reference manifest still opts in",
         )

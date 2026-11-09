@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">Este mensaje tiene archivos o notas de revisión que no pueden ir en el mensaje en esta versión. Se quedan guardados aquí.</string>
+    <string name="promptFixWordsOnly">Agregar solo el texto</string>
+</resources>

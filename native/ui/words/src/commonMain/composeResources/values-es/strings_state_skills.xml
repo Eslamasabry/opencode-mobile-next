@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">Habilidades</string>
+    <string name="stateSkillsUse">Usar en esta conversación</string>
+    <string name="stateSkillsDone">Habilidad agregada a esta conversación.</string>
+    <string name="stateSkillsChanged">La conversación o la carpeta cambió. Vuelve a abrir la lista.</string>
+    <string name="stateSkillsBusy">Ya se está agregando una habilidad. Espera a que termine.</string>
+    <string name="stateSkillsStaged">Termina o cancela el deshacer pendiente antes de agregar una habilidad.</string>
+    <string name="stateSkillsUnsupported">Este servidor no puede agregar habilidades a las conversaciones.</string>
+    <string name="stateSkillsUncertain">No se pudo confirmar el resultado. Actualiza antes de intentarlo de nuevo.</string>
+</resources>

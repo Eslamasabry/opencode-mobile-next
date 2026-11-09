@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="usageWidgetIntro">Hiện phần còn lại của các gói của bạn trên tiện ích Mức dùng ở màn hình chính. Cập nhật khi ứng dụng đang chạy.</string>
+    <string name="usageEmptyTitle">Chưa có gói đăng ký nào</string>
+    <string name="usageOnConnection">trên %1$s</string>
+    <string name="usageWidgetSettingsShow">Hiện các gói này</string>
+    <string name="usageWidgetSettingsWindows">Hiện mốc 5 giờ, theo tuần hoặc cả hai</string>
+    <string name="usageWidgetWindowBoth">Cả hai</string>
+    <string name="usageWidgetWindowFiveHour">5 giờ</string>
+    <string name="usageWidgetWindowWeekly">Theo tuần</string>
+    <string name="usageWidgetSettingsSetup">Hiện các dòng cần thiết lập</string>
+    <string name="usageWidgetSettingsSetupHelp">Các dòng đăng nhập, thêm khóa và thiết lập</string>
+    <string name="widgetV2ConfigureTitle">Kiểu tiện ích</string>
+    <string name="widgetProjectTitle">Hiện cuộc trò chuyện từ</string>
+    <string name="widgetProjectUnavailable">Không lưu được lựa chọn này. Hãy thử lại.</string>
+    <string name="widgetV2AccentWallpaper">Hình nền</string>
+    <string name="widgetV2AccentApp">Giao diện ứng dụng</string>
+    <string name="widgetV2AccentGreen">Xanh lá</string>
+    <string name="widgetV2AccentTeal">Xanh ngọc</string>
+    <string name="widgetV2AccentBlue">Xanh dương</string>
+    <string name="widgetV2AccentAmber">Hổ phách</string>
+    <string name="widgetV2SaveStyle">Lưu kiểu</string>
+    <string name="widgetV2SteerTitle">Thêm vào lượt này</string>
+    <string name="widgetV2AfterReplyTitle">Gửi sau câu trả lời này</string>
+    <string name="widgetV2VoiceTitle">Tin nhắn mới</string>
+    <string name="widgetV2MessageHint">Viết tin nhắn</string>
+    <string name="widgetV2Send">Gửi</string>
+    <string name="widgetV2StaleRequest">Cuộc trò chuyện đã thay đổi. Tin nhắn của bạn vẫn còn đây.</string>
+    <string name="widgetV2Unavailable">Kết nối nền hiện không dùng được. Tin nhắn của bạn vẫn còn đây.</string>
+    <string name="widgetV2Unsupported">Kết nối này không làm được việc đó.</string>
+    <string name="widgetV2Uncertain">Chúng tôi không xác nhận được tin nhắn đã gửi hay chưa. Hãy kiểm tra cuộc trò chuyện trước khi gửi lại.</string>
+    <string name="widgetV2InvalidRequest">Hãy viết tin nhắn trước khi gửi.</string>
+    <string name="widgetV2UnknownBehavior">Đang chờ chi tiết cuộc trò chuyện…</string>
+    <string name="widgetV2StyleStale">Tiện ích này đã thay đổi. Hãy đóng cửa sổ này và thử lại.</string>
+    <string name="widgetV2StyleUnavailable">Không lưu được kiểu. Hãy thử lại.</string>
+    <string name="widgetV2DictationUnavailable">Hiện không đọc chính tả được. Bạn có thể gõ thay thế.</string>
+    <string name="widgetV2RestartUnavailable">Cuộc trò chuyện này chỉ thay đổi được từ bên trong ứng dụng.</string>
+</resources>

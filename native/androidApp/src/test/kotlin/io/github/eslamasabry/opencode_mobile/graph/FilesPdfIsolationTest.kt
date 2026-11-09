@@ -42,4 +42,17 @@ class FilesPdfIsolationTest {
         assertFalse(PdfReply.validSize(1, 1537, 10))
         assertFalse(PdfReply.validSize(1, 1536, 1536)) // over two million pixels
     }
+
+    @Test
+    fun `B-MEDIA-004 the isolated process leaves Application onCreate before touching storage`() {
+        // Seen on the API 37 emulator: OcApplication.onCreate ran in ":local_pdf", Telemetry.init read SharedPreferences
+        // there ("cannot be accessed ... from inside an isolated process"), the process died, and every PDF failed.
+        val app = source("src/main/kotlin/io/github/eslamasabry/opencode_mobile/OcApplication.kt")
+        val body = app.substringAfter("override fun onCreate()")
+        val guard = body.indexOf("if (!isMainProcess()) return")
+        assertTrue(guard >= 0, "onCreate does not stop non-main processes")
+        assertTrue(guard < body.indexOf("Telemetry.init"), "Telemetry.init runs before the process check")
+        assertTrue(guard < body.indexOf("NativeCrashStore"), "the crash store opens before the process check")
+        assertTrue(guard < body.indexOf("AppLog.install"), "logging is installed before the process check")
+    }
 }

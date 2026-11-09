@@ -29,7 +29,7 @@ public enum class ThemePack(override val wire: String) : WireNamed {
 
 /** The app language (`oc.appLocale`): [System] removes the key. Unsupported stored codes read as [System]. */
 public enum class LocaleChoice(public val code: String?) {
-    System(null), En("en"), Ar("ar"), Zh("zh"), Es("es"), Pt("pt"), Ja("ja"), Ru("ru");
+    System(null), En("en"), Ar("ar"), Zh("zh"), Es("es"), Pt("pt"), Ja("ja"), Ru("ru"), Vi("vi"), Id("id"), Fr("fr");
 
     public companion object {
         /** The language part of [tag] (`ar-EG` → [Ar]); null when unsupported. Null [tag] → [System]. */
@@ -78,8 +78,13 @@ public enum class FrostStrength(override val wire: String) : WireNamed {
     Off("off"), Weak("weak"), Balanced("balanced"), Strong("strong"),
 }
 
-/** Glass's floating edges (`oc.glassEdges`): missing or unknown reads [Liquid]; device-wide, never swept. */
-public enum class GlassEdges(override val wire: String) : WireNamed { Liquid("liquid"), Frosted("frosted") }
+/**
+ * The Glass look (`oc.glassLook`, glass looks 2026-11-09): missing or unknown reads [Glossy], which is never stored;
+ * device-wide, never swept. Replaces `oc.glassEdges` (`frosted` became [Frosted]; [Preferences] migrates it once).
+ */
+public enum class GlassLookChoice(override val wire: String) : WireNamed {
+    Glossy("glossy"), Clear("clear"), Frosted("frosted"), Smoked("smoked"),
+}
 
 /**
  * The person's Fine-tune choices; null = the style's default. Only Corners and Spacing exist: each style keeps its
@@ -129,7 +134,7 @@ public data class DevicePreferences(
     /** The Accent swatch id; null matches the theme. */
     val accent: String? = null,
     val frost: FrostStrength = FrostStrength.Balanced,
-    val glassEdges: GlassEdges = GlassEdges.Liquid,
+    val glassLook: GlassLookChoice = GlassLookChoice.Glossy,
     val reasoningExpanded: Boolean = false,
     val timestampsVisible: Boolean = false,
 ) {
@@ -158,7 +163,8 @@ public sealed interface PreferenceChange {
 
     public data class Frost(val value: FrostStrength) : PreferenceChange
 
-    public data class Edges(val value: GlassEdges) : PreferenceChange
+    /** The Glass look; Glossy removes the key. Every write also removes the retired `oc.glassEdges`. */
+    public data class Look(val value: GlassLookChoice) : PreferenceChange
 
     public data class ReasoningExpanded(val value: Boolean) : PreferenceChange
 

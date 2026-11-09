@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">En este teléfono</string>
+    <string name="agentsHubOnComputers">En tus computadoras</string>
+    <string name="agentsHubComputersEmpty">Aún no hay ninguna computadora. Agrega una que ejecute Paseo para usar Claude Code o Pi desde este teléfono.</string>
+    <string name="agentsHubAddComputer">Agregar una computadora</string>
+    <string name="agentsHubCheck">Comprobar la conexión</string>
+    <string name="agentsHubCheckAgents">Comprobar agentes</string>
+    <string name="agentsHubFolderHint">/home/tu/proyecto</string>
+    <string name="agentsHubInvalidAddress">Usa una dirección ws:// en este dispositivo o en tu red privada, o una dirección wss://.</string>
+    <string name="agentsHubInvalidFolder">Escribe la carpeta del proyecto como ruta completa, por ejemplo /home/tu/proyecto.</string>
+    <string name="agentsHubInvalidPassword">No se puede usar esta contraseña. Usa letras, números y símbolos sin espacios.</string>
+    <string name="agentsHubAdded">Guardado. Sus conversaciones aparecen en Conversaciones.</string>
+    <string name="agentsHubAddFailed">No se pudo guardar esta computadora. Revisa los datos e inténtalo de nuevo.</string>
+    <string name="agentsHubAgentsFailed">No se pudieron leer los agentes de esa computadora. Comprueba que Paseo esté en ejecución allí.</string>
+    <string name="agentsHubStartFailed">No se pudo iniciar una conversación allí. La computadora sigue guardada.</string>
+    <string name="agentsHubSignInFailed">Esa computadora no aceptó la contraseña.</string>
+    <string name="agentsHubNotAnswering">Esa computadora no respondió. Comprueba que Paseo esté en ejecución y que este teléfono pueda llegar a ella.</string>
+    <string name="agentsHubNotConnected">Sin conexión</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

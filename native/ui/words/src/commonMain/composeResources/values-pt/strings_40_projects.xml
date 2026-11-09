@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">Conversas relacionadas</string>
+    <string name="r40RelationsRefresh">Atualizar conversas relacionadas</string>
+    <string name="r40RelationsStale">O local desta conversa mudou. Volte e reabra as conversas relacionadas.</string>
+    <string name="r40RelationsFailure">Não foi possível concluir. Tente novamente ou volte e reabra as conversas relacionadas.</string>
+    <string name="r40RelationsParent">Iniciada a partir de</string>
+    <string name="r40RelationsEmpty">Nenhuma conversa de subagente ainda</string>
+    <string name="r40RelationsEmptyBody">O trabalho delegado aparece aqui sem se misturar à sua conversa.</string>
+    <string name="r40RelationsChildren">Conversas de subagentes · %1$s</string>
+    <string name="r40RelationsUntitled">Conversa sem título</string>
+    <string name="r40RelationsNeedsYou">Precisa de você · Abra para responder</string>
+    <string name="r40RelationsWorking">Trabalhando</string>
+    <string name="r40RelationsIdle">Ociosa</string>
+    <string name="r40RelationsDone">Concluída</string>
+    <string name="r40RelationsCurrent">Esta conversa</string>
+    <string name="r40RelationsPinned">Fixada</string>
+    <string name="r40RelationsActions">Ações</string>
+    <string name="r40RelationsOpening">Trabalhando…</string>
+    <string name="r40RelationsOpen">Abrir conversa</string>
+    <string name="r40RelationsResume">Continuar no computador</string>
+    <string name="r40RelationsPin">Fixar conversa</string>
+    <string name="r40RelationsUnpin">Desafixar conversa</string>
+    <string name="r40RelationsStop">Parar subagente</string>
+    <string name="r40RelationsStopTitle">Parar %1$s?</string>
+    <string name="r40RelationsStopBody">Isso interrompe o trabalho atual. A conversa e o trabalho já concluído permanecem.</string>
+    <string name="r40RelationsKeepRunning">Manter em execução</string>
+    <string name="r40RelationsResumeBody">Execute este comando no computador que hospeda este servidor, no mesmo projeto. Copiar não envia nada.</string>
+    <string name="r40RelationsCopy">Copiar comando</string>
+    <string name="r40RelationsJustNow">Agora mesmo</string>
+    <string name="r40RelationsMinutes">há %1$s min</string>
+    <string name="r40RelationsHours">há %1$s h</string>
+    <string name="r40RelationsDays">há %1$s d</string>
+</resources>

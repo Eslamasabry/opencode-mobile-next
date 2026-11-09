@@ -16,7 +16,10 @@ import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitSecureWindow
+import io.github.eslamasabry.oc.ui.kit.platform.androidKitSecureWindow
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
@@ -39,7 +42,7 @@ class MainActivity : ComponentActivity() {
     private var routeWhenReady = false
 
     /** P-110: the page the killed process was on, reopened once the shell is up. */
-    private var lastRoute: AppRoute? = null
+    private var lastRoute: List<AppRoute> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Before super.onCreate: the product's activity-lifecycle owners (ResumedActivities, the
@@ -69,6 +72,7 @@ class MainActivity : ComponentActivity() {
         // P12-SETTINGS: stored appearance and language at the root; first run picks the welcome.
         val settings = graph as SettingsAppGraph
         settings.firstRunStarter.start()
+        val secureWindow = androidKitSecureWindow(this)
         setContent {
             graph.kitChatEnvironment.Provide {
                 val appearance by settings.appPreferences.appearance.collectAsState()
@@ -78,6 +82,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 CompositionLocalProvider(
+                    LocalKitSecureWindow provides secureWindow,
                     LocalKitTerminalSlot provides AndroidKitTerminalSlot,
                     LocalTerminalLinkHost provides (graph as TerminalLinksGraph).terminalLinkHost,
                     LocalKitLogoLoader provides (graph as ProviderLogoGraph).kitLogoLoader,
@@ -109,11 +114,19 @@ class MainActivity : ComponentActivity() {
                                 )
                                     settings.whatsNewStarter.start()
                                 val navigator = graph.shell.navigator
-                                LastRoute.reopen(lastRoute, navigator.top.value)?.let(navigator::open)
-                                lastRoute = null
+                                navigator.restoreStack(
+                                    LastRoute.reopen(lastRoute, navigator.top.value, ChatsRoute.Home)
+                                )
+                                lastRoute = emptyList()
                                 if (routeWhenReady) {
                                     routeWhenReady = false
                                     platformHub.route(intent)
+                                }
+                                // Gap 3: "fully drawn" = the shell (home, or the welcome on first run) composed and one more
+                                // frame on screen, so cold-start numbers (Macrobenchmark TTFD) cover real content, not the splash.
+                                if (savedInstanceState == null) {
+                                    withFrameNanos {}
+                                    if (!isDestroyed) reportFullyDrawn()
                                 }
                             }
                         }
@@ -126,7 +139,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         // Before the shell is up the saved page is still the one to reopen, not home.
-        LastRoute.save(if (shellReady) appGraph.shell.navigator.top.value else lastRoute, outState)
+        LastRoute.save(if (shellReady) appGraph.shell.navigator.snapshot() else lastRoute, outState)
     }
 
     override fun attachBaseContext(newBase: Context) {

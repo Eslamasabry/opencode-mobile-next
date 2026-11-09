@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Utilisation du forfait sur ce téléphone</string>
+    <string name="linuxQuotaSetup">Configurer l’utilisation du forfait</string>
+    <string name="linuxQuotaEnabled">L’utilisation du forfait est configurée</string>
+    <string name="linuxQuotaBody">Lit les limites de Codex, GLM et MiniMax à partir des connexions déjà présentes sur ce téléphone. L’assistant ne s’exécute que pendant la lecture de l’utilisation.</string>
+    <string name="linuxQuotaTurnOff">Désactiver l’utilisation du forfait</string>
+    <string name="linuxQuotaLinuxNotReady">Configurez d’abord Linux sur Ce téléphone.</string>
+    <string name="linuxQuotaNoNode">Installez Node depuis les composants Linux, puis réessayez.</string>
+    <string name="linuxQuotaOldNode">Mettez Node à jour vers la version 20 ou ultérieure, puis réessayez.</string>
+    <string name="linuxQuotaPrepareFailed">Les fichiers d’utilisation n’ont pas pu être préparés. Réessayez.</string>
+    <string name="linuxQuotaStartFailed">L’assistant d’utilisation n’a pas répondu. Réessayez.</string>
+    <string name="linuxQuotaRemoveFailed">L’assistant d’utilisation n’a pas pu être supprimé. Réessayez.</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="one">%1$d a besoin de vous</item>
+        <item quantity="many">%1$d ont besoin de vous</item>
+        <item quantity="other">%1$d ont besoin de vous</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="one">%1$d en cours</item>
+        <item quantity="many">%1$d en cours</item>
+        <item quantity="other">%1$d en cours</item>
+    </plurals>
+    <string name="native_live_channel">Connexion de codage en direct</string>
+    <string name="native_live_description">Affichée tant qu’OpenCode garde une connexion au serveur active en arrière-plan</string>
+    <string name="native_phone_server_body">Votre agent continue de travailler pendant que vous utilisez d’autres applications.</string>
+    <string name="native_phone_server_channel">OpenCode sur ce téléphone</string>
+    <string name="native_phone_server_description">Affichée tant que le serveur du téléphone ou le moteur de projet fonctionne</string>
+    <string name="native_setup_channel">Configuration</string>
+    <string name="native_status_action_new_chat">Nouvelle conversation</string>
+    <string name="native_status_action_open">Ouvrir</string>
+    <string name="native_status_action_start">Démarrer</string>
+    <string name="native_status_action_stop_opencode">Arrêter OpenCode</string>
+    <string name="native_status_action_stop_reply">Arrêter la réponse</string>
+    <string name="native_status_on_this_phone">sur ce téléphone</string>
+    <string name="native_status_paused_android_body">Android arrête le travail en arrière-plan après 6 heures par jour. Ouvrez OpenCode pour continuer.</string>
+    <string name="native_status_paused_android_title">En pause · limite d’Android en arrière-plan</string>
+    <string name="native_status_paused_idle_body">Touchez pour redémarrer OpenCode</string>
+    <string name="native_status_paused_idle_title">En pause · rien n’était en cours</string>
+    <string name="native_status_public_paused">OpenCode · en pause</string>
+    <string name="native_status_public_ready">OpenCode · prêt</string>
+    <string name="native_status_ready_body">Prêt quand vous l’êtes</string>
+    <string name="native_status_ready_title">Prêt · rien en cours</string>
+</resources>

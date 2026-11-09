@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Opcional</string>
+    <string name="reportR1Included">Qué se incluye</string>
+    <string name="reportR1IncludedLine">Datos de la app y del teléfono. Se quitan las contraseñas, las claves y las direcciones de servidores.</string>
+    <string name="reportR1IncludedCrash">Datos de la app y del teléfono, y el cierre inesperado de las %1$s. Se quitan las contraseñas, las claves y las direcciones de servidores.</string>
+    <string name="reportR1IncludedFreeze">Datos de la app y del teléfono, y el bloqueo de las %1$s. Se quitan las contraseñas, las claves y las direcciones de servidores.</string>
+    <string name="reportR1IncludedClose">Datos de la app y del teléfono, y el cierre de las %1$s. Se quitan las contraseñas, las claves y las direcciones de servidores.</string>
+    <string name="reportR1IncludedOpen">Mostrar qué se incluye</string>
+    <string name="reportR1Send">Enviar informe</string>
+    <string name="reportR1CopyText">Copiar texto</string>
+    <string name="reportR1PostGitHub">Publicar en GitHub</string>
+    <string name="reportR1NoSend">Esta versión no puede enviar informes. Copia el texto o publícalo en GitHub.</string>
+    <string name="reportR1SheetSubtitle">Esto es exactamente lo que se envía.</string>
+    <string name="reportR1Words">Tus palabras</string>
+    <string name="reportR1NoWords">No escribiste nada</string>
+    <string name="reportR1LastClose">La última vez que se cerró la app</string>
+    <string name="reportR1Crashed">Se cerró inesperadamente · %1$s</string>
+    <string name="reportR1Froze">Dejó de responder · %1$s</string>
+    <string name="reportR1ClosedForMemory">Android la cerró para liberar memoria · %1$s</string>
+    <string name="reportR1App">App</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Teléfono</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">%1$s GB de memoria</string>
+    <string name="reportR1Connection">Conexión</string>
+    <string name="reportR1AddressOut">%1$s · dirección quitada</string>
+    <string name="reportR1NotConnected">Sin conexión</string>
+    <string name="reportR1Problems">Problemas recientes</string>
+    <string name="reportR1NoProblems">Ninguno</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Nunca se envía: tus conversaciones, archivos, contraseñas, claves ni direcciones de servidores.</string>
+    <string name="reportR1SentBody">Gracias. Si nos escribes sobre este problema, indica este código para que podamos encontrar tu informe.</string>
+    <string name="reportR1PublicTitle">¿Publicar este informe públicamente?</string>
+    <string name="reportR1PublicBody">Cualquiera puede leer los problemas de GitHub. El formulario se abre con tus palabras y los datos de la app, y no se publica nada hasta que lo envíes allí.</string>
+    <string name="reportR1PublicConfirm">Abrir GitHub</string>
+    <string name="reportR1GitHubFailed">No se pudo abrir GitHub. Inténtalo de nuevo.</string>
+    <string name="reportR1KindTimeout">Se agotó el tiempo</string>
+    <string name="reportR1KindAuth">Inicio de sesión rechazado</string>
+    <string name="reportR1KindTls">Certificado no confiable</string>
+    <string name="reportR1KindServer">Error del servidor</string>
+    <string name="reportR1KindProtocol">Respuesta inesperada del servidor</string>
+    <string name="reportR1KindDns">Dirección no encontrada</string>
+    <string name="reportR1KindRefused">Conexión rechazada</string>
+    <string name="reportR1KindOffline">Sin red</string>
+    <string name="reportR1KindTooLarge">Mensaje demasiado grande</string>
+    <string name="reportR1KindRejected">Mensaje rechazado</string>
+    <string name="reportR1KindOther">Otro problema</string>
+    <string name="reportKeptCopyErrors">Copiar registro de errores</string>
+    <string name="reportKeptClearErrors">Borrar errores</string>
+</resources>

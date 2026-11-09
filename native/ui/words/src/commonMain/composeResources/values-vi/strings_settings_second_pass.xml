@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">Về bản dựng này</string>
+    <string name="nativeAboutProvenance">Ứng dụng độc lập này được xây dựng với sự hỗ trợ lớn từ AI. Android là nền tảng được hỗ trợ chính. Các bản dựng cho máy tính để bàn còn mang tính thử nghiệm và chưa được kiểm thử trên phần cứng. Hãy báo những gì bị lỗi để giúp cải thiện ứng dụng.</string>
+    <string name="nativePhraseChipsTitle">Gợi ý cụm từ</string>
+    <string name="nativePhraseChipsAliases">gợi ý cụm từ cụm từ nhanh đề xuất ô nhập tin nhắn</string>
+    <string name="nativePhraseChipsDescription">Gợi ý các cụm từ ngắn bạn hay dùng phía trên ô nhập tin nhắn. Các cụm từ đã học được giữ trên thiết bị này.</string>
+    <string name="nativeToolsRequired">Bắt buộc</string>
+    <string name="nativeToolsOptional">Không bắt buộc</string>
+    <string name="nativeToolsParameters">Tham số</string>
+    <string name="nativeToolsNoParameters">Công cụ này không khai báo tham số nào.</string>
+    <string name="nativeToolsCoding">Công cụ cho mô hình</string>
+    <string name="nativeToolsChooseModel">Chọn một mô hình để xem công cụ của nó.</string>
+    <string name="nativeCapabilitiesTitle">Những gì hoạt động ở đây</string>
+</resources>

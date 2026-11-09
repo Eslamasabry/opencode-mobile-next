@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Bawaan gaya</string>
+    <string name="settings40_reset_question">Setel ulang Tampilan?</string>
+    <string name="settings40_reset_body">Setel ulang warna, gaya, bentuk, kaca, ukuran teks, gerakan, dan cahaya balasan. Percakapan, bahasa, dan pilihan notifikasi Anda tidak berubah.</string>
+    <string name="settings40_local_work">Pekerjaan belum terkirim di ponsel ini</string>
+    <string name="settings40_queue_title">Perintah dalam antrean</string>
+    <string name="settings40_drafts_title">Draf percakapan</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="other">%1$d item · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">Penyimpanan ini tidak dapat dibaca. Semuanya tetap disimpan.</string>
+    <string name="settings40_storage_reading">Membaca penyimpanan lokal…</string>
+    <string name="settings40_discard_queue">Hapus perintah antrean yang belum terkirim</string>
+    <string name="settings40_discard_drafts">Hapus draf percakapan</string>
+    <string name="settings40_queue_keeps">Menghapus perintah yang belum pernah dikirim. Perintah dengan penanda pengiriman atau tanda terima perintah tetap ada untuk ditinjau.</string>
+    <string name="settings40_queue_empty">Tidak ada perintah antrean untuk dihapus.</string>
+    <string name="settings40_drafts_empty">Tidak ada draf tersimpan untuk dihapus.</string>
+    <string name="settings40_discard_working">Menghapus konten lokal…</string>
+    <string name="settings40_queue_question">Hapus perintah antrean yang belum terkirim?</string>
+    <string name="settings40_drafts_question">Hapus draf percakapan?</string>
+    <string name="settings40_drafts_body">Menghapus teks tersimpan dan lampiran draf di ponsel ini. Percakapan yang terbuka ikut diperbarui. Pekerjaan yang masih dikirim atau diperiksa mencegah penghapusan. Tindakan ini tidak dapat dibatalkan.</string>
+    <string name="settings40_discard_failed">Tidak dapat menyelesaikan penghapusan. Pekerjaan yang sedang dikirim, pekerjaan yang belum pasti, penyimpanan yang tidak terbaca, atau perubahan saat menyimpan dapat mencegah penghapusan. Periksa jumlahnya dan coba lagi.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="other">%1$d item dihapus.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="other">%1$d item dihapus. Perintah yang disimpan untuk ditinjau: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="other">%1$d draf dihapus. Beberapa file lampiran tidak dapat dihapus. Coba hapus draf lagi untuk menyelesaikan.</item>
+    </plurals>
+    <string name="settings40_no_answers">Belum ada pertanyaan di server ini yang perlu dijawab.</string>
+    <string name="settings40_answer_failed">Langkah ini tidak selesai. Jawaban tersimpan dan pengaturan Android Anda mungkin berbeda. Periksa Notifikasi atau Tetap berjalan, lalu coba lagi.</string>
+    <string name="settings40_held_action">Hapus juga yang ini</string>
+    <string name="settings40_held_question">Hapus perintah yang disimpan untuk ditinjau?</string>
+    <string name="settings40_held_body">Perintah ini mungkin sudah sampai ke server. Ini hanya menghapusnya dari ponsel ini, dan tidak ada lagi yang dikirim.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="other">%1$d di antaranya mungkin sudah sampai ke server. Penghapusan hanya menghapusnya dari ponsel ini, dan tidak ada lagi yang dikirim.</item>
+    </plurals>
+</resources>

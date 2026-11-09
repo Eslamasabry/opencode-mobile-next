@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansWidgetSettings">Виджет расхода</string>
+    <string name="plansWidgetSetupRows">Показывать тарифы, требующие настройки</string>
+    <string name="plansWidgetBoth">Показывать оба окна</string>
+    <string name="plansWidgetFiveHour">Показывать пятичасовое окно</string>
+    <string name="plansWidgetWeekly">Показывать недельное окно</string>
+    <string name="plansWidgetSelected">Выбрано</string>
+    <string name="plansWidgetVisible">Показывать этот тариф в виджете</string>
+</resources>

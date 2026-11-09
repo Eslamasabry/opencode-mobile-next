@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">Alat: %1$s</string>
+    <string name="approvalToolTerminal">Perintah terminal</string>
+    <string name="approvalToolEdit">Perubahan file</string>
+    <string name="approvalToolRead">Pembacaan file</string>
+    <string name="approvalToolWeb">Permintaan web</string>
+    <string name="approvalToolOutside">Di luar proyek ini</string>
+    <string name="approvalToolOther">Alat lain</string>
+    <string name="approvalCopyAsk">Salin yang diminta untuk dijalankan</string>
+    <string name="approvalCopied">Tersalin</string>
+    <string name="approvalAllow">Izinkan</string>
+    <string name="approvalAlwaysAllowExact">Selalu izinkan %1$s</string>
+    <string name="approvalDeny">Tolak</string>
+    <string name="approvalReplyLabel">Beri tahu apa yang harus dilakukan</string>
+    <string name="approvalReplySend">Tolak dan kirim</string>
+    <string name="approvalReplyJustDeny">Tolak saja</string>
+    <string name="approvalReplyBack">Kembali</string>
+    <string name="approvalReplyEmpty">Tulis apa yang harus dilakukan, atau pilih Tolak saja.</string>
+    <string name="approvalAllowedWhat">Diizinkan: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Selalu diizinkan: %1$s</string>
+    <string name="approvalDenied">Ditolak</string>
+    <string name="approvalDeniedInstead">Ditolak, diminta melakukan ini: %1$s</string>
+</resources>

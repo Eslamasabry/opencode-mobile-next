@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="one">Leyendo 1 archivo</item>
+        <item quantity="many">Leyendo %1$d archivos</item>
+        <item quantity="other">Leyendo %1$d archivos</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="one">Buscando en el proyecto</item>
+        <item quantity="many">Buscando en el proyecto, %1$d búsquedas</item>
+        <item quantity="other">Buscando en el proyecto, %1$d búsquedas</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="one">Revisando 1 carpeta</item>
+        <item quantity="many">Revisando %1$d carpetas</item>
+        <item quantity="other">Revisando %1$d carpetas</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="one">Editando 1 archivo</item>
+        <item quantity="many">Editando %1$d archivos</item>
+        <item quantity="other">Editando %1$d archivos</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="one">Obteniendo 1 página</item>
+        <item quantity="many">Obteniendo %1$d páginas</item>
+        <item quantity="other">Obteniendo %1$d páginas</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="one">Delegando 1 tarea</item>
+        <item quantity="many">Delegando %1$d tareas</item>
+        <item quantity="other">Delegando %1$d tareas</item>
+    </plurals>
+    <string name="liveStepRunning">Ejecutando %1$s</string>
+    <string name="liveStepRunningCommand">Ejecutando un comando</string>
+    <string name="liveFailedStillWorking">El agente sigue trabajando. Todavía no tienes que hacer nada.</string>
+    <string name="liveFailedStopped">El agente se detuvo. Envía un mensaje para pedirle que continúe.</string>
+</resources>

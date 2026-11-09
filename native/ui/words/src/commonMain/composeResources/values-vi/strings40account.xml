@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Tài khoản Codex</string>
+    <string name="account40ScopeLost">Máy chủ này đã thay đổi. Quay lại Máy chủ và mở tài khoản của máy chủ đang kết nối.</string>
+    <string name="account40Refresh">Làm mới tài khoản</string>
+    <string name="account40Loading">Đang kiểm tra tài khoản trên máy chủ</string>
+    <string name="account40Unavailable">Không dùng được trang tài khoản</string>
+    <string name="account40ReadFailed">Không đọc được tài khoản</string>
+    <string name="account40Disconnected">Kết nối bị gián đoạn</string>
+    <string name="account40Connected">Đã đăng nhập trên máy chủ</string>
+    <string name="account40SignedOut">Sẵn sàng đăng nhập</string>
+    <string name="account40InProgress">Đang đăng nhập</string>
+    <string name="account40NeedsAttention">Việc đăng nhập cần bạn xem lại</string>
+    <string name="account40NoAuth">Máy chủ không yêu cầu đăng nhập</string>
+    <string name="account40ApiKey">Khóa API</string>
+    <string name="account40HostAuth">Xác thực máy chủ</string>
+    <string name="account40HostNote">Môi trường chính thức giữ phiên đăng nhập. Thay đổi tài khoản ảnh hưởng đến mọi máy chủ đã lưu được kết nối với máy chủ này.</string>
+    <string name="account40UnsupportedDetail">Trang này đã được xác minh với Codex 0.153.4. Môi trường đang kết nối có thể không hỗ trợ các thao tác tài khoản này.</string>
+    <string name="account40ReconnectDetail">Dữ liệu tài khoản và mã đăng nhập đã bị xóa. Hãy kết nối lại để làm mới. Đăng nhập sẽ không tự bắt đầu lại.</string>
+    <string name="account40SignIn">Đăng nhập bằng ChatGPT</string>
+    <string name="account40SignInNote">Đăng nhập bằng tài khoản ChatGPT của bạn. Bạn hoàn tất trong trình duyệt; ứng dụng này không bao giờ thấy mật khẩu của bạn.</string>
+    <string name="account40Limits">Giới hạn tốc độ</string>
+    <string name="account40LimitsUnavailable">Không có thông tin giới hạn tốc độ cho tài khoản hoặc máy chủ này.</string>
+    <string name="account40Usage">Lượng token đã dùng</string>
+    <string name="account40UsageUnavailable">Không có thông tin lượng token đã dùng cho tài khoản hoặc máy chủ này.</string>
+    <string name="account40LifetimeTokens">Token đã dùng từ trước đến nay</string>
+    <string name="account40PeakTokens">Token cao nhất mỗi ngày</string>
+    <string name="account40UsageNote">Các giá trị do máy chủ báo cáo. Giá trị thiếu nghĩa là chưa biết, không phải bằng không. Số token không phải hóa đơn hay số tin nhắn còn lại.</string>
+    <string name="account40Updated">Kiểm tra lần cuối %1$s</string>
+    <string name="account40Starting">Đang yêu cầu mã đăng nhập</string>
+    <string name="account40Waiting">Hoàn tất đăng nhập trong trình duyệt</string>
+    <string name="account40Cancelling">Đang hủy đăng nhập</string>
+    <string name="account40Cancelled">Đã hủy đăng nhập</string>
+    <string name="account40LoginFailed">Đăng nhập chưa hoàn tất. Hãy kiểm tra máy chủ rồi thử lại.</string>
+    <string name="account40LoginUncertain">Máy chủ không xác nhận được việc đăng nhập hoặc hủy. Có thể nó vẫn đang chờ. Hãy kiểm tra môi trường chính thức trên máy chủ trước khi bắt đầu lại.</string>
+    <string name="account40LoginCompleted">Đã đăng nhập xong. Đang kiểm tra tài khoản.</string>
+    <string name="account40CodeHint">Nhập mã dùng một lần này vào trang đăng nhập chính thức. Hãy giữ kín mã.</string>
+    <string name="account40OpenSignIn">Mở trang đăng nhập chính thức</string>
+    <string name="account40Cancel">Hủy đăng nhập</string>
+    <string name="account40Allowance">Hạn mức được báo cáo</string>
+    <string name="account40PercentUsed">Đã dùng %1$d%</string>
+    <string name="account40WindowUnknown">Không rõ độ dài khoảng thời gian</string>
+    <string name="account40WindowMinutes">Khoảng %1$d phút</string>
+    <string name="account40WindowHours">Khoảng %1$d giờ</string>
+    <string name="account40WindowDays">Khoảng %1$d ngày</string>
+    <string name="account40ResetUnknown">Không rõ thời điểm đặt lại</string>
+    <string name="account40ScopeLostTitle">Máy chủ này đã thay đổi</string>
+    <string name="account40BackToServers">Quay lại Máy chủ</string>
+    <string name="account40NotConnected">Hãy kết nối với máy chủ này để xem tài khoản Codex của nó.</string>
+    <string name="account40SignInMethod">Đăng nhập bằng</string>
+    <string name="account40PlanTitle">Gói</string>
+    <string name="account40CopyCode">Sao chép mã đăng nhập</string>
+    <string name="account40LimitReached">Bạn đã đạt giới hạn Codex. %1$s</string>
+    <string name="account40ResetDue">Sắp đặt lại</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="other">Đặt lại sau %1$d ngày</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="other">Đặt lại sau %1$d giờ</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="other">Đặt lại sau %1$d phút</item>
+    </plurals>
+    <string name="account40Back">Quay lại</string>
+    <string name="account40Details">Chi tiết</string>
+    <string name="account40CopyDetails">Sao chép chi tiết</string>
+    <string name="account40Copied">Đã sao chép mã</string>
+    <string name="account40OpenQuestion">Mở trang đăng nhập chính thức tại %1$s?</string>
+    <string name="account40OpenPage">Mở trang đăng nhập</string>
+    <string name="account40OpenFailed">Không mở được trang đăng nhập hoặc bộ nhớ tạm.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

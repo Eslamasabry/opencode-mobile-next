@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">Trên điện thoại này</string>
+    <string name="agentsHubOnComputers">Trên máy tính của bạn</string>
+    <string name="agentsHubComputersEmpty">Chưa thêm máy tính nào. Hãy thêm một máy tính đang chạy Paseo để dùng Claude Code hoặc Pi từ điện thoại này.</string>
+    <string name="agentsHubAddComputer">Thêm máy tính</string>
+    <string name="agentsHubCheck">Kiểm tra kết nối</string>
+    <string name="agentsHubCheckAgents">Kiểm tra tác nhân</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">Hãy dùng địa chỉ ws:// trên thiết bị này hoặc mạng riêng của bạn, hoặc địa chỉ wss://.</string>
+    <string name="agentsHubInvalidFolder">Hãy nhập thư mục dự án dưới dạng đường dẫn đầy đủ, ví dụ /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">Không dùng được mật khẩu này. Hãy dùng chữ cái, chữ số và ký hiệu, không có dấu cách.</string>
+    <string name="agentsHubAdded">Đã lưu. Các cuộc trò chuyện của nó xuất hiện trong Cuộc trò chuyện.</string>
+    <string name="agentsHubAddFailed">Không lưu được máy tính này. Hãy kiểm tra thông tin rồi thử lại.</string>
+    <string name="agentsHubAgentsFailed">Không đọc được các tác nhân trên máy tính đó. Hãy kiểm tra Paseo có đang chạy ở đó không.</string>
+    <string name="agentsHubStartFailed">Không bắt đầu được cuộc trò chuyện ở đó. Máy tính vẫn được lưu.</string>
+    <string name="agentsHubSignInFailed">Máy tính đó không chấp nhận mật khẩu.</string>
+    <string name="agentsHubNotAnswering">Máy tính đó không phản hồi. Hãy kiểm tra Paseo có đang chạy và điện thoại này có truy cập được nó không.</string>
+    <string name="agentsHubNotConnected">Chưa kết nối</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

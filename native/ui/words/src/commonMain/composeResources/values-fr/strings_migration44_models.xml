@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="native44AllModels">Tous les modèles (%1$s)</string>
+    <plurals name="native44MoreModels">
+        <item quantity="one">Afficher %1$s modèle de plus</item>
+        <item quantity="many">Afficher %1$s de modèles de plus</item>
+        <item quantity="other">Afficher %1$s modèles de plus</item>
+    </plurals>
+    <string name="native44Context">Contexte\u00A0: %1$s</string>
+    <string name="native44Output">Limite de sortie\u00A0: %1$s</string>
+    <string name="native44Price">Entrée %1$s $ · sortie %2$s $ par million de jetons</string>
+    <string name="native44ModelShortcuts">Changer de modèle</string>
+    <string name="native44CopyFailed">Impossible de copier l’identifiant du modèle. Réessayez.</string>
+</resources>

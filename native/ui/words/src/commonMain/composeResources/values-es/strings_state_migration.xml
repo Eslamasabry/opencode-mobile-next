@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAppearanceOverview">Todas las opciones de apariencia</string>
+    <string name="stateAppearanceChangedLast">Último cambio: %1$s</string>
+</resources>

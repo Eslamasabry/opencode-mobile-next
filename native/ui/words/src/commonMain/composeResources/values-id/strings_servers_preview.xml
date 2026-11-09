@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">Server</string>
+    <string name="serversNewTitle">Percakapan baru</string>
+    <string name="serversSaved">Server tersimpan</string>
+    <string name="serversEmpty">Tambahkan server OpenCode 2 untuk memulai percakapan.</string>
+    <string name="serversAdd">Tambah server</string>
+    <string name="serversName">Nama</string>
+    <string name="serversAddress">Alamat server</string>
+    <string name="serversUsername">Nama pengguna</string>
+    <string name="serversPassword">Kata sandi</string>
+    <string name="serversCleartext">Izinkan HTTP untuk alamat ini</string>
+    <string name="serversCleartextHelp">HTTP tidak mengenkripsi kata sandi atau percakapan Anda. Gunakan hanya di jaringan yang Anda percaya.</string>
+    <string name="serversCleartextRequired">Konfirmasi HTTP untuk alamat ini sebelum menyambung.</string>
+    <string name="serversConnect">Sambungkan</string>
+    <string name="serversConnected">Tersambung</string>
+    <string name="serversCreate">Mulai percakapan</string>
+    <string name="serversSave">Simpan dan sambungkan</string>
+    <string name="serversRemove">Hapus server</string>
+    <string name="serversCancel">Batal</string>
+    <string name="serversRemoveConfirm">Hapus %1$s beserta detail koneksi tersimpannya dari aplikasi ini?</string>
+    <string name="serversWorking">Harap tunggu tindakan saat ini selesai.</string>
+    <string name="serversInvalidAddress">Masukkan alamat server.</string>
+    <string name="serversSaveFailed">Server ini tidak dapat disimpan. Periksa alamat dan coba lagi.</string>
+    <string name="serversConnectFailed">Tidak dapat menyambung. Periksa alamat server dan jaringan, lalu coba lagi.</string>
+    <string name="serversCreateFailed">Percakapan tidak dapat dimulai. Server Anda tetap tersimpan.</string>
+    <string name="serversRemoveFailed">Server ini tidak dapat dihapus. Detail tersimpannya tidak berubah.</string>
+    <string name="serversSignInFailed">Server tidak menerima data masuk ini. Periksa nama pengguna dan kata sandi.</string>
+    <string name="serverHttpsRequired">Alamat ini ada di internet publik, jadi memerlukan HTTPS. HTTP biasa akan mengirim kata sandi Anda tanpa enkripsi. Ubah alamat agar diawali https://, atau jangkau server lewat Tailscale atau jaringan Anda sendiri.</string>
+</resources>

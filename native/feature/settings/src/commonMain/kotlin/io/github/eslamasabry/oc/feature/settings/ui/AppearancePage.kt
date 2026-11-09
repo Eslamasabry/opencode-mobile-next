@@ -63,12 +63,13 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAskShape
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskStyle
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskTheme
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCorners
-import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdges
-import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesMotionOff
-import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesNeedsAndroid13
-import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesNote
 import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
+import io.github.eslamasabry.oc.ui.kit.choice.KitGlassLookOption
+import io.github.eslamasabry.oc.ui.kit.choice.KitGlassLookPicker
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneReset
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAutoNote
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverHoldsStyle
@@ -88,6 +89,38 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
+    // The Glass look picker (glass looks 2026-11-09, D5): opened from the "Glass look" row and by tapping the chosen
+    // Glass card again; one sheet for the page, whichever question asks for it.
+    val glassLookOpen = rememberSaveable { mutableStateOf(false) }
+    CompositionLocalProvider(LocalGlassLookSheet provides glassLookOpen) { AppearanceBodyContent(ui, actions) }
+    if (glassLookOpen.value && ui.style == SurfaceStyle.Glass && !ui.heldBySaver) {
+        GlassLookSheet(ui, actions) { glassLookOpen.value = false }
+    }
+}
+
+/** Whether the Glass look picker is open (provided by [AppearanceBody]). */
+private val LocalGlassLookSheet = staticCompositionLocalOf<MutableState<Boolean>?> { null }
+
+/** The Glass look picker: a sheet of live previews over a moving field; a tap applies the look at once. */
+@Composable
+private fun GlassLookSheet(ui: AppearanceUi, actions: SettingsActions, onDismiss: () -> Unit) {
+    KitSheet(
+        visible = true,
+        onDismissRequest = onDismiss,
+        title = stringResource(Res.string.appearanceGlassLook),
+    ) {
+        KitGlassLookPicker(
+            options = ui.glassLooks.map { KitGlassLookOption(it, glassLookWords(it), glassLookLine(it)) },
+            selected = ui.glassLook,
+            onSelect = actions::onGlassLook,
+            disclosure = stringResource(Res.string.appearanceGlassLookDisclosure),
+            modifier = Modifier.testTag("appearance-glass-look-picker"),
+        )
+    }
+}
+
+@Composable
+private fun ColumnScope.AppearanceBodyContent(ui: AppearanceUi, actions: SettingsActions) {
     val onePage = ui.question == null && ui.guide?.done != false
     if (onePage) {
         AppearanceOnePage(ui, actions)
@@ -306,19 +339,30 @@ private fun ColumnScope.AppearanceControls(
                 else KitEnabled.Enabled
             Box(gutter) {
                 val columns = 2 // F: lib/ui/screens/settings/appearance_screen.dart:973
+                val glassLookSheet = LocalGlassLookSheet.current
+                val glassChosen = ui.style == SurfaceStyle.Glass
+                // Tapping the chosen Glass card again opens its looks (D5); its name says the look.
+                val glassLabel = stringResource(Res.string.appearanceGlassCardLook, glassLookWords(ui.glassLook))
                 AppearanceGrid(SurfaceStyle.entries, columns) { style ->
+                    val glass = style == SurfaceStyle.Glass
                     KitStyleOptionCard(
                         style = Style.valueOf(style.name),
-                        label = styleWords(style),
+                        label = if (glass && glassChosen) glassLabel else styleWords(style),
                         selected = style == ui.style,
                         enabled = styleHeld.isEnabled,
                         disabledReason = styleHeld.reason,
-                        onSelect = { actions.onStyle(style) },
+                        onSelect = {
+                            if (glass && glassChosen && ui.glassLookHold != EdgeHold.Motion) glassLookSheet?.value = true
+                            else actions.onStyle(style)
+                        },
                         modifier = Modifier.testTag("appearance-style-${style.name}"),
                     )
                 }
             }
             if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
+            else if (ui.style == SurfaceStyle.Glass && ui.glassLookHold != EdgeHold.Motion) {
+                KitGroupNote(stringResource(Res.string.appearanceGlassCardHint))
+            }
         }
     }
     if ((question == null || question == AppearanceQuestion.Shape) && ui.styles) {
@@ -354,28 +398,32 @@ private fun ColumnScope.AppearanceControls(
                 onChange = actions::onSpacing,
             )
         }
-        // Glass only: its floating parts bend what lies behind them (liquid) or blur it (frosted).
+        // Glass only: the Glass look row (in the place of the old Liquid/Frosted control) opens the looks' picker.
         if (ui.style == SurfaceStyle.Glass) {
-            AppearanceKnobLabel(stringResource(Res.string.appearanceGlassEdges))
-            Box(gutter) {
-                KitSegmented(
-                    segments = GlassEdges.entries.map { KitSegment(it, glassEdgesWords(it)) },
-                    selected = ui.glassEdges,
-                    semanticsLabel = stringResource(Res.string.appearanceGlassEdges),
-                    modifier = Modifier.testTag("appearance-glass-edges"),
-                    enabled = held,
-                    onChange = actions::onGlassEdges,
-                )
-            }
-            KitGroupNote(
-                stringResource(
-                    when (ui.glassEdgesHold) {
-                        EdgeHold.Platform -> Res.string.appearanceGlassEdgesNeedsAndroid13
-                        EdgeHold.Motion -> Res.string.appearanceGlassEdgesMotionOff
-                        else -> Res.string.appearanceGlassEdgesNote
-                    }
-                )
+            val glassLookSheet = LocalGlassLookSheet.current
+            val motionHeld = ui.glassLookHold == EdgeHold.Motion
+            val rowHeld =
+                when {
+                    !held.isEnabled -> held.reason
+                    motionHeld -> stringResource(Res.string.appearanceGlassLookHeldMotion)
+                    else -> null
+                }
+            KitRow(
+                title = stringResource(Res.string.appearanceGlassLook),
+                supporting = glassLookWords(ui.glassLook),
+                trailing = KitRowTrailing.Chevron,
+                enabled = rowHeld == null,
+                disabledReason = rowHeld,
+                onClickLabel = stringResource(Res.string.appearanceGlassLookPick),
+                modifier = Modifier.testTag("appearance-glass-look"),
+                onClick = { glassLookSheet?.value = true },
             )
+            when {
+                motionHeld -> KitGroupNote(stringResource(Res.string.appearanceGlassLookHeldMotion))
+                ui.glassLookHold == EdgeHold.Platform -> KitGroupNote(stringResource(Res.string.appearanceGlassLookNeedsAndroid13))
+                ui.glassLook == GlassLookId.Frosted -> KitGroupNote(stringResource(Res.string.appearanceGlassLookFrostedLighter))
+                else -> Unit
+            }
         }
         val defaults = StyleResolver.spec(Style.valueOf(ui.style.name)).tokens.defaults
         KitGroupNote(

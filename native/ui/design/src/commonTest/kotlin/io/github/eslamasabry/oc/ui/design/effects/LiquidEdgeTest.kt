@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.color.wcagContrast
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.ui.design.style.Style
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,31 +27,34 @@ class LiquidEdgeTest {
 
     @Test
     fun `B-KIT-018 Glass on Android 13 or later with nothing held has liquid edges`() {
-        assertNull(FrostPolicy.edgesHeldBy(ready, balanced, GlassEdges.Liquid))
-        assertTrue(FrostPolicy.liquidEdges(ready, balanced, GlassEdges.Liquid))
+        assertNull(FrostPolicy.edgesHeldBy(ready, balanced, GlassLookId.Glossy))
+        assertTrue(FrostPolicy.liquidEdges(ready, balanced, GlassLookId.Glossy))
     }
 
     @Test
     fun `B-KIT-018 below Android 13 the edges keep today's frost or solid face`() {
-        assertEquals(EdgeHold.Platform, FrostPolicy.edgesHeldBy(ready.copy(lensSupported = false), balanced, GlassEdges.Liquid))
+        assertEquals(EdgeHold.Platform, FrostPolicy.edgesHeldBy(ready.copy(lensSupported = false), balanced, GlassLookId.Glossy))
     }
 
     @Test
     fun `B-KIT-018 Saver, reduced motion and high contrast hold the edges as they hold frost, in frost's order`() {
-        assertEquals(EdgeHold.Saver, FrostPolicy.edgesHeldBy(ready.copy(saver = true, reducedMotion = true), balanced, GlassEdges.Liquid))
-        assertEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, highContrast = true), balanced, GlassEdges.Liquid))
-        assertEquals(EdgeHold.Contrast, FrostPolicy.edgesHeldBy(ready.copy(highContrast = true), balanced, GlassEdges.Liquid))
+        assertEquals(EdgeHold.Saver, FrostPolicy.edgesHeldBy(ready.copy(saver = true, reducedMotion = true), balanced, GlassLookId.Glossy))
+        assertEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, highContrast = true), balanced, GlassLookId.Glossy))
+        assertEquals(EdgeHold.Contrast, FrostPolicy.edgesHeldBy(ready.copy(highContrast = true), balanced, GlassLookId.Glossy))
         // A hold of frost's own comes before the platform: Settings names the reason the person can change.
-        assertEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, lensSupported = false), balanced, GlassEdges.Liquid))
+        assertEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, lensSupported = false), balanced, GlassLookId.Glossy))
     }
 
     @Test
-    fun `B-KIT-018 frost Off and the Frosted choice keep the edges frosted`() {
-        assertEquals(EdgeHold.Off, FrostPolicy.edgesHeldBy(ready, FrostStrength.Off, GlassEdges.Liquid))
-        assertEquals(EdgeHold.Frosted, FrostPolicy.edgesHeldBy(ready, balanced, GlassEdges.Frosted))
-        assertEquals(GlassEdges.Liquid, GlassEdges.fromStorage(null))
-        assertEquals(GlassEdges.Liquid, GlassEdges.fromStorage("melted"))
-        assertEquals(GlassEdges.Frosted, GlassEdges.fromStorage("frosted"))
+    fun `B-KIT-018 frost Off and the Frosted look keep the edges frosted`() {
+        assertEquals(EdgeHold.Off, FrostPolicy.edgesHeldBy(ready, FrostStrength.Off, GlassLookId.Glossy))
+        assertEquals(EdgeHold.Frosted, FrostPolicy.edgesHeldBy(ready, balanced, GlassLookId.Frosted))
+        // Every look with a lens keeps liquid edges (glass looks 2026-11-09).
+        for (look in listOf(GlassLookId.Glossy, GlassLookId.Clear, GlassLookId.Smoked)) assertNull(FrostPolicy.edgesHeldBy(ready, balanced, look), "$look")
+        assertEquals(GlassLookId.Glossy, GlassLookId.fromStorage(null))
+        assertEquals(GlassLookId.Glossy, GlassLookId.fromStorage("melted"))
+        assertEquals(GlassLookId.Frosted, GlassLookId.fromStorage("frosted"))
+        assertEquals(GlassLookId.Smoked, GlassLookId.fromStorage("smoked"))
     }
 
     @Test
@@ -59,7 +63,7 @@ class LiquidEdgeTest {
         for (saver in flags) for (motion in flags) for (contrast in flags) for (style in flags) {
             val c = FrostConditions(saver, motion, contrast, style, lensSupported = true)
             val frost = FrostPolicy.heldBy(c)
-            val edges = FrostPolicy.edgesHeldBy(c, balanced, GlassEdges.Liquid)
+            val edges = FrostPolicy.edgesHeldBy(c, balanced, GlassLookId.Glossy)
             assertEquals(frost?.name, edges?.name, "$c")
         }
     }
@@ -68,7 +72,7 @@ class LiquidEdgeTest {
     fun `B-KIT-037 only Glass ever has liquid edges`() {
         for (style in Style.entries) {
             val c = ready.copy(styleAllows = style == Style.Glass)
-            assertEquals(style == Style.Glass, FrostPolicy.liquidEdges(c, balanced, GlassEdges.Liquid), "$style")
+            assertEquals(style == Style.Glass, FrostPolicy.liquidEdges(c, balanced, GlassLookId.Glossy), "$style")
         }
     }
 
@@ -192,6 +196,22 @@ class LiquidEdgeTest {
         }
         val both = LiquidEdge.faceOf(chrome + LiquidClaim("sheet", LiquidRole.Sheet, page) + LiquidClaim("menu", LiquidRole.Menu, page))
         assertEquals(chrome.size + 2, both.size, "every part keeps a glass face")
+    }
+
+    @Test
+    fun `B-KIT-018 opening a reply's menu changes no other pane's face, however many chips the chat shows`() {
+        // Smoothness 2026-11-09 (owner: the reply's menu janks in Glass): two of the chat's chips flipped to frost as
+        // the menu opened and back as it closed, each rebuilding its glass.
+        val page = Any()
+        val chat =
+            listOf(LiquidClaim("composer", LiquidRole.Composer, null), LiquidClaim("bar", LiquidRole.Bar, null)) +
+                (0 until 3).map { LiquidClaim("chip$it", LiquidRole.Pill, null, order = it) }
+        val before = LiquidEdge.faceOf(chat)
+        for (modal in listOf(listOf(LiquidClaim("menu", LiquidRole.Menu, page)), listOf(LiquidClaim("sheet", LiquidRole.Sheet, page), LiquidClaim("menu", LiquidRole.Menu, page)))) {
+            val open = LiquidEdge.faceOf(chat + modal)
+            for (c in chat) assertEquals(before.getValue(c.key), open.getValue(c.key), "${modal.map { it.key }} open: ${c.key}")
+            for (m in modal) assertEquals(LiquidFaceKind.Liquid, open.getValue(m.key), "${m.key} is liquid")
+        }
     }
 
     @Test

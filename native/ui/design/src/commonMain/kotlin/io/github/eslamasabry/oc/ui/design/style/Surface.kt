@@ -37,6 +37,8 @@ public data class SurfaceRequest(
     val edgeWidthDp: Float = 1f,
     /** The control is an action the person presses (a button, Send), not a mark or a choice. */
     val action: Boolean = false,
+    /** The glass look's numbers (Glass only): its clear panes' blur, sheen, lit corner, specular and glint. */
+    val look: GlassLook = GlassLook.Default,
 ) {
     public val levelFill: Argb
         get() = when (level) {
@@ -90,13 +92,15 @@ public data class SurfaceDecoration(
      * at both ends. Crisp (no blur). Transparent draws none.
      */
     val specular: Argb = Argb(0),
+    /** The specular's glint line, as a share of [specular] (the glass look's [GlassLook.glintShare]). */
+    val glint: Float = GLINT_SHARE,
 ) {
     public companion object {
         /** The most the [sheen] reaches down a face, in dp: a tall pane keeps its gloss at its top, not over its rows. */
         public const val SHEEN_MAX_DP: Float = 40f
 
         /** The [specular] line's strength next to the rim's bright segment. */
-        public const val GLINT_SHARE: Float = .60f
+        public val GLINT_SHARE: Float get() = GlassLook.Default.glintShare
 
         /** How far down from the top edge the specular line lies, in dp (inside the rim). */
         public const val GLINT_DROP_DP: Float = 2.5f

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Входящие</string>
+    <string name="monitorInboxEmpty">Сейчас нет запросов и напоминаний от отслеживаемых серверов.</string>
+    <string name="monitorInboxFailedRun">Запуск требует внимания</string>
+    <string name="monitorInboxOpening">Открываем запрос…</string>
+    <string name="monitorInboxSettings">Выберите в «Уведомлениях», за какими сохранёнными серверами следить.</string>
+    <string name="monitorInboxSwitchBody">Откройте запрос на этом сервере. Работа, уже идущая на других серверах, продолжится.</string>
+</resources>

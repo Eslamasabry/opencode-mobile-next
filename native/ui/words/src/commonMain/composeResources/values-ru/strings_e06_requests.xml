@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatRequestNoLongerNeeded">Больше не нужно</string>
+    <string name="chatRequestNoLongerNeededWhy">Выполнение остановлено, поэтому ничего не отправлено.</string>
+    <string name="chatRequestCardLabel">Запрос %1$s из %2$s: %3$s</string>
+</resources>

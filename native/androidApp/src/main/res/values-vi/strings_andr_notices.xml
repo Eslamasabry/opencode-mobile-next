@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andr_appExitForceStopped">OpenCode Mobile đã bị đóng %1$s</string>
+    <string name="andr_appExitLowMemory">Android đã đóng OpenCode Mobile %1$s để giải phóng bộ nhớ</string>
+    <string name="andr_appExitCrashed">OpenCode Mobile đã dừng đột ngột %1$s</string>
+    <string name="andr_appExitKilled">Android đã dừng OpenCode Mobile %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s. OpenCode trên điện thoại của bạn đã dừng theo và đang khởi động lại.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s. OpenCode và AI Team trên điện thoại của bạn đã dừng theo và đang khởi động lại.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s. OpenCode trên điện thoại của bạn đã dừng theo. Hãy khởi động lại khi bạn sẵn sàng.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. OpenCode và AI Team trên điện thoại của bạn đã dừng theo. Hãy khởi động lại khi bạn sẵn sàng.</string>
+    <string name="andr_appExitServerBack">%1$s. OpenCode trên điện thoại của bạn đã dừng theo và hiện đang chạy lại.</string>
+    <string name="andr_appExitServerBackTeam">%1$s. OpenCode và AI Team trên điện thoại của bạn đã dừng theo; OpenCode hiện đang chạy lại.</string>
+    <string name="andr_appExitAtTime">lúc %1$s</string>
+    <string name="andr_appExitOnDay">vào %1$s lúc %2$s</string>
+    <string name="andr_appExitKeepRunning">Giữ cho tiếp tục chạy</string>
+    <string name="andr_backgroundPauseTimeLimit">Kết nối nền đã tạm dừng %1$s để tiết kiệm pin.</string>
+    <string name="andr_backgroundPauseRestricted">Kết nối nền đã tạm dừng: mức dùng pin bị hạn chế.</string>
+    <string name="andr_backgroundPauseUserStopped">Kết nối nền đã dừng khi ứng dụng đóng %1$s.</string>
+    <string name="andr_backgroundPauseAppUpdated">Kết nối nền đã dừng khi ứng dụng được cập nhật %1$s.</string>
+    <string name="andr_backgroundPauseInterrupted">Kết nối nền đã dừng không rõ lý do.</string>
+    <string name="andr_backgroundPauseDeviceRestarted">Kết nối nền đã dừng khi điện thoại khởi động lại.</string>
+    <string name="andr_backgroundPauseResumeShort">Tiếp tục</string>
+    <string name="andr_backgroundPauseResuming">Đang tiếp tục kết nối nền…</string>
+    <string name="andr_backgroundPauseResumeFailed">Không thể tiếp tục. Hãy mở cài đặt Giữ chạy nền.</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">Mở cài đặt Giữ chạy nền</string>
+    <string name="andr_notifyDismiss">Bỏ qua</string>
+    <string name="andr_firstRunNotifyTitle">Thông báo cho bạn khi tác nhân cần bạn?</string>
+    <string name="andr_firstRunNotifyBody">Bạn có thể rời ứng dụng trong lúc tác nhân làm việc. Bạn sẽ nhận thông báo khi tác nhân cần câu trả lời của bạn. Android hiện một thông báo nhỏ liên tục khi vẫn còn kết nối.</string>
+    <string name="andr_firstRunNotifyAccept">Thông báo cho tôi</string>
+    <string name="andr_firstRunNotifyDecline">Để sau</string>
+    <string name="andr_notifyPermissionRefused">Thông báo đang bị chặn. Hãy cho phép thông báo trong cài đặt Android, rồi bật kết nối nền.</string>
+    <string name="andr_notifyEnableFailed">Kết nối nền chưa khởi động được. Hãy mở cài đặt nền để thử lại.</string>
+    <string name="andr_pauseBackground">Tạm dừng chạy nền</string>
+    <string name="andr_notifySaveFailed">Không lưu được lựa chọn của bạn nên chưa có gì được bật. Hãy thử lại.</string>
+    <string name="andr_termuxRetiredNotice">Termux không còn được hỗ trợ. Hãy thiết lập Linux tích hợp trên điện thoại này, hoặc kết nối với máy tính của bạn. Các dự án của bạn trong Termux vẫn còn nguyên; hãy sao chép chúng vào bộ nhớ chung của điện thoại hoặc đẩy lên bằng Git để chuyển sang.</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">Thiết lập Linux tích hợp</string>
+    <string name="andr_termuxRetiredConnectComputer">Kết nối máy tính</string>
+    <string name="andr_crashOfferMessage">Lần trước OpenCode Mobile đã đóng đột ngột. Gửi báo cáo sự cố?</string>
+    <string name="andr_crashOfferReview">Xem lại và gửi</string>
+    <string name="andr_crashOfferNotNow">Để sau</string>
+</resources>

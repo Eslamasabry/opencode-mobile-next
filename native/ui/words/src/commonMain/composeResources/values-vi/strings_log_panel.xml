@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">Tìm trong nhật ký</string>
+    <string name="p12LogFollow">Theo dõi</string>
+    <string name="p12LogPause">Tạm dừng</string>
+    <string name="p12LogCopy">Sao chép tất cả</string>
+    <string name="p12LogWrap">Ngắt dòng</string>
+    <plurals name="p12LogMatches">
+        <item quantity="other">%1$d trên %2$d dòng khớp</item>
+    </plurals>
+    <string name="p12LogPrevious">Kết quả trước</string>
+    <string name="p12LogNext">Kết quả tiếp theo</string>
+</resources>

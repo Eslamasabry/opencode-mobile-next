@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">Переносить строки кода</string>
+    <string name="stateReaderNoWrap">Код в одну строку</string>
+    <string name="stateReaderSaveFailed">Не удалось сохранить выбор отображения. Повторите.</string>
+    <string name="stateUsageBudgets">Личные бюджеты расходов</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

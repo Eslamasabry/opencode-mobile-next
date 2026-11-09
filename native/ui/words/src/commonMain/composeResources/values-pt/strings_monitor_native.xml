@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Verificar outros servidores</string>
+    <string name="monitorNativeBack">Voltar</string>
+    <string name="monitorNativeForegroundOnly">Verifica os servidores salvos enquanto esta página está aberta. Ao fechá-la, as leituras param. Isso não inicia um servidor no celular nem ativa alertas em segundo plano.</string>
+    <string name="monitorNativeCheck">Verificar agora</string>
+    <string name="monitorNativeChecking">Verificando…</string>
+    <string name="monitorNativeAllow">Permitir verificações</string>
+    <string name="monitorNativeConsent">Permita que este app leia os pedidos e o status recente das conversas deste servidor salvo.</string>
+    <string name="monitorNativeUnsupported">Este servidor salvo não pode ser verificado aqui.</string>
+    <string name="monitorNativeOff">As verificações estão desativadas</string>
+    <string name="monitorNativeWaiting">Ainda não verificado</string>
+    <string name="monitorNativeCurrent">Verificado</string>
+    <string name="monitorNativePartial">Verificado em parte. Verifique de novo para ler mais conversas.</string>
+    <string name="monitorNativeUnknown">Não foi possível confirmar o estado mais recente. Observações anteriores ainda podem aparecer.</string>
+    <string name="monitorNativePaused">Verificações pausadas</string>
+    <string name="monitorNativePending">Esperando por você: %1$d</string>
+    <string name="monitorNativeRunning">Em execução: %1$d</string>
+    <string name="monitorNativeConversation">Conversa</string>
+    <string name="monitorNativeFailed">A última etapa verificada falhou</string>
+    <string name="monitorNativeEarlierFailure">Falha anterior; o estado mais recente é desconhecido</string>
+    <string name="monitorNativeSaveFailed">Não foi possível salvar nem carregar estas configurações. Tente novamente.</string>
+    <string name="monitorNativeEmpty">Não há servidores salvos disponíveis para verificar.</string>
+    <string name="monitorNativeRequest">Esperando por você</string>
+    <string name="monitorNativeEarlierRequest">Pedido anterior; o estado mais recente é desconhecido</string>
+    <string name="monitorNativeReconnect">Conecte-se a este servidor ou atualize o login dele em Servidores antes de verificar.</string>
+</resources>

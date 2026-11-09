@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeNewStart">Начать</string>
+    <string name="upgradeAgentReady">Готов</string>
+    <string name="upgradeMode">Режим</string>
+    <string name="upgradeModeBuild">Сборка</string>
+    <string name="upgradeModePlan">План</string>
+</resources>

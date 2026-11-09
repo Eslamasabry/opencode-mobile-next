@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorServerUnavailable">Impossible de vérifier ce serveur. Ouvrez la conversation pour examiner les demandes.</string>
+    <string name="monitorServerWaiting">En attente de la prochaine vérification.</string>
+    <string name="monitorServerCurrent">Demandes vérifiées.</string>
+    <string name="monitorServerPaused">Vérifications en pause. Ouvrez l'app ou reprenez la connexion en arrière-plan.</string>
+    <string name="monitorServerWifiRequired">En attente du Wi-Fi.</string>
+</resources>

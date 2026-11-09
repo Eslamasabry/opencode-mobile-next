@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_status_working">Đang làm việc…</string>
+    <string name="notify_status_still_working">%1$s vẫn đang làm việc</string>
+    <string name="notify_status_chats_working">%1$s cuộc trò chuyện đang làm việc</string>
+    <string name="notify_status_more">+%1$s nữa</string>
+    <string name="notify_status_waiting_count">%1$s đang chờ</string>
+    <string name="notify_status_tasks_progress">%1$s/%2$s tác vụ</string>
+    <string name="notify_status_minutes">%1$s phút</string>
+    <string name="notify_status_hours">%1$s giờ</string>
+    <string name="notify_status_waiting_provider">Đang chờ · giới hạn %1$s</string>
+    <string name="notify_status_waiting_generic">Đang chờ · nhà cung cấp đang bận</string>
+    <string name="notify_status_tries_again_at">Sẽ thử lại lúc %1$s</string>
+    <string name="notify_status_tries_again_soon">Sẽ sớm thử lại</string>
+    <string name="notify_status_paused_android_title">Tạm dừng · giới hạn nền của Android</string>
+    <string name="notify_status_paused_android_body">Android dừng việc chạy nền sau 6 giờ mỗi ngày. Mở OpenCode để tiếp tục.</string>
+    <string name="notify_status_paused_hot_title">Tạm dừng · điện thoại đang nóng</string>
+    <string name="notify_status_paused_hot_body">Sẽ chạy lại khi máy nguội</string>
+    <string name="notify_status_paused_idle_title">Tạm dừng · không có gì đang chạy</string>
+    <string name="notify_status_paused_idle_body">Chạm để chạy lại OpenCode</string>
+    <string name="notify_status_reconnecting_title">Đang kết nối lại với %1$s</string>
+    <string name="notify_status_reconnecting_generic">Đang kết nối lại</string>
+    <string name="notify_status_reconnecting_body">Đang chờ kết nối</string>
+    <string name="notify_status_ready_title">Sẵn sàng · không có gì đang chạy</string>
+    <string name="notify_status_ready_body">Sẵn sàng khi bạn cần</string>
+    <string name="notify_status_last_reply">Trả lời gần nhất %1$s trước</string>
+    <string name="notify_status_last_reply_now">Vừa trả lời xong</string>
+    <string name="notify_status_setup_title">Thiết lập · %1$s/%2$s</string>
+    <string name="notify_status_on_server">trên %1$s</string>
+    <string name="notify_status_on_this_phone">trên điện thoại này</string>
+    <string name="notify_status_lock_working">%1$s đang làm việc</string>
+    <string name="notify_status_lock_waiting">Đang chờ</string>
+    <string name="notify_status_lock_paused">Tạm dừng</string>
+    <string name="notify_status_lock_reconnecting">Đang kết nối lại</string>
+    <string name="notify_status_lock_ready">Sẵn sàng</string>
+    <string name="notify_status_lock_setup">Đang thiết lập</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="other">%1$s cần bạn</item>
+    </plurals>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">Đang tải gõ bằng giọng nói</string>
+    <string name="r40SetupVoiceVerifying">Đang kiểm tra tệp gõ bằng giọng nói</string>
+    <string name="r40SetupRequired">Bắt buộc</string>
+    <string name="r40SetupWorking">Vui lòng chờ thao tác hiện tại.</string>
+    <string name="r40SetupTotals">%1$s · khoảng %2$s phút</string>
+    <string name="r40SetupCouldNotCheck">Không thể kiểm tra các công cụ đã cài hoặc thiết lập. Thử lại.</string>
+    <string name="r40SetupRetry">Thử lại</string>
+    <string name="r40SetupActionFailed">Chưa hoàn tất. Thử lại.</string>
+    <string name="r40SetupCheckDevice">Hãy xử lý các yêu cầu của điện thoại ở trên trước khi bắt đầu.</string>
+    <string name="r40SetupStorageUnopened">Không thể mở cài đặt bộ nhớ. Hãy giải phóng dung lượng trong cài đặt điện thoại, rồi thử lại.</string>
+    <string name="r40SetupRemoveVoiceTitle">Gỡ gõ bằng giọng nói?</string>
+    <string name="r40SetupRemoveVoiceBody">Thao tác này gỡ các mô hình giọng nói đã tải khỏi ứng dụng. Các cuộc trò chuyện của bạn vẫn còn. Bạn có thể tải lại gõ bằng giọng nói sau.</string>
+    <string name="r40SetupRemoveVoice">Gỡ gõ bằng giọng nói</string>
+    <string name="r40SetupKeepVoice">Giữ gõ bằng giọng nói</string>
+    <string name="r40SetupRemoveVoiceFailed">Không thể gỡ gõ bằng giọng nói. Hãy kết thúc mọi lượt ghi âm hoặc tải xuống đang chạy, rồi thử lại.</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">Xong</string>
+    <string name="r40SetupComponentInstalled">Đã cài đặt sẵn</string>
+    <string name="r40SetupComponentChecking">Đang kiểm tra…</string>
+    <string name="r40SetupComponentRunning">Đang cài đặt…</string>
+    <string name="r40SetupComponentFailed">Chưa hoàn tất</string>
+    <string name="r40SetupComponentPending">Đang chờ</string>
+    <string name="r40WelcomePhone">Trên điện thoại này</string>
+    <string name="r40WelcomePhoneBody">Chạy OpenCode ngay tại đây. Không cần máy tính.</string>
+    <string name="r40WelcomeComputer">Trên máy tính của tôi</string>
+    <string name="r40WelcomeComputerBody">Kết nối với máy tính đang chạy OpenCode.</string>
+    <string name="r40WelcomeRunning">Thiết lập đã xong %1$s%</string>
+    <string name="r40WelcomeStopped">Thiết lập dừng ở %1$s%</string>
+    <string name="r40WelcomeSetupBody">Tải một không gian làm việc Linux riêng và các công cụ OpenCode cần. Hãy chọn thứ cần cài trước khi bắt đầu.</string>
+    <string name="r40WelcomeViewProgress">Xem tiến trình thiết lập</string>
+</resources>

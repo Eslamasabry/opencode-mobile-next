@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
 import io.github.eslamasabry.oc.engine.analytics.health.NoOpTelemetryVendor
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
+import io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,7 +43,9 @@ internal object Telemetry {
         current?.let { return it }
         val app = context.applicationContext ?: context
         val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val vendor = FirebaseTelemetryVendor.create(app)
+        // Gap 3: the Firebase singletons are built on a background thread on first use, not here on the main thread.
+        val vendor: TelemetryVendor? =
+            if (DeferredFirebaseTelemetryVendor.Config.present(app)) DeferredFirebaseTelemetryVendor(app) else null
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val early = TelemetryConsent(prefs.getBoolean(EARLY_USAGE, false), prefs.getBoolean(EARLY_CRASHES, false))
         val service =

@@ -56,7 +56,7 @@ class P12FixSettingsTest {
             val language = PreferenceMapping.personal(DevicePreferences(locale = choice)).language
             assertEquals(choice.code, language.tag, "$choice")
         }
-        assertEquals(listOf(null, "en", "ar", "es", "ja", "pt", "ru", "zh"), AppLanguage.entries.map { it.tag })
+        assertEquals(listOf(null, "en", "ar", "es", "ja", "pt", "ru", "vi", "id", "fr", "zh"), AppLanguage.entries.map { it.tag })
     }
 
     @Test

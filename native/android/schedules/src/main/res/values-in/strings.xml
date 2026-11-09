@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">Perintah terjadwal</string>
+    <string name="oc_schedule_title">Perintah terjadwal</string>
+    <string name="oc_schedule_running">Menjalankan perintah terjadwal Anda…</string>
+    <string name="oc_schedule_ran">Terkirim. Balasan ada di percakapan.</string>
+    <string name="oc_schedule_finished">Selesai. Ketuk untuk membaca balasan.</string>
+    <string name="oc_schedule_skipped">Dilewati kali ini. Ketuk untuk melihat alasannya.</string>
+    <string name="oc_schedule_failed">Tidak selesai. Ketuk untuk melihat alasannya.</string>
+    <string name="oc_schedule_why_needs_you">Menunggu jawaban Anda. Buka percakapan untuk melanjutkan.</string>
+    <string name="oc_schedule_why_sign_in">Server meminta Anda masuk lagi.</string>
+    <string name="oc_schedule_why_agent">Agen berhenti karena terjadi kesalahan.</string>
+    <string name="oc_schedule_why_timeout">Tidak selesai tepat waktu. Perintah tidak dikirim ulang.</string>
+    <string name="oc_schedule_why_unavailable">Server tidak dapat dijangkau.</string>
+    <string name="oc_schedule_digest_title">Perintah terjadwal pagi ini</string>
+    <string name="oc_schedule_digest_body">%1$d dibalas, %2$d tidak selesai, %3$d dilewati</string>
+    <string name="oc_schedule_open">Buka</string>
+</resources>

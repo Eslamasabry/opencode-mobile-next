@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">Coba secara offline</string>
+    <string name="stateDemoTitle">Demo offline</string>
+    <string name="stateDemoDisclosure">Percakapan simulasi. Tidak ada server, file, atau pengaturan tersimpan yang diubah. Keluar akan menghapus demo ini.</string>
+    <string name="stateDemoPrompt">Buat pesan sambutan lebih ramah.</string>
+    <string name="stateDemoReply">Ini balasan simulasi. Pesan sambutan contoh bisa berubah dari “Hello” menjadi “Welcome aboard!”. Izinkan atau tolak suntingan simulasi di bawah. Tidak ada file asli yang ditulis.</string>
+    <string name="stateDemoAllowed">Anda mengizinkan suntingan simulasi. Contohnya kini berbunyi “Welcome aboard!”. Tidak ada file asli yang diubah.</string>
+    <string name="stateDemoDenied">Anda menolak suntingan simulasi. Contohnya tetap berbunyi “Hello”. Tidak ada file asli yang diubah.</string>
+    <string name="stateDemoAllow">Izinkan suntingan simulasi</string>
+    <string name="stateDemoDeny">Tolak suntingan simulasi</string>
+    <string name="stateDemoReset">Atur ulang demo</string>
+    <string name="stateDemoLeave">Keluar dari demo</string>
+</resources>

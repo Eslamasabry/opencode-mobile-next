@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">Pesan lama tidak bisa dimuat. Pesan yang sudah dimuat tetap ada. Coba lagi.</string>
+    <string name="chatTranscriptTokens">%1$s token</string>
+    <string name="chatTranscriptCost">Perkiraan biaya: $%1$s</string>
+    <string name="chatHistoryTitle">Pakai ulang perintah</string>
+    <string name="chatHistorySubtitle">Pilih kata dari percakapan ini atau kiriman terbaru Anda. Kata ditambahkan ke draf; tidak ada yang dikirim.</string>
+    <string name="chatHistorySearch">Cari perintah terbaru</string>
+    <string name="chatHistoryEmpty">Belum ada perintah terbaru.</string>
+    <string name="chatHistoryLoading">Memuat perintah terbaru…</string>
+    <string name="chatHistoryLoadFailed">Perintah terbaru tidak bisa dimuat. Perintah dari percakapan ini tetap bisa dipakai.</string>
+</resources>

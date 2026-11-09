@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="worktreeInspectionTitle">Xem một bản sao</string>
+    <string name="worktreeInspectionExactScope">Các thay đổi và cuộc trò chuyện được đọc cho đúng dự án, thư mục và không gian làm việc này.</string>
+    <string name="worktreeInspectionReadFailed">Không xem được bản sao này. Chưa rõ trạng thái của nó.</string>
+    <string name="worktreeInspectionWorkspace">Không gian làm việc: %1$s</string>
+    <string name="worktreeInspectionHostScope">Trên máy chủ này</string>
+    <string name="worktreeInspectionConversations">Cuộc trò chuyện trong bản sao này</string>
+    <string name="worktreeInspectionNoPageMatches">Không có cuộc trò chuyện nào khớp trên trang này. Hãy tải thêm để tiếp tục tìm.</string>
+    <string name="worktreeInspectionNoConversations">Không có cuộc trò chuyện nào khớp trong bản sao này.</string>
+</resources>

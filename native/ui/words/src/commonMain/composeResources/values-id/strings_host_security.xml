@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">Mesin di jaringan pribadi Anda</string>
+    <string name="hostSecIntro">Periksa identitas SSH-nya, siapkan kunci publik ponsel ini, atau pulihkan host yang tersimpan.</string>
+    <string name="hostSecBundleMissing">Instalasi host baru belum tersedia sampai paket host OpenCode 2 yang telah ditinjau diterbitkan. Perintah persiapan ini hanya berjalan saat Anda menyalin dan menjalankannya di mesin Anda.</string>
+    <string name="hostSecWorking">Bekerja…</string>
+    <string name="hostSecRefresh">Muat ulang mesin tersimpan</string>
+    <string name="hostSecSaved">Mesin tersimpan</string>
+    <string name="hostSecAddress">Akun SSH dan alamat tailnet (user@host)</string>
+    <string name="hostSecPort">Port SSH</string>
+    <string name="hostSecInspect">Periksa identitas mesin</string>
+    <string name="hostSecTrustHelp">Bandingkan sidik jari ini di sesi terpisah pada mesin dengan ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. Lanjutkan hanya jika cocok persis.</string>
+    <string name="hostSecTrust">Sidik jari cocok — siapkan kunci publik</string>
+    <string name="hostSecPublicHelp">Kunci publik ini aman disalin. Kunci privat tetap di Android Keystore. Instalasi dan pendaftaran tetap memerlukan paket host yang telah ditinjau.</string>
+    <string name="hostSecCopy">Salin perintah</string>
+    <string name="hostSecResume">Verifikasi koneksi tersimpan</string>
+    <string name="hostSecVerified">Identitas SSH yang disematkan dan identitas supervisor yang tersimpan telah diverifikasi melalui terowongan pribadi.</string>
+    <string name="hostSecNotConnected">Tidak ada koneksi host terverifikasi yang terbuka.</string>
+    <string name="hostSecRevoke">Cabut ponsel ini dan hapus</string>
+    <string name="hostSecForget">Lupakan data host lokal</string>
+    <string name="hostSecRemoveConfirm">Hapus</string>
+    <string name="hostSecRevokeHelp">Aplikasi harus mengonfirmasi pencabutan dengan host yang disematkan sebelum menghapus akses lokal. Pencabutan yang gagal menyimpan data agar bisa dicoba lagi. Percakapan di mesin tetap berjalan.</string>
+    <string name="hostSecForgetHelp">Hapus terowongan lokal, kunci, dan data host tersimpan di ponsel ini. Ini tidak mencabut akses jarak jauh atau menghentikan percakapan di mesin.</string>
+    <string name="hostSecTargetFailure">Gunakan alamat mesin di jaringan Tailscale Anda serta akun dan port SSH yang valid. Rute DNS publik, lokal, dan campuran ditolak.</string>
+    <string name="hostSecIdentityFailure">Identitas mesin berubah. Tidak ada yang diterima. Verifikasi mesin secara terpisah sebelum mencoba lagi.</string>
+    <string name="hostSecRevokeFailure">Pencabutan akses tidak dapat dikonfirmasi. Akses tersimpan dipertahankan agar Anda bisa mencoba lagi.</string>
+    <string name="hostSecStorageFailure">Data host tidak dapat dibaca atau diubah dengan aman. Pertahankan mesin tersimpan dan coba lagi.</string>
+    <string name="hostSecFailure">Operasi host pribadi tidak dapat diselesaikan. Periksa pengaturan Linux ponsel dan jaringan pribadi, lalu coba lagi.</string>
+    <string name="hostSecStepTailnet">Hubungkan kedua perangkat ke Tailscale Anda. Pemeriksaan ini menampilkan status dan alamat; tidak membuktikan keanggotaan VPN. DNS diselesaikan sekali, setiap jawaban harus berada di rentang tailnet, dan SSH memakai alamat numerik tervalidasi dengan kunci yang disematkan.</string>
+    <string name="hostSecStepAccount">Gunakan akun Ubuntu 24.04 terpisah tanpa akses root. Periksa alat-alat ini lebih dulu. Penyiapan memeriksa sistem, UID non-root, arsitektur, Python, dan pengelola layanan pengguna; tidak memasang paket dengan sudo.</string>
+    <string name="hostSecStepNetwork">Biarkan satu sesi penyelamat tetap terbuka. Ganti MACHINE_TAILSCALE_IP dengan alamat numerik sebenarnya dan hapus entri ListenAddress publik atau wildcard. Perintah pemilik ini mengubah seluruh daemon SSH. Penginstal hanya membaca soket yang benar-benar mendengarkan pada port SSH terpilih dan menolak pendengar publik, wildcard, atau LAN biasa; penginstal tidak mengubah firewall atau pengikatan SSH. Verifikasi setiap port SSH lainnya secara terpisah.</string>
+    <string name="hostSecStepLinger">Jalankan perintah pertama sekali dengan akses administrator. Penginstal membaca Linger dan mensyaratkan yes, lalu memeriksa bahwa systemctl --user berfungsi. Penginstal tidak pernah mengaktifkan linger sendiri atau meminta kata sandi sudo.</string>
+    <string name="hostSecStepPolicy">Biarkan satu sesi administrator tetap terbuka. Ganti PHONE_TAILSCALE_IP dan MACHINE_TAILSCALE_IP dengan alamat numerik sebenarnya. Validasi sebelum memuat ulang. Direktif SSH sebelumnya mungkin menimpa file ini. Penginstal memeriksa penerusan TCP lokal, penerusan balik dan soket yang dinonaktifkan, tidak ada perangkat tunnel, UseDNS no, DisableForwarding no, login kunci publik, dan jalur authorized_keys standar. Membaca pengaturan tidak membuktikan daemon yang berjalan telah memuatnya; verifikasi pemuatan ulang sendiri.</string>
+    <string name="hostSecStepIdentity">Bandingkan keluaran ini dengan aplikasi di sesi mesin terpisah sebelum memercayainya. Aplikasi menghitung sidik jari Ed25519 SHA256 dan memblokir perubahan identitas berikutnya.</string>
+    <string name="hostSecRevokeQuestion">Cabut ponsel ini dan hapus host?</string>
+    <string name="hostSecForgetQuestion">Lupakan data host lokal?</string>
+</resources>

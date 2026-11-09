@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitor40FormTitle">Jawab permintaan ini</string>
+    <string name="monitor40FormGone">Permintaan ini telah berubah atau tidak tersedia lagi. Buka kembali dari kotak masuk.</string>
+    <string name="monitor40FormSent">Jawaban Anda telah dikirim.</string>
+    <string name="monitor40FormElsewhere">Permintaan ini sudah dijawab di tempat lain.</string>
+    <string name="monitor40FormHeld">Jawaban Anda akan segera dikirim.</string>
+    <string name="monitor40Undo">Urungkan</string>
+    <string name="monitor40FormFailed">Jawaban Anda tidak dapat dikirim.</string>
+    <string name="monitor40Other">Lainnya</string>
+    <string name="monitor40OpenLink">Buka halaman</string>
+    <string name="monitor40Send">Kirim jawaban</string>
+    <string name="monitor40Decline">Tolak permintaan</string>
+    <string name="monitor40FixFields">Periksa jawaban yang ditandai sebelum mengirim.</string>
+    <string name="monitor40NotConfirmed">Belum dikonfirmasi</string>
+    <string name="monitor40Sending">Mengirim jawaban Anda</string>
+    <string name="monitor40DeclineQuestion">Tolak permintaan ini?</string>
+    <string name="monitor40DeclineBody">Permintaan akan ditutup tanpa jawaban Anda.</string>
+    <string name="monitor40LinkQuestion">Buka halaman ini?</string>
+    <string name="monitor40Required">Masukkan jawaban.</string>
+    <string name="monitor40Number">Masukkan angka.</string>
+    <string name="monitor40Integer">Masukkan bilangan bulat.</string>
+    <string name="monitor40NotOffered">Pilih jawaban yang tersedia atau masukkan nilai yang diterima formulir.</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="other">Masukkan minimal %1$d karakter.</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="other">Gunakan maksimal %1$d karakter.</item>
+    </plurals>
+    <string name="monitor40Range">Masukkan nilai dalam batas yang diizinkan: %1$s hingga %2$s.</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="other">Pilih minimal %1$d jawaban.</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="other">Pilih maksimal %1$d jawaban.</item>
+    </plurals>
+    <string name="monitor40QuestionCount">Pertanyaan: %1$d</string>
+    <string name="monitor40Answer">Jawaban</string>
+</resources>

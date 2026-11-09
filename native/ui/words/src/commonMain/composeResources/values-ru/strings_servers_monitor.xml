@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorServerUnavailable">Не удалось проверить этот сервер. Откройте чат, чтобы просмотреть запросы.</string>
+    <string name="monitorServerWaiting">Ожидание следующей проверки.</string>
+    <string name="monitorServerCurrent">Запросы проверены.</string>
+    <string name="monitorServerPaused">Проверки приостановлены. Откройте приложение или возобновите фоновое подключение.</string>
+    <string name="monitorServerWifiRequired">Ожидание Wi-Fi.</string>
+</resources>

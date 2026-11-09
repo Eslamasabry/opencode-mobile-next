@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="usageWidgetIntro">Affiche ce qu'il reste sur vos forfaits dans le widget Utilisation de l'écran d'accueil. Se met à jour pendant que l'application fonctionne.</string>
+    <string name="usageEmptyTitle">Aucun abonnement pour l'instant</string>
+    <string name="usageOnConnection">sur %1$s</string>
+    <string name="usageWidgetSettingsShow">Afficher ces forfaits</string>
+    <string name="usageWidgetSettingsWindows">Afficher 5 heures, hebdomadaire ou les deux</string>
+    <string name="usageWidgetWindowBoth">Les deux</string>
+    <string name="usageWidgetWindowFiveHour">5 heures</string>
+    <string name="usageWidgetWindowWeekly">Hebdomadaire</string>
+    <string name="usageWidgetSettingsSetup">Afficher les lignes à configurer</string>
+    <string name="usageWidgetSettingsSetupHelp">Lignes Se connecter, Ajouter une clé et Configurer</string>
+    <string name="widgetV2ConfigureTitle">Style du widget</string>
+    <string name="widgetProjectTitle">Afficher les conversations de</string>
+    <string name="widgetProjectUnavailable">Impossible d'enregistrer ce choix. Réessayez.</string>
+    <string name="widgetV2AccentWallpaper">Fond d'écran</string>
+    <string name="widgetV2AccentApp">Thème de l'application</string>
+    <string name="widgetV2AccentGreen">Vert</string>
+    <string name="widgetV2AccentTeal">Sarcelle</string>
+    <string name="widgetV2AccentBlue">Bleu</string>
+    <string name="widgetV2AccentAmber">Ambre</string>
+    <string name="widgetV2SaveStyle">Enregistrer le style</string>
+    <string name="widgetV2SteerTitle">Ajouter à ce tour</string>
+    <string name="widgetV2AfterReplyTitle">Envoyer après cette réponse</string>
+    <string name="widgetV2VoiceTitle">Nouveau message</string>
+    <string name="widgetV2MessageHint">Écrire un message</string>
+    <string name="widgetV2Send">Envoyer</string>
+    <string name="widgetV2StaleRequest">La conversation a changé. Votre message est toujours là.</string>
+    <string name="widgetV2Unavailable">La connexion en arrière-plan est indisponible. Votre message est toujours là.</string>
+    <string name="widgetV2Unsupported">Cette connexion ne peut pas faire cela.</string>
+    <string name="widgetV2Uncertain">Nous n'avons pas pu confirmer l'envoi. Vérifiez la conversation avant de renvoyer.</string>
+    <string name="widgetV2InvalidRequest">Écrivez un message avant d'envoyer.</string>
+    <string name="widgetV2UnknownBehavior">En attente des détails de la conversation…</string>
+    <string name="widgetV2StyleStale">Ce widget a changé. Fermez cette fenêtre et réessayez.</string>
+    <string name="widgetV2StyleUnavailable">Impossible d'enregistrer le style. Réessayez.</string>
+    <string name="widgetV2DictationUnavailable">La dictée n'est pas disponible pour le moment. Vous pouvez écrire à la place.</string>
+    <string name="widgetV2RestartUnavailable">Cette conversation ne peut être modifiée que depuis l'application.</string>
+</resources>

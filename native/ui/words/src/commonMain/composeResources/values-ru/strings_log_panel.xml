@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">Найти в журнале</string>
+    <string name="p12LogFollow">Следить</string>
+    <string name="p12LogPause">Пауза</string>
+    <string name="p12LogCopy">Копировать всё</string>
+    <string name="p12LogWrap">Переносить строки</string>
+    <plurals name="p12LogMatches">
+        <item quantity="one">%1$d из %2$d подходящей строки</item>
+        <item quantity="few">%1$d из %2$d подходящих строк</item>
+        <item quantity="many">%1$d из %2$d подходящих строк</item>
+        <item quantity="other">%1$d из %2$d подходящей строки</item>
+    </plurals>
+    <string name="p12LogPrevious">Предыдущее совпадение</string>
+    <string name="p12LogNext">Следующее совпадение</string>
+</resources>

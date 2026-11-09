@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">Trả lời tác nhân</string>
+    <string name="stateFormAnswer">Trả lời</string>
+    <string name="stateFormHeld">Câu trả lời của bạn sẽ được gửi ngay.</string>
+    <string name="stateFormUndo">Hoàn tác</string>
+    <string name="stateFormInvalid">Kiểm tra các câu trả lời được đánh dấu trước khi gửi.</string>
+    <string name="stateFormOther">Lựa chọn khác</string>
+    <string name="stateFormOpenLink">Mở liên kết</string>
+    <string name="stateFormRestoring">Đang khôi phục các câu trả lời đã lưu…</string>
+    <string name="stateFormSend">Gửi câu trả lời</string>
+    <string name="stateFormDecline">Từ chối yêu cầu này</string>
+    <string name="stateFormDeclineTitle">Từ chối yêu cầu này?</string>
+    <string name="stateFormDeclineBody">Tác nhân sẽ tiếp tục mà không có câu trả lời của bạn. Không thể khôi phục yêu cầu này.</string>
+    <string name="stateFormKeepEditing">Tiếp tục chỉnh sửa</string>
+    <string name="stateFormStorageFailed">Không thể đọc hoặc lưu các câu trả lời đã lưu của bạn. Hãy đóng và mở lại yêu cầu này để thử lại.</string>
+    <string name="stateFormUncertain">Chưa xác nhận đã gửi. Hãy kiểm tra cuộc trò chuyện trước khi trả lời lại.</string>
+    <string name="stateFormChanged">Yêu cầu này đã thay đổi. Hãy mở lại yêu cầu hiện tại.</string>
+    <string name="stateFormNotAccepted">Câu trả lời của bạn không được chấp nhận. Hãy xem lại yêu cầu trước khi thử lại.</string>
+    <string name="stateFormDismiss">Bỏ qua</string>
+</resources>

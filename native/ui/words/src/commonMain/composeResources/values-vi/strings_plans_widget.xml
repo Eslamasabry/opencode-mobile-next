@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansWidgetSettings">Tiện ích mức dùng</string>
+    <string name="plansWidgetSetupRows">Hiện các gói cần thiết lập</string>
+    <string name="plansWidgetBoth">Hiện cả hai khoảng</string>
+    <string name="plansWidgetFiveHour">Hiện khoảng năm giờ</string>
+    <string name="plansWidgetWeekly">Hiện khoảng hằng tuần</string>
+    <string name="plansWidgetSelected">Đã chọn</string>
+    <string name="plansWidgetVisible">Hiện gói này trong tiện ích</string>
+</resources>

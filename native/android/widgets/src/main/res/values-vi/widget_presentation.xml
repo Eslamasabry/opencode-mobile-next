@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_ask_outside_write">Ghi ra ngoài dự án này?</string>
+    <string name="widget_ask_outside_read">Đọc ngoài dự án này?</string>
+    <string name="widget_ask_outside_run">Chạy lệnh ngoài dự án này?</string>
+    <string name="widget_ask_directory">Làm việc ngoài dự án này?</string>
+    <string name="widget_ask_command">Chạy lệnh này?</string>
+    <string name="widget_ask_edit">Sửa tệp này?</string>
+    <string name="widget_ask_read">Đọc tệp này?</string>
+    <string name="widget_ask_permission">Dùng %1$s</string>
+</resources>

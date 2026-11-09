@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">Инструмент: %1$s</string>
+    <string name="approvalToolTerminal">Команда терминала</string>
+    <string name="approvalToolEdit">Изменение файла</string>
+    <string name="approvalToolRead">Чтение файла</string>
+    <string name="approvalToolWeb">Веб-запрос</string>
+    <string name="approvalToolOutside">Вне этого проекта</string>
+    <string name="approvalToolOther">Другой инструмент</string>
+    <string name="approvalCopyAsk">Скопировать, что он просит выполнить</string>
+    <string name="approvalCopied">Скопировано</string>
+    <string name="approvalAllow">Разрешить</string>
+    <string name="approvalAlwaysAllowExact">Всегда разрешать: %1$s</string>
+    <string name="approvalDeny">Запретить</string>
+    <string name="approvalReplyLabel">Скажите, что сделать вместо этого</string>
+    <string name="approvalReplySend">Запретить и отправить</string>
+    <string name="approvalReplyJustDeny">Просто запретить</string>
+    <string name="approvalReplyBack">Назад</string>
+    <string name="approvalReplyEmpty">Напишите, что сделать вместо этого, или выберите «Просто запретить».</string>
+    <string name="approvalAllowedWhat">Разрешено: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Всегда разрешено: %1$s</string>
+    <string name="approvalDenied">Запрещено</string>
+    <string name="approvalDeniedInstead">Запрещено, вместо этого нужно сделать: %1$s</string>
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">История настройки и реестр</string>
+    <string name="stateSetupNoWrites">Настройку можно просматривать здесь. Применить и Отменить недоступны: у этого сервера нет проверенного способа атомарного восстановления.</string>
+    <string name="stateSetupUnsupported">Подключитесь к серверу, поддерживающему просмотр настройки, чтобы прочитать источники конфигурации.</string>
+    <string name="stateSetupSaveFailed">Не удалось сохранить изменение. Повторите.</string>
+    <string name="stateSetupReadFailed">Не удалось прочитать сведения о настройке. Повторите.</string>
+    <string name="stateSetupOffline">Подключитесь снова, чтобы обновить сведения о настройке.</string>
+    <string name="stateSetupSources">Источники конфигурации</string>
+    <string name="stateSetupMcp">Подключённые инструменты</string>
+    <string name="stateSetupRecordReview">Запомнить, что я проверил эту настройку</string>
+    <string name="stateSetupRefresh">Обновить настройку</string>
+    <string name="stateSetupHistory">История настройки</string>
+    <string name="stateSetupHistoryUnavailable">Сохранённая история недоступна. Она сохранена для восстановления.</string>
+    <string name="stateSetupHistoryEmpty">Проверок настройки пока нет</string>
+    <string name="stateSetupRegistryConsent">Просматривать публичный реестр инструментов</string>
+    <string name="stateSetupRegistryPrivacy">По умолчанию выключено. Обновление отправляет один публичный запрос. В реестр уходят слова поиска, но не учётные данные вашего сервера. Записи в реестре ничего не запускают и не устанавливают.</string>
+    <string name="stateSetupRegistrySearch">Поиск по реестру</string>
+    <string name="stateSetupRegistryRefresh">Обновить реестр</string>
+    <string name="stateSetupRegistrySaved">Показать сохранённые записи</string>
+    <string name="stateSetupRegistryClear">Забыть согласие и сохранённый список реестра</string>
+    <string name="stateSetupRegistryOffline">Не в сети. Показан сохранённый список.</string>
+    <string name="stateSetupRegistryFailed">Не удалось загрузить реестр. Сохранённый список остался.</string>
+    <string name="stateSetupRegistryEmpty">Нет записей для показа. Обновите или измените поиск.</string>
+    <string name="stateSetupMcpConnected">Подключено</string>
+    <string name="stateSetupMcpPending">Подключение</string>
+    <string name="stateSetupMcpDisabled">Выключено</string>
+    <string name="stateSetupMcpFailed">Не удалось подключиться</string>
+    <string name="stateSetupMcpSignIn">Нужно войти</string>
+    <string name="stateSetupMcpUnknown">Состояние неизвестно</string>
+    <string name="stateSetupAuditProposed">Изменение предложено</string>
+    <string name="stateSetupAuditPending">Изменение ожидает</string>
+    <string name="stateSetupAuditAccepted">Изменение принято</string>
+    <string name="stateSetupAuditVerified">Проверка подтверждена</string>
+    <string name="stateSetupAuditUncertain">Результат неясен</string>
+    <string name="stateSetupAuditRejected">Изменение отклонено</string>
+    <string name="stateServerSchedules">Запросы по расписанию</string>
+</resources>

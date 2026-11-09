@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">Cari percakapan</string>
+    <string name="p12SearchField">Cari percakapan</string>
+    <string name="p12SearchServer">Server</string>
+    <string name="p12SearchRecent">Pencarian terbaru</string>
+    <string name="p12SearchRecentEmpty">Pencarian Anda di ponsel ini muncul di sini.</string>
+    <string name="p12SearchRecentClear">Hapus pencarian terbaru</string>
+    <string name="p12SearchRecentRemove">Hapus %1$s</string>
+    <string name="p12SearchRecentFailed">Pencarian terbaru tidak dapat diperbarui. Pencarian tetap berfungsi.</string>
+    <string name="p12SearchInside">Cari juga di dalam percakapan terbaru</string>
+    <string name="p12SearchInsideHelp">Membaca pesan terbaru dari 20 percakapan terakhir Anda di server ini.</string>
+    <string name="p12SearchTitles">Judul</string>
+    <string name="p12SearchInsideSection">Di dalam percakapan</string>
+    <string name="p12SearchInsideReading">Membaca percakapan terbaru…</string>
+    <string name="p12SearchInsideFailed">Percakapan terbaru tidak dapat dibaca. Hasil judul tetap tampil.</string>
+    <string name="p12SearchFromYou">Anda: %1$s</string>
+    <string name="p12SearchFromAgent">Balasan: %1$s</string>
+    <string name="p12SearchOneProject">Hanya proyek saat ini di server ini yang dicari.</string>
+    <string name="p12SearchSearching">Mencari…</string>
+    <string name="p12SearchFailed">Percakapan tidak dapat dicari.</string>
+    <string name="p12SearchTryAgain">Coba lagi</string>
+    <string name="p12SearchNoServerTitle">Tidak ada server tersambung</string>
+    <string name="p12SearchNoServerBody">Sambungkan server untuk mencari percakapannya.</string>
+    <string name="p12SearchOpenServers">Buka Server</string>
+    <string name="p12SearchConversationsWhat">percakapan</string>
+    <string name="p12UsageCost">Perkiraan biaya</string>
+    <string name="p12UsageRange">Rentang tanggal</string>
+    <string name="p12UsageActivity">Aktivitas per hari</string>
+    <string name="p12UsageDay">%1$s · %2$s langkah</string>
+    <string name="p12UsageProjectsFailed">Daftar proyek tidak dapat dimuat. Semua proyek tetap berfungsi.</string>
+    <string name="p12UsageNoServerBody">Sambungkan server untuk melihat pemakaian dan biayanya.</string>
+    <string name="p12UsageFailed">Pemakaian tidak dapat dimuat.</string>
+    <string name="p12UsageTryAgain">Coba lagi</string>
+    <string name="p12UsageCounts">Aktivitas</string>
+    <string name="p12UsageServer">Server</string>
+</resources>

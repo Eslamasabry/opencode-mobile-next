@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Ouverture…</string>
+    <string name="migration_updating">Mise à jour de votre application…</string>
+    <string name="migration_still_updating">Mise à jour toujours en cours. Le premier démarrage après une mise à jour peut prendre un peu plus de temps.</string>
+    <string name="migration_try_again">Réessayer de transférer vos données</string>
+    <string name="migration_reenter_title">Quelques connexions ont besoin de vous</string>
+    <string name="migration_reenter_body">La mise à jour n’a pas pu lire ces connexions enregistrées. Tout le reste a été transféré.</string>
+    <string name="migration_reenter_row_password">%1$s · Saisir le mot de passe</string>
+    <string name="migration_reenter_row_token">%1$s · Saisir le jeton</string>
+    <string name="migration_reenter_row_github">%1$s · Se reconnecter à GitHub</string>
+    <string name="migration_reenter_row_byo">%1$s · Reconfigurer</string>
+    <string name="migration_reenter_unnamed">Un serveur enregistré</string>
+    <string name="migration_reenter_later">Se connecter à ceux-ci plus tard</string>
+    <string name="migration_reenter_field_password">Mot de passe pour %1$s</string>
+    <string name="migration_reenter_field_token">Jeton pour %1$s</string>
+    <string name="migration_reenter_save">Enregistrer</string>
+    <string name="migration_reenter_save_failed">Impossible de l’enregistrer sur ce téléphone. Réessayez.</string>
+    <string name="migration_reenter_back">Retour à la liste</string>
+    <string name="migration_reenter_github_where">Pour vous reconnecter à GitHub pour %1$s, ouvrez l’une de ses conversations, puis Git.</string>
+    <string name="migration_reenter_open_chats">Ouvrir les conversations</string>
+    <string name="migration_reenter_byo_absent">La reconfiguration de %1$s n’est pas encore disponible dans cette version. Ses informations enregistrées restent sur ce téléphone.</string>
+    <string name="migration_failed_title">La mise à jour n’a pas pu terminer le transfert de vos données</string>
+    <string name="migration_failed_body">Rien n’a été supprimé. Vos données d’avant la mise à jour sont en sécurité sur ce téléphone.</string>
+    <string name="migration_restore_row">Restaurer les données d’avant la mise à jour</string>
+    <string name="migration_restore_confirm">Cela rétablit vos réglages et vos serveurs tels qu’ils étaient avant la mise à jour. Les modifications faites depuis sont conservées dans une copie.</string>
+    <string name="migration_restore_confirm_title">Restaurer des données plus anciennes\u00A0?</string>
+    <string name="migration_restore_confirm_action">Restaurer les données d’avant la mise à jour</string>
+    <string name="migration_start_fresh_row">Repartir de zéro (conserve une copie de vos anciennes données)</string>
+    <string name="migration_start_fresh_confirm">Vous repartirez sans serveur enregistré et avec les réglages par défaut. Une copie de vos anciennes données reste sur ce téléphone.</string>
+    <string name="migration_start_fresh_confirm_title">Repartir de zéro\u00A0?</string>
+    <string name="migration_start_fresh_confirm_action">Repartir de zéro et garder une copie</string>
+    <string name="migration_report_row">Signaler un problème</string>
+    <string name="migration_details">Détails · %1$s</string>
+    <string name="migration_space_title">Votre téléphone est presque plein</string>
+    <string name="migration_space_body">La mise à jour a besoin de %1$s d’espace libre pour conserver une copie de sécurité de vos données. Libérez de l’espace, puis réessayez.</string>
+    <string name="migration_save_failed_title">Enregistrement impossible sur ce téléphone</string>
+    <string name="migration_open_storage_row">Ouvrir les paramètres de stockage</string>
+    <string name="migration_close">Fermer</string>
+    <string name="migration_deferred_notice">Pas encore disponible dans cette version\u00A0: %1$s. Ce que vous avez enregistré pour eux reste sur ce téléphone, intact.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Mémoire</string>
+    <string name="migration_deferred_gemma">le modèle d’IA sur le téléphone</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Fermer la note sur les fonctionnalités absentes de cette version</string>
+</resources>

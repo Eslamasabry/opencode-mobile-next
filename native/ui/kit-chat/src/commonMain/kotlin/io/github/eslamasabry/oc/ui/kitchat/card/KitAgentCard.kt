@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -62,8 +64,8 @@ import io.github.eslamasabry.oc.ui.kitchat.form.KitFormValue
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -873,17 +875,15 @@ public fun KitCardListSlot(
     }
 }
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 private fun CardPhotoPreview(item: KitCardPhotoItem) {
-    val bitmap =
-        remember(item.bytes) {
-            try {
-                item.bytes?.decodeToImageBitmap()
-            } catch (_: RuntimeException) {
-                null
-            }
+    val work = LocalKitImageWork.current
+    val edge = with(LocalDensity.current) { 96.dp.toPx() }.toInt()
+    val bitmap by
+        produceState<ImageBitmap?>(null, item.bytes, edge) {
+            value = item.bytes?.let { KitImages.loadBytes(it, edge, work) }
         }
-    if (bitmap != null)
-        Image(BitmapPainter(bitmap), item.name, Modifier.height(64.dp).widthIn(max = 96.dp))
+    val shown = bitmap
+    if (shown != null)
+        Image(BitmapPainter(shown), item.name, Modifier.height(64.dp).widthIn(max = 96.dp))
 }

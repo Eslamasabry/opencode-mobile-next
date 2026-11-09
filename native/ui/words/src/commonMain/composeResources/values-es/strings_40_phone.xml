@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40PhoneConnect">Usar el servidor de este teléfono</string>
+    <string name="r40PhoneConnectFailed">No se pudo conectar con el servidor de este teléfono. Inténtalo de nuevo.</string>
+    <string name="r40PhoneMemory">Usando %1$s de memoria</string>
+    <string name="r40PhoneHistoryMoving">Trayendo tus conversaciones anteriores…</string>
+    <string name="r40PhoneHistoryCount">Trayendo tus conversaciones anteriores (%1$s de %2$s)…</string>
+    <string name="r40PhoneHistoryFailed">No se pudieron traer las conversaciones anteriores. Tus datos originales siguen en este teléfono, sin cambios.</string>
+    <string name="r40PhoneReplySpeed">Velocidad de la última respuesta</string>
+    <string name="r40PhoneReplyNoWords">Terminó en %1$s sin texto</string>
+    <string name="r40PhoneReplyLast">Primeras palabras en %1$s · Terminó en %2$s</string>
+    <string name="r40PhoneInstalled">Instalado en este teléfono</string>
+    <string name="r40PhoneChecking">Comprobando…</string>
+    <string name="r40PhoneInstalledMark">Instalado</string>
+    <string name="r40PhoneInventoryFailed">No se pudo comprobar qué está instalado. Se conserva la lista anterior. Inténtalo de nuevo.</string>
+    <string name="r40PhoneLinuxMode">Modo de Linux</string>
+    <string name="r40PhoneLinuxFast">Rápido (seccomp)</string>
+    <string name="r40PhoneLinuxSlow">Más lento (ptrace)</string>
+    <string name="r40PhoneUnknown">Sin información</string>
+    <string name="r40PhoneAwake">Mantener el teléfono activo</string>
+    <string name="r40PhoneAwakeNow">Activo ahora para trabajar</string>
+    <string name="r40PhoneAwakeWhenWorking">Solo mientras haga falta</string>
+    <string name="r40PhoneFirstWords">Espera de las primeras palabras</string>
+    <string name="r40PhoneFirstSplit">%1$s en la app · %2$s en el servidor</string>
+    <string name="r40PhoneRefresh">Actualizar datos del teléfono</string>
+    <string name="r40PhoneModel">Modelo de la última respuesta</string>
+    <string name="r40PhoneRuntimeDetails">Detalles de ejecución</string>
+    <string name="r40PhoneHistoryDetails">Detalles de la importación de conversaciones</string>
+    <string name="r40PhoneLogFailed">No se pudo leer el registro del servidor. Inténtalo de nuevo.</string>
+    <string name="r40PhoneLogEmpty">El servidor aún no ha escrito ningún registro.</string>
+    <string name="r40PhoneLog">Registro del servidor de OpenCode</string>
+    <string name="r40PhoneSeconds">%1$s s</string>
+</resources>

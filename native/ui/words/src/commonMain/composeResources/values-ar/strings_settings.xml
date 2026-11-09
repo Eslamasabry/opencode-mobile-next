@@ -555,6 +555,9 @@
     <string name="e7LocaleUiSpanish">Español</string>
     <string name="e7LocaleUiPortuguese">Português (Brasil)</string>
     <string name="e7LocaleUiRussian">Русский</string>
+    <string name="e7LocaleUiVietnamese">Tiếng Việt</string>
+    <string name="e7LocaleUiIndonesian">Bahasa Indonesia</string>
+    <string name="e7LocaleUiFrench">Français</string>
     <string name="serverSettingsRemoveTitle">إزالة %1$s</string>
     <string name="serverSettingsRecheckAgents">التحقق من الوكلاء مجددا</string>
     <string name="serverSettingsRecheckAgentsDetail">استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.</string>
@@ -876,10 +879,20 @@
     <string name="backgroundBatterySettingsInstead">لم يعرض Android سؤاله، لذا فُتحت إعدادات البطارية بدلًا منه. اضبط هذا التطبيق على «غير مقيّد» هناك.</string>
     <string name="privacyPagesSummary">الخوادم والمزوّدون والصوت والملفات والتحديثات</string>
     <string name="manageSpaceKeptAllComputers">تبقى حواسيبك وكل ما رفعته إلى git</string>
-    <string name="appearanceGlassEdges">حواف الزجاج</string>
-    <string name="appearanceGlassEdgesLiquid">سائلة</string>
-    <string name="appearanceGlassEdgesFrosted">مصنفرة</string>
-    <string name="appearanceGlassEdgesNote">السائلة تثني ما يمرّ خلف الأشرطة وصندوق الرسالة والألواح والقوائم. المصنفرة تطمسه.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">الحواف السائلة تحتاج Android 13. يعرضها هذا الهاتف مصنفرة.</string>
-    <string name="appearanceGlassEdgesMotionOff">تبقى الحواف مصنفرة ما دامت الحركة متوقفة.</string>
+    <string name="appearanceGlassLook">مظهر الزجاج</string>
+    <string name="appearanceGlassLookPick">اختر مظهر الزجاج</string>
+    <string name="appearanceGlassLookGlossy">لامع</string>
+    <string name="appearanceGlassLookGlossyLine">لمعان ساطع، وانحناء عند الحواف</string>
+    <string name="appearanceGlassLookClear">شفاف</string>
+    <string name="appearanceGlassLookClearLine">يُرى ما خلفه، ولمعان خفيف</string>
+    <string name="appearanceGlassLookFrosted">مصنفر</string>
+    <string name="appearanceGlassLookFrostedLine">تمويه ناعم، الأسهل في القراءة</string>
+    <string name="appearanceGlassLookSmoked">مُدخَّن</string>
+    <string name="appearanceGlassLookSmokedLine">زجاج داكن على الأشرطة والأزرار</string>
+    <string name="appearanceGlassLookDisclosure">تستخدم المعاينات ألوانًا ساطعة لتظهر الفروق. الصفحة خلفها تعرض خلفيتك الحقيقية.</string>
+    <string name="appearanceGlassLookFrostedLighter">صار المصنفر يستخدم بطاقات أفتح، فيظهر المزيد من خلفيتك.</string>
+    <string name="appearanceGlassLookHeldMotion">تتوقف مظاهر الزجاج ما دامت الحركة متوقفة. شغّل الحركة لتختار واحدًا.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">انحناء الحواف يحتاج Android 13. يعرضها هذا الهاتف مموّهة في كل مظهر.</string>
+    <string name="appearanceGlassCardHint">اضغط الزجاج مرة أخرى لتختار مظهره.</string>
+    <string name="appearanceGlassCardLook">زجاج · %1$s</string>
 </resources>

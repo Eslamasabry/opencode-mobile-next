@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Сбросить сохранённые входы</string>
+    <string name="agentsResetSavedSignInsBody">Отключить все серверы и удалить из приложения сохранённые пароли серверов и ключи доступа помощника? Ваши профили, чаты, проекты и собственные входы агентов останутся. После этого перезапустите приложение.</string>
+    <string name="agentsResetSavedSignInsFailed">Не все сохранённые входы удалось сбросить. Повторите попытку, затем перезапустите приложение.</string>
+    <string name="agentsRestartAfterReset">Перезапустите приложение, прежде чем снова подключаться или использовать агентов на телефоне.</string>
+    <string name="agentsHelperStopped">Помощник агентов неожиданно остановился. Проверьте настройку телефона, прежде чем начинать новый чат.</string>
+    <string name="agentsHelperMayHaveStopped">Помощник агентов остановился. Возможно, Android остановил его, чтобы освободить память или ограничить фоновые процессы.</string>
+    <string name="agentsPhoneHelperProfile">Агенты на телефоне</string>
+    <string name="agentsPreviousVersion">Вернуться к предыдущей версии %1$s</string>
+    <string name="agentsPreviousVersionBody">Переключиться на проверенную предыдущую версию, сохранённую на этом телефоне? Сначала помощник остановится, затем агенты на телефоне подключатся снова. Входы и чаты сохранятся.</string>
+    <string name="agentsPreviousVersionFailed">Не удалось вернуть предыдущую версию. Завершите все выполняемые задачи и повторите попытку.</string>
+    <string name="agentsPreviousVersionRestored">Предыдущая версия восстановлена.</string>
+</resources>

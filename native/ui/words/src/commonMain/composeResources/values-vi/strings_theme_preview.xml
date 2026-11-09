@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="themePreviewOnly">Bản xem trước này chỉ đổi các màu này. Chọn Áp dụng để dùng chúng trong toàn bộ ứng dụng.</string>
+</resources>

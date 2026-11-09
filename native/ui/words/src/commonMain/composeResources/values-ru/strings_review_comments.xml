@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewCommentTitleLine">Комментарий к строке %1$s</string>
+    <string name="reviewCommentTitleLines">Комментарий к строкам %1$s–%2$s</string>
+    <string name="reviewCommentField">Что агенту нужно изменить?</string>
+    <string name="reviewCommentAdd">Добавить комментарий</string>
+    <string name="reviewCommentLine">Строка %1$s</string>
+    <string name="reviewCommentLines">Строки %1$s–%2$s</string>
+    <string name="reviewCommentRemovedLine">Удалённая строка %1$s</string>
+    <string name="reviewCommentRemovedLines">Удалённые строки %1$s–%2$s</string>
+    <string name="reviewCommentDraft">Не отправлено</string>
+    <string name="reviewCommentSending">Отправляется</string>
+    <string name="reviewCommentWaiting">Ждёт агента</string>
+    <string name="reviewCommentFixed">Исправлено</string>
+    <string name="reviewCommentRemove">Удалить</string>
+    <string name="reviewCommentsLabel">Ваши комментарии</string>
+    <string name="reviewCommentHint">Нажмите номер строки, затем «Комментарий», чтобы попросить агента изменить её.</string>
+    <string name="reviewCommentNotPlaced">Не удалось определить, какие это строки. Выберите строки снова.</string>
+    <string name="reviewCommentsSendFailed">Не удалось отправить комментарии. Они сохранены здесь.</string>
+    <plurals name="reviewSendComments">
+        <item quantity="one">Отправить %1$d комментарий</item>
+        <item quantity="few">Отправить %1$d комментария</item>
+        <item quantity="many">Отправить %1$d комментариев</item>
+        <item quantity="other">Отправить %1$d комментария</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="one">%1$d комментарий ждёт агента.</item>
+        <item quantity="few">%1$d комментария ждут агента.</item>
+        <item quantity="many">%1$d комментариев ждут агента.</item>
+        <item quantity="other">%1$d комментария ждут агента.</item>
+    </plurals>
+    <string name="reviewGuided">С проводником</string>
+    <string name="reviewGuidedSupporting">Агент проведёт вас по своим изменениям, сначала самые важные</string>
+    <string name="reviewGuideMaking">Просим агента провести вас по его изменениям…</string>
+    <string name="reviewGuideFallback">На этот раз не удалось подготовить обзор. Показаны все файлы.</string>
+    <string name="reviewGuideBusy">Обзор появится, когда агент закончит. Пока показаны все файлы.</string>
+    <string name="reviewGuideAlsoChanged">Также изменено</string>
+</resources>

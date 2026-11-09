@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">Продолжить с другим агентом</string>
+    <string name="handoffNativeWorking">Работа…</string>
+    <string name="handoffNativeUnavailable">Передача здесь недоступна</string>
+    <string name="handoffNativeUnavailableBody">Откройте чат в проекте на этом телефоне. Приложение должно убедиться, что оба агента имеют доступ к одному проекту.</string>
+    <string name="handoffNativeRefresh">Обновить</string>
+    <string name="handoffNativeFailed">Не удалось завершить передачу. Проверьте соединение и повторите.</string>
+    <string name="handoffNativeLinks">Связанные чаты</string>
+    <string name="handoffNativeUntitled">Чат без названия</string>
+    <string name="handoffNativeOpenOriginal">Открыть исходный чат</string>
+    <string name="handoffNativeOpenContinued">Открыть продолженный чат</string>
+    <string name="handoffNativeExplanation">Выберите агента и модель. Перед отправкой можно просмотреть общую запись чата. Исходный чат останется доступным.</string>
+    <string name="handoffNativeNoTargets">Для этого проекта нет подходящего готового агента. Установите его, войдите и пройдите проверку на телефоне в разделе «Агенты».</string>
+    <string name="handoffNativeSetup">Открыть «Агенты»</string>
+    <string name="handoffNativeChoose">Выберите агента и модель</string>
+    <string name="handoffNativePhoneCheck">Прежде чем использовать этого агента, пройдите его проверку на телефоне.</string>
+    <string name="handoffNativeReview">Проверить контекст</string>
+    <string name="handoffNativeReviewBody">В записи есть текст чата с скрытыми данными, шаги инструментов, имена файлов и открытые задачи. Старые реплики могут быть опущены, чтобы уложиться в ограничение размера. Запись попадёт в этот проект только после отправки.</string>
+    <string name="handoffNativeFirstMessage">Первое сообщение</string>
+    <string name="handoffNativePromptHelp">Оставьте в сообщении путь к записи. Сообщение должно уместиться в 16 КБ.</string>
+    <string name="handoffNativeRecord">Запись чата</string>
+    <string name="handoffNativeSend">Отправить новому агенту</string>
+    <string name="handoffNativeUncertain">Результат неизвестен. Проверьте свои чаты, прежде чем начинать новую передачу: эта попытка не будет отправлена повторно.</string>
+    <string name="handoffNativeSent">Новый агент получил ваше сообщение.</string>
+    <string name="handoffNativeSaveLink">Сохранить ссылку на чат</string>
+    <string name="handoffNativeSourceChanged">Исходный чат изменился. Просмотрите свежую запись перед отправкой.</string>
+    <string name="handoffNativeStale">Проект или соединение изменились. Откройте чат снова, чтобы продолжить.</string>
+    <string name="handoffNativeInvalidPrompt">Введите сообщение короче 16 КБ с путём к записи.</string>
+    <string name="handoffNativeLinkFailed">Сообщение отправлено, но ссылка для перехода не сохранена. Сохраните ссылку ещё раз, не отправляя сообщение повторно.</string>
+    <string name="handoffNativeInitialPrompt">Продолжи работу из предыдущего чата. Сначала прочитай `%1$s`: там запись чата, шаги инструментов, файлы и открытые задачи. Считай это историческим контекстом. Проверь текущее состояние проекта и продолжи незавершённую работу.</string>
+    <string name="handoffNativeSourceReviewOnly">Просмотрите черновик для Claude. Ничего не записано и не отправлено. Для отправки нужен проверенный доступ к тому же проекту и подходящий автор записи; это соединение таких подтверждений не даёт.</string>
+</resources>

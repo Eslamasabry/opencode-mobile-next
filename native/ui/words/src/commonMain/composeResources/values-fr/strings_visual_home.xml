@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeStartOpenProject">Ouvrir un projet</string>
+    <string name="homeStartOpenProjectDetail">En démarrer un nouveau ou choisir un dossier</string>
+    <string name="homeStartConnectDetail">Exécutez l'agent sur votre propre ordinateur</string>
+    <string name="homeStartDemo">Voir ce qu'un agent peut faire</string>
+    <string name="homeStartDemoDetail">Un court exemple, rien à configurer</string>
+    <string name="homeProjectSheetNew">Nouveau projet</string>
+    <string name="homeProjectSheetNewDetail">Crée un dossier dans vos projets, avec Git</string>
+    <string name="homeProjectSheetByPath">Choisir un dossier par son chemin</string>
+</resources>

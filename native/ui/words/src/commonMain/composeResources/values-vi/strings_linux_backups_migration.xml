@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">Các tệp đăng nhập đã biết và cài đặt môi trường dịch vụ đã lưu vẫn ở lại trên điện thoại này. Lệnh dịch vụ tùy chỉnh được đưa vào; hãy xem lại chúng trước khi chia sẻ bản sao lưu.</string>
+    <string name="linuxBackupServiceAccountsNative">Các dịch vụ có cài đặt môi trường đã lưu được sao lưu ở trạng thái tắt. Sau khi khôi phục, hãy thiết lập lại tài khoản và môi trường của chúng trước khi khởi động.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSharedAccessTitle">¿Permitiste el acceso a los archivos de este teléfono?</string>
+    <string name="phoneSharedAccessBody">Usa Permitir el acceso en los ajustes de Android y luego intenta abrir el archivo de nuevo.</string>
+</resources>

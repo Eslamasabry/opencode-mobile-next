@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeConnectScanTitle">Отсканируйте код с компьютера</string>
+    <string name="upgradeConnectScanBody">Выполните команду ниже на компьютере. Она покажет код. Отсканируйте его, и подключение готово.</string>
+    <string name="upgradeConnectPasteBody">Выполните команду ниже на компьютере, затем вставьте код, который она выведет.</string>
+    <string name="upgradeConnectCommandTitle">Выполните это на компьютере</string>
+    <string name="upgradeConnectOtherWays">Другие способы подключения</string>
+    <string name="upgradeConnectTailscaleBody">Подключитесь к компьютеру через частную сеть.</string>
+    <string name="upgradeConnectManualBody">Введите адрес, затем пароль.</string>
+    <string name="upgradeConnectNameLine">Будет сохранено как «%1$s». Ниже можно переименовать.</string>
+    <string name="upgradeConnectNameFallback">Мой компьютер</string>
+    <string name="upgradeReadyTitle">Подключено к «%1$s»</string>
+    <string name="upgradeReadyVersion">Версия %1$s</string>
+    <string name="upgradeReadyStart">Начать чат</string>
+</resources>

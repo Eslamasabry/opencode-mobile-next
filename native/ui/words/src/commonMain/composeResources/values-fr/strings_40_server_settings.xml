@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverSettingsTitle">Paramètres du serveur</string>
+    <string name="serverSettingsShell">Shell par défaut</string>
+    <string name="serverSettingsFailed">Impossible de terminer. Réessayez.</string>
+    <string name="serverSettingsRemove">Supprimer le serveur</string>
+    <string name="serverSettingsRemoveBody">Supprime cette connexion enregistrée et ses données locales de l’application. Le serveur et les fichiers de son ordinateur ne sont pas touchés.</string>
+    <string name="serverSettingsDisconnected">Non connecté</string>
+    <string name="serverSettingsConnect">Se connecter à ce serveur</string>
+    <string name="serverSettingsOnServer">Les modifications faites ici sont enregistrées sur %1$s et partagées avec les autres applications qui l’utilisent.</string>
+    <string name="serverSettingsWaiting">En attente</string>
+    <string name="serverSettingsPassed">Réussi</string>
+    <string name="serverSettingsAttention">À vérifier</string>
+    <string name="serverSettingsFailedCheck">À corriger</string>
+    <string name="serverSettingsSkipped">Non vérifié</string>
+    <string name="serverSettingsShellUnavailable">Connectez-vous à un serveur qui partage ses paramètres de shell pour changer son shell par défaut.</string>
+    <string name="serverSettingsSaving">Enregistrement…</string>
+    <string name="serverSettingsTerminal">Terminal</string>
+    <string name="serverSettingsFiles">Parcourir les fichiers</string>
+    <string name="serverSettingsProjects">Gérer les projets</string>
+    <string name="serverSettingsSchedules">Invites programmées</string>
+    <string name="serverSettingsProviders">Fournisseurs de modèles</string>
+    <string name="serverSettingsPermissions">Demandes d’autorisation</string>
+    <string name="serverSettingsSteering">Guider une réponse en cours</string>
+    <string name="serverSettingsSupported">Disponible sur ce serveur</string>
+    <string name="serverSettingsUnsupported">Non disponible sur ce serveur</string>
+    <string name="server40DisconnectConfirm">Se déconnecter de %1$s\u00A0?</string>
+    <string name="server40Disconnect">Déconnecter</string>
+    <string name="server40DisconnectBody">Cela ferme la connexion sur ce téléphone. Vos conversations, brouillons et messages en attente restent enregistrés.</string>
+    <string name="server40Reconnect">Reconnecter</string>
+    <string name="server40AgentsNone">Aucun agent n’est prêt sur cet ordinateur.</string>
+    <string name="server40Plugins">Plugins du serveur</string>
+    <string name="server40ResetDone">Vos valeurs par défaut s’appliquent de nouveau ici.</string>
+    <string name="server40ModelHelp">Ce choix s’applique aux nouvelles conversations sur ce serveur. Les conversations existantes gardent leur propre modèle.</string>
+</resources>

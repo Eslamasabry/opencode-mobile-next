@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">Modelo predeterminado</string>
+    <string name="p12NewDefaultAgent">Agente predeterminado</string>
+    <string name="p12NewAgent">Agente</string>
+    <string name="p12NewFolder">Carpeta del proyecto</string>
+    <string name="p12NewUseFolder">Usar esta carpeta</string>
+    <string name="p12NewDraftFailed">No se pudo guardar tu mensaje en este teléfono. Mantén esta página abierta e inténtalo de nuevo.</string>
+    <string name="p12NewCreationUnconfirmed">El servidor no confirmó si se creó la conversación. Revisa Conversaciones antes de iniciar otra. Tu mensaje sigue guardado aquí.</string>
+    <string name="p12NewBoundProject">Esta conexión usa su carpeta de proyecto guardada. Agrega una conexión para otra carpeta.</string>
+    <string name="p12NewDeliveryUnconfirmed">El servidor no confirmó este mensaje. Abre la conversación creada para revisarlo antes de iniciar otra. Tus palabras siguen guardadas aquí.</string>
+    <string name="p12NewOpenCreated">Abrir la conversación creada</string>
+    <string name="chatsNewFolderMissing">La carpeta de este proyecto ya no está en el servidor. Vuelve a crearla como un proyecto vacío o elige otro proyecto.</string>
+    <string name="chatsNewFolderRemake">Volver a crear la carpeta</string>
+    <string name="chatsNewFolderChooseAnother">Elegir otro proyecto</string>
+    <string name="chatSendFolderMissing">La carpeta de este proyecto ya no está en el servidor, así que el mensaje no se envió. Inicia una conversación nueva para volver a crear la carpeta o elige otro proyecto.</string>
+</resources>

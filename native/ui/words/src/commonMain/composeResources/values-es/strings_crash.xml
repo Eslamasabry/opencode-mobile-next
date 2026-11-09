@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Evidencia de fallos guardada</string>
+    <string name="secCrashCapture">Conservar categorías de fallos en este teléfono</string>
+    <string name="secCrashPrivacy">Desactivado de forma predeterminada. Guarda solo categorías de errores y horas, nunca mensajes, trazas ni conversaciones.</string>
+    <string name="secCrashClear">Borrar la evidencia guardada</string>
+    <string name="secCrashPreview">Vista previa del informe de fallos</string>
+    <string name="secCrashEmpty">No se ha guardado evidencia de fallos.</string>
+    <string name="secCrashDisabled">Activa la captura de fallos para conservar las categorías de errores futuros.</string>
+    <string name="secCrashStale">La evidencia cambió. Vuelve a ver la vista previa del informe antes de compartir.</string>
+    <string name="secCrashBusy">Ya se está abriendo el panel para compartir.</string>
+    <string name="secCrashUnavailable">La evidencia de fallos no está disponible. Inténtalo de nuevo.</string>
+    <string name="secCrashShareUnavailable">Compartir no está disponible. Inténtalo de nuevo.</string>
+    <string name="secAppExits">Cierres de la app de Android</string>
+    <string name="secHelperExits">Cierres del ayudante del agente</string>
+    <string name="secHistoryRefresh">Actualizar historial de cierres</string>
+    <string name="secHistoryEmpty">No se registraron cierres recientes.</string>
+    <string name="secHistoryUnavailable">El historial de cierres no está disponible.</string>
+    <string name="secHistoryEntry">%1$s · código %2$d</string>
+    <string name="secCrashReportHeader">Informe de fallos de OpenCode Mobile\nSolo categorías de errores y horas capturadas.\nNo se incluyen mensajes, trazas ni conversaciones.\n\n</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">Thao tác với cổng</string>
+    <string name="linuxPortCopiedAddress">Sao chép địa chỉ</string>
+    <string name="linuxPortOwnerStop">Dừng %1$s</string>
+    <string name="linuxPortOwnerQuestion">Dừng %1$s?</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="other">Dừng chương trình đã chọn và các tiến trình phụ của nó (%1$d tiến trình). Mỗi tiến trình vẫn phải khớp với danh tính đang hiển thị. Sẽ không có gì khởi động lại nó.</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">Đã kết thúc: %1$d · buộc dừng: %2$d · vẫn đang chạy: %3$d · danh tính đã đổi nên được giữ lại: %4$d</string>
+</resources>

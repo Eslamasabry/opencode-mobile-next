@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">Связанные чаты</string>
+    <string name="r40RelationsRefresh">Обновить связанные чаты</string>
+    <string name="r40RelationsStale">Расположение этого чата изменилось. Вернитесь назад и снова откройте связанные чаты.</string>
+    <string name="r40RelationsFailure">Не удалось завершить. Повторите или вернитесь назад и снова откройте связанные чаты.</string>
+    <string name="r40RelationsParent">Начат из</string>
+    <string name="r40RelationsEmpty">Чатов субагентов пока нет</string>
+    <string name="r40RelationsEmptyBody">Делегированная работа появится здесь и не смешается с вашим чатом.</string>
+    <string name="r40RelationsChildren">Чаты субагентов · %1$s</string>
+    <string name="r40RelationsUntitled">Чат без названия</string>
+    <string name="r40RelationsNeedsYou">Нужны вы · Откройте, чтобы ответить</string>
+    <string name="r40RelationsWorking">Работает</string>
+    <string name="r40RelationsIdle">Ожидает</string>
+    <string name="r40RelationsDone">Готово</string>
+    <string name="r40RelationsCurrent">Этот чат</string>
+    <string name="r40RelationsPinned">Закреплён</string>
+    <string name="r40RelationsActions">Действия</string>
+    <string name="r40RelationsOpening">Выполняется…</string>
+    <string name="r40RelationsOpen">Открыть чат</string>
+    <string name="r40RelationsResume">Продолжить на компьютере</string>
+    <string name="r40RelationsPin">Закрепить чат</string>
+    <string name="r40RelationsUnpin">Открепить чат</string>
+    <string name="r40RelationsStop">Остановить субагента</string>
+    <string name="r40RelationsStopTitle">Остановить %1$s?</string>
+    <string name="r40RelationsStopBody">Текущая работа будет остановлена. Чат и уже выполненная работа сохранятся.</string>
+    <string name="r40RelationsKeepRunning">Не останавливать</string>
+    <string name="r40RelationsResumeBody">Выполните эту команду на компьютере, где работает этот сервер, в том же проекте. Копирование ничего не отправляет.</string>
+    <string name="r40RelationsCopy">Скопировать команду</string>
+    <string name="r40RelationsJustNow">Только что</string>
+    <string name="r40RelationsMinutes">%1$s мин назад</string>
+    <string name="r40RelationsHours">%1$s ч назад</string>
+    <string name="r40RelationsDays">%1$s д назад</string>
+</resources>

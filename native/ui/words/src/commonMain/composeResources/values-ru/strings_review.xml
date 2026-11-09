@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Изменения в этом ходе</string>
+    <string name="reviewOneFileUnavailable">Отменить один файл пока нельзя: этот сервер умеет отменять только с запроса. Выберите «Отменить всё» или «Отменить, начиная отсюда» на запросе.</string>
+    <string name="reviewNoDiff">Сервер не сообщил, какие строки изменились в этом файле.</string>
+    <string name="reviewFileGone">Этого файла больше нет в этих изменениях.</string>
+    <string name="reviewIncomplete">Не удалось прочитать старые сообщения, поэтому в списке могут быть не все файлы.</string>
+    <string name="reviewNoChangesBody">Агент не сообщил здесь об изменениях в файлах.</string>
+    <string name="reviewWaiting">Отмена ждёт вашей проверки. Сообщения после её запроса скрыты, пока вы не выберете.</string>
+    <string name="reviewUndoUnknown">Чтобы отменить всё, нужен запрос, с которого начались эти изменения, но его не удалось прочитать.</string>
+    <string name="reviewUndoUnavailable">Этот сервер не может отменять изменения с запроса.</string>
+    <string name="reviewToolEvidence">По данным инструментов агента. Изменения, сделанные командами, не показаны.</string>
+    <string name="reviewSendBackFailed">Не удалось добавить вашу заметку в сообщение. Повторите.</string>
+</resources>

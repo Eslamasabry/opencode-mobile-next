@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="crashOfferSection">Отчёты о сбоях</string>
+    <string name="crashOfferSettingTitle">Предлагать отчёты о сбоях</string>
+    <string name="crashOfferSettingDetail">Если приложение неожиданно закроется, вам предложат отчёт, который можно сначала просмотреть. Сами по себе данные никогда не отправляются.</string>
+    <string name="telemetryConsentTitle">Помочь улучшить OpenCode Mobile?</string>
+    <string name="telemetryConsentBody">Если вы согласитесь, приложение будет отправлять через Google Firebase анонимные данные об использовании и работе приложения, а также отчёты о сбоях. Каждый пункт можно изменить в разделе «Настройки» › «Конфиденциальность и данные».</string>
+    <string name="telemetryConsentSends">Отправляется: какие страницы и функции используются, удаётся ли подключаться, отправлять и настраивать, скорость приложения, диапазоны памяти и хранилища, отчёты о сбоях. Случайный идентификатор установки.</string>
+    <string name="telemetryConsentNever">Никогда не отправляются: ваш код, чаты, файлы, адреса серверов и ключи. Рекламный идентификатор не используется.</string>
+    <string name="telemetryConsentShare">Разрешить оба</string>
+    <string name="telemetryConsentNotNow">Не сейчас</string>
+</resources>

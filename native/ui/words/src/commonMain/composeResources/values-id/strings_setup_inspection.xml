@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">Periksa penyiapan</string>
+    <string name="setupInspectReadOnly">Tampilan ini membaca konfigurasi dan status alat. Terapkan dan Urungkan tidak tersedia karena server ini tidak dapat memulihkan perubahan penyiapan dengan aman.</string>
+    <string name="setupInspectFailed">Informasi penyiapan tidak dapat dimuat. Sambungkan ulang ke server dan coba lagi.</string>
+    <string name="setupInspectRefresh">Muat ulang penyiapan</string>
+    <string name="setupInspectLoading">Membaca penyiapan…</string>
+    <string name="setupInspectConfig">Sumber konfigurasi</string>
+    <string name="setupInspectNoSources">Tidak ada sumber konfigurasi yang dilaporkan.</string>
+    <string name="setupInspectMcp">Koneksi alat</string>
+    <string name="setupInspectNoMcp">Tidak ada koneksi alat yang dilaporkan.</string>
+    <string name="setupMcpConnected">Terhubung</string>
+    <string name="setupMcpPending">Menghubungkan</string>
+    <string name="setupMcpDisabled">Nonaktif</string>
+    <string name="setupMcpFailed">Koneksi gagal</string>
+    <string name="setupMcpSignIn">Perlu masuk</string>
+    <string name="setupMcpUnknown">Status tidak diketahui</string>
+    <string name="setupRegistryTitle">Registri alat publik</string>
+    <string name="setupRegistryConsent">Jelajahi registri publik</string>
+    <string name="setupRegistryPrivacy">Muat ulang menghubungi registri MCP publik tanpa kredensial server. Kata kunci pencarian dikirim ke registri dan tidak pernah disimpan.</string>
+    <string name="setupRegistryDisabled">Penjelajahan nonaktif. Aktifkan agar daftar dimuat saat Anda memilih Muat ulang.</string>
+    <string name="setupRegistryLoading">Memuat daftar publik…</string>
+    <string name="setupRegistryOffline">Anda sedang offline. Menampilkan daftar tersimpan.</string>
+    <string name="setupRegistryError">Registri publik tidak dapat dimuat. Menampilkan daftar tersimpan.</string>
+    <string name="setupRegistryEmpty">Belum ada daftar yang dimuat. Muat ulang atau cari di registri.</string>
+    <string name="setupRegistryReadOnly">Daftar hanya berupa informasi. Siapkan alat secara manual di server Anda; halaman ini tidak pernah menjalankan perintah registri atau membuka tautan yang tercantum.</string>
+    <string name="setupRegistrySearch">Cari daftar</string>
+    <string name="setupRegistryRefresh">Muat ulang daftar</string>
+    <string name="setupRegistrySaved">Tampilkan daftar tersimpan</string>
+    <string name="setupInspectUnsupported">Pemeriksaan penyiapan tidak tersedia di server ini.</string>
+    <string name="setupMigrationRequired">Memindahkan percakapan lama Anda…</string>
+    <string name="setupMigrationProgress">Memindahkan percakapan lama Anda (%1$d dari %2$d)…</string>
+    <string name="setupMigrationError">Server tidak dapat menyelesaikan pemindahan percakapan lama Anda. Data asli Anda masih ada di ponsel ini, tidak tersentuh.</string>
+    <string name="setupMigrationUnavailable">Server tidak dapat melaporkan status percakapan lama Anda. Muat ulang untuk mencoba lagi.</string>
+</resources>

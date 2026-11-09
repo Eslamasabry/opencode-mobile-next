@@ -97,7 +97,7 @@ class DevServicesScreenTest {
             assertEquals(listOf("start s1", "add"), calls.seen)
             // Flutter keeps the project folder in the folded Details, under "Project folder".
             onNodeWithText("Details").performClick()
-            onNodeWithText("/work/shopfront", substring = true).assertExists()
+            onNodeWithText("/work/shopfront", substring = true, useUnmergedTree = true).assertExists()
         }
 
     @Test

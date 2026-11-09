@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">Koneksi latar belakang dijeda %1$s untuk menghemat baterai.</string>
+    <string name="background_pause_restricted">Koneksi latar belakang dijeda: pemakaian baterai dibatasi.</string>
+    <string name="background_pause_user_stopped">Koneksi latar belakang berhenti saat aplikasi ditutup %1$s.</string>
+    <string name="background_pause_app_updated">Koneksi latar belakang berhenti saat aplikasi diperbarui %1$s.</string>
+    <string name="background_pause_interrupted">Koneksi latar belakang berhenti karena alasan yang tidak diketahui.</string>
+    <string name="background_pause_device_restarted">Koneksi latar belakang berhenti saat ponsel dimulai ulang.</string>
+    <string name="background_pause_resume">Lanjutkan koneksi latar belakang</string>
+    <string name="background_pause_resume_short">Lanjutkan</string>
+    <string name="background_pause_resuming">Melanjutkan koneksi latar belakang…</string>
+    <string name="background_pause_resume_failed">Tidak dapat melanjutkan. Buka pengaturan Tetap berjalan.</string>
+    <string name="background_pause_open_keep_running">Buka pengaturan Tetap berjalan</string>
+    <string name="background_pause_resumed">Koneksi latar belakang dilanjutkan.</string>
+    <string name="background_error_notifications_required">Akses notifikasi diperlukan.</string>
+    <string name="background_error_could_not_change">Android tidak dapat mengubah mode latar belakang.</string>
+    <string name="background_error_android_app_only">Mode langsung di latar belakang tersedia di aplikasi Android.</string>
+</resources>

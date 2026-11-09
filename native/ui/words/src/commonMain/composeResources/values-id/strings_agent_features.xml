@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentFeaturesTitle">Pengaturan agen</string>
+    <string name="agentFeaturesEmpty">Agen ini tidak punya pengaturan tambahan.</string>
+    <string name="agentFeaturesFailed">Pengaturan agen tidak bisa dimuat</string>
+</resources>

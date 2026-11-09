@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Outils de projet du serveur</string>
+    <string name="protoWorking">En cours…</string>
+    <string name="protoGitInitialized">Ce dossier est un dépôt Git.</string>
+    <string name="protoWorktreeCreated">L’arbre de travail est prêt dans le dossier ci-dessous.</string>
+    <string name="protoShellSaved">Shell par défaut enregistré.</string>
+    <string name="protoGitInitialize">Initialiser Git dans ce dossier</string>
+    <string name="protoWorktreeName">Nom du nouvel arbre de travail</string>
+    <string name="protoWorktreeCreate">Créer l’arbre de travail</string>
+    <string name="protoShellTitle">Shell de terminal par défaut</string>
+    <string name="protoShellDefault">Utiliser celui du serveur</string>
+    <string name="protoShellUnavailable">Ce shell ne peut pas être utilisé sur ce serveur.</string>
+    <string name="protoWebSearch">Rechercher sur le web</string>
+    <string name="protoWebSearchHelp">Recherchez avec le fournisseur de ce serveur. Les recherches n’apparaissent pas dans l’historique des conversations.</string>
+    <string name="protoWebUnavailable">La recherche sur le web n’est pas disponible sur ce serveur.</string>
+    <string name="protoWebFailed">La recherche sur le web n’a pas abouti. Rechargez la liste des fournisseurs ou relancez la recherche.</string>
+    <string name="protoWebQuery">Termes de recherche sur le web</string>
+    <string name="protoWebProvider">Fournisseur de recherche</string>
+    <string name="protoWebEmpty">Aucun résultat web.</string>
+    <string name="protoWebOpenQuestion">Ouvrir %1$s dans votre navigateur\u00A0?</string>
+    <string name="protoWebOpenBrowser">Ouvrir le navigateur</string>
+    <string name="protoWebInsecure">Ce lien utilise une connexion non chiffrée.</string>
+    <string name="protoWebLeaveApp">Ceci ouvre un site web en dehors de l’application.</string>
+    <string name="protoGitToolsFailed">Cela n’a pas fonctionné. Vérifiez le serveur et réessayez.</string>
+    <string name="protoPairingCheck">%1$s\u00A0: %2$s</string>
+</resources>

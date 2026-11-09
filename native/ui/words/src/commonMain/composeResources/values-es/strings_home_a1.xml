@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatsHomeRightNow">Ahora mismo</string>
+    <string name="chatsHomeRecent">Recientes</string>
+    <string name="chatsHomeAsksToRun">Pide ejecutar: %1$s</string>
+</resources>

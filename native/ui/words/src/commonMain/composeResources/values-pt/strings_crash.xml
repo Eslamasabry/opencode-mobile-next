@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Registros de falhas salvos</string>
+    <string name="secCrashCapture">Guardar categorias de falhas neste celular</string>
+    <string name="secCrashPrivacy">Desativado por padrão. Salva apenas categorias de erro e horários, nunca mensagens, rastros ou conversas.</string>
+    <string name="secCrashClear">Limpar registros salvos</string>
+    <string name="secCrashPreview">Ver prévia do relatório de falhas</string>
+    <string name="secCrashEmpty">Nenhum registro de falha foi salvo.</string>
+    <string name="secCrashDisabled">Ative o registro de falhas para guardar as próximas categorias de erro.</string>
+    <string name="secCrashStale">Os registros mudaram. Veja a prévia do relatório de novo antes de compartilhar.</string>
+    <string name="secCrashBusy">A tela de compartilhamento já está abrindo.</string>
+    <string name="secCrashUnavailable">Os registros de falhas não estão disponíveis. Tente novamente.</string>
+    <string name="secCrashShareUnavailable">O compartilhamento não está disponível. Tente novamente.</string>
+    <string name="secAppExits">Encerramentos do app Android</string>
+    <string name="secHelperExits">Encerramentos do auxiliar do agente</string>
+    <string name="secHistoryRefresh">Atualizar histórico de encerramentos</string>
+    <string name="secHistoryEmpty">Nenhum encerramento recente foi registrado.</string>
+    <string name="secHistoryUnavailable">O histórico de encerramentos não está disponível.</string>
+    <string name="secHistoryEntry">%1$s · código %2$d</string>
+    <string name="secCrashReportHeader">Relatório de falhas do OpenCode Mobile\nSomente categorias de erro e horários capturados.\nNenhuma mensagem, rastro ou conversa está incluído.\n\n</string>
+</resources>

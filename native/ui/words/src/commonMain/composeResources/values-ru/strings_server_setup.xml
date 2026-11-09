@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secSetupTitle">Настройка сервера</string>
+    <string name="secSetupReadOnly">Просмотрите конфигурацию сервера и подготовьте локальные предложения. Для применения и отмены нужна точка атомарного восстановления, которой на этом сервере нет. Здесь ничего не меняется на вашем сервере.</string>
+    <string name="secSetupFailed">Не удалось загрузить настройку. Подключитесь к этому серверу снова и повторите попытку.</string>
+    <string name="secSetupRefresh">Обновить настройку сервера</string>
+    <string name="secSetupConfig">Конфигурация со скрытыми личными значениями</string>
+    <string name="secSetupGuided">Пошаговая настройка на этом устройстве</string>
+    <string name="secSetupReview">Проверить предложение</string>
+    <string name="secSetupInvalid">Заполните запрошенные поля без учётных данных. Проверьте модель, команду и адрес и повторите попытку.</string>
+    <string name="secSetupInputs">Введите все запрошенные значения без учётных данных. В URL не должно быть пароля, запроса или фрагмента. Изменений не предложено.</string>
+    <string name="secSetupUnsupported">Для этого сценария нужны отдельные средства входа или настройки сервера. В пошаговой настройке он недоступен.</string>
+    <string name="secSetupProposed">Локальное предложение готово к проверке. Ничего не применено. Предложения для коннекторов создаются выключенными.</string>
+    <string name="secSetupRegistry">Открыть публичный реестр коннекторов</string>
+    <string name="secSetupRegistryConsent">По умолчанию выключено. Если включить, выбор только сохранится, без загрузки. Обновление обращается к публичному реестру MCP без учётных данных сервера.</string>
+    <string name="secSetupSearch">Поиск по публичным записям</string>
+    <string name="secSetupRegistryRefresh">Обновить публичные записи</string>
+    <string name="secSetupRegistryDisabled">Доступ к публичному реестру выключен.</string>
+    <string name="secSetupRegistryOffline">Нет сети. Показаны сохранённые записи.</string>
+    <string name="secSetupRegistryFailed">Не удалось загрузить публичный реестр. Повторите позже или настройте вручную.</string>
+    <string name="secSetupRegistryEmpty">Нет публичных записей для показа.</string>
+    <string name="secSetupRegistryReady">Публичные записи коннекторов</string>
+    <string name="secSetupRegistryRemote">В записи указан адрес HTTPS. Проверьте его данные, прежде чем настраивать его на вашем сервере.</string>
+    <string name="secSetupRegistryDetails">Для этой записи нужны данные подключения. Настройте её вручную.</string>
+    <string name="secSetupRegistryCommand">Для установки пакета нужна проверенная команда на вашем сервере. Настройте вручную.</string>
+    <string name="secSetupRegistryNoEndpoint">В этой записи нет поддерживаемого адреса HTTPS. Настройте вручную.</string>
+    <string name="secSetupChooseModel">Выбрать модель</string>
+    <string name="secSetupDefaultAgent">Агент по умолчанию</string>
+    <string name="secSetupPermission">Правило доступа</string>
+    <string name="secSetupRemoteMcp">Удалённый коннектор</string>
+    <string name="secSetupLocalMcp">Локальный коннектор</string>
+    <string name="secSetupRemoveMcp">Удалить коннектор</string>
+    <string name="secSetupProvider">Вход у провайдера</string>
+    <string name="secSetupAgent">Настроить агента</string>
+    <string name="secSetupCommand">Настроить команду</string>
+    <string name="secSetupModelField">Модель (провайдер/модель)</string>
+    <string name="secSetupAgentField">Имя существующего агента</string>
+    <string name="secSetupToolField">Название инструмента</string>
+    <string name="secSetupEffectField">Разрешение (ask, allow или deny)</string>
+    <string name="secSetupUrlField">Адрес коннектора (HTTPS или локальный)</string>
+    <string name="secSetupCommandField">Аргументы команды списком JSON, без учётных данных</string>
+    <string name="secSetupNameField">Название коннектора</string>
+    <string name="secHostOfficialInstall">Официальный пакет OpenCode 2</string>
+    <string name="secHostPinnedFront">Проверенная команда запуска AI Team</string>
+    <string name="secHostPinnedFrontHelp">Выполните это на компьютере после настройки супервизора Gas City. Замените you@example.com на свою разрешённую учётную запись Tailscale. Загрузка закреплена за полным коммитом и проверяется до именования и запуска.</string>
+</resources>

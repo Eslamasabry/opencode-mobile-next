@@ -14,7 +14,7 @@ import org.w3c.dom.Element
  * an update that starts requesting `requestLegacyExternalStorage` is treated as a scope expansion and its storage
  * grants are reset. 2.1.4 set neither legacy-storage attribute; native set `requestLegacyExternalStorage="true"`.
  *
- * The fixture `src/test/resources/flutter-2.1.4/AndroidManifest.xml` is the released 2.1.4+62 manifest, verbatim.
+ * The fixture `src/test/resources/flutter-2.1.5/AndroidManifest.xml` is the released 2.1.5+63 manifest, verbatim.
  * The same rules run on the merged switch manifest at build time (`verify<Variant>StorageManifest` in
  * build.gradle.kts), which also sees library manifests.
  */
@@ -43,14 +43,14 @@ class StorageAccessManifestTest {
         getAttributeNS(android, name).takeIf { hasAttributeNS(android, name) }
 
     private val flutter: Element by lazy {
-        parse(RepoFiles.native("androidApp/src/test/resources/flutter-2.1.4/AndroidManifest.xml"))
+        parse(RepoFiles.native("androidApp/src/test/resources/flutter-2.1.5/AndroidManifest.xml"))
     }
 
     private fun permissions(manifest: Element): Map<String, String?> =
         manifest.children("uses-permission").associate { it.attr("name").orEmpty() to it.attr("maxSdkVersion") }
 
     @Test
-    fun `B-145 the app requests legacy storage exactly as 2_1_4 did`() {
+    fun `B-145 the app requests legacy storage exactly as 2_1_5 did`() {
         val flutterApp = flutter.children("application").single()
         for (manifest in RepoFiles.shippedManifests()) {
             val app = parse(manifest).children("application").singleOrNull() ?: continue
@@ -58,7 +58,7 @@ class StorageAccessManifestTest {
                 assertEquals(
                     flutterApp.attr(name),
                     app.attr(name),
-                    "${manifest.relativeTo(RepoFiles.native)}: android:$name differs from 2.1.4 " +
+                    "${manifest.relativeTo(RepoFiles.native)}: android:$name differs from 2.1.5 " +
                         "(resets All-files access)",
                 )
             }
@@ -66,7 +66,7 @@ class StorageAccessManifestTest {
     }
 
     @Test
-    fun `B-145 every 2_1_4 storage permission stays requested with the same maxSdkVersion`() {
+    fun `B-145 every 2_1_5 storage permission stays requested with the same maxSdkVersion`() {
         val old = permissions(flutter).filterKeys { it in storagePermissions }
         assertEquals(storagePermissions.toSet(), old.keys, "fixture lost a storage permission")
         val main = permissions(parse(RepoFiles.native("androidApp/src/main/AndroidManifest.xml")))

@@ -31,12 +31,34 @@ runs:
         org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8
         org.gradle.workers.max=4
         oc.test.forks=2
+        systemProp.org.gradle.internal.repository.max.retries=8
+        systemProp.org.gradle.internal.repository.initial.backoff=2000
+        systemProp.org.gradle.internal.http.connectionTimeout=60000
+        systemProp.org.gradle.internal.http.socketTimeout=120000
         EOP
     - name: Gradle (cached)
       if: runner.environment != 'self-hosted'
       uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       with:
         cache-read-only: false
+    # services.gradle.org answers 504 now and then. The distribution zip is cached per wrapper version, and a miss is fetched
+    # here with retries and backoff, so the Gradle steps never fail on the download itself.
+    - name: Cache the Gradle wrapper distribution
+      if: runner.environment != 'self-hosted'
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/wrapper/dists
+        key: gradle-dist-${{ hashFiles('native/gradle/wrapper/gradle-wrapper.properties') }}
+    - name: Download the Gradle distribution (retries with backoff)
+      shell: bash
+      working-directory: ${{ github.workspace }}/native
+      run: |
+        for wait in 0 15 45 90 180; do
+          sleep "$wait"
+          if ./gradlew --version >/dev/null 2>"$RUNNER_TEMP/gradle-dist.err"; then echo "Gradle distribution ready"; exit 0; fi
+          echo "::warning::Gradle distribution download failed (waited ${wait}s before this try): $(tail -n 1 "$RUNNER_TEMP/gradle-dist.err")"
+        done
+        cat "$RUNNER_TEMP/gradle-dist.err"; exit 1
     - name: Stop a Gradle daemon left over from a cancelled run in this workspace
       if: runner.environment == 'self-hosted'
       shell: bash

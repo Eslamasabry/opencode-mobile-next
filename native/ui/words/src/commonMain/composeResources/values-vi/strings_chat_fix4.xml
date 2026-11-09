@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">Tài khoản nhà cung cấp của mô hình đã hết tín dụng cho mô hình này. Hãy nạp thêm tại nhà cung cấp đó, hoặc chọn mô hình khác.</string>
+    <string name="chatReplyFailedConnectionLost">Mất kết nối tới nhà cung cấp của mô hình nên phản hồi đã dừng. Hãy yêu cầu nó tiếp tục, hoặc gửi lại.</string>
+</resources>

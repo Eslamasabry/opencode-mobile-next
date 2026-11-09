@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalLinkReviewBody">Buka tautan ini di browser? %1$s</string>
+    <string name="terminalLinkReviewInsecure">Tautan ini memakai koneksi tidak terenkripsi. Buka %1$s di browser?</string>
+    <string name="terminalLinkReviewTitle">Buka tautan ini?</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">Buka tautan · %1$s</string>
+</resources>

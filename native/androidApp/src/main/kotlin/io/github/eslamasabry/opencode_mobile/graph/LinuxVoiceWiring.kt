@@ -1540,6 +1540,9 @@ internal constructor(
      */
     suspend fun startServer(): Outcome<Unit> = startNow()
 
+    /** The phone team's turn-on stops OpenCode here (Flutter `PhoneTeamSetupPorts.stopServer`). */
+    suspend fun stopServer(): Outcome<Unit> = stopNow()
+
     suspend fun refreshServer() = refreshNow()
 
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =

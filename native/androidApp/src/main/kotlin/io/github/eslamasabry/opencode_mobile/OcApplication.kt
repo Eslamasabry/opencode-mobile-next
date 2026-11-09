@@ -4,7 +4,10 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.os.Build
+import android.util.Log
 import android.os.Process
+import android.os.SystemClock
+import android.os.Trace
 import dev.zacsweers.metro.createGraphFactory
 import io.github.eslamasabry.oc.android.platform.NativeCrashStore
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
@@ -14,6 +17,9 @@ import io.github.eslamasabry.oc.core.common.LaunchMode
 import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kit.image.KitFileImageDisk
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.imageKeepFraction
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
@@ -51,16 +57,23 @@ class OcApplication : Application(), GraphOwner {
 
     override fun onCreate() {
         super.onCreate()
+        // The isolated PDF parser in ":local_pdf" has no storage and no UserManager: opening SharedPreferences there
+        // throws and kills the process before it can answer, so every PDF showed "could not be displayed". It needs
+        // none of the product below, so any process but the main one stops here.
+        if (!isMainProcess()) return
         // 1. B-SEC-043, as the Flutter OcApplication: the category-only handler goes in before
         // anything else can crash; it stores nothing until crash capture is turned on.
         // Crash reports go through the vendor-neutral Reporting layer (consent + redaction) before any vendor sees them.
         // B-180/B-190: off in every flavour until the person agrees; the stored answers are adopted after the gate.
-        reporting = Telemetry.init(this)
+        val tOnCreate = SystemClock.elapsedRealtime()
+        step("telemetryInit") { reporting = Telemetry.init(this) }
         try {
             NativeCrashStore(filesDir).install { category, frames ->
                 reporting.reportCrash(category, frames)
             }
         } catch (_: Throwable) {}
+        // Pictures: disk thumbnails live under the cache folder, one per profile (oc.imageCache.<profileId>).
+        KitImages.diskFor = KitFileImageDisk.factory(cacheDir)
         redactor = Redactor() // 2. before any secret is read
         AppLog.install(
             RedactingWriter(
@@ -79,12 +92,70 @@ class OcApplication : Application(), GraphOwner {
             )
         // Every component of the main process (activities, alert buttons, services, workers,
         // tiles, widgets) may be the first thing in a cold process and relies on the started
-        // product, as before. The isolated PDF parser in ":local_pdf" never warms profiles,
-        // connects, or starts Linux.
-        if (isMainProcess()) {
-            PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
-            startProduct()
+        // product, as before.
+        PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
+        step("graph") { appGraph }
+        startProduct()
+        Log.i("OcStartup", "Application.onCreate total ${SystemClock.elapsedRealtime() - tOnCreate}ms")
+    }
+
+    /** The starters nothing in the first frame waits for, in their original relative order. */
+    private fun startDeferred() {
+        Thread(
+                {
+                    step("telemetryContinuity") {
+                        (appGraph as ContinuityAccessors).telemetryContinuity.start() // s23-continuity: Flutter 2.1.5 answers, crash offer
+                    }
+                    step("monitorRuntime") { (appGraph as MonitorRuntimeAccessors).monitorRuntime.start() }
+                    // B-146: send prompts queued for another saved server once it answers.
+                    step("queuedServerWatch") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.QueuedServerWatchAccessors).queuedServerWatch.start()
+                    }
+                    step("nativePhoneDetails") { (appGraph as PhoneDetailsAccessors).nativePhoneDetails.start() }
+                    step("nativePhoneBudget") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneBudgetAccessors)
+                            .nativePhoneBudget
+                            .start() // restore the saved phone speed budget
+                    }
+                    step("builtinRuntime") {
+                        appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
+                    }
+                    step("nativePhoneHealing") { (appGraph as NativeHealingAccessors).nativePhoneHealing.start() }
+                    step("agentWidgets") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.AgentWidgetAccessors).agentWidgets.start()
+                    }
+                    step("nativeAppExitRecovery") { (appGraph as NativeExitAccessors).nativeAppExitRecovery.start() }
+                    step("linuxStartup") {
+                        (appGraph as LinuxAccessors).linuxStartup.start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
+                    }
+                    step("firstLaunchHooks") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.FirstLaunchAccessors)
+                            .firstLaunchHooks
+                            .start() // E00-S07: the first app open after the Flutter -> native update (plan 05 §7.9)
+                    }
+                },
+                "oc-startup",
+            )
+            .start()
+    }
+
+    /** One startup step, visible in a system trace as `oc.start.<name>` and timed in the log. */
+    private inline fun step(name: String, block: () -> Unit) {
+        val t0 = SystemClock.elapsedRealtime()
+        Trace.beginSection("oc.start.$name")
+        try {
+            block()
+        } finally {
+            Trace.endSection()
+            val ms = SystemClock.elapsedRealtime() - t0
+            Log.i("OcStartup", "$name ${ms}ms on ${Thread.currentThread().name}")
         }
+    }
+
+    /** Frees the picture cache as the system asks (audit gap 5): see [imageKeepFraction] for the levels. */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        imageKeepFraction(level)?.let(KitImages::trim)
     }
 
     private fun isMainProcess(): Boolean {
@@ -103,47 +174,31 @@ class OcApplication : Application(), GraphOwner {
     fun startProduct() {
         if (productStarted) return
         productStarted = true
-        (appGraph as CrashAccessors).crashDiagnostics.start()
-        (appGraph as DiagnosticsAttentionAccessors)
-            .diagnosticsAttention
-            .start() // persisted report, crash store, exits
-        (appGraph as BackgroundAccessors).background.start()
-        (appGraph as AppExitAccessors).appExit.start()
-        (appGraph as AppNoticesAccessors).appNotices.start()
-        (appGraph as ContinuityAccessors).telemetryContinuity.start() // s23-continuity: Flutter 2.1.5 answers, crash offer
-        (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
-        (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
-        // B-146: send prompts queued for another saved server once it answers.
-        (appGraph as io.github.eslamasabry.opencode_mobile.graph.QueuedServerWatchAccessors)
-            .queuedServerWatch
-            .start()
-        appGraph.previewRuntime // Warm local stores. MainActivity restores the ordinary connection.
-        (appGraph as PhoneDetailsAccessors).nativePhoneDetails.start()
-        (appGraph as io.github.eslamasabry.opencode_mobile.graph.AttentionStateAccessors)
-            .attentionState
-            .start()
-        (appGraph as PlatformAccessors)
-            .platform
-            .start() // P12-PLATFORM: channels, widgets feed, alerts, update check
-        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneBudgetAccessors)
-            .nativePhoneBudget
-            .start() // restore the saved phone speed budget
-        appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic
-        // permission)
-        appGraph
-            .builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone
-        // server comes back
-        (appGraph as NativeHealingAccessors).nativePhoneHealing.start()
-        (appGraph as io.github.eslamasabry.opencode_mobile.graph.AgentWidgetAccessors)
-            .agentWidgets
-            .start()
-        (appGraph as NativeExitAccessors).nativeAppExitRecovery.start()
-        (appGraph as LinuxAccessors)
-            .linuxStartup
-            .start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
-        (appGraph as io.github.eslamasabry.opencode_mobile.graph.FirstLaunchAccessors)
-            .firstLaunchHooks
-            .start() // E00-S07: the first app open after the Flutter → native update (plan 05 §7.9)
+        // Gap 3 (startup): the first block is what the first frame and the notification paths need, so it stays here in the
+        // ADR order. Everything after it is independent of the first frame and runs, in the same order, on one background
+        // thread ("oc-startup"). Each starter only launches its own coroutines or reads its own stores; the ones that need
+        // the main thread hop to it through dispatchers.main as before.
+        step("crashDiagnostics") { (appGraph as CrashAccessors).crashDiagnostics.start() }
+        step("diagnosticsAttention") {
+            (appGraph as DiagnosticsAttentionAccessors).diagnosticsAttention.start() // persisted report, crash store, exits
+        }
+        step("background") { (appGraph as BackgroundAccessors).background.start() }
+        step("appExit") { (appGraph as AppExitAccessors).appExit.start() }
+        step("appNotices") { (appGraph as AppNoticesAccessors).appNotices.start() }
+        step("attentionRuntime") { (appGraph as AttentionRuntimeAccessors).attentionRuntime.start() }
+        step("previewRuntime") {
+            appGraph.previewRuntime // Warm local stores. MainActivity restores the ordinary connection.
+        }
+        step("attentionState") {
+            (appGraph as io.github.eslamasabry.opencode_mobile.graph.AttentionStateAccessors).attentionState.start()
+        }
+        step("platform") {
+            (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        }
+        step("resumedActivities") {
+            appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
+        }
+        startDeferred()
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }

@@ -1,12 +1,12 @@
 # Flutter store ledger
 
-Every piece of data the released Flutter app (2.1.4+62, `origin/master` at `2dec68a25`) keeps on an Android phone, and
+Every piece of data the released Flutter app (2.1.5+63, tag `v2.1.5+63` at `c7ebb72e1`, the release on the owner's phone; 2.1.4+62 was `2dec68a25`) keeps on an Android phone, and
 how the native app reads it. Story E00-S01.
 
 | File | What |
 |---|---|
 | [`store-ledger.json`](store-ledger.json) | one row per store: preference keys and key families, other SharedPreferences files and their keys, secure-storage names, files and folders, WorkManager names, alarms, notification channels, widgets, tiles, shortcuts, manifest components, intent extras the OS holds, permissions, Keystore aliases |
-| [`flutter-2.1.4-names.json`](flutter-2.1.4-names.json) | what `FlutterStoreScanner` finds in the 2.1.4 tree (`lib/`, `android/app/src/main/`), with the first file that writes each name |
+| [`flutter-2.1.5-names.json`](flutter-2.1.5-names.json) | what `FlutterStoreScanner` finds in the 2.1.5 tree (`lib/`, `android/app/src/main/`), with the first file that writes each name |
 
 ## A row
 
@@ -14,7 +14,7 @@ how the native app reads it. Story E00-S01.
 |---|---|
 | `kind`, `name` | the store and the literal the Flutter code uses (a family ends in `.`); `aliases` are other spellings the scanner sees |
 | `shape`, `store`, `physicalKey` | the full key with its id placeholder, and where it lives on the phone |
-| `flutterWriter` | the first Flutter file (2.1.4 tree) that writes it |
+| `flutterWriter` | the first Flutter file (2.1.5 tree) that writes it |
 | `nativeReader` | the native file that reads it (`READ`), or `none yet` / `kept untouched` / `deferred` / `dropped` / `not stored` |
 | `status` | `READ`, `MISSING`, `KEPT`, `DEFERRED`, `DROPPED`, `NOT_STORED`, `NEW` (definitions in the file) |
 | `decision` | the plan decision behind the handling: plan 05 §7.8 codes, Appendix B/C/D, or 01 D6/D7 and the §9.9 component freeze |
@@ -46,12 +46,12 @@ lives under a new native key) is `MISSING` with a note.
 ```bash
 cd native/tools/flutter-migration-readers
 ./gradlew test                                             # snapshot + ledger checks
-git worktree add ../../../../flutter-2.1.4 origin/master   # optional: rescan the real tree
-./gradlew test -PflutterTree=../../../../flutter-2.1.4     # also fails on a name the tree writes with no row
-./gradlew scanFlutterTree -PflutterTree=../../../../flutter-2.1.4 -PflutterCommit=$(git rev-parse origin/master)
+git worktree add ../../../../flutter-2.1.5 v2.1.5+63   # optional: rescan the real tree
+./gradlew test -PflutterTree=../../../../flutter-2.1.5     # also fails on a name the tree writes with no row
+./gradlew scanFlutterTree -PflutterTree=../../../../flutter-2.1.5 -PflutterCommit=$(git rev-parse 'v2.1.5+63^{commit}')
 ```
 
-- `B-MIGR-005 every name the released 2_1_4 tree writes has a store ledger row` — snapshot vs ledger.
+- `B-MIGR-005 every name the released 2_1_5 tree writes has a store ledger row` — snapshot vs ledger.
 - `B-MIGR-005 rescanning a Flutter checkout finds the snapshot and nothing unmapped` — runs with `-PflutterTree`.
 - `B-MIGR-005 a key added to the Flutter tree without a ledger row fails the check` — the red case, on a temp tree.
 - `B-MIGR-005 each ledger row names its writer, its native reader or decision, and the fallback words` — and every

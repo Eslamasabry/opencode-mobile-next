@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSetupErrorNodeCannotRun">Le système de ce téléphone ne peut pas exécuter Node.js dans le Linux intégré. Vous pouvez quand même utiliser OpenCode Mobile en vous connectant à votre ordinateur.</string>
+    <string name="phoneSetupNodeConnectComputer">Connecter un ordinateur</string>
+    <string name="phoneSetupNodeReportFailure">Signaler cet échec</string>
+</resources>

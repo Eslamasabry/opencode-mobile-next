@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="projectStorageMeasureFailed">Không đo được các tệp đã lưu. Thử lại.</string>
+    <string name="projectStorageDeleteFailed">Android không xóa được dữ liệu của ứng dụng. Thử lại.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="linuxProcessMembers">
+        <item quantity="one">%1$d процесс</item>
+        <item quantity="few">%1$d процесса</item>
+        <item quantity="many">%1$d процессов</item>
+        <item quantity="other">%1$d процесса</item>
+    </plurals>
+    <string name="linuxProcessHeavy">Высокая нагрузка</string>
+</resources>

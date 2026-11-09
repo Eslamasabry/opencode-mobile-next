@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">Neste celular</string>
+    <string name="agentsHubOnComputers">Nos seus computadores</string>
+    <string name="agentsHubComputersEmpty">Nenhum computador adicionado ainda. Adicione um que rode o Paseo para usar o Claude Code ou o Pi a partir deste celular.</string>
+    <string name="agentsHubAddComputer">Adicionar um computador</string>
+    <string name="agentsHubCheck">Verificar a conexão</string>
+    <string name="agentsHubCheckAgents">Verificar agentes</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">Use um endereço ws:// neste dispositivo ou na sua rede privada, ou um endereço wss://.</string>
+    <string name="agentsHubInvalidFolder">Digite a pasta do projeto como um caminho completo, como /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">Esta senha não pode ser usada. Use letras, números e símbolos sem espaços.</string>
+    <string name="agentsHubAdded">Salvo. As conversas dele aparecem em Conversas.</string>
+    <string name="agentsHubAddFailed">Não foi possível salvar este computador. Confira os dados e tente novamente.</string>
+    <string name="agentsHubAgentsFailed">Não foi possível ler os agentes desse computador. Confira se o Paseo está rodando lá.</string>
+    <string name="agentsHubStartFailed">Não foi possível iniciar uma conversa lá. O computador continua salvo.</string>
+    <string name="agentsHubSignInFailed">Esse computador não aceitou a senha.</string>
+    <string name="agentsHubNotAnswering">Esse computador não respondeu. Confira se o Paseo está rodando e se este celular consegue alcançá-lo.</string>
+    <string name="agentsHubNotConnected">Não conectado</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

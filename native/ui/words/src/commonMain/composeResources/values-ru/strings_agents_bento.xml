@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Установка…</string>
+    <string name="agentsHelperNotConnected">Агенты на телефоне не подключены.</string>
+    <string name="agentsHelperNotStarted">Агенты на телефоне не подключены: помощник агентов не запустился.</string>
+    <string name="agentsHelperNoAnswer">Агенты на телефоне не подключены: помощник агентов не ответил.</string>
+    <string name="agentsHelperKeyRefused">Агенты на телефоне не подключены: помощник агентов не принял ключ этого приложения.</string>
+    <string name="agentsHelperKeyUnreadable">Агенты на телефоне не подключены: телефону не удалось прочитать ключ помощника агентов.</string>
+    <string name="agentsHelperNoLinux">Агенты на телефоне не подключены: встроенный Linux этого телефона не настроен.</string>
+    <string name="agentsTabsLabel">Где работают агенты</string>
+    <string name="agentsTabComputers">На компьютерах</string>
+    <string name="agentsPhoneReady">Этот телефон готов</string>
+    <string name="agentsPhoneReadyDetails">Этот телефон готов · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Обновить</string>
+    <string name="agentsAddComputerLine">Используйте Claude Code или Pi на компьютере, где запущен Paseo.</string>
+    <string name="agentsComputerLooking">Ищем агентов на этом компьютере…</string>
+    <string name="agentsComputerReadFailed">Не удалось прочитать список агентов этого компьютера. Потяните вниз, чтобы повторить.</string>
+    <string name="agentsNewChat">Новый чат</string>
+    <string name="agentsNewChatWith">Новый чат с %1$s</string>
+    <string name="agentsConversationsStored">Где хранятся чаты</string>
+    <string name="agentsConversationsStoredOn">Где хранятся чаты: %1$s</string>
+    <string name="agentsHostAccount">Учётная запись хоста: %1$s</string>
+</resources>

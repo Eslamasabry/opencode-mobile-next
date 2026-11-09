@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">Выбрать на GitHub</string>
+    <string name="gitRemotePickGitHubTitle">Выберите репозиторий</string>
+    <string name="gitRemotePickGitHubNone">В этом аккаунте GitHub пока нет репозиториев.</string>
+    <string name="gitRemoteRepoPrivate">Закрытый</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">Используйте имя репозитория до 100 символов: буквы, цифры, точки, дефисы или подчёркивания.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">Это имя уже занято или недоступно в вашем аккаунте GitHub. Попробуйте другое.</string>
+    <string name="gitActionInitialize">Начать отслеживание</string>
+    <string name="gitActionPublish">Создать на GitHub</string>
+    <string name="gitBusyInitialize">Запускаем Git в этом проекте…</string>
+    <string name="gitBusyPublish">Создаём репозиторий на GitHub…</string>
+    <string name="gitDoneInitialized">Git готов в этом проекте.</string>
+    <string name="gitDoneGitHubRepositoryCreated">Репозиторий GitHub создан и подключён. Проект пока не отправлен.</string>
+    <string name="gitInitializeProject">Начать отслеживание этого проекта</string>
+    <string name="gitInitializeProjectHint">Файлы останутся здесь, а вы начнёте работать с Git.</string>
+    <string name="gitPublishToGitHub">Создать репозиторий GitHub</string>
+    <string name="gitPublishToGitHubHint">Выберите имя и кто сможет его видеть.</string>
+    <string name="gitPublishTitle">Создать репозиторий</string>
+    <string name="gitPublishName">Имя репозитория</string>
+    <string name="gitPublishNameHint">Используйте буквы, цифры, точки, дефисы или подчёркивания.</string>
+    <string name="gitPublishVisibility">Кто сможет видеть</string>
+    <string name="gitPublishPrivate">Закрытый</string>
+    <string name="gitPublishPublic">Открытый</string>
+    <string name="gitPublishPrivateHint">Репозиторий увидите только вы и те, кого вы выберете.</string>
+    <string name="gitPublishPublicHint">Репозиторий сможет увидеть любой.</string>
+    <string name="gitPublishButton">Создать репозиторий</string>
+</resources>

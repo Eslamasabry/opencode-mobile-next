@@ -54,6 +54,7 @@ public class OpenProjectViewModel(
     private val opened: OpenedFolders,
     private val creator: ProjectCreation = NoProjectCreation(),
     private val phoneFolders: PhoneFolders = NoPhoneFolders(),
+    private val lastKnown: ProjectsLastKnown = NoProjectsLastKnown(),
 ) : ViewModel(), OpenProjectActions {
     private val mutable = MutableStateFlow(OpenProjectUi())
     public val state: StateFlow<OpenProjectUi> = mutable.asStateFlow()
@@ -170,7 +171,7 @@ public class OpenProjectViewModel(
                 missingPath = null,
             )
         }
-        list(server) { projects(server) }
+        list(server, null) { projects(server) }
     }
 
     override fun enterFolder(path: String) {
@@ -190,7 +191,7 @@ public class OpenProjectViewModel(
                 canShowHidden = builtin(server),
             )
         }
-        list(server) { folders(server, root ?: target, target) }
+        list(server, listingKey(target)) { folders(server, root ?: target, target) }
     }
 
     override fun back() {
@@ -213,15 +214,29 @@ public class OpenProjectViewModel(
     }
 
     /** Runs one listing: skeleton rows, "Still reading" after [SLOW_AFTER_MS], then the folders or the problem. */
-    private fun list(server: ProjectServer, read: suspend () -> Outcome<List<OpenFolderUi>>) {
+    private fun list(server: ProjectServer, key: String?, read: suspend () -> Outcome<List<OpenFolderUi>>) {
         val run = ++generation
         slowJob?.cancel()
+        // Cache-first: the listing this page last drew comes back at once; skeleton rows are for a first-ever listing.
+        val kept = lastKnown.peekFolders(server.profile, key)?.takeIf { it.isNotEmpty() }
         mutable.update {
-            it.copy(loading = true, slow = false, failure = null, folders = persistentListOf())
+            it.copy(
+                loading = kept == null,
+                slow = false,
+                failure = null,
+                folders = kept?.toImmutableList() ?: persistentListOf(),
+            )
         }
-        slowJob = viewModelScope.launch {
-            delay(SLOW_AFTER_MS)
-            if (run == generation) mutable.update { it.copy(slow = true) }
+        if (kept == null) {
+            slowJob = viewModelScope.launch {
+                delay(SLOW_AFTER_MS)
+                if (run == generation) mutable.update { it.copy(slow = true) }
+            }
+            viewModelScope.launch {
+                val stored = lastKnown.readFolders(server.profile, key)?.takeIf { it.isNotEmpty() } ?: return@launch
+                if (run != generation || !state.value.loading) return@launch
+                mutable.update { it.copy(loading = false, slow = false, folders = stored.toImmutableList()) }
+            }
         }
         viewModelScope.launch {
             val result = read()
@@ -234,8 +249,12 @@ public class OpenProjectViewModel(
                     is Outcome.Failed -> it.copy(loading = false, slow = false, failure = result.failure)
                 }
             }
+            if (result is Outcome.Ok) lastKnown.keepFolders(server.profile, key, result.value)
         }
     }
+
+    /** What a folder's listing is kept under; hidden folders listed too make a different listing. */
+    private fun listingKey(path: String): String = if (state.value.showHidden) "$path|hidden" else path
 
     /** The server's projects, newest first; on this phone the folders of /root/projects follow. */
     private suspend fun projects(server: ProjectServer): Outcome<List<OpenFolderUi>> {
@@ -340,7 +359,7 @@ public class OpenProjectViewModel(
         if (!state.value.canShowHidden || state.value.step != OpenProjectStep.Folder) return
         val path = state.value.path ?: return
         mutable.update { it.copy(showHidden = !it.showHidden) }
-        list(server) { folders(server, root ?: path, path) }
+        list(server, listingKey(path)) { folders(server, root ?: path, path) }
     }
 
     override fun openShown() {
@@ -362,10 +381,10 @@ public class OpenProjectViewModel(
         val ui = state.value
         when (ui.step) {
             OpenProjectStep.Servers -> Unit
-            OpenProjectStep.Projects -> list(server) { projects(server) }
+            OpenProjectStep.Projects -> list(server, null) { projects(server) }
             OpenProjectStep.Folder -> {
                 val path = ui.path ?: return
-                list(server) { folders(server, root ?: path, path) }
+                list(server, listingKey(path)) { folders(server, root ?: path, path) }
             }
         }
     }

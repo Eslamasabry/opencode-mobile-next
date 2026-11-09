@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Berpikir</string>
+    <string name="composerFullThinkingDefault">Bawaan</string>
+    <string name="composerFullAgent">Agen</string>
+    <string name="composerFullModels">Model</string>
+    <string name="composerFullModelChangeFailed">Pilihan model tidak bisa dikonfirmasi. Periksa pilihan Anda lalu coba lagi.</string>
+    <string name="composerFullAttach">Lampirkan</string>
+    <string name="composerFullAddTitle">Tambahkan ke perintah</string>
+    <string name="composerFullPhotoLibrary">Pustaka foto</string>
+    <string name="composerFullTakePhoto">Ambil foto</string>
+    <string name="composerFullPasteImage">Tempel gambar dari papan klip</string>
+    <string name="composerFullPasteEmpty">Tidak ada gambar di papan klip.</string>
+    <string name="composerFullDraftFull">Hapus lampiran dulu. Satu draf menampung hingga 5 file dan total 20 MB.</string>
+    <string name="composerFullPhotoDenied">Akses foto ditolak. Izinkan akses kamera atau foto di pengaturan aplikasi Android, lalu coba lagi.</string>
+    <string name="composerFullStale">Percakapan berubah saat Anda memilih. Coba lagi.</string>
+    <string name="composerFullCommands">Perintah</string>
+    <string name="composerFullFiles">File dari proyek</string>
+    <string name="composerFullAttachmentsLocal">Lampiran disimpan bersama draf ini di perangkat ini.</string>
+    <string name="composerFullSteerHint">Arahkan saat sedang bekerja…</string>
+</resources>

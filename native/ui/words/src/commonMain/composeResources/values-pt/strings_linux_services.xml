@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">Programas de desenvolvimento</string>
+    <string name="linuxDevProgramsNote">Programas encontrados no Linux deste celular. Selecione um programa para ler o arquivo de saída dele.</string>
+    <string name="linuxDevScanFailed">Não foi possível verificar os programas de desenvolvimento</string>
+    <string name="linuxDevProgram">Programa %1$d</string>
+    <string name="linuxDevPorts">Portas: %1$s</string>
+    <string name="linuxDevReadLog">Ler registro</string>
+    <string name="linuxDevNoLog">Nenhum arquivo de saída legível</string>
+    <string name="linuxDevLog">Registro do programa</string>
+    <string name="linuxDevLogLoading">Lendo a saída mais recente…</string>
+    <string name="linuxDevLogFailed">Não foi possível ler a saída do programa.</string>
+    <string name="linuxDevLogEmpty">Ainda sem saída.</string>
+    <string name="linuxDevStop">Parar</string>
+    <string name="linuxDevStopTitle">Parar este programa?</string>
+    <string name="linuxDevStopBody">Para o processo %1$d neste celular. O comando dele é verificado de novo antes de ser parado.</string>
+    <string name="linuxSvcTitle">Serviços de desenvolvimento</string>
+    <string name="linuxSvcFailed">A ação não foi concluída</string>
+    <string name="linuxSvcUnconfirmed">Não foi possível confirmar a conexão atual nem a propriedade do comando. Atualize antes de tentar de novo.</string>
+    <string name="linuxSvcCorrupt">Não foi possível ler os comandos salvos. Os dados salvos foram mantidos sem alteração.</string>
+    <string name="linuxSvcUnsupported">Esta conexão não consegue controlar serviços de desenvolvimento. Você ainda pode salvar comandos para depois.</string>
+    <string name="linuxSvcAdd">Adicionar comando</string>
+    <string name="linuxSvcRefresh">Atualizar</string>
+    <string name="linuxSvcSaved">Comandos salvos</string>
+    <string name="linuxSvcSavedNote">Salvar um comando nunca o inicia. Só uma execução iniciada aqui pode ser controlada pelo comando salvo.</string>
+    <string name="linuxSvcEmpty">Nenhum comando salvo neste projeto.</string>
+    <string name="linuxSvcNotStarted">Não iniciado</string>
+    <string name="linuxSvcRunning">Em execução</string>
+    <string name="linuxSvcStopped">Parado</string>
+    <string name="linuxSvcUnknown">Execução não confirmada</string>
+    <string name="linuxSvcDetected">Encontrado em execução</string>
+    <string name="linuxSvcStart">Iniciar</string>
+    <string name="linuxSvcRestart">Reiniciar</string>
+    <string name="linuxSvcReport">Relatório de falha</string>
+    <string name="linuxSvcForget">Esquecer execução</string>
+    <string name="linuxSvcRemove">Remover comando</string>
+    <string name="linuxSvcName">Nome</string>
+    <string name="linuxSvcNext">Avançar</string>
+    <string name="linuxSvcCommand">Comando</string>
+    <string name="linuxSvcSave">Salvar comando</string>
+    <string name="linuxSvcInvalidName">Digite um nome de 1 a 80 caracteres.</string>
+    <string name="linuxSvcInvalidCommand">Digite um comando de 1 a 4096 caracteres.</string>
+    <string name="linuxSvcRemoveTitle">Remover este comando?</string>
+    <string name="linuxSvcForgetTitle">Esquecer esta execução?</string>
+    <string name="linuxSvcStopBody">O programa selecionado só será parado depois que a identidade atual dele for confirmada.</string>
+    <string name="linuxSvcRemoveBody">Remove este comando salvo e o registro local dele. Isso nunca para um programa em execução.</string>
+    <string name="linuxSvcForgetBody">Esquece o registro incerto neste celular. Isso não para o programa; confira a lista de programas em execução antes de iniciar outra cópia.</string>
+</resources>

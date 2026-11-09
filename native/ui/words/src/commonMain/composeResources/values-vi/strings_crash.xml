@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Bằng chứng sự cố đã lưu</string>
+    <string name="secCrashCapture">Giữ các loại sự cố trên điện thoại này</string>
+    <string name="secCrashPrivacy">Mặc định tắt. Chỉ lưu loại lỗi và thời điểm, không bao giờ lưu tin nhắn, ngăn xếp hay cuộc trò chuyện.</string>
+    <string name="secCrashClear">Xóa bằng chứng đã lưu</string>
+    <string name="secCrashPreview">Xem trước báo cáo sự cố</string>
+    <string name="secCrashEmpty">Chưa lưu bằng chứng sự cố nào.</string>
+    <string name="secCrashDisabled">Hãy bật ghi nhận sự cố để giữ các loại lỗi về sau.</string>
+    <string name="secCrashStale">Bằng chứng đã thay đổi. Hãy xem trước báo cáo lại trước khi chia sẻ.</string>
+    <string name="secCrashBusy">Bảng chia sẻ đang mở.</string>
+    <string name="secCrashUnavailable">Không có bằng chứng sự cố. Hãy thử lại.</string>
+    <string name="secCrashShareUnavailable">Không thể chia sẻ. Hãy thử lại.</string>
+    <string name="secAppExits">Lần thoát của ứng dụng Android</string>
+    <string name="secHelperExits">Lần thoát của trình hỗ trợ tác nhân</string>
+    <string name="secHistoryRefresh">Làm mới lịch sử thoát</string>
+    <string name="secHistoryEmpty">Chưa ghi nhận lần thoát nào gần đây.</string>
+    <string name="secHistoryUnavailable">Không có lịch sử thoát.</string>
+    <string name="secHistoryEntry">%1$s · mã %2$d</string>
+    <string name="secCrashReportHeader">Báo cáo sự cố OpenCode Mobile\nChỉ gồm loại lỗi và thời điểm đã ghi nhận.\nKhông có tin nhắn, ngăn xếp hay cuộc trò chuyện.\n\n</string>
+</resources>
