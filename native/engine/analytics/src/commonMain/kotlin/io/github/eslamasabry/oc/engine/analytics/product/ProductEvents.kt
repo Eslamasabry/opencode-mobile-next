@@ -93,6 +93,15 @@ public enum class ProductEvent(public val wire: String) {
 
     /** Android asked the app to free memory: `level`. */
     MemoryPressure("memory_pressure"),
+
+    /** The one-time GitHub star ask came into view while a reply was awaited. No properties. */
+    StarPromptShown("star_prompt_shown"),
+
+    /** The person tapped "Star on GitHub". No properties. */
+    StarPromptTapped("star_prompt_tapped"),
+
+    /** The person tapped "Not now". No properties. */
+    StarPromptDismissed("star_prompt_dismissed"),
 }
 
 /** A value with a fixed wire word. */
@@ -313,6 +322,9 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
             ProductEvent.ConnectComputerChosen.wire to emptyMap(),
             ProductEvent.UpdateOffered.wire to emptyMap(),
             ProductEvent.UpdateInstalled.wire to emptyMap(),
+            ProductEvent.StarPromptShown.wire to emptyMap(),
+            ProductEvent.StarPromptTapped.wire to emptyMap(),
+            ProductEvent.StarPromptDismissed.wire to emptyMap(),
         ) + healthSchema()
     }
 

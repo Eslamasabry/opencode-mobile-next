@@ -53,6 +53,12 @@ public interface ChatOutside {
      * failed.
      */
     public fun openLink(url: String): Boolean
+
+    /**
+     * Opens an address the app itself authored (the GitHub star ask), through the same link policy and opener, with no
+     * question first. Never pass a value from a server or a form. False = refused or the platform failed.
+     */
+    public fun openOwnLink(url: String): Boolean = false
 }
 
 /** The link policy's answer, in this module's words. */
@@ -83,6 +89,8 @@ public class NoChatOutside : ChatOutside {
     override fun checkLink(url: String): LinkCheck = LinkCheck.Refused
 
     override fun openLink(url: String): Boolean = false
+
+    override fun openOwnLink(url: String): Boolean = false
 }
 
 /** The permission round trip leaves a visible Retry action in chat. */

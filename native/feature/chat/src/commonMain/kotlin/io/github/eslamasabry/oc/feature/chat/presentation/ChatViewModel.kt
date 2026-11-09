@@ -44,6 +44,7 @@ public class ChatViewModel(
     clock: Clock,
     private val outside: ChatOutside,
     private val schedules: ScheduleEngine,
+    starPrompts: Set<io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt>,
 ) : ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
     private var openingSchedule = false
@@ -56,6 +57,7 @@ public class ChatViewModel(
             outside = outside,
             clock = clock,
             landOnFailure = route.landOnFailure,
+            star = starPrompts.firstOrNull(),
         )
 
     public val serverCapabilities = world.capabilities
@@ -309,6 +311,10 @@ public class ChatViewModel(
     override fun retrySend(localId: Long): Unit = presenter.retrySend(localId)
 
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
+
+    override fun starTapped(): Unit = presenter.starTapped()
+
+    override fun starDismissed(): Unit = presenter.starDismissed()
 
     override fun openLink(url: String): Unit = presenter.openLink(url)
 

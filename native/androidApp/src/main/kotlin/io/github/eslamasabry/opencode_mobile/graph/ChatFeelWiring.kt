@@ -184,6 +184,14 @@ class AndroidChatOutside(
             false
         }
 
+    /** An address the app wrote itself opens at once, but only after the same policy check (AGENTS.md invariant, R17). */
+    override fun openOwnLink(url: String): Boolean =
+        when (val decision = policy.check(url, LinkOrigin.AppAuthored)) {
+            is LinkDecision.Open -> opener.open(decision.link) is Outcome.Ok
+            is LinkDecision.AskFirst,
+            is LinkDecision.Refuse -> false
+        }
+
     override fun checkLink(url: String): LinkCheck {
         // P12-FIX-PREVIEWQR: `http://localhost:5173` in a reply is the conversation's dev server,
         // not the phone's:

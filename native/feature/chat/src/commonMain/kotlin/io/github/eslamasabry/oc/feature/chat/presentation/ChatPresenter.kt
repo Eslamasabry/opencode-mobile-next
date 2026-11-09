@@ -6,11 +6,15 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptRules
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
+import io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt
+import io.github.eslamasabry.oc.feature.chat.starprompt.StarPromptEvent
+import io.github.eslamasabry.oc.feature.chat.starprompt.StarPromptTurn
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.StoppedPrompt
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
@@ -100,6 +104,8 @@ internal data class ChatLocal(
     /** B-169 §5: switches sent per stopped prompt ([LimitSwitchRules.promptKey]). */
     val switches: PersistentMap<String, Int> = persistentMapOf(),
     val attachAgain: AttachAgainUi? = null,
+    /** The one-time star ask is up for this wait. */
+    val starAsk: Boolean = false,
 )
 
 internal data class PendingArrival(
@@ -135,6 +141,7 @@ public class ChatPresenter(
     landOnFailure: Boolean = false,
     private val outside: ChatOutside? = null,
     private val clock: Clock? = null,
+    private val star: ChatStarPrompt? = null,
 ) : ChatActions {
     private var nextId = 1L
     private val local =
@@ -202,6 +209,7 @@ public class ChatPresenter(
                 settleStop()
             }
             .launchIn(scope)
+        watchTurns(scope)
         // S30 story 3: what this server can background, read each time the chat goes live (Flutter reads it on
         // attach), so a reconnect to another server version is read again.
         world.load
@@ -215,6 +223,48 @@ public class ChatPresenter(
                 present(i, l, h)
             }
             .stateIn(scope, started, ChatUi.loading(world.ref))
+    }
+
+    /**
+     * The one-time star ask (app-wide, see [ChatStarPrompt]): a turn that starts here is a prompt sent; a turn that ends
+     * is a reply, good or not. A run already going when the chat opens, or a steer into a running turn, is neither.
+     */
+    private fun watchTurns(scope: CoroutineScope) {
+        val port = star ?: return
+        var wasBusy: Boolean? = null
+        world.transcript
+            .onEach { t ->
+                val busy = t.run.busy
+                val before = wasBusy
+                wasBusy = busy
+                if (before == false && busy && world.link.value == ChatLink.Live) {
+                    launcher.launch {
+                        if (port.promptStarted() && world.transcript.value.run.busy) {
+                            local.update { it.copy(starAsk = true) }
+                            port.report(StarPromptEvent.Shown)
+                        }
+                    }
+                } else if (before == true && !busy) {
+                    local.update { it.copy(starAsk = false) }
+                    val good = StarPromptTurn.succeeded(t.rows)
+                    launcher.launch { port.replyEnded(good) }
+                }
+            }
+            .launchIn(scope)
+    }
+
+    override fun starTapped() {
+        if (!local.value.starAsk) return
+        local.update { it.copy(starAsk = false) }
+        star?.report(StarPromptEvent.Tapped)
+        // Opened on the app's own link path; a refusal costs nothing, the ask is already spent.
+        outside?.openOwnLink(StarPromptRules.URL)
+    }
+
+    override fun starDismissed() {
+        if (!local.value.starAsk) return
+        local.update { it.copy(starAsk = false) }
+        star?.report(StarPromptEvent.Dismissed)
     }
 
     private data class Five(
@@ -390,6 +440,7 @@ public class ChatPresenter(
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
+            starAsk = l.starAsk && t.run.busy && i.link == ChatLink.Live,
         )
     }
 

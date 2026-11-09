@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chatStarAskTitle">Gostando do OpenCode?</string>
+    <string name="chatStarAskBody">Uma estrela no GitHub ajuda outras pessoas a encontrá-lo.</string>
+    <string name="chatStarAskAction">Dar uma estrela no GitHub</string>
+    <string name="chatStarAskShort">Estrela</string>
+    <string name="chatStarAskDismiss">Agora não</string>
+</resources>

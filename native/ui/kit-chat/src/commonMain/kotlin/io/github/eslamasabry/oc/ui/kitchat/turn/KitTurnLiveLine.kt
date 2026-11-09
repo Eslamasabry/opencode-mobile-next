@@ -60,6 +60,8 @@ public fun KitTurnLiveLine(
     /** A way out of a long wait (Stop), drawn quietly under the words; null draws none. */
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    /** A one-time ask under the words (see [KitLiveAsk]); null draws none. It unfolds in and folds away. */
+    ask: KitLiveAsk? = null,
 ) {
     val colors = LocalKitColors.current
     val style = LocalKitTypography.current.style(TypeRole.Secondary)
@@ -126,6 +128,13 @@ public fun KitTurnLiveLine(
                 tone = TextTone.Secondary,
                 maxLines = 2,
             )
+        }
+        // The leaving ask keeps its words while it folds away.
+        val heldAsk = remember { arrayOfNulls<KitLiveAsk>(1) }
+        if (ask != null) heldAsk[0] = ask
+        KitReveal(visible = ask != null) {
+            val shown = ask ?: heldAsk[0]
+            if (shown != null) KitLiveAskView(shown, Modifier.padding(top = Space.S2.dp).testTag(LIVE_ASK_TAG))
         }
     }
 }
