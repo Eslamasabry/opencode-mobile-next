@@ -66,10 +66,64 @@ class LiveFrameClockTest {
         clock.touch()
         assertFalse(clock.resting)
         assertTrue(clock.wantsFrames)
-        // Two minutes later the person touches; the first frames after it step by one frame, not by two minutes.
+        // Two minutes later the person touches; the first frames after it step by one frame, not by two minutes (and
+        // the first second gathers speed: half the ease-in is lost to it).
         val (steps, _) = clock.run(t + 120_000 * ms, 1000.0 / 60, 1000)
         assertTrue(steps >= 58)
-        assertEquals(before + 1f, clock.seconds, .1f)
+        val easeIn = LiveFrameClock.EASE_IN_NANOS / 1e9f
+        assertEquals(before + 1f - easeIn / 2f, clock.seconds, .05f)
+    }
+
+    @Test
+    fun `B-KIT-LIVE-040 a woken clock gathers speed smoothly instead of jumping to full speed`() {
+        val clock = LiveFrameClock().apply { acquire() }
+        val (_, t) = clock.run(0, 1000.0 / 60, 31_000)
+        assertTrue(clock.resting)
+        clock.touch()
+        var at = t + 60_000 * ms
+        clock.frame(at) // the first frame after the wake only starts the count
+        var last = clock.seconds
+        val steps = mutableListOf<Float>()
+        repeat(90) {
+            at += 16_666_667L
+            clock.frame(at)
+            steps += clock.seconds - last
+            last = clock.seconds
+        }
+        val frame = 1f / 60f
+        assertTrue(steps.first() < frame * .05f, "the first step is a sliver of a frame: ${steps.first()}")
+        assertTrue(steps.zipWithNext().all { (a, b) -> b >= a - 1e-6f }, "speed only rises: $steps")
+        assertTrue(steps.zipWithNext().all { (a, b) -> b - a <= frame * .06f }, "no step jumps the speed")
+        assertEquals(frame, steps.last(), frame * .01f)
+        assertEquals(1f, clock.speed, .001f)
+    }
+
+    @Test
+    fun `B-KIT-LIVE-041 the background slows to a stop before the rest, still resting at 30 seconds`() {
+        val clock = LiveFrameClock().apply { acquire() }
+        val easeOut = LiveFrameClock.EASE_OUT_NANOS / 1_000_000L
+        val (_, t) = clock.run(0, 1000.0 / 60, 30_000 - easeOut)
+        assertEquals(1f, clock.speed, .01f)
+        var at = t
+        var last = clock.seconds
+        val steps = mutableListOf<Float>()
+        while (!clock.resting) {
+            clock.frame(at)
+            steps += clock.seconds - last
+            last = clock.seconds
+            at += 16_666_667L
+        }
+        assertTrue(at <= 30_000 * ms + 50 * ms, "it still rests at 30 s: ${at / ms} ms")
+        assertTrue(steps.zipWithNext().all { (a, b) -> b <= a + 1e-6f }, "speed only falls")
+        assertTrue(steps.dropLast(1).last() < (1f / 60f) * .05f, "the last steps are slivers: ${steps.takeLast(3)}")
+        // A touch while it slows picks the speed up from where it is, without a jump.
+        val again = LiveFrameClock().apply { acquire() }
+        val (_, t2) = again.run(0, 1000.0 / 60, 30_000 - easeOut / 2)
+        val slow = again.speed
+        assertTrue(slow in .2f..0.8f, "half way into the ease: $slow")
+        again.touch()
+        again.frame(t2)
+        assertTrue(again.speed - slow < .05f, "no jump on the touch: $slow -> ${again.speed}")
     }
 
     @Test
