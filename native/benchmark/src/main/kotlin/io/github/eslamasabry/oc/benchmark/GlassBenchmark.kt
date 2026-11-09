@@ -63,6 +63,11 @@ class GlassBenchmark {
     @Test fun menuGlass() = scroll("glass", "menu")
 
     @Test fun menuSolid() = scroll("solid", "menu")
+
+    /** Smoothness round 2: a page pushed over the chat and popped (two framed pages, each with its own ground, at once). */
+    @Test fun pushGlassAurora() = scroll("glass-aurora", "push")
+
+    @Test fun pushGlass() = scroll("glass", "push")
 }
 
 private const val PKG_NATIVE = "io.github.eslamasabry.opencode_mobile.native"

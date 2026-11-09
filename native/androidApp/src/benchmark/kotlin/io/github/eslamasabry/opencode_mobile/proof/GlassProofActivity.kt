@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,10 @@ import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.routes.RouteMotion
+import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.forward
+import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
+import io.github.eslamasabry.oc.ui.shell.nav.ShellMotionLevel
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +67,9 @@ import kotlinx.coroutines.flow.StateFlow
  * scrolled by itself so a Macrobenchmark measures the same frames on every build. `look`: `solid`, `glass` (Glass, no
  * background), `glass-aurora` (Glass over the animated aurora shader) or `glass-drift` (Glass over the painted aurora).
  * `scene`: `list` (a long list of Glass rows under a liquid bar, chips and a liquid +), `chat` (a long transcript of
- * text under a liquid bar and a liquid composer) or `menu` (the chat with a reply's menu opened and closed eight times). The benchmark taps Start and waits for Done.
+ * text under a liquid bar and a liquid composer), `menu` (the chat with a reply's menu opened and closed eight times) or
+ * `push` (a second page pushed over the chat and popped again, eight times, with the shell's fade-forwards). The
+ * benchmark taps Start and waits for Done.
  */
 /** Scrolls by [total] px over [ms], one step per display frame (frame-driven: no animation scale applies). */
 private suspend fun LazyListState.glide(total: Float, ms: Long) {
@@ -80,12 +87,15 @@ private suspend fun LazyListState.glide(total: Float, ms: Long) {
 class GlassProofActivity : ComponentActivity() {
     private var started by mutableStateOf(false)
     private var done by mutableStateOf(false)
+    private var hold = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val look = intent.getStringExtra("look") ?: "glass-aurora"
         val scene = intent.getStringExtra("scene") ?: "list"
+        // `hold`: the menu scene opens the menu once and keeps it open (for a still screenshot of the look).
+        hold = intent.getBooleanExtra("hold", false)
         val appearance =
             when (look) {
                 "solid" -> KitAppearance()
@@ -104,19 +114,49 @@ class GlassProofActivity : ComponentActivity() {
         setContent {
             appGraph.kitChatEnvironment.Provide {
                 CompositionLocalProvider(LocalKitPlatform provides platform) {
-                    KitTheme(appearance) { Page(scene) }
+                    KitTheme(appearance) { if (scene == "push") Pushes() else Page(scene) }
                 }
             }
         }
     }
 
+    /** Two pages, each a framed KitScreen with its own ground, pushed and popped as the shell's NavDisplay does it. */
     @Composable
-    private fun Page(scene: String) {
+    private fun Pushes() {
+        var top by remember { mutableStateOf(false) }
+        LaunchedEffect(started) {
+            if (!started) return@LaunchedEffect
+            repeat(8) {
+                top = true
+                delay(900)
+                top = false
+                delay(700)
+            }
+            done = true
+        }
+        AnimatedContent(
+            targetState = top,
+            transitionSpec = {
+                if (targetState) forward(RouteMotion.SharedAxisX, ShellMotionLevel.Full)
+                else pop(RouteMotion.SharedAxisX, ShellMotionLevel.Full)
+            },
+            label = "proof.push",
+        ) { pushed -> if (pushed) Page("list", showsStart = false, runs = false) else Page("chat", runs = false) }
+    }
+
+    @Composable
+    private fun Page(scene: String, showsStart: Boolean = true, runs: Boolean = true) {
         val list = rememberLazyListState()
         val source = rememberKitFrostState()
         var menu by remember { mutableStateOf(false) }
         LaunchedEffect(started) {
-            if (!started) return@LaunchedEffect
+            if (!started || !runs) return@LaunchedEffect
+            if (scene == "menu" && hold) {
+                menu = true
+                delay(1_500)
+                done = true
+                return@LaunchedEffect
+            }
             if (scene == "menu") {
                 // The owner's path (2026-11-09): a reply's ⋯ menu opening and closing over the chat, eight times.
                 repeat(8) {
@@ -165,8 +205,14 @@ class GlassProofActivity : ComponentActivity() {
                 ) {
                     item(key = "start", contentType = "start") {
                         Row(Modifier.padding(16.dp)) {
-                            KitButton(label = "Start", onClick = { started = true })
-                            if (scene == "menu") {
+                            if (showsStart) KitButton(label = "Start", onClick = { started = true })
+                            if (scene == "menu" && hold) {
+                menu = true
+                delay(1_500)
+                done = true
+                return@LaunchedEffect
+            }
+            if (scene == "menu") {
                                 KitMenu(
                                     expanded = menu,
                                     items = listOf(KitMenuItem("Copy", {}), KitMenuItem("Share", {}), KitMenuItem("Fork from here", {}), KitMenuItem("Retry", {})),
