@@ -22,7 +22,11 @@ import kotlinx.coroutines.channels.Channel
  * - it holds while nothing uses it ([acquire] / [release]) or while [held] (app hidden, Saver, heat); the display
  *   stops sending frames while the screen is off or the app is in the background, and Battery Saver and heat force
  *   Calm motion, which holds one still frame (see [KitLiveBackground]);
- * - it never jumps: one step is at most a quarter second, so time carries on smoothly after a pause.
+ * - it never jumps: one step is at most a quarter second, so time carries on smoothly after a pause;
+ * - it eases into its rest and out of it (glass-live 2026-11-09: the glass shows the background move, so a stop or a
+ *   start must not snap): over the last [EASE_OUT_NANOS] before the rest the background slows to a stop, and after a
+ *   touch wakes it, it gathers speed over [EASE_IN_NANOS]. A touch while it slows picks the speed up from where it is.
+ *   It still rests at [idleAfterNanos]: the ease costs no extra frames.
  *
  * [seconds] is snapshot state read only in draw blocks, so a step redraws the background layer and recomposes nothing.
  * The decision logic ([frame]) is plain code, driven by frame times, so tests drive it without a display.
@@ -38,6 +42,13 @@ public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS)
     private var lastActive = NONE
     private var touched = false
     private var idle = false
+
+    /** The ease towards full speed, 0..1 (linear; the speed is its smoothstep). Full from the first use. */
+    private var level = 1f
+
+    /** How fast background time runs now, 0..1: 1 while it runs, easing to 0 into a rest and back up after one. */
+    public val speed: Float
+        get() = ease(level)
 
     /** Set while the app is hidden or the system asks for less work; the clock keeps its time. */
     public var held: Boolean = false
@@ -79,6 +90,7 @@ public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS)
         touched = true
         if (idle) {
             idle = false
+            level = 0f // a wake gathers speed from a stop
             last = NONE // the rest is not counted: time carries on from where it stopped
         }
     }
@@ -93,14 +105,24 @@ public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS)
             touched = false
         }
         val used = users > 0 && !held
-        if (used && nanos - lastActive >= idleAfterNanos) idle = true
+        val quiet = nanos - lastActive
+        if (used && quiet >= idleAfterNanos) {
+            idle = true
+            level = 0f
+        }
         val running = used && !idle
         val steps = running && last != NONE && nanos > last
         when {
             !running -> last = NONE // the pause is not counted: time carries on where it stopped
             last == NONE -> last = nanos
             steps -> {
-                seconds += (minOf(nanos - last, MAX_STEP_NANOS).toDouble() / NANOS_PER_SECOND).toFloat()
+                val dt = minOf(nanos - last, MAX_STEP_NANOS)
+                // Up: at most a full ease-in per EASE_IN_NANOS. Down: the share of the ease-out left before the rest.
+                val toRest = ((idleAfterNanos - quiet).toDouble() / EASE_OUT_NANOS).toFloat().coerceIn(0f, 1f)
+                val before = ease(level)
+                level = minOf(toRest, level + (dt.toDouble() / EASE_IN_NANOS).toFloat()).coerceIn(0f, 1f)
+                // The step runs at the mean of the speeds at its two ends, so a slow frame never jumps the speed.
+                seconds += ((before + ease(level)) / 2f) * (dt.toDouble() / NANOS_PER_SECOND).toFloat()
                 last = nanos
             }
         }
@@ -115,6 +137,15 @@ public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS)
         /** Rest after this long without a touch (FG: lib/ui/kit/live_background/kit_live_clock.dart:44). */
         public const val IDLE_AFTER_NANOS: Long = 30_000_000_000L
         private const val MAX_STEP_NANOS: Long = 250_000_000L // FG: lib/ui/kit/live_background/kit_live_support.dart:61
+
+        /** How long a woken clock takes to reach full speed. */
+        public const val EASE_IN_NANOS: Long = 900_000_000L
+
+        /** How long the background takes to slow to a stop before the rest (inside the idle time, not after it). */
+        public const val EASE_OUT_NANOS: Long = 1_500_000_000L
+
+        /** Smoothstep: the speed for an ease [x] of 0..1, with no sudden change at either end. */
+        private fun ease(x: Float): Float = x * x * (3f - 2f * x)
         private const val NONE: Long = Long.MIN_VALUE
         private const val NANOS_PER_SECOND: Long = 1_000_000_000L
     }

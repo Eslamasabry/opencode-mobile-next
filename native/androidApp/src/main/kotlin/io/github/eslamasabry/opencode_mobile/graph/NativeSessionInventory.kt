@@ -86,14 +86,19 @@ class NativeSessionInventory(
 
     suspend fun save(profile: StoredProfile, sessions: List<Session>, current: () -> Boolean) {
         val rows = ArrayList<Map<String, Any>>()
+        val scope = scope(profile)
+        val rich = richRows((stores.prefs.get(PREFIX + profile.id.raw) as? PrefValue.Str)?.value, scope)
         var used = 0
         for (session in sessions.take(MAX_SESSIONS)) {
             if (session.id.raw.isEmpty() || session.id.raw.length > 512) continue
             val row =
-                mapOf(
-                    "id" to session.id.raw,
-                    "title" to redactor.diagnostics(session.title.orEmpty(), 256),
-                    "updated" to (session.time?.updatedMs ?: session.time?.createdMs ?: 0L),
+                withRich(
+                    rich,
+                    mapOf(
+                        "id" to session.id.raw,
+                        "title" to redactor.diagnostics(session.title.orEmpty(), 256),
+                        "updated" to (session.time?.updatedMs ?: session.time?.createdMs ?: 0L),
+                    ),
                 )
             val bytes = DartJson.encode(row).encodeToByteArray().size + 1
             if (used + bytes > MAX_BYTES - 512) break
@@ -104,7 +109,7 @@ class NativeSessionInventory(
             DartJson.encode(
                 mapOf(
                     "v" to 1,
-                    "scope" to scope(profile),
+                    "scope" to scope,
                     "at" to clock.now().toEpochMilliseconds(),
                     "rows" to rows,
                 )
@@ -119,6 +124,30 @@ class NativeSessionInventory(
 
     companion object {
         const val PREFIX = "oc.sessionInventory."
+
+        /** The fields a plain list save writes; everything else on a row is the home's (project, agent, preview, …). */
+        private val PLAIN = setOf("id", "title", "updated")
+
+        /**
+         * Cache-first: the saved rows of [raw] by id when it was saved for [scope]. Three writers share this key (the
+         * home's feed with its marks and last-message line, the runtime's list refresh and All conversations); a plain
+         * save keeps the home's richer fields of each row it rewrites, so the home's first frame keeps them.
+         */
+        fun richRows(raw: String?, scope: String): Map<String, Map<*, *>> {
+            if (raw == null || raw.length > MAX_BYTES) return emptyMap()
+            val doc = DartJson.decodeOrNull(raw) as? Map<*, *> ?: return emptyMap()
+            if (doc["scope"] != scope) return emptyMap()
+            return (doc["rows"] as? List<*>).orEmpty().mapNotNull { row ->
+                (row as? Map<*, *>)?.let { r -> (r["id"] as? String)?.let { it to r } }
+            }.toMap()
+        }
+
+        fun withRich(rich: Map<String, Map<*, *>>, row: Map<String, Any>): Map<String, Any> {
+            val saved = rich[row["id"]] ?: return row
+            val extra = LinkedHashMap<String, Any>()
+            for ((k, v) in saved) if (k is String && k !in PLAIN && v != null) extra[k] = v
+            return if (extra.isEmpty()) row else LinkedHashMap(row).apply { putAll(extra) }
+        }
         private const val MAX_SESSIONS = 100
         private const val MAX_BYTES = 65_536
     }

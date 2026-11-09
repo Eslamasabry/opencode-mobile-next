@@ -49,9 +49,17 @@ public data class PromptRow(
     override val turnId: String,
     val text: String,
     val createdMs: Long? = null,
+    /** Pictures and files the prompt carried, in order (a prompt may have no words at all). */
+    val files: List<PromptFile> = emptyList(),
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Prompt
+}
+
+/** One file a sent prompt carried. [url] is a `data:` address for a picture, otherwise the server's own address. */
+public data class PromptFile(val name: String, val mime: String?, val url: String?) {
+    public val isImage: Boolean
+        get() = mime?.startsWith("image/") == true
 }
 
 /**
@@ -132,6 +140,8 @@ public data class FooterRow(
     val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
     /** Creation time of the actual newest assistant message represented by this turn footer. */
     val createdMs: Long? = null,
+    /** The provider (agent) that wrote the newest reply of this turn; names whom to sign in again. */
+    val providerId: String? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -71,7 +72,8 @@ class ComposerKeysUiTest {
                         KitComposerStripReveal(
                             stop = if (running) stopChip else null,
                             modifier = Modifier.testTag("strip-host"),
-                            chips = { KitChip("Sonnet") },
+                            // A real model chip is tappable (48 dp); an untappable one is a plain word since audit C03 (1143f6e41).
+                            chips = { KitChip("Sonnet", kind = KitChipKind.Action, onClick = {}) },
                         )
                     }
                 }

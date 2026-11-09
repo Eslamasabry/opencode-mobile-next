@@ -174,7 +174,7 @@ public class NeedsYouViewModel(
                         offers.mapNotNull { o -> t.firingRuleId(o.firingId)?.let(t::ruleById)?.let { o.id to it.definition.name } }
                             .toMap()
                             .toImmutableMap(),
-                    review = s.review.toImmutableList(),
+                    review = s.reviewCards.toImmutableList(),
                     notSaved = s.pending.count { it.state != CouldNotSaveState.Discarded },
                     canApprove = s.canApprove,
                     canChangeProposals = s.capabilities.supports(FactsBookTriggers.PROPOSAL_EDIT),

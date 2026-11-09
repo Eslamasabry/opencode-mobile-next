@@ -135,6 +135,9 @@ public class AndroidKitPlatform(
         return true
     }
 
+    override fun backdropSampler(): KitBackdropSampler? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) AndroidBackdropSampler() else null
+
     override fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
         backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
@@ -200,6 +203,12 @@ public class AndroidKitPlatform(
         val time = android.text.format.DateFormat.getBestDateTimePattern(locale, "jm")
         val pattern = java.text.SimpleDateFormat(date + " " + time, locale)
         return pattern.format(java.util.Date(atMs))
+    }
+
+    override fun dateOnly(atMs: Long, localeTag: String): String {
+        val locale = java.util.Locale.forLanguageTag(localeTag)
+        val date = android.text.format.DateFormat.getBestDateTimePattern(locale, "yMMMd")
+        return java.text.SimpleDateFormat(date, locale).format(java.util.Date(atMs))
     }
 
     override fun messageTime(createdMs: Long, nowMs: Long): String {

@@ -5,10 +5,16 @@ package io.github.eslamasabry.oc.engine.transcript.state
  * MessageInfo / Part / ToolStatus belong in :core:model (plan 09 §2.2), GatewayEvent in :core:domain (plan 04 §11.2).
  * They live here, trimmed to what the reducer proof needs, so slice 0 does not edit shared core modules. Field names
  * follow the plan so slice 2 can swap the import and keep the reducer.
+ *
+ * Cache-first (2026-11-09): the message shapes are @Serializable so a conversation's last page is kept as it read
+ * (KeptTranscript) and drawn at once when the conversation opens again.
  */
+
+import kotlinx.serialization.Serializable
 
 public enum class Role { User, Assistant }
 
+@Serializable
 public data class MessageInfo(
     val id: String,
     val sessionId: String,
@@ -18,6 +24,8 @@ public data class MessageInfo(
     val finish: String? = null,
     val errorText: String? = null,
     val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
+    /** The provider (agent) that wrote the message; names whom a lapsed sign-in belongs to. */
+    val providerId: String? = null,
 )
 
 /** Switch/Notice/Compaction = the Dart "v2:*" tags (plan 09 §2.2, trap T9). */
@@ -39,6 +47,7 @@ public enum class ToolStatus {
     }
 }
 
+@Serializable
 public data class Part(
     val id: String,
     val messageId: String,
@@ -50,6 +59,10 @@ public data class Part(
     val synthetic: Boolean = false,
     val ended: Boolean = false,
     val searchText: String = "",
+    /** File parts: the kind, the name and the address (a `data:` address for a picture the phone sent). */
+    val mime: String? = null,
+    val filename: String? = null,
+    val url: String? = null,
 ) {
     /** Dart Part.isRenderable (plan 09 §2.2). */
     public val isRenderable: Boolean
@@ -62,6 +75,7 @@ public data class Part(
                 }
 }
 
+@Serializable
 public data class MessageWithParts(val info: MessageInfo, val parts: List<Part>)
 
 public enum class DeltaField { Text, Reasoning, ToolInputRaw }

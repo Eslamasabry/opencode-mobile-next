@@ -339,10 +339,34 @@ internal fun TurnMetadata(
 }
 
 @Composable
-internal fun TurnEndNote(note: io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote) {
+internal fun TurnEndNote(
+    note: io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote,
+    onContinue: (() -> Unit)? = null,
+) {
+    // Flutter `_stoppedLine`: a pause or restart ends the reply on its own line, with a way to carry on from there.
+    androidx.compose.foundation.layout.Column {
+        TurnEndLine(note)
+        if (note.canContinue && onContinue != null)
+            KitButton(
+                stringResource(Res.string.messageViewContinueReply),
+                onContinue,
+                role = KitButtonRole.Tertiary,
+                modifier = Modifier.testTag("stopped-continue"),
+            )
+    }
+}
+
+@Composable
+private fun TurnEndLine(note: io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote) {
     KitQuietLine(
         stringResource(
             when (note) {
+                io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.PausedInactive ->
+                    Res.string.chatTurnPausedInactive
+                io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.StoppedServerRestart ->
+                    Res.string.chatTurnStoppedServerRestart
+                io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Superseded ->
+                    Res.string.chatTurnSuperseded
                 io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent ->
                     Res.string.chatNoReplyCameBack
                 io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Stopped ->

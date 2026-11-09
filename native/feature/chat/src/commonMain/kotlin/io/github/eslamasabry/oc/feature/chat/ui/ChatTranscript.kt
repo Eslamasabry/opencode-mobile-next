@@ -65,6 +65,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.words.res.chatStalledStop
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -85,6 +86,8 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitSentFile
+import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberKitSentFiles
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdNest
 import io.github.eslamasabry.oc.ui.kitchat.markdown.settle
 import io.github.eslamasabry.oc.ui.kitchat.markdown.takesCaret
@@ -195,6 +198,13 @@ internal class ReplyActions(
     val onContinue: (String) -> Unit = {},
     val signInSettingsLabel: String? = null,
     val onSignInSettings: () -> Unit = {},
+    /**
+     * B-AGENT-189 (#137): the plain line for an agent whose sign-in ran out ("{agent} needs you to sign in
+     * again"), by provider id; null = this conversation's agent cannot sign in from the chat.
+     */
+    val signInAgainWords: ((String) -> String?)? = null,
+    val signInAgainLabel: String? = null,
+    val onAgentSignIn: (String) -> Unit = {},
     /** Error-card recovery (Flutter `assistant_error_row.dart`); a null label hides that fix. */
     val models: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     val canCompact: Boolean = false,
@@ -333,6 +343,8 @@ internal fun ChatTranscriptList(
         null,
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
+    /** Stop on the live line while a tool call has waited minutes (null hides it). */
+    onStopLive: (() -> Unit)? = null,
     /** A finished turn's "All files" (the project's Files); null hides the link. */
     onAllFiles: (() -> Unit)? = null,
     /** "Send again" under the newest prompt that got no reply (Flutter no_reply_reason.dart:198); null hides it. */
@@ -441,6 +453,11 @@ internal fun ChatTranscriptList(
                                 if (stepsShown) Res.string.chatLiveHideSteps else Res.string.chatLiveShowSteps
                             ),
                         modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-live-line"),
+                        actionLabel =
+                            if (notice is LiveNoticeUi.ToolWait && onStopLive != null)
+                                stringResource(Res.string.chatStalledStop)
+                            else null,
+                        onAction = onStopLive,
                     )
                 } else {
                     val minutes = stringResource(Res.string.chatHomeMinutes)
@@ -597,7 +614,17 @@ private fun PendingBubble(
     onReview: (() -> Unit)? = null,
 ) {
     Column {
-        KitPromptBubble(p.text, Modifier.kitPromptLift(p.localId, p.text))
+        // The same thumbnails the echoed message will show (cached by address), so the swap does not flicker.
+        val sent =
+            rememberKitSentFiles(
+                remember(p.files) { p.files.map { KitSentFile(it.name, it.mime, it.url) } }
+            )
+        KitPromptBubble(
+            p.text,
+            Modifier.kitPromptLift(p.localId, p.text),
+            photos = sent.photos,
+            attachments = sent.attachments,
+        )
         when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
             PendingState.Unconfirmed -> ReceiptCheckLine(p.localId, check, onCheck, onReview)
@@ -745,17 +772,17 @@ private fun ChatRow(
                         label = listWords.messageActions,
                         onOpen = { onOpenMenu(row.key) },
                     ) {
-                        KitPromptBubble(CardAnswerDisplay.text(row.text))
+                        SentPromptBubble(row)
                     }
                 } else {
-                    KitPromptBubble(CardAnswerDisplay.text(row.text))
+                    SentPromptBubble(row)
                 }
                 // A turn with no assistant row still has an explicit end next to its prompt.
                 if (facts.reading.metadata[row.turnId] == null)
                     facts.reading.endNotes[row.turnId]?.let { note ->
                         if (note == io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent)
                             NoReplyNotice(onSendAgain)
-                        else TurnEndNote(note)
+                        else TurnEndNote(note, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } })
                     }
             }
         is ThoughtRow -> {
@@ -872,7 +899,14 @@ private fun ChatRow(
                         // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
                         val limits = LocalLimitSwitchReply.current
                         val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again".
+                        val signInAgain =
+                            if (limit == null && AgentErrorText.signInExpired(reason))
+                                row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
+                            else null
                         if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
+                        else if (signInAgain != null)
+                            KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason)
@@ -884,6 +918,17 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            val signInAgainLabel = reply?.signInAgainLabel
+                            val signInAgainAgent = row.providerId
+                            if (signInAgain != null && signInAgainLabel != null && signInAgainAgent != null) {
+                                val agentId = signInAgainAgent
+                                KitButton(
+                                    signInAgainLabel,
+                                    { reply?.onAgentSignIn?.invoke(agentId) },
+                                    role = KitButtonRole.Primary,
+                                    modifier = Modifier.testTag("error-action-sign-in-again"),
+                                )
+                            }
                             if (
                                 AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null
@@ -1044,9 +1089,10 @@ private fun ChatRow(
                             // Copy/More at the end); the "Stopped" note belongs on that edge, as in Flutter, so it
                             // steps back by the inset (offset follows the layout direction, so RTL mirrors).
                             val note = Modifier.offset(x = -Space.S4.dp).testTag("chat-turn-footer-note")
+                            val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
-                            else if (row.stopped) KitReplyNote(words.stoppedFooter(), note)
-                            facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                            else if (row.stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
+                            endNote?.let { n -> TurnEndNote(n, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } }) }
                             // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
                             // (message_view.dart:423-427: the model, when it changed).
                             facts.reading.metadata[row.turnId]
@@ -1239,4 +1285,19 @@ internal fun pathsOf(blocks: List<KitMdBlock>): List<String> {
     }
     blocks.forEach(::walk)
     return out.toList()
+}
+
+
+/** The person's prompt with what it carried: pictures as thumbnails under the words, other files as chips. */
+@Composable
+private fun SentPromptBubble(row: PromptRow) {
+    val sent =
+        rememberKitSentFiles(
+            remember(row.files) { row.files.map { KitSentFile(it.name, it.mime, it.url) } }
+        )
+    KitPromptBubble(
+        CardAnswerDisplay.text(row.text),
+        photos = sent.photos,
+        attachments = sent.attachments,
+    )
 }

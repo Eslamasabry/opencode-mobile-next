@@ -42,7 +42,7 @@ public class ChatViewModel(
     private val worlds: ChatWorlds,
     private val nav: AppNavigator,
     clock: Clock,
-    outside: ChatOutside,
+    private val outside: ChatOutside,
     private val schedules: ScheduleEngine,
 ) : ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
@@ -206,6 +206,13 @@ public class ChatViewModel(
     override fun openSignInSettings(): Unit =
         nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.Home)
 
+    override fun phoneAgentSignIn(): Boolean = outside.isPhoneServer(route.ref)
+
+    override fun openAgentSignIn(providerId: String) {
+        if (!outside.isPhoneServer(route.ref)) return
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.SignInTerminal(route.ref.profileId, providerId))
+    }
+
     override fun confirmLeave(): Unit = presenter.confirmLeave()
 
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()
@@ -250,6 +257,16 @@ public class ChatViewModel(
     override fun openPlace(place: ChatPlace): Unit = presenter.openPlace(place)
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()
+
+    override fun openParent() {
+        world.parent.value?.let { nav.open(ChatRoute(it)) }
+    }
+
+    override fun showSubagents(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(world.ref))
+
+    override fun editServer(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.ServersRoute.Edit(world.ref.profileId))
+
+    override fun openServers(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.ServersRoute.Home)
 
     override fun confirmRestartPhoneServer(): Unit = presenter.confirmRestartPhoneServer()
 
@@ -306,6 +323,8 @@ public class ChatViewModel(
     override fun confirmUndo(): Unit = presenter.confirmUndo()
 
     override suspend fun readPicture(path: String): ByteArray? = presenter.readPicture(path)
+
+    override val pictureScope: String get() = presenter.pictureScope
 
     override fun openPicture(path: String, name: String): Unit = presenter.openPicture(path, name)
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- المرحلة 0 (أول رد): الإعداد لا يبدو عالقًا، وفشل رد النموذج يقول ما الخطوة التالية. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s يستغرق وقتًا أطول بكثير من المعتاد. حاول مجددًا، أو استخدم حاسوبًا بدلًا من ذلك.</string>
+    <string name="setupUseComputerInstead">استخدم حاسوبًا بدلًا من ذلك</string>
+    <string name="setupActivityDownloading">جارٍ تنزيل الملفات</string>
+    <string name="setupActivityUnpacking">جارٍ فك الملفات</string>
+    <string name="setupActivityConfiguring">جارٍ تجهيز الأشياء</string>
+    <string name="setupActivityChecking">جارٍ فحص ما هو مثبّت</string>
+    <string name="setupActivityWorking">جارٍ العمل</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">لا يزال يعمل. قد تستغرق الخطوات الطويلة عدة دقائق.</string>
+    <string name="chatModelFailRateLimit">النموذج مشغول الآن. بدّل النموذج، أو حاول مجددًا بعد دقائق.</string>
+    <string name="chatModelFailDailyLimit">انتهى الحد المجاني اليومي لهذا النموذج. بدّل النموذج، أو حاول غدًا.</string>
+    <string name="chatModelFailSignIn">يحتاج هذا النموذج إلى تسجيل الدخول أولًا. سجّل الدخول، أو بدّل النموذج.</string>
+    <string name="chatModelFailQuota">لا رصيد متبقٍ في حسابك لهذا النموذج. أضف رصيدًا، أو بدّل النموذج.</string>
+    <string name="chatModelFailGeneric">تعذّر على النموذج الرد. بدّل النموذج، أو حاول مجددًا.</string>
+    <string name="chatModelFailSwitch">بدّل النموذج</string>
+    <string name="chatModelFailSignInAction">تسجيل الدخول</string>
+    <string name="chatStalledOnTool">لا يزال بانتظار %1$s.</string>
+    <string name="chatStalledStop">إيقاف</string>
+</resources>

@@ -258,7 +258,7 @@ class KitComposerGateTest {
         val readOnly = i.readOnlyReason != null
         val note = noteOf(i)
         KitComposerTextBox(
-            text = i.text,
+            text = { i.text },
             running = i.busy,
             hasLeading = !readOnly,
             wide = wide,

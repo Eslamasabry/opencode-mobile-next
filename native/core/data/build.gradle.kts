@@ -5,6 +5,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         api(project(":core:common"))
         api(project(":core:security")) // Redactor is in public constructors (AeadSecretStore, AndroidDataStores)
+        api(libs.kotlinx.io.core) // FileLastKnown: last-known server data on files (cache-first, 2026-11-09)
     }
     sourceSets.getByName("androidHostTest").dependencies {
         implementation(kotlin("test-junit"))

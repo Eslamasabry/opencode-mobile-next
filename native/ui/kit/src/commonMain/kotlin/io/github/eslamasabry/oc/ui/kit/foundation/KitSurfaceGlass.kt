@@ -5,6 +5,7 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,7 +25,9 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -84,16 +87,77 @@ internal class KitGlassBackdrop {
 
     /** The picture's darkest and brightest spots under a pane's frost, for [io.github.eslamasabry.oc.ui.design.style.GlassFinish]. */
     internal var frostedSpots: List<Argb> by mutableStateOf(emptyList())
+
+    /**
+     * The picture blurred once per frost sigma and shared by every pane of that sigma (smoothness 2026-11-09): a pane
+     * draws its part of the one blurred copy, clipped to its shape, instead of blurring the picture again on its own.
+     * Made by the panes in the source's window, released with the source ([kitGlassBackdropSource]).
+     */
+    internal val frosted: MutableMap<Float, SharedFrost> = HashMap()
+
+    /**
+     * Bumped whenever the picture's paint changes (another look, a theme, the strength) or its layer is made again
+     * (glass-live 2026-11-09, owner: "the render is fixed with the previous background render").
+     */
+    internal var paintVersion: Int by mutableIntStateOf(0)
+
+    /** Reads the state the picture steps with (its time), set by the live background; null while it does not step. */
+    internal var stepping: () -> Any? = NotStepping
+
+    /**
+     * What the picture shows now, as a key. Read it in every draw block that shows the picture through anything but
+     * the page's own layer (a pane's frost, a liquid face, a rim): the block then runs again, in the same frame, on
+     * every picture step and every look or theme change. A layer that only references the picture's recording is not
+     * enough: a recording drawn under several parents (the page and every pane) is not re-rendered under all of them
+     * when it changes, so a pane kept showing an old frame until something else redrew it.
+     */
+    internal fun frame(): Any? {
+        val v = paintVersion
+        val s = stepping()
+        return if (s == null) v else v to s
+    }
 }
+
+private val NotStepping: () -> Any? = { null }
+
+/**
+ * One blurred copy of the backdrop's picture at [FROST_SCALE] of its size (the blur hides the lower resolution; a
+ * quarter of the pixels to blur), kept as a reference to the picture's layer: a new frame of the picture blurs again on
+ * the GPU without anything being recorded here.
+ */
+internal class SharedFrost(val layer: GraphicsLayer) {
+    var from: GraphicsLayer? = null
+
+    /** The picture's [KitGlassBackdrop.frame] this copy was recorded at: a new frame records it again. */
+    var frame: Any? = Unset
+    var size: androidx.compose.ui.unit.IntSize = androidx.compose.ui.unit.IntSize.Zero
+}
+
+private object Unset
+
+/** The scale the shared frost blurs the picture at. */
+internal const val FROST_SCALE: Float = .5f
 
 @Composable
 internal fun rememberKitGlassBackdrop(): KitGlassBackdrop = remember { KitGlassBackdrop() }
+
+/**
+ * The live picture of the page under a window's sheets and menus (provided by `KitSheetHost`, set by the page's live
+ * background): a sheet's or a menu's liquid face lies outside the page's [LocalKitGlassBackdrop], yet must follow every
+ * frame of the picture the page shows through it (glass-live 2026-11-09).
+ */
+@Stable
+internal class KitLivePicture {
+    internal var backdrop: KitGlassBackdrop? by mutableStateOf(null)
+}
+
+internal val LocalKitLivePicture: ProvidableCompositionLocal<KitLivePicture?> = staticCompositionLocalOf { null }
 
 /** The backdrop of the page being drawn, or null where no live background hosts the page. */
 internal val LocalKitGlassBackdrop: ProvidableCompositionLocal<KitGlassBackdrop?> = staticCompositionLocalOf { null }
 
 /** How much a frost lifts the saturation of the colour it blurs (1 keeps it): frosted glass glows with what is behind. */
-internal const val FROST_SATURATION: Float = 1.7f // FG: lib/ui/kit/kit_surface_look.dart:101
+internal val FROST_SATURATION: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.frostSaturation // FG: lib/ui/kit/kit_surface_look.dart:101 (1.7)
 
 /**
  * Draws [paint] (the picture only) and records it for the panes above ([KitGlassBackdrop]). It also bounds the panes'
@@ -120,14 +184,16 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     val density = LocalDensity.current.density
     val backdrop = LocalKitGlassBackdrop.current
     val ground = LocalKitColors.current.ground
+    val light = kitRimLightGround()
     // Reduced motion and high contrast hold the frost solid (Dart `KitFrost.heldBy`; high contrast already draws Solid).
     val held = reduced || signals.highContrast
     val sigma = decoration.frost
+    // The shared copy is blurred at FROST_SCALE of the picture's size, so the blur's radius is scaled with it.
     val effect =
         remember(sigma, density, platform, held) {
-            if (held) null else platform.frostEffect(FrostSpec(sigma, FROST_SATURATION, 0f), density)
+            if (held) null else platform.frostEffect(FrostSpec(sigma, FROST_SATURATION, 0f), density * FROST_SCALE)
         }
-    return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape())
+    return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape(), sigma, light)
 }
 
 /**
@@ -135,7 +201,7 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
  * no frost of their own (Dart `_KitSurfaceScope.frosted`), as they do inside a frosted pane. It draws nothing itself.
  */
 internal fun Modifier.kitGlassStackRoot(): Modifier =
-    this then GlassFrostElement(null, null, Color.Transparent, androidx.compose.ui.graphics.RectangleShape)
+    this then GlassFrostElement(null, null, Color.Transparent, androidx.compose.ui.graphics.RectangleShape, 0f)
 
 /** Whether a Glass pane over [backdrop] blurs the picture behind it here (for the legibility measure). */
 @Composable
@@ -366,6 +432,8 @@ private data class BackdropSourceElement(
         node.backdrop = backdrop
         node.paint = paint
         node.invalidateDraw()
+        // Another paint (a look, a theme, the strength): every pane showing the picture draws again.
+        backdrop.paintVersion++
     }
 
     override fun InspectorInfo.inspectableProperties() {
@@ -389,11 +457,18 @@ private class BackdropSourceNode(
         own?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         if (backdrop.layer === own) backdrop.layer = null
         own = null
+        backdrop.paintVersion++
+        backdrop.frosted.values.forEach { requireGraphicsContext().releaseGraphicsLayer(it.layer) }
+        backdrop.frosted.clear()
     }
 
     override fun ContentDrawScope.draw() {
         val layer = own ?: requireGraphicsContext().createGraphicsLayer().also { own = it }
-        backdrop.layer = layer
+        if (backdrop.layer !== layer) {
+            backdrop.layer = layer
+            // A new layer: every pane showing the old one draws again (outside this draw's own reads).
+            androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { backdrop.paintVersion++ }
+        }
         // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
         // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
         recordDetached(layer, paint)
@@ -407,14 +482,19 @@ private data class GlassFrostElement(
     val effect: RenderEffect?,
     val ground: Color,
     val shape: Shape,
+    val sigma: Float,
+    /** The ground's luma for the backdrop's rim light (a dark theme), or null: no rim light. */
+    val light: Float? = null,
 ) : ModifierNodeElement<GlassFrostNode>() {
-    override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape)
+    override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape, sigma, light)
 
     override fun update(node: GlassFrostNode) {
         node.backdrop = backdrop
         node.effect = effect
         node.ground = ground
         node.shape = shape
+        node.sigma = sigma
+        node.light = light
         node.invalidateDraw()
     }
 
@@ -428,11 +508,13 @@ private class GlassFrostNode(
     var effect: RenderEffect?,
     var ground: Color,
     var shape: Shape,
+    var sigma: Float,
+    var light: Float?,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode {
     override val traverseKey: Any get() = GlassTraverseKey
     private var coordinates: LayoutCoordinates? = null
     private var last: Offset = Offset.Unspecified
-    private var blur: GraphicsLayer? = null
+    private val rim = BackdropRimLight()
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
@@ -445,34 +527,212 @@ private class GlassFrostNode(
     }
 
     override fun onDetach() {
-        blur?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
-        blur = null
+        rim.release(requireGraphicsContext())
         coordinates = null
         last = Offset.Unspecified
+    }
+
+    /** The picture blurred once for every pane of this sigma, made on first use and kept in step with the picture. */
+    private fun ContentDrawScope.shared(bd: KitGlassBackdrop, picture: GraphicsLayer, fx: RenderEffect): GraphicsLayer {
+        val frost = bd.frosted.getOrPut(sigma) { SharedFrost(requireGraphicsContext().createGraphicsLayer()) }
+        val layer = frost.layer
+        val full = picture.size
+        val now = bd.frame()
+        if (frost.from !== picture || frost.size != full || layer.renderEffect == null || frost.frame != now) {
+            frost.from = picture
+            frost.size = full
+            frost.frame = now
+            val small = androidx.compose.ui.unit.IntSize(
+                (full.width * FROST_SCALE).toInt().coerceAtLeast(1),
+                (full.height * FROST_SCALE).toInt().coerceAtLeast(1),
+            )
+            layer.renderEffect = fx
+            layer.pivotOffset = Offset.Zero
+            layer.scaleX = full.width.toFloat() / small.width
+            layer.scaleY = full.height.toFloat() / small.height
+            // A reference to the picture's layer, drawn small: each new frame of the picture is blurred again by the GPU
+            // with nothing recorded here.
+            layer.record(Density(density, fontScale), layoutDirection, small) {
+                scale(small.width.toFloat() / full.width, small.height.toFloat() / full.height, Offset.Zero) { drawLayer(picture) }
+            }
+        }
+        return layer
     }
 
     /** Inside a pane that frosts already: sit on its frost (Dart `_KitSurfaceScope.frosted`, kit_surface_look.dart:1263-1265). */
     private fun nested(): Boolean = findNearestAncestor(GlassTraverseKey) is GlassFrostNode
 
     override fun ContentDrawScope.draw() {
-        if (!nested()) {
-            val outline = shape.createOutline(size, layoutDirection, this)
-            val bd = backdrop
-            val fx = effect
-            val c = coordinates
-            val picture = bd?.layer
-            if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
-                bd.root === c.findRootCoordinates()
-            ) {
-                val layer = blur ?: requireGraphicsContext().createGraphicsLayer().also { blur = it }
-                layer.renderEffect = fx
-                val shift = bd.origin - c.positionInRoot()
-                recordDetached(layer) { translate(shift.x, shift.y) { drawLayer(picture) } }
-                clipPath(Path().apply { addOutline(outline) }) { drawLayer(layer) }
-            } else {
-                drawOutline(outline, ground)
+        if (nested()) {
+            drawContent()
+            return
+        }
+        val outline = shape.createOutline(size, layoutDirection, this)
+        val bd = backdrop
+        val fx = effect
+        val c = coordinates
+        // Subscribes this draw to the picture: a new frame of it, or another look, draws this pane again.
+        if (fx != null) bd?.frame()
+        val picture = bd?.layer
+        if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
+            bd.root === c.findRootCoordinates()
+        ) {
+            val layer = shared(bd, picture, fx)
+            val shift = bd.origin - c.positionInRoot()
+            clipPath(Path().apply { addOutline(outline) }) { translate(shift.x, shift.y) { drawLayer(layer) } }
+            drawContent()
+            // Over the face's own rim: the backdrop's light where the picture behind is bright (dark themes).
+            light?.let { rim.draw(this, requireGraphicsContext(), picture, shift, shape, it) }
+        } else {
+            drawOutline(outline, ground)
+            drawContent()
+        }
+    }
+}
+
+/**
+ * The rim catching the backdrop's light (glass-live 2026-11-09; owner: "glass not interacting with the background", "so
+ * frosty and not glossy"): a [RIM_LIGHT_BAND_DP] band just inside a pane's lit edges (the straight part of its top edge
+ * and of its start side, where the specular light falls) shows the live picture behind it as neutral white light,
+ * brighter where the picture is brighter than the ground and nothing over the plain ground. White, never the look's
+ * colour (owner 2026-11-08: neutral rims). Dark themes only; a light theme's rim is already white on milk.
+ *
+ * Cheap by design: the band's layer holds one reference to the page's one picture recording (never a copy), so the
+ * picture stepping re-records nothing here; it is drawn through two rectangle clips (a scissor, never a path mask), and
+ * recorded again only when the pane moves or changes size.
+ */
+internal class BackdropRimLight {
+    private var layer: GraphicsLayer? = null
+    private var filtered: Float = Float.NaN
+
+    fun draw(scope: DrawScope, context: androidx.compose.ui.graphics.GraphicsContext, picture: GraphicsLayer, shift: Offset, shape: Shape, groundLuma: Float) {
+        with(scope) {
+            val band = RIM_LIGHT_BAND_DP.dp.toPx()
+            if (RIM_LIGHT_GAIN <= 0f || size.width <= band * 4f || size.height <= band * 4f) return
+            val l = layer ?: context.createGraphicsLayer().also { layer = it }
+            if (filtered != groundLuma) {
+                l.colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(rimLightMatrix(groundLuma))
+                filtered = groundLuma
+            }
+            l.alpha = RIM_LIGHT_MAX
+            recordDetached(l) { translate(shift.x, shift.y) { drawLayer(picture) } }
+            // The corners' radius: the bands stay on the straight edges, inside the face.
+            val r = cornerOf(shape, size, this).coerceAtMost(minOf(size.width, size.height) / 2f)
+            val rtl = layoutDirection == LayoutDirection.Rtl
+            if (size.width - 2f * r > band) clipRect(r, 0f, size.width - r, band) { drawLayer(l) }
+            if (size.height - 2f * r > band) {
+                val x = if (rtl) size.width - band else 0f
+                clipRect(x, r, x + band, size.height - r) { drawLayer(l) }
             }
         }
+    }
+
+    private fun cornerOf(shape: Shape, size: androidx.compose.ui.geometry.Size, density: Density): Float =
+        when (val o = shape.createOutline(size, LayoutDirection.Ltr, density)) {
+            is androidx.compose.ui.graphics.Outline.Rounded -> maxOf(o.roundRect.topLeftCornerRadius.x, o.roundRect.topRightCornerRadius.x)
+            is androidx.compose.ui.graphics.Outline.Rectangle -> 0f
+            else -> minOf(size.width, size.height) / 4f
+        }
+
+    fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
+        layer?.let { context.releaseGraphicsLayer(it) }
+        layer = null
+        filtered = Float.NaN
+    }
+}
+
+/**
+ * White at an alpha of [RIM_LIGHT_GAIN] × how far the picture's luma lies above the ground's ([groundLuma], 0..1): the
+ * picture as light. Colour matrix rows in Compose's order (offsets 0..255).
+ */
+internal fun rimLightMatrix(groundLuma: Float): androidx.compose.ui.graphics.ColorMatrix {
+    val k = RIM_LIGHT_GAIN
+    return androidx.compose.ui.graphics.ColorMatrix(
+        floatArrayOf(
+            0f, 0f, 0f, 0f, 255f,
+            0f, 0f, 0f, 0f, 255f,
+            0f, 0f, 0f, 0f, 255f,
+            k * LUMA_R, k * LUMA_G, k * LUMA_B, 0f, -k * groundLuma * 255f,
+        )
+    )
+}
+
+/** The ground's luma for the rim light in a dark theme, or null (a light theme: no rim light). */
+@Composable
+internal fun kitRimLightGround(): Float? {
+    val roles = io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current
+    if (!roles.dark) return null
+    val g = roles.ground
+    return (LUMA_R * g.red + LUMA_G * g.green + LUMA_B * g.blue) / 255f
+}
+
+/** How wide the lit band inside a pane's edge is, in dp: a touch wider than the 1 dp rim, so the light reads. */
+internal val RIM_LIGHT_BAND_DP: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightBandDp
+
+/** Light per unit of luma above the ground: a look at its cap (about .2 above a dark ground) lights the rim about half. */
+internal val RIM_LIGHT_GAIN: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightGain
+
+/** The most the rim light adds (its layer's alpha). */
+internal val RIM_LIGHT_MAX: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightMax
+
+private const val LUMA_R: Float = .2126f
+private const val LUMA_G: Float = .7152f
+private const val LUMA_B: Float = .0722f
+
+/**
+ * A liquid pane's rim catching the page's live picture ([BackdropRimLight]), drawn over the pane and its content. Nothing
+ * where no live picture lies behind it in this window (a light theme, the flat ground, a popup).
+ */
+@Composable
+internal fun Modifier.kitBackdropRimLight(shape: Shape): Modifier {
+    val backdrop = LocalKitGlassBackdrop.current ?: return this
+    val light = kitRimLightGround() ?: return this
+    return this then RimLightElement(backdrop, shape, light)
+}
+
+private data class RimLightElement(val backdrop: KitGlassBackdrop, val shape: Shape, val light: Float) : ModifierNodeElement<RimLightNode>() {
+    override fun create(): RimLightNode = RimLightNode(backdrop, shape, light)
+
+    override fun update(node: RimLightNode) {
+        node.backdrop = backdrop
+        node.shape = shape
+        node.light = light
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitBackdropRimLight"
+    }
+}
+
+private class RimLightNode(var backdrop: KitGlassBackdrop, var shape: Shape, var light: Float) :
+    Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
+    private var coordinates: LayoutCoordinates? = null
+    private var last: Offset = Offset.Unspecified
+    private val rim = BackdropRimLight()
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        this.coordinates = coordinates
+        val at = coordinates.positionInRoot()
+        if (at != last) {
+            last = at
+            invalidateDraw()
+        }
+    }
+
+    override fun onDetach() {
+        rim.release(requireGraphicsContext())
+        coordinates = null
+        last = Offset.Unspecified
+    }
+
+    override fun ContentDrawScope.draw() {
         drawContent()
+        val bd = backdrop
+        bd.frame()
+        val c = coordinates?.takeIf { it.isAttached } ?: return
+        val picture = bd.layer ?: return
+        if (!bd.painted || bd.root !== c.findRootCoordinates()) return
+        rim.draw(this, requireGraphicsContext(), picture, bd.origin - c.positionInRoot(), shape, light)
     }
 }

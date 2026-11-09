@@ -5,6 +5,7 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -34,6 +36,7 @@ import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.forward
@@ -59,6 +62,9 @@ public fun ShellNavDisplay(
     val effectiveLevel = shellLevel(level, KitMotion.state.level)
     val levelState = rememberUpdatedState(effectiveLevel)
     val signals = remember { GestureSignals() }
+    // Which pages the transition in flight joins: rows pair with a page only when one of them grows from a row.
+    val growRoutes = remember { GrowRoutes(backStack.lastOrNull()) }
+    growRoutes.onTop(backStack.lastOrNull())
 
     // GestureStarted / GestureCancelled from the dispatcher NavDisplay registers on (plan 08 §5.4).
     val dispatcher = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
@@ -68,11 +74,19 @@ public fun ShellNavDisplay(
             dispatcher.transitionState.collect { t ->
                 val inProgress = t is NavigationEventTransitionState.InProgress
                 if (t is NavigationEventTransitionState.InProgress) signals.progress = t.latestEvent.progress
-                if (inProgress && !wasInProgress) gate.on(GateEvent.GestureStarted)
+                if (inProgress && !wasInProgress) {
+                    // A gesture pops the top page: only it and the page beneath take part from here.
+                    growRoutes.settle()
+                    gate.on(GateEvent.GestureStarted)
+                }
                 if (!inProgress && wasInProgress) gate.on(GateEvent.GestureCancelled) // no-op after a commit
                 wasInProgress = inProgress
             }
         }
+    }
+    // One entry composed: the page that left is gone, so the pair it formed with the top page is over.
+    LaunchedEffect(growRoutes) {
+        snapshotFlow { signals.composedEntries <= 1 }.collect { settled -> if (settled) growRoutes.settle() }
     }
     // TransitionSettled: one entry composed means no entry transition is running (the popped or covered one left).
     LaunchedEffect(gate) {
@@ -96,7 +110,10 @@ public fun ShellNavDisplay(
         }
     }
 
-    SharedTransitionLayout {
+    // Flutter's fade-forwards paints the page colour under both pages (its backgroundColor): while the covered page has
+    // faded and the arriving one is still a quarter width short and half transparent, the ground shows there, never
+    // the window (dark under a light theme: the "weird" grey flash of owner 2026-11-09).
+    SharedTransitionLayout(Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f))) {
         val sharedScope = this
         val growDecorator = remember(sharedScope, gate) {
             NavEntryDecorator<NavKey>(
@@ -106,7 +123,8 @@ public fun ShellNavDisplay(
                         signals.composedEntries++
                         onDispose { signals.composedEntries-- }
                     }
-                    val host = remember(contentScope) { ShellGrowHost(sharedScope, contentScope, gate, levelState) }
+                    val host =
+                        remember(contentScope) { ShellGrowHost(sharedScope, contentScope, gate, levelState, growRoutes) }
                     val grows = (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
                     Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value, grows)) {
                         CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
@@ -142,6 +160,35 @@ public fun ShellNavDisplay(
 private fun androidx.navigation3.scene.Scene<NavKey>.motion(): RouteMotion? =
     entries.lastOrNull()?.metadata?.get(ShellMotion.MOTION_KEY) as? RouteMotion
 
+/**
+ * The pages the navigation in flight joins, for the row ↔ page transform: the top page and, until the transition
+ * settles, the page that was on top before it. Updated in composition, before NavDisplay starts the transition, so the
+ * shared bounds see it on their first frame.
+ */
+@Stable
+internal class GrowRoutes(top: NavKey?) {
+    private var last: NavKey? = top
+    private var current: NavKey? by mutableStateOf(top)
+    private var from: NavKey? by mutableStateOf(null)
+
+    fun onTop(top: NavKey?) {
+        if (top == last) return
+        from = last
+        last = top
+        current = top
+    }
+
+    fun settle() {
+        from = null
+    }
+
+    /** A page that grows from a row is on top, or is the one the transition leaves or covers. */
+    val involved: Boolean
+        get() = current.grows() || from.grows()
+
+    private fun NavKey?.grows(): Boolean = (this as? AppRoute)?.motion == RouteMotion.GrowFromRow
+}
+
 @Stable
 internal class GestureSignals {
     var composedEntries by mutableIntStateOf(0)
@@ -155,12 +202,16 @@ internal class ShellGrowHost(
     override val animatedVisibilityScope: AnimatedVisibilityScope,
     private val gate: RowTransformGate,
     private val level: androidx.compose.runtime.State<ShellMotionLevel>,
+    private val routes: GrowRoutes,
 ) : KitGrowHost {
     override val transformEnabled: Boolean
         get() = sharedBoundsEnabled(gate.state, level.value)
 
     override val opening: Boolean
         get() = gate.opening
+
+    override val rowTransformInFlight: Boolean
+        get() = routes.involved
 }
 
 /**

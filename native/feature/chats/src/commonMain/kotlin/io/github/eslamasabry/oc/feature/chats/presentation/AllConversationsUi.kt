@@ -36,10 +36,20 @@ public class ConversationServer(
 public interface ConversationServers {
     public val servers: StateFlow<ImmutableList<ConversationServer>>
 
+    /**
+     * Cache-first: saved servers the list shows that are not connected yet (connecting, starting or away). All
+     * conversations draws their kept rows ([ConversationPreviews.read] by profile) instead of a "no server" or
+     * skeleton page; the live rows replace them when the server answers.
+     */
+    public val waiting: StateFlow<ImmutableList<ServerName>>
+        get() = NO_WAITING
+
     public fun prefetch(ref: ConversationRef) {}
 
     public fun forget(ref: ConversationRef) {}
 }
+
+private val NO_WAITING: StateFlow<ImmutableList<ServerName>> = MutableStateFlow(persistentListOf())
 
 @ContributesBinding(AppScope::class)
 @Inject
