@@ -701,3 +701,40 @@ val verifyProductionLineage by tasks.registering {
 tasks.configureEach {
     if (name.startsWith("package") && name.endsWith("Release")) dependsOn(verifyProductionLineage)
 }
+
+// The per-app language list (Android 13+ system settings) is generated, not hand-kept: a language is listed only when it
+// has at least 95 % of the English keys (the same rule as LanguageCoverage.offered in :ui:words; :tools:strings
+// LanguageGateTest pins both). Below that the app reads English as a whole.
+abstract class GenerateLocaleConfig : DefaultTask() {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val words: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val out: DirectoryProperty
+
+    @TaskAction
+    fun run() {
+        val root = words.get().asFile
+        fun names(folder: java.io.File): Set<String> =
+            folder.listFiles().orEmpty().filter { it.name.startsWith("strings") && it.extension == "xml" }
+                .flatMap { f -> Regex("""<(?:string|plurals)\s+name="([^"]+)""").findAll(f.readText()).map { it.groupValues[1] }.toList() }.toSet()
+        val source = names(java.io.File(root, "values"))
+        val tags = root.listFiles().orEmpty().filter { it.isDirectory && Regex("values-[a-z]{2,3}").matches(it.name) }
+            .map { it.name.removePrefix("values-") }
+            .filter { names(java.io.File(root, "values-$it")).intersect(source).size * 100 >= 95 * source.size }.sorted()
+        val xml = java.io.File(out.get().asFile, "xml/locales_config.xml")
+        xml.parentFile.mkdirs()
+        xml.writeText(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Generated: languages at 95% of English or more. -->\n" +
+                "<locale-config xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+                (listOf("en") + tags).joinToString("") { "    <locale android:name=\"$it\" />\n" } + "</locale-config>\n",
+        )
+    }
+}
+
+val localeConfig = tasks.register<GenerateLocaleConfig>("generateLocaleConfig") {
+    words.set(rootProject.layout.projectDirectory.dir("ui/words/src/commonMain/composeResources"))
+    out.set(layout.buildDirectory.dir("generated/localeConfig/res"))
+}
+androidComponents.onVariants { variant -> variant.sources.res?.addGeneratedSourceDirectory(localeConfig, GenerateLocaleConfig::out) }

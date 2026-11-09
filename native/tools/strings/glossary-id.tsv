@@ -1,0 +1,68 @@
+# Glossary for id. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Ponsel ini|ponsel ini
+term	\b[Cc]onversations?\b	percakapan
+term	\bTry again\b	Coba lagi|coba lagi
+term	\bSettings\b	Pengaturan
+term	\bServers?\b	server
+term	\bProjects?\b	proyek
+term	\bAgents?\b	agen
+term	\bFiles\b	file|berkas
+term	\bCancel\b	Batal
+term	\bOffline\b	Offline|Luring
+term	\bDisconnect\b	Putuskan
+term	\bAllow\b	Izinkan
+term	\bDeny\b	Tolak
+term	\bDelete\b	Hapus
+term	\bSearch\b	Cari|pencarian
+term	\bRefresh\b	Muat ulang|Segarkan
+term	\bModel\b	model
+forbid	\bsesi\b	say percakapan, not sesi
+forbid	\bchat\b	say percakapan, not chat
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

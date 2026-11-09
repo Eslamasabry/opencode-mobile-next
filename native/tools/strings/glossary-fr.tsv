@@ -1,0 +1,68 @@
+# Glossary for fr. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Ce téléphone|ce téléphone|Ce telephone
+term	\b[Cc]onversations?\b	conversation
+term	\bTry again\b	Réessayer|réessayez|Essayer à nouveau
+term	\bSettings\b	Paramètres
+term	\bServers?\b	serveur
+term	\bProjects?\b	projet
+term	\bAgents?\b	agent
+term	\bFiles\b	fichiers
+term	\bCancel\b	Annuler
+term	\bOffline\b	Hors ligne
+term	\bDisconnect\b	Déconnecter
+term	\bAllow\b	Autoriser
+term	\bDeny\b	Refuser
+term	\bDelete\b	Supprimer
+term	\bSearch\b	Rechercher|Recherche
+term	\bRefresh\b	Actualiser
+term	\bModel\b	modèle
+forbid	\bsessions?\b	say conversation, not session
+forbid	\bchats?\b	say conversation, not chat
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

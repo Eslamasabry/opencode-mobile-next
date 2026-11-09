@@ -159,9 +159,9 @@ class AppPreferences(stores: PreviewStores, appScope: AppCoroutineScope) {
     /** The chosen language tag; null follows the phone (B-L10N-001). */
     val localeTag: StateFlow<String?> =
         mutable
-            .map(PreferenceMapping::localeTag)
+            .map(::offeredLocaleTag)
             .distinctUntilChanged()
-            .stateIn(scope, SharingStarted.Eagerly, PreferenceMapping.localeTag(mutable.value))
+            .stateIn(scope, SharingStarted.Eagerly, offeredLocaleTag(mutable.value))
 
     /**
      * [localeTag] once the stored value is known (never the defaults before warm-up), for the
@@ -1069,6 +1069,10 @@ class FirstRunStarter(
     }
 }
 
+/** A stored language below 95 % coverage reads English as a whole, never string by string. */
+private fun offeredLocaleTag(p: DevicePreferences): String? =
+    PreferenceMapping.localeTag(p)?.let { io.github.eslamasabry.oc.ui.words.LanguageCoverage.offeredOrNull(it) ?: "en" }
+
 /** The phone's own language, for "Use system language". */
 internal fun systemLocaleTag(): String {
     val list = Resources.getSystem().configuration.locales
@@ -1081,7 +1085,8 @@ internal fun systemLocaleTag(): String {
     return tags.firstOrNull { it.substringBefore('-').lowercase() == code } ?: code
 }
 
-private val SHIPPED_LANGUAGES = setOf("en", "ar", "es", "ja", "pt", "ru", "zh")
+/** Only languages at 95 % of English (a lower one reads English as a whole): generated with the words. */
+private val SHIPPED_LANGUAGES: Set<String> = io.github.eslamasabry.oc.ui.words.LanguageCoverage.offered
 
 /**
  * The app language on Android (B-L10N-001). Words come from Compose resources, which read the
@@ -1112,7 +1117,7 @@ object AppLocale {
      * recreates once.
      */
     fun changed(tag: String?): Boolean {
-        val want = tag ?: systemLocaleTag()
+        val want = io.github.eslamasabry.oc.ui.words.LanguageCoverage.offeredOrNull(tag) ?: systemLocaleTag()
         if (want == applied) return false
         applied = want
         return true
@@ -1137,6 +1142,7 @@ object AppLocale {
         return io.github.eslamasabry.oc.engine.settings.prefs.LocaleChoice.entries
             .firstOrNull { it.code != null && it.code == raw }
             ?.code
+            ?.let { io.github.eslamasabry.oc.ui.words.LanguageCoverage.offeredOrNull(it) }
     }
 }
 

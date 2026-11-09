@@ -1,0 +1,68 @@
+# Glossary for pt. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Este celular|Este telefone|este celular
+term	\b[Cc]onversations?\b	conversa
+term	\bTry again\b	Tentar novamente|tente novamente
+term	\bSettings\b	Configura[cç][oõ]es
+term	\bServers?\b	servidor
+term	\bProjects?\b	projeto
+term	\bAgents?\b	agente
+term	\bFiles\b	arquivos
+term	\bCancel\b	Cancelar
+term	\bOffline\b	Offline|Sem conex[aã]o
+term	\bDisconnect\b	Desconectar
+term	\bAllow\b	Permitir
+term	\bDeny\b	Negar|Recusar
+term	\bDelete\b	Excluir|Apagar
+term	\bSearch\b	Pesquisar|Buscar|busca|pesquisa
+term	\bRefresh\b	Atualizar
+term	\bModel\b	modelo
+forbid	\bsess[aã]o\b|\bsess[oõ]es\b	say conversa, not sessão
+forbid	\bchats?\b	say conversa, not chat
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

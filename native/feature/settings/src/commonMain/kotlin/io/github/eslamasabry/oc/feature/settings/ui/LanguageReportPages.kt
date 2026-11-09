@@ -49,7 +49,7 @@ internal fun ColumnScope.LanguageBody(language: AppLanguage, actions: SettingsAc
     Spacer(Modifier.height(Space.S3.dp)) // F: lib/ui/widgets/language_picker.dart:159
     KitChoiceList(
         choices =
-            AppLanguage.entries.map { item ->
+            AppLanguage.entries.filter { it.tag == null || it.tag in LanguageCoverage.offered }.map { item ->
                 val share = item.tag?.let { LanguageCoverage.percent[it] }
                 KitChoice(
                     item,
