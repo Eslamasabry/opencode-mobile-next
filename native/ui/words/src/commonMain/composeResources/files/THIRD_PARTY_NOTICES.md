@@ -63,6 +63,13 @@ current text colour and the logos remain trademarks of their owners; they are
 shown only to name the agent or provider. A provider without a bundled mark
 still falls back to its models.dev logo, downloaded by provider name.
 
+Five agent brands also ship a full-colour file, `assets/marks/<slug>-color.svg` (Claude, Gemini, Google for
+Antigravity, Qwen and Copilot): the colour SVGs of the same lobe-icons set
+(`@lobehub/icons-static-svg` 1.102.0, MIT, Copyright (c) 2023 LobeHub; same licence file), unchanged apart from
+removing the `<title>` and the inline `style`, and fixing the size at 24. The app draws them in their own colours,
+without a tint; OpenCode, Codex/OpenAI, Kilo Code, Cline, Goose and Pi have no colour file (or, like OpenCode and
+Codex, are single-colour by design, and Codex's colour file sits on a white plate) and stay in the text colour.
+
 ### Local SVG previews
 
 The native kit renders bounded provider marks on Android with `com.caverock:androidsvg-aar:1.4`,
