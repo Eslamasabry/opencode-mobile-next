@@ -91,7 +91,13 @@ public data class LibraryInventory(
     val catalog: CatalogSnapshot? = null,
     val skillConversationsSupported: Boolean = false,
     val activeCredential: ImmutableMap<String, String?> = persistentMapOf(),
-)
+    /** True while the lists are the last-known ones, before the live read answers. */
+    val fromKept: Boolean = false,
+) {
+    /** A skeleton is only for a first-ever load: with kept lists the screen shows a quiet bar instead. */
+    val coldLoading: Boolean
+        get() = loading && !fromKept
+}
 
 /**
  * The Tools inventory and actions, pinned to one profile/location. Reads retain their last good
@@ -103,15 +109,25 @@ public class LibrarySession(
     private val recovery: LibraryRecoveryStore,
     private val scope: CoroutineScope,
     private val clock: Clock,
+    private val kept: LibraryLastKnown? = null,
 ) {
     private val lane = Mutex()
-    private val mutable = MutableStateFlow(LibraryInventory())
+    private val mutable = MutableStateFlow(firstInventory())
     public val state: StateFlow<LibraryInventory> = mutable.asStateFlow()
     public val profileId: ProfileId?
         get() = pinned?.profile ?: current()?.profile
 
     private var initialized = false
     private var corrupt = false
+
+    /** The first frame: the lists last read for this connection and folder, when there are any. */
+    private fun firstInventory(): LibraryInventory {
+        val src = source()?.takeIf { it.current() } ?: return LibraryInventory()
+        val shelf = kept?.peek(src.profile, place(src)) ?: return LibraryInventory()
+        return if (shelf.isEmpty) LibraryInventory() else shelf.over(LibraryInventory())
+    }
+
+    private fun place(src: LibrarySource): String = "${src.location.directory.orEmpty()}|${src.location.workspace.orEmpty()}"
 
     private data class SourceKey(
         val profile: ProfileId,
@@ -252,9 +268,14 @@ public class LibrarySession(
         read("conversations", { src.server.sessionPage(limit = 100) }) { page ->
             mutable.update { it.copy(conversations = page.items) }
         }
+        if (failures.isEmpty() && src.current()) {
+            val shelf = KeptLibrary.of(mutable.value)
+            kept?.let { k -> scope.launch { k.keep(src.profile, place(src), shelf) } }
+        }
         mutable.update {
             it.copy(
                 loading = false,
+                fromKept = false,
                 skillConversationsSupported =
                     src.current() &&
                         src.capabilities.serverCatalog &&

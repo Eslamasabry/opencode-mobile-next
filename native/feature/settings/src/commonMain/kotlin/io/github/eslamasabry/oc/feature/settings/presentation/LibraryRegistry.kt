@@ -102,3 +102,10 @@ public fun libraryRegistryItem(entry: RegistryEntry): LibraryRegistryItem {
         pkg.requiresArguments || pkg.environment.any { it.required },
     )
 }
+
+/**
+ * Cache-first: the registry's saved list stays on screen while it refreshes (the store keeps the saved entries during
+ * Loading), so a skeleton shows only when there is nothing to draw yet; otherwise a quiet bar says it is updating.
+ */
+public fun libraryRegistryColdLoading(registry: io.github.eslamasabry.oc.engine.setupassist.SetupRegistrySnapshot): Boolean =
+    registry.status == io.github.eslamasabry.oc.engine.setupassist.SetupRegistryStatus.Loading && registry.entries.isEmpty()

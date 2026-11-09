@@ -61,7 +61,11 @@ internal fun LibraryRegistrySheet(state: LibraryUi, actions: LibraryActions) {
         else if (!registry.optedIn) KitText(stringResource(Res.string.nlibRegistryConsent))
         else {
             KitField(search, stringResource(Res.string.nlibSearch))
-            if (registry.status == SetupRegistryStatus.Loading) KitSkeletonRows()
+            if (libraryRegistryColdLoading(registry)) KitSkeletonRows()
+            else KitLoadingBar(
+                registry.status == SetupRegistryStatus.Loading,
+                stringResource(Res.string.agentsStateUpdatingHelper),
+            )
             if (registry.status in listOf(SetupRegistryStatus.Error, SetupRegistryStatus.Offline)) {
                 KitNotice(stringResource(Res.string.nlibRegistryFailed))
                 KitButton(
