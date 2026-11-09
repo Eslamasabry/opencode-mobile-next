@@ -49,6 +49,31 @@ object LastKnownWiring {
 internal fun StoredProfile.lastKnownMark(): ServerMark =
     ServerMark.of(backend.name, baseUrl, username, codexDirectory)
 
+/**
+ * One shelf for a feature's port: entries keyed by profile (and an item, such as a session id or a folder path), the
+ * server mark looked up from the saved profile, so data read from another server never shows. A profile that no
+ * longer exists keeps and shows nothing. Every cache-first port in the app is a few lines over one of these.
+ */
+class ProfileShelf<T>(private val store: LastKnown, private val stores: PreviewStores, val shelf: CacheShelf<T>) {
+    private fun mark(profile: ProfileId): ServerMark? = stores.profiles.profile(profile)?.profile?.lastKnownMark()
+
+    /** Memory only, for a first frame. */
+    fun peek(profile: ProfileId, item: String = ""): T? = mark(profile)?.let { store.peek(profile, it, shelf, item) }
+
+    suspend fun read(profile: ProfileId, item: String = ""): T? =
+        mark(profile)?.let { store.read(profile, it, shelf, item) }
+
+    suspend fun keep(profile: ProfileId, item: String = "", value: T) {
+        val mark = mark(profile) ?: return
+        store.write(profile, mark, shelf, item, value)
+    }
+
+    /** Loads the newest entries into memory, so the next screen's first frame needs no read. */
+    suspend fun warm(profile: ProfileId) {
+        mark(profile)?.let { store.warm(profile, it, shelf) }
+    }
+}
+
 /** Deleting a profile deletes everything the last-known store kept for it (AGENTS.md rule 9). */
 @ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
 @Inject
@@ -64,25 +89,21 @@ class LastKnownDeletion(private val store: LastKnown) : ProfileResourceCleaner {
 @SingleIn(AppScope::class)
 @Inject
 class AppChatLastKnown(
-    private val store: LastKnown,
-    private val stores: PreviewStores,
+    store: LastKnown,
+    stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val clock: Clock,
     private val appScope: AppCoroutineScope,
 ) : ChatLastKnown {
-    private fun mark(ref: ConversationRef): ServerMark? =
-        stores.profiles.profile(ref.profileId)?.profile?.lastKnownMark()
+    private val pages = ProfileShelf(store, stores, TRANSCRIPTS)
 
-    override fun peek(ref: ConversationRef): KeptTranscript? =
-        mark(ref)?.let { store.peek(ref.profileId, it, TRANSCRIPTS, ref.sessionId.raw) }
+    override fun peek(ref: ConversationRef): KeptTranscript? = pages.peek(ref.profileId, ref.sessionId.raw)
 
-    override suspend fun read(ref: ConversationRef): KeptTranscript? =
-        mark(ref)?.let { store.read(ref.profileId, it, TRANSCRIPTS, ref.sessionId.raw) }
+    override suspend fun read(ref: ConversationRef): KeptTranscript? = pages.read(ref.profileId, ref.sessionId.raw)
 
     override suspend fun keep(ref: ConversationRef, title: String?, messages: List<MessageWithParts>) {
-        val mark = mark(ref) ?: return
         val kept = KeptTranscript.fit(title, messages, TRANSCRIPTS.maxBytes - ENVELOPE) ?: return
-        store.write(ref.profileId, mark, TRANSCRIPTS, ref.sessionId.raw, kept)
+        pages.keep(ref.profileId, ref.sessionId.raw, kept)
     }
 
     override fun detached(ref: ConversationRef): TranscriptHandle =
