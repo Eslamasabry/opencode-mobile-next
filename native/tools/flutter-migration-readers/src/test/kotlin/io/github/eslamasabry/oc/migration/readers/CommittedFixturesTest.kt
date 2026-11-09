@@ -67,7 +67,9 @@ class CommittedFixturesTest {
     fun `B-MIGR-005 the committed prefs hold every key Flutter 2_1_5 lists, with its consent and telemetry values`() {
         val prefs = SharedPrefsFile(File(fixture, "shared_prefs"), FlutterPrefsCodec.FILE_NAME).read()!!.androidMap
         val ledger = MiniJson.parse(File("src/test/resources/fixtures/flutter-2.1.5/settings_preferences_ledger.json").readText()) as Map<*, *>
-        val absent = ledger.keys.map { it as String }.filter { k ->
+        // Preference keys only: the ledger also lists secure-storage names and names that are not stored.
+        val stored = io.github.eslamasabry.oc.migration.readers.model.FlutterKey.entries.map { it.pattern }.toSet()
+        val absent = ledger.keys.map { it as String }.filter { it in stored }.filter { k ->
             // Families end in a dot: the fixture holds at least one member of each.
             prefs.keys.none { it == FlutterPrefsCodec.physicalKey(k) || (k.endsWith(".") && it.startsWith(FlutterPrefsCodec.physicalKey(k))) }
         }
