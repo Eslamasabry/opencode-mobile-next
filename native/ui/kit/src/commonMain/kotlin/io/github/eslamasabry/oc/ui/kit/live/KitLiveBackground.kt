@@ -48,10 +48,15 @@ import kotlin.math.floor
  * stops with the app (the frame clock pauses when the window is hidden). Saver hides the look; a style may cap or hide
  * it.
  *
+ * [shared] (every framed page, `KitScreen`): the page shows the theme root's one live background ([KitLiveShare]): one
+ * clock, and per page size one recorded picture, one shader frame and one set of blurred copies, so a push or a pop
+ * draws the look once (smoothness round 2). Each page still draws that picture in its own frame, so nothing is seen
+ * through a page. A thumbnail of a look ([KitLiveLookPreview]) keeps its own.
+ *
  * States: off (flat ground), shader, still fallback, painted.
  */
 @Composable
-public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = false, content: @Composable () -> Unit) {
     val appearance = LocalKitAppearance.current
     val style = LocalKitStyle.current
     val colors = LocalKitColors.current
@@ -59,7 +64,9 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val motion = LocalKitMotion.current
     val platform = LocalKitPlatform.current
     val backdrop = rememberKitGlassBackdrop()
-    val clock = rememberLiveFrameClock()
+    val share = if (shared) LocalKitLiveShare.current else null
+    val clock = share?.clock ?: rememberLiveFrameClock()
+    val pictures = share?.pictures
     // Hook H7: a style may cap the look or hide it (kit_live_background.dart:266-271).
     val strength = style.spec.tokens.live.cap(appearance.liveStrength)
     val on = appearance.liveBackground && !appearance.saver && strength > 0f
@@ -75,8 +82,14 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val glassBlurs = style.spec.tokens.blursBehind && kitGlassFrostAvailable()
     val animates = motion.ambientLoops && (plate != null || render == LiveRender.Shader)
     val time = rememberLiveTime(clock, animates)
+    // A shared page draws a shader look through the shared picture whatever the style (one shader frame for every page
+    // of its size); otherwise only where Glass blurs it, as before.
     val shaderPicture =
-        if (glassBlurs && look != null && render == LiveRender.Shader) rememberLiveShaderBackdrop(look, strength, time) else null
+        if ((glassBlurs || pictures != null) && look != null && render == LiveRender.Shader) {
+            rememberLiveShaderBackdrop(look, strength, time, pictures)
+        } else {
+            null
+        }
     val painted = plate != null || shaderPicture != null
     SideEffect {
         backdrop.painted = painted
@@ -104,13 +117,13 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
                 // Six steps a second for the picture: Glass panes re-blur it on every step.
                 val steps = AuroraImage.FRAMES_PER_SECOND
                 val drift = remember(clock) { derivedStateOf { floor(clock.seconds * steps) / steps } }
-                Modifier.kitGlassBackdropSource(backdrop) {
+                Modifier.kitGlassBackdropSource(backdrop, pictures) {
                     drawRect(ground)
                     val at = if (animates) drift.value.toDouble() else 0.0
                     drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at))
                 }
             }
-            shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, shaderPicture)
+            shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, pictures, shaderPicture)
             else -> null
         }
     // A touch wakes a resting clock; it never consumes the touch.

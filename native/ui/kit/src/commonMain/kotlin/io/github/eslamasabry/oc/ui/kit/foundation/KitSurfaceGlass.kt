@@ -76,7 +76,13 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 /** The picture behind one page's glass panes. Made by `KitLiveBackground`; panes read it from [LocalKitGlassBackdrop]. */
 @Stable
 internal class KitGlassBackdrop {
-    internal var layer: GraphicsLayer? = null
+    /** The recorded picture (this page's own, or the one every page of its size shares: [KitGlassPictures]). */
+    internal var picture: KitGlassPicture? = null
+
+    /** The picture's layer; null until the source has drawn. */
+    internal val layer: GraphicsLayer? get() = picture?.layer
+
+    /** This page's picture's top-left in its root, and that root: each page that shows a shared picture has its own. */
     internal var origin: Offset = Offset.Zero
     internal var root: LayoutCoordinates? = null
 
@@ -86,12 +92,70 @@ internal class KitGlassBackdrop {
     /** The picture's darkest and brightest spots under a pane's frost, for [io.github.eslamasabry.oc.ui.design.style.GlassFinish]. */
     internal var frostedSpots: List<Argb> by mutableStateOf(emptyList())
 
+    /** The picture's blurred copies, one per frost sigma ([KitGlassPicture.frosted]). */
+    internal val frosted: Map<Float, SharedFrost> get() = picture?.frosted ?: emptyMap()
+}
+
+/**
+ * One recorded live picture and what is made from it. It is recorded again every time a page showing it draws
+ * (smoothness round 2 and the owner's "stale background" report: nothing here is ever kept across a change of the
+ * picture), so it is always the picture the page shows now.
+ */
+internal class KitGlassPicture {
+    internal var layer: GraphicsLayer? = null
+
     /**
      * The picture blurred once per frost sigma and shared by every pane of that sigma (smoothness 2026-11-09): a pane
      * draws its part of the one blurred copy, clipped to its shape, instead of blurring the picture again on its own.
-     * Made by the panes in the source's window, released with the source ([kitGlassBackdropSource]).
+     * Made by the panes in the source's window, released with the picture.
      */
     internal val frosted: MutableMap<Float, SharedFrost> = HashMap()
+
+    /** The shader look's reduced-resolution layer, when the picture is a shader look ([rememberLiveShaderBackdrop]). */
+    internal var shader: GraphicsLayer? = null
+
+    /** What [shader] was last recorded from: every input of the shader's frame, so an equal key is the same pixels. */
+    internal var shaderKey: Any? = null
+
+    /** How many times the picture was recorded: a blurred copy refreshes its reference on every new recording. */
+    internal var version: Int = 0
+
+    internal var users: Int = 0
+
+    internal fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
+        layer?.let(context::releaseGraphicsLayer)
+        shader?.let(context::releaseGraphicsLayer)
+        frosted.values.forEach { context.releaseGraphicsLayer(it.layer) }
+        layer = null
+        shader = null
+        shaderKey = null
+        frosted.clear()
+    }
+}
+
+/**
+ * The live pictures of one theme root, one per page size (smoothness round 2: one live background for the whole app).
+ * Every framed page of a size shows the same picture and its panes blur the same copies, so a push or a pop draws the
+ * look once, not once per page. Pages of other sizes (a list pane, a look's thumbnail) get their own.
+ */
+internal class KitGlassPictures {
+    private val bySize = HashMap<androidx.compose.ui.unit.IntSize, KitGlassPicture>()
+
+    /** Pictures in use (tests). */
+    internal val count: Int get() = bySize.size
+
+    internal fun acquire(size: androidx.compose.ui.unit.IntSize): KitGlassPicture =
+        bySize.getOrPut(size) { KitGlassPicture() }.also { it.users++ }
+
+    internal fun release(picture: KitGlassPicture, context: androidx.compose.ui.graphics.GraphicsContext) {
+        picture.users--
+        if (picture.users > 0) return
+        bySize.entries.removeAll { it.value === picture }
+        picture.release(context)
+    }
+
+    /** The picture recorded for [size], if a page of that size is showing one. */
+    internal fun at(size: androidx.compose.ui.unit.IntSize): KitGlassPicture? = bySize[size]
 }
 
 /**
@@ -102,6 +166,8 @@ internal class KitGlassBackdrop {
 internal class SharedFrost(val layer: GraphicsLayer) {
     var from: GraphicsLayer? = null
     var size: androidx.compose.ui.unit.IntSize = androidx.compose.ui.unit.IntSize.Zero
+    var effect: RenderEffect? = null
+    var version: Int = -1
 }
 
 /** The scale the shared frost blurs the picture at. */
@@ -122,8 +188,11 @@ internal const val FROST_SATURATION: Float = 1.7f // FG: lib/ui/kit/kit_surface_
  * behind the page's content ([kitGlassBackdropBoundary] bounds the content), so a step of the picture re-records the
  * picture alone, never the page.
  */
-internal fun Modifier.kitGlassBackdropSource(backdrop: KitGlassBackdrop, paint: DrawScope.() -> Unit): Modifier =
-    this then BackdropSourceElement(backdrop, paint)
+internal fun Modifier.kitGlassBackdropSource(
+    backdrop: KitGlassBackdrop,
+    shared: KitGlassPictures? = null,
+    paint: DrawScope.() -> Unit,
+): Modifier = this then BackdropSourceElement(backdrop, shared, paint)
 
 /**
  * The frost under a decorated surface's face (fills the lead stub; standard §12 seam). Only Glass draws one, only for a
@@ -380,12 +449,15 @@ private object GlassTraverseKey
 
 private data class BackdropSourceElement(
     val backdrop: KitGlassBackdrop,
+    val shared: KitGlassPictures?,
     val paint: DrawScope.() -> Unit,
 ) : ModifierNodeElement<BackdropSourceNode>() {
-    override fun create(): BackdropSourceNode = BackdropSourceNode(backdrop, paint)
+    override fun create(): BackdropSourceNode = BackdropSourceNode(backdrop, shared, paint)
 
     override fun update(node: BackdropSourceNode) {
+        if (node.backdrop !== backdrop || node.shared !== shared) node.letGo()
         node.backdrop = backdrop
+        node.shared = shared
         node.paint = paint
         node.invalidateDraw()
     }
@@ -397,30 +469,54 @@ private data class BackdropSourceElement(
 
 private class BackdropSourceNode(
     var backdrop: KitGlassBackdrop,
+    var shared: KitGlassPictures?,
     var paint: DrawScope.() -> Unit,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode {
     override val traverseKey: Any get() = GlassTraverseKey
-    private var own: GraphicsLayer? = null
+    private var held: KitGlassPicture? = null
+    private var heldSize: androidx.compose.ui.unit.IntSize? = null
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         backdrop.origin = coordinates.positionInRoot()
         backdrop.root = coordinates.findRootCoordinates()
     }
 
+    /** Lets go of the picture: the page's own is released, a shared one once its last page lets go. */
+    fun letGo() {
+        val p = held ?: return
+        held = null
+        heldSize = null
+        if (backdrop.picture === p) backdrop.picture = null
+        if (!isAttached) return
+        val context = requireGraphicsContext()
+        val pictures = shared
+        if (pictures != null) pictures.release(p, context) else p.release(context)
+    }
+
     override fun onDetach() {
-        own?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
-        if (backdrop.layer === own) backdrop.layer = null
-        own = null
-        backdrop.frosted.values.forEach { requireGraphicsContext().releaseGraphicsLayer(it.layer) }
-        backdrop.frosted.clear()
+        letGo()
+    }
+
+    /** The picture for a page of [size]: kept while the size holds, the shared one of that size where pages share. */
+    private fun pictureFor(size: androidx.compose.ui.unit.IntSize): KitGlassPicture {
+        held?.let { if (heldSize == size) return it }
+        letGo()
+        val p = shared?.acquire(size) ?: KitGlassPicture()
+        held = p
+        heldSize = size
+        return p
     }
 
     override fun ContentDrawScope.draw() {
-        val layer = own ?: requireGraphicsContext().createGraphicsLayer().also { own = it }
-        backdrop.layer = layer
-        // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
-        // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
+        val picture = pictureFor(size.toIntSize())
+        backdrop.picture = picture
+        val layer = picture.layer ?: requireGraphicsContext().createGraphicsLayer().also { picture.layer = it }
+        // Recorded on every draw, never kept: a shared picture is recorded again by each page that shows it, so it is
+        // always the current look, theme and time. Recorded in the layer's own scope, never through this node's: the
+        // picture cannot draw into, or ask for its density from, the scope that is drawing it (N-29, a sample's paint
+        // reading toPx() recursed for ever).
         recordDetached(layer, paint)
+        picture.version++
         drawLayer(layer)
         drawContent()
     }
@@ -476,13 +572,17 @@ private class GlassFrostNode(
     }
 
     /** The picture blurred once for every pane of this sigma, made on first use and kept in step with the picture. */
-    private fun ContentDrawScope.shared(bd: KitGlassBackdrop, picture: GraphicsLayer, fx: RenderEffect): GraphicsLayer {
-        val frost = bd.frosted.getOrPut(sigma) { SharedFrost(requireGraphicsContext().createGraphicsLayer()) }
+    private fun ContentDrawScope.shared(pic: KitGlassPicture, picture: GraphicsLayer, fx: RenderEffect): GraphicsLayer {
+        val frost = pic.frosted.getOrPut(sigma) { SharedFrost(requireGraphicsContext().createGraphicsLayer()) }
         val layer = frost.layer
         val full = picture.size
-        if (frost.from !== picture || frost.size != full || layer.renderEffect == null) {
+        // Kept only while nothing it is made of changed: the picture's layer, its size, the blur, and the picture's
+        // recording (each new recording refreshes the reference, so the copy never shows an older picture).
+        if (frost.from !== picture || frost.size != full || frost.effect !== fx || frost.version != pic.version) {
             frost.from = picture
             frost.size = full
+            frost.effect = fx
+            frost.version = pic.version
             val small = androidx.compose.ui.unit.IntSize(
                 (full.width * FROST_SCALE).toInt().coerceAtLeast(1),
                 (full.height * FROST_SCALE).toInt().coerceAtLeast(1),
@@ -509,11 +609,12 @@ private class GlassFrostNode(
             val bd = backdrop
             val fx = effect
             val c = coordinates
-            val picture = bd?.layer
-            if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
+            val pic = bd?.picture
+            val picture = pic?.layer
+            if (fx != null && bd != null && pic != null && picture != null && bd.painted && c != null && c.isAttached &&
                 bd.root === c.findRootCoordinates()
             ) {
-                val layer = shared(bd, picture, fx)
+                val layer = shared(pic, picture, fx)
                 val shift = bd.origin - c.positionInRoot()
                 clipPath(Path().apply { addOutline(outline) }) { translate(shift.x, shift.y) { drawLayer(layer) } }
             } else {

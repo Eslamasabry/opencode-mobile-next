@@ -549,7 +549,8 @@ public fun KitScreen(
     }
     if (framed) {
         // The page's ground: flat, or the person's live background (Glass panes blur only that picture).
-        KitLiveBackground(modifier.fillMaxSize()) {
+        // One live background for the whole app (smoothness round 2): every page shows the theme root's one picture.
+        KitLiveBackground(modifier.fillMaxSize(), shared = true) {
             ScreenSheetHost(Modifier.fillMaxSize()) {
                 content()
             }
@@ -685,7 +686,7 @@ private fun Panes(
             else size.width - 0.5f
         drawPaneRule(hairline, x, rule)
     }
-    KitLiveBackground(modifier.fillMaxSize()) {
+    KitLiveBackground(modifier.fillMaxSize(), shared = true) {
         ScreenSheetHost(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxSize()) {
                 Box(
