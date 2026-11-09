@@ -755,7 +755,7 @@ private fun ChatRow(
                     facts.reading.endNotes[row.turnId]?.let { note ->
                         if (note == io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent)
                             NoReplyNotice(onSendAgain)
-                        else TurnEndNote(note)
+                        else TurnEndNote(note, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } })
                     }
             }
         is ThoughtRow -> {
@@ -1044,9 +1044,10 @@ private fun ChatRow(
                             // Copy/More at the end); the "Stopped" note belongs on that edge, as in Flutter, so it
                             // steps back by the inset (offset follows the layout direction, so RTL mirrors).
                             val note = Modifier.offset(x = -Space.S4.dp).testTag("chat-turn-footer-note")
+                            val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
-                            else if (row.stopped) KitReplyNote(words.stoppedFooter(), note)
-                            facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                            else if (row.stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
+                            endNote?.let { n -> TurnEndNote(n, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } }) }
                             // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
                             // (message_view.dart:423-427: the model, when it changed).
                             facts.reading.metadata[row.turnId]
