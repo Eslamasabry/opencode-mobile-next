@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportScrolledUnder
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
@@ -166,6 +167,9 @@ public fun KitTranscriptList(
         snapshotFlow { state.atLiveEdge }
             .collect { if (it && !state.lazy.isScrollInProgress) state.following = true }
     }
+    // Chat edge A (owner 2026-11-09): the frame shows its scrolled-container ground only while older rows lie under the
+    // header (the list is reversed: older rows are forward, above).
+    KitReportScrolledUnder { state.lazy.canScrollForward }
     val chrome = kitScreenChromePadding()
     val insetPadding =
         PaddingValues(
