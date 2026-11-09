@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.engine.team.TeamHost
 import io.github.eslamasabry.oc.engine.team.TeamRead
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.engine.team.TeamLastKnown
 import io.github.eslamasabry.oc.engine.team.TeamWorkspaceJson
 import kotlinx.collections.immutable.persistentMapOf
 import okhttp3.MediaType.Companion.toMediaType
@@ -35,7 +36,8 @@ import org.json.JSONObject
 object TeamBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun engine(host: AppTeamHost): TeamEngine = TeamEngine(host)
+    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>): TeamEngine =
+        TeamEngine(host, kept = kept.firstOrNull())
 }
 
 /**

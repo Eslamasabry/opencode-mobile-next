@@ -20,6 +20,7 @@ failures can be absorbed this way.
 
 Reads <reports-dir>/**/report-*.json (test shards), compile.json, apk.json, custom.json and record.json written by the
 jobs, and diffs failing test ids against <base-reports-dir> (the newest run on the base branch that kept reports).
+PLANNED_SHARDS (comma list of shard ids, from the plan job) makes a missing shard report an integrity failure (exit 2).
 Job results come from the environment: RESULT_COMPILE, RESULT_TEST, RESULT_APK, RESULT_RECORD, RESULT_CUSTOM.
 Tests for this file: tool/ci/test_gate.py.
 """
@@ -116,6 +117,27 @@ if env('RESULT_APK') not in (None, '', 'skipped'):
 if env('RESULT_CUSTOM') not in (None, '', 'skipped'):
     rows.append(('custom tasks', mark(env('RESULT_CUSTOM'))))
 
+# Integrity: a run must not look green when Gradle never ran (a failed distribution download, a dead setup step, a missing shard).
+# Exit code 2 = integrity failure; the workflow reds the run on every branch for it, unlike the ordinary FAIL (1).
+integrity = []
+planned = [x for x in env('PLANNED_SHARDS', '').split(',') if x != '']
+if env('RESULT_TEST') not in (None, '', 'skipped') and planned:
+    seen = {s['name'].rsplit('-', 1)[-1] for s in shards}
+    missing = [x for x in planned if x not in seen]
+    if missing:
+        integrity.append(f'{len(missing)} of {len(planned)} planned test shard(s) left no report (shard {", ".join(missing)})')
+for s in shards:
+    if s.get('job_status') == 'failure' or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
+        integrity.append(f'{s["name"]}: the shard job did not get as far as running Gradle (setup {s.get("pick_outcome") or "unknown"}, job {s.get("job_status") or "unknown"})')
+    elif s.get('planned') and not s.get('gradle_ran', True):
+        integrity.append(f'{s["name"]}: Gradle never ran although {len(s["planned"])} task(s) were planned (no task or BUILD line in the log)')
+for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_CUSTOM', 'custom tasks', custom)):
+    if env(key) not in (None, '', 'skipped'):
+        if not rep:
+            integrity.append(f'{label}: the job left no report (it died before its report step)')
+        elif rep.get('failed') and rep.get('gradle_ran') is False:
+            integrity.append(f'{label}: Gradle never ran (nothing started, for instance a failed distribution download)')
+
 reasons = []
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
     if env(key) in ('failure', 'cancelled') or rep.get('failed'):
@@ -125,6 +147,7 @@ if env('RESULT_TEST') not in (None, '', 'skipped') and not shards:
 reasons += [f'real failure, {r}' for r in real]
 if new:
     reasons.append(f'{len(new)} failing test(s) that are not known noise')
+reasons = [f'INTEGRITY, {r}' for r in integrity] + reasons
 red = bool(reasons)
 
 print(f'## Native CI: {"FAIL" if red else "PASS"}\n')
@@ -149,4 +172,4 @@ elif failed:
     print(f'\n{len(failed)} failing test(s) are all known noise (also failing on the base, or on tool/ci/known_failures.txt).')
 if not red:
     print('\nPASS: nothing here needs anyone.')
-sys.exit(1 if red else 0)
+sys.exit(2 if integrity else (1 if red else 0))

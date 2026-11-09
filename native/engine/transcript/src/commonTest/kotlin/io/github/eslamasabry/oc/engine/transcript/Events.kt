@@ -21,6 +21,9 @@ internal object Ev {
     fun text(msg: String, part: String, text: String = "", ended: Boolean = false) =
         GatewayEvent.PartUpserted(Part(part, msg, S, PartType.Text, text = text, ended = ended))
 
+    fun file(msg: String, part: String, mime: String, name: String, url: String) =
+        GatewayEvent.PartUpserted(Part(part, msg, S, PartType.File, mime = mime, filename = name, url = url))
+
     fun tool(msg: String, call: String, status: ToolStatus) =
         GatewayEvent.PartUpserted(Part(call, msg, S, PartType.Tool, toolName = "read", toolStatus = status))
 

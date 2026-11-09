@@ -47,10 +47,15 @@ public data class FactsBookState(
     val capabilities: FactsBookCapabilities = FactsBookCapabilities.B5,
     /** Reminders a rule proposed: they wait with the changes to review. */
     val proposalsWaiting: Int = 0,
+    /** The ids of those proposed reminders: the node lists them in its review queue too, and they are counted once. */
+    val proposalIds: Set<String> = emptySet(),
     /** "Talk about this" offers that can still be answered. */
     val openOffers: Int = 0,
 ) {
-    val reviewWaiting: Int get() = review.size + proposalsWaiting
+    /** Review cards that are not also a rule's proposed reminder (F: controller.reviewCards). */
+    val reviewCards: List<ReviewItem> get() = review.filter { it.id !in proposalIds }
+
+    val reviewWaiting: Int get() = reviewCards.size + proposalsWaiting
 
     /** What needs the person, derived from the review queue and Not saved yet; counted once. */
     val needsYou: List<NeedsYouItem>
@@ -96,7 +101,7 @@ public class FactsBookEngine(
     /** Rules, events and what they proposed, read only where the node's capabilities list them. */
     public val triggers: FactsBookTriggers =
         FactsBookTriggers({ gateway }, { state.value.capabilities }, clock) { t ->
-            mutable.update { it.copy(proposalsWaiting = t.proposals.size, openOffers = t.openOffers(clock.now()).size) }
+            mutable.update { it.copy(proposalsWaiting = t.proposals.size, proposalIds = t.proposals.map { p -> p.id }.toSet(), openOffers = t.openOffers(clock.now()).size) }
         }
 
     /** Reads the pairing of [profileId] in place (Flutter's keys) and builds the gateway. Safe to call again. */

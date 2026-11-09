@@ -9,9 +9,12 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -79,4 +82,37 @@ class KitMarkdownTest {
         assertEquals(true, item.checked)
         assertEquals("done thing", item.inlines.text)
     }
+
+    @Test
+    fun `B-CHAT-101 tapping an agent choice hands its words to the message box`() =
+        runComposeUiTest {
+            val picked = mutableListOf<String>()
+            val blocks = KitMdSource.blocks("r", "```choices\n- Ship it\n- Wait\n```", false)
+            setContent {
+                ChatTestTheme {
+                    KitMarkdown(blocks, KitMarkdownActions(onLink = {}, onChoice = { picked += it }))
+                }
+            }
+            onNodeWithText("Wait").performClick()
+            assertEquals(listOf("Wait"), picked)
+            onNodeWithTag("agent-choices-block").assertExists()
+        }
+
+    @Test
+    fun `B-CHAT-101 a checklist says done or to do in words and a command block names where to run it`() =
+        runComposeUiTest {
+            val blocks =
+                (KitMdSource.blocks("a", "```checklist\n[x] built\n[ ] shipped\n```", false) +
+                        KitMdSource.blocks("b", "```command\nls -la\n```", false))
+                    .toImmutableList()
+            setContent {
+                ChatTestTheme {
+                    KitMarkdown(blocks, KitMarkdownActions(onLink = {}, runOnComputerLabel = "Run on your computer"))
+                }
+            }
+            onNodeWithTag("agent-check-done").assertExists()
+            onNodeWithTag("agent-check-open").assertExists()
+            onNodeWithText("Run on your computer").assertExists()
+            onNodeWithText("ls -la").assertExists()
+        }
 }

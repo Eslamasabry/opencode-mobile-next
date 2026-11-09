@@ -53,6 +53,15 @@ class AgentErrorTextTest {
     }
 
     @Test
+    fun `B-AGENT-189 a sign-in that ran out is told apart from one that was never made`() {
+        assertTrue(AgentErrorText.signInExpired("Failed to authenticate: OAuth session expired and could not be refreshed"))
+        assertTrue(AgentErrorText.signInExpired("Your login session has expired"))
+        assertTrue(AgentErrorText.signInExpired("token has been revoked"))
+        assertFalse(AgentErrorText.signInExpired("Not logged in. Please run /login"))
+        assertFalse(AgentErrorText.signInExpired("401 Unauthorized: invalid api key"))
+    }
+
+    @Test
     fun `B-AGENT-012 a recognised cause is said in plain words, with what happens next`() {
         val words = AgentErrorWords.forText(reset, En)
         assertEquals("The connection to the model dropped.", words.headline)

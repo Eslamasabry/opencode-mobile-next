@@ -64,6 +64,25 @@ class ReportProblemTest {
         }
 
         override suspend fun reportCode(): String? = "abcdef01-0"
+
+        var kept = 0
+        var clearWorks = true
+        var timings = "step  typical 12 ms"
+
+        override fun errorsKept(): Int = kept
+
+        override fun errorLogText(): String = if (kept > 0) "Error x$kept" else ""
+
+        override suspend fun clearErrors(): Boolean {
+            if (clearWorks) kept = 0
+            return clearWorks
+        }
+
+        override fun timingReport(): String = timings
+
+        override fun clearTimings() {
+            timings = ""
+        }
     }
 
     private class GitHub : DiagnosticsExport {
@@ -127,6 +146,49 @@ class ReportProblemTest {
         p.onBack(); runCurrent()
         assertTrue(sender.sent.isEmpty(), "only Send report sends")
         assertNull(p.state.value.report, "leaving drops the report")
+    }
+
+    @Test
+    fun `B-DIAG-REPORT-001 the page reads what this phone kept, and clearing errors asks first`() = runTest {
+        val sender = FakeSender().apply { kept = 3 }
+        val p = presenter(sender)
+        p.onOpen(SettingsPage.ReportProblem); runCurrent()
+        val report = p.state.value.report!!
+        assertEquals(3, report.errorsKept)
+        assertEquals("Error x3", report.errorLog)
+        assertEquals("step  typical 12 ms", report.timingReport)
+        p.onClearErrors(true); runCurrent()
+        assertTrue(p.state.value.report!!.confirmClearErrors)
+        assertEquals(3, sender.kept, "asking clears nothing")
+        p.onConfirmClearErrors(false); runCurrent()
+        assertFalse(p.state.value.report!!.confirmClearErrors)
+        assertEquals(3, sender.kept, "cancel clears nothing")
+        assertTrue(sender.sent.isEmpty(), "none of this sends anything")
+    }
+
+    @Test
+    fun `B-DIAG-REPORT-002 confirmed Clear errors empties the kept errors and says so when storage refuses`() = runTest {
+        val sender = FakeSender().apply { kept = 2; clearWorks = false }
+        val p = presenter(sender)
+        p.onOpen(SettingsPage.ReportProblem); runCurrent()
+        p.onClearErrors(true); p.onConfirmClearErrors(true); runCurrent()
+        assertTrue(p.state.value.report!!.clearFailed)
+        assertEquals(2, p.state.value.report!!.errorsKept)
+        sender.clearWorks = true
+        p.onClearErrors(true); p.onConfirmClearErrors(true); runCurrent()
+        assertEquals(0, p.state.value.report!!.errorsKept)
+        assertEquals("", p.state.value.report!!.errorLog)
+        assertFalse(p.state.value.report!!.clearFailed)
+    }
+
+    @Test
+    fun `B-DIAG-REPORT-003 Clear timings empties the timing report`() = runTest {
+        val sender = FakeSender()
+        val p = presenter(sender)
+        p.onOpen(SettingsPage.ReportProblem); runCurrent()
+        p.onClearTimings(); runCurrent()
+        assertEquals("", p.state.value.report!!.timingReport)
+        assertEquals("", sender.timings)
     }
 
     @Test

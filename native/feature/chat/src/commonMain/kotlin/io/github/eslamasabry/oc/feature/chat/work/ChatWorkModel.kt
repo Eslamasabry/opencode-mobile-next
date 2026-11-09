@@ -1,9 +1,13 @@
 package io.github.eslamasabry.oc.feature.chat.work
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.model.BackgroundWorkResult
+import io.github.eslamasabry.oc.core.model.BackgroundWorkSupport
 import io.github.eslamasabry.oc.core.model.ManagedShell
 import io.github.eslamasabry.oc.core.model.ManagedShellStatus
+import io.github.eslamasabry.oc.feature.chat.presentation.BackgroundWork
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -58,7 +62,17 @@ public data class ChatWorkUi(
     val actionFailed: Boolean = false,
     /** The "Run shell command" dialog; null = closed. */
     val dialog: ShellDialogUi? = null,
+    /** Flutter `canBackground`: a reply runs work the server can move on (the sheet offers it). */
+    val canBackground: Boolean = false,
+    /** The request is on its way (Flutter `_promoting`). */
+    val backgrounding: Boolean = false,
+    /** What the server said to the last request; null = none made. */
+    val backgroundResult: BackgroundWorkResult? = null,
 ) {
+    /** Flutter `blocked`: the notice stays while it can be asked, is asked, or was answered. */
+    val backgroundNotice: Boolean
+        get() = canBackground || backgrounding || backgroundResult != null
+
     val running: Int
         get() = shells.count { it.status == ManagedShellStatus.Running }
 }
@@ -76,6 +90,9 @@ public class ChatWorkModel(
     private val launch: (suspend () -> Unit) -> Unit,
 ) {
     private val mutable = MutableStateFlow(ChatWorkUi())
+    private var backgroundSupport: BackgroundWorkSupport = BackgroundWorkSupport.Unavailable
+    private var supportRead = false
+    private var backgroundRequested: Set<String> = emptySet()
     public val state: StateFlow<ChatWorkUi> = mutable
 
     /** Keeps the running count honest while the chat is open; stops on its own where unsupported. */
@@ -83,13 +100,63 @@ public class ChatWorkModel(
         launch {
             while (mutable.value.supported) {
                 if (world.capabilities.value.conversationShellOn) load(quiet = true)
+                loadBackground()
                 delay(POLL_MS)
             }
         }
     }
 
     public fun refresh() {
-        launch { load(quiet = false) }
+        mutable.update { it.copy(backgroundResult = null) }
+        launch {
+            load(quiet = false)
+            loadBackground()
+        }
+    }
+
+    private fun backgroundParts() =
+        (world as? TurnFeedSource)?.turnFeed?.value?.ledger?.messages?.let {
+            BackgroundWork.parts(it, backgroundSupport)
+        }.orEmpty()
+
+    private fun offersBackground(): Boolean =
+        world.transcript.value.run.busy &&
+            !mutable.value.backgrounding &&
+            world.readOnly.value == null &&
+            backgroundParts().any { BackgroundWork.key(it) !in backgroundRequested }
+
+    /** Reads what the server can move on, then whether this reply has such work (a failure offers nothing). */
+    private suspend fun loadBackground() {
+        if (!supportRead) {
+            val support = world.backgroundWorkSupport()
+            if (support is Outcome.Ok) {
+                backgroundSupport = support.value
+                supportRead = true
+            }
+        }
+        mutable.update { it.copy(canBackground = offersBackground()) }
+    }
+
+    /** Flutter `_promote`: "Keep chatting while it runs" sends the running work to the background. */
+    public fun runInBackground() {
+        if (!mutable.value.canBackground || mutable.value.backgrounding) return
+        val keys = backgroundParts().map(BackgroundWork::key)
+        mutable.update { it.copy(backgrounding = true, canBackground = false) }
+        launch {
+            when (val r = world.backgroundWork()) {
+                is Outcome.Ok -> {
+                    if (r.value != BackgroundWorkResult.Unchanged) backgroundRequested = backgroundRequested + keys
+                    mutable.update { it.copy(backgrounding = false, backgroundResult = r.value) }
+                    world.reload()
+                    load(quiet = true)
+                }
+                is Outcome.Failed -> {
+                    // offersBackground() refuses while the request is on its way, so clear that first: the offer stays.
+                    mutable.update { it.copy(backgrounding = false) }
+                    mutable.update { it.copy(canBackground = offersBackground(), actionFailed = true) }
+                }
+            }
+        }
     }
 
     private suspend fun load(quiet: Boolean) {

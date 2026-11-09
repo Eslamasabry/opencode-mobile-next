@@ -12,6 +12,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalSource
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalState
+import io.github.eslamasabry.oc.engine.runtime.terminal.TerminalLastKnown
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminals
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TerminalRoute
@@ -47,8 +48,9 @@ public class TerminalViewModel(
     source: RemoteTerminalSource,
     dispatchers: AppDispatchers,
     private val nav: AppNavigator,
+    kept: Set<TerminalLastKnown> = emptySet(),
 ) : ViewModel(), TerminalActions {
-    private val terminals = RemoteTerminals(route.from, source, viewModelScope, dispatchers)
+    private val terminals = RemoteTerminals(route.from, source, viewModelScope, dispatchers, kept.firstOrNull())
     public val state: StateFlow<RemoteTerminalState> = terminals.state
 
     init {

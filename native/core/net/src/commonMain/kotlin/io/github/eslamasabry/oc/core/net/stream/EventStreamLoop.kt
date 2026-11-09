@@ -76,6 +76,8 @@ public class EventStreamLoop(
     private val readBufferBytes: Int = 16 * 1024,
     /** N4-D21, from `GatewaySpec.reconnectAllowed`: whether the loop may dial again on its own. */
     private val reconnectAllowed: StateFlow<Boolean> = MutableStateFlow(true),
+    /** Battery Saver is on: a background-watching loop retries at the slow pace at once. */
+    private val batterySaver: StateFlow<Boolean> = MutableStateFlow(false),
 ) {
     private val retry = Channel<Unit>(Channel.CONFLATED)
 
@@ -161,7 +163,7 @@ public class EventStreamLoop(
                 nextAt = null
                 continue
             }
-            val wait = policy.delayMs(attempt, random, seen) ?: continue
+            val wait = policy.delayMs(attempt, random, seen, batterySaver.value) ?: continue
             val at = now() + wait
             nextAt = at // known before the status goes out
             send(StreamSignal.Status(waiting(attempt, at)))

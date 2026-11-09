@@ -71,7 +71,8 @@ class GlassPanesTest {
         // Owner 2026-11-09, "crisper": a moderate blur, so colour and shapes behind stay visible; a big pane a little more.
         for ((role, _) in panes) {
             val sigma = GlassSpec.clearFrostSigma(role)
-            assertTrue(sigma in 8f..GlassSpec.PANE_FROST * .65f, "$role: moderate blur $sigma")
+            // glass-live 2026-11-09 ("so frosty and not glossy"): light, never below what the reach rows hold for.
+            assertTrue(sigma in io.github.eslamasabry.oc.ui.design.effects.LiveReach.FROST_SIGMA_DP..GlassSpec.PANE_FROST * .65f, "$role: moderate blur $sigma")
         }
         assertTrue(GlassSpec.clearFrostSigma(SurfaceRole.Content) >= GlassSpec.clearFrostSigma(SurfaceRole.Control), "a big pane keeps a little more frost")
     }

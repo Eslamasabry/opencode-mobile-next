@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.markdown
 
+import io.github.eslamasabry.oc.core.markdown.AgentBlockType
 import io.github.eslamasabry.oc.core.markdown.Align
 import io.github.eslamasabry.oc.core.markdown.Block
 import io.github.eslamasabry.oc.core.markdown.Inlines
@@ -38,6 +39,7 @@ public object KitMdSource {
             is KitMdBlock.Table -> b.copy(key = key)
             is KitMdBlock.Rule -> b.copy(key = key)
             is KitMdBlock.Pictures -> b.copy(key = key)
+            is KitMdBlock.Agent -> b.copy(key = key)
         }
 
     private fun rekeyChildren(children: ImmutableList<KitMdBlock>, key: String): ImmutableList<KitMdBlock> =
@@ -68,10 +70,16 @@ public object KitMdSource {
                 )
             is Block.Rule -> KitMdBlock.Rule(b.key)
             is Block.PictureGroup -> KitMdBlock.Pictures(b.key, b.pictures.mapNotNull(::picture).toImmutableList())
-            // A closed ```choices/```checklist/```command fence: its cards belong to the cards unit; until then its
-            // lines read as a plain block (never lost, never interactive).
             is Block.AgentBlock ->
-                KitMdBlock.Code(b.key, b.type.info, b.items.joinToString("\n") { it.text }, open = false)
+                KitMdBlock.Agent(
+                    b.key,
+                    when (b.type) {
+                        AgentBlockType.Choices -> KitAgentKind.Choices
+                        AgentBlockType.Checklist -> KitAgentKind.Checklist
+                        AgentBlockType.Command -> KitAgentKind.Command
+                    },
+                    b.items.map { KitAgentItem(it.text, it.done == true) }.toImmutableList(),
+                )
         }
 
     /**

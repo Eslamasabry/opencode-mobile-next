@@ -33,12 +33,11 @@ public enum class ChatsOpeningPhase {
     Failed,
 }
 
-public data class ChatsOpeningRow(val key: String, val title: RowTitle)
-
 public data class ChatsOpeningUi(
     val phase: ChatsOpeningPhase,
     val serverName: String,
-    val rows: ImmutableList<ChatsOpeningRow> = persistentListOf(),
+    /** The saved rows, as the live feed's own rows: the home draws them with its normal layout. */
+    val rows: ImmutableList<io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem> = persistentListOf(),
     val failure: Failure? = null,
     /** The server that is opening, so its sign-in can be edited from the failure card. */
     val profile: ProfileId? = null,
@@ -133,6 +132,9 @@ public interface ChatsHomeExtras {
 
     /** B-161: the folders the home lists now, so [branches] reads those and only those. */
     public fun wantBranches(places: Set<BranchPlace>) {}
+
+    /** The last-message lines read so far (by row identity), kept with the saved rows for the next start. */
+    public fun rememberPreviews(lines: Map<String, String>) {}
 
     /**
      * G4: each project folder's kind and whether it is a git repository, by directory, for the project sheet's glyphs

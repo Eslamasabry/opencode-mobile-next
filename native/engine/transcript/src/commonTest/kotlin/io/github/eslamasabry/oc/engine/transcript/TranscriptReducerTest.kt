@@ -62,6 +62,25 @@ class TranscriptReducerTest {
     }
 
     @Test
+    fun `B-CHAT-130 a prompt that carried a picture keeps it on its prompt row, with or without words`() {
+        // Words and a picture in one message.
+        apply(Ev.prompt("u1", "What is this?"))
+        apply(Ev.file("u1", "u1-f", "image/png", "shot.png", "data:image/png;base64,AAAA"))
+        // A picture alone: no text part at all.
+        apply(Ev.user("u2"), Ev.file("u2", "u2-f", "image/jpeg", "photo.jpg", "data:image/jpeg;base64,BBBB"))
+        apply(GatewayEvent.RunStarted(S), Ev.assistant("a1"), Ev.text("a1", "t1", "A cat.", ended = true))
+        apply(GatewayEvent.RunEnded(S, RunOutcome.Succeeded))
+        val prompts = derive().rows.filterIsInstance<PromptRow>().associateBy { it.key }
+        assertEquals(listOf("shot.png"), prompts.getValue("prompt:u1").files.map { it.name })
+        assertEquals("What is this?", prompts.getValue("prompt:u1").text)
+        val alone = prompts.getValue("prompt:u2")
+        assertEquals("", alone.text)
+        assertEquals("image/jpeg", alone.files.single().mime)
+        assertEquals("data:image/jpeg;base64,BBBB", alone.files.single().url)
+        assertEquals("u2", alone.turnId, "a picture alone starts its own turn; the reply belongs under it")
+    }
+
+    @Test
     fun `B5 QA wave1 a failed reply keeps the server's reason on its footer`() {
         apply(Ev.prompt("u1", "Hello"))
         apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5, error = "API key expired (401)"))

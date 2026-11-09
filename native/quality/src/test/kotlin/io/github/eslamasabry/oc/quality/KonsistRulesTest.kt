@@ -75,6 +75,26 @@ class KonsistRulesTest {
     }
 
     @Test
+    fun `main lazy lists give every item a contentType`() {
+        val lists =
+            listOf(
+                "feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsScreen.kt",
+                "feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsAllScreen.kt",
+                "feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsInboxScreen.kt",
+                "feature/files/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/files/ui/FolderScreen.kt",
+                "feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatTranscript.kt",
+            )
+        val call = Regex("""(?<![\w.])(?:items|itemsIndexed)\(\w|(?<![\w.])item\((?:key = |")""")
+        val missing =
+            lists.flatMap { path ->
+                File(root, path).readLines().withIndex().filter { (_, line) ->
+                    call.containsMatchIn(line) && "contentType" !in line
+                }.map { "$path:${it.index + 1}" }
+            }
+        kAssertTrue(missing.isEmpty(), "lazy list items without contentType: $missing")
+    }
+
+    @Test
     fun `K4 no Dispatchers or Clock System outside core common`() {
         production.files
             .filter { "/core/common/" !in it.path }

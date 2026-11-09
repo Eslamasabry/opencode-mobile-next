@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitWheel
 import io.github.eslamasabry.oc.ui.kit.choice.KitWheelColumn
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -51,11 +52,17 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import io.github.eslamasabry.oc.ui.kit.text.kitClock
+import io.github.eslamasabry.oc.ui.kit.text.kitDate
 import kotlinx.datetime.plus
 import kotlinx.datetime.DatePeriod
 import org.jetbrains.compose.resources.stringResource
@@ -66,6 +73,17 @@ private fun pad() = Modifier.padding(horizontal = LocalKitTokens.current.gutter.
 private fun two(n: Int) = n.toString().padStart(2, '0')
 
 private fun clockOf(at: LocalDateTime) = "${two(at.hour)}:${two(at.minute)}"
+
+/** The wall-clock moment as an instant in this phone's zone, so the platform formatters show the same wall clock. */
+private fun momentMs(at: LocalDateTime): Long = at.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+
+/** A time of day the way the phone shows it (12 or 24 hour); the plain HH:mm where no formatter exists. */
+@Composable
+private fun clockWords(at: LocalDateTime): String = kitClock(momentMs(at)) ?: clockOf(at)
+
+/** A date in the app's language; the ISO date where no formatter exists. */
+@Composable
+private fun dateWords(at: LocalDateTime): String = kitDate(momentMs(at)) ?: at.date.toString()
 
 /** Short weekday words, Monday first, in the app's language (the scheduled-prompt day names). */
 @Composable
@@ -85,9 +103,9 @@ private fun weekdayWords(day: Int): String =
 /** A reminder's timing in words (F: `timingWords`). */
 @Composable
 internal fun timingWords(timing: ReminderTiming): String {
-    val time = clockOf(timing.at)
+    val time = clockWords(timing.at)
     return when (timing.repeat) {
-        ReminderRepeat.Never -> "${timing.at.date}, $time"
+        ReminderRepeat.Never -> "${dateWords(timing.at)}, $time"
         ReminderRepeat.Daily -> stringResource(Res.string.fbWhenDaily, time)
         ReminderRepeat.Weekly -> stringResource(Res.string.fbWhenWeeklyOn, timing.weekdays.sorted().map { weekdayWords(it) }.joinToString(", "), time)
         ReminderRepeat.Monthly ->
@@ -121,6 +139,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
         loading = state.loading && reminders != null,
         loadingLabel = title,
         edges = KitScreenEdges.Bleed,
+        refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::reload, enabled = reminders != null),
     ) {
         when {
             reminders == null && state.error == null -> KitSkeletonRows()
@@ -128,7 +147,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
                 KitStateView(
                     KitStateKind.Error,
                     stringResource(Res.string.fbErrorTitle),
-                    body = failureWords(state.error),
+                    body = failureWords(state.error) + (failureDetails(state.error)?.let { "\n\n$it" } ?: ""),
                     primary = KitAction(stringResource(Res.string.commonRetry), actions::reload),
                 )
             else ->
@@ -227,6 +246,8 @@ private fun ReminderRow(r: Reminder, state: RemindersUi, actions: RemindersActio
 public fun ReminderEditScreen(state: ReminderEditUi, actions: ReminderEditActions) {
     val title = stringResource(Res.string.fbReminderTitle)
     val draft = state.draft
+    val appTag = LocalKitLocaleTag.current
+    LaunchedEffect(appTag) { actions.appLanguage(appTag) }
     KitScreen(
         topBar = {
             KitTopBar(title, exit = KitTopBarExit.Back, exitLabel = stringResource(Res.string.kitTopBarBack), onExit = actions::back)
@@ -240,7 +261,15 @@ public fun ReminderEditScreen(state: ReminderEditUi, actions: ReminderEditAction
                 ({
                     KitActionBlock(
                         Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
-                        primary = KitAction(stringResource(Res.string.fbReminderSave), actions::save, working = state.working),
+                        primary =
+                            KitAction(
+                                stringResource(Res.string.fbReminderSave),
+                                actions::save,
+                                enabled =
+                                    if (draft.what.isBlank()) KitEnabled.Disabled(stringResource(Res.string.fbReminderNeedsTitle))
+                                    else KitEnabled.Enabled,
+                                working = state.working,
+                            ),
                         secondary =
                             if (state.fromCapture) KitAction(stringResource(Res.string.fbReminderChange), actions::changeWritten) else null,
                     )
@@ -277,6 +306,8 @@ private fun DraftForm(draft: ReminderDraft, state: ReminderEditUi, actions: Remi
             placeholder = stringResource(Res.string.fbReminderWhatHint),
             error = if (state.needsTitle) stringResource(Res.string.fbReminderNeedsTitle) else null,
         )
+        // When it will fire, above the detail rows: with the keyboard up the person still sees it (F: summary).
+        KitText(bidiName(timingWords(draft.timing)), role = TypeRole.Body)
     }
     KitRowGroup {
         KitRow(
@@ -326,7 +357,9 @@ private fun DraftForm(draft: ReminderDraft, state: ReminderEditUi, actions: Remi
         )
     }
     KitGroupNote(stringResource(Res.string.fbReminderClockNote))
-    if (state.cannotRing) KitGroupNote(stringResource(Res.string.fbReminderNotSoundedYet))
+    if (state.cannotRing) {
+        Column(pad()) { KitNotice(stringResource(Res.string.fbReminderNotSoundedYet)) }
+    }
 }
 
 /** Day and time for a one-time reminder; the clock time (and day of month or date) for a repeating one. */
@@ -347,7 +380,7 @@ private fun WhenWheel(draft: ReminderDraft, actions: ReminderEditActions) {
     when (timing.repeat) {
         ReminderRepeat.Never, ReminderRepeat.Yearly -> {
             val start = timing.at.date
-            val days = ((-1 until 366).map { start.plus(DatePeriod(days = it)) } + start).distinct().sorted()
+            val days = ((-365 until 5 * 366).map { start.plus(DatePeriod(days = it)) } + start).distinct().sorted()
             KitWheel(
                 listOf(
                     KitWheelColumn(

@@ -946,11 +946,50 @@ public class SettingsPresenter(
         }
     }
 
+    override fun onClearErrors(ask: Boolean) {
+        local.update { it.copy(report = it.report?.copy(confirmClearErrors = ask, clearFailed = false)) }
+    }
+
+    override fun onConfirmClearErrors(confirm: Boolean) {
+        local.update { it.copy(report = it.report?.copy(confirmClearErrors = false)) }
+        val port = problemReport ?: return
+        if (!confirm) return
+        scope.launch {
+            val ok = port.clearErrors()
+            local.update {
+                it.copy(
+                    report =
+                        it.report?.copy(
+                            errorsKept = port.errorsKept(),
+                            errorLog = port.errorLogText(),
+                            clearFailed = !ok,
+                        )
+                )
+            }
+        }
+    }
+
+    override fun onClearTimings() {
+        val port = problemReport ?: return
+        port.clearTimings()
+        local.update { it.copy(report = it.report?.copy(timingReport = port.timingReport())) }
+    }
+
     /** Reads the report's facts once per visit; a newer visit wins over a slower older one. */
     private fun loadReport() {
         val port = problemReport
         val generation = ++reportGeneration
-        local.update { it.copy(report = ReportUi(canSend = port?.canSend == true)) }
+        local.update {
+            it.copy(
+                report =
+                    ReportUi(
+                        canSend = port?.canSend == true,
+                        errorsKept = port?.errorsKept() ?: 0,
+                        errorLog = port?.errorLogText().orEmpty(),
+                        timingReport = port?.timingReport().orEmpty(),
+                    )
+            )
+        }
         port ?: return
         scope.launch {
             val content = port.build().withWords(port.words(local.value.reportDescription))
