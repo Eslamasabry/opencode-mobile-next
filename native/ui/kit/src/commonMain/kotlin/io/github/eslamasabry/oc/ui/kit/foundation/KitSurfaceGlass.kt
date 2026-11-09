@@ -120,6 +120,7 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     val density = LocalDensity.current.density
     val backdrop = LocalKitGlassBackdrop.current
     val ground = LocalKitColors.current.ground
+    val light = kitRimLightGround()
     // Reduced motion and high contrast hold the frost solid (Dart `KitFrost.heldBy`; high contrast already draws Solid).
     val held = reduced || signals.highContrast
     val sigma = decoration.frost
@@ -127,7 +128,7 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
         remember(sigma, density, platform, held) {
             if (held) null else platform.frostEffect(FrostSpec(sigma, FROST_SATURATION, 0f), density)
         }
-    return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape())
+    return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape(), light)
 }
 
 /**
@@ -407,14 +408,17 @@ private data class GlassFrostElement(
     val effect: RenderEffect?,
     val ground: Color,
     val shape: Shape,
+    /** The ground's luma for the backdrop's rim light (a dark theme), or null: no rim light. */
+    val light: Float? = null,
 ) : ModifierNodeElement<GlassFrostNode>() {
-    override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape)
+    override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape, light)
 
     override fun update(node: GlassFrostNode) {
         node.backdrop = backdrop
         node.effect = effect
         node.ground = ground
         node.shape = shape
+        node.light = light
         node.invalidateDraw()
     }
 
@@ -428,11 +432,13 @@ private class GlassFrostNode(
     var effect: RenderEffect?,
     var ground: Color,
     var shape: Shape,
+    var light: Float?,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode {
     override val traverseKey: Any get() = GlassTraverseKey
     private var coordinates: LayoutCoordinates? = null
     private var last: Offset = Offset.Unspecified
     private var blur: GraphicsLayer? = null
+    private val rim = BackdropRimLight()
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
@@ -447,6 +453,7 @@ private class GlassFrostNode(
     override fun onDetach() {
         blur?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         blur = null
+        rim.release(requireGraphicsContext())
         coordinates = null
         last = Offset.Unspecified
     }
@@ -455,24 +462,166 @@ private class GlassFrostNode(
     private fun nested(): Boolean = findNearestAncestor(GlassTraverseKey) is GlassFrostNode
 
     override fun ContentDrawScope.draw() {
-        if (!nested()) {
-            val outline = shape.createOutline(size, layoutDirection, this)
-            val bd = backdrop
-            val fx = effect
-            val c = coordinates
-            val picture = bd?.layer
-            if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
-                bd.root === c.findRootCoordinates()
-            ) {
-                val layer = blur ?: requireGraphicsContext().createGraphicsLayer().also { blur = it }
-                layer.renderEffect = fx
-                val shift = bd.origin - c.positionInRoot()
-                recordDetached(layer) { translate(shift.x, shift.y) { drawLayer(picture) } }
-                clipPath(Path().apply { addOutline(outline) }) { drawLayer(layer) }
-            } else {
-                drawOutline(outline, ground)
-            }
+        if (nested()) {
+            drawContent()
+            return
         }
+        val outline = shape.createOutline(size, layoutDirection, this)
+        val bd = backdrop
+        val fx = effect
+        val c = coordinates
+        val picture = bd?.layer
+        if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
+            bd.root === c.findRootCoordinates()
+        ) {
+            val layer = blur ?: requireGraphicsContext().createGraphicsLayer().also { blur = it }
+            layer.renderEffect = fx
+            val shift = bd.origin - c.positionInRoot()
+            recordDetached(layer) { translate(shift.x, shift.y) { drawLayer(picture) } }
+            clipPath(Path().apply { addOutline(outline) }) { drawLayer(layer) }
+            drawContent()
+            // Over the face's own rim: the backdrop's light where the picture behind is bright (dark themes).
+            light?.let { rim.draw(this, requireGraphicsContext(), picture, shift, shape, it) }
+        } else {
+            drawOutline(outline, ground)
+            drawContent()
+        }
+    }
+}
+
+/**
+ * The rim catching the backdrop's light (glass-live 2026-11-09; owner: "glass not interacting with the background"): a
+ * [RIM_LIGHT_BAND_DP] band just inside a pane's edge shows the live picture behind it as neutral white light, brighter
+ * where the picture is brighter than the ground and nothing over the plain ground. White, never the look's colour (owner
+ * 2026-11-08: neutral rims). Dark themes only; a light theme's rim is already white on milk.
+ *
+ * Cheap by design: the band's layer holds one reference to the page's one picture recording (never a copy), so the
+ * picture stepping re-records nothing here; the layer is recorded again only when the pane moves or changes size.
+ */
+internal class BackdropRimLight {
+    private var layer: GraphicsLayer? = null
+    private var filtered: Float = Float.NaN
+
+    fun draw(scope: DrawScope, context: androidx.compose.ui.graphics.GraphicsContext, picture: GraphicsLayer, shift: Offset, shape: Shape, groundLuma: Float) {
+        with(scope) {
+            val band = RIM_LIGHT_BAND_DP.dp.toPx()
+            if (size.width <= band * 4f || size.height <= band * 4f) return
+            val l = layer ?: context.createGraphicsLayer().also { layer = it }
+            if (filtered != groundLuma) {
+                l.colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(rimLightMatrix(groundLuma))
+                filtered = groundLuma
+            }
+            l.alpha = RIM_LIGHT_MAX
+            recordDetached(l) { translate(shift.x, shift.y) { drawLayer(picture) } }
+            val inner = shape.createOutline(androidx.compose.ui.geometry.Size(size.width - band * 2f, size.height - band * 2f), layoutDirection, this)
+            val ring =
+                Path().apply {
+                    fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+                    addOutline(shape.createOutline(size, layoutDirection, this@with))
+                    addPath(Path().apply { addOutline(inner) }, Offset(band, band))
+                }
+            clipPath(ring) { drawLayer(l) }
+        }
+    }
+
+    fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
+        layer?.let { context.releaseGraphicsLayer(it) }
+        layer = null
+        filtered = Float.NaN
+    }
+}
+
+/**
+ * White at an alpha of [RIM_LIGHT_GAIN] × how far the picture's luma lies above the ground's ([groundLuma], 0..1): the
+ * picture as light. Colour matrix rows in Compose's order (offsets 0..255).
+ */
+internal fun rimLightMatrix(groundLuma: Float): androidx.compose.ui.graphics.ColorMatrix {
+    val k = RIM_LIGHT_GAIN
+    return androidx.compose.ui.graphics.ColorMatrix(
+        floatArrayOf(
+            0f, 0f, 0f, 0f, 255f,
+            0f, 0f, 0f, 0f, 255f,
+            0f, 0f, 0f, 0f, 255f,
+            k * LUMA_R, k * LUMA_G, k * LUMA_B, 0f, -k * groundLuma * 255f,
+        )
+    )
+}
+
+/** The ground's luma for the rim light in a dark theme, or null (a light theme: no rim light). */
+@Composable
+internal fun kitRimLightGround(): Float? {
+    val roles = io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current
+    if (!roles.dark) return null
+    val g = roles.ground
+    return (LUMA_R * g.red + LUMA_G * g.green + LUMA_B * g.blue) / 255f
+}
+
+/** How wide the lit band inside a pane's edge is, in dp: a touch wider than the 1 dp rim, so the light reads. */
+internal const val RIM_LIGHT_BAND_DP: Float = 1.5f
+
+/** Light per unit of luma above the ground: a look at its cap (about .2 above a dark ground) lights the rim about half. */
+internal const val RIM_LIGHT_GAIN: Float = 2.6f
+
+/** The most the rim light adds (its layer's alpha). */
+internal const val RIM_LIGHT_MAX: Float = .75f
+
+private const val LUMA_R: Float = .2126f
+private const val LUMA_G: Float = .7152f
+private const val LUMA_B: Float = .0722f
+
+/**
+ * A liquid pane's rim catching the page's live picture ([BackdropRimLight]), drawn over the pane and its content. Nothing
+ * where no live picture lies behind it in this window (a light theme, the flat ground, a popup).
+ */
+@Composable
+internal fun Modifier.kitBackdropRimLight(shape: Shape): Modifier {
+    val backdrop = LocalKitGlassBackdrop.current ?: return this
+    val light = kitRimLightGround() ?: return this
+    return this then RimLightElement(backdrop, shape, light)
+}
+
+private data class RimLightElement(val backdrop: KitGlassBackdrop, val shape: Shape, val light: Float) : ModifierNodeElement<RimLightNode>() {
+    override fun create(): RimLightNode = RimLightNode(backdrop, shape, light)
+
+    override fun update(node: RimLightNode) {
+        node.backdrop = backdrop
+        node.shape = shape
+        node.light = light
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitBackdropRimLight"
+    }
+}
+
+private class RimLightNode(var backdrop: KitGlassBackdrop, var shape: Shape, var light: Float) :
+    Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
+    private var coordinates: LayoutCoordinates? = null
+    private var last: Offset = Offset.Unspecified
+    private val rim = BackdropRimLight()
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        this.coordinates = coordinates
+        val at = coordinates.positionInRoot()
+        if (at != last) {
+            last = at
+            invalidateDraw()
+        }
+    }
+
+    override fun onDetach() {
+        rim.release(requireGraphicsContext())
+        coordinates = null
+        last = Offset.Unspecified
+    }
+
+    override fun ContentDrawScope.draw() {
         drawContent()
+        val bd = backdrop
+        val c = coordinates?.takeIf { it.isAttached } ?: return
+        val picture = bd.layer ?: return
+        if (!bd.painted || bd.root !== c.findRootCoordinates()) return
+        rim.draw(this, requireGraphicsContext(), picture, bd.origin - c.positionInRoot(), shape, light)
     }
 }

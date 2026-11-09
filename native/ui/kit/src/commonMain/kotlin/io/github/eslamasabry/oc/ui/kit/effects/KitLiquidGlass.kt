@@ -76,7 +76,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropRimLight
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassStackRoot
+import io.github.eslamasabry.oc.ui.kit.live.kitLivePictureSpots
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -308,13 +310,17 @@ private fun Modifier.liquidPane(
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // What the page's live background can put behind the content (glass-live): the face is thickened for that look
+    // alone, not for every picture the app can draw, so the motion behind it shows through.
+    val picture = kitLivePictureSpots()
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
             val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
-            val face = LiquidEdge.face(roles, role)
+            val face = LiquidEdge.face(roles, role, picture = picture)
+            // The other theme's face (over content of the other brightness) keeps the whole measure.
             val otherFace = LiquidEdge.face(other, role)
             // A chosen part's glass leans to the accent and holds a little more (GlassSpec's chosen tint and lift).
             fun lean(c: Color, dark: Boolean): Color {
@@ -347,7 +353,8 @@ private fun Modifier.liquidPane(
         }
     val words = kitLiquidWords(backdrop, flip)
     val latest by rememberUpdatedState(transform)
-    return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
+    // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
+    return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
 }
 
 /**

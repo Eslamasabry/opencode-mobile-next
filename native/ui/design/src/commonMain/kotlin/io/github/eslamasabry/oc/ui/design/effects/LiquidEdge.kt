@@ -176,7 +176,7 @@ public object LiquidEdge {
      * [SurfaceDecoration.sheen]; no rims and no top glow (the rim light replaces them). The + is its accent at the
      * recipe's tint. A pane whose words flip to the other theme's ink draws the other theme's face with them.
      */
-    public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero): SurfaceDecoration {
+    public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero, picture: List<Argb>? = null): SurfaceDecoration {
         val recipe = recipe(role, roles.dark)
         if (role == LiquidRole.Action) {
             // The + is accent glass, as thin as its glyph allows: 3:1 over either end of any backdrop.
@@ -188,7 +188,7 @@ public object LiquidEdge {
             while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
             return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
         }
-        val t = faceTint(roles, role)
+        val t = faceTint(roles, role, picture)
         return SurfaceDecoration(radii = radii, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen)
     }
 
@@ -210,7 +210,7 @@ public object LiquidEdge {
      * their targets ([inks]) on the face over what it floats over ([themeSpots]), with and without the sheen. As GlassFinish does for a pane: where Glass's own tint cannot carry them its lit corner goes, then the Solid
      * surface the pane stands for takes its place ([solidOf]), and last the sheen goes. Quieter, never less legible.
      */
-    public fun faceTint(roles: Roles, role: LiquidRole): FaceTint {
+    public fun faceTint(roles: Roles, role: LiquidRole, picture: List<Argb>? = null): FaceTint {
         val recipe = recipe(role, roles.dark)
         val (base, lit) = tintOf(roles, role)
         val thin =
@@ -223,7 +223,7 @@ public object LiquidEdge {
             )
         // The same measure as Glass's in-flow panes: a dark face deepens with the ground's smoke, a light one with its
         // own milk, the gloss goes first where it costs, then the Solid surface itself.
-        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(roles, recipe), inks(roles, role))
+        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(roles, recipe, picture), inks(roles, role))
         val fill = d.fill ?: base
         return FaceTint(fill, d.fillStart ?: fill, d.sheen)
     }
@@ -244,14 +244,23 @@ public object LiquidEdge {
      * (a photo, a white page in a screenshot) flips the words and the face to the other theme's ([LiquidInkRule]), whose
      * face is measured the same way. Not every colour a picture can hold: that would need a plate, and the owner removed
      * the plate (2026-11-08); the strictly worst case is reported by [bandContrast].
+     *
+     * [picture] is what the page's live background can put behind the content, when the kit knows it (glass-live
+     * 2026-11-09): nothing over the flat ground, the frosted aurora's spots, or a shader look's own spots under the lens
+     * ([LiveSpots.forLook]). Null (not known) measures every picture the app draws: the frosted aurora and the farthest
+     * any shader look reaches under the lens ([LiveReach.most]).
      */
-    public fun themeSpots(roles: Roles, recipe: LiquidRecipe): List<Argb> {
+    public fun themeSpots(roles: Roles, recipe: LiquidRecipe, picture: List<Argb>? = null): List<Argb> {
         val ground = roles.ground.opaqueArgb()
+        val pictured =
+            picture
+                ?: (AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
+                    // A shader look behind the content (owner 2026-11-09: the glass now shows it): the farthest any
+                    // look reaches under the lens (LiveReach, measured).
+                    LiveSpots.of(roles, LiveReach.most(roles.dark, lens = true)))
         val content =
             listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)) +
-                AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
-                // A shader look behind the content (owner 2026-11-09: the glass now shows it).
-                LiveSpots.of(roles) +
+                pictured +
                 listOf(lerp(ground, roles.text1.opaqueArgb(), BLURRED_INK), lerp(ground, roles.accent.opaqueArgb(), ACCENT_WASH))
         return content.map { filtered(it, recipe) }
     }
