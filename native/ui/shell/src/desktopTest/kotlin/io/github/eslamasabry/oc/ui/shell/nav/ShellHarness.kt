@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.shell.nav
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -54,6 +56,9 @@ class FakeSystemMotion(scale: Float = 1f) : SystemMotion {
 /** The kit's own desktop platform (no haptics, fill indication), so the harness tracks the KitPlatform contract. */
 private val TestPlatform: KitPlatform = DesktopKitPlatform()
 
+/** The home's way to the second list (ChatsRoute.All). */
+const val ALL_LABEL: String = "All conversations"
+
 fun ref(i: Int) = ConversationRef(ProfileId("t"), SessionId("s$i"))
 
 /** A list of rows that register grow keys, and a chat page that grows out of them (what :feature:chats installs). */
@@ -61,9 +66,23 @@ private val testInstaller = EntryInstaller {
     entry<ChatsRoute.Home> {
         val nav = LocalHarness.navigator
         KitScreen(title = "List") {
+            KitButton(ALL_LABEL, onClick = { nav.open(ChatsRoute.All()) })
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
                 items((0 until 30).toList(), key = { it }) { i ->
                     KitRow("Row $i", "preview $i", onClick = { nav.openChat(ref(i)) }, growKey = ref(i))
+                }
+            }
+        }
+    }
+    // A second list of the same conversations, lower down the page (as All conversations under its search and
+    // filters): the rows carry the same grow keys as the home's.
+    entry<ChatsRoute.All> {
+        val nav = LocalHarness.navigator
+        KitScreen(title = "Everything", backLabel = "Back", onBack = nav::back) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
+                item(key = "head") { Spacer(Modifier.height(240.dp)) }
+                items((0 until 30).toList(), key = { it }) { i ->
+                    KitRow("Every $i", "preview $i", onClick = { nav.openChat(ref(i)) }, growKey = ref(i))
                 }
             }
         }

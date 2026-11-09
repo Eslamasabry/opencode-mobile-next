@@ -54,6 +54,15 @@ public interface KitGrowHost {
 
     /** True when the last navigation was forward (open, 250 ms), false for a return (200 ms). */
     public val opening: Boolean
+
+    /**
+     * True while the navigation in flight opens or leaves a page that grows from a row, or while such a page is on top
+     * (a back gesture may start). Two list pages hold rows with the same grow keys (the home's Recent and All
+     * conversations both open the same chats); between them the rows must ride their pages, never pair up and fly
+     * from one list into the other (owner 2026-11-09, "Clicking on All conversations has a weird animation").
+     */
+    public val rowTransformInFlight: Boolean
+        get() = true
 }
 
 public val LocalKitGrowHost: ProvidableCompositionLocal<KitGrowHost?> = staticCompositionLocalOf { null }
@@ -78,9 +87,13 @@ public object KitGrowMotion {
 /** Keys are data classes, never strings (motion-native §4.3); wrapping keeps kit keys apart from any other key. */
 private data class GrowKey(val key: Any)
 
-private class GateConfig(private val host: KitGrowHost) : SharedTransitionScope.SharedContentConfig {
+private class GateConfig(
+    private val host: KitGrowHost,
+    /** A row ↔ page pair ([GrowKey], [GrowTitleKey]): only while a page that grows from a row is involved. */
+    private val rowToPage: Boolean = false,
+) : SharedTransitionScope.SharedContentConfig {
     override val SharedTransitionScope.SharedContentState.isEnabled: Boolean
-        get() = host.transformEnabled
+        get() = host.transformEnabled && (!rowToPage || host.rowTransformInFlight)
 
     /**
      * A transform already running keeps going even if the gate turns it off mid-flight (the person's own Off arriving
@@ -127,7 +140,7 @@ private fun AnimatedVisibilityScope.growCorner(pageSide: Boolean): Dp {
 internal fun Modifier.kitGrowSource(key: Any?): Modifier {
     val host = LocalKitGrowHost.current ?: return this
     if (key == null) return this
-    val config = remember(host) { GateConfig(host) }
+    val config = remember(host) { GateConfig(host, rowToPage = true) }
     val specs = KitMotion.specs
     with(host.sharedTransitionScope) {
         val state = rememberSharedContentState(GrowKey(key), config)
@@ -163,7 +176,7 @@ public fun KitGrowPage(growKey: Any?, content: @Composable () -> Unit) {
         Box(Modifier.fillMaxSize()) { content() }
         return
     }
-    val config = remember(host) { GateConfig(host) }
+    val config = remember(host) { GateConfig(host, rowToPage = true) }
     val specs = KitMotion.specs
     val ground = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.ground // P-116: not Material's
     val transition = host.animatedVisibilityScope.transition
@@ -237,7 +250,7 @@ private data class GrowTitleKey(val key: Any)
 internal fun Modifier.kitGrowTitle(key: Any?): Modifier {
     val host = LocalKitGrowHost.current ?: return this
     if (key == null) return this
-    val config = remember(host) { GateConfig(host) }
+    val config = remember(host) { GateConfig(host, rowToPage = true) }
     val specs = KitMotion.specs
     with(host.sharedTransitionScope) {
         val state = rememberSharedContentState(GrowTitleKey(key), config)
