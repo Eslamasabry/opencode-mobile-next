@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="desktopSettingsMenu">Cài đặt</string>
+    <string name="desktopReleaseCurrent">Đây là bản dựng mới nhất đã phát hành.</string>
+    <string name="desktopUpdatesBuildAvailable">Đã có bản dựng %1$s.</string>
+    <string name="desktopReleaseFailed">Không kiểm tra được bản cập nhật. Hãy thử lại khi bạn có mạng.</string>
+    <string name="desktopReleaseLimit">Bản cập nhật mở trên GitHub. Hãy tự tải và cài bản dành cho máy tính.</string>
+    <string name="desktopReleaseOpenQuestion">Mở bản phát hành trên GitHub?</string>
+    <string name="desktopReleaseOpenFailed">Không mở được trình duyệt. Hãy thử lại.</string>
+</resources>

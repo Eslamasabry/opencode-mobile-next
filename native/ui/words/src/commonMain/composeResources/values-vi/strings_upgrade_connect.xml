@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeConnectScanTitle">Quét mã từ máy tính của bạn</string>
+    <string name="upgradeConnectScanBody">Chạy lệnh bên dưới trên máy tính của bạn. Lệnh sẽ hiện một mã. Quét mã là bạn đã kết nối.</string>
+    <string name="upgradeConnectPasteBody">Chạy lệnh bên dưới trên máy tính của bạn, rồi dán mã mà lệnh in ra.</string>
+    <string name="upgradeConnectCommandTitle">Chạy lệnh này trên máy tính của bạn</string>
+    <string name="upgradeConnectOtherWays">Các cách kết nối khác</string>
+    <string name="upgradeConnectTailscaleBody">Truy cập máy tính của bạn qua mạng riêng.</string>
+    <string name="upgradeConnectManualBody">Nhập địa chỉ, rồi nhập mật khẩu.</string>
+    <string name="upgradeConnectNameLine">Sẽ được lưu với tên %1$s. Bạn có thể đổi tên bên dưới.</string>
+    <string name="upgradeConnectNameFallback">Máy tính của tôi</string>
+    <string name="upgradeReadyTitle">Đã kết nối với %1$s</string>
+    <string name="upgradeReadyVersion">Phiên bản %1$s</string>
+    <string name="upgradeReadyStart">Bắt đầu cuộc trò chuyện</string>
+</resources>

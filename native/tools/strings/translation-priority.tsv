@@ -1,0 +1,9 @@
+# regex on the file name, most visible first (home, chat, composer, setup and This phone, servers, settings, errors); anything else after
+strings_(s10_home|visual_home|home_a1|chats|chats_home|new_conversation|upgrade_new)
+^strings_chat(_header|_feel|_receipts|_history|_nav_second)?\.xml$|strings_chat_
+strings_composer|strings_phrases|strings_40_phrases
+strings_(onboarding|setup|server_setup|40_setup|first_reply)|strings_phone|strings_40_phone|strings_linux_(setup|install)
+strings_(servers|40_servers|server_)
+strings_(settings|40_settings|s8_settings)
+strings_(failures|crash|stale_failure|state)
+strings_common|strings_kit|strings\.xml|strings_os

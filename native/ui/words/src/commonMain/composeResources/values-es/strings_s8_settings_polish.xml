@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="vpttAutoSendDetailShort">Se envía tras una pausa corta, con 3 segundos para cancelar. Mantener pulsado el micrófono nunca envía.</string>
+    <string name="readAloudVoiceNaturalDetailShort">Más natural y funciona sin conexión. Solo en inglés; los demás idiomas usan la voz del teléfono.</string>
+</resources>

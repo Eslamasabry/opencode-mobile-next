@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedSignIn">Nhà cung cấp của mô hình không chấp nhận đăng nhập. Hãy đăng nhập lại nhà cung cấp đó, hoặc chọn mô hình khác.</string>
+    <string name="chatReplyFailedModel">Mô hình này không khả dụng. Hãy chọn mô hình khác rồi gửi lại.</string>
+    <string name="chatReplyFailedBusy">Nhà cung cấp của mô hình đang bận. Hãy đợi một lát, hoặc chọn mô hình khác.</string>
+    <string name="chatReplyFailedOther">Phản hồi dừng do có lỗi. Hãy gửi lại, hoặc chọn mô hình khác.</string>
+    <string name="chatReplyFailedDetails">Chi tiết</string>
+    <string name="chatReplyFailedCopy">Sao chép chi tiết</string>
+    <string name="chatSendFailedOffline">Hiện không kết nối được tới máy chủ.</string>
+    <string name="chatSendFailedChanged">Kết nối đã thay đổi khi đang gửi. Chưa có gì được gửi.</string>
+    <string name="chatSendFailedRefused">Máy chủ không nhận tin nhắn. Chưa có gì được gửi.</string>
+    <string name="chatModelsSearch">Tìm mô hình</string>
+    <string name="chatModelsRecent">Gần đây</string>
+    <string name="chatModelsCurrent">Hiện tại</string>
+    <string name="chatModelsNoMatch">Không có mô hình phù hợp</string>
+    <string name="chatsHomeNewShort">Cuộc trò chuyện mới</string>
+</resources>

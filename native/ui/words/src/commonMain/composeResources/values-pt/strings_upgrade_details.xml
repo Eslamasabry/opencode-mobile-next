@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipMessageDetailsTitle">Detalhes da mensagem</string>
+    <string name="tipMessageDetails">Segure uma mensagem para ver Detalhes, ou use o botão Mais dela, para ver o modelo e o tempo.</string>
+</resources>

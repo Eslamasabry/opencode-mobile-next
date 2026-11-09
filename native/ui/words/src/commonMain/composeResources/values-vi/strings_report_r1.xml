@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Không bắt buộc</string>
+    <string name="reportR1Included">Nội dung được gửi</string>
+    <string name="reportR1IncludedLine">Thông tin về ứng dụng và điện thoại. Mật khẩu, khóa và địa chỉ máy chủ đã được loại bỏ.</string>
+    <string name="reportR1IncludedCrash">Thông tin về ứng dụng và điện thoại, cùng lần ứng dụng gặp sự cố lúc %1$s. Mật khẩu, khóa và địa chỉ máy chủ đã được loại bỏ.</string>
+    <string name="reportR1IncludedFreeze">Thông tin về ứng dụng và điện thoại, cùng lần ứng dụng bị treo lúc %1$s. Mật khẩu, khóa và địa chỉ máy chủ đã được loại bỏ.</string>
+    <string name="reportR1IncludedClose">Thông tin về ứng dụng và điện thoại, cùng lần ứng dụng bị đóng lúc %1$s. Mật khẩu, khóa và địa chỉ máy chủ đã được loại bỏ.</string>
+    <string name="reportR1IncludedOpen">Xem nội dung được gửi</string>
+    <string name="reportR1Send">Gửi báo cáo</string>
+    <string name="reportR1CopyText">Sao chép văn bản</string>
+    <string name="reportR1PostGitHub">Đăng công khai trên GitHub</string>
+    <string name="reportR1NoSend">Phiên bản này không gửi được báo cáo. Hãy sao chép văn bản hoặc đăng lên GitHub.</string>
+    <string name="reportR1SheetSubtitle">Đây chính xác là nội dung sẽ được gửi.</string>
+    <string name="reportR1Words">Nội dung bạn viết</string>
+    <string name="reportR1NoWords">Chưa viết gì</string>
+    <string name="reportR1LastClose">Lần đóng gần nhất của ứng dụng</string>
+    <string name="reportR1Crashed">Đóng đột ngột · %1$s</string>
+    <string name="reportR1Froze">Ngừng phản hồi · %1$s</string>
+    <string name="reportR1ClosedForMemory">Android đóng để giải phóng bộ nhớ · %1$s</string>
+    <string name="reportR1App">Ứng dụng</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Điện thoại</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">Bộ nhớ %1$s GB</string>
+    <string name="reportR1Connection">Kết nối</string>
+    <string name="reportR1AddressOut">%1$s · đã loại bỏ địa chỉ</string>
+    <string name="reportR1NotConnected">Chưa kết nối</string>
+    <string name="reportR1Problems">Sự cố gần đây</string>
+    <string name="reportR1NoProblems">Không có</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Không bao giờ gửi: cuộc trò chuyện, tệp, mật khẩu, khóa và địa chỉ máy chủ của bạn.</string>
+    <string name="reportR1SentBody">Cảm ơn bạn. Nếu bạn liên hệ với chúng tôi về sự cố này, hãy đưa mã này để chúng tôi tìm báo cáo của bạn.</string>
+    <string name="reportR1PublicTitle">Đăng báo cáo này công khai?</string>
+    <string name="reportR1PublicBody">Ai cũng đọc được các issue trên GitHub. Biểu mẫu mở ra với nội dung bạn viết và thông tin ứng dụng, và chưa có gì được đăng cho đến khi bạn gửi ở đó.</string>
+    <string name="reportR1PublicConfirm">Mở GitHub</string>
+    <string name="reportR1GitHubFailed">Không mở được GitHub. Thử lại.</string>
+    <string name="reportR1KindTimeout">Hết thời gian chờ</string>
+    <string name="reportR1KindAuth">Đăng nhập bị từ chối</string>
+    <string name="reportR1KindTls">Chứng chỉ không đáng tin cậy</string>
+    <string name="reportR1KindServer">Lỗi máy chủ</string>
+    <string name="reportR1KindProtocol">Máy chủ phản hồi bất thường</string>
+    <string name="reportR1KindDns">Không tìm thấy địa chỉ</string>
+    <string name="reportR1KindRefused">Kết nối bị từ chối</string>
+    <string name="reportR1KindOffline">Không có mạng</string>
+    <string name="reportR1KindTooLarge">Tin nhắn quá lớn</string>
+    <string name="reportR1KindRejected">Tin nhắn bị từ chối</string>
+    <string name="reportR1KindOther">Sự cố khác</string>
+    <string name="reportKeptCopyErrors">Sao chép nhật ký lỗi</string>
+    <string name="reportKeptClearErrors">Xóa lỗi</string>
+</resources>

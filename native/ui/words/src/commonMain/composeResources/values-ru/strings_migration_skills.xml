@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">Использовать в новом чате</string>
+    <string name="migrationSkillReady">Навык готов в новом чате. Агент ещё не запускался.</string>
+    <string name="migrationSkillChanged">Соединение изменилось. Уже созданный чат сохранён.</string>
+    <string name="migrationSkillInvalid">У этого навыка нет поддерживаемого идентификатора. Обновите список навыков.</string>
+    <string name="migrationSkillUncertain">Запрос мог дойти до сервера. Уже созданный чат сохранён. Проверьте его, прежде чем повторять.</string>
+    <string name="migrationSkillOpen">Открыть чат</string>
+</resources>

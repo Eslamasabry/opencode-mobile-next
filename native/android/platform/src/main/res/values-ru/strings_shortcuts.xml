@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Подключиться</string>
+    <string name="shortcut_connect_long">Выберите сервер для подключения</string>
+    <string name="shortcut_new_task_short">Новый чат</string>
+    <string name="shortcut_new_task_long">Начните новый чат на текущем сервере</string>
+</resources>

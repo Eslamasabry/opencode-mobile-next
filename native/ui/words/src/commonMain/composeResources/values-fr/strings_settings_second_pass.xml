@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">À propos de cette version</string>
+    <string name="nativeAboutProvenance">Cette app indépendante est conçue avec une forte aide de l’IA. Android est la plateforme principale prise en charge. Les versions pour ordinateur sont expérimentales et n’ont pas été testées sur du matériel réel. Signalez ce qui ne fonctionne pas pour aider à améliorer l’app.</string>
+    <string name="nativePhraseChipsTitle">Phrases rapides</string>
+    <string name="nativePhraseChipsAliases">phrases rapides suggestions zone de saisie</string>
+    <string name="nativePhraseChipsDescription">Propose au-dessus de la zone de message les courtes phrases que vous utilisez souvent. Les phrases apprises restent sur cet appareil.</string>
+    <string name="nativeToolsRequired">Obligatoire</string>
+    <string name="nativeToolsOptional">Facultatif</string>
+    <string name="nativeToolsParameters">Paramètres</string>
+    <string name="nativeToolsNoParameters">Cet outil ne déclare aucun paramètre.</string>
+    <string name="nativeToolsCoding">Outils du modèle</string>
+    <string name="nativeToolsChooseModel">Choisissez un modèle pour voir ses outils.</string>
+    <string name="nativeCapabilitiesTitle">Ce qui fonctionne ici</string>
+</resources>

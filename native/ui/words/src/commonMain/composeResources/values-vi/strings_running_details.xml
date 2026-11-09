@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningDetailMemory">Bộ nhớ %1$d MB</string>
+    <string name="runningDetailElapsed">Đã chạy %1$d phút</string>
+    <string name="runningDetailPid">Tiến trình %1$d</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="other">Cũng dừng %1$d tiến trình phụ của nó. Danh tính của từng tiến trình được kiểm tra lại.</item>
+    </plurals>
+    <string name="runningDetailBusy">Đang bận</string>
+    <string name="runningDetailIdle">Nhàn rỗi</string>
+</resources>

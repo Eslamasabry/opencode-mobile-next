@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="staleFailureTitle">Báo cáo lỗi này?</string>
+    <string name="staleFailureBody">Lỗi này xảy ra trên %1$s. Phiên bản %2$s có thể đã sửa nó.</string>
+    <string name="staleFailureUpdateFirst">Cập nhật trước</string>
+    <string name="staleFailureReportAnyway">Vẫn báo cáo</string>
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverSettingsTitle">Cài đặt máy chủ</string>
+    <string name="serverSettingsShell">Shell mặc định</string>
+    <string name="serverSettingsFailed">Không hoàn tất được. Hãy thử lại.</string>
+    <string name="serverSettingsRemove">Xóa máy chủ</string>
+    <string name="serverSettingsRemoveBody">Xóa kết nối đã lưu này và dữ liệu cục bộ của nó khỏi ứng dụng. Máy chủ và các tệp trên máy tính của nó vẫn được giữ nguyên.</string>
+    <string name="serverSettingsDisconnected">Chưa kết nối</string>
+    <string name="serverSettingsConnect">Kết nối với máy chủ này</string>
+    <string name="serverSettingsOnServer">Thay đổi ở đây được lưu trên %1$s và dùng chung với các ứng dụng khác dùng nó.</string>
+    <string name="serverSettingsWaiting">Đang chờ</string>
+    <string name="serverSettingsPassed">Đạt</string>
+    <string name="serverSettingsAttention">Cần chú ý</string>
+    <string name="serverSettingsFailedCheck">Cần sửa</string>
+    <string name="serverSettingsSkipped">Chưa kiểm tra</string>
+    <string name="serverSettingsShellUnavailable">Hãy kết nối với máy chủ có chia sẻ cài đặt shell để đổi shell mặc định của nó.</string>
+    <string name="serverSettingsSaving">Đang lưu…</string>
+    <string name="serverSettingsTerminal">Terminal</string>
+    <string name="serverSettingsFiles">Duyệt tệp</string>
+    <string name="serverSettingsProjects">Quản lý dự án</string>
+    <string name="serverSettingsSchedules">Lời nhắc đã lên lịch</string>
+    <string name="serverSettingsProviders">Nhà cung cấp mô hình</string>
+    <string name="serverSettingsPermissions">Yêu cầu cấp quyền</string>
+    <string name="serverSettingsSteering">Hướng dẫn phản hồi đang chạy</string>
+    <string name="serverSettingsSupported">Có trên máy chủ này</string>
+    <string name="serverSettingsUnsupported">Không có trên máy chủ này</string>
+    <string name="server40DisconnectConfirm">Ngắt kết nối khỏi %1$s?</string>
+    <string name="server40Disconnect">Ngắt kết nối</string>
+    <string name="server40DisconnectBody">Việc này đóng kết nối trên điện thoại này. Các cuộc trò chuyện, bản nháp và tin nhắn đang chờ gửi vẫn được lưu.</string>
+    <string name="server40Reconnect">Kết nối lại</string>
+    <string name="server40AgentsNone">Không có tác nhân nào sẵn sàng trên máy tính này.</string>
+    <string name="server40Plugins">Plugin của máy chủ</string>
+    <string name="server40ResetDone">Mặc định của bạn lại được áp dụng ở đây.</string>
+    <string name="server40ModelHelp">Lựa chọn này áp dụng cho các cuộc trò chuyện mới trên máy chủ này. Các cuộc trò chuyện hiện có giữ mô hình riêng của chúng.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="projectStorageMeasureFailed">Ukuran file tersimpan tidak dapat dihitung. Coba lagi.</string>
+    <string name="projectStorageDeleteFailed">Android tidak dapat menghapus data aplikasi. Coba lagi.</string>
+</resources>

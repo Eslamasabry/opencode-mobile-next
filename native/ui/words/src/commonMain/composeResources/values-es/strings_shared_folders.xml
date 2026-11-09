@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">Almacenamiento compartido</string>
+    <string name="sharedFoldersSelected">Linux solo puede ver las carpetas de proyecto que abres y Download › OpenCode. El acceso a archivos de Android permite a la app leer esas carpetas; no comparte todo tu almacenamiento con Linux.</string>
+    <string name="sharedFoldersAll">Permitir que Linux vea todo el almacenamiento compartido</string>
+    <string name="sharedFoldersAllDetail">Usa el acceso al almacenamiento anterior en lugar de las carpetas de proyecto seleccionadas. Los cambios se aplican cuando el servidor del teléfono se inicia de nuevo.</string>
+    <string name="sharedFoldersAllRisk">Los agentes que se ejecutan en Linux podrán leer y cambiar archivos fuera de tus proyectos abiertos.</string>
+    <string name="sharedFoldersProtection">La protección limita Linux a las carpetas de proyecto seleccionadas.</string>
+    <string name="sharedFoldersRestart">El acceso a las carpetas se guardó. Reinicia el servidor del teléfono desde Este teléfono cuando tu trabajo esté listo y luego actualiza Archivos. No se detuvo ningún servidor.</string>
+    <string name="sharedFoldersFailed">No se pudo leer ni guardar el acceso a las carpetas. Inténtalo de nuevo.</string>
+    <string name="sharedFoldersAndroid">Acceso a archivos de Android</string>
+    <string name="sharedFoldersAndroidDetail">Permite el acceso cuando abras proyectos en el almacenamiento compartido.</string>
+    <string name="sharedFoldersGranted">Permitido. Linux sigue la elección de carpetas de abajo.</string>
+    <string name="sharedFoldersWorking">Actualizando el acceso a las carpetas…</string>
+</resources>

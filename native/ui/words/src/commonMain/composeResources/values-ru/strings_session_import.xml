@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="importNativePaste">Или вставьте экспорт в формате JSON</string>
+    <string name="importNativeReview">Проверить вставленный JSON</string>
+    <string name="importNativeWorkspaceOptional">Необязательно. Оставьте пустым, чтобы использовать папку проекта.</string>
+    <string name="importNativeAttemptDone">Закройте и снова откройте импорт, чтобы проверить другую попытку. Если результат не подтверждён, сначала посмотрите «Все чаты».</string>
+</resources>

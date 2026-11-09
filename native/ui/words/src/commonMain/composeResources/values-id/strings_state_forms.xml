@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">Jawab agen</string>
+    <string name="stateFormAnswer">Jawab</string>
+    <string name="stateFormHeld">Jawaban Anda akan segera dikirim.</string>
+    <string name="stateFormUndo">Urungkan</string>
+    <string name="stateFormInvalid">Periksa jawaban yang ditandai sebelum mengirim.</string>
+    <string name="stateFormOther">Lainnya</string>
+    <string name="stateFormOpenLink">Buka tautan</string>
+    <string name="stateFormRestoring">Memulihkan jawaban tersimpan Anda…</string>
+    <string name="stateFormSend">Kirim jawaban</string>
+    <string name="stateFormDecline">Tolak permintaan ini</string>
+    <string name="stateFormDeclineTitle">Tolak permintaan ini?</string>
+    <string name="stateFormDeclineBody">Agen akan melanjutkan tanpa jawaban Anda. Permintaan ini tidak dapat dipulihkan.</string>
+    <string name="stateFormKeepEditing">Lanjut mengedit</string>
+    <string name="stateFormStorageFailed">Jawaban tersimpan Anda tidak dapat dibaca atau disimpan. Tutup lalu buka lagi permintaan ini untuk mencoba lagi.</string>
+    <string name="stateFormUncertain">Pengiriman belum dikonfirmasi. Periksa percakapan sebelum menjawab lagi.</string>
+    <string name="stateFormChanged">Permintaan ini berubah. Buka kembali permintaan saat ini.</string>
+    <string name="stateFormNotAccepted">Jawaban Anda tidak diterima. Tinjau permintaan sebelum mencoba lagi.</string>
+    <string name="stateFormDismiss">Tutup</string>
+</resources>

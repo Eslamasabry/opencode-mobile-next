@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">Carpetas de Linux integradas</string>
+    <string name="secBuiltinFoldersBody">Explora el almacenamiento de proyectos y las carpetas de Linux de este teléfono.</string>
+    <string name="secBuiltinFolderLinked">Esta carpeta es un enlace. Elige una carpeta real.</string>
+    <string name="secBuiltinFolderNotInstalled">Instala Linux en este teléfono para explorar estas carpetas.</string>
+</resources>

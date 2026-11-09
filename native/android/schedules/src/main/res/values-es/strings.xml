@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">Mensajes programados</string>
+    <string name="oc_schedule_title">Mensaje programado</string>
+    <string name="oc_schedule_running">Enviando tu mensaje programado…</string>
+    <string name="oc_schedule_ran">Enviado. La respuesta está en la conversación.</string>
+    <string name="oc_schedule_finished">Terminado. Toca para leer la respuesta.</string>
+    <string name="oc_schedule_skipped">Se omitió esta vez. Toca para ver el motivo.</string>
+    <string name="oc_schedule_failed">No terminó. Toca para ver el motivo.</string>
+    <string name="oc_schedule_why_needs_you">Está esperando tu respuesta. Abre la conversación para continuar.</string>
+    <string name="oc_schedule_why_sign_in">El servidor pidió iniciar sesión de nuevo.</string>
+    <string name="oc_schedule_why_agent">El agente se detuvo por un error.</string>
+    <string name="oc_schedule_why_timeout">No terminó a tiempo. No se volvió a enviar.</string>
+    <string name="oc_schedule_why_unavailable">No se pudo conectar con el servidor.</string>
+    <string name="oc_schedule_digest_title">Mensajes programados de esta mañana</string>
+    <string name="oc_schedule_digest_body">%1$d respondidos, %2$d sin terminar, %3$d omitidos</string>
+    <string name="oc_schedule_open">Abrir</string>
+</resources>

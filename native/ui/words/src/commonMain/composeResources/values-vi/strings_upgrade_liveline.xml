@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="other">Đang đọc %1$d tệp</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="other">Đang tìm trong dự án, %1$d lượt tìm</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="other">Đang xem qua %1$d thư mục</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="other">Đang sửa %1$d tệp</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="other">Đang tải %1$d trang</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="other">Đang giao %1$d nhiệm vụ</item>
+    </plurals>
+    <string name="liveStepRunning">Đang chạy %1$s</string>
+    <string name="liveStepRunningCommand">Đang chạy một lệnh</string>
+    <string name="liveFailedStillWorking">Tác nhân vẫn đang làm việc. Bạn chưa cần làm gì.</string>
+    <string name="liveFailedStopped">Tác nhân đã dừng. Hãy gửi tin nhắn để yêu cầu nó tiếp tục.</string>
+</resources>

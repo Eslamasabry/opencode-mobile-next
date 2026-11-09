@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">Android đã dừng ứng dụng. Đang kiểm tra lại những gì đang chạy…</string>
+    <string name="stateLifecycleUnavailable">Android đã dừng ứng dụng. Không thể kiểm tra việc khôi phục.</string>
+    <string name="stateLifecycleStopped">Android đã dừng ứng dụng. OpenCode đã dừng.</string>
+    <string name="stateLifecycleUnreachable">Android đã dừng ứng dụng. OpenCode chưa phản hồi.</string>
+    <string name="stateLifecyclePartial">OpenCode đang phản hồi. Một số dịch vụ đã chạy trước đó chưa sẵn sàng.</string>
+    <string name="stateLifecycleReady">OpenCode và các dịch vụ đã chạy trước đó đã phản hồi trở lại. Các tác vụ bị gián đoạn có thể cần bạn xử lý.</string>
+    <string name="stateStorageTitle">Bộ nhớ của ứng dụng</string>
+    <string name="stateStorageServer">Linux và OpenCode</string>
+    <string name="stateStoragePrivate">Thông tin đăng nhập, cài đặt và cuộc trò chuyện đã lưu</string>
+    <plurals name="stateStorageProject">
+        <item quantity="other">%1$s · %2$d tệp · %3$d riêng tư</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="other">%1$d máy chủ đã lưu</item>
+    </plurals>
+    <string name="stateStorageEmpty">Điện thoại này chưa lưu Linux hay dự án nào.</string>
+    <string name="stateStorageFailed">Không thể đo bộ nhớ. Thử lại.</string>
+    <string name="stateStorageRefresh">Đo lại bộ nhớ</string>
+</resources>

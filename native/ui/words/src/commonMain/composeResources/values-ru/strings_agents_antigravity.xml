@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">Antigravity в вашем терминале</string>
+    <string name="agentPersonaAntigravityAbout">Подход Google к работе с агентами Antigravity, ориентированный на терминал.</string>
+    <string name="agentPersonaAntigravityNeeds">Аккаунт Google; вход выполняется в браузере</string>
+    <string name="agentsAntigravitySignInIntro">Antigravity покажет в терминале ссылку для входа. Откройте её в браузере и войдите через Google, затем вставьте код из браузера в терминал.</string>
+    <string name="agentsGeminiMigrationNote">Если Gemini CLI предложит перейти на Antigravity, вернитесь к агентам и установите Antigravity (agy). Ваши чаты с Gemini останутся здесь.</string>
+</resources>

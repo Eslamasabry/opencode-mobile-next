@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Vérifier les autres serveurs</string>
+    <string name="monitorNativeBack">Retour</string>
+    <string name="monitorNativeForegroundOnly">Vérifie les serveurs enregistrés tant que cette page est ouverte. La fermer arrête les lectures. Cela ne démarre pas de serveur sur le téléphone et n’active pas les alertes en arrière-plan.</string>
+    <string name="monitorNativeCheck">Vérifier maintenant</string>
+    <string name="monitorNativeChecking">Vérification…</string>
+    <string name="monitorNativeAllow">Autoriser les vérifications</string>
+    <string name="monitorNativeConsent">Autorisez cette application à lire les demandes et l’état récent des conversations de ce serveur enregistré.</string>
+    <string name="monitorNativeUnsupported">Ce serveur enregistré ne peut pas être vérifié ici.</string>
+    <string name="monitorNativeOff">Vérifications désactivées</string>
+    <string name="monitorNativeWaiting">Pas encore vérifié</string>
+    <string name="monitorNativeCurrent">Vérifié</string>
+    <string name="monitorNativePartial">Vérifié en partie. Vérifiez à nouveau pour lire plus de conversations.</string>
+    <string name="monitorNativeUnknown">Impossible de confirmer le dernier état. Des observations plus anciennes peuvent encore s’afficher.</string>
+    <string name="monitorNativePaused">Vérifications en pause</string>
+    <string name="monitorNativePending">Vous attendent\u00A0: %1$d</string>
+    <string name="monitorNativeRunning">En cours\u00A0: %1$d</string>
+    <string name="monitorNativeConversation">Conversation</string>
+    <string name="monitorNativeFailed">Le dernier échange vérifié a échoué</string>
+    <string name="monitorNativeEarlierFailure">Échec antérieur\u00A0; le dernier état est inconnu</string>
+    <string name="monitorNativeSaveFailed">Impossible d’enregistrer ou de charger ces paramètres. Réessayez.</string>
+    <string name="monitorNativeEmpty">Aucun serveur enregistré n’est disponible pour la vérification.</string>
+    <string name="monitorNativeRequest">Vous attend</string>
+    <string name="monitorNativeEarlierRequest">Demande antérieure\u00A0; le dernier état est inconnu</string>
+    <string name="monitorNativeReconnect">Connectez-vous à ce serveur ou mettez à jour sa connexion dans Serveurs avant de vérifier.</string>
+</resources>

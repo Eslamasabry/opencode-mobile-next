@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeNewStart">Mulai</string>
+    <string name="upgradeAgentReady">Siap</string>
+    <string name="upgradeMode">Mode</string>
+    <string name="upgradeModeBuild">Bangun</string>
+    <string name="upgradeModePlan">Rencana</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalLinkReviewBody">Открыть эту ссылку в браузере? %1$s</string>
+    <string name="terminalLinkReviewInsecure">Эта ссылка использует незащищённое соединение. Открыть %1$s в браузере?</string>
+    <string name="terminalLinkReviewTitle">Открыть эту ссылку?</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">Открыть ссылку · %1$s</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="native44AllModels">Tất cả mô hình (%1$s)</string>
+    <plurals name="native44MoreModels">
+        <item quantity="other">Hiện thêm %1$s mô hình</item>
+    </plurals>
+    <string name="native44Context">Ngữ cảnh %1$s</string>
+    <string name="native44Output">Giới hạn đầu ra %1$s</string>
+    <string name="native44Price">Đầu vào $%1$s · đầu ra $%2$s mỗi triệu token</string>
+    <string name="native44ModelShortcuts">Đổi mô hình</string>
+    <string name="native44CopyFailed">Không sao chép được ID mô hình. Hãy thử lại.</string>
+</resources>

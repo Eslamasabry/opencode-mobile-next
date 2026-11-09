@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Pemakaian paket di ponsel ini</string>
+    <string name="linuxQuotaSetup">Siapkan pemakaian paket</string>
+    <string name="linuxQuotaEnabled">Pemakaian paket sudah disiapkan</string>
+    <string name="linuxQuotaBody">Baca batas Codex, GLM, dan MiniMax dari akun masuk yang sudah ada di ponsel ini. Pembantu hanya berjalan saat pemakaian dibaca.</string>
+    <string name="linuxQuotaTurnOff">Matikan pemakaian paket</string>
+    <string name="linuxQuotaLinuxNotReady">Siapkan Linux di Ponsel ini dulu.</string>
+    <string name="linuxQuotaNoNode">Instal Node dari komponen Linux, lalu coba lagi.</string>
+    <string name="linuxQuotaOldNode">Perbarui Node ke versi 20 atau lebih baru, lalu coba lagi.</string>
+    <string name="linuxQuotaPrepareFailed">File pemakaian tidak dapat disiapkan. Coba lagi.</string>
+    <string name="linuxQuotaStartFailed">Pembantu pemakaian tidak merespons. Coba lagi.</string>
+    <string name="linuxQuotaRemoveFailed">Pembantu pemakaian tidak dapat dihapus. Coba lagi.</string>
+</resources>

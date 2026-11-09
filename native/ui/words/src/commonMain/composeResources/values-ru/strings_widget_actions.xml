@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">Написать в этот чат</string>
+    <string name="widgetActionMessage">Сообщение</string>
+    <string name="widgetActionHint">Направьте текущий ответ. Если агент не может принимать указания во время работы, ваше сообщение будет отправлено после его ответа.</string>
+    <string name="widgetActionSend">Отправить сообщение</string>
+    <string name="widgetActionClose">Закрыть</string>
+    <string name="widgetActionOpen">Открыть чат</string>
+    <string name="widgetActionAccepted">Сообщение отправлено</string>
+    <string name="widgetActionRejected">Этот чат не смог принять сообщение</string>
+    <string name="widgetActionUncertain">Не удалось подтвердить сообщение</string>
+    <string name="widgetActionCheckFirst">Проверьте чат, прежде чем отправлять снова.</string>
+    <string name="widgetActionOpenHint">Откройте чат, чтобы увидеть последний ответ.</string>
+    <string name="widgetActionSending">Отправка сообщения…</string>
+    <string name="widgetActionEnterMessage">Сначала введите сообщение</string>
+    <string name="widgetPanelAllProjects">Все проекты</string>
+    <string name="widgetPanelSave">Сохранить выбор</string>
+    <string name="widgetPanelRecord">Голосовой ввод</string>
+    <string name="widgetPanelFinishRecording">Закончить голосовой ввод</string>
+    <string name="widgetPanelListening">Слушаем…</string>
+</resources>

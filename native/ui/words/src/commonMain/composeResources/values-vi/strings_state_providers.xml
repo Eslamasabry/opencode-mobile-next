@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateProviderZaiGlobal">Z.AI · Toàn cầu</string>
+    <string name="stateProviderZaiChina">Z.AI · Trung Quốc</string>
+    <string name="stateProviderZaiPlanGlobal">Z.AI Coding Plan · Toàn cầu</string>
+    <string name="stateProviderZaiPlanChina">Z.AI Coding Plan · Trung Quốc</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="isolatedTaskCreateUnknown">Server tidak mengonfirmasi apakah salinan sudah dibuat. Periksa proyek sebelum memulai yang lain.</string>
+    <string name="isolatedTaskOpenUnknown">Server tidak mengonfirmasi percakapan. Periksa Percakapan sebelum memulai yang lain. Tugas Anda tetap tersimpan di sini.</string>
+    <string name="isolatedTaskProgress">Langkah %1$d dari 3</string>
+    <string name="isolatedTaskOperationFailed">Langkah itu tidak dapat diselesaikan. Tugas Anda tetap tersimpan di sini.</string>
+    <string name="isolatedTaskCopies">Salinan terpisah</string>
+    <string name="isolatedTaskRefreshCopies">Muat ulang salinan</string>
+    <string name="isolatedTaskSendUnconfirmed">Tidak dapat memastikan apakah tugas Anda terkirim. Tugas tetap tersimpan di sini. Buka percakapan dan periksa sebelum mengirimnya lagi.</string>
+</resources>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">Servicios</string>
+    <string name="keptSvcFailed">Los servicios no pudieron completar eso</string>
+    <string name="keptSvcFailedBody">Comprueba que Linux esté configurado e inténtalo de nuevo. Tus opciones de servicios guardadas se conservan.</string>
+    <string name="keptSvcAdd">Agregar un servicio</string>
+    <string name="keptSvcKeepsRunning">Un servicio que inicies sigue ejecutándose después de un fallo o cuando la app se abre de nuevo, hasta que lo detengas.</string>
+    <string name="keptSvcEmpty">Aún no hay servicios. Agrega tu propio comando para mantenerlo en ejecución.</string>
+    <string name="keptSvcScreenOff">Los servicios pueden pausarse con la pantalla apagada, salvo que el teléfono esté cargando.</string>
+    <string name="keptSvcStartNamed">Iniciar %1$s</string>
+    <string name="keptSvcStopNamed">Detener %1$s</string>
+    <string name="keptSvcRestartNamed">Reiniciar %1$s</string>
+    <string name="keptSvcOpenNamed">Abrir %1$s</string>
+    <string name="keptSvcRemoveNamed">Quitar %1$s</string>
+    <string name="keptSvcWorking">Terminando la acción del servicio…</string>
+    <string name="keptSvcCopyLog">Copiar registro</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="one">Volvió tras 1 reinicio</item>
+        <item quantity="many">Volvió tras %1$d de reinicios</item>
+        <item quantity="other">Volvió tras %1$d reinicios</item>
+    </plurals>
+    <string name="keptSvcLogTitle">Registro del servicio</string>
+    <string name="keptSvcSearchLog">Buscar en el registro</string>
+    <string name="keptSvcLogEmpty">Aún no hay salida.</string>
+    <string name="keptSvcRemoveQuestion">¿Quitar %1$s?</string>
+    <string name="keptSvcRemoveBody">El servicio se detiene antes de quitar su definición guardada y sus registros.</string>
+    <string name="keptSvcRemoveGoes">Se quitan su comando, su opción de encendido y sus registros.</string>
+    <string name="keptSvcRemoveStays">Las herramientas instaladas y los archivos del proyecto se conservan.</string>
+    <string name="keptSvcSaveStart">Guardar e iniciar servicio</string>
+    <string name="keptSvcName">Nombre</string>
+    <string name="keptSvcNameHint">De 2 a 24 letras minúsculas, números o guiones; empieza con una letra.</string>
+    <string name="keptSvcCommand">Comando</string>
+    <string name="keptSvcDirectory">Carpeta dentro de Linux</string>
+    <string name="keptSvcPort">Puerto (opcional)</string>
+    <string name="keptSvcPortHint">Un puerto libre entre 1024 y 65535. Déjalo en blanco si no tiene página web.</string>
+    <string name="keptSvcBadName">Elige otro nombre con el formato indicado arriba. Los nombres de los servicios de la app están reservados.</string>
+    <string name="keptSvcBadCommand">Escribe una sola línea de comando, de hasta 4096 caracteres.</string>
+    <string name="keptSvcBadDirectory">Usa una carpeta absoluta de Linux, sin segmentos de directorio superior (..).</string>
+    <string name="keptSvcBadPort">Elige un puerto sin usar entre 1024 y 65535, fuera de los puertos reservados de la app.</string>
+    <string name="keptSvcRestart">Reiniciar tras un fallo</string>
+    <string name="keptSvcRestartBody">Intentar de nuevo tras un fallo; detenerse tras varios fallos seguidos y rápidos.</string>
+    <string name="keptSvcLimit">Ya hay 16 servicios. Quita uno antes de agregar otro.</string>
+    <string name="keptSvcPaused">En pausa mientras el teléfono está caliente</string>
+    <string name="keptSvcOff">Apagado</string>
+    <string name="keptSvcStarting">Iniciando…</string>
+    <string name="keptSvcRunning">En ejecución</string>
+    <string name="keptSvcRunningFor">En ejecución desde hace %1$d min</string>
+    <string name="keptSvcStopping">Deteniendo…</string>
+    <string name="keptSvcRetrying">Falló (código %1$d). Se reintentará en %2$d s</string>
+    <string name="keptSvcPortBusy">El puerto %1$d está ocupado. Se reintentará pronto.</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="one">Detenido tras fallos repetidos (1 reinicio)</item>
+        <item quantity="many">Detenido tras fallos repetidos (%1$d de reinicios)</item>
+        <item quantity="other">Detenido tras fallos repetidos (%1$d reinicios)</item>
+    </plurals>
+    <string name="keptSvcExited">Terminó (código %1$d)</string>
+    <string name="keptSvcPortNumber">Puerto %1$d</string>
+    <string name="keptSvcLogStarted">Iniciado</string>
+    <string name="keptSvcLogExit">Terminó (código %1$d)</string>
+    <string name="keptSvcLogRetry">Se reintentará en %1$d s</string>
+    <string name="keptSvcLogGaveUp">Detenido tras fallos repetidos</string>
+</resources>

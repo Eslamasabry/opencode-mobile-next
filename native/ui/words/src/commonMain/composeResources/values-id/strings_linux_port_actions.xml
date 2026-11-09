@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">Tindakan port</string>
+    <string name="linuxPortCopiedAddress">Salin alamat</string>
+    <string name="linuxPortOwnerStop">Hentikan %1$s</string>
+    <string name="linuxPortOwnerQuestion">Hentikan %1$s?</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="other">Hentikan program terpilih dan pembantunya (%1$d proses). Setiap proses harus tetap cocok dengan identitas yang ditampilkan. Tidak ada yang memulainya lagi.</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">Diakhiri: %1$d · dipaksa: %2$d · masih berjalan: %3$d · identitas berubah dan dipertahankan: %4$d</string>
+</resources>

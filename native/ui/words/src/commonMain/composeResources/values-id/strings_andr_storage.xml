@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">Penyimpanan internal</string>
+    <string name="andrStorageUp">Naik satu folder</string>
+    <string name="andrStorageUseFolder">Buka folder ini</string>
+    <string name="andrStorageFoldersEmpty">Tidak ada folder di sini.</string>
+    <string name="andrStorageFolderMissing">Folder ini sudah tidak ada. Naik satu tingkat dan pilih folder lain.</string>
+    <string name="andrStorageFolderDenied">Izinkan akses ke folder di pengaturan Android, lalu coba lagi.</string>
+    <string name="andrStorageFolderFailed">Tidak dapat membaca folder ini. Coba lagi.</string>
+    <string name="andrStorageAccess">Izinkan akses ke folder</string>
+    <string name="andrStorageWorking">Tunggu folder selesai dimuat.</string>
+    <string name="andrStorageTitle">Penyimpanan ponsel</string>
+    <string name="andrStorageNearlyFull">Penyimpanan hampir penuh: tersisa %1$s. Kosongkan sebagian ruang sebelum memasang alat atau memulai tugas besar.</string>
+    <string name="andrStorageAvailable">%1$s tersedia untuk aplikasi ini.</string>
+    <string name="andrStorageUnknown">Ruang yang tersedia tidak dapat dibaca. Coba ukur lagi.</string>
+    <string name="andrStorageMeasure">Ukur penyimpanan dan file Linux</string>
+    <string name="andrStorageMeasuring">Mengukur penyimpanan…</string>
+    <string name="andrStorageHostSizes">Linux dan alat: %1$s · Proyek: %2$s. Ini ukuran file, bukan seluruh penyimpanan aplikasi.</string>
+    <string name="andrStorageHostUnknown">Ukuran file Linux tidak dapat diukur. File Anda tetap aman.</string>
+    <string name="andrStorageRootHere">Penyimpanan internal itu sendiri tidak bisa menjadi proyek. Buka folder di dalamnya.</string>
+</resources>

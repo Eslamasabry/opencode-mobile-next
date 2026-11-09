@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">Penyimpanan bersama</string>
+    <string name="sharedFoldersSelected">Linux hanya dapat melihat folder proyek yang Anda buka dan Download › OpenCode. Akses file Android memungkinkan aplikasi membaca folder tersebut; seluruh penyimpanan Anda tidak dibagikan ke Linux.</string>
+    <string name="sharedFoldersAll">Izinkan Linux melihat semua penyimpanan bersama</string>
+    <string name="sharedFoldersAllDetail">Pakai akses penyimpanan yang lebih lama, bukan folder proyek terpilih. Perubahan berlaku saat server ponsel dimulai lagi.</string>
+    <string name="sharedFoldersAllRisk">Agen yang berjalan di Linux akan dapat membaca dan mengubah file di luar proyek yang Anda buka.</string>
+    <string name="sharedFoldersProtection">Perlindungan membatasi Linux hanya pada folder proyek terpilih.</string>
+    <string name="sharedFoldersRestart">Akses folder tersimpan. Mulai ulang server ponsel dari Ponsel ini saat pekerjaan Anda selesai, lalu muat ulang File. Tidak ada server yang dihentikan.</string>
+    <string name="sharedFoldersFailed">Akses folder tidak dapat dibaca atau disimpan. Coba lagi.</string>
+    <string name="sharedFoldersAndroid">Akses file Android</string>
+    <string name="sharedFoldersAndroidDetail">Izinkan akses saat Anda membuka proyek di penyimpanan bersama.</string>
+    <string name="sharedFoldersGranted">Diizinkan. Linux tetap mengikuti pilihan folder di bawah.</string>
+    <string name="sharedFoldersWorking">Memperbarui akses folder…</string>
+</resources>

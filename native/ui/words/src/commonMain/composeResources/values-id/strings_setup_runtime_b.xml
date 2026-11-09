@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupRbStatusUnreadable">Penyiapan tersimpan tidak dapat dibaca. Coba Lanjutkan penyiapan.</string>
+    <string name="setupRbToolsUncheckable">Alat yang terpasang tidak dapat diperiksa. Coba lagi.</string>
+</resources>

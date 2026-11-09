@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">Duración de los servicios</string>
+    <string name="linuxLifetimeRefresh">Revisar la duración de los servicios</string>
+    <string name="linuxLifetimeReading">Leyendo la duración de los servicios…</string>
+    <string name="linuxLifetimeRunning">En ejecución</string>
+    <string name="linuxLifetimeStopped">Detenido</string>
+    <string name="linuxLifetimeUptime">Ejecución actual: %1$d ms</string>
+    <string name="linuxLifetimeLastUptime">Ejecución anterior: %1$d ms</string>
+    <string name="linuxLifetimeExit">Última salida: %1$d</string>
+    <string name="linuxLifetimeRestarts">Reinicios: %1$d</string>
+    <string name="linuxLifetimeUnknown">Causa de la salida desconocida</string>
+    <string name="linuxLifetimeExited">El programa terminó</string>
+    <string name="linuxLifetimeKilled">Poca memoria o límite de procesos de Android</string>
+    <string name="linuxLifetimeFailed">No se pudo leer la duración de los servicios.</string>
+    <string name="linuxLifetimeEmpty">No hay observaciones de duración de servicios disponibles.</string>
+</resources>

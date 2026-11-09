@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">Os arquivos de login conhecidos e as configurações de ambiente salvas dos serviços ficam neste celular. Os comandos personalizados dos serviços são incluídos; revise-os antes de compartilhar um backup.</string>
+    <string name="linuxBackupServiceAccountsNative">Os serviços com configurações de ambiente salvas entram no backup desativados. Depois de restaurar, configure novamente a conta e o ambiente deles antes de iniciá-los.</string>
+</resources>

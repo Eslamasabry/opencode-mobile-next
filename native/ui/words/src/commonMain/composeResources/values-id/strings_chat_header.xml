@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHeaderServer">Server</string>
+    <string name="chatHeaderContext">Konteks terpakai</string>
+    <string name="chatHeaderNotReported">Belum dilaporkan</string>
+    <string name="chatHeaderTokens">Token</string>
+    <string name="chatHeaderInUse">Sedang dipakai</string>
+    <string name="chatHeaderRenameFailed">Percakapan tidak bisa diganti namanya.</string>
+    <string name="chatHeaderShareFailed">Percakapan tidak bisa dibagikan.</string>
+    <string name="chatHeaderUnshareFailed">Gagal menghentikan berbagi.</string>
+    <string name="chatHeaderForkFailed">Percakapan tidak bisa dicabangkan.</string>
+    <string name="chatHeaderArchiveFailed">Percakapan tidak bisa diarsipkan.</string>
+    <string name="chatHeaderDeleteFailed">Percakapan tidak bisa dihapus.</string>
+    <string name="chatHeaderFailureDetails">Detail</string>
+    <string name="chatHeaderApprovalSaveFailed">Pengaturan persetujuan tidak bisa disimpan.</string>
+</resources>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_live_channel">Kết nối lập trình trực tiếp</string>
+    <string name="notify_live_description">Hiện khi OpenCode giữ kết nối máy chủ ở chế độ nền</string>
+    <string name="notify_coding_requests_channel">Yêu cầu lập trình</string>
+    <string name="notify_coding_requests_description">Báo khi OpenCode cần quyền hoặc cần bạn trả lời</string>
+    <string name="notify_coding_requests_quiet_channel">Yêu cầu lập trình (giờ yên tĩnh)</string>
+    <string name="notify_coding_requests_quiet_description">Yêu cầu đến trong giờ yên tĩnh, không phát âm thanh</string>
+    <string name="notify_coding_status_channel">Cập nhật cuộc trò chuyện lập trình</string>
+    <string name="notify_coding_status_description">Báo khi một cuộc trò chuyện OpenCode ở chế độ nền hoàn tất</string>
+    <string name="notify_team_progress_channel">Tiến độ AI Team</string>
+    <string name="notify_team_progress_description">Một dòng nhẹ nhàng khi AI Team đang làm việc</string>
+    <string name="notify_setup_channel">Thiết lập</string>
+    <string name="notify_phone_server_channel">OpenCode trên điện thoại này</string>
+    <string name="notify_phone_server_description">Hiện khi máy chủ trên điện thoại hoặc công cụ dự án đang chạy</string>
+    <string name="notify_schedule_channel">Lời nhắc đã lên lịch</string>
+    <string name="notify_voice_setup">Thiết lập giọng nói</string>
+    <string name="notify_alert_permission_title">Cho phép %1$s tiếp tục?</string>
+    <string name="notify_alert_question_title">%1$s có câu hỏi cho bạn</string>
+    <string name="notify_alert_complete_title">Đã xong: %1$s</string>
+    <string name="notify_alert_error_title">Đã dừng: %1$s</string>
+    <string name="notify_alert_stopped_any">Một cuộc trò chuyện đã dừng</string>
+    <string name="notify_ask_run">Chạy %1$s?</string>
+    <string name="notify_ask_edit">Sửa %1$s?</string>
+    <string name="notify_ask_read">Đọc %1$s?</string>
+    <string name="notify_ask_folder">Làm việc trong %1$s?</string>
+    <string name="notify_public_needs_you">Có yêu cầu cần bạn</string>
+    <string name="notify_public_finished">Một cuộc trò chuyện đã xong</string>
+    <string name="notify_status_public_stopped">OpenCode · một cuộc trò chuyện đã dừng</string>
+    <string name="notify_test_title">Thông báo đã bật</string>
+    <string name="notify_test_body">Câu hỏi và công việc đã xong sẽ hiện như thế này.</string>
+    <string name="notify_alert_quota_title">Mức dùng của nhà cung cấp đã chạm ngưỡng của bạn</string>
+    <string name="notify_alert_quota_body">Mở để xem mức dùng hiện tại.</string>
+    <string name="notify_alert_quota_reset_title">%1$s đã dùng lại được</string>
+    <string name="notify_alert_quota_reset_generic_title">Giới hạn sử dụng đã được đặt lại</string>
+    <string name="notify_alert_quota_reset_body">Mở để xem còn lại bao nhiêu.</string>
+    <string name="notify_alert_checkin_title">%1$s vẫn đang làm việc</string>
+    <string name="notify_alert_checkin_body">Mở cuộc trò chuyện để xem tiến độ.</string>
+    <string name="notify_alert_reason_auth">Nhà cung cấp từ chối khóa. Hãy đăng nhập lại để tiếp tục.</string>
+    <string name="notify_alert_reason_context">Cuộc trò chuyện quá dài so với mô hình.</string>
+    <string name="notify_alert_reason_length">Câu trả lời đã chạm giới hạn độ dài.</string>
+    <string name="notify_alert_reason_filter">Nhà cung cấp đã chặn câu trả lời.</string>
+    <string name="notify_alert_reason_model">Mô hình đó hiện không dùng được. Hãy chọn mô hình khác để tiếp tục.</string>
+    <string name="notify_alert_reason_other">Đã xảy ra lỗi.</string>
+    <string name="notify_allow_once">Cho phép một lần</string>
+    <string name="notify_reject">Từ chối</string>
+    <string name="notify_open">Mở</string>
+    <string name="notify_status_action_open">Mở</string>
+    <string name="notify_status_action_stop_reply">Dừng câu trả lời</string>
+    <string name="notify_status_action_start">Bắt đầu</string>
+    <string name="notify_status_action_new_chat">Cuộc trò chuyện mới</string>
+    <string name="notify_status_action_stop_opencode">Dừng OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · sẵn sàng</string>
+    <string name="notify_status_public_paused">OpenCode · tạm dừng</string>
+    <plurals name="notify_chip_running">
+        <item quantity="other">%1$s đang chạy</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="other">%1$s cần bạn</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="other">%s cần bạn</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="other">%s cuộc trò chuyện đã xong</item>
+    </plurals>
+    <string name="notify_answer_in_app">Mở OpenCode để trả lời</string>
+    <string name="notify_reply_watch_title">Vẫn đang xử lý câu trả lời của bạn</string>
+    <string name="notify_status_public_working">OpenCode · đang làm việc</string>
+</resources>

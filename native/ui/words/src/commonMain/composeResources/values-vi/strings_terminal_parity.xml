@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalLinkReviewBody">Mở liên kết này trong trình duyệt? %1$s</string>
+    <string name="terminalLinkReviewInsecure">Liên kết này dùng kết nối không mã hóa. Mở %1$s trong trình duyệt?</string>
+    <string name="terminalLinkReviewTitle">Mở liên kết này?</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">Mở liên kết · %1$s</string>
+</resources>

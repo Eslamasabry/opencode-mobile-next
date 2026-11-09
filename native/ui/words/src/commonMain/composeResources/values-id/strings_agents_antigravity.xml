@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">Antigravity di terminal Anda</string>
+    <string name="agentPersonaAntigravityAbout">Cara Google yang mengutamakan terminal untuk bekerja dengan agen Antigravity.</string>
+    <string name="agentPersonaAntigravityNeeds">Akun Google; masuk lewat browser Anda</string>
+    <string name="agentsAntigravitySignInIntro">Antigravity memberi Anda tautan masuk di terminal. Buka di browser dan masuk dengan Google, lalu tempel kode dari browser ke terminal.</string>
+    <string name="agentsGeminiMigrationNote">Jika Gemini CLI meminta Anda memakai Antigravity, kembali ke Agen dan pasang Antigravity (agy). Percakapan Gemini Anda tetap ada di sini.</string>
+</resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Planes y límites</string>
+    <string name="statePlansCopy1">Atrás</string>
+    <string name="statePlansCopy2">Leyendo tus planes</string>
+    <string name="statePlansCopy3">Actualizar</string>
+    <string name="statePlansCopy4">Actualizando</string>
+    <string name="statePlansCopy5">Aún no has iniciado sesión en ningún plan</string>
+    <string name="statePlansCopy6">Inicia sesión en Codex, Claude, GLM o MiniMax en un servidor o en este teléfono para ver cuánto queda.</string>
+    <string name="statePlansCopy7">Claves de API (sin límites de plan)</string>
+    <string name="statePlansCopy8">Sin sesión iniciada en ningún lugar</string>
+    <string name="statePlansCopy9">Este teléfono</string>
+    <string name="statePlansCopy10">Queda de sobra</string>
+    <string name="statePlansCopy11">Cerca del límite</string>
+    <string name="statePlansCopy12">Límite alcanzado</string>
+    <string name="statePlansCopy13">Sesión iniciada, pero aún no se pueden leer sus cifras</string>
+    <string name="statePlansCopy14">El inicio de sesión caducó</string>
+    <string name="statePlansCopy15">Sin sesión iniciada</string>
+    <string name="statePlansCopy16">Esta vez no se pudieron leer las cifras</string>
+    <string name="statePlansCopy17">Sin conexión. Estas son las últimas cifras.</string>
+    <string name="statePlansCopy18">No se informan límites</string>
+    <string name="statePlansCopy19">Clave de API, sin límites de plan</string>
+    <string name="statePlansCopy20">Inicia sesión para ver las cifras</string>
+    <string name="statePlansCopy21">Inicia sesión en %1$s para ver las cifras</string>
+    <string name="statePlansCopy22">Agrega la clave para ver las cifras</string>
+    <string name="statePlansCopy23">Agrega la clave en %1$s para ver las cifras</string>
+    <string name="statePlansCopy24">Configura la lectura para ver las cifras</string>
+    <string name="statePlansCopy25">Configura la lectura en %1$s para ver las cifras</string>
+    <string name="statePlansCopy26">Inténtalo de nuevo</string>
+    <string name="statePlansCopy27">5 horas</string>
+    <string name="statePlansCopy28">Esta semana</string>
+    <string name="statePlansCopy29">Este mes</string>
+    <string name="statePlansCopy30">Límite</string>
+    <string name="statePlansCopy31">Queda el %1$s%</string>
+    <string name="statePlansCopy32">se restablece ahora</string>
+    <string name="statePlansCopy33">se restablece en %1$s min</string>
+    <string name="statePlansCopy34">se restablece en %1$s h</string>
+    <string name="statePlansCopy35">se restablece en %1$s días</string>
+    <string name="statePlansCopy36">Se restableció desde que se leyeron estas cifras.</string>
+    <string name="statePlansCopy37">Plan: %1$s</string>
+    <string name="statePlansCopy38">Alerta al usar el %1$s%</string>
+    <string name="statePlansCopy39">sin conexión</string>
+    <string name="statePlansCopy40">el inicio de sesión caducó</string>
+    <string name="statePlansCopy41">sin sesión iniciada</string>
+    <string name="statePlansCopy42">cifras leídas aquí</string>
+    <string name="statePlansCopy43">sesión iniciada</string>
+    <string name="statePlansCopy44">Los límites del plan de Claude no se pueden leer a través de OpenCode</string>
+    <string name="statePlansAlerts">Alertas de uso</string>
+    <string name="statePlansThreshold">Alerta al usar el %1$d%</string>
+    <string name="statePlansResetOn">El aviso de restablecimiento está activado</string>
+    <string name="statePlansResetOff">El aviso de restablecimiento está desactivado</string>
+    <string name="statePlansPercent">Porcentaje usado (1–100)</string>
+    <string name="statePlansSaveFailed">No se pudo guardar. Escribe un porcentaje del 1 al 100 e inténtalo de nuevo.</string>
+    <string name="statePlansSave">Guardar nivel de alerta</string>
+    <string name="statePlansUseDefault">Usar el nivel de alerta predeterminado</string>
+</resources>

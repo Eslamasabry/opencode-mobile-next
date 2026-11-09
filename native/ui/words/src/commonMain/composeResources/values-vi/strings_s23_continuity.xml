@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureOpenCode1">Máy chủ này chạy OpenCode 1. Hãy cập nhật lên OpenCode 2 để dùng ở đây.</string>
+</resources>

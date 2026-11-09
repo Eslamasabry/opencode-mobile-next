@@ -107,5 +107,8 @@ public enum class AppLanguage(public val tag: String?) {
     Japanese("ja"),
     Portuguese("pt"),
     Russian("ru"),
+    Vietnamese("vi"),
+    Indonesian("id"),
+    French("fr"),
     Chinese("zh"),
 }

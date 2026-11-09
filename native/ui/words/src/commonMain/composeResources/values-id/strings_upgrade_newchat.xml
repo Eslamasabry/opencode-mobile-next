@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgNewChatKept">Tulisan dan pilihan Anda tersimpan. Coba lagi, atau edit dulu.</string>
+    <string name="upgNewChatEdit">Edit</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">Agen dan model</string>
+    <string name="upgNewChatAgents">Siapa yang mengerjakan</string>
+    <string name="upgNewChatModeHint">Rencana membahasnya dulu. Bangun membuat perubahan.</string>
+    <string name="upgNewChatModeOnlyFor">Bangun dan Rencana hanya untuk %1$s.</string>
+    <string name="upgNewChatModel">Model</string>
+    <string name="upgNewChatModelsSearch">Cari model</string>
+    <string name="upgNewChatBackToAgents">Kembali ke agen</string>
+    <string name="upgNewChatDone">Selesai</string>
+    <string name="upgNewChatModelsNone">Server ini tidak punya model lain.</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">Servidores</string>
+    <string name="serversNewTitle">Nueva conversación</string>
+    <string name="serversSaved">Servidores guardados</string>
+    <string name="serversEmpty">Agrega un servidor de OpenCode 2 para iniciar una conversación.</string>
+    <string name="serversAdd">Agregar un servidor</string>
+    <string name="serversName">Nombre</string>
+    <string name="serversAddress">Dirección del servidor</string>
+    <string name="serversUsername">Nombre de usuario</string>
+    <string name="serversPassword">Contraseña</string>
+    <string name="serversCleartext">Permitir HTTP para esta dirección</string>
+    <string name="serversCleartextHelp">HTTP no cifra tu contraseña ni tus conversaciones. Úsalo solo en una red de confianza.</string>
+    <string name="serversCleartextRequired">Confirma HTTP para esta dirección antes de conectar.</string>
+    <string name="serversConnect">Conectar</string>
+    <string name="serversConnected">Conectado</string>
+    <string name="serversCreate">Iniciar conversación</string>
+    <string name="serversSave">Guardar y conectar</string>
+    <string name="serversRemove">Quitar servidor</string>
+    <string name="serversCancel">Cancelar</string>
+    <string name="serversRemoveConfirm">¿Quitar %1$s y sus datos de conexión guardados de esta app?</string>
+    <string name="serversWorking">Espera a que termine la acción actual.</string>
+    <string name="serversInvalidAddress">Escribe la dirección de un servidor.</string>
+    <string name="serversSaveFailed">No se pudo guardar este servidor. Revisa la dirección e inténtalo de nuevo.</string>
+    <string name="serversConnectFailed">No se pudo conectar. Revisa la dirección del servidor y la red, e inténtalo de nuevo.</string>
+    <string name="serversCreateFailed">No se pudo iniciar una conversación. Tu servidor sigue guardado.</string>
+    <string name="serversRemoveFailed">No se pudo quitar este servidor. Sus datos guardados no cambiaron.</string>
+    <string name="serversSignInFailed">El servidor no aceptó estos datos de inicio de sesión. Revisa el nombre de usuario y la contraseña.</string>
+    <string name="serverHttpsRequired">Esta dirección está en internet público, así que necesita HTTPS. Con HTTP simple tu contraseña se enviaría sin cifrar. Cambia la dirección para que empiece con https:// o accede al servidor mediante Tailscale o tu propia red.</string>
+</resources>

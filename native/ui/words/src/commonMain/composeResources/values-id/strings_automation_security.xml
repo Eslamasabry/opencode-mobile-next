@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">Yang berjalan sendiri</string>
+    <string name="secAutomationDetail">Pilih apa yang boleh dilakukan server ini secara otomatis. Sebuah pilihan mengizinkan pekerjaan yang ada; tidak memulainya.</string>
+    <string name="secAutomationReconnect">Hubungkan kembali</string>
+    <string name="secAutomationRetryIntake">Coba lagi pekerjaan masuk</string>
+    <string name="secAutomationReconcileQueuedSends">Cocokkan pengiriman dalam antrean</string>
+    <string name="secAutomationRetryProviderErrors">Coba lagi error penyedia</string>
+    <string name="secAutomationRestartPhoneServer">Mulai ulang server ponsel</string>
+    <string name="secAutomationResumeSetup">Lanjutkan penyiapan</string>
+    <string name="secAutomationRecheckEnvironment">Periksa ulang lingkungan</string>
+    <string name="secAutomationPollRestartHealth">Periksa kondisi setelah mulai ulang</string>
+    <string name="secAutomationThermalRecovery">Pulih setelah panas</string>
+    <string name="secAutomationReduceEffects">Kurangi efek</string>
+    <string name="secAutomationChooseDefaults">Pilih default</string>
+    <string name="secAutomationDetectInstallations">Deteksi pemasangan</string>
+    <string name="secAutomationPreserveDrafts">Pertahankan draf</string>
+    <string name="secAutomationFollowOutput">Ikuti keluaran</string>
+    <string name="secAutomationPollOpenPages">Muat ulang halaman terbuka</string>
+    <string name="secAutomationBoundedPaging">Muat lebih banyak hasil</string>
+    <string name="secAutomationRouteReadyWork">Arahkan pekerjaan yang siap</string>
+    <string name="secAutomationWakeStalledPool">Bangunkan pekerja yang macet</string>
+    <string name="secAutomationRestartWorkers">Mulai ulang pekerja</string>
+    <string name="secAutomationRecycleWorkers">Daur ulang pekerja</string>
+    <string name="secAutomationHoldAtProviderLimit">Tunggu saat batas penyedia tercapai</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Coba lagi jawaban yang belum terkonfirmasi</string>
+    <string name="secAutomationRetryTransientTask">Coba lagi kegagalan sementara</string>
+    <string name="secAutomationFallBackToDirectTask">Pakai tugas langsung sebagai cadangan</string>
+    <string name="secAutomationApplyCodePush">Terapkan pembaruan kode</string>
+    <string name="secAutomationRestartDevServices">Mulai ulang layanan pengembangan</string>
+    <string name="secAutomationStopIdleHelpers">Hentikan pembantu yang menganggur</string>
+    <string name="secAutomationCleanCaches">Bersihkan cache</string>
+    <string name="secAutomationUpdateWhenIdle">Perbarui saat menganggur</string>
+    <string name="secAutomationMonitorOtherServers">Pantau server lain</string>
+    <string name="secAutomationMonitorQuota">Pantau kuota</string>
+</resources>

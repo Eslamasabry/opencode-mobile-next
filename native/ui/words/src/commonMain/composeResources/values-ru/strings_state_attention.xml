@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Активность</string>
+    <string name="stateAttentionRefresh">Обновить</string>
+    <string name="stateAttentionNeedsYou">Нужны вы</string>
+    <string name="stateAttentionHistory">Пока вас не было</string>
+    <string name="stateAttentionIncomplete">Некоторые серверы не проверены. Сохранённые данные могли устареть.</string>
+    <string name="stateAttentionCorrupt">Часть сохранённой активности не удалось прочитать. Она осталась на этом телефоне.</string>
+    <string name="stateAttentionSaveFailed">Не удалось сохранить изменение. Обновите и повторите.</string>
+    <string name="stateAttentionNoneKnown">Ответившие серверы не сообщают об ожидающих запросах.</string>
+    <string name="stateAttentionNone">Ожидающих запросов нет.</string>
+    <string name="stateAttentionNoHistory">Автоматической активности нет.</string>
+    <string name="stateAttentionPermission">Запрошено разрешение</string>
+    <string name="stateAttentionQuestion">Вопрос ждёт ответа</string>
+    <string name="stateAttentionForm">Форма ждёт заполнения</string>
+    <string name="stateAttentionFailure">Чат требует внимания</string>
+    <string name="stateAttentionTeam">Команде нужны вы</string>
+    <string name="stateAttentionStale">Последние известные данные</string>
+    <string name="stateAttentionAcknowledge">Скрыть показанную активность</string>
+    <string name="stateActReconnect">Подключено заново автоматически</string>
+    <string name="stateActRestart">Перезапущено автоматически</string>
+    <string name="stateActHeatPause">Приостановлено из-за нагрева</string>
+    <string name="stateActHeatStop">Остановлено из-за нагрева</string>
+    <string name="stateActHeatResume">Возобновлено после охлаждения</string>
+    <string name="stateActUpdate">Обновлено автоматически</string>
+    <string name="stateActPermission">Разрешение выдано автоматически</string>
+    <string name="stateActQueued">Сохранённое сообщение отправлено</string>
+    <string name="stateActOther">Автоматическая активность</string>
+    <string name="stateAttentionMonitorTitle">Другие серверы</string>
+    <string name="stateAttentionMonitorCopy">Выберите, какие другие сохранённые серверы этот телефон может проверять на ожидающие запросы. Это не отвечает на запросы и не меняет эти серверы.</string>
+    <string name="stateAttentionMonitorChoice">Проверять ожидающие запросы</string>
+</resources>

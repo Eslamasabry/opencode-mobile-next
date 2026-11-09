@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Iniciar sessão em %1$s</string>
+    <string name="m40AuthBack">Voltar</string>
+    <string name="m40AuthWorking">Trabalhando…</string>
+    <string name="m40AuthPlaces">Onde você quer iniciar sessão?</string>
+    <string name="m40AuthBest">O uso está pronto para ser lido aqui.</string>
+    <string name="m40AuthServer">O login fica salvo neste servidor.</string>
+    <string name="m40AuthPhone">Este celular</string>
+    <string name="m40AuthMethods">Escolha como iniciar sessão</string>
+    <string name="m40AuthNoPlace">Nenhum lugar para iniciar sessão</string>
+    <string name="m40AuthNoPlaceBody">Adicione um servidor OpenCode ou instale o agente deste provedor neste celular.</string>
+    <string name="m40AuthUnavailable">O login não está disponível aqui</string>
+    <string name="m40AuthUnavailableBody">Esta conexão não oferece um método de login compatível com este provedor.</string>
+    <string name="m40AuthKey">Chave de API</string>
+    <string name="m40AuthKeyHelp">Sua chave é enviada a esta conexão e salva lá.</string>
+    <string name="m40AuthSaveKey">Salvar chave</string>
+    <string name="m40AuthContinue">Continuar</string>
+    <string name="m40AuthEnterValue">Digite um valor.</string>
+    <string name="m40AuthSelectValue">Escolha uma opção.</string>
+    <string name="m40AuthOpenPage">Abrir página de login</string>
+    <string name="m40AuthAskPage">Abrir %1$s no seu navegador?</string>
+    <string name="m40AuthOpenBrowser">Abrir no navegador</string>
+    <string name="m40AuthCheck">Verificar login</string>
+    <string name="m40AuthWaiting">Termine de iniciar sessão e verifique aqui.</string>
+    <string name="m40AuthCommandWaiting">A conexão está executando o login. Verifique aqui quando terminar.</string>
+    <string name="m40AuthCode">Código de login ou URL de retorno</string>
+    <string name="m40AuthFinish">Concluir login</string>
+    <string name="m40AuthDone">Concluído</string>
+    <string name="m40AuthComplete">Login feito</string>
+    <string name="m40AuthCompleteBody">A lista de planos foi atualizada.</string>
+    <string name="m40AuthFailed">Não foi possível concluir esta etapa. Tente novamente.</string>
+    <string name="m40AuthReenter">Digite a senha deste servidor de novo em Servidores e volte aqui.</string>
+    <string name="m40AuthDetails">Detalhes</string>
+    <string name="m40AuthCopyDetails">Copiar detalhes</string>
+    <string name="m40AuthDeviceCode">Use o código %1$s na página de login.</string>
+    <string name="m40AuthCopyCode">Copiar código</string>
+    <string name="m40AuthCopied">Código copiado</string>
+    <string name="m40AuthBrowserHint">Este método precisa ser concluído em um navegador na máquina que executa este servidor.</string>
+    <string name="m40AuthDeviceHint">Inicie sessão usando o código do dispositivo.</string>
+    <string name="m40AuthAccountHint">Inicie sessão com sua conta do provedor.</string>
+    <string name="m40AuthCommandHint">A conexão executa este login; o celular não executa nenhum comando.</string>
+    <string name="m40AuthPhoneHint">Use o agente instalado deste provedor neste celular.</string>
+</resources>

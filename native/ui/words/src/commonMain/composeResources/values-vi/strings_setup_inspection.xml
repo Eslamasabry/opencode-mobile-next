@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">Xem thiết lập</string>
+    <string name="setupInspectReadOnly">Màn hình này chỉ đọc cấu hình và trạng thái công cụ. Không thể Áp dụng và Hoàn tác vì máy chủ này không thể khôi phục an toàn các thay đổi thiết lập.</string>
+    <string name="setupInspectFailed">Không tải được thông tin thiết lập. Hãy kết nối lại với máy chủ và thử lại.</string>
+    <string name="setupInspectRefresh">Làm mới thiết lập</string>
+    <string name="setupInspectLoading">Đang đọc thiết lập…</string>
+    <string name="setupInspectConfig">Nguồn cấu hình</string>
+    <string name="setupInspectNoSources">Không có nguồn cấu hình nào được báo cáo.</string>
+    <string name="setupInspectMcp">Kết nối công cụ</string>
+    <string name="setupInspectNoMcp">Không có kết nối công cụ nào được báo cáo.</string>
+    <string name="setupMcpConnected">Đã kết nối</string>
+    <string name="setupMcpPending">Đang kết nối</string>
+    <string name="setupMcpDisabled">Đã tắt</string>
+    <string name="setupMcpFailed">Kết nối thất bại</string>
+    <string name="setupMcpSignIn">Cần đăng nhập</string>
+    <string name="setupMcpUnknown">Chưa rõ trạng thái</string>
+    <string name="setupRegistryTitle">Danh bạ công cụ công khai</string>
+    <string name="setupRegistryConsent">Duyệt danh bạ công khai</string>
+    <string name="setupRegistryPrivacy">Làm mới sẽ liên hệ danh bạ MCP công khai mà không gửi thông tin xác thực của máy chủ. Từ khóa tìm kiếm được gửi đến danh bạ và không bao giờ được lưu.</string>
+    <string name="setupRegistryDisabled">Tính năng duyệt đang tắt. Hãy bật để tải danh sách khi bạn chọn Làm mới.</string>
+    <string name="setupRegistryLoading">Đang tải danh sách công khai…</string>
+    <string name="setupRegistryOffline">Bạn đang ngoại tuyến. Đang hiện các danh sách đã lưu.</string>
+    <string name="setupRegistryError">Không tải được danh bạ công khai. Đang hiện các danh sách đã lưu.</string>
+    <string name="setupRegistryEmpty">Chưa tải danh sách nào. Hãy làm mới hoặc tìm trong danh bạ.</string>
+    <string name="setupRegistryReadOnly">Các danh sách chỉ để tham khảo. Hãy thiết lập công cụ thủ công trên máy chủ của bạn; trang này không bao giờ chạy lệnh của danh bạ hay mở liên kết trong danh sách.</string>
+    <string name="setupRegistrySearch">Tìm trong danh sách</string>
+    <string name="setupRegistryRefresh">Làm mới danh sách</string>
+    <string name="setupRegistrySaved">Hiện danh sách đã lưu</string>
+    <string name="setupInspectUnsupported">Máy chủ này không hỗ trợ xem thiết lập.</string>
+    <string name="setupMigrationRequired">Đang chuyển các cuộc trò chuyện trước đó của bạn sang…</string>
+    <string name="setupMigrationProgress">Đang chuyển các cuộc trò chuyện trước đó của bạn sang (%1$d/%2$d)…</string>
+    <string name="setupMigrationError">Máy chủ không thể hoàn tất việc chuyển các cuộc trò chuyện trước đó của bạn. Dữ liệu gốc vẫn còn nguyên trên điện thoại này.</string>
+    <string name="setupMigrationUnavailable">Máy chủ không báo cáo được trạng thái các cuộc trò chuyện trước đó của bạn. Hãy làm mới để thử lại.</string>
+</resources>

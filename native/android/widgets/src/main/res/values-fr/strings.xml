@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_label">Conversation</string>
+    <string name="widget_description">Ce qui compte maintenant : ce qui a besoin de vous, ce qui travaille ou votre dernière conversation.</string>
+    <string name="native_team_working">En cours</string>
+    <string name="native_widget_now">maintenant</string>
+    <string name="native_widget_minutes">%1$s\u00A0min</string>
+    <string name="native_widget_hours">%1$s\u00A0h</string>
+    <string name="native_widget_days">%1$s\u00A0j</string>
+    <string name="usage_widget_title">Utilisation</string>
+    <string name="usage_widget_description">Ce qu’il reste sur chaque limite de forfait, et quand elle se réinitialise.</string>
+    <string name="usage_widget_empty">Aucune mesure de limite pour l’instant. Ouvrez Utilisation pour connecter une source.</string>
+    <string name="usage_widget_resets">Réinitialisation dans %1$s</string>
+    <string name="usage_widget_updated">Mis à jour il y a %1$s</string>
+    <string name="usage_widget_sign_in">Se connecter</string>
+    <string name="usage_widget_add_key">Ajouter une clé</string>
+    <string name="usage_widget_not_signed_in">Non connecté</string>
+    <string name="usage_widget_no_key">Aucune clé ajoutée</string>
+    <string name="usage_widget_set_up">Configurer</string>
+    <string name="usage_widget_cant_read">Lecture impossible pour l’instant</string>
+    <string name="usage_widget_auth">Connexion requise</string>
+    <string name="usage_widget_this_phone">Ce téléphone</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s \u0020%2$s\u00A0%% restant</string>
+    <string name="usage_widget_short_hours">%1$s\u00A0h</string>
+    <string name="usage_widget_short_days">%1$s\u00A0j</string>
+    <string name="usage_widget_short_week">Semaine</string>
+    <string name="usage_widget_short_month">Mois</string>
+    <string name="widget_label_wide">Conversations</string>
+    <string name="widget_label_list">Liste de conversations</string>
+    <string name="widget_label_strip">Bandeau de conversation</string>
+    <string name="widget_description_wide">Ce qui a besoin de vous ou travaille maintenant, et vos prochaines conversations.</string>
+    <string name="widget_description_list">Ce qui compte maintenant, avec vos autres conversations en dessous.</string>
+    <string name="widget_description_strip">Ce qui compte maintenant, sur une seule ligne.</string>
+    <string name="usage_widget_title_wide">Utilisation, large</string>
+    <string name="usage_widget_description_wide">Ce qu’il reste sur chaque limite de forfait, sur deux colonnes.</string>
+    <string name="widget_label_status">État</string>
+    <string name="widget_description_status">Vos serveurs, le Linux de ce téléphone, les tâches en cours et la limite de forfait la plus proche d’être atteinte.</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Vista</string>
+    <string name="filesSearchNames">Nombres de archivo</string>
+    <string name="filesRowActions">Acciones</string>
+    <string name="filesChangeDeleted">Eliminado</string>
+    <string name="filesChangeAdded">Agregado</string>
+    <string name="filesChangeModified">Modificado</string>
+    <string name="filesWrapCode">Ajustar líneas</string>
+    <string name="filesUnwrapCode">Desplazar líneas hacia los lados</string>
+    <string name="filesShowPreview">Vista previa</string>
+    <string name="filesMoreActions">Más acciones del archivo</string>
+    <string name="filesAttachFailed">No se pudo adjuntar este archivo. Inténtalo de nuevo.</string>
+    <string name="filesPreferencesFailed">No se pudo guardar esta opción de vista. Inténtalo de nuevo.</string>
+    <string name="filesLinkRefused">Este enlace no se puede abrir de forma segura.</string>
+    <string name="filesOpenLinkQuestion">¿Abrir %1$s?</string>
+    <string name="filesOpenLinkBody">Este enlace se abre fuera de la app.</string>
+    <string name="filesOpenLink">Abrir enlace</string>
+    <string name="filesAttachmentReady">Archivo adjunto. Vuelve a la conversación para agregar tu comentario.</string>
+    <string name="filesScopedEmpty">Esta es la carpeta que comparte el servidor de esta conversación. Revisa su acceso a carpetas y luego actualiza.</string>
+    <string name="filesStorageFailed">No se cambió el acceso a la carpeta. Inténtalo de nuevo.</string>
+    <string name="filesStorageRestart">El acceso a la carpeta quedó guardado. Reinicia el servidor de este teléfono y luego actualiza.</string>
+    <string name="filesOpenPhone">Abrir Este teléfono</string>
+    <string name="filesReviewStorage">Revisar carpetas compartidas</string>
+    <string name="filesSelectedStorageBody">Permite esta carpeta de proyecto o revisa las carpetas compartidas. El acceso a todo un volumen de almacenamiento sigue desactivado a menos que lo actives allí.</string>
+</resources>

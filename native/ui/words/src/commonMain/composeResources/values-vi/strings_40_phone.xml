@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40PhoneConnect">Dùng máy chủ của điện thoại này</string>
+    <string name="r40PhoneConnectFailed">Không thể kết nối với máy chủ của điện thoại này. Thử lại.</string>
+    <string name="r40PhoneMemory">Đang dùng %1$s bộ nhớ</string>
+    <string name="r40PhoneHistoryMoving">Đang chuyển các cuộc trò chuyện trước đây sang…</string>
+    <string name="r40PhoneHistoryCount">Đang chuyển các cuộc trò chuyện trước đây sang (%1$s trên %2$s)…</string>
+    <string name="r40PhoneHistoryFailed">Không thể chuyển các cuộc trò chuyện trước đây sang. Dữ liệu gốc của bạn vẫn còn trên điện thoại này, không bị đụng đến.</string>
+    <string name="r40PhoneReplySpeed">Tốc độ phản hồi gần nhất</string>
+    <string name="r40PhoneReplyNoWords">Hoàn tất trong %1$s, không có chữ nào</string>
+    <string name="r40PhoneReplyLast">Chữ đầu tiên sau %1$s · Hoàn tất sau %2$s</string>
+    <string name="r40PhoneInstalled">Đã cài trên điện thoại này</string>
+    <string name="r40PhoneChecking">Đang kiểm tra…</string>
+    <string name="r40PhoneInstalledMark">Đã cài đặt</string>
+    <string name="r40PhoneInventoryFailed">Không thể kiểm tra những gì đã cài. Danh sách trước đó được giữ lại. Thử lại.</string>
+    <string name="r40PhoneLinuxMode">Chế độ Linux</string>
+    <string name="r40PhoneLinuxFast">Nhanh (seccomp)</string>
+    <string name="r40PhoneLinuxSlow">Chậm hơn (ptrace)</string>
+    <string name="r40PhoneUnknown">Chưa có báo cáo</string>
+    <string name="r40PhoneAwake">Giữ điện thoại luôn thức</string>
+    <string name="r40PhoneAwakeNow">Đang thức để làm việc</string>
+    <string name="r40PhoneAwakeWhenWorking">Chỉ khi công việc cần</string>
+    <string name="r40PhoneFirstWords">Chờ chữ đầu tiên</string>
+    <string name="r40PhoneFirstSplit">%1$s trong ứng dụng · %2$s trên máy chủ</string>
+    <string name="r40PhoneRefresh">Làm mới thông tin điện thoại</string>
+    <string name="r40PhoneModel">Mô hình của phản hồi gần nhất</string>
+    <string name="r40PhoneRuntimeDetails">Chi tiết môi trường chạy</string>
+    <string name="r40PhoneHistoryDetails">Chi tiết việc nhập cuộc trò chuyện</string>
+    <string name="r40PhoneLogFailed">Không thể đọc nhật ký máy chủ. Thử lại.</string>
+    <string name="r40PhoneLogEmpty">Máy chủ chưa ghi nhật ký nào.</string>
+    <string name="r40PhoneLog">Nhật ký máy chủ OpenCode</string>
+    <string name="r40PhoneSeconds">%1$s giây</string>
+</resources>

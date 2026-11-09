@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">Kirim pesan ke percakapan ini</string>
+    <string name="widgetActionMessage">Pesan</string>
+    <string name="widgetActionHint">Arahkan balasan saat ini. Jika agen ini tidak dapat menerima arahan saat bekerja, pesan Anda menyusul setelah balasannya.</string>
+    <string name="widgetActionSend">Kirim pesan</string>
+    <string name="widgetActionClose">Tutup</string>
+    <string name="widgetActionOpen">Buka percakapan</string>
+    <string name="widgetActionAccepted">Pesan terkirim</string>
+    <string name="widgetActionRejected">Percakapan ini tidak dapat menerima pesan</string>
+    <string name="widgetActionUncertain">Tidak dapat memastikan pesan terkirim</string>
+    <string name="widgetActionCheckFirst">Periksa percakapan sebelum mengirim lagi.</string>
+    <string name="widgetActionOpenHint">Buka percakapan untuk melihat balasan terbarunya.</string>
+    <string name="widgetActionSending">Mengirim pesan…</string>
+    <string name="widgetActionEnterMessage">Masukkan pesan dulu</string>
+    <string name="widgetPanelAllProjects">Semua proyek</string>
+    <string name="widgetPanelSave">Simpan pilihan</string>
+    <string name="widgetPanelRecord">Pengetikan suara</string>
+    <string name="widgetPanelFinishRecording">Selesaikan pengetikan suara</string>
+    <string name="widgetPanelListening">Mendengarkan…</string>
+</resources>

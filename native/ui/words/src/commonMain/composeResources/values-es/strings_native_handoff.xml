@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">Continuar en un agente nuevo</string>
+    <string name="nativeHandoffIntro">Elige un agente de este servidor. Revisa el registro de la conversación con datos ocultos y el primer mensaje antes de empezar. La conversación de origen no cambia.</string>
+    <string name="nativeHandoffPreparing">Preparando el registro de la conversación…</string>
+    <string name="nativeHandoffReview">Este registro se guardará en una carpeta nueva ignorada del mismo proyecto. Las credenciales están ocultas; el razonamiento y el contenido de los adjuntos no se incluyen.</string>
+    <string name="nativeHandoffPrompt">Primer mensaje para el agente nuevo</string>
+    <string name="nativeHandoffSend">Iniciar el agente nuevo</string>
+    <string name="nativeHandoffSending">Guardando el registro e iniciando la conversación nueva…</string>
+    <string name="nativeHandoffSucceeded">El agente nuevo recibió el registro de la conversación.</string>
+    <string name="nativeHandoffFailed">No se pudo terminar la transferencia. El origen no cambió. Revisa la conexión y el proyecto, y luego vuelve a abrir esta hoja.</string>
+    <string name="nativeHandoffUnconfirmed">No se pudo confirmar la conversación nueva. Revisa Todas las conversaciones antes de iniciar otra: puede que el agente la haya recibido.</string>
+    <string name="nativeHandoffLinkFailed">El agente nuevo recibió el registro, pero no se pudo guardar el enlace de la conversación. Intenta guardar el enlace otra vez; no se volverá a enviar ningún mensaje.</string>
+    <string name="nativeHandoffSaveLink">Guardar el enlace de la conversación</string>
+</resources>

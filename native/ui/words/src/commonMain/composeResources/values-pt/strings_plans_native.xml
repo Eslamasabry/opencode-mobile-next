@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Lendo o uso dos planos</string>
+    <string name="plansNativeCollectors">Ler limites dos planos</string>
+    <string name="plansNativeCollectorOn">Leitura ativada</string>
+    <string name="plansNativeCollectorOff">Leitura desativada</string>
+    <string name="plansNativeCollectorSetup">Configurar a leitura neste celular</string>
+    <string name="plansNativeCollectorRemote">Permitir a leitura a partir deste servidor</string>
+    <string name="plansNativeCollectorWorking">Atualizando a leitura dos planos</string>
+    <string name="plansNativeCollectorFailed">Não foi possível mudar a leitura dos planos. Verifique o servidor e tente novamente.</string>
+    <string name="plansNativeAlerts">Alertas de limite do plano</string>
+    <string name="plansNativeAlertsBody">Avisa quando um plano legível chega ao nível escolhido. A leitura remota ainda precisa da sua permissão.</string>
+    <string name="plansNativeSetupQuestion">Configurar a leitura dos planos em %1$s?</string>
+    <string name="plansNativeRemoteQuestion">Permitir a leitura dos planos a partir de %1$s?</string>
+    <string name="plansNativeOffQuestion">Desativar a leitura dos planos em %1$s?</string>
+    <string name="plansNativeSetupBody">O app instala o leitor de planos dentro do Ubuntu do app. As credenciais dos provedores ficam no celular.</string>
+    <string name="plansNativeRemoteBody">Lê os limites dos planos a partir do coletor já instalado neste servidor. Esta permissão vale apenas para este servidor e para as contas de provedores que ele informa.</string>
+    <string name="plansNativeOffBody">Para de ler esta fonte e remove a permissão de leitura dela. Os logins dos provedores são mantidos.</string>
+    <string name="plansNativeSetUp">Configurar a leitura</string>
+    <string name="plansNativeAllow">Permitir a leitura</string>
+    <string name="plansNativeTurnOff">Desativar a leitura</string>
+    <string name="plansNativeCancel">Cancelar</string>
+</resources>

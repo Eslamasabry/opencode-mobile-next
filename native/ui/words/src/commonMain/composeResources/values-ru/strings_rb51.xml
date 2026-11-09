@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb51VoiceEnglish">Английский</string>
+    <string name="rb51VoiceArabic">Арабский</string>
+    <string name="rb51VoiceMoreLanguages">Другие языки</string>
+</resources>

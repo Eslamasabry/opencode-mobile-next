@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerLimitApproaching">Perto do limite</string>
+    <string name="composerLimitReached">Limite atingido</string>
+    <string name="composerLimitResetsInHoursMinutes">Renova em %1$d h %2$d min</string>
+    <string name="composerLimitResetsInHours">Renova em %1$d h</string>
+    <string name="composerLimitResetsInMinutes">Renova em %1$d min</string>
+    <string name="composerLimitResetsOnDay">Renova %1$s às %2$s</string>
+    <string name="composerLimitResetsOnDate">Renova %1$s</string>
+    <string name="composerLimitViewUsage">Ver uso</string>
+    <string name="composerLimitDismiss">Dispensar</string>
+    <string name="composerLimitMonday">segunda-feira</string>
+    <string name="composerLimitTuesday">terça-feira</string>
+    <string name="composerLimitWednesday">quarta-feira</string>
+    <string name="composerLimitThursday">quinta-feira</string>
+    <string name="composerLimitFriday">sexta-feira</string>
+    <string name="composerLimitSaturday">sábado</string>
+    <string name="composerLimitSunday">domingo</string>
+    <string name="composerLimitClock12">%1$s %2$s</string>
+    <string name="composerLimitAm">AM</string>
+    <string name="composerLimitPm">PM</string>
+</resources>

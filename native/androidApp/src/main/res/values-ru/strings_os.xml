@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="one">%1$d ждёт вас</item>
+        <item quantity="few">%1$d ждут вас</item>
+        <item quantity="many">%1$d ждут вас</item>
+        <item quantity="other">%1$d ждут вас</item>
+    </plurals>
+    <string name="notifStatusReconnectingGeneric">Повторное подключение</string>
+    <string name="andr_thermalPaused">Телефон нагрелся — AI Team приостановлена, чтобы он остыл. Она возобновится сама.</string>
+    <string name="andr_thermalStopped">Телефон сильно нагрелся — AI Team остановлена, чтобы его защитить. Её работа сохранена, и она запустится снова, когда телефон остынет.</string>
+    <string name="andr_thermalResumed">AI Team возобновлена — телефон остыл.</string>
+</resources>

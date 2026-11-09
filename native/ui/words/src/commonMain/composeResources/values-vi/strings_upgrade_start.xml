@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeStartSending">Đang gửi…</string>
+    <string name="upgradeStartFailed">Tin nhắn của bạn đã được lưu. Hãy thử lại khi bạn sẵn sàng.</string>
+</resources>

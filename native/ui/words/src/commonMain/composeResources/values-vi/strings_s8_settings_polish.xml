@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="vpttAutoSendDetailShort">Gửi sau một khoảng dừng ngắn, có 3 giây để hủy. Giữ nút micro không bao giờ tự gửi.</string>
+    <string name="readAloudVoiceNaturalDetailShort">Tự nhiên hơn và dùng được khi ngoại tuyến. Chỉ có tiếng Anh; các ngôn ngữ khác dùng giọng của điện thoại.</string>
+</resources>

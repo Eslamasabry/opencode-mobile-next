@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">Nhắn vào cuộc trò chuyện này</string>
+    <string name="widgetActionMessage">Tin nhắn</string>
+    <string name="widgetActionHint">Hướng dẫn câu trả lời hiện tại. Nếu tác nhân này không nhận được hướng dẫn khi đang làm việc, tin nhắn của bạn sẽ đi sau câu trả lời của nó.</string>
+    <string name="widgetActionSend">Gửi tin nhắn</string>
+    <string name="widgetActionClose">Đóng</string>
+    <string name="widgetActionOpen">Mở cuộc trò chuyện</string>
+    <string name="widgetActionAccepted">Đã gửi tin nhắn</string>
+    <string name="widgetActionRejected">Cuộc trò chuyện này không nhận được tin nhắn</string>
+    <string name="widgetActionUncertain">Không xác nhận được tin nhắn</string>
+    <string name="widgetActionCheckFirst">Hãy kiểm tra cuộc trò chuyện trước khi gửi lại.</string>
+    <string name="widgetActionOpenHint">Mở cuộc trò chuyện để xem câu trả lời mới nhất.</string>
+    <string name="widgetActionSending">Đang gửi tin nhắn…</string>
+    <string name="widgetActionEnterMessage">Hãy nhập tin nhắn trước</string>
+    <string name="widgetPanelAllProjects">Tất cả dự án</string>
+    <string name="widgetPanelSave">Lưu lựa chọn</string>
+    <string name="widgetPanelRecord">Nhập bằng giọng nói</string>
+    <string name="widgetPanelFinishRecording">Kết thúc nhập bằng giọng nói</string>
+    <string name="widgetPanelListening">Đang nghe…</string>
+</resources>

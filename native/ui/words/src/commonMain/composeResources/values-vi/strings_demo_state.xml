@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">Dùng thử ngoại tuyến</string>
+    <string name="stateDemoTitle">Bản demo ngoại tuyến</string>
+    <string name="stateDemoDisclosure">Cuộc trò chuyện giả lập. Không có máy chủ, tệp hay cài đặt đã lưu nào bị thay đổi. Thoát ra sẽ quên bản demo này.</string>
+    <string name="stateDemoPrompt">Làm lời chào thân thiện hơn.</string>
+    <string name="stateDemoReply">Đây là phản hồi giả lập. Lời chào mẫu có thể đổi từ “Hello” thành “Welcome aboard!”. Hãy cho phép hoặc từ chối chỉnh sửa giả lập bên dưới. Không có tệp thật nào được ghi.</string>
+    <string name="stateDemoAllowed">Bạn đã cho phép chỉnh sửa giả lập. Lời chào mẫu giờ là “Welcome aboard!”. Không có tệp thật nào bị thay đổi.</string>
+    <string name="stateDemoDenied">Bạn đã từ chối chỉnh sửa giả lập. Lời chào mẫu vẫn là “Hello”. Không có tệp thật nào bị thay đổi.</string>
+    <string name="stateDemoAllow">Cho phép chỉnh sửa giả lập</string>
+    <string name="stateDemoDeny">Từ chối chỉnh sửa giả lập</string>
+    <string name="stateDemoReset">Đặt lại bản demo</string>
+    <string name="stateDemoLeave">Thoát bản demo</string>
+</resources>

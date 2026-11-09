@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">Máy chủ</string>
+    <string name="serversNewTitle">Cuộc trò chuyện mới</string>
+    <string name="serversSaved">Máy chủ đã lưu</string>
+    <string name="serversEmpty">Hãy thêm một máy chủ OpenCode 2 để bắt đầu cuộc trò chuyện.</string>
+    <string name="serversAdd">Thêm máy chủ</string>
+    <string name="serversName">Tên</string>
+    <string name="serversAddress">Địa chỉ máy chủ</string>
+    <string name="serversUsername">Tên người dùng</string>
+    <string name="serversPassword">Mật khẩu</string>
+    <string name="serversCleartext">Cho phép HTTP với địa chỉ này</string>
+    <string name="serversCleartextHelp">HTTP không mã hóa mật khẩu hay cuộc trò chuyện của bạn. Chỉ dùng trên mạng bạn tin cậy.</string>
+    <string name="serversCleartextRequired">Hãy xác nhận HTTP cho địa chỉ này trước khi kết nối.</string>
+    <string name="serversConnect">Kết nối</string>
+    <string name="serversConnected">Đã kết nối</string>
+    <string name="serversCreate">Bắt đầu cuộc trò chuyện</string>
+    <string name="serversSave">Lưu và kết nối</string>
+    <string name="serversRemove">Gỡ máy chủ</string>
+    <string name="serversCancel">Hủy</string>
+    <string name="serversRemoveConfirm">Gỡ %1$s và thông tin kết nối đã lưu của nó khỏi ứng dụng này?</string>
+    <string name="serversWorking">Vui lòng chờ thao tác hiện tại hoàn tất.</string>
+    <string name="serversInvalidAddress">Nhập địa chỉ máy chủ.</string>
+    <string name="serversSaveFailed">Không lưu được máy chủ này. Hãy kiểm tra địa chỉ và thử lại.</string>
+    <string name="serversConnectFailed">Không kết nối được. Hãy kiểm tra địa chỉ máy chủ và mạng, rồi thử lại.</string>
+    <string name="serversCreateFailed">Không bắt đầu được cuộc trò chuyện. Máy chủ của bạn vẫn được giữ.</string>
+    <string name="serversRemoveFailed">Không gỡ được máy chủ này. Thông tin đã lưu của nó không thay đổi.</string>
+    <string name="serversSignInFailed">Máy chủ không chấp nhận thông tin đăng nhập này. Hãy kiểm tra tên người dùng và mật khẩu.</string>
+    <string name="serverHttpsRequired">Địa chỉ này nằm trên internet công cộng nên cần HTTPS. HTTP thuần sẽ gửi mật khẩu của bạn không mã hóa. Hãy đổi địa chỉ để bắt đầu bằng https://, hoặc truy cập máy chủ qua Tailscale hay mạng riêng của bạn.</string>
+</resources>

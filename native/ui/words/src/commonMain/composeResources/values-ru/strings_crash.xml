@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Сохранённые данные о сбоях</string>
+    <string name="secCrashCapture">Хранить категории сбоев на этом телефоне</string>
+    <string name="secCrashPrivacy">По умолчанию выключено. Сохраняются только категории и время ошибок, но не сообщения, стеки и чаты.</string>
+    <string name="secCrashClear">Очистить сохранённые данные</string>
+    <string name="secCrashPreview">Предпросмотр отчёта о сбое</string>
+    <string name="secCrashEmpty">Данные о сбоях не сохранены.</string>
+    <string name="secCrashDisabled">Включите сохранение сбоев, чтобы хранить категории будущих ошибок.</string>
+    <string name="secCrashStale">Данные изменились. Перед отправкой снова откройте предпросмотр отчёта.</string>
+    <string name="secCrashBusy">Окно отправки уже открывается.</string>
+    <string name="secCrashUnavailable">Данные о сбоях недоступны. Повторите.</string>
+    <string name="secCrashShareUnavailable">Отправка недоступна. Повторите.</string>
+    <string name="secAppExits">Выходы приложения Android</string>
+    <string name="secHelperExits">Выходы помощника агента</string>
+    <string name="secHistoryRefresh">Обновить историю выходов</string>
+    <string name="secHistoryEmpty">Недавних выходов не зафиксировано.</string>
+    <string name="secHistoryUnavailable">История выходов недоступна.</string>
+    <string name="secHistoryEntry">%1$s · код %2$d</string>
+    <string name="secCrashReportHeader">Отчёт о сбое OpenCode Mobile\nТолько категории и время зафиксированных ошибок.\nСообщения, стеки и чаты не включены.\n\n</string>
+</resources>

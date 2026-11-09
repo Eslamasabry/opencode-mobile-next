@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">Antigravity dans votre terminal</string>
+    <string name="agentPersonaAntigravityAbout">La façon de Google de travailler avec les agents Antigravity, d’abord depuis le terminal.</string>
+    <string name="agentPersonaAntigravityNeeds">Un compte Google\u00A0; connexion dans votre navigateur</string>
+    <string name="agentsAntigravitySignInIntro">Antigravity vous donne un lien de connexion dans le terminal. Ouvrez-le dans votre navigateur et connectez-vous avec Google, puis collez le code du navigateur dans le terminal.</string>
+    <string name="agentsGeminiMigrationNote">Si Gemini CLI vous demande d’utiliser Antigravity, retournez à Agents et installez Antigravity (agy). Vos conversations Gemini restent ici.</string>
+</resources>

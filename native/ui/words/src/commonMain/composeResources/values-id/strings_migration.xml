@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Membuka…</string>
+    <string name="migration_updating">Memperbarui aplikasi Anda…</string>
+    <string name="migration_still_updating">Masih memperbarui. Mulai pertama setelah pembaruan bisa sedikit lebih lama.</string>
+    <string name="migration_try_again">Coba pindahkan data Anda lagi</string>
+    <string name="migration_reenter_title">Beberapa akun masuk perlu Anda lagi</string>
+    <string name="migration_reenter_body">Pembaruan tidak dapat membaca data masuk tersimpan ini. Semua yang lain sudah dipindahkan.</string>
+    <string name="migration_reenter_row_password">%1$s · Masukkan kata sandi</string>
+    <string name="migration_reenter_row_token">%1$s · Masukkan token</string>
+    <string name="migration_reenter_row_github">%1$s · Masuk ke GitHub lagi</string>
+    <string name="migration_reenter_row_byo">%1$s · Siapkan lagi</string>
+    <string name="migration_reenter_unnamed">Server tersimpan</string>
+    <string name="migration_reenter_later">Masuk ke ini nanti</string>
+    <string name="migration_reenter_field_password">Kata sandi untuk %1$s</string>
+    <string name="migration_reenter_field_token">Token untuk %1$s</string>
+    <string name="migration_reenter_save">Simpan</string>
+    <string name="migration_reenter_save_failed">Tidak dapat menyimpannya di ponsel ini. Coba lagi.</string>
+    <string name="migration_reenter_back">Kembali ke daftar</string>
+    <string name="migration_reenter_github_where">Untuk masuk ke GitHub lagi bagi %1$s, buka salah satu percakapannya, lalu Git.</string>
+    <string name="migration_reenter_open_chats">Buka percakapan</string>
+    <string name="migration_reenter_byo_absent">Menyiapkan %1$s lagi belum tersedia di versi ini. Detail tersimpannya tetap di ponsel ini.</string>
+    <string name="migration_failed_title">Pembaruan tidak dapat selesai memindahkan data Anda</string>
+    <string name="migration_failed_body">Tidak ada yang dihapus. Data Anda sebelum pembaruan aman di ponsel ini.</string>
+    <string name="migration_restore_row">Pulihkan data sebelum pembaruan</string>
+    <string name="migration_restore_confirm">Ini mengembalikan pengaturan dan server Anda seperti sebelum pembaruan. Perubahan sejak saat itu disimpan dalam salinan.</string>
+    <string name="migration_restore_confirm_title">Pulihkan data lama?</string>
+    <string name="migration_restore_confirm_action">Pulihkan data sebelum pembaruan</string>
+    <string name="migration_start_fresh_row">Mulai dari awal (menyimpan salinan data lama Anda)</string>
+    <string name="migration_start_fresh_confirm">Anda akan mulai tanpa server tersimpan dan dengan pengaturan default. Salinan data lama Anda tetap di ponsel ini.</string>
+    <string name="migration_start_fresh_confirm_title">Mulai dari awal?</string>
+    <string name="migration_start_fresh_confirm_action">Mulai dari awal dan simpan salinan</string>
+    <string name="migration_report_row">Laporkan masalah</string>
+    <string name="migration_details">Detail · %1$s</string>
+    <string name="migration_space_title">Ponsel Anda hampir penuh</string>
+    <string name="migration_space_body">Pembaruan membutuhkan ruang kosong %1$s untuk menyimpan salinan pengaman data Anda. Kosongkan ruang, lalu coba lagi.</string>
+    <string name="migration_save_failed_title">Tidak dapat menyimpan di ponsel ini</string>
+    <string name="migration_open_storage_row">Buka pengaturan penyimpanan</string>
+    <string name="migration_close">Tutup</string>
+    <string name="migration_deferred_notice">Belum ada di versi ini: %1$s. Data yang Anda simpan untuk fitur itu tetap di ponsel ini, tidak tersentuh.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Memori</string>
+    <string name="migration_deferred_gemma">model AI di ponsel</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Tutup catatan tentang fitur yang belum ada di versi ini</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Caixa de entrada</string>
+    <string name="monitorInboxEmpty">Nenhum pedido ou lembrete dos servidores que você acompanha por enquanto.</string>
+    <string name="monitorInboxFailedRun">Uma execução precisa de atenção</string>
+    <string name="monitorInboxOpening">Abrindo o pedido…</string>
+    <string name="monitorInboxSettings">Escolha quais servidores salvos acompanhar em Notificações.</string>
+    <string name="monitorInboxSwitchBody">Abra o pedido neste servidor. O trabalho que já está em execução nos seus outros servidores continua.</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateNoteTitle">Note de la conversation</string>
+    <string name="stateNoteDescription">Cette note guide les réponses dans cette conversation. Elle est enregistrée sur ce serveur.</string>
+    <string name="stateNoteField">Note pour cette conversation</string>
+    <string name="stateNoteSave">Enregistrer la note</string>
+    <string name="stateNoteRemove">Supprimer la note</string>
+    <string name="stateNoteReload">Relire la note enregistrée</string>
+    <string name="stateNoteWorking">Enregistrement ou lecture de la note. Patientez.</string>
+    <string name="stateNoteReloadFirst">Modifiez d’abord le texte. La note doit être chargée et tenir en 8192 octets encodés.</string>
+    <string name="stateNoteTooLarge">La note est trop longue. Limitez-la à 8192 octets encodés.</string>
+    <string name="stateNoteChanged">La conversation ou sa note enregistrée a changé. Relisez-la avant d’enregistrer.</string>
+    <string name="stateNoteFailed">La note n’a pas pu être lue ou enregistrée. Vérifiez la connexion et réessayez.</string>
+    <string name="stateNoteSaved">Note enregistrée.</string>
+    <string name="stateNoteRemoved">Note supprimée.</string>
+    <string name="stateNoteDiscardTitle">Abandonner cette modification de la note\u00A0?</string>
+    <string name="stateNoteDiscardBody">Votre modification non enregistrée sera perdue. La note enregistrée reste telle quelle.</string>
+    <string name="stateNoteDiscard">Abandonner la modification</string>
+</resources>

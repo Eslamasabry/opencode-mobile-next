@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">URL này đã có trong danh sách cần xem xét của bạn.</string>
+    <string name="webSourcesFullNative">Bạn có thể xem xét tối đa 10 nguồn. Hãy xóa một nguồn trước khi thêm nguồn khác.</string>
+    <string name="webSourcesChooseNative">Hãy chọn ít nhất một nguồn đã xem xét.</string>
+</resources>

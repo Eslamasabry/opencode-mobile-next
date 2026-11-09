@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Mục mức dùng đó đã thay đổi. Hãy làm mới Gói để xem các tài khoản hiện tại.</string>
+    <string name="hub40ContinueOn">Tiếp tục trên %1$s?</string>
+    <string name="hub40ContinueBody">Lối tắt này yêu cầu mở kết nối đã lưu để đăng nhập nhà cung cấp. Sẽ không có gì được gửi cho đến khi bạn tiếp tục.</string>
+    <string name="hub40Continue">Tiếp tục</string>
+</resources>

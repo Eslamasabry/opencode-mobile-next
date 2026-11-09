@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningConnecting">Connexion à %1$s</string>
+    <string name="homeOpeningFailed">%1$s ne répond pas</string>
+    <string name="homeOpeningSavedTitles">Voici les titres de conversation enregistrés la dernière fois. Elles s’ouvrent dès que le serveur répond.</string>
+    <string name="homeOpeningStarting">Démarrage de ce téléphone…</string>
+    <string name="homeOpeningWaiting">Vos conversations s’afficheront ici dès qu’il répondra.</string>
+    <string name="homeOpeningFailedBody">Vérifiez que le serveur est allumé et que ce téléphone peut l’atteindre, puis réessayez.</string>
+    <string name="homeWatchedServers">Serveurs surveillés</string>
+    <string name="homeInboxCount">Boîte de réception · %1$s</string>
+    <string name="homeSourcesFailed">Impossible de modifier les connexions de cette liste. Réessayez.</string>
+    <string name="homeWatchedOpenBody">Nous vérifierons que cette demande précise attend toujours sur ce serveur avant d’ouvrir sa conversation.</string>
+    <string name="homeWatchedOpenFailed">Cette demande n’a pas pu être ouverte. Actualisez les serveurs surveillés et réessayez.</string>
+    <string name="homeRefreshWatched">Actualiser les serveurs surveillés</string>
+    <string name="homeMonitorOff">Désactivée. Activez-la pour vérifier les demandes en attente de ce serveur.</string>
+    <string name="homeMonitorWaiting">En attente de la prochaine vérification</string>
+    <string name="homeMonitorChecking">Vérification des demandes en attente</string>
+    <string name="homeMonitorCurrent">Les demandes en attente sont à jour</string>
+    <string name="homeMonitorUnavailable">Ne répond pas. Ses demandes ne sont pas affichées.</string>
+    <string name="homeMonitorWifi">En attente du Wi-Fi</string>
+    <string name="homeMonitorPaused">Les vérifications sont suspendues tant que l’application et le service en arrière-plan sont arrêtés.</string>
+</resources>

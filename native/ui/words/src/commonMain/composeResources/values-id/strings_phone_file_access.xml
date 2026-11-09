@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSharedAccessTitle">Sudah mengizinkan akses ke file di ponsel ini?</string>
+    <string name="phoneSharedAccessBody">Izinkan akses di pengaturan Android, lalu coba buka file itu lagi.</string>
+</resources>

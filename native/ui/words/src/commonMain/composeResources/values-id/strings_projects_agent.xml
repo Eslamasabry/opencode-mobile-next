@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">Perubahan dan worktree</string>
+    <string name="agentProjectReadFailed">Tindakan proyek ini tidak dapat diselesaikan. Periksa kondisi terbaru sebelum mencoba lagi.</string>
+    <string name="agentProjectNoGit">Folder ini bukan repositori Git.</string>
+    <string name="agentProjectBranch">Branch saat ini</string>
+    <string name="agentProjectBaseBranch">Branch dasar</string>
+    <string name="agentProjectDetached">Checkout terlepas</string>
+    <string name="agentProjectWorkingTree">Working tree</string>
+    <string name="agentProjectBranchChanges">Sejak branch dasar</string>
+    <string name="agentProjectAllFiles">Semua file yang berubah</string>
+    <string name="agentProjectNoPatch">File ini tidak memiliki patch teks.</string>
+    <string name="agentProjectPreviousLines">200 baris sebelumnya</string>
+    <string name="agentProjectNextLines">200 baris berikutnya</string>
+    <string name="agentProjectChangedFiles">File yang berubah</string>
+    <string name="agentProjectNoChanges">Tidak ada perubahan dalam perbandingan ini.</string>
+    <string name="agentProjectLineChanges">%1$d ditambah · %2$d dihapus</string>
+    <string name="agentProjectWorktrees">Worktree</string>
+    <string name="agentProjectNoWorktrees">Tidak ada worktree yang dilaporkan untuk proyek ini.</string>
+    <string name="agentProjectReady">Siap</string>
+    <string name="agentProjectRemove">Hapus worktree</string>
+    <string name="agentProjectWorking">Tunggu hingga tindakan ini selesai.</string>
+    <string name="agentProjectNewWorktree">Worktree baru dengan nama</string>
+    <string name="agentProjectGenerateWorktree">Buat dengan nama otomatis</string>
+    <string name="agentProjectRefresh">Muat ulang status proyek</string>
+    <string name="agentProjectNameInvalid">Gunakan 1–128 huruf, angka, titik, garis bawah, atau tanda hubung. Mulai dengan huruf atau angka dan jangan gunakan dua titik berurutan.</string>
+    <string name="agentProjectWorktreeName">Nama worktree</string>
+    <string name="agentProjectCreate">Buat worktree</string>
+    <string name="agentProjectRemoveQuestion">Hapus “%1$s”?</string>
+    <string name="agentProjectRemoveBody">Mengarsipkan worktree beserta percakapannya, lalu menghapus foldernya: %1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="other">Worktree ini memiliki %1$d file yang berubah. File tersebut akan ikut dihapus bersama folder.</item>
+    </plurals>
+</resources>

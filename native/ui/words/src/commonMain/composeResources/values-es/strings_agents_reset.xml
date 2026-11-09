@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Restablecer inicios de sesión guardados</string>
+    <string name="agentsResetSavedSignInsBody">¿Desconectar todos los servidores y quitar de esta app las contraseñas de servidor guardadas y las claves de acceso del ayudante? Se conservan tus perfiles, conversaciones, proyectos y los inicios de sesión propios de los agentes. Reinicia la app después.</string>
+    <string name="agentsResetSavedSignInsFailed">No se pudieron restablecer todos los inicios de sesión guardados. Inténtalo de nuevo y luego reinicia la app.</string>
+    <string name="agentsRestartAfterReset">Reinicia la app antes de volver a conectar o usar los agentes del teléfono.</string>
+    <string name="agentsHelperStopped">El ayudante de agentes se detuvo de forma inesperada. Revisa la configuración del teléfono antes de iniciar otra conversación.</string>
+    <string name="agentsHelperMayHaveStopped">El ayudante de agentes se detuvo. Es posible que Android lo haya detenido para liberar memoria o limitar los procesos en segundo plano.</string>
+    <string name="agentsPhoneHelperProfile">Agentes del teléfono</string>
+    <string name="agentsPreviousVersion">Usar la versión anterior de %1$s</string>
+    <string name="agentsPreviousVersionBody">¿Cambiar a la versión anterior verificada que se guarda en este teléfono? Primero se detendrá el ayudante y luego los agentes del teléfono se conectarán de nuevo. Se conservan los inicios de sesión y las conversaciones.</string>
+    <string name="agentsPreviousVersionFailed">No se pudo restaurar la versión anterior. Termina cualquier trabajo en curso e inténtalo de nuevo.</string>
+    <string name="agentsPreviousVersionRestored">Se restauró la versión anterior.</string>
+</resources>

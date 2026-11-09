@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s memakan waktu jauh lebih lama dari seharusnya. Coba lagi, atau pakai komputer.</string>
+    <string name="setupUseComputerInstead">Pakai komputer</string>
+    <string name="setupActivityDownloading">Mengunduh file</string>
+    <string name="setupActivityUnpacking">Mengekstrak file</string>
+    <string name="setupActivityConfiguring">Menyiapkan semuanya</string>
+    <string name="setupActivityChecking">Memeriksa yang terpasang</string>
+    <string name="setupActivityWorking">Bekerja</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">Masih bekerja. Langkah yang panjang bisa memakan beberapa menit.</string>
+    <string name="chatModelFailRateLimit">Model sedang sibuk. Ganti model, atau coba lagi dalam beberapa menit.</string>
+    <string name="chatModelFailDailyLimit">Batas harian gratis untuk model ini sudah habis. Ganti model, atau coba lagi besok.</string>
+    <string name="chatModelFailSignIn">Model ini mengharuskan Anda masuk dulu. Masuk, atau ganti model.</string>
+    <string name="chatModelFailQuota">Akun Anda tidak punya kredit lagi untuk model ini. Tambah kredit, atau ganti model.</string>
+    <string name="chatModelFailGeneric">Model tidak bisa menjawab. Ganti model, atau coba lagi.</string>
+    <string name="chatModelFailSwitch">Ganti model</string>
+    <string name="chatModelFailSignInAction">Masuk</string>
+    <string name="chatStalledOnTool">Masih menunggu %1$s.</string>
+    <string name="chatStalledStop">Hentikan</string>
+</resources>

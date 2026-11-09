@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxExitForceStop">Aplikasi ditutup saat OpenCode sedang berjalan</string>
+    <string name="linuxExitMemory">Android menutup aplikasi untuk mengosongkan memori</string>
+    <string name="linuxExitMemoryLimit">Android menutup aplikasi karena mencapai batas memori</string>
+    <string name="linuxExitCrash">Aplikasi mengalami crash saat OpenCode sedang berjalan</string>
+    <string name="linuxExitKilled">Android menghentikan aplikasi saat OpenCode sedang berjalan</string>
+    <string name="linuxExitRestored">OpenCode berjalan lagi.</string>
+    <string name="linuxExitCheckStatus">Periksa status server saat ini di bawah.</string>
+    <string name="linuxExitPolicyOff">Mulai ulang otomatis nonaktif. Anda bisa memulai OpenCode saat siap.</string>
+</resources>

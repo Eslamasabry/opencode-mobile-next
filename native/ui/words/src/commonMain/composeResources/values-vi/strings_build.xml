@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeCapabilitiesDetail">Xem ứng dụng này làm được gì và mở phần thiết lập khi có.</string>
+    <string name="nativeCapabilityOpenFailed">Không mở được phần thiết lập này. Kiểm tra máy chủ đã chọn rồi thử lại.</string>
+    <string name="nativeCapabilityAddServerTitle">Kết nối máy chủ</string>
+    <string name="nativeCapabilityAddServerDetail">Lưu địa chỉ máy chủ bạn chạy trên máy tính.</string>
+    <string name="nativeCapabilityPhoneSetupTitle">Thiết lập điện thoại này</string>
+    <string name="nativeCapabilityPhoneSetupDetail">Cài môi trường Linux và máy chủ trên điện thoại này.</string>
+    <string name="nativeCapabilityServerGenerationTitle">Dùng OpenCode 2</string>
+    <string name="nativeCapabilityServerGenerationDetail">Thiết lập phiên bản máy chủ bạn muốn dùng.</string>
+    <string name="nativeCapabilityAddServerCodexTitle">Kết nối Codex</string>
+    <string name="nativeCapabilityAddServerCodexDetail">Kết nối Codex trên máy tính của bạn.</string>
+    <string name="nativeCapabilityAddServerPaseoTitle">Kết nối Paseo</string>
+    <string name="nativeCapabilityAddServerPaseoDetail">Kết nối các tác nhân trên máy tính Paseo của bạn.</string>
+    <string name="nativeCapabilityModelSignInTitle">Đăng nhập nhà cung cấp mô hình</string>
+    <string name="nativeCapabilityModelSignInDetail">Quản lý tài khoản nhà cung cấp cho máy chủ đã chọn.</string>
+    <string name="nativeCapabilityTeamTurnOnTitle">Thiết lập AI Team</string>
+    <string name="nativeCapabilityTeamTurnOnDetail">Mở phần thiết lập nhóm cho dự án của bạn.</string>
+    <string name="nativeCapabilityTeamHostGuideTitle">Kết nối máy chủ của nhóm</string>
+    <string name="nativeCapabilityTeamHostGuideDetail">Mở hướng dẫn thiết lập cho máy tính của nhóm bạn.</string>
+    <string name="nativeCapabilityVoiceModelSetupTitle">Thiết lập nhập bằng giọng nói</string>
+    <string name="nativeCapabilityVoiceModelSetupDetail">Chọn và tải mô hình nhận dạng giọng nói chạy trên thiết bị.</string>
+    <string name="nativeCapabilityMcpAddTitle">Thêm công cụ MCP</string>
+    <string name="nativeCapabilityMcpAddDetail">Kết nối một công cụ với máy chủ đã chọn.</string>
+    <string name="nativeCapabilityProjectChooseTitle">Mở một dự án</string>
+    <string name="nativeCapabilityProjectChooseDetail">Chọn thư mục bạn muốn làm việc.</string>
+    <string name="nativeCapabilityProjectGitInitTitle">Thiết lập Git cho dự án</string>
+    <string name="nativeCapabilityProjectGitInitDetail">Mở phần thiết lập Git của dự án.</string>
+    <string name="nativeCapabilityAllowNotificationsTitle">Cho phép thông báo</string>
+    <string name="nativeCapabilityAllowNotificationsDetail">Chọn những gì ứng dụng báo cho bạn khi bạn vắng mặt.</string>
+    <string name="nativeCapabilityAllowBackgroundTitle">Giữ chạy nền</string>
+    <string name="nativeCapabilityAllowBackgroundDetail">Mở cài đặt nền và pin của Android.</string>
+    <string name="nativeCapabilityAllowCameraTitle">Cho phép dùng camera</string>
+    <string name="nativeCapabilityAllowCameraDetail">Cho phép dùng camera để ghép nối và chụp ảnh.</string>
+    <string name="nativeCapabilityAllowMicrophoneTitle">Cho phép dùng micrô</string>
+    <string name="nativeCapabilityAllowMicrophoneDetail">Cho phép dùng micrô để nhập bằng giọng nói.</string>
+    <string name="nativeCapabilityTailscaleSetupTitle">Kết nối qua Tailscale</string>
+    <string name="nativeCapabilityTailscaleSetupDetail">Thiết lập truy cập riêng tới máy tính của bạn.</string>
+    <string name="nativeCapabilityQuotaCollectorGuideTitle">Thiết lập đo mức sử dụng</string>
+    <string name="nativeCapabilityQuotaCollectorGuideDetail">Mở phần thiết lập đo mức sử dụng gói đăng ký.</string>
+    <string name="nativeCapabilityAddExternalAgentTitle">Kết nối tác nhân bên ngoài</string>
+    <string name="nativeCapabilityAddExternalAgentDetail">Kết nối một tác nhân qua thẻ tác nhân đã công bố.</string>
+    <string name="nativeCapabilityTeamDeferred">AI Team sẽ có sau khi chuyển sang bản gốc. Dữ liệu nhóm hiện có vẫn ở trên điện thoại này.</string>
+    <string name="nativeCapabilityExternalDropped">Tác nhân từ ứng dụng khác không thuộc ứng dụng này. Dữ liệu đã lưu của bạn được giữ nguyên.</string>
+</resources>

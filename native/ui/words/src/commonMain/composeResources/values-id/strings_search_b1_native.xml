@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="searchB1Web">Web</string>
+    <string name="searchB1InsideMessages">Di dalam pesan</string>
+    <string name="searchB1AboutOptions">Tentang opsi pencarian</string>
+    <string name="searchB1OptionsTitle">Opsi pencarian</string>
+    <string name="searchB1ChooseServer">Pilih server yang dicari</string>
+    <string name="searchB1RecentConversations">Percakapan terbaru</string>
+    <string name="searchB1Clear">Hapus</string>
+    <string name="searchB1Conversations">Percakapan</string>
+    <string name="searchB1Places">Pengaturan dan halaman</string>
+    <string name="searchB1SeeAll">Lihat semua %1$s</string>
+    <string name="searchB1SeeAllSpoken">Lihat semua %1$s percakapan</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="other">%1$s percakapan</item>
+    </plurals>
+</resources>

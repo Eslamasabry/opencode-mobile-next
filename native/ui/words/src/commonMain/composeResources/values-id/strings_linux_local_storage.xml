@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">Jelajahi proyek ponsel</string>
+    <string name="linuxLocalProjectsDetail">Jelajahi folder saat server dihentikan, termasuk proyek yang dipertahankan setelah Linux dihapus.</string>
+    <string name="linuxLocalParent">Naik satu folder</string>
+    <string name="linuxLocalClose">Tutup folder</string>
+    <string name="linuxLocalGit">Proyek Git</string>
+    <string name="linuxLocalFolder">Folder</string>
+    <string name="linuxLocalReading">Membaca folder…</string>
+    <string name="linuxLocalFolderFailed">Folder ini tidak dapat dibaca. Mungkin dipindahkan, dihapus, atau berupa tautan.</string>
+    <string name="linuxLocalEmpty">Tidak ada folder di sini.</string>
+    <string name="linuxLocalMeasure">Ukur pilihan penghapusan Linux</string>
+    <string name="linuxLocalRemoveKeep">Hapus Linux, pertahankan proyek</string>
+    <string name="linuxLocalRemoveAll">Hapus Linux dan proyek</string>
+    <string name="linuxLocalFreed">Membebaskan %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">Hapus Linux dan pertahankan proyek?</string>
+    <string name="linuxLocalRemoveAllQuestion">Hapus Linux dan semua proyek ponsel?</string>
+    <string name="linuxLocalRemoveKeepBody">Menghentikan program ponsel dan menghapus Linux, alat terinstal, data masuk, dan riwayat server lokal. File proyek Anda tetap bisa dijelajahi. Membebaskan %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Menghentikan program ponsel dan menghapus Linux, alat terinstal, data masuk, riwayat server lokal, dan semua file proyek ponsel yang dipertahankan. Tindakan ini tidak dapat dibatalkan. Membebaskan %1$s.</string>
+    <string name="linuxLocalStorageFailed">Ponsel tidak dapat menyelesaikan pembacaan atau penghapusan penyimpanan Linux. Tutup tugas ponsel dan coba lagi.</string>
+    <string name="linuxLocalRemoved">Penyimpanan Linux dihapus.</string>
+    <string name="linuxLocalCreate">Buat proyek ponsel</string>
+    <string name="linuxLocalCreatePath">Jalur folder proyek absolut</string>
+    <string name="linuxLocalInvalidPath">Masukkan jalur folder absolut tanpa traversal induk atau jeda baris.</string>
+</resources>

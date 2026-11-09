@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">La conexión en segundo plano se pausó %1$s para ahorrar batería.</string>
+    <string name="background_pause_restricted">Conexión en segundo plano pausada: el uso de batería está restringido.</string>
+    <string name="background_pause_user_stopped">La conexión en segundo plano se detuvo cuando se cerró la app %1$s.</string>
+    <string name="background_pause_app_updated">La conexión en segundo plano se detuvo cuando se actualizó la app %1$s.</string>
+    <string name="background_pause_interrupted">La conexión en segundo plano se detuvo por un motivo desconocido.</string>
+    <string name="background_pause_device_restarted">La conexión en segundo plano se detuvo cuando se reinició el teléfono.</string>
+    <string name="background_pause_resume">Reanudar la conexión en segundo plano</string>
+    <string name="background_pause_resume_short">Reanudar</string>
+    <string name="background_pause_resuming">Reanudando la conexión en segundo plano…</string>
+    <string name="background_pause_resume_failed">No se pudo reanudar. Abre los ajustes de Mantener en ejecución.</string>
+    <string name="background_pause_open_keep_running">Abrir ajustes de Mantener en ejecución</string>
+    <string name="background_pause_resumed">Conexión en segundo plano reanudada.</string>
+    <string name="background_error_notifications_required">Se necesita acceso a las notificaciones.</string>
+    <string name="background_error_could_not_change">Android no pudo cambiar el modo en segundo plano.</string>
+    <string name="background_error_android_app_only">El modo en vivo en segundo plano solo está disponible en la app de Android.</string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Leyendo el uso del plan</string>
+    <string name="plansNativeCollectors">Leer límites del plan</string>
+    <string name="plansNativeCollectorOn">Lectura activada</string>
+    <string name="plansNativeCollectorOff">Lectura desactivada</string>
+    <string name="plansNativeCollectorSetup">Configurar la lectura en este teléfono</string>
+    <string name="plansNativeCollectorRemote">Permitir la lectura desde este servidor</string>
+    <string name="plansNativeCollectorWorking">Actualizando la lectura del plan</string>
+    <string name="plansNativeCollectorFailed">No se pudo cambiar la lectura del plan. Revisa el servidor e inténtalo de nuevo.</string>
+    <string name="plansNativeAlerts">Avisos de límite del plan</string>
+    <string name="plansNativeAlertsBody">Avisa cuando un plan legible llega al nivel elegido. La lectura remota sigue necesitando tu permiso.</string>
+    <string name="plansNativeSetupQuestion">¿Configurar la lectura del plan en %1$s?</string>
+    <string name="plansNativeRemoteQuestion">¿Permitir la lectura del plan desde %1$s?</string>
+    <string name="plansNativeOffQuestion">¿Desactivar la lectura del plan en %1$s?</string>
+    <string name="plansNativeSetupBody">La app instala su lector de planes dentro del Ubuntu de la app. Las credenciales de los proveedores se quedan en el teléfono.</string>
+    <string name="plansNativeRemoteBody">Lee los límites del plan desde el recolector ya instalado en este servidor. Este permiso se aplica solo a este servidor y a las cuentas de proveedores que informa.</string>
+    <string name="plansNativeOffBody">Deja de leer esta fuente y quita su permiso de lectura. Los inicios de sesión de los proveedores se conservan.</string>
+    <string name="plansNativeSetUp">Configurar la lectura</string>
+    <string name="plansNativeAllow">Permitir la lectura</string>
+    <string name="plansNativeTurnOff">Desactivar la lectura</string>
+    <string name="plansNativeCancel">Cancelar</string>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">Herramientas de la conversación</string>
+    <string name="sessionTransferWait">Terminando esta acción…</string>
+    <string name="sessionTransferExport">Guardar una copia completa</string>
+    <string name="sessionTransferRedact">Ocultar valores privados</string>
+    <string name="sessionTransferRedactBody">El servidor reemplaza los valores sensibles en la copia exportada.</string>
+    <string name="sessionTransferSave">Guardar archivo JSON</string>
+    <string name="sessionTransferImport">Importar una conversación</string>
+    <string name="sessionTransferChoose">Elegir archivo JSON</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="one">1 registro de mensaje</item>
+        <item quantity="many">%1$d de registros de mensajes</item>
+        <item quantity="other">%1$d registros de mensajes</item>
+    </plurals>
+    <string name="sessionTransferRedacted">Esta copia incluye valores ocultos. La importación conserva esos marcadores.</string>
+    <string name="sessionTransferDestination">Importar en esta carpeta del servidor</string>
+    <string name="sessionTransferDestinationRequired">Primero elige una carpeta de destino.</string>
+    <string name="sessionTransferImportAction">Importar la conversación revisada</string>
+    <string name="sessionTransferNote">Nota de la conversación</string>
+    <string name="sessionTransferLoadNote">Leer la nota actual</string>
+    <string name="sessionTransferSaveNote">Guardar nota</string>
+    <string name="sessionTransferRemoveNote">Quitar nota</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="one">La nota debe caber en 1 byte codificado. Acórtala e inténtalo de nuevo.</item>
+        <item quantity="many">La nota debe caber en %1$d de bytes codificados. Acórtala e inténtalo de nuevo.</item>
+        <item quantity="other">La nota debe caber en %1$d bytes codificados. Acórtala e inténtalo de nuevo.</item>
+    </plurals>
+    <string name="sessionTransferSaved">Conversación guardada.</string>
+    <string name="sessionTransferImported">Conversación importada.</string>
+    <string name="sessionTransferNoteSaved">Nota guardada.</string>
+    <string name="sessionTransferNoteRemoved">Nota quitada.</string>
+    <string name="sessionTransferInvalid">Elige una exportación JSON de OpenCode válida.</string>
+    <string name="sessionTransferLarge">Elige una exportación menor de 128 MiB.</string>
+    <string name="sessionTransferChanged">La conexión con el servidor cambió. Vuelve a abrir estas herramientas antes de continuar.</string>
+    <string name="sessionTransferSignIn">El servidor denegó el acceso. Revisa tu inicio de sesión en el servidor e inténtalo de nuevo.</string>
+    <string name="sessionTransferConflict">Ya existe una conversación con esta identidad. Elige otro destino o revísala en el servidor.</string>
+    <string name="sessionTransferUnsupported">Este servidor no permite transferir conversaciones.</string>
+    <string name="sessionTransferFailed">No se pudo completar esta acción. Revisa la conexión e inténtalo de nuevo.</string>
+    <string name="sessionTransferReference">Referenciar una carpeta del servidor</string>
+    <string name="sessionTransferReferencePath">Ruta completa de la carpeta en este servidor</string>
+    <string name="sessionTransferReferenceBody">Agrega una referencia de carpeta a tu próximo mensaje. La carpeta permanece en el servidor.</string>
+    <string name="sessionTransferReferenceAdd">Agregar referencia de carpeta</string>
+    <string name="sessionTransferReferenceRequired">Primero escribe la ruta de la carpeta del servidor.</string>
+    <string name="sessionTransferReferenceAdded">Referencia de carpeta agregada a tu borrador.</string>
+    <string name="sessionTransferReferenceInvalid">Escribe una ruta de carpeta absoluta en el servidor.</string>
+</resources>

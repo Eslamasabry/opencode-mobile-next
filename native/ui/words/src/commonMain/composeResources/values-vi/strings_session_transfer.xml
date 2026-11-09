@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">Công cụ cuộc trò chuyện</string>
+    <string name="sessionTransferWait">Đang hoàn tất thao tác này…</string>
+    <string name="sessionTransferExport">Lưu bản sao đầy đủ</string>
+    <string name="sessionTransferRedact">Ẩn các giá trị riêng tư</string>
+    <string name="sessionTransferRedactBody">Máy chủ sẽ thay các giá trị nhạy cảm trong bản sao đã xuất.</string>
+    <string name="sessionTransferSave">Lưu tệp JSON</string>
+    <string name="sessionTransferImport">Nhập một cuộc trò chuyện</string>
+    <string name="sessionTransferChoose">Chọn tệp JSON</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="other">%1$d bản ghi tin nhắn</item>
+    </plurals>
+    <string name="sessionTransferRedacted">Bản sao này có các giá trị đã ẩn. Khi nhập, các chỗ giữ chỗ đó vẫn được giữ.</string>
+    <string name="sessionTransferDestination">Nhập vào thư mục máy chủ này</string>
+    <string name="sessionTransferDestinationRequired">Hãy chọn thư mục đích trước.</string>
+    <string name="sessionTransferImportAction">Nhập cuộc trò chuyện đã xem lại</string>
+    <string name="sessionTransferNote">Ghi chú cuộc trò chuyện</string>
+    <string name="sessionTransferLoadNote">Đọc ghi chú hiện tại</string>
+    <string name="sessionTransferSaveNote">Lưu ghi chú</string>
+    <string name="sessionTransferRemoveNote">Xóa ghi chú</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="other">Ghi chú phải vừa trong %1$d byte đã mã hóa. Hãy rút ngắn và thử lại.</item>
+    </plurals>
+    <string name="sessionTransferSaved">Đã lưu cuộc trò chuyện.</string>
+    <string name="sessionTransferImported">Đã nhập cuộc trò chuyện.</string>
+    <string name="sessionTransferNoteSaved">Đã lưu ghi chú.</string>
+    <string name="sessionTransferNoteRemoved">Đã xóa ghi chú.</string>
+    <string name="sessionTransferInvalid">Hãy chọn một tệp xuất JSON OpenCode hợp lệ.</string>
+    <string name="sessionTransferLarge">Hãy chọn tệp xuất nhỏ hơn 128 MiB.</string>
+    <string name="sessionTransferChanged">Kết nối máy chủ đã thay đổi. Hãy mở lại các công cụ này trước khi tiếp tục.</string>
+    <string name="sessionTransferSignIn">Máy chủ từ chối truy cập. Hãy kiểm tra đăng nhập máy chủ của bạn và thử lại.</string>
+    <string name="sessionTransferConflict">Đã có một cuộc trò chuyện với cùng danh tính này. Hãy chọn đích khác hoặc xem lại trên máy chủ.</string>
+    <string name="sessionTransferUnsupported">Máy chủ này không hỗ trợ chuyển cuộc trò chuyện.</string>
+    <string name="sessionTransferFailed">Không hoàn tất được thao tác này. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="sessionTransferReference">Tham chiếu một thư mục máy chủ</string>
+    <string name="sessionTransferReferencePath">Đường dẫn đầy đủ của thư mục trên máy chủ này</string>
+    <string name="sessionTransferReferenceBody">Thêm tham chiếu thư mục vào lời nhắc tiếp theo của bạn. Thư mục vẫn nằm trên máy chủ.</string>
+    <string name="sessionTransferReferenceAdd">Thêm tham chiếu thư mục</string>
+    <string name="sessionTransferReferenceRequired">Hãy nhập đường dẫn thư mục trên máy chủ trước.</string>
+    <string name="sessionTransferReferenceAdded">Đã thêm tham chiếu thư mục vào bản nháp của bạn.</string>
+    <string name="sessionTransferReferenceInvalid">Nhập đường dẫn tuyệt đối của thư mục trên máy chủ.</string>
+</resources>

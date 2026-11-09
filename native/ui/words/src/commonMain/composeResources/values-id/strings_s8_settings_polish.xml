@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="vpttAutoSendDetailShort">Terkirim setelah jeda singkat, dengan 3 detik untuk membatalkan. Menahan mikrofon tidak pernah mengirim.</string>
+    <string name="readAloudVoiceNaturalDetailShort">Lebih natural dan berfungsi offline. Hanya bahasa Inggris; bahasa lain memakai suara ponsel.</string>
+</resources>

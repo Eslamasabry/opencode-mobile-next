@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">Dịch vụ</string>
+    <string name="keptSvcFailed">Dịch vụ không thể hoàn tất việc đó</string>
+    <string name="keptSvcFailedBody">Hãy kiểm tra Linux đã được thiết lập chưa, rồi thử lại. Các lựa chọn dịch vụ đã lưu của bạn được giữ nguyên.</string>
+    <string name="keptSvcAdd">Thêm dịch vụ</string>
+    <string name="keptSvcKeepsRunning">Dịch vụ bạn khởi động sẽ tiếp tục chạy sau khi gặp sự cố hoặc khi mở lại ứng dụng, cho đến khi bạn dừng nó.</string>
+    <string name="keptSvcEmpty">Chưa có dịch vụ nào. Hãy thêm lệnh của bạn để giữ nó luôn chạy.</string>
+    <string name="keptSvcScreenOff">Dịch vụ có thể tạm dừng khi màn hình tắt, trừ khi điện thoại đang sạc.</string>
+    <string name="keptSvcStartNamed">Khởi động %1$s</string>
+    <string name="keptSvcStopNamed">Dừng %1$s</string>
+    <string name="keptSvcRestartNamed">Khởi động lại %1$s</string>
+    <string name="keptSvcOpenNamed">Mở %1$s</string>
+    <string name="keptSvcRemoveNamed">Xóa %1$s</string>
+    <string name="keptSvcWorking">Đang hoàn tất thao tác với dịch vụ…</string>
+    <string name="keptSvcCopyLog">Sao chép nhật ký</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="other">Đã chạy lại sau %1$d lần khởi động lại</item>
+    </plurals>
+    <string name="keptSvcLogTitle">Nhật ký dịch vụ</string>
+    <string name="keptSvcSearchLog">Tìm trong nhật ký</string>
+    <string name="keptSvcLogEmpty">Chưa có đầu ra.</string>
+    <string name="keptSvcRemoveQuestion">Xóa %1$s?</string>
+    <string name="keptSvcRemoveBody">Dịch vụ sẽ dừng trước khi định nghĩa và nhật ký đã lưu của nó bị xóa.</string>
+    <string name="keptSvcRemoveGoes">Lệnh, lựa chọn bật/tắt và nhật ký của nó sẽ bị xóa.</string>
+    <string name="keptSvcRemoveStays">Các công cụ đã cài và tệp dự án vẫn còn.</string>
+    <string name="keptSvcSaveStart">Lưu và khởi động dịch vụ</string>
+    <string name="keptSvcName">Tên</string>
+    <string name="keptSvcNameHint">2–24 chữ thường, số hoặc dấu gạch ngang; bắt đầu bằng chữ cái.</string>
+    <string name="keptSvcCommand">Lệnh</string>
+    <string name="keptSvcDirectory">Thư mục trong Linux</string>
+    <string name="keptSvcPort">Cổng (không bắt buộc)</string>
+    <string name="keptSvcPortHint">Một cổng trống từ 1024 đến 65535. Để trống nếu dịch vụ không có trang web.</string>
+    <string name="keptSvcBadName">Hãy chọn tên khác theo định dạng ở trên. Tên dịch vụ của ứng dụng được dành riêng.</string>
+    <string name="keptSvcBadCommand">Nhập một dòng lệnh, tối đa 4096 ký tự.</string>
+    <string name="keptSvcBadDirectory">Dùng thư mục Linux tuyệt đối, không có đoạn thư mục cha (..).</string>
+    <string name="keptSvcBadPort">Chọn một cổng chưa dùng từ 1024 đến 65535, nằm ngoài các cổng ứng dụng đã dành riêng.</string>
+    <string name="keptSvcRestart">Khởi động lại sau khi gặp sự cố</string>
+    <string name="keptSvcRestartBody">Thử lại sau khi lỗi; dừng nếu sự cố liên tục xảy ra nhanh.</string>
+    <string name="keptSvcLimit">Đã có 16 dịch vụ. Hãy xóa một dịch vụ trước khi thêm cái khác.</string>
+    <string name="keptSvcPaused">Tạm dừng khi điện thoại nóng</string>
+    <string name="keptSvcOff">Tắt</string>
+    <string name="keptSvcStarting">Đang khởi động…</string>
+    <string name="keptSvcRunning">Đang chạy</string>
+    <string name="keptSvcRunningFor">Đã chạy %1$d phút</string>
+    <string name="keptSvcStopping">Đang dừng…</string>
+    <string name="keptSvcRetrying">Gặp sự cố (mã %1$d). Thử lại sau %2$d giây</string>
+    <string name="keptSvcPortBusy">Cổng %1$d đang bận. Sẽ thử lại sớm.</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="other">Đã dừng sau các sự cố lặp lại (%1$d lần khởi động lại)</item>
+    </plurals>
+    <string name="keptSvcExited">Đã kết thúc (mã %1$d)</string>
+    <string name="keptSvcPortNumber">Cổng %1$d</string>
+    <string name="keptSvcLogStarted">Đã khởi động</string>
+    <string name="keptSvcLogExit">Đã kết thúc (mã %1$d)</string>
+    <string name="keptSvcLogRetry">Thử lại sau %1$d giây</string>
+    <string name="keptSvcLogGaveUp">Đã dừng sau các sự cố lặp lại</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">Bukti error tersimpan</string>
+    <string name="secCrashCapture">Simpan kategori error di ponsel ini</string>
+    <string name="secCrashPrivacy">Nonaktif secara default. Hanya menyimpan kategori dan waktu error, tidak pernah pesan, stack, atau percakapan.</string>
+    <string name="secCrashClear">Hapus bukti tersimpan</string>
+    <string name="secCrashPreview">Pratinjau laporan error</string>
+    <string name="secCrashEmpty">Belum ada bukti error yang tersimpan.</string>
+    <string name="secCrashDisabled">Aktifkan perekaman error untuk menyimpan kategori error berikutnya.</string>
+    <string name="secCrashStale">Bukti berubah. Pratinjau laporan lagi sebelum membagikan.</string>
+    <string name="secCrashBusy">Lembar berbagi sedang dibuka.</string>
+    <string name="secCrashUnavailable">Bukti error tidak tersedia. Coba lagi.</string>
+    <string name="secCrashShareUnavailable">Berbagi tidak tersedia. Coba lagi.</string>
+    <string name="secAppExits">Keluar aplikasi Android</string>
+    <string name="secHelperExits">Keluar pembantu agen</string>
+    <string name="secHistoryRefresh">Muat ulang riwayat keluar</string>
+    <string name="secHistoryEmpty">Tidak ada keluar terbaru yang tercatat.</string>
+    <string name="secHistoryUnavailable">Riwayat keluar tidak tersedia.</string>
+    <string name="secHistoryEntry">%1$s · kode %2$d</string>
+    <string name="secCrashReportHeader">Laporan error OpenCode Mobile\nHanya kategori dan waktu error yang direkam.\nTidak ada pesan, stack, atau percakapan yang disertakan.\n\n</string>
+</resources>

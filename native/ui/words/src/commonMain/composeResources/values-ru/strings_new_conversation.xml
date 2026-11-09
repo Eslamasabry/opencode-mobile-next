@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">Модель по умолчанию</string>
+    <string name="p12NewDefaultAgent">Агент по умолчанию</string>
+    <string name="p12NewAgent">Агент</string>
+    <string name="p12NewFolder">Папка проекта</string>
+    <string name="p12NewUseFolder">Использовать эту папку</string>
+    <string name="p12NewDraftFailed">Не удалось сохранить сообщение на этом телефоне. Не закрывайте эту страницу и повторите попытку.</string>
+    <string name="p12NewCreationUnconfirmed">Сервер не подтвердил, был ли создан чат. Прежде чем начинать другой, проверьте раздел «Чаты». Ваше сообщение сохранено здесь.</string>
+    <string name="p12NewBoundProject">Это подключение использует свою сохранённую папку проекта. Чтобы работать с другой папкой, добавьте ещё одно подключение.</string>
+    <string name="p12NewDeliveryUnconfirmed">Сервер не подтвердил это сообщение. Откройте созданный чат и проверьте его, прежде чем начинать другой. Ваш текст сохранён здесь.</string>
+    <string name="p12NewOpenCreated">Открыть созданный чат</string>
+    <string name="chatsNewFolderMissing">Папки этого проекта больше нет на сервере. Создайте её заново как пустой проект или выберите другой проект.</string>
+    <string name="chatsNewFolderRemake">Создать папку заново</string>
+    <string name="chatsNewFolderChooseAnother">Выбрать другой проект</string>
+    <string name="chatSendFolderMissing">Папки этого проекта больше нет на сервере, поэтому сообщение не отправлено. Начните новый чат, чтобы создать папку заново, или выберите другой проект.</string>
+</resources>

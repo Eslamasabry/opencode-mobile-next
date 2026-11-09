@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">Загружаем голосовой набор</string>
+    <string name="r40SetupVoiceVerifying">Проверяем файлы голосового набора</string>
+    <string name="r40SetupRequired">Обязательно</string>
+    <string name="r40SetupWorking">Дождитесь завершения текущего действия.</string>
+    <string name="r40SetupTotals">%1$s · около %2$s мин</string>
+    <string name="r40SetupCouldNotCheck">Не удалось проверить установленные инструменты или настройку. Повторите попытку.</string>
+    <string name="r40SetupRetry">Повторить</string>
+    <string name="r40SetupActionFailed">Не удалось завершить. Повторите попытку.</string>
+    <string name="r40SetupCheckDevice">Прежде чем начать, выполните требования к телефону выше.</string>
+    <string name="r40SetupStorageUnopened">Не удалось открыть настройки хранилища. Освободите место в настройках телефона и повторите попытку.</string>
+    <string name="r40SetupRemoveVoiceTitle">Удалить голосовой набор?</string>
+    <string name="r40SetupRemoveVoiceBody">Загруженные речевые модели будут удалены из этого приложения. Ваши чаты сохранятся. Голосовой набор можно загрузить снова позже.</string>
+    <string name="r40SetupRemoveVoice">Удалить голосовой набор</string>
+    <string name="r40SetupKeepVoice">Оставить голосовой набор</string>
+    <string name="r40SetupRemoveVoiceFailed">Не удалось удалить голосовой набор. Завершите активную запись или загрузку и повторите попытку.</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">Готово</string>
+    <string name="r40SetupComponentInstalled">Уже установлено</string>
+    <string name="r40SetupComponentChecking">Проверяем…</string>
+    <string name="r40SetupComponentRunning">Устанавливаем…</string>
+    <string name="r40SetupComponentFailed">Не завершено</string>
+    <string name="r40SetupComponentPending">Ожидание</string>
+    <string name="r40WelcomePhone">На этом телефоне</string>
+    <string name="r40WelcomePhoneBody">Запускайте OpenCode прямо здесь. Компьютер не нужен.</string>
+    <string name="r40WelcomeComputer">На моём компьютере</string>
+    <string name="r40WelcomeComputerBody">Подключитесь к компьютеру, на котором работает OpenCode.</string>
+    <string name="r40WelcomeRunning">Настройка выполнена на %1$s%</string>
+    <string name="r40WelcomeStopped">Настройка остановилась на %1$s%</string>
+    <string name="r40WelcomeSetupBody">Загружает закрытое рабочее пространство Linux и инструменты, нужные OpenCode. Перед началом выберите, что устанавливать.</string>
+    <string name="r40WelcomeViewProgress">Посмотреть ход настройки</string>
+</resources>

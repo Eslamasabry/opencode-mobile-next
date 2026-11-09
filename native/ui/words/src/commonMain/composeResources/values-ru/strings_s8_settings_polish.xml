@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="vpttAutoSendDetailShort">Отправляет после короткой паузы, у вас есть 3 секунды, чтобы отменить. Удержание микрофона никогда не отправляет.</string>
+    <string name="readAloudVoiceNaturalDetailShort">Звучит естественнее и работает без сети. Только английский; для других языков используется голос телефона.</string>
+</resources>

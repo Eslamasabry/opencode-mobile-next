@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryUsageTitle">Penggunaan dan kesehatan aplikasi</string>
+    <string name="telemetryUsageDetail">Mengirim hitungan anonim ke Google Analytics for Firebase: jenis halaman dan fitur yang Anda gunakan, apakah koneksi, pengiriman, penyiapan, agen, layanan latar belakang, dan pembaruan berhasil, kecepatan aplikasi dimulai dan kelancaran halaman, peringatan memori, serta rentang memori, penyimpanan kosong, CPU, dan versi WebView ponsel Anda. Juga mengirim waktu ke Firebase Performance Monitoring: lama aplikasi dimulai, menghubungkan, balasan pertama, langkah penyiapan, dan memulai agen. Hanya kata baku, rentang, dan angka, dengan ID instalasi acak, model ponsel, dan versi Android Anda. Tanpa kode, percakapan, file, alamat, kunci, atau ID iklan.</string>
+    <string name="telemetryCrashesTitle">Laporan crash</string>
+    <string name="telemetryCrashesDetail">Mengirim laporan crash ke Google Firebase Crashlytics: jenis kesalahan dan lokasinya di kode aplikasi, tanpa pesannya, langkah terakhir Anda dalam kata singkat, dan alasan Android menutup aplikasi terakhir kali. Tanpa kode, percakapan, file, alamat, kunci, atau ID iklan.</string>
+    <string name="collectTitle">Yang kami kumpulkan</string>
+    <string name="collectRowSummary">Kedua tombol mulai dalam keadaan mati. Lihat persis apa yang dikirim masing-masing.</string>
+    <string name="collectUsageNotSentYet">Versi ini belum mengirim penggunaan dan kesehatan aplikasi. Jawaban Anda disimpan dan dipakai setelah fitur itu tersedia.</string>
+    <string name="collectRules">Hanya kata baku dan rentang angka yang dikirim, tidak pernah teks bebas. Mematikan tombol menghapus data yang belum terkirim.</string>
+    <string name="collectUsageLabel">Dengan Penggunaan dan kesehatan aplikasi</string>
+    <string name="collectCrashesLabel">Dengan Laporan crash</string>
+    <string name="collectReportLabel">Hanya saat Anda mengirim laporan masalah</string>
+    <string name="collectNeverLabel">Tidak pernah dikirim</string>
+    <string name="collectConnect">Apakah koneksi ke server berhasil, jenis kegagalan, dan lamanya</string>
+    <string name="collectDrop">Mengapa koneksi terputus dan apakah tersambung kembali</string>
+    <string name="collectSend">Apakah pengiriman pesan berhasil atau menunggu dalam antrean, dan seberapa cepat balasan pertama datang</string>
+    <string name="collectStall">Di mana terjadi penantian panjang (alat, persetujuan) dan berapa lama</string>
+    <string name="collectQueue">Jumlah pesan antrean yang terkirim atau gagal</string>
+    <string name="collectPhoneSetup">Sejauh mana penyiapan di ponsel ini berjalan, lama tiap langkah, dan jenis kegagalan</string>
+    <string name="collectAgents">Apakah agen berhasil dimulai, dan jenis kegagalan</string>
+    <string name="collectBackground">Mengapa layanan latar belakang berhenti</string>
+    <string name="collectUpdates">Apakah pembaruan berhasil terpasang, dan jenis kegagalan</string>
+    <string name="collectPages">Jenis halaman dan fitur yang Anda gunakan, langkah penyiapan, balasan pertama, dan lama kunjungan</string>
+    <string name="collectStart">Seberapa cepat aplikasi dimulai</string>
+    <string name="collectSmooth">Seberapa lancar halaman, dan kecepatan refresh layar</string>
+    <string name="collectMemory">Peringatan memori dari Android</string>
+    <string name="collectDevice">Rentang memori dan penyimpanan kosong ponsel Anda, jenis prosesor dan versi WebView, apakah notifikasi diizinkan, serta jenis dan versi server yang Anda gunakan</string>
+    <string name="collectCrashKind">Jenis kesalahan dan lokasinya di kode aplikasi, tanpa pesannya</string>
+    <string name="collectExit">Alasan Android menutup aplikasi terakhir kali (misalnya crash, macet, atau memori rendah)</string>
+    <string name="collectSteps">30 langkah terakhir Anda, dalam kata singkat seperti chat.send</string>
+    <string name="collectCrashKeys">Versi aplikasi, cara pemasangannya, jenis server, apakah server ponsel ini berjalan, jumlah koneksi yang terbuka, dan versi server</string>
+    <string name="collectReport">500 baris terakhir log aplikasi sendiri, dengan kunci, alamat, dan path dikosongkan. Anda melihat semuanya dan memilih Kirim atau Batal.</string>
+    <string name="collectNever">Perintah dan balasan Anda, nama file atau path, alamat web, nama host, alamat IP, teks pesan kesalahan, kunci atau token, ID iklan, atau ID Android</string>
+</resources>

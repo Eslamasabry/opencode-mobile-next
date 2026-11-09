@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="remoteTerminalTitle">Terminal</string>
+    <string name="remoteTerminalWorking">Đang xử lý…</string>
+    <string name="remoteTerminalUnavailable">Hãy kết nối máy chủ hỗ trợ terminal để dùng trang này.</string>
+    <string name="remoteTerminalFailed">Yêu cầu terminal không thành công. Thử lại.</string>
+    <string name="remoteTerminalInputUncertain">Kết nối bị ngắt khi đang gửi dữ liệu nhập. Kiểm tra terminal trước khi gửi lại.</string>
+    <string name="remoteTerminalIntro">Lệnh chạy trên máy chủ này. Rời trang này sẽ ngắt phần hiển thị; dùng Kết thúc terminal để dừng shell của nó.</string>
+    <string name="remoteTerminalCreate">Terminal mới</string>
+    <string name="remoteTerminalRefresh">Làm mới</string>
+    <string name="remoteTerminalEmpty">Chưa có terminal nào.</string>
+    <string name="remoteTerminalRunning">Đang chạy</string>
+    <string name="remoteTerminalEnded">Đã kết thúc</string>
+    <string name="remoteTerminalList">Tất cả terminal</string>
+    <string name="remoteTerminalDisconnect">Ngắt kết nối</string>
+    <string name="remoteTerminalReconnect">Kết nối lại</string>
+    <string name="remoteTerminalEnd">Kết thúc terminal</string>
+    <string name="remoteTerminalDisconnected">Đã ngắt kết nối. Kết nối lại để tiếp tục đọc terminal này.</string>
+    <string name="remoteTerminalInputOff">Kết nối lại để gửi dữ liệu nhập cho terminal.</string>
+    <string name="remoteTerminalInterrupt">Ngắt (Ctrl-C)</string>
+    <string name="remoteTerminalEndInput">Kết thúc nhập (Ctrl-D)</string>
+    <string name="remoteTerminalEscape">Escape</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">Terminal dễ đọc</string>
+    <string name="remoteTerminalTranscript">Kết quả terminal</string>
+    <string name="remoteTerminalNoOutput">Terminal chưa có kết quả nào.</string>
+    <string name="remoteTerminalInput">Gửi đến terminal</string>
+    <string name="remoteTerminalSend">Gửi</string>
+    <string name="remoteTerminalEndQuestion">Kết thúc terminal này?</string>
+    <string name="remoteTerminalEndBody">Thao tác này dừng shell từ xa và mọi thứ đang chạy trong đó.</string>
+    <string name="remoteTerminalKeep">Giữ terminal</string>
+    <string name="remoteTerminalOffline">Terminal đã ngắt kết nối. Mở lại để kết nối lại.</string>
+    <string name="remoteTerminalSize">Kích thước terminal</string>
+    <string name="remoteTerminalRows">Số hàng</string>
+    <string name="remoteTerminalColumns">Số cột</string>
+    <string name="remoteTerminalApplySize">Áp dụng kích thước</string>
+    <string name="remoteTerminalSizeRange">Chọn từ 1 đến 1000 hàng và cột.</string>
+    <string name="remoteTerminalServiceUnavailable">Máy chủ này không cung cấp dịch vụ terminal.</string>
+    <string name="remoteTerminalProjectChanged">Dự án của cuộc trò chuyện này đã thay đổi. Quay lại và mở Terminal lần nữa.</string>
+    <string name="remoteTerminalSignInRequired">Đăng nhập lại vào máy chủ này để dùng terminal của nó.</string>
+    <string name="remoteTerminalServiceNoAnswer">Dịch vụ terminal không phản hồi. Thử lại.</string>
+</resources>

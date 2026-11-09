@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Komponen Linux</string>
+    <string name="linuxComponentsRefresh">Periksa komponen terinstal</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">Komponen</string>
+    <string name="linuxComponentsInstalled">Terinstal</string>
+    <string name="linuxComponentsDependents">Dibutuhkan oleh %1$s. Hapus komponen itu dulu.</string>
+    <string name="linuxComponentsDependencyUnknown">%1$s tidak dapat diperiksa. Periksa lagi sebelum menghapus komponen ini.</string>
+    <string name="linuxComponentsRequired">Dibutuhkan untuk server di ponsel ini.</string>
+    <string name="linuxComponentsUnsupported">Komponen ini tidak dapat dihapus secara terpisah.</string>
+    <string name="linuxComponentsAbsent">Belum terinstal</string>
+    <string name="linuxComponentsUnknownPresence">Komponen terinstal tidak dapat diperiksa. Coba lagi.</string>
+    <string name="linuxComponentsBusy">Tunggu penyiapan atau operasi saat ini selesai.</string>
+    <string name="linuxComponentsFailed">Komponen tidak dapat dihapus. Periksa lagi lalu coba ulang.</string>
+    <string name="linuxComponentsRemove">Hapus %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">Hapus %1$s?</string>
+    <string name="linuxComponentsRemoveBody">Hanya komponen ini yang dihapus. Proyek dan percakapan Anda tetap ada. Dependensi akan diperiksa lagi sebelum penghapusan.</string>
+    <string name="linuxSetupOpenSettings">Buka pengaturan aplikasi</string>
+    <string name="linuxSetupStepWaiting">Menunggu</string>
+    <string name="linuxSetupStepKept">Sudah terinstal</string>
+    <string name="linuxSetupSwitchBusy">Selesaikan pekerjaan yang berjalan dan jawab permintaan yang tertunda di ponsel ini, lalu coba penyiapan lagi.</string>
+    <string name="linuxSetupSwitchFailed">Penyiapan tidak dapat mempersiapkan ponsel ini dengan aman. Percakapan dan pesan tersimpan Anda tetap aman. Periksa koneksi dan ruang kosong, lalu coba lagi.</string>
+</resources>

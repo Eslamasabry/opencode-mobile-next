@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="desktopSettingsMenu">Настройки</string>
+    <string name="desktopReleaseCurrent">Это самая новая опубликованная сборка.</string>
+    <string name="desktopUpdatesBuildAvailable">Доступна сборка %1$s.</string>
+    <string name="desktopReleaseFailed">Не удалось проверить обновления. Повторите, когда будете в сети.</string>
+    <string name="desktopReleaseLimit">Обновления открываются на GitHub. Скачайте и установите настольную версию самостоятельно.</string>
+    <string name="desktopReleaseOpenQuestion">Открыть релиз на GitHub?</string>
+    <string name="desktopReleaseOpenFailed">Не удалось открыть браузер. Повторите.</string>
+</resources>

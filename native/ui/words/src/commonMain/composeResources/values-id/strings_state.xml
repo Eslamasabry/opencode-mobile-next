@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">Sematkan percakapan</string>
+    <string name="stateUnpin">Lepas sematan percakapan</string>
+    <string name="statePinFailed">Sematan tidak dapat disimpan. Coba lagi.</string>
+    <string name="stateContextUsage">Konteks terakhir: %1$d%</string>
+    <string name="stateSavedPreview">Daftar tersimpan. Hubungkan untuk membuka percakapan ini.</string>
+</resources>

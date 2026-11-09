@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">Chủ của nó đã dừng</string>
+    <string name="runningOrphanCpuWithoutOwner">Đang bận mà không có cuộc trò chuyện nào chờ nó</string>
+    <string name="linuxStorageScanRunning">Đang đo %1$s</string>
+    <string name="linuxStorageScanDone">Đã đo xong bộ nhớ</string>
+    <string name="linuxStorageScanIdle">Không có lượt quét nào đang chạy</string>
+    <string name="linuxStorageScanLog">Quét bộ nhớ</string>
+</resources>

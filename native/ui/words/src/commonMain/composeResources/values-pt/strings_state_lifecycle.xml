@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">O Android parou o app. Verificando de novo o que está em execução…</string>
+    <string name="stateLifecycleUnavailable">O Android parou o app. Não foi possível verificar a recuperação.</string>
+    <string name="stateLifecycleStopped">O Android parou o app. O OpenCode está parado.</string>
+    <string name="stateLifecycleUnreachable">O Android parou o app. O OpenCode ainda não está respondendo.</string>
+    <string name="stateLifecyclePartial">O OpenCode está respondendo. Alguns serviços que estavam em execução ainda não estão prontos.</string>
+    <string name="stateLifecycleReady">O OpenCode e os serviços que estavam em execução voltaram a responder. Tarefas interrompidas podem precisar da sua atenção.</string>
+    <string name="stateStorageTitle">Armazenamento do app</string>
+    <string name="stateStorageServer">Linux e OpenCode</string>
+    <string name="stateStoragePrivate">Logins, configurações e conversas salvos</string>
+    <plurals name="stateStorageProject">
+        <item quantity="one">%1$s · 1 arquivo · %3$d privados</item>
+        <item quantity="many">%1$s · %2$d arquivos · %3$d privados</item>
+        <item quantity="other">%1$s · %2$d arquivos · %3$d privados</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="one">1 servidor salvo</item>
+        <item quantity="many">%1$d servidores salvos</item>
+        <item quantity="other">%1$d servidores salvos</item>
+    </plurals>
+    <string name="stateStorageEmpty">Nenhum Linux ou projeto está armazenado neste celular.</string>
+    <string name="stateStorageFailed">Não foi possível medir o armazenamento. Tente novamente.</string>
+    <string name="stateStorageRefresh">Medir o armazenamento de novo</string>
+</resources>

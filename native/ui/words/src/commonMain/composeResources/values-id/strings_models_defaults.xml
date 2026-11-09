@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="modelDefaultsPhoneTitle">Percakapan baru di ponsel ini</string>
+    <string name="modelDefaultsNamedTitle">Percakapan baru di %1$s</string>
+    <string name="modelDefaultsScope">Dipakai untuk percakapan baru. Setiap percakapan menyimpan pilihannya sendiri.</string>
+    <string name="modelDefaultsServerChoice">Pakai default server</string>
+    <string name="modelDefaultsRecommended">Pilihan yang disarankan</string>
+    <string name="modelDefaultsAll">Semua model yang tersedia</string>
+    <string name="modelDefaultsFailed">Pilihan model tidak dapat dibaca atau disimpan.</string>
+    <string name="modelDefaultsInUse">Sedang dipakai</string>
+    <string name="modelDefaultsDefault">Default server</string>
+    <string name="modelDefaultsRecent">Pilihan terbaru</string>
+    <string name="modelDefaultsCheapest">Harga terendah</string>
+    <string name="modelDefaultsFree">Gratis</string>
+    <string name="modelDefaultsPrice">Masukan $%1$s · Keluaran $%2$s per juta token</string>
+    <string name="modelDefaultsSelected">Dipilih</string>
+    <string name="modelDefaultsSaving">Menyimpan pilihan model</string>
+</resources>

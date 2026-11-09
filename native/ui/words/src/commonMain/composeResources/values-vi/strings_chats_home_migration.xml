@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningConnecting">Đang kết nối với %1$s</string>
+    <string name="homeOpeningFailed">%1$s không phản hồi</string>
+    <string name="homeOpeningSavedTitles">Đây là tên các cuộc trò chuyện đã lưu lần trước. Chúng sẽ mở được khi máy chủ phản hồi.</string>
+    <string name="homeOpeningStarting">Đang khởi động điện thoại này…</string>
+    <string name="homeOpeningWaiting">Các cuộc trò chuyện của bạn sẽ hiển thị ở đây khi máy chủ phản hồi.</string>
+    <string name="homeOpeningFailedBody">Hãy kiểm tra máy chủ đã bật và điện thoại này kết nối được với nó, rồi thử lại.</string>
+    <string name="homeWatchedServers">Máy chủ đang theo dõi</string>
+    <string name="homeInboxCount">Hộp thư · %1$s</string>
+    <string name="homeSourcesFailed">Không đổi được các kết nối của danh sách này. Hãy thử lại.</string>
+    <string name="homeWatchedOpenBody">Chúng tôi sẽ kiểm tra yêu cầu này vẫn đang chờ trên máy chủ này trước khi mở cuộc trò chuyện của nó.</string>
+    <string name="homeWatchedOpenFailed">Không mở được yêu cầu này. Hãy làm mới các máy chủ đang theo dõi rồi thử lại.</string>
+    <string name="homeRefreshWatched">Làm mới máy chủ đang theo dõi</string>
+    <string name="homeMonitorOff">Đang tắt. Hãy bật để kiểm tra các yêu cầu đang chờ của máy chủ này.</string>
+    <string name="homeMonitorWaiting">Đang chờ lần kiểm tra tiếp theo</string>
+    <string name="homeMonitorChecking">Đang kiểm tra các yêu cầu đang chờ</string>
+    <string name="homeMonitorCurrent">Các yêu cầu đang chờ đã được cập nhật</string>
+    <string name="homeMonitorUnavailable">Không phản hồi. Các yêu cầu của nó chưa được hiển thị.</string>
+    <string name="homeMonitorWifi">Đang chờ Wi-Fi</string>
+    <string name="homeMonitorPaused">Việc kiểm tra tạm dừng khi ứng dụng và dịch vụ nền đã dừng.</string>
+</resources>

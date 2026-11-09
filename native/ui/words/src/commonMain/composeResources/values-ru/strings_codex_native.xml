@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Проверка подключения Codex</string>
+    <string name="codexNativeIntro">Выполните эту однострочную команду на своём компьютере. Введите её адрес, абсолютный путь к папке и токен доступа, чтобы проверить подключение с аутентификацией.</string>
+    <string name="codexNativeCopy">Копировать команду запуска</string>
+    <string name="codexNativeTokenHelp">Используйте собственный абсолютный путь к файлу токена. Храните токен в тайне. Обычный WebSocket разрешён только на этом устройстве; для другого компьютера используйте защищённый WebSocket.</string>
+    <string name="codexNativeAddress">Адрес WebSocket</string>
+    <string name="codexNativeDirectory">Абсолютный путь к папке</string>
+    <string name="codexNativeToken">Токен доступа</string>
+    <string name="codexNativeWorking">Проверка подключения…</string>
+    <string name="codexNativeProbe">Проверить подключение</string>
+    <string name="codexNativeProbed">Подключение с аутентификацией ответило на чтение в пределах папки. Пустой результат не подтверждает, что папка существует.</string>
+    <string name="codexNativeFailed">Проверка подключения не удалась. Убедитесь, что Codex запущен, и повторите.</string>
+    <string name="codexNativeAuthFailed">Codex отклонил токен доступа. Проверьте его и повторите.</string>
+    <string name="codexNativeScopeFailed">Проверьте адрес, абсолютный путь к папке и разрешённую область подключения.</string>
+    <string name="codexNativeVersion">Это подключение не может передать сведения об использовании аккаунта. Для чтения аккаунта нужен проверенный протокол Codex 0.153.4.</string>
+    <string name="codexNativeOpen">Открыть чтение аккаунта</string>
+    <string name="codexNativeReaderOpen">Чтение аккаунта открыто. Откройте «Планы», чтобы обновить лимиты аккаунта. Когда закончите, закройте его здесь.</string>
+    <string name="codexNativePlans">Открыть «Планы»</string>
+    <string name="codexNativeClose">Закрыть чтение аккаунта</string>
+    <string name="codexNativeReadOnly">Эта страница проверяет подключение и читает сведения об использовании аккаунта. Она не начинает чат, не выполняет вход и не отправляет запрос.</string>
+</resources>

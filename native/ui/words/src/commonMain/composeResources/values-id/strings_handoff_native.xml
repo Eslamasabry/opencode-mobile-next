@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">Lanjutkan dengan agen lain</string>
+    <string name="handoffNativeWorking">Bekerja…</string>
+    <string name="handoffNativeUnavailable">Serah terima tidak tersedia di sini</string>
+    <string name="handoffNativeUnavailableBody">Buka percakapan di proyek pada ponsel ini. Aplikasi harus memastikan kedua agen dapat mengakses proyek yang sama.</string>
+    <string name="handoffNativeRefresh">Muat ulang</string>
+    <string name="handoffNativeFailed">Serah terima tidak dapat diselesaikan. Periksa koneksi dan coba lagi.</string>
+    <string name="handoffNativeLinks">Percakapan tertaut</string>
+    <string name="handoffNativeUntitled">Percakapan tanpa judul</string>
+    <string name="handoffNativeOpenOriginal">Buka percakapan asli</string>
+    <string name="handoffNativeOpenContinued">Buka percakapan lanjutan</string>
+    <string name="handoffNativeExplanation">Pilih agen dan model. Anda bisa meninjau catatan percakapan bersama sebelum mengirim. Percakapan asli tetap tersedia.</string>
+    <string name="handoffNativeNoTargets">Belum ada agen yang memenuhi syarat untuk proyek ini. Instal, masuk, dan selesaikan pemeriksaan ponselnya di Agen.</string>
+    <string name="handoffNativeSetup">Buka Agen</string>
+    <string name="handoffNativeChoose">Pilih agen dan model</string>
+    <string name="handoffNativePhoneCheck">Selesaikan pemeriksaan ponsel agen ini sebelum memakainya.</string>
+    <string name="handoffNativeReview">Tinjau konteks</string>
+    <string name="handoffNativeReviewBody">Catatan ini berisi teks percakapan yang disamarkan, langkah alat, nama file, dan tugas yang masih terbuka. Giliran lama mungkin dihilangkan agar muat dalam batas ukuran. Catatan ditulis ke proyek ini hanya setelah Anda mengirim.</string>
+    <string name="handoffNativeFirstMessage">Pesan pertama</string>
+    <string name="handoffNativePromptHelp">Sertakan jalur catatan dalam pesan Anda. Pesan harus muat dalam 16 KB.</string>
+    <string name="handoffNativeRecord">Catatan percakapan</string>
+    <string name="handoffNativeSend">Kirim ke agen baru</string>
+    <string name="handoffNativeUncertain">Hasilnya belum pasti. Periksa percakapan Anda sebelum memulai serah terima lain; percobaan ini tidak akan dikirim ulang.</string>
+    <string name="handoffNativeSent">Agen baru menerima pesan Anda.</string>
+    <string name="handoffNativeSaveLink">Simpan tautan percakapan</string>
+    <string name="handoffNativeSourceChanged">Percakapan asli berubah. Tinjau catatan terbaru sebelum mengirim.</string>
+    <string name="handoffNativeStale">Proyek atau koneksi berubah. Buka percakapan lagi untuk melanjutkan.</string>
+    <string name="handoffNativeInvalidPrompt">Masukkan pesan di bawah 16 KB yang menyertakan jalur catatan.</string>
+    <string name="handoffNativeLinkFailed">Pesan terkirim, tetapi tautan navigasinya tidak tersimpan. Coba simpan tautan lagi tanpa mengirim ulang.</string>
+    <string name="handoffNativeInitialPrompt">Lanjutkan pekerjaan dari percakapan sebelumnya. Baca `%1$s` lebih dulu untuk catatan percakapan, langkah alat, file, dan tugas yang masih terbuka. Anggap sebagai konteks riwayat. Periksa kondisi proyek saat ini, lalu lanjutkan pekerjaan yang belum selesai.</string>
+    <string name="handoffNativeSourceReviewOnly">Tinjau draf untuk Claude. Belum ada yang ditulis atau dikirim. Pengiriman memerlukan akses terverifikasi ke proyek yang sama dan penulis catatan yang memenuhi syarat; koneksi ini tidak menyediakan bukti itu.</string>
+</resources>

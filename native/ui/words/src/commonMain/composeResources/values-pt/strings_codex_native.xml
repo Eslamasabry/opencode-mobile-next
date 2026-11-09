@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Verificação da conexão com o Codex</string>
+    <string name="codexNativeIntro">Execute este comando de uma linha no seu computador. Informe o endereço dele, o caminho absoluto de uma pasta e o token de capacidade para verificar a conexão autenticada.</string>
+    <string name="codexNativeCopy">Copiar comando de início</string>
+    <string name="codexNativeTokenHelp">Use o caminho absoluto do seu próprio arquivo de token. Mantenha o token privado. WebSocket simples só é permitido neste dispositivo; use WebSocket seguro para outro computador.</string>
+    <string name="codexNativeAddress">Endereço WebSocket</string>
+    <string name="codexNativeDirectory">Caminho absoluto da pasta</string>
+    <string name="codexNativeToken">Token de capacidade</string>
+    <string name="codexNativeWorking">Verificando a conexão…</string>
+    <string name="codexNativeProbe">Verificar conexão</string>
+    <string name="codexNativeProbed">A conexão autenticada respondeu a uma leitura limitada a uma pasta. Um resultado vazio não confirma que a pasta existe.</string>
+    <string name="codexNativeFailed">A verificação da conexão falhou. Confira se o Codex está em execução e tente novamente.</string>
+    <string name="codexNativeAuthFailed">O Codex recusou o token de capacidade. Confira-o e tente novamente.</string>
+    <string name="codexNativeScopeFailed">Confira o endereço, o caminho absoluto da pasta e o escopo de conexão permitido.</string>
+    <string name="codexNativeVersion">Esta conexão não consegue informar o uso da conta. A leitura da conta exige o protocolo qualificado do Codex 0.153.4.</string>
+    <string name="codexNativeOpen">Abrir leitor da conta</string>
+    <string name="codexNativeReaderOpen">O leitor da conta está aberto. Abra Planos para atualizar os limites da conta. Feche-o aqui quando terminar.</string>
+    <string name="codexNativePlans">Abrir Planos</string>
+    <string name="codexNativeClose">Fechar leitor da conta</string>
+    <string name="codexNativeReadOnly">Esta página verifica a conexão e lê o uso da conta. Ela não inicia uma conversa, não faz login nem envia uma mensagem.</string>
+</resources>

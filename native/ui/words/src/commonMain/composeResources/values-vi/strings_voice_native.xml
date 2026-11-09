@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeSendNow">Gửi ngay</string>
+    <string name="voiceNativeDetect">Nhận diện từ giọng nói</string>
+    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativePhoneEngine">Nhập bằng giọng nói dùng tính năng nhận dạng giọng nói riêng của điện thoại, nên âm thanh vẫn ở trên điện thoại này. Điện thoại không có tính năng đó sẽ không hiện micro. Phiên bản này chưa dùng các mô hình giọng nói bên dưới.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Cần bộ nhận dạng giọng nói ngoại tuyến, mà phiên bản này chưa có.</string>
+    <string name="voiceNativeSettingsAction">Cài đặt giọng nói</string>
+    <string name="voiceNativeStoppedAfterPause">Đã dừng sau một quãng nghỉ. Lời nói của bạn đã nằm trong ô nhập.</string>
+    <string name="voiceNativeNoRecognizer">Điện thoại này không có dịch vụ nhận dạng giọng nói. Hãy bật một dịch vụ trong cài đặt Android rồi thử lại.</string>
+    <string name="voiceNativeReadAloud">Đọc to</string>
+    <string name="voiceNativePartial">Đã tải %1$s trên %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Nhận dạng giọng nói của điện thoại</string>
+</resources>

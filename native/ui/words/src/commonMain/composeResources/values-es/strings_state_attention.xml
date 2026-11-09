@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Actividad</string>
+    <string name="stateAttentionRefresh">Actualizar</string>
+    <string name="stateAttentionNeedsYou">Te necesitan</string>
+    <string name="stateAttentionHistory">Mientras no estabas</string>
+    <string name="stateAttentionIncomplete">Algunos servidores no se han comprobado. Las observaciones guardadas pueden estar desactualizadas.</string>
+    <string name="stateAttentionCorrupt">No se pudo leer parte de la actividad guardada. Se conservó en este teléfono.</string>
+    <string name="stateAttentionSaveFailed">No se pudo guardar este cambio. Actualiza e inténtalo de nuevo.</string>
+    <string name="stateAttentionNoneKnown">No se conoce ninguna solicitud de los servidores que respondieron.</string>
+    <string name="stateAttentionNone">No hay solicitudes en espera.</string>
+    <string name="stateAttentionNoHistory">No hay actividad automática para mostrar.</string>
+    <string name="stateAttentionPermission">Permiso solicitado</string>
+    <string name="stateAttentionQuestion">Pregunta en espera</string>
+    <string name="stateAttentionForm">Formulario en espera</string>
+    <string name="stateAttentionFailure">Una conversación necesita revisión</string>
+    <string name="stateAttentionTeam">El equipo te necesita</string>
+    <string name="stateAttentionStale">Último estado conocido</string>
+    <string name="stateAttentionAcknowledge">Descartar la actividad mostrada</string>
+    <string name="stateActReconnect">Reconectado automáticamente</string>
+    <string name="stateActRestart">Reiniciado automáticamente</string>
+    <string name="stateActHeatPause">En pausa por calor</string>
+    <string name="stateActHeatStop">Detenido por calor</string>
+    <string name="stateActHeatResume">Reanudado tras enfriarse</string>
+    <string name="stateActUpdate">Actualizado automáticamente</string>
+    <string name="stateActPermission">Permiso permitido automáticamente</string>
+    <string name="stateActQueued">Mensaje guardado enviado</string>
+    <string name="stateActOther">Actividad automática</string>
+    <string name="stateAttentionMonitorTitle">Otros servidores</string>
+    <string name="stateAttentionMonitorCopy">Elige qué otros servidores guardados puede revisar este teléfono en busca de solicitudes en espera. Esto no responde solicitudes ni cambia esos servidores.</string>
+    <string name="stateAttentionMonitorChoice">Buscar solicitudes en espera</string>
+</resources>

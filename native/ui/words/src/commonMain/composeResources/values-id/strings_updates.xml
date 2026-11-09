@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="desktopSettingsMenu">Pengaturan</string>
+    <string name="desktopReleaseCurrent">Ini adalah versi terbaru yang dipublikasikan.</string>
+    <string name="desktopUpdatesBuildAvailable">Build %1$s tersedia.</string>
+    <string name="desktopReleaseFailed">Tidak dapat memeriksa pembaruan. Coba lagi saat Anda online.</string>
+    <string name="desktopReleaseLimit">Pembaruan dibuka di GitHub. Unduh dan pasang rilis desktop sendiri.</string>
+    <string name="desktopReleaseOpenQuestion">Buka rilis di GitHub?</string>
+    <string name="desktopReleaseOpenFailed">Tidak dapat membuka browser. Coba lagi.</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeSendNow">Отправить сейчас</string>
+    <string name="voiceNativeDetect">Определить по речи</string>
+    <string name="voiceNativeSizeMb">%1$d МБ</string>
+    <string name="voiceNativePhoneEngine">Голосовой ввод использует встроенное распознавание речи телефона, поэтому аудио остаётся на этом телефоне. Если его нет, значок микрофона не показывается. Эта версия пока не использует модели речи ниже.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Нужен офлайн-движок речи, которого в этой версии пока нет.</string>
+    <string name="voiceNativeSettingsAction">Настройки голоса</string>
+    <string name="voiceNativeStoppedAfterPause">Остановлено после паузы. Ваш текст в поле ввода.</string>
+    <string name="voiceNativeNoRecognizer">На этом телефоне нет службы распознавания речи. Включите её в настройках Android и повторите.</string>
+    <string name="voiceNativeReadAloud">Читать вслух</string>
+    <string name="voiceNativePartial">Загружено %1$s из %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Распознавание речи на телефоне</string>
+</resources>

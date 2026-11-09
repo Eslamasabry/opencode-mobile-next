@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Đang cài đặt…</string>
+    <string name="agentsHelperNotConnected">Tác nhân trên điện thoại chưa được kết nối.</string>
+    <string name="agentsHelperNotStarted">Tác nhân trên điện thoại chưa được kết nối: trình hỗ trợ tác nhân chưa khởi động.</string>
+    <string name="agentsHelperNoAnswer">Tác nhân trên điện thoại chưa được kết nối: trình hỗ trợ tác nhân không phản hồi.</string>
+    <string name="agentsHelperKeyRefused">Tác nhân trên điện thoại chưa được kết nối: trình hỗ trợ tác nhân không chấp nhận khóa của ứng dụng này.</string>
+    <string name="agentsHelperKeyUnreadable">Tác nhân trên điện thoại chưa được kết nối: điện thoại này không đọc được khóa của trình hỗ trợ tác nhân.</string>
+    <string name="agentsHelperNoLinux">Tác nhân trên điện thoại chưa được kết nối: Linux tích hợp của điện thoại này chưa được thiết lập.</string>
+    <string name="agentsTabsLabel">Nơi tác nhân chạy</string>
+    <string name="agentsTabComputers">Trên máy tính</string>
+    <string name="agentsPhoneReady">Điện thoại này đã sẵn sàng</string>
+    <string name="agentsPhoneReadyDetails">Điện thoại này đã sẵn sàng · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Làm mới</string>
+    <string name="agentsAddComputerLine">Dùng Claude Code hoặc Pi trên máy tính đang chạy Paseo.</string>
+    <string name="agentsComputerLooking">Đang tìm tác nhân trên máy tính này…</string>
+    <string name="agentsComputerReadFailed">Không đọc được các tác nhân của máy tính này. Hãy kéo xuống để thử lại.</string>
+    <string name="agentsNewChat">Cuộc trò chuyện mới</string>
+    <string name="agentsNewChatWith">Cuộc trò chuyện mới với %1$s</string>
+    <string name="agentsConversationsStored">Nơi lưu các cuộc trò chuyện</string>
+    <string name="agentsConversationsStoredOn">Nơi lưu các cuộc trò chuyện: %1$s</string>
+    <string name="agentsHostAccount">Tài khoản trên máy chủ: %1$s</string>
+</resources>

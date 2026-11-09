@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_widget_action">Đang gửi thao tác từ tiện ích của bạn</string>
+    <string name="notify_widget_action_description">Đang kiểm tra đúng cuộc trò chuyện và yêu cầu.</string>
+</resources>

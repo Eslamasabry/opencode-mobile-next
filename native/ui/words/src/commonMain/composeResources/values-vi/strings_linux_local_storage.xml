@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">Duyệt dự án trên điện thoại</string>
+    <string name="linuxLocalProjectsDetail">Duyệt thư mục khi máy chủ đã dừng, kể cả các dự án được giữ lại sau khi gỡ Linux.</string>
+    <string name="linuxLocalParent">Lên một thư mục</string>
+    <string name="linuxLocalClose">Đóng thư mục</string>
+    <string name="linuxLocalGit">Dự án Git</string>
+    <string name="linuxLocalFolder">Thư mục</string>
+    <string name="linuxLocalReading">Đang đọc thư mục…</string>
+    <string name="linuxLocalFolderFailed">Không đọc được thư mục này. Có thể nó đã bị di chuyển, xóa hoặc là một liên kết.</string>
+    <string name="linuxLocalEmpty">Không có thư mục nào ở đây.</string>
+    <string name="linuxLocalMeasure">Đo các lựa chọn gỡ Linux</string>
+    <string name="linuxLocalRemoveKeep">Gỡ Linux, giữ dự án</string>
+    <string name="linuxLocalRemoveAll">Gỡ Linux và các dự án</string>
+    <string name="linuxLocalFreed">Giải phóng %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">Gỡ Linux và giữ lại dự án?</string>
+    <string name="linuxLocalRemoveAllQuestion">Gỡ Linux và tất cả dự án trên điện thoại?</string>
+    <string name="linuxLocalRemoveKeepBody">Dừng các chương trình trên điện thoại và gỡ Linux, công cụ đã cài, thông tin đăng nhập và lịch sử máy chủ cục bộ. Tệp dự án của bạn vẫn có thể duyệt. Giải phóng %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Dừng các chương trình trên điện thoại và gỡ Linux, công cụ đã cài, thông tin đăng nhập, lịch sử máy chủ cục bộ và mọi tệp dự án còn lại trên điện thoại. Không thể hoàn tác. Giải phóng %1$s.</string>
+    <string name="linuxLocalStorageFailed">Điện thoại không thể đọc hoặc xóa xong bộ nhớ Linux. Hãy đóng các tác vụ trên điện thoại rồi thử lại.</string>
+    <string name="linuxLocalRemoved">Đã gỡ bộ nhớ Linux.</string>
+    <string name="linuxLocalCreate">Tạo dự án trên điện thoại</string>
+    <string name="linuxLocalCreatePath">Đường dẫn tuyệt đối của thư mục dự án</string>
+    <string name="linuxLocalInvalidPath">Nhập đường dẫn thư mục tuyệt đối, không có đoạn thư mục cha hoặc ngắt dòng.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="worktreeInspectionTitle">Inspeccionar una copia</string>
+    <string name="worktreeInspectionExactScope">Los cambios y las conversaciones se leen para el proyecto, la carpeta y el espacio de trabajo exactos.</string>
+    <string name="worktreeInspectionReadFailed">No se pudo inspeccionar esta copia. Se desconoce su estado.</string>
+    <string name="worktreeInspectionWorkspace">Espacio de trabajo: %1$s</string>
+    <string name="worktreeInspectionHostScope">En este servidor</string>
+    <string name="worktreeInspectionConversations">Conversaciones en esta copia</string>
+    <string name="worktreeInspectionNoPageMatches">No hay conversaciones que coincidan en esta página. Carga más para seguir buscando.</string>
+    <string name="worktreeInspectionNoConversations">No hay conversaciones que coincidan en esta copia.</string>
+</resources>

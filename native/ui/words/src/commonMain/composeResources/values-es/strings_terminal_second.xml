@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalSourceBuiltIn">Linux integrado</string>
+    <string name="terminalSourceServer">Servidor de OpenCode</string>
+    <string name="terminalSourceServerRuntime">%1$s · servidor de OpenCode</string>
+    <string name="terminalRerun">Ejecutar el comando otra vez</string>
+    <string name="terminalRerunUncertain">No se pudo confirmar la nueva ejecución. Actualiza los terminales antes de intentarlo de nuevo.</string>
+    <string name="terminalKeyControl">Control</string>
+    <string name="terminalKeyAlt">Alt</string>
+    <string name="terminalKeyEscape">Esc</string>
+    <string name="terminalKeyTab">Tab</string>
+    <string name="terminalKeyUp">↑</string>
+    <string name="terminalKeyDown">↓</string>
+    <string name="terminalKeyLeft">←</string>
+    <string name="terminalKeyRight">→</string>
+    <string name="terminalKeyHome">Inicio</string>
+    <string name="terminalKeyEnd">Fin</string>
+    <string name="terminalKeyPageUp">Re Pág</string>
+    <string name="terminalKeyPageDown">Av Pág</string>
+    <string name="terminalKeyPipe">|</string>
+    <string name="terminalKeySlash">/</string>
+    <string name="terminalKeyBackslash">\\</string>
+    <string name="terminalKeyTilde">~</string>
+    <string name="terminalKeyMinus">−</string>
+    <string name="terminalKeyUnderscore">_</string>
+</resources>

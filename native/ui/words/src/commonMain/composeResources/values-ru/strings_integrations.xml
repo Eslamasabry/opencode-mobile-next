@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Провайдеры и инструменты</string>
+    <string name="intBack">Назад</string>
+    <string name="intRefresh">Обновить</string>
+    <string name="intServers">Сервер</string>
+    <string name="intNoServer">Сначала подключитесь к серверу</string>
+    <string name="intProviders">Провайдеры</string>
+    <string name="intConnected">Вход выполнен</string>
+    <string name="intNotConnected">Вход не выполнен</string>
+    <string name="intKey">Ключ API</string>
+    <string name="intSaveKey">Сохранить ключ на сервере</string>
+    <string name="intKeyPage">Получить ключ API</string>
+    <string name="intOpenSignIn">Открыть страницу входа</string>
+    <string name="intCode">Код или URL обратного вызова</string>
+    <string name="intCompleteSignIn">Завершить вход</string>
+    <string name="intSignInHelp">Завершите вход в браузере, затем вставьте сюда его код или URL обратного вызова.</string>
+    <string name="intConnectors">Коннекторы</string>
+    <string name="intConnectorConnected">Подключён</string>
+    <string name="intConnectorNotConnected">Требует внимания</string>
+    <string name="intConnectorName">Название коннектора</string>
+    <string name="intConnectorUrl">Адрес HTTPS</string>
+    <string name="intHeaderName">Имя заголовка (необязательно)</string>
+    <string name="intHeaderValue">Значение заголовка</string>
+    <string name="intSaveConnector">Добавить коннектор</string>
+    <string name="intHeaderHelp">Значения заголовков секретны. Они отправляются только на этот сервер и никогда не показываются в диагностике.</string>
+    <string name="intSkills">Написать навык</string>
+    <string name="intRequirements">Что должен делать навык?</string>
+    <string name="intDraftHelp">Агент подготовит черновик SKILL.md в новом чате для проверки. Установить его или менять файлы агента не просят.</string>
+    <string name="intAskDraft">Попросить агента о черновике</string>
+    <string name="intOpenDraft">Открыть чат с черновиком</string>
+    <string name="intSaved">Сохранено на сервере.</string>
+    <string name="intFailed">Не удалось завершить. Обновите, прежде чем повторить.</string>
+    <string name="intUnsupported">Этот сервер не поддерживает это действие.</string>
+    <string name="intChanged">Соединение изменилось. Откройте эту страницу снова.</string>
+    <string name="intInvalid">Проверьте обязательные поля и повторите.</string>
+    <string name="intDraftSent">Запрос на черновик отправлен. Откройте чат, чтобы следить за ним.</string>
+    <string name="intDraftUncertain">Запрос мог дойти. Проверьте чат, прежде чем отправлять снова.</string>
+    <string name="intOpenQuestion">Открыть эту страницу?</string>
+    <string name="intOpen">Открыть страницу</string>
+    <string name="intInsecure">Этот адрес не зашифрован.</string>
+    <string name="intConnectorReady">Подключён для следующего сообщения.</string>
+    <string name="intConnectorUnknown">Подключён. Обнаружение инструментов не подтверждено.</string>
+    <string name="intConnectorAuth">Этому коннектору нужно, чтобы вы вошли.</string>
+    <string name="intConnecting">Подключение</string>
+    <string name="intConnectorSignIn">Войти в этот коннектор</string>
+    <string name="intConnectorCancelSignIn">Отменить вход</string>
+</resources>

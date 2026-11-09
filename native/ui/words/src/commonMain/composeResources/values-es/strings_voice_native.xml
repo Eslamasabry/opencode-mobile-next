@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeSendNow">Enviar ahora</string>
+    <string name="voiceNativeDetect">Detectar por la voz</string>
+    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativePhoneEngine">El dictado por voz usa el reconocimiento de voz de tu propio teléfono, así que el audio se queda en este teléfono. Los teléfonos que no lo tienen no muestran el micrófono. Esta versión aún no usa los modelos de voz de abajo.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Necesita el motor de voz sin conexión, que esta versión aún no incluye.</string>
+    <string name="voiceNativeSettingsAction">Ajustes de voz</string>
+    <string name="voiceNativeStoppedAfterPause">Se detuvo tras una pausa. Tus palabras están en el cuadro.</string>
+    <string name="voiceNativeNoRecognizer">Este teléfono no tiene un servicio de reconocimiento de voz. Activa uno en los ajustes de Android e inténtalo de nuevo.</string>
+    <string name="voiceNativeReadAloud">Leer en voz alta</string>
+    <string name="voiceNativePartial">Descargado %1$s de %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Reconocimiento de voz del teléfono</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversInspectSetup">Проверить настройку</string>
+    <string name="serversPairingAnswered">Сервер ответил. Проверьте вход или состояние сервера перед подключением.</string>
+    <string name="serversRemoteTerminal">Терминал</string>
+</resources>

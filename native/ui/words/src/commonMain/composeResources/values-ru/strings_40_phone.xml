@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40PhoneConnect">Использовать сервер этого телефона</string>
+    <string name="r40PhoneConnectFailed">Не удалось подключиться к серверу этого телефона. Повторите попытку.</string>
+    <string name="r40PhoneMemory">Используется памяти: %1$s</string>
+    <string name="r40PhoneHistoryMoving">Переносим ваши прежние чаты…</string>
+    <string name="r40PhoneHistoryCount">Переносим ваши прежние чаты (%1$s из %2$s)…</string>
+    <string name="r40PhoneHistoryFailed">Не удалось перенести прежние чаты. Ваши исходные данные остались на этом телефоне нетронутыми.</string>
+    <string name="r40PhoneReplySpeed">Скорость последнего ответа</string>
+    <string name="r40PhoneReplyNoWords">Завершено за %1$s, без слов</string>
+    <string name="r40PhoneReplyLast">Первые слова через %1$s · Завершено за %2$s</string>
+    <string name="r40PhoneInstalled">Установлено на этом телефоне</string>
+    <string name="r40PhoneChecking">Проверяем…</string>
+    <string name="r40PhoneInstalledMark">Установлено</string>
+    <string name="r40PhoneInventoryFailed">Не удалось проверить, что установлено. Прежний список сохранён. Повторите попытку.</string>
+    <string name="r40PhoneLinuxMode">Режим Linux</string>
+    <string name="r40PhoneLinuxFast">Быстрый (seccomp)</string>
+    <string name="r40PhoneLinuxSlow">Медленнее (ptrace)</string>
+    <string name="r40PhoneUnknown">Нет данных</string>
+    <string name="r40PhoneAwake">Телефон не засыпает</string>
+    <string name="r40PhoneAwakeNow">Сейчас не спит ради работы</string>
+    <string name="r40PhoneAwakeWhenWorking">Только пока нужно для работы</string>
+    <string name="r40PhoneFirstWords">Ожидание первых слов</string>
+    <string name="r40PhoneFirstSplit">%1$s в приложении · %2$s на сервере</string>
+    <string name="r40PhoneRefresh">Обновить сведения о телефоне</string>
+    <string name="r40PhoneModel">Модель последнего ответа</string>
+    <string name="r40PhoneRuntimeDetails">Подробности о среде выполнения</string>
+    <string name="r40PhoneHistoryDetails">Подробности переноса чатов</string>
+    <string name="r40PhoneLogFailed">Не удалось прочитать журнал сервера. Повторите попытку.</string>
+    <string name="r40PhoneLogEmpty">Сервер пока не записал журнал.</string>
+    <string name="r40PhoneLog">Журнал сервера OpenCode</string>
+    <string name="r40PhoneSeconds">%1$s с</string>
+</resources>

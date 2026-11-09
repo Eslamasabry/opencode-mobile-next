@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">Modelo</string>
+    <string name="composerPreviewModelDefault">Padrão do servidor</string>
+    <string name="composerPreviewModelDefaultHint">O modelo padrão do próprio servidor</string>
+    <string name="composerPreviewModelsTitle">Escolher um modelo</string>
+    <string name="composerPreviewModelsLoading">Carregando modelos…</string>
+    <string name="composerPreviewModelsEmpty">Nenhum modelo disponível no momento.</string>
+    <string name="composerPreviewModelsFailed">Não foi possível carregar a lista de modelos.</string>
+    <string name="composerPreviewModelsRetry">Tentar novamente</string>
+    <string name="composerPreviewModelsClose">Fechar</string>
+    <string name="composerPreviewAttachFile">Anexar arquivo</string>
+    <string name="composerPreviewAttachNoPicker">Este aparelho não consegue anexar arquivos aqui.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">Este modelo não aceita arquivos. Escolha um que aceite.</string>
+    <string name="composerPreviewAttachmentRemove">Remover</string>
+    <string name="composerPreviewAttachmentFailed">Não foi possível anexar o arquivo.</string>
+    <string name="composerPreviewAttachmentTooLarge">Este arquivo é grande demais para anexar.</string>
+    <string name="composerPreviewAttachmentUnsupported">Este tipo de arquivo não pode ser anexado.</string>
+    <string name="composerPreviewAttachmentStorage">Não foi possível salvar o arquivo neste aparelho.</string>
+    <string name="composerPreviewAttachmentDismiss">Dispensar</string>
+    <string name="composerPreviewAttachmentRetry">Tentar novamente</string>
+</resources>

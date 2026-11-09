@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">Téléchargement de la saisie vocale</string>
+    <string name="r40SetupVoiceVerifying">Vérification des fichiers de saisie vocale</string>
+    <string name="r40SetupRequired">Obligatoire</string>
+    <string name="r40SetupWorking">Patientez jusqu’à la fin de l’action en cours.</string>
+    <string name="r40SetupTotals">%1$s · environ %2$s min</string>
+    <string name="r40SetupCouldNotCheck">Impossible de vérifier les outils installés ou la configuration. Réessayez.</string>
+    <string name="r40SetupRetry">Réessayer</string>
+    <string name="r40SetupActionFailed">L’opération ne s’est pas terminée. Réessayez.</string>
+    <string name="r40SetupCheckDevice">Résolvez les exigences du téléphone ci-dessus avant de commencer.</string>
+    <string name="r40SetupStorageUnopened">Impossible d’ouvrir les paramètres de stockage. Libérez de l’espace dans les paramètres de votre téléphone, puis réessayez.</string>
+    <string name="r40SetupRemoveVoiceTitle">Supprimer la saisie vocale ?</string>
+    <string name="r40SetupRemoveVoiceBody">Cela supprime de cette application les modèles vocaux téléchargés. Vos conversations sont conservées. Vous pourrez retélécharger la saisie vocale plus tard.</string>
+    <string name="r40SetupRemoveVoice">Supprimer la saisie vocale</string>
+    <string name="r40SetupKeepVoice">Garder la saisie vocale</string>
+    <string name="r40SetupRemoveVoiceFailed">Impossible de supprimer la saisie vocale. Terminez tout enregistrement ou téléchargement en cours, puis réessayez.</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">Terminé</string>
+    <string name="r40SetupComponentInstalled">Déjà installé</string>
+    <string name="r40SetupComponentChecking">Vérification…</string>
+    <string name="r40SetupComponentRunning">Installation…</string>
+    <string name="r40SetupComponentFailed">Non terminé</string>
+    <string name="r40SetupComponentPending">En attente</string>
+    <string name="r40WelcomePhone">Sur ce téléphone</string>
+    <string name="r40WelcomePhoneBody">Exécutez OpenCode ici. Aucun ordinateur nécessaire.</string>
+    <string name="r40WelcomeComputer">Sur mon ordinateur</string>
+    <string name="r40WelcomeComputerBody">Connectez-vous à un ordinateur où OpenCode est en cours d’exécution.</string>
+    <string name="r40WelcomeRunning">Configuration terminée à %1$s%</string>
+    <string name="r40WelcomeStopped">Configuration arrêtée à %1$s%</string>
+    <string name="r40WelcomeSetupBody">Télécharge un espace de travail Linux privé et les outils dont OpenCode a besoin. Choisissez ce qu’il faut installer avant de commencer.</string>
+    <string name="r40WelcomeViewProgress">Voir la progression de la configuration</string>
+</resources>

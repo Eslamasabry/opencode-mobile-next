@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">Внутренняя память</string>
+    <string name="andrStorageUp">На уровень выше</string>
+    <string name="andrStorageUseFolder">Открыть эту папку</string>
+    <string name="andrStorageFoldersEmpty">Здесь нет папок.</string>
+    <string name="andrStorageFolderMissing">Этой папки больше нет. Вернитесь назад и выберите другую папку.</string>
+    <string name="andrStorageFolderDenied">Разрешите доступ к папкам в настройках Android и повторите попытку.</string>
+    <string name="andrStorageFolderFailed">Не удалось прочитать эту папку. Повторите попытку.</string>
+    <string name="andrStorageAccess">Разрешить доступ к папкам</string>
+    <string name="andrStorageWorking">Дождитесь окончания загрузки папки.</string>
+    <string name="andrStorageTitle">Память телефона</string>
+    <string name="andrStorageNearlyFull">Память почти заполнена: доступно %1$s. Освободите место, прежде чем устанавливать инструменты или запускать большую задачу.</string>
+    <string name="andrStorageAvailable">Доступно этому приложению: %1$s.</string>
+    <string name="andrStorageUnknown">Не удалось определить свободное место. Попробуйте измерить ещё раз.</string>
+    <string name="andrStorageMeasure">Измерить память и файлы Linux</string>
+    <string name="andrStorageMeasuring">Измеряем память…</string>
+    <string name="andrStorageHostSizes">Linux и инструменты: %1$s · Проекты: %2$s. Это размеры файлов, а не вся память приложения.</string>
+    <string name="andrStorageHostUnknown">Не удалось измерить размеры файлов Linux. Ваши файлы сохранены.</string>
+    <string name="andrStorageRootHere">Сама внутренняя память не может быть проектом. Откройте папку внутри неё.</string>
+</resources>

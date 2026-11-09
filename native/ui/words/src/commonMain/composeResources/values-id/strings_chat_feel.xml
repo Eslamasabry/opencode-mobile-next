@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatFeelShare">Bagikan</string>
+    <string name="chatFeelSelectText">Pilih teks</string>
+    <string name="chatFeelEditAndResend">Ubah dan kirim ulang</string>
+    <string name="chatFeelOpenLinkTitle">Buka tautan?</string>
+    <string name="chatFeelOpenLinkBody">%1$s akan dibuka di luar aplikasi.</string>
+    <string name="chatFeelOpenLinkAction">Buka</string>
+    <string name="chatFeelLinkRefused">Tautan ini tidak bisa dibuka dari sini.</string>
+    <string name="chatFeelUndoTitle">Urungkan mulai dari sini?</string>
+    <string name="chatFeelUndoBody">Perintah ini dan semua setelahnya diurungkan di server.</string>
+    <string name="chatFeelUndoAction">Urungkan</string>
+    <string name="chatFeelPicture">Gambar</string>
+    <string name="chatFeelPictureOnServer">Gambar di server: %1$s</string>
+    <string name="chatFeelPictureOnWeb">Gambar dari %1$s. Ketuk untuk membukanya di luar aplikasi.</string>
+    <string name="chatFeelDone">Selesai</string>
+    <string name="chatFeelPictureLoading">Membuka gambar…</string>
+    <string name="chatFeelPictureFailed">Gambar ini tidak bisa ditampilkan di sini.</string>
+</resources>

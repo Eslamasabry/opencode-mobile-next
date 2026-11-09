@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">Mensaje conservado</string>
+    <string name="composerKeptRestoreRefused">No se pudo restaurar este mensaje. Sigue en Mensajes conservados. Ábrelo de nuevo para restaurarlo.</string>
+    <string name="composerKeptMissingFiles">No se pudieron restaurar estos archivos: %1$s. Su mensaje conservado no cambió.</string>
+</resources>

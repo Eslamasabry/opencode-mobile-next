@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">На счёте провайдера модели нет средств для этой модели. Пополните счёт у этого провайдера или выберите другую модель.</string>
+    <string name="chatReplyFailedConnectionLost">Соединение с провайдером модели потеряно, поэтому ответ остановился. Попросите продолжить или отправьте снова.</string>
+</resources>

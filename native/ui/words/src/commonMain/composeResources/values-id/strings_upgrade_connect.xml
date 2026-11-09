@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeConnectScanTitle">Pindai kode dari komputer Anda</string>
+    <string name="upgradeConnectScanBody">Jalankan perintah di bawah pada komputer Anda. Perintah itu menampilkan kode. Pindai kode tersebut dan Anda terhubung.</string>
+    <string name="upgradeConnectPasteBody">Jalankan perintah di bawah pada komputer Anda, lalu tempel kode yang ditampilkan.</string>
+    <string name="upgradeConnectCommandTitle">Jalankan ini di komputer Anda</string>
+    <string name="upgradeConnectOtherWays">Cara lain untuk terhubung</string>
+    <string name="upgradeConnectTailscaleBody">Jangkau komputer Anda lewat jaringan pribadi.</string>
+    <string name="upgradeConnectManualBody">Ketik alamat, lalu kata sandi.</string>
+    <string name="upgradeConnectNameLine">Akan disimpan sebagai %1$s. Anda dapat mengubah namanya di bawah.</string>
+    <string name="upgradeConnectNameFallback">Komputer saya</string>
+    <string name="upgradeReadyTitle">Terhubung ke %1$s</string>
+    <string name="upgradeReadyVersion">Versi %1$s</string>
+    <string name="upgradeReadyStart">Mulai percakapan</string>
+</resources>

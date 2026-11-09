@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeStartOpenProject">Buka proyek</string>
+    <string name="homeStartOpenProjectDetail">Mulai yang baru atau pilih folder</string>
+    <string name="homeStartConnectDetail">Jalankan agen di komputer Anda sendiri</string>
+    <string name="homeStartDemo">Lihat yang dapat dilakukan agen</string>
+    <string name="homeStartDemoDetail">Contoh singkat, tanpa penyiapan</string>
+    <string name="homeProjectSheetNew">Proyek baru</string>
+    <string name="homeProjectSheetNewDetail">Membuat folder di proyek Anda, dengan Git</string>
+    <string name="homeProjectSheetByPath">Pilih folder lewat path</string>
+</resources>

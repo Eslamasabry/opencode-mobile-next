@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">Dossiers Linux intégrés</string>
+    <string name="secBuiltinFoldersBody">Parcourez le stockage des projets et les dossiers Linux de ce téléphone.</string>
+    <string name="secBuiltinFolderLinked">Ce dossier est un lien. Choisissez un vrai dossier.</string>
+    <string name="secBuiltinFolderNotInstalled">Installez Linux sur ce téléphone pour parcourir ces dossiers.</string>
+</resources>

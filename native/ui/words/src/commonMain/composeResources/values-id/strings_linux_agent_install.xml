@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentInstall">Instal atau perbarui %1$s</string>
+    <string name="linuxAgentInstalling">Menginstal %1$s</string>
+    <string name="linuxAgentInstallBackground">Instalasi berlanjut di latar belakang. Ketuk Muat ulang untuk melihat progres terbarunya.</string>
+    <string name="linuxAgentInstallCancel">Batalkan instalasi</string>
+    <string name="linuxAgentInstallBusy">Penyiapan lain sedang berjalan. Tunggu sampai selesai atau batalkan dulu.</string>
+    <string name="linuxAgentInstallSpace">Ruang kosong tidak cukup untuk unduhan ini dan file terpasangnya. Kosongkan penyimpanan lalu coba lagi.</string>
+    <string name="linuxAgentInstallUnavailable">Agen ini tidak dapat diinstal di ponsel ini saat ini.</string>
+    <string name="linuxAgentInstallDone">%1$s terinstal. Masuk dan pemeriksaan kompatibilitas ponsel masih diperlukan sebelum dipakai.</string>
+    <string name="linuxAgentInstallFailed">%1$s tidak dapat diinstal. Ketuk Instal atau perbarui untuk mencoba lagi.</string>
+    <string name="linuxAgentInstallInterrupted">Instalasi %1$s terhenti. Ketuk Instal atau perbarui untuk mengulang dengan aman.</string>
+</resources>

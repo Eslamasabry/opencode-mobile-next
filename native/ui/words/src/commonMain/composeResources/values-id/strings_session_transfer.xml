@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">Alat percakapan</string>
+    <string name="sessionTransferWait">Menyelesaikan tindakan ini…</string>
+    <string name="sessionTransferExport">Simpan salinan lengkap</string>
+    <string name="sessionTransferRedact">Sembunyikan nilai pribadi</string>
+    <string name="sessionTransferRedactBody">Server mengganti nilai sensitif di salinan yang diekspor.</string>
+    <string name="sessionTransferSave">Simpan file JSON</string>
+    <string name="sessionTransferImport">Impor percakapan</string>
+    <string name="sessionTransferChoose">Pilih file JSON</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="other">%1$d catatan pesan</item>
+    </plurals>
+    <string name="sessionTransferRedacted">Salinan ini berisi nilai yang disembunyikan. Impor mempertahankan penggantinya.</string>
+    <string name="sessionTransferDestination">Impor ke folder server ini</string>
+    <string name="sessionTransferDestinationRequired">Pilih folder tujuan dahulu.</string>
+    <string name="sessionTransferImportAction">Impor percakapan yang sudah ditinjau</string>
+    <string name="sessionTransferNote">Catatan percakapan</string>
+    <string name="sessionTransferLoadNote">Baca catatan saat ini</string>
+    <string name="sessionTransferSaveNote">Simpan catatan</string>
+    <string name="sessionTransferRemoveNote">Hapus catatan</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="other">Catatan harus muat dalam %1$d byte terenkode. Persingkat lalu coba lagi.</item>
+    </plurals>
+    <string name="sessionTransferSaved">Percakapan tersimpan.</string>
+    <string name="sessionTransferImported">Percakapan diimpor.</string>
+    <string name="sessionTransferNoteSaved">Catatan tersimpan.</string>
+    <string name="sessionTransferNoteRemoved">Catatan dihapus.</string>
+    <string name="sessionTransferInvalid">Pilih ekspor JSON OpenCode yang valid.</string>
+    <string name="sessionTransferLarge">Pilih ekspor yang lebih kecil dari 128 MiB.</string>
+    <string name="sessionTransferChanged">Koneksi server berubah. Buka alat ini lagi sebelum melanjutkan.</string>
+    <string name="sessionTransferSignIn">Server menolak akses. Periksa data masuk server Anda dan coba lagi.</string>
+    <string name="sessionTransferConflict">Percakapan dengan identitas ini sudah ada. Pilih tujuan lain atau tinjau di server.</string>
+    <string name="sessionTransferUnsupported">Server ini tidak menyediakan pemindahan percakapan.</string>
+    <string name="sessionTransferFailed">Tindakan ini tidak dapat diselesaikan. Periksa koneksi dan coba lagi.</string>
+    <string name="sessionTransferReference">Rujuk folder server</string>
+    <string name="sessionTransferReferencePath">Path folder lengkap di server ini</string>
+    <string name="sessionTransferReferenceBody">Menambahkan rujukan folder ke perintah berikutnya. Folder tetap berada di server.</string>
+    <string name="sessionTransferReferenceAdd">Tambah rujukan folder</string>
+    <string name="sessionTransferReferenceRequired">Masukkan path folder server dahulu.</string>
+    <string name="sessionTransferReferenceAdded">Rujukan folder ditambahkan ke draf Anda.</string>
+    <string name="sessionTransferReferenceInvalid">Masukkan path folder absolut di server.</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Hubungkan</string>
+    <string name="shortcut_connect_long">Pilih server untuk dihubungkan</string>
+    <string name="shortcut_new_task_short">Percakapan baru</string>
+    <string name="shortcut_new_task_long">Mulai percakapan baru di server saat ini</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureCertificate">Không xác minh được chứng chỉ của máy chủ này. Kiểm tra máy chủ rồi thử lại.</string>
+    <string name="serverFailureIncompatible">Máy chủ này chạy phiên bản mà ứng dụng không dùng được.</string>
+    <string name="serverFailureNetwork">Không kết nối được máy chủ này. Kiểm tra mạng hoặc địa chỉ máy chủ rồi thử lại.</string>
+    <string name="serverFailureRejected">Máy chủ đã từ chối yêu cầu này. Kiểm tra máy chủ rồi thử lại.</string>
+    <string name="serverFailureSecret">Ứng dụng không đọc được mật khẩu đã lưu. Hãy nhập lại mật khẩu.</string>
+    <string name="serverFailureServer">Máy chủ gặp sự cố. Thử lại sau.</string>
+    <string name="serverFailureStorage">Ứng dụng không đọc hoặc lưu được kết nối này trên điện thoại này. Thử lại.</string>
+    <string name="serverFailureTimeout">Máy chủ không phản hồi kịp. Thử lại.</string>
+    <string name="serverFailureUnreadableReply">Máy chủ đã phản hồi, nhưng ứng dụng không đọc được nội dung.</string>
+    <string name="serverFailureOther">Ứng dụng không hoàn tất được kết nối này. Thử lại.</string>
+</resources>

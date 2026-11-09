@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHeaderServer">Máy chủ</string>
+    <string name="chatHeaderContext">Ngữ cảnh đã dùng</string>
+    <string name="chatHeaderNotReported">Chưa có báo cáo</string>
+    <string name="chatHeaderTokens">Token</string>
+    <string name="chatHeaderInUse">Đang dùng</string>
+    <string name="chatHeaderRenameFailed">Không thể đổi tên cuộc trò chuyện.</string>
+    <string name="chatHeaderShareFailed">Không thể chia sẻ cuộc trò chuyện.</string>
+    <string name="chatHeaderUnshareFailed">Không thể dừng chia sẻ.</string>
+    <string name="chatHeaderForkFailed">Không thể tách nhánh cuộc trò chuyện.</string>
+    <string name="chatHeaderArchiveFailed">Không thể lưu trữ cuộc trò chuyện.</string>
+    <string name="chatHeaderDeleteFailed">Không thể xóa cuộc trò chuyện.</string>
+    <string name="chatHeaderFailureDetails">Chi tiết</string>
+    <string name="chatHeaderApprovalSaveFailed">Không thể lưu cài đặt phê duyệt.</string>
+</resources>

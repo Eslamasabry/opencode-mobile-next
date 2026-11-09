@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="invitation40Question">Đã hỏi 3 lần. Luôn cho phép hành động này?</string>
+    <string name="invitation40KeepAsking">Tiếp tục hỏi</string>
+    <string name="invitation40SaveFailed">Không lưu được lựa chọn này. Yêu cầu vẫn đang chờ; bạn có thể trả lời một lần.</string>
+</resources>

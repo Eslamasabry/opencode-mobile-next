@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelSaving">Đang lưu…</string>
+    <string name="widgetPanelClose">Đóng</string>
+    <string name="widgetPanelPreview">Xem trước widget</string>
+    <string name="widgetPanelSquare">Vuông</string>
+    <string name="widgetPanelWide">Rộng</string>
+    <string name="widgetPanelBackground">Nền</string>
+    <string name="widgetPanelSolid">Đặc</string>
+    <string name="widgetPanelTinted">Phủ màu</string>
+    <string name="widgetPanelTransparent">Trong suốt</string>
+    <string name="widgetPanelAccent">Màu nhấn</string>
+    <string name="widgetPanelActionUnavailable">Widget này cần có kết nối trực tiếp mới gửi được tin nhắn.</string>
+    <string name="widgetPanelSending">Đang gửi…</string>
+    <string name="widgetPanelSent">Đã gửi</string>
+    <string name="widgetPanelBusy">Một thao tác widget khác vẫn đang chạy. Tin nhắn của bạn vẫn còn ở đây.</string>
+    <string name="widgetPanelDictate">Đọc để nhập</string>
+</resources>

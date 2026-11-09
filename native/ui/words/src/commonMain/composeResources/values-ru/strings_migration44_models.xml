@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="native44AllModels">Все модели (%1$s)</string>
+    <plurals name="native44MoreModels">
+        <item quantity="one">Показать ещё %1$s модель</item>
+        <item quantity="few">Показать ещё %1$s модели</item>
+        <item quantity="many">Показать ещё %1$s моделей</item>
+        <item quantity="other">Показать ещё %1$s модели</item>
+    </plurals>
+    <string name="native44Context">Контекст: %1$s</string>
+    <string name="native44Output">Предел вывода: %1$s</string>
+    <string name="native44Price">Ввод $%1$s · вывод $%2$s за миллион токенов</string>
+    <string name="native44ModelShortcuts">Сменить модель</string>
+    <string name="native44CopyFailed">Не удалось скопировать ID модели. Повторите.</string>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">Thay đổi và worktree</string>
+    <string name="agentProjectReadFailed">Không hoàn tất được thao tác này của dự án. Kiểm tra trạng thái mới nhất trước khi thử lại.</string>
+    <string name="agentProjectNoGit">Thư mục này không phải kho Git.</string>
+    <string name="agentProjectBranch">Nhánh hiện tại</string>
+    <string name="agentProjectBaseBranch">Nhánh gốc</string>
+    <string name="agentProjectDetached">Checkout tách rời</string>
+    <string name="agentProjectWorkingTree">Cây làm việc</string>
+    <string name="agentProjectBranchChanges">Kể từ nhánh gốc</string>
+    <string name="agentProjectAllFiles">Tất cả tệp đã thay đổi</string>
+    <string name="agentProjectNoPatch">Tệp này không có bản vá dạng văn bản.</string>
+    <string name="agentProjectPreviousLines">200 dòng trước</string>
+    <string name="agentProjectNextLines">200 dòng sau</string>
+    <string name="agentProjectChangedFiles">Tệp đã thay đổi</string>
+    <string name="agentProjectNoChanges">Không có thay đổi nào trong phần so sánh này.</string>
+    <string name="agentProjectLineChanges">Thêm %1$d · xóa %2$d</string>
+    <string name="agentProjectWorktrees">Worktree</string>
+    <string name="agentProjectNoWorktrees">Dự án này chưa có worktree nào.</string>
+    <string name="agentProjectReady">Sẵn sàng</string>
+    <string name="agentProjectRemove">Xóa worktree</string>
+    <string name="agentProjectWorking">Chờ thao tác này hoàn tất.</string>
+    <string name="agentProjectNewWorktree">Worktree mới đặt tên</string>
+    <string name="agentProjectGenerateWorktree">Tạo với tên tự động</string>
+    <string name="agentProjectRefresh">Làm mới trạng thái dự án</string>
+    <string name="agentProjectNameInvalid">Dùng 1–128 chữ cái, chữ số, dấu chấm, dấu gạch dưới hoặc gạch nối. Bắt đầu bằng chữ cái hoặc chữ số và không dùng hai dấu chấm liền nhau.</string>
+    <string name="agentProjectWorktreeName">Tên worktree</string>
+    <string name="agentProjectCreate">Tạo worktree</string>
+    <string name="agentProjectRemoveQuestion">Xóa “%1$s”?</string>
+    <string name="agentProjectRemoveBody">Lưu trữ worktree cùng các cuộc trò chuyện của nó và xóa thư mục: %1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="other">Worktree này có %1$d tệp đã thay đổi. Chúng sẽ bị xóa cùng thư mục.</item>
+    </plurals>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Raciocínio</string>
+    <string name="composerFullThinkingDefault">Padrão</string>
+    <string name="composerFullAgent">Agente</string>
+    <string name="composerFullModels">Modelos</string>
+    <string name="composerFullModelChangeFailed">Não foi possível confirmar a escolha do modelo. Confira sua seleção e tente novamente.</string>
+    <string name="composerFullAttach">Anexar</string>
+    <string name="composerFullAddTitle">Adicionar ao pedido</string>
+    <string name="composerFullPhotoLibrary">Galeria de fotos</string>
+    <string name="composerFullTakePhoto">Tirar foto</string>
+    <string name="composerFullPasteImage">Colar imagem da área de transferência</string>
+    <string name="composerFullPasteEmpty">Não há imagem na área de transferência.</string>
+    <string name="composerFullDraftFull">Remova um anexo primeiro. Um rascunho comporta até 5 arquivos e 20 MB no total.</string>
+    <string name="composerFullPhotoDenied">O acesso às fotos foi negado. Permita o acesso à câmera ou às fotos nas configurações do app no Android e tente novamente.</string>
+    <string name="composerFullStale">A conversa mudou enquanto você escolhia. Tentar novamente.</string>
+    <string name="composerFullCommands">Comandos</string>
+    <string name="composerFullFiles">Arquivos do projeto</string>
+    <string name="composerFullAttachmentsLocal">Os anexos são salvos com este rascunho neste aparelho.</string>
+    <string name="composerFullSteerHint">Oriente enquanto trabalha…</string>
+</resources>

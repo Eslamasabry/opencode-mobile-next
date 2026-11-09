@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupRbStatusUnreadable">Không đọc được thiết lập đã lưu. Hãy thử Tiếp tục thiết lập.</string>
+    <string name="setupRbToolsUncheckable">Không kiểm tra được các công cụ đã cài. Hãy thử lại.</string>
+</resources>

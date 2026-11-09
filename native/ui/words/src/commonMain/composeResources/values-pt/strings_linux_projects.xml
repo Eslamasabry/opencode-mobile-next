@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxFindProjects">Encontrar projetos neste celular</string>
+    <string name="linuxFindProjectsBody">Procura no espaço de projetos e no armazenamento compartilhado do celular. As pastas continuam onde estão.</string>
+    <string name="linuxStopFinding">Parar de procurar</string>
+    <string name="linuxFindProjectsDone">Busca concluída</string>
+    <string name="linuxFindProjectsLimited">Parou no limite da varredura. Estes são os primeiros resultados.</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">Pasta do projeto</string>
+</resources>

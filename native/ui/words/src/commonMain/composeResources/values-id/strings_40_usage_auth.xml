@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Masuk ke %1$s</string>
+    <string name="m40AuthBack">Kembali</string>
+    <string name="m40AuthWorking">Memproses…</string>
+    <string name="m40AuthPlaces">Di mana Anda ingin masuk?</string>
+    <string name="m40AuthBest">Penggunaan siap dibaca di sini.</string>
+    <string name="m40AuthServer">Data masuk disimpan di server ini.</string>
+    <string name="m40AuthPhone">Ponsel ini</string>
+    <string name="m40AuthMethods">Pilih cara masuk</string>
+    <string name="m40AuthNoPlace">Tidak ada tempat untuk masuk</string>
+    <string name="m40AuthNoPlaceBody">Tambahkan server OpenCode atau instal agen penyedia ini di ponsel ini.</string>
+    <string name="m40AuthUnavailable">Masuk tidak tersedia di sini</string>
+    <string name="m40AuthUnavailableBody">Sambungan ini tidak menawarkan cara masuk yang didukung untuk penyedia ini.</string>
+    <string name="m40AuthKey">Kunci API</string>
+    <string name="m40AuthKeyHelp">Kunci Anda dikirim ke sambungan ini dan disimpan di sana.</string>
+    <string name="m40AuthSaveKey">Simpan kunci</string>
+    <string name="m40AuthContinue">Lanjutkan</string>
+    <string name="m40AuthEnterValue">Masukkan nilai.</string>
+    <string name="m40AuthSelectValue">Pilih salah satu opsi.</string>
+    <string name="m40AuthOpenPage">Buka halaman masuk</string>
+    <string name="m40AuthAskPage">Buka %1$s di browser Anda?</string>
+    <string name="m40AuthOpenBrowser">Buka di browser</string>
+    <string name="m40AuthCheck">Periksa proses masuk</string>
+    <string name="m40AuthWaiting">Selesaikan proses masuk, lalu periksa di sini.</string>
+    <string name="m40AuthCommandWaiting">Sambungan sedang menjalankan proses masuknya. Periksa di sini setelah selesai.</string>
+    <string name="m40AuthCode">Kode masuk atau URL callback</string>
+    <string name="m40AuthFinish">Selesaikan proses masuk</string>
+    <string name="m40AuthDone">Selesai</string>
+    <string name="m40AuthComplete">Sudah masuk</string>
+    <string name="m40AuthCompleteBody">Daftar paket telah dimuat ulang.</string>
+    <string name="m40AuthFailed">Tidak dapat menyelesaikan langkah ini. Coba lagi.</string>
+    <string name="m40AuthReenter">Masukkan lagi kata sandi server ini di Server, lalu kembali ke sini.</string>
+    <string name="m40AuthDetails">Detail</string>
+    <string name="m40AuthCopyDetails">Salin detail</string>
+    <string name="m40AuthDeviceCode">Gunakan kode %1$s di halaman masuk.</string>
+    <string name="m40AuthCopyCode">Salin kode</string>
+    <string name="m40AuthCopied">Kode tersalin</string>
+    <string name="m40AuthBrowserHint">Cara ini harus diselesaikan di browser pada mesin yang menjalankan server ini.</string>
+    <string name="m40AuthDeviceHint">Masuk menggunakan kode perangkat.</string>
+    <string name="m40AuthAccountHint">Masuk dengan akun penyedia Anda.</string>
+    <string name="m40AuthCommandHint">Sambungan menjalankan proses masuk ini; ponsel tidak menjalankan perintah apa pun.</string>
+    <string name="m40AuthPhoneHint">Gunakan agen terinstal milik penyedia ini di ponsel ini.</string>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">Android остановил приложение. Снова проверяем, что работает…</string>
+    <string name="stateLifecycleUnavailable">Android остановил приложение. Не удалось проверить восстановление.</string>
+    <string name="stateLifecycleStopped">Android остановил приложение. OpenCode остановлен.</string>
+    <string name="stateLifecycleUnreachable">Android остановил приложение. OpenCode пока не отвечает.</string>
+    <string name="stateLifecyclePartial">OpenCode отвечает. Некоторые ранее работавшие службы не готовы.</string>
+    <string name="stateLifecycleReady">OpenCode и ранее работавшие службы снова отвечают. Прерванным задачам может понадобиться ваше внимание.</string>
+    <string name="stateStorageTitle">Хранилище приложения</string>
+    <string name="stateStorageServer">Linux и OpenCode</string>
+    <string name="stateStoragePrivate">Сохранённые входы, настройки и чаты</string>
+    <plurals name="stateStorageProject">
+        <item quantity="one">%1$s · 1 файл · %3$d личных</item>
+        <item quantity="few">%1$s · %2$d файла · %3$d личных</item>
+        <item quantity="many">%1$s · %2$d файлов · %3$d личных</item>
+        <item quantity="other">%1$s · %2$d файла · %3$d личных</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="one">%1$d сохранённый сервер</item>
+        <item quantity="few">%1$d сохранённых сервера</item>
+        <item quantity="many">%1$d сохранённых серверов</item>
+        <item quantity="other">%1$d сохранённого сервера</item>
+    </plurals>
+    <string name="stateStorageEmpty">На этом телефоне не хранятся ни Linux, ни проекты.</string>
+    <string name="stateStorageFailed">Не удалось измерить хранилище. Повторите.</string>
+    <string name="stateStorageRefresh">Измерить хранилище ещё раз</string>
+</resources>

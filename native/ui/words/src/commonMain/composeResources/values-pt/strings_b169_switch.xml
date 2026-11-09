@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Trocar de modelo</string>
+    <string name="b169UsedUp">%1$s está esgotado por enquanto</string>
+    <string name="b169UsedUpNoName">Este modelo está esgotado por enquanto</string>
+    <string name="b169ConnectProvider">Conectar um provedor…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="one">A resposta interrompida já executou %1$d passo. Enviar de novo com %2$s?</item>
+        <item quantity="many">A resposta interrompida já executou %1$d passos. Enviar de novo com %2$s?</item>
+        <item quantity="other">A resposta interrompida já executou %1$d passos. Enviar de novo com %2$s?</item>
+    </plurals>
+    <string name="b169AskSend">Enviar</string>
+    <string name="b169AttachAgain">Anexe %1$s de novo para enviar</string>
+    <string name="b169Free">Grátis · pode usar suas mensagens</string>
+    <string name="b169TooLong">Longo demais para este modelo</string>
+    <string name="b169Suggested">Sugerido</string>
+    <string name="b169Offline">Trocar de modelo volta a funcionar quando o servidor voltar.</string>
+</resources>

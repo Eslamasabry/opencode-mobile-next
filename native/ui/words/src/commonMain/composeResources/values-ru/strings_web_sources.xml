@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">Этот URL уже есть в вашем списке проверки.</string>
+    <string name="webSourcesFullNative">Можно проверить до 10 источников. Удалите один, прежде чем добавлять другой.</string>
+    <string name="webSourcesChooseNative">Выберите хотя бы один проверенный источник.</string>
+</resources>

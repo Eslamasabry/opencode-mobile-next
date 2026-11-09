@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">Les fichiers de connexion connus et les réglages d’environnement des services enregistrés restent sur ce téléphone. Les commandes de service personnalisées sont incluses\u00A0; vérifiez-les avant de partager une sauvegarde.</string>
+    <string name="linuxBackupServiceAccountsNative">Les services dont les réglages d’environnement sont enregistrés sont sauvegardés désactivés. Après la restauration, configurez de nouveau leur compte et leur environnement avant de les démarrer.</string>
+</resources>

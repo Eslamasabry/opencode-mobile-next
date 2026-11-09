@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">Hentikan server yang dimulai ulang</string>
+    <string name="activityUndoing">Menghentikan server yang dimulai ulang…</string>
+    <string name="activityUndone">Pemulaian ulang dibatalkan.</string>
+    <string name="activityUndoFailed">Pembatalan gagal.</string>
+    <string name="activityUndoUnconfirmed">Hasil pembatalan tidak diketahui. Tidak akan dicoba lagi.</string>
+    <string name="activityUndoUnavailable">Pembatalan tidak tersedia.</string>
+</resources>

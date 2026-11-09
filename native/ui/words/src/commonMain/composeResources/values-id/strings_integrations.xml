@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Penyedia dan alat</string>
+    <string name="intBack">Kembali</string>
+    <string name="intRefresh">Muat ulang</string>
+    <string name="intServers">Server</string>
+    <string name="intNoServer">Hubungkan ke server dulu</string>
+    <string name="intProviders">Penyedia</string>
+    <string name="intConnected">Sudah masuk</string>
+    <string name="intNotConnected">Belum masuk</string>
+    <string name="intKey">Kunci API</string>
+    <string name="intSaveKey">Simpan kunci di server</string>
+    <string name="intKeyPage">Dapatkan kunci API</string>
+    <string name="intOpenSignIn">Buka halaman masuk</string>
+    <string name="intCode">Kode atau URL callback</string>
+    <string name="intCompleteSignIn">Selesaikan masuk</string>
+    <string name="intSignInHelp">Selesaikan di browser Anda, lalu tempel kode atau URL callback-nya di sini.</string>
+    <string name="intConnectors">Konektor</string>
+    <string name="intConnectorConnected">Terhubung</string>
+    <string name="intConnectorNotConnected">Perlu perhatian</string>
+    <string name="intConnectorName">Nama konektor</string>
+    <string name="intConnectorUrl">Alamat HTTPS</string>
+    <string name="intHeaderName">Nama header (opsional)</string>
+    <string name="intHeaderValue">Nilai header</string>
+    <string name="intSaveConnector">Tambah konektor</string>
+    <string name="intHeaderHelp">Nilai header bersifat rahasia. Nilai ini hanya dikirim ke server ini dan tidak pernah ditampilkan di diagnostik.</string>
+    <string name="intSkills">Tulis keterampilan</string>
+    <string name="intRequirements">Apa yang harus dilakukan keterampilan ini?</string>
+    <string name="intDraftHelp">Agen akan menyusun SKILL.md di percakapan baru untuk ditinjau. Agen tidak akan diminta memasangnya atau mengubah file.</string>
+    <string name="intAskDraft">Minta draf dari agen</string>
+    <string name="intOpenDraft">Buka percakapan draf</string>
+    <string name="intSaved">Tersimpan di server.</string>
+    <string name="intFailed">Belum selesai. Muat ulang sebelum mencoba lagi.</string>
+    <string name="intUnsupported">Server ini tidak mendukung tindakan ini.</string>
+    <string name="intChanged">Koneksi berubah. Buka halaman ini lagi.</string>
+    <string name="intInvalid">Periksa kolom wajib dan coba lagi.</string>
+    <string name="intDraftSent">Permintaan draf terkirim. Buka percakapan untuk mengikutinya.</string>
+    <string name="intDraftUncertain">Permintaan mungkin sudah sampai. Periksa percakapan sebelum mengirim lagi.</string>
+    <string name="intOpenQuestion">Buka halaman ini?</string>
+    <string name="intOpen">Buka halaman</string>
+    <string name="intInsecure">Alamat ini tidak terenkripsi.</string>
+    <string name="intConnectorReady">Terhubung untuk pesan berikutnya.</string>
+    <string name="intConnectorUnknown">Terhubung. Penemuan alat belum terkonfirmasi.</string>
+    <string name="intConnectorAuth">Konektor ini mengharuskan Anda masuk.</string>
+    <string name="intConnecting">Menghubungkan</string>
+    <string name="intConnectorSignIn">Masuk ke konektor ini</string>
+    <string name="intConnectorCancelSignIn">Batalkan masuk</string>
+</resources>

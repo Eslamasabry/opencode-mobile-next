@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">Cảnh báo</string>
+    <string name="m40UsageWidget">Widget màn hình chính</string>
+    <string name="m40UsageReadFrom">Đọc mức sử dụng</string>
+    <string name="m40UsageAdd">Thêm gói đăng ký</string>
+    <string name="m40UsageSaveFailed">Không lưu được thay đổi đó. Hãy thử lại.</string>
+    <string name="m40UsageAlertsWatch">Theo dõi các gói của tôi</string>
+    <string name="m40UsageAlertsEvery">Theo dõi mọi gói đăng ký có thể đọc được giới hạn.</string>
+    <string name="m40UsageTellMe">Báo cho tôi khi</string>
+    <string name="m40UsageReset">Gói đã dùng hết có lại</string>
+    <string name="m40UsageDifferent">Khác cho các gói này</string>
+    <string name="m40UsageWhen">Khi nào báo cho tôi</string>
+    <string name="m40UsageQuiet">Giờ yên lặng</string>
+    <string name="m40UsageQuietShared">Dùng chung giờ yên lặng với các thông báo khác.</string>
+    <string name="m40UsageQuietStart">Bắt đầu</string>
+    <string name="m40UsageQuietEnd">Kết thúc</string>
+    <string name="m40UsageQuietAllDay">Các mốc giờ này tắt cảnh báo cả ngày.</string>
+    <string name="m40UsageWifi">Chỉ qua Wi-Fi</string>
+    <string name="m40UsageNothingToWatch">Chưa có gói nào đọc được để theo dõi.</string>
+    <string name="m40UsageDownTo">Khi một gói chỉ còn</string>
+    <string name="m40UsageSameAsOthers">Giống các gói khác: còn %1$d%</string>
+    <string name="m40UsageWidgetPlans">Các gói trên widget</string>
+    <string name="m40UsageWidgetSetup">Hiện các gói cần thiết lập</string>
+    <string name="m40UsageWidgetWindows">Khoảng thời gian hiển thị</string>
+    <string name="m40UsageBoth">5 giờ và tuần này</string>
+    <string name="m40UsageReaderGone">Kết nối đã lưu này không còn nữa.</string>
+    <string name="m40UsageReadPhoneBody">Hãy thiết lập trình đọc trong Ubuntu trong ứng dụng để đọc giới hạn gói bạn đã đăng nhập. Khóa nhà cung cấp luôn ở trên máy chủ.</string>
+    <string name="m40UsageReadComputerBody">Cho phép một lần kiểm tra ngắn, chỉ đọc qua máy chủ này khi làm mới mức sử dụng. Nó tìm giới hạn của các gói đã đăng nhập trên máy tính này. Bạn có thể tắt ở đây.</string>
+    <string name="m40UsageWhatRuns">Những gì chạy trên máy tính</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">Lần kiểm tra đọc thông tin đăng nhập của nhà cung cấp ngay trên máy và chỉ trả về giới hạn gói cùng một mã tham chiếu tài khoản ẩn. Khóa và token không bao giờ quay về ứng dụng.</string>
+    <string name="m40UsageCopying">Đang sao chép trình đọc</string>
+    <string name="m40UsageCheckingSignIns">Đang kiểm tra đăng nhập</string>
+    <string name="m40UsageStarting">Đang khởi động trình đọc</string>
+    <string name="m40UsageReading">Đang đọc giới hạn gói</string>
+    <string name="m40UsageChecking">Đang kiểm tra kết nối</string>
+    <string name="m40UsageNeedsNode">Máy tính này cần Node 20 trở lên để đọc giới hạn gói.</string>
+    <string name="m40UsageLinuxNotReady">Hãy thiết lập Ubuntu trong ứng dụng trước, rồi thử lại.</string>
+    <string name="m40UsageServerTooOld">Hãy cập nhật máy chủ này để đọc mức sử dụng qua terminal lệnh.</string>
+    <string name="m40UsagePrepareFailed">Không chuẩn bị được trình đọc. Hãy thử lại.</string>
+    <string name="m40UsageStartFailed">Trình đọc không khởi động. Hãy thử lại.</string>
+    <string name="m40UsageRemoveFailed">Không xóa được trình đọc. Hãy thử lại.</string>
+    <string name="m40UsageUnreachable">Không kết nối được với máy tính này. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="m40UsageNoAnswer">Lần kiểm tra không trả về câu trả lời đọc được. Hãy thử lại.</string>
+    <string name="m40UsageFoundNone">Lần kiểm tra không tìm thấy gói nào đã đăng nhập mà nó đọc được giới hạn.</string>
+    <string name="m40UsageFound">Tìm thấy: %1$s</string>
+    <string name="m40UsageReadNow">Đọc ngay</string>
+    <string name="m40UsageTurnOn">Bật việc đọc</string>
+    <string name="m40UsageTurnOff">Tắt việc đọc</string>
+    <string name="m40UsageThreshold">Mức cảnh báo cho gói này</string>
+    <string name="m40UsageResetHelp">Báo cho tôi khi gói này có lại.</string>
+    <string name="m40UsageReadOff">Tắt việc đọc từ %1$s</string>
+    <string name="m40UsageChooseSignIn">Chọn nơi đăng nhập</string>
+</resources>

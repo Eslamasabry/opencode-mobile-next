@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">Найти в моей сети</string>
+    <string name="upgradeFindBody">Искать OpenCode на компьютерах в этой сети Wi-Fi.</string>
+    <string name="upgradeFindReason">Чтобы найти ваш компьютер, приложение просматривает устройства в вашей сети Wi-Fi. Оно не отправляет пароль и опрашивает только ближайшие адреса.</string>
+    <string name="upgradeFindScanning">Ищем в этой сети Wi-Fi…</string>
+    <string name="upgradeFindStop">Остановить</string>
+    <string name="upgradeFindSearchAgain">Искать снова</string>
+    <string name="upgradeFindResultsLabel">Компьютеры, найденные в вашей сети</string>
+    <string name="upgradeFindNeedsPassword">Нужен пароль</string>
+    <string name="upgradeFindVersion">Версия %1$s</string>
+    <string name="upgradeFindPickLabel">Использовать: %1$s</string>
+    <string name="upgradeFindEmptyTitle">Ничего не найдено</string>
+    <string name="upgradeFindEmptyBody">Запустите OpenCode на компьютере командой `opencode serve --mdns`, убедитесь, что оба устройства в одной сети Wi-Fi, или введите адрес сами.</string>
+    <string name="upgradeFindEnterAddress">Ввести адрес</string>
+    <string name="upgradeFindDeniedBody">Без доступа к локальной сети приложение не сможет найти ваш компьютер. Разрешите доступ и повторите поиск или введите адрес сами.</string>
+    <string name="upgradeFindAllow">Разрешить и искать</string>
+    <string name="upgradeFindBlockedBody">Доступ к локальной сети для этого приложения выключен. Включите его в настройках приложения или введите адрес сами.</string>
+    <string name="upgradeFindOpenSettings">Открыть настройки приложения</string>
+</resources>

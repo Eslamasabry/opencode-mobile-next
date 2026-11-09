@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">Об этой сборке</string>
+    <string name="nativeAboutProvenance">Это независимое приложение создано при активной помощи ИИ. Основная поддерживаемая платформа — Android. Версии для компьютера экспериментальные и не проверялись на реальном оборудовании. Сообщайте о сбоях, чтобы помочь улучшить приложение.</string>
+    <string name="nativePhraseChipsTitle">Подсказки фраз</string>
+    <string name="nativePhraseChipsAliases">подсказки фраз быстрые фразы предложения поле ввода</string>
+    <string name="nativePhraseChipsDescription">Предлагать над полем сообщения короткие фразы, которые вы часто используете. Выученные фразы хранятся на этом устройстве.</string>
+    <string name="nativeToolsRequired">Обязательный</string>
+    <string name="nativeToolsOptional">Необязательный</string>
+    <string name="nativeToolsParameters">Параметры</string>
+    <string name="nativeToolsNoParameters">У этого инструмента нет параметров.</string>
+    <string name="nativeToolsCoding">Инструменты для модели</string>
+    <string name="nativeToolsChooseModel">Выберите модель, чтобы увидеть её инструменты.</string>
+    <string name="nativeCapabilitiesTitle">Что здесь работает</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Entri penggunaan itu telah berubah. Muat ulang Paket untuk melihat akun terkini.</string>
+    <string name="hub40ContinueOn">Lanjutkan di %1$s?</string>
+    <string name="hub40ContinueBody">Pintasan ini meminta membuka koneksi tersimpan untuk masuk ke penyedia. Tidak ada yang dikirim sampai Anda melanjutkan.</string>
+    <string name="hub40Continue">Lanjutkan</string>
+</resources>

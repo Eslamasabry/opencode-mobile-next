@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxHostSetupTitle">Настройка компьютера с Linux</string>
+    <string name="linuxHostSetupIntro">Скопируйте команду и вставьте её в терминал на компьютере с Ubuntu или Linux. Приложение не запускает её за вас.</string>
+    <string name="linuxHostSetupSafety">Установщик проверяет закреплённую загрузку перед установкой. OpenCode слушает только на этом компьютере; для подключения телефона используйте USB или аутентифицированный туннель.</string>
+    <string name="linuxHostSetupInstall">Установить OpenCode и его службу</string>
+    <string name="linuxHostSetupUpdate">Обновить OpenCode</string>
+    <string name="linuxHostSetupStart">Запустить службу</string>
+    <string name="linuxHostSetupStop">Остановить службу</string>
+    <string name="linuxHostSetupRestart">Перезапустить службу</string>
+    <string name="linuxHostSetupStatus">Проверить службу</string>
+    <string name="linuxHostSetupCopy">Скопировать установщик и команду</string>
+    <string name="linuxHostSetupCopyDetail">В копию входит полный установщик, встроенный в это приложение, а за ним выбранная команда. Он записывает ubuntu-opencode.sh в текущую папку. «Установить» сохраняет имеющийся OpenCode 2; «Обновить» никогда не переводит с OpenCode 1 и не понижает более новую версию.</string>
+    <string name="linuxHostSetupUsb">Когда телефон подключён по USB, выполните это на компьютере, чтобы пробросить порт сервера.</string>
+    <string name="linuxHostSetupCopyUsb">Скопировать команду для USB</string>
+</resources>

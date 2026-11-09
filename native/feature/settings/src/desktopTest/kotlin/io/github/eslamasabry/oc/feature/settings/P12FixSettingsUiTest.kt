@@ -66,13 +66,21 @@ class P12FixSettingsUiTest {
         }
 
     @Test
-    fun `B-L10N-008 the Language page lists every shipped language and shows a saved Spanish as chosen`() =
+    fun `B-L10N-008 the Language page lists only languages at 95 percent of English`() =
         runComposeUiTest {
-            val choices = FakeChoices(PersonalPrefs(language = AppLanguage.Spanish))
+            val choices = FakeChoices(PersonalPrefs(language = AppLanguage.System))
             show(choices)
             presenter.onOpen(SettingsPage.Language); waitForIdle()
-            listOf("Use system language", "English", "العربية", "Español", "日本語", "Português (Brasil)", "Русский", "简体中文")
-                .forEach { onNodeWithText(it).performScrollTo().assertExists() }
+            val names =
+                mapOf("en" to "English", "ar" to "العربية", "es" to "Español", "ja" to "日本語", "pt" to "Português (Brasil)", "ru" to "Русский", "vi" to "Tiếng Việt", "id" to "Bahasa Indonesia", "fr" to "Français", "zh" to "简体中文")
+            onNodeWithText("Use system language").performScrollTo().assertExists()
+            names.forEach { (tag, name) ->
+                if (tag in io.github.eslamasabry.oc.ui.words.LanguageCoverage.offered) {
+                    onNodeWithText(name).performScrollTo().assertExists()
+                } else {
+                    onNodeWithText(name).assertDoesNotExist()
+                }
+            }
             tap("Use system language")
             assertEquals(AppLanguage.System, choices.value.value.language)
         }

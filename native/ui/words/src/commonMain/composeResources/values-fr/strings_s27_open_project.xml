@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">Où se trouve le projet\u00A0?</string>
+    <string name="openProjectWhereBody">Choisissez le téléphone ou l’ordinateur qui le contient.</string>
+    <string name="openProjectStatusConnected">Connecté</string>
+    <string name="openProjectStatusConnecting">Connexion en cours</string>
+    <string name="openProjectStatusNotConnected">Non connecté</string>
+    <string name="openProjectTypePath">Saisir un chemin</string>
+    <string name="openProjectTypePathBody">Ouvrir un dossier à partir de son chemin complet</string>
+    <string name="openProjectNewFolder">Nouveau dossier</string>
+    <string name="openProjectNewFolderBody">Créer un dossier dans %1$s et l’ouvrir</string>
+    <string name="openProjectCloneBody">Copier un dépôt dans %1$s et l’ouvrir</string>
+    <string name="openProjectCloneFailed">Impossible de copier le dépôt. Vérifiez son adresse et que le serveur peut y accéder.</string>
+    <string name="openProjectSlowBody">Le serveur met plus de temps que d’habitude à répondre.</string>
+    <string name="openProjectProjectsEmptyBody">Clonez un dépôt ou créez un nouveau dossier pour commencer.</string>
+    <string name="openProjectServerNotConnected">Ce serveur n’est pas connecté pour le moment. Réessayez une fois qu’il l’est.</string>
+</resources>

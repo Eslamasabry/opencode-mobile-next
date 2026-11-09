@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">Công cụ</string>
+    <string name="protoToolsRefresh">Làm mới</string>
+    <string name="protoToolsPlugins">Plugin</string>
+    <string name="protoToolsSkills">Kỹ năng</string>
+    <string name="protoToolsMcp">Máy chủ MCP</string>
+    <string name="protoToolsLoadFailed">Không tải được danh sách này. Thử Làm mới.</string>
+    <string name="protoToolsUnavailable">Kết nối này không có công cụ. Hãy kết nối máy chủ hỗ trợ công cụ.</string>
+    <string name="protoToolsEmpty">Chưa có gì ở đây.</string>
+    <string name="protoToolsUnnamedPlugin">Plugin chưa đặt tên</string>
+    <string name="protoToolsSkillNeedsChat">Hãy mở Công cụ từ một cuộc trò chuyện để thêm kỹ năng vào đó.</string>
+    <string name="protoToolsSkillReview">Thêm kỹ năng này vào cuộc trò chuyện hiện tại. Chọn xem tác nhân có nên tiếp tục ngay không.</string>
+    <string name="protoToolsResume">Tiếp tục cuộc trò chuyện ngay</string>
+    <string name="protoToolsActivate">Thêm kỹ năng</string>
+    <string name="protoToolsDisconnect">Ngắt kết nối %1$s</string>
+    <string name="protoToolsAddMcp">Thêm máy chủ MCP</string>
+    <string name="protoToolsRuntimeScope">Thao tác này thêm máy chủ cho dự án hiện tại cho đến khi máy chủ khởi động lại. Tên đã có sẽ không bao giờ bị thay thế.</string>
+    <string name="protoToolsName">Tên máy chủ</string>
+    <string name="protoToolsLocal">Chạy một lệnh cục bộ</string>
+    <string name="protoToolsCommand">Lệnh và đối số, mỗi dòng một mục</string>
+    <string name="protoToolsUrl">Địa chỉ HTTP hoặc HTTPS</string>
+    <string name="protoToolsAdd">Thêm máy chủ</string>
+    <string name="protoToolsChanged">Kết nối hoặc dự án này đã thay đổi. Làm mới trước khi thử lại.</string>
+    <string name="protoToolsInvalidDraft">Kiểm tra tên và địa chỉ hoặc lệnh của máy chủ rồi thử lại.</string>
+    <string name="protoToolsAddFailed">Không thêm được máy chủ. Làm mới danh sách trước khi thử lại.</string>
+    <string name="protoToolsDisconnectFailed">Không xác nhận được kết nối. Làm mới danh sách trước khi thử lại.</string>
+    <string name="protoToolsActivateFailed">Không thêm được kỹ năng. Kiểm tra xem nó còn khả dụng không.</string>
+    <string name="protoToolsStaged">Hoàn tất hoặc hủy thao tác hoàn nguyên đang chờ trước khi thêm kỹ năng.</string>
+    <string name="protoToolsUncertain">Máy chủ có thể đã nhận thao tác này. Kiểm tra cuộc trò chuyện trước khi thử lại.</string>
+    <string name="protoToolsDone">Xong.</string>
+    <string name="protoToolsActive">Đang hoạt động</string>
+    <string name="protoToolsFailed">Cần xem lại</string>
+    <string name="protoToolsUnknown">Chưa rõ trạng thái</string>
+    <string name="protoToolsBuiltin">Tích hợp sẵn</string>
+    <string name="protoToolsPackage">Gói</string>
+    <string name="protoToolsLocalSource">Cục bộ</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">Chưa rõ nguồn</string>
+    <string name="protoToolsConnected">Đã kết nối</string>
+    <string name="protoToolsDisabled">Đã tắt</string>
+    <string name="protoToolsSignIn">Cần đăng nhập</string>
+    <string name="protoToolsDisconnected">Đã ngắt kết nối</string>
+    <string name="protoToolsConnecting">Đang kết nối</string>
+    <string name="protoWorktreeInvalid">Nhập tên worktree dài 1–120 ký tự, không chứa ký tự điều khiển.</string>
+    <string name="protoWebInvalid">Nhập nội dung tìm trên web dài 1–1000 ký tự.</string>
+    <string name="protoToolsProviders">Nhà cung cấp</string>
+    <string name="protoToolsConnect">Kết nối %1$s</string>
+</resources>

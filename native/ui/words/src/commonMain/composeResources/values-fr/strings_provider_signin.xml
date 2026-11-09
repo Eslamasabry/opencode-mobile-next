@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProvidersTitle">Connexions aux fournisseurs</string>
+    <string name="protoProvidersRefresh">Actualiser les fournisseurs</string>
+    <string name="protoProvidersEmpty">Ce serveur n’a aucune connexion à un fournisseur.</string>
+    <string name="protoProvidersConnected">Connecté</string>
+    <string name="protoProvidersNotConnected">Non connecté</string>
+    <string name="protoProvidersUseKey">Utiliser une clé API</string>
+    <string name="protoProvidersDisconnect">Supprimer la connexion enregistrée</string>
+    <string name="protoProvidersStart">Commencer la connexion</string>
+    <string name="protoProvidersKey">Clé API</string>
+    <string name="protoProvidersConnect">Connecter le fournisseur</string>
+    <string name="protoProvidersFinishBrowser">Terminez la connexion dans votre navigateur, puis vérifiez le résultat ici.</string>
+    <string name="protoProvidersCode">Code de connexion</string>
+    <string name="protoProvidersComplete">Terminer la connexion</string>
+    <string name="protoProvidersCheck">Vérifier la connexion</string>
+    <string name="protoProvidersCancel">Annuler la connexion</string>
+    <string name="protoProvidersOpenTitle">Ouvrir la page de connexion\u00A0?</string>
+    <string name="protoProvidersOpenHost">Votre navigateur va ouvrir %1$s.</string>
+    <string name="protoProvidersOpenInsecure">La page %1$s utilise une connexion non chiffrée.</string>
+    <string name="protoProvidersOpen">Ouvrir le navigateur</string>
+    <string name="protoProvidersUnavailable">La connexion aux fournisseurs n’est pas disponible sur ce serveur.</string>
+    <string name="protoProvidersLoadFailed">Impossible de charger les connexions aux fournisseurs. Réessayez.</string>
+    <string name="protoProvidersChanged">Ce serveur ou ce projet a changé. Actualisez avant de commencer une autre connexion.</string>
+    <string name="protoProvidersInvalidInput">Renseignez les informations de connexion requises.</string>
+    <string name="protoProvidersFailed">La connexion n’a pas pu aboutir. Vérifiez son état ou réessayez.</string>
+    <string name="protoProvidersPending">En attente de la fin de la connexion par le fournisseur.</string>
+    <string name="protoProvidersCompleteStatus">Connexion confirmée par le serveur. Actualisez pour voir les fournisseurs connectés.</string>
+    <string name="protoProvidersExpired">Cette connexion a expiré. Commencez-en une nouvelle.</string>
+    <string name="protoProvidersCancelled">Connexion annulée.</string>
+    <string name="protoProvidersDisconnected">Connexion enregistrée supprimée. Actualisez pour voir les connexions actuelles.</string>
+</resources>

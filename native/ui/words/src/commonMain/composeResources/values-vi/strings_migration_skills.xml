@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">Dùng trong cuộc trò chuyện mới</string>
+    <string name="migrationSkillReady">Kỹ năng đã sẵn sàng trong một cuộc trò chuyện mới. Tác nhân chưa chạy.</string>
+    <string name="migrationSkillChanged">Kết nối đã thay đổi. Mọi cuộc trò chuyện đã tạo đều được giữ lại.</string>
+    <string name="migrationSkillInvalid">Kỹ năng này không có mã định danh được hỗ trợ. Hãy làm mới danh sách kỹ năng.</string>
+    <string name="migrationSkillUncertain">Yêu cầu có thể đã đến được máy chủ. Mọi cuộc trò chuyện đã tạo đều được giữ lại. Hãy kiểm tra trước khi thử lại.</string>
+    <string name="migrationSkillOpen">Mở cuộc trò chuyện</string>
+</resources>

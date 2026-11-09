@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">Cuộc trò chuyện liên quan</string>
+    <string name="r40RelationsRefresh">Làm mới các cuộc trò chuyện liên quan</string>
+    <string name="r40RelationsStale">Vị trí của cuộc trò chuyện này đã thay đổi. Hãy quay lại và mở lại các cuộc trò chuyện liên quan.</string>
+    <string name="r40RelationsFailure">Không hoàn tất được. Hãy thử lại, hoặc quay lại và mở lại các cuộc trò chuyện liên quan.</string>
+    <string name="r40RelationsParent">Bắt đầu từ</string>
+    <string name="r40RelationsEmpty">Chưa có cuộc trò chuyện của tác nhân phụ</string>
+    <string name="r40RelationsEmptyBody">Công việc được giao sẽ hiện ở đây, không lẫn vào cuộc trò chuyện của bạn.</string>
+    <string name="r40RelationsChildren">Cuộc trò chuyện của tác nhân phụ · %1$s</string>
+    <string name="r40RelationsUntitled">Cuộc trò chuyện chưa đặt tên</string>
+    <string name="r40RelationsNeedsYou">Cần bạn · Mở để trả lời</string>
+    <string name="r40RelationsWorking">Đang làm việc</string>
+    <string name="r40RelationsIdle">Nhàn rỗi</string>
+    <string name="r40RelationsDone">Xong</string>
+    <string name="r40RelationsCurrent">Cuộc trò chuyện này</string>
+    <string name="r40RelationsPinned">Đã ghim</string>
+    <string name="r40RelationsActions">Hành động</string>
+    <string name="r40RelationsOpening">Đang xử lý…</string>
+    <string name="r40RelationsOpen">Mở cuộc trò chuyện</string>
+    <string name="r40RelationsResume">Tiếp tục trên máy tính</string>
+    <string name="r40RelationsPin">Ghim cuộc trò chuyện</string>
+    <string name="r40RelationsUnpin">Bỏ ghim cuộc trò chuyện</string>
+    <string name="r40RelationsStop">Dừng tác nhân phụ</string>
+    <string name="r40RelationsStopTitle">Dừng %1$s?</string>
+    <string name="r40RelationsStopBody">Việc này dừng công việc hiện tại của nó. Cuộc trò chuyện và phần việc đã hoàn thành vẫn được giữ.</string>
+    <string name="r40RelationsKeepRunning">Tiếp tục chạy</string>
+    <string name="r40RelationsResumeBody">Chạy lệnh này trên máy tính đang chạy máy chủ này, trong cùng dự án. Sao chép không gửi gì cả.</string>
+    <string name="r40RelationsCopy">Sao chép lệnh</string>
+    <string name="r40RelationsJustNow">Vừa xong</string>
+    <string name="r40RelationsMinutes">%1$s phút trước</string>
+    <string name="r40RelationsHours">%1$s giờ trước</string>
+    <string name="r40RelationsDays">%1$s ngày trước</string>
+</resources>

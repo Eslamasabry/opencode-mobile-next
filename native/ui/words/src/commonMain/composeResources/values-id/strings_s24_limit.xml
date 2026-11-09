@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerLimitApproaching">Mendekati batas</string>
+    <string name="composerLimitReached">Batas tercapai</string>
+    <string name="composerLimitResetsInHoursMinutes">Reset dalam %1$d j %2$d mnt</string>
+    <string name="composerLimitResetsInHours">Reset dalam %1$d j</string>
+    <string name="composerLimitResetsInMinutes">Reset dalam %1$d mnt</string>
+    <string name="composerLimitResetsOnDay">Reset %1$s pukul %2$s</string>
+    <string name="composerLimitResetsOnDate">Reset %1$s</string>
+    <string name="composerLimitViewUsage">Lihat penggunaan</string>
+    <string name="composerLimitDismiss">Tutup</string>
+    <string name="composerLimitMonday">Senin</string>
+    <string name="composerLimitTuesday">Selasa</string>
+    <string name="composerLimitWednesday">Rabu</string>
+    <string name="composerLimitThursday">Kamis</string>
+    <string name="composerLimitFriday">Jumat</string>
+    <string name="composerLimitSaturday">Sabtu</string>
+    <string name="composerLimitSunday">Minggu</string>
+    <string name="composerLimitClock12">%1$s %2$s</string>
+    <string name="composerLimitAm">AM</string>
+    <string name="composerLimitPm">PM</string>
+</resources>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Abriendo…</string>
+    <string name="migration_updating">Actualizando tu app…</string>
+    <string name="migration_still_updating">Sigue actualizando. El primer inicio después de una actualización puede tardar un poco más.</string>
+    <string name="migration_try_again">Intentar mover tus datos de nuevo</string>
+    <string name="migration_reenter_title">Algunos inicios de sesión te necesitan de nuevo</string>
+    <string name="migration_reenter_body">La actualización no pudo leer estos inicios de sesión guardados. Todo lo demás se transfirió.</string>
+    <string name="migration_reenter_row_password">%1$s · Escribir contraseña</string>
+    <string name="migration_reenter_row_token">%1$s · Escribir token</string>
+    <string name="migration_reenter_row_github">%1$s · Volver a iniciar sesión en GitHub</string>
+    <string name="migration_reenter_row_byo">%1$s · Configurar de nuevo</string>
+    <string name="migration_reenter_unnamed">Un servidor guardado</string>
+    <string name="migration_reenter_later">Iniciar sesión en estos más tarde</string>
+    <string name="migration_reenter_field_password">Contraseña de %1$s</string>
+    <string name="migration_reenter_field_token">Token de %1$s</string>
+    <string name="migration_reenter_save">Guardar</string>
+    <string name="migration_reenter_save_failed">No se pudo guardar en este teléfono. Inténtalo de nuevo.</string>
+    <string name="migration_reenter_back">Volver a la lista</string>
+    <string name="migration_reenter_github_where">Para volver a iniciar sesión en GitHub en %1$s, abre una de sus conversaciones y luego Git.</string>
+    <string name="migration_reenter_open_chats">Abrir conversaciones</string>
+    <string name="migration_reenter_byo_absent">Volver a configurar %1$s aún no está en esta versión. Sus datos guardados se quedan en este teléfono.</string>
+    <string name="migration_failed_title">La actualización no pudo terminar de mover tus datos</string>
+    <string name="migration_failed_body">No se eliminó nada. Tus datos de antes de la actualización están a salvo en este teléfono.</string>
+    <string name="migration_restore_row">Restaurar los datos de antes de la actualización</string>
+    <string name="migration_restore_confirm">Esto devuelve tus ajustes y servidores a como estaban antes de la actualización. Los cambios hechos desde entonces se guardan en una copia.</string>
+    <string name="migration_restore_confirm_title">¿Restaurar datos anteriores?</string>
+    <string name="migration_restore_confirm_action">Restaurar los datos de antes de la actualización</string>
+    <string name="migration_start_fresh_row">Empezar de cero (conserva una copia de tus datos anteriores)</string>
+    <string name="migration_start_fresh_confirm">Empezarás sin servidores guardados y con los ajustes predeterminados. Una copia de tus datos anteriores se queda en este teléfono.</string>
+    <string name="migration_start_fresh_confirm_title">¿Empezar de cero?</string>
+    <string name="migration_start_fresh_confirm_action">Empezar de cero y conservar una copia</string>
+    <string name="migration_report_row">Informar de un problema</string>
+    <string name="migration_details">Detalles · %1$s</string>
+    <string name="migration_space_title">Tu teléfono está casi lleno</string>
+    <string name="migration_space_body">La actualización necesita %1$s de espacio libre para guardar una copia de seguridad de tus datos. Libera espacio e inténtalo de nuevo.</string>
+    <string name="migration_save_failed_title">No se pudo guardar en este teléfono</string>
+    <string name="migration_open_storage_row">Abrir ajustes de almacenamiento</string>
+    <string name="migration_close">Cerrar</string>
+    <string name="migration_deferred_notice">Aún no están en esta versión: %1$s. Lo que guardaste para ellos se queda en este teléfono, sin tocar.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Memoria</string>
+    <string name="migration_deferred_gemma">el modelo de IA del teléfono</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Descartar la nota sobre funciones que no están en esta versión</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationStorageTitle">Armazenamento</string>
+    <string name="migrationStorageAssistant">Modelo do assistente neste celular</string>
+    <string name="migrationStorageDelete">Excluir modelo</string>
+    <string name="migrationStorageDeleteTitle">Excluir o modelo do assistente?</string>
+    <string name="migrationStorageDeleteBody">Isso remove o modelo salvo e os downloads incompletos deste celular, liberando %1$s.</string>
+    <string name="migrationStorageEmpty">Nenhum modelo do assistente está armazenado neste celular</string>
+    <string name="localModelSaveFailed">Não foi possível alterar o modelo salvo. Tente novamente.</string>
+</resources>

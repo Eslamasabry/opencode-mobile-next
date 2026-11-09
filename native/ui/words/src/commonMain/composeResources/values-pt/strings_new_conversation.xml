@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">Modelo padrão</string>
+    <string name="p12NewDefaultAgent">Agente padrão</string>
+    <string name="p12NewAgent">Agente</string>
+    <string name="p12NewFolder">Pasta do projeto</string>
+    <string name="p12NewUseFolder">Usar esta pasta</string>
+    <string name="p12NewDraftFailed">Não foi possível salvar sua mensagem neste celular. Mantenha esta página aberta e tente novamente.</string>
+    <string name="p12NewCreationUnconfirmed">O servidor não confirmou se a conversa foi criada. Veja Conversas antes de iniciar outra. Sua mensagem continua salva aqui.</string>
+    <string name="p12NewBoundProject">Esta conexão usa a pasta de projeto salva. Adicione uma conexão para usar outra pasta.</string>
+    <string name="p12NewDeliveryUnconfirmed">O servidor não confirmou esta mensagem. Abra a conversa criada para conferir antes de iniciar outra. Suas palavras continuam salvas aqui.</string>
+    <string name="p12NewOpenCreated">Abrir a conversa criada</string>
+    <string name="chatsNewFolderMissing">A pasta deste projeto não está mais no servidor. Crie-a de novo como um projeto vazio ou escolha outro projeto.</string>
+    <string name="chatsNewFolderRemake">Criar a pasta de novo</string>
+    <string name="chatsNewFolderChooseAnother">Escolher outro projeto</string>
+    <string name="chatSendFolderMissing">A pasta deste projeto não está mais no servidor, então a mensagem não foi enviada. Inicie uma nova conversa para criar a pasta de novo ou escolha outro projeto.</string>
+</resources>

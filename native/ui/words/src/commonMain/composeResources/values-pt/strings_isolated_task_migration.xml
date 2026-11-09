@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="isolatedTaskCreateUnknown">O servidor não confirmou se a cópia foi feita. Confira o projeto antes de iniciar outra.</string>
+    <string name="isolatedTaskOpenUnknown">O servidor não confirmou a conversa. Confira as Conversas antes de iniciar outra. Sua tarefa continua salva aqui.</string>
+    <string name="isolatedTaskProgress">Etapa %1$d de 3</string>
+    <string name="isolatedTaskOperationFailed">Não foi possível concluir essa etapa. Sua tarefa continua salva aqui.</string>
+    <string name="isolatedTaskCopies">Cópias separadas</string>
+    <string name="isolatedTaskRefreshCopies">Atualizar cópias</string>
+    <string name="isolatedTaskSendUnconfirmed">Não foi possível confirmar se sua tarefa foi enviada. Ela continua salva aqui. Abra a conversa e confira antes de enviá-la de novo.</string>
+</resources>

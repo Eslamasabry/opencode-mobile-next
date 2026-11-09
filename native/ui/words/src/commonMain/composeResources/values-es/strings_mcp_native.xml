@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="mcpNativeTitle">Catálogo de conectores</string>
+    <string name="mcpNativeConsent">Explora el registro público de MCP. Tu búsqueda se envía al registro solo después de que actives esto.</string>
+    <string name="mcpNativeTurnOn">Activar</string>
+    <string name="mcpNativeTurnOff">Desactivar el catálogo</string>
+    <string name="mcpNativeRefresh">Actualizar</string>
+    <string name="mcpNativeSearch">Buscar conectores</string>
+    <string name="mcpNativeEmpty">No se encontraron conectores.</string>
+    <string name="mcpNativeLoadFailed">No se pudo actualizar. Se muestran los listados guardados si hay.</string>
+    <string name="mcpNativeUnsupported">Esta conexión no puede agregar conectores. Aún puedes revisar los listados.</string>
+    <string name="mcpNativeReview">Revisar conector</string>
+    <string name="mcpNativeRuntimeOnly">Esto agrega el conector a este proyecto hasta que el servidor se reinicie. Revisa antes la dirección o el comando.</string>
+    <string name="mcpNativeAdd">Agregar conector</string>
+    <string name="mcpNativeAdded">El servidor muestra este conector. Aún no se confirma la disponibilidad de sus herramientas.</string>
+    <string name="mcpNativeCheck">Revisar conexión</string>
+    <string name="mcpNativeAddUncertain">No se pudo confirmar que se agregara. Revisa la conexión antes de intentarlo de nuevo.</string>
+    <string name="mcpNativeConflict">Ya existe un conector con ese nombre. Elige otro nombre.</string>
+    <string name="mcpNativeName">Nombre</string>
+    <string name="mcpNativeAddress">Dirección</string>
+    <string name="mcpNativeCommand">Comando</string>
+    <string name="mcpNativeNeedsSettings">Este listado necesita más datos de conexión o argumentos del comando. Configúralo manualmente en tu servidor.</string>
+    <string name="mcpNativeNotAddable">Este listado no se puede agregar desde el catálogo.</string>
+    <string name="mcpNativeBack">Atrás</string>
+    <string name="mcpNativeSaveFailed">No se pudo guardar la preferencia del catálogo. Inténtalo de nuevo.</string>
+    <string name="mcpNativeSourceChanged">La conexión cambió. Vuelve a abrir el catálogo.</string>
+    <string name="mcpNativeToolsReady">Las herramientas del conector están listas para el próximo turno.</string>
+    <string name="mcpNativeSignIn">Iniciar sesión en el conector</string>
+    <string name="mcpNativeCode">URL de retorno o código</string>
+    <string name="mcpNativeFinishSignIn">Terminar de iniciar sesión</string>
+    <string name="mcpNativeCancelSignIn">Cancelar el inicio de sesión</string>
+</resources>

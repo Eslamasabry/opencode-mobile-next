@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalLinkReviewBody">Ouvrir ce lien dans votre navigateur\u00A0? %1$s</string>
+    <string name="terminalLinkReviewInsecure">Ce lien utilise une connexion non chiffrée. Ouvrir %1$s dans votre navigateur\u00A0?</string>
+    <string name="terminalLinkReviewTitle">Ouvrir ce lien\u00A0?</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Échap</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">Ouvrir le lien · %1$s</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">Invite conservée</string>
+    <string name="composerKeptRestoreRefused">Cette invite n’a pas pu être restaurée. Elle est toujours dans Invites conservées. Rouvrez-la pour la restaurer.</string>
+    <string name="composerKeptMissingFiles">Ces fichiers n’ont pas pu être restaurés\u00A0: %1$s. L’invite conservée correspondante reste inchangée.</string>
+</resources>

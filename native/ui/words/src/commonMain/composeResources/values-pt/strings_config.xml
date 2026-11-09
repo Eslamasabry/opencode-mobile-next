@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="configInspectionTitle">Configuração do servidor</string>
+    <string name="configInspectionExplanation">Leia as fontes de configuração do servidor por ordem de prioridade. Chaves, tokens, valores de ambiente, cabeçalhos, comandos e mensagens ficam ocultos. Esta página não altera nada.</string>
+    <string name="configInspectionUnavailable">Não foi possível carregar a configuração do servidor. Reconecte e tente novamente.</string>
+    <string name="configInspectionRefresh">Atualizar configuração</string>
+</resources>

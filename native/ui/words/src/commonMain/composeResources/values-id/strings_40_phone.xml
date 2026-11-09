@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40PhoneConnect">Pakai server ponsel ini</string>
+    <string name="r40PhoneConnectFailed">Tidak bisa tersambung ke server ponsel ini. Coba lagi.</string>
+    <string name="r40PhoneMemory">Memakai %1$s memori</string>
+    <string name="r40PhoneHistoryMoving">Memindahkan percakapan lama Anda…</string>
+    <string name="r40PhoneHistoryCount">Memindahkan percakapan lama Anda (%1$s dari %2$s)…</string>
+    <string name="r40PhoneHistoryFailed">Percakapan lama tidak bisa dipindahkan. Data asli Anda tetap utuh di ponsel ini.</string>
+    <string name="r40PhoneReplySpeed">Kecepatan balasan terakhir</string>
+    <string name="r40PhoneReplyNoWords">Selesai dalam %1$s tanpa kata</string>
+    <string name="r40PhoneReplyLast">Kata pertama dalam %1$s · Selesai dalam %2$s</string>
+    <string name="r40PhoneInstalled">Terpasang di ponsel ini</string>
+    <string name="r40PhoneChecking">Memeriksa…</string>
+    <string name="r40PhoneInstalledMark">Terpasang</string>
+    <string name="r40PhoneInventoryFailed">Daftar yang terpasang tidak bisa diperiksa. Daftar sebelumnya dipertahankan. Coba lagi.</string>
+    <string name="r40PhoneLinuxMode">Mode Linux</string>
+    <string name="r40PhoneLinuxFast">Cepat (seccomp)</string>
+    <string name="r40PhoneLinuxSlow">Lebih lambat (ptrace)</string>
+    <string name="r40PhoneUnknown">Tidak dilaporkan</string>
+    <string name="r40PhoneAwake">Menjaga ponsel tetap aktif</string>
+    <string name="r40PhoneAwakeNow">Aktif untuk bekerja sekarang</string>
+    <string name="r40PhoneAwakeWhenWorking">Hanya saat pekerjaan memerlukannya</string>
+    <string name="r40PhoneFirstWords">Menunggu kata pertama</string>
+    <string name="r40PhoneFirstSplit">%1$s di aplikasi · %2$s di server</string>
+    <string name="r40PhoneRefresh">Muat ulang detail ponsel</string>
+    <string name="r40PhoneModel">Model balasan terakhir</string>
+    <string name="r40PhoneRuntimeDetails">Detail runtime</string>
+    <string name="r40PhoneHistoryDetails">Detail impor percakapan</string>
+    <string name="r40PhoneLogFailed">Log server tidak bisa dibaca. Coba lagi.</string>
+    <string name="r40PhoneLogEmpty">Server belum menulis log.</string>
+    <string name="r40PhoneLog">Log server OpenCode</string>
+    <string name="r40PhoneSeconds">%1$s dtk</string>
+</resources>

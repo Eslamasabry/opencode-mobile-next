@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">Встроенные папки Linux</string>
+    <string name="secBuiltinFoldersBody">Просматривайте хранилище проектов и папки Linux на этом телефоне.</string>
+    <string name="secBuiltinFolderLinked">Эта папка — ссылка. Выберите настоящую папку.</string>
+    <string name="secBuiltinFolderNotInstalled">Установите Linux на этот телефон, чтобы просматривать эти папки.</string>
+</resources>

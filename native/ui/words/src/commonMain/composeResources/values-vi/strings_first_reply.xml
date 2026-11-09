@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s mất lâu hơn nhiều so với bình thường. Hãy thử lại, hoặc dùng máy tính thay thế.</string>
+    <string name="setupUseComputerInstead">Dùng máy tính thay thế</string>
+    <string name="setupActivityDownloading">Đang tải tệp</string>
+    <string name="setupActivityUnpacking">Đang giải nén tệp</string>
+    <string name="setupActivityConfiguring">Đang thiết lập</string>
+    <string name="setupActivityChecking">Đang kiểm tra những gì đã cài</string>
+    <string name="setupActivityWorking">Đang xử lý</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">Vẫn đang xử lý. Các bước dài có thể mất vài phút.</string>
+    <string name="chatModelFailRateLimit">Mô hình đang bận. Hãy đổi mô hình, hoặc thử lại sau vài phút.</string>
+    <string name="chatModelFailDailyLimit">Đã dùng hết hạn mức miễn phí hằng ngày của mô hình này. Hãy đổi mô hình, hoặc thử lại vào ngày mai.</string>
+    <string name="chatModelFailSignIn">Mô hình này cần bạn đăng nhập trước. Hãy đăng nhập, hoặc đổi mô hình.</string>
+    <string name="chatModelFailQuota">Tài khoản của bạn hết số dư cho mô hình này. Hãy nạp thêm, hoặc đổi mô hình.</string>
+    <string name="chatModelFailGeneric">Mô hình không thể trả lời. Hãy đổi mô hình, hoặc thử lại.</string>
+    <string name="chatModelFailSwitch">Đổi mô hình</string>
+    <string name="chatModelFailSignInAction">Đăng nhập</string>
+    <string name="chatStalledOnTool">Vẫn đang chờ %1$s.</string>
+    <string name="chatStalledStop">Dừng</string>
+</resources>

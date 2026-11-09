@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">Alertes</string>
+    <string name="m40UsageWidget">Widget d’écran d’accueil</string>
+    <string name="m40UsageReadFrom">Lire l’utilisation</string>
+    <string name="m40UsageAdd">Ajouter un abonnement</string>
+    <string name="m40UsageSaveFailed">Cette modification n’a pas pu être enregistrée. Réessayez.</string>
+    <string name="m40UsageAlertsWatch">Surveiller mes forfaits</string>
+    <string name="m40UsageAlertsEvery">Surveiller chaque abonnement dont les limites sont lisibles.</string>
+    <string name="m40UsageTellMe">Me prévenir quand</string>
+    <string name="m40UsageReset">Un forfait épuisé est de nouveau disponible</string>
+    <string name="m40UsageDifferent">Différent pour ces forfaits</string>
+    <string name="m40UsageWhen">Quand me prévenir</string>
+    <string name="m40UsageQuiet">Heures calmes</string>
+    <string name="m40UsageQuietShared">Les mêmes heures calmes que pour les autres notifications.</string>
+    <string name="m40UsageQuietStart">Début</string>
+    <string name="m40UsageQuietEnd">Fin</string>
+    <string name="m40UsageQuietAllDay">Ces horaires coupent les alertes toute la journée.</string>
+    <string name="m40UsageWifi">Wi-Fi uniquement</string>
+    <string name="m40UsageNothingToWatch">Aucun forfait lisible à surveiller pour l’instant.</string>
+    <string name="m40UsageDownTo">Quand un forfait descend à</string>
+    <string name="m40UsageSameAsOthers">Comme les autres\u00A0: %1$d% restant</string>
+    <string name="m40UsageWidgetPlans">Forfaits sur le widget</string>
+    <string name="m40UsageWidgetSetup">Afficher les forfaits à configurer</string>
+    <string name="m40UsageWidgetWindows">Périodes à afficher</string>
+    <string name="m40UsageBoth">5 heures et cette semaine</string>
+    <string name="m40UsageReaderGone">Cette connexion enregistrée n’est plus disponible.</string>
+    <string name="m40UsageReadPhoneBody">Configurez un lecteur dans Ubuntu intégré à l’application pour lire les limites de vos forfaits connectés. Les clés des fournisseurs restent sur l’hôte.</string>
+    <string name="m40UsageReadComputerBody">Autorisez une brève vérification en lecture seule via ce serveur lors de l’actualisation de l’utilisation. Elle cherche les limites des forfaits connectés sur cet ordinateur. Vous pouvez la désactiver ici.</string>
+    <string name="m40UsageWhatRuns">Ce qui s’exécute sur l’ordinateur</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">La vérification lit localement les connexions des fournisseurs et ne renvoie que les limites des forfaits et une référence de compte opaque. Les clés et jetons ne reviennent jamais dans l’application.</string>
+    <string name="m40UsageCopying">Copie du lecteur</string>
+    <string name="m40UsageCheckingSignIns">Vérification des connexions</string>
+    <string name="m40UsageStarting">Démarrage du lecteur</string>
+    <string name="m40UsageReading">Lecture des limites des forfaits</string>
+    <string name="m40UsageChecking">Vérification de la connexion</string>
+    <string name="m40UsageNeedsNode">Cet ordinateur a besoin de Node 20 ou d’une version plus récente pour lire les limites des forfaits.</string>
+    <string name="m40UsageLinuxNotReady">Configurez d’abord Ubuntu intégré à l’application, puis réessayez.</string>
+    <string name="m40UsageServerTooOld">Mettez à jour ce serveur pour lire l’utilisation via un terminal de commandes.</string>
+    <string name="m40UsagePrepareFailed">Le lecteur n’a pas pu être préparé. Réessayez.</string>
+    <string name="m40UsageStartFailed">Le lecteur n’a pas démarré. Réessayez.</string>
+    <string name="m40UsageRemoveFailed">Le lecteur n’a pas pu être supprimé. Réessayez.</string>
+    <string name="m40UsageUnreachable">Cet ordinateur est injoignable. Vérifiez la connexion et réessayez.</string>
+    <string name="m40UsageNoAnswer">La vérification n’a pas renvoyé de réponse lisible. Réessayez.</string>
+    <string name="m40UsageFoundNone">La vérification n’a trouvé aucun forfait connecté dont elle peut lire les limites.</string>
+    <string name="m40UsageFound">Trouvé\u00A0: %1$s</string>
+    <string name="m40UsageReadNow">Lire maintenant</string>
+    <string name="m40UsageTurnOn">Activer la lecture</string>
+    <string name="m40UsageTurnOff">Désactiver la lecture</string>
+    <string name="m40UsageThreshold">Seuil d’alerte pour ce forfait</string>
+    <string name="m40UsageResetHelp">Me prévenir quand ce forfait est de nouveau disponible.</string>
+    <string name="m40UsageReadOff">Désactiver la lecture depuis %1$s</string>
+    <string name="m40UsageChooseSignIn">Choisissez où vous connecter</string>
+</resources>

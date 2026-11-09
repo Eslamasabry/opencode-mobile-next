@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatsHomeRightNow">Ngay lúc này</string>
+    <string name="chatsHomeRecent">Gần đây</string>
+    <string name="chatsHomeAsksToRun">Xin chạy: %1$s</string>
+</resources>

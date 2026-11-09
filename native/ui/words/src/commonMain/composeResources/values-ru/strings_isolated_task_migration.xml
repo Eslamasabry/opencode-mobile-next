@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="isolatedTaskCreateUnknown">Сервер не подтвердил, создана ли копия. Проверьте проект, прежде чем начинать другую.</string>
+    <string name="isolatedTaskOpenUnknown">Сервер не подтвердил чат. Проверьте раздел «Чаты», прежде чем начинать другой. Ваша задача остаётся сохранённой здесь.</string>
+    <string name="isolatedTaskProgress">Шаг %1$d из 3</string>
+    <string name="isolatedTaskOperationFailed">Не удалось завершить этот шаг. Ваша задача остаётся сохранённой здесь.</string>
+    <string name="isolatedTaskCopies">Отдельные копии</string>
+    <string name="isolatedTaskRefreshCopies">Обновить копии</string>
+    <string name="isolatedTaskSendUnconfirmed">Не удалось подтвердить, отправлена ли ваша задача. Она остаётся сохранённой здесь. Откройте чат и проверьте, прежде чем отправлять снова.</string>
+</resources>

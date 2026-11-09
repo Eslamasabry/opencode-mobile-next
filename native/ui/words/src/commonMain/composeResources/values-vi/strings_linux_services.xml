@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">Chương trình phát triển</string>
+    <string name="linuxDevProgramsNote">Các chương trình tìm thấy trong Linux của điện thoại này. Chọn một chương trình để đọc tệp đầu ra của nó.</string>
+    <string name="linuxDevScanFailed">Không kiểm tra được các chương trình phát triển</string>
+    <string name="linuxDevProgram">Chương trình %1$d</string>
+    <string name="linuxDevPorts">Cổng: %1$s</string>
+    <string name="linuxDevReadLog">Đọc nhật ký</string>
+    <string name="linuxDevNoLog">Không có tệp đầu ra đọc được</string>
+    <string name="linuxDevLog">Nhật ký chương trình</string>
+    <string name="linuxDevLogLoading">Đang đọc đầu ra mới nhất…</string>
+    <string name="linuxDevLogFailed">Không đọc được đầu ra của chương trình.</string>
+    <string name="linuxDevLogEmpty">Chưa có đầu ra.</string>
+    <string name="linuxDevStop">Dừng</string>
+    <string name="linuxDevStopTitle">Dừng chương trình này?</string>
+    <string name="linuxDevStopBody">Dừng tiến trình %1$d trên điện thoại này. Lệnh của nó được kiểm tra lại trước khi dừng.</string>
+    <string name="linuxSvcTitle">Dịch vụ phát triển</string>
+    <string name="linuxSvcFailed">Thao tác chưa hoàn tất</string>
+    <string name="linuxSvcUnconfirmed">Không xác nhận được kết nối hiện tại hoặc quyền sở hữu lệnh. Hãy làm mới trước khi thử lại.</string>
+    <string name="linuxSvcCorrupt">Không đọc được các lệnh đã lưu. Dữ liệu đã lưu được giữ nguyên.</string>
+    <string name="linuxSvcUnsupported">Kết nối này không điều khiển được dịch vụ phát triển. Bạn vẫn có thể lưu lệnh để dùng sau.</string>
+    <string name="linuxSvcAdd">Thêm lệnh</string>
+    <string name="linuxSvcRefresh">Làm mới</string>
+    <string name="linuxSvcSaved">Lệnh đã lưu</string>
+    <string name="linuxSvcSavedNote">Lưu một lệnh không bao giờ tự khởi động nó. Chỉ một lần chạy bắt đầu từ đây mới điều khiển được từ lệnh đã lưu.</string>
+    <string name="linuxSvcEmpty">Dự án này chưa có lệnh nào được lưu.</string>
+    <string name="linuxSvcNotStarted">Chưa khởi động</string>
+    <string name="linuxSvcRunning">Đang chạy</string>
+    <string name="linuxSvcStopped">Đã dừng</string>
+    <string name="linuxSvcUnknown">Chưa xác nhận lần chạy</string>
+    <string name="linuxSvcDetected">Thấy đang chạy</string>
+    <string name="linuxSvcStart">Khởi động</string>
+    <string name="linuxSvcRestart">Khởi động lại</string>
+    <string name="linuxSvcReport">Báo cáo lỗi</string>
+    <string name="linuxSvcForget">Quên lần chạy</string>
+    <string name="linuxSvcRemove">Xóa lệnh</string>
+    <string name="linuxSvcName">Tên</string>
+    <string name="linuxSvcNext">Tiếp</string>
+    <string name="linuxSvcCommand">Lệnh</string>
+    <string name="linuxSvcSave">Lưu lệnh</string>
+    <string name="linuxSvcInvalidName">Nhập tên dài 1–80 ký tự.</string>
+    <string name="linuxSvcInvalidCommand">Nhập lệnh dài 1–4096 ký tự.</string>
+    <string name="linuxSvcRemoveTitle">Xóa lệnh này?</string>
+    <string name="linuxSvcForgetTitle">Quên lần chạy này?</string>
+    <string name="linuxSvcStopBody">Chương trình đã chọn chỉ dừng sau khi xác nhận được danh tính hiện tại của nó.</string>
+    <string name="linuxSvcRemoveBody">Xóa lệnh đã lưu này và biên nhận cục bộ của nó. Việc này không bao giờ dừng một chương trình đang chạy.</string>
+    <string name="linuxSvcForgetBody">Quên biên nhận chưa chắc chắn trên điện thoại này. Việc này không dừng chương trình; hãy kiểm tra danh sách đang chạy trước khi khởi động thêm một bản sao.</string>
+</resources>

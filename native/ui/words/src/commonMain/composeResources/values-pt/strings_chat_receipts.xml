@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReceiptCheckAgain">Atualizar</string>
+    <string name="chatReceiptChecking">Verificando se sua mensagem chegou…</string>
+    <string name="chatReceiptLastChecked">Última verificação: %1$s.</string>
+</resources>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Padrão do estilo</string>
+    <string name="settings40_reset_question">Redefinir a aparência?</string>
+    <string name="settings40_reset_body">Redefine cores, estilo, forma, vidro, tamanho do texto, movimento e brilho da resposta. Suas conversas, idioma e escolhas de notificação permanecem como estão.</string>
+    <string name="settings40_local_work">Itens não enviados neste celular</string>
+    <string name="settings40_queue_title">Mensagens na fila</string>
+    <string name="settings40_drafts_title">Rascunhos de conversas</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="one">%1$d item · %2$s</item>
+        <item quantity="many">%1$d de itens · %2$s</item>
+        <item quantity="other">%1$d itens · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">Não foi possível ler este armazenamento. Tudo foi mantido.</string>
+    <string name="settings40_storage_reading">Lendo o armazenamento local…</string>
+    <string name="settings40_discard_queue">Excluir mensagens não enviadas da fila</string>
+    <string name="settings40_discard_drafts">Excluir rascunhos de conversas</string>
+    <string name="settings40_queue_keeps">Exclui as mensagens que nunca foram enviadas. As que têm marca de envio ou recibo de comando ficam para revisão.</string>
+    <string name="settings40_queue_empty">Nenhuma mensagem na fila para excluir.</string>
+    <string name="settings40_drafts_empty">Nenhum rascunho salvo para excluir.</string>
+    <string name="settings40_discard_working">Excluindo conteúdo local…</string>
+    <string name="settings40_queue_question">Excluir as mensagens não enviadas da fila?</string>
+    <string name="settings40_drafts_question">Excluir os rascunhos de conversas?</string>
+    <string name="settings40_drafts_body">Exclui o texto salvo e os anexos dos rascunhos neste celular. As conversas abertas também são atualizadas. Itens ainda em envio ou em verificação impedem a exclusão. Isso não pode ser desfeito.</string>
+    <string name="settings40_discard_failed">Não foi possível terminar de excluir. Itens em envio, itens incertos, armazenamento ilegível ou uma alteração durante o salvamento podem impedir a exclusão. Confira as contagens e tente novamente.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="one">%1$d item excluído.</item>
+        <item quantity="many">%1$d de itens excluídos.</item>
+        <item quantity="other">%1$d itens excluídos.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="one">%1$d item excluído. Mensagens mantidas para revisão: %2$d.</item>
+        <item quantity="many">%1$d de itens excluídos. Mensagens mantidas para revisão: %2$d.</item>
+        <item quantity="other">%1$d itens excluídos. Mensagens mantidas para revisão: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="one">%1$d rascunho excluído. Alguns anexos não puderam ser removidos. Tente excluir os rascunhos de novo para concluir.</item>
+        <item quantity="many">%1$d de rascunhos excluídos. Alguns anexos não puderam ser removidos. Tente excluir os rascunhos de novo para concluir.</item>
+        <item quantity="other">%1$d rascunhos excluídos. Alguns anexos não puderam ser removidos. Tente excluir os rascunhos de novo para concluir.</item>
+    </plurals>
+    <string name="settings40_no_answers">Nenhuma pergunta deste servidor precisa de resposta por enquanto.</string>
+    <string name="settings40_answer_failed">Esta etapa não terminou. Sua resposta salva e as configurações do Android podem estar diferentes. Confira Notificações ou Manter em execução e tente novamente.</string>
+    <string name="settings40_held_action">Excluir estas também</string>
+    <string name="settings40_held_question">Excluir as mensagens mantidas para revisão?</string>
+    <string name="settings40_held_body">Elas podem já ter chegado ao servidor. Isso só as remove deste celular, e nada mais é enviado.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="one">%1$d delas pode já ter chegado ao servidor. Excluir só a remove deste celular, e nada mais é enviado.</item>
+        <item quantity="many">%1$d de delas podem já ter chegado ao servidor. Excluir só as remove deste celular, e nada mais é enviado.</item>
+        <item quantity="other">%1$d delas podem já ter chegado ao servidor. Excluir só as remove deste celular, e nada mais é enviado.</item>
+    </plurals>
+</resources>
