@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.first
 
 /**
  * App conditions use the existing single status slot on Conversations and Chat; a server return
@@ -115,9 +117,22 @@ class AndroidAppNotices(
         background.start()
         exits.start()
         thermal.start()
+        // The exit notice waits until the phone's server has come back, or EXIT_SETTLE_MS at most: shown at once, it
+        // arrived saying "starting again", then "start it again when you're ready", then "running again" within two
+        // seconds of a cold start (owner 2026-11-10). It now says one thing, once.
+        val settledExit = MutableStateFlow<io.github.eslamasabry.oc.engine.runtime.recovery.AppExitNotice?>(null)
+        scope.launch {
+            exits.notice.collectLatest { exit ->
+                settledExit.value = null
+                if (exit != null) {
+                    withTimeoutOrNull(EXIT_SETTLE_MS) { exits.serverBack.first { it } }
+                    settledExit.value = exit
+                }
+            }
+        }
         scope.launch {
             combine(
-                    exits.notice,
+                    settledExit,
                     exits.serverBack,
                     background.live,
                     preferences.localeTag,
@@ -438,3 +453,6 @@ internal const val CRASH_OFFER_ID: String = "crash-offer"
 interface AppNoticesAccessors {
     val appNotices: AndroidAppNotices
 }
+
+/** How long the exit notice waits for the phone's server to come back before it says what it knows. */
+private const val EXIT_SETTLE_MS: Long = 6_000

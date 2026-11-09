@@ -131,7 +131,7 @@ class AppChatsHome(
                 )
             } else null
         if (opening == null) phoneWatch = null
-        mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value)
+        mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value, known = true)
         if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
     }
 

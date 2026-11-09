@@ -200,7 +200,8 @@ public fun ChatsScreen(
     // G3: the empty page carries New conversation as its own full-width button at the bottom (Flutter
     // KitStateView.calm), so the floating + only rides over a list.
     val listed = state.phase == ChatsPhase.List
-    val showFab = listed && state.home.opening == null
+    // Shown once the home knows its server and that server is open: it fades in once, never out and in again.
+    val showFab = listed && state.home.known && state.home.opening == null
     // Under Glass the floating + is liquid glass over the list (the kit records it only then).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
@@ -236,7 +237,10 @@ public fun ChatsScreen(
                 )
                 val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
                 val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
-                if (pill != null) HeaderRow(pill, showFilters) { Filters(state, actions, bleed = true) }
+                // Until the saved servers are read the row keeps its room and stays empty, so the pill and the
+                // filters arrive together in their places instead of the pill pushing the filters aside.
+                if (shellBar && !state.home.known) Spacer(Modifier.height(LocalKitTokens.current.minTarget.dp))
+                else if (pill != null) HeaderRow(pill, showFilters) { Filters(state, actions, bleed = true) }
                 else if (showFilters) Filters(state, actions)
             }
         },
