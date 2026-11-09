@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -36,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -44,7 +44,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -59,8 +58,6 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.color.lerp
-import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
-import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
 import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.LiquidInkRule
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
@@ -77,7 +74,7 @@ import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidWords
 import io.github.eslamasabry.oc.ui.kit.effects.LiquidFlip
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassLookOverride
-import io.github.eslamasabry.oc.ui.kit.effects.drawLiquidTint
+import io.github.eslamasabry.oc.ui.kit.effects.kitFrostPane
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPlateHost
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
@@ -119,6 +116,12 @@ public object LookFieldPolicy {
 
     /** The field is recorded at this share of its size on each side. */
     public const val RECORD_SCALE: Float = .5f
+
+    /** The drifting lines' ink, as a share of the theme's text colour: faint, like the mockup's code behind the glass. */
+    public const val INK_ALPHA: Float = .30f
+
+    /** A look without a lens (Frosted) blurs its preview's field this many times its role's blur (glass looks §3). */
+    public const val FROSTED_BLUR_FACTOR: Float = 2f
 
     /**
      * How many display frames one field step lasts at [panelHz]: the smallest whole number that brings the rate to
@@ -232,11 +235,14 @@ internal object LookFieldPalette {
     fun spots(ground: Argb, dark: Boolean): List<Argb> = listOf(ground) + blobs(ground, dark)
 }
 
-/** Draws the field at [t] seconds: four soft colour blobs drifting over the ground, and lines of text drifting up. */
-internal fun DrawScope.drawLookField(t: Float, ground: Color, blobs: List<Color>, ink: Color) {
-    drawRect(ground)
-    val w = size.width
-    val h = size.height
+/**
+ * Draws the field at [t] seconds over [area] (the field's own size, whatever the scope it is drawn in: the recording is
+ * smaller): four soft colour blobs drifting over the ground, and faint lines of text drifting up.
+ */
+internal fun DrawScope.drawLookField(t: Float, ground: Color, blobs: List<Color>, ink: Color, area: Size) {
+    val w = area.width
+    val h = area.height
+    drawRect(ground, Offset.Zero, area)
     blobs.forEachIndexed { i, c ->
         val p = i * 1.7f
         val cx = w * (.5f + .38f * sin(t * .21f + p).toFloat())
@@ -245,8 +251,8 @@ internal fun DrawScope.drawLookField(t: Float, ground: Color, blobs: List<Color>
         drawCircle(Brush.radialGradient(listOf(c, c.copy(alpha = 0f)), Offset(cx, cy), r), r, Offset(cx, cy))
     }
     // Lines of transcript, word by word, drifting up: they show the blur and the bend at the rim.
-    val pitch = 24.dp.toPx()
-    val stroke = 7.dp.toPx()
+    val pitch = 22.dp.toPx()
+    val stroke = 5.dp.toPx()
     val drift = (t * 9.dp.toPx()) % pitch
     var y = -drift + pitch / 2f
     var line = 0
@@ -281,7 +287,8 @@ public fun KitLookField(
     state.layer = layer
     val ground = colors.ground.copy(alpha = 1f)
     val blobs = remember(roles.ground, roles.dark) { LookFieldPalette.blobs(roles.ground, roles.dark).map { Color(it.v) } }
-    val ink = colors.text1.copy(alpha = .78f)
+    // Faint: the lines show the blur and the bend, never compete with the previews' words.
+    val ink = colors.text1.copy(alpha = LookFieldPolicy.INK_ALPHA)
     LaunchedEffect(state, still) {
         if (still) {
             state.moving = false
@@ -328,9 +335,12 @@ public fun KitLookField(
                     state.version
                     val t = state.seconds
                     val k = LookFieldPolicy.RECORD_SCALE
-                    val small = IntSize((size.width * k).toInt().coerceAtLeast(1), (size.height * k).toInt().coerceAtLeast(1))
+                    val area = size
+                    val small = IntSize((area.width * k).toInt().coerceAtLeast(1), (area.height * k).toInt().coerceAtLeast(1))
+                    // The recording's scope is `small`: the field is drawn over its own full size, scaled down into it
+                    // (it once filled only the recording's size, scaled down again: a quarter of the field).
                     layer.record(this, layoutDirection, small) {
-                        scale(k, k, Offset.Zero) { drawLookField(t, ground, blobs, ink) }
+                        scale(k, k, Offset.Zero) { drawLookField(t, ground, blobs, ink, area) }
                     }
                     scale(1f / k, 1f / k, Offset.Zero) { drawLayer(layer) }
                 }
@@ -350,6 +360,9 @@ private fun fieldBackdrop(state: KitLookFieldState): KitLiquidBackdrop =
             scale(1f / LookFieldPolicy.RECORD_SCALE, 1f / LookFieldPolicy.RECORD_SCALE, Offset.Zero) { drawLayer(layer) }
         }
     }
+
+/** The field's shape: one rounded panel behind every preview. */
+private val FieldShape: CornerBasedShape = RoundedCornerShape(28.dp)
 
 /** A preview's shape: the kit's card corner. */
 private val PreviewShape: CornerBasedShape = RoundedCornerShape(22.dp)
@@ -378,7 +391,6 @@ public fun KitGlassLookPreview(
     val colors = LocalKitColors.current
     val platform = LocalKitPlatform.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val density = LocalDensity.current.density
     val backdrop = remember(field) { fieldBackdrop(field) }
     val other = remember(roles, appearance.pack, appearance.accent) {
         ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
@@ -399,8 +411,8 @@ public fun KitGlassLookPreview(
                 rimAdds = dark,
                 rimDp = 1f,
                 shadow = Color.Transparent,
-                // A look without a lens is the floating pieces' frost (frost strength Balanced's blur).
-                frostBlurDp = FrostStrength.Balanced.sigmaDp,
+                // A look without a lens is milky frost: its role's blur, twice over (glass looks §3, "Frosted ×2").
+                frostBlurDp = LiquidEdge.recipe(PREVIEW_ROLE, dark, preset).blurDp * LookFieldPolicy.FROSTED_BLUR_FACTOR,
                 sheen = Color(face.sheen.v),
                 specular = Color.White.copy(alpha = if (dark) preset.spec.liquidSpecularDark else preset.spec.liquidSpecularLight),
                 keepRim = true,
@@ -409,14 +421,12 @@ public fun KitGlassLookPreview(
         }
     val lens = preset.lens
     val glass =
-        if (platform.liquidGlass) {
-            platform.liquidPane(spec, backdrop, PreviewShape) { if (lens) 0f else 1f }
+        if (platform.liquidGlass && lens) {
+            platform.liquidPane(spec, backdrop, PreviewShape) { 0f }
         } else {
-            // No lens on this platform: the field blurred under the look's tint (the frost every look falls back to).
-            val blur = remember(platform, density, lens, spec) {
-                platform.frostEffect(FrostSpec(if (lens) spec.recipe.blurDp else spec.frostBlurDp, preset.spec.frostSaturation, 0f), density)
-            }
-            frostedPreview(backdrop, blur, spec)
+            // A look without a lens, or no lens on this platform: the field blurred under the look's face, as the
+            // Frosted look's panels draw the page (the same kit frost).
+            Modifier.kitFrostPane(spec, backdrop, PreviewShape, if (lens) spec.recipe.blurDp else spec.frostBlurDp, preset.spec.frostSaturation)
         }
     // The words on the pane: the theme's ink, or Smoked's dark-theme ink in a light theme. Never sampled: the face is
     // measured over every colour of the field.
@@ -452,7 +462,7 @@ public fun KitGlassLookPreview(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     KitText(name, Modifier.weight(1f), role = TypeRole.RowTitle, maxLines = 2)
-                    if (selected) KitGlyph(KitIcons.check, colors.accent, Space.S5.dp)
+                    if (selected) ChosenCheck(colors.accent, colors.onAccent)
                 }
                 Spacer(Modifier.height(Space.S1.dp))
                 KitText(line, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 3)
@@ -462,24 +472,17 @@ public fun KitGlassLookPreview(
 }
 
 /**
- * The field blurred by [blur] (null: unblurred) under [spec]'s tint, sheen and specular, for a platform with no lens:
- * the tint is drawn outside the blurred layer, so only the field blurs.
+ * The chosen preview's check: a filled accent disc with the check in the accent's ink, so it reads over any colour of
+ * the field behind the glass (a bare accent check vanished over the field's own accent-coloured blob).
  */
 @Composable
-private fun frostedPreview(backdrop: KitLiquidBackdrop, blur: androidx.compose.ui.graphics.RenderEffect?, spec: KitLiquidPaneSpec): Modifier {
-    val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
-    return Modifier
-        .onGloballyPositioned { at[0] = it }
-        .clip(PreviewShape)
-        .drawWithContent {
-            drawContent()
-            drawLiquidTint(spec, PreviewShape)
-        }
-        .graphicsLayer { renderEffect = blur }
-        .drawBehind {
-            val c = at[0]?.takeIf { it.isAttached } ?: return@drawBehind
-            backdrop.draw(this, c)
-        }
+private fun ChosenCheck(accent: Color, onAccent: Color) {
+    Box(
+        Modifier.size(Space.S6.dp).drawBehind { drawCircle(accent) }.testTag("kit-glass-look-check"),
+        contentAlignment = Alignment.Center,
+    ) {
+        KitGlyph(KitIcons.check, onAccent, Space.S4.dp)
+    }
 }
 
 /** The chosen preview's accent ring, inside its edge. */
@@ -516,8 +519,9 @@ public fun KitGlassLookPicker(
 ) {
     val shown = options.take(LookFieldPolicy.MAX_PREVIEWS)
     Column(modifier.fillMaxWidth()) {
-        KitLookField(field, Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))) {
+        KitLookField(field, Modifier.fillMaxWidth().clip(FieldShape)) {
             Column(Modifier.fillMaxWidth().padding(Space.S3.dp), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                // Two to a row; an odd last look takes the whole row, so the field never shows an empty cell.
                 shown.chunked(2).forEach { pair ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
                         pair.forEach { o ->
@@ -531,7 +535,6 @@ public fun KitGlassLookPicker(
                                 modifier = Modifier.weight(1f),
                             )
                         }
-                        if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
             }

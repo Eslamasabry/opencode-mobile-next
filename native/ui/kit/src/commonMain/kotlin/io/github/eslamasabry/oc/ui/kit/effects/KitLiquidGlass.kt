@@ -77,6 +77,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropRimLight
+import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassFrostAvailable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassStackRoot
 import io.github.eslamasabry.oc.ui.kit.live.kitLivePictureSpots
 import io.github.eslamasabry.oc.ui.kit.platform.KitBackdropSampler
@@ -107,7 +108,11 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /** Liquid edges' conditions as the kit reads them now: FrostPolicy's, with the platform's lens. */
 @Composable
-internal fun kitLiquidOn(): Boolean {
+internal fun kitLiquidOn(): Boolean = kitEdgesHeldBy() == null
+
+/** Why Glass's floating parts are not liquid glass here and now, or null when they are ([FrostPolicy.edgesHeldBy]). */
+@Composable
+private fun kitEdgesHeldBy(): io.github.eslamasabry.oc.ui.design.effects.EdgeHold? {
     val platform = LocalKitPlatform.current
     val signals by platform.signals.collectAsState()
     val appearance = LocalKitAppearance.current
@@ -119,8 +124,17 @@ internal fun kitLiquidOn(): Boolean {
             styleAllows = LocalKitStyle.current.style == Style.Glass,
             lensSupported = platform.liquidGlass,
         )
-    return FrostPolicy.liquidEdges(conditions, appearance.frost, kitGlassLook().id)
+    return FrostPolicy.edgesHeldBy(conditions, appearance.frost, kitGlassLook().id)
 }
+
+/**
+ * Whether Glass's panels over the page (sheets, dialogs, menus) are frost of the page here: the look has no lens (the
+ * Frosted look) and the platform can blur (Android 12+, desktop). Without this they fell to their own solid face, an
+ * opaque sheet over the page (owner 2026-11-09: "Frosted does not blur at all").
+ */
+@Composable
+internal fun kitFrostedPanelsOn(): Boolean =
+    kitEdgesHeldBy() == io.github.eslamasabry.oc.ui.design.effects.EdgeHold.Frosted && kitGlassFrostAvailable()
 
 /** Whether Glass's floating parts may be liquid glass here and now (before the window's budget). */
 @Composable
@@ -236,15 +250,47 @@ internal fun kitLiquidFace(role: LiquidRole, source: KitLiquidSource?, shape: Sh
     return liquidFace(role, source, backdrop, shape, transform)
 }
 
-/** A menu's liquid face over the page, unless it opens over a sheet or a dialog. */
+/** A menu's liquid face over the page (frost of it under the Frosted look), unless it opens over a sheet or a dialog. */
 @Composable
-internal fun kitLiquidMenuFace(shape: Shape, transform: () -> Float): Modifier? =
-    kitLiquidFace(LiquidRole.Menu, LocalKitLiquidPage.current.takeIf { !LocalKitLiquidOverModal.current }, shape, transform)
+internal fun kitLiquidMenuFace(shape: Shape, transform: () -> Float): Modifier? {
+    val page = LocalKitLiquidPage.current.takeIf { !LocalKitLiquidOverModal.current }
+    return kitFrostedPanelFace(LiquidRole.Menu, page, shape) ?: kitLiquidFace(LiquidRole.Menu, page, shape, transform)
+}
 
-/** A sheet's liquid face over the page. */
+/** A sheet's liquid face over the page (frost of it under the Frosted look). */
 @Composable
-internal fun kitLiquidSheetFace(shape: Shape, transform: () -> Float): Modifier? =
-    kitLiquidFace(LiquidRole.Sheet, LocalKitLiquidPage.current, shape, transform)
+internal fun kitLiquidSheetFace(shape: Shape, transform: () -> Float): Modifier? {
+    val page = LocalKitLiquidPage.current
+    return kitFrostedPanelFace(LiquidRole.Sheet, page, shape) ?: kitLiquidFace(LiquidRole.Sheet, page, shape, transform)
+}
+
+/**
+ * [role]'s panel over the page under the Frosted look: the page blurred by the common frost ([kitFrostPane], so it
+ * needs no runtime shaders) under the face the look's liquid pane would wear, its rim kept, its words on it. Null
+ * outside that look, where the panel keeps its liquid face or its own. It takes no part in the window's liquid budget:
+ * it has no lens.
+ */
+@Composable
+private fun kitFrostedPanelFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape): Modifier? {
+    val on = source != null && shape is CornerBasedShape && kitFrostedPanelsOn()
+    // The page records only while a pane uses it.
+    DisposableEffect(source, on) {
+        if (on) source!!.users++
+        onDispose { if (on) source!!.users-- }
+    }
+    if (!on) return null
+    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
+    val picture = LocalKitGlassBackdrop.current
+    val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
+    val backdrop = remember(source, ground, picture, live) { liquidSourceBackdrop(source!!, ground, picture, live) }
+    val flip = liquidFlipFor(source, role)
+    val spec = kitLiquidPaneSpec(role, flip ?: remember { LiquidFlip() }, chosen = false, keepRim = true)
+    return Modifier.kitBackdropRimLight(shape)
+        .kitFrostPane(spec, backdrop, shape as CornerBasedShape, spec.frostBlurDp, kitGlassLook().spec.frostSaturation)
+        .kitGlassStackRoot()
+        .kitLiquidPlateHost(kitLiquidWords(backdrop, flip))
+        .testTag("kit-frosted-panel")
+}
 
 private val NoTransform: () -> Float = { 0f }
 
@@ -313,6 +359,17 @@ private fun Modifier.liquidPane(
 ): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
+    val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim)
+    val platform = LocalKitPlatform.current
+    val words = kitLiquidWords(backdrop, flip)
+    val latest by rememberUpdatedState(transform)
+    // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
+    return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
+}
+
+/** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
+@Composable
+internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean): KitLiquidPaneSpec {
     val roles = LocalKitRoles.current
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -367,10 +424,7 @@ private fun Modifier.liquidPane(
                 resolution = liquidResolutionOf(recipe, platform.liquidResolution),
             )
         }
-    val words = kitLiquidWords(backdrop, flip)
-    val latest by rememberUpdatedState(transform)
-    // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
-    return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
+    return spec
 }
 
 /**
