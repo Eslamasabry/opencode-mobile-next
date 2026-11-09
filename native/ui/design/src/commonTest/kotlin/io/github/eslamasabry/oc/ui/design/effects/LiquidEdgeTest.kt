@@ -89,23 +89,29 @@ class LiquidEdgeTest {
     }
 
     @Test
-    fun `B-KIT-003 text1, text2 and text3 read on the bare face over the content their ink lies over, in every pack, light and dark`() {
-        // Owner 2026-11-08: no plate behind words; the face's tint (and blur) carries them. A pane whose words flip to
-        // the other theme's ink flips its face to the other theme's too, so both themes' faces cover every content.
-        val tints = mutableListOf<String>()
+    fun `B-KIT-003 on clear glass every ink reads at its target over the page at rest, and the primary words keep the moving floor`() {
+        // Owner 2026-11-08: no plate behind words. Owner 2026-11-09/10: clear glass, the tint is never thickened for
+        // them either. The text floor is kept over the page at rest; over content moving behind the glass the primary
+        // words keep LiquidEdge.MOVING_FLOOR, and the ink flip covers content of the other brightness.
+        val rows = mutableListOf<String>()
+        val low = mutableListOf<String>()
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val roles = ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null)
             for (role in LiquidRole.entries) {
                 val face = LiquidEdge.face(roles, role)
                 assertEquals(0, face.wordsPlate.alpha, "$pack dark=$dark $role: no plate")
-                val target = LiquidEdge.inks(roles, role).minOf { it.second }
-                val worst = LiquidEdge.worstContrast(roles, role)
-                assertTrue(worst >= target - 1e-3, "$pack dark=$dark $role: worst $worst < $target")
-                val band = if (role == LiquidRole.Action) worst else LiquidEdge.bandContrast(roles, role)
-                tints += "$pack ${if (dark) "dark" else "light"} $role ${face.fill!!.alpha * 100 / 255}% worst ${"%.2f".format(worst)} band ${"%.2f".format(band)}"
+                val name = "$pack ${if (dark) "dark" else "light"} $role"
+                for ((i, r) in LiquidEdge.restContrasts(roles, role).withIndex()) {
+                    val (_, target, got) = r
+                    if (got < target - 1e-3) low += "$name text${i + 1} at rest: ${"%.2f".format(got)} < ${"%.2f".format(target)}"
+                }
+                val moving = LiquidEdge.movingContrast(roles, role)
+                if (moving < LiquidEdge.MOVING_FLOOR - 1e-3) low += "$name moving: ${"%.2f".format(moving)} < ${LiquidEdge.MOVING_FLOOR}"
+                rows += "$name tint ${face.fill!!.alpha * 100 / 255}% rest ${LiquidEdge.restContrasts(roles, role).joinToString("/") { "%.2f".format(it.third) }} moving ${"%.2f".format(moving)}"
             }
         }
-        println(tints.joinToString("\n"))
+        println(rows.joinToString("\n"))
+        assertTrue(low.isEmpty(), low.joinToString("\n"))
     }
 
     @Test

@@ -314,7 +314,7 @@ public fun KitComposerChip(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            icon?.let { KitIcon(it, size = KitIconSize.Small, tone = if (active) TextTone.Accent else TextTone.Secondary) }
+            icon?.let { KitIcon(it, size = KitIconSize.Small, tone = if (active && LocalKitComposerSlab.current) TextTone.Accent else TextTone.Secondary) }
             KitText(
                 label,
                 // The chip line gives a bounded width (it no longer scrolls), so the words take what the glyphs

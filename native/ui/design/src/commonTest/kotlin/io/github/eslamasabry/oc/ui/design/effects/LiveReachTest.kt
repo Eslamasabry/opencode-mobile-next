@@ -78,7 +78,7 @@ class LiveReachTest {
     }
 
     @Test
-    fun `B-KIT-LIVE-046 a liquid face over a known picture keeps its words at their targets over that picture`() {
+    fun `B-KIT-LIVE-046 a liquid face over a known picture keeps its primary words at the moving floor over that picture`() {
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val roles = ThemeResolver.roles(pack, null, dark, saver = false, dynamic = null)
             for (role in listOf(LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Pill, LiquidRole.Sheet, LiquidRole.Menu)) {
@@ -87,12 +87,12 @@ class LiveReachTest {
                 for (picture in listOf<List<Argb>>(emptyList()) + LiveReach.rows.keys.map { LiveSpots.forLook(roles, it, lens = true) }) {
                     val face = LiquidEdge.face(roles, role, picture = picture)
                     assertTrue(face.fill!!.alpha <= whole + 1, "$pack dark=$dark $role: never thicker than over every picture")
-                    // Words over every spot that picture can put behind the content, as the face measures them.
+                    // Clear glass (owner 2026-11-10): the primary words over every spot that picture can put behind the
+                    // content keep LiquidEdge.MOVING_FLOOR; the tint is never thickened for them.
+                    val ink = LiquidEdge.inks(roles, role).first().first
                     for (spot in LiquidEdge.themeSpots(roles, recipe, picture)) for (f in listOfNotNull(face.fill, face.fillStart)) {
-                        val bare = f.over(spot)
-                        for (seen in listOf(bare, face.sheen.over(bare))) for ((ink, target) in LiquidEdge.inks(roles, role)) {
-                            assertTrue(wcagContrast(ink, seen) >= target - 1e-3, "$pack dark=$dark $role: ${wcagContrast(ink, seen)} < $target")
-                        }
+                        val c = wcagContrast(ink, f.over(spot))
+                        assertTrue(c >= LiquidEdge.MOVING_FLOOR - 1e-3, "$pack dark=$dark $role: $c < ${LiquidEdge.MOVING_FLOOR}")
                     }
                 }
             }

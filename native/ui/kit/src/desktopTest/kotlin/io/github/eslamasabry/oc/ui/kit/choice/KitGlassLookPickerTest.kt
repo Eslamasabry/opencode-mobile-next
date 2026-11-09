@@ -184,7 +184,7 @@ class KitGlassLookPickerTest {
     }
 
     @Test
-    fun `B-KIT-018 three looks lay out two on top and the last across the whole row, with one filled check`() = runComposeUiTest {
+    fun `B-KIT-018 the two looks share one row at one width, with one filled check`() = runComposeUiTest {
         mainClock.autoAdvance = false
         setContent {
             KitTheme(appearance = KitAppearance(style = Style.Glass), platform = FakeKitPlatform(frost = true), localeTag = "en", stillFrame = true) {
@@ -195,12 +195,9 @@ class KitGlassLookPickerTest {
         assertEquals(2, GlassLooks.offered.size, "Clear and Smoked are cut: two looks ship")
         val glossy = onNodeWithTag("kit-glass-look-glossy", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val frosted = onNodeWithTag("kit-glass-look-frosted", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        val smoked = onNodeWithTag("kit-glass-look-smoked", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        assertEquals(glossy.top, frosted.top, .5f, "Glossy and Frosted share the top row")
+        assertEquals(0, onAllNodesWithTag("kit-glass-look-smoked", useUnmergedTree = true).fetchSemanticsNodes().size, "Smoked is not offered")
+        assertEquals(glossy.top, frosted.top, .5f, "Glossy and Frosted share the row")
         assertEquals(glossy.width, frosted.width, .5f)
-        assertTrue(smoked.top > glossy.bottom, "Smoked sits below them")
-        assertEquals(glossy.left, smoked.left, .5f, "Smoked starts where the row starts")
-        assertEquals(frosted.right, smoked.right, .5f, "and ends where it ends: no empty cell beside it")
         assertEquals(1, onAllNodesWithTag("kit-glass-look-check", useUnmergedTree = true).fetchSemanticsNodes().size, "one check, on the chosen look")
     }
 

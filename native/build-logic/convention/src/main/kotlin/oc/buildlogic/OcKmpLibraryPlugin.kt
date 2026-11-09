@@ -72,6 +72,13 @@ class OcKmpLibraryPlugin : Plugin<Project> {
             val toolchains = extensions.getByType<JavaToolchainService>()
             tasks.withType<Test>().configureEach {
                 maxParallelForks = providers.gradleProperty("oc.test.forks").get().toInt()
+                // Golden gates (`*GateTest`: a part rendered and compared with a stored picture) are the slow tests and
+                // need the goldens on disk. A working loop skips them (-Poc.test.gates=skip) and a checkpoint or CI can
+                // run them alone (-Poc.test.gates=only). Unset: every test, as before.
+                when (providers.gradleProperty("oc.test.gates").orNull) {
+                    "skip" -> filter { excludeTestsMatching("*GateTest"); isFailOnNoMatchingTests = false }
+                    "only" -> filter { includeTestsMatching("*GateTest"); isFailOnNoMatchingTests = false }
+                }
                 if (name.contains("AndroidHostTest")) {
                     javaLauncher.set(
                         toolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(Jdk.TEST_LAUNCHER)) },

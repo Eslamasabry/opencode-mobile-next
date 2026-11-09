@@ -367,10 +367,15 @@ public fun KitScreen(
                                         topReach = HEADER_FADE_DP.dp,
                                         // From 8 dp above the block (inside the list's own 16 dp padding, so the
                                         // newest line at rest and the jump pill stay whole) over its top 16 dp.
+                                        // Under a glass slab the body stays whole; only the sliver between the
+                                        // slab's bottom edge and the window's dissolves, so no half line shows there.
                                         fadeFromBottom =
-                                            if (bottomPart == null || slab) null
-                                            else ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } }),
-                                        bottomReach = (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
+                                            when {
+                                                bottomPart == null -> null
+                                                slab -> ({ with(density) { (SLAB_UNDER_FADE_DP + Space.S2).dp.toPx() } })
+                                                else -> ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } })
+                                            },
+                                        bottomReach = if (slab) SLAB_UNDER_FADE_DP.dp else (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
                                         topReachPx = { statusPx + reach - statusEdgeSolid(statusPx.toFloat()) },
                                     )
                             )
@@ -824,6 +829,9 @@ internal const val COMPOSER_FADE_DP = 16
 
 /** How far above a chat's bottom block its transcript starts to fade out (within the list's own padding). */
 internal const val EDGE_LEAD_DP = 8
+
+/** Under a glass slab: the body dissolves over this much behind the slab's bottom edge and is gone in the margin below it. */
+internal const val SLAB_UNDER_FADE_DP = 8
 
 /** How far the chat header's ground fades down into the body. */
 internal const val HEADER_FADE_DP = 12

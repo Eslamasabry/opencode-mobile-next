@@ -206,8 +206,9 @@ class GlassPanesTest {
         for (role in LiquidRole.entries.filter { it != LiquidRole.Action }) {
             assertTrue(LiquidEdge.recipe(role, true, GlassLooks.Smoked).tint >= GlassLooks.Smoked.smokeTint, "$role: Smoked starts at its smoke")
         }
-        // The stored names round-trip.
-        for (id in GlassLookId.entries) assertEquals(id, GlassLookId.fromStorage(id.storageName))
+        // The stored names round-trip; a stored Smoked reads as Glossy (Smoked is no longer offered, owner 2026-11-09).
+        for (id in GlassLookId.entries)
+            assertEquals(if (id == GlassLookId.Smoked) GlassLookId.Glossy else id, GlassLookId.fromStorage(id.storageName))
     }
 
     /** What a liquid face floats over, per backdrop: the painted aurora, frosted, and the farthest a shader look reaches. */
@@ -223,7 +224,6 @@ class GlassPanesTest {
     fun `B-KIT-003 every look keeps the readability floor, every pack, light and dark, over the aurora and the shader looks`() {
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val page = roles(pack, dark)
-            val darkRoles = roles(pack, true)
             for (id in GlassLookId.entries) {
                 val look = GlassLooks.of(id)
                 // In-flow panes: the look's clear panes (Smoked keeps the page's own, D6).
@@ -239,18 +239,19 @@ class GlassPanesTest {
                     }
                 }
                 // Floating pieces with a lens: the look's liquid face (Smoked: the dark theme's, over this page).
-                if (!look.lens) continue
-                val faceRoles = if (look.smoked) darkRoles else page
+                // Smoked is no longer offered (owner 2026-11-09); a stored Smoked reads as Glossy.
+                if (!look.lens || look.smoked) continue
+                val faceRoles = page
                 for (role in wordRoles) for (picture in liquidPictures(page)) {
                     val face = LiquidEdge.face(faceRoles, role, picture = picture, look = look, page = page)
                     val recipe = LiquidEdge.recipe(role, faceRoles.dark, look)
                     val spots = LiquidEdge.themeSpots(page, recipe, picture)
+                    // Clear glass (owner 2026-11-10): a liquid face is one thin tint; its primary words keep
+                    // LiquidEdge.MOVING_FLOOR over everything it floats over (the text floor holds at rest: LiquidEdgeTest).
+                    val ink = LiquidEdge.inks(faceRoles, role).first().first
                     for (f in listOfNotNull(face.fill, face.fillStart)) for (spot in spots) {
-                        val bare = f.over(spot)
-                        for (seen in listOf(bare, face.sheen.over(bare))) for ((ink, target) in LiquidEdge.inks(faceRoles, role)) {
-                            val c = wcagContrast(ink, seen)
-                            assertTrue(c >= target - 1e-3, "$id $pack dark=$dark $role: $c < $target")
-                        }
+                        val c = wcagContrast(ink, f.over(spot))
+                        assertTrue(c >= LiquidEdge.MOVING_FLOOR - 1e-3, "$id $pack dark=$dark $role: $c < ${LiquidEdge.MOVING_FLOOR}")
                     }
                 }
             }

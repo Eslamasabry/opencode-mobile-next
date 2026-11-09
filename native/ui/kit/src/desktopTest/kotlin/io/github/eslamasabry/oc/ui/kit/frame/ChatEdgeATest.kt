@@ -262,7 +262,7 @@ class ChatEdgeATest {
     }
 
     @Test
-    fun `B-KIT-003 the bar's words keep their floor over the transcript blurred under it`() {
+    fun `B-KIT-003 the bar's primary words keep the moving floor over the transcript blurred under it`() {
         // Measure how much ink a paragraph of the transcript's Body text keeps under the bar's blur (the lens's blur
         // radius as a Gaussian), then hold every pack's bar face to its targets over the worst of it, as glass-v3
         // measured its panes (LiquidEdge.worstContrast's spots).
@@ -274,13 +274,12 @@ class ChatEdgeATest {
             val face = LiquidEdge.face(roles, LiquidRole.Bar)
             val ground = roles.ground.withAlpha(1f)
             val under = LiquidEdge.filtered(lerp(ground, roles.text1.withAlpha(1f), share), recipe)
+            // Clear glass (owner 2026-11-10): the bar's face is one thin tint; its title keeps LiquidEdge.MOVING_FLOOR
+            // over the densest blurred text, and the text floor at rest (LiquidEdgeTest).
+            val ink = LiquidEdge.inks(roles, LiquidRole.Bar).first().first
             for (fill in listOfNotNull(face.fill, face.fillStart)) {
-                val bare = fill.over(under)
-                for (seen in listOf(bare, face.sheen.over(bare)))
-                    for ((ink, target) in LiquidEdge.inks(roles, LiquidRole.Bar)) {
-                        val c = wcagContrast(ink, seen)
-                        assertTrue(c >= target - 1e-3, "$pack dark=$darkMode: bar words at $c over moving text, floor $target")
-                    }
+                val c = wcagContrast(ink, fill.over(under))
+                assertTrue(c >= LiquidEdge.MOVING_FLOOR - 1e-3, "$pack dark=$darkMode: bar words at $c over moving text, floor ${LiquidEdge.MOVING_FLOOR}")
             }
         }
     }

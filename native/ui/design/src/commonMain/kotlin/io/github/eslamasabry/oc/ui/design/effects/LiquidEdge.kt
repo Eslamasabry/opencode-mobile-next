@@ -91,7 +91,7 @@ public object LiquidEdge {
 
     /** How far the backdrop moves towards the theme: a little darker in a dark theme, a little lighter in a light one. */
     public const val PRESS_LIFT_DARK: Float = .03f
-    public const val PRESS_LIFT_LIGHT: Float = .03f
+    public const val PRESS_LIFT_LIGHT: Float = 0f
 
     /** The rim width the lens bends in, for a pane whose shorter side is [shortSidePx], at [density] px per dp. */
     public fun rimPx(shortSidePx: Float, density: Float, recipe: LiquidRecipe? = null): Float =
@@ -123,7 +123,7 @@ public object LiquidEdge {
             LiquidRole.Bar -> r(6f, 34f, .14f, .18f, .12f)
             LiquidRole.Composer -> r(4f, 34f, .16f, .20f, .18f)
             LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f)
-            LiquidRole.Menu -> r(12f, 48f, .18f, .20f, .12f, rimMax = 26f)
+            LiquidRole.Menu -> r(if (dark) 12f else 6f, 48f, .18f, .20f, .10f, rimMax = 26f)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(2f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
@@ -367,6 +367,44 @@ public object LiquidEdge {
             }
         }
     }
+
+    /**
+     * Each ink of [role] on the face over the page at rest (its ground and surface steps, nothing scrolling behind):
+     * the ink, its target and the lowest contrast it has there. Clear glass holds every ink to its target here.
+     */
+    public fun restContrasts(roles: Roles, role: LiquidRole): List<Triple<Argb, Double, Double>> {
+        val face = face(roles, role)
+        val recipe = recipe(role, roles.dark)
+        val ground = roles.ground.opaqueArgb()
+        val rest =
+            if (role == LiquidRole.Action) backdropEnds(recipe).toList()
+            else listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)).map { filtered(it, recipe) }
+        return inks(roles, role).map { (ink, target) ->
+            Triple(ink, target, listOfNotNull(face.fill, face.fillStart).minOf { f -> rest.minOf { e -> wcagContrast(ink, f.over(e)) } })
+        }
+    }
+
+    /**
+     * The lowest contrast [role]'s primary words (text1; the +: its glyph) have on the face over everything it floats
+     * over ([themeSpots]: blurred words scrolling behind, an accent wash, the live pictures). Clear glass holds them to
+     * [MOVING_FLOOR] there.
+     */
+    public fun movingContrast(roles: Roles, role: LiquidRole): Double {
+        val face = face(roles, role)
+        val recipe = recipe(role, roles.dark)
+        val spots = if (role == LiquidRole.Action) backdropEnds(recipe).toList() else themeSpots(roles, recipe)
+        val ink = inks(roles, role).first().first
+        return listOfNotNull(face.fill, face.fillStart).minOf { f -> spots.minOf { e -> wcagContrast(ink, f.over(e)) } }
+    }
+
+    /**
+     * Clear glass (owner 2026-11-09 "is it that difficult to have the real glass feel", 2026-11-10 "the menu glass still
+     * has the milky feeling"): a liquid face is one thin tint and is never thickened into a plate for its words. So the
+     * text floor (4.5:1) is kept where the page is at rest ([restContrasts]); over content moving behind the glass the
+     * primary words keep at least this, WCAG's 3:1 for large text and controls, and the pane's ink flip
+     * ([LiquidInkRule]) turns them to the other theme's ink over content of the other brightness.
+     */
+    public const val MOVING_FLOOR: Double = 3.0
 
     /**
      * Which of the window's liquid [claims] are drawn as liquid glass. The page's parts (bars, composer, +, pills) share

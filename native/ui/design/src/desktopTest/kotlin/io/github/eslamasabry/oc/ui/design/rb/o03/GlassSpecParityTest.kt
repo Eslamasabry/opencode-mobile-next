@@ -24,7 +24,8 @@ class GlassSpecParityTest {
         assertEquals(50f, GlassSpec.WEIGHT_BOOST)
         assertEquals(.08f, GlassSpec.SHEEN)
         assertEquals(20f, GlassSpec.PANE_FROST)
-        assertEquals(26f, GlassSpec.FLOAT_FROST)
+        // Owner's glass retune 2026-11-09: floating frost 16 dp (Flutter's 26 read as frosty plastic).
+        assertEquals(16f, GlassSpec.FLOAT_FROST)
         val t = GlassSpec.tokens
         assertEquals(Knobs(), t.defaults)
         assertTrue(t.blursBehind)
@@ -54,7 +55,7 @@ class GlassSpecParityTest {
         assertEquals(.06f, GlassSpec.frostOf(SurfaceRole.Sheet))
         assertEquals(0f, GlassSpec.frostOf(SurfaceRole.Divider))
         for (r in listOf(SurfaceRole.Content, SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Field)) assertEquals(20f, GlassSpec.frostSigma(r))
-        for (r in listOf(SurfaceRole.Floating, SurfaceRole.Sheet)) assertEquals(26f, GlassSpec.frostSigma(r))
+        for (r in listOf(SurfaceRole.Floating, SurfaceRole.Sheet)) assertEquals(16f, GlassSpec.frostSigma(r))
         for (r in listOf(SurfaceRole.Toggle, SurfaceRole.Ground, SurfaceRole.Code, SurfaceRole.Divider, SurfaceRole.StateLayer)) assertEquals(0f, GlassSpec.frostSigma(r))
     }
 
