@@ -8,8 +8,11 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.kit.content.image.KitImageView
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.image.KIT_VIEWER_EDGE
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.getValue
 
 /**
  * Which renderer a [KitViewerContent] uses (Dart `KitViewerKind`, lib/ui/kit/kit_viewer_content.dart): the enum order is
@@ -200,7 +203,13 @@ public fun KitViewerImageBody(
     modifier: Modifier = Modifier,
     unreadable: @Composable () -> Unit,
 ) {
-    val bitmap = remember(bytes) { decodeOrNull(bytes) }
+    val work = LocalKitImageWork.current
+    val loaded by
+        produceState<Pair<Boolean, ImageBitmap?>>(false to null, bytes) {
+            value = true to KitImages.loadBytes(bytes, KIT_VIEWER_EDGE, work)
+        }
+    val bitmap = loaded.second
+    if (!loaded.first) return
     if (bitmap == null) {
         unreadable()
         return
@@ -229,22 +238,17 @@ public fun KitPdfPngPage(
     failedReason: String? = null,
     onRetry: (() -> Unit)? = null,
 ) {
-    val bitmap = remember(png) { png?.let(::decodeOrNull) }
+    val work = LocalKitImageWork.current
+    val loaded by
+        produceState<Pair<Boolean, ImageBitmap?>>(false to null, png) {
+            value = true to png?.let { KitImages.loadBytes(it, KIT_VIEWER_EDGE, work) }
+        }
+    val bitmap = loaded.second
     val state =
         when {
-            failed || (png != null && bitmap == null) -> KitPdfPageState.Failed(failedReason)
+            failed || (png != null && loaded.first && bitmap == null) -> KitPdfPageState.Failed(failedReason)
             bitmap != null -> KitPdfPageState.Ready(bitmap)
             else -> KitPdfPageState.Loading()
         }
     KitPdfPage(page, pageCount, state, modifier, onRetry)
 }
-
-@OptIn(ExperimentalResourceApi::class)
-private fun decodeOrNull(bytes: ByteArray): ImageBitmap? =
-    if (bytes.isEmpty()) null
-    else
-        try {
-            bytes.decodeToImageBitmap()
-        } catch (_: RuntimeException) { // an undecodable picture is a plain "can't show", never a crash
-            null
-        }

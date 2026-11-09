@@ -55,6 +55,8 @@ internal fun Modifier.kitScrollEdges(
     fadeFromBottom: (() -> Float)?,
     bottomReach: Dp,
     strength: () -> Float = { 1f },
+    /** The top fade's length in px, read while drawing; overrides [topReach] (the status edge's dissolve). */
+    topReachPx: (() -> Float)? = null,
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -65,7 +67,7 @@ internal fun Modifier.kitScrollEdges(
                 val k = strength().coerceIn(0f, 1f)
                 if (k > 0f) {
                     val t = clearAbove().coerceIn(0f, size.height)
-                    val r = topReach.toPx()
+                    val r = topReachPx?.invoke() ?: topReach.toPx()
                     if (t > 0f) {
                         drawRect(Color.Black.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = BlendMode.DstOut)
                     }

@@ -50,13 +50,13 @@ public object GlassSpec : StyleSpec {
      * much lighter frosted glass"): the background blur behind a card or a row group when the panes are clear. A big
      * pane carries a little more frost than a chip or a field ([PANE_FROST]).
      */
-    public const val CLEAR_CONTENT_FROST: Float = 12f
+    public val CLEAR_CONTENT_FROST: Float get() = GlassLook.Default.contentFrostDp
 
     /**
      * The blur behind a clear chip, control or field (owner 2026-11-09, "crisper": moderate blur, so colour and shapes
      * behind stay visible; the frost's saturation carries the vibrancy).
      */
-    public const val CLEAR_PANE_FROST: Float = 10f
+    public val CLEAR_PANE_FROST: Float get() = GlassLook.Default.paneFrostDp
 
     /**
      * The accent a chosen pane's tint takes (dark, light): accent-tinted frost, never a solid slab. A dark chosen pane
@@ -128,16 +128,16 @@ public object GlassSpec : StyleSpec {
      * A clear pane's top sheen (owner 2026-11-09, "glossy"): the theme's near-white, fading out over the first 30 % of
      * the pane and at most [SurfaceDecoration.SHEEN_MAX_DP].
      */
-    public fun sheenOf(roles: Roles): Argb = styleLight(roles).withAlpha(if (roles.dark) .10f else .34f)
+    public fun sheenOf(roles: Roles, look: GlassLook = GlassLook.Default): Argb = styleLight(roles).withAlpha(if (roles.dark) look.sheenDark else look.sheenLight)
 
     /**
      * A clear pane's specular light ([SurfaceDecoration.specular]): white, a bright segment of the 1 dp rim at the top
      * start and a thin line just inside the top edge. Restrained: strong enough to catch the eye, never a white frame.
      */
-    public fun specularOf(roles: Roles): Argb = styleLight(roles).withAlpha(if (roles.dark) SPECULAR_DARK else SPECULAR_LIGHT)
+    public fun specularOf(roles: Roles, look: GlassLook = GlassLook.Default): Argb = styleLight(roles).withAlpha(if (roles.dark) look.specularDark else look.specularLight)
 
-    public const val SPECULAR_DARK: Float = .55f
-    public const val SPECULAR_LIGHT: Float = .90f
+    public val SPECULAR_DARK: Float get() = GlassLook.Default.specularDark
+    public val SPECULAR_LIGHT: Float get() = GlassLook.Default.specularLight
 
     /**
      * Whether [r] is a chosen pane drawn as accent-tinted glass: a chosen content or control surface with no fill of its
@@ -240,7 +240,10 @@ public object GlassSpec : StyleSpec {
             val plain = tintOf(roles, role, r.level)
             val base = if (chosen) chosenTintOf(roles, plain) else plain
             fill = base.withAlpha(alpha)
-            fillStart = lerp(base, white, if (dark) SHEEN else SHEEN * 2).withAlpha(minOf(1f, alpha + (if (dark) .04f else .12f))) // FG: lib/ui/kit/style/kit_style_glass.dart:188,189
+            // A clear pane's lit corner is GlassLook's (less milk in a light theme); the held, thick panes keep Flutter's.
+            val lit = if (!clear) (if (dark) .04f else .12f) else if (dark) GlassLook.Default.litLiftDark else GlassLook.Default.litLiftLight // FG: lib/ui/kit/style/kit_style_glass.dart:188,189
+            val toWhite = if (clear || dark) SHEEN else SHEEN * 2
+            fillStart = lerp(base, white, toWhite).withAlpha(minOf(1f, alpha + lit))
         }
         val raised = r.knobs.depth == Depth.Raised
         val shadows =

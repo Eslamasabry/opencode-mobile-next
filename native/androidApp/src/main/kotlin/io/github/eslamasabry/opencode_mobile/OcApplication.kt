@@ -14,6 +14,9 @@ import io.github.eslamasabry.oc.core.common.LaunchMode
 import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kit.image.KitFileImageDisk
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.imageKeepFraction
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
@@ -65,6 +68,8 @@ class OcApplication : Application(), GraphOwner {
                 reporting.reportCrash(category, frames)
             }
         } catch (_: Throwable) {}
+        // Pictures: disk thumbnails live under the cache folder, one per profile (oc.imageCache.<profileId>).
+        KitImages.diskFor = KitFileImageDisk.factory(cacheDir)
         redactor = Redactor() // 2. before any secret is read
         AppLog.install(
             RedactingWriter(
@@ -86,6 +91,12 @@ class OcApplication : Application(), GraphOwner {
         // product, as before.
         PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
         startProduct()
+    }
+
+    /** Frees the picture cache as the system asks (audit gap 5): see [imageKeepFraction] for the levels. */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        imageKeepFraction(level)?.let(KitImages::trim)
     }
 
     private fun isMainProcess(): Boolean {

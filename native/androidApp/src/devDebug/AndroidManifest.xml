@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev-flavour debug build only (audit gap 5): StrictMode logging at process start. Not in release, preview or switch. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <provider
+            android:name=".DebugHygieneProvider"
+            android:authorities="${applicationId}.debug-hygiene"
+            android:exported="false"
+            android:initOrder="100" />
+    </application>
+</manifest>

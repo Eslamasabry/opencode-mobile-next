@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.data.cache.CacheShelf
+import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.facet
@@ -20,6 +22,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsData
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsHost
 import io.github.eslamasabry.oc.feature.settings.presentation.NoModelDefaultsHost
+import io.github.eslamasabry.oc.feature.settings.presentation.KeptModelDefaults
 
 /** The picker stores only this app's default; selecting it never changes an existing chat. */
 @ContributesBinding(AppScope::class, replaces = [NoModelDefaultsHost::class])
@@ -27,7 +30,11 @@ import io.github.eslamasabry.oc.feature.settings.presentation.NoModelDefaultsHos
 class LiveModelDefaultsHost(
     private val registry: ConnectionRegistry,
     private val stores: PreviewStores,
+    store: LastKnown,
 ) : ModelDefaultsHost {
+    // Cache-first: the page's rows as the last successful read showed them (ids, names, prices; never a key).
+    private val shelf = ProfileShelf(store, stores, KEPT)
+
     private var captured: Pair<ProfileId, ConnectionGraph>? = null
     private var available = emptyList<ModelRef>()
     private var capturedLocation: io.github.eslamasabry.oc.core.model.ServerLocation? = null
@@ -94,7 +101,7 @@ class LiveModelDefaultsHost(
                     providers.defaultModelId?.let { ModelRef(provider, it) }
                 },
             )
-        return Outcome.Ok(
+        val data =
             ModelDefaultsData(
                 graph.profile.name,
                 graph.profile.managedOnPhone,
@@ -103,7 +110,25 @@ class LiveModelDefaultsHost(
                 serverDefaults,
                 modelStore.modelLibrary(profile),
             )
-        )
+        shelf.keep(profile, value = KeptModelDefaults.of(data))
+        return Outcome.Ok(data)
+    }
+
+    override suspend fun kept(profile: ProfileId?): ModelDefaultsData? {
+        val id = profile ?: stores.profiles.activeId.value ?: return null
+        val kept = shelf.peek(id) ?: shelf.read(id) ?: return null
+        val library = ModelStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(id))).modelLibrary(id)
+        val stored =
+            stores.prefs
+                .string("oc.model.${id.raw}")
+                ?.split('|')
+                ?.takeIf { it.size >= 2 }
+                ?.let { ModelRef(it[0], it[1]) }
+        return kept.data(library, stored)
+    }
+
+    companion object {
+        val KEPT = CacheShelf("modelDefaults", KeptModelDefaults.serializer(), maxBytes = 256 * 1024)
     }
 
     override suspend fun choose(model: ModelRef?): Outcome<Unit> {
@@ -126,3 +151,4 @@ class LiveModelDefaultsHost(
         }
     }
 }
+

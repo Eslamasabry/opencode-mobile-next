@@ -22,11 +22,9 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningRow
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
-import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -45,7 +43,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
-import kotlinx.collections.immutable.persistentListOf
 
 /**
  * E20-S09: the home's "isn't answering" page, with and without saved titles, as desktop goldens (412 × 915 dp,
@@ -64,7 +61,7 @@ class E20S09OpeningGoldensTest {
     @AfterTest
     fun restoreLocale() = Locale.setDefault(savedLocale)
 
-    private fun failed(rows: List<ChatsOpeningRow>) =
+    private fun failed() =
         ChatsUi(
             phase = ChatsPhase.Opening,
             // C18: a failed opening is never a dead end - Settings stays in the bar, like the real home.
@@ -75,7 +72,6 @@ class E20S09OpeningGoldensTest {
                         ChatsOpeningUi(
                             ChatsOpeningPhase.Failed,
                             "This phone",
-                            rows = persistentListOf(*rows.toTypedArray()),
                             failure = Failure.Network(),
                             profile = ProfileId("phone"),
                         )
@@ -119,7 +115,7 @@ class E20S09OpeningGoldensTest {
 
     @Test
     fun `E20-S09 with no saved titles a failure shows no placeholder rows and does not mention saved titles`() =
-        scene("home-opening-failed-empty", failed(emptyList())) { variant ->
+        scene("home-opening-failed-empty", failed()) { variant ->
             assertEquals(0, onAllNodesWithTag("kit-skeleton-rows").fetchSemanticsNodes().size)
             // C18: the failed page keeps a way out beside Try again and Change server - the Settings gear.
             if (variant.locale == "en") {
@@ -127,23 +123,6 @@ class E20S09OpeningGoldensTest {
                 assertEquals(0, onAllNodesWithText("saved last time", substring = true).fetchSemanticsNodes().size)
                 onNodeWithText("Check that the server is on", substring = true).assertExists()
             }
-        }
-
-    @Test
-    fun `E20-S09 with saved titles a failure lists them as rows`() =
-        scene(
-            "home-opening-failed-saved",
-            failed(
-                listOf(
-                    ChatsOpeningRow("a", RowTitle.Text("Fix the login bug")),
-                    ChatsOpeningRow("b", RowTitle.Text("Plan the release notes")),
-                )
-            ),
-        ) { variant ->
-            onNodeWithText("Fix the login bug").assertExists()
-            onNodeWithText("Plan the release notes").assertExists()
-            assertEquals(0, onAllNodesWithTag("kit-skeleton-rows").fetchSemanticsNodes().size)
-            if (variant.locale == "en") onNodeWithText("saved last time", substring = true).assertExists()
         }
 
     private fun ComposeUiTest.compare(name: String) {

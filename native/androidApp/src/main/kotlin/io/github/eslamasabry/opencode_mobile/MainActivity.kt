@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitSecureWindow
+import io.github.eslamasabry.oc.ui.kit.platform.androidKitSecureWindow
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.shell.App
@@ -70,6 +72,7 @@ class MainActivity : ComponentActivity() {
         // P12-SETTINGS: stored appearance and language at the root; first run picks the welcome.
         val settings = graph as SettingsAppGraph
         settings.firstRunStarter.start()
+        val secureWindow = androidKitSecureWindow(this)
         setContent {
             graph.kitChatEnvironment.Provide {
                 val appearance by settings.appPreferences.appearance.collectAsState()
@@ -79,6 +82,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 CompositionLocalProvider(
+                    LocalKitSecureWindow provides secureWindow,
                     LocalKitTerminalSlot provides AndroidKitTerminalSlot,
                     LocalTerminalLinkHost provides (graph as TerminalLinksGraph).terminalLinkHost,
                     LocalKitLogoLoader provides (graph as ProviderLogoGraph).kitLogoLoader,

@@ -96,7 +96,7 @@ public data class SurfaceDecoration(
         public const val SHEEN_MAX_DP: Float = 40f
 
         /** The [specular] line's strength next to the rim's bright segment. */
-        public const val GLINT_SHARE: Float = .60f
+        public val GLINT_SHARE: Float get() = GlassLook.Default.glintShare
 
         /** How far down from the top edge the specular line lies, in dp (inside the rim). */
         public const val GLINT_DROP_DP: Float = 2.5f

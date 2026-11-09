@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import io.github.eslamasabry.oc.core.common.CertificateWhy
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -297,6 +298,12 @@ public fun ServerEditorScreen(
             )
         else null
     val certificate = state.certificate
+    // A pin already held for this very address that differs from what the server shows now: a changed
+    // certificate. It is explained, and replaced only by an explicit tap.
+    val heldPin = pin
+    val certificateChanged =
+        certificate != null && heldPin != null && pinOrigin == certificate.origin &&
+            !heldPin.equals(certificate.fingerprint, ignoreCase = true)
     KitScreen(
         topBar = {
             KitTopBar(
@@ -388,11 +395,18 @@ public fun ServerEditorScreen(
         KitSheet(
             visible = certificate != null,
             onDismissRequest = actions::dismissCertificate,
-            title = stringResource(Res.string.serverTrustCertificateTitle),
+            title =
+                stringResource(
+                    if (certificateChanged) Res.string.serverTrustCertificateChangedTitle
+                    else Res.string.serverTrustCertificateTitle
+                ),
             icon = KitIcons.warning,
             primary =
                 KitAction(
-                    stringResource(Res.string.serverTrustCertificateAccept),
+                    stringResource(
+                        if (certificateChanged) Res.string.serverTrustCertificateReplace
+                        else Res.string.serverTrustCertificateAccept
+                    ),
                     {
                         if (certificate != null) {
                             if (
@@ -413,7 +427,10 @@ public fun ServerEditorScreen(
             certificate?.let {
                 KitServerTrustBody(
                     it.origin,
-                    stringResource(Res.string.serverTrustCertificateBody),
+                    stringResource(
+                        if (certificateChanged) Res.string.serverTrustCertificateChangedBody
+                        else Res.string.serverTrustCertificateBody
+                    ),
                     fingerprint = it.fingerprint,
                     fingerprintLabel = stringResource(Res.string.serverTrustFingerprint),
                     validity =
@@ -1110,7 +1127,12 @@ private fun editorFailureWords(failure: Failure, httpsRequired: Boolean): String
     stringResource(
         when (failure) {
             is Failure.SignIn -> Res.string.serversSignInFailed
-            is Failure.Certificate -> Res.string.serverFailureCertificate
+            is Failure.Certificate ->
+                when (failure.why) {
+                    CertificateWhy.Changed -> Res.string.serverTrustCertificateChangedBody
+                    CertificateWhy.Expired -> Res.string.serverTrustCertificateValidityError
+                    CertificateWhy.Untrusted -> Res.string.serverFailureCertificate
+                }
             is Failure.TimedOut -> Res.string.serverFailureTimeout
             is Failure.Network -> Res.string.serverFailureNetwork
             is Failure.Refused ->
