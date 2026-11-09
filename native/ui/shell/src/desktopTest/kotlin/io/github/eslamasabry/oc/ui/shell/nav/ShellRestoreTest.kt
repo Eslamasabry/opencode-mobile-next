@@ -15,7 +15,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -51,6 +50,7 @@ class ShellRestoreTest {
     private class Pages {
         val navigator = ShellNavigator()
         var homeFirstVisible = -1
+        var sheetOpen = false
         var typed: androidx.compose.foundation.text.input.TextFieldState? = null
         var listState: androidx.compose.foundation.lazy.LazyListState? = null
 
@@ -70,6 +70,7 @@ class ShellRestoreTest {
                 val field = rememberTextFieldState()
                 typed = field
                 var sheet by rememberSaveable { mutableStateOf(false) }
+                sheetOpen = sheet
                 KitScreen(title = "Everything", backLabel = "Back", onBack = navigator::back) {
                     KitField(field, label = "Search")
                     KitButton(SHEET, onClick = { sheet = true })
@@ -100,16 +101,16 @@ class ShellRestoreTest {
             }
         }
         // Home scrolled down, then a second page with a typed search and its sheet open.
-        runOnIdle { assertEquals(0, pages.homeFirstVisible) }
+        runOnIdle { assertEquals(0, pages.homeFirstVisible, "starts at top") }
         runOnIdle { pages.listState!!.requestScrollToItem(25) }
         waitForIdle()
         onNodeWithText(OPEN).performClick()
         waitForIdle()
         runOnIdle { pages.typed!!.edit { replace(0, length, "hello") } }
-        runOnIdle { pages.navigator.snapshot().also { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), it) } }
+        runOnIdle { pages.navigator.snapshot().also { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), it, "stack before") } }
         onNodeWithText(SHEET).performClick()
         waitForIdle()
-        assertTrue(onAllNodesWithText(SHEET_TITLE).fetchSemanticsNodes().isNotEmpty())
+        runOnIdle { assertTrue(pages.sheetOpen, "the sheet opened") }
 
         runOnIdle {
             registry = SaveableStateRegistry(registry.performSave()) { true }
@@ -117,8 +118,8 @@ class ShellRestoreTest {
         }
         waitForIdle()
 
-        runOnIdle { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), pages.navigator.snapshot()) }
-        assertTrue(onAllNodesWithText(SHEET_TITLE).fetchSemanticsNodes().isNotEmpty(), "the open sheet comes back")
+        runOnIdle { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), pages.navigator.snapshot(), "stack after restore") }
+        runOnIdle { assertTrue(pages.sheetOpen, "the open sheet comes back") }
         runOnIdle { assertEquals("hello", pages.typed!!.text.toString(), "the typed text comes back") }
         runOnIdle { pages.navigator.back() }
         waitForIdle()
