@@ -81,7 +81,7 @@ class EditorCertificateOfferTest {
             Connections,
             Nav,
             PairingInbox(),
-            PairingProbe { PairingAnswer.Unreachable },
+            PairingProbe { PairingAnswer.NoAnswer },
             NoLanDiscovery(),
             PlatformCapabilities.android(),
         )

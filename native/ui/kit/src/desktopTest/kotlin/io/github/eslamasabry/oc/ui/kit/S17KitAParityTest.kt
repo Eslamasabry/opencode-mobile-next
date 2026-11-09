@@ -66,12 +66,12 @@ class S17KitAParityTest {
     }
 
     @Test
-    fun `B-KIT-031 the segmented track is the 48 dp target; its hairline is drawn on the edge, not added to the height`() =
+    fun `B-KIT-031 the segmented track is the 48 dp target, its hairline is drawn on the edge, not added to the height`() =
         runDesktopComposeUiTest(412, 300) {
             var expected = 0f
             setContent {
                 Themed {
-                    expected = LocalKitTokens.current.minTarget // owner 2026-11-09 (d352b241c): the thumb sits inset in the track; the hairline no longer pads it
+                    expected = LocalKitTokens.current.minTarget.toFloat() // owner 2026-11-09 (d352b241c): the thumb sits inset in the track; the hairline no longer pads it
                     KitSegmented(
                         segments = listOf(KitSegment("today", "Today"), KitSegment("week", "Week"), KitSegment("month", "Month")),
                         selected = "week",
