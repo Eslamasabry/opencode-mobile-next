@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -11,6 +12,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object OscilloscopeLook : LiveLook {
     override val id: String = "oscilloscope"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
     override val shader: String = LiveShaderLib.LAYER + BODY
 
     override fun uniforms(u: LiveUniforms) {

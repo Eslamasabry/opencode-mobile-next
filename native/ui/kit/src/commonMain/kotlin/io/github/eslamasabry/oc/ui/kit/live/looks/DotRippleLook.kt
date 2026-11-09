@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object DotRippleLook : LiveLook {
     override val id: String = "dotRipple"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
 
     override val shader: String =
         LiveShaderLib.TINT +
@@ -34,7 +36,7 @@ half4 main(float2 fragCoord) {
     float r = 1.0 + 1.8 * wave;
     float d = length(p - g);
     float disc = 1.0 - smoothstep(r - px(), r + px(), d);
-    half3 tint = mix(uInk.rgb, glowTint(), half(wave));
+    half3 tint = mix(uInk.rgb, glowTint(), half(0.4 + 0.6 * wave));
     return liveOut(fragCoord, tint, disc * (0.45 + 1.0 * wave));
 }
 """

@@ -182,6 +182,8 @@ public class AndroidKitPlatform(
             null
         }
 
+    override fun liveFinish(ground: androidx.compose.ui.graphics.Color): RenderEffect? = AndroidLiveShader.finish(ground)
+
     override fun svgPainter(text: String, pixels: Int): Painter? {
         if (!isStaticKitSvg(text) || pixels !in 1..256) return null
         return try {

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object HoneycombLook : LiveLook {
     override val id: String = "honeycomb"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
     override val shader: String = LiveShaderLib.LAYER + BODY
 
     override fun uniforms(u: LiveUniforms) {
@@ -37,7 +39,7 @@ half4 main(float2 fc) {
     float2 a = abs(h.xy);
     float hd = max(dot(a, float2(0.5, 0.8660254)), a.x);
     float edgePx = (0.5 - hd) * uHex * d;
-    float edge = 1.0 - smoothstep(0.35, 1.25, edgePx);
+    float edge = 1.0 - smoothstep(0.35, 1.25, edgePx / lvK());
 
     float shade = 0.5 + 0.5 * (h.y * 1.6) + (lvHash(h.zw * 3.7) - 0.5) * 0.5;
 
@@ -48,8 +50,12 @@ half4 main(float2 fc) {
     float bandW = 150.0 / period;
     float band = exp(-pos * pos / (2.0 * bandW * bandW));
 
-    float k = lvAmt(0.025) * clamp(shade, 0.0, 1.0) + lvAmt(0.06) * edge * (0.45 + 0.55 * band);
-    float g = lvAmt(0.035) * band + lvAmt(0.14) * edge * band;
+    // The lattice shows only where the light band and a slow broad patch reveal it, so it never tiles the whole page
+    // like wallpaper.
+    float patch = smoothstep(0.35, 0.8, lvNoise(p / 240.0 + float2(uTime * 0.01, 0.0)));
+    float reveal = max(band, 0.35 * patch);
+    float k = lvAmt(0.015) * clamp(shade, 0.0, 1.0) * reveal + lvAmt(0.05) * edge * reveal;
+    float g = lvAmt(0.03) * band + lvAmt(0.12) * edge * band;
     return lvOut(lvLayer(k, g), fc);
 }
 """

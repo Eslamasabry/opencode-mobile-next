@@ -98,7 +98,7 @@ class LiveLooksCTest {
             setOf(
                 LiveShaderLib.RES, LiveShaderLib.TIME, LiveShaderLib.INTENSITY, LiveShaderLib.DENSITY,
                 LiveShaderLib.DARK, LiveShaderLib.GROUND, LiveShaderLib.ACCENT, LiveShaderLib.PARTNER,
-                LiveShaderLib.GLOW, LiveShaderLib.INK,
+                LiveShaderLib.GLOW, LiveShaderLib.INK, LiveShaderLib.ENCODE,
             )
 
         fun lum(rgb: Int): Double {

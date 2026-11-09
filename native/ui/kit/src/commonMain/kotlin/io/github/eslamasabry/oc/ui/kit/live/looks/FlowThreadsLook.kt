@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object FlowThreadsLook : LiveLook {
     override val id: String = "flowThreads"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
 
     override val shader: String =
         LiveShaderLib.TINT +
@@ -38,7 +40,7 @@ half4 main(float2 fragCoord) {
         halo += exp(-d * d * 0.006) * 0.07;
     }
     float along = 0.5 + 0.5 * sin(x * 0.004 + t * 0.03);
-    half3 tint = mix(uInk.rgb, glowTint(), half(0.35 + 0.65 * along));
+    half3 tint = mix(uInk.rgb, glowTint(), half(0.55 + 0.45 * along));
     return liveOut(fragCoord, tint, max(core * 0.75, min(halo, 0.45)));
 }
 """

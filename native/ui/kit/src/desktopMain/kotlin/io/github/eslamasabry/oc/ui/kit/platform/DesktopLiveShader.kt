@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.platform
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asComposeShader
 import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
 import org.jetbrains.skia.RuntimeEffect
 import org.jetbrains.skia.RuntimeShaderBuilder
@@ -26,6 +27,18 @@ internal class DesktopLiveShader(effect: RuntimeEffect) : LiveShaderProgram() {
     override fun float4(name: String, x: Float, y: Float, z: Float, w: Float) = builder.uniform(name, x, y, z, w)
 
     companion object {
+        private val finishEffect by lazy { RuntimeEffect.makeForShader(io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib.FINISH) }
+
+        /** The full-resolution finish of a reduced look on [ground] (LiveShaderLib.FINISH as an image filter). */
+        fun finish(ground: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.RenderEffect? =
+            try {
+                val b = RuntimeShaderBuilder(finishEffect)
+                b.uniform("uGround", ground.red, ground.green, ground.blue, 1f)
+                org.jetbrains.skia.ImageFilter.makeRuntimeShader(b, "content", null).asComposeRenderEffect()
+            } catch (_: RuntimeException) {
+                null
+            }
+
         /** Null when the text does not compile. */
         fun compile(source: String): LiveShaderProgram? =
             try {

@@ -114,6 +114,21 @@ public interface KitPlatform {
         get() = null
 
     /**
+     * The most of the screen's pixels per side a live look may draw at (bg-looks 2026-11-10; 1 = full): each look asks
+     * for its own ([io.github.eslamasabry.oc.ui.kit.live.LiveLook.resolution]) and gets at most this. A platform lowers it
+     * where full-resolution looks cost too much.
+     */
+    public val liveResolutionCap: Float
+        get() = 1f
+
+    /**
+     * The full-resolution finish of a look drawn at reduced resolution on [ground]
+     * ([io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib.FINISH] as a render effect): it decodes the filtered-up layer and
+     * dithers it at the screen's own pixels. Null where the platform cannot: the reduced pass then dithers itself.
+     */
+    public fun liveFinish(ground: Color): RenderEffect? = null
+
+    /**
      * Whether Glass's floating parts can be liquid glass here: the refraction runs on runtime shaders (Android 13+).
      * Android 8–12 and desktop keep today's frost or solid faces (`LiquidGlass.holdOf`, hold Platform).
      */

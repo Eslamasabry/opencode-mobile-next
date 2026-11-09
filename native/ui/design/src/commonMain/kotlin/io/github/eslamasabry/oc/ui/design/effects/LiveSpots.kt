@@ -10,8 +10,9 @@ import kotlin.math.sqrt
  * What a Glass pane can find behind it over a shader look (Aurora drift, Breathing mesh and the other live looks; owner
  * 2026-11-09: in-flow panes show real glass over every live background). Every look colours the ground with the theme's
  * look colours (the kit's `LivePalette`: the accent, its partner, the glow between the accent and the text, and the
- * text's ink): as light added to a dark ground (`liveGlow`'s screen blend, which moves the ground along `tint × (1 −
- * ground)`), or as a dye on a light one (towards the tint). And it ends in the shader prelude's `liveOut`, which keeps
+ * text's ink): as light added to a dark ground (`liveGlow`'s screen blend of the colour's vivid form, which moves the
+ * ground along `tint × (1 − ground)`), as coloured light multiplied into a light one (`liveGlow`), or as a mark mixed
+ * towards the colour itself (the dot, line and instrument looks). And it ends in the shader prelude's `liveOut`, which keeps
  * each pixel within [CAP_LIGHT] (light) or [CAP_DARK] (dark) of the ground (RGB distance, 0-1 channels).
  *
  * So whatever a look draws lies in the ground's cap ball along those directions and their mixes: [of] returns the ground
@@ -46,10 +47,18 @@ public object LiveSpots {
         val cap = (if (dark) CAP_DARK else CAP_LIGHT) * reach.coerceIn(0f, MAX_REACH)
         val g = rgb(roles.ground)
         val tints = listOf(roles.accent, roles.partner, lerp(roles.accent, roles.text1, GLOW_TOWARD_TEXT), roles.text1).map(::rgb)
-        // How far each colour moves the ground per unit of its strength, and at most how far it can.
+        // How far each colour moves the ground per unit of its strength, and at most how far it can: the dot, line and
+        // instrument looks mix towards the colour itself; the wash looks (liveGlow) lay its vivid form, screened on a
+        // dark ground and multiplied in at full brightness on a light one (bg-looks 2026-11-10).
         val moves =
-            tints.map { t ->
-                if (dark) FloatArray(3) { t[it] * (1f - g[it]) } else FloatArray(3) { t[it] - g[it] }
+            tints.flatMap { t ->
+                val v = vivid(t)
+                if (dark) {
+                    listOf(FloatArray(3) { t[it] * (1f - g[it]) }, FloatArray(3) { v[it] * (1f - g[it]) })
+                } else {
+                    val top = maxOf(v[0], v[1], v[2], .02f)
+                    listOf(FloatArray(3) { t[it] - g[it] }, FloatArray(3) { g[it] * (v[it] / top - 1f) })
+                }
             }
         val directions = moves + moves.indices.flatMap { i -> (i + 1 until moves.size).map { j -> FloatArray(3) { (moves[i][it] + moves[j][it]) / 2f } } }
         fun moved(d: FloatArray): Argb? {
@@ -60,6 +69,14 @@ public object LiveSpots {
         }
         return listOf(argb(g)) + directions.mapNotNull(::moved).distinct()
     }
+
+    /** The prelude's `liveVivid`: the colour 40 % further from its own grey. */
+    private fun vivid(c: FloatArray): FloatArray {
+        val l = .2126f * c[0] + .7152f * c[1] + .0722f * c[2]
+        return FloatArray(3) { (l + (c[it] - l) * VIVID).coerceIn(0f, 1f) }
+    }
+
+    private const val VIVID: Float = 1.4f
 
     private fun rgb(c: Argb): FloatArray = floatArrayOf(c.red / 255f, c.green / 255f, c.blue / 255f)
 

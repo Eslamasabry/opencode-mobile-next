@@ -26,6 +26,15 @@ public object LiveShaderLib {
     internal const val GLOW = "uGlow"
     internal const val INK = "uInk"
 
+    /** 1 when the look runs at reduced resolution and the [FINISH] pass decodes and dithers it at full resolution. */
+    internal const val ENCODE = "uEncode"
+
+    /**
+     * How far from the ground (per channel, 0..1) a reduced pass can write ([FINISH] decodes it): every look stays within
+     * 0.3 of its ground, so the 8-bit layer holds the look in 0.64 of an output step, finer than the screen's own.
+     */
+    public const val ENCODE_RANGE: Float = .32f
+
     /** The smallest shader: compiles wherever runtime shaders exist, so the host can choose the fallback once. */
     internal const val PROBE: String = "half4 main(float2 c) { return half4(0.0); }"
 
@@ -41,6 +50,7 @@ uniform half4 uAccent;
 uniform half4 uPartner;
 uniform half4 uGlow;
 uniform half4 uInk;
+uniform float uEncode;
 
 // Hash without sine: stable on mobile GPUs at the coordinates we use (a few hundred at most).
 float liveHash(float2 p) {
@@ -79,24 +89,62 @@ float liveFbm(float2 p) {
     return v;
 }
 
-// Light added to the ground: a screen blend on dark themes, a tint on light ones, so a glow never greys a light page.
+// Interleaved gradient noise (Jimenez 2014): screen-space noise with almost no low frequencies, so a dither made of it
+// never clumps into the mottled patches white noise leaves in a dark gradient. One dot and two fract per pixel.
+float liveIgn(float2 p) {
+    return fract(52.9829189 * fract(dot(p, float2(0.06711056, 0.00583715))));
+}
+
+// The dither every look ends with: triangular (gradient noise plus a hash), 1.5 8-bit steps either way. The looks draw
+// at half resolution and are filtered up to the screen, which softens a dither; at this size it still breaks every
+// 8-bit step of the slowest, darkest gradient after that, so no glow ends in visible bands.
+float liveDither(float2 fragCoord) {
+    return (liveIgn(fragCoord) + liveHash(fragCoord + 71.3) - 1.0) * (1.5 / 255.0);
+}
+
+// A look's final colour. At full resolution: dithered here. In a reduced pass (uEncode): the distance from the ground,
+// spread over the 8-bit range and undithered, for the full-resolution finish (LiveShaderLib.FINISH) to decode and
+// dither after the upscale, so the dither is always at the screen's own pixels.
+half4 liveEmit(float3 col, float2 fragCoord) {
+    if (uEncode > 0.5) {
+        return half4(clamp(0.5 + 0.5 * (col - float3(uGround.rgb)) / 0.32, 0.0, 1.0), 1.0);
+    }
+    return half4(clamp(col + liveDither(fragCoord), 0.0, 1.0), 1.0);
+}
+
+// The tint with its colour drawn out (40 % further from its own grey), so a look adds colour, not a grey haze: theme
+// partners are often pale, and a pale tint screened onto a dark ground only lifted it towards grey.
+float3 liveVivid(float3 c) {
+    float l = dot(c, float3(0.2126, 0.7152, 0.0722));
+    return clamp(l + (c - l) * 1.4, 0.0, 1.0);
+}
+
+// Light added to the ground. Dark themes: a screen blend, so it reads as light. Light themes: coloured light on paper,
+// the ground multiplied by the tint brought to full brightness, so colour comes in without greying or darkening the
+// page (a light accent is dark for contrast; mixing towards it made light pages muddy).
 float3 liveGlow(float3 base, float3 tint, float a) {
     a = clamp(a, 0.0, 1.0);
+    tint = liveVivid(tint);
     float3 lit = 1.0 - (1.0 - base) * (1.0 - tint * a);
-    float3 dye = mix(base, tint, a);
+    float3 hue = tint / max(max(tint.r, tint.g), max(tint.b, 0.02));
+    float3 dye = base * mix(float3(1.0), hue, a);
     return mix(dye, lit, uDark);
 }
 
-// Every look ends here: the colour is kept within a small distance of the ground (text stays readable at Bold), then
-// a triangular dither of one 8-bit step hides banding in the soft gradients.
+// Every look ends here: the colour is kept within a small distance of the ground (text stays readable at Bold) with a
+// soft knee from 60 % of it, so a bright spot rolls off into a gentle plateau instead of a flat clipped patch with a
+// hard rim; then dithered.
 half4 liveOut(float3 col, float2 fragCoord) {
     float3 g = float3(uGround.rgb);
     float3 d = col - g;
     float m = length(d);
     float cap = mix(0.20, 0.30, uDark);
-    if (m > cap) { d *= cap / m; }
-    float n = liveHash(fragCoord) + liveHash(fragCoord + 71.3) - 1.0;
-    return half4(clamp(g + d + n / 255.0, 0.0, 1.0), 1.0);
+    float knee = cap * 0.6;
+    if (m > knee) {
+        float room = cap - knee;
+        d *= (knee + room * (1.0 - exp(-(m - knee) / room))) / m;
+    }
+    return liveEmit(g + d, fragCoord);
 }
 """
 
@@ -153,12 +201,16 @@ float px() {
 }
 
 // Lays [tint] on the ground by [a] (0..1 of the look's own range), scaled by intensity, capped, then dithered so
-// the long soft gradients never band.
+// the long soft gradients never band. A fine mark on a near-white ground needs a deeper share to be seen at all, so on a
+// light ground Subtle and Normal take up to 1.6 times the share; the boost fades out towards Bold, which stays exactly as
+// strong as before (the reach Glass panes are measured against, LiveReach, is measured at Bold).
+float lightBoost(float k) {
+    return mix(k, 1.0, max(isDark(), clamp((uIntensity - 1.0) / 0.6, 0.0, 1.0)));
+}
+
 half4 liveOut(float2 fragCoord, half3 tint, float a) {
-    float m = clamp(a * uIntensity * 0.125, 0.0, 0.2);
-    half3 c = mix(uGround.rgb, tint, half(m));
-    float d = (hash21(fragCoord) + hash21(fragCoord + 71.3) - 1.0) / 255.0;
-    return half4(clamp(c + half(d), 0.0, 1.0), 1.0);
+    float m = clamp(a * uIntensity * 0.125 * lightBoost(1.6), 0.0, 0.2);
+    return liveEmit(mix(float3(uGround.rgb), float3(tint), m), fragCoord);
 }
 """
 
@@ -207,9 +259,16 @@ float lvFbm(float2 p) {
     return s / 0.875;
 }
 
-// Coverage of a line at signed distance d (px) with half width w (px), one pixel of anti-aliasing.
+// How many render pixels make one of the half-resolution pixels the looks' widths were drawn in (1 up to 1.5 px per dp):
+// at full resolution a line keeps its width on the page and gains crisp edges.
+float lvK() {
+    return max(uDensity / 1.5, 1.0);
+}
+
+// Coverage of a line at signed distance d (px) with half width w (half-resolution px), one pixel of anti-aliasing.
 float lvLine(float d, float w) {
-    return 1.0 - smoothstep(w - 0.5, w + 0.5, abs(d));
+    float k = lvK();
+    return 1.0 - smoothstep(w * k - 0.5, w * k + 0.5, abs(d));
 }
 
 // The page point in dp.
@@ -217,9 +276,12 @@ float2 lvDp(float2 fc) {
     return fc / max(uDensity, 1.0);
 }
 
-// How strongly a look may tint the ground: intensity, a little less on light grounds where tints read stronger.
+// How strongly a look may tint the ground. Light grounds took 0.8 of it, which made the instrument looks vanish there at
+// Subtle and Normal; the discount now fades in only towards Bold, which stays as before (the measured reach, LiveReach,
+// and the secondary-text guard are taken at Bold).
 float lvAmt(float a) {
-    return a * uIntensity * mix(0.8, 1.0, uDark);
+    float lightK = mix(1.0, 0.8, clamp((uIntensity - 1.0) / 0.6, 0.0, 1.0));
+    return a * uIntensity * mix(lightK, 1.0, uDark);
 }
 
 // The ground tinted towards ink by k, then towards the accent by g (both already scaled by lvAmt).
@@ -245,10 +307,35 @@ half3 lvKeepContrast(half3 c) {
     return half3(mix(float3(uGround.rgb), float3(c), s));
 }
 
-// Opaque output, contrast-kept, with triangular dither (one 8-bit step) so slow gradients never band.
+// Opaque output, contrast-kept, dithered (liveEmit) so slow gradients never band.
 half4 lvOut(half3 c, float2 fc) {
-    float n = lvHash(fc) + lvHash(fc + float2(19.19, 47.47)) - 1.0;
-    return half4(clamp(lvKeepContrast(c) + half(n / 255.0), 0.0, 1.0), 1.0);
+    return liveEmit(float3(lvKeepContrast(c)), fc);
+}
+"""
+
+    /**
+     * The full-resolution finish of a look drawn at reduced resolution (bg-looks 2026-11-10): applied as a render effect
+     * to the full-size layer the reduced pass is filtered up into, it decodes the look's distance from the ground
+     * ([ENCODE_RANGE]) and adds the dither at the screen's own pixels, after the upscale. Per pixel: one texture read,
+     * one gradient noise and one hash (about 20 ALU operations); no time uniform, so the effect is built once per theme.
+     */
+    public const val FINISH: String =
+        """
+uniform shader content;
+uniform half4 uGround;
+
+float fHash(float2 p) {
+    float3 q = fract(float3(p.xyx) * 0.1031);
+    q += dot(q, q.yzx + 33.33);
+    return fract((q.x + q.y) * q.z);
+}
+
+half4 main(float2 fragCoord) {
+    float3 e = float3(content.eval(fragCoord).rgb);
+    float3 c = float3(uGround.rgb) + (e - 0.5) * (2.0 * 0.32);
+    float ign = fract(52.9829189 * fract(dot(fragCoord, float2(0.06711056, 0.00583715))));
+    float n = (ign + fHash(fragCoord + 71.3) - 1.0) * (1.5 / 255.0);
+    return half4(clamp(c + n, 0.0, 1.0), 1.0);
 }
 """
 
