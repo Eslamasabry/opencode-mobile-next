@@ -114,8 +114,8 @@ public data class TeamState(
 /** One serial lane for every profile's reads; each profile has its own state. */
 public class TeamEngine(
     private val host: TeamHost,
-    private val newRequestId: () -> String = Ids()::next,
     private val kept: TeamLastKnown? = null,
+    private val newRequestId: () -> String = Ids()::next,
 ) {
     private val lane = Mutex()
     private val drafts = Mutex()
