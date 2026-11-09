@@ -169,6 +169,11 @@ Glass + aurora in the chat, so no after-numbers were taken there; Test Lab is th
 | d84052d90 | A menu or sheet never takes the page's liquid slots | `LiquidEdgeTest`: opening a reply's menu (or a sheet and a menu) changes no other pane's face with the composer, the bar and three chips |
 | 61a2a4f51, 54b0629fe, 8f28e5b71 | `GlassProofActivity` + `GlassBenchmark` (benchmark build type only; scroll, chat and menu scenes) | the Test Lab runs above |
 
+## Round 2
+
+The menu layer, the half-resolution liquid backdrop and the one live background landed on 2026-11-09; see
+[round-2.md](round-2.md) for what changed, the guard tests and the S24 numbers.
+
 ## Left, with options for the owner
 
 - **Live background cost** (cause 3). (a) keep as is; (b) one background for the whole app instead of one per
