@@ -397,7 +397,7 @@ jobs:
           allprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }
           EOT
           set -o pipefail
-          tool/ci/gradle_retry.sh "$RUNNER_TEMP/apk.log" :androidApp:assemblePreviewBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/apk.log" :androidApp:assemblePreviewBenchmark :benchmark:assembleBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
       - name: Check the APK signer
         env:
           HAS_KEY: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 != '' }}
@@ -413,7 +413,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: native-previewBenchmark-apk
-          path: native/androidApp/build/outputs/apk/**/*.apk
+          path: |
+            native/androidApp/build/outputs/apk/**/*.apk
+            native/benchmark/build/outputs/apk/**/*.apk
           retention-days: 7
           if-no-files-found: error
       - name: Upload APK for the phone sync (native/next only)

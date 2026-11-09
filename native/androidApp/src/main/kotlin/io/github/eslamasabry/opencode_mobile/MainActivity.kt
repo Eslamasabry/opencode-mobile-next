@@ -122,6 +122,12 @@ class MainActivity : ComponentActivity() {
                                     routeWhenReady = false
                                     platformHub.route(intent)
                                 }
+                                // Gap 3: "fully drawn" = the shell (home, or the welcome on first run) composed and one more
+                                // frame on screen, so cold-start numbers (Macrobenchmark TTFD) cover real content, not the splash.
+                                if (savedInstanceState == null) {
+                                    withFrameNanos {}
+                                    if (!isDestroyed) reportFullyDrawn()
+                                }
                             }
                         }
                     }
