@@ -47,11 +47,12 @@ public data class BackoffPolicy(
      * attempts ≤ [hiddenAfterAttempt], then a uniform draw from [hiddenRangeMs]. HiddenIdle → null: the stream is
      * cancelled (`Suspended`, 04 §6.4) and nothing is dialled (PB-53).
      */
-    public fun delayMs(attempt: Int, random: Random, visibility: Visibility): Long? =
+    public fun delayMs(attempt: Int, random: Random, visibility: Visibility, batterySaver: Boolean = false): Long? =
         when (visibility) {
             Visibility.Foreground -> delayMs(attempt, random)
             Visibility.HiddenWatching ->
-                if (attempt <= hiddenAfterAttempt) {
+                // Battery Saver: no quick retries from the background, straight to the 60-120 s pace.
+                if (attempt <= hiddenAfterAttempt && !batterySaver) {
                     delayMs(attempt, random)
                 } else {
                     hiddenRangeMs.first + random.nextLong(hiddenRangeMs.last - hiddenRangeMs.first + 1)

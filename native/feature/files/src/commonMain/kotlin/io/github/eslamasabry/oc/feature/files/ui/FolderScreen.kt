@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -79,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
 import io.github.eslamasabry.oc.ui.words.res.filesNoTextBody
 import io.github.eslamasabry.oc.ui.words.res.filesNoTextTitle
 import io.github.eslamasabry.oc.ui.words.res.filesNotConnected
+import io.github.eslamasabry.oc.ui.words.res.filesShowingSaved
 import io.github.eslamasabry.oc.ui.words.res.filesOnlyHidden
 import io.github.eslamasabry.oc.ui.words.res.filesOpenPhone
 import io.github.eslamasabry.oc.ui.words.res.filesPreferencesFailed
@@ -251,7 +253,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
         ) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                 if (state.actionFailure != null)
-                    item("action-failed") {
+                    item("action-failed", contentType = "action-failed") {
                         KitErrorNotice(
                             stringResource(Res.string.filesMentionFailed),
                             failure = state.actionFailure,
@@ -260,7 +262,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         )
                     }
                 if (state.storageResult == FilesStorageResult.Failed)
-                    item("storage-failed") {
+                    item("storage-failed", contentType = "storage-failed") {
                         KitStateView(
                             KitStateKind.Calm,
                             stringResource(Res.string.filesStorageFailed),
@@ -272,7 +274,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         )
                     }
                 if (state.storageResult == FilesStorageResult.RestartRequired)
-                    item("storage-restart") {
+                    item("storage-restart", contentType = "storage-restart") {
                         KitStateView(
                             KitStateKind.Calm,
                             stringResource(Res.string.filesStorageRestart),
@@ -287,8 +289,17 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 ),
                         )
                     }
+                if (state.offline)
+                    item("offline") {
+                        KitNotice(
+                            stringResource(Res.string.filesShowingSaved),
+                            tone = StatusTone.Attention,
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry)),
+                            liveRegion = false,
+                        )
+                    }
                 if (state.attachNotice != null)
-                    item("attach-notice") {
+                    item("attach-notice", contentType = "attach-notice") {
                         KitNotice(
                             when (state.attachNotice) {
                                 FileNotice.Attached ->
@@ -305,18 +316,18 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         )
                     }
                 if (state.preferencesFailed)
-                    item("preferences-warning") {
+                    item("preferences-warning", contentType = "preferences-warning") {
                         KitNotice(stringResource(Res.string.filesPreferencesFailed))
                     }
                 if (state.changesFailure != null)
-                    item("change-warning") {
+                    item("change-warning", contentType = "change-warning") {
                         KitNotice(stringResource(Res.string.readerUiIndicatorsFailed))
                     }
                 when {
                     state.query != null || state.surface != FileSearchSurface.Files ->
                         searchItems(state, actions, loadingSince)
                     state.phase == FolderPhase.Loading ->
-                        item("loading") {
+                        item("loading", contentType = "loading") {
                             KitStateView(
                                 KitStateKind.Loading,
                                 stringResource(Res.string.filesLoadingFolder),
@@ -331,7 +342,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                             )
                         }
                     state.phase == FolderPhase.NotConnected ->
-                        item("not-connected") {
+                        item("not-connected", contentType = "not-connected") {
                             KitStateView(
                                 KitStateKind.Error,
                                 stringResource(Res.string.filesNotConnected),
@@ -340,14 +351,14 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                             )
                         }
                     state.phase == FolderPhase.Unavailable ->
-                        item("unavailable") {
+                        item("unavailable", contentType = "unavailable") {
                             KitStateView(
                                 KitStateKind.Calm,
                                 stringResource(Res.string.filesUnavailable),
                             )
                         }
                     state.phase == FolderPhase.Failed ->
-                        item("failed") {
+                        item("failed", contentType = "failed") {
                             KitStateView(
                                 KitStateKind.Error,
                                 stringResource(Res.string.filesLoadFailedTitle),
@@ -358,7 +369,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         }
                     state.storageBlock != FilesStorageBlock.None &&
                         state.storageResult != FilesStorageResult.RestartRequired ->
-                        item("storage-access") {
+                        item("storage-access", contentType = "storage-access") {
                             KitStateView(
                                 KitStateKind.Calm,
                                 stringResource(Res.string.filesAccessNeededTitle),
@@ -394,7 +405,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                             )
                         }
                     state.onlyHidden ->
-                        item("only-hidden") {
+                        item("only-hidden", contentType = "only-hidden") {
                             KitStateView(
                                 KitStateKind.Calm,
                                 stringResource(Res.string.filesOnlyHidden),
@@ -407,7 +418,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                             )
                         }
                     state.empty ->
-                        item("empty") {
+                        item("empty", contentType = "empty") {
                             KitStateView(
                                 KitStateKind.Empty,
                                 stringResource(Res.string.chatStartEmptyFolder),
@@ -420,7 +431,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                             )
                         }
                     else ->
-                        items(state.entries, key = { it.path }) { node ->
+                        items(state.entries, key = { it.path }, contentType = { "entry" }) { node ->
                             EntryRow(node, state, actions)
                         }
                 }
@@ -509,7 +520,7 @@ private fun LazyListScope.searchItems(
     since: kotlin.time.TimeMark,
 ) {
     if (state.surface == FileSearchSurface.Files && state.canSearchText && state.query != null)
-        item("inside") {
+        item("inside", contentType = "inside") {
             KitRow(
                 stringResource(Res.string.filesSearchInside, state.query),
                 onClick = { actions.selectSurface(FileSearchSurface.Text) },
@@ -517,7 +528,7 @@ private fun LazyListScope.searchItems(
         }
     when {
         state.searching ->
-            item("searching") {
+            item("searching", contentType = "searching") {
                 KitStateView(
                     KitStateKind.Loading,
                     stringResource(Res.string.filesSearching),
@@ -527,7 +538,7 @@ private fun LazyListScope.searchItems(
                 )
             }
         state.searchFailure != null ->
-            item("search-failed") {
+            item("search-failed", contentType = "search-failed") {
                 KitErrorNotice(
                     stringResource(Res.string.filesLoadFailedTitle),
                     failure = state.searchFailure,
@@ -537,7 +548,7 @@ private fun LazyListScope.searchItems(
                 )
             }
         state.query == null ->
-            item("hint") {
+            item("hint", contentType = "hint") {
                 KitStateView(
                     KitStateKind.Calm,
                     stringResource(
@@ -549,14 +560,14 @@ private fun LazyListScope.searchItems(
             }
         state.surface == FileSearchSurface.Text -> {
             if (state.textMatches.isEmpty())
-                item("empty-text") {
+                item("empty-text", contentType = "empty-text") {
                     KitStateView(
                         KitStateKind.Empty,
                         stringResource(Res.string.filesNoTextTitle),
                         body = stringResource(Res.string.filesNoTextBody),
                     )
                 }
-            items(state.textMatches, key = { "${it.path}:${it.lineNumber}:${it.snippet}" }) { match
+            items(state.textMatches, key = { "${it.path}:${it.lineNumber}:${it.snippet}" }, contentType = { "text-match" }) { match
                 ->
                 KitRow(
                     match.snippet.trim().ifEmpty { match.path.substringAfterLast('/') },
@@ -569,16 +580,16 @@ private fun LazyListScope.searchItems(
                 )
             }
             if (state.resultsLimited)
-                item("limited") {
+                item("limited", contentType = "limited") {
                     KitNotice(stringResource(Res.string.filesTextLimited, state.textMatches.size))
                 }
         }
         state.surface == FileSearchSurface.Symbols -> {
             if (state.symbols.isEmpty())
-                item("empty-symbols") {
+                item("empty-symbols", contentType = "empty-symbols") {
                     KitStateView(KitStateKind.Empty, stringResource(Res.string.readerUiNoSymbols))
                 }
-            items(state.symbols, key = { "${it.path}:${it.line}:${it.column}:${it.name}" }) { symbol
+            items(state.symbols, key = { "${it.path}:${it.line}:${it.column}:${it.name}" }, contentType = { "symbol" }) { symbol
                 ->
                 KitRow(
                     symbol.name,
@@ -591,7 +602,7 @@ private fun LazyListScope.searchItems(
             }
         }
         state.results.isEmpty() ->
-            item("no-results") {
+            item("no-results", contentType = "no-results") {
                 KitStateView(
                     KitStateKind.Empty,
                     stringResource(Res.string.readerUiNoFiles),
@@ -599,7 +610,7 @@ private fun LazyListScope.searchItems(
                 )
             }
         else ->
-            items(state.results, key = { "found:" + it.path }) { node ->
+            items(state.results, key = { "found:" + it.path }, contentType = { "found" }) { node ->
                 EntryRow(node, state, actions)
             }
     }

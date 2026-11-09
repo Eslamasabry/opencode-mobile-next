@@ -258,6 +258,16 @@ public class ChatViewModel(
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()
 
+    override fun openParent() {
+        world.parent.value?.let { nav.open(ChatRoute(it)) }
+    }
+
+    override fun showSubagents(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(world.ref))
+
+    override fun editServer(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.ServersRoute.Edit(world.ref.profileId))
+
+    override fun openServers(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.ServersRoute.Home)
+
     override fun confirmRestartPhoneServer(): Unit = presenter.confirmRestartPhoneServer()
 
     override fun openTimeline(): Unit = presenter.openTimeline()
@@ -313,6 +323,8 @@ public class ChatViewModel(
     override fun confirmUndo(): Unit = presenter.confirmUndo()
 
     override suspend fun readPicture(path: String): ByteArray? = presenter.readPicture(path)
+
+    override val pictureScope: String get() = presenter.pictureScope
 
     override fun openPicture(path: String, name: String): Unit = presenter.openPicture(path, name)
 

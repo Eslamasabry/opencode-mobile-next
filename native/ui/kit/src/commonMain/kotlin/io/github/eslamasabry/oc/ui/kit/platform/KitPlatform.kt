@@ -134,6 +134,13 @@ public interface KitPlatform {
         return true
     }
 
+    /**
+     * A new ink sampler for one liquid pane ([KitBackdropSampler]), kept for the pane's life; null where the platform has
+     * none, and the pane then reads a snapshot through [readPixels]. Android keeps one small render target per pane and
+     * never holds the UI thread on the GPU.
+     */
+    public fun backdropSampler(): KitBackdropSampler? = null
+
     public fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
         backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
