@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.gate
 
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import java.awt.image.BufferedImage
@@ -22,7 +23,7 @@ class EmptyCompositionTest {
     private val root = File(System.getProperty("user.dir"), "../../..").canonicalFile
     private val name = "gate_selftest_empty"
     private val golden = File(root, "looks-gate/flutter/${GateRef.Product.dir}/${name}_light.png")
-    private val spec = KitConfirmSpec(title = "Share conversation?", confirmLabel = "Share conversation")
+    private val spec = KitConfirmSpec(title = "Share conversation?", confirmLabel = "Share conversation", kind = KitConfirmKind.Neutral)
 
     @BeforeTest
     fun plantGolden() {

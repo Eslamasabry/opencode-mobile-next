@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.platform.LocalDensity
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -65,7 +67,6 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
-import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -216,7 +217,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
 
 /**
  * A short message that needs an answer (Dart `showKitAlert`; plan 06 §7.4): an in-window centred panel, title, body,
- * then its actions; [icon] shows in a tile beside the title. Dismissing (scrim, Back, the predictive back gesture) calls [onDismissRequest]. With no [primary]
+ * then its actions; [icon] shows as a bare glyph beside the title (no tile). Dismissing (scrim, Back, the predictive back gesture) calls [onDismissRequest]. With no [primary]
  * the alert offers one Close.
  *
  * States: closed, open
@@ -238,7 +239,11 @@ public fun KitAlert(
     val close = stringResource(Res.string.kitSheetClose)
     KitDialogFrame(visible, title, onDismissRequest) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            icon?.let { IconTile(it, LocalKitTokens.current.iconTile.dp) }
+            icon?.let {
+                // Centred on the title's first line, so the bare glyph reads as part of it.
+                val line = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Title).lineHeight.toDp() }
+                Box(Modifier.height(line), contentAlignment = Alignment.Center) { HeaderMarkSmall(it) }
+            }
             KitText(title, Modifier.weight(1f), role = TypeRole.Title, kind = KitTextKind.Frame)
         }
         body?.let { KitText(it, role = TypeRole.Body, tone = TextTone.Secondary) }
@@ -252,6 +257,9 @@ public fun KitAlert(
 /** Pure rule of [KitInputDialog]: an unchanged or cancelled dialog answers null (B-KIT-016). */
 public object InputDialogRules {
     public fun result(initial: String, typed: String, submitted: Boolean): String? = if (!submitted || typed == initial) null else typed
+
+    /** The one validation line the dialog shows: none until the person typed or tried to submit. */
+    public fun shownError(touched: Boolean, error: String?): String? = error?.takeIf { touched }
 }
 
 /**
@@ -260,7 +268,9 @@ public object InputDialogRules {
  * state; changing [operationKey] starts a new operation even when two targets have the same initial text.
  * Secret input starts empty and is never saved or restored; a nonempty secret [initial] is refused.
  * [onResult] is called once: with the new text, or with null
- * when the person cancels or submits it unchanged (B-KIT-016). [validate] returns the error line, or null.
+ * when the person cancels or submits it unchanged (B-KIT-016). [validate] returns the error line, or null; it shows
+ * once, under the field, after the person typed or tried to submit, and the confirm stays tappable (never a second
+ * copy of the line under a disabled button).
  *
  * States: closed, open, invalid
  * Text: frame (title), reading (value)
@@ -301,9 +311,13 @@ private fun InputDialogContent(
         if (kind == KitFieldKind.Secret) remember { TextFieldState() } else rememberTextFieldState(initial)
     val focus = remember { FocusRequester() }
     val cancel = stringResource(Res.string.kitConfirmCancel)
-    val typed = state.text.toString()
-    val error = validate(typed)
+    // The validation line is said once, under the field, and only after the person typed or tried to submit (audit
+    // 2026-11-09 C06; as KitInputOperationDialog and KitInputFormDialog). A disabled confirm would print the same words
+    // again under the button, so it stays tappable: submit checks again and answers nothing while the text is invalid.
+    var touched by remember { mutableStateOf(false) }
+    val error = InputDialogRules.shownError(touched, validate(state.text.toString()))
     val submit = {
+        touched = true
         val current = state.text.toString()
         if (validate(current) == null) onResult(InputDialogRules.result(initial, current, submitted = true))
     }
@@ -317,14 +331,10 @@ private fun InputDialogContent(
             imeAction = ImeAction.Done,
             focusRequester = focus,
             onSubmit = submit,
+            onTextChanged = { touched = true },
         )
         KitActionBlock(
-            primary =
-                KitAction(
-                    confirmLabel,
-                    onClick = submit,
-                    enabled = if (error == null) KitEnabled.Enabled else KitEnabled.Disabled(error),
-                ),
+            primary = KitAction(confirmLabel, onClick = submit),
             tertiary = listOf(KitAction(cancel, onClick = { onResult(null) })),
         )
         LaunchedEffect(Unit) {

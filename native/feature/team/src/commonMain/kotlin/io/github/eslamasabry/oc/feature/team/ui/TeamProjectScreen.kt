@@ -163,6 +163,7 @@ public fun TeamProjectScreen(state: TeamProjectUi, actions: TeamProjectActions) 
                     KitConfirmSpec(
                         title = stringResource(Res.string.teamProjectAcceptMilestoneConfirmTitle),
                         confirmLabel = stringResource(Res.string.teamProjectAccept),
+                        kind = KitConfirmKind.Neutral,
                         body = accept?.text,
                         cancelLabel = stringResource(Res.string.kitConfirmCancel),
                     )
@@ -217,6 +218,7 @@ private fun confirmSpec(p: ProjectView, ask: ProjectConfirm?): KitConfirmSpec? =
             KitConfirmSpec(
                 title = stringResource(Res.string.teamProjectMergeConfirmTitle),
                 confirmLabel = stringResource(Res.string.teamProjectMergeNext),
+                kind = KitConfirmKind.Neutral,
                 body = stringResource(Res.string.teamProjectMergeConfirmBody),
                 cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 consequences =
@@ -231,6 +233,7 @@ private fun confirmSpec(p: ProjectView, ask: ProjectConfirm?): KitConfirmSpec? =
             KitConfirmSpec(
                 title = stringResource(Res.string.teamProjectTaskPromoteConfirmTitle),
                 confirmLabel = stringResource(Res.string.teamProjectTaskPromote),
+                kind = KitConfirmKind.Neutral,
                 body = stringResource(Res.string.teamProjectTaskPromoteBody),
                 cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 consequences = listOfNotNull(promote?.let { "${it.repoName}: ${it.mainCommit} → ${it.devCommit}" }),

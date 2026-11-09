@@ -139,6 +139,7 @@ public fun MonitorInboxScreen(state: MonitorInboxUi, actions: MonitorInboxAction
                             stringResource(Res.string.profileMonitorSwitchBody, current, it.server)
                         } ?: stringResource(Res.string.monitorInboxSwitchBody),
                     confirmLabel = stringResource(Res.string.monitorSwitchTo, it.server),
+                    kind = KitConfirmKind.Neutral,
                 )
             },
         onConfirm = actions::confirmSwitch,

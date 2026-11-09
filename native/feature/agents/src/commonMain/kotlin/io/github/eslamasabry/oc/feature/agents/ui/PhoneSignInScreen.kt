@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.agents.presentation.PhoneSignInController
 import io.github.eslamasabry.oc.feature.agents.presentation.SignInTerminalUi
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -24,6 +25,7 @@ public fun PhoneSignInScreen(
                         KitConfirmSpec(
                             title = stringResource(Res.string.terminal40OpenPageQuestion),
                             confirmLabel = stringResource(Res.string.agentsSignInOpenPage),
+                            kind = KitConfirmKind.Neutral,
                             body = stringResource(Res.string.terminal40OpenPageBody, it),
                         )
                     },

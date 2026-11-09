@@ -270,6 +270,8 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
                     KitConfirmSpec(
                         title = stringResource(Res.string.linuxRestoreTitle),
                         confirmLabel = stringResource(Res.string.linuxRestoreConfirm),
+                        // Nothing is lost: projects stay and replaced settings files are kept aside.
+                        kind = KitConfirmKind.Neutral,
                         body =
                             stringResource(
                                 Res.string.linuxRestoreBody,

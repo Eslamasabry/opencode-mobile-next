@@ -30,6 +30,22 @@ internal object BuildRestGates {
     private fun scan(path: String, text: String, rule: String, pattern: Regex): List<Hit> =
         code(text).filter { (_, l) -> pattern.containsMatchIn(l) }.map { (n, _) -> Hit(path, rule, n) }
 
+    // ---- Kit spacing: the gap between containers is the kit's, not a screen's ----
+
+    private val LITERAL_SPACER = Regex("""Spacer\(.*\.height\(\s*\d+(\.\d+)?\.dp""")
+    private val SPACER = Regex("""Spacer\(.*\.height\(""")
+    private val GROUP_START = Regex("""^(KitRowGroup|kitSliverRowGroup|KitPanel)\(""")
+
+    /** A `Spacer(Modifier.height(<number>.dp))`: a gap with a number a screen chose instead of a token or the kit's stack. */
+    fun literalSpacer(path: String, text: String): List<Hit> = scan(path, text, "literal dp spacer", LITERAL_SPACER)
+
+    /** A spacer set right before a container: the kit's stack puts that gap there by itself. */
+    fun spacerBeforeContainer(path: String, text: String): List<Hit> {
+        val lines = code(text)
+        return lines.indices.filter { i -> SPACER.containsMatchIn(lines[i].second) && i + 1 < lines.size && GROUP_START.containsMatchIn(lines[i + 1].second) }
+            .map { Hit(path, "spacer before a container", lines[it].first) }
+    }
+
     // ---- B-BUILD-001: UI talks to the domain gateway only ----
 
     private val PROTOCOL_IMPORT = Regex("""^import io\.github\.eslamasabry\.oc\.protocol\.""")

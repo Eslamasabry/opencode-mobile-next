@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -177,12 +178,14 @@ public fun ConnectionFormScreen(state: ConnectionFormUi, actions: ConnectionForm
                             stringResource(Res.string.monitor40DeclineQuestion),
                             stringResource(Res.string.monitor40Decline),
                             kind = KitConfirmKind.Destructive,
+                            icon = KitIcons.close,
                             body = stringResource(Res.string.monitor40DeclineBody),
                         )
                     state.linkHost != null ->
                         KitConfirmSpec(
                             stringResource(Res.string.monitor40LinkQuestion),
                             stringResource(Res.string.monitor40OpenLink),
+                            kind = KitConfirmKind.Neutral,
                             body = state.linkHost,
                         )
                     else -> null

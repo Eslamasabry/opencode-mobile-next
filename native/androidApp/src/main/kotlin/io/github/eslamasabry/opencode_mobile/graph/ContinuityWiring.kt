@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
 import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
@@ -203,6 +204,7 @@ class TelemetryConsentOverlay(private val continuity: AppTelemetryContinuity) : 
                     KitConfirmSpec(
                         title = stringResource(Res.string.telemetryConsentTitle),
                         confirmLabel = stringResource(Res.string.telemetryConsentShare),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.telemetryConsentBody),
                         consequenceItems =
                             listOf(

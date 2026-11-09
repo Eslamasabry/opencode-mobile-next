@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -176,6 +177,7 @@ internal fun VoiceConversationControls(
                             stringResource(Res.string.readAloudConsentEngine),
                         ),
                     confirmLabel = stringResource(Res.string.readAloudContinue),
+                    kind = KitConfirmKind.Neutral,
                     cancelLabel = stringResource(Res.string.e7VoiceUiNotNow),
                 ),
             onConfirm = presenter::consentToReplies,

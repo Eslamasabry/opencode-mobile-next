@@ -13,17 +13,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfacePadding
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.state.*
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -33,6 +29,7 @@ import kotlin.time.Duration
 import kotlin.time.TimeMark
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.platform.testTag
 
 /**
  * Flutter's page-size KitStateView: centered in bounded room, natural height in a list, scrollable
@@ -80,28 +77,19 @@ public fun KitPageState(
             contentAlignment = Alignment.Center,
         ) {
             Column(Modifier.kitMaxWidth(CapRole.State).fillMaxWidth()) {
-                KitSurface(
-                    level = SurfaceLevel.Surface3,
-                    shape = KitShapeId.Tile,
-                    padding = KitSurfacePadding.None,
-                ) {
-                    Box(
-                        Modifier.size(FlutterKitTokens.MARK_SIZE.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        KitGlyph(
-                            icon,
-                            when (kind) {
-                                KitStateKind.Loading,
-                                KitStateKind.Working -> colors.accent
-                                KitStateKind.Error -> colors.text1
-                                KitStateKind.Finished -> colors.success
-                                else -> colors.text2
-                            },
-                            FlutterKitTokens.MARK_ICON_SIZE.dp,
-                        )
-                    }
-                }
+                // The bare glyph on the title's rail: no tile behind it (audit 2026-11-09 C01).
+                KitGlyph(
+                    icon,
+                    when (kind) {
+                        KitStateKind.Loading,
+                        KitStateKind.Working -> colors.accent
+                        KitStateKind.Error -> colors.text1
+                        KitStateKind.Finished -> colors.success
+                        else -> colors.text2
+                    },
+                    FlutterKitTokens.MARK_ICON_SIZE.dp,
+                    Modifier.testTag("kit-state-icon"),
+                )
                 Spacer(Modifier.height(Space.S5.dp))
                 KitText(title, Modifier.semantics { heading() }, role = TypeRole.Title)
                 val words =

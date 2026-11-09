@@ -311,6 +311,7 @@ public fun LinuxHomeScreen(
                     KitConfirmSpec(
                         title = stringResource(Res.string.linuxMgrRepairTitle),
                         confirmLabel = stringResource(Res.string.linuxMgrRepair),
+                        kind = KitConfirmKind.Neutral,
                         body = stringResource(Res.string.linuxMgrRepairBody),
                         consequences = listOf(stringResource(Res.string.linuxMgrRepairKept)),
                     )

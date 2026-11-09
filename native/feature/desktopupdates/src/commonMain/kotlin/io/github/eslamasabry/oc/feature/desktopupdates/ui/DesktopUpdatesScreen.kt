@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -118,6 +119,7 @@ public fun DesktopUpdatesScreen(state: DesktopUpdatesUi, actions: DesktopUpdates
                     KitConfirmSpec(
                         title = stringResource(Res.string.desktopReleaseOpenQuestion),
                         confirmLabel = stringResource(Res.string.appUpdateOpenRelease),
+                        kind = KitConfirmKind.Neutral,
                         body = state.releasePage,
                     )
                 else null,

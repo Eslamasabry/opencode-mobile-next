@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
@@ -217,6 +218,7 @@ public fun PlansContent(
                                 words.providerName(it.provider),
                             ),
                     confirmLabel = stringResource(Res.string.plansCollectorAllow),
+                    kind = KitConfirmKind.Neutral,
                     body =
                         stringResource(
                             if (it.provider == "paseo") Res.string.plansPaseoTrust
@@ -253,6 +255,7 @@ public fun PlansContent(
                                 else -> Res.string.plansNativeAllow
                             }
                         ),
+                    kind = KitConfirmKind.Neutral,
                     body =
                         stringResource(
                             when {

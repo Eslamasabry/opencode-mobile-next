@@ -93,6 +93,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
@@ -610,6 +611,7 @@ private fun AlwaysAllowConfirm(row: ConversationRowUi?, actions: ChatsActions) {
                     title = stringResource(Res.string.chatRequestAlwaysConfirm, it),
                     body = stringResource(Res.string.chatRequestAlwaysScope, it, stringResource(Res.string.chatRequestAlwaysInProject)),
                     confirmLabel = stringResource(Res.string.chatUiAlwaysAllow),
+                    kind = KitConfirmKind.Neutral,
                     cancelLabel = stringResource(Res.string.kitConfirmCancel),
                 )
             },

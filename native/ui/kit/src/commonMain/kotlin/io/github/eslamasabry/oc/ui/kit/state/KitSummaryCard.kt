@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.kit.row.kitContainer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,6 +68,7 @@ public fun KitSummaryCard(
     val shape = KitShapeId.Card.shape()
     Column(
         modifier
+            .kitContainer()
             .kitMaxWidth(CapRole.Reading)
             .fillMaxWidth()
             .padding(horizontal = tokens.gutter.dp)

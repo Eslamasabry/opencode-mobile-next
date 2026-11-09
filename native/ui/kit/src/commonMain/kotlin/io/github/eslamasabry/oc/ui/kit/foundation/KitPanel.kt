@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
+import io.github.eslamasabry.oc.ui.kit.row.kitContainer
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,7 +77,7 @@ public fun KitPanel(
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val capped = modifier.kitMaxWidth(CapRole.Reading) // F: lib/ui/kit/kit_panel.dart:69
+    val capped = modifier.kitContainer().kitMaxWidth(CapRole.Reading) // F: lib/ui/kit/kit_panel.dart:69
     if (tone == StatusTone.Neutral) Neutral(capped, icon, title, padding, onClick, content)
     else Retired(capped, tone, icon, title, padding, onClick, content)
 }
