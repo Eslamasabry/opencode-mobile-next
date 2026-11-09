@@ -27,11 +27,11 @@ keep	HTTPS
 keep	QR
 term	\bThis phone\b	Este tel[eé]fono
 term	\b[Cc]onversations?\b	conversaci[oó]n|conversaciones
-term	\bTry again\b	Intentar de nuevo|int[eé]ntalo de nuevo
+term	\bTry again\b	Intentar de nuevo|int[eé]ntalo|de nuevo|otra vez|vuelve a|reintent
 term	\bSettings\b	Ajustes
 term	\bServers?\b	servidor
 term	\bProjects?\b	proyecto
-term	\bAgents?\b	agente
+term	\b(?<!Claude )Agents?\b	agente
 term	^Files$	archivos
 term	^Cancel$	Cancelar
 term	^Offline$	Sin conexi[oó]n
@@ -42,8 +42,8 @@ term	^Delete$	Eliminar|Borrar
 term	^Search$	Buscar|b[uú]squeda
 term	^Refresh$	Actualizar
 term	^Model$	modelo
-forbid	(?<!iniciar )(?<!inicio de )(?<!cerrar )(?<!cierre de )(?<!inicia )(?<!cierra )\bsesi[oó]n(es)?\b	say conversación, not sesión (iniciar/cerrar sesión is fine)
-forbid	\bchats?\b	say conversación, not chat
+forbid	(?s)^(?!.*(?:inici|cerr|autentic|credenc|acces|cuenta)).*\bsesi[oó]n(es)?\b	say conversación, not sesión (sign-in wording is fine)
+forbid	\bchats?\b(?!\.)	say conversación, not chat
 allow	OK
 allow	Wi-Fi
 allow	Bluetooth

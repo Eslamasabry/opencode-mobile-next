@@ -31,7 +31,7 @@ term	\bTry again\b	Réessayer|réessayez|Essayer à nouveau
 term	\bSettings\b	Paramètres
 term	\bServers?\b	serveur
 term	\bProjects?\b	projet
-term	\bAgents?\b	agent
+term	\b(?<!Claude )Agents?\b	agent
 term	^Files$	fichiers
 term	^Cancel$	Annuler
 term	^Offline$	Hors ligne
@@ -43,7 +43,7 @@ term	^Search$	Rechercher|Recherche
 term	^Refresh$	Actualiser
 term	^Model$	modèle
 forbid	\bsessions?\b	say conversation, not session
-forbid	\bchats?\b	say conversation, not chat
+forbid	\bchats?\b(?!\.)	say conversation, not chat
 allow	OK
 allow	Wi-Fi
 allow	Bluetooth

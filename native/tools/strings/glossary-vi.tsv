@@ -31,7 +31,7 @@ term	\bTry again\b	Thử lại
 term	\bSettings\b	Cài đặt
 term	\bServers?\b	máy chủ
 term	\bProjects?\b	dự án
-term	\bAgents?\b	tác nhân
+term	\b(?<!Claude )Agents?\b	tác nhân
 term	^Files$	tệp
 term	^Cancel$	Hủy
 term	^Offline$	Ngoại tuyến
@@ -42,7 +42,7 @@ term	^Delete$	Xóa
 term	^Search$	Tìm kiếm|Tìm
 term	^Refresh$	Làm mới
 term	^Model$	mô hình
-forbid	\bphiên\b	say cuộc trò chuyện, not phiên
+forbid	\bphiên(?! bản)\b	say cuộc trò chuyện, not phiên
 forbid	\bchat\b	say cuộc trò chuyện, not chat
 allow	OK
 allow	Wi-Fi

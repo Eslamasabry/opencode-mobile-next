@@ -31,7 +31,7 @@ term	\bTry again\b	Coba lagi|coba lagi
 term	\bSettings\b	Pengaturan
 term	\bServers?\b	server
 term	\bProjects?\b	proyek
-term	\bAgents?\b	agen
+term	\b(?<!Claude )Agents?\b	agen
 term	^Files$	file|berkas
 term	^Cancel$	Batal
 term	^Offline$	Offline|Luring
@@ -42,7 +42,7 @@ term	^Delete$	Hapus
 term	^Search$	Cari|pencarian
 term	^Refresh$	Muat ulang|Segarkan
 term	^Model$	model
-forbid	\bsesi\b	say percakapan, not sesi
+forbid	\bsesi(?! masuk)\b	say percakapan, not sesi
 forbid	\bchat\b	say percakapan, not chat
 allow	OK
 allow	Wi-Fi

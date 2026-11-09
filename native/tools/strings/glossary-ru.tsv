@@ -31,7 +31,7 @@ term	\bTry again\b	Повторить|Повторите|ещё раз|еще р
 term	\bSettings\b	Настройки
 term	\bServers?\b	сервер
 term	\bProjects?\b	проект
-term	\bAgents?\b	агент
+term	\b(?<!Claude )Agents?\b	агент
 term	^Files$	файл
 term	^Cancel$	Отмена|Отменить
 term	^Offline$	Не в сети|без сети|офлайн
