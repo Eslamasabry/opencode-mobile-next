@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.os.Build
+import android.util.Log
 import android.os.Process
 import android.os.SystemClock
 import android.os.Trace
@@ -61,7 +62,8 @@ class OcApplication : Application(), GraphOwner {
         // anything else can crash; it stores nothing until crash capture is turned on.
         // Crash reports go through the vendor-neutral Reporting layer (consent + redaction) before any vendor sees them.
         // B-180/B-190: off in every flavour until the person agrees; the stored answers are adopted after the gate.
-        reporting = Telemetry.init(this)
+        val tOnCreate = SystemClock.elapsedRealtime()
+        step("telemetryInit") { reporting = Telemetry.init(this) }
         try {
             NativeCrashStore(filesDir).install { category, frames ->
                 reporting.reportCrash(category, frames)
@@ -87,7 +89,9 @@ class OcApplication : Application(), GraphOwner {
         // tiles, widgets) may be the first thing in a cold process and relies on the started
         // product, as before.
         PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
+        step("graph") { appGraph }
         startProduct()
+        Log.i("OcStartup", "Application.onCreate total ${SystemClock.elapsedRealtime() - tOnCreate}ms")
     }
 
     /** The starters nothing in the first frame waits for, in their original relative order. */
@@ -139,7 +143,7 @@ class OcApplication : Application(), GraphOwner {
         } finally {
             Trace.endSection()
             val ms = SystemClock.elapsedRealtime() - t0
-            AppLog.tagged("Startup").i { "$name ${ms}ms" }
+            Log.i("OcStartup", "$name ${ms}ms on ${Thread.currentThread().name}")
         }
     }
 
