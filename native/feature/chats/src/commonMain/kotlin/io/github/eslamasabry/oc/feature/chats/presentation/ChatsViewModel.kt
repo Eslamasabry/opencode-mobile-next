@@ -628,6 +628,29 @@ public class ChatsViewModel(
         }
     }
 
+    override fun restartOpeningPhoneServer() {
+        val opening = home.snapshot.value.opening ?: return
+        val profile = opening.profile ?: return
+        if (!opening.onThisPhone) return
+        // The card follows the phone server's own state (starting, then the list or a new failure).
+        viewModelScope.launch { home.restartPhoneServer(profile) }
+    }
+
+    override fun disconnectServer(profile: ProfileId) {
+        if (switching.value.to != null) return
+        switching.value = Switching(to = profile)
+        viewModelScope.launch {
+            when (val done = home.disconnect(profile)) {
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> {
+                    switching.value = Switching()
+                    if (sheet.value == ChatsHomeSheet.Servers) sheet.value = null
+                }
+                // The sheet stays open and says why; the rows are as they were.
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed -> switching.value = Switching(failure = done.failure)
+            }
+        }
+    }
+
     override fun addServer() {
         sheet.value = null
         nav.open(ServersRoute.Edit())

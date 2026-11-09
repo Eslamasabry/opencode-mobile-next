@@ -65,6 +65,7 @@ class AppChatsHome(
     private val clock: Clock,
     private val monitor: AppChatsMonitor,
     private val phone: BuiltinRuntime,
+    private val phoneServer: AndroidChatPhoneServer,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras, HomeFeedCache {
@@ -128,6 +129,7 @@ class AppChatsHome(
                     rows = cachedRows(owner.id).toImmutableList(),
                     failure = failure,
                     profile = active,
+                    onThisPhone = phoneServer.runsHere(active),
                 )
             } else null
         if (opening == null) phoneWatch = null
@@ -212,6 +214,10 @@ class AppChatsHome(
 
     // The home pill's switcher: the same connect-and-make-active the Servers page runs on a tap.
     override suspend fun switchTo(profile: ProfileId): Outcome<Unit> = runtime.connect(profile)
+
+    override suspend fun disconnect(profile: ProfileId): Outcome<Unit> = runtime.disconnect(profile)
+
+    override suspend fun restartPhoneServer(profile: ProfileId): Outcome<Unit> = phoneServer.restart(profile)
 
     private suspend fun record(result: Outcome<Unit>): Outcome<Unit> =
         withContext(lane) {

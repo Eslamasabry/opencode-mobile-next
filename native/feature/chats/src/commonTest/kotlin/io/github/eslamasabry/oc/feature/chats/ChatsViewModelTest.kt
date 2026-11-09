@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtras
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
@@ -320,6 +322,19 @@ class ChatsViewModelTest {
             return answer
         }
 
+        val disconnected = mutableListOf<String>()
+        val restarted = mutableListOf<String>()
+
+        override suspend fun restartPhoneServer(profile: ProfileId): Outcome<Unit> {
+            restarted += profile.raw
+            return answer
+        }
+
+        override suspend fun disconnect(profile: ProfileId): Outcome<Unit> {
+            disconnected += profile.raw
+            return answer
+        }
+
         override suspend fun showSource(profile: ProfileId, shown: Boolean): Outcome<Unit> = Unit.ok()
 
         override suspend fun retrySource(profile: ProfileId): Outcome<Unit> = Unit.ok()
@@ -378,6 +393,41 @@ class ChatsViewModelTest {
         vm.addServer()
         assertEquals(listOf<AppRoute>(ServersRoute.Edit()), nav.routes)
         assertEquals(null, vm.state.value.sheet)
+    }
+
+    @Test
+    fun `B-OPENING-RESTART the opening card restarts only this phone's own server`() = runTest {
+        val home = Home(listOf(source("main", main = true)))
+        val vm =
+            ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator(), home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val failed = ChatsOpeningUi(ChatsOpeningPhase.Failed, "Phone", profile = ProfileId("main"), onThisPhone = false)
+        home.snapshot.value = home.snapshot.value.copy(opening = failed)
+        vm.restartOpeningPhoneServer()
+        assertEquals(emptyList(), home.restarted, "a computer's server is never restarted from the phone")
+        home.snapshot.value = home.snapshot.value.copy(opening = failed.copy(onThisPhone = true))
+        vm.restartOpeningPhoneServer()
+        assertEquals(listOf("main"), home.restarted)
+    }
+
+    @Test
+    fun `B-SWITCH-DISCONNECT Disconnect from the server in use closes it and the sheet, a refusal keeps the sheet and says why`() = runTest {
+        val home = Home(listOf(source("main", main = true), source("work")))
+        val vm =
+            ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator(), home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.openServerSwitcher()
+        vm.disconnectServer(ProfileId("main"))
+        assertEquals(listOf("main"), home.disconnected)
+        assertEquals(emptyList(), home.switched, "disconnecting never switches servers")
+        assertEquals(null, vm.state.value.sheet)
+        assertEquals(null, vm.state.value.switcher.switching)
+        val refused = Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope)
+        home.answer = Outcome.Failed(refused)
+        vm.openServerSwitcher()
+        vm.disconnectServer(ProfileId("main"))
+        assertEquals(ChatsHomeSheet.Servers, vm.state.value.sheet)
+        assertEquals(refused, vm.state.value.switcher.failure)
     }
 
     @Test

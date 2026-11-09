@@ -41,6 +41,8 @@ public data class ChatsOpeningUi(
     val failure: Failure? = null,
     /** The server that is opening, so its sign-in can be edited from the failure card. */
     val profile: ProfileId? = null,
+    /** The opening server is this phone's own OpenCode: the failure card can restart it (Flutter root-connecting). */
+    val onThisPhone: Boolean = false,
 )
 
 public data class ChatsListSourceUi(
@@ -122,6 +124,18 @@ public interface ChatsHomeExtras {
      */
     public suspend fun switchTo(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("serverSwitch")))
+
+    /**
+     * The switcher's "Disconnect from <server>" (owner rule 2026-09-27: the action names its target and sits in the
+     * server's own menu): close the live connection and keep the server chosen, offline (Flutter
+     * `disconnect(keepActive: true)`). By default there is no connection owner to ask.
+     */
+    public suspend fun disconnect(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("serverDisconnect")))
+
+    /** Restart this phone's own OpenCode when it is the server that failed to open (stop, then the manual start). */
+    public suspend fun restartPhoneServer(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
 
     /**
      * B-161: the git branch of each folder the home lists; a folder without git is absent. The connection owner

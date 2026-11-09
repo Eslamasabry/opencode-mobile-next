@@ -378,6 +378,12 @@ public interface ChatsActions {
     /** A switcher row: switch to [profile] (the one in use only closes the sheet). */
     public fun switchServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
 
+    /** The in-use server's "Disconnect from <name>", after the person confirmed it. */
+    public fun disconnectServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
+
+    /** The opening-failure card's "Restart phone server", after the person confirmed it. */
+    public fun restartOpeningPhoneServer() {}
+
     /** The switcher's "Add a server". */
     public fun addServer() {}
 
