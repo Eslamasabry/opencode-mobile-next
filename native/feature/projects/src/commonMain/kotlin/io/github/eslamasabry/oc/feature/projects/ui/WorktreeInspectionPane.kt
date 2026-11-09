@@ -27,7 +27,8 @@ internal fun WorktreeInspectionPane(state: ProjectWorkspaceUi, actions: ProjectW
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitGroupNote(stringResource(Res.string.worktreeInspectionTitle))
         KitGroupNote(stringResource(Res.string.worktreeInspectionExactScope))
-        if (state.inspectionBusy) KitSkeletonRows(count = 2)
+        if (state.inspectionBusy && state.inspectionScopes.isEmpty() && state.inspectionChanges == null)
+            KitSkeletonRows(count = 2)
         state.inspectionFailure?.let { failure ->
             KitErrorNotice(
                 message = stringResource(Res.string.worktreeInspectionReadFailed),
