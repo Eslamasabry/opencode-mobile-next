@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookNodeHost
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookPhoneNode
+import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import kotlinx.datetime.TimeZone
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookSigning
@@ -28,6 +29,7 @@ import java.security.SecureRandom
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -110,13 +112,14 @@ private class AppFactsBookAccess(
             if (stores.warm() !is Outcome.Ok) return@launch
             launch { stores.profiles.activeId.collect { profile.value = it?.raw } }
             on.value = store.flagOn()
-            // As Flutter does when the app opens: a memory set up on this phone and paired here is started again,
-            // unless the person stopped it. Quiet: a failure shows on the Memory row and the phone-node page.
-            if (on.value) {
-                launch {
-                    engine.open(profile.value ?: stores.profiles.activeId.value?.raw)
-                    phoneNode.ensureRunning()
-                }
+            // As Flutter does when the section shows: a memory set up on this phone and paired here is started again,
+            // unless the person stopped it, then read again. Quiet: a failure shows on the Memory row and the
+            // phone-node page. Turning the switch on later in the session does the same.
+            launch {
+                on.first { it }
+                engine.open(profile.value ?: stores.profiles.activeId.value?.raw)
+                phoneNode.ensureRunning()
+                if (phoneNode.status.value.state == PhoneNodeState.Running) engine.refresh()
             }
             stores.prefs.changes.collect { keys -> if (FactsBookStore.FLAG_KEY in keys) on.value = store.flagOn() }
         }

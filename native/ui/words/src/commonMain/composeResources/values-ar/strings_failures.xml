@@ -86,6 +86,7 @@
     <string name="chatSendFailureLostConnectionTo">فقد %1$s اتصاله بـ%2$s</string>
     <string name="chatSendFailureLostConnection">فقد %1$s اتصاله بمزوّد النموذج</string>
     <string name="chatSendFailureSignIn">يحتاج %1$s إلى تسجيل دخولك</string>
+    <string name="chatSendFailureSignInAgain">يحتاج %1$s إلى تسجيل دخولك مرة أخرى</string>
     <string name="chatSendFailureNoCredit">لا يملك %1$s رصيدًا لهذا النموذج</string>
     <string name="chatSendFailureModelUnavailable">هذا النموذج غير متاح</string>
     <string name="chatSendFailureBusy">%1$s مشغول الآن</string>

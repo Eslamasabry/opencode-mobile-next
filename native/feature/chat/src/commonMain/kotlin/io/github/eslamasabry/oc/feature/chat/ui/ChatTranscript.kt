@@ -195,6 +195,13 @@ internal class ReplyActions(
     val onContinue: (String) -> Unit = {},
     val signInSettingsLabel: String? = null,
     val onSignInSettings: () -> Unit = {},
+    /**
+     * B-AGENT-189 (#137): the plain line for an agent whose sign-in ran out ("{agent} needs you to sign in
+     * again"), by provider id; null = this conversation's agent cannot sign in from the chat.
+     */
+    val signInAgainWords: ((String) -> String?)? = null,
+    val signInAgainLabel: String? = null,
+    val onAgentSignIn: (String) -> Unit = {},
     /** Error-card recovery (Flutter `assistant_error_row.dart`); a null label hides that fix. */
     val models: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     val canCompact: Boolean = false,
@@ -872,7 +879,14 @@ private fun ChatRow(
                         // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
                         val limits = LocalLimitSwitchReply.current
                         val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again".
+                        val signInAgain =
+                            if (limit == null && AgentErrorText.signInExpired(reason))
+                                row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
+                            else null
                         if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
+                        else if (signInAgain != null)
+                            KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason)
@@ -884,6 +898,17 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            val signInAgainLabel = reply?.signInAgainLabel
+                            val signInAgainAgent = row.providerId
+                            if (signInAgain != null && signInAgainLabel != null && signInAgainAgent != null) {
+                                val agentId = signInAgainAgent
+                                KitButton(
+                                    signInAgainLabel,
+                                    { reply?.onAgentSignIn?.invoke(agentId) },
+                                    role = KitButtonRole.Primary,
+                                    modifier = Modifier.testTag("error-action-sign-in-again"),
+                                )
+                            }
                             if (
                                 AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null

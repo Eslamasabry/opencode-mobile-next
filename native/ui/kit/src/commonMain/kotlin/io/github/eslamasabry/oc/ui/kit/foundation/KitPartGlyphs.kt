@@ -26,7 +26,7 @@ internal object KitPartGlyphs {
     val Eye: ImageVector get() = KitIcons.visible
     val EyeOff: ImageVector get() = KitIcons.hidden
     val Warning: ImageVector get() = KitIcons.warning
-    val Ring: ImageVector get() = KitIcons.radioEmpty
+    val Ring: ImageVector get() = KitIcons.info // C11: a notice mark is the info glyph, never an empty ring that reads as a radio button
     val Undo: ImageVector get() = KitIcons.undo
     val Copy: ImageVector get() = KitIcons.copy
     val Paste: ImageVector get() = KitIcons.paste

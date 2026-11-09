@@ -105,7 +105,7 @@ public fun KitFab(
         visible = visible,
         modifier = modifier,
         enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
-        exit = if (reduced) ExitTransition.None else fadeOut(specs.enter()),
+        exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
     ) {
         if (LocalKitStyle.current.spec.tokens.track) SignalKey(label, icon, onClick) else RoundFace(label, icon, onClick, backdrop)
     }

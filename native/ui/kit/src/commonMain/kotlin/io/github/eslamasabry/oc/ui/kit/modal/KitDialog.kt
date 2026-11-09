@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.ui.kit.modal
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -201,7 +200,9 @@ internal fun DialogLayer(state: KitSheetHostState) {
             }
         } else {
             Box(Modifier.fillMaxSize().padding(Space.S6.dp).imePadding(), contentAlignment = Alignment.Center) {
-                AnimatedVisibility(state.dialogShown, enter = still.enter { fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f) }, exit = still.exit { fadeOut(specs.exit()) }) {
+                // MOT-2: a modal never scales in; it fades and rises 8 dp at Full (KitModalMotion).
+                val rise = KitModalMotion.dialogEnter()
+                AnimatedVisibility(state.dialogShown, enter = still.enter { rise }, exit = still.exit { fadeOut(specs.exit()) }) {
                     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Dialog, SurfaceLevel.Surface2, ownFill = colors.surface2))
                     Box(
                         panel.widthIn(max = DIALOG_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)

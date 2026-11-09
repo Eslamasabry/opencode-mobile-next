@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
@@ -225,6 +226,8 @@ public fun KitChoiceRow(
 ) {
     val tokens = LocalKitTokens.current
     val on = enabled.isEnabled
+    // C04 (audit 2026-11-09): a single choice is marked by the check at the trailing edge, never by a ring at the start.
+    val mark = if (mark == KitChoiceMark.Radio) KitChoiceMark.Tick else mark
     // The chosen row fills with the accent (owner reference 2026-11-07), on the effects spring: it washes in and out
     // instead of switching. Off: at once.
     val accent = LocalKitColors.current.accent
@@ -353,8 +356,9 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
     if (mark == KitChoiceMark.Tick) {
         Box(Modifier.size(size), contentAlignment = Alignment.Center) {
             if (pop > 0f) {
-                Box(popped.size(size).clip(KitShapeId.Circle.shape()).background(colors.accent), contentAlignment = Alignment.Center) {
-                    KitGlyph(KitPartGlyphs.Check, colors.onAccent, 14.dp)
+                // C04: the bare check in the accent, not a disc behind it.
+                Box(popped.size(size), contentAlignment = Alignment.Center) {
+                    KitGlyph(KitPartGlyphs.Check, colors.accent, 20.dp, Modifier.testTag("kit-choice-tick"))
                 }
             }
         }
@@ -376,5 +380,5 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
     }
 }
 
-/** How strongly a chosen row's fill shows the accent. */
-internal const val SELECTED_FILL_ALPHA: Float = 0.16f
+/** How strongly a chosen row's fill shows the accent: a breath, never a slab (audit 2026-11-09, C04). */
+internal const val SELECTED_FILL_ALPHA: Float = 0.06f

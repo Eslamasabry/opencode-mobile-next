@@ -35,7 +35,10 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** E20-S30 (owner 2026-11-07): the chat's bottom chrome is a translucent veil, not an opaque ground band. */
+/**
+ * E20-S30 (owner 2026-11-07): the chat's bottom chrome is no opaque ground band. The veil policy stays (the jump pill
+ * still lies on one); since 2026-11-09 the chrome itself lays none.
+ */
 class E20S30ChromeVeilTest {
     /** KitScreen's bottom block pads its content S2 above and below; its test tag sits inside that padding. */
     private val BLOCK_PADDING = 16.dp
@@ -105,34 +108,21 @@ class E20S30ChromeVeilTest {
         }
     }
 
+    // Owner 2026-11-09 ("an opaque slab under the composer", "a rough line just below Jump to latest"): the veil's
+    // ground ended in a hard line over a live background. A chat's bottom block now lays nothing behind its parts; the
+    // transcript fades out over its top 16 dp instead (ChromeEdgeBlendTest guards the look in every style).
     @Test
-    fun `E20-S30 a chat screen's bottom block is a veil and the body scrolls under it with no fade room`() =
-        runComposeUiTest {
-            val seen = Seen()
-            setContent(scene(seen, frost = true))
-            waitForIdle()
-            val block = onNodeWithTag("kit-screen-bottom").getBoundsInRoot()
-            val veil = assertNotNull(seen.veil, "the bottom block provides its veil")
-            assertEquals(VeilLook.Blur, veil.look)
-            // The body's room is the block itself (the tag sits inside its 8 dp padding, top and bottom): no 16 dp
-            // ground fade above it (the old opaque band).
-            assertEquals(block.bottom - block.top + BLOCK_PADDING, assertNotNull(seen.padding).calculateBottomPadding())
-        }
-
-    @Test
-    fun `E20-S30 without a blur the veil is the 92 percent tint`() = runComposeUiTest {
-        val seen = Seen()
-        setContent(scene(seen, frost = true, platform = FakeKitPlatform(frost = false)))
-        waitForIdle()
-        assertEquals(VeilLook.Tint, assertNotNull(seen.veil).look)
-    }
-
-    @Test
-    fun `E20-S30 high contrast keeps the bottom block opaque`() = runComposeUiTest {
-        val seen = Seen()
-        setContent(scene(seen, frost = true, platform = FakeKitPlatform(KitSystemSignals(highContrast = true), frost = true)))
-        waitForIdle()
-        assertEquals(VeilLook.Opaque, assertNotNull(seen.veil).look)
+    fun `E20-S30 a chat screen's bottom block lays no veil and the body scrolls under it with no fade room`() {
+        for (platform in listOf(FakeKitPlatform(frost = true), FakeKitPlatform(frost = false), FakeKitPlatform(KitSystemSignals(highContrast = true), frost = true)))
+            runComposeUiTest {
+                val seen = Seen()
+                setContent(scene(seen, frost = true, platform = platform))
+                waitForIdle()
+                val block = onNodeWithTag("kit-screen-bottom").getBoundsInRoot()
+                assertNull(seen.veil, "no veil band behind the bottom block")
+                // The body's room is the block itself (the tag sits inside its 8 dp padding, top and bottom).
+                assertEquals(block.bottom - block.top + BLOCK_PADDING, assertNotNull(seen.padding).calculateBottomPadding())
+            }
     }
 
     @Test

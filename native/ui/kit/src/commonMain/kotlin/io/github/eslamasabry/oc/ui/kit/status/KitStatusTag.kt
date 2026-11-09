@@ -5,20 +5,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.RoleDerivation
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
-import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -42,26 +37,19 @@ public fun KitStatusTag(label: String, tone: KitStatusTagTone, modifier: Modifie
         KitStatusTagTone.Running -> c.accent
         KitStatusTagTone.Done, KitStatusTagTone.Failed -> c.text2 // F: kit_status_tag.dart:49 calm, not a second green
     }
-    val plain = tone == KitStatusTagTone.Failed
-    val fill = if (plain) Color.Transparent else base.copy(alpha = .18f).compositeOver(c.surface1) // F: lib/ui/kit/kit_status_tag.dart:56
-    val ink = if (plain) c.text2 else Color(
-        RoleDerivation.readableOn(Argb(base.toArgb()), listOf(Argb(fill.toArgb())), 4.7, Argb(c.text1.toArgb())).v, // F: lib/ui/kit/kit_status_tag.dart:59
+    // C03 (audit 2026-11-09): never a tinted capsule. The word alone, in the tone's ink where colour carries meaning
+    // (needs you, running) and in calm secondary text otherwise.
+    val ink = if (tone == KitStatusTagTone.Done || tone == KitStatusTagTone.Failed) c.text2 else Color(
+        RoleDerivation.readableOn(Argb(base.toArgb()), listOf(Argb(c.surface1.toArgb())), 4.7, Argb(c.text1.toArgb())).v, // F: lib/ui/kit/kit_status_tag.dart:59
     )
-    // A small control surface in its own tint from the style resolver (Solid: the tint at a space3 corner); the plain
-    // tag is words alone in every style.
-    val surface =
-        if (plain) Modifier
-        else kitSurfaceLook(
-            KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Button, ownFill = fill, color = fill, radius = Space.S3.dp),
-        ).modifier
     val style = LocalKitTypography.current.style(TypeRole.Caption).copy(color = ink)
     KitSwap(label to tone, modifier.kitMaxWidth(CapRole.Chip), alignment = Alignment.CenterStart) { (word, _) ->
         BasicText(
             word,
-            Modifier.then(surface).padding(horizontal = Space.S2.dp, vertical = Space.S1.dp),
+            Modifier.padding(vertical = Space.S1.dp),
             style = style,
-            maxLines = if (plain) Int.MAX_VALUE else 1,
-            overflow = if (plain) TextOverflow.Clip else TextOverflow.Ellipsis,
+            maxLines = Int.MAX_VALUE,
+            overflow = TextOverflow.Clip,
         )
     }
 }

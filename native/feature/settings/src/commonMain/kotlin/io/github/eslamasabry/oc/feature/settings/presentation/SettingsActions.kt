@@ -140,6 +140,14 @@ public interface SettingsActions {
     /** Report a problem › What's included: opens ([open]) or closes the sheet listing exactly what is sent. */
     public fun onShowIncluded(open: Boolean) {}
 
+    /** Report a problem › On this phone › Clear errors: asks first ([ask] true), then clears when [confirm]ed. */
+    public fun onClearErrors(ask: Boolean) {}
+
+    public fun onConfirmClearErrors(confirm: Boolean) {}
+
+    /** Report a problem › On this phone › Clear timings. */
+    public fun onClearTimings() {}
+
     /** Report a problem › Send report: sends exactly the report "What's included" lists, once. */
     public fun onSendProblemReport() {}
 

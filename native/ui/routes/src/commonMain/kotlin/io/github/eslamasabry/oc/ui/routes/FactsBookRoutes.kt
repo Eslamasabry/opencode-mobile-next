@@ -43,6 +43,10 @@ public sealed interface FactsBookRoute : AppRoute {
         val locale: String = "en",
         val fromText: String? = null,
         val proposalId: String? = null,
+        /** The area the checked reminder belongs to (a thing's "Remind me about"); null is `general`. */
+        val area: String? = null,
+        /** With [fromText]: the words are the title as they are, a one-off tomorrow at 09:00 (no guess from the words). */
+        val exact: Boolean = false,
     ) : FactsBookRoute {
         override val motion: RouteMotion
             get() = RouteMotion.SlideUp

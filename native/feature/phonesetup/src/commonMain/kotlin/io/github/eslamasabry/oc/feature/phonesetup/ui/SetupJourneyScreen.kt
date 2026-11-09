@@ -680,8 +680,32 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                             textAlign = TextAlign.Center,
                         )
                     }
-                    if (note != null) {
+                    val clock = progress.stepElapsedSeconds
+                    if (running && clock != null) {
+                        // Phase 0: a long step shows its own clock and what it is doing, or a still-working line.
                         Spacer(Modifier.height(if (costParts.isEmpty()) Space.S6.dp else Space.S2.dp))
+                        val doing = progress.activity?.let { activityWords(it) }
+                        KitText(
+                            if (doing != null)
+                                stringResource(Res.string.setupHeartbeatLine, doing, elapsedClock(clock))
+                            else elapsedClock(clock),
+                            Modifier.testTag("phone-setup-progress-heartbeat"),
+                            role = TypeRole.RowTitle,
+                            tone = TextTone.Secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                        if ((progress.quietSeconds ?: 0) >= 30) {
+                            Spacer(Modifier.height(Space.S1.dp))
+                            KitText(
+                                stringResource(Res.string.setupHeartbeatQuiet),
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Tertiary,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                    if (note != null) {
+                        Spacer(Modifier.height(if (costParts.isEmpty() && clock == null) Space.S6.dp else Space.S2.dp))
                         KitText(
                             note,
                             Modifier.widthIn(max = 320.dp),
@@ -799,6 +823,17 @@ private fun JobAction(state: SetupJourneyUi, actions: SetupJourneyActions) {
         )
     }
     if (cannotRun) return
+    val timedOut =
+        state.progress.state == SetupState.Failed &&
+            (state.progress.error is SetupError.StepTimedOut ||
+                state.progress.components.any { it.error is SetupError.StepTimedOut })
+    KitReveal(timedOut) {
+        KitActionBlock(
+            primary = KitAction(stringResource(Res.string.r40SetupRetry), actions::continueSetup, working = state.working),
+            secondary = KitAction(stringResource(Res.string.setupUseComputerInstead), actions::connectComputer),
+        )
+    }
+    if (timedOut) return
     when {
         state.progress.state == SetupState.Running -> KitButton(
             stringResource(Res.string.phoneSetupRingPause), { actions.askStop(); actions.confirmStop() },
@@ -888,6 +923,28 @@ private fun ReadyProject(state: SetupJourneyUi, actions: SetupJourneyActions) {
     }
 }
 
+@Composable
+private fun activityWords(activity: SetupActivity): String =
+    stringResource(
+        when (activity) {
+            SetupActivity.Downloading -> Res.string.setupActivityDownloading
+            SetupActivity.Unpacking -> Res.string.setupActivityUnpacking
+            SetupActivity.Configuring -> Res.string.setupActivityConfiguring
+            SetupActivity.Checking -> Res.string.setupActivityChecking
+            SetupActivity.Working -> Res.string.setupActivityWorking
+        }
+    )
+
+/** m:ss, or h:mm:ss past an hour; digits are isolated so a right-to-left page keeps them in order. */
+internal fun elapsedClock(seconds: Int): String {
+    val h = seconds / 3600
+    val m = (seconds % 3600) / 60
+    val s = seconds % 60
+    val body = if (h > 0) "$h:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
+    else "$m:${s.toString().padStart(2, '0')}"
+    return "\u2066$body\u2069"
+}
+
 /** The job ended because Node.js crashed in every safe mode (the Node install's give-up line, #117). */
 internal fun nodeCannotRun(progress: SetupProgress): Boolean =
     progress.state == SetupState.Failed &&
@@ -971,6 +1028,7 @@ private fun runtimeProblem(error: SetupError?): String =
         SetupError.ToolsUncheckable -> stringResource(Res.string.setupRbToolsUncheckable)
         SetupError.PersistenceFailure -> stringResource(Res.string.linuxSetupSavedFailed)
         SetupError.Interrupted -> stringResource(Res.string.phoneSetupErrorInterrupted)
+        is SetupError.StepTimedOut -> stringResource(Res.string.setupStepTimedOut, error.title)
         SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupError.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)

@@ -39,11 +39,14 @@ import io.github.eslamasabry.oc.engine.runtime.host.NativeRuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.AppOpenStart
+import io.github.eslamasabry.oc.engine.runtime.server.LocalServerGate
+import io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerStarter
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
 import io.github.eslamasabry.oc.engine.runtime.server.StartTarget
+import io.github.eslamasabry.oc.engine.runtime.server.StartProblem
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupFinishRequest
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupHostKind
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
@@ -106,6 +109,7 @@ object LinuxRuntimeWiring {
         leases: NativeChatLeases,
         policies: AppAutomationPolicies,
         consents: NativePhoneFirstStartConsents,
+        gates: LocalServerGates,
     ): BuiltinRuntime =
         BuiltinRuntime(
                 app,
@@ -118,6 +122,7 @@ object LinuxRuntimeWiring {
                 leases,
                 policies,
                 consents,
+                gates,
             )
             .also { leases.start() }
 
@@ -402,6 +407,7 @@ internal constructor(
     private val leases: NativeChatLeases,
     private val policies: AppAutomationPolicies,
     private val consents: NativePhoneFirstStartConsents,
+    gates: LocalServerGates,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
@@ -1556,7 +1562,39 @@ internal constructor(
             override suspend fun updateOpenCode(): Outcome<Unit> = update()
         }
 
+    /**
+     * Phase 0 (first reply): a connection to this phone's own server waits until it answers a health check, restarts
+     * it once if it never does, and shows "Starting this phone's server…" (facts.starting) meanwhile.
+     */
+    private val localGate =
+        LocalServerGate(
+            probe = { id ->
+                val password = (profiles.secret(id) as? Outcome.Ok)?.value.orEmpty()
+                if (password.isEmpty()) ProbeAnswer.NoAnswer else port.probe(password)
+            },
+            restart = { id -> startNow(id) is Outcome.Ok },
+            clock = clock,
+            mayWait = { id ->
+                id.raw !in closedProfiles &&
+                    withContext(io) { runCatchingBlocking { !stoppedByPerson() } ?: false }
+            },
+            onWaiting = { _, waiting ->
+                facts.update {
+                    it.copy(starting = waiting, startProblem = if (waiting) null else it.startProblem)
+                }
+            },
+        )
+
     init {
+        gates.gate = { id ->
+            if (id != ownerId() || withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready) {
+                LocalServerWait.Ready
+            } else {
+                localGate.awaitReady(id).also {
+                    if (it == LocalServerWait.NotAnswering) facts.update { f -> f.copy(startProblem = StartProblem.TimedOut) }
+                }
+            }
+        }
         app.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityResumed(activity: Activity) = resumed(true)
@@ -1730,4 +1768,15 @@ object OfflineSpeechEngine : SherpaRuntime {
             override fun release() = kokoro.release()
         }
     }
+}
+
+
+/**
+ * The seam between the connection runtime and the phone's own server (phase 0): the built-in runtime installs the gate,
+ * the connection runtime asks it before the first connection to the managed local profile. Unset means no gating.
+ */
+@SingleIn(AppScope::class)
+@dev.zacsweers.metro.Inject
+class LocalServerGates {
+    @Volatile var gate: (suspend (ProfileId) -> LocalServerWait)? = null
 }
