@@ -379,9 +379,6 @@ class NativePhoneSetup(
                         it.attributes,
                         error = it.failed,
                     )
-                    // B-190: linux_setup_step and its linux_setup_<step> trace, consent-gated.
-                    io.github.eslamasabry.oc.engine.analytics.health.HealthFlow()
-                        .setupTiming(it.name, it.attributes, it.durationMillis, it.failed)
                 },
                 finisher =
                     SetupFinisher { request ->
@@ -397,6 +394,9 @@ class NativePhoneSetup(
                     var reportedJob: String? = null
                     value.progress.collect {
                         shown.value = it
+                        // The setup funnel (linux_setup_step, setup_step_reached, setup_done, abandoned/resumed).
+                        io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.setupOrNull
+                            ?.observe(it.jobId, journeyJobState(it.state), journeySteps(it), it.firstSetup)
                         if (it.state == SetupState.Failed && it.jobId != reportedJob) {
                             reportedJob = it.jobId
                             reportStepFailed(it)

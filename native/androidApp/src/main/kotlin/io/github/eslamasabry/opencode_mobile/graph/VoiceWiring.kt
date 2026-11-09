@@ -144,11 +144,13 @@ class AndroidVoiceHub(
             )
         val models = NotifyingVoiceModels(components.packs.asVoiceModels(), notices, components.network)
         val dictation =
-            if (offline) {
-                components.voice.asDictation()
-            } else {
-                phoneDictation(permission, models, components)
-            }
+            JourneyDictation(
+                if (offline) {
+                    components.voice.asDictation()
+                } else {
+                    phoneDictation(permission, models, components)
+                }
+            )
         return VoiceParts(
                 dictation = dictation,
                 models = models,
@@ -702,5 +704,18 @@ internal class MicRequestRelay {
 
     companion object {
         const val KEY = "oc.voice.mic"
+    }
+}
+
+/**
+ * Marks the next prompt as a voice prompt once dictation hands back words (analytics `send_result.input`). It reads
+ * only whether any words came, never the words themselves.
+ */
+private class JourneyDictation(private val inner: Dictation) : Dictation by inner {
+    override suspend fun finish(): Outcome<String> {
+        val result = inner.finish()
+        if (result is Outcome.Ok && result.value.isNotBlank())
+            io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.chatOrNull?.noteVoice()
+        return result
     }
 }

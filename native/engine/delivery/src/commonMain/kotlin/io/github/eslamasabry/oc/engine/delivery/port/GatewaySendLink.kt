@@ -149,7 +149,7 @@ public class GatewaySendLink(
         val admitted = admitInteractive()
         if (admitted is Outcome.Failed) return admitted
         val tracing = tracing ?: return admit(session, prompt, beforeSend)
-        tracing.sent(session.raw, onPhone = onPhone)
+        tracing.sent(session.raw, onPhone, prompt.agent, prompt.attachments.isNotEmpty())
         val result = admit(session, prompt, beforeSend)
         tracing.accepted(session.raw, error = result is Outcome.Failed)
         return result

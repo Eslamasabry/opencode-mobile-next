@@ -68,11 +68,11 @@ class ProductAnalyticsTest {
     fun `B-180-001 the event list is Flutter 2_1_5's, name for name`() {
         assertEquals(
             listOf(
-                "app_open", "setup_step_reached", "setup_step_failed", "setup_done", "first_reply",
+                "app_open", "setup_step_reached", "setup_done", "setup_abandoned", "setup_resumed", "first_reply",
                 "connect_computer_chosen", "update_offered", "update_installed", "screen_view", "feature_used",
                 "session_length",
             ),
-            ProductEvent.entries.map { it.wire }.take(11),
+            ProductEvent.entries.map { it.wire }.take(12),
         )
         assertEquals(ProductEvent.entries.map { it.wire }.toSet(), productSchema.keys)
         assertEquals(
@@ -82,10 +82,7 @@ class ProductAnalyticsTest {
             ),
             productSchema.getValue("screen_view").getValue("screen"),
         )
-        assertEquals(
-            setOf("armcap", "threads", "both", "none_worked", "other"),
-            productSchema.getValue("setup_step_failed").getValue("node_variant"),
-        )
+        assertTrue("setup_step_failed" !in productSchema, "folded into linux_setup_step result=fail with fail_kind")
         // Every listed value passes the last check, so nothing in the list is ever dropped by it.
         productSchema.values.flatMap { it.values }.flatten().forEach { assertTrue(productValueIsSafe(it), it) }
     }
@@ -104,12 +101,12 @@ class ProductAnalyticsTest {
     fun `B-180-003 an unlisted key or value, free text, a path, a host or an address never leaves`() {
         analytics()
             .track(
-                ProductEvent.SetupStepFailed,
+                ProductEvent.SetupStepReached,
                 mapOf(
                     "step" to ProductSetupStep.Node,
+                    "attempt" to "1",
                     "kind" to "segfault at /data/user/0/x",
-                    "compat_mode" to true,
-                    "node_variant" to ProductNodeVariant.NoneWorked,
+                    "fail_kind" to "segfault at /data/user/0/x",
                     "host" to "example.com",
                     "message" to "please fix my code",
                     "email" to "me@example.com",
@@ -117,7 +114,7 @@ class ProductAnalyticsTest {
             )
         assertEquals(
             listOf(
-                "setup_step_failed" to mapOf("step" to "node", "compat_mode" to "true", "node_variant" to "none_worked")
+                "setup_step_reached" to mapOf("step" to "node", "attempt" to "1")
             ),
             sink.events,
         )
@@ -170,7 +167,7 @@ class ProductAnalyticsTest {
                 "app_open" to mapOf("kind" to "cold"),
                 "update_installed" to emptyMap(),
                 "update_result" to mapOf("kind" to "in_app", "result" to "installed"),
-                "session_length" to mapOf("minutes" to "5_to_15"),
+                "session_length" to mapOf("minutes_range" to "5_to_15"),
                 "app_open" to mapOf("kind" to "warm"),
             ),
             sink.events,
