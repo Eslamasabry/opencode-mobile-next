@@ -898,11 +898,13 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
-                            if (signInAgain != null && reply?.signInAgainLabel != null && row.providerId != null) {
-                                val agentId = row.providerId
+                            val signInAgainLabel = reply?.signInAgainLabel
+                            val signInAgainAgent = row.providerId
+                            if (signInAgain != null && signInAgainLabel != null && signInAgainAgent != null) {
+                                val agentId = signInAgainAgent
                                 KitButton(
-                                    reply.signInAgainLabel,
-                                    { reply.onAgentSignIn(agentId) },
+                                    signInAgainLabel,
+                                    { reply?.onAgentSignIn?.invoke(agentId) },
                                     role = KitButtonRole.Primary,
                                     modifier = Modifier.testTag("error-action-sign-in-again"),
                                 )
