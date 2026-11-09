@@ -21,10 +21,16 @@ import io.github.eslamasabry.oc.engine.factsbook.ThingKind
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FactsBookRoute
 import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -92,18 +98,65 @@ public class MemorySectionViewModel(
     private val nav: AppNavigator,
     private val clock: Clock,
 ) : ViewModel(), MemorySectionActions {
+    /**
+     * While the memory on this phone is still starting, a read that cannot reach it is tried again this often, this many
+     * times (about a minute), before the section says it did not answer (F: `readRetryDelay`, `readRetryAttempts`).
+     */
+    internal var readRetryDelay: Duration = 5.seconds
+    internal var readRetryAttempts: Int = 12
+
+    private val readRetries = MutableStateFlow(0)
+
     public val state: StateFlow<MemorySectionUi> =
-        combine(access.enabled, access.engine.state, access.phoneNode.status) { on, s, node -> present(on, s, node) }
+        combine(access.enabled, access.engine.state, access.phoneNode.status, readRetries) { on, s, node, tries -> present(on, s, node, comingUp(s, node, tries)) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MemorySectionUi())
 
     init {
         access.follow(viewModelScope, refresh = true)
+        // A real answer ends the waiting.
+        viewModelScope.launch {
+            access.engine.state.collect { s -> if (s.error == null) readRetries.value = 0 }
+        }
+        // The memory on this phone stopped while the section shows what it last read: read again, so the row says it is
+        // stopped instead of showing old numbers (F: `_watchStop`).
+        viewModelScope.launch {
+            var seen: PhoneNodeState? = null
+            access.phoneNode.status.collect { node ->
+                val before = seen
+                seen = node.state
+                if (before != null && before != PhoneNodeState.Stopped && node.state == PhoneNodeState.Stopped && node.pairedHere) {
+                    access.engine.refresh()
+                }
+            }
+        }
+        // Coming up: read again every few seconds instead of showing an error (F: `_scheduleRetry`).
+        viewModelScope.launch {
+            combine(access.engine.state, access.phoneNode.status, readRetries) { s, node, tries -> comingUp(s, node, tries) && s.load != FactsBookLoad.Loading }
+                .collectLatest { waiting ->
+                    if (!waiting) return@collectLatest
+                    delay(readRetryDelay)
+                    // The read itself changes what is watched; it is never cut short.
+                    withContext(NonCancellable) {
+                        access.engine.refresh()
+                        readRetries.update { it + 1 }
+                    }
+                }
+        }
     }
 
-    private fun present(on: Boolean, s: FactsBookState, node: PhoneNodeStatus): MemorySectionUi =
+    /**
+     * The last read could not reach the memory on this phone, which is paired here and not stopped by the person: it is
+     * most likely still coming up (always just after an update). A real answer, such as unauthorized or locked, is not
+     * waited for (F: `_comingUp`).
+     */
+    private fun comingUp(s: FactsBookState, node: PhoneNodeStatus, tries: Int): Boolean =
+        access.phoneNode.supported && node.pairedHere && !node.personStopped && node.state != PhoneNodeState.Stopped &&
+            s.error?.unreachable == true && tries < readRetryAttempts
+
+    private fun present(on: Boolean, s: FactsBookState, node: PhoneNodeStatus, comingUp: Boolean): MemorySectionUi =
         MemorySectionUi(
             nodeStopped = node.pairedHere && node.state == PhoneNodeState.Stopped,
-            nodeStarting = node.pairedHere && (node.busy || node.state == PhoneNodeState.Installing),
+            nodeStarting = node.pairedHere && (node.busy || node.state == PhoneNodeState.Installing || comingUp),
             shown = on,
             loaded = s.loaded,
             paired = s.paired,
@@ -128,8 +181,12 @@ public class MemorySectionViewModel(
 
     override fun openThing(id: String): Unit = nav.open(FactsBookRoute.Thing(id))
 
+    /** The memory on this phone may simply not be running: start it first, then read again (F: the notice's Try again). */
     override fun retry() {
-        viewModelScope.launch { access.engine.refresh() }
+        access.background {
+            if (access.phoneNode.supported && access.phoneNode.status.value.pairedHere) access.phoneNode.ensureRunning()
+            access.engine.refresh()
+        }
     }
 
     override fun startNode() {
@@ -156,6 +213,8 @@ public data class AboutYouUi(
     /** Null while the list is being read. */
     val things: ImmutableList<Thing>? = null,
     val listError: FactsBookError? = null,
+    /** The list is read again behind what is shown (pull to refresh). */
+    val refreshing: Boolean = false,
 )
 
 public interface AboutYouActions {
@@ -193,6 +252,7 @@ public class AboutYouViewModel(private val access: FactsBookAccess, private val 
         val filter: ThingFilter = ThingFilter.All,
         val things: List<Thing>? = null,
         val error: FactsBookError? = null,
+        val refreshing: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local())
@@ -209,6 +269,7 @@ public class AboutYouViewModel(private val access: FactsBookAccess, private val 
                     filter = own.filter,
                     things = own.things?.toImmutableList(),
                     listError = own.error,
+                    refreshing = own.refreshing,
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AboutYouUi())
@@ -235,15 +296,15 @@ public class AboutYouViewModel(private val access: FactsBookAccess, private val 
 
     override fun reload() {
         val filter = local.value.filter
-        local.update { it.copy(error = null) }
+        local.update { it.copy(error = null, refreshing = true) }
         viewModelScope.launch {
             access.engine.open(access.activeProfileId.value)
             val node = access.engine.node
             val result = node?.things(filter.kind) ?: FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))
             if (local.value.filter != filter) return@launch
             when (result) {
-                is FbResult.Ok -> local.update { it.copy(things = result.value) }
-                is FbResult.Err -> local.update { it.copy(error = result.error) }
+                is FbResult.Ok -> local.update { it.copy(things = result.value, refreshing = false) }
+                is FbResult.Err -> local.update { it.copy(error = result.error, refreshing = false) }
             }
         }
     }

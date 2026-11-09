@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,6 +59,7 @@ public fun AboutYouScreen(state: AboutYouUi, actions: AboutYouActions) {
         width = KitScreenWidth.Reading,
         loading = state.load == FactsBookLoad.Loading,
         loadingLabel = title,
+        refresh = KitScreenRefresh(refreshing = state.refreshing, onRefresh = actions::reload),
         bottom = {
             KitActionBlock(
                 Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = Space.S2.dp),
@@ -160,7 +162,7 @@ private fun ThingList(state: AboutYouUi, actions: AboutYouActions) {
             KitStateView(
                 KitStateKind.Error,
                 stringResource(Res.string.fbErrorTitle),
-                body = failureWords(state.listError),
+                body = failureWords(state.listError) + (failureDetails(state.listError)?.let { "\n\n$it" } ?: ""),
                 primary = KitAction(stringResource(Res.string.commonRetry), actions::reload),
             )
         things == null -> KitSkeletonRows()

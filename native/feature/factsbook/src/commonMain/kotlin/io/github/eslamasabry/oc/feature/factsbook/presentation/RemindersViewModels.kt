@@ -96,7 +96,7 @@ public class RemindersViewModel(private val access: FactsBookAccess, private val
             mutable.update {
                 val base = it.copy(
                     loading = false,
-                    cannotRing = caps.isDisabled("phone_alarm_delivery") || !caps.supports("phone_alarm_delivery"),
+                    cannotRing = caps.isDisabled("phone_alarm_delivery"),
                     canAdd = caps.supports(FactsBookCapabilities.REMINDERS),
                 )
                 when (r) {
@@ -193,10 +193,19 @@ public class ReminderEditViewModel(
         viewModelScope.launch {
             val node = access.reminderNode()
             val caps = access.engine.state.value.capabilities
-            val ring = !(caps.isDisabled("phone_alarm_delivery") || !caps.supports("phone_alarm_delivery"))
+            val ring = !caps.isDisabled("phone_alarm_delivery")
             val words = route.fromText
             if (words != null) {
                 // A first guess from the words; the person checks every field (F: capture_screen.dart `_save`).
+                if (route.exact) {
+                    // "Remind me about Sam": the title as it is, a one-off tomorrow at 09:00 (F: thing_screen.dart `_remind`).
+                    val tomorrow = (clock.now() + 1.days).toLocalDateTime(TimeZone.currentSystemDefault())
+                    val at = LocalDateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0)
+                    mutable.update {
+                        it.copy(draft = ReminderDraft(words, ReminderTiming(ReminderRepeat.Never, at), locale = route.locale), cannotRing = !ring)
+                    }
+                    return@launch
+                }
                 val guess = ReminderGuess.from(words, clock.now().toLocalDateTime(TimeZone.currentSystemDefault()))
                 mutable.update {
                     it.copy(
@@ -283,7 +292,7 @@ public class ReminderEditViewModel(
             val old = saved
             val proposed = proposal
             val scheduleId = old?.schedule?.id ?: proposed?.preview?.schedule?.id
-            val area = old?.area ?: proposed?.area ?: "general"
+            val area = old?.area ?: proposed?.area ?: route.area ?: "general"
             val preview =
                 when (val r = node.previewReminder(draft.what, draft.timing, draft.zone, draft.locale, scheduleId, area)) {
                     is FbResult.Err -> {

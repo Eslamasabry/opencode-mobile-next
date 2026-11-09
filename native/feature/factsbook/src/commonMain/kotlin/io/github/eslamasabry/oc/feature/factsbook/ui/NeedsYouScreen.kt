@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -104,6 +105,7 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
             loading = state.load == FactsBookLoad.Loading,
             loadingLabel = title,
             edges = KitScreenEdges.Bleed,
+            refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::refresh, enabled = state.load != FactsBookLoad.Failed),
         ) {
             when {
                 state.load == FactsBookLoad.Failed -> {
@@ -442,11 +444,19 @@ private fun OfferCard(offer: ConversationOffer, state: NeedsYouUi, actions: Need
         val working = offer.id in state.working
         Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             KitButton(
-                KitAction(stringResource(Res.string.fbOfferTalk), { actions.talk(offer, leadIn) }, working = working),
+                KitAction(
+                    stringResource(Res.string.fbOfferTalk),
+                    { if (!working) actions.talk(offer, leadIn) },
+                    working = working,
+                    icon = KitIcons.chat,
+                ),
                 role = KitButtonRole.Secondary,
             )
             KitButton(
-                KitAction(stringResource(Res.string.fbOfferNotNow), { actions.notNow(offer) }, working = working),
+                KitAction(
+                    stringResource(Res.string.fbOfferNotNow),
+                    { if (!working) actions.notNow(offer) },
+                ),
                 role = KitButtonRole.Tertiary,
             )
         }
