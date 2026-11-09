@@ -90,6 +90,7 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.drive
 import io.github.eslamasabry.oc.ui.kitchat.stream.growOnly
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitFreshFade
+import io.github.eslamasabry.oc.ui.kitchat.stream.newestWordVisibility
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
@@ -854,7 +855,9 @@ private fun MdText(
         // included, so it never stands on a glyph.
         val breath = rememberCaretBreath()
         val colors = LocalKitColors.current
-        textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors, breath)
+        // B-089: the caret fades in with the newest word instead of standing at full strength ahead of it.
+        val follow: () -> Float = { breath() * (state?.newestWordVisibility() ?: 1f) }
+        textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors, follow)
     }
     // C-015: the block reads in its own direction, from the whole text (not only what is revealed so far), and fills
     // the column so a one-line right-to-left heading or paragraph sits on the right edge.

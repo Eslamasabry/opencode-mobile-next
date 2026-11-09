@@ -53,6 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -160,6 +161,8 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                                 }
                             }
                         }
+                    if (state.step == OpenProjectStep.Folder && state.refusedPath != null && state.refusedPath == state.path)
+                        item(key = "refused") { KitNotice(stringResource(Res.string.folderBrowserHomeHere)) }
                     item(key = "folders") { Folders(state, actions) }
                     item(key = "more") { MoreWays(state, actions) }
                 }

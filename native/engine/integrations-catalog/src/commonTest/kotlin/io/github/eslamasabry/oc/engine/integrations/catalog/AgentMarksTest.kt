@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.engine.integrations.catalog
 
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -14,8 +13,6 @@ class AgentMarksTest {
             "claude" to "claude",
             "codex" to "codex",
             "gemini" to "gemini",
-            "antigravity" to "google",
-            "agy" to "google",
             "qwen" to "qwen",
             "kilo" to "kilocode",
             "cline" to "cline",
@@ -26,10 +23,10 @@ class AgentMarksTest {
         )
 
     @Test
-    fun `B-095 Antigravity row gets the bundled google mark, not an empty square`() {
-        assertEquals("google", ProviderMarks.agentSlug("antigravity"))
-        assertEquals("google", ProviderMarks.agentSlug("agy"))
-        assertEquals("google", ProviderMarks.agentSlug(" Antigravity "))
+    fun `B-116 Antigravity has no Google G mark, it takes the neutral agent mark`() {
+        assertEquals(null, ProviderMarks.agentSlug("antigravity"))
+        assertEquals(null, ProviderMarks.agentSlug("agy"))
+        assertEquals(null, ProviderMarks.agentColorFile("antigravity"))
     }
 
     @Test
@@ -38,34 +35,5 @@ class AgentMarksTest {
             assertEquals(slug, ProviderMarks.agentSlug(key), key)
             assertTrue(slug in ProviderMarks.slugs, "$slug is bundled")
         }
-    }
-
-    @Test
-    fun `B-095 the agent loader reads the bundled google mark for Antigravity`() = runTest {
-        val asked = mutableListOf<String>()
-        val host =
-            object : ProviderLogoHost {
-                override suspend fun fetch(url: String): ProviderLogoResponse? = null
-
-                override suspend fun bundled(slug: String): String? {
-                    asked += slug
-                    return "<svg/>"
-                }
-
-                override suspend fun read(name: String): ProviderLogoFile? = null
-
-                override suspend fun write(name: String, text: String) = Unit
-
-                override suspend fun delete(name: String) = Unit
-            }
-        val logos =
-            ProviderLogos(
-                host,
-                object : kotlin.time.Clock {
-                    override fun now() = kotlin.time.Instant.fromEpochMilliseconds(0)
-                },
-            )
-        assertEquals("<svg/>", logos.agentSvg("antigravity"))
-        assertEquals(listOf("google"), asked)
     }
 }

@@ -200,8 +200,7 @@ public object ProviderMarks {
             "claude" to "claude",
             "codex" to "codex",
             "gemini" to "gemini",
-            "antigravity" to "google",
-            "agy" to "google",
+            // Antigravity has no official mark of its own; Google's "G" is the wrong brand, so it takes the neutral agent mark.
             "qwen" to "qwen",
             "kilo" to "kilocode",
             "cline" to "cline",
