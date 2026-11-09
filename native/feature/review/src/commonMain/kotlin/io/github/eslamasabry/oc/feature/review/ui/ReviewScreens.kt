@@ -275,7 +275,7 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
             )
         },
         width = KitScreenWidth.Reading,
-        loading = state.load == ReviewLoad.Loading || state.working,
+        loading = state.load == ReviewLoad.Loading || state.working || state.updating,
         bottom =
             if (state.load == ReviewLoad.Ready && state.files.isNotEmpty()) {
                 {
@@ -605,7 +605,7 @@ public fun FileDiffScreen(state: FileDiffUi, actions: FileDiffActions) {
     var fullContext by remember(state.path) { mutableStateOf(false) }
     KitScreen(
         topBar = { FileTopBar(state, fullContext, { fullContext = !fullContext }, actions::back) },
-        loading = state.load == ReviewLoad.Loading,
+        loading = state.load == ReviewLoad.Loading || state.updating,
         bottom = if (state.canComment && state.drafts > 0) ({ SendCommentsBlock(state, actions) }) else null,
         edges = KitScreenEdges.Bleed,
     ) {
@@ -996,11 +996,12 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
     val busy =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.revertBusy))
         else KitEnabled.Enabled
-    val decide = state.phase == StagedPhase.Review
+    // Keep and Put back wait for the live read: a kept page never decides anything.
+    val decide = state.phase == StagedPhase.Review && !state.updating
     KitScreen(
         topBar = { TopBar(stringResource(Res.string.reviewRevertScreenTitle), actions::back) },
         width = KitScreenWidth.Reading,
-        loading = state.phase == StagedPhase.Loading || state.working,
+        loading = state.phase == StagedPhase.Loading || state.working || state.updating,
         bottom =
             if (decide) {
                 {

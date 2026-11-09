@@ -13,7 +13,10 @@ import io.github.eslamasabry.oc.core.net.HttpClientFactory
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookDeviceCheck
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookKept
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookNodeHost
+import io.github.eslamasabry.oc.engine.factsbook.KeptFactsBookHttp
+import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookPhoneNode
 import io.github.eslamasabry.oc.engine.factsbook.PhoneNodeState
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
@@ -51,6 +54,7 @@ object FactsBookWiring {
         app: Application,
         linux: LinuxHost,
         dispatchers: AppDispatchers,
+        lastKnown: LastKnown,
     ): FactsBookAccess =
         AppFactsBookAccess(
             stores,
@@ -59,6 +63,7 @@ object FactsBookWiring {
             clock,
             AndroidFactsBookDeviceCheck(app, clock),
             AndroidFactsBookNodeHost(app, linux, stores.secrets, dispatchers),
+            AppFactsBookKept(lastKnown, stores),
         )
 }
 
@@ -69,6 +74,7 @@ private class AppFactsBookAccess(
     clock: Clock,
     deviceCheck: FactsBookDeviceCheck,
     nodeHost: FactsBookNodeHost,
+    private val kept: FactsBookKept,
 ) : FactsBookAccess {
     private val secure = SecureRandom()
 
@@ -86,7 +92,10 @@ private class AppFactsBookAccess(
     override val engine: FactsBookEngine =
         FactsBookEngine(
             store,
-            gatewayFor = { link, token, signer -> HttpFactsBookGateway(httpFor(link.baseUrl), token, owner = signer) },
+            gatewayFor = { link, token, signer ->
+                // Every good read is kept for the next visit (cache-first); the pages show it at once.
+                HttpFactsBookGateway(KeptFactsBookHttp(httpFor(link.baseUrl), kept, { engine.state.value.profileId }, link.baseUrl), token, owner = signer)
+            },
             outboxFor = { id ->
                 object : FactsBookOutboxStore {
                     override suspend fun read(): String? = store.readOutbox(id)
@@ -96,6 +105,7 @@ private class AppFactsBookAccess(
             },
             clock = clock,
             signing = FactsBookSigning({ n -> ByteArray(n).also(secure::nextBytes) }, deviceCheck),
+            kept = kept,
         )
 
     override val phoneNode: FactsBookPhoneNode =

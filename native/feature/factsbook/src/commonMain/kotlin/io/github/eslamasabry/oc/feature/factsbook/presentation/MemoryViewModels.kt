@@ -299,6 +299,12 @@ public class AboutYouViewModel(private val access: FactsBookAccess, private val 
         local.update { it.copy(error = null, refreshing = true) }
         viewModelScope.launch {
             access.engine.open(access.activeProfileId.value)
+            if (local.value.things == null) {
+                // Cache-first: what the node last listed shows at once; the live list replaces it below.
+                access.engine.keptRead { things(filter.kind) }?.let { kept ->
+                    local.update { if (it.filter == filter && it.things == null) it.copy(things = kept) else it }
+                }
+            }
             val node = access.engine.node
             val result = node?.things(filter.kind) ?: FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))
             if (local.value.filter != filter) return@launch

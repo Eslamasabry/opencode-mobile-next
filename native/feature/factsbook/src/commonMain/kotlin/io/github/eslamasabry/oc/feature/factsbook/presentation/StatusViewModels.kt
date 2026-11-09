@@ -82,6 +82,17 @@ public class StatusViewModel(private val access: FactsBookAccess, private val na
         viewModelScope.launch {
             val engine = access.engine
             engine.open(access.activeProfileId.value)
+            if (mutable.value.status == null) {
+                // Cache-first: the modules as the node last reported them, at once; the live read replaces them below.
+                engine.keptRead { status() }?.let { kept -> mutable.update { if (it.status == null) it.copy(
+                    status = kept,
+                    canApprove = engine.state.value.canApprove,
+                    link = engine.state.value.link,
+                    capabilities = engine.state.value.capabilities,
+                    nowMs = clock.now().toEpochMilliseconds(),
+                    phoneNode = access.phoneNode.supported,
+                )  else it } }
+            }
             val r = engine.node?.status() ?: unreachableErr
             val s = engine.state.value
             mutable.update {
@@ -172,6 +183,14 @@ public class SettingsViewModel(private val access: FactsBookAccess, private val 
         mutable.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             access.engine.open(access.activeProfileId.value)
+            if (mutable.value.settings == null) {
+                // Cache-first: the settings as the node last showed them, at once; the live read replaces them below.
+                access.engine.keptRead { settings() }?.let { kept -> mutable.update { if (it.settings == null) it.copy(
+                    settings = kept,
+                    canApprove = access.engine.state.value.canApprove,
+                    showTriggers = access.engine.state.value.capabilities.supports(FactsBookCapabilities.TRIGGERS),
+                ) else it } }
+            }
             val r = access.engine.node?.settings() ?: unreachableErr
             val s = access.engine.state.value
             mutable.update {

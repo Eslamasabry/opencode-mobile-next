@@ -167,7 +167,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         LibraryEmpty(
                             rows.isEmpty(),
                             query,
-                            inventory.loading,
+                            inventory.coldLoading,
                             selectedSection in inventory.failedSections,
                             state.tab,
                         )
@@ -220,7 +220,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         LibraryEmpty(
                             rows.isEmpty(),
                             query,
-                            inventory.loading,
+                            inventory.coldLoading,
                             selectedSection in inventory.failedSections,
                             state.tab,
                         )
@@ -247,7 +247,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         LibraryEmpty(
                             rows.isEmpty(),
                             query,
-                            inventory.loading,
+                            inventory.coldLoading,
                             selectedSection in inventory.failedSections,
                             state.tab,
                         )
@@ -322,7 +322,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             LibraryEmpty(
                                 rows.isEmpty() && inventory.attempts.isEmpty(),
                                 query,
-                                inventory.loading,
+                                inventory.coldLoading,
                                 selectedSection in inventory.failedSections,
                                 state.tab,
                             )
@@ -375,7 +375,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         LibraryEmpty(
                             rows.isEmpty(),
                             query,
-                            inventory.loading,
+                            inventory.coldLoading,
                             selectedSection in inventory.failedSections,
                             state.tab,
                         )

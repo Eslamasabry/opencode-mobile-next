@@ -50,6 +50,7 @@ class AndroidLibraryHost(
     private val appScope: AppCoroutineScope,
     private val registryFactory: LibraryRegistryFactory,
     private val redactor: Redactor,
+    private val keptLibrary: io.github.eslamasabry.oc.engine.integrations.catalog.LibraryLastKnown,
 ) : LibraryHost {
     private data class ContextKey(
         val profile: ServerProfile,
@@ -174,6 +175,7 @@ class AndroidLibraryHost(
                 recovery,
                 CoroutineScope(appScope.coroutineContext + dispatchers.main),
                 clock,
+                keptLibrary,
             )
             .also {
                 it.retain()

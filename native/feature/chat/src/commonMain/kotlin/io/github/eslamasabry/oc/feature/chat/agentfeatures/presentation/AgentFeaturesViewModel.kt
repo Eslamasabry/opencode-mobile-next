@@ -75,14 +75,19 @@ public class AgentFeaturesViewModel(
     @Assisted route: ChatRoute,
     ports: Set<AgentFeaturesPort>,
     registry: ConnectionRegistry,
+    kept: Set<AgentFeaturesLastKnown> = emptySet(),
 ) : ViewModel(), AgentFeaturesActions {
     private val ref = route.ref
     private val adapters = ports
-    private val mutable = MutableStateFlow(AgentFeaturesUi())
+    private val shelf = kept.firstOrNull()
+    private val mutable = MutableStateFlow(AgentFeaturesUi().seeded(shelf?.peek(ref)))
     public val state: StateFlow<AgentFeaturesUi> = mutable.asStateFlow()
     private var revision = 0L
 
     init {
+        if (shelf != null && mutable.value.snapshot == null) {
+            viewModelScope.launch { mutable.value = mutable.value.seeded(shelf.read(ref)) }
+        }
         viewModelScope.launch {
             registry.live.collect {
                 val available = adapters.any { it.available(ref) }
@@ -121,9 +126,11 @@ public class AgentFeaturesViewModel(
             if (ticket != revision) return@launch
             mutable.value =
                 when (result) {
-                    is Outcome.Ok -> mutable.value.copy(loading = false, snapshot = result.value)
-                    is Outcome.Failed ->
-                        mutable.value.copy(loading = false, failure = result.failure)
+                    is Outcome.Ok -> {
+                        shelf?.keep(ref, KeptAgentFeatures.of(result.value))
+                        mutable.value.copy(loading = false, snapshot = result.value)
+                    }
+                    is Outcome.Failed -> mutable.value.readFailed(result.failure, wasRead = id == null)
                 }
         }
     }

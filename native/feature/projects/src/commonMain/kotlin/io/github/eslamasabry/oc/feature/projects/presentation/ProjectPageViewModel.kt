@@ -50,6 +50,7 @@ public class ProjectPageViewModel(
     private val signals: ProjectSignalsHost = NoProjectSignalsHost(),
     private val storageAccess: Set<SharedStorageAccess> = emptySet(),
     private val lastKnown: ProjectsLastKnown = NoProjectsLastKnown(),
+    private val workspaceKept: WorkspaceLastKnown = NoWorkspaceLastKnown(),
 ) : ViewModel(), ProjectPageActions {
     private val directory = ProjectRules.normalize(route.directory)
     private val mutable = MutableStateFlow(ProjectPageUi(directory, ProjectRules.name(directory)))
@@ -84,6 +85,8 @@ public class ProjectPageViewModel(
             openConversation = { session ->
                 server?.let { nav.openChat(ConversationRef(it.profile, session)) }
             },
+            peekKept = { workspaceKept.peek(route.profile, directory) },
+            keepKept = { workspaceKept.keep(route.profile, directory, it) },
         )
 
     init {

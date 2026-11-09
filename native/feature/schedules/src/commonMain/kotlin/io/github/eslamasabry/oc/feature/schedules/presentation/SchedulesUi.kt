@@ -103,6 +103,8 @@ public data class SchedulesUi(
     val busy: Boolean = false,
     /** The clock reading the words are relative to ("Today 09:00"). */
     val nowMs: Long = 0,
+    /** Cache-first: the rows are the last ones seen and the live read is still on its way (a quiet bar, no skeleton). */
+    val updating: Boolean = false,
 )
 
 public interface SchedulesActions {
@@ -175,6 +177,8 @@ public data class ScheduleEditUi(
     val nowMs: Long = 0,
     /** B-NAV-055: the schedule's last run, with what happened (Flutter schedule_sheet's last-run row). */
     val lastRun: LastRunUi? = null,
+    /** Cache-first: the form shows the last-seen facts while the live ones load (a quiet bar, no skeleton). */
+    val updating: Boolean = false,
 )
 
 public interface ScheduleEditActions {

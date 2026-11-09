@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
@@ -62,7 +63,11 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
         height = KitSheetHeight.Full,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            if (state.busy) WorkspaceSection("loading") { KitSkeletonRows(count = 2) }
+            if (state.busy && !state.hasFacts) WorkspaceSection("loading") { KitSkeletonRows(count = 2) }
+            else KitLoadingBar(
+                state.busy || state.inspectionBusy,
+                stringResource(Res.string.agentsStateUpdatingHelper),
+            )
             state.failure?.let { failure ->
                 WorkspaceSection("failure") {
                     KitErrorNotice(

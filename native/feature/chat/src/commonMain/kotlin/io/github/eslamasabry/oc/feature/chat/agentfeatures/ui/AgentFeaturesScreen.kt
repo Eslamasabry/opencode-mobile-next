@@ -2,7 +2,9 @@ package io.github.eslamasabry.oc.feature.chat.agentfeatures.ui
 
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.chat.agentfeatures.presentation.AgentFeaturesActions
+import io.github.eslamasabry.oc.feature.chat.agentfeatures.presentation.AgentFeaturesBody
 import io.github.eslamasabry.oc.feature.chat.agentfeatures.presentation.AgentFeaturesUi
+import io.github.eslamasabry.oc.feature.chat.agentfeatures.presentation.body
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -28,9 +30,10 @@ public fun AgentFeaturesScreen(state: AgentFeaturesUi, actions: AgentFeaturesAct
         title = stringResource(Res.string.agentFeaturesTitle),
         subtitle = state.snapshot?.owner,
         closeLabel = stringResource(Res.string.kitSheetClose),
+        loading = state.loading && state.snapshot != null, // quiet: the kept list stays, a thin line says it updates
     ) {
-        when {
-            state.failure != null ->
+        when (state.body()) {
+            AgentFeaturesBody.Failure ->
                 KitStateView(
                     kind = KitStateKind.Error,
                     title = stringResource(Res.string.agentFeaturesFailed),
@@ -38,10 +41,10 @@ public fun AgentFeaturesScreen(state: AgentFeaturesUi, actions: AgentFeaturesAct
                     onRetry = actions::refresh,
                     retryLabel = stringResource(Res.string.commonRetry),
                 )
-            state.loading -> KitSkeletonRows(count = 3)
-            state.snapshot?.features.isNullOrEmpty() ->
+            AgentFeaturesBody.Skeleton -> KitSkeletonRows(count = 3)
+            AgentFeaturesBody.Empty ->
                 KitText(stringResource(Res.string.agentFeaturesEmpty))
-            else ->
+            AgentFeaturesBody.Rows ->
                 KitRowGroup {
                     for (feature in state.snapshot!!.features) {
                         if (feature.on != null) {

@@ -34,7 +34,8 @@ public fun AgentAccountScreen(state: AgentAccountUi, actions: AgentAccountAction
     KitBackGuard(true, actions::back)
     val panel = state.panel
     val busy =
-        state.phase == AgentAccountPhase.Loading ||
+        state.updating ||
+            state.phase == AgentAccountPhase.Loading ||
             (state.phase == AgentAccountPhase.Panel &&
                 (panel.status == AccountPanelStatus.Loading ||
                     panel.loginStatus in

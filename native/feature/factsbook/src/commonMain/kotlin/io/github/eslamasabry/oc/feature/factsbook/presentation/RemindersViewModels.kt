@@ -91,6 +91,16 @@ public class RemindersViewModel(private val access: FactsBookAccess, private val
     override fun reload() {
         mutable.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
+            access.reminderNode()
+            if (mutable.value.reminders == null) {
+                // Cache-first: the reminders as the node last listed them, at once; the live list replaces them below.
+                access.engine.keptRead { (this as? FactsBookReminders)?.reminders() ?: away }
+                    ?.let { kept -> mutable.update { if (it.reminders == null) it.copy(
+                    reminders = kept.toImmutableList(),
+                    cannotRing = access.engine.state.value.capabilities.isDisabled("phone_alarm_delivery"),
+                    canAdd = access.engine.state.value.capabilities.supports(FactsBookCapabilities.REMINDERS),
+                ) else it } }
+            }
             val r = access.reminderNode()?.reminders() ?: away
             val caps = access.engine.state.value.capabilities
             mutable.update {
@@ -250,15 +260,28 @@ public class ReminderEditViewModel(
                 mutable.update { it.copy(draft = ReminderDraft(timing = ReminderTiming(ReminderRepeat.Never, at), locale = startLocale()), cannotRing = !ring) }
                 return@launch
             }
-            val found = (node?.reminders() as? FbResult.Ok)?.value?.firstOrNull { it.id == route.id }
+            // Cache-first: the reminder as the node last listed it opens at once; the live read replaces it below.
+            access.engine.keptRead { (this as? FactsBookReminders)?.reminders() ?: away }?.firstOrNull { it.id == route.id }?.let { kept ->
+                val keptTiming = ReminderTiming.fromWhen(kept.schedule.`when`) ?: return@let
+                saved = kept
+                mutable.update {
+                    it.copy(draft = ReminderDraft(kept.what, keptTiming, kept.schedule.zone, if (kept.locale == "ar") "ar" else "en"), cannotRing = !ring)
+                }
+            }
+            val live = node?.reminders()
+            val found = (live as? FbResult.Ok)?.value?.firstOrNull { it.id == route.id }
             val timing = found?.let { ReminderTiming.fromWhen(it.schedule.`when`) }
+            // Nothing answered: the kept copy stays on screen (saving will say if the node is still away).
+            if (live !is FbResult.Ok && saved != null && mutable.value.draft != null) return@launch
             if (found == null || timing == null) {
                 mutable.update { it.copy(error = FactsBookError("not_found"), cannotRing = !ring) }
                 return@launch
             }
             saved = found
             mutable.update {
-                it.copy(
+                // What the person already changed on the kept copy stays.
+                if (edited && it.draft != null) it.copy(cannotRing = !ring)
+                else it.copy(
                     draft = ReminderDraft(found.what, timing, found.schedule.zone, if (found.locale == "ar") "ar" else "en"),
                     cannotRing = !ring,
                 )

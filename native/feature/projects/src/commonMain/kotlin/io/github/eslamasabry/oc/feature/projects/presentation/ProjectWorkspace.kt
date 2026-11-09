@@ -67,6 +67,10 @@ public data class ProjectWorkspaceUi(
 ) {
     /** True when the folder is known not to be a Git repository (nothing to inspect: offer Initialize, not an error). */
     val notARepository: Boolean get() = health?.setupState == VersionControlSetupState.Absent
+
+    /** True when there are facts to draw (kept or live); a read then shows a quiet bar, never a skeleton. */
+    val hasFacts: Boolean
+        get() = health != null || worktrees.isNotEmpty() || changes.isNotEmpty() || inspectionScopes.isNotEmpty()
 }
 
 public interface ProjectWorkspaceActions {
@@ -124,6 +128,8 @@ internal class ProjectWorkspace(
     private val scope: CoroutineScope,
     private val publish: (ProjectWorkspaceUi) -> Unit,
     private val openConversation: (SessionId) -> Unit,
+    private val peekKept: () -> KeptWorkspace? = { null },
+    private val keepKept: suspend (KeptWorkspace) -> Unit = {},
 ) : ProjectWorkspaceActions {
     private var server: ProjectServer? = null
     private var generation = 0
@@ -143,7 +149,7 @@ internal class ProjectWorkspace(
         val read = next?.gateway is LocatedProjectGateway && caps?.sessionDiff == true
         val trees = next?.operations != null && caps?.worktreeBrowsing == true
         val inspect = next?.gateway is WorktreeInspectionGateway && caps?.worktreeInspection == true
-        set(
+        val fresh =
             ProjectWorkspaceUi(
                 available = read || trees || inspect,
                 canInspect = inspect,
@@ -153,7 +159,15 @@ internal class ProjectWorkspace(
                 canReset = trees && caps?.worktreeReset == true,
                 canInitGit = read && caps?.gitInit == true,
             )
-        )
+        // Cache-first: the sheet's first frame is what it last showed for this folder.
+        set(if (fresh.available) peekKept()?.over(fresh) ?: fresh else fresh)
+    }
+
+    /** Keeps what the sheet now shows, once a read finished without failure. */
+    private fun keepShown() {
+        if (state.failure != null || state.inspectionFailure != null || state.mode != VcsDiffMode.WorkingTree) return
+        val kept = KeptWorkspace.of(state)
+        scope.launch { keepKept(kept) }
     }
 
     private fun current(run: Int, live: ProjectServer): Boolean {
@@ -229,6 +243,7 @@ internal class ProjectWorkspace(
                 if (!current(run, live)) return@launch
             }
             set(next.copy(busy = false))
+            keepShown()
             if (next.canInspect) loadInspectionCopies(live, run)
         }
     }
@@ -250,13 +265,15 @@ internal class ProjectWorkspace(
                 val selected =
                     state.inspectionScope?.takeIf { it in copies.value }
                         ?: copies.value.firstOrNull()
+                // The kept changes and conversations of the same copy stay until its live read replaces them.
+                val same = selected != null && selected == state.inspectionScope
                 set(
                     state.copy(
                         inspectionScopes = copies.value,
                         inspectionScope = selected,
                         inspectionBusy = false,
-                        inspectionChanges = null,
-                        inspectionSessions = persistentListOf(),
+                        inspectionChanges = if (same) state.inspectionChanges else null,
+                        inspectionSessions = if (same) state.inspectionSessions else persistentListOf(),
                         inspectionCursor = null,
                     )
                 )
@@ -353,6 +370,7 @@ internal class ProjectWorkspace(
                         inspectionCursor = page.value.nextCursor,
                     )
                 )
+                keepShown()
             }
         }
     }

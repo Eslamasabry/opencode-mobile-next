@@ -139,6 +139,8 @@ public data class ChangesUi(
     /** "Guided" can be turned on here (B-155): the conversation's agent can be asked. */
     val canGuide: Boolean = false,
     val guide: GuideUi = GuideUi.Off,
+    /** Cache-first: these are the last-seen rows and the live read is on its way (a quiet bar, no skeleton). */
+    val updating: Boolean = false,
 ) {
     /** Rows whose diff was opened and is unchanged. */
     val viewedCount: Int get() = files.count { it.viewed }
@@ -179,6 +181,8 @@ public data class FileDiffUi(
     val drafts: Int = 0,
     val sending: Boolean = false,
     val sendFailure: Failure? = null,
+    /** Cache-first: this is the last-seen diff and the live read is on its way. */
+    val updating: Boolean = false,
 ) {
     val name: String get() = path.split('/', '\\').lastOrNull { it.isNotEmpty() } ?: path
 }
@@ -249,4 +253,6 @@ public data class StagedUi(
     val failure: Failure? = null,
     /** The first read failed: Try again. */
     val loadFailure: Failure? = null,
+    /** Cache-first: the last-seen files; Keep and Put back wait for the live read. */
+    val updating: Boolean = false,
 )
