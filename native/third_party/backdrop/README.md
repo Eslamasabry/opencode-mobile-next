@@ -16,7 +16,12 @@ it) and gets this fork. Its own dependencies (Compose foundation/ui/ui-graphics 
 
 ## What changed, and why
 
-One change, marked `OC fork` in the code: **`drawBackdrop` / `drawPlainBackdrop` take `resolutionScale`** (default 1:
+Two changes, marked `OC fork` in the code.
+
+**Compose 1.13:** `androidMain/.../internal/Paint.kt` reads the framework paint through `Paint.nativePaint` instead of
+`asFrameworkPaint()`, which Compose 1.13 (the app's version) deprecates at error level. Same object, same behaviour.
+
+**Half resolution:** `drawBackdrop` / `drawPlainBackdrop` take `resolutionScale` (default 1:
 upstream's behaviour, line for line).
 
 - Files: `DrawBackdropModifier.kt` (the parameter, the node's `resolutionScale`, the layer's size, the scaled
