@@ -87,6 +87,87 @@ class ExitClassifierTest {
         }
     }
 
+    private fun announced(reason: Int, sub: Int = -1, description: String? = null) =
+        ExitRecord(reason = reason, timestampMs = OWNER_AT, subReason = sub, description = description).kind.announced
+
+    private fun bySystem(reason: Int, sub: Int = -1) =
+        ExitRecord(reason = reason, timestampMs = OWNER_AT, subReason = sub).kind.closedBySystem
+
+    @Test
+    fun `EXIT-NOTICE-001 the person's own force stop is never announced`() {
+        // Upgrade test 2026-11-09: `am force-stop` (USER_REQUESTED, FORCE STOP) showed
+        // "Android closed OpenCode Mobile" on the next start.
+        assertFalse(announced(ExitReason.USER_REQUESTED, ExitReason.SUB_FORCE_STOP))
+        assertFalse(announced(ExitReason.USER_REQUESTED))
+        assertFalse(announced(ExitReason.USER_REQUESTED, ExitReason.SUB_STOP_APP))
+        assertFalse(announced(ExitReason.USER_STOPPED))
+        assertFalse(announced(ExitReason.USER_STOPPED, ExitReason.SUB_FORCE_STOP))
+        // A swipe from Recents or a stop that only the sub-reason names.
+        assertFalse(announced(ExitReason.OTHER, ExitReason.SUB_REMOVE_TASK))
+        assertFalse(announced(ExitReason.OTHER, ExitReason.SUB_FORCE_STOP))
+        assertFalse(announced(ExitReason.OTHER, ExitReason.SUB_STOP_APP))
+        assertFalse(bySystem(ExitReason.USER_REQUESTED, ExitReason.SUB_FORCE_STOP))
+        assertFalse(bySystem(ExitReason.USER_STOPPED))
+    }
+
+    @Test
+    fun `EXIT-NOTICE-002 an update and a normal exit are never announced`() {
+        assertFalse(announced(ExitReason.PACKAGE_UPDATED))
+        assertFalse(announced(ExitReason.PACKAGE_STATE_CHANGE))
+        assertFalse(announced(ExitReason.USER_REQUESTED, ExitReason.SUB_PACKAGE_UPDATE))
+        assertFalse(announced(ExitReason.OTHER, ExitReason.SUB_PACKAGE_UPDATE))
+        assertFalse(announced(ExitReason.EXIT_SELF))
+        assertFalse(announced(ExitReason.UNKNOWN))
+        for (reason in listOf(ExitReason.PACKAGE_UPDATED, ExitReason.EXIT_SELF, ExitReason.UNKNOWN)) {
+            assertFalse(bySystem(reason), "reason $reason")
+        }
+    }
+
+    @Test
+    fun `EXIT-NOTICE-003 every system kill is announced`() {
+        assertTrue(announced(ExitReason.LOW_MEMORY))
+        assertTrue(announced(ExitReason.FREEZER))
+        assertTrue(announced(ExitReason.EXCESSIVE_RESOURCE_USAGE))
+        assertTrue(announced(ExitReason.SIGNALED))
+        assertTrue(announced(ExitReason.OTHER))
+        assertTrue(announced(ExitReason.DEPENDENCY_DIED))
+        assertTrue(announced(ExitReason.PERMISSION_CHANGE))
+        assertTrue(announced(ExitReason.OTHER, ExitReason.SUB_MEMORY_PRESSURE))
+        assertTrue(announced(ExitReason.SIGNALED, ExitReason.SUB_LARGE_CACHED))
+        assertTrue(announced(ExitReason.OTHER, description = "MemoryLimiter:AnonSwap"))
+        val kills =
+            listOf(
+                ExitReason.LOW_MEMORY, ExitReason.FREEZER, ExitReason.EXCESSIVE_RESOURCE_USAGE, ExitReason.SIGNALED,
+                ExitReason.OTHER,
+            )
+        for (reason in kills) {
+            assertTrue(bySystem(reason), "reason $reason")
+        }
+    }
+
+    @Test
+    fun `EXIT-NOTICE-004 a crash is announced but is not a system kill`() {
+        val crashes =
+            listOf(ExitReason.CRASH, ExitReason.CRASH_NATIVE, ExitReason.ANR, ExitReason.INITIALIZATION_FAILURE)
+        for (reason in crashes) {
+            assertTrue(announced(reason), "reason $reason")
+            assertFalse(bySystem(reason), "reason $reason")
+        }
+    }
+
+    @Test
+    fun `EXIT-NOTICE-005 the sub-reason is read from Android's record text`() {
+        val text =
+            "ApplicationExitInfo(timestamp=11/9/26 10:02 PM pid=4242 realUid=10190 packageUid=10190 " +
+                "definingUid=10190 user=0 process=io.github.eslamasabry.opencode_mobile " +
+                "reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0 importance=100 pss=0.00 rss=0.00 " +
+                "description=stop io.github.eslamasabry.opencode_mobile due to from pid 9 state=empty trace=null"
+        assertEquals(ExitReason.SUB_FORCE_STOP, ExitReason.subReasonIn(text))
+        assertEquals(ExitReason.SUB_UNKNOWN, ExitReason.subReasonIn("reason=3 (LOW MEMORY) subreason=-1 (UNKNOWN)"))
+        assertEquals(ExitReason.SUB_UNKNOWN, ExitReason.subReasonIn("reason=3 (LOW MEMORY)"))
+        assertEquals(ExitReason.SUB_UNKNOWN, ExitReason.subReasonIn(null))
+    }
+
     private companion object {
         const val OWNER_AT = 1_790_380_793_000L
     }

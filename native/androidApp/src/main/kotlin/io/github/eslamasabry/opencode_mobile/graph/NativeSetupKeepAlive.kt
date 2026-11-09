@@ -53,6 +53,7 @@ class NativeSetupKeepAlive(
                         reason = it.reason,
                         atMs = it.at.toEpochMilliseconds(),
                         memoryPressure = it.kind == ExitKind.LowMemory || it.kind == ExitKind.MemoryLimit,
+                        closedBySystem = it.kind.closedBySystem,
                     )
                 },
                 clock.now().toEpochMilliseconds(),

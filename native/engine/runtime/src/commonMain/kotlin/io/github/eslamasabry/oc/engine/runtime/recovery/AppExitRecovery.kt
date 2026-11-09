@@ -28,6 +28,12 @@ public enum class PreviousExitKind {
     /** Whether the person hears about it when something was running. */
     public val notable: Boolean get() = this != Normal && this != Update
 
+    /**
+     * Whether a notice tells the person about it: a system kill (low memory, memory limit, any other kill) or a crash.
+     * Never the person's own force stop, an update or a normal exit (same rule as `ExitKind.announced`).
+     */
+    public val announced: Boolean get() = this == LowMemory || this == MemoryLimit || this == Killed || this == Crash
+
     /** A crash is ours to fix, not a phone setting to change. */
     public val offersKeepAlive: Boolean get() = this != Crash
 }

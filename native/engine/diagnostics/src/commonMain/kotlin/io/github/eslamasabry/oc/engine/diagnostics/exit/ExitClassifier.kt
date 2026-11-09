@@ -22,6 +22,10 @@ public object ExitReason {
     public const val PACKAGE_STATE_CHANGE: Int = 15
     public const val PACKAGE_UPDATED: Int = 16
 
+    /** The sub-reason in `ApplicationExitInfo.toString()` ("subreason=21 (FORCE STOP)"), or [SUB_UNKNOWN]. */
+    public fun subReasonIn(text: String?): Int =
+        text?.let { Regex("subreason=(-?\\d+)").find(it)?.groupValues?.get(1)?.toIntOrNull() } ?: SUB_UNKNOWN
+
     // Subreasons (hidden API).
     public const val SUB_UNKNOWN: Int = -1
     public const val SUB_TOO_MANY_CACHED: Int = 2
@@ -65,6 +69,19 @@ public enum class ExitKind {
 
     /** Whether the person hears about it when something was running. */
     public val notable: Boolean get() = this != Normal && this != Update
+
+    /**
+     * The phone, not the person, ended the app: low memory, the memory limiter, the freezer, a maker's battery manager
+     * or any other system kill. A force stop (`REASON_USER_REQUESTED`, `REASON_USER_STOPPED`, a swipe from Recents), an
+     * update and a normal exit are never one.
+     */
+    public val closedBySystem: Boolean get() = this == LowMemory || this == MemoryLimit || this == Killed
+
+    /**
+     * Whether a notice ("Android closed OpenCode Mobile ...") tells the person about it: a system kill or a crash. The
+     * person's own force stop is not news to them (upgrade test 2026-11-09), so it stays in diagnostics only.
+     */
+    public val announced: Boolean get() = closedBySystem || this == Crash
 
     /** A crash is ours to fix, not a phone setting to change (B-STATE-026). */
     public val offersKeepAlive: Boolean get() = this != Crash

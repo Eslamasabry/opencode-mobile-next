@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitKind
+import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitReason
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
 import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
@@ -120,7 +121,7 @@ class NativeAppExitRecovery(
             }
         val profile = owner?.let { stores.profiles.profile(ProfileId(it)) }
         val allowed = owner != null && profile != null && policyAllows(owner)
-        val shown = exit?.let { report ->
+        val shown = exit?.takeIf { it.kind.announced }?.let { report ->
             report.kind.phoneKind()?.let { kind -> PhoneExitNotice(kind, report.at, allowed) }
         }
         mutable.value = shown
@@ -163,12 +164,7 @@ class NativeAppExitRecovery(
             ExitRecord(
                 reason = newest.reason,
                 timestampMs = at,
-                subReason =
-                    Regex("subreason=(\\d+)")
-                        .find(newest.toString())
-                        ?.groupValues
-                        ?.get(1)
-                        ?.toIntOrNull() ?: -1,
+                subReason = ExitReason.subReasonIn(newest.toString()),
                 status = newest.status,
                 importance = newest.importance,
                 processName = app.packageName,
