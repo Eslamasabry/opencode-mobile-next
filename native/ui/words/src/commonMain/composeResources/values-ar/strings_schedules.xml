@@ -52,7 +52,7 @@
         <item quantity="other">كل %1$s ساعة</item>
     </plurals>
     <string name="scheduleRuleHours__eq1">كل ساعة</string>
-    <string name="scheduleRuleHours__eq2">كل %1$s ساعات</string>
+    <string name="scheduleRuleHours__eq2">كل ساعتين</string>
     <string name="scheduleForTime">جدولة الساعة %1$s</string>
     <string name="scheduleForWhen">جدولة %1$s</string>
     <plurals name="scheduleForHours">
@@ -64,7 +64,7 @@
         <item quantity="other">جدولة كل %1$s ساعة</item>
     </plurals>
     <string name="scheduleForHours__eq1">جدولة كل ساعة</string>
-    <string name="scheduleForHours__eq2">جدولة كل %1$s ساعات</string>
+    <string name="scheduleForHours__eq2">جدولة كل ساعتين</string>
     <string name="scheduleForToday">جدولة اليوم الساعة %1$s</string>
     <string name="scheduleForTomorrow">جدولة غدًا الساعة %1$s</string>
     <string name="scheduleDayAt">%1$s، %2$s</string>

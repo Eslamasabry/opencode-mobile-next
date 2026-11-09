@@ -900,6 +900,9 @@ public fun ChatScreen(
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
                                             onStopLive = actions::stop,
+                                            starAsk = state.starAsk,
+                                            onStarTap = actions::starTapped,
+                                            onStarDismiss = actions::starDismissed,
                                             reply =
                                                 rememberReplyActions(
                                                     actions,

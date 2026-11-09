@@ -134,7 +134,7 @@
         <item quantity="many">ينتظر %1$d خطوة أخرى</item>
         <item quantity="other">ينتظر %1$d خطوة أخرى</item>
     </plurals>
-    <string name="teamUiRunBlockedByDeps__eq0">ينتظر %1$d خطوات أخرى</string>
+    <string name="teamUiRunBlockedByDeps__eq0">لا ينتظر شيئًا</string>
     <string name="teamUiRunBlockedByDeps__eq1">ينتظر خطوة أخرى</string>
     <string name="teamUiRunElapsedDays">%1$d ي</string>
     <string name="teamUiRunElapsedHours">%1$d س %2$d د</string>
@@ -357,7 +357,7 @@
     </plurals>
     <string name="teamUiMergeFiles__eq0">لا تغييرات في الملفات</string>
     <string name="teamUiMergeFiles__eq1">ملف واحد · +%2$d / −%3$d</string>
-    <string name="teamUiMergeFiles__eq2">%1$d ملفات · +%2$d / −%3$d</string>
+    <string name="teamUiMergeFiles__eq2">ملفان · +%2$d / −%3$d</string>
     <string name="teamUiMergeReviewChanges">مراجعة التغييرات</string>
     <string name="teamUiMergeApprove">اعتماد الطلب</string>
     <string name="teamUiMergeApprovedBy">اعتمده %1$s</string>
@@ -424,7 +424,7 @@
     </plurals>
     <string name="teamUiPhoneStatusRunning__eq0">يعمل</string>
     <string name="teamUiPhoneStatusRunning__eq1">يعمل · وكيل واحد</string>
-    <string name="teamUiPhoneStatusRunning__eq2">يعمل · %1$d وكلاء</string>
+    <string name="teamUiPhoneStatusRunning__eq2">يعمل · وكيلان</string>
     <string name="teamUiPhoneStatusFailed">لا يعمل · فشلت الخطوة الأخيرة</string>
     <string name="teamUiPhoneStatusUnreachable">بدأ، لكنه لا يُجيب على %1$s</string>
     <string name="teamUiPhoneStatusUnknown">تعذّرت قراءة الحالة</string>
@@ -580,9 +580,9 @@
         <item quantity="many">خُططت %1$d خطوة</item>
         <item quantity="other">خُططت %1$d خطوة</item>
     </plurals>
-    <string name="teamChatLeadPlanned__eq0">خُطِّطت %1$d خطوات</string>
+    <string name="teamChatLeadPlanned__eq0">لا خطوات</string>
     <string name="teamChatLeadPlanned__eq1">خُططت خطوة واحدة</string>
-    <string name="teamChatLeadPlanned__eq2">خُطِّطت %1$d خطوات</string>
+    <string name="teamChatLeadPlanned__eq2">خُططت خطوتان</string>
     <string name="teamChatLeadRouted">أُرسلت «%1$s» إلى العمال</string>
     <string name="teamChatLeadStarting">بدأ عامل على «%1$s»</string>
     <string name="teamChatLeadClaimedWorker">تولّى عامل «%1$s»</string>
@@ -605,9 +605,9 @@
         <item quantity="many">%1$d خطوة · %2$d منتهية</item>
         <item quantity="other">%1$d خطوة · %2$d منتهية</item>
     </plurals>
-    <string name="teamChatStepsSummary__eq0">%1$d خطوات · %2$d منتهية</string>
+    <string name="teamChatStepsSummary__eq0">لا خطوات · %2$d منتهية</string>
     <string name="teamChatStepsSummary__eq1">خطوة واحدة · %2$d منتهية</string>
-    <string name="teamChatStepsSummary__eq2">%1$d خطوات · %2$d منتهية</string>
+    <string name="teamChatStepsSummary__eq2">خطوتان · %2$d منتهية</string>
     <string name="teamChatComposerHint">راسل الفريق…</string>
     <string name="teamChatComposerGoesTo">رسالتك تصل إلى %1$s</string>
     <string name="teamChatComposerNobody">لا يوجد وكيل على هذه المهمة لمراسلته بعد.</string>
@@ -1712,7 +1712,7 @@
         <item quantity="other">كل %1$d دقيقة</item>
     </plurals>
     <string name="teamJobEveryMinutes__eq1">كل دقيقة</string>
-    <string name="teamJobEveryMinutes__eq2">كل %1$d دقائق</string>
+    <string name="teamJobEveryMinutes__eq2">كل دقيقتين</string>
     <plurals name="teamJobEveryHours">
         <item quantity="zero">كل %1$d ساعة</item>
         <item quantity="one">كل ساعة</item>
@@ -1722,7 +1722,7 @@
         <item quantity="other">كل %1$d ساعة</item>
     </plurals>
     <string name="teamJobEveryHours__eq1">كل ساعة</string>
-    <string name="teamJobEveryHours__eq2">كل %1$d ساعات</string>
+    <string name="teamJobEveryHours__eq2">كل ساعتين</string>
     <plurals name="teamJobEverySeconds">
         <item quantity="zero">كل %1$d ثانية</item>
         <item quantity="one">كل ثانية</item>
@@ -1732,7 +1732,7 @@
         <item quantity="other">كل %1$d ثانية</item>
     </plurals>
     <string name="teamJobEverySeconds__eq1">كل ثانية</string>
-    <string name="teamJobEverySeconds__eq2">كل %1$d ثوانٍ</string>
+    <string name="teamJobEverySeconds__eq2">كل ثانيتين</string>
     <string name="teamJobOnSchedule">وفق جدول</string>
     <string name="teamJobRepeats">يتكرر من تلقاء نفسه</string>
     <string name="teamJobWhenEvent">عند حدوث شيء</string>
@@ -1776,7 +1776,7 @@
     </plurals>
     <string name="teamMergeGateQuestion__eq0">دمج التغييرات في %2$s؟</string>
     <string name="teamMergeGateQuestion__eq1">دمج تغيير واحد في %2$s؟</string>
-    <string name="teamMergeGateQuestion__eq2">دمج %1$d تغييرات في %2$s؟</string>
+    <string name="teamMergeGateQuestion__eq2">دمج تغييرين في %2$s؟</string>
     <plurals name="teamMergeGateChecksPassed">
         <item quantity="zero">نجحت الفحوص الـ%1$d كلها</item>
         <item quantity="one">نجح الفحص</item>
@@ -1786,7 +1786,7 @@
         <item quantity="other">نجحت الفحوص الـ%1$d كلها</item>
     </plurals>
     <string name="teamMergeGateChecksPassed__eq1">نجح الفحص</string>
-    <string name="teamMergeGateChecksPassed__eq2">نجحت كل الفحوص وعددها %1$d</string>
+    <string name="teamMergeGateChecksPassed__eq2">نجح الفحصان</string>
     <string name="teamMergeGateApprove">اعتماد الدمج</string>
     <string name="teamMergeGateIfIgnored">تبقى التغييرات في فرعها. لا يُدمج شيء حتى تقول ذلك.</string>
     <string name="teamMergeGateAnnouncement">جاهز للدمج. %1$s</string>

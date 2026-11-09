@@ -23,6 +23,15 @@ internal fun phosphor(name: String, mirror: Boolean, vararg parts: Pair<String, 
         .apply { parts.forEach { (d, alpha) -> addPath(pathData = addPathNodes(d), fill = SolidColor(Color.Black), fillAlpha = alpha) } }
         .build()
 
+/**
+ * Builds one brand mark drawn on a 24 × 24 grid (a Simple Icons path, filled in one colour the caller tints). Brand marks
+ * are not Phosphor glyphs, so they never go through [phosphor].
+ */
+internal fun brandMark(name: String, pathData: String): ImageVector =
+    ImageVector.Builder(name = name, defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f)
+        .apply { addPath(pathData = addPathNodes(pathData), fill = SolidColor(Color.Black)) }
+        .build()
+
 /** The three bundled Phosphor fonts (Dart families `AppPhosphorRegular`, `AppPhosphorDuotone`, `AppPhosphorFill`). */
 internal enum class PhosphorFamily { Regular, Duotone, Fill }
 

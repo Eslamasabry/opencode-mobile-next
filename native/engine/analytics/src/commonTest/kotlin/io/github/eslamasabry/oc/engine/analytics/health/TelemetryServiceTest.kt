@@ -56,7 +56,7 @@ class TelemetryServiceTest {
                 "session_length", "conn_attempt", "conn_drop", "send_result", "turn_stall", "chat_turn", "approval",
                 "queue_flush",
                 "linux_setup_step", "agent_start", "bg_service_end", "update_result", "app_start", "jank",
-                "memory_pressure",
+                "memory_pressure", "star_prompt_shown", "star_prompt_tapped", "star_prompt_dismissed",
             ),
             ProductEvent.entries.map { it.wire },
         )

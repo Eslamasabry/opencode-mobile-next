@@ -796,7 +796,7 @@
         <item quantity="other">يعمل %1$d وكيلًا.</item>
     </plurals>
     <string name="processBudgetAgentsRunning__eq1">يعمل وكيل واحد.</string>
-    <string name="processBudgetAgentsRunning__eq2">يعمل %1$d وكلاء.</string>
+    <string name="processBudgetAgentsRunning__eq2">يعمل وكيلان.</string>
     <string name="processBudgetWaitWarm">في الانتظار: الهاتف دافئ. يبدأ العمل تلقائيًا عندما يبرد الهاتف.</string>
     <string name="processBudgetWaitBattery">في الانتظار: البطارية منخفضة. يبدأ العمل تلقائيًا عند شحن الهاتف.</string>
     <string name="processBudgetCount">%1$d منها تُحسب ضمن الحد البالغ نحو %2$d</string>
@@ -820,7 +820,7 @@
         <item quantity="other">%1$d تعمل: %2$s</item>
     </plurals>
     <string name="linuxSvcHubRunning__eq1">واحدة تعمل: %2$s</string>
-    <string name="linuxSvcHubRunning__eq2">%1$d تعمل: %2$s</string>
+    <string name="linuxSvcHubRunning__eq2">اثنتان تعملان: %2$s</string>
     <plurals name="linuxSvcHubOff">
         <item quantity="zero">%1$d خدمة، كلها متوقفة</item>
         <item quantity="one">خدمة واحدة، متوقفة</item>
@@ -830,7 +830,7 @@
         <item quantity="other">%1$d خدمة، كلها متوقفة</item>
     </plurals>
     <string name="linuxSvcHubOff__eq1">خدمة واحدة، متوقفة</string>
-    <string name="linuxSvcHubOff__eq2">%1$d خدمات، كلها متوقفة</string>
+    <string name="linuxSvcHubOff__eq2">خدمتان، متوقفتان</string>
     <string name="linuxSvcHubCrashed">توقفت %1$s بعد أعطال متكررة</string>
     <string name="linuxSvcAddDetail">شغّل أمرًا من عندك وأبقه يعمل</string>
     <string name="linuxSvcKeepsRunning">الخدمة التي تشغّلها تبقى تعمل: تعود بعد أي عطل وعند إعادة تشغيل التطبيق، إلى أن توقفها.</string>
@@ -851,7 +851,7 @@
         <item quantity="other">توقفت بعد %1$d عطل · %2$s</item>
     </plurals>
     <string name="linuxSvcGaveUp__eq1">توقفت بعد عطل واحد · %2$s</string>
-    <string name="linuxSvcGaveUp__eq2">توقفت بعد %1$d أعطال · %2$s</string>
+    <string name="linuxSvcGaveUp__eq2">توقفت بعد عطلين · %2$s</string>
     <string name="linuxSvcGaveUpNoCount">توقفت بعد عطل · %1$s</string>
     <string name="linuxSvcExited">انتهت (الرمز %1$d)</string>
     <string name="linuxSvcPortBusy">المنفذ %1$s مستخدم بالفعل. ستُعاد المحاولة قريبًا</string>
@@ -873,7 +873,7 @@
         <item quantity="other">عادت %1$d مرة بعد عطل، آخرها عند %2$s</item>
     </plurals>
     <string name="linuxSvcCameBack__eq1">عادت مرة واحدة بعد عطل، عند %2$s</string>
-    <string name="linuxSvcCameBack__eq2">عادت %1$d مرات بعد عطل، آخرها عند %2$s</string>
+    <string name="linuxSvcCameBack__eq2">عادت مرتين بعد عطل، آخرها عند %2$s</string>
     <string name="linuxSvcRemoveGoes">يُحذف سجلها وإعداداتها</string>
     <string name="linuxSvcRemoveStays">يبقى البرنامج مثبّتًا</string>
     <string name="linuxSvcLogTitle">السجل</string>

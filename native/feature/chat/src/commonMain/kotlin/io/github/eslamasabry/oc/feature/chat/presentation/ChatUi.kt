@@ -82,6 +82,8 @@ public data class ChatUi(
      * turn says "Attach {file} again to send".
      */
     val attachAgain: AttachAgainUi? = null,
+    /** The one-time GitHub star ask rides under the live line while this turn waits for its reply. */
+    val starAsk: Boolean = false,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -428,6 +430,12 @@ public enum class ChatPlace {
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
+    /** "Star on GitHub" on the live line's ask: opens the repository and ends the ask. */
+    public fun starTapped() {}
+
+    /** "Not now" on the live line's ask. */
+    public fun starDismissed() {}
+
     /** Back (button, gesture or Esc): pops when nothing is lost (07 §3.4). */
     public fun leaveRequested()
 

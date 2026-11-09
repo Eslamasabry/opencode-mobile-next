@@ -62,10 +62,15 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.words.res.chatStalledStop
+import io.github.eslamasabry.oc.ui.words.res.chatStarAskAction
+import io.github.eslamasabry.oc.ui.words.res.chatStarAskDismiss
+import io.github.eslamasabry.oc.ui.words.res.chatStarAskBody
+import io.github.eslamasabry.oc.ui.words.res.chatStarAskTitle
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -357,6 +362,10 @@ internal fun ChatTranscriptList(
     folds: TranscriptFolds = rememberTranscriptFolds(),
     /** S28 story 8: the handoff line ("Continued from …"), drawn above the oldest message; null = none. */
     topLine: (@Composable () -> Unit)? = null,
+    /** The one-time GitHub star ask rides under the live line while it is up (a turn still waiting for its reply). */
+    starAsk: Boolean = false,
+    onStarTap: () -> Unit = {},
+    onStarDismiss: () -> Unit = {},
 ) {
     val currentRows by rememberUpdatedState(rows)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
@@ -442,6 +451,16 @@ internal fun ChatTranscriptList(
                                 (facts.runStartedAtMs ?: unique.firstNotNullOfOrNull { (it as? PromptRow)?.createdMs })
                                     ?.let { facts.nowMs - it },
                         )
+                    // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
+                    val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
+                    val askTitle = stringResource(Res.string.chatStarAskTitle)
+                    val askBody = stringResource(Res.string.chatStarAskBody)
+                    val askAction = stringResource(Res.string.chatStarAskAction)
+                    val askDismiss = stringResource(Res.string.chatStarAskDismiss)
+                    val ask =
+                        if (starAsk && !streaming && notice == null && !live.stopping && !live.stoppingAfterStep)
+                            KitLiveAsk(askTitle, askBody, askAction, onStarTap, askDismiss, onStarDismiss)
+                        else null
                     KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
@@ -458,6 +477,7 @@ internal fun ChatTranscriptList(
                                 stringResource(Res.string.chatStalledStop)
                             else null,
                         onAction = onStopLive,
+                        ask = ask,
                     )
                 } else {
                     val minutes = stringResource(Res.string.chatHomeMinutes)
