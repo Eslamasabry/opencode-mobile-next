@@ -107,6 +107,6 @@ class AppearanceAuditRenders {
     private companion object {
         const val DENSITY = 2f
         const val WIDTH = 720
-        const val HEIGHT = 1180
+        const val HEIGHT = 1320 // Glass and Soft panes are taller: at 1180 the last row was squeezed and its buttons drew without words
     }
 }

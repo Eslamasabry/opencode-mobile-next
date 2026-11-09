@@ -95,7 +95,8 @@ class GlassLiveFramesTest {
             mainClock.advanceTimeBy(1_500)
             val stepped = pane()
             val moved = difference(first, stepped)
-            assertTrue(moved > .4, "the pane shows the background's next frame (mean change $moved)")
+            // A stale pane changes by exactly 0; the haze itself drifts slowly (a third of a step a pixel in 1.5 s at Bold).
+            assertTrue(moved > .15, "the pane shows the background's next frame (mean change $moved)")
             // Another look: the pane shows it on the next frame, not the old one.
             look = "matrixRain"
             mainClock.advanceTimeByFrame()

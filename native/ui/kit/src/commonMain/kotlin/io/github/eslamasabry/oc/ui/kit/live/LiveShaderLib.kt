@@ -35,6 +35,13 @@ public object LiveShaderLib {
      */
     public const val ENCODE_RANGE: Float = .32f
 
+    /**
+     * The dither's reach either way, in 8-bit steps. It is always laid at the screen's own pixels (in the look at full
+     * resolution, in [FINISH] after the upscale otherwise), where one step either way of triangular noise is exactly
+     * what removes an 8-bit band; more only adds grain.
+     */
+    public const val DITHER_STEPS: Float = 1f
+
     /** The smallest shader: compiles wherever runtime shaders exist, so the host can choose the fallback once. */
     internal const val PROBE: String = "half4 main(float2 c) { return half4(0.0); }"
 
@@ -95,11 +102,10 @@ float liveIgn(float2 p) {
     return fract(52.9829189 * fract(dot(p, float2(0.06711056, 0.00583715))));
 }
 
-// The dither every look ends with: triangular (gradient noise plus a hash), 1.5 8-bit steps either way. The looks draw
-// at half resolution and are filtered up to the screen, which softens a dither; at this size it still breaks every
-// 8-bit step of the slowest, darkest gradient after that, so no glow ends in visible bands.
+// The dither every look ends with: triangular (gradient noise plus a hash), one 8-bit step either way, at the
+// screen's own pixels, so no glow ends in visible bands.
 float liveDither(float2 fragCoord) {
-    return (liveIgn(fragCoord) + liveHash(fragCoord + 71.3) - 1.0) * (1.5 / 255.0);
+    return (liveIgn(fragCoord) + liveHash(fragCoord + 71.3) - 1.0) * ($DITHER_STEPS / 255.0);
 }
 
 // A look's final colour. At full resolution: dithered here. In a reduced pass (uEncode): the distance from the ground,
@@ -107,7 +113,7 @@ float liveDither(float2 fragCoord) {
 // dither after the upscale, so the dither is always at the screen's own pixels.
 half4 liveEmit(float3 col, float2 fragCoord) {
     if (uEncode > 0.5) {
-        return half4(clamp(0.5 + 0.5 * (col - float3(uGround.rgb)) / 0.32, 0.0, 1.0), 1.0);
+        return half4(clamp(0.5 + 0.5 * (col - float3(uGround.rgb)) / $ENCODE_RANGE, 0.0, 1.0), 1.0);
     }
     return half4(clamp(col + liveDither(fragCoord), 0.0, 1.0), 1.0);
 }
@@ -332,9 +338,9 @@ float fHash(float2 p) {
 
 half4 main(float2 fragCoord) {
     float3 e = float3(content.eval(fragCoord).rgb);
-    float3 c = float3(uGround.rgb) + (e - 0.5) * (2.0 * 0.32);
+    float3 c = float3(uGround.rgb) + (e - 0.5) * (2.0 * $ENCODE_RANGE);
     float ign = fract(52.9829189 * fract(dot(fragCoord, float2(0.06711056, 0.00583715))));
-    float n = (ign + fHash(fragCoord + 71.3) - 1.0) * (1.5 / 255.0);
+    float n = (ign + fHash(fragCoord + 71.3) - 1.0) * ($DITHER_STEPS / 255.0);
     return half4(clamp(c + n, 0.0, 1.0), 1.0);
 }
 """

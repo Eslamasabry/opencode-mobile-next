@@ -41,8 +41,11 @@ half4 main(float2 fragCoord) {
     float3 g = float3(uGlow.rgb);
     // The skirt leans to the partner, the body is the accent, the core lifts towards the glow.
     float3 hue = mix(b, a, smoothstep(0.15, 0.75, glow));
-    float3 col = liveGlow(ground, hue, glow * 0.30 * uIntensity);
-    col = liveGlow(col, g, core * 0.10 * uIntensity);
+    // On paper the dye is far stronger than light on a dark ground: at the dark share it sat deep in liveOut's roll-off
+    // and the lower third went one flat colour. 0.65 of it keeps the pool a gradient to its centre.
+    float share = mix(0.65, 1.0, uDark) * uIntensity;
+    float3 col = liveGlow(ground, hue, glow * 0.30 * share);
+    col = liveGlow(col, g, core * 0.10 * share);
     return liveOut(col, fragCoord);
 }
 """
