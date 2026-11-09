@@ -21,6 +21,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -45,11 +46,14 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -57,8 +61,8 @@ import kotlinx.coroutines.flow.StateFlow
  * Smoothness proof (benchmark build type only; docs/native/qa/smoothness-2026-11-09): one kit page in a chosen look,
  * scrolled by itself so a Macrobenchmark measures the same frames on every build. `look`: `solid`, `glass` (Glass, no
  * background), `glass-aurora` (Glass over the animated aurora shader) or `glass-drift` (Glass over the painted aurora).
- * `scene`: `list` (a long list of Glass rows under a liquid bar, chips and a liquid +) or `chat` (a long transcript of
- * text under a liquid bar and a liquid composer). The benchmark taps Start and waits for Done.
+ * `scene`: `list` (a long list of Glass rows under a liquid bar, chips and a liquid +), `chat` (a long transcript of
+ * text under a liquid bar and a liquid composer) or `menu` (the chat with a reply's menu opened and closed eight times). The benchmark taps Start and waits for Done.
  */
 /** Scrolls by [total] px over [ms], one step per display frame (frame-driven: no animation scale applies). */
 private suspend fun LazyListState.glide(total: Float, ms: Long) {
@@ -110,8 +114,20 @@ class GlassProofActivity : ComponentActivity() {
     private fun Page(scene: String) {
         val list = rememberLazyListState()
         val source = rememberKitFrostState()
+        var menu by remember { mutableStateOf(false) }
         LaunchedEffect(started) {
             if (!started) return@LaunchedEffect
+            if (scene == "menu") {
+                // The owner's path (2026-11-09): a reply's ⋯ menu opening and closing over the chat, eight times.
+                repeat(8) {
+                    menu = true
+                    delay(900)
+                    menu = false
+                    delay(700)
+                }
+                done = true
+                return@LaunchedEffect
+            }
             // Down and back up twice at a steady reading-scroll speed, then four quick flick-speed passes.
             repeat(2) {
                 list.glide(9_000f, 3_000)
@@ -126,10 +142,10 @@ class GlassProofActivity : ComponentActivity() {
         KitScreen(
             page = true,
             overlayChrome = true,
-            frost = if (scene == "chat") source else null,
+            frost = if (scene != "list") source else null,
             topBar = { KitTopBar(if (done) "Done" else if (started) "Scrolling" else "Ready") },
             bottom =
-                if (scene == "chat") {
+                if (scene != "list") {
                     {
                         Column(Modifier.fillMaxWidth().padding(16.dp)) {
                             Row { KitChip("Ask first", icon = KitIcons.add); KitChip("build · Model") }
@@ -145,13 +161,22 @@ class GlassProofActivity : ComponentActivity() {
             Box(Modifier.fillMaxSize()) {
                 LazyColumn(
                     state = list,
-                    modifier = Modifier.fillMaxSize().then(if (scene == "chat") Modifier.kitFrostSource(source) else Modifier.kitGlassSource(source)),
+                    modifier = Modifier.fillMaxSize().then(if (scene != "list") Modifier.kitFrostSource(source) else Modifier.kitGlassSource(source)),
                 ) {
                     item(key = "start", contentType = "start") {
-                        Row(Modifier.padding(16.dp)) { KitButton(label = "Start", onClick = { started = true }) }
+                        Row(Modifier.padding(16.dp)) {
+                            KitButton(label = "Start", onClick = { started = true })
+                            if (scene == "menu") {
+                                KitMenu(
+                                    expanded = menu,
+                                    items = listOf(KitMenuItem("Copy", {}), KitMenuItem("Share", {}), KitMenuItem("Fork from here", {}), KitMenuItem("Retry", {})),
+                                    onDismissRequest = { menu = false },
+                                ) { KitText("More", KitTextRole.Supporting, Modifier.padding(16.dp)) }
+                            }
+                        }
                     }
                     items(200, key = { it }, contentType = { "row" }) { i ->
-                        if (scene == "chat") {
+                        if (scene != "list") {
                             KitText(
                                 if (i % 2 == 0) "Question $i: what does the parser do with an empty line in a fenced block?"
                                 else "Answer $i: it keeps the line inside the block and closes the fence only on a line of three backticks.",

@@ -29,6 +29,10 @@ class GlassBenchmark {
             startupMode = null,
             iterations = 3,
             setupBlock = {
+                // Test Lab devices run with animations off; the owner's phone does not.
+                device.executeShellCommand("settings put global animator_duration_scale 1")
+                device.executeShellCommand("settings put global transition_animation_scale 1")
+                device.executeShellCommand("settings put global window_animation_scale 1")
                 killProcess()
                 startActivityAndWait(Intent().setClassName(PKG_NATIVE, GLASS).putExtra("look", look).putExtra("scene", scene))
                 check(device.wait(Until.hasObject(By.text("Ready")), 30_000)) { "not ready" }
@@ -52,6 +56,13 @@ class GlassBenchmark {
     @Test fun chatGlass() = scroll("glass", "chat")
 
     @Test fun chatGlassAurora() = scroll("glass-aurora", "chat")
+
+    /** The owner's report (2026-11-09): a reply's ⋯ menu opening over the chat in Glass. */
+    @Test fun menuGlassAurora() = scroll("glass-aurora", "menu")
+
+    @Test fun menuGlass() = scroll("glass", "menu")
+
+    @Test fun menuSolid() = scroll("solid", "menu")
 }
 
 private const val PKG_NATIVE = "io.github.eslamasabry.opencode_mobile.native"
