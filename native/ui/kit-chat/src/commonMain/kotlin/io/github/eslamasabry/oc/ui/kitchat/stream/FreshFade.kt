@@ -58,6 +58,17 @@ public fun Modifier.kitFreshFade(layout: () -> TextLayoutResult?, state: RevealS
     }
 
 /**
+ * How far the newest fresh word has faded in, 0..1 (1 when no word is fading). The stream caret follows this so it
+ * never stands out at full strength ahead of the words still fading in (B-089). Read in the draw phase only.
+ */
+internal fun RevealState.newestWordVisibility(): Float {
+    val now = frameNanos
+    val newest = runs.maxByOrNull { it.end } ?: return 1f
+    val age = ((now - newest.bornNanos).toFloat() / RevealPace.FADE_NS).coerceIn(0f, 1f)
+    return EaseOutCubic.transform(age)
+}
+
+/**
  * Smooth growth of the live block (plan 08 §5.1 step 6; plan 09 §8.4 names `animateContentSize`, whose fallback this
  * is — 08 is more precise: growth only, a shrink is taken at once, velocity carries when the next line lands).
  * The height is clamped to the content height plus a 4 dp descender allowance; pair with clipToBounds.
