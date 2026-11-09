@@ -59,8 +59,8 @@ public object KitProviderLogoRules {
 }
 
 /**
- * Decorative monochrome provider or agent mark. While it loads, or when there is none, the slot stays empty at the same
- * size: no stand-in letter (owner 2026-11-06), so rows keep one edge and never show a stray glyph.
+ * Decorative monochrome provider or agent mark. While it loads the slot is held empty at the same
+ * size; when there is none it takes no room (C14). No stand-in letter (owner 2026-11-06).
  */
 @Composable
 public fun KitProviderLogo(
@@ -73,11 +73,18 @@ public fun KitProviderLogo(
 ) {
     val source = LocalKitLogoLoader.current
     var providerSvg by remember(id, agent, source) { mutableStateOf<String?>(null) }
-    if (!agent) LaunchedEffect(id, source) { providerSvg = KitProviderLogoRules.load(source, id, agent = false) }
+    var providerLooked by remember(id, agent, source) { mutableStateOf(false) }
+    if (!agent) LaunchedEffect(id, source) {
+        providerSvg = KitProviderLogoRules.load(source, id, agent = false)
+        providerLooked = true
+    }
     // An agent keeps its brand colours when it has a colour mark; otherwise (and for every provider) the mark takes the text colour.
-    val agentArt = if (agent) rememberAgentMarkArt(id).first else null
-    val art = if (agent) agentArt else providerSvg?.let { AgentMarkArt(it, tinted = true) }
+    val agentResult = if (agent) rememberAgentMarkArt(id) else null
+    val art = if (agent) agentResult?.first else providerSvg?.let { AgentMarkArt(it, tinted = true) }
     val svg = art?.svg
+    // C14 (audit 2026-11-09): once the source says there is no mark, the slot is given back; a row never keeps an empty
+    // leading indent. While the mark loads the slot is held so the row does not jump.
+    val missing = art == null && (if (agent) agentResult?.second == true else providerLooked)
     val context = LocalPlatformContext.current
     val request =
         remember(svg, context) {
@@ -90,6 +97,7 @@ public fun KitProviderLogo(
                     .build()
             }
         }
+    if (missing) return
     Box(modifier.size(maxOf(28.dp, markSize)).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
         if (request != null)
             AsyncImage(

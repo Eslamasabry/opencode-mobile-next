@@ -15,12 +15,12 @@ import kotlin.time.Clock
  * crash's own classes and frames; no report may get its message.
  */
 class DiagnosticsCrashHandlerTest {
-    private fun crash(): Throwable =
-        try {
-            listOf<String>().first { it == "password=fake-secret" }
-        } catch (e: NoSuchElementException) {
-            IllegalStateException("prompt words fake-prompt", e)
-        }
+    private fun crash(): Throwable {
+        // A real thrown cause, so it carries real frames. The try's value is a String, so the cause is caught on its own.
+        val cause = runCatching { listOf<String>().first { it == "password=fake-secret" } }.exceptionOrNull()
+            as NoSuchElementException
+        return IllegalStateException("prompt words fake-prompt", cause)
+    }
 
     @Test
     fun `the next handler gets the crash's classes and frames, never a frameless wrapper`() {
