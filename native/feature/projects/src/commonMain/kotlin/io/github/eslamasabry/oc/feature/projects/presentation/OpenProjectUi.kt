@@ -80,6 +80,8 @@ public data class OpenProjectUi(
     val dialogFailure: Failure? = null,
     /** A typed path that is not there: "Create this folder?" is asked for it. */
     val missingPath: String? = null,
+    /** B-106: the folder whose "Open" was refused (home or root cannot be a project); the page says why while it is shown. */
+    val refusedPath: String? = null,
     /** The path field starts here (the folder shown, or next to the one opened last). */
     val pathStart: String = "",
     /** [OpenProjectStep.Folder] on this phone's own files: hidden folders are shown too (Flutter's "Show hidden folders"). */

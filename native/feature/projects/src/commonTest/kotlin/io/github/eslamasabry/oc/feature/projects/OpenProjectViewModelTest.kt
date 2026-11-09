@@ -469,4 +469,17 @@ class OpenProjectViewModelTest {
         vm.openRecent(ProfileId("gone"), "/srv/app")
         assertTrue(nav.routes.isEmpty())
     }
+
+    @Test
+    fun `B-106 Open on the home folder says why on the page instead of doing nothing`() {
+        val gateway = Located().apply { tree = mapOf("/root" to listOf(dir("api"))) }
+        val nav = Nav()
+        val vm = OpenProjectViewModel(nav, Servers(listOf(computer(gateway, Ops(listOf(project("/srv/app", true, 1)))))), SessionOpenedFolders())
+        vm.chooseServer(pcId)
+        vm.enterFolder("/root")
+        vm.openShown()
+        assertTrue(nav.routes.isEmpty())
+        assertEquals("/root", vm.state.value.refusedPath)
+        assertEquals("/root", vm.state.value.path)
+    }
 }
