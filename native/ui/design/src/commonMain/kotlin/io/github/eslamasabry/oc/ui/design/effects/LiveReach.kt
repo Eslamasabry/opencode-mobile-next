@@ -9,9 +9,9 @@ package io.github.eslamasabry.oc.ui.design.effects
  *
  * How the numbers were made (`LiveReachMeasureTest` in `:ui:kit` desktop tests renders them again and fails when a
  * look reaches further than its row): every look rendered through the host's own shader code at Bold (1.6, the
- * strongest a person can pick), on the light and dark themes of four packs, at eight moments over two minutes; then
- * blurred as a clear in-flow pane blurs it ([GlassSpec.CLEAR_PANE_FROST], the lightest frost: `frost`) and as the
- * lightest liquid lens does ([LiquidEdge]'s pill recipe, 2 dp: `lens`). The farthest frosted pixel from the ground,
+ * strongest a person can pick), on the light and dark themes of all 31 packs, at eight moments over two minutes; then
+ * blurred as the lightest liquid lens blurs it ([LiquidEdge]'s pill recipe, 2 dp: `lens`, which the clear panes' lighter
+ * frost uses too, see [FROST_SIGMA_DP]). The farthest blurred pixel from the ground,
  * over all of them, as a share of the cap, with 15 % room on top, rounded up to a twentieth (a look measured within
  * 8-bit dither of the cap, up to 1.05, is held at the cap itself).
  *
@@ -47,30 +47,36 @@ public object LiveReach {
     /** The measured rows, by stored look id. */
     public val rows: Map<String, Row> =
         mapOf(
-            "aurora" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured 1.014 1.025 1.025 1.042
-            "mesh" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured 1.013 1.024 1.025 1.040
-            "dotRipple" to Row(0.15f, 0.2f, 1.0f, 1.45f), // measured 0.109 0.153 0.895 1.251
-            "topo" to Row(0.45f, 0.6f, 0.85f, 1.0f), // measured 0.358 0.511 0.724 1.017
-            "flowThreads" to Row(0.5f, 0.7f, 0.9f, 1.3f), // measured 0.421 0.608 0.750 1.107
-            "glowSpill" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured 1.016 1.018 1.021 1.030
-            "lightRays" to Row(0.45f, 0.6f, 0.9f, 1.25f), // measured 0.354 0.494 0.760 1.056
-            "constellation" to Row(0.15f, 0.2f, 1.0f, 1.7f), // measured 0.106 0.159 1.021 1.474
-            "halftone" to Row(0.4f, 0.6f, 0.7f, 1.0f), // measured 0.344 0.485 0.593 0.846
-            "liquidBlobs" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured 1.013 1.018 1.025 1.038
-            "matrixRain" to Row(0.15f, 0.15f, 0.55f, 0.75f), // measured 0.092 0.121 0.457 0.635
-            "blueprint" to Row(0.55f, 0.65f, 1.0f, 1.35f), // measured 0.442 0.536 0.850 1.162
-            "circuit" to Row(0.15f, 0.2f, 0.8f, 1.0f), // measured 0.123 0.159 0.656 0.865
-            "oscilloscope" to Row(0.7f, 0.85f, 1.0f, 1.55f), // measured 0.588 0.739 0.969 1.340
-            "radar" to Row(0.55f, 0.7f, 1.0f, 1.6f), // measured 0.471 0.567 1.008 1.387
-            "honeycomb" to Row(0.65f, 0.9f, 0.95f, 1.35f), // measured 0.559 0.760 0.825 1.142
-            "brushedMetal" to Row(0.95f, 1.35f, 1.0f, 1.4f), // measured 0.824 1.146 0.854 1.195
-            "silk" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured 1.020 1.023 1.025 1.041
-            "caustics" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured 0.888 0.958 1.021 1.030
-            "bokeh" to Row(0.55f, 0.75f, 0.9f, 1.25f), // measured 0.440 0.631 0.754 1.083
+            "aurora" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured frost@10 dp 1.014 1.025, lens 1.025 1.042
+            "mesh" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured frost@10 dp 1.013 1.024, lens 1.025 1.040
+            "dotRipple" to Row(1.0f, 1.45f, 1.0f, 1.45f), // measured frost@10 dp 0.109 0.153, lens 0.895 1.251
+            "topo" to Row(0.85f, 1.0f, 0.85f, 1.0f), // measured frost@10 dp 0.358 0.511, lens 0.724 1.017
+            "flowThreads" to Row(0.9f, 1.3f, 0.9f, 1.3f), // measured frost@10 dp 0.421 0.608, lens 0.750 1.107
+            "glowSpill" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured frost@10 dp 1.016 1.018, lens 1.021 1.030
+            "lightRays" to Row(0.9f, 1.25f, 0.9f, 1.25f), // measured frost@10 dp 0.354 0.494, lens 0.760 1.056
+            "constellation" to Row(1.0f, 1.7f, 1.0f, 1.7f), // measured frost@10 dp 0.106 0.159, lens 1.021 1.474
+            "halftone" to Row(0.7f, 1.0f, 0.7f, 1.0f), // measured frost@10 dp 0.344 0.485, lens 0.593 0.846
+            "liquidBlobs" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured frost@10 dp 1.013 1.018, lens 1.025 1.038
+            "matrixRain" to Row(0.55f, 0.75f, 0.55f, 0.75f), // measured frost@10 dp 0.092 0.121, lens 0.457 0.635
+            "blueprint" to Row(1.0f, 1.35f, 1.0f, 1.35f), // measured frost@10 dp 0.442 0.536, lens 0.850 1.162
+            "circuit" to Row(0.8f, 1.0f, 0.8f, 1.0f), // measured frost@10 dp 0.123 0.159, lens 0.656 0.865
+            "oscilloscope" to Row(1.0f, 1.55f, 1.0f, 1.55f), // measured frost@10 dp 0.588 0.739, lens 0.969 1.340
+            "radar" to Row(1.0f, 1.6f, 1.0f, 1.6f), // measured frost@10 dp 0.471 0.567, lens 1.008 1.387
+            "honeycomb" to Row(0.95f, 1.35f, 0.95f, 1.35f), // measured frost@10 dp 0.559 0.760, lens 0.825 1.142
+            "brushedMetal" to Row(1.0f, 1.4f, 1.0f, 1.4f), // measured frost@10 dp 0.824 1.146, lens 0.854 1.195
+            "silk" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured frost@10 dp 1.020 1.023, lens 1.025 1.041
+            "caustics" to Row(1.0f, 1.0f, 1.0f, 1.0f), // measured frost@10 dp 0.888 0.958, lens 1.021 1.030
+            "bokeh" to Row(0.9f, 1.25f, 0.9f, 1.25f), // measured frost@10 dp 0.440 0.631, lens 0.754 1.083
         )
 
-    /** The blur the `frost` columns were measured under, in dp: the lightest a clear in-flow pane uses. */
-    public const val FROST_SIGMA_DP: Float = 10f
+    /**
+     * The lightest blur a clear in-flow pane may use, in dp ([GlassLook.contentFrostDp], [GlassLook.paneFrostDp]). The
+     * `frost` columns hold the `lens` columns' numbers, measured under the lighter lens blur: a Gaussian blur only ever
+     * pulls a pixel towards its neighbours' mean, so a look reaches no further under 6 dp than under 1.2 dp, and the
+     * rows hold for any frost from here up. (Measured at 10 dp the frost reaches were smaller still: matrix rain .09,
+     * aurora 1.01 of the cap; they are kept in each row's comment.)
+     */
+    public const val FROST_SIGMA_DP: Float = 6f
 
     /** The blur the `lens` columns were measured under, in dp: the lightest a liquid face uses (the pill's). */
     public const val LENS_BLUR_DP: Float = 2f

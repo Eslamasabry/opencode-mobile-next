@@ -35,7 +35,7 @@ import kotlin.test.assertTrue
 /**
  * glass-live (owner 2026-11-09, "why is glass not interacting with the background?"): Glass panes over a shader look are
  * only as thick as that look needs. Every look is rendered through the host's own shader code ([SkiaLiveLook]) at Bold,
- * blurred as a clear pane (frost) and as the lightest liquid lens blur it, and its farthest pixel from the ground must
+ * blurred as the lightest clear pane frost and as the lightest liquid lens blur it, and its farthest pixel from the ground must
  * stay inside its [LiveReach] row; then every frosted pixel must leave the pane's words readable.
  *
  * With LIVE_REACH_MEASURE=1 it measures every pack instead of the guard's three and prints the table [LiveReach] holds

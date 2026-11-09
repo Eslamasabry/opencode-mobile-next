@@ -8,7 +8,7 @@ package io.github.eslamasabry.oc.ui.design.style
  * as its words need over the look behind it ([GlassFinish], [io.github.eslamasabry.oc.ui.design.effects.LiveReach]).
  *
  * Default (glass-live 2026-11-09): clearer and glossier than the first clear panes. Less milk (a lighter light-theme
- * sheen and lit corner, one blur for every clear pane), more gloss (a brighter specular and glint, a brighter liquid
+ * sheen and lit corner, a light 6 dp blur for every clear pane, so thin marks such as matrix rain stay visible), more gloss (a brighter specular and glint, a brighter liquid
  * rim, and a rim that catches the live picture's light).
  */
 public data class GlassLook(
@@ -43,8 +43,8 @@ public data class GlassLook(
         /** Glass as it ships: clear and glossy. */
         public val Default: GlassLook =
             GlassLook(
-                contentFrostDp = 10f,
-                paneFrostDp = 10f,
+                contentFrostDp = 6f,
+                paneFrostDp = 6f,
                 frostSaturation = 1.7f,
                 sheenDark = .12f,
                 sheenLight = .24f,
