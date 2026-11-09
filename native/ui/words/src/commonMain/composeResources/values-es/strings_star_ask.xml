@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The one-time GitHub star ask that rides under the live line while the second reply is awaited. -->
 <resources>
-    <string name="chatStarAskTitle">¿Te gusta OpenCode?</string>
+    <string name="chatStarAskTitle">¿Te gusta OpenCode Next?</string>
     <string name="chatStarAskBody">Una estrella en GitHub ayuda a que otros lo encuentren.</string>
     <string name="chatStarAskAction">Dar una estrella en GitHub</string>
-    <string name="chatStarAskShort">Estrella</string>
     <string name="chatStarAskDismiss">Ahora no</string>
 </resources>

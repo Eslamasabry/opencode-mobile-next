@@ -63,7 +63,6 @@ import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAskLook
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -71,7 +70,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatStalledStop
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskAction
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskDismiss
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskBody
-import io.github.eslamasabry.oc.ui.words.res.chatStarAskShort
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskTitle
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
@@ -330,9 +328,6 @@ public fun ChatTranscript(
  * RowKind as contentType, kit parts only. The list follows when the newest key changes and the
  * person has not scrolled away (§7.3, in the kit).
  */
-/** The look the ask is drawn in; held here only until the owner picks one of the three (the renders switch it). */
-internal var starAskLook: KitLiveAskLook = KitLiveAskLook.Card
-
 @Composable
 internal fun ChatTranscriptList(
     rows: ImmutableList<TranscriptRow>,
@@ -460,12 +455,11 @@ internal fun ChatTranscriptList(
                     val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
                     val askTitle = stringResource(Res.string.chatStarAskTitle)
                     val askBody = stringResource(Res.string.chatStarAskBody)
-                    val askShort = stringResource(Res.string.chatStarAskShort)
                     val askAction = stringResource(Res.string.chatStarAskAction)
                     val askDismiss = stringResource(Res.string.chatStarAskDismiss)
                     val ask =
                         if (starAsk && !streaming && notice == null && !live.stopping && !live.stoppingAfterStep)
-                            KitLiveAsk(askTitle, askBody, askAction, askShort, onStarTap, askDismiss, onStarDismiss, starAskLook)
+                            KitLiveAsk(askTitle, askBody, askAction, onStarTap, askDismiss, onStarDismiss)
                         else null
                     KitTurnLiveLine(
                         words = line.words,

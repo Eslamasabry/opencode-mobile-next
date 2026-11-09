@@ -7,7 +7,6 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.isFocused
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -22,31 +21,27 @@ class LiveLineAskTest {
     private var taps = 0
     private var dismissals = 0
 
-    private fun ask(look: KitLiveAskLook = KitLiveAskLook.Card) =
+    private fun ask() =
         KitLiveAsk(
-            "Enjoying OpenCode?",
+            "Enjoying OpenCode Next?",
             "A GitHub star helps others find it.",
             "Star on GitHub",
-            "Star",
             { taps++ },
             "Not now",
             { dismissals++ },
-            look,
         )
 
     @Test
-    fun `B-STAR-020 every look shows the ask under the live line and each action does its own thing`() {
-        for (look in KitLiveAskLook.entries) runComposeUiTest {
+    fun `B-STAR-020 the card shows the ask under the live line and each action does its own thing`() {
+        runComposeUiTest {
             taps = 0
             dismissals = 0
-            setContent { ChatTestTheme { KitTurnLiveLine("Thinking", ask = ask(look)) } }
+            setContent { ChatTestTheme { KitTurnLiveLine("Thinking", ask = ask()) } }
             onNodeWithTag(LIVE_ASK_TAG).assertExists()
             onNodeWithTag(LIVE_ASK_ACTION_TAG).performClick()
-            assertEquals(1 to 0, taps to dismissals, "$look action")
-            // The pill's small x is the chip's own remove target, named by the dismiss label.
-            if (look == KitLiveAskLook.Pill) onNodeWithContentDescription("Not now").performClick()
-            else onNodeWithTag(LIVE_ASK_DISMISS_TAG).performClick()
-            assertEquals(1 to 1, taps to dismissals, "$look dismiss")
+            assertEquals(1 to 0, taps to dismissals, "action")
+            onNodeWithTag(LIVE_ASK_DISMISS_TAG).performClick()
+            assertEquals(1 to 1, taps to dismissals, "dismiss")
         }
     }
 
@@ -58,9 +53,9 @@ class LiveLineAskTest {
 
     @Test
     fun `B-STAR-022 the ask is announced politely and takes no focus`() {
-        for (look in listOf(KitLiveAskLook.Card, KitLiveAskLook.Notice)) runComposeUiTest {
-            setContent { ChatTestTheme { KitTurnLiveLine("Thinking", ask = ask(look)) } }
-            val words = onNodeWithText("Enjoying OpenCode?")
+        runComposeUiTest {
+            setContent { ChatTestTheme { KitTurnLiveLine("Thinking", ask = ask()) } }
+            val words = onNodeWithText("Enjoying OpenCode Next?")
             assertEquals(LiveRegionMode.Polite, words.fetchSemanticsNode().config[SemanticsProperties.LiveRegion])
             onNodeWithTag(LIVE_ASK_ACTION_TAG).assert(isFocused().not())
             onNodeWithTag(LIVE_ASK_DISMISS_TAG).assert(isFocused().not())

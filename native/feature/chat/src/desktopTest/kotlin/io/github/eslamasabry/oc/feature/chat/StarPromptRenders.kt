@@ -48,8 +48,6 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
-import io.github.eslamasabry.oc.feature.chat.ui.starAskLook
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAskLook
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
@@ -126,7 +124,7 @@ class StarPromptRenders {
         }
 
     @Composable
-    private fun Screen(style: Style, dark: Boolean, ask: Boolean) {
+    private fun Screen(style: Style, dark: Boolean, ask: Boolean, tag: String) {
         CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
             KitTheme(
                 appearance =
@@ -136,7 +134,7 @@ class StarPromptRenders {
                         motion = MotionLevel.Off,
                     ),
                 platform = DesktopKitPlatform(),
-                localeTag = "en",
+                localeTag = tag,
                 stillFrame = true,
             ) {
                 CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
@@ -157,29 +155,26 @@ class StarPromptRenders {
         }
     }
 
-    private fun shoot(style: Style, dark: Boolean, ask: Boolean, name: String) {
-        Locale.setDefault(Locale.forLanguageTag("en"))
+    private fun shoot(style: Style, dark: Boolean, name: String, tag: String = "en") {
+        Locale.setDefault(Locale.forLanguageTag(tag))
         runDesktopComposeUiTest(WIDTH, HEIGHT) {
-            setContent { Screen(style, dark, ask) }
+            setContent { Screen(style, dark, ask = true, tag = tag) }
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
             val image = onRoot().captureToImage().toAwtImage()
-            ImageIO.write(image, "png", File(out, "$name-${style.storageName}-${if (dark) "dark" else "light"}.png"))
+            ImageIO.write(image, "png", File(out, "$name.png"))
         }
+        Locale.setDefault(Locale.forLanguageTag("en"))
     }
 
     @Test
     fun `star prompt renders`() {
         if (out == null) return
-        val looks = listOf(KitLiveAskLook.Card to "a", KitLiveAskLook.Pill to "b", KitLiveAskLook.Notice to "c")
-        for ((look, letter) in looks) {
-            starAskLook = look
-            for (style in listOf(Style.Solid, Style.Glass)) for (dark in listOf(false, true)) {
-                shoot(style, dark, ask = true, name = "variant-$letter")
-            }
+        for (style in listOf(Style.Solid, Style.Glass)) for (dark in listOf(false, true)) {
+            shoot(style, dark, "variant-d-${style.storageName}-${if (dark) "dark" else "light"}")
         }
-        starAskLook = KitLiveAskLook.Card
+        shoot(Style.Solid, dark = false, name = "variant-d-rtl-ar-solid-light", tag = "ar")
     }
 
     private companion object {
